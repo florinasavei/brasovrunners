@@ -140,7 +140,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
                 <TextField name="name" label={tEvent("rsvp.name")} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
                 <CheckboxField name="showName">{tEvent("rsvp.showName")}</CheckboxField>
                 <Typography variant="body2" color="text.secondary">
-                  <Link href="/legal/privacy">{tEvent("rsvp.privacy")}</Link>
+                  <Link href="/legal/privacy" style={inlineLink}>{tEvent("rsvp.privacy")}</Link>
                 </Typography>
               </Stack>
             )}

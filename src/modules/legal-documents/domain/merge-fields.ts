@@ -144,8 +144,9 @@ export const RSVP_MERGE_FIELD = "rsvp";
  * section 5: the newsletter's (the automatic question the day before a ticked event, to the subscribers of that topic and of «Toate
  * noutățile») and «Vin!»'s (the subscriber's address is written into the answers when the question is sent, unconfirmed, and deleted
  * after 7 days or at «Nu vin»). It is also the switch: the question is queued and sent, and the topic offered, only while the notice in
- * force, in every language, names it AND «Vin!» (`describesRsvpAsk`). `{{newsletterTopics}}` names the topic in a notice at once, as it
- * is filled when the notice is shown; this marker is what the club approves. `/admin/tasks` carries the row `rsvpAskNotice`.
+ * force, in every language, names it AND «Vin!» (`describesRsvpAsk`). `{{newsletterTopics}}` leaves the topic out (it lists what the club
+ * writes about, `AUTOMATIC_TOPICS` aside), so only this marker names it, and the club approves it. The consent to the question is the
+ * subscriber's own, given under a notice that names it: `findFirstRsvpAskNoticeVersion`. `/admin/tasks` carries the row `rsvpAskNotice`.
  */
 export const RSVP_ASK_MERGE_FIELD = "rsvpAsk";
 

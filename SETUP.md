@@ -2452,7 +2452,7 @@ enter them; **only the Administrator and the Superadministrator make them public
 The answer «Vin!» (`DECISIONS.md` §811; the owner, 2026-10-18: «how do I mark myself as "Going"?») is for the events people simply
 turn up to — the weekly group run, and any hike, coffee or meetup saved with «Fără înscrieri». It is **not a registration**: it holds no
 place, signs no declaration and makes no participant. It is **closed until the privacy notice describes it**, and it is a tick the club
-turns on event by event. Two steps are the club's.
+turns on event by event. Three steps are the club's: the notice (1), the tick (2) and, for the «Vii?» email, the notice once more (7).
 
 1. **Approve a privacy notice that names «Vin!» — a lawyer reads it first.** `/admin/legal` → the «GDPR» card → «Regenerează din șablon»
    → confirm. Four paragraphs gain the answer (the marker `{{rsvp}}` is the button's own name, „Vin!” / “I'm coming!”):
@@ -2503,11 +2503,11 @@ turns on event by event. Two steps are the club's.
    counts, never the address.
 6. **Not built here.** The one-tap answer from the members' zone. It calls the same service (`answerRsvp` with an identity of source `account`)
    and the same gate (`rsvpOffered`).
-7. **The «Vii?» email (`DECISIONS.md` §NNN).** One step for the club: **approve the privacy notice again from the template** (`/admin/legal` → «Pornește de la șablon»; a lawyer
+7. **The «Vii?» email (`DECISIONS.md` §NNN).** One step for the club: **approve the privacy notice again from the template** (`/admin/legal` → the «GDPR» card → «Regenerează din șablon», as in step 1; a lawyer
    reads section 5's two paragraphs first — the newsletter's, which now says the automatic question the day before, and «Vin!»'s, which says the subscriber's address is written as
    an unconfirmed answer when the question is sent and deleted at «Nu vin» or after 7 days). Until a notice naming `{{rsvpAsk}}` (and `{{rsvp}}`) is in force, in both languages, **nobody is asked**
-   and the topic's box does not show in the pop-up or on the subscriber's page; `/admin/tasks` carries the row `rsvpAskNotice` while an upcoming event is ticked. Note that the topic's *name*
-   is listed in the notice in force at once, because `{{newsletterTopics}}` is filled when the notice is shown: that names the topic, it does not switch the question on.
+   and the topic's box does not show in the pop-up or on the subscriber's page; `/admin/tasks` carries the row `rsvpAskNotice` while an upcoming event is ticked. The topic is named in the
+   notice only through `{{rsvpAsk}}` (`{{newsletterTopics}}` leaves it out), so a notice approved before names nothing of it.
    After that: a newsletter subscriber who ticks the topic **«Întrebarea «Vii?» înaintea alergărilor»** (or «Toate noutățile») gets, the day before a ticked event, from 08:00 club time,
    one email «Vii mâine la …?» with the two buttons **«Vin»** (then «Da, vin» on the page that opens; counts them, no second email) and **«Nu vin»** (counts nobody, and the browser is not
    remembered) — once per event, never for an event ticked only on its own day, never to someone already counted, and not sent at all if it would arrive after midnight. It leaves

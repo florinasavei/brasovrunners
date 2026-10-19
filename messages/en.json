@@ -3620,7 +3620,7 @@
         "volunteerMinors": "Only in the privacy notice: the parent's boxes of the volunteers' form, in quotation marks; without it, the club takes no volunteers under 18",
         "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them",
         "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming",
-        "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question the day before."
+        "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question the day before"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4669,12 +4669,12 @@
           ]
         },
         "rsvpAskNotice": {
-          "title": "Privacy notice: the “Coming tomorrow?” question",
+          "title": "Privacy notice: the day-before “Coming?” question",
           "todo": "An event takes “I'm coming!” answers, but the notice in force does not describe the day-before question yet, so no subscriber is asked and the topic's box does not show when subscribing.",
-          "done": "The notice in force describes the day-before question: the topic's subscribers and those of “All the news” get one email with “I'm coming” and “I'm not coming”.",
+          "done": "The notice in force describes the day-before question: subscribers who chose the topic (or “All the news”) under a notice that describes it get one email with “I'm coming” and “I'm not coming”.",
           "how": [
             "Before approving, have a lawyer read section 5's two paragraphs: the “I'm coming!” one (the address becomes an unconfirmed answer) and the newsletter's.",
-            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The topic already shows in the notice in force; the question goes out only after the new one.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The question goes out only after the new one, and only to those who chose the topic (or “All the news”) under it or a newer one.",
             "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages."
           ]
         }
@@ -6480,7 +6480,7 @@
         "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role, from the event's «Volunteers» card: a short message naming the role, the date and the place. Nothing to press.",
         "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers, or an organizer presses “Send the parent's link”: the agreement and the link where the parent accepts it in their own name.",
         "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page: “Yes, I'm coming” counts them, “I'm not coming” takes it back. The page's “not coming any more” sends only the withdraw link.",
-        "RSVP_ASK": "The day before, from {askHour}: to subscribers of “The ‘Coming?’ question before runs” and “All the news”, with “I'm coming” (counts them) and “I'm not coming”. Those who answered are skipped."
+        "RSVP_ASK": "The day before, from {askHour}: to subscribers of “The ‘Coming?’ question before runs” and “All the news”, with “I'm coming” (then “Yes, I'm coming” counts them) and “I'm not coming”. Those who answered are skipped."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",

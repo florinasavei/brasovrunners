@@ -1,10 +1,10 @@
-import { and, asc, eq, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
-import { eventRsvpAsks, eventRsvps } from "@/db/schema/event-rsvps";
+import { and, asc, eq, gt, gte, isNotNull, isNull, lt, sql } from "drizzle-orm";
+import { eventRsvpAsks, eventRsvps, eventRsvpTokens } from "@/db/schema/event-rsvps";
 import { events } from "@/db/schema/events";
 import { newsletterSubscribers } from "@/db/schema/newsletter";
 import type { Database } from "@/db/types";
 import { findPublishedEventById } from "@/modules/events/repository";
-import { findCurrentApprovedDocument, noticeDescribesRsvpAsk } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, findFirstRsvpAskNoticeVersion, noticeDescribesRsvpAsk } from "@/modules/legal-documents/repository";
 import { receives } from "@/modules/newsletter/domain/topics";
 import { receivesSql } from "@/modules/newsletter/service";
 import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
@@ -23,7 +23,8 @@ import { mintRsvpLinks } from "./rsvp";
  * the gate `rsvpOffered`, a name is still public only by the person's own tick.
  *
  * **Who is asked.** The confirmed subscribers whose topics include `RSVP_ASK` or `ALL` (`receivesSql`, the one rule the newsletter's
- * sends and alerts use), less anyone whose address already has a confirmed answer to this event. Not a new-event topic: «Alergările
+ * sends and alerts use) **and whose consent was given under a notice that names the question** (`privacy_notice_version` at or above
+ * `findFirstRsvpAskNoticeVersion`: «Toate noutățile» ticked earlier agreed to less), less anyone whose address already has a confirmed answer to this event. Not a new-event topic: «Alergările
  * săptămânale» promises «o dată pe serie, nu la fiecare alergare» (`Newsletter.topicHints`), and a question before every run would break
  * what those subscribers were told — so the question is a topic of its own, off until a subscriber ticks it (or has «Toate noutățile»).
  * Never an event for the members alone (§552): its page is not the public's, nor its newsletter's.
@@ -34,7 +35,7 @@ import { mintRsvpLinks } from "./rsvp";
  * nobody to ask still gets its row. A cancelled or unticked event is never asked, and its row, if one exists, stays.
  *
  * **The links are an answer's, not a new kind.** The message is queued with the subscriber's id and the event's, and nothing secret.
- * When it is SENT (`prepareRsvpAsk`, called by the renderer, AGENTS.md §14.5) the subscriber's «Vin!» row is made — unconfirmed, with
+ * When it is SENT (`checkRsvpAsk` first and `makeRsvpAsk` last, called by the renderer, AGENTS.md §14.5) the subscriber's «Vin!» row is made — unconfirmed, with
  * no name and no tick, `asked_at` set — and the two links of the existing machinery are minted for it: `RSVP_CONFIRM` (the «Vin» button)
  * and `RSVP_WITHDRAW` (the «Nu vin» button). The page `/vin/<link>` (§812) does the rest: the GET changes nothing, the press is a
  * POST that spends the link. «Vin» confirms the row (`confirmRsvp`, counted at once, the browser remembered); «Nu vin» deletes it
@@ -78,11 +79,17 @@ export async function queueRsvpAsks<T extends Record<string, unknown>>(db: Datab
   if (due.length === 0) return 0;
   /*
     The notice in force must describe «Vin!» AND this question, in every language (`noticeDescribesRsvpAsk`): the question writes a
-    «Vin!» row from the subscriber's address, which neither the newsletter's paragraph nor «Vin!»'s alone says. `{{newsletterTopics}}`
-    names the topic in a notice at once; the club's approval of `{{rsvpAsk}}` is the switch. The same answer is `rsvpOffered`'s notice flag.
+    «Vin!» row from the subscriber's address, which neither the newsletter's paragraph nor «Vin!»'s alone says. The club's approval of
+    `{{rsvpAsk}}` is the switch. The same answer is `rsvpOffered`'s notice flag.
   */
   const described = await noticeDescribesRsvpAsk(db, now);
   if (!described) return 0;
+  /*
+    Whose consent covers it: a subscriber is asked only if the notice they consented under (`privacy_notice_version`) already named the
+    question — «Toate noutățile» given before did not say it (§NNN; the §421 line, as for the names on the list).
+  */
+  const firstAskNotice = await findFirstRsvpAskNoticeVersion(db);
+  if (firstAskNotice === null) return 0;
 
   let queued = 0;
   for (const event of due) {
@@ -104,6 +111,7 @@ export async function queueRsvpAsks<T extends Record<string, unknown>>(db: Datab
           and(
             isNotNull(newsletterSubscribers.confirmedAt),
             receivesSql(ASK_TOPICS),
+            gte(newsletterSubscribers.privacyNoticeVersion, firstAskNotice),
             // Already counted: asking the person who said «Vin» would be noise (a confirmed answer of the same canonical address).
             sql`NOT EXISTS (
               SELECT 1 FROM ${eventRsvps}
@@ -141,22 +149,28 @@ export async function queueRsvpAsks<T extends Record<string, unknown>>(db: Datab
 /** What the renderer needs to write the two buttons: the answer's row, the event's start, and the two secrets (in this email alone). */
 export type PreparedRsvpAsk = { rsvpId: string; startsAt: Date; confirm: string; withdraw: string; locale: "ro" | "en" };
 
+/** What `checkRsvpAsk` found true, and `makeRsvpAsk` writes from: nothing is written yet. */
+export type CheckedRsvpAsk = {
+  eventId: string;
+  subscriber: typeof newsletterSubscribers.$inferSelect;
+  locale: "ro" | "en";
+  noticeVersion: number;
+  startsAt: Date;
+  now: Date;
+};
+
 /**
- * At the send (AGENTS.md §14.5: the secrets exist in the email alone): make the subscriber's «Vin!» row for this event, unconfirmed,
- * with no name and no tick, and mint its two links. Throws `OutboxMessageWithdrawn` — the message is dropped, not failed (§331) —
- * when there is nothing to ask any more: the subscriber unsubscribed, never confirmed or unticked the topic, the address on the row is not theirs, the
- * event was cancelled, unticked, handed a registration, made the members' or moved out of «tomorrow» (or started), the notice stopped
- * describing «Vin!» or the question, or the address already has a counted answer.
- *
- * A row that already exists UNCONFIRMED (the address was typed on the page and its own message not yet used) is taken over: the
- * name and the tick on it were typed by whoever typed the address, and this link's press is the subscriber's own, so they are cleared —
- * the press replaces them (§812: an unconfirmed row never lends a stranger's name to a verified press) — and the older confirm link
- * dies with the new one (`mintRsvpLinks`). Its age restarts, so the seven days an unanswered row lives count from this email.
+ * At the send, the read-only half (AGENTS.md §14.5; the renderer calls it FIRST, `makeRsvpAsk` LAST, so a failure of the words and the
+ * calendar file in between leaves nothing written): every reason to drop the message. Throws `OutboxMessageWithdrawn` — dropped, not
+ * failed (§331) — when there is nothing to ask any more: the subscriber unsubscribed, never confirmed or unticked the topic, consented
+ * under a notice that did not describe the question (`findFirstRsvpAskNoticeVersion`), the address on the row is not theirs, the event was
+ * cancelled, unticked, handed a registration, made the members' or moved out of «tomorrow» (or started), or the notice stopped
+ * describing «Vin!» or the question.
  */
-export async function prepareRsvpAsk<T extends Record<string, unknown>>(
+export async function checkRsvpAsk<T extends Record<string, unknown>>(
   db: Database<T>,
   params: { eventId: string; subscriberId: string; recipientEmail: string; now: Date },
-): Promise<PreparedRsvpAsk> {
+): Promise<CheckedRsvpAsk> {
   const { eventId, subscriberId, now } = params;
   const [subscriber] = await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriberId)).limit(1);
   if (!subscriber || subscriber.confirmedAt === null) throw new OutboxMessageWithdrawn("rsvp ask: the subscriber is no longer on the list");
@@ -170,6 +184,12 @@ export async function prepareRsvpAsk<T extends Record<string, unknown>>(
 
   // Still on the topic: unticking «Întrebarea «Vii?» …» (or «Toate noutățile») after the morning's queue stops the question, and no row is written.
   if (!receives(subscriber.topics, ASK_TOPICS)) throw new OutboxMessageWithdrawn("rsvp ask: the subscriber no longer receives the topic");
+
+  // ...and consented under a notice that named the question (the queue's rule again: a version recorded earlier is a consent to less).
+  const firstAskNotice = await findFirstRsvpAskNoticeVersion(db);
+  if (firstAskNotice === null || subscriber.privacyNoticeVersion < firstAskNotice) {
+    throw new OutboxMessageWithdrawn("rsvp ask: the subscriber consented under a notice that did not describe the question");
+  }
 
   const locale = subscriber.locale;
   const [stored] = await db.select({ membersOnly: events.membersOnly }).from(events).where(eq(events.id, eventId)).limit(1);
@@ -185,9 +205,24 @@ export async function prepareRsvpAsk<T extends Record<string, unknown>>(
   if (!rsvpAskDue(event.startsAt, now)) throw new OutboxMessageWithdrawn("rsvp ask: the window of «tomorrow» is closed");
   const notice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now);
   if (!notice) throw new OutboxMessageWithdrawn("rsvp ask: no approved privacy notice");
-  const startsAt = event.startsAt;
+  return { eventId, subscriber, locale, noticeVersion: notice.version, startsAt: event.startsAt, now };
+}
 
-  const rsvpId = await db.transaction(async (tx) => {
+/**
+ * At the send, the writing half (AGENTS.md §14.5: the secrets exist in the email alone): make the subscriber's «Vin!» row for this
+ * event, unconfirmed, with no name and no tick, and mint its two links. Throws `OutboxMessageWithdrawn` when the address already has a
+ * counted answer, or an answer typed on the page whose own «Da, vin» link is still live.
+ *
+ * A row that already exists UNCONFIRMED and whose own link is spent or has run out (an old answer typed on the page, never pressed) is
+ * taken over: the name and the tick on it were typed by whoever typed the address, and this link's press is the subscriber's own, so they
+ * are cleared — the press replaces them (§812: an unconfirmed row never lends a stranger's name to a verified press). Its age restarts,
+ * so the seven days an unanswered row lives count from this email. One whose «Da, vin» link is still LIVE is left alone and the question
+ * is dropped: that email is already a one-tap path, and minting here would kill its link (`mintRsvpLinks` supersedes the older of each
+ * purpose). (The reverse — the page's message sent after this one — still supersedes these links, and leaves the person that one.)
+ */
+export async function makeRsvpAsk<T extends Record<string, unknown>>(db: Database<T>, checked: CheckedRsvpAsk): Promise<PreparedRsvpAsk> {
+  const { eventId, subscriber, locale, noticeVersion, startsAt, now } = checked;
+  const written = await db.transaction(async (tx) => {
     const values = {
       eventId,
       deliveryEmail: subscriber.deliveryEmail,
@@ -196,13 +231,13 @@ export async function prepareRsvpAsk<T extends Record<string, unknown>>(
       displayName: null,
       showName: false,
       locale,
-      privacyNoticeVersion: notice.version,
+      privacyNoticeVersion: noticeVersion,
       confirmedAt: null,
       askedAt: now,
       createdAt: now,
     };
     const [inserted] = await tx.insert(eventRsvps).values(values).onConflictDoNothing({ target: [eventRsvps.eventId, eventRsvps.canonicalEmail] }).returning({ id: eventRsvps.id });
-    if (inserted) return inserted.id;
+    if (inserted) return { id: inserted.id };
     const [existing] = await tx
       .select()
       .from(eventRsvps)
@@ -210,16 +245,44 @@ export async function prepareRsvpAsk<T extends Record<string, unknown>>(
       .for("update");
     if (!existing) throw new OutboxMessageWithdrawn("rsvp ask: the answer could not be written");
     // Counted already (a press of a page's link, a remembered browser): nothing left to ask.
-    if (existing.confirmedAt !== null) return null;
+    if (existing.confirmedAt !== null) return { dropped: "counted" as const };
+    // An answer typed on the page whose own «Da, vin» link is live: that email is the path already, and minting would kill its link.
+    if (existing.askedAt === null) {
+      const [live] = await tx
+        .select({ id: eventRsvpTokens.id })
+        .from(eventRsvpTokens)
+        .where(
+          and(
+            eq(eventRsvpTokens.rsvpId, existing.id),
+            eq(eventRsvpTokens.purpose, "RSVP_CONFIRM"),
+            isNull(eventRsvpTokens.usedAt),
+            isNull(eventRsvpTokens.invalidatedAt),
+            gt(eventRsvpTokens.expiresAt, now),
+          ),
+        )
+        .limit(1);
+      if (live) return { dropped: "pending" as const };
+    }
     await tx
       .update(eventRsvps)
-      .set({ deliveryEmail: subscriber.deliveryEmail, displayName: null, showName: false, locale, privacyNoticeVersion: notice.version, askedAt: now, createdAt: now })
+      .set({ deliveryEmail: subscriber.deliveryEmail, displayName: null, showName: false, locale, privacyNoticeVersion: noticeVersion, askedAt: now, createdAt: now })
       .where(eq(eventRsvps.id, existing.id));
-    return existing.id;
+    return { id: existing.id };
   });
-  if (rsvpId === null) throw new OutboxMessageWithdrawn("rsvp ask: the address is already counted");
+  if ("dropped" in written) {
+    throw new OutboxMessageWithdrawn(written.dropped === "counted" ? "rsvp ask: the address is already counted" : "rsvp ask: the address has a live «Da, vin» link already");
+  }
+  const rsvpId = written.id;
 
   const links = await mintRsvpLinks(db, { rsvpId, startsAt, confirm: true, now });
   if (!links || links.confirm === null) throw new OutboxMessageWithdrawn("rsvp ask: the event has started");
   return { rsvpId, startsAt, confirm: links.confirm, withdraw: links.withdraw, locale };
+}
+
+/** Both halves, for a caller with nothing to do between them (the renderer calls them apart, so a failure in between leaves nothing written). */
+export async function prepareRsvpAsk<T extends Record<string, unknown>>(
+  db: Database<T>,
+  params: { eventId: string; subscriberId: string; recipientEmail: string; now: Date },
+): Promise<PreparedRsvpAsk> {
+  return makeRsvpAsk(db, await checkRsvpAsk(db, params));
 }

@@ -14,7 +14,7 @@ import { emailEventFacts } from "@/modules/notifications/event-facts-row";
 import { readEmailCopyForSending } from "@/modules/notifications/email-copy";
 import { renderCalendarPart } from "@/modules/notifications/calendar-part";
 import { type EmailRenderer, OutboxMessageWithdrawn, type OutboxRow } from "@/modules/notifications/outbox";
-import { prepareRsvpAsk, type PreparedRsvpAsk } from "@/modules/rsvp/ask";
+import { checkRsvpAsk, makeRsvpAsk, type PreparedRsvpAsk } from "@/modules/rsvp/ask";
 import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
 import { env } from "@/shared/config/env";
 import { readNewsletterWords } from "./domain/message";
@@ -59,7 +59,6 @@ export async function renderNewsletterRow(
   const locale = row.locale as Locale;
   const other: Locale = locale === "ro" ? "en" : "ro";
   const payload = (row.payloadJson ?? {}) as { subscriberId?: unknown; sendId?: unknown; eventId?: unknown };
-  let asked: PreparedRsvpAsk | null = null;
   let attachments: OutgoingEmail["attachments"];
   const clubCopy = isClubCopy(row.payloadJson) && row.messageType !== "NEWSLETTER_CONFIRM";
   const eventId = typeof payload.eventId === "string" ? payload.eventId : null;
@@ -84,17 +83,19 @@ export async function renderNewsletterRow(
   }
 
   const subscriberId = typeof payload.subscriberId === "string" ? payload.subscriberId : null;
-  // «Vii mâine la …?»: the row, the links and every reason to drop the message are one step (`rsvp/ask.ts`), before any word is written.
-  if (row.messageType === "RSVP_ASK") {
-    if (!eventId || !subscriberId) throw new Error("rsvp ask: the message names no event or no subscriber");
-    asked = await prepareRsvpAsk(db, { eventId, subscriberId, recipientEmail: row.recipientEmail, now });
-  }
+  const asking = row.messageType === "RSVP_ASK";
+  if (asking && (!eventId || !subscriberId)) throw new Error("rsvp ask: the message names no event or no subscriber");
   const [subscriber] = !clubCopy && subscriberId
     ? await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriberId)).limit(1)
     : [];
-  if (!clubCopy && !subscriber) throw new Error("newsletter: the subscriber is no longer on the list");
+  // A question for a subscriber who has gone since is no question (§331: withdrawn, not failed).
+  if (!clubCopy && !subscriber) {
+    if (asking) throw new OutboxMessageWithdrawn("rsvp ask: the subscriber is no longer on the list");
+    throw new Error("newsletter: the subscriber is no longer on the list");
+  }
 
   const settings = await currentDeadlines(db);
+  const overrides = await readEmailCopyForSending(db, now);
   const topics = subscriber ? normalizeTopics(subscriber.topics) : [];
   const data: TemplateData = {
     participantName: "",
@@ -165,9 +166,14 @@ export async function renderNewsletterRow(
     data.newsletterManageUrl = await manageUrl();
   } else {
     if (subscriber && subscriber.confirmedAt === null) throw new Error("newsletter: the address never confirmed");
+    // «Vii mâine la …?»: every reason to drop the message is read first, with nothing written (`rsvp/ask.ts`); the writing is the last step.
+    const checked = asking && eventId && subscriberId ? await checkRsvpAsk(db, { eventId, subscriberId, recipientEmail: row.recipientEmail, now }) : null;
     const texts = eventId ? await eventRows(db, eventId) : [];
     const details = eventNotificationDetailsIn(texts, locale);
-    if (!details) throw new Error("newsletter: the event cannot be read");
+    if (!details) {
+      if (asking) throw new OutboxMessageWithdrawn("rsvp ask: the event cannot be read");
+      throw new Error("newsletter: the event cannot be read");
+    }
     const otherDetails = texts.find((candidate) => candidate.locale === other);
     const placeLater = details.locationToBeAnnounced === true;
     const when = (language: Locale) =>
@@ -195,11 +201,7 @@ export async function renderNewsletterRow(
     if (otherDetails) data.eventFactsOther = emailEventFacts(otherDetails, pageOf(other, otherDetails.slug));
     actionUrl = data.eventUrl;
     data.newsletterManageUrl = await manageUrl();
-    if (asked) {
-      // The two buttons are the answer's own links: «Vin» (the confirm link) and, under it, «Nu vin» (the withdraw link).
-      const tokenPage = (secret: string) => `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/vin/[token]", params: { token: secret } } })}`;
-      actionUrl = tokenPage(asked.confirm);
-      data.rsvpWithdrawUrl = tokenPage(asked.withdraw);
+    if (checked) {
       // The event in the person's calendar, the same file the event's page offers (§174): so the day is there whichever they answer.
       if (details.slug) {
         const carried = await renderCalendarPart(db, {
@@ -213,6 +215,16 @@ export async function renderNewsletterRow(
         });
         attachments = carried.attachments;
       }
+      /*
+        LAST, once every other read has succeeded: this writes the person's «Vin!» row and mints the two links (`rsvp/ask.ts`, AGENTS.md
+        §14.5), and a failure after it would leave live hashes that no email carries. The reasons to drop the message were read first
+        (`checkRsvpAsk`), so the reads that can find the subscriber or the event gone drop it too, not fail it.
+      */
+      const asked: PreparedRsvpAsk = await makeRsvpAsk(db, checked);
+      // The two buttons are the answer's own links: «Vin» (the confirm link) and, under it, «Nu vin» (the withdraw link).
+      const tokenPage = (secret: string) => `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/vin/[token]", params: { token: secret } } })}`;
+      actionUrl = tokenPage(asked.confirm);
+      data.rsvpWithdrawUrl = tokenPage(asked.withdraw);
     }
   }
 
@@ -224,6 +236,6 @@ export async function renderNewsletterRow(
     data,
     actionUrl,
     attachments,
-    overrides: await readEmailCopyForSending(db, now),
+    overrides,
   });
 }

@@ -2152,7 +2152,7 @@ const T = {
       body: (d: TemplateData) => [
         `Vii mâine la ${d.eventTitle ?? "eveniment"}? Apasă „Vin”, apoi „Da, vin” pe pagina care se deschide — fără cont.`,
         "„Da, vin” te numără printre cei care vin. „Nu vin” nu te numără și nu te mai întrebăm pentru acest eveniment; poți răspunde altfel, de pe pagina evenimentului, până la start.",
-        "Linkurile sunt doar pentru tine și merg o singură dată. Primești întrebarea pentru că ești abonat la noutățile clubului.",
+        "Linkurile sunt doar pentru tine și merg o singură dată.",
       ],
       action: "Vin",
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] }),
@@ -2987,7 +2987,7 @@ const T = {
       body: (d: TemplateData) => [
         `Are you coming to ${d.eventTitle ?? "the event"} tomorrow? Press “I'm coming”, then “Yes, I'm coming” on the page that opens — no account.`,
         "“Yes, I'm coming” counts you among those coming. “I'm not coming” counts you out and we don't ask again for this event; you can answer differently, from the event's page, until the start.",
-        "The links are for you only and work once. You get this question because you subscribed to the club's news.",
+        "The links are for you only and work once.",
       ],
       action: "I'm coming",
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] }),
