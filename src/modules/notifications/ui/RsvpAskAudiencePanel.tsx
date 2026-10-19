@@ -15,8 +15,8 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import RadioField from "@/shared/ui/RadioField";
 import StatusChip from "@/shared/ui/StatusChip";
-import type { RsvpAskAudienceState } from "../ask-audience";
-import { asksAnswerers, RSVP_ASK_AUDIENCES } from "../domain/ask-audience";
+import type { RsvpAskAudienceState } from "@/modules/rsvp/ask-audience";
+import { asksAnswerers, RSVP_ASK_AUDIENCES } from "@/modules/rsvp/domain/ask-audience";
 
 type Props = {
   locale: Locale;

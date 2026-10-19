@@ -41,7 +41,7 @@ import { readEmailTransport } from "@/modules/notifications/email-transport";
 import ClubNoticesPanel from "@/modules/notifications/ui/ClubNoticesPanel";
 import CalendarRsvpPanel from "@/modules/notifications/ui/CalendarRsvpPanel";
 import { readCalendarRsvpTo } from "@/modules/notifications/calendar-rsvp";
-import RsvpAskAudiencePanel from "@/modules/rsvp/ui/RsvpAskAudiencePanel";
+import RsvpAskAudiencePanel from "@/modules/notifications/ui/RsvpAskAudiencePanel";
 import { readRsvpAskAudienceSetting } from "@/modules/rsvp/ask-audience";
 import { noticeDescribesRsvpAskAnswerers } from "@/modules/legal-documents/repository";
 import ClubMailboxRejectionsPanel from "@/modules/notifications/ui/ClubMailboxRejectionsPanel";

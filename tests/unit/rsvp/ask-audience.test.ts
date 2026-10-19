@@ -80,7 +80,7 @@ vi.mock("@/i18n/navigation", async () => {
 });
 vi.mock("@/app/[locale]/admin/settings/emails/actions", () => ({ updateRsvpAskAudienceAction: async () => null }));
 
-const { default: RsvpAskAudiencePanel } = await import("@/modules/rsvp/ui/RsvpAskAudiencePanel");
+const { default: RsvpAskAudiencePanel } = await import("@/modules/notifications/ui/RsvpAskAudiencePanel");
 
 async function panel(audience: (typeof RSVP_ASK_AUDIENCES)[number], options: { described?: boolean; mayEdit?: boolean; locale?: "ro" | "en" } = {}): Promise<string> {
   const locale = options.locale ?? "ro";
