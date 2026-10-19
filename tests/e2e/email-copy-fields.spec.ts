@@ -46,7 +46,7 @@ test.describe("the fields of an email's words, as a legend", () => {
     await openFold(legend);
 
     const terms = legend.locator("dt");
-    await expect(terms).toHaveCount(17);
+    await expect(terms).toHaveCount(18);
     await expect(terms.nth(0)).toContainText("{eventTitle}");
     await expect(terms.nth(0)).toContainText("folosit în textul implicit");
     // The example is the preview's: the sample's title, in italics beside what the field is.
@@ -58,7 +58,9 @@ test.describe("the fields of an email's words, as a legend", () => {
     await expect(role).not.toHaveCSS("opacity", "0.6");
     await expect(legend.locator("dd").nth(14)).toContainText("nu se completează în acest mesaj");
     await expect(terms.nth(15)).toContainText("{inviterName}");
-    await expect(terms.nth(16)).toContainText("{feedbackLink}");
+    // `{rsvpAskDay}` (§823) belongs to the «Vii?» question alone: dimmed here, in the closed set's order between the two.
+    await expect(terms.nth(16)).toContainText("{rsvpAskDay}");
+    await expect(terms.nth(17)).toContainText("{feedbackLink}");
 
     // The old sentence is gone, and the phone keeps its width with the card open (criterion 1).
     await expect(main.getByTestId("email-copy-placeholders")).toHaveCount(0);
