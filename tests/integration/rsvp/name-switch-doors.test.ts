@@ -392,7 +392,7 @@ describe("§NNN the name tick's doors", () => {
     it("reads nothing about the person from the form: a forged address, row or event changes nothing", async () => {
       const mine = await links("ana@example.test");
       await links("dan@example.test", { name: "Dan" });
-      await press(setNameByLinkAction, form(mine.withdraw, { showName: "on", email: "dan@example.test", displayName: "Altcineva", rsvpId: "x", eventId: "y" }));
+      await press(setNameByLinkAction, form(mine.withdraw, { showName: "on", name: "Ana", email: "dan@example.test", displayName: "Altcineva", rsvpId: "x", eventId: "y" }));
       const all = await rows();
       expect(all.find((row) => row.canonicalEmail === "ana@example.test")).toMatchObject({ showName: true, displayName: "Ana" });
       expect(all.find((row) => row.canonicalEmail === "dan@example.test")).toMatchObject({ showName: false, displayName: "Dan" });
@@ -416,10 +416,10 @@ describe("§NNN the name tick's doors", () => {
     const roMail = texts.find((entry) => entry.to === "ana@example.test")!.message;
     const enMail = texts.find((entry) => entry.to === "liz@example.test")!.message;
     const roNote = "După „Da, vin”, tot din „Nu vin” îți arăți sau ascunzi numele; răspunsul se șterge doar dacă apeși „Nu mai vin” pe pagina lui.";
-    const enNote = "After “Yes, I&#39;m coming”, the “I&#39;m not coming” link also lets you show or hide your name; your answer goes only if you press “I&#39;m not coming any more” on its page.";
+    const enNote = "After “Yes, I'm coming”, the “I'm not coming” link also lets you show or hide your name; your answer goes only if you press “I'm not coming any more” on its page.";
     expect(roMail.text).toContain(roNote);
     expect(roMail.html).toContain(roNote);
-    expect(enMail.text).toContain(enNote.replaceAll("&#39;", "'"));
+    expect(enMail.text).toContain(enNote);
     expect(enMail.html).toContain(enNote);
     // Under the «Nu vin» button: after its link in the text, never before it.
     expect(roMail.text.indexOf("După „Da, vin”")).toBeGreaterThan(roMail.text.indexOf("Nu vin:"));

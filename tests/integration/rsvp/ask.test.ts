@@ -373,7 +373,7 @@ describe("§818 «Vii mâine la …?»", () => {
         "After “Yes, I'm coming”, the “I'm not coming” link also lets you show or hide your name; your answer goes only if you press “I'm not coming any more” on its page.",
       ]) {
         expect(message.text).toContain(line);
-        expect(message.html).toContain(line.replaceAll("'", "&#39;").replaceAll("“", "“"));
+        expect(message.html).toContain(line);
       }
       expect(message.text).toMatch(/\/ro\/noutati\/abonament\/[A-Za-z0-9_-]{43}/);
       expect(message.attachments?.some((file) => file.filename.endsWith(".ics"))).toBe(true);
