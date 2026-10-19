@@ -3,7 +3,6 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { getLocale, getTranslations } from "next-intl/server";
 import {
   cachedFirstStatesNoticeVersion,
   cachedListNumbersDisclosed,
@@ -173,8 +172,6 @@ type StartListProps = {
 async function startListOrThrow({ event, page: requestedPage }: StartListProps) {
   // Cheap and first: an event with no public list (the default) loads nothing below.
   if (event.participantListVisibility !== "NAMES") return null;
-  const t = await getTranslations("Event");
-  const locale = await getLocale();
   /*
     The counts, the places line and the title's headline come from `readStartListHead` (§NNN): one function, which the event page's
     facts line «N vin · vezi cine» reads too, so the two say one number — and nothing here asks the database for it twice (every read is
@@ -182,9 +179,9 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     a static page made again when it closes (§549). The page and the hidden rows are drawn from the anonymous count alone — the cache
     holds a number for them, never a row, a position or an initial (§346).
   */
-  const head = await readStartListHead(event, t, locale);
+  const head = await readStartListHead(event);
   if (head === null) return null;
-  const { now, deadlines, hiddenShown, named, anonymous, outsideNamed, hidden, countPublic, countHidden, door, headline } = head;
+  const { t, locale, now, deadlines, hiddenShown, named, anonymous, outsideNamed, hidden, countPublic, countHidden, door, headline } = head;
   // The gate (§396): the notice in force, in every language, describes the states. Off, nothing
   // below reads a pending or waiting row at all — not even their count.
   const statesOn = await cachedListStatesDisclosed(now);

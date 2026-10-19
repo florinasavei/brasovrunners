@@ -22,6 +22,9 @@ import { readRegistrationDoor, type RegistrationDoor } from "./registration-door
  * closes (§549), here and not in the component, so whichever caller asks first holds the page.
  */
 export type StartListHead = {
+  /** The page's translator under `Event` and its language, loaded once the list is known to be open (a closed list loads neither). */
+  t: Awaited<ReturnType<typeof getTranslations>>;
+  locale: string;
   /** The moment the list was judged open at, and the club's deadlines it was judged by (the legend's sentences read them too). */
   now: Date;
   deadlines: Deadlines;
@@ -41,9 +44,7 @@ export type StartListHead = {
   headline: ReturnType<typeof startListHeadline>;
 };
 
-type Say = Parameters<typeof startListHeadline>[0];
-
-export async function readStartListHead(event: PublicEvent, say: Say, locale: string): Promise<StartListHead | null> {
+export async function readStartListHead(event: PublicEvent): Promise<StartListHead | null> {
   if (event.participantListVisibility !== "NAMES") return null;
   const now = new Date();
   const deadlines = await cachedDeadlines();
@@ -51,6 +52,8 @@ export async function readStartListHead(event: PublicEvent, say: Say, locale: st
   await holdPageUntil([publicListClosesAt(event, deadlines)], now);
   if (!publicListStillOpen(event, now, deadlines)) return null;
 
+  const t = await getTranslations("Event");
+  const locale = await getLocale();
   // Two counts first, so one page of fifty never fetches four hundred rows (§250), from the public cache (§333).
   const hiddenShown = hiddenListShownPublicly(event);
   const { named, anonymous, outsideNamed, hidden } = await cachedStartListCounts(event.id, hiddenShown);
@@ -72,7 +75,7 @@ export async function readStartListHead(event: PublicEvent, say: Say, locale: st
   */
   const confirmed = named + anonymous;
   const headline = startListHeadline(
-    say,
+    t,
     locale,
     countHidden
       ? { confirmed: Math.max(confirmed - outsideNamed, 0) + hidden.confirmed, named }
@@ -80,7 +83,7 @@ export async function readStartListHead(event: PublicEvent, say: Say, locale: st
     door.kind === "KNOWN" ? door.fill : null,
     countHidden ? hidden.held : 0,
   );
-  return { now, deadlines, hiddenShown, named, anonymous, outsideNamed, hidden, countPublic, countHidden, door, headline };
+  return { t, locale, now, deadlines, hiddenShown, named, anonymous, outsideNamed, hidden, countPublic, countHidden, door, headline };
 }
 
 /**
@@ -90,8 +93,7 @@ export async function readStartListHead(event: PublicEvent, say: Say, locale: st
  */
 export async function readStartListCount(event: PublicEvent): Promise<number | null> {
   return readOrWhileAway(async () => {
-    if (event.participantListVisibility !== "NAMES") return null;
-    const head = await readStartListHead(event, await getTranslations("Event"), await getLocale());
+    const head = await readStartListHead(event);
     return head !== null && head.countPublic ? head.headline.count : null;
   }, null);
 }
