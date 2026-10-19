@@ -69,7 +69,7 @@ export default async function ZoneRsvp({ locale, eventId, going, count, publicNa
         <>
           {/* The tick is beside the words, never alone: state is not a glyph by itself. */}
           <Typography component="span" data-testid="zone-rsvp-going" sx={{ fontWeight: 700 }}>
-            {t("rsvp.going")} ✓
+            {`${t("rsvp.going")} ✓`}
           </Typography>
           <form action={leaveAsMemberAction}>
             {hidden}
