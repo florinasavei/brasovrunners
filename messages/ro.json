@@ -874,13 +874,13 @@
       },
       "memberMark": "BVR",
       "memberLabel": "Membru {club}",
-      "memberHelp": "Bifa e declarația ta; clubul nu o verifică. Lângă numele afișat apare „BVR”; fără nume ești doar numărat printre membri.",
+      "memberHelp": "Bifa e declarația ta; clubul nu o verifică. Lângă numele afișat apare „{mark}”; fără nume ești doar numărat printre membri.",
       "memberFact": "Membru",
-      "memberFactHelp": "Contul tău e de membru: lângă numele afișat apare „BVR”.",
+      "memberFactHelp": "Contul tău e de membru: lângă numele afișat apare „{mark}”.",
       "memberOutcome": {
-        "on": "Gata: ești numărat printre membri. „BVR” apare doar lângă un nume afișat.",
+        "on": "Gata: ești numărat printre membri. „{mark}” apare doar lângă un nume afișat.",
         "off": "Gata: nu mai ești numărat printre membri.",
-        "closed": "Evenimentul nu mai primește răspunsuri „Vin!”, așa că bifa de membru nu se mai poate pune."
+        "closed": "Bifa de membru nu se poate pune acum."
       },
       "members": {
         "one": "{count} membru",
@@ -3716,7 +3716,7 @@
         "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin",
         "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc întrebarea „Vii?” înainte de eveniment",
         "rsvpAskAnswerers": "Doar în nota de confidențialitate: numele butonului „Nu mă mai întreba la seria aceasta”, între ghilimele. Cu el în nota în vigoare, se întreabă „Vii?” și cei care au mai răspuns „Vin!”",
-        "rsvpMember": "Doar în nota de confidențialitate: semnul „BVR”, între ghilimele. Cu el în nota în vigoare, „Vin!” are bifa „Sunt membru”, iar „Cine vine” arată semnul lângă numele afișate ale membrilor"
+        "rsvpMember": "Doar în nota de confidențialitate: semnul „BVR”, între ghilimele. Cu el în nota în vigoare, „Vin!” are bifa „Sunt membru al grupului …”, iar „Cine vine” arată semnul lângă numele afișate ale membrilor"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4786,8 +4786,8 @@
         },
         "rsvpMemberNotice": {
           "title": "Nota de confidențialitate: semnul de membru la „Cine vine”",
-          "todo": "Un eveniment primește răspunsuri „Vin!”, dar nota în vigoare nu descrie încă semnul de membru: formularul nu are bifa „Sunt membru”, iar „Cine vine” nu arată niciun semn și nu numără membrii.",
-          "done": "Nota în vigoare descrie semnul de membru: cine bifează „Sunt membru” (sau răspunde din contul de membru) sub ea apare cu „BVR” lângă numele afișat, iar membrii sunt numărați.",
+          "todo": "Un eveniment primește răspunsuri „Vin!”, dar nota în vigoare nu descrie încă semnul de membru: formularul nu are bifa „Sunt membru al grupului …”, iar „Cine vine” nu arată niciun semn și nu numără membrii.",
+          "done": "Nota în vigoare descrie semnul de membru: cine bifează „Sunt membru al grupului …” (sau răspunde din contul de membru) sub ea apare cu „BVR” lângă numele afișat, iar membrii sunt numărați.",
           "how": [
             "Înainte de aprobare, un avocat citește din șablon, în secțiunea 4, propoziția despre semnul „BVR” lângă nume și despre numărul membrilor.",
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Semnul apare doar la răspunsurile date sub nota nouă ori sub una mai nouă; cele de dinainte rămân fără semn.",
@@ -6445,7 +6445,7 @@
       "rsvpNameShown": "cu numele pe pagină",
       "rsvpNameHidden": "doar numărat",
       "rsvpMemberDeclared": "membru (declarat)",
-      "rsvpMemberAccount": "membru (din cont)",
+      "rsvpMemberAccount": "membru (verificat)",
       "rsvpNotice": "nota v{version}",
       "rsvpConfirmedAt": "confirmat {when}",
       "rsvpUnconfirmed": "neconfirmat",
@@ -13151,6 +13151,7 @@
     "confirmButton": "Da, vin",
     "confirmPending": "Te numărăm…",
     "confirmAutoNote": "Deschis în browser, linkul te numără singur; dacă nu se întâmplă, apasă „Da, vin”.",
+    "confirmMember": "Dacă apeși „Da, vin”, numele „{name}” va apărea cu semnul „{mark}”: cine a scris adresa a bifat că ești membru. Dacă nu vrei, nu apăsa; linkul „Nu vin” din email te scoate.",
     "withdrawTitle": "Nu mai vii?",
     "answerTitle": "Răspunsul tău",
     "answerIntro": "Vii la {event}.",

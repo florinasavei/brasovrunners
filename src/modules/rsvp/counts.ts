@@ -34,7 +34,7 @@ export async function countRsvpsForEvents<T extends Record<string, unknown>>(db:
  *
  * A map, not a set (§827): each answered event carries the state of the person's own tick «Numele meu apare la „Cine vine"» — `showName`
  * as it stands (the tick AND a name: a tick with no name shows nothing and is not drawn ticked), and `name`, the name the row holds, which
- * the zone prefills in its box so a stored name is never published unseen (§812). The signed-in account's own answers, never the address. And, since §829,
+ * the zone prefills in its box so a stored name is never published unseen (§812). The signed-in account's own answers, never the address. And, since §NNN,
  * `clubMember`, present only when the answer holds one: `ACCOUNT` is what the zone says as the fact «Membru».
  */
 export type AccountAnswer = { showName: boolean; name: string | null; clubMember?: ClubMemberKind };

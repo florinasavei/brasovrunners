@@ -692,7 +692,7 @@ export async function cachedRsvpAskDescribed(now: Date): Promise<boolean> {
 }
 
 /**
- * Whether an event page may offer the tick «Sunt membru» on «Vin!» (§829): the privacy notice in force describes the member mark
+ * Whether an event page may offer the tick «Sunt membru» on «Vin!» (§NNN): the privacy notice in force describes the member mark
  * (`describesRsvpMember`) and «Vin!» (`describesRsvp`), in every language — `noticeDescribesRsvpMember`'s cached twin, which the service asks again
  * at every answer and every tick.
  */
@@ -702,7 +702,7 @@ export async function cachedRsvpMemberDescribed(now: Date): Promise<boolean> {
 }
 
 /**
- * The first approved privacy notice that described the member mark (`findFirstRsvpMemberNoticeVersion`, §829), or null — the line below which an
+ * The first approved privacy notice that described the member mark (`findFirstRsvpMemberNoticeVersion`, §NNN), or null — the line below which an
  * answer is not marked and not counted among the members: it was given under a notice that said nothing about it. Expired with every legal text,
  * like the name's twin.
  */

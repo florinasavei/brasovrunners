@@ -427,7 +427,7 @@ export async function noticeDescribesRsvpAsk<T extends Record<string, unknown>>(
 }
 
 /**
- * Whether the privacy notice in force describes the member mark on «Cine vine» (§829, `describesRsvpMember`) — in every language, AND «Vin!» itself
+ * Whether the privacy notice in force describes the member mark on «Cine vine» (§NNN, `describesRsvpMember`) — in every language, AND «Vin!» itself
  * (`describesRsvp`), because the mark is a part of that answer. False while either is silent. For the service, which asks again at every answer and
  * every tick, and `/admin/tasks`' row `rsvpMemberNotice`; the event page reads the cached twin (`cachedRsvpMemberDescribed`). A notice approved before
  * the marker existed is silent: the tick is not offered, nothing is marked, and the club approves the marker.
@@ -735,7 +735,7 @@ export async function findFirstRsvpAskAnswerersNoticeVersion<T extends Record<st
 
 /**
  * The lowest version of an approved, not withdrawn privacy notice that describes the member mark on «Cine vine» in **every** language
- * (`describesRsvpMember`, with `describesRsvp` beside it), or null when none does — `findFirstRsvpNoticeVersion`'s twin (§829, the §421 rule). An
+ * (`describesRsvpMember`, with `describesRsvp` beside it), or null when none does — `findFirstRsvpNoticeVersion`'s twin (§NNN, the §421 rule). An
  * answer «Vin!» records the notice it was last given under (`event_rsvps.privacy_notice_version`: when it was made, and again when the tick is
  * changed); it is marked, and counted among the members, only if that is this version or a later one — an answer given under an older notice
  * agreed to a name, never to a mark.

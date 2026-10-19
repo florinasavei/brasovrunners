@@ -1068,7 +1068,7 @@ async function renderRow(
     const [answer] =
       typeof rsvpId === "string" && isUuid(rsvpId)
         ? await db
-            .select({ id: eventRsvps.id, eventId: eventRsvps.eventId, canonicalEmail: eventRsvps.canonicalEmail, confirmedAt: eventRsvps.confirmedAt, showName: eventRsvps.showName, displayName: eventRsvps.displayName })
+            .select({ id: eventRsvps.id, eventId: eventRsvps.eventId, canonicalEmail: eventRsvps.canonicalEmail, confirmedAt: eventRsvps.confirmedAt, showName: eventRsvps.showName, displayName: eventRsvps.displayName, clubMember: eventRsvps.clubMember })
             .from(eventRsvps)
             .where(eq(eventRsvps.id, rsvpId))
             .limit(1)
@@ -1089,6 +1089,8 @@ async function renderRow(
     data.rsvpStage = stage;
     // The name the press would make public, said before it is pressed (the person who typed the address chose it, not the one who presses).
     if (stage === "confirm" && answer.showName && answer.displayName) data.rsvpShownName = answer.displayName;
+    // The member mark that name would carry (§NNN): a tick whoever typed the address put on the page is declared for the owner, so the owner is told before it shows.
+    if (stage === "confirm" && answer.showName && answer.displayName && answer.clubMember === "DECLARED") data.rsvpShownMember = true;
     if (stage === "confirm" && links.confirm) {
       payloadActionUrl = linkUrl("/vin/[token]", links.confirm);
       data.rsvpWithdrawUrl = linkUrl("/vin/[token]", links.withdraw);

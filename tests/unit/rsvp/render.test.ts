@@ -43,7 +43,7 @@ vi.mock("@/modules/registrations/ui/BotCheck", async () => {
 vi.mock("@/modules/registrations/ui/link-wait-words", () => ({ spamHintWords: async () => "Uită-te și în Spam." }));
 vi.mock("@/modules/public-cache/reads", () => ({
   cachedFirstRsvpNoticeVersion: async () => 1,
-  // §829: the member tick is not offered in these tests (the notice describes no mark); `member-render.test.ts` draws it.
+  // §NNN: the member tick is not offered in these tests (the notice describes no mark); `member-render.test.ts` draws it.
   cachedFirstRsvpMemberNoticeVersion: async () => null,
   cachedRsvpMemberDescribed: async () => false,
   cachedMemberDefinition: async () => null,

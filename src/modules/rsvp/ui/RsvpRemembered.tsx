@@ -6,17 +6,19 @@ import EventBusyIcon from "@mui/icons-material/EventBusy";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import SaveIcon from "@mui/icons-material/Save";
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { decodeHint, PERSON_HINT_COOKIE } from "@/modules/person-session/domain/hint";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import Hint from "@/shared/ui/Hint";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import type { RsvpIslandState, RsvpMemberResult, RsvpNameResult } from "../remembered-actions";
-import { islandFace, rememberedHeading } from "../domain/island";
+import { islandFace, memberTickFace, rememberedHeading } from "../domain/island";
 import { setRsvpGoing } from "./going-store";
 
 /** The words the island draws, handed over by the Server Component as strings: the island carries no messages of its own. */
@@ -47,7 +49,7 @@ export type RsvpIslandLabels = {
   nameNeeded: string;
   nameNone: string;
   /**
-   * The member tick (§829): «Sunt membru al grupului {club}» with the club's sentence for what «membru» means behind its «?» (`memberHint`), the help under it, and the
+   * The member tick (§NNN): «Sunt membru al grupului {club}» with the club's sentence for what «membru» means behind its «?» (`memberHint`), the help under it, and the
    * sentences after a save — «on», «off», and «closed» when the event or the notice no longer takes it. `memberFact` says «Membru» for an answer an account made.
    */
   memberTick: string;
@@ -57,6 +59,8 @@ export type RsvpIslandLabels = {
   memberOff: string;
   memberClosed: string;
   memberFact: string;
+  /** The fact's help, on its chip's tooltip (the zone's own words, §NNN). */
+  memberFactHelp: string;
 };
 
 /**
@@ -71,7 +75,7 @@ export type RsvpIslandActions = {
   forget: () => Promise<void>;
   /** The person's own tick «Numele meu apare la „Cine vine"» (§827): on or off, with the name the box holds — the one shown (the answer's own) or the one typed. */
   showName: (slug: string, locale: string, showName: boolean, name: string) => Promise<RsvpNameResult>;
-  /** The person's own declared tick «Sunt membru» (§829): on or off, saved at once. */
+  /** The person's own declared tick «Sunt membru» (§NNN): on or off, saved at once. */
   member: (slug: string, locale: string, clubMember: boolean) => Promise<RsvpMemberResult>;
 };
 
@@ -120,7 +124,7 @@ export default function RsvpRemembered({
   locale: string;
   labels: RsvpIslandLabels;
   actions: RsvpIslandActions;
-  /** The member tick is offered only while the notice in force describes the mark (`cachedRsvpMemberDescribed`, §829); a tick already given stays visible, so it can be taken back. */
+  /** The member tick is offered only while the notice in force describes the mark (`cachedRsvpMemberDescribed`, §NNN); a tick already given stays visible, so it can be taken back. */
   memberOffered?: boolean;
   children: ReactNode;
 }) {
@@ -135,7 +139,7 @@ export default function RsvpRemembered({
   const [asking, setAsking] = useState(false);
   const [nameNote, setNameNote] = useState<"shown" | "hidden" | "name" | "none" | null>(null);
   const [refusals, setRefusals] = useState(0);
-  // The member tick (§829): the last save's sentence — a status, not a colour — and a remount counter for a refusal, like the name's.
+  // The member tick (§NNN): the last save's sentence — a status, not a colour — and a remount counter for a refusal, like the name's.
   const [memberNote, setMemberNote] = useState<"on" | "off" | "closed" | "none" | null>(null);
   const [memberRefusals, setMemberRefusals] = useState(0);
   const masked = hint?.masked ?? null;
@@ -276,16 +280,16 @@ export default function RsvpRemembered({
             </Typography>
           )}
           {/*
-            «Sunt membru al grupului …» (§829): a real tick box in its own small form, saved at once (a change submits it), beside the name's. Drawn while the
+            «Sunt membru al grupului …» (§NNN): a real tick box in its own small form, saved at once (a change submits it), beside the name's. Drawn while the
             notice in force describes the mark, or while a tick was given (so it can be taken back); an answer an account made says «Membru» as a fact —
             the mark comes from the account's role, never from this box. The declaration is the person's: the club does not check it.
           */}
-          {state.clubMember === "ACCOUNT" ? (
-            <Typography variant="body2" data-testid="rsvp-member-fact" sx={{ fontWeight: 600 }}>
-              {labels.memberFact}
-            </Typography>
+          {memberTickFace(state.clubMember, memberOffered) === "fact" ? (
+            <Box data-testid="rsvp-member-fact">
+              <GlyphChip glyph="membersOnly" label={labels.memberFact} variant="outlined" color="primary" tooltip={labels.memberFactHelp} />
+            </Box>
           ) : (
-            (memberOffered || state.clubMember !== null) && (
+            memberTickFace(state.clubMember, memberOffered) === "box" && (
               <form
                 key={`member-${memberRefusals}`}
                 action={(form: FormData) => runMember(form.get("clubMember") === "on")}
@@ -320,7 +324,7 @@ export default function RsvpRemembered({
           <Stack spacing={1.5}>
             {/* A tick only for somebody who gave a name before: with no name there is nothing to show. */}
             {hint.name !== null && <CheckboxField name="showName">{labels.showName}</CheckboxField>}
-            {/* The declared member tick (§829): off by default, while the notice in force describes the mark; the club's sentence behind its «?». */}
+            {/* The declared member tick (§NNN): off by default, while the notice in force describes the mark; the club's sentence behind its «?». */}
             {memberOffered && (
               <CheckboxField name="clubMember" help={labels.memberHelp}>
                 {labels.memberTick}

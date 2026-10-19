@@ -21,7 +21,7 @@ export type RsvpAnswerRow = { email: string; displayName: string | null; showNam
  *
  * Drawn only when the event has answers; a fold closed by default with its summary line (the house's nested cards).
  *
- * **The member mark (§829, amending §796):** per row, the registrations' own chip (`MemberChip`, §662) — «Membru (declarat)» for the person's tick on a
+ * **The member mark (§NNN, amending §796):** per row, the registrations' own chip (`MemberChip`, §662) — «Membru (declarat)» for the person's tick on a
  * «Vin!» answer, «Membru (verificat)» for an answer given from an account of the club (the account's role, set by the server) — and the line says how many
  * of the confirmed answers are a member's: «… · 2 membri confirmați». The chip is what the club knows; what the public sees is a separate rule (the notice's
  * version, `publicRsvpMember`).
@@ -41,7 +41,7 @@ export default async function RsvpAnswersCard({
   const t = await getTranslations("Admin");
   const total = counts.confirmed + counts.unconfirmed;
   if (total === 0) return null;
-  // «1 membru confirmat» (§829): said only when there is one, after the counts, in the editor's own words.
+  // «1 membru confirmat» (§NNN): said only when there is one, after the counts, in the editor's own words.
   const members = counts.members ? t(`editor.rsvpAnswers.members.${countForm(counts.members, locale)}`, { count: counts.members }) : null;
   // The count line is a sentence and ends with a full stop (`countLine`): the members' words go before it, the aside's line has none.
   const withMembers = (line: string): string => (members === null ? line : line.endsWith(".") ? `${line.slice(0, -1)} · ${members}.` : `${line} · ${members}`);

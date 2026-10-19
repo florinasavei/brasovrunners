@@ -1,5 +1,6 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
 import { RSVP_CONFIRM_HOURS } from "@/modules/rsvp/domain/link-life";
+import { rsvpMemberClause } from "@/modules/rsvp/notice-words";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { RegistrationCancelReasonKind } from "@/db/schema/registrations";
 import { emailBodyParts, newsletterBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
@@ -1139,6 +1140,8 @@ export type TemplateData = {
    * whoever wrote it, like the waiting list's standing.
    */
   rsvpShownName?: string;
+  /** With `rsvpShownName` (§NNN): the same press would also show the member mark beside that name, ticked by whoever typed the address. */
+  rsvpShownMember?: boolean;
   /**
    * A family sitting's one message (§519): everybody the sitting sent the form for and nobody
    * confirmed yet, by full name and birth date ("YYYY-MM-DD"), in the order sent — read at send time.
@@ -2399,6 +2402,8 @@ const T = {
     rsvpNameNote: "După „Da, vin”, tot din „Nu vin” îți arăți sau ascunzi numele; răspunsul se șterge doar dacă apeși „Nu mai vin” pe pagina lui.",
     /** «Vin!» (§811): which name the press makes public, since whoever typed the address chose it. */
     rsvpShownName: (name: string) => `Dacă apeși „Da, vin”, pe pagina evenimentului va apărea numele „${name}”: cine a scris adresa a bifat că vrea să apară cu numele. Dacă nu vrei, apasă „Nu vin”.`,
+    /** «Vin!» (§NNN): the mark that goes with the name, ticked by whoever typed the address — said before the press, like the name. */
+    rsvpShownMember: (name: string, mark: string) => `Dacă apeși „Da, vin”, numele „${name}” va apărea cu semnul ${mark}: cine a scris adresa a bifat că ești membru. Dacă nu vrei, apasă „Nu vin”.`,
     /** «Nu mai pot ajunge» (§558; the owner's words), and its one sentence under the button. */
     cannotCome: {
       label: "Nu mai pot ajunge",
@@ -3207,6 +3212,7 @@ const T = {
     /** Under “I'm not coming” (§827), before the answer is counted: see the Romanian note. */
     rsvpNameNote: "After “Yes, I'm coming”, the “I'm not coming” link also lets you show or hide your name; your answer goes only if you press “I'm not coming any more” on its page.",
     rsvpShownName: (name: string) => `If you press “Yes, I'm coming”, the name “${name}” will show on the event's page: whoever typed the address ticked that they want their name to show. If you don't, press “I'm not coming”.`,
+    rsvpShownMember: (name: string, mark: string) => `If you press “Yes, I'm coming”, the name “${name}” will show with the mark ${mark}: whoever typed the address ticked that you are a member. If you don't, press “I'm not coming”.`,
     cannotCome: {
       label: "I can't make it any more",
       note: "Your place goes to someone else.",
@@ -3861,6 +3867,9 @@ export function buildTemplateContent(
         : []),
       // «Vin!» (§811): the name the press would make public, after the body whoever wrote it — only on the shape that counts the person.
       ...(messageType === "RSVP_CONFIRM" && data.rsvpShownName && (data.rsvpStage === undefined || data.rsvpStage === "confirm") ? [copy.rsvpShownName(data.rsvpShownName)] : []),
+      ...(messageType === "RSVP_CONFIRM" && data.rsvpShownName && data.rsvpShownMember && (data.rsvpStage === undefined || data.rsvpStage === "confirm")
+        ? [copy.rsvpShownMember(data.rsvpShownName, rsvpMemberClause(locale))]
+        : []),
       // Where the person stood in the line when this was rendered (§629), after the body whoever wrote it.
       ...(messageType === "WAITLIST_JOINED" && data.waitlistStanding ? [copy.waitlistPosition(data.waitlistStanding)] : []),
       // The members' shop (§683): how to pay (the member's two) and the order's note, after the body whoever wrote it.

@@ -112,7 +112,7 @@ export type PersonData = {
     deliveryEmail: string;
     displayName: string | null;
     showName: boolean;
-    /** The member mark the answer holds (§829): `DECLARED` (the person's tick), `ACCOUNT` (given from a member account), or null — never said. */
+    /** The member mark the answer holds (§NNN): `DECLARED` (the person's tick), `ACCOUNT` (given from a member account), or null — never said. */
     clubMember: ReturnType<typeof parseClubMember>;
     locale: string;
     privacyNoticeVersion: number;

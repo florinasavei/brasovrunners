@@ -19,7 +19,7 @@ export type RsvpSummaryWords = {
 };
 
 /**
- * The count's words with the members' after them, when there are any (§829): «3 vin» and «2 membri» become «3 vin · 2 membri» — the closed fold's line
+ * The count's words with the members' after them, when there are any (§NNN): «3 vin» and «2 membri» become «3 vin · 2 membri» — the closed fold's line
  * and the facts line say the same two numbers, the second only when it is not nothing (`members` counts every confirmed member answer, named or not).
  */
 export function rsvpCountText(count: string, members: string | null): string {

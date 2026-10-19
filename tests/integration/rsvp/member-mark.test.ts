@@ -4,12 +4,15 @@ import { renderToReadableStream } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventRsvps, eventRsvpTokens } from "@/db/schema/event-rsvps";
 import { eventTranslations, events } from "@/db/schema/events";
 import { staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findFirstRsvpMemberNoticeVersion, findFirstRsvpNoticeVersion, insertLegalDocumentVersion, noticeDescribesRsvpMember } from "@/modules/legal-documents/repository";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
+import { renderOutboxMessage } from "@/modules/notifications/render";
+import { makeRsvpAsk } from "@/modules/rsvp/ask";
 import { viewPersonData } from "@/modules/registrations/person-data";
 import { rememberPerson } from "@/modules/person-session/session";
 import { answeredByAccount } from "@/modules/rsvp/counts";
@@ -80,13 +83,13 @@ const HOUR = 60 * 60_000;
 const DAY = 24 * HOUR;
 
 /**
- * §829 (BR-REQ-039-01, BR-REQ-060-01, BR-REQ-036-02; amends §812 and §796) — the member mark on «Cine vine»: the service and the doors that are not the zone.
+ * §NNN (BR-REQ-039-01, BR-REQ-060-01, BR-REQ-036-02; amends §812 and §796) — the member mark on «Cine vine»: the service and the doors that are not the zone.
  * A declared tick is `DECLARED` and is kept only while the notice in force describes the mark; an account's answer is `ACCOUNT` from its role alone; the
  * public read marks a member only beside a name that may be shown, counts every confirmed member answer, and reads the §421 line (the version a tick was
  * last given under). The member tick flips like the name's — a remembered browser or a live «Nu mai vin» link, never spent. Real database (PGlite).
  * The zone's door is `member-mark-zone.test.ts`; the pages, `member-page.test.ts`; the journey, `tests/e2e/rsvp.spec.ts`.
  */
-describe("§829 the member mark on «Vin!»", () => {
+describe("§NNN the member mark on «Vin!»", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let eventId: string;
@@ -482,6 +485,65 @@ describe("§829 the member mark on «Vin!»", () => {
     });
   });
 
+  describe("a tick typed beside somebody else's address (§NNN, amending §812)", () => {
+    const askOf = (email = "ana@example.test") => ({
+      eventId,
+      kind: "SUBSCRIBER" as const,
+      recipient: { deliveryEmail: email, canonicalEmail: email, canonicalizationVersion: 1 },
+      locale: "ro" as const,
+      noticeVersion: 1,
+      startsAt: new Date(NOW.getTime() + 2 * DAY),
+      daysAway: 2,
+      now: NOW,
+    });
+
+    it("the «Vii?» question takes the row over WITHOUT the tick a stranger typed, and its page decides the tick both ways", async () => {
+      await answerRsvp(db, eventId, identityOf("page", { email: "ana@example.test", displayName: "Mallory", showName: true, locale: "ro", clubMember: true }), NOW);
+      expect(await rowOf()).toMatchObject({ clubMember: "DECLARED", displayName: "Mallory", showName: true });
+      const asked = await makeRsvpAsk(db, askOf());
+      // The name, its tick and the member tick are cleared together: nothing a stranger typed is carried into the owner's press.
+      expect(await rowOf()).toMatchObject({ displayName: null, showName: false, clubMember: null });
+      // The owner types a name, ticks it, and leaves the member box unticked: no mark and no member, whatever was typed before.
+      await confirmRsvp(db, asked.confirm, NOW, { displayName: "Ana", showName: true });
+      expect(await rowOf()).toMatchObject({ clubMember: null, displayName: "Ana", showName: true });
+      expect(await publicRead()).toEqual({ count: 1, names: ["Ana"], others: 0 });
+    });
+
+    it("the question's page gives nothing for an unticked box even when the row held a tick, and DECLARED for a ticked one", async () => {
+      const [asked] = await db
+        .insert(eventRsvps)
+        .values({ eventId, deliveryEmail: "ana@example.test", canonicalEmail: "ana@example.test", canonicalizationVersion: 1, locale: "ro", privacyNoticeVersion: 1, askedAt: NOW, askedBasis: "SUBSCRIBER", clubMember: "DECLARED" })
+        .returning();
+      const links = (await mintRsvpLinks(db, { rsvpId: asked.id, startsAt: new Date(NOW.getTime() + 2 * DAY), confirm: true, confirmUntilStart: true, now: NOW }))!;
+      await confirmRsvp(db, links.confirm!, NOW, { displayName: "Ana", showName: true });
+      expect((await rowOf()).clubMember).toBeNull();
+      await db.delete(eventRsvps);
+      const [again] = await db
+        .insert(eventRsvps)
+        .values({ eventId, deliveryEmail: "ana@example.test", canonicalEmail: "ana@example.test", canonicalizationVersion: 1, locale: "ro", privacyNoticeVersion: 1, askedAt: NOW, askedBasis: "SUBSCRIBER" })
+        .returning();
+      const next = (await mintRsvpLinks(db, { rsvpId: again.id, startsAt: new Date(NOW.getTime() + 2 * DAY), confirm: true, confirmUntilStart: true, now: NOW }))!;
+      await confirmRsvp(db, next.confirm!, NOW, { displayName: "Ana", showName: true, clubMember: true });
+      expect(await rowOf()).toMatchObject({ clubMember: "DECLARED" });
+    });
+
+    it("the «Da, vin» email tells its owner that the press shows the mark beside the name — only when a name shows and the tick was typed", async () => {
+      await answerRsvp(db, eventId, identityOf("page", { email: "ana@example.test", displayName: "Ana", showName: true, locale: "ro", clubMember: true }), NOW);
+      await answerRsvp(db, eventId, identityOf("page", { email: "bea@example.test", displayName: "Bea", showName: true, locale: "ro" }), NOW);
+      await answerRsvp(db, eventId, identityOf("page", { email: "cora@example.test", displayName: "Cora", showName: false, locale: "ro", clubMember: true }), NOW);
+      const sent = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "RSVP_CONFIRM"));
+      const textOf = async (email: string) => (await renderOutboxMessage(sent.find((message) => message.recipientEmail === email)!, db, NOW)).text;
+      const ana = await textOf("ana@example.test");
+      // Both languages in one message (the club's way); the name's own sentence stands beside it.
+      expect(ana).toContain("numele „Ana” va apărea cu semnul „BVR”: cine a scris adresa a bifat că ești membru");
+      expect(ana).toContain("the name “Ana” will show with the mark “BVR”: whoever typed the address ticked that you are a member");
+      expect(ana).toContain("va apărea numele „Ana”");
+      // No tick, or no name shown: nothing is said of a mark, because none will show.
+      expect(await textOf("bea@example.test")).not.toMatch(/cu semnul|with the mark/);
+      expect(await textOf("cora@example.test")).not.toMatch(/cu semnul|with the mark/);
+    });
+  });
+
   describe("the «Nu mai vin» link's page", () => {
     async function html(element: ReactElement): Promise<string> {
       const { NextIntlClientProvider } = await import("next-intl");
@@ -556,9 +618,20 @@ describe("§829 the member mark on «Vin!»", () => {
       expect(await page(withdraw, { nume: "shown", membru: "on" })).toContain("Gata: ești numărat printre membri.");
       // «Off» claims a state: not drawn while the row says the tick is on.
       expect(await page(withdraw, { membru: "off" })).not.toContain("nu mai ești numărat printre membri");
-      expect(await press(form(withdraw, { showName: "on", name: "Ana", memberBox: "1" }))).toMatch(/\?nume=shown&membru=off$/);
+      expect(await press(form(withdraw, { showName: "on", name: "Ana", memberBox: "1" }))).toMatch(/\?membru=off$/);
       expect(await rowOf()).toMatchObject({ clubMember: null });
       expect(await page(withdraw, { membru: "off" })).toContain("Gata: nu mai ești numărat printre membri.");
+    });
+
+    it("says nothing of the name when the press changed only the member tick — the name never showed and did not change", async () => {
+      const withdraw = await withdrawLink();
+      // The name is hidden and stays so: only the member box is ticked.
+      expect(await press(form(withdraw, { name: "Ana", memberBox: "1", clubMember: "on" }))).toMatch(/\?membru=on$/);
+      expect(await rowOf()).toMatchObject({ clubMember: "DECLARED", showName: false });
+      expect(await press(form(withdraw, { name: "Ana", memberBox: "1" }))).toMatch(/\?membru=off$/);
+      // A name turned on beside it says both; a Save that changes nothing still says the name's state.
+      expect(await press(form(withdraw, { showName: "on", name: "Ana", memberBox: "1", clubMember: "on" }))).toMatch(/\?nume=shown&membru=on$/);
+      expect(await press(form(withdraw, { showName: "on", name: "Ana", memberBox: "1", clubMember: "on" }))).toMatch(/\?nume=shown$/);
     });
 
     it("says nothing of a tick the press left as it was: a name saved beside an untouched tick, ticked or not", async () => {
@@ -588,7 +661,27 @@ describe("§829 the member mark on «Vin!»", () => {
       await approveNotice(2, "rsvp", new Date(NOW.getTime() - HOUR));
       expect(await press(form(withdraw, { memberBox: "1", clubMember: "on", showName: "on", name: "Ana" }))).toMatch(/&membru=closed$/);
       expect((await rowOf()).clubMember).toBeNull();
-      expect(await page(withdraw, { membru: "closed" })).toContain("bifa de membru nu se mai poate pune");
+      expect(await page(withdraw, { membru: "closed" })).toContain("Bifa de membru nu se poate pune acum.");
+    });
+
+    it("says on the confirm page that the press shows the mark beside the name — a tick a stranger typed — and does not press itself", async () => {
+      await answerRsvp(db, eventId, identityOf("page", { email: "ana@example.test", displayName: "Ana", showName: true, locale: "ro", clubMember: true }), NOW);
+      const [row] = await rows();
+      const links = (await mintRsvpLinks(db, { rsvpId: row.id, startsAt: new Date(NOW.getTime() + 2 * DAY), confirm: true, now: NOW }))!;
+      const markup = await page(links.confirm!);
+      expect(markup).toContain('data-testid="rsvp-confirm-member"');
+      expect(markup).toContain("numele „Ana” va apărea cu semnul „BVR”");
+      // The press is the owner's own: no island pressing it, and no promise that the link counts by itself.
+      expect(markup).not.toContain('data-testid="rsvp-auto-confirm"');
+      expect(markup).not.toContain('data-testid="rsvp-confirm-auto"');
+      expect(await page(links.confirm!, {}, "en")).toContain("the name “Ana” will show with the mark “BVR”");
+      // Without the tick, or with no name shown, the page is what it was: it presses itself and says nothing of a mark.
+      await db.update(eventRsvps).set({ clubMember: null });
+      const plain = await page(links.confirm!);
+      expect(plain).not.toContain('data-testid="rsvp-confirm-member"');
+      expect(plain).toContain('data-testid="rsvp-auto-confirm"');
+      await db.update(eventRsvps).set({ clubMember: "DECLARED", showName: false });
+      expect(await page(links.confirm!)).not.toContain('data-testid="rsvp-confirm-member"');
     });
 
     it("draws the tick on the email's question beside the name's, in both languages", async () => {

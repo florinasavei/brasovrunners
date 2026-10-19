@@ -34,7 +34,7 @@ export type RsvpIslandState =
    */
   | { remembered: true; offered: true; going: boolean; showName: boolean; name: string | null; clubMember?: ClubMemberKind; count: number };
 
-/** What the member tick says back (§829): the state as it stands, and why nothing was written (a sentence of the island's own), or null. */
+/** What the member tick says back (§NNN): the state as it stands, and why nothing was written (a sentence of the island's own), or null. */
 export type RsvpMemberResult = { state: RsvpIslandState; refused: "none" | "closed" | null };
 
 /** What the name switch says back: the state as it stands, and why nothing was written (a sentence of the island's own), or null. */
@@ -54,7 +54,7 @@ async function stateFor(slug: string, locale: Locale, now: Date): Promise<RsvpIs
     going: own !== null,
     showName: own?.showName ?? false,
     name: own?.name ?? null,
-    // The member mark the answer holds (§829), present only when it holds one: `DECLARED` is the box ticked, `ACCOUNT` a fact the island says.
+    // The member mark the answer holds (§NNN), present only when it holds one: `DECLARED` is the box ticked, `ACCOUNT` a fact the island says.
     ...(own?.clubMember ? { clubMember: own.clubMember } : {}),
     count: await countRsvps(db, event.id),
   };
@@ -70,7 +70,7 @@ export async function rsvpStateAction(slug: string, locale: string): Promise<Rsv
 }
 
 /**
- * «Vin!» in one tap: the remembered address's answer, counted at once. `showName` is the person's tick on this press, and `clubMember` (§829) their
+ * «Vin!» in one tap: the remembered address's answer, counted at once. `showName` is the person's tick on this press, and `clubMember` (§NNN) their
  * declared «Sunt membru» — taken only while the notice in force describes the mark (`answerRsvp` asks), and always `DECLARED`: a remembered browser
  * proves an address, never an account.
  */
@@ -121,7 +121,7 @@ export async function rsvpShowNameAction(slug: string, locale: string, showName:
 }
 
 /**
- * «Sunt membru al grupului …» (§829): the remembered address's own declared tick on its confirmed answer, any time — `rsvpShowNameAction`'s twin. The
+ * «Sunt membru al grupului …» (§NNN): the remembered address's own declared tick on its confirmed answer, any time — `rsvpShowNameAction`'s twin. The
  * cookie says who (the island never names an address). Turning it on records the notice in force and needs the event to take «Vin!» and the notice
  * to describe the mark; turning it off needs neither (`setRsvpClubMember`). An account's mark (`ACCOUNT`) is not this tick's to take away.
  */

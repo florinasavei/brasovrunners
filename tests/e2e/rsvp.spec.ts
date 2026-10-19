@@ -29,7 +29,7 @@ let eventId = "";
 let secondEventId = "";
 let guest = "";
 const NAME = "Ana Rsvp";
-// §829: a second visitor, who ticks that they are a member on the second date.
+// §NNN: a second visitor, who ticks that they are a member on the second date.
 const MEMBER_NAME = "Mihai Membru";
 let memberGuest = "";
 
@@ -498,7 +498,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await noSidewaysScroll(page);
   });
 
-  test("§829 a visitor ticks «Sunt membru» beside a shown name: the answer is declared, «BVR» stands beside the name, and the lines say «1 vine · 1 membru»", async ({ page }) => {
+  test("§NNN a visitor ticks «Sunt membru» beside a shown name: the answer is declared, «BVR» stands beside the name, and the lines say «1 vine · 1 membru»", async ({ page }) => {
     memberGuest = guest.replace("ana.vin.", "membru.vin.");
     await page.goto(eventUrl("ro", secondSlug));
     await hydrated(page);
@@ -572,7 +572,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
       await expect(page.getByTestId("event-facts").getByTestId("who-comes-link")).toHaveText("1 coming · 1 member · see who", { timeout: 2_000 });
     }).toPass({ timeout: 20_000 });
     await openEventFold(page, "rsvp-who");
-    await expect(page.getByTestId("rsvp-who-members")).toHaveText("Of them: 1 member.");
+    await expect(page.getByTestId("rsvp-who-members")).toHaveText("Members among them: 1 member.");
     await expect(page.getByTestId("rsvp-member-mark")).toContainText("Brașov Runners member");
   });
 
@@ -616,7 +616,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await expect(row).toHaveAttribute("data-going", "true");
     await expect(row.getByTestId("zone-rsvp-going")).toHaveText("Tu vii ✓");
     await expect(row.getByTestId("zone-rsvp-count")).toContainText("1 vine");
-    // §829: an account's answer is a member's — «Membru» as a fact beside «Tu vii ✓», no tick to give: the server read it from the role.
+    // §NNN: an account's answer is a member's — «Membru» as a fact beside «Tu vii ✓», no tick to give: the server read it from the role.
     await expect(row.getByTestId("zone-rsvp-member")).toContainText("Membru");
     await expect(row.getByRole("checkbox", { name: /Sunt membru/ })).toHaveCount(0);
     // Counted at once, unnamed and no name kept: the member did not tick the box.

@@ -10,11 +10,11 @@ import { cleanDisplayName, identityOf, type RsvpIdentity } from "./identity";
  * `source: "account"` is verified (`identityOf`): the address is the sign-in provider's, so the answer is counted at once and no email
  * is sent. A name still reaches the page only through `publicRsvpName`, which asks the notice that was in force at the press.
  *
- * **The member mark is the account's role** (§829; the owner, 2026-10-19: «organizatorii și administratorii sunt peste membri»): the identity carries
+ * **The member mark is the account's role** (§NNN; the owner, 2026-10-19: «organizatorii și administratorii sunt peste membri»): the identity carries
  * the session's `role` and the service makes the answer `ACCOUNT` for a role at least a member (`accountClubMember`) — every role of the club's accounts —
  * whatever the form posted. The form has no member tick for an account: the zone says «Membru» as a fact.
  */
-/** `role` is the session's (`StaffAccount.role`): an account read without it is marked by nothing (§829). */
+/** `role` is the session's (`StaffAccount.role`): an account read without it is marked by nothing (§NNN). */
 export type RsvpAccount = { email: string; displayName: string | null; role?: StaffRole };
 
 /** The name the account would show, cleaned the way every typed name is, or null when it has none. */

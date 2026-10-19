@@ -104,7 +104,7 @@ async function invalidateConfirmLinks<T extends Record<string, unknown>>(tx: Tra
  *   the message then only offers to take the answer back.
  * - **Verified** (`remembered`, `account`, `link`): the row is confirmed at once, no email, the public cache expired.
  *
- * **The member mark** (§829, amending §812 and §796): `identityClubMember` says which — `DECLARED` for the person's own tick on the page, the
+ * **The member mark** (§NNN, amending §812 and §796): `identityClubMember` says which — `DECLARED` for the person's own tick on the page, the
  * remembered browser or the link, `ACCOUNT` for an account whose role is at least a member (read from the session on the server, never from a
  * posted box, and winning over any tick) — and it is **kept only while the notice in force describes the mark** (`noticeDescribesRsvpMember`): a tick
  * posted to a form that was drawn before the notice, or forged, stores nothing, so the data is never collected without the sentence that says so.
@@ -357,7 +357,7 @@ export type RsvpLink = {
    */
   name: string | null;
   /**
-   * The member mark the answer holds (§829): `DECLARED`, `ACCOUNT` or null — what the page of a counted answer's link draws ticked, and says when it
+   * The member mark the answer holds (§NNN): `DECLARED`, `ACCOUNT` or null — what the page of a counted answer's link draws ticked, and says when it
    * is an account's (not the tick's to take away). Absent on the question's refusal link, which has no answer behind it.
    */
   clubMember?: ClubMemberKind | null;
@@ -524,15 +524,20 @@ export async function confirmRsvp<T extends Record<string, unknown>>(
     const typedName = cleanDisplayName(options.displayName);
     const asked = before !== undefined && before.askedAt !== null && before.confirmedAt === null;
     const takesName = asked && typedName !== null && before.displayName === null;
-    // The member tick of the question's page (§829): taken only for the row the email made, still unconfirmed, and only under a notice that describes it.
-    const takesMember = asked && options.clubMember === true && before.clubMember === null && (await noticeDescribesRsvpMember(tx, now));
+    /*
+      The member tick of the question's page (§NNN): for the row the email made, still unconfirmed, the box DECIDES in both directions — ticked
+      gives `DECLARED` under a notice that describes the mark, unticked gives nothing — because it is the one thing the person was shown there; a
+      value the row held from before (a stranger's, were one ever kept) is never published unseen.
+    */
+    const takesMember = asked && options.clubMember === true && (await noticeDescribesRsvpMember(tx, now));
+    const dropsMember = asked && !takesMember && before.clubMember !== null;
     const notice = takesName || takesMember ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", before.locale, now) : undefined;
     const [row] = await tx
       .update(eventRsvps)
       .set({
         confirmedAt: sql`coalesce(${eventRsvps.confirmedAt}, ${now})`,
         ...(takesName ? { displayName: typedName, showName: options.showName === true } : {}),
-        ...(takesMember ? { clubMember: "DECLARED" } : {}),
+        ...(takesMember ? { clubMember: "DECLARED" as const } : dropsMember ? { clubMember: null } : {}),
         ...(notice ? { privacyNoticeVersion: notice.version } : {}),
       })
       .where(eq(eventRsvps.id, rsvpId))
@@ -701,12 +706,12 @@ export async function setRsvpShowName<T extends Record<string, unknown>>(
  * What `setRsvpClubMember` tells its caller: the tick as it stands now, or why nothing was written.
  *   `none`    the person has no confirmed answer here (taken back, never confirmed, a link that is not live): nothing is touched.
  *   `closed`  the tick was turned ON and the event no longer takes «Vin!» or the notice in force does not describe the member mark: a membership is not
- *             recorded under a notice that does not say so (§829). Turning OFF is never refused for this.
+ *             recorded under a notice that does not say so (§NNN). Turning OFF is never refused for this.
  */
 export type RsvpMemberSwitch = { ok: true; clubMember: boolean } | { ok: false; reason: "none" | "closed" };
 
 /**
- * «Sunt membru al grupului …» (§829, amending §812 and §796; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece dacă sunt
+ * «Sunt membru al grupului …» (§NNN, amending §812 and §796; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece dacă sunt
  * membru BVR») — the person flips their own declared tick on a «Vin!» answer, any time, from where they already see it: the remembered browser
  * (`remembered`) or the «Nu mai vin» link's page (`token`). `setRsvpShowName`'s shape and rules, for the other tick: one write, reversible, low-stakes,
  * never audited, the row found the same way (`lockOwnConfirmedRsvp`, **never from the form**, BR-REQ-060-01), only a CONFIRMED row of that person.
@@ -780,7 +785,7 @@ export async function hasConfirmedRsvp<T extends Record<string, unknown>>(db: Da
 /**
  * The person's own confirmed answer, as the tick «Numele meu apare la „Cine vine"» needs it (§827): whether the name shows (the tick AND a
  * name) and the name the row holds, which the tick would show — handed only to the browser the cookie proves is the person's, never the
- * address. Null when there is no confirmed answer of this address. The remembered browser's state. And, since §829, the member mark the answer holds
+ * address. Null when there is no confirmed answer of this address. The remembered browser's state. And, since §NNN, the member mark the answer holds
  * (`clubMember`, present only when it holds one): what the island draws ticked, or as a fact when it is an account's.
  */
 export async function readOwnRsvpName<T extends Record<string, unknown>>(
@@ -805,7 +810,7 @@ export type PublicRsvps = {
   /** `count` less the names shown: «și încă N». */
   others: number;
   /**
-   * How many of the confirmed answers are a member's (§829), named or not — what the lines «N vin · M membri» say. Present only when there is at
+   * How many of the confirmed answers are a member's (§NNN), named or not — what the lines «N vin · M membri» say. Present only when there is at
    * least one: a count the page has no member for is not a count of zero members, it says nothing (`publicRsvpMember`).
    */
   members?: number;
@@ -839,7 +844,7 @@ export async function readPublicRsvps<T extends Record<string, unknown>>(
   let members = 0;
   for (const row of rows) {
     const name = publicRsvpName({ confirmed: true, showName: row.showName, displayName: row.displayName, privacyNoticeVersion: row.privacyNoticeVersion, firstRsvpNoticeVersion: options.firstRsvpNoticeVersion });
-    // A member (§829): counted whether or not the name shows; the mark is the name's, never a row's of its own.
+    // A member (§NNN): counted whether or not the name shows; the mark is the name's, never a row's of its own.
     const member = publicRsvpMember({ confirmed: true, clubMember: parseClubMember(row.clubMember), privacyNoticeVersion: row.privacyNoticeVersion, firstMemberNoticeVersion: options.firstMemberNoticeVersion ?? null });
     if (member) members += 1;
     if (name !== null && names.length < RSVP_NAMES_SHOWN) {
@@ -896,7 +901,7 @@ export async function countRsvpsForAdmin<T extends Record<string, unknown>>(db: 
     .from(eventRsvps)
     .where(and(eq(eventRsvps.eventId, eventId), sql`NOT ${ASKED_UNANSWERED}`))
     .groupBy(sql`${eventRsvps.confirmedAt} IS NOT NULL`);
-  // `members` (§829, present only when there is one): the confirmed answers that say they are a member, declared or from an account — the editor's «M membri confirmați», whatever notice they were given under.
+  // `members` (§NNN, present only when there is one): the confirmed answers that say they are a member, declared or from an account — the editor's «M membri confirmați», whatever notice they were given under.
   const members = rows.find((row) => row.confirmed)?.members ?? 0;
   return { confirmed: rows.find((row) => row.confirmed)?.n ?? 0, unconfirmed: rows.find((row) => !row.confirmed)?.n ?? 0, ...(members > 0 ? { members } : {}) };
 }

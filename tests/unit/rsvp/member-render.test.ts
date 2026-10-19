@@ -7,7 +7,7 @@ import type { PublicRsvps } from "@/modules/rsvp/rsvp";
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * §829 (BR-REQ-039-01; amends §812 and §796) — what the pieces draw for the member mark, without a database: the tick on the page's form and what the one-tap
+ * §NNN (BR-REQ-039-01; amends §812 and §796) — what the pieces draw for the member mark, without a database: the tick on the page's form and what the one-tap
  * island is handed for it, the small «BVR» chip beside a shown name and the line «Dintre ei: M membri», the editor's chips in the registrations' own words and
  * the count of confirmed members, the zone's fact. The page as a whole, over a real database, is `tests/integration/rsvp/member-page.test.ts`.
  */
@@ -94,7 +94,7 @@ beforeEach(() => {
   state.rsvps = { count: 0, names: [], others: 0 };
 });
 
-describe("§829 the tick on the page's form", () => {
+describe("§NNN the tick on the page's form", () => {
   it("is a real checkbox, off by default, with the club's name from the constant and the sentence for what «membru» means behind a «?»", async () => {
     const markup = await box();
     const tick = /<input\b[^>]*name="clubMember"[^>]*>/.exec(markup)?.[0] ?? "";
@@ -104,7 +104,7 @@ describe("§829 the tick on the page's form", () => {
     expect(markup).toContain(`Sunt membru al grupului ${CLUB_NAME}`);
     // The «?» is the registration form's own island (`Hint`): its text is the platform's sentence until the club writes its own.
     expect(markup).toContain(ro.Registration.clubMemberDefinition);
-    expect(markup).toContain(ro.Event.rsvp.memberHelp);
+    expect(markup).toContain(ro.Event.rsvp.memberHelp.replace("{mark}", ro.Event.rsvp.memberMark));
     // Beside the name's tick, not instead of it.
     expect(markup).toContain('name="showName"');
     expect(markup.indexOf('name="showName"')).toBeLessThan(markup.indexOf('name="clubMember"'));
@@ -114,7 +114,7 @@ describe("§829 the tick on the page's form", () => {
     const markup = await box("en");
     expect(markup).toContain(`I am a member of the ${CLUB_NAME} group`);
     expect(markup).toContain(en.Registration.clubMemberDefinition);
-    expect(markup).toContain(en.Event.rsvp.memberHelp);
+    expect(markup).toContain(en.Event.rsvp.memberHelp.replace("{mark}", en.Event.rsvp.memberMark));
   });
 
   it("is not drawn while the notice in force does not describe the mark", async () => {
@@ -140,7 +140,7 @@ describe("§829 the tick on the page's form", () => {
   });
 });
 
-describe("§829 what the one-tap island is handed for the tick", () => {
+describe("§NNN what the one-tap island is handed for the tick", () => {
   type Node = { type?: unknown; props?: Record<string, unknown> } | null | undefined;
   function findIsland(node: unknown): { labels: Record<string, string>; memberOffered?: boolean; actions: Record<string, unknown> } | null {
     if (!node || typeof node !== "object") return null;
@@ -167,7 +167,8 @@ describe("§829 what the one-tap island is handed for the tick", () => {
     expect(typeof actions.member).toBe("function");
     expect(labels.memberTick).toBe(`Sunt membru al grupului ${CLUB_NAME}`);
     expect(labels.memberHint).toBe(ro.Registration.clubMemberDefinition);
-    expect(labels.memberOn).toBe(ro.Event.rsvp.memberOutcome.on);
+    expect(labels.memberOn).toBe(ro.Event.rsvp.memberOutcome.on.replace("{mark}", ro.Event.rsvp.memberMark));
+    expect(labels.memberFactHelp).toBe(ro.Event.rsvp.memberFactHelp.replace("{mark}", ro.Event.rsvp.memberMark));
     expect(labels.memberOff).toBe(ro.Event.rsvp.memberOutcome.off);
     expect(labels.memberClosed).toBe(ro.Event.rsvp.memberOutcome.closed);
     expect(labels.memberFact).toBe("Membru");
@@ -183,7 +184,7 @@ describe("§829 what the one-tap island is handed for the tick", () => {
   });
 });
 
-describe("§829 «Cine vine» — the mark beside a shown name, the line of members", () => {
+describe("§NNN «Cine vine» — the mark beside a shown name, the line of members", () => {
   it("draws a small «BVR» chip beside the names marked, and none beside the others or «și încă N»", async () => {
     state.rsvps = { count: 4, names: ["Ana Popescu", "Bia Ionescu", "Cora Dima"], others: 1, members: 3, memberMarks: [true, false, true] };
     const markup = await count();
@@ -216,12 +217,12 @@ describe("§829 «Cine vine» — the mark beside a shown name, the line of memb
   it("says it in English", async () => {
     state.rsvps = { count: 2, names: ["Ana"], others: 1, members: 2, memberMarks: [true] };
     const markup = await count("en");
-    expect(markup).toContain("Of them: 2 members.");
+    expect(markup).toContain("Members among them: 2 members.");
     expect(markup).toContain(`${CLUB_NAME} member`);
   });
 });
 
-describe("§829 the editor's fold — the registrations' chips, and the count of confirmed members", () => {
+describe("§NNN the editor's fold — the registrations' chips, and the count of confirmed members", () => {
   const rows = [
     { email: "ana@example.test", displayName: "Ana", showName: true, clubMember: "DECLARED" as const, confirmedAt: new Date("2026-10-20T10:00:00Z"), createdAt: new Date("2026-10-20T09:00:00Z") },
     { email: "cont@example.test", displayName: "Cont", showName: false, clubMember: "ACCOUNT" as const, confirmedAt: new Date("2026-10-20T10:30:00Z"), createdAt: new Date("2026-10-20T09:30:00Z") },
@@ -273,7 +274,7 @@ describe("§829 the editor's fold — the registrations' chips, and the count of
   });
 });
 
-describe("§829 the zone's fact", () => {
+describe("§NNN the zone's fact", () => {
   const row = (props: Partial<ComponentProps<typeof ZoneRsvp>> = {}) =>
     ZoneRsvp({ locale: "ro", eventId: EVENT, titleId: "t", going: true, count: 1, publicName: "Ana", showName: false, name: null, ...props }).then((element) => html(element as ReactElement));
 

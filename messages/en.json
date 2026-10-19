@@ -874,20 +874,20 @@
       },
       "memberMark": "BVR",
       "memberLabel": "{club} member",
-      "memberHelp": "The tick is your own word; the club does not check it. “BVR” shows beside the name you show; with no name you are only counted among the members.",
+      "memberHelp": "The tick is your own statement; the club does not check it. “{mark}” shows beside the name you show; with no name you are only counted among the members.",
       "memberFact": "Member",
-      "memberFactHelp": "Your account is a member's: “BVR” shows beside the name you show.",
+      "memberFactHelp": "Your account is a member's: “{mark}” shows beside the name you show.",
       "memberOutcome": {
-        "on": "Done: you are counted among the members. “BVR” shows only beside a name you show.",
+        "on": "Done: you are counted among the members. “{mark}” shows only beside a name you show.",
         "off": "Done: you are no longer counted among the members.",
-        "closed": "This event no longer takes “I'm coming!” answers, so the member tick can't be set now."
+        "closed": "The member tick can't be set now."
       },
       "members": {
         "one": "{count} member",
         "few": "{count} members",
         "other": "{count} members"
       },
-      "whoMembers": "Of them: {members}.",
+      "whoMembers": "Members among them: {members}.",
       "calendar": {
         "link": "I'm coming!",
         "count": {
@@ -3716,7 +3716,7 @@
         "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming",
         "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question before the event",
         "rsvpAskAnswerers": "Only in the privacy notice: the name of the button “Don't ask me again for this series”, in quotes. With it in the notice in force, those who answered “I'm coming!” before are asked too",
-        "rsvpMember": "Only in the privacy notice: the mark “BVR”, in quotes. With it in the notice in force, “I'm coming!” has the tick “I am a member”, and “Who's coming” shows the mark beside the shown names of members"
+        "rsvpMember": "Only in the privacy notice: the mark “BVR”, in quotes. With it in the notice in force, “I'm coming!” has the tick “I am a member of the … group”, and “Who's coming” shows the mark beside the shown names of members"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4786,8 +4786,8 @@
         },
         "rsvpMemberNotice": {
           "title": "Privacy notice: the member mark on “Who's coming”",
-          "todo": "An event takes “I'm coming!” answers, but the notice in force does not describe the member mark yet: the form has no “I am a member” tick, and “Who's coming” shows no mark and does not count members.",
-          "done": "The notice in force describes the member mark: whoever ticks “I am a member” (or answers from a member account) under it shows with “BVR” beside the name they show, and members are counted.",
+          "todo": "An event takes “I'm coming!” answers, but the notice in force does not describe the member mark yet: the form has no “I am a member of the … group” tick, and “Who's coming” shows no mark and does not count members.",
+          "done": "The notice in force describes the member mark: whoever ticks “I am a member of the … group” (or answers from a member account) under it shows with “BVR” beside the name they show, and members are counted.",
           "how": [
             "Before approving, a lawyer reads from the template, in section 4, the sentence about the “BVR” mark beside a name and about the number of members.",
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The mark shows only for answers given under the new notice or a newer one; earlier ones stay unmarked.",
@@ -6445,7 +6445,7 @@
       "rsvpNameShown": "name shown on the page",
       "rsvpNameHidden": "counted only",
       "rsvpMemberDeclared": "member (declared)",
-      "rsvpMemberAccount": "member (from an account)",
+      "rsvpMemberAccount": "member (verified)",
       "rsvpNotice": "notice v{version}",
       "rsvpConfirmedAt": "confirmed {when}",
       "rsvpUnconfirmed": "unconfirmed",
@@ -13151,6 +13151,7 @@
     "confirmButton": "Yes, I'm coming",
     "confirmPending": "Counting you…",
     "confirmAutoNote": "Opened in a browser, the link counts you by itself. If nothing happens, press “Yes, I'm coming”.",
+    "confirmMember": "If you press “Yes, I'm coming”, the name “{name}” will show with the mark “{mark}”: whoever typed the address ticked that you are a member. If you don't want that, don't press; the “I'm not coming” link in the email removes you.",
     "withdrawTitle": "Not coming any more?",
     "answerTitle": "Your answer",
     "answerIntro": "You're coming to {event}.",
