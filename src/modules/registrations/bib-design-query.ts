@@ -112,13 +112,13 @@ export type BibDesignFormValues = {
 /** «Numărul membrilor» as the panel posts it; `bib-design.ts#bibMemberSchema` validates it. */
 export type BibMemberFormValues = {
   enabled: boolean;
-  /** «Fundalul» (§NNN): `card` or `band`; anything else is the schema's to refuse. */
+  /** «Fundalul» (§695): `card` or `band`; anything else is the schema's to refuse. */
   style: string;
   /** The colour select: a hex triplet, or null for the event's band (the kit's gradient on a card). */
   bandColour: string | null;
   headerImageSrc: string | null;
   headerImageCrop: BibCropValue;
-  /** «Tot numărul»'s photograph and its crop in the card's shape (§NNN). */
+  /** «Tot numărul»'s photograph and its crop in the card's shape (§695). */
   cardImageSrc: string | null;
   cardImageCrop: BibCropValue;
   /** As typed: the schema keeps it to one line and `BIB_MEMBER_LABEL_MAX`. */

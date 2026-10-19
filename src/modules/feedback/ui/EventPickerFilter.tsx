@@ -56,7 +56,7 @@ export type EventPickerWords = {
 const NO_MATCH_VALUE = "\u0000no-match";
 
 /**
- * Each chip's glyph (§NNN; the owner, 2026-10-10: «I want icons on these filters»): the calendar for
+ * Each chip's glyph (§693; the owner, 2026-10-10: «I want icons on these filters»): the calendar for
  * every event, the trophy for the special ones (the registration form's own for a race), the group for
  * the group runs. Decoration: the chip's words are its name.
  */

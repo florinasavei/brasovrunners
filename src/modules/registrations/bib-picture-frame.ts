@@ -11,7 +11,7 @@ import { BIB_CARD, BIB_LAYOUT, bibProfileChartWidth } from "./bib-geometry";
  *   559.28 × 62 points, a shape of about 9 : 1.
  * - **sponsors** — «Bandă cu sponsori»: the card less its inset each side by the strip's picture
  *   height, 523.28 × 24 points, a shape of about 22 : 1.
- * - **memberCard** — a member's bib drawn «Tot numărul» (§NNN): the card's whole width by its height
+ * - **memberCard** — a member's bib drawn «Tot numărul» (§695): the card's whole width by its height
  *   less the small print's one line, 559.28 × 362.95 points, about 1.54 : 1. A footer of two lines or
  *   a sponsors' strip covers the photograph's foot in white; the shape stays the same.
  * - **profile** — «O poză încărcată» for the route's profile (§759): the strip's whole width by the

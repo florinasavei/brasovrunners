@@ -259,7 +259,7 @@ describe("§664 the members' design", () => {
 
   it("saves through the same schema the form posts to", () => {
     const parsed = bibDesignSchema.parse({ ...DEFAULT_BIB_DESIGN, member: { enabled: true, bandColour: "#6a1b9a", headerImageSrc: null, headerImageCrop: null, label: "  Membru BVR " } });
-    // A form of before the members' style (§NNN) saves the header alone, as it printed.
+    // A form of before the members' style (§695) saves the header alone, as it printed.
     expect(parsed.member).toEqual({ ...DEFAULT_BIB_MEMBER_DESIGN, enabled: true, bandColour: "#6a1b9a", label: "Membru BVR" });
     // A form without the members' section (an older caller) saves the members' bib off.
     const without: Record<string, unknown> = { ...DEFAULT_BIB_DESIGN };

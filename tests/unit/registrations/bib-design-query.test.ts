@@ -73,7 +73,7 @@ const EVERYTHING_OFF: BibDesign = {
   emergencyUpsideDown: false,
   showDistance: true,
   numberStubs: true,
-  // The members' bib (§664): on, the whole card (§NNN), a colour, both pictures with their crops and a
+  // The members' bib (§664): on, the whole card (§695), a colour, both pictures with their crops and a
   // label with a diacritic and an ampersand.
   member: {
     enabled: true,
@@ -197,7 +197,7 @@ describe("§249 the design on the wire: encode, then parse", () => {
     expect(params.get("memberEnabled")).toBe("1");
     expect(params.get("memberBandColour")).toBe("#6a1b9a");
     expect(params.get("memberLabel")).toBe("Membru Brașov & co");
-    // The whole card and its photograph (§NNN), under the members' keys too.
+    // The whole card and its photograph (§695), under the members' keys too.
     expect(params.get("memberStyle")).toBe("card");
     expect(params.get("memberCardImageSrc")).toBe(OURS);
     // The main header's keys are untouched by the members' picture.

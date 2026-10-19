@@ -471,7 +471,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const band = asMember ? bibMemberBandColour(design.member, input.bandColour) : bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
   const memberLabel = asMember ? bibMemberLabel(design.member, input.memberLabelDefault ?? "") : "";
-  // «Tot numărul» (§NNN): the members' background over the whole card, the label a stripe.
+  // «Tot numărul» (§695): the members' background over the whole card, the label a stripe.
   const asCard = asMember && design.member.style === "card";
   // The member mark (§750, its shape §759); the name set above the number steps aside for its width (`bibNameReserve`).
   const markDrawn = asMember && design.member.mark;
@@ -505,7 +505,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
     const address = bibPictureUrl(src, env.APP_BASE_URL);
     return address ? { src: address, width: 0, height: 0 } : null;
   };
-  // A member's card draws its own photograph, never a header (§NNN); a member's band draws the
+  // A member's card draws its own photograph, never a header (§695); a member's band draws the
   // members' picture or none — never the event's (§664): its band instead.
   const cardPicture = asCard
     ? input.pictures
@@ -531,7 +531,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   // Told which header this picture draws, as the sheet is (§317).
   const footerLines = bibImageFooterLines(input, header !== null);
   const footerHeight = L.footerHeight + Math.max(0, footerLines.length - 1) * BIB_FOOTER_LINE.lineHeight;
-  // A member's card's coloured part: everything above the sponsors' strip and the small print (§NNN).
+  // A member's card's coloured part: everything above the sponsors' strip and the small print (§695).
   const sponsorRow = sponsors || stubs ? L.sponsorHeight : 0;
   const cardHeight = BIB_CARD.height - footerHeight - sponsorRow;
   const stripe = asCard && memberLabel ? bibMemberStripeText(memberLabel) : "";
@@ -696,7 +696,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           padding: px(BIB_MARGIN) - PAPER_EDGE,
         }}
       >
-        {/* A member's card (§NNN): its background behind everything, at the sheet's points — the
+        {/* A member's card (§695): its background behind everything, at the sheet's points — the
             photograph in the card's shape under the navy veil, the colour, or the kit's gradient. */}
         {cardBackground ? (
           <div
@@ -832,7 +832,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         </div>
         {design.namePosition === "below" ? name : null}
         {bibExtrasBlock({ row: profileRow, picture: profilePicture, emergency, turn, ink })}
-        {/* A member's card's stripe (§NNN): its foot on the background's foot, the label in capitals. */}
+        {/* A member's card's stripe (§695): its foot on the background's foot, the label in capitals. */}
         {stripe ? (
           <div
             style={{

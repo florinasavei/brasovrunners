@@ -95,7 +95,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const fieldId = (name: string) => `c-${name}`;
 
 /**
- * The page in sections (§NNN; the owner, 2026-10-10: «I need here sections, separators and icons»):
+ * The page in sections (§696; the owner, 2026-10-10: «I need here sections, separators and icons»):
  * «Scrie-ne» and its intro, «Spune-ne ceva» when it is offered, «Trimite-ne un mesaj» with the form, «Contact direct», the
  * newsletter (§746, amending §721 and §698). Each section after the form opens with a rule and a heading that wears its glyph;
  * the newsletter's box draws the same.
@@ -165,7 +165,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
   // The address the club chose to show (§442): the mailbox, its Gmail, or both, «… sau …».
   const writeTo = await cachedShownContactAddresses();
   /*
-    «Telefon public» (§565) on the page itself, not only in the footer's fold (§NNN): a visitor who came
+    «Telefon public» (§565) on the page itself, not only in the footer's fold (§693): a visitor who came
     to reach the club finds both ways here. Optional — no number set, no line — and tolerant of an outage.
   */
   const phone = await orNull(() => cachedPublicPhone());
@@ -274,7 +274,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
         {t("intro")}{" "}
-        {/* Where and when the runs are (§NNN): the question a newcomer brings here most, answered by a link. */}
+        {/* Where and when the runs are (§693): the question a newcomer brings here most, answered by a link. */}
         {t.rich("runsHint", {
           calendar: (chunks) => (
             <MuiLink href={getPathname({ locale, href: "/calendar" })} sx={inlineLink} data-testid="contact-calendar-link">
@@ -325,7 +325,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
           </Alert>
           {/* The toast the send flashed (§427), here and on no other state of this page. */}
           <PublicFlash accept={["contactSent"]} />
-          {/* A way on after the send (§NNN): the empty form again, at the page's bare address. */}
+          {/* A way on after the send (§693): the empty form again, at the page's bare address. */}
           <Button
             component="a"
             href={getPathname({ locale, href: "/contact" })}
