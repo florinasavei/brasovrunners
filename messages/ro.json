@@ -12801,6 +12801,14 @@
     "upcomingTitle": "Următoarele alergări",
     "upcomingEmpty": "Nicio alergare anunțată acum.",
     "upcomingAll": "Toate alergările",
+    "rsvp": {
+      "nameHelp": "Pe pagina alergării apari ca „{name}”.",
+      "outcome": {
+        "went": "Am notat că vii.",
+        "left": "Am șters răspunsul: nu mai vii.",
+        "closed": "Alergarea nu mai primește răspunsuri „Vin!”."
+      }
+    },
     "eventsTitle": "Evenimente pentru membri",
     "codesTitle": "Coduri de reducere",
     "tabsLabel": "Părțile zonei membrilor",

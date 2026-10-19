@@ -12801,6 +12801,14 @@
     "upcomingTitle": "The next runs",
     "upcomingEmpty": "No run is announced right now.",
     "upcomingAll": "Every event",
+    "rsvp": {
+      "nameHelp": "On the run's page you show as “{name}”.",
+      "outcome": {
+        "went": "Noted: you're coming.",
+        "left": "Answer removed: you're not coming any more.",
+        "closed": "This run no longer takes “I'm coming!” answers."
+      }
+    },
     "eventsTitle": "Events for members",
     "codesTitle": "Discount codes",
     "tabsLabel": "Parts of the members' zone",

@@ -19,6 +19,7 @@ import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX, PUB
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { DENSITY } from "@/theme/density";
 import { RSVP_BOX_ID, type RsvpOutcome } from "../rsvp-box";
+import type { PublicRsvps } from "../rsvp";
 import RsvpCount, { readRsvpsOf } from "./RsvpCount";
 import RsvpSummary from "./RsvpSummary";
 import { rsvpForgetAction, rsvpGoAction, rsvpLeaveAction, rsvpStateAction } from "../remembered-actions";
@@ -52,6 +53,7 @@ export default async function RsvpBox({
   eventId,
   renderedAt,
   outcome,
+  rsvps: given,
 }: {
   locale: Locale;
   slug: string;
@@ -59,11 +61,16 @@ export default async function RsvpBox({
   /** When this form was rendered — or, on a corrected address, when the one it corrects was. */
   renderedAt: Date;
   outcome: RsvpOutcome | null;
+  /**
+   * The answers the page already read (`readRsvpsOf`, §822): `EventPageView` reads them once, before the calendar's add links, so the links'
+   * «N vin până acum» and this card say one number from one read. Absent, the box reads them itself; `null` is «the database is away».
+   */
+  rsvps?: PublicRsvps | null;
 }) {
   const t = await getTranslations("Event");
   const siteKey = turnstileSiteKey();
   // Read once: the closed line and the count card inside say the same number, and a database that is away says neither (§281).
-  const rsvps = await readRsvpsOf(eventId);
+  const rsvps = given === undefined ? await readRsvpsOf(eventId) : given;
   const summaryWords = {
     countText: rsvps !== null && rsvps.count > 0 ? t(`rsvp.chip.${countForm(rsvps.count, locale)}`, { count: rsvps.count }) : null,
     emptyText: t("rsvp.countEmpty"),

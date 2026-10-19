@@ -1,3 +1,4 @@
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import MuiLink from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
@@ -5,6 +6,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { unstable_rethrow } from "next/navigation";
 import { formatDay } from "@/i18n/dates";
+import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { datedOrNull } from "@/modules/events/domain/dated";
@@ -12,12 +14,18 @@ import { groupSeries, seriesLookup } from "@/modules/events/domain/series";
 import { membersOnlyEventsFor } from "@/modules/events/members-only";
 import EventCard from "@/modules/events/ui/EventCard";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
+import type { PublicEvent } from "@/modules/events/repository";
 import { cachedUpcomingEvents } from "@/modules/public-cache/reads";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
+import { answeredByAccount } from "@/modules/rsvp/counts";
+import { accountPublicName } from "@/modules/rsvp/domain/account-identity";
+import { parseZoneRsvpOutcome } from "@/modules/rsvp/domain/zone-outcome";
+import { readPublicComing } from "@/modules/rsvp/public-page";
+import ZoneRsvp from "@/modules/rsvp/ui/ZoneRsvp";
 import { DENSITY } from "@/theme/density";
 import ZoneFrame, { frameParts, openZone } from "../zone";
 
-type Props = { params: Promise<{ locale: string }> };
+type Props = { params: Promise<{ locale: string }>; searchParams?: Promise<{ vin?: string | string[] }> };
 
 /** Reads the session, so it is never prerendered or cached (AGENTS.md §14.5). */
 export const dynamic = "force-dynamic";
@@ -46,18 +54,43 @@ async function membersOnlyOrNone(account: Parameters<typeof membersOnlyEventsFor
 const UPCOMING_SHOWN = 5;
 
 /**
- * «Următoarele alergări» (§524): the next published events, soonest first — the public listing's own
+ * «Următoarele alergări» (§524): the published events ahead, soonest first — the public listing's own
  * cached read (§333), so the zone costs the database nothing the listing has not already paid, and
- * shows nothing a stranger could not see. Empty while the database is away.
+ * shows nothing a stranger could not see. The page shows the first `UPCOMING_SHOWN`; «Vin!»'s gate and counts are read over all of
+ * them, the same list the listing reads, so they share its cache entry (§822). Empty while the database is away.
  */
 async function upcomingOrNone(locale: Locale, now: Date) {
   try {
     const events = await cachedUpcomingEvents(locale, now);
-    return [...events].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime()).slice(0, UPCOMING_SHOWN);
+    return [...events].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
   } catch (error) {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
     return [];
+  }
+}
+
+/** One run's row: how many come and whether this account does. */
+type ZoneRsvpFacts = { count: number; going: boolean };
+
+/**
+ * «Vin!» on the runs the zone lists (§822): which of the shown runs take answers and how many come — the public pages' one gate and
+ * cached counts (`readPublicComing`, §815), so a members' event is never in it (`couldBeOffered`: its page draws no «Vii?», and the
+ * service refuses an answer to it) — and, live and for this account alone, which of those it has answered (one query,
+ * `answeredByAccount`). A run absent from the map takes no answers and gets no row. Nothing at all while the database is away: a
+ * «Vin!» that cannot be told from «Tu vii» is worse than none.
+ */
+async function rsvpsOrNone(account: { email: string }, all: readonly PublicEvent[], shown: readonly PublicEvent[], now: Date): Promise<ReadonlyMap<string, ZoneRsvpFacts>> {
+  try {
+    const coming = await readPublicComing(all, now);
+    const ids = shown.filter((event) => coming.has(event.id)).map((event) => event.id);
+    if (ids.length === 0) return new Map();
+    const answered = await answeredByAccount(getDb(), account.email, ids);
+    return new Map(ids.map((id) => [id, { count: coming.get(id) ?? 0, going: answered.has(id) }]));
+  } catch (error) {
+    unstable_rethrow(error);
+    if (!isDatabaseAwayError(error)) throw error;
+    return new Map();
   }
 }
 
@@ -80,14 +113,19 @@ async function upcomingOrNone(locale: Locale, now: Date) {
  *
  * «Următoarele alergări»: the next published events, from the listing's own cached read (§333).
  */
-export default async function MembersAreaPage({ params }: Props) {
+export default async function MembersAreaPage({ params, searchParams }: Props) {
   const opened = await openZone((await params).locale);
   if ("resting" in opened) return opened.resting;
   const { locale, account } = opened;
 
   const t = await getTranslations("Members");
   const now = new Date();
-  const [parts, upcoming, membersEvents] = await Promise.all([frameParts(account, locale, now), upcomingOrNone(locale, now), membersOnlyOrNone(account, locale, now)]);
+  const [parts, upcomingAll, membersEvents] = await Promise.all([frameParts(account, locale, now), upcomingOrNone(locale, now), membersOnlyOrNone(account, locale, now)]);
+  const upcoming = upcomingAll.slice(0, UPCOMING_SHOWN);
+  // «Vin!» (§822): the account's own answers are read live after the list, over the runs shown; what a press said is the address's `?vin=`.
+  const rsvps = await rsvpsOrNone(account, upcomingAll, upcoming, now);
+  const publicName = accountPublicName(account);
+  const vin = parseZoneRsvpOutcome((await searchParams)?.vin);
   /*
     A repeated members' run is one card with its dates, as on the listing (§113, §486): the dated
     ones grouped, those whose date is to be announced after them one by one — §533 refuses a series
@@ -128,6 +166,11 @@ export default async function MembersAreaPage({ params }: Props) {
         <Typography id="members-upcoming-title" variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
           {t("upcomingTitle")}
         </Typography>
+        {vin !== null && (
+          <Alert severity={vin === "closed" ? "warning" : "success"} role="status" sx={{ mb: 1.5 }} data-testid="zone-rsvp-outcome">
+            {t(`rsvp.outcome.${vin}`)}
+          </Alert>
+        )}
         {upcoming.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
             {t("upcomingEmpty")}
@@ -146,6 +189,8 @@ export default async function MembersAreaPage({ params }: Props) {
                   {" · "}
                   {formatDay(event.startsAt, { locale, timeZone: event.timezone, withTime: true })}
                 </Typography>
+                {/* «Vin!» (§822): only a run that takes answers, with this account's own state; a members' event has none (its page draws no «Vii?»). */}
+                {rsvps.has(event.id) && <ZoneRsvp locale={locale} eventId={event.id} going={rsvps.get(event.id)!.going} count={rsvps.get(event.id)!.count} publicName={publicName} />}
               </Box>
             ))}
           </Box>

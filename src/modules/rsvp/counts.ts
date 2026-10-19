@@ -1,6 +1,7 @@
-import { and, count, inArray, isNotNull } from "drizzle-orm";
+import { and, count, eq, inArray, isNotNull } from "drizzle-orm";
 import { eventRsvps } from "@/db/schema/event-rsvps";
 import type { Database } from "@/db/types";
+import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 
 /**
  * How many confirmed «Vin!» answers each of these events has, in one query (§815): what the calendar's feed,
@@ -21,4 +22,26 @@ export async function countRsvpsForEvents<T extends Record<string, unknown>>(db:
     .groupBy(eventRsvps.eventId);
   for (const row of rows) counts[row.eventId] = row.n;
   return counts;
+}
+
+/**
+ * Which of these events a signed-in member has a confirmed answer to, in one query (§822): the members' zone's «Tu vii ✓» and its
+ * «Nu mai vin», read live for the account on screen — never through the public cache, which is everybody's. The address is matched in
+ * its canonical form, the way the service writes it (`canonicalizeEmail`, AGENTS.md §10.4), so the row an account made yesterday is
+ * found whatever case or dots the provider spells it with. An answer still waiting for its emailed link (`confirmedAt` empty) is not an
+ * answer; an address that cannot be canonicalised answers nothing.
+ */
+export async function answeredByAccount<T extends Record<string, unknown>>(db: Database<T>, email: string, eventIds: readonly string[]): Promise<Set<string>> {
+  if (eventIds.length === 0) return new Set();
+  let canonicalEmail: string;
+  try {
+    canonicalEmail = canonicalizeEmail(email).canonicalEmail;
+  } catch {
+    return new Set();
+  }
+  const rows = await db
+    .select({ eventId: eventRsvps.eventId })
+    .from(eventRsvps)
+    .where(and(eq(eventRsvps.canonicalEmail, canonicalEmail), inArray(eventRsvps.eventId, [...eventIds]), isNotNull(eventRsvps.confirmedAt)));
+  return new Set(rows.map((row) => row.eventId));
 }
