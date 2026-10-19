@@ -86,7 +86,7 @@ describe("BR-REQ-070-04 the feedback form's event picker filters as you type (§
     expect(pickerNoEventFound(filterPickerOptions(ALL, "", "all"))).toBe(false);
   });
 
-  it("narrows with a chip: «Evenimente speciale» is everything but the group runs, a hike too (§NNN); «Toate» keeps every kind", () => {
+  it("narrows with a chip: «Evenimente speciale» is everything but the group runs, a hike too (§693); «Toate» keeps every kind", () => {
     expect(values(filterPickerOptions(ALL, "", "special"))).toEqual([GENERAL_VALUE, "crosul-brasovului", "drumetie-pe-tampa", "semimaratonul-tampa"]);
     expect(values(filterPickerOptions(ALL, "", "group"))).toEqual([GENERAL_VALUE, "happy-monday-2026-10-05", "happy-monday-2026-09-28"]);
     expect(values(filterPickerOptions(ALL, "", "all"))).toContain("drumetie-pe-tampa");

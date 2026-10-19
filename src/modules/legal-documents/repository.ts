@@ -41,6 +41,7 @@ import {
   describesRsvp,
   describesRsvpAsk,
   describesRsvpAskAnswerers,
+  describesRsvpMember,
   describesTeamPage,
   MINIMUM_AGE_MERGE_FIELD,
   mergeFieldsIn,
@@ -426,6 +427,17 @@ export async function noticeDescribesRsvpAsk<T extends Record<string, unknown>>(
 }
 
 /**
+ * Whether the privacy notice in force describes the member mark on «Cine vine» (§831, `describesRsvpMember`) — in every language, AND «Vin!» itself
+ * (`describesRsvp`), because the mark is a part of that answer. False while either is silent. For the service, which asks again at every answer and
+ * every tick, and `/admin/tasks`' row `rsvpMemberNotice`; the event page reads the cached twin (`cachedRsvpMemberDescribed`). A notice approved before
+ * the marker existed is silent: the tick is not offered, nothing is marked, and the club approves the marker.
+ */
+export async function noticeDescribesRsvpMember<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesRsvp(notice.body) && describesRsvpMember(notice.body));
+}
+
+/**
  * Whether the privacy notice in force describes the day-before question's SECOND audience (§823, `describesRsvpAskAnswerers`) — in every
  * language, AND the question and «Vin!» themselves (`describesRsvpAsk`, `describesRsvp`): the question writes a «Vin!» row from the address
  * of an earlier answer. False while any is silent. For the queue and the send (the club's choice of the audience is only half of it) and
@@ -719,6 +731,17 @@ export async function findFirstRsvpAskNoticeVersion<T extends Record<string, unk
  */
 export async function findFirstRsvpAskAnswerersNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
   return findFirstNoticeVersionDescribing(db, (body) => describesRsvp(body) && describesRsvpAsk(body) && describesRsvpAskAnswerers(body));
+}
+
+/**
+ * The lowest version of an approved, not withdrawn privacy notice that describes the member mark on «Cine vine» in **every** language
+ * (`describesRsvpMember`, with `describesRsvp` beside it), or null when none does — `findFirstRsvpNoticeVersion`'s twin (§831, the §421 rule). An
+ * answer «Vin!» records the notice it was last given under (`event_rsvps.privacy_notice_version`: when it was made, and again when the tick is
+ * changed); it is marked, and counted among the members, only if that is this version or a later one — an answer given under an older notice
+ * agreed to a name, never to a mark.
+ */
+export async function findFirstRsvpMemberNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
+  return findFirstNoticeVersionDescribing(db, (body) => describesRsvp(body) && describesRsvpMember(body));
 }
 
 /**

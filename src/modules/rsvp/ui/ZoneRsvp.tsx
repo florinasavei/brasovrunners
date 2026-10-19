@@ -12,6 +12,7 @@ import type { Locale } from "@/i18n/routing";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
+import type { ClubMemberKind } from "../domain/public-member";
 import { zoneRsvpAnchor } from "../domain/zone-outcome";
 
 /**
@@ -32,6 +33,10 @@ import { zoneRsvpAnchor } from "../domain/zone-outcome";
  * tick box, saved by one press, working without JavaScript. When neither the answer nor the account holds a name, a «Numele tău» box stands
  * with it. The account's name is used only when ticked (`setNameAsMemberAction`).
  *
+ * **«Membru» is a fact here, not a tick** (§831; the owner, 2026-10-19: «organizatorii și administratorii sunt peste membri»): an answer an account made
+ * from this page holds the mark `ACCOUNT`, set by the server from the account's role (every role of the club's accounts is at least a member), so the row says
+ * «Membru» beside «Tu vii ✓» and offers nothing to tick — the mark «BVR» then stands beside the name the person chose to show on «Cine vine».
+ *
  * **A name the person was not shown is never published** (§827, §812): when the answer holds a name — one a stranger may have typed on the
  * page with the tick off — the box «Numele tău» stands prefilled with it, editable, and the help says «Apari ca „…”»; the press posts what
  * the box holds. Only when the answer holds none is the account's own name the fallback, named in the help beside the tick.
@@ -50,9 +55,11 @@ export type ZoneRsvpProps = {
   /** The answer's own tick «Numele meu apare la „Cine vine"» as it stands (the tick and a name), and the name the row holds (`answeredByAccount`). Only read while `going`. */
   showName: boolean;
   name: string | null;
+  /** The member mark the answer holds (`answeredByAccount`, §831): `ACCOUNT` is drawn as the fact «Membru»; only read while `going`. */
+  clubMember?: ClubMemberKind | null;
 };
 
-export default async function ZoneRsvp({ locale, eventId, titleId, going, count, publicName, showName, name }: ZoneRsvpProps) {
+export default async function ZoneRsvp({ locale, eventId, titleId, going, count, publicName, showName, name, clubMember = null }: ZoneRsvpProps) {
   const t = await getTranslations("Event");
   const tZone = await getTranslations("Members");
   const hidden = (
@@ -87,6 +94,11 @@ export default async function ZoneRsvp({ locale, eventId, titleId, going, count,
           <Typography component="span" data-testid="zone-rsvp-going" sx={{ fontWeight: 700 }}>
             {`${t("rsvp.going")} ✓`}
           </Typography>
+          {clubMember === "ACCOUNT" && (
+            <Box data-testid="zone-rsvp-member">
+              <GlyphChip glyph="membersOnly" label={t("rsvp.memberFact")} variant="outlined" color="primary" tooltip={t("rsvp.memberFactHelp", { mark: t("rsvp.memberMark") })} />
+            </Box>
+          )}
           <form action={leaveAsMemberAction} aria-labelledby={titleId}>
             {hidden}
             <SubmitButton label={t("rsvp.cancel")} pendingLabel={t("rsvp.submitting")} variant="outlined">

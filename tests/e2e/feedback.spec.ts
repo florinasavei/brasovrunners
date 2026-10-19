@@ -322,10 +322,10 @@ async function pickEventByTyping(page: Page, firstSlug: string | undefined, fixt
   for (const words of ["Toate", "Evenimente speciale", "Alergări de grup"]) {
     const chip = chips.getByRole("button", { name: words });
     expect((await chip.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-    // Each with its glyph (§NNN; the owner: «I want icons on these filters»).
+    // Each with its glyph (§693; the owner: «I want icons on these filters»).
     await expect(chip.locator("svg")).toHaveCount(1);
   }
-  // «Evenimente speciale» is every event but the group runs (§NNN): the spec's own are races.
+  // «Evenimente speciale» is every event but the group runs (§693): the spec's own are races.
   for (const [words, shown] of [
     ["Evenimente speciale", fixture.races],
     ["Alergări de grup", fixture.runs],
@@ -572,7 +572,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       // On «Cum a fost» the club is the default reader; the safety person is the other answer.
       await expect(form.getByTestId("feedback-audience").getByRole("radio", { name: "Clubul" })).toBeChecked();
       await form.locator('[name="message"]').fill("   ");
-      // «Dacă nu mai vii…» is a fold (§NNN), closed until opened.
+      // «Dacă nu mai vii…» is a fold (§693), closed until opened.
       const reasons = form.getByTestId("feedback-reasons");
       await expect(reasons).not.toHaveAttribute("open", /.*/);
       await expect(form.locator('input[name="reasons"][value="time"]')).toBeHidden();
@@ -595,7 +595,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       // Brought back open, since a refusal kept a tick in it.
       await expect(page.getByTestId("feedback-reasons")).toHaveAttribute("open", /.*/);
       await expect(page.locator('input[name="reasons"][value="time"]')).toBeVisible();
-      // The way back and the way to another branch (§NNN): buttons with a glyph, a thumb's height each.
+      // The way back and the way to another branch (§693): buttons with a glyph, a thumb's height each.
       for (const id of ["feedback-back", "feedback-other-branches"]) {
         const control = page.getByTestId(id);
         await expect(control.locator("svg")).toHaveCount(1);
@@ -659,7 +659,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await page.getByTestId("feedback-form-cum-a-fost").getByRole("button", { name: "Trimite" }).click();
       await expect(page).toHaveURL(/\/ro\/contact\/spune-ne\?sent=cum-a-fost$/, { timeout: 30_000 });
       await expect(page.getByTestId("feedback-sent")).toContainText("Mesajul a plecat");
-      // A way on (§NNN): another message, from step 1.
+      // A way on (§693): another message, from step 1.
       await expect(page.getByTestId("feedback-send-another")).toHaveAttribute("href", "/ro/contact/spune-ne");
       // The club's message names the event picked: its subject is «[feedback][cum-a-fost] Cum a fost: <title>» (§786), as `/devs` shows the capture.
       await expect(async () => {

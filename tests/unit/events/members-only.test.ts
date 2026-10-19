@@ -157,7 +157,7 @@ describe("§552 no public read path meets a members' row or a code (source walk)
     for (const path of readers) {
       expect(
         path.startsWith("src/app/[locale]/admin/") ||
-          path === "src/app/[locale]/members-area/page.tsx" ||
+          path === "src/app/[locale]/members-area/codes/page.tsx" ||
           path.startsWith("src/modules/content/member-codes/") ||
           // The member tiers' counts and the delete's check meet the codes' limit (§811): the backoffice's files, never a public read (`repository.ts` there does not).
           path === "src/modules/content/member-tiers/admin-repository.ts" ||

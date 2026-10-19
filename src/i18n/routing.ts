@@ -184,7 +184,12 @@ export const routing = defineRouting({
      */
     "/members": { ro: "/membri", en: "/members" },
     "/members-area": { ro: "/zona-membri", en: "/members-area" },
-    /** The zone's other two tabs (§715): the shop and the runs, each an address of its own, under the private segment; the codes are the zone's own address. */
+    /**
+     * The zone's other tabs (§715, amended: the zone opens on «Alergări»): «Alergări» is the zone's own address — the zone opens on the runs — and the
+     * codes, the shop each have one of their own, under the private segment. `/members-area/runs` was the runs' address before
+     * the zone opened on them: it stays, as a permanent redirect to the zone (`runs/page.tsx`), so no link made before breaks.
+     */
+    "/members-area/codes": { ro: "/zona-membri/coduri", en: "/members-area/codes" },
     "/members-area/shop": { ro: "/zona-membri/magazin", en: "/members-area/shop" },
     "/members-area/runs": { ro: "/zona-membri/alergari", en: "/members-area/runs" },
 

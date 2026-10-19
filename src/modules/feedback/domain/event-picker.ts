@@ -22,7 +22,7 @@ export type PickerKind = "race" | "group" | "other";
 /**
  * The chip that is pressed: every kind, the special events, or the group runs.
  *
- * «Evenimente speciale» (§NNN; the owner, 2026-10-10: «instead of "curse" say "evenimente speciale"»)
+ * «Evenimente speciale» (§693; the owner, 2026-10-10: «instead of "curse" say "evenimente speciale"»)
  * is every event that is not a group run — a race, and also a hike, a coffee, a special event — where
  * «Curse» held races alone and left the rest under «Toate» only. The two chips now split the list.
  */

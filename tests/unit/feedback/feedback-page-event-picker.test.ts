@@ -328,7 +328,7 @@ describe("EventPickerFilter on the server draws only the select it was given", (
     expect(reserved).toMatch(/^<div[^>]*aria-hidden="true"[^>]*>/);
     expect(html).toMatch(/visibility:hidden;\}@media \(scripting: none\)\{\.css-[\w-]+\{display:none;\}\}/);
     for (const words of ["Toate", "Evenimente speciale", "Alergări de grup"]) expect(reserved).toContain(words);
-    // Each chip wears its glyph (§NNN), hidden from a screen reader: the words are its name.
+    // Each chip wears its glyph (§693), hidden from a screen reader: the words are its name.
     for (const glyph of ["EventIcon", "EmojiEventsIcon", "GroupsIcon"]) expect(reserved).toContain(`data-testid="${glyph}"`);
     // Nothing a reader or a test could take for the chips themselves.
     expect(reserved).not.toContain('role="group"');

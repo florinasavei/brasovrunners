@@ -3,7 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN — «Spune-ne ceva» after the owner's round of 2026-10-10: «I need
+ * BR-REQ-070-04, `DECISIONS.md` §693 — «Spune-ne ceva» after the owner's round of 2026-10-10: «I need
  * this to be wider», «the back link to have an icon and be bigger», «"alt tip de mesaj" is not clear
  * what it does, not clearly visible». The page as the server draws it, with the real catalogues:
  * - the page is `md` wide, not `sm`;
@@ -92,7 +92,7 @@ afterEach(() => {
   branches = { howItWent: true, suggestion: true };
 });
 
-describe("BR-REQ-070-04 «Spune-ne ceva», wider and clearer (§NNN)", () => {
+describe("BR-REQ-070-04 «Spune-ne ceva», wider and clearer (§693)", () => {
   it("is md wide, and «Înapoi la Contact» is a button with its arrow", async () => {
     const html = await render({});
     expect(html).toContain("MuiContainer-maxWidthMd");

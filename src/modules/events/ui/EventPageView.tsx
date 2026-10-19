@@ -189,7 +189,7 @@ export default async function EventPageView({
   */
   const whoComes = visit?.rsvpBox && !membersOnly
     ? rsvpsRead && rsvpsRead.count > 0
-      ? { count: rsvpsRead.count, href: `#${RSVP_WHO_ID}` }
+      ? { count: rsvpsRead.count, members: rsvpsRead.members ?? 0, href: `#${RSVP_WHO_ID}` }
       : null
     : dated && !membersOnly && visit && event.eventStatus === "SCHEDULED" && dated.startsAt.getTime() > now.getTime()
       ? await readStartListCount(dated).then((count) => (count !== null && count > 0 ? { count, href: "#start-list-title" } : null))

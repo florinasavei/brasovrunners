@@ -315,14 +315,16 @@ describe("§811 the member tiers", () => {
 
   describe("«Șterge nivelul»", () => {
     it("deletes a level nobody holds, closes the gap, and audits it by id with no name", async () => {
-      const { first, second } = await twoTiers();
+      const { first } = await twoTiers();
       await deleteMemberTier(db, { actor: admin, tierId: first.id, now: NOW });
       const rest = await listAllMemberTiers(db);
       expect(rest.map((tier) => [tier.nameRo, tier.position])).toEqual([["Fondator", 1]]);
       const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "member_tier.deleted"));
       expect(audit).toMatchObject({ entityType: "member_tier", entityId: first.id, metadataJson: { codesUpdated: 0 } });
       expect(JSON.stringify(audit)).not.toContain("Membru");
-      await expect(deleteMemberTier(db, { actor: admin, tierId: second.id.replace(/.$/, (last) => (last === "0" ? "1" : "0")), now: NOW })).rejects.toMatchObject({ code: "NOT_FOUND" });
+      // Flaky before: `second.id` with its last character set to "0" is no id at all whenever the random uuid already ended
+      // in 0. The nil uuid is a well-formed id no row can hold (`gen_random_uuid()` makes version 4, this is version 0).
+      await expect(deleteMemberTier(db, { actor: admin, tierId: "00000000-0000-0000-0000-000000000000", now: NOW })).rejects.toMatchObject({ code: "NOT_FOUND" });
       await expect(deleteMemberTier(db, { actor: admin, tierId: "nu-e-un-id", now: NOW })).rejects.toMatchObject({ code: "NOT_FOUND" });
     });
 

@@ -31,21 +31,21 @@ import { headingRule } from "@/theme/surfaces";
 import { signOutAction } from "../admin/actions";
 
 /**
- * The members' zone's three parts (§715), in the owner's order: the partners' codes, the club's shop,
- * the runs. The zone drew all of it on one long page, and a member after the shop scrolled past the
- * codes and the runs. «Coduri de reducere» is the zone's own address (`/members-area`), drawn
- * directly: every link made before the tabs — the sign-in's landing, the members' page's button —
- * arrives at the first tab, and the runs have an address of their own. Below `sm` each tab says a
- * shorter word (`tabsShort`, §731): the three full ones with their glyphs need about 350 px in a
- * 288-px row, and the current tab sat past the edge, so a member did not see where they were.
+ * The members' zone's three parts (§715), amended: the zone opens on the runs (the owner, 2026-10-19: «And it should be a lot easier for
+ * BVR members to see this» — who comes to the next runs). The order is «Alergări», «Coduri de reducere», «Magazin»; «Alergări» is the
+ * zone's own address (`/members-area`), drawn directly: every link made before the tabs and since — the sign-in's landing, the
+ * members' page's button — arrives at the runs, the codes have an address of their own (`/members-area/codes`) and the old
+ * `/members-area/runs` answers with a permanent redirect to the zone. The zone drew all of it on one long page, and a member after the
+ * shop scrolled past the rest. Below `sm` each tab says a shorter word (`tabsShort`, §731): the three full ones with their glyphs need
+ * about 350 px in a 288-px row, and the current tab sat past the edge, so a member did not see where they were.
  */
-export const ZONE_TABS = ["codes", "shop", "runs"] as const;
+export const ZONE_TABS = ["runs", "codes", "shop"] as const;
 export type ZoneTab = (typeof ZONE_TABS)[number];
 
 const TAB_ROUTE = {
-  codes: "/members-area",
+  runs: "/members-area",
+  codes: "/members-area/codes",
   shop: "/members-area/shop",
-  runs: "/members-area/runs",
 } as const satisfies Record<ZoneTab, string>;
 
 /** The «Members» words, read by the page that draws the frame, which needs them too. */
@@ -54,7 +54,7 @@ type MembersWords = Awaited<ReturnType<typeof getTranslations<"Members">>>;
 type Account = NonNullable<Awaited<ReturnType<typeof getCurrentAccount>>>;
 
 /**
- * The door, asserted by every one of the three pages and never by the frame around them (§524,
+ * The door, asserted by every one of the three tabs' pages and never by the frame around them (§524,
  * BR-REQ-060-01): a layout is not re-run when a member moves between tabs, so each page asks for the
  * account itself. Signed out, the visitor goes to the sign-in in the members' words, which lands
  * back on the zone; a deployment with no sign-in at all answers 404; an account that may not open
@@ -137,7 +137,7 @@ export default function ZoneFrame({
   parts: FrameParts;
   children: ReactNode;
 }) {
-  const glyphs = { codes: <LocalOfferIcon />, shop: <StorefrontIcon />, runs: <DirectionsRunIcon /> } as const;
+  const glyphs = { runs: <DirectionsRunIcon />, codes: <LocalOfferIcon />, shop: <StorefrontIcon /> } as const;
   const tabs = ZONE_TABS.filter((tab) => tab !== "shop" || parts.shop);
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>

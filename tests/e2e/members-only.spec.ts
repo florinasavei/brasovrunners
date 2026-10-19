@@ -50,7 +50,12 @@ test.describe("§552 events and codes for the members alone", () => {
     await expect(page).toHaveURL(/\/ro\/zona-membri$/, { timeout: 30_000 });
     await hydrated(page);
 
-    // The codes are the first tab (§715), the zone's own address; the runs are the third, at their own.
+    // The zone opens on «Alergări» (§715 amended): the members' events are on the landing, the codes a tab away at their own address.
+    await expect(page.getByTestId("members-events")).toBeVisible();
+    await expect(page.getByTestId("member-code")).toHaveCount(0);
+    await page.getByTestId("members-tabs").getByRole("link", { name: /^Coduri/ }).click();
+    await expect(page).toHaveURL(/\/ro\/zona-membri\/coduri$/);
+    await hydrated(page);
     await expect(page.getByTestId("members-events")).toHaveCount(0);
     const code = page.getByTestId("member-code").filter({ hasText: fixture.partner });
     await expect(code).toContainText(fixture.code);
@@ -61,7 +66,7 @@ test.describe("§552 events and codes for the members alone", () => {
     expect(Math.round((box?.height ?? 0) * 10) / 10).toBeGreaterThanOrEqual(44);
 
     await page.getByTestId("members-tabs").getByRole("link", { name: "Alergări" }).click();
-    await expect(page).toHaveURL(/\/ro\/zona-membri\/alergari$/);
+    await expect(page).toHaveURL(/\/ro\/zona-membri$/);
     await hydrated(page);
     const events = page.getByTestId("members-events");
     await expect(events.getByRole("heading", { name: "Evenimente pentru membri" })).toBeVisible();
