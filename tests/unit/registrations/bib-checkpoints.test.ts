@@ -358,6 +358,20 @@ describe("§757 the pins stand side by side, never over one another", () => {
     expect(thinBibCheckpoints([point(5, ["TIMING"]), point(5 + close, ["DIRECTION"])], BIB_LAYOUT.profileChartWidth, 9_000, radius)).toHaveLength(1);
   });
 
+  // §NNN: «Regrupare» is first among one point's own glyphs; between two points that would touch, the aid station's rule (§757) is older and stays.
+  it("gives a regroup point way to an aid station within a pin's reach, in either order, and keeps the group's glyph on a point that is both", () => {
+    const close = 0.5 * ((radius * 2 + radius * 0.5) / BIB_LAYOUT.profileChartWidth) * 9;
+    const regroupFirst = thinBibCheckpoints([point(5, ["REGROUP"]), point(5 + close, ["WATER"])], BIB_LAYOUT.profileChartWidth, 9_000, radius);
+    expect(regroupFirst.map((row) => row.kinds)).toEqual([["WATER"]]);
+    const waterFirst = thinBibCheckpoints([point(5, ["WATER"]), point(5 + close, ["REGROUP"])], BIB_LAYOUT.profileChartWidth, 9_000, radius);
+    expect(waterFirst.map((row) => row.kinds)).toEqual([["WATER"]]);
+    // Two regroup points that touch are one pin; a point that is both an aid station and a regroup still pins the group.
+    expect(thinBibCheckpoints([point(5, ["REGROUP"]), point(5 + close, ["REGROUP"])], BIB_LAYOUT.profileChartWidth, 9_000, radius)).toHaveLength(1);
+    const both = thinBibCheckpoints([point(5, ["WATER", "REGROUP"]), point(5 + close, ["TIMING"])], BIB_LAYOUT.profileChartWidth, 9_000, radius);
+    expect(both.map((row) => row.kinds)).toEqual([["WATER", "REGROUP"]]);
+    expect(glyphForKinds(both[0].kinds)).toBe("regroup");
+  });
+
   it("says both when a water station and a food station are too close to pin apart, in either order — «km 4 · apă + hrană», the drop", () => {
     const sources = (first: string, second: string) => [at(4, null, [first]), at(4.1, null, [second])];
     for (const [first, second] of [["WATER", "FOOD"], ["FOOD", "WATER"]]) {

@@ -96,6 +96,7 @@ describe("§757 the checkpoints' table on the event page", () => {
     expect(rows[0]).toContain("Regrupare");
     expect(rows[0]).toContain("Așteptăm 5 minute");
     expect(rows[0]).toContain("MuiChip-icon");
+    expect(rows[0]).toContain('data-testid="GroupsIcon"');
     expect(rows[0]).not.toContain(ro.Event.checkpoints.kinds.WATER);
     expect(rows[1]).toContain("Apă");
     expect(rows[1]).toContain("Regrupare");

@@ -10194,7 +10194,7 @@
     },
     "checkpoints": {
       "title": "Checkpoints",
-      "intro": "Where there is water, food, first aid, timing, a guide or a regroup, and how long after the start the last runner passes. Shown in the table, on the profile and on the number.",
+      "intro": "Where there is water, food, first aid, timing, someone showing the way or a regroup, and how long after the start the last runner passes. Shown in the table, on the route profile and on the number.",
       "saveNote": "The points are saved only with “Save the points”, not with the page's “Save”.",
       "routeLength": "The route is {km} km long. No point can be beyond it.",
       "summaryNone": "no points",

@@ -12,6 +12,7 @@ import {
 } from "@/modules/routes/elevation/geometry";
 import { ELEVATION_GLYPH_PATHS, GLYPH_EVEN_ODD } from "@/modules/routes/elevation/glyphs";
 import { type ElevationProfileData } from "@/modules/routes/elevation/parse";
+import { maxRadius } from "../../helpers/svg-path-points";
 
 /**
  * §802 (amending §718, §750, §757) — the elevation profile's geometry, `routes/elevation/geometry.ts`: where the line, the
@@ -318,6 +319,21 @@ describe("§802 the markers", () => {
     }
     expect(ELEVATION_GLYPH_PATHS.regroup).toMatch(/^M/);
     expect(GLYPH_EVEN_ODD.regroup).toBe(false);
+  });
+
+  // A glyph is drawn inside its pin's ring: on the race number the ring's inner edge sits at 0.906 of its radius, and the glyph is
+  // scaled so a point 7.5 from the centre lands at 0.78 of it. The food fork's tines are the farthest a glyph with corners
+  // reaches (8.08); the drop's round bulb reaches 8.2 but follows the ring's own curve, so it never meets it. No other glyph
+  // may reach past 8.1, curves and arcs included.
+  it("keeps every glyph's outline within 8.1 of its centre (the drop's bulb 8.2), so none runs into its ring (§NNN)", () => {
+    for (const [name, path] of Object.entries(ELEVATION_GLYPH_PATHS)) {
+      expect(maxRadius(path), name).toBeLessThanOrEqual(name === "water" ? 8.2 : 8.1);
+      expect(maxRadius(path), name).toBeGreaterThan(3);
+    }
+    expect(maxRadius(ELEVATION_GLYPH_PATHS.food)).toBeGreaterThan(8);
+    // The measure sees what it measures: a corner far out is far out.
+    expect(maxRadius("M0 0L10 0L10 5z")).toBeCloseTo(Math.hypot(10, 5), 5);
+    expect(maxRadius("M-5 0a5 5 0 0 1 10 0z")).toBeCloseTo(5, 1);
   });
 
   // Nothing stored has the kind yet, so no drawing changes: every set of the five old kinds still pins what it always pinned.
