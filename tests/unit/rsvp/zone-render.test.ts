@@ -33,9 +33,9 @@ async function html(element: ReactElement): Promise<string> {
   return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<script[^>]*>[\s\S]*?<\/script>/g, "");
 }
 
-const row = async (props: { going?: boolean; count?: number; publicName?: string | null; showName?: boolean; hasName?: boolean }, locale: "ro" | "en" = "ro") => {
+const row = async (props: { going?: boolean; count?: number; publicName?: string | null; showName?: boolean; name?: string | null }, locale: "ro" | "en" = "ro") => {
   state.language = locale;
-  return html(await ZoneRsvp({ locale, eventId: EVENT_ID, titleId: zoneRsvpTitleId(EVENT_ID), going: false, count: 0, publicName: "Ana Membru", showName: false, hasName: false, ...props }));
+  return html(await ZoneRsvp({ locale, eventId: EVENT_ID, titleId: zoneRsvpTitleId(EVENT_ID), going: false, count: 0, publicName: "Ana Membru", showName: false, name: null, ...props }));
 };
 
 beforeEach(() => {
@@ -92,16 +92,17 @@ describe("§NNN the zone's row under a run that takes answers", () => {
   });
 
   it("keeps the name tick «Numele meu apare la „Cine vine”» on «Tu vii ✓»: a real checkbox in its own form, drawn as the answer keeps it (§NNN)", async () => {
-    const off = await row({ going: true, count: 2, showName: false, hasName: true });
+    const off = await row({ going: true, count: 2, showName: false, name: "Ana" });
     expect(off).toContain('data-testid="zone-rsvp-name"');
     expect(off).toContain("Numele meu apare la „Cine vine”");
     expect(off).toMatch(/<input[^>]*type="checkbox"[^>]*name="showName"|<input[^>]*name="showName"[^>]*type="checkbox"/);
     expect(off).not.toMatch(/<input[^>]*name="showName"[^>]*checked/);
-    // The answer holds a name: no box, and the help says the name stays saved.
-    expect(off).not.toContain('name="name"');
-    expect(off).toContain("Numele rămâne păstrat");
+    // The answer holds a name: the box stands prefilled with it, and the help says which name the tick shows and that it stays saved.
+    expect(off).toMatch(/<input[^>]*name="name"[^>]*value="Ana"|<input[^>]*value="Ana"[^>]*name="name"/);
+    expect(off).toContain("Cu bifa apari ca „Ana”");
+    expect(off).toContain("numele rămâne păstrat");
     expect(off).toContain("Salvează");
-    const on = await row({ going: true, count: 2, showName: true, hasName: true });
+    const on = await row({ going: true, count: 2, showName: true, name: "Ana" });
     expect(on).toMatch(/<input[^>]*name="showName"[^>]*checked|<input[^>]*checked[^>]*name="showName"/);
     // The form carries the event and the language and nothing of the person's: no address, no role.
     expect(on).not.toMatch(/name="(email|displayName|role)"/);
@@ -109,17 +110,18 @@ describe("§NNN the zone's row under a run that takes answers", () => {
   });
 
   it("asks for a name only when neither the answer nor the account has one, and says which name the account would show otherwise", async () => {
-    const nobody = await row({ going: true, showName: false, hasName: false, publicName: null });
+    const nobody = await row({ going: true, showName: false, name: null, publicName: null });
     expect(nobody).toContain('name="name"');
     expect(nobody).toContain("Numele tău");
+    expect(nobody).toContain("Bifează și scrie numele cu care vrei să apari.");
     // The account has a name and the answer none: the tick uses it, the help says which — no box.
-    const account = await row({ going: true, showName: false, hasName: false, publicName: "Ana Membru" });
+    const account = await row({ going: true, showName: false, name: null, publicName: "Ana Membru" });
     expect(account).not.toContain('name="name"');
     expect(account).toContain("Dacă bifezi, pe pagina alergării apari ca „Ana Membru”.");
   });
 
   it("says the same tick in English", async () => {
-    const markup = await row({ going: true, showName: true, hasName: true }, "en");
+    const markup = await row({ going: true, showName: true, name: "Ana" }, "en");
     expect(markup).toContain("My name shows under “Who&#x27;s coming”");
     expect(markup).toContain("Save");
   });

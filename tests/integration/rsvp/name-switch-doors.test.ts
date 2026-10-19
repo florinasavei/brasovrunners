@@ -139,36 +139,35 @@ describe("§NNN the name tick's doors", () => {
       expect(await rows()).toMatchObject([{ showName: false, displayName: "Ana" }]);
     });
 
-    it("tells the island the tick's state — booleans only, never the name or the address — and flips it at once, in both directions", async () => {
+    it("tells the island the tick's state and the name the tick would show — never the address — and flips it at once, in both directions", async () => {
       await remember();
       await rsvpGoAction(slug, "ro", false);
       const before = await rsvpStateAction(slug, "ro");
-      expect(before).toEqual({ remembered: true, offered: true, going: true, showName: false, hasName: true, count: 1 });
+      expect(before).toEqual({ remembered: true, offered: true, going: true, showName: false, name: "Ana", count: 1 });
 
-      const on = await rsvpShowNameAction(slug, "ro", true, "");
-      expect(on).toEqual({ state: { remembered: true, offered: true, going: true, showName: true, hasName: true, count: 1 }, refused: null });
+      // The island shows the name and posts it back; a bare tick would publish a name the person was not shown, so it is refused.
+      expect(await rsvpShowNameAction(slug, "ro", true, "")).toMatchObject({ refused: "name", state: { showName: false, name: "Ana" } });
+      expect(await publicRead()).toEqual({ count: 1, names: [], others: 1 });
+      const on = await rsvpShowNameAction(slug, "ro", true, "Ana");
+      expect(on).toEqual({ state: { remembered: true, offered: true, going: true, showName: true, name: "Ana", count: 1 }, refused: null });
       expect(await publicRead()).toEqual({ count: 1, names: ["Ana"], others: 0 });
       expect(revalidated.at(-1)).toEqual(["places"]);
 
       const off = await rsvpShowNameAction(slug, "ro", false, "");
-      expect(off).toEqual({ state: { remembered: true, offered: true, going: true, showName: false, hasName: true, count: 1 }, refused: null });
+      expect(off).toEqual({ state: { remembered: true, offered: true, going: true, showName: false, name: "Ana", count: 1 }, refused: null });
       expect(await publicRead()).toEqual({ count: 1, names: [], others: 1 });
       expect(await rows()).toMatchObject([{ showName: false, displayName: "Ana" }]);
-      // Nothing the island is handed holds an address or a name.
-      for (const result of [before, on, off]) {
-        const text = JSON.stringify(result);
-        expect(text).not.toContain("example.test");
-        expect(text).not.toContain("Ana");
-      }
+      // Nothing the island is handed holds an address (the name is the person's own, shown beside the tick).
+      for (const result of [before, on, off]) expect(JSON.stringify(result)).not.toContain("example.test");
     });
 
     it("with no stored name, a tick without a typed one is refused with «name» and a typed one is taken", async () => {
       await remember("dan@example.test", null);
       await rsvpGoAction(slug, "ro", false);
-      expect(await rsvpStateAction(slug, "ro")).toMatchObject({ going: true, showName: false, hasName: false });
-      expect(await rsvpShowNameAction(slug, "ro", true, "   ")).toMatchObject({ refused: "name", state: { showName: false, hasName: false } });
+      expect(await rsvpStateAction(slug, "ro")).toMatchObject({ going: true, showName: false, name: null });
+      expect(await rsvpShowNameAction(slug, "ro", true, "   ")).toMatchObject({ refused: "name", state: { showName: false, name: null } });
       const taken = await rsvpShowNameAction(slug, "ro", true, "  Dan   P. ");
-      expect(taken).toMatchObject({ refused: null, state: { going: true, showName: true, hasName: true } });
+      expect(taken).toMatchObject({ refused: null, state: { going: true, showName: true, name: "Dan P." } });
       expect(await publicRead()).toEqual({ count: 1, names: ["Dan P."], others: 0 });
     });
 
@@ -182,14 +181,14 @@ describe("§NNN the name tick's doors", () => {
       await remember();
       await rsvpGoAction(slug, "ro", false);
       await approveNotice(2);
-      await rsvpShowNameAction(slug, "ro", true, "");
+      await rsvpShowNameAction(slug, "ro", true, "Ana");
       expect((await rows())[0].privacyNoticeVersion).toBe(2);
       await db.update(events).set({ rsvpEnabled: false }).where(eq(events.id, eventId));
       // The page is no longer offered: the island has nothing to draw, and an untick of the stale one still works.
       expect(await rsvpShowNameAction(slug, "ro", false, "")).toMatchObject({ refused: null, state: { remembered: true, offered: false } });
       expect((await rows())[0].showName).toBe(false);
       // …and a tick is refused: closed.
-      expect(await rsvpShowNameAction(slug, "ro", true, "")).toMatchObject({ refused: "closed" });
+      expect(await rsvpShowNameAction(slug, "ro", true, "Ana")).toMatchObject({ refused: "closed" });
     });
   });
 

@@ -88,13 +88,13 @@ describe("§811 the remembered browser's one tap", () => {
 
   it("reports where a remembered browser stands: not yet coming, and how many are", async () => {
     await remember();
-    expect(await rsvpStateAction(slug, "ro")).toEqual({ remembered: true, offered: true, going: false, showName: false, hasName: false, count: 0 });
+    expect(await rsvpStateAction(slug, "ro")).toEqual({ remembered: true, offered: true, going: false, showName: false, name: null, count: 0 });
   });
 
   it("answers in one tap — counted at once, no email at all — and then says «Tu vii»", async () => {
     await remember();
     const next = await rsvpGoAction(slug, "ro", false);
-    expect(next).toEqual({ remembered: true, offered: true, going: true, showName: false, hasName: true, count: 1 });
+    expect(next).toEqual({ remembered: true, offered: true, going: true, showName: false, name: "Ana", count: 1 });
     const [row] = await answers();
     expect(row).toMatchObject({ canonicalEmail: "ana@example.test", showName: false, confirmedAt: expect.any(Date) });
     expect(await db.select().from(emailOutbox)).toHaveLength(0);

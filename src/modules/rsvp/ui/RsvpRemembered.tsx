@@ -31,9 +31,13 @@ export type RsvpIslandLabels = {
   submit: string;
   submitting: string;
   showName: string;
-  /** The tick on «Tu vii ✓» (§NNN): «Numele meu apare la „Cine vine"», its help, the box shown when the answer holds no name, and the save. */
+  /**
+   * The tick on «Tu vii ✓» (§NNN): «Numele meu apare la „Cine vine"»; its help with `{name}` when the answer holds a name (it says which one the
+   * tick shows); the help when it holds none; the box shown then, and the save.
+   */
   nameSwitch: string;
   nameHelp: string;
+  nameAsk: string;
   nameBox: string;
   nameSave: string;
   /** One sentence after each save (a status, not a colour) and one per refusal. */
@@ -41,7 +45,6 @@ export type RsvpIslandLabels = {
   nameHidden: string;
   nameNeeded: string;
   nameNone: string;
-  nameClosed: string;
 };
 
 /**
@@ -54,7 +57,7 @@ export type RsvpIslandActions = {
   go: (slug: string, locale: string, showName: boolean) => Promise<RsvpIslandState>;
   leave: (slug: string, locale: string) => Promise<RsvpIslandState>;
   forget: () => Promise<void>;
-  /** The person's own tick «Numele meu apare la „Cine vine"» (§NNN): on or off, with the name typed in the box when the answer holds none. */
+  /** The person's own tick «Numele meu apare la „Cine vine"» (§NNN): on or off, with the name the box holds — the one shown (the answer's own) or the one typed. */
   showName: (slug: string, locale: string, showName: boolean, name: string) => Promise<RsvpNameResult>;
 };
 
@@ -101,7 +104,7 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
   const [pressFailed, setPressFailed] = useState(false);
   // The name tick (§NNN): the box opens when the person ticks with no name to show; `nameNote` is the last save's sentence; `refusals` remounts the tick form after a refusal only (a saved tick already shows what the person did, and a remount would drop the keyboard's focus), so the box shows what the server kept.
   const [asking, setAsking] = useState(false);
-  const [nameNote, setNameNote] = useState<"shown" | "hidden" | "name" | "none" | "closed" | null>(null);
+  const [nameNote, setNameNote] = useState<"shown" | "hidden" | "name" | "none" | null>(null);
   const [refusals, setRefusals] = useState(0);
   const masked = hint?.masked ?? null;
 
@@ -160,7 +163,8 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
       const { state: next, refused } = await actions.showName(slug, locale, on, name);
       if (!next.remembered) clearHint();
       setState(next);
-      setNameNote(refused ?? (on ? "shown" : "hidden"));
+      // «closed» has no sentence here: the state says the event takes no answer now, the island draws the typed form, and the page says why.
+      setNameNote(refused === "closed" ? null : (refused ?? (on ? "shown" : "hidden")));
       setAsking(refused === "name");
       if (refused !== null) setRefusals((n) => n + 1);
       router.refresh();
@@ -184,6 +188,7 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
           {/*
             «Numele meu apare la „Cine vine"» (§NNN): a real tick box in its own small form, saved at once when the answer holds a name
             (a change submits the form); with no name, ticking opens one «Numele tău» box and «Salvează». The server reads the cookie.
+            With a name, the help says which name the tick shows and the form posts it: a name is never published unposted (§812).
           */}
           <form
             key={refusals}
@@ -191,16 +196,17 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
             onChange={(event) => {
               const target = event.target;
               if (!(target instanceof HTMLInputElement) || target.name !== "showName") return;
-              if (state.hasName) event.currentTarget.requestSubmit();
+              if (state.name !== null) event.currentTarget.requestSubmit();
               else setAsking(target.checked);
             }}
             data-testid="rsvp-name-switch"
           >
             <Stack spacing={1}>
-              <CheckboxField name="showName" defaultChecked={state.showName || asking} help={labels.nameHelp}>
+              <CheckboxField name="showName" defaultChecked={state.showName || asking} help={state.name !== null ? labels.nameHelp.replace("{name}", () => state.name ?? "") : labels.nameAsk}>
                 {labels.nameSwitch}
               </CheckboxField>
-              {asking && !state.hasName && (
+              {state.name !== null && <input type="hidden" name="name" value={state.name} />}
+              {asking && state.name === null && (
                 <Stack spacing={1.5} data-testid="rsvp-name-box">
                   <TextField name="name" label={labels.nameBox} required fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
                   <SubmitButton label={labels.nameSave} pendingLabel={labels.submitting} size="large">
@@ -218,9 +224,7 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
                   ? labels.nameHidden
                   : nameNote === "name"
                     ? labels.nameNeeded
-                    : nameNote === "none"
-                      ? labels.nameNone
-                      : labels.nameClosed}
+                    : labels.nameNone}
             </Typography>
           )}
           <form action={() => run(() => actions.leave(slug, locale))}>

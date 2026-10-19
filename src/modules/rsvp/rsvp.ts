@@ -323,8 +323,16 @@ export type RsvpLink = {
   asked: boolean;
   /** The answer has a name already (typed on the page): the box is then not offered, and the press changes nothing about it. */
   named: boolean;
-  /** The person's tick «Numele meu apare la „Cine vine"» as the row keeps it (§NNN): what the withdraw link's page draws ticked or not. */
+  /**
+   * The person's tick «Numele meu apare la „Cine vine"» as it stands (§NNN): the row's `show_name` AND a name to show. A tick with no name
+   * (the page's form lets one be ticked with the box empty) shows nothing, so the page does not draw it ticked either.
+   */
   showName: boolean;
+  /**
+   * The name the row holds — the person's own link, so the page may draw it: the tick would show exactly this, and the box is prefilled
+   * with it, so a name is never published that the person was not shown (§NNN, §812).
+   */
+  name: string | null;
 };
 
 /**
@@ -378,7 +386,8 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
       confirmed: row.confirmedAt !== null,
       asked: row.askedAt !== null && row.confirmedAt === null,
       named: row.displayName !== null,
-      showName: row.showName,
+      showName: row.showName && row.displayName !== null,
+      name: row.displayName,
     } satisfies RsvpLink;
   });
 }
@@ -564,10 +573,12 @@ export type RsvpNameSwitch = { ok: true; showName: boolean } | { ok: false; reas
  * (not used, not replaced, not expired, the event not started) and `eventId` is that answer's event. Only a CONFIRMED row of that person is
  * touched: a name is public only for a counted answer (`publicRsvpName`), and an unconfirmed or «Vii?»-asked row is not the person's yet.
  *
- * - **ON** needs a name to show — the one typed now (`displayName`, cleaned like every typed name), else the one on the row, else
- *   `defaultName` (the signed-in account's own, which the zone offers only for the person's tick) — and records the privacy notice in
- *   force on the row (`privacy_notice_version`): the tick is a fresh consent, under the notice that describes it, and it needs the event
- *   to take «Vin!» (`rsvpOffered`: published, ahead, ticked, the notice describing «Vin!»).
+ * - **ON** needs a name to show, and it is **the one posted now** (`displayName`, cleaned like every typed name) — or, only when the row
+ *   holds none, `defaultName` (the signed-in account's own, which the zone offers only for the person's tick and names beside it). A name
+ *   already on the row is never published unposted: it may be one a stranger typed on the page with the tick off (§812: an unconfirmed
+ *   row never lends a stranger's typed name to a verified press), so every door shows it, prefilled and editable, and posts it. The
+ *   press records the privacy notice in force on the row (`privacy_notice_version`): the tick is a fresh consent, under the notice that
+ *   describes it, and it needs the event to take «Vin!» (`rsvpOffered`: published, ahead, ticked, the notice describing «Vin!»).
  * - **OFF** clears `show_name` and keeps the name stored — it is the person's, used again if they turn it back on. It needs no notice and
  *   no open event: a person may always stop being named.
  *
@@ -627,7 +638,7 @@ export async function setRsvpShowName<T extends Record<string, unknown>>(
       return { ok: true, showName: false, changed: true };
     }
 
-    const name = cleanDisplayName(input.displayName) ?? cleanDisplayName(row.displayName) ?? cleanDisplayName(input.defaultName);
+    const name = cleanDisplayName(input.displayName) ?? (cleanDisplayName(row.displayName) === null ? cleanDisplayName(input.defaultName) : null);
     if (name === null) return { ok: false, reason: "name" };
     const event = await findPublishedEventById(tx, row.locale, row.eventId);
     const notice = event ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", row.locale, now) : undefined;
@@ -659,20 +670,21 @@ export async function hasConfirmedRsvp<T extends Record<string, unknown>>(db: Da
 }
 
 /**
- * The person's own confirmed answer, as the tick «Numele meu apare la „Cine vine"» needs it (§NNN): whether the row shows the name and
- * whether it holds one — never the name or the address. Null when there is no confirmed answer of this address. The remembered browser's state.
+ * The person's own confirmed answer, as the tick «Numele meu apare la „Cine vine"» needs it (§NNN): whether the name shows (the tick AND a
+ * name) and the name the row holds, which the tick would show — handed only to the browser the cookie proves is the person's, never the
+ * address. Null when there is no confirmed answer of this address. The remembered browser's state.
  */
 export async function readOwnRsvpName<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
   canonicalEmail: string,
-): Promise<{ showName: boolean; hasName: boolean } | null> {
+): Promise<{ showName: boolean; name: string | null } | null> {
   const [row] = await db
     .select({ showName: eventRsvps.showName, displayName: eventRsvps.displayName })
     .from(eventRsvps)
     .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.canonicalEmail, canonicalEmail), isNotNull(eventRsvps.confirmedAt)))
     .limit(1);
-  return row ? { showName: row.showName, hasName: row.displayName !== null } : null;
+  return row ? { showName: row.showName && row.displayName !== null, name: row.displayName } : null;
 }
 
 /** What the page's card «Vin (N)» draws: the count, the names that may be shown, and how many are only counted. */

@@ -32,10 +32,10 @@ export async function countRsvpsForEvents<T extends Record<string, unknown>>(db:
  * answer; an address that cannot be canonicalised answers nothing.
  *
  * A map, not a set (§NNN): each answered event carries the state of the person's own tick «Numele meu apare la „Cine vine"» — `showName`
- * as the row keeps it, `hasName` whether the row holds a name at all (so the zone knows whether ticking needs the name box). Never the
- * name or the address: the zone's row draws a tick, not the data.
+ * as it stands (the tick AND a name: a tick with no name shows nothing and is not drawn ticked), and `name`, the name the row holds, which
+ * the zone prefills in its box so a stored name is never published unseen (§812). The signed-in account's own answers, never the address.
  */
-export type AccountAnswer = { showName: boolean; hasName: boolean };
+export type AccountAnswer = { showName: boolean; name: string | null };
 
 export async function answeredByAccount<T extends Record<string, unknown>>(db: Database<T>, email: string, eventIds: readonly string[]): Promise<Map<string, AccountAnswer>> {
   if (eventIds.length === 0) return new Map();
@@ -49,5 +49,5 @@ export async function answeredByAccount<T extends Record<string, unknown>>(db: D
     .select({ eventId: eventRsvps.eventId, showName: eventRsvps.showName, displayName: eventRsvps.displayName })
     .from(eventRsvps)
     .where(and(eq(eventRsvps.canonicalEmail, canonicalEmail), inArray(eventRsvps.eventId, [...eventIds]), isNotNull(eventRsvps.confirmedAt)));
-  return new Map(rows.map((row) => [row.eventId, { showName: row.showName, hasName: row.displayName !== null }]));
+  return new Map(rows.map((row) => [row.eventId, { showName: row.showName && row.displayName !== null, name: row.displayName }]));
 }

@@ -845,7 +845,8 @@
       "help": "Browserul tău rămâne recunoscut un an după „Da, vin” sau „Nu mai vin”; „Nu sunt eu” îl uită.",
       "failed": "Nu am putut trimite răspunsul. Încearcă din nou.",
       "nameSwitch": "Numele meu apare la „Cine vine”",
-      "nameKept": "Debifat, ești doar numărat. Numele rămâne păstrat și apare din nou dacă îl bifezi.",
+      "nameKept": "Cu bifa apari ca „{name}”. Fără ea ești doar numărat; numele rămâne păstrat și apare din nou dacă bifezi iar.",
+      "nameAsk": "Bifează și scrie numele cu care vrei să apari.",
       "nameBox": "Numele tău",
       "nameSave": "Salvează",
       "nameOutcome": {
@@ -853,7 +854,8 @@
         "hidden": "Gata: numele tău nu mai apare; ești doar numărat.",
         "name": "Scrie numele cu care vrei să apari.",
         "none": "Nu găsim un răspuns „Vin!” de-al tău aici.",
-        "closed": "Evenimentul nu mai primește răspunsuri „Vin!”, așa că numele nu se mai poate arăta."
+        "closed": "Evenimentul nu mai primește răspunsuri „Vin!”, așa că numele nu se mai poate arăta.",
+        "wait": "Prea multe schimbări într-o oră. Încearcă mai târziu; „Nu mai vin” merge oricând."
       },
       "calendar": {
         "link": "Vin!",
@@ -13009,6 +13011,8 @@
     "confirmPending": "Te numărăm…",
     "confirmAutoNote": "Deschis în browser, linkul te numără singur; dacă nu se întâmplă, apasă „Da, vin”.",
     "withdrawTitle": "Nu mai vii?",
+    "answerTitle": "Răspunsul tău",
+    "answerIntro": "Vii la {event}.",
     "withdrawIntro": "Nu mai vii la {event}? Răspunsul tău se șterge.",
     "withdrawButton": "Nu mai vin",
     "withdrawPending": "Se trimite…",

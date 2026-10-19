@@ -5,7 +5,9 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { hashTokenSecret, isWellFormedTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
+import { consumeRateLimit, refundRateLimit } from "@/modules/rate-limit/service";
 import { rememberPerson } from "@/modules/person-session/session";
 import { confirmRsvp, readRsvpLink, setRsvpShowName, withdrawRsvp, type RsvpProved } from "@/modules/rsvp/rsvp";
 import { RSVP_BOX_ID } from "@/modules/rsvp/rsvp-box";
@@ -82,19 +84,29 @@ export async function withdrawRsvpAction(form: FormData): Promise<void> {
  *
  * **This POST does NOT spend the link** (`setRsvpShowName` reads the token, it does not consume it): showing or hiding a name is a reversible,
  * low-stakes choice — the precedent is the registration's `LIST_CONSENT` link (§186) — so the same link still takes the answer back with
- * «Nu mai vin» afterwards, and the tick can be flipped as often as the person likes until the event starts. The GET of the page changed
- * nothing and still does not (BR-REQ-036-02); only this press writes, and it writes the one tick (and the name typed in the box, when the answer
- * holds none). A link that is not live — spent, replaced, expired, the event started, or a confirm link — lands on the page's «linkul nu mai merge»,
+ * «Nu mai vin» afterwards. The GET of the page changed nothing and still does not (BR-REQ-036-02); only this press
+ * writes, and it writes the one tick and the name the box holds (prefilled with the answer's own: a stored name is never published unposted).
+ * A link that is not live — spent, replaced, expired, the event started, or a confirm link — lands on the page's «linkul nu mai merge»,
  * and no address or name is ever read from the form. The page is read again live, drawing the new state and one sentence from `?nume=`.
+ *
+ * **The throttle is its own** (`rsvp-name`, thirty an hour per link), not `token-validate`'s ten: that bucket is what «Nu mai vin» and the page's
+ * every GET spend, and a flip is a POST plus the redirect's GET — two attempts each, so five flips in an hour would have locked «Nu mai vin» out
+ * of its own link. The redirect's GET is paid back here (`refundRateLimit`) because this press, not the person, caused it; a person who
+ * opens the page ten times still spends ten. A refused flip says so on the page (`?nume=wait`) and leaves the link working.
  */
 export async function setNameByLinkAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("locale"));
   const token = String(form.get("token") ?? "");
   const db = getDb();
   const now = new Date();
-  if (!(await tokenAttemptAllowed(db, token, now))) redirect(`${pageOf(locale, token)}?invalid=1`);
-  const link = await readRsvpLink(db, token, now);
-  if (!link || link.state !== "live" || link.purpose !== "RSVP_WITHDRAW") redirect(`${pageOf(locale, token)}?invalid=1`);
+  if (!isWellFormedTokenSecret(token)) redirect(`${pageOf(locale, token)}?invalid=1`);
+  const key = hashTokenSecret(token);
+  const allowed = (await consumeRateLimit(db, "rsvp-name", key, now)).allowed;
+  const link = allowed ? await readRsvpLink(db, token, now) : null;
+  // The redirect below lands on the page, whose GET spends one `token-validate` attempt: this press pays it back (see above).
+  if (allowed && (!link || link.state !== "live" || link.purpose !== "RSVP_WITHDRAW")) redirect(`${pageOf(locale, token)}?invalid=1`);
+  await refundRateLimit(db, "token-validate", key, now);
+  if (!allowed || !link) redirect(`${pageOf(locale, token)}?nume=wait`);
   const result = await setRsvpShowName(
     db,
     link.eventId,

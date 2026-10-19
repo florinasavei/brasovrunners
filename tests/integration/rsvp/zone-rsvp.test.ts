@@ -462,10 +462,11 @@ describe("§NNN the zone's name tick", () => {
     expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe(`/ro/zona-membri/alergari?vin=shown#vin-${eventId}`);
     expect((await answers())[0]).toMatchObject({ showName: true, displayName: "Ana Membru", privacyNoticeVersion: 2 });
     expect(await publicRead(eventId)).toEqual({ count: 1, names: ["Ana Membru"], others: 0 });
-    // The row now draws the tick ticked, and no name box (the answer holds a name).
+    // The row now draws the tick ticked, and the box «Numele tău» prefilled with the name the answer holds: the person is shown what it publishes.
     const row = rowOf(await runs(), eventId)!;
     expect(row).toMatch(/<input[^>]*name="showName"[^>]*checked|<input[^>]*checked[^>]*name="showName"/);
-    expect(row).not.toContain('name="name"');
+    expect(row).toMatch(/<input[^>]*name="name"[^>]*value="Ana Membru"|<input[^>]*value="Ana Membru"[^>]*name="name"/);
+    expect(row).toContain("Cu bifa apari ca „Ana Membru”");
   });
 
   it("hides it on the untick, keeps the name stored and says «hidden» — and the next tick shows it again", async () => {
@@ -476,8 +477,11 @@ describe("§NNN the zone's name tick", () => {
     expect(await publicRead(eventId)).toEqual({ count: 1, names: [], others: 1 });
     const row = rowOf(await runs(), eventId)!;
     expect(row).not.toMatch(/<input[^>]*name="showName"[^>]*checked/);
-    expect(row).toContain("Numele rămâne păstrat");
-    await redirectedTo(setNameAsMemberAction(tick(eventId, true)));
+    expect(row).toContain("numele rămâne păstrat");
+    // The next tick posts what the prefilled box holds; a bare one would publish a name not shown (§812), and is refused.
+    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe("/ro/zona-membri/alergari?vin=name#vin-outcome");
+    expect((await publicRead(eventId)).names).toEqual([]);
+    await redirectedTo(setNameAsMemberAction(tick(eventId, true, { name: "Ana Membru" })));
     expect((await publicRead(eventId)).names).toEqual(["Ana Membru"]);
   });
 
@@ -494,12 +498,28 @@ describe("§NNN the zone's name tick", () => {
     expect((await answers())[0]).toMatchObject({ showName: true, displayName: "Ana M." });
   });
 
-  it("never swaps a name the person typed for the account's: the stored name wins on a tick", async () => {
+  it("never swaps a name the person typed for the account's, and never publishes it unposted: the stored name is shown in the box and goes public only posted", async () => {
     const eventId = await seed("Alergarea de joi");
     await answerRsvp(db, eventId, identityOf("link", { email: member.email, displayName: "Ana", showName: false, locale: "ro" }), new Date());
     state.cookie = member.id;
-    await redirectedTo(setNameAsMemberAction(tick(eventId, true)));
+    // The row shows the stored name, prefilled, not the account's «Ana Membru».
+    const row = rowOf(await runs(), eventId)!;
+    expect(row).toMatch(/<input[^>]*name="name"[^>]*value="Ana"|<input[^>]*value="Ana"[^>]*name="name"/);
+    expect(row).toContain("Cu bifa apari ca „Ana”");
+    // A stale tab's bare tick: refused, nothing public, the account's name not lent.
+    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe("/ro/zona-membri/alergari?vin=name#vin-outcome");
+    expect((await answers())[0]).toMatchObject({ showName: false, displayName: "Ana" });
+    await redirectedTo(setNameAsMemberAction(tick(eventId, true, { name: "Ana" })));
     expect((await answers())[0]).toMatchObject({ showName: true, displayName: "Ana" });
+  });
+
+  it("draws a tick with no name unticked, with the box ready", async () => {
+    const eventId = await seed("Alergarea de joi");
+    await answerRsvp(db, eventId, identityOf("link", { email: member.email, displayName: null, showName: true, locale: "ro" }), new Date());
+    state.cookie = member.id;
+    expect((await answers())[0]).toMatchObject({ showName: true, displayName: null });
+    const row = rowOf(await runs(), eventId)!;
+    expect(row).not.toMatch(/<input[^>]*name="showName"[^>]*checked|<input[^>]*checked[^>]*name="showName"/);
   });
 
   it("touches only the signed-in account's own answer: a forged address or role changes nothing", async () => {
@@ -522,7 +542,7 @@ describe("§NNN the zone's name tick", () => {
     // An untick always works, even for a run the club has since unticked.
     expect(await redirectedTo(setNameAsMemberAction(tick(eventId, false)))).toBe(`/ro/zona-membri/alergari?vin=hidden#vin-${eventId}`);
     // Turning it on again: closed, nothing written.
-    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe("/ro/zona-membri/alergari?vin=closed#vin-outcome");
+    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true, { name: "Ana Membru" })))).toBe("/ro/zona-membri/alergari?vin=closed#vin-outcome");
     expect((await answers())[0].showName).toBe(false);
   });
 

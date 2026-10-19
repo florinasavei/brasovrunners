@@ -1507,6 +1507,15 @@ export function lawyerReads(locale: EmailLocale, keys: readonly string[]): strin
   return `${words.lead} ${words.changed}, ${words.first} ${named}.`;
 }
 
+/**
+ * One line of the «Vin!» confirmation's «counted» shape (§NNN), whose one button is the withdraw link itself: that link's page also shows or hides
+ * the person's name, and the answer goes only by the page's own button. Above `T` because both languages' bodies read it.
+ */
+const RSVP_NAME_COUNTED = {
+  ro: "Pe pagina butonului îți arăți sau ascunzi numele la „Cine vine”; răspunsul se șterge doar dacă apeși acolo „Nu mai vin”.",
+  en: "On the button's page you can also show or hide your name under “Who's coming”; your answer goes only if you press “I'm not coming any more” there.",
+} as const;
+
 const T = {
   ro: {
     hi: (name: string) => `Salut, ${name},`,
@@ -1598,6 +1607,7 @@ const T = {
         d.rsvpStage === "counted"
           ? [
               `Ești deja numărat printre cei care vin la ${d.eventTitle ?? "eveniment"}. Dacă nu mai poți veni, apasă butonul de mai jos și răspunsul tău se șterge.`,
+              RSVP_NAME_COUNTED.ro,
               "Primești acest mesaj pentru că cineva a scris adresa ta la „Vin!” pe pagina evenimentului.",
             ]
           : d.rsvpStage === "withdraw"
@@ -1612,9 +1622,11 @@ const T = {
               ],
       action: (d: TemplateData) => (d.rsvpStage === "counted" || d.rsvpStage === "withdraw" ? "Nu mai vin" : "Da, vin"),
       emphasis: (d: TemplateData, b: readonly string[]): Emphasis =>
-        d.rsvpStage === "counted" || d.rsvpStage === "withdraw"
-          ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1]] }
-          : { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] },
+        d.rsvpStage === "counted"
+          ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] }
+          : d.rsvpStage === "withdraw"
+            ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1]] }
+            : { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] },
       links: (d: TemplateData) => [...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : [])],
     },
     registrationConfirmed: {
@@ -2361,8 +2373,11 @@ const T = {
     familyDecline: "Nu înscriu această persoană",
     /** «Vin!» (§811): the quieter button under «Da, vin» — the same message's other link. */
     rsvpNo: "Nu vin",
-    /** Under «Nu vin» (§NNN): the same link's page also shows or hides the person's name on «Cine vine». */
-    rsvpNameNote: "Tot de aici îți arăți sau ascunzi numele",
+    /**
+     * Under «Nu vin» (§NNN), before the answer is counted: the same link's page shows or hides the name once it is — and says that the answer goes
+     * only by the page's own button, since the body above says «Nu vin» deletes it.
+     */
+    rsvpNameNote: "După „Da, vin”, tot din „Nu vin” îți arăți sau ascunzi numele; răspunsul se șterge doar dacă apeși „Nu mai vin” pe pagina lui.",
     /** «Vin!» (§811): which name the press makes public, since whoever typed the address chose it. */
     rsvpShownName: (name: string) => `Dacă apeși „Da, vin”, pe pagina evenimentului va apărea numele „${name}”: cine a scris adresa a bifat că vrea să apară cu numele. Dacă nu vrei, apasă „Nu vin”.`,
     /** «Nu mai pot ajunge» (§558; the owner's words), and its one sentence under the button. */
@@ -2832,6 +2847,7 @@ const T = {
         d.rsvpStage === "counted"
           ? [
               `You are already counted among those coming to ${d.eventTitle ?? "the event"}. If you can't come any more, press the button below and your answer is deleted.`,
+              RSVP_NAME_COUNTED.en,
               "You are getting this because someone typed your address under “I'm coming!” on the event's page.",
             ]
           : d.rsvpStage === "withdraw"
@@ -2846,9 +2862,11 @@ const T = {
               ],
       action: (d: TemplateData) => (d.rsvpStage === "counted" || d.rsvpStage === "withdraw" ? "I'm not coming any more" : "Yes, I'm coming"),
       emphasis: (d: TemplateData, b: readonly string[]): Emphasis =>
-        d.rsvpStage === "counted" || d.rsvpStage === "withdraw"
-          ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1]] }
-          : { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] },
+        d.rsvpStage === "counted"
+          ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] }
+          : d.rsvpStage === "withdraw"
+            ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1]] }
+            : { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] },
       links: (d: TemplateData) => [...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : [])],
     },
     registrationConfirmed: {
@@ -3164,8 +3182,8 @@ const T = {
     },
     familyDecline: "I am not registering this person",
     rsvpNo: "I'm not coming",
-    /** Under “I'm not coming” (§NNN): the same link's page also shows or hides the person's name on “Who's coming”. */
-    rsvpNameNote: "You show or hide your name from here too",
+    /** Under “I'm not coming” (§NNN), before the answer is counted: see the Romanian note. */
+    rsvpNameNote: "After “Yes, I'm coming”, the “I'm not coming” link also lets you show or hide your name; your answer goes only if you press “I'm not coming any more” on its page.",
     rsvpShownName: (name: string) => `If you press “Yes, I'm coming”, the name “${name}” will show on the event's page: whoever typed the address ticked that they want their name to show. If you don't, press “I'm not coming”.`,
     cannotCome: {
       label: "I can't make it any more",

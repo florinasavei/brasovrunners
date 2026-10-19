@@ -34,8 +34,11 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
-/** What `?nume=` may say after the name tick (§NNN): names of outcomes, never a value of the person's; anything else is nothing. */
-const NAME_OUTCOMES = ["shown", "hidden", "name", "none", "closed"] as const;
+/**
+ * What `?nume=` may say after the name tick (§NNN): names of outcomes, never a value of the person's; anything else is nothing. «Shown» and
+ * «hidden» claim a state, so they are drawn only while the row says so (below): the address alone proves nothing.
+ */
+const NAME_OUTCOMES = ["shown", "hidden", "name", "none", "closed", "wait"] as const;
 
 /**
  * The page a «Vin!» message's two buttons open (§811, «Vin!» part 1): «Da, vin» (`RSVP_CONFIRM`) or «Nu mai vin» (`RSVP_WITHDRAW`) —
@@ -73,7 +76,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const { invalid, retras, ok, nu, nume } = await searchParams;
-  const nameOutcome = NAME_OUTCOMES.find((outcome) => outcome === nume) ?? null;
+  const nameQuery = NAME_OUTCOMES.find((outcome) => outcome === nume) ?? null;
   const t = await getTranslations("Rsvp");
   const tEvent = await getTranslations("Event");
   const db = getDb();
@@ -116,6 +119,8 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
 
   const link = invalid !== undefined || !(await tokenAttemptAllowed(db, token, now)) ? null : await readRsvpLink(db, token, now);
   const live = link?.state === "live" ? link : null;
+  // «Gata: numele tău apare» only when the tick is on, «nu mai apare» only when it is off: a sentence from the address alone is not drawn (the «retras» proof's reason).
+  const nameOutcome = nameQuery === "shown" ? (live?.showName ? nameQuery : null) : nameQuery === "hidden" ? (live && !live.showName ? nameQuery : null) : nameQuery;
   // «Da, vin»: a POST, so the GET above counts nobody (§12.8); the island may press it, a person always can.
   const confirmForm = (
     <form action={confirmRsvpAction}>
@@ -130,7 +135,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
-        {!link ? t("linkInvalid") : link.purpose === "RSVP_WITHDRAW" ? (link.asked ? t("askNoTitle") : t("withdrawTitle")) : link.asked ? t("askTitle") : t("confirmTitle")}
+        {!link ? t("linkInvalid") : link.purpose === "RSVP_WITHDRAW" ? (link.asked ? t("askNoTitle") : live?.confirmed ? t("answerTitle") : t("withdrawTitle")) : link.asked ? t("askTitle") : t("confirmTitle")}
       </Typography>
 
       {!live ? (
@@ -197,28 +202,34 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
         </Stack>
       ) : (
         <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
-          <Typography data-testid="rsvp-withdraw-intro">{live.asked ? t("askNoIntro", { event: live.title }) : t("withdrawIntro", { event: live.title })}</Typography>
+          {/* A counted answer's page does two jobs, so it opens neutral; «Nu mai vii? … se șterge» stands directly above the button it explains. */}
+          {live.confirmed && <Typography data-testid="rsvp-answer-intro">{t("answerIntro", { event: live.title })}</Typography>}
           {nameOutcome !== null && (
             <Alert severity={nameOutcome === "shown" || nameOutcome === "hidden" ? "success" : "warning"} role="status" data-testid="rsvp-name-note">
               {tEvent(`rsvp.nameOutcome.${nameOutcome}`)}
             </Alert>
           )}
-          {/* The name tick (§NNN): only a counted answer has a name to show; its POST reads the link and does not spend it (`setNameByLinkAction`). */}
+          {/*
+            The name tick (§NNN): only a counted answer has a name to show; its POST reads the link and does not spend it (`setNameByLinkAction`).
+            The box «Numele tău» is always there, prefilled with the name the answer holds — the person is shown what the tick publishes and may
+            change it (§812: a name typed on the page with the tick off is never published unseen); blank when the answer holds none.
+          */}
           {live.confirmed && (
             <form action={setNameByLinkAction} style={{ width: "100%" }} data-testid="rsvp-name-switch">
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="token" value={token} />
               <Stack spacing={1.5} sx={{ alignItems: "flex-start" }}>
-                <CheckboxField name="showName" defaultChecked={live.showName} help={tEvent("rsvp.nameKept")}>
+                <CheckboxField name="showName" defaultChecked={live.showName} help={live.name !== null ? tEvent("rsvp.nameKept", { name: live.name }) : tEvent("rsvp.nameAsk")}>
                   {tEvent("rsvp.nameSwitch")}
                 </CheckboxField>
-                {!live.named && <TextField name="name" label={tEvent("rsvp.nameBox")} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />}
+                <TextField name="name" label={tEvent("rsvp.nameBox")} defaultValue={live.name ?? ""} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
                 <SubmitButton label={tEvent("rsvp.nameSave")} pendingLabel={tEvent("rsvp.submitting")} variant="outlined">
                   <SaveIcon />
                 </SubmitButton>
               </Stack>
             </form>
           )}
+          <Typography data-testid="rsvp-withdraw-intro">{live.asked ? t("askNoIntro", { event: live.title }) : t("withdrawIntro", { event: live.title })}</Typography>
           <form action={withdrawRsvpAction}>
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="token" value={token} />

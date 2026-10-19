@@ -27,6 +27,7 @@ export type RateLimitScope =
   | "volunteer-event"
   | "rsvp-confirm"
   | "rsvp-event"
+  | "rsvp-name"
   | "content-translate"
   | "bot-check-signal";
 
@@ -115,6 +116,12 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    * page can cause an hour whatever the addresses typed. Two hundred is more than a club's turn-up run gets in a season.
    */
   "rsvp-event": { limit: 200, windowMs: 60 * 60_000 },
+  /**
+   * The name tick on the «Nu mai vin» link's page (§NNN), keyed on the link's hash: its own bucket, so flipping a name never spends the
+   * ten `token-validate` attempts that «Nu mai vin» itself depends on. Thirty an hour is far more flips than a person makes, and it bounds
+   * the public-cache expiries (`places`) a leaked link could cause.
+   */
+  "rsvp-name": { limit: 30, windowMs: 60 * 60_000 },
   /** «Tradu din română» (§464), per staff id; the daily character budget bounds the cost. */
   "content-translate": { limit: 60, windowMs: 60 * 60_000 },
   /**

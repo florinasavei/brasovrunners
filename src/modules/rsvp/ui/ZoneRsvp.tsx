@@ -31,6 +31,10 @@ import { zoneRsvpAnchor } from "../domain/zone-outcome";
  * numele meu public»): «Numele meu apare la „Cine vine"», drawn from the answer's own `showName`, in its own small form with «Salvează» — a real
  * tick box, saved by one press, working without JavaScript. When neither the answer nor the account holds a name, a «Numele tău» box stands
  * with it. The account's name is used only when ticked (`setNameAsMemberAction`).
+ *
+ * **A name the person was not shown is never published** (§NNN, §812): when the answer holds a name — one a stranger may have typed on the
+ * page with the tick off — the box «Numele tău» stands prefilled with it, editable, and the help says «Apari ca „…”»; the press posts what
+ * the box holds. Only when the answer holds none is the account's own name the fallback, named in the help beside the tick.
  */
 export type ZoneRsvpProps = {
   locale: Locale;
@@ -43,12 +47,12 @@ export type ZoneRsvpProps = {
   count: number;
   /** The name the account would show (`accountPublicName`), or null: then there is nothing to tick. */
   publicName: string | null;
-  /** The answer's own tick «Numele meu apare la „Cine vine"» as the row keeps it, and whether the row holds a name (`answeredByAccount`). Only read while `going`. */
+  /** The answer's own tick «Numele meu apare la „Cine vine"» as it stands (the tick and a name), and the name the row holds (`answeredByAccount`). Only read while `going`. */
   showName: boolean;
-  hasName: boolean;
+  name: string | null;
 };
 
-export default async function ZoneRsvp({ locale, eventId, titleId, going, count, publicName, showName, hasName }: ZoneRsvpProps) {
+export default async function ZoneRsvp({ locale, eventId, titleId, going, count, publicName, showName, name }: ZoneRsvpProps) {
   const t = await getTranslations("Event");
   const tZone = await getTranslations("Members");
   const hidden = (
@@ -89,14 +93,14 @@ export default async function ZoneRsvp({ locale, eventId, titleId, going, count,
               <EventBusyIcon />
             </SubmitButton>
           </form>
-          {/* The name tick (§NNN): the box only when there is no name anywhere to show; the help says which name, or that it stays saved. */}
+          {/* The name tick (§NNN): the box prefilled with the name the answer holds (shown, editable, posted), or blank when no name is anywhere; the help says which name the tick shows. */}
           <form action={setNameAsMemberAction} aria-labelledby={titleId} data-testid="zone-rsvp-name" style={{ flexBasis: "100%" }}>
             {hidden}
             <Stack spacing={1}>
-              <CheckboxField name="showName" defaultChecked={showName} help={hasName ? t("rsvp.nameKept") : publicName !== null ? tZone("rsvp.nameHelp", { name: publicName }) : undefined}>
+              <CheckboxField name="showName" defaultChecked={showName} help={name !== null ? t("rsvp.nameKept", { name }) : publicName !== null ? tZone("rsvp.nameHelp", { name: publicName }) : t("rsvp.nameAsk")}>
                 {t("rsvp.nameSwitch")}
               </CheckboxField>
-              {!hasName && publicName === null && <TextField name="name" label={t("rsvp.nameBox")} autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} sx={{ maxWidth: 360 }} />}
+              {(name !== null || publicName === null) && <TextField name="name" label={t("rsvp.nameBox")} defaultValue={name ?? ""} autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} sx={{ maxWidth: 360 }} />}
               <Box>
                 <SubmitButton label={t("rsvp.nameSave")} pendingLabel={t("rsvp.submitting")} variant="outlined">
                   <SaveIcon />

@@ -478,7 +478,10 @@ describe("§NNN the island's props for the name tick", () => {
       nameHidden: "Gata: numele tău nu mai apare; ești doar numărat.",
       nameNeeded: "Scrie numele cu care vrei să apari.",
     });
-    expect(labels.nameHelp).toContain("Numele rămâne păstrat");
+    // The help carries `{name}` for the island to fill with the answer's own name; a second sentence says what to do when it holds none.
+    expect(labels.nameHelp).toContain("Cu bifa apari ca „{name}”");
+    expect(labels.nameHelp).toContain("numele rămâne păstrat");
+    expect(labels.nameAsk).toBe("Bifează și scrie numele cu care vrei să apari.");
     expect(typeof actions.showName).toBe("function");
   });
 
@@ -486,7 +489,10 @@ describe("§NNN the island's props for the name tick", () => {
     const { labels } = await island("en");
     expect(labels.nameSwitch).toBe("My name shows under “Who's coming”");
     expect(labels.nameSave).toBe("Save");
-    expect(labels.nameClosed).toContain("no longer takes");
+    expect(labels.nameHelp).toContain("Ticked, you show as “{name}”");
+    expect(labels.nameAsk).toBe("Tick it and type the name you want to show.");
+    // «Closed» has no sentence in the island: the state turns it to the typed form, which cannot show one.
+    expect(labels).not.toHaveProperty("nameClosed");
   });
 
   it("holds no address and no person's name in anything it is handed", async () => {
@@ -499,11 +505,13 @@ describe("§NNN the island's props for the name tick", () => {
   it("has every sentence in both catalogues, one plain sentence each (≤ 200 characters)", () => {
     for (const catalogue of [ro, en]) {
       const rsvp = catalogue.Event.rsvp;
-      for (const sentence of [rsvp.nameSwitch, rsvp.nameKept, rsvp.nameBox, rsvp.nameSave, ...Object.values(rsvp.nameOutcome)]) {
+      for (const sentence of [rsvp.nameSwitch, rsvp.nameKept, rsvp.nameAsk, rsvp.nameBox, rsvp.nameSave, ...Object.values(rsvp.nameOutcome)]) {
         expect(sentence.length).toBeGreaterThan(0);
         expect(sentence.length).toBeLessThanOrEqual(200);
-        expect(sentence).not.toContain("{");
+        // Only the help that names the name has a placeholder.
+        if (sentence !== rsvp.nameKept) expect(sentence).not.toContain("{");
       }
+      expect(rsvp.nameKept).toContain("{name}");
     }
   });
 });

@@ -86,7 +86,7 @@ async function rsvpsOrNone(account: { email: string }, all: readonly PublicEvent
     const ids = shown.filter((event) => coming.has(event.id)).map((event) => event.id);
     if (ids.length === 0) return new Map();
     const answered = await answeredByAccount(getDb(), account.email, ids);
-    return new Map(ids.map((id) => [id, { count: coming.get(id) ?? 0, going: answered.has(id), showName: answered.get(id)?.showName ?? false, hasName: answered.get(id)?.hasName ?? false }]));
+    return new Map(ids.map((id) => [id, { count: coming.get(id) ?? 0, going: answered.has(id), showName: answered.get(id)?.showName ?? false, name: answered.get(id)?.name ?? null }]));
   } catch (error) {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
@@ -193,7 +193,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
                   {formatDay(event.startsAt, { locale, timeZone: event.timezone, withTime: true })}
                 </Typography>
                 {/* «Vin!» (§NNN): only a run that takes answers, with this account's own state; a members' event has none (its page draws no «Vii?»). */}
-                {rsvps.has(event.id) && <ZoneRsvp locale={locale} eventId={event.id} titleId={zoneRsvpTitleId(event.id)} going={rsvps.get(event.id)!.going} count={rsvps.get(event.id)!.count} publicName={publicName} showName={rsvps.get(event.id)!.showName} hasName={rsvps.get(event.id)!.hasName} />}
+                {rsvps.has(event.id) && <ZoneRsvp locale={locale} eventId={event.id} titleId={zoneRsvpTitleId(event.id)} going={rsvps.get(event.id)!.going} count={rsvps.get(event.id)!.count} publicName={publicName} showName={rsvps.get(event.id)!.showName} name={rsvps.get(event.id)!.name} />}
               </Box>
             ))}
           </Box>
