@@ -43,7 +43,8 @@ export default async function RsvpAnswersCard({
   if (total === 0) return null;
   // «1 membru confirmat» (§829): said only when there is one, after the counts, in the editor's own words.
   const members = counts.members ? t(`editor.rsvpAnswers.members.${countForm(counts.members, locale)}`, { count: counts.members }) : null;
-  const withMembers = (line: string): string => (members === null ? line : `${line} · ${members}`);
+  // The count line is a sentence and ends with a full stop (`countLine`): the members' words go before it, the aside's line has none.
+  const withMembers = (line: string): string => (members === null ? line : line.endsWith(".") ? `${line.slice(0, -1)} · ${members}.` : `${line} · ${members}`);
   const when = (at: Date): string => formatDay(at, { locale: locale === "en" ? "en" : "ro", timeZone, withTime: true });
   const body: ReactNode =
     rows === null ? (
