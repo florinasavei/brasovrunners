@@ -25,10 +25,10 @@ const OFFER = read("src/modules/group-run-declarations/ui/DeclarationOffer.tsx")
 describe("§498 «Condiții de participare»", () => {
   const fold = PAGE.slice(PAGE.indexOf('data-testid="conditions-fold"'), PAGE.indexOf("<OpenFoldFromHash />"));
 
-  it("is one closed native fold after the programme and before the start list, titled by a real h2 in its summary", () => {
+  it("is one closed native fold after the programme and — since the list moved up (§NNN) — after the start list, titled by a real h2 in its summary", () => {
     expect(fold.length).toBeGreaterThan(0);
     expect(PAGE.indexOf('data-testid="conditions-fold"')).toBeGreaterThan(PAGE.indexOf("<EventProgramme "));
-    expect(PAGE.indexOf('data-testid="conditions-fold"')).toBeLessThan(PAGE.indexOf("<StartList "));
+    expect(PAGE.indexOf('data-testid="conditions-fold"')).toBeGreaterThan(PAGE.indexOf("<StartList "));
     // Closed on arrival: no `open` on the details, whatever the address says (a fragment opens it).
     const details = PAGE.slice(PAGE.lastIndexOf('component="details"', PAGE.indexOf('data-testid="conditions-fold"')), PAGE.indexOf('data-testid="conditions-fold"'));
     expect(details).not.toMatch(/\bopen[=\s]/);
