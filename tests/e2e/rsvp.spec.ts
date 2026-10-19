@@ -515,11 +515,11 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await member.goto("/ro/autentificare?to=members");
     await member.getByRole("button", { name: /Dev Member/ }).click();
     await expect(member).toHaveURL(/\/ro\/zona-membri$/, { timeout: 30_000 });
-    await member.goto("/ro/zona-membri/alergari");
+    await member.goto("/ro/zona-membri");
     await hydrated(member);
     const row = member.locator(`#vin-${eventId}`);
     await expect(async () => {
-      await member.goto("/ro/zona-membri/alergari");
+      await member.goto("/ro/zona-membri");
       await expect(row).toHaveCount(1, { timeout: 1_000 });
     }).toPass({ timeout: 20_000, intervals: [1_000] });
     await expect(row).toHaveAttribute("data-going", "false");
@@ -555,6 +555,21 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await member.waitForURL(/vin=shown/);
     await expect(member.getByTestId("zone-rsvp-outcome")).toHaveText("Gata: numele tău apare la „Cine vine”.");
     await expect(row.getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" })).toBeChecked();
+    // §715 amended: «Cine vine (N)» stands open under the run's «Vin!» — a heading and the names, never a fold — with the ticked name in it.
+    const card = member.locator("li", { has: row });
+    const who = card.getByTestId("rsvp-who");
+    await expect(who).toBeVisible();
+    await expect(who.locator("xpath=ancestor-or-self::details")).toHaveCount(0);
+    await expect(who.getByTestId("rsvp-who-heading")).toContainText("Cine vine (1)");
+    await expect(who.getByTestId("rsvp-name")).toHaveCount(1);
+    await expect(who.getByTestId("rsvp-others")).toHaveCount(0);
+    // The soonest run that takes answers is the zone's first card, featured, and carries its open list; which event it is is the seed's to say.
+    const first = member.locator('[data-testid="members-upcoming"] ul > li').first();
+    await expect(first).toHaveAttribute("data-testid", "members-next-run");
+    await expect(first).toHaveAttribute("data-featured", "true");
+    await expect(member.locator('[data-featured="true"]')).toHaveCount(1);
+    if ((await first.locator(`#vin-${eventId}`).count()) === 1) await expect(first.getByTestId("rsvp-who")).toBeVisible();
+    await noSidewaysScroll(member);
     const shownName = await withDatabase(async (client) => {
       const { rows } = await client.query<{ showName: boolean; displayName: string | null }>(`SELECT show_name AS "showName", display_name AS "displayName" FROM event_rsvps WHERE event_id = $1`, [eventId]);
       return rows[0];
@@ -566,6 +581,11 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await member.waitForURL(/vin=hidden/);
     await expect(member.getByTestId("zone-rsvp-outcome")).toHaveText("Gata: numele tău nu mai apare; ești doar numărat.");
     await expect(row.getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" })).not.toBeChecked();
+    // Hidden again: still counted in the open list, named no more.
+    const hiddenWho = member.locator("li", { has: row }).getByTestId("rsvp-who");
+    await expect(hiddenWho.getByTestId("rsvp-who-heading")).toContainText("Cine vine (1)");
+    await expect(hiddenWho.getByTestId("rsvp-name")).toHaveCount(0);
+    await expect(hiddenWho.getByTestId("rsvp-others")).toHaveText("și încă 1");
     await withDatabase(async (client) => {
       const { rows } = await client.query<{ showName: boolean; displayName: string | null }>(`SELECT show_name AS "showName", display_name AS "displayName" FROM event_rsvps WHERE event_id = $1`, [eventId]);
       expect(rows[0]).toEqual({ showName: false, displayName: shownName.displayName });
@@ -582,7 +602,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await expect(member.getByTestId("rsvp-others")).toHaveText("și încă 1");
 
     // One press back.
-    await member.goto("/ro/zona-membri/alergari");
+    await member.goto("/ro/zona-membri");
     await hydrated(member);
     await member.locator(`#vin-${eventId}`).getByRole("button", { name: "Nu mai vin", exact: true }).click();
     await member.waitForURL(/vin=left/);

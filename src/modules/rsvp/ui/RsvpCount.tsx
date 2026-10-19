@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { cachedFirstRsvpNoticeVersion, cachedPublicRsvps } from "@/modules/public-cache/reads";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
+import { zoneRsvpTitleId } from "@/modules/rsvp/domain/zone-outcome";
 import type { PublicRsvps } from "@/modules/rsvp/rsvp";
 import { FOLD_GLYPH_INLINE_SX, PUBLIC_FOLD_SX } from "@/shared/ui/disclosure";
 import { DENSITY } from "@/theme/density";
@@ -31,18 +32,27 @@ export async function readRsvpsOf(eventId: string): Promise<PublicRsvps | null> 
  * A Server Component on the static event page (§549): the read is the public cache's, filed under "places", and a confirmation
  * or a withdrawal expires it at once. While the database is away it draws nothing (§281) — a count that cannot be asked is not
  * a count of zero. The wrapper carries `data-nosnippet`, as the start list's does: names stay out of search snippets.
+ *
+ * **`open`: the members' zone's card (§715 amended; the owner, 2026-10-19: «And it should be a lot easier for BVR members to see this»)**
+ * — the same bar, the same people glyph, the same rows and «și încă N», but not a fold: a heading and the list, always showing, under each
+ * run in «Alergări» (`members-area/page.tsx`), which hands every card the one read it made for the page (`readPublicRsvpsFor`) and so never
+ * asks per card. The anchor carries the event's id (many cards, one page). The heading is an `h4`, one level under the run's own title (`h3`), and the region is named by the run's title and the heading together — «Alergarea de joi Cine vine (3)» — so a screen reader's list of regions says which run each belongs to. The disclosure is the event page's, not wider: the names are
+ * those the cached read gives — a confirmed answer whose person ticked, under a notice that describes «Vin!» — and being a member shows
+ * no more (§143, §812). Nobody has answered: nothing is drawn, the row above it already says so and invites the first answer.
  */
-export default async function RsvpCount({ eventId, rsvps: given }: { eventId: string; rsvps?: PublicRsvps | null }) {
+export default async function RsvpCount({ eventId, rsvps: given, open = false }: { eventId: string; rsvps?: PublicRsvps | null; open?: boolean }) {
   const t = await getTranslations("Event");
   const rsvps = given === undefined ? await readRsvpsOf(eventId) : given;
-  if (rsvps === null) return null;
+  if (rsvps === null || (open && rsvps.count === 0)) return null;
+  // One anchor per card when many are on a page (the zone's), the event page's own `#cine-vine` otherwise.
+  const who = open ? `${RSVP_WHO_ID}-${eventId}` : RSVP_WHO_ID;
 
   return (
     // Google honours `data-nosnippet` only on span, div and section elements, so the wrapper — not the disclosure — carries it.
-    <Box component="section" data-nosnippet="" aria-labelledby={`${RSVP_WHO_ID}-title`} sx={{ mt: { xs: DENSITY.gapSm, sm: 3 } }}>
-      <Box component="details" id={RSVP_WHO_ID} data-testid="rsvp-who" sx={{ ...PUBLIC_FOLD_SX, scrollMarginTop: 16 }}>
-        <Box component="summary">
-          <Typography id={`${RSVP_WHO_ID}-title`} component="h2" variant="h2" data-testid="rsvp-who-heading" sx={{ fontSize: "1.25rem" }}>
+    <Box component="section" data-nosnippet="" aria-labelledby={open ? `${zoneRsvpTitleId(eventId)} ${who}-title` : `${who}-title`} sx={{ mt: open ? 1 : { xs: DENSITY.gapSm, sm: 3 } }}>
+      <Box component={open ? "div" : "details"} id={who} data-testid="rsvp-who" data-open={open ? "true" : undefined} sx={open ? {} : { ...PUBLIC_FOLD_SX, scrollMarginTop: 16 }}>
+        <Box component={open ? "div" : "summary"}>
+          <Typography id={`${who}-title`} component={open ? "h4" : "h2"} variant="h2" data-testid="rsvp-who-heading" sx={{ fontSize: open ? "1rem" : "1.25rem", ...(open ? { fontWeight: 700, mb: 0.5 } : {}) }}>
             <GroupsIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
             {/* The races' own words (`startList.title*`): one bar, one wording, wherever «Cine vine» is drawn. */}
             {rsvps.count === 0 ? t("startList.title") : t("startList.titleCount", { count: rsvps.count })}

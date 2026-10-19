@@ -2126,7 +2126,10 @@ the people added at once in «Adaugă mai mulți membri»; and **says who each c
 «Coduri de reducere»: «Toți membrii» (members with or without a level) or one or more levels, chosen on every code — a new
 code starts with nothing ticked and is not saved until one is, and «Toți membrii» cannot be ticked together with a level
 (§811, amended by §828). Every code's line says «Pentru: …». The codes saved before the choice was explicit read as «Toți membrii».
-In the zone's «Coduri de reducere» a member then sees the
+**The zone's tabs and where it opens (`DECISIONS.md` §715, amended).** The members' zone opens on **«Alergări»** — the address
+`/zona-membri` (`/members-area`), the sign-in's landing and the members' page's button — then **«Coduri de reducere»**
+(`/zona-membri/coduri`) and **«Magazin»** (`/zona-membri/magazin`, drawn only once the notice names the shop). The old
+`/zona-membri/alergari` still works: a permanent redirect to the zone. Nothing to set up. In the zone's «Coduri de reducere» a member then sees the
 codes for everyone and those for their own level; a member with no level sees the codes for everyone alone. **No
 member sees their level, and no visitor sees the levels:** the zone draws no badge, the public «Beneficiile membrilor»
 page has no section of levels, and no code card says why it is there. Only the administrators see a level, on «Echipa»
@@ -2551,7 +2554,7 @@ turns on event by event. Three steps are the club's: the notice (1), the tick (2
    run; a remembered browser a year after its last answer). «Toate datele unei persoane» (`/admin/registrations/person`) lists a person's answers and
    browsers, counts them in the JSON export, and an Administrator can **«Șterge răspunsurile „Vin!” și browserele»** on request — one audit row with the
    counts, never the address.
-6. **From the members' zone (§822).** In «Alergări» a signed-in member answers a run that takes answers with one press, **«Vin!»** (the account's address, counted at once, no email; the name only on their own tick), and the home page's and the event page's calendar links say «N vin» like the rest, except on a repeating run's card, which shows no count. **One step for the club:** approve the privacy notice again from the template (step 7's click), so it describes this answer; the gate stays the one for «Vin!» (§822), so nothing waits on it.
+6. **From the members' zone (§822).** In «Alergări» a signed-in member answers a run that takes answers with one press, **«Vin!»** (the account's address, counted at once, no email; the name only on their own tick), and the home page's and the event page's calendar links say «N vin» like the rest, except on a repeating run's card, which shows no count. **One step for the club:** approve the privacy notice again from the template (step 7's click), so it describes this answer; the gate stays the one for «Vin!» (§822), so nothing waits on it. **The zone opens on «Alergări»** (§715 amended): each run is a card with «Vin!» and, directly under it, **«Cine vine (N)»** open — the names of those who ticked «Vreau să apar cu numele» and «și încă N» for the rest, exactly what the event page's «Cine vine» shows and no more (§143, §812; being a member shows no extra name) — and the next run that takes answers is the first card, in the event listing's lead frame.
 7. **The «Vii?» email (`DECISIONS.md` §818).** One step for the club: **approve the privacy notice again from the template** (`/admin/legal` → the «GDPR» card → «Regenerează din șablon», as in step 1; a lawyer
    reads section 5's two paragraphs first — the newsletter's, which now says the automatic question the day before, and «Vin!»'s, which says the subscriber's address is written as
    an unconfirmed answer when the question is sent and deleted at «Nu vin» or after 7 days). Until a notice naming `{{rsvpAsk}}` (and `{{rsvp}}`) is in force, in both languages, **nobody is asked**
