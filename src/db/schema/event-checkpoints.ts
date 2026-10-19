@@ -16,7 +16,7 @@ export const eventCheckpointKind = pgEnum("event_checkpoint_kind", ["WATER", "FO
  * The checkpoints of one event's route (§757; the owner, 2026-10-13: «other things for the route: I
  * need to put checkpoints and limit times»): a point at a distance along the route, where something
  * is — water, food, first aid, the timing mat — and, optionally, the time by which a runner has to
- * be there. They are the list under «Traseul» in the editor, the table «Puncte de control» on the
+ * be there. They are the list under «Traseul» in the editor, the table «Puncte pe traseu» on the
  * event page and the marks on the bib's profile strip (§750).
  *
  * **The cut-off is a time limit, minutes from the gun, not a time of the day** (§770, reversing

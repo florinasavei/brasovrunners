@@ -49,7 +49,7 @@ const EVERYTHING_OFF: BibDesign = {
   footerText: "Cronometraj: Start & Go + 50% · Urgențe organizator 0722 000 000",
   // The profile and the emergency phone (§750): the ticks on, the phone with the spaces a URL escapes.
   showProfile: true,
-  // «Punctele de control pe profil» (§757): off, the other way from its default (on).
+  // «Punctele de pe traseu pe profil» (§757): off, the other way from its default (on).
   showCheckpoints: false,
   // «…cu orele limită» (§757): on, the other way from its default (off).
   showCheckpointTimes: true,

@@ -199,7 +199,7 @@ export const dynamic = "force-dynamic";
  * each input sits in; a stale version anywhere fails the whole save as a CONFLICT. The side
  * column's publication moves and recurrence actions are forms of their own, **siblings** of the
  * save form — HTML forms cannot nest — and so are the two small forms the bib card's immediate
- * actions post (`form="bib-assign"`, `form="bib-download"`), and so is «Puncte de control», which
+ * actions post (`form="bib-assign"`, `form="bib-download"`), and so is «Puncte pe traseu», which
  * stands after the to-do card, above the save form's first card, where the document has it — no CSS
  * `order` (§760); «Traseul» links to it. Below the grid, what is
  * operations rather than settings: the registrations received, the volunteers (§754, §760), and
@@ -392,7 +392,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     resultsRow: await resultsRowFor(staffUser.role, now),
   });
   /*
-    «Puncte de control» (§757): the route's points as saved, the route's length they are measured
+    «Puncte pe traseu» (§757): the route's points as saved, the route's length they are measured
     against, and the GPX's waypoints when the file has some that sit on its track. Read for every
     role that opens the editor; the forms ask the service for the role again.
   */
@@ -556,7 +556,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     texts: orderedTranslations,
     night: clubNightEvent(event).night,
     storageConfigured: isStorageConfigured(),
-    // «Puncte de control» (§757): «Traseul»'s card reads as drawn while the table is.
+    // «Puncte pe traseu» (§757): «Traseul»'s card reads as drawn while the table is.
     checkpointCount: checkpoints.length,
   });
   /*
@@ -1059,7 +1059,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 inUse={query.todos === "1"}
               />
               {/*
-                «Puncte de control» (§757) is a named card of «Traseul», inside it in the document (§763). Its
+                «Puncte pe traseu» (§757) is a named card of «Traseul», inside it in the document (§763). Its
                 two forms are detached (`CheckpointForms`): their state wraps the save form, their `<form>`
                 elements stand right after it — HTML forms cannot nest — and every box of the card names its
                 form, so neither save posts the other's boxes.

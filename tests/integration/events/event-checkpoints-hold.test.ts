@@ -10,7 +10,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 /**
  * §757, §770, BR-REQ-050-02 — the checkpoints' rules hold after every save, not only their own card's: an
  * event save that shortens «Timp limită» under a saved point's time limit or shortens the route under a
- * point is refused naming «Puncte de control» and the rule, writing nothing; a save that keeps them true
+ * point is refused naming «Puncte pe traseu» and the rule, writing nothing; a save that keeps them true
  * goes through — and one that moves the gun moves every clock and no limit, which is the point of a
  * time limit. On a series the other dates the save reaches are held to the same rules, the refusal naming
  * the date. «Duplică» and a series' new dates carry the checkpoints.

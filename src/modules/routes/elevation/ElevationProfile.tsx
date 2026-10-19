@@ -8,7 +8,7 @@ import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
 
 /**
  * The route's elevation profile as a picture (§802, amending §718 and §757; the owner, 2026-10-16: «I would like to have a
- * widget actually! And read it from the GPX»): the one chart of the event page and of the editor's «Puncte de control»
+ * widget actually! And read it from the GPX»): the one chart of the event page and of the editor's «Puncte pe traseu»
  * preview, drawn from `geometry.ts` — the same core the race number's strip draws from.
  *
  * A **Server Component** with plain-data props: the profile (`parse.ts`), the checkpoints to draw (the caller has already
@@ -22,7 +22,7 @@ import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
  * `<title>`, and — on the page's two charts — **a dotted vertical line from the pin down to the kilometre axis at the
  * point's exact kilometre** (the owner, 2026-10-17: «a dotted vertical line across the chart to show exactly where these
  * points are»), drawn under the curve and its tint, with the small dot where it meets the line. A pin is never the only way
- * to learn a point: the visually hidden list under the chart names each, and the table «Puncte de control» says what it offers.
+ * to learn a point: the visually hidden list under the chart names each, and the table «Puncte pe traseu» says what it offers.
  *
  * **Three sizes for the page** (`variant: "page"`), the one that fits shown by CSS alone — a single viewBox would scale its
  * labels with the screen, 11 px on a phone and 30 px on a desktop — and each **spanning the section's whole width** (the

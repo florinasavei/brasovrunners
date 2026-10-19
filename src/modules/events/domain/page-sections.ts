@@ -132,7 +132,7 @@ export type PageSectionData = {
    */
   storageConfigured?: boolean;
   /**
-   * How many «Puncte de control» the event has (§757): their own table, not a column, so the caller
+   * How many «Puncte pe traseu» the event has (§757): their own table, not a column, so the caller
    * counts them. Left out, none — the create page's event has none yet.
    */
   checkpointCount?: number;
@@ -259,8 +259,8 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   // Facebook, WhatsApp, Instagram and the calendar (§90, §107): from the page's own address.
   { id: "share", card: null, anchor: null, glyph: "share", automatic: true, drawn: () => true },
   /*
-    «Puncte de control» (`#checkpoints`, §757): the table right under the route's maps, drawn while the
-    event has a checkpoint. Part of «Traseul»: the card «Puncte de control» is a named card inside it
+    «Puncte pe traseu» (`#checkpoints`, §757): the table right under the route's maps, drawn while the
+    event has a checkpoint. Part of «Traseul»: the card «Puncte pe traseu» is a named card inside it
     (§763), whose boxes post with forms of their own beside the save form (forms cannot nest), so it
     has no number and no chip.
   */

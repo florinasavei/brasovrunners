@@ -560,8 +560,8 @@ function distanceSummary(words: SummaryWords, distanceMeters: number | null | un
  * own date, which the caller computes). The route / training description (§387) adds `cu descriere` when
  * written in every language, `descriere într-o singură limbă` when in one only — the text the next
  * save refuses (§352), said the way the partners' line says it — and `EN identic cu RO` (§354).
- * `labels.checkpoints` — `3 puncte de control`, said after the maps when the route has any (§760):
- * «Puncte de control» is a card of «Traseul», and a closed «Traseul» says it briefly.
+ * `labels.checkpoints` — `3 puncte pe traseu`, said after the maps when the route has any (§760):
+ * «Puncte pe traseu» is a card of «Traseul», and a closed «Traseul» says it briefly.
  */
 export function courseSummary(
   words: SummaryWords,

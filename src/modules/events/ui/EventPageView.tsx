@@ -383,7 +383,7 @@ export default async function EventPageView({
         }
       />
 
-      {/* «Puncte de control» (§757), under `#checkpoints`: right under the route's maps, the kilometre,
+      {/* «Puncte pe traseu» (§757), under `#checkpoints`: right under the route's maps, the kilometre,
           what there is and the cut-off of each point, and the finish when the event has a time limit.
           Nothing at all when the club has put none. */}
       <EventCheckpoints

@@ -766,7 +766,7 @@
     },
     "timeLimit": "Time limit",
     "checkpoints": {
-      "heading": "Checkpoints",
+      "heading": "Points on the route",
       "columns": {
         "km": "Km",
         "name": "Point",
@@ -2175,8 +2175,8 @@
       "CHECKPOINT_CUTOFF_NO_START": "The time limit of the point “{name}” counts from the start, and the start has no time yet. Write the start's time (or the race's start) and save the event first, then set the time limit.",
       "CHECKPOINT_CUTOFF_AFTER_LATER": "The time limit of the point “{name}” ({cutoff}) is longer than the one of “{later}” ({laterCutoff}), which is further along the route. Runners reach “{name}” first: its time limit has to be shorter.",
       "CHECKPOINT_CUTOFF_AFTER_END": "The time limit {cutoff} of the point “{name}” is longer than {limit}, how long the event lasts from the start to the finish. Choose a time up to {limit} or lengthen the event's “Time limit”.",
-      "CHECKPOINTS_NO_LONGER_HOLD": "This save would break “Checkpoints”: {detail} Change the point in its card first, then save again. Nothing was saved.",
-      "CHECKPOINTS_NO_LONGER_HOLD_DATED": "On one of the dates ({date}), this save would break “Checkpoints”: {detail} Change the point on that date first, or save without it. Nothing was saved, on any date.",
+      "CHECKPOINTS_NO_LONGER_HOLD": "This save would break “Points on the route”: {detail} Change the point in its card first, then save again. Nothing was saved.",
+      "CHECKPOINTS_NO_LONGER_HOLD_DATED": "On one of the dates ({date}), this save would break “Points on the route”: {detail} Change the point on that date first, or save without it. Nothing was saved, on any date.",
       "CHECKPOINT_NOTE_ONE_LANGUAGE": "The note of the point “{name}” is written in both languages or in neither, at most {max} characters.",
       "CHECKPOINT_TOO_MANY": "Too many points: at most {max} on a route.",
       "VOLUNTEER_AGREEMENT_MISSING": "No volunteer agreement is in force. Approve one first in «Legal documents»: the template is ready.",
@@ -2459,7 +2459,7 @@
       "routeStrava": "Strava: the link or the embed code",
       "routeStravaHelp": "Paste the route's link from Strava (strava.com/routes/…) or its embed code (Share → Embed). The page shows the map, loaded only when the visitor presses, and the link.",
       "showRouteProfile": "Show the route profile on the page",
-      "showRouteProfileHelp": "Unticked, the page draws no profile from the GPX; the «Checkpoints» table and the maps stay. The race number has its own setting in “What the race number looks like”.",
+      "showRouteProfileHelp": "Unticked, the page draws no profile from the GPX; the «Points on the route» table and the maps stay. The race number has its own setting in “What the race number looks like”.",
       "showRouteProfileNoGpx": "No GPX file is saved yet, so there is nothing to draw: upload one in «Links and files» and save.",
       "routeGpx": {
         "label": "The route's GPX file",
@@ -2682,13 +2682,13 @@
         "showProfile": "The route's profile",
         "showProfileHelp": "Ticked: every number carries a strip with the route's profile, under the name. Choose below where it comes from and how it sits.",
         "showProfileNoGpx": "The event has no GPX: upload it in “The route” or choose a picture.",
-        "showCheckpoints": "Checkpoints on the profile",
+        "showCheckpoints": "Points on the route, on the profile",
         "showCheckpointsHelp": "Ticked: a ring with its sign above the profile, at each point ticked “Show on the route profile”, and under it “km 5 · water” or “km 12”, where it fits. Only on the profile drawn from the GPX.",
         "showProfileScale": "Kilometres and altitudes on the profile",
         "showProfileScaleHelp": "Ticked: under the profile, ticks at regular distances with their kilometre, and the highest and the lowest altitude. They appear only where they fit, on the profile drawn from the GPX.",
         "showCheckpointTimes": "…with the cut-off times",
         "showCheckpointTimesHelp": "Ticked: beside each point, the time it closes too, “km 12 · 11:30”. If not every time fits, none is printed; then the kilometres that do not fit go. The marks always stay.",
-        "showCheckpointsNone": "The event has no checkpoints: add them in “The course” › “Checkpoints”.",
+        "showCheckpointsNone": "The event has no points on the route: add them in “The course” › “Points on the route”.",
         "showEmergency": "Emergency phone",
         "showEmergencyHelp": "Ticked: every number carries a small line with the label and one or two phones. Type the organizers' numbers, never a participant's.",
         "emergencyPhone": "The organizers' phone",
@@ -9021,8 +9021,8 @@
         "publicListOff": "The public participant list stayed off: the privacy notice that describes it is not yet in force here.",
         "seriesNotApplied": "The series' rule in the file was not applied: the event is a single date.",
         "volunteersSkipped": "Of the volunteer categories, contact persons and roles in the file, those the “Volunteers” card's rules do not accept were left out (in all: {count}).",
-        "checkpointKindsDropped": "In the file's checkpoints, the kinds this version does not know were left out (in all: {count}).",
-        "checkpointLimitsDropped": "In the file's checkpoints, the cut-off times that could not be counted from the start were left out (in all: {count}). Write them again as “Time limit”."
+        "checkpointKindsDropped": "In the file's points on the route, the kinds this version does not know were left out (in all: {count}).",
+        "checkpointLimitsDropped": "In the file's points on the route, the cut-off times that could not be counted from the start were left out (in all: {count}). Write them again as “Time limit”."
       },
       "refusals": {
         "tooLarge": "The file is too large for an event file.",
@@ -9087,7 +9087,7 @@
             "name": "GPX file name",
             "url": "GPX file"
           },
-          "checkpoints": "Checkpoints",
+          "checkpoints": "Points on the route",
           "showRouteProfile": "Route profile shown on the page"
         },
         "links": "Links and files",
@@ -9176,7 +9176,7 @@
             "showWebsite": "Bib: website address",
             "footerText": "Bib: the club's own line",
             "showProfile": "Bib: route profile",
-            "showCheckpoints": "Bib: checkpoints on the profile",
+            "showCheckpoints": "Bib: points on the route, on the profile",
             "showCheckpointTimes": "Bib: cut-off times on the profile",
             "showProfileScale": "Bib: kilometres and altitudes on the profile",
             "showDistance": "Bib: distance badge",
@@ -10280,7 +10280,7 @@
       }
     },
     "checkpoints": {
-      "title": "Checkpoints",
+      "title": "Points on the route",
       "intro": "Where there is water, food, first aid, timing, someone showing the way or a regroup, and how long after the start the last runner passes. Shown in the table, on the route profile and on the number.",
       "saveNote": "The points are saved only with “Save the points”, not with the page's “Save”.",
       "routeLength": "The route is {km} km long. No point can be beyond it.",
@@ -10290,7 +10290,7 @@
         "few": "{count} points",
         "other": "{count} points"
       },
-      "empty": "No checkpoints.",
+      "empty": "No points on the route.",
       "readOnly": "You can read the list; the Organizer, the Administrator and the Superadministrator write it. Ask them for any change.",
       "rowTitle": "{km} km — {name}",
       "cutoffAside": "time limit {duration}",
@@ -10335,9 +10335,9 @@
       "save": "Save the points",
       "saving": "Saving…",
       "inCourse": {
-        "one": "{count} checkpoint",
-        "few": "{count} checkpoints",
-        "other": "{count} checkpoints"
+        "one": "{count} point on the route",
+        "few": "{count} points on the route",
+        "other": "{count} points on the route"
       },
       "gpx": {
         "take": "Take the points from the GPX",
@@ -12627,9 +12627,9 @@
       "teamBoxHidden": "The box was taken off the site.",
       "teamBoxMoved": "The order of the boxes was changed.",
       "teamBoxDeleted": "The box was deleted.",
-      "checkpointsSaved": "The checkpoints were saved.",
+      "checkpointsSaved": "The points on the route were saved.",
       "checkpointsAdded": "The points from the GPX were added.",
-      "checkpointsUnchanged": "Nothing to change in the checkpoints.",
+      "checkpointsUnchanged": "Nothing to change in the points on the route.",
       "volunteerAgreementRequested": "The agreement link is on its way by email.",
       "volunteerAgreementRecorded": "Agreement recorded as signed on paper.",
       "badgeDesignSaved": "The badge was saved.",
