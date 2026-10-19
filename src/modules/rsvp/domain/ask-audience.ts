@@ -35,6 +35,22 @@ export function asksAnswerers(audience: RsvpAskAudience): boolean {
   return audience === "ANSWERERS" || audience === "BOTH";
 }
 
+/**
+ * Whom the question really reaches today, pure — the club's choice cut by the privacy notice in force (§823), the way `rsvp/ask.ts#queueRsvpAsks`
+ * cuts it: while the notice describes no «Vii?» question nobody is asked, and the earlier answerers are asked only while the notice names that
+ * use too. `null` is nobody — the choice is the answerers alone and the notice is silent about them, or the notice is silent altogether; `BOTH`
+ * with the answerers' notice silent is the subscribers alone. The event editor's tick says this, never the bare choice, so its sentence cannot
+ * promise an email the sender holds back.
+ */
+export function reachedAudience(audience: RsvpAskAudience, noticeDescribesAsk: boolean, noticeDescribesAnswerers: boolean): RsvpAskAudience | null {
+  if (!noticeDescribesAsk) return null;
+  const subscribers = asksSubscribers(audience);
+  const answerers = asksAnswerers(audience) && noticeDescribesAnswerers;
+  if (subscribers && answerers) return "BOTH";
+  if (subscribers) return "SUBSCRIBERS";
+  return answerers ? "ANSWERERS" : null;
+}
+
 /** A stored value read leniently: one this code cannot read is the default — never a failed send, never a wider audience. */
 export function readRsvpAskAudience(value: unknown): RsvpAskAudience {
   const parsed = rsvpAskAudienceSchema.safeParse(value);

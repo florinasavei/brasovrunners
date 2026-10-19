@@ -6,7 +6,7 @@ import { createEvent, duplicateEvent, repeatEvent, saveEventAndTranslations } fr
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §823 — «Acceptă răspunsuri „Vin!”» › «Trimite întrebarea „Vii?” înainte de acest eveniment» (`events.rsvp_ask_enabled`), the kit's pattern
+ * §823 — «Acceptă răspunsuri „Vin!”» › «Trimite emailul „Vii?” înainte de această dată» (`events.rsvp_ask_enabled`), the kit's pattern
  * (§554, §557, §802): on for every event until the club unticks it, saved through the editor's real action by its marker (a form without the
  * block never switches it off), carried to every date a series makes and by a "following" edit, kept by a duplicate, and the save leaves the
  * staff member who made it on the row. The session and navigation stand-ins are `show-route-profile.test.ts`'s.
@@ -117,7 +117,7 @@ const wordsFor = (row: { slug: string; title: string; excerpt: string | null }) 
   seoDescription: "",
 });
 
-describe("§823 «Vin!» › «Trimite întrebarea „Vii?”» on the event", () => {
+describe("§823 «Vin!» › «Trimite emailul „Vii?”» on the event", () => {
   it("starts on, for an event that says nothing of it, and is written off on create when the caller says so", async () => {
     const plain = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     expect((await reloadEvent(plain.id)).rsvpAskEnabled).toBe(true);

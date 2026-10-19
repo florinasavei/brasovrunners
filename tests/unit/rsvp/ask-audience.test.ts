@@ -8,6 +8,7 @@ import {
   asksSubscribers,
   DEFAULT_RSVP_ASK_AUDIENCE,
   mergeAskRecipients,
+  reachedAudience,
   readRsvpAskAudience,
   RSVP_ASK_AUDIENCES,
   rsvpAskAudienceSchema,
@@ -35,6 +36,17 @@ describe("§823 the «Vii?» audience, pure", () => {
     expect([asksSubscribers("SUBSCRIBERS"), asksAnswerers("SUBSCRIBERS")]).toEqual([true, false]);
     expect([asksSubscribers("ANSWERERS"), asksAnswerers("ANSWERERS")]).toEqual([false, true]);
     expect([asksSubscribers("BOTH"), asksAnswerers("BOTH")]).toEqual([true, true]);
+  });
+
+  it("cuts the club's choice by the notice in force, as the queue does: nobody while the notice is silent, the subscribers alone when only the answerers' use is unnamed", () => {
+    // The notice describes no «Vii?» email: nobody is asked, whatever the club chose.
+    for (const audience of RSVP_ASK_AUDIENCES) expect(reachedAudience(audience, false, true)).toBeNull();
+    // The notice names the email but not the answerers' use.
+    expect(reachedAudience("SUBSCRIBERS", true, false)).toBe("SUBSCRIBERS");
+    expect(reachedAudience("ANSWERERS", true, false)).toBeNull();
+    expect(reachedAudience("BOTH", true, false)).toBe("SUBSCRIBERS");
+    // The notice names both: the choice stands.
+    for (const audience of RSVP_ASK_AUDIENCES) expect(reachedAudience(audience, true, true)).toBe(audience);
   });
 
   describe("the union", () => {

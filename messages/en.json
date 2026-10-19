@@ -3333,15 +3333,18 @@
       "rsvpEnabled": "Accept “I'm coming!” answers from the page, calendar and email",
       "rsvpEnabledHelp": "Anyone can leave their address and say they're coming; you see how many here and on the page, and, if you tick below, an email before. The privacy notice must describe “I'm coming!” — see Tasks.",
       "rsvpAskEnabled": "Send the “Coming?” email before this date",
-      "rsvpAskEnabledHelp": "Ticked, {who} get, {when}, at {hour}, an email “Coming to … {day}?” with the buttons “I'm coming” and “I'm not coming”. Unticked, the email is not sent for this date; answers on the page still work.",
+      "rsvpAskEnabledHelp": "Ticked, {who} get, {days} before, from {hour}, the email “Coming to … {day}?” with “I'm coming” and “I'm not coming”.",
+      "rsvpAskEnabledHelpTopics": "The subscribers are those who chose “{topic}” or “{all}”.",
+      "rsvpAskEnabledHelpUnticked": "Unticked, the email is not sent for this date; answers on the page do not change.",
+      "rsvpAskEnabledHelpSilent": "The email is not sent yet: the privacy notice does not describe it — see Tasks. Answers on the page do not change.",
       "rsvpAskEnabledHelpOff": "The “Coming?” email is off in Settings → “Deadlines” (0 days before): it is sent for no date. The tick here is kept; answers on the page still work.",
       "rsvpAskChange": "Change in Settings:",
       "rsvpAskDeadlinesLink": "Deadlines (when and at what time)",
       "rsvpAskEmailsLink": "Emails (who)",
       "rsvpAskWho": {
-        "SUBSCRIBERS": "the newsletter's subscribers to “The ‘Coming?’ question before runs” or to “All the news”",
-        "ANSWERERS": "those who answered “I'm coming!” at an earlier date of the same series",
-        "BOTH": "the newsletter's subscribers to “The ‘Coming?’ question before runs” or to “All the news”, and those who answered “I'm coming!” at an earlier date of the series"
+        "SUBSCRIBERS": "the newsletter's subscribers",
+        "ANSWERERS": "those who said “I'm coming!” earlier in the series",
+        "BOTH": "the newsletter's subscribers and those who said “I'm coming!” earlier in the series"
       },
       "rsvpAnswers": {
         "title": "“I'm coming!” answers ({count})",
@@ -9136,7 +9139,7 @@
           "kitShirt": "T-shirt in the kit",
           "askHealthNote": "Health note asked",
           "rsvpEnabled": "“I'm coming!” answers are taken",
-          "rsvpAskEnabled": "The “Coming?” question is sent"
+          "rsvpAskEnabled": "The “Coming?” email is sent"
         },
         "publicList": {
           "names": "Public participant list",

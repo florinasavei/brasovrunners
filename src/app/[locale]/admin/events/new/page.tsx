@@ -30,9 +30,8 @@ import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import { blankTranslation } from "@/modules/content/events/ui/TranslationFields";
 import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
-import { rsvpAskTimingOf } from "@/modules/deadlines/domain/deadlines";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
-import { readRsvpAskAudienceSetting } from "@/modules/rsvp/ask-audience";
+import { readRsvpAskSettings } from "@/modules/rsvp/ask-settings";
 import { groupRunDeclarationsInForce, listApprovedRaceDeclarations } from "@/modules/legal-documents/repository";
 import { canCreateEvent, canTransition } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -104,7 +103,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
   // The club's deadlines (§377): the reminder an event left "as usual" gets, and how far ahead a series is created.
   const deadlines = await deadlinesForThisRequest();
   // The «Vii?» email's days, hour and audience (§823), for the words under the editor's tick.
-  const rsvpAsk = { ...rsvpAskTimingOf(deadlines), audience: (await readRsvpAskAudienceSetting(getDb())).audience };
+  const rsvpAsk = await readRsvpAskSettings(getDb(), deadlines, new Date());
   const horizon = daysPhrase(locale, deadlines.seriesHorizonDays);
   const t = await getTranslations("Admin");
   // The language endonyms are shared with the public switcher and the editor's tabs.

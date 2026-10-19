@@ -164,8 +164,8 @@ import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { readRepeatRule } from "@/modules/events/domain/repeat";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
-import { rsvpAskTimingOf, seriesHorizonEnd, withinRaceWeek } from "@/modules/deadlines/domain/deadlines";
-import { readRsvpAskAudienceSetting } from "@/modules/rsvp/ask-audience";
+import { seriesHorizonEnd, withinRaceWeek } from "@/modules/deadlines/domain/deadlines";
+import { readRsvpAskSettings } from "@/modules/rsvp/ask-settings";
 import { fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provisional-start";
 
@@ -259,8 +259,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const now = new Date();
   // The club's deadlines (§377), straight through: the reminder card's "as usual", race week, the series horizon.
   const { deadlines } = await readDeadlines(db);
-  // The «Vii?» email's days, hour and audience (§823), for the words under the editor's tick: «Termene» and «Emailuri» say them.
-  const rsvpAsk = { ...rsvpAskTimingOf(deadlines), audience: (await readRsvpAskAudienceSetting(db)).audience };
+  // The «Vii?» email's days, hour and audience (§823), for the words under the editor's tick: «Termene» and «Emailuri» say them, the notice in force cuts them.
+  const rsvpAsk = await readRsvpAskSettings(db, deadlines, now);
   // "1 dată", "7 date", "20 de date" (§341), for the banners that count a series' dates. The
   // count arrives in the query string, so anything that is not a number reads as none.
   const countOf = (raw: string | undefined) => (Number.isFinite(Number(raw)) ? Number(raw) : 0);
