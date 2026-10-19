@@ -23,6 +23,7 @@ import {
   VolunteerRoleRowError,
   type VolunteerRolesRequest,
 } from "@/modules/volunteers/volunteers";
+import { setVolunteersListPublic } from "@/modules/volunteers/public-list";
 import { VOLUNTEER_NEEDED_MAX, VOLUNTEER_ROLE_DESCRIPTION_MAX, VOLUNTEER_ROLE_NAME_MAX, VOLUNTEER_ROLES_MAX } from "@/modules/volunteers/domain/volunteer";
 import { postedRoleRows } from "@/modules/volunteers/role-rows";
 import { recordPaperVolunteerAgreement, requestVolunteerAgreement } from "@/modules/volunteers/agreement";
@@ -99,6 +100,8 @@ const staffFields = (form: FormData) => ({
   guardianEmail: field(form, "guardianEmail"),
   volunteeredBefore: form.get("volunteeredBefore") === "on",
   clubMember: form.get("clubMember") === "on",
+  // «Vreau să apar pe lista publică a voluntarilor» (§NNN): the organizers' record of the person's own tick, true only when posted.
+  listOptIn: form.get("listOptIn") === "on",
 });
 
 const categoryFields = (form: FormData) => ({ nameRo: field(form, "nameRo"), nameEn: field(form, "nameEn") });
@@ -269,6 +272,22 @@ export async function withdrawVolunteerInvitationAction(_previous: unknown, form
     return backToCard(form, { error: error.code });
   }
   return backToCard(form, { saved: "volunteerInvitationWithdrawn" });
+}
+
+/**
+ * «Lista voluntarilor e publică pe pagina evenimentului» (§NNN): the card's fourth tick, the event's `volunteers_list_public`, the same submit
+ * drawn as the checkbox (`TickButton`) — it posts `on=1|0`, the state it wants, never a toggle.
+ */
+export async function switchVolunteersListAction(form: FormData): Promise<void> {
+  const on = field(form, "on") === "1";
+  try {
+    const actor = await requireStaff();
+    const result = await setVolunteersListPublic(getDb(), actor, { eventId: eventIdOf(form), on }, new Date());
+    return backToCard(form, { saved: result.changed ? (on ? "volunteersListOn" : "volunteersListOff") : "volunteerUnchanged" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
 }
 
 /** «Adaugă o categorie» (§774): both names. A refusal keeps what was typed (§315). */

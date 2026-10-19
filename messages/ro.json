@@ -668,6 +668,19 @@
         "emailHelp": "Aici trimitem linkul pentru acord. Nu îl folosim pentru altceva.",
         "aware": "Părintele sau tutorele meu știe și e de acord"
       },
+      "list": {
+        "title": "Voluntarii",
+        "heading": "Voluntarii ({count})",
+        "forming": "Echipa de voluntari se formează.",
+        "names": "Voluntarii care au vrut să apară cu numele",
+        "others": {
+          "one": "și încă 1 voluntar",
+          "few": "și încă {count} voluntari",
+          "other": "și încă {count} de voluntari"
+        },
+        "tick": "Vreau să apar pe lista publică a voluntarilor",
+        "tickHelp": "Pagina evenimentului arată doar numele tău și rolul dat de organizatori, după ce te confirmă. Poți cere oricând, în scris, să fii scos de pe ea."
+      },
       "otherCategory": "Alte activități",
       "contactLabel": "Întrebări?",
       "roleCount": {
@@ -3641,6 +3654,7 @@
         "volunteerProfile": "Doar în nota de confidențialitate: casetele formularului de voluntari despre persoană, între ghilimele. Fără el în nota în vigoare, formularul cere doar bifa vârstei minime",
         "volunteerGuardian": "Doar în contractul de voluntariat: numele părintelui sau tutorelui unui voluntar minor. La un adult, propoziția dispare. Fără el în contractul în vigoare, nu se primesc minori",
         "volunteerMinors": "Doar în nota de confidențialitate: casetele părintelui din formularul de voluntari, între ghilimele; fără el, clubul nu primește voluntari sub 18 ani",
+        "volunteersList": "Doar în nota de confidențialitate: bifa „Vreau să apar pe lista publică a voluntarilor”, între ghilimele. Cu ea în nota în vigoare, lista publică poate arăta nume",
         "results": "Numele secțiunii „Clasament”, între ghilimele, în nota de confidențialitate și în termeni. Cu el în ambele texte în vigoare, un administrator poate publica clasamentul, iar pagina cursei îl arată",
         "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin",
         "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc ziua dinainte întrebarea „Vii?”"
@@ -4617,6 +4631,16 @@
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică” — în aceeași ședință, în ambele limbi."
           ]
         },
+        "volunteersListNotice": {
+          "title": "Textul pentru lista publică a voluntarilor",
+          "todo": "Un eveniment are lista voluntarilor publică, dar nota de confidențialitate în vigoare nu o descrie încă. Până o aprobi, pagina nu arată cardul „Voluntarii” și formularul nu arată bifa de apariție.",
+          "done": "Nota în vigoare descrie lista publică a voluntarilor: pagina arată numele și rolul celor confirmați care au bifat, iar pe ceilalți îi numără.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre voluntari spune acum ce arată lista publică: numele și rolul dat, doar cu bifa persoanei.",
+            "Un jurist ar trebui să citească paragraful: temeiul (consimțământul, art. 6(1)(a)), cât timp rămâne numele pe pagină și retragerea acordului.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică” — în ambele limbi, în aceeași ședință cu celelalte texte ale voluntarilor."
+          ]
+        },
         "emailRoadDown": {
           "title": "O cale de trimitere nu merge",
           "todo": "Gmail-ul clubului sau Mailgun refuză mesajele de peste o oră; mesajele pleacă prin cealaltă cale.",
@@ -5263,7 +5287,10 @@
         "guardianEmail": "Emailul părintelui sau tutorelui",
         "guardianHelp": "Doar pentru un voluntar sub 18 ani. Fără email, acordul se ia pe hârtie, la organizatori.",
         "guardianValue": "Părinte sau tutore: {name}",
-        "birthDateHelpMinors": "Opțional. Cel puțin {age} în ziua evenimentului. Sub 18 ani, trece mai jos și părintele sau tutorele."
+        "birthDateHelpMinors": "Opțional. Cel puțin {age} în ziua evenimentului. Sub 18 ani, trece mai jos și părintele sau tutorele.",
+        "listOptIn": "Vrea să apară pe lista publică a voluntarilor",
+        "listOptInHelp": "Bifează doar dacă persoana ți-a spus că vrea, de preferat în scris. Numele tău rămâne în jurnal. Dacă lista e publică, pagina arată numele și rolul dat, după ce o confirmi.",
+        "listOptInOff": "Nota în vigoare nu descrie lista publică: nu se mai poate bifa. Poți doar s-o debifezi."
       },
       "states": {
         "REGISTERED": "Înscris",
@@ -5388,9 +5415,16 @@
         "label": "Arată public câți voluntari mai sunt necesari",
         "help": "Bifat, pagina de voluntari spune la fiecare rol câte persoane mai sunt necesare. Debifat, nu spune nicio cifră; aici vezi mereu numerele."
       },
+      "list": {
+        "label": "Lista voluntarilor e publică pe pagina evenimentului",
+        "help": "Bifat, pagina arată un card „Voluntarii” cu numele și rolul dat al celor confirmați care au bifat; ceilalți sunt doar numărați. Adresa și telefonul nu apar niciodată.",
+        "noticeOff": "Cardul nu se arată încă: nota de confidențialitate în vigoare nu descrie lista publică a voluntarilor, iar formularul nu arată bifa. «Sarcini» spune ce trebuie aprobat.",
+        "noticeLink": "Documente legale"
+      },
       "chips": {
         "before": "A mai fost voluntar",
-        "club": "Din grupul {club}"
+        "club": "Din grupul {club}",
+        "wantsList": "Vrea pe lista publică"
       },
       "yes": "Da",
       "no": "Nu",
@@ -12450,6 +12484,8 @@
       "volunteersShirtsOff": "Formularul public nu mai cere mărimea tricoului. Mărimile deja date se păstrează.",
       "volunteersCountsOn": "Pagina de voluntari spune acum câte persoane mai sunt necesare la fiecare rol.",
       "volunteersCountsOff": "Pagina de voluntari nu mai spune câte persoane mai sunt necesare.",
+      "volunteersListOn": "Pagina evenimentului poate arăta acum cardul „Voluntarii”: numele și rolul celor confirmați care au bifat.",
+      "volunteersListOff": "Pagina evenimentului nu mai arată lista voluntarilor.",
       "volunteerGuardianRequested": "Linkul pentru părinte pleacă pe email.",
       "volunteerGuardianRecorded": "Acordul părintelui, înregistrat ca semnat pe hârtie.",
       "volunteerCategoryAdded": "Categorie adăugată.",

@@ -8,6 +8,7 @@ import { compareCategories, compareRoles } from "@/modules/volunteers/domain/vol
 import { DEFAULT_VOLUNTEERS_ACCESS } from "@/modules/volunteers/domain/access";
 import { changeVolunteerCategory, changeVolunteerRole, ROLE_FORM_COLOUR_BOXES, setVolunteersAccess } from "@/modules/volunteers/volunteers";
 import { TYPED_COLOUR } from "@/modules/volunteers/badges/badges";
+import { setVolunteersListPublic } from "@/modules/volunteers/public-list";
 import { isDomainError } from "@/shared/errors/domain-error";
 import type { VolunteersFile } from "./file-format";
 
@@ -35,7 +36,7 @@ export async function readVolunteersFile<T extends Record<string, unknown>>(db: 
   const categories = (await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, eventId))).sort(compareCategories);
   const roles = (await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, eventId))).sort(compareRoles);
   const position = new Map(categories.map((category, index) => [category.id, index]));
-  const [event] = await db.select({ access: events.volunteersAccess }).from(events).where(eq(events.id, eventId)).limit(1);
+  const [event] = await db.select({ access: events.volunteersAccess, listPublic: events.volunteersListPublic }).from(events).where(eq(events.id, eventId)).limit(1);
   const document = (stored: unknown): Record<string, unknown> | null => {
     if (stored === null || stored === undefined) return null;
     const read = readRichText(stored);
@@ -43,6 +44,7 @@ export async function readVolunteersFile<T extends Record<string, unknown>>(db: 
   };
   return {
     access: event?.access ?? DEFAULT_VOLUNTEERS_ACCESS,
+    listPublic: event?.listPublic ?? false,
     categories: categories.map((category) => ({
       name: { ro: category.nameRo, en: category.nameEn },
       contact:
@@ -113,6 +115,11 @@ export async function importVolunteersFile<T extends Record<string, unknown>>(
     but not the tick «Primește voluntari», so nothing opens by itself. Through the card's own service, which audits it.
   */
   if (file.access !== DEFAULT_VOLUNTEERS_ACCESS) await setVolunteersAccess(db, actor, { eventId, access: file.access }, now);
+  /*
+    «Lista voluntarilor e publică pe pagina evenimentului» (§NNN) travels the same way, through the card's own service: no volunteer is in the file, and a name
+    appears only for a confirmed volunteer who ticked under a notice that describes the list.
+  */
+  if (file.listPublic) await setVolunteersListPublic(db, actor, { eventId, on: true }, now);
   let roles = 0;
   for (const role of file.roles) {
     const under = role.category !== null && role.category >= 0 ? created[role.category] : undefined;

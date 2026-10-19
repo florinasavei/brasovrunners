@@ -2395,6 +2395,25 @@ only ones who see the names, addresses and telephone numbers.
     - **One person's invitations** — the person's data screen («Toate datele unei persoane», Administrator) lists the invitations sent to an address, with the club's line in both
       languages, and **«Șterge invitațiile de voluntariat»** erases them on request (art. 17), asking first; the offers and registrations stay.
 
+11. **Show the volunteers on the event's page — or keep the list private** (`DECISIONS.md` §NNN; the owner, 2026-10-19: «private vs public lists of volunteers»). By default the
+    list of volunteers is the team's alone (the card, the CSV, the badges), exactly as before. The card «Voluntari» has one more tick, under «Arată public câți voluntari mai sunt
+    necesari»: **«Lista voluntarilor e publică pe pagina evenimentului»** (off by default, one press like the others, audited). Three things must hold before a name shows:
+    - **The notice describes it.** Approve the privacy notice from the template once more (`/admin/legal` → the «GDPR» card → «Regenerează din șablon», a lawyer reading the
+      volunteers' paragraph first): it gains a sentence with the marker `{{volunteersList}}` — what the page shows (the name and the role given, nothing else), for whom (only a
+      volunteer who ticked), the basis (their consent, withdrawn by writing) and until when (the offer's deletion, 30 days after the event's start). Until a notice naming it is in
+      force in **both** languages the page shows no card and the form asks no tick; `/admin/tasks` shows the row «Textul pentru lista publică a voluntarilor» while an upcoming
+      event has the list public, and the card says so in a line with a link to «Documente legale».
+    - **The volunteer ticks.** The volunteers' page then has one more optional box, **«Vreau să apar pe lista publică a voluntarilor»** (off by default, with one line of help), in every
+      way in (anyone, a member, an invitation). For a person you enter yourself («Adaugă un voluntar de mână», «Modifică») the same words are a box, **«Vrea să apară pe lista publică
+      a voluntarilor»**: tick it only when the person told you they want to, preferably in writing — your name stays in the log, as for a paper agreement. A tick can always be cleared;
+      it cannot be recorded while the notice is silent. A row with the tick says «Vrea pe lista publică» (the wish; the page names the person only once confirmed, under the conditions above). A volunteer who ticked under a notice from before this one is never named, and neither is a volunteer under eighteen (counted only: the guardian's acceptance covers the agreement, not a public name).
+    - **You confirm them.** The page names only **«Confirmat»** volunteers; the others are not on it at all.
+    What the visitor sees: the card **«Voluntarii (N)»**, a fold **closed on arrival** like «Condiții de participare», after «Căutăm voluntari» and before the rules — the names of the
+    volunteers who ticked, each with the role you gave them, and «și încă N voluntari» for the rest of the confirmed. Nobody ticked yet but the page is asking for volunteers: the card is
+    the one sentence «Echipa de voluntari se formează.»; the offer closed and nobody ticked: no card. Never an address, a telephone number, a city or a date of birth. The card goes 30
+    days after the event's start, when the maintenance job deletes the offers, and at once if you untick the box, switch «Primește voluntari» off or the notice stops describing it.
+    The tick travels with a copy of the event, every date of a repeat and the event's JSON file (never a volunteer, and not «Primește voluntari»).
+
 ## 45. Clasament — put a race's results in the backoffice, and make them public only when the notice says so
 
 A race's results (`DECISIONS.md` §808; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă») are

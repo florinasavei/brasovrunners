@@ -1170,6 +1170,13 @@
       "when": 1792395982141,
       "tag": "0171_volunteers_access",
       "breakpoints": true
+    },
+    {
+      "idx": 167,
+      "version": "7",
+      "when": 1792396594555,
+      "tag": "0172_volunteers_public_list",
+      "breakpoints": true
     }
   ]
 }

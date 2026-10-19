@@ -668,6 +668,19 @@
         "emailHelp": "We send the consent link here. We use it for nothing else.",
         "aware": "My parent or guardian knows and agrees"
       },
+      "list": {
+        "title": "Volunteers",
+        "heading": "Volunteers ({count})",
+        "forming": "The volunteer team is taking shape.",
+        "names": "Volunteers who chose to appear by name",
+        "others": {
+          "one": "and 1 more volunteer",
+          "few": "and {count} more volunteers",
+          "other": "and {count} more volunteers"
+        },
+        "tick": "I want to appear on the public list of volunteers",
+        "tickHelp": "The event page shows only your name and the role the organizers give you, once they confirm you. You can ask in writing to be taken off it at any time."
+      },
       "otherCategory": "Other activities",
       "contactLabel": "Questions?",
       "roleCount": {
@@ -3641,6 +3654,7 @@
         "volunteerProfile": "Privacy notice only: the volunteers' form boxes about the person, in quotes. Without it in the notice in force, the form asks only the minimum-age tick",
         "volunteerGuardian": "Only in the volunteer agreement: the name of a minor volunteer's parent or guardian. For an adult the sentence is left out. Without it in the agreement in force, no minors are taken",
         "volunteerMinors": "Only in the privacy notice: the parent's boxes of the volunteers' form, in quotation marks; without it, the club takes no volunteers under 18",
+        "volunteersList": "Only in the privacy notice: the tick “I want to appear on the public list of volunteers”, in quotes. With it in the notice in force, a public list can show names",
         "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them",
         "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming",
         "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question the day before"
@@ -4617,6 +4631,16 @@
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish” — in the same sitting, in both languages."
           ]
         },
+        "volunteersListNotice": {
+          "title": "The text for the volunteers' public list",
+          "todo": "An event has its volunteers' list public, but the privacy notice in force does not describe it yet. Until you approve it, the page shows no “Volunteers” card and the form does not show the tick.",
+          "done": "The notice in force describes the public list of volunteers: the page shows the name and role of confirmed volunteers who ticked, and counts the others.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The paragraph about volunteers now says what the public list shows: the name and given role, only with the person's tick.",
+            "A lawyer should read the paragraph: the basis (consent, art. 6(1)(a)), how long the name stays on the page and the withdrawal of consent.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish” — in both languages, in the same sitting as the other texts for volunteers."
+          ]
+        },
         "emailRoadDown": {
           "title": "A way of sending does not work",
           "todo": "The club's Gmail or Mailgun has refused messages for over an hour; messages leave by the other way.",
@@ -5263,7 +5287,10 @@
         "guardianEmail": "Parent's or guardian's email",
         "guardianHelp": "Only for a volunteer under 18. Without an email, the consent is taken on paper, with the organizers.",
         "guardianValue": "Parent or guardian: {name}",
-        "birthDateHelpMinors": "Optional. At least {age} old on the day of the event. Under 18, add the parent or guardian below."
+        "birthDateHelpMinors": "Optional. At least {age} old on the day of the event. Under 18, add the parent or guardian below.",
+        "listOptIn": "Wants to appear on the public list of volunteers",
+        "listOptInHelp": "Tick only if the person told you they want to, preferably in writing. Your name stays in the log. If the list is public, the page shows the name and given role once you confirm them.",
+        "listOptInOff": "The notice in force does not describe the public list: it cannot be ticked any more. You can only untick it."
       },
       "states": {
         "REGISTERED": "Registered",
@@ -5388,9 +5415,16 @@
         "label": "Show publicly how many volunteers are still needed",
         "help": "Ticked, the volunteers' page tells each role how many more people it needs. Unticked, it shows no number; here you always see the numbers."
       },
+      "list": {
+        "label": "The volunteers' list is public on the event's page",
+        "help": "Ticked, the page shows a “Volunteers” card with the name and given role of confirmed volunteers who ticked; the rest are only counted. Address and telephone never appear.",
+        "noticeOff": "The card is not shown yet: the privacy notice in force does not describe the public list of volunteers, so the form does not show the tick. “Tasks” says what to approve.",
+        "noticeLink": "Legal documents"
+      },
       "chips": {
         "before": "Volunteered before",
-        "club": "From the {club} group"
+        "club": "From the {club} group",
+        "wantsList": "Wants to be on the public list"
       },
       "yes": "Yes",
       "no": "No",
@@ -12450,6 +12484,8 @@
       "volunteersShirtsOff": "The public form no longer asks for the T-shirt size. Sizes already given are kept.",
       "volunteersCountsOn": "The volunteers' page now says how many more people each role needs.",
       "volunteersCountsOff": "The volunteers' page no longer says how many more people each role needs.",
+      "volunteersListOn": "The event's page can now show the “Volunteers” card: the name and role of confirmed volunteers who ticked.",
+      "volunteersListOff": "The event's page no longer shows the volunteers' list.",
       "volunteerGuardianRequested": "The link to the parent is on its way by email.",
       "volunteerGuardianRecorded": "The parent's consent is recorded as signed on paper.",
       "volunteerCategoryAdded": "Category added.",

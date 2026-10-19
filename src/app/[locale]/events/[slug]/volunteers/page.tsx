@@ -182,6 +182,7 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
         eventDay={volunteerEventDay(event, now)}
         profile={offer.profile}
         minors={offer.minors}
+        listTick={offer.listTick}
         outcome={outcome}
         refused={parseVolunteerBoxes(one(asked.vfields))}
         typed={typed}

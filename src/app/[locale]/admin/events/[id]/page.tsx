@@ -33,6 +33,7 @@ import {
   noticeDescribesVolunteerAgreement,
   noticeDescribesVolunteers,
   noticeDescribesVolunteerProfile,
+  noticeDescribesVolunteersList,
   volunteerMinorsOpen,
   volunteerAgreementInForce,
 } from "@/modules/legal-documents/repository";
@@ -448,6 +449,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           agreementEvent,
           // Which form the public page draws (§765): the card says so beside the tick.
           profileDescribed: await noticeDescribesVolunteerProfile(db, now),
+          // Whether the notice in force describes the volunteers' public list (§NNN): the entry's box and the club's tick say so.
+          listDescribed: await noticeDescribesVolunteersList(db, now),
           // Whether the club may take a person under eighteen (§768): the guardian's boxes, link and paper wait for it.
           minorsOpen: await volunteerMinorsOpen(db, now),
           // The day the entry's date of birth is counted on (§773): the gun's, else the event's.
@@ -1475,6 +1478,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   acceptsVolunteers={event.acceptsVolunteers}
                   volunteersShirts={event.volunteersShirts}
                   volunteersShowCounts={event.volunteersShowCounts}
+                  volunteersListPublic={event.volunteersListPublic}
+                  listDescribed={volunteersCard.listDescribed}
                   access={event.volunteersAccess}
                   invitations={volunteersCard.invitations}
                   profileDescribed={volunteersCard.profileDescribed}

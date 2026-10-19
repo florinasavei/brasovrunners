@@ -1907,6 +1907,9 @@ const SERIES_COLUMNS = [
   // today; listed so that a save which ever does carries it like the other rules of a series, and so that every date a repeat makes starts with it
   // (`copiedEventValues`).
   "volunteersAccess",
+  // «Lista voluntarilor e publică pe pagina evenimentului» (§NNN): the club's standing rule for the list, saved by the «Voluntari» card on its own like the
+  // choice above, listed for the same reason. It travels with a copy because each volunteer ticks «Vreau să apar» on the copy themselves (AGENTS.md §10.10).
+  "volunteersListPublic",
   // «Copertă» (§709), like the route (§49): the Wednesday run wears one cover every Wednesday, and
   // "from this date" or "all" carries a new one — the picture and its crop together.
   "coverMediaAssetId",
@@ -3009,6 +3012,8 @@ function blankEventRow(now: Date): EditableEvent {
     volunteersShirts: false,
     // «Arată public câți voluntari mai sunt necesari» (§773): off the same way — a public number is the club's choice, event by event.
     volunteersShowCounts: false,
+    // «Lista voluntarilor e publică pe pagina evenimentului» (§NNN): off the same way — a name on a public page is never the default. A copy and a repeat carry the source's tick (`copiedEventValues`).
+    volunteersListPublic: false,
     // «Cine se poate oferi» (§NNN): anyone, until the club narrows it in the «Voluntari» card.
     volunteersAccess: "ANYONE",
     difficulty: null,
@@ -3595,6 +3600,10 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     showRouteProfile: source.showRouteProfile,
     // «Acceptă răspunsuri „Vin!”» (§811) travels with the event it is the tick of; the answers themselves never do.
     rsvpEnabled: source.rsvpEnabled,
+    // «Lista voluntarilor e publică pe pagina evenimentului» (§NNN) travels with the event it is the tick of, to a duplicate and to every date of a
+    // repeat, like «Cine se poate oferi»: the club's standing rule for the event's volunteers. It shows nothing by itself — no volunteer is copied,
+    // and a name appears only for a confirmed volunteer who ticked, under a notice that describes the list.
+    volunteersListPublic: source.volunteersListPublic,
     // «Cine se poate oferi» (§NNN) travels to a duplicate and to every date of a repeat: it is the club's standing rule for who helps
     // (members only, by invitation), and every value but the default only narrows the door. The tick «Primește voluntari», the
     // invitations and the people never travel — a copy starts with the tick off.

@@ -651,7 +651,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     «Anulat» included — and the privacy notice's section 7 says so; an offer entered after the start, thirty
     days after its entry. The row's own age is asked too, so one wrong year typed in the editor (2025 for
     2026) never takes a whole list at the next run, offers made yesterday among them. The roles stay with the
-    event: they hold no name. Nothing public showed a volunteer, so no cache needs telling.
+    event: they hold no name. Since §NNN an event's page may name the volunteers who ticked (the public list), so the cache is told after the commit.
   */
   await step("volunteers", async (tx) => {
     const cutoff = daysBefore(now, RETENTION.volunteerDaysAfterEvent);
@@ -674,6 +674,8 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .returning({ id: eventVolunteerInvitations.id });
     counts.volunteerInvitations = invitations.length;
   });
+  // The event page's card «Voluntarii» (§NNN) is filed under "places": the names this step has just removed must leave it too. After the step's commit.
+  if (counts.volunteers > 0) revalidatePublicContent("places");
 
   /*
     A race's results (§808): a result row holds a race number, a time, the positions and the category — the sex and the age band of a

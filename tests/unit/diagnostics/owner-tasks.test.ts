@@ -52,6 +52,8 @@ const LAUNCHED: OwnerTaskInputs = {
   volunteerAgreementDescribed: true,
   volunteerProfileDescribed: true,
   volunteerMinorsOpen: true,
+  volunteersListDescribed: true,
+  volunteersListEvents: 1,
   gmailFallbackDescribed: true,
   refusalDescribed: true,
   teamPageDescribed: true,
@@ -305,6 +307,22 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, volunteerMinorsOpen: false, volunteeringEvents: 0 }).some((task) => task.id === "volunteerMinorsTexts")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.volunteerMinorsTexts;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  it("§NNN: the volunteers' public list row is open while an event ahead has the list public and the notice is silent, done once it names the list, absent while neither is wanted", () => {
+    expect(stateOf({ ...LAUNCHED, volunteersListDescribed: false }, "volunteersListNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "volunteersListNotice")).toBe("done");
+    // Done by itself the day a notice naming it takes effect, even with no event having the list public.
+    expect(stateOf({ ...LAUNCHED, volunteersListEvents: 0 }, "volunteersListNotice")).toBe("done");
+    // No event has the list public and the notice is silent: nothing to ask of the club.
+    expect(ownerTasks({ ...LAUNCHED, volunteersListDescribed: false, volunteersListEvents: 0 }).some((task) => task.id === "volunteersListNotice")).toBe(false);
+    // Never blocking: it does not stop a runner, so the row is not one of the blocking ones.
+    expect(ownerTasks({ ...LAUNCHED, volunteersListDescribed: false }).find((task) => task.id === "volunteersListNotice")?.owner).toBe("club");
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.volunteersListNotice;
       expect(item.title && item.todo && item.done).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -594,6 +612,7 @@ describe("owner tasks", () => {
       "volunteerAgreementNotice",
       "volunteerProfileNotice",
       "volunteerMinorsTexts",
+      "volunteersListNotice",
       "gmailFallbackNotice",
       "volunteerAgreement",
       "volunteerRoleChoicesAgreement",
