@@ -20,6 +20,8 @@ export type ListingCardProps = {
   titleAs?: "h2" | "h3";
   /** «Clasament» (§809): a single date's results are on show, so its card wears the chip (`EventCard`'s `resultsChip`). A series card never does: a series of dates is a run, and runs have no results. */
   resultsChip?: boolean;
+  /** «N vin» (§815): how many confirmed they come to a single date the page offers the answer to (`EventCard`'s `comingCount`). A series card never wears it: its dates do. */
+  comingCount?: number;
 };
 
 /**
@@ -30,10 +32,10 @@ export type ListingCardProps = {
  *
  * A Server Component: rows in, the listing's markup out — no element crosses into a client component (§370).
  */
-export default function ListingCard({ members, index, now, weather = null, seriesDates, titleAs, resultsChip = false }: ListingCardProps) {
+export default function ListingCard({ members, index, now, weather = null, seriesDates, titleAs, resultsChip = false, comingCount = 0 }: ListingCardProps) {
   return members.length > 1 ? (
     <SeriesCard members={members} index={index} now={now} weather={weather} titleAs={titleAs} />
   ) : (
-    <EventCard event={members[0]} index={index} now={now} weather={weather} seriesDates={seriesDates} titleAs={titleAs} resultsChip={resultsChip} />
+    <EventCard event={members[0]} index={index} now={now} weather={weather} seriesDates={seriesDates} titleAs={titleAs} resultsChip={resultsChip} comingCount={comingCount} />
   );
 }

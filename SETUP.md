@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.56-2026-10-18 -->
+<!-- PROJECT_BASELINE: BR-V3.58-2026-10-18 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.56-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.58-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2116,17 +2116,24 @@ with its cards in the order you fill them.
    column «Adăugată de». Whoever runs the shop may do it: an Administrator, or the colleague given
    «Gestionează magazinul» in step 6.
 
-**Member levels** (optional, any time; `DECISIONS.md` §811). The members' zone can tell a founder from a supporter.
-An Administrator **names the levels** on «Pagini» → «Membri» → «Niveluri de membru» (a name and a description in
-both languages, a symbol, the order in «Poziția», «Ascuns» for a level no longer given) and presses the one
+**Member levels** (optional, any time; `DECISIONS.md` §811, amended by §817). A level is the staff's own label on a
+member, and its one use is to decide **which member sees which discount code**. An Administrator **names the levels**
+on «Pagini» → «Membri» → «Niveluri de membru» (a name in both languages, a note for the administrators in both
+languages — or in neither — the order in «Poziția», «Ascuns» for a level no longer given) and presses the one
 «Salvează toate nivelurile»; **gives each member one** on «Echipa», in «Nivel» on the member's row — or one for all
-the people added at once in «Adaugă mai mulți membri» — and the zone shows it under the member's name while the
-public «Beneficiile membrilor» page lists the visible levels; and **limits a code** with the chips «Pentru
-nivelurile» in «Coduri de reducere» (nothing ticked is every member). A level is a label and what the member
-gets, never a permission: it opens and closes nothing, and the shop does not read it.
+the people added at once in «Adaugă mai mulți membri»; and **limits a code** with the chips «Pentru nivelurile» in
+«Coduri de reducere» (nothing ticked is every member). In the zone's «Coduri de reducere» a member then sees the
+codes for everyone and those for their own level; a member with no level sees the codes for everyone alone. **No
+member sees their level, and no visitor sees the levels:** the zone draws no badge, the public «Beneficiile membrilor»
+page has no section of levels, and no code card says why it is there. Only the administrators see a level, on «Echipa»
+and in the editors. A level is never a permission: it opens and closes nothing, and the shop does not read it. (The
+`glyph` column of the levels is a leftover of the first version, no longer shown or edited; a later contract
+migration drops it.)
 The privacy notice's template names the level among what the club keeps about a member (section 12): approve the notice
-from the new template on production, a lawyer reading that clause first, before giving members levels. An Administrator
-or a colleague who opens the zone sees every code, with the chips saying which are limited; a member sees the codes for
+from the new template on production, a lawyer reading that clause first, before giving members levels; the clause says only the
+administrators see the level (§817), so a notice approved from the first version of the template, which also named the member, is
+approved once more. An Administrator
+or a colleague who opens the zone sees every code, so they can check what the club has; a member sees the codes for
 everyone and for their own level.
 
 ## 44. Voluntari — register the people who help at a race
@@ -2384,8 +2391,9 @@ enter them; **only the Administrator and the Superadministrator make them public
    Until a notice **and** terms naming `{{results}}` are in force in **both** languages, ticking «Clasamentul e public pe pagina
    evenimentului» is refused with a sentence and a link here, and `/admin/tasks` shows the rows «Nota de confidențialitate: clasamentul
    curselor» and «Termenii: clasamentul curselor». Entering, importing and ranking work meanwhile.
-2. **After the race, open «Clasament».** The race's editor → the card «Înscrieri» → «Clasament», or the registrations list with the race
-   chosen (both links are drawn for a race that has started; a typed address works for any race). The page has a line for every
+2. **After the race, open «Clasament» — or before it.** The race's editor → the card «Înscrieri» → «Clasament», or the registrations list with the race
+   chosen (both links are drawn for a published race and for one that has started, before the start too; the page then says the race has not begun
+   and lets you write from now on; a typed address works for any race). The page has a line for every
    registered runner who holds a race number — the checked-in first, then by number — with four boxes: **«Timp»** (`h:mm:ss`, `mm:ss` or
    `mm:ss.t`), **«Stare»** (Sosit, Abandon, Neprezentat, Descalificat), **«Timp cip»** (optional) and **«Notă»**. A line with every box empty is
    no result. The blank choice of «Stare» reads «Din timp (Sosit / Neprezentat)» because it is exactly that: a time typed with no state is
@@ -2479,6 +2487,13 @@ turns on event by event. Two steps are the club's.
    random secret, readable only by the server, its fingerprint kept) and `br_person_hint` (the masked address and the name, no secret). On any other event that
    takes answers the page then says «Răspunzi ca an…@gmail.com» and **«Vin!»** is one tap, counted at once, no email; **«Nu mai vin»** is one tap
    too, and **«Nu sunt eu»** forgets the browser. Without JavaScript the typed form stands. This is not a login and opens nothing else.
+   **From a calendar (§815).** For an event that offers the answer, the club's calendar feed, the event's `.ics` file and the file attached to the
+   emails say **«Vin! → <the event's page>#vin»** and under it **«N vin până acum»** (nobody yet: «Fii primul care spune că vine.»). Google and Apple make
+   the link tappable, and it lands on the «Vii?» card — one more tap in a remembered browser, an email once in any other. A calendar cannot take the
+   answer itself (a feed subscribed from an address is read-only in Google), so the link is all of it. The feed is made again with every confirmation or
+   withdrawal, never at each poll; a file saved earlier keeps the day's number and a link that stays true. On the listing, a single date wears
+   **«N vin»** (the people glyph), a 44-pixel link to the same card, once at least one person has confirmed; a series card never does, its dates do.
+   Nothing to set up: all of it follows the tick and the notice, and says nothing for an event that does not offer the answer.
 4. **What the club sees.** In the editor, under the registration card, a fold **«Răspunsuri „Vin!” (N)»** (read-only: no file, no button) lists the email, the
    name, whether the person asked to be named, confirmed or not, and when — **for the Organizer, the Administrator and the Superadministrator**; every other
    role sees only the counts. The preview before saving and `/previzualizare` show nothing of it.
@@ -2486,8 +2501,8 @@ turns on event by event. Two steps are the club's.
    run; a remembered browser a year after its last answer). «Toate datele unei persoane» (`/admin/registrations/person`) lists a person's answers and
    browsers, counts them in the JSON export, and an Administrator can **«Șterge răspunsurile „Vin!” și browserele»** on request — one audit row with the
    counts, never the address.
-6. **Not built here.** The links in the calendar feed, the `.ics` files and the listing card; the one-tap answer from the members' zone. They call
-   the same service (`answerRsvp` with an identity of source `account`) and the same gate (`rsvpOffered`).
+6. **Not built here.** The one-tap answer from the members' zone. It calls the same service (`answerRsvp` with an identity of source `account`)
+   and the same gate (`rsvpOffered`).
 7. **The «Vii?» email (`DECISIONS.md` §NNN).** One step for the club: **approve the privacy notice again from the template** (`/admin/legal` → «Pornește de la șablon»; a lawyer
    reads section 5's two paragraphs first — the newsletter's, which now says the automatic question the day before, and «Vin!»'s, which says the subscriber's address is written as
    an unconfirmed answer when the question is sent and deleted at «Nu vin» or after 7 days). Until a notice naming `{{rsvpAsk}}` (and `{{rsvp}}`) is in force, in both languages, **nobody is asked**

@@ -816,7 +816,22 @@
       "cancel": "Nu mai vin",
       "notMe": "Nu sunt eu",
       "help": "Browserul tău rămâne recunoscut un an după „Da, vin” sau „Nu mai vin”; „Nu sunt eu” îl uită.",
-      "failed": "Nu am putut trimite răspunsul. Încearcă din nou."
+      "failed": "Nu am putut trimite răspunsul. Încearcă din nou.",
+      "calendar": {
+        "link": "Vin!",
+        "count": {
+          "one": "{count} vine până acum",
+          "few": "{count} vin până acum",
+          "other": "{count} vin până acum"
+        },
+        "empty": "Fii primul care spune că vine."
+      },
+      "chip": {
+        "one": "{count} vine",
+        "few": "{count} vin",
+        "other": "{count} vin",
+        "go": "spune dacă vii"
+      }
     }
   },
   "Admin": {
@@ -1895,7 +1910,7 @@
       "inviteStaffTitle": "Adaugi persoana în echipă?",
       "inviteStaffBody": "Primește pe email invitația de intrare, cu rolul ales, și poate intra de îndată ce își pune parola: în backoffice, sau — ca Membru — doar în zona membrilor de pe site.",
       "memberTierTitle": "Schimbi nivelul?",
-      "memberTierBody": "Nivelul lui {name} se schimbă în zona membrilor, la următoarea pagină pe care o deschide.",
+      "memberTierBody": "Nivelul lui {name} se schimbă; de la următoarea pagină pe care o deschide, membrul vede codurile de reducere potrivite. Nivelul nu i se arată.",
       "changeRoleTitle": "Schimbi rolul?",
       "changeRoleBody": "{name} primește rolul ales de la următoarea pagină pe care o deschide.",
       "approvePlatformTitle": "Aprobi șabloanele care lipsesc ({count} din {total})?",
@@ -9480,34 +9495,19 @@
           "few": "{count} niveluri",
           "other": "{count} de niveluri"
         },
-        "intro": "Nivelurile pe care le dai membrilor. Un nivel e o etichetă și ce primește membrul, nu un drept.",
-        "introMore": "Un nivel nu schimbă ce poate face cineva pe site. Membrul îl vede în zona lui, pagina publică îl înșiră, iar un cod de reducere poate fi doar pentru unele niveluri.",
-        "empty": "Nu ai încă niciun nivel. Până atunci, membrii sunt pur și simplu „Membru”.",
+        "intro": "Un nivel decide ce coduri de reducere vede membrul; membrii nu-și văd nivelul.",
+        "introMore": "Nivelul e eticheta ta: îl văd doar administratorii. Îl dai fiecărui membru în „Echipa”, apoi bifezi la fiecare cod pentru ce niveluri e. Nu schimbă ce poate face cineva pe site.",
+        "empty": "Nu ai încă niciun nivel. Până atunci, un membru vede doar codurile de reducere pentru toți.",
         "rowsIntro": "Scrie un nivel în rândul gol de la sfârșit și apasă „Salvează toate nivelurile”. Ordinea e cea din „Poziția”.",
         "listLabel": "Nivelurile de membru, în ordinea clubului",
         "newRow": "Adaugă un nivel",
         "newRowHint": "Scrie numele în română și în engleză. Un rând gol nu face nimic.",
         "nameRo": "Nume (Română)",
         "nameEn": "Nume (English)",
-        "descriptionRo": "Descriere (Română)",
-        "descriptionEn": "Descriere (English)",
-        "descriptionHelp": "Ce primește membrul cu acest nivel, pe scurt (cel mult {max} de caractere).",
+        "descriptionRo": "Notă (o văd doar administratorii)",
+        "descriptionEn": "Notă (o văd doar administratorii)",
+        "descriptionHelp": "Pentru tine: la ce folosește nivelul, ce coduri primește (cel mult {max} de caractere). Membrul nu o vede.",
         "bothOrNeither": "În ambele limbi sau în niciuna.",
-        "glyph": "Simbol",
-        "glyphs": {
-          "star": "Stea",
-          "medal": "Medalie",
-          "trophy": "Trofeu",
-          "diamond": "Diamant",
-          "heart": "Inimă",
-          "bolt": "Fulger",
-          "shield": "Scut",
-          "runner": "Alergător",
-          "flag": "Steag",
-          "flame": "Flacără",
-          "verified": "Sigiliu",
-          "mountain": "Munte"
-        },
         "position": "Poziția",
         "positionLast": "ultima",
         "language": {
@@ -9515,7 +9515,7 @@
           "en": "English"
         },
         "hidden": "Ascuns",
-        "hiddenHelp": "Un nivel ascuns nu se mai dă și nu apare pe pagina publică. Membrii care îl au îl păstrează.",
+        "hiddenHelp": "Un nivel ascuns nu se mai dă. Membrii care îl au îl păstrează, iar codurile lui rămân.",
         "hiddenChip": "Ascuns",
         "hiddenOption": "{name} (ascuns)",
         "members": {
@@ -12669,9 +12669,6 @@
     "upcomingEmpty": "Nicio alergare anunțată acum.",
     "upcomingAll": "Toate alergările",
     "eventsTitle": "Evenimente pentru membri",
-    "tiersTitle": "Nivelurile de membru",
-    "tierYours": "Nivelul tău",
-    "codeForTiers": "Codul e pentru nivelurile",
     "codesTitle": "Coduri de reducere",
     "tabsLabel": "Părțile zonei membrilor",
     "tabs": {

@@ -4,7 +4,7 @@ import ro from "../../../messages/ro.json";
 import { categoryLabelOf } from "@/modules/results/category-words";
 import { buildResultsCsv, resultsCsvFileName } from "@/modules/results/csv";
 import { STATISTICS_AGE_BANDS } from "@/modules/registrations/statistics";
-import { eventTakesResults } from "@/modules/results/domain/event-type";
+import { eventTakesResults, resultsDoorOpen } from "@/modules/results/domain/event-type";
 import { resultsFingerprint } from "@/modules/results/domain/fingerprint";
 
 /**
@@ -69,6 +69,35 @@ describe("§808 which events take results", () => {
   it("takes only the race", () => {
     expect(eventTakesResults("RACE")).toBe(true);
     for (const type of ["GROUP_RUN", "HIKE", "COFFEE", "MEETUP", "GEAR_TEST", "EXTERNAL", ""]) expect(eventTakesResults(type), type).toBe(false);
+  });
+});
+
+describe("§808 the «Clasament» door", () => {
+  const NOW = new Date("2026-10-18T12:00:00.000Z");
+  const AHEAD = new Date("2026-11-21T07:00:00.000Z");
+  const BEHIND = new Date("2026-10-01T07:00:00.000Z");
+
+  it("is open for a published race still ahead — the page behind it opens before the start", () => {
+    expect(resultsDoorOpen({ type: "RACE", editorialStatus: "PUBLISHED", startsAt: AHEAD }, NOW)).toBe(true);
+  });
+
+  it("is open for a race that has started, and on the gun's own instant", () => {
+    expect(resultsDoorOpen({ type: "RACE", editorialStatus: "PUBLISHED", startsAt: BEHIND }, NOW)).toBe(true);
+    expect(resultsDoorOpen({ type: "RACE", editorialStatus: "PUBLISHED", startsAt: NOW }, NOW)).toBe(true);
+  });
+
+  it("is closed for an event that takes no results, whatever its state or date", () => {
+    for (const type of ["GROUP_RUN", "HIKE", "COFFEE", "MEETUP", "GEAR_TEST", "EXTERNAL", ""]) {
+      expect(resultsDoorOpen({ type, editorialStatus: "PUBLISHED", startsAt: AHEAD }, NOW), type).toBe(false);
+      expect(resultsDoorOpen({ type, editorialStatus: "PUBLISHED", startsAt: BEHIND }, NOW), type).toBe(false);
+    }
+  });
+
+  it("is closed for a race still ahead that is not published (a draft, in review, archived), open once it has started", () => {
+    for (const editorialStatus of ["DRAFT", "IN_REVIEW", "ARCHIVED"]) {
+      expect(resultsDoorOpen({ type: "RACE", editorialStatus, startsAt: AHEAD }, NOW), editorialStatus).toBe(false);
+      expect(resultsDoorOpen({ type: "RACE", editorialStatus, startsAt: BEHIND }, NOW), editorialStatus).toBe(true);
+    }
   });
 });
 

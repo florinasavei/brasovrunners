@@ -7,6 +7,7 @@ import BadgeIcon from "@mui/icons-material/Badge";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import BrushIcon from "@mui/icons-material/Brush";
+import BuildIcon from "@mui/icons-material/Build";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import CategoryIcon from "@mui/icons-material/Category";
@@ -104,7 +105,7 @@ import type { ComponentType } from "react";
  * verb acts on, the two share the picture (the bibs are the ticket on both, printing is the
  * printer), so the screen reads as one system.
  *
- * **Read by `Panel` and by `SettingsSubNav` (the glyph before each tab of «Setări»), both Server Components** that no client file imports
+ * **Read by `Panel` and by the sub-tab rows (`SettingsSubNav`, `TasksSubNav`, `GallerySubNav`, `ParticipantEmailsPanel`'s language switch), all Server Components** that no client file imports
  * (`tests/unit/shared/glyph-on-every-button-and-fold.test.ts` holds it): the lookup by name
  * happens on the server and only the drawn `<svg>` reaches the browser, so this table costs a
  * visitor nothing and the backoffice nothing but the paths it draws. One file per glyph, never
@@ -223,6 +224,9 @@ export const PANEL_GLYPHS = {
   // «Setări»' row of tabs (§318 as amended, 2026-10-18) names the two it has no card for: the anti-robot check, a shield, and «Configurație», the platform's own screen, a gear.
   antiBot: ShieldIcon,
   configuration: SettingsIcon,
+  // «Sarcini»' tab «Aplicația» (§318 as amended): the app's own work queue, the wrench. Its other three tabs share a card's picture: «Club» the checklist read from the system (`todo`), «De făcut» the club's own lines (`todoOwn`), «Sistem» the gear of «Configurație», where it leads.
+  app: BuildIcon,
+  // The language switch of «Emailuri» (§318 as amended) takes `translation`, below — never a flag; the two entries differ by their words.
   // «Pagina principală» (§714): the home page at the site's root, under «Aspect».
   home: HomeIcon,
   textSize: FormatSizeIcon,

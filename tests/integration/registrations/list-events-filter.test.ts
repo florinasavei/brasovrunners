@@ -49,6 +49,13 @@ describe("§736 the events the registrations list offers", () => {
     expect(offered.filter((row) => row.id === fresh)).toHaveLength(1);
   });
 
+  it("carries what the «Clasament» door reads: the type, the start and the editorial state (§808)", async () => {
+    const fresh = await event("Crosul nou", "INTERNAL");
+    const row = (await listEventsWithRegistrations(db)).find((offered) => offered.id === fresh);
+    expect(row).toMatchObject({ type: "RACE", editorialStatus: "DRAFT" });
+    expect(row?.startsAt).toEqual(new Date("2026-11-21T07:00:00Z"));
+  });
+
   it("still offers an event that has registrations, whatever it takes now", async () => {
     const past = await event("Crosul de anul trecut", "NONE");
     const email = "a@example.test";

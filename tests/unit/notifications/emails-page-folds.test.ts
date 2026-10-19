@@ -23,7 +23,7 @@ import ro from "../../../messages/ro.json";
  */
 const ROOT = process.cwd();
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
-const markup = (html: string): string => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+const markup = (html: string): string => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<link rel="preload"[^>]*>/g, "");
 
 // The cards of the templates: a visitor's message and the road notice (§778) have none.
 const TYPES = (emailMessageType.enumValues as readonly EmailMessageType[]).filter((type): type is Exclude<EmailMessageType, RelayMessageType> => !isRelayMessage(type));
@@ -115,6 +115,21 @@ describe("§336 the emails participants receive: one card of cards", () => {
     expect(firstInner).toBeGreaterThan(nav);
     expect(html).toContain('href="/ro/admin/settings/emails?lang=en#participant-emails"');
     expect(html).toMatch(/aria-current="page"[^>]*>Română|>Română<\/a>/);
+  });
+
+  it("draws a picture before each language of the switch, the language's flag, like every language tab (§572)", () => {
+    const html = render([card("VERIFY_REGISTRATION_EMAIL")]);
+    const nav = html.slice(html.indexOf("<nav"), html.indexOf("</nav>"));
+    const entries = [...nav.matchAll(/<a [^>]*>([\s\S]*?)<\/a>/g)].map((match) => ({ inner: match[1], text: match[1].replace(/<[^>]+>/g, "") }));
+    expect(entries.map((entry) => entry.text)).toEqual(["Română", "English"]);
+    for (const entry of entries) {
+      // An `aria-hidden` picture, one per entry, before the words that stay the link's name.
+      expect(entry.inner, entry.text).toMatch(/^<span[^>]*aria-hidden="true"[^>]*><img/);
+      expect(entry.inner, entry.text).toContain("<img");
+      expect(entry.inner, entry.text).not.toContain("<svg");
+    }
+    expect(entries[0].inner).toContain('src="/flags/ro.svg"');
+    expect(entries[1].inner).toContain('src="/flags/gb.svg"');
   });
 
   it("opens the card, and only the message whose words were just saved", () => {

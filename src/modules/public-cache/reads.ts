@@ -35,7 +35,6 @@ import {
 import { readPublicFaqPage } from "@/modules/content/faq/repository";
 import { memberDefinitionFor, parseMemberDefinition, readMemberDefinition } from "@/modules/content/members/member-definition";
 import { readPublicMembersPage } from "@/modules/content/members/page-settings";
-import { readPublicMemberTiers } from "@/modules/content/member-tiers/repository";
 import { readPublicTeamPage } from "@/modules/content/team/repository";
 import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import type { ElevationProfileData } from "@/modules/routes/elevation/parse";
@@ -89,6 +88,7 @@ import {
 import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { describesRefusal } from "@/modules/legal-documents/domain/refusal-clause";
 import { findCurrentApprovedDocument, findFirstResultsNoticeVersion, findFirstRsvpNoticeVersion, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
+import { countRsvpsForEvents } from "@/modules/rsvp/counts";
 import { type PublicRsvps, readPublicRsvps } from "@/modules/rsvp/rsvp";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import { DEFAULT_PUBLIC_LIST_CLUB } from "@/modules/registrations/domain/public-list-club";
@@ -708,6 +708,19 @@ export async function cachedPublicRsvps(eventId: string, firstRsvpNoticeVersion:
 }
 
 /**
+ * How many come to each of these events (`countRsvpsForEvents`, §815): the number the calendar's feed, the `.ics` files and the
+ * listing's «N vin» chip say, for every offered event of the page at once. Filed under "places" like `cachedPublicRsvps` — the
+ * tag a confirmation or a withdrawal expires (`revalidatePublicContent("places")`, §812) — so the static feed and the listing,
+ * which are filed under the tags of what they read, are made again after a write to "places" and never at each poll (§549). No saved copy (a
+ * count of people is not a thing to serve stale, §281), so a caller takes it through `readOrWhileAway`. The ids are sorted into
+ * the key: the same events are the same entry whatever order a page asks in.
+ */
+export async function cachedRsvpCounts(eventIds: readonly string[]): Promise<Record<string, number>> {
+  const ids = [...new Set(eventIds)].sort();
+  return publicRead(["places.rsvp-counts", ...ids], ["places"], () => countRsvpsForEvents(getDb(), ids));
+}
+
+/**
  * Whether the privacy notice in force describes the volunteer agreement's acceptance (§758,
  * `describesVolunteerAgreement`), in every language — the event page's fifth condition for «Vreau să fiu
  * voluntar», `cachedVolunteersDescribed`'s twin. `noticeDescribesVolunteerAgreement` is the uncached read the
@@ -905,15 +918,6 @@ export async function cachedFaqPage(locale: Locale) {
  */
 export async function cachedMembersPage(locale: Locale) {
   return publicRead(["members.page", locale], ["pages"], () => readPublicMembersPage(getDb(), locale));
-}
-
-/**
- * `readPublicMemberTiers`: «Nivelurile de membru» (§811) — the visible levels, in the club's order and the
- * reader's language, for the members' page. Nothing about a person. Filed under `pages` with the page that
- * lists them: a save of the levels expires that kind (`content/member-tiers/service.ts`).
- */
-export async function cachedMemberTiers(locale: Locale) {
-  return publicRead(["members.tiers", locale], ["pages"], () => readPublicMemberTiers(getDb(), locale));
 }
 
 /** The sitemap's standing pages: the address, the last change and the alternates — `cachedSitemapEvents`' shape. */

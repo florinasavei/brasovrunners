@@ -116,7 +116,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
         secondEventId = rows[0].id;
         await client.query("INSERT INTO events SELECT * FROM second_date");
         await client.query("CREATE TEMP TABLE second_texts ON COMMIT DROP AS SELECT * FROM event_translations WHERE event_id = $1", [eventId]);
-        await client.query("UPDATE second_texts SET id = gen_random_uuid(), event_id = $1, slug = slug || '-2'", [secondEventId]);
+        await client.query("UPDATE second_texts SET id = gen_random_uuid(), event_id = $1, slug = slug || '-2', title = title || ' bis'", [secondEventId]);
         await client.query("INSERT INTO event_translations SELECT * FROM second_texts");
         await client.query("COMMIT");
       } catch (error) {
@@ -185,6 +185,9 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     }
     expect((await rsvpRow(guest, eventId))?.confirmedAt).toBeNull();
     expect(await rememberedBrowsers(guest)).toBe(0);
+    // Before the answer: the event's calendar file exists and says nobody has yet — the file the confirmation below must expire.
+    const before = await page.request.get(`/ro/events/${slug}/calendar.ics`);
+    expect((await before.text()).replace(/\r\n /g, "").replace(/\\n/g, "\n")).toContain("Fii primul care spune că vine.");
 
     const press = page.getByRole("button", { name: "Da, vin" });
     expect((await press.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -209,9 +212,22 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await expect(page.getByTestId("rsvp-remembered-as")).toContainText("an…@example.test");
     await expect(page.getByTestId("rsvp-count-heading")).toContainText("Vin (1)");
     await expect(page.getByTestId("rsvp-name")).toHaveText(NAME);
+    // §815: the event's calendar file now carries the door and the count — the confirmation expired the file that was made without them.
+    const ics = await page.request.get(`/ro/events/${slug}/calendar.ics`);
+    expect((await ics.text()).replace(/\r\n /g, "").replace(/\\n/g, "\n")).toMatch(new RegExp(`Vin! → \\S+/ro/evenimente/${slug}#vin\\n1 vine până acum`));
     // …and the address is nowhere on the page.
     expect(await page.content()).not.toContain(guest);
     await noSidewaysScroll(page);
+
+    // The listing's card for this date (the second date has a title of its own, so this one is not a series' card): «1 vine», a link to the
+    // page's «Vii?» card, and the 44 pixels every link on a card has in both directions.
+    await page.goto("/ro/evenimente");
+    const chip = page.locator(`[data-testid="coming-chip"][href$="/${slug}#vin"]`);
+    await expect(chip).toHaveCount(1);
+    await expect(chip).toContainText("1 vine");
+    const chipBox = await chip.boundingBox();
+    expect(chipBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+    expect(chipBox?.width ?? 0).toBeGreaterThanOrEqual(44);
 
     // The same link, spent: one sentence, and the event's page.
     await page.goto(`/ro/vin/${secret}`);

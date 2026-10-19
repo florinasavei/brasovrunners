@@ -8,12 +8,12 @@ import { DEFAULT_TIER_GLYPH, isTierGlyphKey, type TierGlyphKey } from "./glyph-k
  * The member tiers (§811), read. A tier is a label and its benefits, never a permission: nothing here
  * decides what anybody may do. The reads:
  *
- * - every level, in the club's order, and the visible ones — «Niveluri de membru»'s chips and the team page's select
+ * - every level, in the club's order — the codes' chips and the team page's select, hidden ones included
  *   (the backoffice's counts are `admin-repository.ts`, which meets the members' and the codes' tables);
- * - the visible levels, in the club's order — what «Echipa» offers when giving a level;
- * - a level by id — the member's own badge in the zone;
- * - the public members' page's levels, in one language — through the public cache (§333), so a save
- *   expires `pages` (`service.ts`).
+ * - a level by id — checked when «Echipa» gives it to a member.
+ *
+ * The level is the staff's label alone (§817): no member and no visitor is shown it, so nothing here is read by the
+ * zone or by a public page, and nothing is filed in the public cache.
  */
 
 /** A level as the screens draw it in one language. `glyph` is always a key of the tiers' table. */
@@ -40,20 +40,10 @@ export async function listAllMemberTiers<T extends Record<string, unknown>>(db: 
   return db.select().from(memberTiers).orderBy(asc(memberTiers.position), asc(memberTiers.createdAt));
 }
 
-/** The tiers not hidden, in the club's order. */
-export async function listVisibleMemberTiers<T extends Record<string, unknown>>(db: Database<T>): Promise<MemberTier[]> {
-  return db.select().from(memberTiers).where(eq(memberTiers.hidden, false)).orderBy(asc(memberTiers.position), asc(memberTiers.createdAt));
-}
-
 /** One tier by id, or nothing. */
 export async function findMemberTier<T extends Record<string, unknown>>(db: Database<T>, id: string): Promise<MemberTier | undefined> {
   const [row] = await db.select().from(memberTiers).where(eq(memberTiers.id, id)).limit(1);
   return row;
-}
-
-/** The levels the public members' page lists, in one language: visible ones, in order, nothing about a person. */
-export async function readPublicMemberTiers<T extends Record<string, unknown>>(db: Database<T>, locale: Locale): Promise<TierView[]> {
-  return (await listVisibleMemberTiers(db)).map((tier) => tierViewOf(tier, locale));
 }
 
 /**

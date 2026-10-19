@@ -6,6 +6,7 @@ import { calendarLabels } from "@/modules/events/calendar-labels";
 import { datedOrNull } from "@/modules/events/domain/dated";
 import { buildCalendar } from "@/modules/events/ical";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
+import { readComingFromDb } from "@/modules/rsvp/coming";
 import { env } from "@/shared/config/env";
 import { CLUB_NAME } from "@/theme/brand";
 import type { CalendarPart } from "./domain/calendar-part";
@@ -43,7 +44,9 @@ export async function renderCalendarPart<T extends Record<string, unknown>>(
   const found = await findPublishedEventBySlug(db, input.locale, input.slug, "members");
   const published = found ? datedOrNull(found) : null;
   if (!published) return {};
-  const events = [toCalendarEvent(published, input.locale, input.now)];
+  // «Vin!» (§815): the same two lines the feed carries, read from the database itself — the renderer has no request and no public cache.
+  const coming = await readComingFromDb(db, [published], input.now);
+  const events = [toCalendarEvent(published, input.locale, input.now, { coming })];
   const labels = calendarLabels(input.locale);
   if (input.part === "file") {
     const ics = buildCalendar({ events, baseUrl: env.APP_BASE_URL, name: published.title, labels });
