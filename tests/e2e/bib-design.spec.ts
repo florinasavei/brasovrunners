@@ -144,7 +144,7 @@ test.describe("§664 the members' number, designed in the panel", () => {
     await enabled.check();
     await expect(preview).toHaveAttribute("src", /[?&]memberEnabled=1(&|$)/, { timeout: 10_000 });
 
-    // «Fundalul» (§NNN): the whole card first for a club that has not offered the members' bib yet.
+    // «Fundalul» (§695): the whole card first for a club that has not offered the members' bib yet.
     const style = members.getByLabel("Fundalul numărului de membru");
     await expect(style).toHaveValue("card");
     await expect(preview).toHaveAttribute("src", /[?&]memberStyle=card(&|$)/, { timeout: 10_000 });

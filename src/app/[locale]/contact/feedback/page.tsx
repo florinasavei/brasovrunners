@@ -192,10 +192,10 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   }
 
   return (
-    // `md`, not `sm` (§NNN; the owner, 2026-10-10: «I need this to be wider»): step 1's four cards, two
+    // `md`, not `sm` (§693; the owner, 2026-10-10: «I need this to be wider»): step 1's four cards, two
     // a row from `sm`, no longer wrap every sentence onto four lines; a phone is unchanged.
     <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
-      {/* A button with its arrow, a thumb's height (§NNN; the owner: «the back link to have an icon and be
+      {/* A button with its arrow, a thumb's height (§693; the owner: «the back link to have an icon and be
           bigger»); a plain `<a>`, so the page keeps its one island. Pulled left by its own padding, so the
           arrow lines up with the heading. */}
       <Button
@@ -219,7 +219,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
           {/* Who got it (§678): the safety person — her form's own reader, or the one a named message chose — or the club. */}
           {sentReader(sentBranch, search.catre) === "person" ? t(safetyByGmail ? "sent.safetyGmail" : safetyFallback ? "sent.safetyFallback" : "sent.safety", { name: safetyName }) : t("sent.body")}
         </Alert>
-        {/* A way on after the send (§NNN): another message, from the wizard's first step. */}
+        {/* A way on after the send (§693): another message, from the wizard's first step. */}
         <Button
           component="a"
           href={path}
@@ -414,7 +414,7 @@ async function BranchForm({
     <>
       {/* The glyph the visitor chose on step 1, beside the branch's name. */}
       {/* The glyph and the name on the left; «Schimbă tipul mesajului» on the right, or under them on a
-          narrow phone (§NNN; the owner, of the old «Alt tip de mesaj» under the send button: «not clear what
+          narrow phone (§693; the owner, of the old «Alt tip de mesaj» under the send button: «not clear what
           it does, not clearly visible»). Only when there is another branch to go to. */}
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 2, rowGap: 1, mb: 1 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -554,7 +554,7 @@ async function BranchForm({
               <Typography component="legend" variant="body1" sx={{ mb: 1 }}>
                 {t("rating.legend")}
               </Typography>
-              {/* Five columns at every width (§NNN): at 320 pixels the five faces wrapped four and one;
+              {/* Five columns at every width (§693): at 320 pixels the five faces wrapped four and one;
                   a label longer than its column («Foarte bine») takes a second line instead. */}
               <Box sx={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 0.75, maxWidth: 480 }}>
                 {RATINGS.map((rating) => {
@@ -609,7 +609,7 @@ async function BranchForm({
             slotProps={{ htmlInput: { maxLength: FEEDBACK_TEXT_MAX } }}
           />
           {/*
-            «Dacă nu mai vii, ne spui de ce?» folded (§NNN): six boxes and a line are for the few who stopped
+            «Dacă nu mai vii, ne spui de ce?» folded (§693): six boxes and a line are for the few who stopped
             coming, and open they were half the form on a phone. A native `<details>`, no island; it opens by
             itself when a refusal brought back a tick or a word in it, or named one of its boxes.
           */}

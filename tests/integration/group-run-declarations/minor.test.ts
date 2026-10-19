@@ -244,7 +244,8 @@ describe("§769 the storage: one row, §330's columns", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ typedName: "Ana Popescu", minorTypedName: "Ion Popescu", idDocument: null, email: "ana@example.ro", declarationVersion: 1 });
     // The minor's birth date was counted and dropped: no column keeps it.
-    expect(JSON.stringify(rows[0])).not.toContain("2012");
+    // Flaky before: the row's random uuids are hex, and a uuid can spell «2012» by chance; they are scrubbed first.
+    expect(JSON.stringify(rows[0]).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, "<id>")).not.toContain("2012");
     // An adult's own declaration has none.
     await signGroupRunDeclaration(db, await adult(event.id, { email: "x@example.ro", typedName: "Maria Ionescu" }), NOW);
     expect((await db.select().from(groupRunDeclarations).where(eq(groupRunDeclarations.typedName, "Maria Ionescu")))[0].minorTypedName).toBeNull();

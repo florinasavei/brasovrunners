@@ -116,7 +116,7 @@ export async function GET(
     handed over as PNG (§560, `bib-pictures.ts`): pdfkit embeds no WebP, which every stored
     picture is, and a design with a picture failed the whole sheet with "Unknown image format.".
   */
-  // The members' header or card photograph too (§664, §NNN), only when a member's bib is on this sheet; a spare never is one.
+  // The members' header or card photograph too (§664, §695), only when a member's bib is on this sheet; a spare never is one.
   const anyMember = part !== "others" && rows.some((row) => row.member === true);
   const loaded = await loadBibPictures(event.design, BIB_PICTURE_WIDTH.sheet, anyMember);
   const header = loaded.header?.png ?? null;

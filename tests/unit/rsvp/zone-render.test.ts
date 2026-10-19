@@ -56,7 +56,7 @@ describe("§822 the zone's row under a run that takes answers", () => {
     expect(markup).toMatch(/<input[^>]*type="checkbox"[^>]*name="showName"|<input[^>]*name="showName"[^>]*type="checkbox"/);
     expect(markup).not.toMatch(/<input[^>]*name="showName"[^>]*checked/);
     expect(markup).toContain("Vreau să apar cu numele");
-    expect(markup).toContain("Dacă bifezi, pe pagina alergării apari ca „Ana Membru”.");
+    expect(markup).toContain("Dacă bifezi, apari ca „Ana Membru” pe pagina alergării și la „Cine vine”.");
     // The form posts the event and the language, and nothing of the person's: no address, no name, no role.
     expect(markup).toContain(`name="eventId" value="${EVENT_ID}"`);
     expect(markup).toContain('name="uiLocale" value="ro"');
@@ -69,7 +69,7 @@ describe("§822 the zone's row under a run that takes answers", () => {
     expect(markup).toContain("1 coming");
     expect(markup).toContain("I&#x27;m coming!");
     expect(markup).toContain("I want my name to show");
-    expect(markup).toContain("If you tick it, the run&#x27;s page shows you as “Ana Membru”.");
+    expect(markup).toContain("If you tick it, you show as “Ana Membru” on the run&#x27;s page and under “Who&#x27;s coming”.");
     expect(markup).toContain('name="uiLocale" value="en"');
   });
 
@@ -117,7 +117,7 @@ describe("§822 the zone's row under a run that takes answers", () => {
     // The account has a name and the answer none: the tick uses it, the help says which — no box.
     const account = await row({ going: true, showName: false, name: null, publicName: "Ana Membru" });
     expect(account).not.toContain('name="name"');
-    expect(account).toContain("Dacă bifezi, pe pagina alergării apari ca „Ana Membru”.");
+    expect(account).toContain("Dacă bifezi, apari ca „Ana Membru” pe pagina alergării și la „Cine vine”.");
   });
 
   it("says the same tick in English", async () => {

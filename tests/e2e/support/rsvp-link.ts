@@ -27,14 +27,14 @@ export async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): 
   }
 }
 
-export type RsvpRow = { id: string; eventId: string; confirmedAt: Date | null; displayName: string | null; showName: boolean };
+export type RsvpRow = { id: string; eventId: string; confirmedAt: Date | null; displayName: string | null; showName: boolean; clubMember: "DECLARED" | "ACCOUNT" | null };
 
 /** The answer an address gave at an event, once the request that wrote it has committed. */
 export async function rsvpRow(email: string, eventId: string): Promise<RsvpRow | null> {
   return withDatabase(async (client) => {
     for (let attempt = 0; attempt < 20; attempt += 1) {
       const { rows } = await client.query<RsvpRow>(
-        `SELECT id, event_id AS "eventId", confirmed_at AS "confirmedAt", display_name AS "displayName", show_name AS "showName"
+        `SELECT id, event_id AS "eventId", confirmed_at AS "confirmedAt", display_name AS "displayName", show_name AS "showName", club_member AS "clubMember"
            FROM event_rsvps WHERE canonical_email = lower($1) AND event_id = $2`,
         [email, eventId],
       );

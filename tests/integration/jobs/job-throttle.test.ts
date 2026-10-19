@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { rateLimitBuckets } from "@/db/schema/rate-limit";
+import { windowStart } from "@/modules/rate-limit/domain/window";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -49,6 +51,17 @@ beforeAll(async () => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(NOW);
 });
+// The first real ping loads the job's whole module graph on demand (`ping.ts` imports it lazily, so a
+// ping answered from the cache never pays for it); load it here, in a hook with a budget of its own,
+// so the first test measures the throttle rather than a cold transform on a loaded machine.
+beforeAll(async () => {
+  await Promise.all([
+    import("@/modules/registrations/maintenance"),
+    import("@/modules/jobs/cadence"),
+    import("@/modules/jobs/next-work"),
+    import("@/modules/diagnostics/neon-budget"),
+  ]);
+});
 afterAll(async () => {
   vi.useRealTimers();
   await close();
@@ -58,14 +71,36 @@ beforeEach(async () => {
   vi.setSystemTime(NOW);
 });
 
+/**
+ * Put a bucket at `count` attempts in the current window, as if that many authenticated calls had
+ * already been counted. The route's own throttle call (`consumeRateLimit`) is what reads it, so the
+ * 429 below is still the route's answer; only the thirty real maintenance runs it took to get there
+ * are gone — each one a real run against PostgreSQL in WebAssembly, which is what failed by chance
+ * with a 30 s timeout on a loaded CI machine.
+ */
+async function spend(job: string, count: number): Promise<void> {
+  const { windowMs } = RATE_LIMITS["job-invoke"];
+  await db
+    .insert(rateLimitBuckets)
+    .values({ scope: "job-invoke", key: job, windowStartsAt: windowStart(NOW, windowMs), count })
+    .onConflictDoUpdate({
+      target: [rateLimitBuckets.scope, rateLimitBuckets.key, rateLimitBuckets.windowStartsAt],
+      set: { count },
+    });
+}
+
 describe("BR-REQ-090-03 job endpoints are throttled", () => {
   it("refuses with 429 and a Retry-After once the limit is spent", async () => {
     const { limit } = RATE_LIMITS["job-invoke"];
 
-    for (let attempt = 1; attempt <= limit; attempt += 1) {
-      const response = await POST(post(`Bearer ${SECRET}`));
-      expect(response.status, `attempt ${attempt}`).toBe(200);
-    }
+    // The first call, for real: an authenticated call inside the allowance is answered, and counted.
+    const first = await POST(post(`Bearer ${SECRET}`));
+    expect(first.status, "attempt 1").toBe(200);
+
+    // Everything up to the allowance's last call but one is counted without running the job.
+    await spend("registration-maintenance", limit - 1);
+    const last = await POST(post(`Bearer ${SECRET}`));
+    expect(last.status, `attempt ${limit}`).toBe(200);
 
     const refused = await POST(post(`Bearer ${SECRET}`));
     expect(refused.status).toBe(429);
@@ -85,14 +120,15 @@ describe("BR-REQ-090-03 job endpoints are throttled", () => {
 
     // The real scheduler arrives after all of that with a full allowance.
     expect((await POST(post(`Bearer ${SECRET}`))).status).toBe(200);
+    // And the flood was never counted: the one authenticated call was the bucket's first, so this probe is its second.
+    const probe = await consumeRateLimit(db, "job-invoke", "registration-maintenance", NOW);
+    expect(probe.count).toBe(2);
   });
 
   it("gives each job its own bucket", async () => {
     const { limit } = RATE_LIMITS["job-invoke"];
 
-    for (let attempt = 0; attempt <= limit; attempt += 1) {
-      await POST(post(`Bearer ${SECRET}`));
-    }
+    await spend("registration-maintenance", limit);
     expect((await POST(post(`Bearer ${SECRET}`))).status).toBe(429);
 
     // A hammered maintenance endpoint must not stop confirmations going out.

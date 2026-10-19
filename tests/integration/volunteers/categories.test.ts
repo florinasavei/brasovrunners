@@ -347,7 +347,11 @@ describe("§774 «Persoana de contact» of a category: three optional boxes, its
       { categoryId: route.id, nameRo: "Traseu", fields: ["contactName", "contactPhone", "contactEmail"] },
       { categoryId: route.id, nameRo: "Traseu", fields: ["contactEmail"] },
     ]);
-    const text = JSON.stringify(await trail());
+    // Flaky before: the rows carry random ids (and a real `createdAt`), and a hex id can hold "0712" by chance,
+    // so the ids and instants are scrubbed first and the phone's own digits are the only thing looked for.
+    const text = JSON.stringify(await trail())
+      .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, "<id>")
+      .replace(/\d{4}-\d{2}-\d{2}T[\d:.]+Z/g, "<time>");
     expect(text).not.toContain("Ana Popescu");
     expect(text).not.toContain("0712");
     expect(text).not.toContain("example.test");

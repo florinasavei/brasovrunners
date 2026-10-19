@@ -6,18 +6,19 @@ import { inReadOnlyTransaction } from "@/db/read-only";
 import type { Database, Transaction } from "@/db/types";
 import { generateTokenSecret, hashTokenSecret, isWellFormedTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { findPublishedEventById } from "@/modules/events/repository";
-import { findCurrentApprovedDocument, noticeDescribesRsvp } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, noticeDescribesRsvp, noticeDescribesRsvpMember } from "@/modules/legal-documents/repository";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { DomainError } from "@/shared/errors/domain-error";
-import { cleanDisplayName, isConsistent, type RsvpIdentity } from "./domain/identity";
+import { cleanDisplayName, identityClubMember, isConsistent, type RsvpIdentity } from "./domain/identity";
 import { RSVP_CONFIRM_HOURS, RSVP_LINK_GRACE_DAYS } from "./domain/link-life";
 import { readRefuseLink } from "./ask-refusal";
 import { rsvpOffered } from "./domain/offered";
 import { publicRsvpName } from "./domain/public-name";
+import { type ClubMemberKind, mergeClubMember, parseClubMember, publicRsvpMember } from "./domain/public-member";
 
 /**
  * «Vin!» (§811, «Vin!» part 1; the owner, 2026-10-18: «how do I mark myself as "Going"?») — a person's answer «I am coming»
@@ -102,6 +103,13 @@ async function invalidateConfirmLinks<T extends Record<string, unknown>>(tx: Tra
  *   already confirmed is left exactly as it is — whoever types an address cannot rename its owner or change what is shown — and
  *   the message then only offers to take the answer back.
  * - **Verified** (`remembered`, `account`, `link`): the row is confirmed at once, no email, the public cache expired.
+ *
+ * **The member mark** (§831, amending §812 and §796): `identityClubMember` says which — `DECLARED` for the person's own tick on the page, the
+ * remembered browser or the link, `ACCOUNT` for an account whose role is at least a member (read from the session on the server, never from a
+ * posted box, and winning over any tick) — and it is **kept only while the notice in force describes the mark** (`noticeDescribesRsvpMember`): a tick
+ * posted to a form that was drawn before the notice, or forged, stores nothing, so the data is never collected without the sentence that says so.
+ * An answer already counted keeps what it held unless this press is stronger (`mergeClubMember`); a press that changes it records the notice
+ * in force on the row, as the name's tick does, because that version is what the public mark is read against.
  */
 export async function answerRsvp<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -122,6 +130,8 @@ export async function answerRsvp<T extends Record<string, unknown>>(
   }
   const notice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now);
   if (!notice) throw new DomainError("CONFLICT", "no approved privacy notice exists yet; answers are not taken");
+  const askedMember = identityClubMember(identity);
+  const clubMember: ClubMemberKind | null = askedMember !== null && (await noticeDescribesRsvpMember(db, now)) ? askedMember : null;
 
   // The message throttle is spent before the write, outside the transaction, so a rollback cannot give it back.
   const mail = identity.verified
@@ -137,6 +147,7 @@ export async function answerRsvp<T extends Record<string, unknown>>(
       canonicalizationVersion: who.canonicalizationVersion,
       displayName,
       showName: identity.showName,
+      clubMember,
       locale,
       privacyNoticeVersion: notice.version,
       confirmedAt: identity.verified ? now : null,
@@ -160,6 +171,8 @@ export async function answerRsvp<T extends Record<string, unknown>>(
           ticked it.
         */
         const owned = existing.confirmedAt !== null;
+        const heldMember = parseClubMember(existing.clubMember);
+        const nextMember = mergeClubMember(heldMember, clubMember);
         const [updated] = await tx
           .update(eventRsvps)
           .set(
@@ -168,11 +181,13 @@ export async function answerRsvp<T extends Record<string, unknown>>(
                   showName: identity.showName || existing.showName,
                   displayName: displayName ?? existing.displayName,
                   deliveryEmail: who.deliveryEmail,
-                  ...(identity.showName ? { privacyNoticeVersion: notice.version } : {}),
+                  clubMember: nextMember,
+                  ...(identity.showName || nextMember !== heldMember ? { privacyNoticeVersion: notice.version } : {}),
                 }
               : {
                   confirmedAt: now,
                   showName: identity.showName,
+                  clubMember,
                   displayName,
                   locale,
                   deliveryEmail: who.deliveryEmail,
@@ -196,6 +211,7 @@ export async function answerRsvp<T extends Record<string, unknown>>(
             deliveryEmail: who.deliveryEmail,
             displayName,
             showName: identity.showName,
+            clubMember,
             locale,
             privacyNoticeVersion: notice.version,
             createdAt: now,
@@ -340,6 +356,11 @@ export type RsvpLink = {
    * with it, so a name is never published that the person was not shown (§827, §812).
    */
   name: string | null;
+  /**
+   * The member mark the answer holds (§831): `DECLARED`, `ACCOUNT` or null — what the page of a counted answer's link draws ticked, and says when it
+   * is an account's (not the tick's to take away). Absent on the question's refusal link, which has no answer behind it.
+   */
+  clubMember?: ClubMemberKind | null;
 };
 
 /**
@@ -364,6 +385,7 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
         askedAt: eventRsvps.askedAt,
         displayName: eventRsvps.displayName,
         showName: eventRsvps.showName,
+        clubMember: eventRsvps.clubMember,
         title: eventTranslations.title,
         slug: eventTranslations.slug,
         startsAt: events.startsAt,
@@ -396,6 +418,7 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
       named: row.displayName !== null,
       showName: row.showName && row.displayName !== null,
       name: row.displayName,
+      clubMember: parseClubMember(row.clubMember),
     } satisfies RsvpLink;
   });
 }
@@ -477,7 +500,7 @@ export async function confirmRsvp<T extends Record<string, unknown>>(
   db: Database<T>,
   secret: string,
   now: Date,
-  options: { displayName?: string | null; showName?: boolean } = {},
+  options: { displayName?: string | null; showName?: boolean; clubMember?: boolean } = {},
 ): Promise<RsvpProved | null> {
   if (!isWellFormedTokenSecret(secret)) return null;
   const proved = await db.transaction(async (tx) => {
@@ -499,13 +522,23 @@ export async function confirmRsvp<T extends Record<string, unknown>>(
     if (!rsvpId) return null;
     const [before] = await tx.select().from(eventRsvps).where(eq(eventRsvps.id, rsvpId)).for("update");
     const typedName = cleanDisplayName(options.displayName);
-    const takesName = before !== undefined && typedName !== null && before.askedAt !== null && before.confirmedAt === null && before.displayName === null;
-    const notice = takesName ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", before.locale, now) : undefined;
+    const asked = before !== undefined && before.askedAt !== null && before.confirmedAt === null;
+    const takesName = asked && typedName !== null && before.displayName === null;
+    /*
+      The member tick of the question's page (§831): for the row the email made, still unconfirmed, the box DECIDES in both directions — ticked
+      gives `DECLARED` under a notice that describes the mark, unticked gives nothing — because it is the one thing the person was shown there; a
+      value the row held from before (a stranger's, were one ever kept) is never published unseen.
+    */
+    const takesMember = asked && options.clubMember === true && (await noticeDescribesRsvpMember(tx, now));
+    const dropsMember = asked && !takesMember && before.clubMember !== null;
+    const notice = takesName || takesMember ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", before.locale, now) : undefined;
     const [row] = await tx
       .update(eventRsvps)
       .set({
         confirmedAt: sql`coalesce(${eventRsvps.confirmedAt}, ${now})`,
-        ...(takesName ? { displayName: typedName, showName: options.showName === true, ...(notice ? { privacyNoticeVersion: notice.version } : {}) } : {}),
+        ...(takesName ? { displayName: typedName, showName: options.showName === true } : {}),
+        ...(takesMember ? { clubMember: "DECLARED" as const } : dropsMember ? { clubMember: null } : {}),
+        ...(notice ? { privacyNoticeVersion: notice.version } : {}),
       })
       .where(eq(eventRsvps.id, rsvpId))
       .returning();
@@ -560,6 +593,46 @@ export async function withdrawRsvp<T extends Record<string, unknown>>(
 }
 
 /**
+ * The person's own CONFIRMED answer, locked for update, for a tick they flip (`setRsvpShowName`, `setRsvpClubMember`): by the identity's address, or
+ * by the live `RSVP_WITHDRAW` link of this event — read, never spent. A token proves only the answer it was minted for, and only while it is live (not
+ * used, not replaced, not expired, the event not started) and `eventId` is that answer's event; the life is the one `consumeRsvpToken` gives «Nu mai vin»,
+ * until the event's start as it is now. Undefined when there is none: nothing is touched.
+ */
+async function lockOwnConfirmedRsvp<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  eventId: string,
+  who: { canonicalEmail: string } | { token: string },
+  now: Date,
+): Promise<EventRsvp | undefined> {
+  if ("token" in who) {
+    const [link] = await tx
+      .select({ rsvpId: eventRsvpTokens.rsvpId, eventId: eventRsvps.eventId, startsAt: events.startsAt })
+      .from(eventRsvpTokens)
+      .innerJoin(eventRsvps, eq(eventRsvps.id, eventRsvpTokens.rsvpId))
+      .innerJoin(events, eq(events.id, eventRsvps.eventId))
+      .where(
+        and(
+          eq(eventRsvpTokens.tokenHash, hashTokenSecret(who.token)),
+          eq(eventRsvpTokens.purpose, "RSVP_WITHDRAW"),
+          isNull(eventRsvpTokens.usedAt),
+          isNull(eventRsvpTokens.invalidatedAt),
+          gt(eventRsvpTokens.expiresAt, now),
+        ),
+      )
+      .limit(1);
+    if (!link || link.eventId !== eventId || (link.startsAt && link.startsAt.getTime() <= now.getTime())) return undefined;
+    const [row] = await tx.select().from(eventRsvps).where(and(eq(eventRsvps.id, link.rsvpId), isNotNull(eventRsvps.confirmedAt))).for("update");
+    return row;
+  }
+  const [row] = await tx
+    .select()
+    .from(eventRsvps)
+    .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.canonicalEmail, who.canonicalEmail), isNotNull(eventRsvps.confirmedAt)))
+    .for("update");
+  return row;
+}
+
+/**
  * What `setRsvpShowName` tells its caller: the tick as it stands now, or why nothing was written — each reason is a sentence of the
  * caller's own, never an error page.
  *   `none`    the person has no confirmed answer here (taken back, never confirmed, a link that is not live): nothing is touched.
@@ -608,36 +681,7 @@ export async function setRsvpShowName<T extends Record<string, unknown>>(
   }
   const result = await db.transaction(async (tx): Promise<RsvpNameSwitch & { changed?: boolean }> => {
     // The answer: by the identity's address, or by the live withdraw link of this event — read, never spent.
-    let rsvpId: string | null = null;
-    if ("token" in who) {
-      const [link] = await tx
-        .select({ rsvpId: eventRsvpTokens.rsvpId, eventId: eventRsvps.eventId, startsAt: events.startsAt })
-        .from(eventRsvpTokens)
-        .innerJoin(eventRsvps, eq(eventRsvps.id, eventRsvpTokens.rsvpId))
-        .innerJoin(events, eq(events.id, eventRsvps.eventId))
-        .where(
-          and(
-            eq(eventRsvpTokens.tokenHash, hashTokenSecret(who.token)),
-            eq(eventRsvpTokens.purpose, "RSVP_WITHDRAW"),
-            isNull(eventRsvpTokens.usedAt),
-            isNull(eventRsvpTokens.invalidatedAt),
-            gt(eventRsvpTokens.expiresAt, now),
-          ),
-        )
-        .limit(1);
-      // The same life `consumeRsvpToken` gives «Nu mai vin»: until the event's start as it is now.
-      if (link && link.eventId === eventId && !(link.startsAt && link.startsAt.getTime() <= now.getTime())) rsvpId = link.rsvpId;
-    }
-    const [row] =
-      "token" in who
-        ? rsvpId === null
-          ? []
-          : await tx.select().from(eventRsvps).where(and(eq(eventRsvps.id, rsvpId), isNotNull(eventRsvps.confirmedAt))).for("update")
-        : await tx
-            .select()
-            .from(eventRsvps)
-            .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.canonicalEmail, canonicalEmail ?? ""), isNotNull(eventRsvps.confirmedAt)))
-            .for("update");
+    const row = await lockOwnConfirmedRsvp(tx, eventId, "token" in who ? { token: who.token } : { canonicalEmail: canonicalEmail ?? "" }, now);
     if (!row) return { ok: false, reason: "none" };
 
     if (!input.showName) {
@@ -656,6 +700,67 @@ export async function setRsvpShowName<T extends Record<string, unknown>>(
   });
   if (result.ok && result.changed) revalidatePublicContent("places");
   return result.ok ? { ok: true, showName: result.showName } : result;
+}
+
+/**
+ * What `setRsvpClubMember` tells its caller: the tick as it stands now, or why nothing was written.
+ *   `none`    the person has no confirmed answer here (taken back, never confirmed, a link that is not live): nothing is touched.
+ *   `closed`  the tick was turned ON and the event no longer takes «Vin!» or the notice in force does not describe the member mark: a membership is not
+ *             recorded under a notice that does not say so (§831). Turning OFF is never refused for this.
+ */
+export type RsvpMemberSwitch = { ok: true; clubMember: boolean } | { ok: false; reason: "none" | "closed" };
+
+/**
+ * «Sunt membru al grupului …» (§831, amending §812 and §796; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece dacă sunt
+ * membru BVR») — the person flips their own declared tick on a «Vin!» answer, any time, from where they already see it: the remembered browser
+ * (`remembered`) or the «Nu mai vin» link's page (`token`). `setRsvpShowName`'s shape and rules, for the other tick: one write, reversible, low-stakes,
+ * never audited, the row found the same way (`lockOwnConfirmedRsvp`, **never from the form**, BR-REQ-060-01), only a CONFIRMED row of that person.
+ *
+ * - **ON** records `DECLARED` and the notice in force on the row (`privacy_notice_version`) — the tick is a fresh declaration under the notice that
+ *   describes the mark, and the mark and the member count read exactly that version (`publicRsvpMember`, the §421 line) — and needs the event to take
+ *   «Vin!» (`rsvpOffered`) and that notice to describe the mark (`noticeDescribesRsvpMember`).
+ * - **OFF** clears it. It needs no notice and no open event: a person may always stop being counted as a member.
+ * - **An `ACCOUNT` row is not the person's tick**: it comes from the role of the account the answer was given from, so neither ticking nor unticking
+ *   changes it (the answer says `clubMember: true`, and the island shows a fact, not a box). A signed-in account has no tick at all, so an `account`
+ *   identity is refused here: its mark is made by `answerRsvp` from its role.
+ *
+ * The public cache is told once, only when something changed. No audit row: nothing here is something the staff did.
+ */
+export async function setRsvpClubMember<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  who: { identity: RsvpIdentity } | { token: string },
+  input: { clubMember: boolean },
+  now: Date,
+): Promise<RsvpMemberSwitch> {
+  let canonicalEmail: string | null = null;
+  if ("identity" in who) {
+    if (!who.identity.verified || !isConsistent(who.identity)) throw new DomainError("FORBIDDEN", "an unverified address cannot change what is shown");
+    if (who.identity.source === "account") throw new DomainError("FORBIDDEN", "an account's mark comes from its role, not from a tick");
+    canonicalEmail = canonicalOf(who.identity.email).canonicalEmail;
+  } else if (!isWellFormedTokenSecret(who.token)) {
+    return { ok: false, reason: "none" };
+  }
+  const result = await db.transaction(async (tx): Promise<RsvpMemberSwitch & { changed?: boolean }> => {
+    const row = await lockOwnConfirmedRsvp(tx, eventId, "token" in who ? { token: who.token } : { canonicalEmail: canonicalEmail ?? "" }, now);
+    if (!row) return { ok: false, reason: "none" };
+    const held = parseClubMember(row.clubMember);
+    if (held === "ACCOUNT") return { ok: true, clubMember: true };
+    if (!input.clubMember) {
+      if (held === null) return { ok: true, clubMember: false };
+      await tx.update(eventRsvps).set({ clubMember: null }).where(eq(eventRsvps.id, row.id));
+      return { ok: true, clubMember: false, changed: true };
+    }
+    const event = await findPublishedEventById(tx, row.locale, row.eventId);
+    const notice = event ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", row.locale, now) : undefined;
+    if (!event || !notice || !rsvpOffered(event, now, await noticeDescribesRsvp(tx, now)) || !(await noticeDescribesRsvpMember(tx, now))) return { ok: false, reason: "closed" };
+    // Already ticked under this very notice: nothing to write. Ticked under an older one, the press is the fresh declaration and moves the version (§421).
+    if (held === "DECLARED" && row.privacyNoticeVersion === notice.version) return { ok: true, clubMember: true };
+    await tx.update(eventRsvps).set({ clubMember: "DECLARED", privacyNoticeVersion: notice.version }).where(eq(eventRsvps.id, row.id));
+    return { ok: true, clubMember: true, changed: true };
+  });
+  if (result.ok && result.changed) revalidatePublicContent("places");
+  return result.ok ? { ok: true, clubMember: result.clubMember } : result;
 }
 
 /** How many confirmed answers an event has: the count «Cine vine (N)» says. */
@@ -680,19 +785,22 @@ export async function hasConfirmedRsvp<T extends Record<string, unknown>>(db: Da
 /**
  * The person's own confirmed answer, as the tick «Numele meu apare la „Cine vine"» needs it (§827): whether the name shows (the tick AND a
  * name) and the name the row holds, which the tick would show — handed only to the browser the cookie proves is the person's, never the
- * address. Null when there is no confirmed answer of this address. The remembered browser's state.
+ * address. Null when there is no confirmed answer of this address. The remembered browser's state. And, since §831, the member mark the answer holds
+ * (`clubMember`, present only when it holds one): what the island draws ticked, or as a fact when it is an account's.
  */
 export async function readOwnRsvpName<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
   canonicalEmail: string,
-): Promise<{ showName: boolean; name: string | null } | null> {
+): Promise<{ showName: boolean; name: string | null; clubMember?: ClubMemberKind } | null> {
   const [row] = await db
-    .select({ showName: eventRsvps.showName, displayName: eventRsvps.displayName })
+    .select({ showName: eventRsvps.showName, displayName: eventRsvps.displayName, clubMember: eventRsvps.clubMember })
     .from(eventRsvps)
     .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.canonicalEmail, canonicalEmail), isNotNull(eventRsvps.confirmedAt)))
     .limit(1);
-  return row ? { showName: row.showName && row.displayName !== null, name: row.displayName } : null;
+  if (!row) return null;
+  const clubMember = parseClubMember(row.clubMember);
+  return { showName: row.showName && row.displayName !== null, name: row.displayName, ...(clubMember !== null ? { clubMember } : {}) };
 }
 
 /** What the page's card «Cine vine (N)» draws: the count, the names that may be shown, and how many are only counted. */
@@ -701,6 +809,16 @@ export type PublicRsvps = {
   names: string[];
   /** `count` less the names shown: «și încă N». */
   others: number;
+  /**
+   * How many of the confirmed answers are a member's (§831), named or not — what the lines «N vin · M membri» say. Present only when there is at
+   * least one: a count the page has no member for is not a count of zero members, it says nothing (`publicRsvpMember`).
+   */
+  members?: number;
+  /**
+   * Which of the shown `names` carry the mark «BVR»: the same length as `names`, present only when at least one does. **A mark is only ever
+   * beside a name** — an answer shown as «și încă N» has none, whatever it said (§143, §812).
+   */
+  memberMarks?: boolean[];
 };
 
 /** The most names the card lists; the rest are «și încă N». */
@@ -714,19 +832,33 @@ export const RSVP_NAMES_SHOWN = 60;
 export async function readPublicRsvps<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-  options: { firstRsvpNoticeVersion: number | null },
+  options: { firstRsvpNoticeVersion: number | null; firstMemberNoticeVersion?: number | null },
 ): Promise<PublicRsvps> {
   const rows = await db
-    .select({ displayName: eventRsvps.displayName, showName: eventRsvps.showName, privacyNoticeVersion: eventRsvps.privacyNoticeVersion })
+    .select({ displayName: eventRsvps.displayName, showName: eventRsvps.showName, clubMember: eventRsvps.clubMember, privacyNoticeVersion: eventRsvps.privacyNoticeVersion })
     .from(eventRsvps)
     .where(and(eq(eventRsvps.eventId, eventId), isNotNull(eventRsvps.confirmedAt)))
     .orderBy(asc(eventRsvps.confirmedAt), asc(eventRsvps.id));
   const names: string[] = [];
+  const marks: boolean[] = [];
+  let members = 0;
   for (const row of rows) {
     const name = publicRsvpName({ confirmed: true, showName: row.showName, displayName: row.displayName, privacyNoticeVersion: row.privacyNoticeVersion, firstRsvpNoticeVersion: options.firstRsvpNoticeVersion });
-    if (name !== null && names.length < RSVP_NAMES_SHOWN) names.push(name);
+    // A member (§831): counted whether or not the name shows; the mark is the name's, never a row's of its own.
+    const member = publicRsvpMember({ confirmed: true, clubMember: parseClubMember(row.clubMember), privacyNoticeVersion: row.privacyNoticeVersion, firstMemberNoticeVersion: options.firstMemberNoticeVersion ?? null });
+    if (member) members += 1;
+    if (name !== null && names.length < RSVP_NAMES_SHOWN) {
+      names.push(name);
+      marks.push(member);
+    }
   }
-  return { count: rows.length, names, others: rows.length - names.length };
+  return {
+    count: rows.length,
+    names,
+    others: rows.length - names.length,
+    ...(members > 0 ? { members } : {}),
+    ...(marks.some(Boolean) ? { memberMarks: marks } : {}),
+  };
 }
 
 /**
@@ -751,22 +883,25 @@ export async function countRsvpEvents<T extends Record<string, unknown>>(db: Dat
 }
 
 /** One event's answers for the backoffice's fold (Administrator and Organizer see addresses; the others only the count) — not the «Vii?» email's unanswered questions. */
-export type RsvpAdminRow = { email: string; displayName: string | null; showName: boolean; confirmedAt: Date | null; createdAt: Date };
+export type RsvpAdminRow = { email: string; displayName: string | null; showName: boolean; clubMember: ClubMemberKind | null; confirmedAt: Date | null; createdAt: Date };
 
 export async function listRsvpsForAdmin<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<RsvpAdminRow[]> {
-  return db
-    .select({ email: eventRsvps.deliveryEmail, displayName: eventRsvps.displayName, showName: eventRsvps.showName, confirmedAt: eventRsvps.confirmedAt, createdAt: eventRsvps.createdAt })
+  const rows = await db
+    .select({ email: eventRsvps.deliveryEmail, displayName: eventRsvps.displayName, showName: eventRsvps.showName, clubMember: eventRsvps.clubMember, confirmedAt: eventRsvps.confirmedAt, createdAt: eventRsvps.createdAt })
     .from(eventRsvps)
     .where(and(eq(eventRsvps.eventId, eventId), sql`NOT ${ASKED_UNANSWERED}`))
     .orderBy(asc(eventRsvps.createdAt), asc(eventRsvps.id));
+  return rows.map((row) => ({ ...row, clubMember: parseClubMember(row.clubMember) }));
 }
 
 /** How many answers an event has, confirmed and not (the backoffice's fold title) — the «Vii?» email's unanswered questions are neither (`ASKED_UNANSWERED`). */
-export async function countRsvpsForAdmin<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ confirmed: number; unconfirmed: number }> {
+export async function countRsvpsForAdmin<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ confirmed: number; unconfirmed: number; members?: number }> {
   const rows = await db
-    .select({ confirmed: sql<boolean>`${eventRsvps.confirmedAt} IS NOT NULL`, n: count() })
+    .select({ confirmed: sql<boolean>`${eventRsvps.confirmedAt} IS NOT NULL`, n: count(), members: sql<number>`count(*) FILTER (WHERE ${eventRsvps.clubMember} IS NOT NULL)`.mapWith(Number) })
     .from(eventRsvps)
     .where(and(eq(eventRsvps.eventId, eventId), sql`NOT ${ASKED_UNANSWERED}`))
     .groupBy(sql`${eventRsvps.confirmedAt} IS NOT NULL`);
-  return { confirmed: rows.find((row) => row.confirmed)?.n ?? 0, unconfirmed: rows.find((row) => !row.confirmed)?.n ?? 0 };
+  // `members` (§831, present only when there is one): the confirmed answers that say they are a member, declared or from an account — the editor's «M membri confirmați», whatever notice they were given under.
+  const members = rows.find((row) => row.confirmed)?.members ?? 0;
+  return { confirmed: rows.find((row) => row.confirmed)?.n ?? 0, unconfirmed: rows.find((row) => !row.confirmed)?.n ?? 0, ...(members > 0 ? { members } : {}) };
 }

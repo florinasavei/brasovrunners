@@ -50,12 +50,20 @@ export const eventRsvps = pgTable(
     // Whom the question was sent as (§823): `SUBSCRIBER` (a newsletter subscriber of the topic) or `ANSWERER` (an earlier answerer). Null for an
     // answer typed on the page. A «Vin» pressed in a subscriber's question is an earlier answer only while that address still receives the topic.
     askedBasis: text("asked_basis"),
+    // «Sunt membru» on a «Vin!» answer (§831, amending §812 and §796): `DECLARED` is the person's own tick on the page, in the remembered browser or on
+    // the link's page — a claim the club does not check, said «declarat» in the backoffice; `ACCOUNT` is an answer given from the members' zone by
+    // an account whose role is at least a member (`canOpenMembersZone`'s rule), set on the server from that role and never from a posted box. Null is
+    // «not said» (§650), never «not a member». A text with a CHECK, like `asked_basis`: a new kind is a CHECK edit, not an `ALTER TYPE`. The mark
+    // beside a shown name and the count «N vin · M membri» read it only for a row whose `privacy_notice_version` is that of a notice that describes
+    // it (`rsvp/domain/public-member.ts`, the §421 rule); the version is recorded when the tick is given or changed, as the name's is (§827).
+    clubMember: text("club_member"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     unique("event_rsvps_event_canonical_email_unique").on(t.eventId, t.canonicalEmail),
     check("event_rsvps_display_name_length", sql`${t.displayName} IS NULL OR char_length(${t.displayName}) <= 80`),
     check("event_rsvps_asked_basis_known", sql`${t.askedBasis} IS NULL OR ${t.askedBasis} IN ('SUBSCRIBER', 'ANSWERER')`),
+    check("event_rsvps_club_member_known", sql`${t.clubMember} IS NULL OR ${t.clubMember} IN ('DECLARED', 'ACCOUNT')`),
     // The retention sweep's and the person's-data reads: by identity, across events.
     index("event_rsvps_canonical_email_idx").on(t.canonicalEmail),
   ],

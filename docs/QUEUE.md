@@ -14,21 +14,16 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.59`** (2026-10-19 13:14: §818 the «Vii mâine la …?» email, §819 the folds and the self-pressing «Da, vin»,
-  §820 who may volunteer, §821 the volunteers' public list; **migrations `0170`–`0172`**). Waiting for «prod»: `BR-V3.60`
-  (below — **migrations `0173` + `0174`**, applied by the gated run `yarn ship` approves).
-- **QA: `BR-V3.60`** — §822 «Vin!» from the home page's cards, the event page's Google/Outlook links and the members' zone (one tap
-  from the account; the account's name only with the tick); §823 the «Vii?» question's settings (days before + hour in «Termene»,
-  the audience in «Emailuri» — subscribers by default, the earlier answerers only once chosen and the notice says so, with a
-  «Nu mă mai întreba» link —, a per-event tick); §824 the checkpoint kind «Regrupare»; §825 «Confirmă prezența (opțional)» and
-  «Cine vine (N)» together near the top, and «N vin · vezi cine» in the facts; §826 the level chosen in «Adaugă o persoană»; §827
-  «Numele meu apare la „Cine vine"» — a person shows or hides their name at any time from the page, the zone or the email's link;
-  §828 every discount code says who it is for (levels or «Toți membrii»). **The club's step:** the privacy notice from the new
-  template (it now also names `{{rsvpAskAnswerers}}` and the zone's answer).
-- **Building:** `chore/flaky-tests` (five tests that failed by chance; stale `§NNN`). Queued, stacked on batch CR:
-  `feat/zone-runs-first` (the members' zone opens on «Alergări», «Cine vine» open on each run) and `feat/rsvp-member-mark`
-  (a «BVR» mark beside a shown name on «Cine vine», declared or from the account; **migration `0175`**). The owner's decisions from
-  §803 (retention periods, December on Hobby or Pro, the Basic build machine, QA's region/Node) are open.
+- **Production: `BR-V3.60`** (2026-10-19 18:25: §822–§828 — «Vin!» everywhere, the «Vii?» settings, «Regrupare», «Cine vine» near
+  the top, the name switch, the level in «Adaugă o persoană», every code says who it is for; **migrations `0173` + `0174`**).
+  Waiting for «prod»: `BR-V3.61` (below — **migration `0175`**, applied by the gated run `yarn ship` approves).
+- **QA: `BR-V3.61`** — the members' zone opens on «Alergări» (codes at `/members-area/codes`), each run with «Vin!» and «Cine
+  vine (N)» open, the next run first; «Cine vine» shows which runners are members — a declared tick «Sunt membru al grupului …» or
+  the members' account, a «BVR» mark only beside a name its owner shows, «N vin · M membri», gated by its own notice marker
+  `{{rsvpMember}}` (`/admin/tasks` row `rsvpMemberNotice`); five tests that failed by chance are deterministic.
+- **Building:** nothing. The owner is making the calendar's «Următorul eveniment» say how far away it is from a phone session
+  with another account (`NextEventPanel.tsx`): its PR into qa joins the next small release. The owner's decisions from §803
+  (retention periods, December on Hobby or Pro, the Basic build machine, QA's region/Node) are open.
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
   art. 4(6) of Legea nr. 506/2004, while the same paragraph says Strava may set its own cookies without a press — the
@@ -39,7 +34,7 @@ This section replaces the plan of 2026-09-30; it is what a session with none of 
   `readRegistrationTokenContext`, `openRefusalsWhere` and the guardian rule; the concurrency suite fails on a seeded
   database; a nightly `yarn test:clock`; a guard for computed `COLOR[...]` keys; the «Invitații fără răspuns» line has
   no order and takes its titles from the registrations' locale; `SubNavCurrent` and `ScrollRow` both watch a scrolling
-  row (one helper later); about 30 test files keep a `§NNN` from older batches; about 170 throwaway local test databases.
+  row (one helper later); about 170 throwaway local test databases.
 
 ### How a change is made here (the owner's standing rules, all still in force)
 
@@ -144,6 +139,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.61` | five tests that failed by chance under CI load or on a random id are deterministic (§829) · the members' zone opens on «Alergări»: each run with «Vin!» and who is coming, the next run first (§830) · «Cine vine» shows which runners are Brașov Runners members — declared by them or from their members' account, beside the names they show (§831) |
 | `BR-V3.60` | «Vin!» from the home page, the calendar links and the members' zone: a signed-in member answers with one tap (§822) · the «Vii?» question: how many days before, at what hour, to whom, and a per-event tick (§823) · a checkpoint kind «Regrupare» — the group waits here — first on the profile's pins (§824) · «Confirmă prezența (opțional)» and «Cine vine (N)» stand together near the top, and the facts say how many come (§825) · «Adaugă o persoană» on «Echipa» sets a member's level in the same step (§826) · anyone who said «Vin» can show or hide their name on «Cine vine» at any time, from the page, the zone or the email's link (§827) · every discount code says who it is for: chosen levels or «Toți membrii», never by leaving it empty (§828) |
 | `BR-V3.59` | the day before a ticked run, the newsletter's subscribers are asked «Vii?» with one-tap «Vin» / «Nu vin» links (§818) · the «Vii?» card and «Cine vine» are closed folds with the count on their line; opening the «Da, vin» link counts you without a press (§819) · volunteers: the club chooses who may offer — anyone, the club's signed-in members, or only people it invites by email (§820) · the volunteers' list can be public on the event page: names and roles, only of those who ticked, once the notice describes it (§821) |
 | `BR-V3.58` | member levels are the staff's label alone: they decide which discount codes a member sees, and nothing shows them to members or visitors (§817) |

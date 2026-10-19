@@ -41,7 +41,7 @@ function text(form: FormData, name: string): string {
  * takes answers, the name tick had no name, no answer was found): the page lands on the sentence itself. With no outcome (nothing was taken back) the zone is simply shown again.
  */
 function back(locale: Locale, outcome: ZoneRsvpOutcome | null, eventId: string): never {
-  const path = getPathname({ locale, href: outcome ? { pathname: "/members-area/runs", query: { vin: outcome } } : "/members-area/runs" });
+  const path = getPathname({ locale, href: outcome ? { pathname: "/members-area", query: { vin: outcome } } : "/members-area" });
   const anchor = outcome !== null && isRefusedZoneOutcome(outcome) ? `#${ZONE_RSVP_OUTCOME_ANCHOR}` : isUuid(eventId) ? `#${zoneRsvpAnchor(eventId)}` : "";
   redirect(`${path}${anchor}`);
 }

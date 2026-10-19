@@ -30,7 +30,7 @@ const MAY_NAME_A_LEVEL: RegExp[] = [
   /^src\/modules\/staff-identity\/(service|repository)\.ts$/,
   /^src\/app\/\[locale\]\/admin\/staff\/page\.tsx$/,
   /^src\/app\/\[locale\]\/admin\/pages\/members\//,
-  /^src\/app\/\[locale\]\/members-area\/(page|zone)\.tsx$/,
+  /^src\/app\/\[locale\]\/members-area\/(codes\/page|zone)\.tsx$/,
 ];
 
 describe("§811 a level is read by no door", () => {

@@ -204,7 +204,7 @@ describe("§249 the bib's design, saved and read back", () => {
       },
     });
     const member = (await findEventForBibs(db, event.id, "ro"))?.design.member;
-    // The whole card and its photograph (§NNN) are stored beside the header's, each with its crop.
+    // The whole card and its photograph (§695) are stored beside the header's, each with its crop.
     expect(member).toEqual({
       enabled: true,
       style: "card",

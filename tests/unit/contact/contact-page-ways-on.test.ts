@@ -3,7 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN — the contact page's ways on: the club's public phone (§565) on the
+ * BR-REQ-070-04, `DECISIONS.md` §693 — the contact page's ways on: the club's public phone (§565) on the
  * page itself, not only in the footer's fold, as a `tel:` link in «Contact direct», after the form and just before the newsletter (§721, amending §698); the
  * calendar named in the intro, for the newcomer's «when and where do you run?»; and after a send, a
  * button back to an empty form. The page rendered on the server with the real catalogues (the
@@ -75,7 +75,7 @@ afterEach(() => {
   formReaches = true;
 });
 
-describe("BR-REQ-070-04 the contact page's ways on (§NNN)", () => {
+describe("BR-REQ-070-04 the contact page's ways on (§693)", () => {
   it.each([
     ["ro", "Sună-ne la"],
     ["en", "Call us at"],

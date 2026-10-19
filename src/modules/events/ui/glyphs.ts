@@ -165,7 +165,8 @@ export const GLYPHS = {
   discount: LocalOfferIcon,
   partner: HandshakeIcon,
   // «Doar pentru membrii BVR» (§552): the members' card, the glyph «Pagini» → «Membri» already wears
-  // (§524) — only on the members' own page, the zone and the backoffice, never on a public surface.
+  // (§524) — on the members' own page, the zone and the backoffice, and, since §831, the small «BVR» mark beside a member's shown name on «Cine vine»
+  // (`rsvp/ui/RsvpCount.tsx`) and the zone's fact «Membru»: the one glyph for «a member», never a second one.
   membersOnly: CardMembershipIcon,
   // The filter button's own glyph (§413) — a tuning icon, not the funnel `FilterListIcon`, and
   // "registration open" among the filter's boxes (§413): a calendar with a tick, the same

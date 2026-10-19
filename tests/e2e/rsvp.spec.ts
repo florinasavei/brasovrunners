@@ -29,6 +29,9 @@ let eventId = "";
 let secondEventId = "";
 let guest = "";
 const NAME = "Ana Rsvp";
+// §831: a second visitor, who ticks that they are a member on the second date.
+const MEMBER_NAME = "Mihai Membru";
+let memberGuest = "";
 
 /** Nothing sideways on a phone (BR-REQ-041-01). */
 async function noSidewaysScroll(page: Page) {
@@ -42,7 +45,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
   test.afterAll(async () => {
     // Give the shared database back: the spec's events (and, with them, its answers) and the browsers it remembered.
     await withDatabase(async (client) => {
-      await client.query("DELETE FROM person_sessions WHERE canonical_email = lower($1)", [guest]);
+      await client.query("DELETE FROM person_sessions WHERE canonical_email = ANY($1::text[])", [[guest, memberGuest].filter(Boolean).map((address) => address.toLowerCase())]);
       await client.query("DELETE FROM event_translations WHERE event_id = ANY($1::uuid[])", [[eventId, secondEventId].filter(Boolean)]);
       await client.query("DELETE FROM events WHERE id = ANY($1::uuid[])", [[eventId, secondEventId].filter(Boolean)]);
     });
@@ -495,6 +498,89 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await noSidewaysScroll(page);
   });
 
+  test("§831 a visitor ticks «Sunt membru» beside a shown name: the answer is declared, «BVR» stands beside the name, and the lines say «1 vine · 1 membru»", async ({ page }) => {
+    memberGuest = guest.replace("ana.vin.", "membru.vin.");
+    await page.goto(eventUrl("ro", secondSlug));
+    await hydrated(page);
+    const box = await openEventFold(page, "rsvp-box");
+    await box.locator('input[name="email"]').fill(memberGuest);
+    await box.locator('input[name="name"]').fill(MEMBER_NAME);
+    await box.getByRole("checkbox", { name: "Vreau să apar cu numele" }).check();
+    // The declared tick: off by default, 44 pixels to the thumb, the registration form's own words and the club's sentence behind its «?».
+    const memberTick = box.getByRole("checkbox", { name: /Sunt membru al grupului/ });
+    await expect(memberTick).toBeVisible();
+    await expect(memberTick).not.toBeChecked();
+    expect((await memberTick.locator("xpath=..").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(box.locator("label", { has: page.locator('[name="clubMember"]') }).getByRole("button")).toHaveAttribute("aria-label", /.{20,}/);
+    await memberTick.check();
+    await noSidewaysScroll(page);
+    await page.waitForTimeout(1_500);
+    await box.getByRole("button", { name: "Vin!", exact: true }).click();
+    await page.waitForURL(/vin=1/);
+
+    // Stored as the person's own claim, on the answer that waits for its link — never «verified».
+    const waiting = await rsvpRow(memberGuest, secondEventId);
+    expect(waiting).toMatchObject({ confirmedAt: null, displayName: MEMBER_NAME, showName: true, clubMember: "DECLARED" });
+
+    // The link's page says, before the press, that it shows the mark beside the name (the tick was typed beside this address), and it does not press itself:
+    // the press is the owner's own. Pressing it counts them; the event page then says it in all three places.
+    const secret = await mintRsvpLink(waiting!.id, "RSVP_CONFIRM");
+    await page.goto(`/ro/vin/${secret}`);
+    await expect(page.getByTestId("rsvp-confirm-member")).toContainText(`numele „${MEMBER_NAME}” va apărea cu semnul „BVR”`);
+    await expect(page.getByTestId("rsvp-auto-confirm")).toHaveCount(0);
+    await hydrated(page);
+    await page.getByRole("button", { name: "Da, vin" }).click();
+    await page.waitForURL(new RegExp(`/ro/evenimente/${secondSlug}#vin$`));
+    await hydrated(page);
+    await expect(page.getByTestId("rsvp-box").getByTestId("rsvp-summary-line")).toContainText("1 vine · 1 membru");
+    const factsLine = page.getByTestId("event-facts").getByTestId("who-comes-link");
+    await expect(factsLine).toHaveText("1 vine · 1 membru · vezi cine");
+    await factsLine.click();
+    const who = page.getByTestId("rsvp-who");
+    await expect(who).toHaveAttribute("open", "");
+    await expect(page.getByTestId("rsvp-name")).toContainText(MEMBER_NAME);
+    await expect(page.getByTestId("rsvp-who-members")).toHaveText("Dintre ei: 1 membru.");
+    // «BVR» beside the name — and only there: a screen reader hears «Membru {club}» in its place.
+    const mark = page.getByTestId("rsvp-name").getByTestId("rsvp-member-mark");
+    await expect(mark).toBeVisible();
+    await expect(mark).toContainText("BVR");
+    await expect(mark).toContainText("Membru Brașov Runners");
+    expect(await page.content()).not.toContain(memberGuest);
+    await noSidewaysScroll(page);
+
+    // The remembered browser keeps the tick, saved at once like the name's: unticked, the mark goes and the person is not counted among the members.
+    const remembered = page.getByTestId("rsvp-remembered");
+    const tick = remembered.getByRole("checkbox", { name: /Sunt membru al grupului/ });
+    await expect(tick).toBeChecked();
+    await tick.uncheck();
+    await expect(remembered.getByTestId("rsvp-member-note")).toHaveText("Gata: nu mai ești numărat printre membri.");
+    await expect.poll(async () => (await rsvpRow(memberGuest, secondEventId))?.clubMember).toBeNull();
+    await expect(async () => {
+      await page.reload();
+      await hydrated(page);
+      await expect(page.getByTestId("rsvp-name")).toContainText(MEMBER_NAME, { timeout: 2_000 });
+      await expect(page.getByTestId("rsvp-member-mark")).toHaveCount(0, { timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+    await expect(page.getByTestId("event-facts").getByTestId("who-comes-link")).toHaveText("1 vine · vezi cine");
+    // The reload closed the card (the address now points at «Cine vine»): the tick is inside it.
+    await openEventFold(page, "rsvp-box");
+    await page.getByTestId("rsvp-remembered").getByRole("checkbox", { name: /Sunt membru al grupului/ }).check();
+    await expect(page.getByTestId("rsvp-remembered").getByTestId("rsvp-member-note")).toHaveText("Gata: ești numărat printre membri. „BVR” apare doar lângă un nume afișat.");
+    await expect.poll(async () => (await rsvpRow(memberGuest, secondEventId))?.clubMember).toBe("DECLARED");
+
+    // English: the same chip and lines in the other language.
+    await page.goto(eventUrl("en", `${englishSlug}-2`));
+    await hydrated(page);
+    await expect(async () => {
+      await page.reload();
+      await hydrated(page);
+      await expect(page.getByTestId("event-facts").getByTestId("who-comes-link")).toHaveText("1 coming · 1 member · see who", { timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+    await openEventFold(page, "rsvp-who");
+    await expect(page.getByTestId("rsvp-who-members")).toHaveText("Members among them: 1 member.");
+    await expect(page.getByTestId("rsvp-member-mark")).toContainText("Brașov Runners member");
+  });
+
   test("§822 the members' zone: «Vin!» is one press, counted at once and unnamed, the event page counts it, «Nu mai vin» takes it back", async ({ page, browser }) => {
     // The zone lists the five soonest runs, so the run is moved to tomorrow in the database and saved once in the editor, which expires the
     // public cache the zone reads (a write straight to the table would not).
@@ -515,11 +601,11 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await member.goto("/ro/autentificare?to=members");
     await member.getByRole("button", { name: /Dev Member/ }).click();
     await expect(member).toHaveURL(/\/ro\/zona-membri$/, { timeout: 30_000 });
-    await member.goto("/ro/zona-membri/alergari");
+    await member.goto("/ro/zona-membri");
     await hydrated(member);
     const row = member.locator(`#vin-${eventId}`);
     await expect(async () => {
-      await member.goto("/ro/zona-membri/alergari");
+      await member.goto("/ro/zona-membri");
       await expect(row).toHaveCount(1, { timeout: 1_000 });
     }).toPass({ timeout: 20_000, intervals: [1_000] });
     await expect(row).toHaveAttribute("data-going", "false");
@@ -535,15 +621,18 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await expect(row).toHaveAttribute("data-going", "true");
     await expect(row.getByTestId("zone-rsvp-going")).toHaveText("Tu vii ✓");
     await expect(row.getByTestId("zone-rsvp-count")).toContainText("1 vine");
+    // §831: an account's answer is a member's — «Membru» as a fact beside «Tu vii ✓», no tick to give: the server read it from the role.
+    await expect(row.getByTestId("zone-rsvp-member")).toContainText("Membru");
+    await expect(row.getByRole("checkbox", { name: /Sunt membru/ })).toHaveCount(0);
     // Counted at once, unnamed and no name kept: the member did not tick the box.
     const written = await withDatabase(async (client) => {
-      const { rows } = await client.query<{ confirmed: boolean; showName: boolean; displayName: string | null }>(
-        `SELECT confirmed_at IS NOT NULL AS confirmed, show_name AS "showName", display_name AS "displayName" FROM event_rsvps WHERE event_id = $1`,
+      const { rows } = await client.query<{ confirmed: boolean; showName: boolean; displayName: string | null; clubMember: string | null }>(
+        `SELECT confirmed_at IS NOT NULL AS confirmed, show_name AS "showName", display_name AS "displayName", club_member AS "clubMember" FROM event_rsvps WHERE event_id = $1`,
         [eventId],
       );
       return rows;
     });
-    expect(written).toEqual([{ confirmed: true, showName: false, displayName: null }]);
+    expect(written).toEqual([{ confirmed: true, showName: false, displayName: null, clubMember: "ACCOUNT" }]);
     await noSidewaysScroll(member);
 
     // §827: the name tick stays on «Tu vii ✓» — unticked, with the account's name used only when ticked, and saved by its own «Salvează».
@@ -555,6 +644,21 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await member.waitForURL(/vin=shown/);
     await expect(member.getByTestId("zone-rsvp-outcome")).toHaveText("Gata: numele tău apare la „Cine vine”.");
     await expect(row.getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" })).toBeChecked();
+    // §715 amended: «Cine vine (N)» stands open under the run's «Vin!» — a heading and the names, never a fold — with the ticked name in it.
+    const card = member.locator("li", { has: row });
+    const who = card.getByTestId("rsvp-who");
+    await expect(who).toBeVisible();
+    await expect(who.locator("xpath=ancestor-or-self::details")).toHaveCount(0);
+    await expect(who.getByTestId("rsvp-who-heading")).toContainText("Cine vine (1)");
+    await expect(who.getByTestId("rsvp-name")).toHaveCount(1);
+    await expect(who.getByTestId("rsvp-others")).toHaveCount(0);
+    // The soonest run that takes answers is the zone's first card, featured, and carries its open list; which event it is is the seed's to say.
+    const first = member.locator('[data-testid="members-upcoming"] ul > li').first();
+    await expect(first).toHaveAttribute("data-testid", "members-next-run");
+    await expect(first).toHaveAttribute("data-featured", "true");
+    await expect(member.locator('[data-featured="true"]')).toHaveCount(1);
+    if ((await first.locator(`#vin-${eventId}`).count()) === 1) await expect(first.getByTestId("rsvp-who")).toBeVisible();
+    await noSidewaysScroll(member);
     const shownName = await withDatabase(async (client) => {
       const { rows } = await client.query<{ showName: boolean; displayName: string | null }>(`SELECT show_name AS "showName", display_name AS "displayName" FROM event_rsvps WHERE event_id = $1`, [eventId]);
       return rows[0];
@@ -566,6 +670,11 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await member.waitForURL(/vin=hidden/);
     await expect(member.getByTestId("zone-rsvp-outcome")).toHaveText("Gata: numele tău nu mai apare; ești doar numărat.");
     await expect(row.getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" })).not.toBeChecked();
+    // Hidden again: still counted in the open list, named no more.
+    const hiddenWho = member.locator("li", { has: row }).getByTestId("rsvp-who");
+    await expect(hiddenWho.getByTestId("rsvp-who-heading")).toContainText("Cine vine (1)");
+    await expect(hiddenWho.getByTestId("rsvp-name")).toHaveCount(0);
+    await expect(hiddenWho.getByTestId("rsvp-others")).toHaveText("și încă 1");
     await withDatabase(async (client) => {
       const { rows } = await client.query<{ showName: boolean; displayName: string | null }>(`SELECT show_name AS "showName", display_name AS "displayName" FROM event_rsvps WHERE event_id = $1`, [eventId]);
       expect(rows[0]).toEqual({ showName: false, displayName: shownName.displayName });
@@ -582,7 +691,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await expect(member.getByTestId("rsvp-others")).toHaveText("și încă 1");
 
     // One press back.
-    await member.goto("/ro/zona-membri/alergari");
+    await member.goto("/ro/zona-membri");
     await hydrated(member);
     await member.locator(`#vin-${eventId}`).getByRole("button", { name: "Nu mai vin", exact: true }).click();
     await member.waitForURL(/vin=left/);

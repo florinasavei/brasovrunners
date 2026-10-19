@@ -16,7 +16,7 @@ describe("§549 prefetchFor", () => {
     expect(prefetchFor({ pathname: "/gallery/[slug]", query: { ignored: undefined } })).toBeUndefined();
   });
 
-  it.each(["/contact", "/members", "/members-area", "/members-area/shop", "/members-area/runs", "/sign-in", "/registrations/mine", "/registrations/resend", "/admin"])("never prefetches the per-request page %s", (href) => {
+  it.each(["/contact", "/members", "/members-area", "/members-area/shop", "/members-area/codes", "/members-area/runs", "/sign-in", "/registrations/mine", "/registrations/resend", "/admin"])("never prefetches the per-request page %s", (href) => {
     expect(prefetchFor(href)).toBe(false);
   });
 

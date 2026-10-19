@@ -231,6 +231,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Registration.disclosure.raceNoShirt",
           // «Vreau să primesc oferte și beneficii de la {club} și partenerii săi.» (§562).
           "Registration.promo.label",
+          // The mark beside a shown member's name on «Cine vine» (§831): its accessible name, «Membru {club}», read through `RsvpCount`, which hands it the constant.
+          "Event.rsvp.memberLabel",
           "Team.lead",
           // «Întrebări frecvente» (§525): the page's lead and its description.
           "Faq.lead",
