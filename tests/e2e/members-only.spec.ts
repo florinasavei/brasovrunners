@@ -53,7 +53,7 @@ test.describe("§552 events and codes for the members alone", () => {
     // The zone opens on «Alergări» (§715 amended): the members' events are on the landing, the codes a tab away at their own address.
     await expect(page.getByTestId("members-events")).toBeVisible();
     await expect(page.getByTestId("member-code")).toHaveCount(0);
-    await page.getByTestId("members-tabs").getByRole("link", { name: "Coduri de reducere" }).click();
+    await page.getByTestId("members-tabs").getByRole("link", { name: /^Coduri/ }).click();
     await expect(page).toHaveURL(/\/ro\/zona-membri\/coduri$/);
     await hydrated(page);
     await expect(page.getByTestId("members-events")).toHaveCount(0);
