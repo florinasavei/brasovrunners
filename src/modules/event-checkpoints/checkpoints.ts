@@ -24,7 +24,7 @@ import { savedDurationMinutes, splitDuration } from "@/modules/content/events/du
 import { loadGpxWaypoints } from "./gpx-file";
 
 /**
- * An event's checkpoints (§757): read by the editor's «Puncte de control» card, the event page's table
+ * An event's checkpoints (§757): read by the editor's «Puncte pe traseu» card, the event page's table
  * and the bib's profile strip; written by the card's two forms. The role is asserted here and not only
  * by the hidden buttons (BR-REQ-060-01); every change that changes something writes one audit row
  * naming who did it and the list before and after (`AGENTS.md` §12.12 allows what somebody typed about

@@ -308,7 +308,7 @@ export const events = pgTable(
     /**
      * «Arată profilul traseului pe pagină» (§802, §805): whether the event page draws the elevation profile
      * the GPX gives (`routes/elevation/`). On by default, so every event that had a file keeps its chart; off, the
-     * page draws no chart — the maps, the GPX download and the table «Puncte de control» stay as they were. The
+     * page draws no chart — the maps, the GPX download and the table «Puncte pe traseu» stay as they were. The
      * checkpoints' own «Arată pe profilul traseului» and the race number's design tick (§750) are other settings.
      * Carried by a series and a duplicate like the route (§49).
      */
@@ -783,7 +783,7 @@ export const events = pgTable(
      */
     rsvpEnabled: boolean("rsvp_enabled").notNull().default(false),
     /**
-     * «Trimite întrebarea „Vii?" înainte de acest eveniment» (§823; the owner, 2026-10-19: «I need to set how these emails are
+     * «Trimite emailul „Vii?” înainte de această dată» (§823; the owner, 2026-10-19: «I need to set how these emails are
      * sent»): under «Acceptă răspunsuri „Vin!"», whether the day-before question (§818) is sent for THIS event. On for every event
      * that exists and every one created after this column — the question goes out, as it did, unless the club unticks it for one
      * date. It decides nothing else: «Vin!» on the page, the calendar and the count follow `rsvp_enabled` alone. Carried by a

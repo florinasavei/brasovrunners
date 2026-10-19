@@ -312,7 +312,7 @@ export default async function CalendarPage({ params, query: asked, period: segme
           <CalendarSection locale={locale} view={view} layout={layout} query={query} now={now} events={events} lookOn={look.on} />
         </Box>
         <Box component="aside" aria-label={t("calendar.look.nextEvent.title")} sx={{ display: "none", [UNDER_LOOK]: { display: "grid", gap: 2, mt: { md: 2 }, mb: 4 } }} data-testid="calendar-aside">
-          {next && <NextEventPanel event={next.event} locale={locale} weather={next.weather} />}
+          {next && <NextEventPanel event={next.event} locale={locale} now={now} weather={next.weather} />}
           <SubscribeBox locale={locale} baseUrl={env.APP_BASE_URL} />
         </Box>
       </Box>
@@ -323,7 +323,8 @@ export default async function CalendarPage({ params, query: asked, period: segme
 /**
  * The next-event panel's date and its forecast (the facelift's phase 4), or null — read only while
  * «Aspectul nou» is on. The listing's own cached upcoming rows (`public-cache/reads.ts`), narrowed
- * by the page's filters and kind; a failed read is no panel, never a broken page.
+ * by the page's filters and kind; a failed read is no panel, never a broken page. The card's «Peste 5 zile»
+ * (§834) rolls at the club's midnight, which the page already holds itself to; the start's instant is held here.
  */
 async function readNextEvent(locale: Locale, now: Date, filter: ListingFilter, kind: EventKind | null) {
   try {
@@ -332,6 +333,8 @@ async function readNextEvent(locale: Locale, now: Date, filter: ListingFilter, k
     const door = filter.registration ? await readRegistrationDoors(upcoming, now) : () => false;
     const event = nextCalendarEvent(upcoming, (row) => matchesListingFilter(row, filter, { night: isNight, door }) && matchesKind(row, kind));
     if (!event) return null;
+    // «Azi» becomes «Acum» at the start (§834): the page is made again then, whatever the day's midnight says.
+    await holdPageUntil([event.startsAt], now);
     return { event, weather: (await forecastForEvent(event, now))?.start ?? null };
   } catch {
     return null;

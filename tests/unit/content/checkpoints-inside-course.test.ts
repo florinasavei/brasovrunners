@@ -8,7 +8,7 @@ import { blankTranslation } from "@/modules/content/events/ui/TranslationFields"
 import type { Checkpoint } from "@/modules/event-checkpoints/domain/checkpoint";
 
 /**
- * §763 (amending §757 and §760; BR-REQ-050-02) — «Puncte de control» inside «Traseul», in the
+ * §763 (amending §757 and §760; BR-REQ-050-02) — «Puncte pe traseu» inside «Traseul», in the
  * document. The owner, with a screenshot of the editor on production: «Partea cu „Puncte de control”
  * ar trebui să fie băgată în cardul cu traseu (nested)». §760 drew the card above card 1; the test
  * that went with it measured exactly that, so it passed while the owner saw the card at the top.
@@ -148,7 +148,7 @@ function controls(markup: string): string[] {
 
 const openingOf = (markup: string, id: string) => markup.slice(markup.lastIndexOf("<", markup.indexOf(`id="${id}"`)), markup.indexOf(">", markup.indexOf(`id="${id}"`)) + 1);
 
-describe("§763 «Puncte de control» is a card of «Traseul», in the document", () => {
+describe("§763 «Puncte pe traseu» is a card of «Traseul», in the document", () => {
   it("says the points are saved only by «Salvează punctele», to a role that writes them and to no other", async () => {
     const writer = await editor();
     expect(writer).toContain('data-testid="checkpoints-save-note"');

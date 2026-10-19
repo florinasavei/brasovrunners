@@ -564,7 +564,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Acceptă răspunsuri „Vin!”» (§811), by the same discipline: a caller that did not post the tick writes nothing, so no save
     // takes the answers off a page by not mentioning it. Only an event that asks for no registration keeps it (`hiddenByMode`).
     ...(fields.rsvpEnabled === undefined ? {} : { rsvpEnabled: fields.rsvpEnabled }),
-    // «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823), by the same discipline: a caller that did not post the tick writes nothing.
+    // «Trimite emailul „Vii?” înainte de această dată» (§823), by the same discipline: a caller that did not post the tick writes nothing.
     ...(fields.rsvpAskEnabled === undefined ? {} : { rsvpAskEnabled: fields.rsvpAskEnabled }),
     // No `video_url` (§481): a film is a figure in the description (§266); the column is unread
     // and leaves the database in BR-V2.11 (§491).
@@ -1836,7 +1836,7 @@ export type SaveEventAndTranslationsInput = {
    */
   placeNamesAsTyped?: boolean;
   /**
-   * The caller writes the event's «Puncte de control» itself right after this save (an import over an
+   * The caller writes the event's «Puncte pe traseu» itself right after this save (an import over an
    * event whose file's list differs, §751, §757), having held that list to the rules: the saved list,
    * about to be replaced, is then not held to them against the new start, end and length.
    */
@@ -2044,7 +2044,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
      * box is not on screen, so nothing is refused and nobody is told).
      */
     discountNoteCleared?: boolean;
-    /** Each written date's saved «Puncte de control» held to the rules against the date as written (§757). */
+    /** Each written date's saved «Puncte pe traseu» held to the rules against the date as written (§757). */
     checkpointsHold?: (member: EditableEvent, date: string) => Promise<void>;
   },
 ): Promise<{
@@ -2727,7 +2727,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   */
   const deadlines = await currentDeadlines(db);
   /*
-    The saved «Puncte de control» are held to the card's rules again against the event as this save
+    The saved «Puncte pe traseu» are held to the card's rules again against the event as this save
     leaves it (§757) — a moved start or gun, a shorter «Timp limită», a shorter route or another GPX —
     inside the transaction. The GPX's length they are measured against when no distance is typed is
     read here, before the transaction opens and its lock is taken (§403).
@@ -3605,7 +3605,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     showRouteProfile: source.showRouteProfile,
     // «Acceptă răspunsuri „Vin!”» (§811) travels with the event it is the tick of; the answers themselves never do.
     rsvpEnabled: source.rsvpEnabled,
-    // «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823) travels with the tick it hangs under: to a duplicate and to every date of a repeat.
+    // «Trimite emailul „Vii?” înainte de această dată» (§823) travels with the tick it hangs under: to a duplicate and to every date of a repeat.
     rsvpAskEnabled: source.rsvpAskEnabled,
     // «Lista voluntarilor e publică pe pagina evenimentului» (§821) travels with the event it is the tick of, to a duplicate and to every date of a
     // repeat, like «Cine se poate oferi»: the club's standing rule for the event's volunteers. It shows nothing by itself — no volunteer is copied,

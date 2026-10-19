@@ -16,7 +16,7 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { isUuid } from "@/shared/ids";
 
 /*
-  An event's checkpoints (§757): the Server Actions behind the editor's «Puncte de control» card.
+  An event's checkpoints (§757): the Server Actions behind the editor's «Puncte pe traseu» card.
   Two plain forms that work with scripts off — «Salvează punctele» (the whole list as the card drew
   it) and «Adaugă punctele alese» (what the GPX's preview offered) — and each asks
   `changeCheckpoints`, which asserts the role again (the Organizer and the Administrators write, the

@@ -7,7 +7,12 @@ import type { ReactNode } from "react";
 import { type Deadlines, EVENT_REMINDER_CHOICES, withinRaceWeek } from "@/modules/deadlines/domain/deadlines";
 import { capitalizeFirst } from "@/i18n/dates";
 import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { Link } from "@/i18n/navigation";
 import { EVENT_TYPES, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
+import type { RsvpAskSettings } from "@/modules/rsvp/ask-settings";
+import { asksSubscribers, DEFAULT_RSVP_ASK_AUDIENCE } from "@/modules/rsvp/domain/ask-audience";
+import { DEFAULT_RSVP_ASK_TIMING, rsvpAskClock } from "@/modules/rsvp/domain/ask";
+import { rsvpAskDayPhrase } from "@/modules/rsvp/domain/ask-words";
 import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { readRouteGpx } from "@/modules/events/domain/route-gpx";
 import { readBibDesign } from "@/modules/registrations/bib-design";
@@ -62,6 +67,8 @@ import { RulesBox } from "./TextBoxes";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 
 const REGISTRATION_MODES = ["NONE", "INTERNAL", "EXTERNAL"] as const;
+
+const DEFAULT_RSVP_ASK_SETTINGS: RsvpAskSettings = { ...DEFAULT_RSVP_ASK_TIMING, audience: DEFAULT_RSVP_ASK_AUDIENCE };
 
 /** An approved race-declaration version the editor offers; `effectiveAt` tells a version in force from one approved for later (§515). */
 export type DeclarationOption = { id: string; key: RaceDeclarationKey; version: number; title: string; effectiveAt?: Date };
@@ -128,7 +135,15 @@ export default async function RegistrationBox({
   clubDeadlines,
   windowHolds = null,
   rsvp = null,
+  rsvpAsk = DEFAULT_RSVP_ASK_SETTINGS,
 }: BoxProps & {
+  /**
+   * The club's settings for the «Vii?» email (§823), read by the page, so the tick under «Acceptă răspunsuri „Vin!”» can say what it
+   * does in the club's own numbers: how many days before, from what hour («Termene») and to whom («Emailuri», cut by the notice in force:
+   * `audience` null is «the email cannot leave yet»). Absent: the platform's defaults — the day before, from 08:00, to the subscribers
+   * — with the notice taken as describing the email, which is what a page that read nothing can say.
+   */
+  rsvpAsk?: RsvpAskSettings;
   /**
    * «Răspunsuri „Vin!”» (§811): the event's answers, read by the page for this role — the counts always, the rows (with the addresses)
    * only for a role that reads the registrations. Null on the create form, which has none.
@@ -159,6 +174,8 @@ export default async function RegistrationBox({
   locale: string;
 }) {
   const t = await getTranslations("Admin");
+  // The topic's own label (never retyped here), for the sentence that names whom the «Vii?» email reaches.
+  const news = await getTranslations("Newsletter");
   const { words } = await summaryWords();
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
   const initialType = event?.type ?? "GROUP_RUN";
@@ -183,6 +200,32 @@ export default async function RegistrationBox({
   // de start", "Fără reminder".
   const before = (hours: number) => t("editor.reminder.before", { lead: leadPhrase(locale, hours) });
   const clubReminder = clubDeadlines.reminderHours > 0 ? before(clubDeadlines.reminderHours) : t("editor.reminder.clubNone");
+  /*
+    The «Vii?» email's tick, in the club's own numbers (§823; the owner, 2026-10-19: «nu înțeleg a doua bifă»): who gets it, how long before
+    the start, from what hour and under what subject — «Termene» and «Emailuri» say them, and the notice in force cuts them (`reachedAudience`),
+    so this sentence does not promise an email the sender holds back. Zero days is the email off for every date: the tick is drawn disabled and its answer is carried by a hidden field, so a save
+    posts what the event holds and the days turned up again find it as it was.
+  */
+  const askOff = rsvpAsk.daysBefore === 0;
+  // Never a sentence the sender would contradict: while the notice in force keeps the email from going (`audience` null), the help says so.
+  const askHelp = askOff
+    ? t("editor.rsvpAskEnabledHelpOff")
+    : rsvpAsk.audience === null
+      ? t("editor.rsvpAskEnabledHelpSilent")
+      : [
+          t("editor.rsvpAskEnabledHelp", {
+            who: t(`editor.rsvpAskWho.${rsvpAsk.audience}`),
+            days: leadPhrase(locale, rsvpAsk.daysBefore * 24),
+            hour: rsvpAskClock(rsvpAsk.hour),
+            day: rsvpAskDayPhrase(locale, rsvpAsk.daysBefore),
+          }),
+          // Who the subscribers are, by the topic's own label: a sentence of its own, so none of them outgrows the house's 200 characters.
+          asksSubscribers(rsvpAsk.audience) ? t("editor.rsvpAskEnabledHelpTopics", { topic: news("topics.RSVP_ASK"), all: news("topics.ALL") }) : null,
+          t("editor.rsvpAskEnabledHelpUnticked"),
+        ]
+          .filter(Boolean)
+          .join(" ");
+  const askTicked = event?.rsvpAskEnabled ?? true;
   const storedReminder = event?.reminderHoursBefore ?? null;
   const reminderChoices = [
     ...EVENT_REMINDER_CHOICES,
@@ -506,17 +549,24 @@ export default async function RegistrationBox({
               </CheckboxField>
               <BoxNote>{t("editor.rsvpEnabledHelp")}</BoxNote>
               {/*
-                «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823; the owner, 2026-10-19: «I need to set how these emails are sent»):
-                the question's own tick, under «Acceptă răspunsuri», shown only while that is ticked (`OnlyWhenTicked`: hidden, never removed).
-                On by default — the question goes out unless the club unticks it for one date. Carried by a series, «Duplică» and the JSON file.
+                «Trimite emailul „Vii?” înainte de această dată» (§823; the owner, 2026-10-19: «I need to set how these emails are sent», then
+                «nu înțeleg a doua bifă»): the email's own tick, under «Acceptă răspunsuri», shown only while that is ticked (`OnlyWhenTicked`:
+                hidden, never removed). On by default — the email goes out unless the club unticks it for one date. Its help says who gets it,
+                when and from what hour, from the club's «Termene» and «Emailuri». Carried by a series, «Duplică» and the JSON file.
               */}
               <OnlyWhenTicked name="event.rsvpEnabled" initiallyTicked={event?.rsvpEnabled ?? false}>
                 <Box data-testid="rsvp-ask-enabled" sx={{ pl: { xs: 1.5, sm: 3.5 }, borderLeft: 2, borderColor: "divider", minWidth: 0 }}>
                   <input type="hidden" name="event.rsvpAskEnabled.present" value="1" />
-                  <CheckboxField name="event.rsvpAskEnabled" defaultChecked={event?.rsvpAskEnabled ?? true}>
+                  <CheckboxField name="event.rsvpAskEnabled" defaultChecked={askTicked} disabled={askOff}>
                     {t("editor.rsvpAskEnabled")}
                   </CheckboxField>
-                  <BoxNote>{t("editor.rsvpAskEnabledHelp")}</BoxNote>
+                  {/* A disabled box posts nothing: the hidden field carries its answer, as the box would. */}
+                  {askOff && askTicked ? <input type="hidden" name="event.rsvpAskEnabled" value="on" /> : null}
+                  <BoxNote testId="rsvp-ask-help">{askHelp}</BoxNote>
+                  <Typography variant="body2" color="text.secondary" data-testid="rsvp-ask-settings">
+                    {t("editor.rsvpAskChange")} <Link href="/admin/settings/deadlines">{t("editor.rsvpAskDeadlinesLink")}</Link> ·{" "}
+                    <Link href="/admin/settings/emails">{t("editor.rsvpAskEmailsLink")}</Link>
+                  </Typography>
                 </Box>
               </OnlyWhenTicked>
             </Stack>
