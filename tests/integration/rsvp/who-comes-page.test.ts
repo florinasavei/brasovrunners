@@ -202,7 +202,7 @@ async function draw(slug: string, visit: { rsvpBox?: boolean } | null = { rsvpBo
       visit: visit ? { interestBox: false, interestOutcome: null, interestRenderedAt: NOW, rsvpOutcome: null, rsvpRenderedAt: NOW, ...visit } : undefined,
       preview: asPreview
         ? {
-            door: { door: await draftRegistrationDoor(db, found, { capacity: found.capacity, waitlistCapacity: null }, NOW), word: "Înscrie-te" },
+            door: { door: await draftRegistrationDoor(db, found, { capacity: 50, waitlistCapacity: null }, NOW), word: "Înscrie-te" },
             steps: { deadlines: DEFAULT_DEADLINES, familyOpen: false, refusalOn: false },
           }
         : undefined,
