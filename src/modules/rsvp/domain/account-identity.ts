@@ -1,7 +1,7 @@
 import { cleanDisplayName, identityOf, type RsvpIdentity } from "./identity";
 
 /**
- * The identity a signed-in member answers «Vin!» as, from the members' zone (§822; §812 reserved the source `account` for it).
+ * The identity a signed-in member answers «Vin!» as, from the members' zone (§NNN; §812 reserved the source `account` for it).
  *
  * **The account is the only thing the identity is made from** — its address and its name, read on the server from the session, never
  * from the form (BR-REQ-060-01). The form brings one thing, the person's own tick «Vreau să apar cu numele», and that tick is honoured

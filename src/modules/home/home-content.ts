@@ -100,7 +100,7 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
   const nextMembers: readonly PublicEvent[] = sections.next ? (groupSeries(upcoming).find((series) => series.members.some((member) => member.id === sections.next!.id))?.members ?? [sections.next]) : [];
   const forecasts = await forecastsForEvents([...nextMembers.slice(0, 1), ...shownCards.map((card) => card.members[0])], now);
   /*
-    «N vin» (§815, last surface, §822): how many confirmed they come, for the upcoming events whose page offers the answer — read once for
+    «N vin» (§815, last surface, §NNN): how many confirmed they come, for the upcoming events whose page offers the answer — read once for
     the page, never per card, through the same gate and the same cached reads the listing's chips use (`readPublicComing`), over the same
     list the listing reads, so the two share one cache entry and cannot disagree. Nothing is read while no event ahead is ticked; nothing
     while the database is away (a chip is not worth a page). The page is kept until the first offered event starts, when its chip goes.

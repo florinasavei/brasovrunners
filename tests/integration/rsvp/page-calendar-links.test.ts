@@ -16,7 +16,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { fakeNextCache } from "../../helpers/next-cache";
 
 /**
- * §822 (BR-REQ-020-01 criterion 7, amending §815) — the event page's own «Adaugă în calendar» links carry the answer's door as the `.ics`
+ * §NNN (BR-REQ-020-01 criterion 7, amending §815) — the event page's own «Adaugă în calendar» links carry the answer's door as the `.ics`
  * and the feed do: «Vin! → <page>#vin» and «N vin până acum» in the description of the Google and the two Outlook links, for an event
  * the page offers «Vii?» to and for no other, from the one read of the answers the page's box is handed (no second read). Real database
  * (PGlite), the real `EventPageView` drawn the way the page draws it, the real catalogue.
@@ -179,7 +179,7 @@ function expectDoor(description: string, words: string, pagePath: string) {
 
 const confirm = (email: string) => identityOf("remembered", { email, displayName: null, showName: false, locale: "ro" });
 
-describe("§822 the event page's add-to-calendar links say «Vin!»", () => {
+describe("§NNN the event page's add-to-calendar links say «Vin!»", () => {
   it("carry «Vin! → <page>#vin» and «N vin până acum» in Google's and both Outlooks' description, from the one read the box shares", async () => {
     const { id, slug } = await seed();
     await answerRsvp(db, id, confirm("ana@example.test"), NOW);

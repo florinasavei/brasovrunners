@@ -25,7 +25,7 @@ export async function countRsvpsForEvents<T extends Record<string, unknown>>(db:
 }
 
 /**
- * Which of these events a signed-in member has a confirmed answer to, in one query (§822): the members' zone's «Tu vii ✓» and its
+ * Which of these events a signed-in member has a confirmed answer to, in one query (§NNN): the members' zone's «Tu vii ✓» and its
  * «Nu mai vin», read live for the account on screen — never through the public cache, which is everybody's. The address is matched in
  * its canonical form, the way the service writes it (`canonicalizeEmail`, AGENTS.md §10.4), so the row an account made yesterday is
  * found whatever case or dots the provider spells it with. An answer still waiting for its emailed link (`confirmedAt` empty) is not an

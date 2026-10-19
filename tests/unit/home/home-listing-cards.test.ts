@@ -43,7 +43,7 @@ vi.mock("@/i18n/navigation", () => {
 // What `readHomeContent` reads: the listing's cached upcoming events, the forecast and «Vin!»'s two cached reads — nothing else of the database.
 const upcoming: PublicEvent[] = [];
 const forecastCalls: string[][] = [];
-/** «N vin» (§822): the notice flag and the counts the cache would answer, and every ask made of them. */
+/** «N vin» (§NNN): the notice flag and the counts the cache would answer, and every ask made of them. */
 const rsvp = { described: true, counts: {} as Record<string, number>, describedCalls: 0, countCalls: [] as string[][] };
 vi.mock("@/modules/public-cache/reads", () => ({
   cachedUpcomingEvents: async () => upcoming,
@@ -192,11 +192,11 @@ describe("§726 the home page hands the cards what the listing hands them, from 
 });
 
 /**
- * §822 («Vin!» everywhere else; amends §815) — the home page's run cards wear «N vin»: the counts and the notice flag are read ONCE for the
+ * §NNN («Vin!» everywhere else; amends §815) — the home page's run cards wear «N vin»: the counts and the notice flag are read ONCE for the
  * page, through the listing's own gate (`readPublicComing`), and handed to the cards of a date alone; a series card never wears one; and a page
  * with no ticked event ahead reads neither.
  */
-describe("§822 the home page's cards say how many come", () => {
+describe("§NNN the home page's cards say how many come", () => {
   const ticked = (event: PublicEvent): PublicEvent => ({ ...event, rsvpEnabled: true }) as PublicEvent;
 
   it("reads the gate and the counts once for the page and gives each date alone its count — the next run's card and its section's alike", async () => {

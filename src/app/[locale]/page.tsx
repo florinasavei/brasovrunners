@@ -35,7 +35,7 @@ type Props = { params: Promise<{ locale: string }> };
  * Static, made on its first visit and kept by the CDN (§549): the same for every visitor. It reads the
  * setting and the listing's own upcoming events from the public cache, so it is made again when the
  * setting is saved, when an event is written or ends (the listing's clock window), when someone confirms or withdraws a «Vin!» answer
- * (the cards' «N vin», §822, held to the first offered event's start), when a club page is
+ * (the cards' «N vin», §NNN, held to the first offered event's start), when a club page is
  * published or withdrawn (the navigation's list, which «Cum funcționează» reads), at the forecast's
  * hour, and at the latest after a day. It reads no `searchParams`: `?utm_…` and every other query is
  * the same static page. A literal, as Next requires: `PUBLIC_PAGE_CEILING_SECONDS`.

@@ -18,7 +18,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { fakeNextCache } from "../../helpers/next-cache";
 
 /**
- * §822 (BR-REQ-060-01, BR-REQ-039-01; amends §812 and §815) — «Vin!» in the members' zone. A signed-in member answers a run's «Vii?» with one
+ * §NNN (BR-REQ-060-01, BR-REQ-039-01; amends §812 and §815) — «Vin!» in the members' zone. A signed-in member answers a run's «Vii?» with one
  * press in «Alergări»: the action reads the account from the session and nothing about the person from the form, answers as
  * `source: "account"` (verified: counted at once, no email), shows a name only on the person's own tick and only through the service's
  * rule, takes the answer back on «Nu mai vin», and refuses a run that does not take answers without an error page. The page draws the row
@@ -148,7 +148,7 @@ const answers = () => db.select().from(eventRsvps);
 const mails = () => db.select().from(emailOutbox);
 const press = (eventId: string, extra: Record<string, string> = {}) => formOf({ uiLocale: "ro", eventId, ...extra });
 
-describe("§822 the zone's «Vin!» — who answers is the session's", () => {
+describe("§NNN the zone's «Vin!» — who answers is the session's", () => {
   it("sends a stranger to the sign-in in the members' words and writes nothing", async () => {
     const eventId = await seed("Alergarea de joi");
     expect(await redirectedTo(answerAsMemberAction(press(eventId)))).toBe("/ro/autentificare?to=members");
@@ -281,7 +281,7 @@ const rowOf = (html: string, eventId: string) => {
   return html.slice(start, next === -1 ? undefined : next);
 };
 
-describe("§822 «Alergări» draws the row only under a run that takes answers", () => {
+describe("§NNN «Alergări» draws the row only under a run that takes answers", () => {
   it("draws «Vin!» with the tick off and the account's name under it, and the count of those who come", async () => {
     const eventId = await seed("Alergarea de joi");
     await answerRsvp(db, eventId, identityOf("account", { email: other.email, displayName: other.displayName, showName: false, locale: "ro" }), new Date());

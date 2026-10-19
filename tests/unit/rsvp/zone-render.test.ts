@@ -7,7 +7,7 @@ import { accountIdentity, accountPublicName } from "@/modules/rsvp/domain/accoun
 import { parseZoneRsvpOutcome, ZONE_RSVP_OUTCOMES, zoneRsvpAnchor } from "@/modules/rsvp/domain/zone-outcome";
 
 /**
- * §822 («Vin!» in the members' zone; amends §812) — what the row under a run in «Alergări» draws, in both languages, and the pure rules
+ * §NNN («Vin!» in the members' zone; amends §812) — what the row under a run in «Alergări» draws, in both languages, and the pure rules
  * the zone's action builds its identity with. The action and the page are proved against a database in
  * `tests/integration/rsvp/zone-rsvp.test.ts`; the whole journey in `tests/e2e/rsvp.spec.ts`.
  */
@@ -42,7 +42,7 @@ beforeEach(() => {
   state.language = "ro";
 });
 
-describe("§822 the zone's row under a run that takes answers", () => {
+describe("§NNN the zone's row under a run that takes answers", () => {
   it("offers «Vin!» and the unticked tick «Vreau să apar cu numele» with the name it would show, in Română", async () => {
     const markup = await row({ count: 3 });
     expect(markup).toContain(`id="${zoneRsvpAnchor(EVENT_ID)}"`);
@@ -97,7 +97,7 @@ describe("§822 the zone's row under a run that takes answers", () => {
   });
 });
 
-describe("§822 the identity the zone answers as (§812's source `account`)", () => {
+describe("§NNN the identity the zone answers as (§812's source `account`)", () => {
   const account = { email: "ana@example.test", displayName: "  Ana   Membru " };
 
   it("is verified and made from the account alone: its address, its name cleaned, the language of the page", () => {
@@ -116,7 +116,7 @@ describe("§822 the identity the zone answers as (§812's source `account`)", ()
   });
 });
 
-describe("§822 what the address says after a press", () => {
+describe("§NNN what the address says after a press", () => {
   it("knows three codes and nothing else", () => {
     expect([...ZONE_RSVP_OUTCOMES]).toEqual(["went", "left", "closed"]);
     for (const code of ZONE_RSVP_OUTCOMES) expect(parseZoneRsvpOutcome(code)).toBe(code);

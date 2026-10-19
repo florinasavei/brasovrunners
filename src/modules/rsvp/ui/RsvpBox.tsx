@@ -62,7 +62,7 @@ export default async function RsvpBox({
   renderedAt: Date;
   outcome: RsvpOutcome | null;
   /**
-   * The answers the page already read (`readRsvpsOf`, §822): `EventPageView` reads them once, before the calendar's add links, so the links'
+   * The answers the page already read (`readRsvpsOf`, §NNN): `EventPageView` reads them once, before the calendar's add links, so the links'
    * «N vin până acum» and this card say one number from one read. Absent, the box reads them itself; `null` is «the database is away».
    */
   rsvps?: PublicRsvps | null;

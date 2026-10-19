@@ -13,7 +13,7 @@ import SubmitButton from "@/shared/ui/SubmitButton";
 import { zoneRsvpAnchor } from "../domain/zone-outcome";
 
 /**
- * «Vin!» in the members' zone (§822; the owner, 2026-10-18: «I want the flow to be super easy, also later to integrate with the member
+ * «Vin!» in the members' zone (§NNN; the owner, 2026-10-18: «I want the flow to be super easy, also later to integrate with the member
  * zone») — one row under a run in «Alergări» that takes answers: «N vin», and for the signed-in account one press, «Vin!», or, once it
  * has answered, «Tu vii ✓» with «Nu mai vin». No form to fill: the account is the address and the name.
  *

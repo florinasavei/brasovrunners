@@ -13,7 +13,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /**
- * The members' zone's one tap on «Alergări» (§822): «Vin!» and «Nu mai vin» on a run that takes answers.
+ * The members' zone's one tap on «Alergări» (§NNN): «Vin!» and «Nu mai vin» on a run that takes answers.
  *
  * **Who answers is read here, from the session, and nowhere else** (BR-REQ-060-01): the form carries the event, the page's language
  * and the person's tick «Vreau să apar cu numele» — never an address, never a name, never a role. The door is the zone's own

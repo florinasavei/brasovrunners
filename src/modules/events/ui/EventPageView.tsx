@@ -167,7 +167,7 @@ export default async function EventPageView({
   const dated = datedOrNull(event);
   // The one entry the file, the feed and the calendar row's add links all read (§107, §159).
   /*
-    «Vin! → <page>#vin» and «N vin până acum» in the add links' description (§815, §822): from the one read of the answers the page makes
+    «Vin! → <page>#vin» and «N vin până acum» in the add links' description (§815, §NNN): from the one read of the answers the page makes
     — the box below is handed the same (`rsvps`), so there is no second read — and only where the page draws the box (`visit.rsvpBox`, the
     one rule `rsvpOffered`, decided by the page): not in the preview, not on a members' event, not once the start has passed, not while
     the database is away (`null`). Then the entry carries the count exactly as the `.ics` file and the feed do, and the Google and Outlook

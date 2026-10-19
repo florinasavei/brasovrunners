@@ -57,7 +57,7 @@ const UPCOMING_SHOWN = 5;
  * «Următoarele alergări» (§524): the published events ahead, soonest first — the public listing's own
  * cached read (§333), so the zone costs the database nothing the listing has not already paid, and
  * shows nothing a stranger could not see. The page shows the first `UPCOMING_SHOWN`; «Vin!»'s gate and counts are read over all of
- * them, the same list the listing reads, so they share its cache entry (§822). Empty while the database is away.
+ * them, the same list the listing reads, so they share its cache entry (§NNN). Empty while the database is away.
  */
 async function upcomingOrNone(locale: Locale, now: Date) {
   try {
@@ -74,7 +74,7 @@ async function upcomingOrNone(locale: Locale, now: Date) {
 type ZoneRsvpFacts = { count: number; going: boolean };
 
 /**
- * «Vin!» on the runs the zone lists (§822): which of the shown runs take answers and how many come — the public pages' one gate and
+ * «Vin!» on the runs the zone lists (§NNN): which of the shown runs take answers and how many come — the public pages' one gate and
  * cached counts (`readPublicComing`, §815), so a members' event is never in it (`couldBeOffered`: its page draws no «Vii?», and the
  * service refuses an answer to it) — and, live and for this account alone, which of those it has answered (one query,
  * `answeredByAccount`). A run absent from the map takes no answers and gets no row. Nothing at all while the database is away: a
@@ -122,7 +122,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
   const now = new Date();
   const [parts, upcomingAll, membersEvents] = await Promise.all([frameParts(account, locale, now), upcomingOrNone(locale, now), membersOnlyOrNone(account, locale, now)]);
   const upcoming = upcomingAll.slice(0, UPCOMING_SHOWN);
-  // «Vin!» (§822): the account's own answers are read live after the list, over the runs shown; what a press said is the address's `?vin=`.
+  // «Vin!» (§NNN): the account's own answers are read live after the list, over the runs shown; what a press said is the address's `?vin=`.
   const rsvps = await rsvpsOrNone(account, upcomingAll, upcoming, now);
   const publicName = accountPublicName(account);
   const vin = parseZoneRsvpOutcome((await searchParams)?.vin);
@@ -189,7 +189,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
                   {" · "}
                   {formatDay(event.startsAt, { locale, timeZone: event.timezone, withTime: true })}
                 </Typography>
-                {/* «Vin!» (§822): only a run that takes answers, with this account's own state; a members' event has none (its page draws no «Vii?»). */}
+                {/* «Vin!» (§NNN): only a run that takes answers, with this account's own state; a members' event has none (its page draws no «Vii?»). */}
                 {rsvps.has(event.id) && <ZoneRsvp locale={locale} eventId={event.id} going={rsvps.get(event.id)!.going} count={rsvps.get(event.id)!.count} publicName={publicName} />}
               </Box>
             ))}

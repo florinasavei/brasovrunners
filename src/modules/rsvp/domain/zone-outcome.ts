@@ -1,5 +1,5 @@
 /**
- * What the members' zone says after a press on «Vin!» or «Nu mai vin» (§822): one language-neutral code in the address (`?vin=`),
+ * What the members' zone says after a press on «Vin!» or «Nu mai vin» (§NNN): one language-neutral code in the address (`?vin=`),
  * which the page turns into a sentence — the shop's way (`content/shop/zone-outcome.ts`), so a refresh or a shared link carries
  * nothing of the person's. Kept out of the actions' module because a "use server" file may export only async functions.
  *
