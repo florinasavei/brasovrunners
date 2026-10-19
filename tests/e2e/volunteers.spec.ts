@@ -1,7 +1,7 @@
-import { expect, test, type Locator } from "@playwright/test";
-import { createHash, randomBytes } from "node:crypto";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { existsSync } from "node:fs";
 import pg from "pg";
+import { capturedEmail } from "./support/captured-email";
 import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 import { chooseSex } from "./support/sex-choice";
@@ -1487,7 +1487,7 @@ test.describe("§754 volunteers for a race", () => {
     }
   });
 
-  test("§NNN «Cine se poate oferi»: members only shows a stranger a sentence and a member the form prefilled; by invitation the page is a 404 until an invitation sent from the card opens it, once", async ({ page, browser }) => {
+  test("§NNN «Cine se poate oferi»: members only shows a stranger a sentence and the sign-in that comes back to the page, and a member the form prefilled and sent; by invitation the page is a 404 until an invitation sent from the card (its line in both languages) opens it, once", async ({ page, browser }) => {
     const tag = `${test.info().project.name}-${Date.now().toString(36)}-acc`;
     const event = await seedEvent(tag);
     const invited = `ioana.${tag}@example.test`;
@@ -1533,6 +1533,21 @@ test.describe("§754 volunteers for a race", () => {
       await expect(page.getByTestId("volunteer-access-form").getByRole("radio", { name: words })).toBeChecked({ timeout: 30_000 });
     }
 
+    /** The rest of the form, as a person fills it — the roles, the telephone, the date of birth, sex and city, the two ticks — and the press. */
+    async function fillAndSend(who: Page, name: string | null) {
+      await who.getByTestId("volunteer-roles").getByTestId("volunteer-role-option").filter({ hasText: "Punct de apă" }).getByTestId("volunteer-role-name").click();
+      if (name !== null) await who.getByLabel("Numele tău").fill(name);
+      await who.locator('[name="phone"]').fill("722000333");
+      await typeBirth(who.locator('input[name="birthDate"]'), typedBirth(30));
+      await chooseSex(who, "FEMALE");
+      await who.locator('input[name="city"]').fill("Brașov");
+      await who.locator('input[name="consent"]').check();
+      await who.locator('input[name="agreement"]').check();
+      await who.waitForTimeout(1_200);
+      await who.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
+      await expect(who.getByTestId("volunteer-done")).toBeVisible({ timeout: 30_000 });
+    }
+
     const visitor = await browser.newContext({ baseURL, viewport });
     const memberContext = await browser.newContext({ baseURL, viewport });
     try {
@@ -1554,16 +1569,19 @@ test.describe("§754 volunteers for a race", () => {
       await expect(guest.getByTestId("volunteer-form")).toHaveCount(0);
       await expect(guest.locator('input[name="consent"]')).toHaveCount(0);
       const signInLink = guest.getByTestId("volunteers-sign-in");
-      await expect(signInLink).toHaveAttribute("href", /\/ro\/autentificare\?to=members/);
+      // …and the sign-in comes back to this page: a closed return, the slug rebuilt by the server, never a path from the address.
+      await expect(signInLink).toHaveAttribute("href", new RegExp(`/ro/autentificare\\?to=members&back=volunteers&slug=${event.slug}$`));
       expect((await signInLink.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
       // A member (the development sign-in's «Dev Member»): the form, the name and the address from the account, the address locked.
       const member = await memberContext.newPage();
-      await member.goto("/ro/autentificare?to=members");
-      await member.getByRole("button", { name: /Dev Member/ }).click();
-      await expect(member).toHaveURL(/\/ro\/zona-membri$/, { timeout: 30_000 });
       await member.goto(volunteersPath);
+      await hydrated(member);
+      await member.getByTestId("volunteers-sign-in").click();
+      await member.getByRole("button", { name: /Dev Member/ }).click();
+      // Back on the volunteers' page, not in the members' zone: the member does not have to find the event again.
+      await expect(member).toHaveURL(new RegExp(`${volunteersPath}$`), { timeout: 30_000 });
       await hydrated(member);
       await expect(member.getByTestId("volunteer-form")).toBeVisible();
       await expect(member.getByTestId("volunteer-lock-note")).toContainText("Ești conectat ca membru");
@@ -1575,6 +1593,10 @@ test.describe("§754 volunteers for a race", () => {
       const clubTick = member.getByTestId("volunteer-profile").getByRole("checkbox", { name: /^Fac parte din grupul .+/ });
       await expect(clubTick).toBeChecked();
       await expect(clubTick).toBeDisabled();
+      // …and the send goes through the real action: the member is kept with the account's address, and the club tick from the account.
+      await fillAndSend(member, null);
+      const memberRow = await withDatabase(async (client) => (await client.query<{ email: string; name: string; club_member: boolean }>(`SELECT email, name, club_member FROM event_volunteers WHERE event_id = $1`, [event.id])).rows);
+      expect(memberRow).toEqual([{ email: "dev-member@dev.test", name: "Dev Member", club_member: true }]);
 
       // --- «Doar cu invitație de la club» ----------------------------------------------------
       await choose("Doar cu invitație de la club");
@@ -1587,7 +1609,9 @@ test.describe("§754 volunteers for a race", () => {
       }).toPass({ timeout: 60_000 });
       expect((await visitor.request.get(volunteersPath)).status()).toBe(404);
       expect((await memberContext.request.get(volunteersPath)).status()).toBe(404);
-      expect((await visitor.request.get(`${volunteersPath}?invite=${"x".repeat(43)}`)).status()).toBe(200);
+      // A made-up link is no better than none: the page does not confirm that an address is wrong, it is not there. A bare `?volunteer=1` is no thank-you.
+      expect((await visitor.request.get(`${volunteersPath}?invite=${"x".repeat(43)}`)).status()).toBe(404);
+      expect((await visitor.request.get(`${volunteersPath}?volunteer=1`)).status()).toBe(404);
 
       // The fold «Invitații»: addresses one per line, the club's line, the language, «Trimite invitațiile».
       // The card shuts again after a redirect that has nothing waiting in it: open it, then the fold.
@@ -1608,7 +1632,13 @@ test.describe("§754 volunteers for a race", () => {
       await openFold(card);
       await openFold(page.getByTestId("volunteer-invitations"));
       await fold.getByLabel("Adrese (una pe rând)").fill(invited);
-      await fold.getByLabel("Mesaj (opțional)").fill("Ne bucurăm să te vedem!");
+      // The club's line is in both languages or neither (§354): Romanian alone is refused, naming the language still owed.
+      await fold.getByLabel("Mesaj (română)").fill("Ne bucurăm să te vedem!");
+      await fold.getByRole("button", { name: "Trimite invitațiile", exact: true }).click();
+      await expect(fold.getByText("Scrie mesajul și în română, și în engleză, sau lasă ambele casete goale.")).toBeVisible({ timeout: 30_000 });
+      expect(await invitedAddressesOf(event.id)).toEqual([]);
+      await fold.getByRole("tab", { name: /^English/ }).click();
+      await fold.getByLabel("Message (English)").fill("We are glad to see you!");
       await fold.getByRole("button", { name: "Trimite invitațiile", exact: true }).click();
       await page.waitForURL(/#box-volunteers$/, { timeout: 30_000 });
       await hydrated(page);
@@ -1625,12 +1655,16 @@ test.describe("§754 volunteers for a race", () => {
       expect((await row.getByRole("button", { name: "Retrimite" }).boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       await expect(row.getByRole("button", { name: "Retrage" })).toBeVisible();
 
-      // The email's link is minted when the email leaves and its secret lives in that email alone (it is held in the server's memory):
-      // the setup stores the SHA-256 of a fresh secret on the invitation, as the render does, and keeps the secret — the link is then a real one.
-      const secret = randomBytes(32).toString("base64url");
-      await withDatabase(async (client) => {
-        await client.query(`UPDATE event_volunteer_invitations SET token_hash = $1 WHERE event_id = $2`, [createHash("sha256").update(secret, "utf8").digest("hex"), event.id]);
-      });
+      // The email's link is minted when the email is rendered and its secret lives in that email alone: read it where the server captured the
+      // message (`/devs` → «Emailuri»), as the person would — the render → mint → link path is the subject, nothing stored by the spec. Each half
+      // of the message says the club's line in its own language.
+      const email = await capturedEmail(page, invited, "Mă ofer voluntar");
+      expect(email.text).toMatch(/Mesajul clubului:\s*Ne bucurăm să te vedem!/);
+      expect(email.text).toMatch(/A message from the club:\s*We are glad to see you!/);
+      const link = email.links.find((href) => href.includes("/voluntari?invite="));
+      expect(link, "the email carries the personal link").toBeTruthy();
+      const secret = new URL(link as string).searchParams.get("invite") as string;
+      expect(secret).toMatch(/^[A-Za-z0-9_-]{43}$/);
 
       // The invitee: the form with the invited address locked; a stranger's other address cannot be typed.
       await guest.goto(`${volunteersPath}?invite=${secret}`);
@@ -1640,19 +1674,9 @@ test.describe("§754 volunteers for a race", () => {
       const inviteeEmail = guest.getByLabel("Adresa ta de email");
       await expect(inviteeEmail).toHaveValue(invited);
       await expect(inviteeEmail).toHaveAttribute("readonly", "");
-      await guest.getByTestId("volunteer-roles").getByTestId("volunteer-role-option").filter({ hasText: "Punct de apă" }).getByTestId("volunteer-role-name").click();
-      await guest.getByLabel("Numele tău").fill("Ioana Invitata");
-      await guest.locator('[name="phone"]').fill("722000333");
-      await typeBirth(guest.locator('input[name="birthDate"]'), typedBirth(30));
-      await chooseSex(guest, "FEMALE");
-      await guest.locator('input[name="city"]').fill("Brașov");
-      await guest.locator('input[name="consent"]').check();
-      await guest.locator('input[name="agreement"]').check();
-      await guest.waitForTimeout(1_200);
-      await guest.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
-      await expect(guest.getByTestId("volunteer-done")).toBeVisible({ timeout: 30_000 });
+      await fillAndSend(guest, "Ioana Invitata");
       // The address that was kept is the invitation's.
-      const kept = await withDatabase(async (client) => (await client.query<{ email: string; name: string }>(`SELECT email, name FROM event_volunteers WHERE event_id = $1`, [event.id])).rows);
+      const kept = await withDatabase(async (client) => (await client.query<{ email: string; name: string }>(`SELECT email, name FROM event_volunteers WHERE event_id = $1 AND email = $2`, [event.id, invited])).rows);
       expect(kept).toEqual([{ email: invited, name: "Ioana Invitata" }]);
 
       // The link was spent with the sign-up: the card says «Folosită», the link says so in a sentence, and the thank-you needs no link.

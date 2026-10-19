@@ -91,11 +91,16 @@ describe("migration 0171_volunteers_access — the invitations", () => {
     await insertInvitation(EVENT, "b@example.test");
   });
 
-  it("keeps the club's line to 500 characters and a sign-up only with its moment, and starts in the email's language Romanian", async () => {
+  it("keeps the club's line to 500 characters in each language, in both languages or neither, and a sign-up only with its moment, and starts in the email's language Romanian", async () => {
     const set = (assignments: string) => client.exec(`UPDATE event_volunteer_invitations SET ${assignments} WHERE canonical_email = 'a@example.test'`);
-    await expect(set(`message = '${"x".repeat(501)}'`)).rejects.toThrow();
-    await expect(set(`message = ''`)).rejects.toThrow();
-    await set(`message = '${"x".repeat(500)}'`);
+    await expect(set(`message_ro = '${"x".repeat(501)}', message_en = 'y'`)).rejects.toThrow();
+    await expect(set(`message_ro = 'x', message_en = '${"y".repeat(501)}'`)).rejects.toThrow();
+    await expect(set(`message_ro = '', message_en = ''`)).rejects.toThrow();
+    // One language alone is a cross-language fallback waiting to happen (§354): the table refuses it, whichever side.
+    await expect(set(`message_ro = 'Doar română'`)).rejects.toThrow();
+    await expect(set(`message_en = 'English only'`)).rejects.toThrow();
+    await set(`message_ro = '${"x".repeat(500)}', message_en = '${"y".repeat(500)}'`);
+    await set(`message_ro = NULL, message_en = NULL`);
     await expect(set(`volunteer_id = '${ANA}'`)).rejects.toThrow();
     await set(`volunteer_id = '${ANA}', used_at = now()`);
     expect((await client.query(`SELECT locale FROM event_volunteer_invitations WHERE canonical_email = 'a@example.test'`)).rows).toEqual([{ locale: "ro" }]);

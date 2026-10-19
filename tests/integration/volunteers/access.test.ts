@@ -15,6 +15,7 @@ import { pruneExpiredRows } from "@/modules/jobs/retention";
 import type { OutboxRow } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { VolunteerInvitationRefusal } from "@/modules/volunteers/domain/access";
+import { eraseVolunteerInvitationsOfPerson, viewPersonData } from "@/modules/registrations/person-data";
 import { readVolunteerInvitationLink } from "@/modules/volunteers/invitation-link";
 import { listVolunteerInvitations, resendVolunteerInvitation, sendVolunteerInvitations, withdrawVolunteerInvitation } from "@/modules/volunteers/invitations";
 import { readPublicVolunteerRoles, setVolunteersAccess, submitVolunteer } from "@/modules/volunteers/volunteers";
@@ -613,6 +614,26 @@ describe("§NNN who may offer as a volunteer", () => {
       await changeVolunteer(db, admin, { kind: "delete", eventId: event.id, id: person.id }, NOW);
       expect(await volunteers(event.id)).toHaveLength(0);
       expect(await invitations(event.id)).toHaveLength(0);
+    });
+  });
+
+  describe("the person's data (art. 15 and 17)", () => {
+    it("lists the invitations sent to an address with the club's line in both languages, and an Administrator erases them — counts only in the trail, offers and other addresses untouched", async () => {
+      const event = await seedEvent();
+      await seedRole(event.id);
+      await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "ioana@example.test\nandrei@example.test", messageRo: "Te așteptăm!", messageEn: "We are waiting!", locale: "ro" }, NOW);
+      const data = await viewPersonData(db, admin, "ioana@example.test", NOW);
+      expect(data.volunteerInvitations).toHaveLength(1);
+      expect(data.volunteerInvitations[0]).toMatchObject({ deliveryEmail: "ioana@example.test", messageRo: "Te așteptăm!", messageEn: "We are waiting!", usedAt: null, withdrawnAt: null });
+      // Only an Administrator erases, and the press is asserted in the service as well as at the action.
+      await expect(eraseVolunteerInvitationsOfPerson(db, organizer, "ioana@example.test", NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(await invitations(event.id)).toHaveLength(2);
+      expect(await eraseVolunteerInvitationsOfPerson(db, admin, "ioana@example.test", NOW)).toEqual({ invitations: 1 });
+      expect((await invitations(event.id)).map((row) => row.canonicalEmail)).toEqual(["andrei@example.test"]);
+      expect((await viewPersonData(db, admin, "ioana@example.test", NOW)).volunteerInvitations).toEqual([]);
+      const erased = await trail("participant.volunteer_invitations_erased");
+      expect(erased).toEqual([{ invitations: 1 }]);
+      expect(JSON.stringify(erased)).not.toMatch(/@|Ioana/i);
     });
   });
 });
