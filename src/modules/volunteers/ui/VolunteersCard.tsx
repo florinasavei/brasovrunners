@@ -88,8 +88,12 @@ import {
 } from "../domain/volunteer";
 import { encodeRoleBaseline, roleBaselineOf } from "../role-baseline";
 import { newRoleRowKey, type RoleRowBox, roleBox, roleColourBoxesOf } from "../role-rows";
+import type { VolunteersAccess } from "../domain/access";
+import type { VolunteerInvitationItem } from "../invitations";
 import type { VolunteerCategory, VolunteerItem, VolunteerRole } from "../volunteers";
+import VolunteerAccessChoice from "./VolunteerAccessChoice";
 import VolunteerBirthDateField from "./VolunteerBirthDateField";
+import VolunteerInvitations from "./VolunteerInvitations";
 import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
 
 /** A state's chip: its word, its glyph and its tone — never the colour alone. */
@@ -143,6 +147,10 @@ type Props = {
   volunteersShirts: boolean;
   /** «Arată public câți voluntari mai sunt necesari», as saved (§773): the volunteers' page says how many a role needs only while it is on; the card always does. */
   volunteersShowCounts: boolean;
+  /** «Cine se poate oferi», as saved (§NNN): anyone from the event's page, the club's signed-in members, or only people the club invited. */
+  access?: VolunteersAccess;
+  /** The event's invitations to volunteer (§NNN), the newest first — read only for whoever may manage volunteers. */
+  invitations?: readonly VolunteerInvitationItem[];
   /** The day the entry's date of birth is counted on, `YYYY-MM-DD` (§773, `volunteerEventDay`): the gun's, else the event's. */
   eventDay: string;
   /** The notice in force names what a volunteer says about themselves (§765): the public form asks it — else it is §758's tick. */
@@ -155,6 +163,8 @@ type Props = {
   minorsOpen: boolean;
   /** Why the public form is not on the event's page now, or null when it is (`volunteerOfferClosedFor`). */
   offerClosed: VolunteerOfferClosed | null;
+  /** Whether the event is still ahead (`volunteerEventAhead`): the invitations' standing asks it, never a deadline recorded at the send (§NNN). */
+  eventAhead?: boolean;
   roles: readonly VolunteerRole[];
   /** The headings the roles are grouped under, in the club's order, each with its contact person (§774). */
   categories: readonly VolunteerCategory[];
@@ -200,10 +210,13 @@ export default async function VolunteersCard({
   acceptsVolunteers,
   volunteersShirts,
   volunteersShowCounts,
+  access = "ANYONE",
+  invitations = [],
   eventDay,
   profileDescribed,
   minorsOpen,
   offerClosed,
+  eventAhead = true,
   roles,
   categories,
   standings,
@@ -1349,7 +1362,7 @@ export default async function VolunteersCard({
         {/* The tick, and what keeps the public form off the page, named in words. */}
         <Stack spacing={1} data-testid="volunteer-switch">
           <Alert severity={offerClosed === null ? "success" : "info"} data-testid="volunteer-offer-state">
-            {offerClosed === null ? t("volunteers.offer.open") : t(`volunteers.offer.closed.${offerClosed}`)}
+            {offerClosed === null ? t(access === "ANYONE" ? "volunteers.offer.open" : access === "MEMBERS" ? "volunteers.offer.openMembers" : "volunteers.offer.openInvited") : t(`volunteers.offer.closed.${offerClosed}`)}
           </Alert>
           {/* «Primește voluntari pe pagină» (§765; the owner, 2026-10-14: «nu mai folosi niciodată» a button that flips a setting): a real tick —
               a plain form whose submit is drawn as the checkbox, the words beside it, `role="checkbox"` and `aria-checked`, 44 pixels, working with
@@ -1413,6 +1426,8 @@ export default async function VolunteersCard({
               {t("volunteers.counts.help")}
             </Typography>
           </Box>
+          {/* «Cine se poate oferi» (§NNN): under the ticks it qualifies, only while the event takes volunteers. */}
+          {acceptsVolunteers && <VolunteerAccessChoice locale={locale} eventId={eventId} access={access} />}
           {/* Which form the public page draws (§765): the one that asks the person's date of birth, sex and city only while the notice in force names them. */}
           {!profileDescribed && (
             <Typography variant="body2" color="text.secondary" data-testid="volunteer-profile-off">
@@ -1420,6 +1435,9 @@ export default async function VolunteersCard({
             </Typography>
           )}
         </Stack>
+
+        {/* «Invitații» (§NNN): while the choice is «Doar cu invitație de la club», and as long as any invitation exists. */}
+        {acceptsVolunteers && (access === "INVITED" || invitations.length > 0) && <VolunteerInvitations locale={locale} eventId={eventId} access={access} invitations={invitations} eventAhead={eventAhead} />}
 
         {/* «Categorii» (§774; the owner, 2026-10-14: «categorii cu sub-categorii … Toate astea configurabile»): the headings the roles are grouped
             under on this card and on the volunteers' page — «Start / Sosire», «Traseu» —, each with its optional contact person. */}

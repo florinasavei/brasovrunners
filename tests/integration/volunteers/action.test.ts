@@ -1,12 +1,14 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
+import { generateTokenSecret, hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -25,6 +27,8 @@ type Set = { name: string; value: string; options: { path?: string; maxAge?: num
 const jar = new Map<string, string>();
 const sets: Set[] = [];
 let turnstile: { on: boolean; verdict: string } = { on: false, verdict: "not_configured" };
+/** The members' zone's account reading the request (§NNN): null is a stranger. */
+const viewer: { current: null | { email: string; displayName: string } } = { current: null };
 
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
@@ -45,6 +49,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
     throw Object.assign(new Error("NEXT_REDIRECT"), { redirectTo: url });
   },
 }));
+vi.mock("@/modules/events/members-only", () => ({ membersViewer: async () => viewer.current }));
 vi.mock("@/modules/registrations/bot-check", () => ({ botCheckIsOn: async () => turnstile.on, honeypotIsOn: async () => true }));
 vi.mock("@/modules/registrations/turnstile", async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
@@ -87,6 +92,7 @@ beforeEach(async () => {
   jar.clear();
   sets.length = 0;
   turnstile = { on: false, verdict: "not_configured" };
+  viewer.current = null;
   await db.insert(staffUsers).values({ email: "admin@example.test", displayName: "Admin", role: "ADMIN" });
   // The notice in force names `{{volunteers}}` and `{{volunteerAgreement}}` (§758) in both languages: the form is open.
   const body = (text: string) => ({ sections: [{ paragraphs: [`Voluntari ({{volunteers}}, {{volunteerAgreement}}): ${text}`] }] });
@@ -287,5 +293,71 @@ describe("§754 submitVolunteerAction's redirects", () => {
     sets.length = 0;
     await pressed(post({ name: "" }));
     expect(sets.find((set) => set.name === "br_submitted_to")).toBeUndefined();
+  });
+});
+
+/*
+  §NNN — who may offer (BR-REQ-060-01), through the action that reads the session and the form's hidden `invite`: the server asks the
+  door again, so a hidden form is not a permission. A wrong condition at the action (reading the session when a link came, or the
+  other way round) would refuse every member or let every stranger in while the service's own suite stays green.
+*/
+describe("§NNN submitVolunteerAction and «Cine se poate oferi»", () => {
+  async function chooseAccess(access: "ANYONE" | "MEMBERS" | "INVITED") {
+    await db.update(events).set({ volunteersAccess: access }).where(eq(events.id, eventId));
+  }
+  async function invitation(address = "ioana@example.test") {
+    const secret = generateTokenSecret();
+    await db.insert(eventVolunteerInvitations).values({
+      eventId,
+      deliveryEmail: address,
+      canonicalEmail: address,
+      canonicalizationVersion: 2,
+      tokenHash: hashTokenSecret(secret),
+      sentAt: new Date(),
+      expiresAt: new Date(Date.now() + DAY),
+    });
+    return secret;
+  }
+
+  it("«Doar membrii»: a stranger's post lands back on the volunteers' page with no row; a member's is kept with the account's address", async () => {
+    await seedEvent(true);
+    await chooseAccess("MEMBERS");
+    viewer.current = null;
+    const refused = await pressed(post());
+    expect(refused.pathname.endsWith(`/${slug}/voluntari`)).toBe(true);
+    expect(refused.search).toBe("");
+    expect(await people()).toHaveLength(0);
+    viewer.current = { email: "membru@example.test", displayName: "Maria Membra" };
+    // Somebody else's address from a signed-in member is a forged post: refused as the stranger's is, nothing written.
+    const forged = await pressed(post({ email: "alta@example.test" }));
+    expect(forged.search).toBe("");
+    expect(await people()).toHaveLength(0);
+    const kept = await pressed(post({ email: "Membru@Example.test" }));
+    expect(kept.searchParams.get("volunteer")).toBe("1");
+    expect((await people())[0]).toMatchObject({ canonicalEmail: "membru@example.test", source: "PUBLIC" });
+  });
+
+  it("«Doar cu invitație»: no link, no row; the link's secret posted back is spent, and a link that no longer works goes back to the page naming it", async () => {
+    await seedEvent(true);
+    await chooseAccess("INVITED");
+    viewer.current = { email: "membru@example.test", displayName: "Maria Membra" };
+    expect((await pressed(post())).search).toBe("");
+    expect(await people()).toHaveLength(0);
+    const secret = await invitation();
+    // A refusal of the form keeps the secret in the address, so the form is drawn again with its link.
+    const invalid = await pressed(post({ invite: secret, name: "" }));
+    expect(invalid.searchParams.get("volunteer")).toBe("invalid");
+    expect(invalid.searchParams.get("invite")).toBe(secret);
+    expect(await people()).toHaveLength(0);
+    const done = await pressed(post({ invite: secret, email: "oricine@example.test" }));
+    expect(done.searchParams.get("volunteer")).toBe("1");
+    // The thank-you carries no secret; the invited address is the one kept, whatever was posted.
+    expect(done.searchParams.has("invite")).toBe(false);
+    expect((await people())[0]).toMatchObject({ canonicalEmail: "ioana@example.test" });
+    // The same link again: spent, so the page is asked to say so.
+    const again = await pressed(post({ invite: secret }));
+    expect(again.searchParams.get("invite")).toBe(secret);
+    expect(again.searchParams.has("volunteer")).toBe(false);
+    expect(await people()).toHaveLength(1);
   });
 });

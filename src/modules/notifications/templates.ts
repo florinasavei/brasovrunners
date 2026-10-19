@@ -707,6 +707,8 @@ export function renderBilingual(
     // absent only for a row queued with one text, which both halves then read as before.
     ...(data.organizerNoteOther ? { organizerNote: data.organizerNoteOther } : {}),
     ...(data.cancellationReasonOther ? { cancellationReason: data.cancellationReasonOther } : {}),
+    // The club's line of an invitation to volunteer, in the second half's own language (§354): never the first half's words.
+    ...(data.volunteerInvitation ? { volunteerInvitation: { ...data.volunteerInvitation, message: data.volunteerInvitation.messageOther } } : {}),
     // A family's blocks in the second half: the words and the numbers, not the QR pictures again (§519).
     ...(data.familyConfirmed ? { familyConfirmed: data.familyConfirmed.map((person) => ({ ...person, qrUrl: undefined })) } : {}),
     // The organizer's message (§364): its own subject and body in the second half's language.
@@ -1040,6 +1042,12 @@ export type TemplateData = {
      */
     contacts?: { name: string | null; phone: string | null; email: string | null; categoryRo?: string; categoryEn?: string }[];
   };
+  /**
+   * The club's invitation to volunteer (§NNN): the club's own line to the person (plain text, at most 500 characters) in the first
+   * half's language (`message`) and the second half's (`messageOther`, §354 — each half reads its own, or both are null), and the roles
+   * the event still needs people for, in each language. The link is the message's button; the address is the recipient's, never a name.
+   */
+  volunteerInvitation?: { message: string | null; messageOther: string | null; rolesRo: string[]; rolesEn: string[] };
   /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
@@ -1918,6 +1926,21 @@ const T = {
       ],
       action: "Citește contractul și dă-ți acordul",
     },
+    // The club's invitation to volunteer (§NNN): to an address the club typed; the button is the volunteers' page with the invitation's link.
+    volunteerInvitation: {
+      subject: (d: TemplateData) => `Te invităm să fii voluntar la ${d.eventTitle ?? "eveniment"}`,
+      greeting: () => "Bună ziua,",
+      body: (d: TemplateData) => {
+        const roles = d.volunteerInvitation?.rolesRo ?? [];
+        return [
+          `${CLUB_NAME} te invită să fii voluntar la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}.`,
+          ...(roles.length > 0 ? [`Căutăm oameni pentru: **${roles.join(", ")}**.`] : []),
+          "Apasă butonul de mai jos: se deschide pagina voluntarilor, cu adresa ta deja scrisă. Alegi ce ai vrea să faci și completezi restul; apoi organizatorii îți dau un rol și te confirmă.",
+          "Invitația e doar a ta, iar linkul se folosește o singură dată. Dacă nu te așteptai la acest email, ignoră-l: nu se întâmplă nimic.",
+        ];
+      },
+      action: "Mă ofer voluntar",
+    },
     // To each Organizer and Administrator (§754): who offered for which role; the card «Voluntari» has the rest.
     volunteerClubNotice: {
       subject: (d: TemplateData) => `Voluntar nou la ${d.eventTitle ?? "eveniment"}`,
@@ -2176,6 +2199,7 @@ const T = {
       reinstated: () => "Evenimentul nu mai este anulat: are loc.",
       noteLabel: "Mesajul organizatorilor:",
       reasonLabel: "Motivul:",
+      messageLabel: "Mesajul clubului:",
     },
     closing: "Alergare plăcută,",
     /**
@@ -2436,6 +2460,9 @@ const T = {
     /** The guardian's link (§768): the guardian is not on any list — somebody named them as the parent or guardian of a volunteer under eighteen. */
     privacyFooterGuardian: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că cineva te-a trecut ca părinte sau tutore al unui voluntar sub 18 ani la un eveniment al clubului. Cum folosim datele tale:`,
+    /** The club's invitation to volunteer (§NNN): the club typed the address to send it; nobody asked yet. */
+    privacyFooterVolunteerInvitation: (club: string) =>
+      `Primești acest mesaj de la ${club} pentru că ți-a trecut adresa ca să te invite voluntar la unul dintre evenimentele sale. Cum folosim datele tale:`,
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */
     privacyFooterDeclaration: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai semnat o declarație pe site-ul clubului. Cum folosim datele tale:`,
@@ -2734,6 +2761,20 @@ const T = {
       ],
       action: "Read the agreement and give your consent",
     },
+    volunteerInvitation: {
+      subject: (d: TemplateData) => `We invite you to volunteer at ${d.eventTitle ?? "the event"}`,
+      greeting: () => "Hello,",
+      body: (d: TemplateData) => {
+        const roles = d.volunteerInvitation?.rolesEn ?? [];
+        return [
+          `${CLUB_NAME} invites you to volunteer at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}.`,
+          ...(roles.length > 0 ? [`We are looking for people for: **${roles.join(", ")}**.`] : []),
+          "Press the button below: the volunteers' page opens with your address already written. You choose what you would like to do and fill in the rest; then the organizers give you a role and confirm you.",
+          "The invitation is yours alone, and the link works once. If you were not expecting this email, ignore it: nothing happens.",
+        ];
+      },
+      action: "I want to volunteer",
+    },
     volunteerClubNotice: {
       subject: (d: TemplateData) => `New volunteer for ${d.eventTitle ?? "the event"}`,
       greeting: () => "Hello,",
@@ -3010,6 +3051,7 @@ const T = {
       reinstated: () => "The event is no longer cancelled: it is going ahead.",
       noteLabel: "A message from the organizers:",
       reasonLabel: "The reason:",
+      messageLabel: "A message from the club:",
     },
     closing: "Happy running,",
     /** In front of a message re-sent because the form was filled in again (§235, §286). */
@@ -3182,6 +3224,8 @@ const T = {
     privacyFooterVolunteerAgreement: (club: string) => `This message comes from ${club} because you are on the volunteers' list of one of the club's events. How we use your data:`,
     privacyFooterGuardian: (club: string) =>
       `This message comes from ${club} because someone named you as the parent or guardian of a volunteer under 18 at one of the club's events. How we use your data:`,
+    privacyFooterVolunteerInvitation: (club: string) =>
+      `This message comes from ${club} because it entered your address to invite you to volunteer at one of its events. How we use your data:`,
     privacyFooterDeclaration: (club: string) => `This message comes from ${club} because you signed a declaration on the club's website. How we use your data:`,
     privacyFooterNewsletter: (club: string) =>
       `This message comes from ${club} because you asked for the club's news at this address. Unsubscribe at any time from the link above. How we use your data:`,
@@ -3239,6 +3283,7 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   VOLUNTEER_AGREEMENT_ACCEPTED: "volunteerAgreementAccepted",
   VOLUNTEER_ROLE_ASSIGNED: "volunteerRoleAssigned",
   VOLUNTEER_GUARDIAN_REQUEST: "volunteerGuardianRequest",
+  VOLUNTEER_INVITATION: "volunteerInvitation",
 };
 
 /** The newsletter's three messages (§445) and «Vii mâine la …?» (§NNN): to a subscriber's address, never about a registration. */
@@ -3354,6 +3399,10 @@ function noticeParts(messageType: EmailMessageType, locale: EmailLocale, data: T
   const words = T[locale].noticeWords;
   if (messageType === "EVENT_CANCELLED") {
     return data.cancellationReason ? [organizerTextPart(words.reasonLabel, data.cancellationReason)] : [];
+  }
+  // The club's invitation to volunteer (§NNN): the club's own line, as typed, after the platform's sentences.
+  if (messageType === "VOLUNTEER_INVITATION") {
+    return data.volunteerInvitation?.message ? [organizerTextPart(words.messageLabel, data.volunteerInvitation.message)] : [];
   }
   if (messageType !== "EVENT_UPDATE_NOTICE") return [];
   const changes = new Set(data.updateChanges ?? []);
@@ -3953,6 +4002,8 @@ export function buildTemplateContent(
                 ? copy.privacyFooterInvitation
               : messageType === "VOLUNTEER_RECEIVED"
                 ? copy.privacyFooterVolunteer
+              : messageType === "VOLUNTEER_INVITATION"
+                ? copy.privacyFooterVolunteerInvitation
               : messageType === "VOLUNTEER_GUARDIAN_REQUEST"
                 ? copy.privacyFooterGuardian
               : messageType === "VOLUNTEER_AGREEMENT_REQUEST" || messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" || messageType === "VOLUNTEER_ROLE_ASSIGNED"
@@ -4033,6 +4084,8 @@ const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set([
   "RSVP_CONFIRM",
   // «Vii mâine la …?» (§NNN): the same, to the person asked.
   "RSVP_ASK",
+  // The club's invitation to volunteer (§NNN): the person deciding whether to help reads the same when and where as the others.
+  "VOLUNTEER_INVITATION",
 ]);
 
 /**

@@ -8,6 +8,7 @@ import {
   registrationStatus,
 } from "./support/action-link";
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
+import { capturedEmail } from "./support/captured-email";
 import { chooseSex } from "./support/sex-choice";
 import { confirmDialog } from "./support/confirm";
 import { openFold } from "./support/fold";
@@ -78,28 +79,6 @@ test.describe("§389 §446 a family on one address", () => {
     await fillPerson(page, person, email);
     // What the browser is shown: the one screen every submission gets (§39).
     return (await page.locator("main").innerText()).replaceAll(person.firstName, "<name>");
-  }
-
-  /**
-   * The newest message the server captured for this address whose words contain `needle`, as
-   * `/devs` → «Emailuri» shows it: its words and its links. The outbox drains after the response
-   * that queued it, so it is waited for.
-   */
-  async function capturedEmail(page: Page, email: string, needle: string): Promise<{ text: string; links: string[] }> {
-    let found: { text: string; links: string[] } | undefined;
-    await expect(async () => {
-      await page.goto("/ro/devs?panel=email");
-      const boxes = page.getByTestId("captured-email").filter({ hasText: email });
-      const all = await boxes.evaluateAll((elements) =>
-        elements.map((element) => ({
-          text: element.querySelector('[data-testid="captured-text"]')?.textContent ?? "",
-          links: Array.from(element.querySelectorAll("a")).map((anchor) => anchor.href),
-        })),
-      );
-      found = all.find((message) => message.text.includes(needle));
-      expect(found).toBeTruthy();
-    }).toPass({ timeout: 45_000 });
-    return found!;
   }
 
   test("the form sent again for a different person answers as any submission does, and registers nobody", async ({ page }) => {

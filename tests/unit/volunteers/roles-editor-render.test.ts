@@ -50,6 +50,10 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
       "switchVolunteersAction",
       "switchVolunteersShirtsAction",
       "switchVolunteersCountsAction",
+      "switchVolunteersAccessAction",
+      "sendVolunteerInvitationsAction",
+      "resendVolunteerInvitationAction",
+      "withdrawVolunteerInvitationAction",
     ].map((name) => [name, noop]),
   );
 });

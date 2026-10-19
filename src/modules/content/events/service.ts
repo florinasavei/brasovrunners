@@ -1903,6 +1903,10 @@ const SERIES_COLUMNS = [
   "offersGroupRunDeclaration",
   // Who sees the event (§552): "from this date" makes a weekly run the members' on every later date.
   "membersOnly",
+  // «Cine se poate oferi» (§NNN): the club's standing rule for who helps. The «Voluntari» card saves it on its own, so no event save changes it
+  // today; listed so that a save which ever does carries it like the other rules of a series, and so that every date a repeat makes starts with it
+  // (`copiedEventValues`).
+  "volunteersAccess",
   // «Copertă» (§709), like the route (§49): the Wednesday run wears one cover every Wednesday, and
   // "from this date" or "all" carries a new one — the picture and its crop together.
   "coverMediaAssetId",
@@ -3005,6 +3009,8 @@ function blankEventRow(now: Date): EditableEvent {
     volunteersShirts: false,
     // «Arată public câți voluntari mai sunt necesari» (§773): off the same way — a public number is the club's choice, event by event.
     volunteersShowCounts: false,
+    // «Cine se poate oferi» (§NNN): anyone, until the club narrows it in the «Voluntari» card.
+    volunteersAccess: "ANYONE",
     difficulty: null,
     difficultyLevel: null,
     costType: COST_TYPE_ON_CREATE,
@@ -3589,6 +3595,10 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     showRouteProfile: source.showRouteProfile,
     // «Acceptă răspunsuri „Vin!”» (§811) travels with the event it is the tick of; the answers themselves never do.
     rsvpEnabled: source.rsvpEnabled,
+    // «Cine se poate oferi» (§NNN) travels to a duplicate and to every date of a repeat: it is the club's standing rule for who helps
+    // (members only, by invitation), and every value but the default only narrows the door. The tick «Primește voluntari», the
+    // invitations and the people never travel — a copy starts with the tick off.
+    volunteersAccess: source.volunteersAccess,
     // «Copertă» (§709), like the route: every date of a repeat wears the series' cover, and a
     // duplicate starts with last year's until the club picks this year's.
     coverMediaAssetId: source.coverMediaAssetId,

@@ -17,7 +17,7 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import VolunteerAnswers from "@/modules/volunteers/ui/VolunteerAnswers";
-import { eraseRsvpsAction, lookUpPersonAction } from "./actions";
+import { eraseRsvpsAction, eraseVolunteerInvitationsAction, lookUpPersonAction } from "./actions";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import { actionKeyOf } from "@/shared/forms/action-key";
@@ -94,7 +94,11 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
-        {erased && <Alert severity="success" data-testid="person-rsvps-erased">{t("person.rsvpsErased")}</Alert>}
+        {erased === "invitations" ? (
+          <Alert severity="success" data-testid="person-volunteer-invitations-erased">{t("person.volunteerInvitationsErased")}</Alert>
+        ) : (
+          erased && <Alert severity="success" data-testid="person-rsvps-erased">{t("person.rsvpsErased")}</Alert>
+        )}
         {q && !canonicalEmail && <Alert severity="warning">{t("person.expired", { minutes: PERSON_LOOKUP_MINUTES })}</Alert>}
       </Box>
 
@@ -131,7 +135,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
             </GlyphButton>
           </Stack>
 
-          {!data.participant && data.announcementRequests.length === 0 && data.rsvpAnswers.length === 0 && data.rememberedBrowsers.length === 0 && data.volunteerOffers.length === 0 && data.groupRunDeclarations.length === 0 ? (
+          {!data.participant && data.announcementRequests.length === 0 && data.rsvpAnswers.length === 0 && data.rememberedBrowsers.length === 0 && data.volunteerOffers.length === 0 && data.volunteerInvitations.length === 0 && data.groupRunDeclarations.length === 0 ? (
             <Alert severity="info">{t("person.notFound")}</Alert>
           ) : (
             <>
@@ -286,6 +290,48 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                       size="small"
                     />
                   </form>
+                )}
+              </Box>
+              <Divider />
+              {/*
+                The club's invitations to volunteer sent to this address (§NNN; art. 15 GDPR): the event, when it was sent, sent again, used,
+                withdrawn, the deadline recorded, the language and the club's line in both languages — every column but the link's fingerprint.
+                An unused or withdrawn one holds an address and a line and nothing else, so it is erased here on request (art. 17).
+              */}
+              <Box component="section" data-testid="person-volunteer-invitations">
+                <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+                  {t("person.volunteerInvitations", { count: data.volunteerInvitations.length })}
+                </Typography>
+                {data.volunteerInvitations.length === 0 ? (
+                  <Typography variant="body2">{t("person.none")}</Typography>
+                ) : (
+                  <>
+                    {data.volunteerInvitations.map((invitation, index) => (
+                      <Typography key={index} variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }} data-testid="person-volunteer-invitation">
+                        {t("person.volunteerInvitationSent", { when: show(invitation.sentAt) })} · {invitation.eventTitle ?? invitation.eventId} · {invitation.deliveryEmail} · {invitation.locale}
+                        {invitation.resentAt ? ` · ${t("person.volunteerInvitationResent", { when: show(invitation.resentAt) })}` : ""}
+                        {invitation.usedAt ? ` · ${t("person.volunteerInvitationUsed", { when: show(invitation.usedAt) })}` : ""}
+                        {invitation.withdrawnAt ? ` · ${t("person.volunteerInvitationWithdrawn", { when: show(invitation.withdrawnAt) })}` : ""}
+                        {` · ${t("person.volunteerInvitationUntil", { when: show(invitation.expiresAt) })}`}
+                        {invitation.messageRo ? ` · ${t("person.volunteerInvitationLine", { ro: invitation.messageRo, en: invitation.messageEn ?? "—" })}` : ""}
+                      </Typography>
+                    ))}
+                    <form action={eraseVolunteerInvitationsAction} style={{ marginTop: 12 }}>
+                      <input type="hidden" name="uiLocale" value={locale} />
+                      <input type="hidden" name="q" value={q ?? ""} />
+                      <ConfirmSubmitButton
+                        label={t("person.volunteerInvitationsErase")}
+                        icon="erase"
+                        title={t("person.volunteerInvitationsEraseTitle")}
+                        body={t("person.volunteerInvitationsEraseBody")}
+                        confirmLabel={t("person.volunteerInvitationsErase")}
+                        cancelLabel={words.cancel}
+                        color="error"
+                        variant="outlined"
+                        size="small"
+                      />
+                    </form>
+                  </>
                 )}
               </Box>
               <Divider />

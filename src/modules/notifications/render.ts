@@ -60,11 +60,15 @@ import {
 } from "@/modules/registrations/family-entries";
 import { familyReservationHoldsAt, reservedUntilPhrase } from "@/modules/registrations/domain/family-reservation";
 import { eventInvitations } from "@/db/schema/event-invitations";
+import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { renderVolunteerAgreementPdf, VOLUNTEER_AGREEMENT_PDF_NAME } from "@/modules/volunteers/agreement-pdf";
 import { canonicalOrNull, mintVolunteerAgreementLink, tasksWords, volunteerRoles } from "@/modules/volunteers/agreement";
 import { mintRsvpLinks } from "@/modules/rsvp/rsvp";
-import { isVolunteerMinor, roleLabel, volunteerContactsOf } from "@/modules/volunteers/domain/volunteer";
+import { invitationStandingOf } from "@/modules/volunteers/domain/access";
+import { isVolunteerMinor, roleLabel, roleTakesPeople, rolesWithCategoryWords, volunteerContactsOf, volunteerEventAhead } from "@/modules/volunteers/domain/volunteer";
+import { mintVolunteerInvitationLink } from "@/modules/volunteers/invitation-link";
+import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { mintVolunteerGuardianLink } from "@/modules/volunteers/guardian";
 import { shopOrders } from "@/db/schema/shop";
 import { readShopSettings } from "@/modules/content/shop/settings";
@@ -356,6 +360,7 @@ async function renderRow(
     row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" ||
     row.messageType === "VOLUNTEER_ROLE_ASSIGNED" ||
     row.messageType === "VOLUNTEER_GUARDIAN_REQUEST" ||
+    row.messageType === "VOLUNTEER_INVITATION" ||
     bulkRecipients !== null
       ? (row.payloadJson as { eventId?: unknown } | null)?.eventId
       : undefined;
@@ -1005,6 +1010,40 @@ async function renderRow(
         data.volunteer.agreementAttached = true;
       }
     }
+  }
+  /*
+    The club's invitation to volunteer (§NNN): the invitation is read now (`payload.invitationId`) and the link minted now, at the send
+    — the secret is in this email alone (§14.5), the row keeps its SHA-256, and this newest email's link replaces the earlier one's
+    (`mintVolunteerInvitationLink`). One used, withdrawn or past its date since the press, an address corrected since, or an event
+    called off or over withdraws the message (§331's rule at the moment of sending). The roles named are the ones that still need
+    people, each half in its own language; the club's line travels as typed. The button is the volunteers' page with `?invite=` —
+    from `APP_BASE_URL`, in the message's language (AGENTS.md §8).
+  */
+  if (row.messageType === "VOLUNTEER_INVITATION") {
+    const payload = row.payloadJson as { invitationId?: unknown } | null;
+    const invitationId = payload?.invitationId;
+    const [invitation] =
+      typeof invitationId === "string" && isUuid(invitationId)
+        ? await db.select().from(eventVolunteerInvitations).where(eq(eventVolunteerInvitations.id, invitationId)).limit(1)
+        : [];
+    if (!invitation) throw new OutboxMessageWithdrawn("the invitation is gone");
+    const eventAhead = eventDetails !== undefined && volunteerEventAhead(eventDetails, now);
+    if (invitationStandingOf(invitation, eventAhead) !== "open") throw new OutboxMessageWithdrawn("the invitation was used or withdrawn, or the event was called off or is over");
+    if (canonicalOrNull(row.recipientEmail) !== invitation.canonicalEmail) throw new OutboxMessageWithdrawn("the invitation's address changed since it was queued");
+    if (!eventDetails || !eventDetails.slug) throw new OutboxMessageWithdrawn("the event has no page to invite to");
+    const link = await mintVolunteerInvitationLink(db, invitation.id, row.recipientEmail, now);
+    if (!link) throw new OutboxMessageWithdrawn("the invitation can no longer be sent");
+    const offer = await readPublicVolunteerRoles(db, invitation.eventId);
+    const open = rolesWithCategoryWords(offer.categories, offer.roles.filter((role) => roleTakesPeople(role)));
+    data.participantName = "";
+    data.volunteerInvitation = {
+      // The club's line in each half's own language (§354): the second half reads `messageOther`, never the first half's words.
+      message: locale === "ro" ? invitation.messageRo : invitation.messageEn,
+      messageOther: locale === "ro" ? invitation.messageEn : invitation.messageRo,
+      rolesRo: open.map((role) => roleLabel(role, "ro")),
+      rolesEn: open.map((role) => roleLabel(role, "en")),
+    };
+    payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/volunteers", params: { slug: eventDetails.slug }, query: { invite: link.secret } } })}`;
   }
   // The update's one button is the event's own page (§331): public, no token — and, like every
   // action, absent from a club copy.

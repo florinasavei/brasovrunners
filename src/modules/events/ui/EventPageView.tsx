@@ -85,7 +85,7 @@ export type EventPageVisit = {
    * still need people, in the page's language, or null when that page would answer 404 — the event takes no volunteers,
    * every role is full, or the privacy notice or the volunteer agreement in force does not describe them.
    */
-  volunteers?: { roleNames: readonly string[] } | null;
+  volunteers?: { roleNames: readonly string[]; clubOnly?: boolean } | null;
 };
 
 /**
@@ -365,7 +365,7 @@ export default async function EventPageView({
           and one button to the volunteers' own page — the form is no longer here. A visit's page only, and only where that
           page would answer 200 (the page decides, from the one read both share) — the preview before saving reads no
           public cache and takes no name. */}
-      {visit?.volunteers && !membersOnly && <VolunteerCallout slug={slug} roleNames={visit.volunteers.roleNames} />}
+      {visit?.volunteers && !membersOnly && <VolunteerCallout slug={slug} roleNames={visit.volunteers.roleNames} clubOnly={visit.volunteers.clubOnly === true} />}
 
       {/*
         «Condiții de participare» / "Participation rules" (§498; the owner, 2026-09-27): the

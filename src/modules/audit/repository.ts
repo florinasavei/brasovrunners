@@ -234,6 +234,11 @@ export type AuditAction =
    * something the staff did (a person answers and withdraws on their own).
    */
   | "participant.rsvps_erased"
+  /**
+   * The club's invitations to volunteer sent to one address erased by an Administrator on the person's request (§NNN, art. 17 GDPR) —
+   * `{ invitations }`, the count, never the address, a name or the club's line.
+   */
+  | "participant.volunteer_invitations_erased"
   /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
   | "outbox.sent_by_staff"
   /**
@@ -493,6 +498,17 @@ export type AuditAction =
   | "event.volunteers_shirts_switched"
   /** «Arată public câți voluntari mai sunt necesari» (§773), entity `event`: the metadata holds `on` and nothing of a person. */
   | "event.volunteers_counts_switched"
+  /** «Cine se poate oferi» (§NNN), entity `event`: metadata `{ from, to }` — one of `ANYONE`, `MEMBERS`, `INVITED`; nothing of a person. */
+  | "event.volunteers_access_changed"
+  /**
+   * An invitation to volunteer (§NNN), entity `event`: sent (one row per address), sent again, withdrawn, or spent by the sign-up it
+   * led to (no actor: the person, from the link). The metadata holds the invitation's id — and the volunteer's id when used — and
+   * never an address, a name or the club's line, so the trail names no one.
+   */
+  | "volunteer_invitation.sent"
+  | "volunteer_invitation.resent"
+  | "volunteer_invitation.withdrawn"
+  | "volunteer_invitation.used"
   | "volunteer_role.added"
   | "volunteer_role.edited"
   | "volunteer_role.moved"
