@@ -12912,6 +12912,7 @@
     "signOutPending": "Se încheie sesiunea…",
     "upcomingTitle": "Următoarele alergări",
     "upcomingEmpty": "Nicio alergare anunțată acum.",
+    "nextRun": "Următoarea alergare",
     "upcomingAll": "Toate alergările",
     "rsvp": {
       "nameHelp": "Dacă bifezi, pe pagina alergării apari ca „{name}”.",

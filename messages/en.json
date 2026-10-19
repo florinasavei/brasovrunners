@@ -12912,6 +12912,7 @@
     "signOutPending": "Signing out…",
     "upcomingTitle": "The next runs",
     "upcomingEmpty": "No run is announced right now.",
+    "nextRun": "The next run",
     "upcomingAll": "Every event",
     "rsvp": {
       "nameHelp": "If you tick it, the run's page shows you as “{name}”.",

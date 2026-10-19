@@ -1,6 +1,7 @@
 import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
-import { cachedRsvpCounts, cachedRsvpDescribed } from "@/modules/public-cache/reads";
+import { cachedFirstRsvpNoticeVersion, cachedPublicRsvps, cachedRsvpCounts, cachedRsvpDescribed } from "@/modules/public-cache/reads";
 import { type ComingEvent, readComing } from "./coming";
+import type { PublicRsvps } from "./rsvp";
 
 /**
  * What the public pages ask of «Vin!» beyond the event's own page (§815): the calendar's feed, the event's `.ics`
@@ -16,4 +17,19 @@ export async function readPublicComing(events: readonly ComingEvent[], now: Date
   const coming = await readComing(events, now, { described: cachedRsvpDescribed, counts: cachedRsvpCounts });
   await holdPageUntil(events.filter((event) => coming.has(event.id)).map((event) => event.startsAt), now);
   return coming;
+}
+
+/**
+ * The answers of several events at once, for a page that draws more than one «Cine vine» (§715 amended: the members' zone, §143, §812):
+ * the notice's first version is asked once and each event's cached read (`cachedPublicRsvps`, filed under "places", so a confirmation
+ * or a withdrawal expires it at once) is asked once, in parallel — one gathering for the page, never a read per card. The names are
+ * exactly what the event page's own read gives (`readPublicRsvps`): a confirmed answer whose person ticked, under a notice that describes
+ * «Vin!». An id appears once however many times it is asked. The caller wraps it in `readOrWhileAway`: a count that cannot be asked is not zero.
+ */
+export async function readPublicRsvpsFor(eventIds: readonly string[]): Promise<ReadonlyMap<string, PublicRsvps>> {
+  const ids = [...new Set(eventIds)];
+  if (ids.length === 0) return new Map();
+  const firstNotice = await cachedFirstRsvpNoticeVersion();
+  const read = await Promise.all(ids.map(async (id) => [id, await cachedPublicRsvps(id, firstNotice)] as const));
+  return new Map(read);
 }
