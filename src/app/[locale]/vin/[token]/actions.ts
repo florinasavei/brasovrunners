@@ -10,7 +10,7 @@ import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { consumeRateLimit, refundRateLimit } from "@/modules/rate-limit/service";
 import { rememberPerson } from "@/modules/person-session/session";
 import { refuseRsvpAsks } from "@/modules/rsvp/ask-refusal";
-import { confirmRsvp, readRsvpLink, setRsvpShowName, withdrawRsvp, type RsvpProved } from "@/modules/rsvp/rsvp";
+import { confirmRsvp, readRsvpLink, setRsvpClubMember, setRsvpShowName, withdrawRsvp, type RsvpProved } from "@/modules/rsvp/rsvp";
 import { RSVP_BOX_ID } from "@/modules/rsvp/rsvp-box";
 import { REFUSED_SUFFIX, WITHDRAWN_ASKED_SUFFIX, withdrawnProof } from "@/modules/rsvp/withdrawn-proof";
 
@@ -51,7 +51,8 @@ export async function confirmRsvpAction(form: FormData): Promise<void> {
   const now = new Date();
   if (!(await tokenAttemptAllowed(db, token, now))) redirect(`${pageOf(locale, token)}?invalid=1`);
   // The email's «Vin» (§818) may carry the name and the tick; for any other link the service ignores them.
-  const proved = await confirmRsvp(db, token, now, { displayName: String(form.get("name") ?? ""), showName: form.get("showName") === "on" });
+  // The member tick (§829) rides with them, and is taken only for that same row and only under a notice that describes it.
+  const proved = await confirmRsvp(db, token, now, { displayName: String(form.get("name") ?? ""), showName: form.get("showName") === "on", clubMember: form.get("clubMember") === "on" });
   if (!proved) redirect(`${pageOf(locale, token)}?invalid=1`);
   await remember(proved, now);
   redirect(eventPageOf(proved, `#${RSVP_BOX_ID}`));
@@ -109,6 +110,11 @@ export async function withdrawRsvpAction(form: FormData): Promise<void> {
  * A link that is not live — spent, replaced, expired, the event started, or a confirm link — lands on the page's «linkul nu mai merge»,
  * and no address or name is ever read from the form. The page is read again live, drawing the new state and one sentence from `?nume=`.
  *
+ * **The member tick rides in the same form and the same press** (§829, amending §812; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece dacă sunt
+ * membru BVR»): «Sunt membru al grupului …», the person's declared claim, saved by `setRsvpClubMember` under the same rules — the link is read, never spent, and
+ * no address, name or kind is read from the form. A box that was not drawn (`memberBox`) changes nothing: an unticked box posts nothing, so «not drawn»
+ * must not read as «unticked». The sentence comes from `?membru=`, beside the name's.
+ *
  * **The throttle is its own** (`rsvp-name`, thirty an hour per link), not `token-validate`'s ten: that bucket is what «Nu mai vin» and the page's
  * every GET spend, and a flip is a POST plus the redirect's GET — two attempts each, so five flips in an hour would have locked «Nu mai vin» out
  * of its own link. The redirect's GET is paid back here (`refundRateLimit`) because this press, not the person, caused it; a person who
@@ -135,5 +141,11 @@ export async function setNameByLinkAction(form: FormData): Promise<void> {
     now,
   );
   const code = result.ok ? (result.showName ? "shown" : "hidden") : result.reason;
-  redirect(`${pageOf(locale, token)}?nume=${code}`);
+  // The member tick (§829): its own write and its own sentence; a refusal says so and changes nothing, an unchanged tick says nothing new.
+  let member = "";
+  if (form.get("memberBox") === "1") {
+    const swapped = await setRsvpClubMember(db, link.eventId, { token }, { clubMember: form.get("clubMember") === "on" }, now);
+    member = `&membru=${swapped.ok ? (swapped.clubMember ? "on" : "off") : swapped.reason}`;
+  }
+  redirect(`${pageOf(locale, token)}?nume=${code}${member}`);
 }
