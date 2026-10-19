@@ -1836,7 +1836,7 @@ export type SaveEventAndTranslationsInput = {
    */
   placeNamesAsTyped?: boolean;
   /**
-   * The caller writes the event's «Puncte de control» itself right after this save (an import over an
+   * The caller writes the event's «Puncte pe traseu» itself right after this save (an import over an
    * event whose file's list differs, §751, §757), having held that list to the rules: the saved list,
    * about to be replaced, is then not held to them against the new start, end and length.
    */
@@ -2044,7 +2044,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
      * box is not on screen, so nothing is refused and nobody is told).
      */
     discountNoteCleared?: boolean;
-    /** Each written date's saved «Puncte de control» held to the rules against the date as written (§757). */
+    /** Each written date's saved «Puncte pe traseu» held to the rules against the date as written (§757). */
     checkpointsHold?: (member: EditableEvent, date: string) => Promise<void>;
   },
 ): Promise<{
@@ -2727,7 +2727,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   */
   const deadlines = await currentDeadlines(db);
   /*
-    The saved «Puncte de control» are held to the card's rules again against the event as this save
+    The saved «Puncte pe traseu» are held to the card's rules again against the event as this save
     leaves it (§757) — a moved start or gun, a shorter «Timp limită», a shorter route or another GPX —
     inside the transaction. The GPX's length they are measured against when no distance is typed is
     read here, before the transaction opens and its lock is taken (§403).

@@ -34,7 +34,7 @@
  *   «Nu e nimic de tradus» over a Romanian text already written.
  *
  * - «Cine e membru al grupului» (§789): the sentence behind the member tick's «?» (`memberDefinitionEn`, plain);
- * - An event's checkpoints (§757): a point's English name and note in the editor's «Puncte de control» list (`cp[<n>].nameEn`,
+ * - An event's checkpoints (§757): a point's English name and note in the editor's «Puncte pe traseu» list (`cp[<n>].nameEn`,
  *   `cp[<n>].noteEn`) and the English name of each point the GPX's preview offers (`gp[<n>].nameEn`) — the preview's boxes are
  *   `gp[…]` so that a name belongs to one box on the page, the list's saved rows standing beside it under `cp[…]`;
  * - An event's volunteer roles (§765, §791): the «Roluri» card is one form for every role, so each role's boxes carry its key —

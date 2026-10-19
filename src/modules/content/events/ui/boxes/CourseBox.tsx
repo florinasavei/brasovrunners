@@ -47,7 +47,7 @@ import { LanguageTabs } from "./TextBoxes";
  * the reader may write a language's texts (the Redactor): then it opens on the description's tabs
  * alone, since those words are theirs. The type's box has already said the settings are not.
  *
- * Last in the card, after the route's fields, its named card «Puncte de control» (§757, §763): the
+ * Last in the card, after the route's fields, its named card «Puncte pe traseu» (§757, §763): the
  * Organizer writes it although the settings above are not theirs, every other role reads it, so it
  * is drawn whatever the settings. Its boxes post with forms of their own (`CheckpointsCard`).
  */
@@ -63,12 +63,12 @@ export default async function CourseBox({
 }: BoxProps & {
   languages: readonly LanguageEntry[];
   inSeries?: boolean;
-  /** How many «Puncte de control» the saved route has (§757): said on the closed line when above 0 (§760). */
+  /** How many «Puncte pe traseu» the saved route has (§757): said on the closed line when above 0 (§760). */
   checkpointCount?: number;
   /** The GPX's preview is open inside the card (§763): the card opens, and with it «Traseul», for a render that runs no script. */
   checkpointsOpen?: boolean;
   /**
-   * «Puncte de control» (§757), the card's named card after the route's fields (§763): `CheckpointsCard`,
+   * «Puncte pe traseu» (§757), the card's named card after the route's fields (§763): `CheckpointsCard`,
    * whose boxes post with forms of their own beside the save form (`DetachedActionForm`). Absent on
    * the create page, where there is no event to hold points yet.
    */
@@ -102,7 +102,7 @@ export default async function CourseBox({
         // The automatic answer for the event's own date (§394), read by the same function as the pill.
         // Nothing for a date or an hour left blank (§545): there is no sunset to compare them with.
         night: event && start.date && start.time ? clubNightEvent({ ...event, nightOverride: null }).night : false,
-        // «Puncte de control» is «Traseul»'s card with forms of its own (§757): its count, briefly (§760).
+        // «Puncte pe traseu» is «Traseul»'s card with forms of its own (§757): its count, briefly (§760).
         checkpoints: checkpointCount > 0 ? t(`checkpoints.inCourse.${countForm(checkpointCount, locale)}`, { count: checkpointCount }) : null,
       },
       languages.map((entry) => entry.translation),

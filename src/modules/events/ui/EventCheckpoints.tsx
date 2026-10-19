@@ -8,7 +8,7 @@ import { DENSITY } from "@/theme/density";
 import GlyphChip from "./GlyphChip";
 
 /**
- * «Puncte de control» / "Checkpoints" under `#checkpoints` (§757; the owner, 2026-10-13: «I need to put
+ * «Puncte pe traseu» / "Checkpoints" under `#checkpoints` (§757; the owner, 2026-10-13: «I need to put
  * checkpoints and limit times»): a table under the route's maps — the kilometre, the point, what
  * there is (a chip with a glyph **and** its word, never the glyph alone) and the time limit in words —
  * «Timp limită: 1 h 30 min · se închide la 11:30» (§770: the duration from the start, and the clock

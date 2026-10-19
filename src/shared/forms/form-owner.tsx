@@ -6,7 +6,7 @@ import { createContext, type ReactNode, useContext } from "react";
  * The form a box belongs to when it is drawn inside another form's markup (§763).
  *
  * HTML forms cannot nest, so a card with a save of its own that must stand *inside* a card of the
- * event editor's one save form — «Puncte de control» inside «Traseul» — keeps its `<form>` element
+ * event editor's one save form — «Puncte pe traseu» inside «Traseul» — keeps its `<form>` element
  * beside the save form and gives each of its boxes and buttons the `form` attribute naming it: the
  * browser then posts each box with the form it names, and never with the form around it
  * (`FormData`, `form.elements` and the browser's own validation all follow the attribute). This is

@@ -120,7 +120,7 @@ type Props = {
 };
 
 /**
- * «Puncte de control» (§757; the owner, 2026-10-13: «other things for the route: I need to put
+ * «Puncte pe traseu» (§757; the owner, 2026-10-13: «other things for the route: I need to put
  * checkpoints and limit times»): the named card of «Traseul» where the route's points are kept —
  * a name in both languages, the kilometre, what is there (water, food, first aid, timing, direction), an
  * optional time limit (§770: the race's own hours and minutes boxes, counted from the start) and an optional note — and, when the route's GPX has waypoints, the one press

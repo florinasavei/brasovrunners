@@ -36,7 +36,7 @@ export const SECTION_GLYPHS: Record<PageSectionGlyph, ComponentType<SvgIconProps
   registration: HowToRegIcon,
   partner: HandshakeIcon,
   share: ShareIcon,
-  // The editor card's own glyph (`panel-glyphs.ts`, «Puncte de control»).
+  // The editor card's own glyph (`panel-glyphs.ts`, «Puncte pe traseu»).
   checkpoints: PinDropIcon,
   links: LinkIcon,
   programme: ScheduleIcon,

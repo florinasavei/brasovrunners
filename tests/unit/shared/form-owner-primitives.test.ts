@@ -6,7 +6,7 @@ import RecallField, { NeverKeptField, RecallCheckbox, RecallHidden, RecallRadio 
 
 /**
  * §763 (BR-REQ-050-02) — the house primitives write `form=` on their own control when they are
- * drawn under `DetachedFields`, and only then: «Puncte de control» inside «Traseul» posts with a
+ * drawn under `DetachedFields`, and only then: «Puncte pe traseu» inside «Traseul» posts with a
  * form of its own through that attribute (`form-owner.tsx`). The card itself uses some of these;
  * the rest are what another detached card would reach for, and nothing else pins them.
  */

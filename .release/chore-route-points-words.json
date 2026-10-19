@@ -1,0 +1,18 @@
+{
+  "branch": "chore/route-points-words",
+  "decisionsTitle": "«Puncte de control» is «Puncte pe traseu» everywhere a person reads it (amending §757)",
+  "decisionsSection": "**The owner, 2026-10-19, with a screenshot of a group run's public page** (the table «Puncte de control» — Km · Punct · Ce găsești aici · Limită — with the rows «Regrupare» and «Apă»): «În loc de „puncte de control\" spune „puncte pe traseu\"».\n\n**Why it fits.** Since «Regrupare» (§824) and the water and food kinds, most rows of the table are not controls at all, and a group run has no control. The table is a list of the places along the route, so it says so.\n\n**Decision.** One vocabulary on every surface, in both languages. The heading of the event page's table (§757), the preview, the editor's card under «Traseul» (§763), the profile's tick and the bib setting («Număr: punctele de pe traseu pe profil»), the save toasts and the refusals (`CHECKPOINTS_NO_LONGER_HOLD`), the JSON import's notes and the import diff's label, the box summary of a closed «Traseul» («3 puncte pe traseu») and the editor's field labels read «Puncte pe traseu» (heading), «punctele de pe traseu» (running text) and «{count} puncte pe traseu»; in English «Points on the route» and «points on the route». A sentence never says «pe traseu» twice by accident.\n\n**What stays.** Code identifiers (`checkpoint`, `event_checkpoints`, `CheckpointsCard`, the message keys, the test ids), the anchors and section ids (`#checkpoints`, `#box-checkpoints`: a link someone shared still lands), the history in `DECISIONS.md` and `CHANGELOG.md`, the owner's quotations kept verbatim in comments, and the GPX reader's pattern that still recognises a waypoint called «punct de control» or «control point» as a timing point. No legal template said «puncte de control», so no text the club approved changes. No migration.\n\n**Amends** §757 (the table's name), §763 and §802 (the card's and the profile's words) and §824 (the kinds' vocabulary); their rules are untouched.",
+  "changelogLine": "- **«Puncte de control» is «Puncte pe traseu»** — the event page's table, the editor's card, the bib setting, the toasts and the import's notes say «Puncte pe traseu» (English: «Points on the route»); anchors and ids are unchanged. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-011-01",
+      "text": "Amends criteria 77, 82 and 83. The table under the route's maps, the heading of the page's checkpoints, is «Puncte pe traseu» in Romanian and «Points on the route» in English, with the section's anchor `#checkpoints` unchanged; every other criterion that names the table by its old words «Puncte de control» / «Checkpoints» means this heading (2026-10-19, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-050-02",
+      "text": "Amends criteria 123, 135, 140, 150 and 175. The event editor's card of the route's checkpoints is titled «Puncte pe traseu» (English «Points on the route»), its save toast reads «Punctele de pe traseu au fost salvate.» and the bib setting is «Număr: punctele de pe traseu pe profil», with `#box-checkpoints` unchanged; the old words «Puncte de control» in those criteria name this card (2026-10-19, `DECISIONS.md` §NNN)."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "«Puncte de control» is «Puncte pe traseu» everywhere a person reads it"
+}

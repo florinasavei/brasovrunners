@@ -123,7 +123,7 @@ describe("§406 the page's sections, one list", () => {
   it("gives every card section the id of the card the editor draws for it", () => {
     const boxes = ["KindBox", "TextBoxes", "WhenBox", "PlaceBox", "CourseBox", "CostBox", "RegistrationBox", "CoHostsBox", "LinksBox", "ProgrammeBox", "StartListBox"]
       .map((file) => read(`src/modules/content/events/ui/boxes/${file}.tsx`))
-      // «Puncte de control» (§757) is drawn by its own file, a named card of «Traseul» (§763).
+      // «Puncte pe traseu» (§757) is drawn by its own file, a named card of «Traseul» (§763).
       .concat(read("src/modules/content/events/ui/CheckpointsCard.tsx"))
       .join("\n");
     for (const section of PAGE_SECTIONS) {
@@ -164,7 +164,7 @@ describe("§406 the editor lays its cards out in the page's order, on both pages
       // The cost's card is inside the first box since §466, the place inside «Când și unde» and the
       // rules inside «Program, regulament și declarație» since §481: the page still draws each in its place.
       // The public list inside the same card since §512.
-      // «Puncte de control» inside «Traseul» (§757): its own forms, linked from the course card.
+      // «Puncte pe traseu» inside «Traseul» (§757): its own forms, linked from the course card.
       // The programme, the rules and the public list inside «Participare, înscrieri și regulament» (§760).
       // The public list stands right under the registration card since §825, so it is listed before the share links.
       expect(NESTED).toEqual(["place", "cost", "startList", "checkpoints", "programme", "rules"]);
@@ -253,7 +253,7 @@ describe("§406 whether the page draws each section", () => {
     for (const id of PAGE_SECTION_IDS) expect(states[id], id).toBe(true);
   });
 
-  it("draws «Puncte de control» only while the event has a checkpoint, and «Traseul»'s card with it (§757)", () => {
+  it("draws «Puncte pe traseu» only while the event has a checkpoint, and «Traseul»'s card with it (§757)", () => {
     expect(drawn(bare()).checkpoints).toBe(false);
     const withPoints = bare();
     withPoints.checkpointCount = 1;

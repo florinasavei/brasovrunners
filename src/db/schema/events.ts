@@ -308,7 +308,7 @@ export const events = pgTable(
     /**
      * «Arată profilul traseului pe pagină» (§802, §805): whether the event page draws the elevation profile
      * the GPX gives (`routes/elevation/`). On by default, so every event that had a file keeps its chart; off, the
-     * page draws no chart — the maps, the GPX download and the table «Puncte de control» stay as they were. The
+     * page draws no chart — the maps, the GPX download and the table «Puncte pe traseu» stay as they were. The
      * checkpoints' own «Arată pe profilul traseului» and the race number's design tick (§750) are other settings.
      * Carried by a series and a duplicate like the route (§49).
      */

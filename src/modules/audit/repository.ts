@@ -532,7 +532,7 @@ export type AuditAction =
   /** «Dă-i rolul …» (§761): the organizers gave a volunteer one role — the volunteer's id, the role's and the one before. */
   | "volunteer.assigned"
   /**
-   * An event's checkpoints saved on its editor's «Puncte de control» card (§757), or taken from the
+   * An event's checkpoints saved on its editor's «Puncte pe traseu» card (§757), or taken from the
    * route's GPX: how many were added, changed and removed, and the list before and after — each
    * point's kilometre, its name and its cut-off. Entity `event`. The club's own work about a route,
    * never a participant.

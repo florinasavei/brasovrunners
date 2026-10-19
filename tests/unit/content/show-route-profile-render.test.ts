@@ -14,7 +14,7 @@ import { elevationGpx } from "../../helpers/elevation-gpx";
  * «Arată profilul traseului pe pagină», as the editor draws it: a real tick box (never a toggle button) posted with its marker
  * `event.showRouteProfile.present` — as «Informații medicale» (§557) — checked for an event that says nothing, unchecked when the
  * club switched it off, its help under it, a note when there is no GPX file yet, both languages; nothing of it for a role that
- * may only read the settings. And the «Puncte de control» card's preview: the chart still drawn with one sentence when the tick
+ * may only read the settings. And the «Puncte pe traseu» card's preview: the chart still drawn with one sentence when the tick
  * is off. The page's own gate is proved in `tests/integration/cms/event-draft-preview.test.ts`.
  */
 let language: "ro" | "en" = "ro";
@@ -94,7 +94,7 @@ describe("§802 the tick «Arată profilul traseului pe pagină» in «Traseul»
     expect(markup).toContain('<input type="hidden" name="event.showRouteProfile.present" value="1"/>');
     expect(markup).toContain("Arată profilul traseului pe pagină");
     expect(markup).toContain('data-testid="show-route-profile-help"');
-    expect(markup).toContain("Debifat, pagina nu desenează profilul din GPX; tabelul «Puncte de control» și hărțile rămân.");
+    expect(markup).toContain("Debifat, pagina nu desenează profilul din GPX; tabelul «Puncte pe traseu» și hărțile rămân.");
     expect(markup).toContain("Numărul de concurs are setarea lui în „Cum arată numărul de concurs”.");
     // Never a toggle button: the setting is the box.
     expect(markup).not.toMatch(/role="switch"/);
@@ -107,7 +107,7 @@ describe("§802 the tick «Arată profilul traseului pe pagină» in «Traseul»
     const markup = await course(race({ routeGpx: GPX }));
     expect(tickOf(markup)).toContain("checked");
     expect(markup).toContain("Show the route profile on the page");
-    expect(markup).toContain("Unticked, the page draws no profile from the GPX; the «Checkpoints» table and the maps stay.");
+    expect(markup).toContain("Unticked, the page draws no profile from the GPX; the «Points on the route» table and the maps stay.");
     expect(markup).toContain("The race number has its own setting in “What the race number looks like”.");
     language = "ro";
   });
@@ -145,7 +145,7 @@ describe("§802 the tick «Arată profilul traseului pe pagină» in «Traseul»
   });
 });
 
-describe("§802 the «Puncte de control» card's preview when the tick is off", () => {
+describe("§802 the «Puncte pe traseu» card's preview when the tick is off", () => {
   const PROFILE = parseGpxElevation(elevationGpx())!;
   const base = { locale: "ro" as const, eventId: EVENT_ID, checkpoints: [], mayEdit: true, routeKm: 9, profile: PROFILE, distanceMeters: 9000, gpx: null, previewOpen: false };
   const card = async (over: Partial<ComponentProps<typeof CheckpointsCard>> = {}) => html(createElement(CheckpointForms, { locale: base.locale, eventId: EVENT_ID, mayEdit: true }, await CheckpointsCard({ ...base, ...over })));

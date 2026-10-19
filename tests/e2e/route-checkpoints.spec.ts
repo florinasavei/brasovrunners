@@ -19,7 +19,7 @@ import { openEditorBox, openFold } from "./support/fold";
  * and one with a time limit longer than the race's, adds two checkpoints — one ticked «Direcționare» —
  * with their time limits typed as hours and minutes through the card's own form, and the bib designer's
  * preview address changes with them; the published page then shows «Timp limită: 2 h 30 min», the table
- * «Puncte de control» with both points, each with its limit and the clock it closes at («Timp limită: 1 h ·
+ * «Puncte pe traseu» with both points, each with its limit and the clock it closes at («Timp limită: 1 h ·
  * se închide la 11:00»), and the finish closing at 12:30.
  *
  * The race is written straight into the database — the setup, not the subject — one per project and
@@ -109,10 +109,10 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     await page.waitForURL(/saved=event/);
     await hydrated(page);
 
-    // «Puncte de control»: a named card of «Traseul» (§763), opened the way a person does, with three spare rows.
+    // «Puncte pe traseu»: a named card of «Traseul» (§763), opened the way a person does, with three spare rows.
     const card = page.getByTestId("event-checkpoints-card");
     await expect(page.locator("#box-course").getByTestId("event-checkpoints-card")).toHaveCount(1);
-    await openEditorBox(page, "Puncte de control");
+    await openEditorBox(page, "Puncte pe traseu");
     await expect(card.locator("xpath=self::details")).toHaveAttribute("open", "");
     await expect(card).toContainText("Lungimea traseului: 21 km.");
     const spare = card.getByTestId("checkpoint-new-row");
@@ -140,7 +140,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     const save = card.getByRole("button", { name: "Salvează punctele" });
     expect((await save.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await save.click();
-    await expect(page.getByTestId("toast-live")).toContainText("Punctele de control au fost salvate.", { timeout: 20_000 });
+    await expect(page.getByTestId("toast-live")).toContainText("Punctele de pe traseu au fost salvate.", { timeout: 20_000 });
     await hydrated(page);
     await expect(page.getByTestId("checkpoint-card")).toHaveCount(2);
 
@@ -157,7 +157,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     await page.goto(`/ro/evenimente/${race.slug}`);
     await expect(page.getByTestId("race-time-limit")).toHaveText("2 h 30 min");
     const table = page.getByTestId("event-checkpoints");
-    await expect(table.getByRole("heading", { name: "Puncte de control" })).toBeVisible();
+    await expect(table.getByRole("heading", { name: "Puncte pe traseu" })).toBeVisible();
     const rows = table.getByTestId("checkpoint-row");
     await expect(rows).toHaveCount(2);
     await expect(rows.nth(0)).toContainText("7,5 km");
@@ -187,7 +187,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     // The saved points on the editor's closed lines say the limit and the clock it closes at.
     await page.goto(`/ro/admin/events/${race.id}`);
     await hydrated(page);
-    const cardAgain = await openEditorBox(page, "Puncte de control");
+    const cardAgain = await openEditorBox(page, "Puncte pe traseu");
     await expect(cardAgain).toContainText("timp limită 1 h · se închide la 11:00");
     await expect(cardAgain).toContainText("timp limită 2 h · se închide la 12:00");
     // The two boxes come back as they were saved: one hour and no minutes (the editor's own «0» for none).
@@ -211,7 +211,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     await page.goto(`/ro/admin/events/${race.id}`);
     await hydrated(page);
 
-    const card = await openEditorBox(page, "Puncte de control");
+    const card = await openEditorBox(page, "Puncte pe traseu");
     await card.getByTestId("checkpoints-gpx-offer").click();
     await page.waitForURL(/checkpointsGpx=1/);
     await hydrated(page);
@@ -240,22 +240,22 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     // A point changed: its English name, saved by «Salvează punctele» from inside «Traseul».
     await page.goto(`/ro/admin/events/${race.id}`);
     await hydrated(page);
-    const again = await openEditorBox(page, "Puncte de control");
+    const again = await openEditorBox(page, "Puncte pe traseu");
     const first = again.getByTestId("checkpoint-card").nth(0);
     await openFold(first);
     await first.getByLabel("Numele (engleză)").fill("The spring above the town");
     await again.getByRole("button", { name: "Salvează punctele" }).click();
-    await expect(page.getByTestId("toast-live")).toContainText("Punctele de control au fost salvate.", { timeout: 20_000 });
+    await expect(page.getByTestId("toast-live")).toContainText("Punctele de pe traseu au fost salvate.", { timeout: 20_000 });
 
     // A point removed: «Scoate acest punct» ticked, then saved.
     await page.goto(`/ro/admin/events/${race.id}`);
     await hydrated(page);
-    const third = await openEditorBox(page, "Puncte de control");
+    const third = await openEditorBox(page, "Puncte pe traseu");
     const second = third.getByTestId("checkpoint-card").nth(1);
     await openFold(second);
     await second.getByRole("checkbox", { name: /Scoate acest punct/ }).check();
     await third.getByRole("button", { name: "Salvează punctele" }).click();
-    await expect(page.getByTestId("toast-live")).toContainText("Punctele de control au fost salvate.", { timeout: 20_000 });
+    await expect(page.getByTestId("toast-live")).toContainText("Punctele de pe traseu au fost salvate.", { timeout: 20_000 });
 
     const saved = await withDatabase((client) =>
       client.query<{ name_ro: string; name_en: string }>(`SELECT name_ro, name_en FROM event_checkpoints WHERE event_id = $1 ORDER BY km`, [race.id]),
@@ -278,7 +278,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     try {
       await signIn(page, "Dev Administrator");
       await page.goto(`/ro/admin/events/${race.id}`);
-      const card = await openEditorBox(page, "Puncte de control");
+      const card = await openEditorBox(page, "Puncte pe traseu");
       await openEditorBox(page, "Adaugă puncte");
       const spare = card.getByTestId("checkpoint-new-row").first();
       await spare.getByLabel("Kilometrul").fill("30");
@@ -293,7 +293,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
       // The same for the time limits, with the refusal only the server makes (the browser holds the boxes' own bounds,
       // so «60 minute» never leaves the page): a nearer point with a longer limit than a farther one. Both boxes of both
       // rows come back as typed (§770).
-      await openEditorBox(page, "Puncte de control");
+      await openEditorBox(page, "Puncte pe traseu");
       await openEditorBox(page, "Adaugă puncte");
       const rows = after.getByTestId("checkpoint-new-row");
       await fillRow(rows.nth(0), { km: "5", ro: "Prima", en: "First", kinds: [], hours: "2", minutes: "0" });
@@ -317,7 +317,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
 /*
   §802 (amending §718, §741, §757; the owner, 2026-10-16: «I would like to have a widget actually! And read it from the
   GPX» — «select which ones to show on the elevation profile»): the route's elevation profile on the event page, above
-  the table «Puncte de control», with the pins of the checkpoints the club left ticked and the pointer's readout, and
+  the table «Puncte pe traseu», with the pins of the checkpoints the club left ticked and the pointer's readout, and
   the same chart as a preview in the editor's card with the tick on each point. A race of 9 km with the sample GPX's
   altitudes and four checkpoints: water at 3.8 km, food at 4.5, water at 6.2, and a first-aid point at 7.5 that is
   unticked — in the table, not on the chart.
@@ -517,7 +517,7 @@ test.describe("§802 the route's elevation profile", () => {
     await signIn(page, "Dev Administrator");
     await page.goto(`/ro/admin/events/${race.id}`);
     await hydrated(page);
-    const card = await openEditorBox(page, "Puncte de control");
+    const card = await openEditorBox(page, "Puncte pe traseu");
 
     // «Așa apare pe pagină»: the compact chart, three pins, above the rows, with the sentence that it follows a save.
     const preview = card.getByTestId("checkpoints-preview");
@@ -548,7 +548,7 @@ test.describe("§802 the route's elevation profile", () => {
     await openFold(hut);
     await hut.getByRole("checkbox", { name: "Arată pe profilul traseului" }).uncheck();
     await card.getByRole("button", { name: "Salvează punctele" }).click();
-    await expect(page.getByTestId("toast-live")).toContainText("Punctele de control au fost salvate.", { timeout: 20_000 });
+    await expect(page.getByTestId("toast-live")).toContainText("Punctele de pe traseu au fost salvate.", { timeout: 20_000 });
     await hydrated(page);
     await expect(page.getByTestId("checkpoints-preview").getByTestId("elevation-pin")).toHaveCount(2);
     const stored = await withDatabase((client) => client.query<{ name_ro: string; on_profile: boolean }>(`SELECT name_ro, on_profile FROM event_checkpoints WHERE event_id = $1 ORDER BY km`, [race.id]));
@@ -599,7 +599,7 @@ test.describe("§802 the route's elevation profile", () => {
     // The editor: the tick comes back unticked; the card's preview still draws the chart and says the page does not.
     const again = await openEditorBox(page, "Traseul");
     await expect(again.getByRole("checkbox", { name: "Arată profilul traseului pe pagină" })).not.toBeChecked();
-    const checkpoints = await openEditorBox(page, "Puncte de control");
+    const checkpoints = await openEditorBox(page, "Puncte pe traseu");
     const preview = checkpoints.getByTestId("checkpoints-preview");
     await expect(preview.getByTestId("checkpoints-preview-off")).toHaveText("Profilul e oprit pe pagină: vezi „Arată profilul traseului pe pagină” în «Traseul».");
     await expect(preview.getByTestId("elevation-pin")).toHaveCount(3);

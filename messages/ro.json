@@ -766,7 +766,7 @@
     },
     "timeLimit": "Timp limită",
     "checkpoints": {
-      "heading": "Puncte de control",
+      "heading": "Puncte pe traseu",
       "columns": {
         "km": "Km",
         "name": "Punct",
@@ -2175,8 +2175,8 @@
       "CHECKPOINT_CUTOFF_NO_START": "Timpul limită al punctului „{name}” se numără de la start, iar startul nu are încă o oră. Scrie întâi ora startului (sau a startului cursei) și salvează evenimentul, apoi pune timpul limită.",
       "CHECKPOINT_CUTOFF_AFTER_LATER": "Timpul limită al punctului „{name}” ({cutoff}) e mai lung decât cel al punctului „{later}” ({laterCutoff}), care e mai departe pe traseu. Alergătorii trec întâi pe la „{name}”: timpul de aici trebuie să fie mai scurt.",
       "CHECKPOINT_CUTOFF_AFTER_END": "Timpul limită {cutoff} al punctului „{name}” e mai lung decât {limit}, cât durează evenimentul de la start până la sosire. Alege un timp până la {limit} sau mărește „Timp limită” al evenimentului.",
-      "CHECKPOINTS_NO_LONGER_HOLD": "Salvarea ar strica „Puncte de control”: {detail} Schimbă întâi punctul în cardul lui, apoi salvează din nou. Nu s-a salvat nimic.",
-      "CHECKPOINTS_NO_LONGER_HOLD_DATED": "La una dintre date ({date}), salvarea ar strica „Puncte de control”: {detail} Schimbă întâi punctul la acea dată sau salvează fără ea. Nu s-a salvat nimic, la nicio dată.",
+      "CHECKPOINTS_NO_LONGER_HOLD": "Salvarea ar strica „Puncte pe traseu”: {detail} Schimbă întâi punctul în cardul lui, apoi salvează din nou. Nu s-a salvat nimic.",
+      "CHECKPOINTS_NO_LONGER_HOLD_DATED": "La una dintre date ({date}), salvarea ar strica „Puncte pe traseu”: {detail} Schimbă întâi punctul la acea dată sau salvează fără ea. Nu s-a salvat nimic, la nicio dată.",
       "CHECKPOINT_NOTE_ONE_LANGUAGE": "Nota punctului „{name}” se scrie în ambele limbi sau în niciuna, de cel mult {max} de caractere.",
       "CHECKPOINT_TOO_MANY": "Sunt prea multe puncte: cel mult {max} pe un traseu.",
       "VOLUNTEER_AGREEMENT_MISSING": "Niciun contract de voluntariat nu e în vigoare. Aprobă-l întâi în «Documente legale»: șablonul e gata.",
@@ -2459,7 +2459,7 @@
       "routeStrava": "Strava: linkul sau codul de încorporare",
       "routeStravaHelp": "Lipește linkul traseului de pe Strava (strava.com/routes/…) sau codul de încorporare (Share → Embed). Pe pagină apar harta, încărcată doar când vizitatorul apasă, și linkul.",
       "showRouteProfile": "Arată profilul traseului pe pagină",
-      "showRouteProfileHelp": "Debifat, pagina nu desenează profilul din GPX; tabelul «Puncte de control» și hărțile rămân. Numărul de concurs are setarea lui în „Cum arată numărul de concurs”.",
+      "showRouteProfileHelp": "Debifat, pagina nu desenează profilul din GPX; tabelul «Puncte pe traseu» și hărțile rămân. Numărul de concurs are setarea lui în „Cum arată numărul de concurs”.",
       "showRouteProfileNoGpx": "Încă nu e salvat un fișier GPX, deci nu e nimic de desenat: încarcă unul la «Linkuri și fișiere» și salvează.",
       "routeGpx": {
         "label": "Fișierul GPX al traseului",
@@ -2682,13 +2682,13 @@
         "showProfile": "Profilul traseului",
         "showProfileHelp": "Bifat: pe fiecare număr, sub nume, o fâșie cu profilul traseului. Alegi mai jos de unde vine și cum stă.",
         "showProfileNoGpx": "Evenimentul nu are GPX: încarcă-l în „Traseul” sau alege o poză.",
-        "showCheckpoints": "Punctele de control pe profil",
+        "showCheckpoints": "Punctele de pe traseu pe profil",
         "showCheckpointsHelp": "Bifat: un cerc cu semnul lui deasupra profilului, la fiecare punct bifat „Arată pe profilul traseului”, și dedesubt „km 5 · apă” sau „km 12”, unde încape. Doar la profilul desenat din GPX.",
         "showProfileScale": "Kilometrii și altitudinile pe profil",
         "showProfileScaleHelp": "Bifat: sub profil, liniuțe la distanțe egale, cu kilometrul lor, și altitudinea cea mai mare și cea mai mică. Apar doar unde încap, la profilul desenat din GPX.",
         "showCheckpointTimes": "…cu orele limită",
         "showCheckpointTimesHelp": "Bifat: lângă fiecare punct, și ora la care se închide, „km 12 · 11:30”. Dacă nu încap toate orele, nu se scrie niciuna; apoi pleacă kilometrii care nu încap. Semnele rămân mereu.",
-        "showCheckpointsNone": "Evenimentul nu are puncte de control: adaugă-le în „Traseul” › „Puncte de control”.",
+        "showCheckpointsNone": "Evenimentul nu are puncte pe traseu: adaugă-le în „Traseul” › „Puncte pe traseu”.",
         "showEmergency": "Telefon pentru urgențe",
         "showEmergencyHelp": "Bifat: pe fiecare număr, mic, un rând cu eticheta și unul sau două telefoane. Scrie numerele organizatorilor, nu ale participanților.",
         "emergencyPhone": "Telefonul organizatorilor",
@@ -9009,8 +9009,8 @@
         "publicListOff": "Lista publică a participanților a rămas oprită: nota de confidențialitate care o descrie nu e încă în vigoare aici.",
         "seriesNotApplied": "Regula seriei din fișier nu s-a aplicat: evenimentul e o singură dată.",
         "volunteersSkipped": "Din categoriile, persoanele de contact și rolurile de voluntari din fișier s-au lăsat deoparte cele pe care regulile cardului «Voluntari» nu le primesc (în total: {count}).",
-        "checkpointKindsDropped": "La punctele de control din fișier s-au lăsat deoparte tipurile pe care această versiune nu le știe (în total: {count}).",
-        "checkpointLimitsDropped": "La punctele de control din fișier s-au lăsat deoparte orele limită care nu se puteau număra de la start (în total: {count}). Scrie-le din nou ca „Timp limită”."
+        "checkpointKindsDropped": "La punctele de pe traseu din fișier s-au lăsat deoparte tipurile pe care această versiune nu le știe (în total: {count}).",
+        "checkpointLimitsDropped": "La punctele de pe traseu din fișier s-au lăsat deoparte orele limită care nu se puteau număra de la start (în total: {count}). Scrie-le din nou ca „Timp limită”."
       },
       "refusals": {
         "tooLarge": "Fișierul e prea mare pentru un fișier de eveniment.",
@@ -9075,7 +9075,7 @@
             "name": "Numele fișierului GPX",
             "url": "Fișierul GPX"
           },
-          "checkpoints": "Punctele de control",
+          "checkpoints": "Punctele de pe traseu",
           "showRouteProfile": "Profilul traseului arătat pe pagină"
         },
         "links": "Linkuri și fișiere",
@@ -9164,7 +9164,7 @@
             "showWebsite": "Număr: adresa site-ului",
             "footerText": "Număr: rândul clubului",
             "showProfile": "Număr: profilul traseului",
-            "showCheckpoints": "Număr: punctele de control pe profil",
+            "showCheckpoints": "Număr: punctele de pe traseu pe profil",
             "showCheckpointTimes": "Număr: orele limită pe profil",
             "showProfileScale": "Număr: kilometrii și altitudinile pe profil",
             "showDistance": "Număr: insigna distanței",
@@ -10268,7 +10268,7 @@
       }
     },
     "checkpoints": {
-      "title": "Puncte de control",
+      "title": "Puncte pe traseu",
       "intro": "Unde e apă, mâncare, prim ajutor, cronometrare, cine arată drumul sau regrupare, și în cât timp de la start trece ultimul alergător. Apar în tabel, pe profilul traseului și pe număr.",
       "saveNote": "Punctele se salvează doar cu „Salvează punctele”, nu cu „Salvează” din pagină.",
       "routeLength": "Lungimea traseului: {km} km. Niciun punct nu poate fi dincolo de ea.",
@@ -10278,7 +10278,7 @@
         "few": "{count} puncte",
         "other": "{count} de puncte"
       },
-      "empty": "Niciun punct de control.",
+      "empty": "Niciun punct pe traseu.",
       "readOnly": "Poți citi lista; Organizatorul, Administratorul și Superadministratorul o scriu. Cere-le orice schimbare.",
       "rowTitle": "{km} km — {name}",
       "cutoffAside": "timp limită {duration}",
@@ -10323,9 +10323,9 @@
       "save": "Salvează punctele",
       "saving": "Se salvează…",
       "inCourse": {
-        "one": "{count} punct de control",
-        "few": "{count} puncte de control",
-        "other": "{count} de puncte de control"
+        "one": "{count} punct pe traseu",
+        "few": "{count} puncte pe traseu",
+        "other": "{count} de puncte pe traseu"
       },
       "gpx": {
         "take": "Ia punctele din GPX",
@@ -12615,9 +12615,9 @@
       "teamBoxHidden": "Caseta a fost scoasă de pe site.",
       "teamBoxMoved": "Ordinea casetelor a fost schimbată.",
       "teamBoxDeleted": "Caseta a fost ștearsă.",
-      "checkpointsSaved": "Punctele de control au fost salvate.",
+      "checkpointsSaved": "Punctele de pe traseu au fost salvate.",
       "checkpointsAdded": "Punctele din GPX au fost adăugate.",
-      "checkpointsUnchanged": "Nimic de schimbat la punctele de control.",
+      "checkpointsUnchanged": "Nimic de schimbat la punctele de pe traseu.",
       "volunteerAgreementRequested": "Linkul contractului pleacă pe email.",
       "volunteerAgreementRecorded": "Contract înregistrat ca semnat pe hârtie.",
       "badgeDesignSaved": "Ecusonul a fost salvat.",

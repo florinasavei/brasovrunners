@@ -58,7 +58,7 @@ const XS_DENSITY = new RegExp(`${PROP_THEN_XS}DENSITY\\.(\\w+),\\s*sm:\\s*(-?[\\
  * never excuses a literal in another.
  */
 const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
-  // «Puncte de control» (§757): at 320 pixels the table is a stack of bordered blocks and is a table from `sm` up —
+  // «Puncte pe traseu» (§757): at 320 pixels the table is a stack of bordered blocks and is a table from `sm` up —
   // a layout that exists only on a phone (its `sm` side is zero or the table's own cell padding), not a phone
   // override of a desktop spacing, so there is no wider value for a density step to tighten.
   { file: "src/modules/events/ui/EventCheckpoints.tsx", line: "mb: { xs: 1, sm: 0 },", reason: "the gap between two stacked rows, which a table row does not have" },
