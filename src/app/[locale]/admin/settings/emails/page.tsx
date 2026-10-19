@@ -10,7 +10,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import { renderBilingual } from "@/modules/notifications/templates";
-import { EMAIL_SAMPLE_FAMILY, emailSampleConfirmationRetry } from "@/modules/notifications/domain/email-sample";
+import { EMAIL_SAMPLE_FAMILY, emailSampleConfirmationRetry, emailSampleDeadlines } from "@/modules/notifications/domain/email-sample";
 import {
   emailCopyPrefill,
   emailSampleActionUrl,
@@ -21,7 +21,7 @@ import {
 } from "@/modules/notifications/email-copy-fields";
 import { getDb } from "@/db/client";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
-import { deadlineWords, hoursPhrase, leadPhrase } from "@/modules/deadlines/domain/duration-words";
+import { daysPhrase, deadlineWords, hoursPhrase, leadPhrase } from "@/modules/deadlines/domain/duration-words";
 import { replyToHeader, resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
 import { readClubNotices } from "@/modules/notifications/club-notices";
@@ -41,6 +41,9 @@ import { readEmailTransport } from "@/modules/notifications/email-transport";
 import ClubNoticesPanel from "@/modules/notifications/ui/ClubNoticesPanel";
 import CalendarRsvpPanel from "@/modules/notifications/ui/CalendarRsvpPanel";
 import { readCalendarRsvpTo } from "@/modules/notifications/calendar-rsvp";
+import RsvpAskAudiencePanel from "@/modules/notifications/ui/RsvpAskAudiencePanel";
+import { readRsvpAskAudienceSetting } from "@/modules/rsvp/ask-audience";
+import { noticeDescribesRsvpAskAnswerers } from "@/modules/legal-documents/repository";
 import ClubMailboxRejectionsPanel from "@/modules/notifications/ui/ClubMailboxRejectionsPanel";
 import { readClubMailboxRejections } from "@/modules/notifications/club-mailbox-rejections";
 import OutboxQueuePanel from "@/modules/notifications/ui/OutboxQueuePanel";
@@ -58,7 +61,7 @@ import { readOutboxDelivery } from "@/modules/notifications/outbox-delivery";
 import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
 import { countForm } from "@/i18n/count-form";
 import { LEGAL_TEMPLATES_DIGEST_CLOCK } from "@/modules/legal-documents/domain/templates-notice";
-import { RSVP_ASK_CLOCK } from "@/modules/rsvp/domain/ask";
+import { rsvpAskClock } from "@/modules/rsvp/domain/ask";
 import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
 import { requireStaff } from "@/modules/staff-identity/session";
 import MovedFragmentHop from "@/modules/staff-identity/ui/MovedFragmentHop";
@@ -156,7 +159,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   // The club's deadlines (§377), straight through like the words: the panel that sets them, the
   // when-lines that state them, the previews that print them and the forecast (§383), as they now stand.
   const deadlinesRead = readDeadlines(db);
-  const [plan, transport, volume, queue, relayView, notices, written, deadlines, forecast, addressCap, shownAddress, outboxDelivery, failedRetryable, calendarRsvp] = await Promise.all([
+  const [plan, transport, volume, queue, relayView, notices, written, deadlines, forecast, addressCap, shownAddress, outboxDelivery, failedRetryable, calendarRsvp, rsvpAskAudience, answerersDescribed] = await Promise.all([
     readEmailPlan(db),
     // Which road each group takes, Gmail's cap and pace (§443), beside the plan it spends less of.
     readEmailTransport(db),
@@ -197,6 +200,9 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     maySendNow ? countRetryableFailed(db, now) : 0,
     // «Răspunsurile din calendar merg la» (§672): the club's own address, read straight through like the others.
     readCalendarRsvpTo(db),
+    // «Cui îi trimitem întrebarea „Vii?"» (§NNN): who the day-before question is asked of, and whether the notice in force names the second audience.
+    readRsvpAskAudienceSetting(db),
+    noticeDescribesRsvpAskAnswerers(db, now),
   ]);
   /*
     What «Trimite acum» said about Mailgun's stop (§622): how many Gmail carried and until when Mailgun
@@ -223,8 +229,12 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     reminder: pageWords.reminder ?? "",
     // The hour the legal templates' digest opens at (§775), from the one constant the email reads too.
     digestHour: LEGAL_TEMPLATES_DIGEST_CLOCK,
-    // The hour the «Vii mâine?» question opens at (§818), from the one constant the job reads too.
-    askHour: RSVP_ASK_CLOCK,
+    // The hour the «Vii?» question opens at, and how many days before the start (§818, §NNN), from the club's «Termene» — the numbers the job reads too.
+    askHour: rsvpAskClock(deadlines.deadlines.rsvpAskHour),
+    askDays: daysPhrase(locale, Math.max(deadlines.deadlines.rsvpAskDaysBefore, 1)),
+    // Who it is asked of (§NNN), in the club's choice: said in the long line and the short one.
+    askWho: t(`emails.rsvpAskWho.long.${rsvpAskAudience.audience}`),
+    askWhoShort: t(`emails.rsvpAskWho.short.${rsvpAskAudience.audience}`),
     // The club's limit per address, for the one message that states it (§389).
     people: t(`emails.addressCap.people.${countForm(perAddress, locale)}`, { count: perAddress }),
   };
@@ -238,8 +248,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const retryWords = hoursPhrase(locale, verificationRetryHours);
   const retryLine =
     verificationRetries > 0 ? t("emails.confirmationRetry", { retry: retryWords, times: t(`emails.retryTimes.${countForm(verificationRetries, locale)}`, { count: verificationRetries }) }) : t("emails.confirmationRetryOff");
+  // «Vii?» switched off (§NNN): zero days is «not at all», said in words of its own as the reminder's zero is.
+  const askOff = deadlines.deadlines.rsvpAskDaysBefore === 0;
   const whenOf = (type: EmailMessageType): string => {
     if (type === "EVENT_REMINDER" && reminderOff) return t("emails.reminderOff.when");
+    if (type === "RSVP_ASK" && askOff) return t("emails.rsvpAskOff.when");
     const line = t(`emails.when.${type}`, whenValues);
     // The verification email re-sent by itself (§653), in the club's numbers — or that it is off.
     if (type === "VERIFY_REGISTRATION_EMAIL") return `${line} ${retryLine}`;
@@ -256,7 +269,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const whenMoreOf = (type: EmailMessageType): string | undefined =>
     t.has(`emails.whenMore.${type}`) ? t(`emails.whenMore.${type}`, whenValues) : undefined;
   const whenShortOf = (type: EmailMessageType): string =>
-    type === "EVENT_REMINDER" && reminderOff ? t("emails.reminderOff.whenShort") : t(`emails.whenShort.${type}`, whenValues);
+    type === "EVENT_REMINDER" && reminderOff
+      ? t("emails.reminderOff.whenShort")
+      : type === "RSVP_ASK" && askOff
+        ? t("emails.rsvpAskOff.whenShort")
+        : t(`emails.whenShort.${type}`, whenValues);
 
   const emailsPath = getPathname({ locale, href: "/admin/settings/emails" });
   // The club's deadlines (§377), as the outbox gives every message: the numbers the words say.
@@ -284,6 +301,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     // The club's deadlines in force (§377), which the send gives every message as numbers.
     sample.timings = timings;
     sample.replyTo = replyTo;
+    // «Vii {rsvpAskDay} la …?» says the club's days from «Termene», each half in its own language (§NNN).
+    if (messageType === "RSVP_ASK") {
+      sample.rsvpAskDay = emailSampleDeadlines(emailLocale, deadlines.deadlines).rsvpAskDay;
+      sample.rsvpAskDayOther = emailSampleDeadlines(emailLocale === "ro" ? "en" : "ro", deadlines.deadlines).rsvpAskDay;
+    }
     // And the club's limit per address, on the message that states it (§389): the link's shape —
     // with who the sample address holds and the person its form named (§446).
     if (messageType === "REGISTER_ANOTHER_PERSON") {
@@ -377,6 +399,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {saved === "deliveryTiming" && <Alert severity="success">{t("emails.deliveryTiming.saved")}</Alert>}
         {saved === "clubNotices" && <Alert severity="success">{t("emails.clubNotices.saved")}</Alert>}
         {saved === "calendarRsvp" && <Alert severity="success">{t("emails.calendarRsvp.saved")}</Alert>}
+        {saved === "rsvpAskAudience" && <Alert severity="success">{t("emails.rsvpAskAudience.saved")}</Alert>}
         {saved === "emailCopy" && <Alert severity="success">{t("emails.copy.saved")}</Alert>}
         {saved === "emailCopyReset" && <Alert severity="success">{t("emails.copy.resetDone")}</Alert>}
         {saved === "emailCopySamples" && <Alert severity="success">{t("emails.copy.samplesReplaced")}</Alert>}
@@ -437,6 +460,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         the Administrator changes it.
       */}
       <CalendarRsvpPanel locale={locale} state={calendarRsvp} mayEdit={mayEditEmail} openWhen={{ saved: saved === "calendarRsvp" }} />
+      {/* «Cui îi trimitem întrebarea „Vii?"» (§NNN): beside the calendar's answers — both say what the club sends to whom. */}
+      <RsvpAskAudiencePanel locale={locale} state={rsvpAskAudience} answerersDescribed={answerersDescribed} mayEdit={mayEditEmail} openWhen={{ saved: saved === "rsvpAskAudience" }} />
 
       {/* The club's mailboxes that refuse its emails (§671), under the lists that name them; nothing when none did. */}
       {clubRejections.length > 0 && <ClubMailboxRejectionsPanel locale={locale} groups={clubRejections} />}

@@ -151,6 +151,24 @@ export const RSVP_MERGE_FIELD = "rsvp";
 export const RSVP_ASK_MERGE_FIELD = "rsvpAsk";
 
 /**
+ * The privacy notice's marker for the day-before question's SECOND audience (§NNN; the owner, 2026-10-19: «I need to set how these emails
+ * are sent»): the people who answered «Vin!» at an earlier date of the same series. Filled, when the notice is shown, with the refusal
+ * button's own name, quoted (`rsvp/notice-words.ts`) — „Nu mă mai întreba la seria aceasta” / “Don't ask me again for this series” — in the
+ * «Vin!» paragraph of section 5, which says that the club may ask them too, with the address of the answer, while the answer is kept
+ * (thirty days after the event), that the question then carries that button, and what the press keeps.
+ *
+ * **A marker of its own, not a sentence under `{{rsvpAsk}}`, and the reason is the gate.** Every notice approved since §818 names
+ * `{{rsvpAsk}}`, so words added under it would have been «in force» the day this ships, in texts the club approved before they existed:
+ * the gate would be open on nobody's reading. A new marker is silent in every notice already approved, and a person's answer records the
+ * notice it was given under (`event_rsvps.privacy_notice_version`), so the rule of §421 holds line by line: the answerers' question is
+ * asked only while the notice in force names this marker AND the question AND «Vin!» in every language (`describesRsvpAskAnswerers`),
+ * and only of an answer given under that version or a later one (`findFirstRsvpAskAnswerersNoticeVersion`). An answer given earlier
+ * agreed to being counted, not to being asked again. The club's choice of the audience in «Emailuri» is the other half of the switch;
+ * `/admin/tasks` carries the row `rsvpAskAnswerersNotice` while the club chose it and the notice is silent.
+ */
+export const RSVP_ASK_ANSWERERS_MERGE_FIELD = "rsvpAskAnswerers";
+
+/**
  * The privacy notice's marker for the club's invitations by email (§647): the backoffice section's own
  * name, quoted (`registrations/invitation-words.ts`) — «Invitații» / “Invitations” — in the sentence
  * that says the club may enter an invited person's name and address to send one invitation. Like the
@@ -567,6 +585,7 @@ export const MERGE_FIELDS = [
   RESULTS_MERGE_FIELD,
   RSVP_MERGE_FIELD,
   RSVP_ASK_MERGE_FIELD,
+  RSVP_ASK_ANSWERERS_MERGE_FIELD,
   NEWSLETTER_MERGE_FIELD,
   TEAM_PAGE_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_MERGE_FIELD,
@@ -772,6 +791,16 @@ export function describesRsvp(body: unknown): boolean {
  */
 export function describesRsvpAsk(body: unknown): boolean {
   return mergeFieldsIn(body).has(RSVP_ASK_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the question's second audience, the earlier answerers of a series (§NNN): it names
+ * `{{rsvpAskAnswerers}}`. The gate the club's choice of that audience waits on — together with `describesRsvpAsk` and `describesRsvp`,
+ * which the caller also asks, because the question writes a «Vin!» row — and what `/admin/tasks`' row `rsvpAskAnswerersNotice` reads.
+ * Pure; the caller asks it of the notice in force, in every language.
+ */
+export function describesRsvpAskAnswerers(body: unknown): boolean {
+  return mergeFieldsIn(body).has(RSVP_ASK_ANSWERERS_MERGE_FIELD);
 }
 
 /**

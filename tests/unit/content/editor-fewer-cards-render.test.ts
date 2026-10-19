@@ -290,7 +290,7 @@ describe("§799 «Condiții de participare» inside «Regulamentul»", () => {
       "event.minAge", "event.participantCountPublic", "event.participantCountPublic.present", "event.participantListVisibility", "event.publicListClub",
       "event.publicListClub", "event.publicListClub", "event.registrationClosesAtDate", "event.registrationClosesAtTime", "event.registrationMode",
       "event.registrationOpensAtDate", "event.registrationOpensAtTime", "event.registrationOpensSoon", "event.registrationOpensSoon.present",
-      "event.reminderHoursBefore", "event.rsvpEnabled", "event.rsvpEnabled.present", "event.schedule[0].date", "event.schedule[0].en", "event.schedule[0].endTime", "event.schedule[0].place",
+      "event.reminderHoursBefore", "event.rsvpAskEnabled", "event.rsvpAskEnabled.present", "event.rsvpEnabled", "event.rsvpEnabled.present", "event.schedule[0].date", "event.schedule[0].en", "event.schedule[0].endTime", "event.schedule[0].place",
       "event.schedule[0].ro", "event.schedule[0].time", "event.waitlistAutoOffer", "event.waitlistCapacity", "event.waitlistCountPublic",
       "event.waitlistCountPublic.present", "event.waitlistMode", "event.waitlistPublic", "translations.en.checklist", "translations.en.rules",
       "translations.en.schedule", "translations.ro.checklist", "translations.ro.rules", "translations.ro.schedule",

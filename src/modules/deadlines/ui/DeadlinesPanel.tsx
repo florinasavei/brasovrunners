@@ -85,16 +85,27 @@ type Translate = Awaited<ReturnType<typeof getTranslations>>;
  * typed ones, as the chip does (§456).
  */
 function groupSummary(t: Translate, locale: Locale, fields: readonly DeadlineKey[], deadlines: Deadlines): string {
-  const parts: string[] = fields.map((key) => {
+  const parts: string[] = [];
+  for (const key of fields) {
     const value = deadlines[key];
-    // Zero is "none" (or "race day only") for the six deadlines that allow it, said in words of their own.
-    if (value === 0) return t(`emails.deadlines.shortZero.${key}`);
+    // §NNN: the «Vii?» question's hour is said beside its days, "„Vii?” cu o zi înainte, la 08:00" — and not at all when the days are
+    // zero, `„Vii?” nu se trimite`: an hour of a question nobody is asked is no information. (Zero is a real hour, midnight, never «none».)
+    if (key === "rsvpAskHour") {
+      const last = parts.length - 1;
+      if (deadlines.rsvpAskDaysBefore > 0 && last >= 0) parts[last] = `${parts[last]}, ${t("emails.deadlines.short.rsvpAskHour", { value: deadlineDuration(locale, "rsvpAskHour", value) ?? "" })}`;
+      continue;
+    }
+    // Zero is "none" (or "race day only") for the deadlines that allow it, said in words of their own.
+    if (value === 0) {
+      parts.push(t(`emails.deadlines.shortZero.${key}`));
+      continue;
+    }
     const words =
       key === "verificationRetries"
         ? t(`emails.retryTimes.${countForm(value, locale)}`, { count: value })
         : (deadlineDuration(locale, key, value) ?? String(value));
-    return t(`emails.deadlines.short.${key}`, { value: words });
-  });
+    parts.push(t(`emails.deadlines.short.${key}`, { value: words }));
+  }
   const differing = fields.filter((key) => deadlines[key] !== RECOMMENDED[key]).length;
   if (differing > 0) parts.push(t(`emails.deadlines.differsCount.${countForm(differing, locale)}`, { count: differing }));
   return parts.join(" · ");
@@ -107,7 +118,7 @@ function groupSummary(t: Translate, locale: Locale, fields: readonly DeadlineKey
  * (`DEADLINE_RULES`), carried as `min`/`max` so the browser refuses "0 hours" before the server
  * does (§315).
  *
- * **Thirteen boxes in seven named folds** (the owner, 2026-10-18: «partea asta de termene trebuie
+ * **Fifteen boxes in seven named folds** (the owner, 2026-10-18: «partea asta de termene trebuie
  * grupată mai bine»): `DEADLINE_GROUPS` says which box sits in which fold, and each fold is a nested
  * `Panel` — closed, a glyph, a closed line of its values and how many differ from the recommendation.
  * The form is still ONE, with one «Salvează termenele» and one «Completează valorile recomandate»
@@ -233,7 +244,7 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
                   );
                 }),
               )}
-              {/* One save for the thirteen, under the folds and outside them (§377 amended). */}
+              {/* One save for the fifteen, under the folds and outside them (§377 amended). */}
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                 <GlyphSubmitButton label={t("emails.deadlines.save")} pendingLabel={t("emails.deadlines.saving")} icon="save" />
                 {/* §456: fills the boxes, never saves — the save above does, after its question. */}

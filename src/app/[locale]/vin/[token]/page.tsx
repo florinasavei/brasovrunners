@@ -1,5 +1,6 @@
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
+import NotificationsOffIcon from "@mui/icons-material/NotificationsOff";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Container from "@mui/material/Container";
@@ -17,16 +18,16 @@ import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { readRsvpLink } from "@/modules/rsvp/rsvp";
 import AutoConfirm from "@/modules/rsvp/ui/AutoConfirm";
-import { isWithdrawnProof, WITHDRAWN_ASKED_SUFFIX } from "@/modules/rsvp/withdrawn-proof";
+import { isWithdrawnProof, REFUSED_SUFFIX, WITHDRAWN_ASKED_SUFFIX } from "@/modules/rsvp/withdrawn-proof";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
-import { confirmRsvpAction, withdrawRsvpAction } from "./actions";
+import { confirmRsvpAction, refuseRsvpAsksAction, withdrawRsvpAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ invalid?: string; retras?: string; ok?: string; nu?: string }>;
+  searchParams: Promise<{ invalid?: string; retras?: string; ok?: string; nu?: string; refuz?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,9 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * own words) — a person who gives neither is counted without a name, and the newsletter never had one to lend. «Nu vin» is one press
  * that deletes the row: nobody is counted, and the page says so in the sentence the email promised. The box comes above the button (a
  * field before its submit), under the intro; the privacy notice is linked beside it, as on the event page's card.
+ * **«Nu mă mai întreba la seria aceasta» (§NNN)** is the third link, in the question an earlier answerer receives (`RSVP_REFUSE`): the same page,
+ * the same rule — the GET names the event and shows ONE button, the button is a POST (`refuseRsvpAsksAction`) that records the refusal for the
+ * series and spends the link. After it, the sentence «Gata: nu te mai întrebăm» comes from a keyed proof, like «Nu mai vin»'s; no cookie is set.
  * **«Da, vin» presses itself in a browser** (§812, amending §811; the owner, 2026-10-19: «Asta ar trebui să se auto-bifeze când
  * deschid»). The page above is unchanged — the sentence, the POST form, the button — and, for a live `RSVP_CONFIRM` link whose answer
  * is not counted yet, the form is wrapped in the one island that presses that button once the page is shown in a browser
@@ -63,12 +67,43 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
   const { locale, token } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const { invalid, retras, ok, nu } = await searchParams;
+  const { invalid, retras, ok, nu, refuz } = await searchParams;
   const t = await getTranslations("Rsvp");
   const tEvent = await getTranslations("Event");
   const db = getDb();
   const now = new Date();
   const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
+
+  /*
+    After «Nu mă mai întreba la seria aceasta» (§NNN): the refusal is recorded and the link is spent; the sentence comes only with the keyed
+    proof the action made (an address somebody typed claims nothing), and names the event's page when the slug is the proof's.
+  */
+  if (refuz !== undefined && invalid === undefined && isWithdrawnProof(ok, token, `${refuz}${REFUSED_SUFFIX}`)) {
+    const event = refuz ? await findPublishedEventBySlug(db, locale, refuz) : undefined;
+    return (
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
+        <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
+          {t("askRefuseDoneTitle")}
+        </Typography>
+        <Stack spacing={1.5}>
+          <Alert severity="success" role="status" data-testid="rsvp-refused">
+            {t("askRefuseDone")}
+          </Alert>
+          <Typography variant="body2">
+            {event ? (
+              <Link href={{ pathname: "/events/[slug]", params: { slug: refuz } }} style={inlineLink}>
+                {t("eventLink")}
+              </Link>
+            ) : (
+              <Link href="/events" style={inlineLink}>
+                {t("eventsLink")}
+              </Link>
+            )}
+          </Typography>
+        </Stack>
+      </Container>
+    );
+  }
 
   /*
     After «Nu mai vin» (the answer and its links are gone): the sentence, and the event's page when it is known. The row is gone, so
@@ -120,7 +155,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
-        {!link ? t("linkInvalid") : link.purpose === "RSVP_WITHDRAW" ? (link.asked ? t("askNoTitle") : t("withdrawTitle")) : link.asked ? t("askTitle") : t("confirmTitle")}
+        {!link ? t("linkInvalid") : link.purpose === "RSVP_REFUSE" ? t("askRefuseTitle") : link.purpose === "RSVP_WITHDRAW" ? (link.asked ? t("askNoTitle") : t("withdrawTitle")) : link.asked ? t("askTitle") : t("confirmTitle")}
       </Typography>
 
       {!live ? (
@@ -146,6 +181,18 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
               </Link>
             )}
           </Typography>
+        </Stack>
+      ) : live.purpose === "RSVP_REFUSE" ? (
+        <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
+          <Typography data-testid="rsvp-refuse-intro">{t("askRefuseIntro", { event: live.title })}</Typography>
+          {/* A POST, so the GET above records nothing (§12.8): the press records the refusal and spends the link. */}
+          <form action={refuseRsvpAsksAction}>
+            <input type="hidden" name="locale" value={locale} />
+            <input type="hidden" name="token" value={token} />
+            <SubmitButton label={t("askRefuseButton")} pendingLabel={t("withdrawPending")} size="large" variant="outlined">
+              <NotificationsOffIcon />
+            </SubmitButton>
+          </form>
         </Stack>
       ) : live.purpose === "RSVP_CONFIRM" ? (
         <Stack spacing={2} sx={{ alignItems: "flex-start" }}>

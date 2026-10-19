@@ -7,9 +7,10 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { rememberPerson } from "@/modules/person-session/session";
+import { refuseRsvpAsks } from "@/modules/rsvp/ask-refusal";
 import { confirmRsvp, withdrawRsvp, type RsvpProved } from "@/modules/rsvp/rsvp";
 import { RSVP_BOX_ID } from "@/modules/rsvp/rsvp-box";
-import { WITHDRAWN_ASKED_SUFFIX, withdrawnProof } from "@/modules/rsvp/withdrawn-proof";
+import { REFUSED_SUFFIX, WITHDRAWN_ASKED_SUFFIX, withdrawnProof } from "@/modules/rsvp/withdrawn-proof";
 
 /**
  * The two buttons of a «Vin!» message's page (§811, «Vin!» part 1): «Da, vin» and «Nu mai vin». Each spends its link — single
@@ -52,6 +53,25 @@ export async function confirmRsvpAction(form: FormData): Promise<void> {
   if (!proved) redirect(`${pageOf(locale, token)}?invalid=1`);
   await remember(proved, now);
   redirect(eventPageOf(proved, `#${RSVP_BOX_ID}`));
+}
+
+/**
+ * «Nu mă mai întreba la seria aceasta» (§NNN): spends the `RSVP_REFUSE` link of a question an earlier answerer received, records the refusal for
+ * the series (`ask-refusal.ts`) and says so on the same address. **No cookie**: the person asked for nothing the browser needs to remember, and
+ * the notice justifies the cookies only as strictly necessary to a function the person asked for. The row and the link are spent, so the
+ * redirect carries a keyed proof of the press, as «Nu mai vin» does.
+ */
+export async function refuseRsvpAsksAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("locale"));
+  const token = String(form.get("token") ?? "");
+  const db = getDb();
+  const now = new Date();
+  if (!(await tokenAttemptAllowed(db, token, now))) redirect(`${pageOf(locale, token)}?invalid=1`);
+  const refused = await refuseRsvpAsks(db, token, now);
+  if (!refused) redirect(`${pageOf(locale, token)}?invalid=1`);
+  const slug = refused.slug ?? "";
+  const proof = withdrawnProof(token, `${slug}${REFUSED_SUFFIX}`);
+  redirect(`${pageOf(refused.locale, token)}?refuz=${encodeURIComponent(slug)}&ok=${proof}`);
 }
 
 /** «Nu mai vin»: deletes the answer, remembers the browser (not after the email's unanswered question), and says so on the same address (the row and its links are gone). */

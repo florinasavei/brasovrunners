@@ -7,7 +7,7 @@ import ro from "../../../messages/ro.json";
 /**
  * §377 (amended) — «Termene» in seven named folds (the owner, 2026-10-18). Rendered to HTML the way
  * the server sends it: the folds are closed, each carries a glyph and a closed line of its values in
- * words (and how many differ from the recommendation), the thirteen boxes are in them, and the one
+ * words (and how many differ from the recommendation), the fifteen boxes are in them, and the one
  * save and the fill button stay under them, outside them. The two settings under the deadlines are
  * cards of their own, folded too, with their own saves.
  */
@@ -118,6 +118,43 @@ describe("§377 «Termene» in seven folds", () => {
     expect(summaryOf(english, "deadline-group-hold")).toContain("offer 12 hours · 1 differs from recommended");
   });
 
+  /**
+   * §NNN — the «Vii?» question's two boxes sit in «Înainte de start» and the fold's closed line says them together: «„Vii?” cu o zi înainte,
+   * la 08:00». With zero days the question is not sent, so the hour is not said at all; an hour of zero is midnight, "00:00", never «none».
+   */
+  it("says the «Vii?» question's days and hour together on the «Înainte de start» line, in both languages", async () => {
+    const ro1 = await render("ro");
+    expect(summaryOf(ro1, "deadline-group-beforeStart")).toContain("numărătoare inversă o săptămână înainte · „Vii?” cu o zi înainte, la 08:00");
+    const en1 = await render("en");
+    expect(summaryOf(en1, "deadline-group-beforeStart")).toContain("countdown one week before · “Coming?” one day before, at 08:00");
+    const ro3 = await render("ro", { ...DEFAULT_DEADLINES, rsvpAskDaysBefore: 3, rsvpAskHour: 23 });
+    expect(summaryOf(ro3, "deadline-group-beforeStart")).toContain("„Vii?” cu 3 zile înainte, la 23:00 · 2 diferite de recomandat");
+    const en3 = await render("en", { ...DEFAULT_DEADLINES, rsvpAskDaysBefore: 3, rsvpAskHour: 23 });
+    expect(summaryOf(en3, "deadline-group-beforeStart")).toContain("“Coming?” 3 days before, at 23:00 · 2 differ from recommended");
+    const midnight = await render("ro", { ...DEFAULT_DEADLINES, rsvpAskHour: 0 });
+    expect(summaryOf(midnight, "deadline-group-beforeStart")).toContain("„Vii?” cu o zi înainte, la 00:00 · 1 diferit de recomandat");
+  });
+
+  it("says «not sent» for zero days, with no hour, and never «0 zile»", async () => {
+    const none = await render("ro", { ...DEFAULT_DEADLINES, rsvpAskDaysBefore: 0, rsvpAskHour: 14 });
+    const line = summaryOf(none, "deadline-group-beforeStart");
+    expect(line).toContain("„Vii?” nu se trimite");
+    expect(line).not.toContain("14:00");
+    expect(line).not.toContain("0 zile");
+    const english = await render("en", { ...DEFAULT_DEADLINES, rsvpAskDaysBefore: 0 });
+    expect(summaryOf(english, "deadline-group-beforeStart")).toContain("“Coming?” is not sent");
+  });
+
+  it("gives the two boxes their bounds: days 0 to 7, hour 0 to 23, and the readers' list their values", async () => {
+    const html = await render("ro");
+    const card = fold(html, "deadline-group-beforeStart");
+    expect(card).toMatch(/<input[^>]*name="rsvpAskDaysBefore"[^>]*min="0"[^>]*max="7"|<input[^>]*max="7"[^>]*name="rsvpAskDaysBefore"|<input[^>]*name="rsvpAskDaysBefore"[^>]*max="7"/);
+    expect(card).toMatch(/<input[^>]*name="rsvpAskHour"[^>]*max="23"|<input[^>]*max="23"[^>]*name="rsvpAskHour"/);
+    const reader = await render("ro", { ...DEFAULT_DEADLINES, rsvpAskDaysBefore: 2, rsvpAskHour: 9 }, false);
+    expect(reader).toMatch(/data-testid="deadline-rsvpAskDaysBefore"[^>]*>2</);
+    expect(reader).toMatch(/data-testid="deadline-rsvpAskHour"[^>]*>9</);
+  });
+
   it("says «none» and «race day only» in words of their own for a zero", async () => {
     const html = await render("ro", { ...DEFAULT_DEADLINES, reminderHours: 0, lastCallHours: 0, raceWeekDays: 0, verificationRetries: 0, familySittingMinutes: 0, outageGraceMaxHours: 0 });
     expect(summaryOf(html, "deadline-group-beforeStart")).toContain("fără reminder · fără ultimă chemare · „Am ajuns” de la o zi înainte · numărătoare inversă doar în ziua cursei");
@@ -144,7 +181,7 @@ describe("§377 «Termene» in seven folds", () => {
     expect(withoutFolds).toContain(ro.Admin.emails.deadlines.save);
     expect(withoutFolds).toContain(ro.Admin.emails.deadlines.fillRecommended);
     for (const key of DEADLINE_KEYS) expect(withoutFolds, key).not.toContain(`name="${key}"`);
-    // One save for the thirteen: one button of that name in the whole panel.
+    // One save for the fifteen: one button of that name in the whole panel.
     expect(html.match(new RegExp(`>${ro.Admin.emails.deadlines.save}<`, "g"))).toHaveLength(1);
     for (const group of DEADLINE_GROUPS) expect(fold(html, `deadline-group-${group.key}`), group.key).not.toContain("<button");
   });
