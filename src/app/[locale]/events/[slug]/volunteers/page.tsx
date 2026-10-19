@@ -72,6 +72,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * does not describe them — never a form that cannot work. The one exception is a person reading the answer to their own post
  * (`?volunteer=`): the last role the organizers gave away meanwhile still owes them «am primit».
  *
+ * **Who may offer (§NNN).** «Cine se poate oferi» meets the request here (`volunteerDoorFor`): anyone gets the form; for the club's members
+ * a signed-in member gets it with the name and the address of the account locked and a stranger one sentence and the members' sign-in;
+ * by invitation the page is a 404 without `?invite=<secret>` and, with a live one, the form with the invited address locked. A link
+ * that no longer works says which in a sentence under any choice. The server asks the same rule again at the post (BR-REQ-060-01).
+ * The page was always per request; nothing per viewer is cached — the session is met only for the members' choice and the link's row only
+ * when the address holds a link, on top of the public cache's shared reads.
+ *
  * **Served as the registration page is** (`events/[slug]/register/page.tsx`, the model for a public page with a form):
  * `force-dynamic`, `noindex`, the sealed draft cookie read only after a refusal, the render time the bot check counts
  * from — and the redirect-with-flash of the house's public forms after a send (§427): the thank-you is on this page, in

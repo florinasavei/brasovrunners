@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/TranslateProvider";
-import type { VolunteersAccess } from "@/modules/volunteers/domain/access";
 import type { VolunteerInvitationItem } from "@/modules/volunteers/invitations";
 import type { PublicVolunteerRole, VolunteerRole } from "@/modules/volunteers/volunteers";
 
