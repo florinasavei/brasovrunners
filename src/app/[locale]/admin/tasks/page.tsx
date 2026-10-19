@@ -478,6 +478,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     howValues.creditReason = t(`translationBudget.credit.unread.${deeplCredit.reason}`);
   }
 
+  // §NNN: who the day-before question is asked of, for the row about the notice's silence.
+  const rsvpAskAudience = (await readRsvpAskAudienceSetting(db)).audience;
   const tasks = sortTasks(
     ownerTasks({
       hasApprovedPrivacyNotice: Boolean(privacyNotice),
@@ -496,7 +498,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // §818: the day-before question, described by the notice in force; nobody is asked until then.
       rsvpAskDescribed: await noticeDescribesRsvpAsk(db, now),
       // §NNN: the question's second audience — chosen in «Emailuri», and described by the notice in force; nobody of it is asked until both.
-      rsvpAskAnswerersChosen: asksAnswerers((await readRsvpAskAudienceSetting(db)).audience),
+      rsvpAskAnswerersChosen: asksAnswerers(rsvpAskAudience),
+      rsvpAskAnswerersOnly: rsvpAskAudience === "ANSWERERS",
       rsvpAskAnswerersDescribed: await noticeDescribesRsvpAskAnswerers(db, now),
       rsvpEvents: await countRsvpEvents(db, now),
       // §808: the terms in force describe them too — the older ones promised to ask separately before a named result.

@@ -169,6 +169,9 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     newsletterManageUrl: `${base}/${locale}/EXAMPLE-newsletter`,
     // «Vin!» and «Vii mâine?» (§812, §818): the quieter «Nu vin» under the button, so the preview draws both.
     rsvpWithdrawUrl: `${base}/${locale}/EXAMPLE-rsvp-no`,
+    // The question's day in words, each half in its own language (§NNN); the page sets the club's days over it (`emailSampleDeadlines`).
+    rsvpAskDay: sample.rsvpAskDay,
+    rsvpAskDayOther: other.rsvpAskDay,
   };
 }
 
@@ -258,6 +261,8 @@ function fieldsData(replyTo: string | undefined = env.EMAIL_REPLY_TO ?? undefine
     confirmationHours: field("confirmationHours"),
     // The waiting-list offer's length (§377), which the freed place's message states (§419).
     offerHours: field("offerHours"),
+    // «Vii {rsvpAskDay} la …?» (§NNN): the question's day in words, which the club's «Termene» makes «mâine», «poimâine» or «peste 3 zile».
+    rsvpAskDay: field("rsvpAskDay"),
     replyTo,
   };
 }
@@ -414,6 +419,8 @@ const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>
   inviterName: ["STAFF_INVITATION", "MEMBER_INVITATION"],
   // The organizer's message alone (§676): no other message is written per event by somebody asking how it was.
   feedbackLink: ["ORGANIZER_MESSAGE"],
+  // The day-before question alone (§NNN): no other message is sent «Vii?» a number of days ahead.
+  rsvpAskDay: ["RSVP_ASK"],
 };
 
 /**
@@ -466,6 +473,7 @@ const OTHER_HALF: Partial<Record<EmailCopyPlaceholder, keyof TemplateData>> = {
   holdExpiresAtFormatted: "holdExpiresAtFormattedOther",
   signedAtFormatted: "signedAtFormattedOther",
   feedbackLink: "feedbackLinkOther",
+  rsvpAskDay: "rsvpAskDayOther",
 };
 
 /**

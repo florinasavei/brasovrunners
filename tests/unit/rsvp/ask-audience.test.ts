@@ -12,6 +12,7 @@ import {
   RSVP_ASK_AUDIENCES,
   rsvpAskAudienceSchema,
 } from "@/modules/rsvp/domain/ask-audience";
+import { emailCopyKey } from "@/modules/notifications/domain/email-copy";
 import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
 
 /**
@@ -130,7 +131,9 @@ describe("§NNN the card «Cui îi trimitem întrebarea „Vii?”» in «Emailu
       const silent = await panel(audience, { described: false });
       expect(silent).toContain('data-testid="rsvp-ask-answerers-silent"');
       expect(silent).toContain(ro.Admin.emails.rsvpAskAudience.noticeOpen);
-      expect(silent).toContain(ro.Admin.emails.rsvpAskAudience.noticeSilent);
+      // The sentence is chosen by the audience: «subscribers are asked as before» is false when only the earlier answerers were chosen.
+      expect(silent).toContain(ro.Admin.emails.rsvpAskAudience.noticeSilent[audience]);
+      if (audience === "ANSWERERS") expect(silent).not.toContain("abonații sunt întrebați ca până acum");
       expect(silent).toContain('href="/admin/legal"');
       const described = await panel(audience, { described: true });
       expect(described).toContain(ro.Admin.emails.rsvpAskAudience.noticeDone);
@@ -197,6 +200,27 @@ describe("§NNN the question's email: the refusal link is an earlier answerer's 
     }
     // The subscriber's way out is the topics page, as before.
     expect(build("ro").text).toContain("https://example.test/ro/newsletter/manage");
+  });
+
+  it("fills the club's own words with the day in each half's language: {rsvpAskDay} is a field, so a saved text never freezes «mâine»", () => {
+    const overrides = {
+      [emailCopyKey("RSVP_ASK", "ro")]: { subject: "Vii {rsvpAskDay} la {eventTitle}?", paragraphs: ["Ne vedem {rsvpAskDay}? Apasă „Vin”."] },
+      [emailCopyKey("RSVP_ASK", "en")]: { subject: "Coming {rsvpAskDay} to {eventTitle}?", paragraphs: ["See you {rsvpAskDay}? Press “I'm coming”."] },
+    };
+    const message = buildOutgoingEmail({
+      to: "ana@example.test",
+      locale: "ro",
+      idempotencyKey: "k",
+      messageType: "RSVP_ASK",
+      data: data({ rsvpAskDayOther: "in 3 days" }),
+      actionUrl: "https://example.test/ro/vin/confirm-token",
+      overrides,
+    });
+    expect(message.subject).toContain("Vii peste 3 zile la Alergarea de duminică?");
+    expect(message.subject).toContain("Coming in 3 days to");
+    expect(message.text).toContain("Ne vedem peste 3 zile?");
+    expect(message.text).toContain("See you in 3 days?");
+    expect(message.text).not.toContain("mâine");
   });
 
   it("says «mâine» when the day is not given, as the question always did", () => {

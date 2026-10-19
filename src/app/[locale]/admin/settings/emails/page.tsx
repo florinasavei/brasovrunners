@@ -10,7 +10,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import { renderBilingual } from "@/modules/notifications/templates";
-import { EMAIL_SAMPLE_FAMILY, emailSampleConfirmationRetry } from "@/modules/notifications/domain/email-sample";
+import { EMAIL_SAMPLE_FAMILY, emailSampleConfirmationRetry, emailSampleDeadlines } from "@/modules/notifications/domain/email-sample";
 import {
   emailCopyPrefill,
   emailSampleActionUrl,
@@ -301,6 +301,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     // The club's deadlines in force (§377), which the send gives every message as numbers.
     sample.timings = timings;
     sample.replyTo = replyTo;
+    // «Vii {rsvpAskDay} la …?» says the club's days from «Termene», each half in its own language (§NNN).
+    if (messageType === "RSVP_ASK") {
+      sample.rsvpAskDay = emailSampleDeadlines(emailLocale, deadlines.deadlines).rsvpAskDay;
+      sample.rsvpAskDayOther = emailSampleDeadlines(emailLocale === "ro" ? "en" : "ro", deadlines.deadlines).rsvpAskDay;
+    }
     // And the club's limit per address, on the message that states it (§389): the link's shape —
     // with who the sample address holds and the person its form named (§446).
     if (messageType === "REGISTER_ANOTHER_PERSON") {

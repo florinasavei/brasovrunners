@@ -272,6 +272,11 @@ export type OwnerTaskInputs = {
    */
   rsvpAskAnswerersChosen: boolean;
   /**
+   * The club chose the earlier answerers ALONE (`ANSWERERS`, not `BOTH`): while the notice is silent nobody at all is asked, not even the
+   * subscribers, and the row says so in its own sentence (`todoOnly`) instead of «subscribers are asked as before».
+   */
+  rsvpAskAnswerersOnly?: boolean;
+  /**
    * Does the notice in force, in every language, describe the question's second audience too (§NNN, `noticeDescribesRsvpAskAnswerers`:
    * `{{rsvpAskAnswerers}}`, with the question and «Vin!»)? Until it does, nobody of that audience is asked, whatever the club chose.
    */
@@ -668,6 +673,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       push("rsvpAskAnswerersNotice", {
         owner: "club",
         state: input.rsvpAskAnswerersDescribed ? "done" : "open",
+        ...(!input.rsvpAskAnswerersDescribed && input.rsvpAskAnswerersOnly ? { text: "todoOnly" } : {}),
       });
     }
     /*

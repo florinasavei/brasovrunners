@@ -3661,7 +3661,7 @@
         "volunteersList": "Doar în nota de confidențialitate: bifa „Vreau să apar pe lista publică a voluntarilor”, între ghilimele. Cu ea în nota în vigoare, lista publică poate arăta nume",
         "results": "Numele secțiunii „Clasament”, între ghilimele, în nota de confidențialitate și în termeni. Cu el în ambele texte în vigoare, un administrator poate publica clasamentul, iar pagina cursei îl arată",
         "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin",
-        "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc ziua dinainte întrebarea „Vii?”",
+        "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc înainte de eveniment (cel mult o săptămână, de la ora aleasă de club) întrebarea „Vii?”",
         "rsvpAskAnswerers": "Doar în nota de confidențialitate: numele butonului „Nu mă mai întreba la seria aceasta”, între ghilimele. Cu el în nota în vigoare, se întreabă „Vii?” și cei care au mai răspuns „Vin!”"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
@@ -4721,18 +4721,19 @@
           ]
         },
         "rsvpAskNotice": {
-          "title": "Nota de confidențialitate: întrebarea „Vii?” de ziua dinainte",
-          "todo": "Un eveniment primește răspunsuri „Vin!”, dar nota în vigoare nu descrie încă întrebarea de ziua dinainte, așa că abonații nu sunt întrebați, iar căsuța temei nu apare la abonare.",
-          "done": "Nota în vigoare descrie întrebarea de ziua dinainte: abonații care au ales tema (sau „Toate noutățile”) sub nota care o descrie primesc un singur email cu „Vin” și „Nu vin”.",
+          "title": "Nota de confidențialitate: întrebarea „Vii?” înainte de eveniment",
+          "todo": "Un eveniment primește răspunsuri „Vin!”, dar nota în vigoare nu descrie încă întrebarea dinaintea evenimentului, așa că abonații nu sunt întrebați, iar căsuța temei nu apare la abonare.",
+          "done": "Nota în vigoare descrie întrebarea dinaintea evenimentului: abonații care au ales tema (sau „Toate noutățile”) sub nota care o descrie primesc un singur email cu „Vin” și „Nu vin”.",
           "how": [
-            "Înainte de aprobare, citește cu un avocat cele două paragrafe din șablon, din secțiunea 5: cel despre „Vin!” (adresa abonatului devine răspuns neconfirmat la trimitere) și cel despre newsletter.",
+            "Înainte de aprobare, citește cu un avocat cele două paragrafe din șablon, din secțiunea 5: cel despre „Vin!” (adresa abonatului devine răspuns neconfirmat la trimitere) și cel despre newsletter, cu propoziția despre momentul trimiterii (cel mult o săptămână înainte, de la ora aleasă de club).",
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Întrebarea pleacă abia după nota nouă, și doar celor care au ales tema (sau „Toate noutățile”) sub ea ori sub una mai nouă.",
             "Deschide ciorna, citește, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi."
           ]
         },
         "rsvpAskAnswerersNotice": {
           "title": "Nota de confidențialitate: întrebarea „Vii?” și pentru cei care au mai răspuns „Vin!”",
-          "todo": "Ai ales să întrebi și pe cei care au răspuns „Vin!” înainte, dar nota în vigoare nu descrie asta, așa că nu e întrebat niciunul. Abonații sunt întrebați ca până acum.",
+          "todo": "Ai ales să întrebi și pe cei care au răspuns „Vin!” înainte, dar nota în vigoare nu descrie asta, așa că nu e întrebat niciunul dintre ei. Abonații sunt întrebați ca până acum.",
+          "todoOnly": "Ai ales să întrebi doar pe cei care au răspuns „Vin!” înainte, dar nota în vigoare nu descrie asta, așa că nu primește nimeni întrebarea „Vii?”.",
           "done": "Nota în vigoare descrie și această categorie: cine a răspuns „Vin!” sub ea (sau sub una mai nouă) la o dată anterioară a seriei primește întrebarea, cu butonul „Nu mă mai întreba la seria aceasta”.",
           "how": [
             "Citește cu un avocat propozițiile noi din șablon, secțiunea 5, paragraful „Vin!”: cine e întrebat, cât timp, ce păstrăm după refuz și temeiul.",
@@ -6753,7 +6754,10 @@
         },
         "noticeDone": "Nota în vigoare descrie și această categorie",
         "noticeOpen": "Nota în vigoare nu descrie încă această categorie",
-        "noticeSilent": "Până aprobi o notă nouă din șablon, nimeni dintre cei care au răspuns „Vin!” nu primește întrebarea; abonații sunt întrebați ca până acum.",
+        "noticeSilent": {
+          "ANSWERERS": "Până aprobi o notă nouă din șablon, nu primește nimeni întrebarea „Vii?”: ai ales doar pe cei care au răspuns „Vin!”.",
+          "BOTH": "Până aprobi o notă nouă din șablon, nimeni dintre cei care au răspuns „Vin!” nu primește întrebarea; abonații sunt întrebați ca până acum."
+        },
         "noticeLink": "Deschide „Texte legale”",
         "field": "Întrebarea „Vii?” merge la",
         "save": "Salvează alegerea",
@@ -6906,6 +6910,7 @@
             "holdMinutes": "Cât e ținut locul cât timp se semnează declarația, din „Termene”, cu unitatea cu tot",
             "offerHours": "Cât rămâne deschisă o ofertă de pe lista de așteptare, din „Termene”, cu unitatea cu tot",
             "reminderHours": "Cu cât înainte de start pleacă reminderul — al evenimentului, altfel al clubului din „Termene” — cu unitatea cu tot; nimic când evenimentul nu trimite reminder",
+            "rsvpAskDay": "Când e evenimentul, în cuvinte — „mâine”, „poimâine”, „peste 3 zile” — după câte zile înainte de start pleacă întrebarea, din „Termene”; nu scrie „mâine” de mână",
             "feedbackLink": "Linkul spre „Spune-ne cum a fost” pentru acest eveniment cât timp formularul e pornit; altfel pagina de contact"
           }
         },
@@ -12672,7 +12677,7 @@
       "WEEKLY_RUNS": "Un anunț când pornește o serie nouă de alergări săptămânale — o dată pe serie, nu la fiecare alergare.",
       "VOLUNTEERING": "Când avem nevoie de ajutor la concursuri: masa de ridicare a kitului, traseu, fotografii.",
       "RESULTS_PHOTOS": "Rezultatele și albumele de poze de după evenimente.",
-      "RSVP_ASK": "În ziua dinainte de un eveniment la care clubul numără cine vine, un singur email cu două butoane: „Vin” sau „Nu vin”."
+      "RSVP_ASK": "Înainte de un eveniment la care clubul numără cine vine (la ora și cu atâtea zile înainte cât a ales clubul), un singur email cu două butoane: „Vin” sau „Nu vin”."
     },
     "heading": "Noutățile clubului pe email",
     "intro": "Alege temele care te interesează și îți scriem doar despre ele.",

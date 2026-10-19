@@ -81,7 +81,7 @@ export default async function RsvpAskAudiencePanel({ locale, state, answerersDes
           </Box>
           {!answerersDescribed && (
             <Alert severity="warning" data-testid="rsvp-ask-answerers-silent">
-              {t("emails.rsvpAskAudience.noticeSilent")}{" "}
+              {t(`emails.rsvpAskAudience.noticeSilent.${chosen === "ANSWERERS" ? "ANSWERERS" : "BOTH"}`)}{" "}
               <Link href="/admin/legal" style={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
                 {t("emails.rsvpAskAudience.noticeLink")}
               </Link>

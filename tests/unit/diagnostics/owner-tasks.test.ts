@@ -154,9 +154,15 @@ describe("owner tasks", () => {
     expect(stateOf({ ...LAUNCHED, rsvpAskAnswerersChosen: true, rsvpAskAnswerersDescribed: false }, "rsvpAskAnswerersNotice")).toBe("open");
     expect(stateOf({ ...LAUNCHED, rsvpAskAnswerersChosen: true, rsvpAskAnswerersDescribed: true }, "rsvpAskAnswerersNotice")).toBe("done");
     expect(ownerTasks({ ...LAUNCHED, rsvpAskAnswerersChosen: true, rsvpAskAnswerersDescribed: false }).some((task) => task.state === "blocking")).toBe(false);
+    // Chosen ALONE, the silence stops everybody: the row says so in its own sentence, not «subscribers are asked as before».
+    const only = ownerTasks({ ...LAUNCHED, rsvpAskAnswerersChosen: true, rsvpAskAnswerersOnly: true, rsvpAskAnswerersDescribed: false }).find((task) => task.id === "rsvpAskAnswerersNotice");
+    expect(only?.text).toBe("todoOnly");
+    const both = ownerTasks({ ...LAUNCHED, rsvpAskAnswerersChosen: true, rsvpAskAnswerersOnly: false, rsvpAskAnswerersDescribed: false }).find((task) => task.id === "rsvpAskAnswerersNotice");
+    expect(both?.text).toBeUndefined();
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.rsvpAskAnswerersNotice;
-      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.title && item.todo && item.todoOnly && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.todoOnly).not.toMatch(/ca până acum|as before/);
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
   });
