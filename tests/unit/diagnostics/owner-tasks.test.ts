@@ -30,6 +30,7 @@ const LAUNCHED: OwnerTaskInputs = {
   listNumbersDescribed: true,
   resultsDescribed: true,
   rsvpDescribed: true,
+  rsvpAskDescribed: true,
   rsvpEvents: 0,
   resultsTermsDescribed: true,
   invitationsDescribed: true,
@@ -51,6 +52,8 @@ const LAUNCHED: OwnerTaskInputs = {
   volunteerAgreementDescribed: true,
   volunteerProfileDescribed: true,
   volunteerMinorsOpen: true,
+  volunteersListDescribed: true,
+  volunteersListEvents: 1,
   gmailFallbackDescribed: true,
   refusalDescribed: true,
   teamPageDescribed: true,
@@ -129,6 +132,14 @@ describe("owner tasks", () => {
     expect(stateOf({ ...LAUNCHED, rsvpDescribed: true, rsvpEvents: 2 }, "rsvpNotice")).toBe("done");
     expect(stateOf({ ...LAUNCHED, rsvpDescribed: true, rsvpEvents: 0 }, "rsvpNotice")).toBe("done");
     expect(ownerTasks({ ...LAUNCHED, rsvpDescribed: false, rsvpEvents: 0 }).some((task) => task.id === "rsvpNotice")).toBe(false);
+  });
+
+  /** §818 — the day-before question waits on the notice too: open while an upcoming event is ticked and `{{rsvpAsk}}` is not named, done once it is, absent when nothing is ticked and the notice is silent. */
+  it("keeps the «Vii mâine?» row open while a ticked event waits for the notice naming the question, and absent when nothing is ticked", () => {
+    expect(stateOf({ ...LAUNCHED, rsvpAskDescribed: false, rsvpEvents: 2 }, "rsvpAskNotice")).toBe("open");
+    expect(stateOf({ ...LAUNCHED, rsvpAskDescribed: true, rsvpEvents: 2 }, "rsvpAskNotice")).toBe("done");
+    expect(stateOf({ ...LAUNCHED, rsvpAskDescribed: true, rsvpEvents: 0 }, "rsvpAskNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, rsvpAskDescribed: false, rsvpEvents: 0 }).some((task) => task.id === "rsvpAskNotice")).toBe(false);
   });
 
   /** §808 — a race's published results wait on the club's notice: open until it names `{{results}}`, never blocking, and no row without a notice at all. */
@@ -296,6 +307,22 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, volunteerMinorsOpen: false, volunteeringEvents: 0 }).some((task) => task.id === "volunteerMinorsTexts")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.volunteerMinorsTexts;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  it("§821: the volunteers' public list row is open while an event ahead has the list public and the notice is silent, done once it names the list, absent while neither is wanted", () => {
+    expect(stateOf({ ...LAUNCHED, volunteersListDescribed: false }, "volunteersListNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "volunteersListNotice")).toBe("done");
+    // Done by itself the day a notice naming it takes effect, even with no event having the list public.
+    expect(stateOf({ ...LAUNCHED, volunteersListEvents: 0 }, "volunteersListNotice")).toBe("done");
+    // No event has the list public and the notice is silent: nothing to ask of the club.
+    expect(ownerTasks({ ...LAUNCHED, volunteersListDescribed: false, volunteersListEvents: 0 }).some((task) => task.id === "volunteersListNotice")).toBe(false);
+    // Never blocking: it does not stop a runner, so the row is not one of the blocking ones.
+    expect(ownerTasks({ ...LAUNCHED, volunteersListDescribed: false }).find((task) => task.id === "volunteersListNotice")?.owner).toBe("club");
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.volunteersListNotice;
       expect(item.title && item.todo && item.done).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -572,6 +599,7 @@ describe("owner tasks", () => {
       "listNumbersNotice",
       "resultsNotice",
       "rsvpNotice",
+      "rsvpAskNotice",
       "invitationsNotice",
       "promoNotice",
       "sponsorNotice",
@@ -584,6 +612,7 @@ describe("owner tasks", () => {
       "volunteerAgreementNotice",
       "volunteerProfileNotice",
       "volunteerMinorsTexts",
+      "volunteersListNotice",
       "gmailFallbackNotice",
       "volunteerAgreement",
       "volunteerRoleChoicesAgreement",

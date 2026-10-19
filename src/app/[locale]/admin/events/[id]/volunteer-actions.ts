@@ -14,6 +14,7 @@ import {
   changeVolunteerRole,
   changeVolunteerRoles,
   setAcceptsVolunteers,
+  setVolunteersAccess,
   setVolunteersShirts,
   setVolunteersShowCounts,
   type VolunteerCategoryRequest,
@@ -22,13 +23,16 @@ import {
   VolunteerRoleRowError,
   type VolunteerRolesRequest,
 } from "@/modules/volunteers/volunteers";
+import { setVolunteersListPublic } from "@/modules/volunteers/public-list";
 import { VOLUNTEER_NEEDED_MAX, VOLUNTEER_ROLE_DESCRIPTION_MAX, VOLUNTEER_ROLE_NAME_MAX, VOLUNTEER_ROLES_MAX } from "@/modules/volunteers/domain/volunteer";
 import { postedRoleRows } from "@/modules/volunteers/role-rows";
 import { recordPaperVolunteerAgreement, requestVolunteerAgreement } from "@/modules/volunteers/agreement";
 import { recordPaperVolunteerGuardian, requestVolunteerGuardian } from "@/modules/volunteers/guardian";
+import { readVolunteersAccess, VOLUNTEER_INVITATION_BATCH_MAX, VOLUNTEER_INVITATION_MESSAGE_MAX, VolunteerInvitationRefusal } from "@/modules/volunteers/domain/access";
+import { resendVolunteerInvitation, sendVolunteerInvitations, withdrawVolunteerInvitation } from "@/modules/volunteers/invitations";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
-import { type FormOutcome, refused } from "@/shared/forms/outcome";
+import { type FormOutcome, keptValuesOf, refused } from "@/shared/forms/outcome";
 import { isUuid } from "@/shared/ids";
 
 /*
@@ -96,6 +100,8 @@ const staffFields = (form: FormData) => ({
   guardianEmail: field(form, "guardianEmail"),
   volunteeredBefore: form.get("volunteeredBefore") === "on",
   clubMember: form.get("clubMember") === "on",
+  // «Vreau să apar pe lista publică a voluntarilor» (§821): the organizers' record of the person's own tick, true only when posted.
+  listOptIn: form.get("listOptIn") === "on",
 });
 
 const categoryFields = (form: FormData) => ({ nameRo: field(form, "nameRo"), nameEn: field(form, "nameEn") });
@@ -170,6 +176,114 @@ export async function switchVolunteersCountsAction(form: FormData): Promise<void
     const actor = await requireStaff();
     const result = await setVolunteersShowCounts(getDb(), actor, { eventId: eventIdOf(form), on }, new Date());
     return backToCard(form, { saved: result.changed ? (on ? "volunteersCountsOn" : "volunteersCountsOff") : "volunteerUnchanged" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+}
+
+/**
+ * «Cine se poate oferi» (§820): the card's radio group and its «Salvează». It posts the choice wanted — one of the three, a forged
+ * value is refused by name — and the service saves it, audits it and tells the public cache. Changing it deletes nothing.
+ */
+export async function switchVolunteersAccessAction(form: FormData): Promise<void> {
+  const access = readVolunteersAccess(form.get("access"));
+  // A value that is none of the three is a forged post: refused by name, nothing saved.
+  if (access === null) return backToCard(form, { error: "VALIDATION_ERROR" });
+  try {
+    const actor = await requireStaff();
+    const result = await setVolunteersAccess(getDb(), actor, { eventId: eventIdOf(form), access }, new Date());
+    return backToCard(form, { saved: result.changed ? "volunteersAccessSaved" : "volunteerUnchanged" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+}
+
+/**
+ * The boxes a refusal points at: a line too long, both boxes of the pair; a line written in one language only, the empty one (§354, as the
+ * other pairs of the editor name the language still owed); anything else, the addresses.
+ */
+function invitationRefusalFields(error: VolunteerInvitationRefusal, form: FormData): string[] {
+  if (error.refusal === "VINVITE_MESSAGE_LONG") return ["messageRo", "messageEn"];
+  if (error.refusal === "VINVITE_MESSAGE_ONE_LANGUAGE") return [field(form, "messageRo").trim() === "" ? "messageRo" : "messageEn"];
+  return ["addresses"];
+}
+
+/** The refusals of the invitations' presses that say something to the person who pressed, with their sentence in `Admin.errors`. */
+function invitationRefusalOutcome(error: VolunteerInvitationRefusal, form: FormData): FormOutcome {
+  return {
+    error: error.refusal,
+    // The sentences' numbers and pieces: the lines that could not be read, and the bound the refusal names (`{max}`).
+    errorValues: {
+      ...(error.unread.length > 0 ? { addresses: error.unread.join(", ") } : {}),
+      max: String(error.refusal === "VINVITE_TOO_MANY" ? VOLUNTEER_INVITATION_BATCH_MAX : VOLUNTEER_INVITATION_MESSAGE_MAX),
+    },
+    fields: invitationRefusalFields(error, form),
+    values: keptValuesOf(form),
+  };
+}
+
+/**
+ * «Trimite invitațiile» (§820): the addresses typed, one per line, the club's optional line and the email's language. The service
+ * asserts the role (the Organizer and the Administrators) and the choice «Doar cu invitație de la club»; a refusal comes back to the
+ * form with what was typed, a send redirects to the card with the toast (how many went).
+ */
+export async function sendVolunteerInvitationsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let sent: { sent: number; alreadyInvited: number; alreadyOffered: number };
+  try {
+    const actor = await requireStaff();
+    sent = await sendVolunteerInvitations(
+      getDb(),
+      actor,
+      { eventId: eventIdOf(form), addresses: field(form, "addresses"), messageRo: field(form, "messageRo"), messageEn: field(form, "messageEn"), locale: field(form, "inviteLocale") === "en" ? "en" : "ro" },
+      new Date(),
+    );
+  } catch (error) {
+    if (error instanceof VolunteerInvitationRefusal) return invitationRefusalOutcome(error, form);
+    if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "FORBIDDEN")) return refused(error, form);
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+  return backToCard(form, sent.sent > 0 ? { saved: "volunteerInvitationsSent", count: String(sent.sent) } : { saved: "volunteerInvitationsNone" });
+}
+
+/** «Retrimite» (§820): another email with a new link; the earlier link stops working. A refusal is the card's banner. */
+export async function resendVolunteerInvitationAction(_previous: unknown, form: FormData): Promise<null> {
+  try {
+    const actor = await requireStaff();
+    await resendVolunteerInvitation(getDb(), actor, field(form, "invitationId"), new Date());
+  } catch (error) {
+    if (error instanceof VolunteerInvitationRefusal) return backToCard(form, { error: error.refusal });
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+  return backToCard(form, { saved: "volunteerInvitationResent" });
+}
+
+/** «Retrage» (§820): the invitation ends now and its link says so. */
+export async function withdrawVolunteerInvitationAction(_previous: unknown, form: FormData): Promise<null> {
+  try {
+    const actor = await requireStaff();
+    await withdrawVolunteerInvitation(getDb(), actor, field(form, "invitationId"), new Date());
+  } catch (error) {
+    if (error instanceof VolunteerInvitationRefusal) return backToCard(form, { error: error.refusal });
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+  return backToCard(form, { saved: "volunteerInvitationWithdrawn" });
+}
+
+/**
+ * «Lista voluntarilor e publică pe pagina evenimentului» (§821): the card's fourth tick, the event's `volunteers_list_public`, the same submit
+ * drawn as the checkbox (`TickButton`) — it posts `on=1|0`, the state it wants, never a toggle.
+ */
+export async function switchVolunteersListAction(form: FormData): Promise<void> {
+  const on = field(form, "on") === "1";
+  try {
+    const actor = await requireStaff();
+    const result = await setVolunteersListPublic(getDb(), actor, { eventId: eventIdOf(form), on }, new Date());
+    return backToCard(form, { saved: result.changed ? (on ? "volunteersListOn" : "volunteersListOff") : "volunteerUnchanged" });
   } catch (error) {
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });

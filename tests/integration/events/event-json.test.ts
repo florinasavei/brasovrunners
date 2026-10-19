@@ -1130,7 +1130,7 @@ describe("§774 the volunteers' categories and roles in the file", () => {
     const read = readEventFile(JSON.stringify(older));
     expect(read.ok).toBe(true);
     if (!read.ok) return;
-    expect(read.file.volunteers).toEqual({ categories: [], roles: [] });
+    expect(read.file.volunteers).toEqual({ categories: [], roles: [], access: "ANYONE", listPublic: false });
     const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
     expect(await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, created.eventId))).toEqual([]);
 
@@ -1653,5 +1653,47 @@ describe("§811 the event's tick «Acceptă răspunsuri „Vin!”» travels in 
     await db.insert(eventRsvps).values({ eventId: target.id, deliveryEmail: "ana@example.test", canonicalEmail: "ana@example.test", canonicalizationVersion: 2, locale: "ro", privacyNoticeVersion: 1, confirmedAt: NOW });
     await importEventOver(db, await overInput(file, target.id));
     expect(await db.select().from(eventRsvps).where(eq(eventRsvps.eventId, target.id))).toHaveLength(1);
+  });
+});
+
+// --- «Cine se poate oferi» (§820) ------------------------------------------------------------------
+
+describe("§820 the volunteers' «Cine se poate oferi» travels in the file — written only when it is not «Oricine»", () => {
+  it("is exported as the file's volunteers block, left out of the downloaded text for «Oricine» so an older release still reads it, and the file's version stays 3", async () => {
+    const { event } = await seedRace();
+    const anyone = await fileOf(event.id);
+    expect(anyone.version).toBe(3);
+    expect(anyone.volunteers.access).toBe("ANYONE");
+    expect(serializeEventFile(anyone)).not.toContain('"access"');
+
+    await db.update(events).set({ volunteersAccess: "INVITED" }).where(eq(events.id, event.id));
+    const invited = await fileOf(event.id);
+    expect(invited.volunteers.access).toBe("INVITED");
+    expect(serializeEventFile(invited)).toContain('"access": "INVITED"');
+    // The card's ticks stay out of the file, as before.
+    expect(serializeEventFile(invited)).not.toMatch(/acceptsVolunteers|volunteersShirts|showCounts/);
+  });
+
+  it("is imported as new as it was — with «Primește voluntari» off, so nothing opens by itself —, and a file with no key reads as «Oricine»", async () => {
+    const { event } = await seedRace();
+    await db.update(events).set({ volunteersAccess: "MEMBERS", acceptsVolunteers: true }).where(eq(events.id, event.id));
+    const file = await fileOf(event.id);
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect(await reload(created.eventId)).toMatchObject({ volunteersAccess: "MEMBERS", acceptsVolunteers: false });
+    const read = readEventFile(serializeEventFile({ ...file, volunteers: { ...file.volunteers, access: "ANYONE" } }));
+    if (!read.ok) throw new Error(`a file without the choice did not read: ${read.refusal}`);
+    expect(read.file.volunteers.access).toBe("ANYONE");
+  });
+
+  it("is never written over an existing event: the target keeps the club's own choice, and the import says the volunteers were not applied", async () => {
+    const { event } = await seedRace();
+    await db.update(events).set({ volunteersAccess: "INVITED" }).where(eq(events.id, event.id));
+    const file = await fileOf(event.id);
+    const { target } = await seedTarget();
+    await db.update(events).set({ volunteersAccess: "MEMBERS" }).where(eq(events.id, target.id));
+    const diff = await diffEventImport(db, { actor: admin, file, eventId: target.id });
+    expect(diff.changes.map((change) => change.key).filter((key) => /volunteer|access/i.test(key))).toEqual([]);
+    await importEventOver(db, await overInput(file, target.id));
+    expect((await reload(target.id)).volunteersAccess).toBe("MEMBERS");
   });
 });

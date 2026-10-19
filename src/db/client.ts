@@ -8,6 +8,7 @@ import * as emailOutboxSchema from "./schema/email-outbox";
 import * as eventCheckpointsSchema from "./schema/event-checkpoints";
 import * as eventResultsSchema from "./schema/event-results";
 import * as eventTodosSchema from "./schema/event-todos";
+import * as eventVolunteerInvitationsSchema from "./schema/event-volunteer-invitations";
 import * as eventVolunteersSchema from "./schema/event-volunteers";
 import * as eventsSchema from "./schema/events";
 import * as faqSchema from "./schema/faq";
@@ -30,6 +31,7 @@ export const schema = {
   ...eventTodosSchema,
   ...eventResultsSchema,
   ...eventVolunteersSchema,
+  ...eventVolunteerInvitationsSchema,
   ...eventCheckpointsSchema,
   ...participantsSchema,
   ...emailActionTokensSchema,

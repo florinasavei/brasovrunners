@@ -4,6 +4,7 @@ import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventResults } from "@/db/schema/event-results";
 import { eventRsvps } from "@/db/schema/event-rsvps";
+import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
@@ -111,6 +112,8 @@ export type PersonData = {
     locale: string;
     privacyNoticeVersion: number;
     confirmedAt: Date | null;
+    /** When the «Vii?» email (§818) asked and wrote this row; with no `confirmedAt` it is a question nobody answered, not an answer. */
+    askedAt: Date | null;
     createdAt: Date;
   }>;
   /**
@@ -118,6 +121,25 @@ export type PersonData = {
    * fingerprint, which prove nothing to the person and are of no use to the club.
    */
   rememberedBrowsers: Array<{ deliveryEmail: string; displayName: string | null; createdAt: Date; lastUsedAt: Date; expiresAt: Date }>;
+  /**
+   * The club's invitations to volunteer sent to this address (§820, art. 15 GDPR): the event, the address as the club typed it, the club's
+   * line in both languages, the language and the moments — every column of the row but the link's fingerprint, which proves nothing to the
+   * person. Gone with the event's volunteers, thirty days after the event,
+   * with the person's offer when the card deletes it, or at an Administrator's press on this screen (`eraseVolunteerInvitationsOfPerson`).
+   */
+  volunteerInvitations: Array<{
+    eventId: string;
+    eventTitle: string | null;
+    deliveryEmail: string;
+    messageRo: string | null;
+    messageEn: string | null;
+    locale: string;
+    sentAt: Date;
+    resentAt: Date | null;
+    usedAt: Date | null;
+    withdrawnAt: Date | null;
+    expiresAt: Date;
+  }>;
   /**
    * What the person offered as a volunteer (§754): the event, the role, the state, where it came from and
    * what was typed — name, address, telephone number, their message and the organizers' note, every column
@@ -150,6 +172,10 @@ export type PersonData = {
     city: string | null;
     volunteeredBefore: boolean;
     clubMember: boolean;
+    /** «Vreau să apar pe lista publică a voluntarilor» (§821): the person's tick, or the organizers' record of it — what the event's page may name them by (art. 15 GDPR). */
+    listOptIn: boolean;
+    /** The privacy notice version the list tick was given under (§821); null with no tick. */
+    listOptInNoticeVersion: number | null;
     shirtSize: (typeof eventVolunteers.$inferSelect)["shirtSize"];
     privacyNoticeVersion: number | null;
     createdAt: Date;
@@ -308,6 +334,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
       locale: eventRsvps.locale,
       privacyNoticeVersion: eventRsvps.privacyNoticeVersion,
       confirmedAt: eventRsvps.confirmedAt,
+      askedAt: eventRsvps.askedAt,
       createdAt: eventRsvps.createdAt,
     })
     .from(eventRsvps)
@@ -325,6 +352,26 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .from(personSessions)
     .where(eq(personSessions.canonicalEmail, canonicalEmail))
     .orderBy(asc(personSessions.createdAt));
+
+  // The club's invitations to volunteer (§820), by the same canonical address: the event's title in the invitation's language.
+  const volunteerInvitations = await db
+    .select({
+      eventId: eventVolunteerInvitations.eventId,
+      eventTitle: eventTranslations.title,
+      deliveryEmail: eventVolunteerInvitations.deliveryEmail,
+      messageRo: eventVolunteerInvitations.messageRo,
+      messageEn: eventVolunteerInvitations.messageEn,
+      locale: eventVolunteerInvitations.locale,
+      sentAt: eventVolunteerInvitations.sentAt,
+      resentAt: eventVolunteerInvitations.resentAt,
+      usedAt: eventVolunteerInvitations.usedAt,
+      withdrawnAt: eventVolunteerInvitations.withdrawnAt,
+      expiresAt: eventVolunteerInvitations.expiresAt,
+    })
+    .from(eventVolunteerInvitations)
+    .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventVolunteerInvitations.eventId), eq(eventTranslations.locale, eventVolunteerInvitations.locale)))
+    .where(eq(eventVolunteerInvitations.canonicalEmail, canonicalEmail))
+    .orderBy(asc(eventVolunteerInvitations.sentAt));
 
   // The offers to volunteer (§754), found by the same canonical address: the event's title in Romanian, the role as the club wrote it.
   const offerRows = await db
@@ -349,6 +396,8 @@ async function collectPersonData<T extends Record<string, unknown>>(
       city: eventVolunteers.city,
       volunteeredBefore: eventVolunteers.volunteeredBefore,
       clubMember: eventVolunteers.clubMember,
+      listOptIn: eventVolunteers.listOptIn,
+      listOptInNoticeVersion: eventVolunteers.listOptInNoticeVersion,
       shirtSize: eventVolunteers.shirtSize,
       privacyNoticeVersion: eventVolunteers.privacyNoticeVersion,
       createdAt: eventVolunteers.createdAt,
@@ -489,6 +538,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     announcementRequests,
     rsvpAnswers,
     rememberedBrowsers,
+    volunteerInvitations,
     volunteerOffers,
     groupRunDeclarations: groupRuns,
     results: results.map((row) => ({ ...row, registrationId: row.registrationId as string })),
@@ -569,6 +619,39 @@ export async function eraseRsvpsOfPerson<T extends Record<string, unknown>>(
 }
 
 /**
+ * Erase the club's invitations to volunteer sent to one canonical address (§820, art. 17 GDPR), on the person's request, by an Administrator
+ * (`assertAdministrator`). The rows go whole — the address, the club's line in both languages and the link's fingerprint, so a link already in
+ * an inbox stops working — whatever became of each invitation: an unused or withdrawn one holds an address and a line and nothing else, and
+ * a person's offer (if there is one) is not touched, it has its own delete on the event's «Voluntari» card. One audit row keeps the count
+ * (`participant.volunteer_invitations_erased`), never the address.
+ */
+export async function eraseVolunteerInvitationsOfPerson<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  canonicalEmail: string,
+  now: Date,
+): Promise<{ invitations: number }> {
+  assertAdministrator(actor);
+  return db.transaction(async (tx) => {
+    const deleted = await tx
+      .delete(eventVolunteerInvitations)
+      .where(eq(eventVolunteerInvitations.canonicalEmail, canonicalEmail))
+      .returning({ id: eventVolunteerInvitations.id });
+    const result = { invitations: deleted.length };
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      participantId: null,
+      action: "participant.volunteer_invitations_erased",
+      entityType: "participant",
+      entityId: null,
+      metadata: result,
+      now,
+    });
+    return result;
+  });
+}
+
+/**
  * The page's read. Every registration shown carries its emergency details and health note, so
  * each one is recorded as read (`registration.health_viewed`, §322) exactly as the section on
  * the registration's own page is — the same question, "who has seen my health note", from
@@ -623,6 +706,7 @@ export async function exportPersonData<T extends Record<string, unknown>>(
       rsvpAnswers: data.rsvpAnswers.length,
       rememberedBrowsers: data.rememberedBrowsers.length,
       volunteerOffers: data.volunteerOffers.length,
+      volunteerInvitations: data.volunteerInvitations.length,
       groupRunDeclarations: data.groupRunDeclarations.length,
       results: data.results.length,
       notes: data.notes.length,

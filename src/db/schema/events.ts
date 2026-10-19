@@ -127,6 +127,20 @@ export const publicListClub = pgEnum("public_list_club", ["members_only", "as_ty
 export type PublicListClub = (typeof publicListClub.enumValues)[number];
 
 /**
+ * «Cine se poate oferi» (§820, amending §754 and §768): who may offer as a volunteer for one event. A closed set at the database,
+ * like every choice here.
+ *
+ * - `ANYONE` — «Oricine, de pe pagina evenimentului»: the public form, as it always was. The default.
+ * - `MEMBERS` — «Doar membrii clubului»: the form is shown to a signed-in member of the club (the members' zone's account, §524) and
+ *   to nobody else; a stranger is told so and sent to the members' sign-in.
+ * - `INVITED` — «Doar cu invitație de la club»: no form on the event's page; the volunteers' page opens only from the personal link of
+ *   an invitation the club emailed (`event_volunteer_invitations`).
+ */
+export const volunteersAccess = pgEnum("volunteers_access", ["ANYONE", "MEMBERS", "INVITED"]);
+
+export type VolunteersAccess = (typeof volunteersAccess.enumValues)[number];
+
+/**
  * Events.
  *
  * The full M1 column set from AGENTS.md §12.3 is present even though the pilot reads only a
@@ -537,6 +551,26 @@ export const events = pgTable(
      * never writes it, the event's file does not carry it, and a copy of an event never inherits it.
      */
     volunteersShowCounts: boolean("volunteers_show_counts").notNull().default(false),
+
+    /**
+     * «Cine se poate oferi» (§820, amending §754 and §768; the owner, 2026-10-19: «invite only volunteer … Brașov Runners only
+     * volunteers»): anyone from the event's page (the default, what it always was), the club's signed-in members only, or only a
+     * person the club invited by email. Saved by the «Voluntari» card's own form beside `accepts_volunteers`; the event's save
+     * never writes it. Unlike the ticks above it travels with a copy of the event, a repeat and the event's file: it is the club's
+     * standing rule for who helps, and every value but the default only narrows the door.
+     */
+    volunteersAccess: volunteersAccess("volunteers_access").notNull().default("ANYONE"),
+
+    /**
+     * «Lista voluntarilor e publică pe pagina evenimentului» (§821, amending §754 and §143/§396; the owner, 2026-10-19: «private vs
+     * public lists of volunteers»): the volunteers' list is the team's alone (the editor's card, the CSV, the badges) unless the club
+     * ticks this. Ticked, the event's page draws a card «Voluntarii» with the **name and the given role** of each confirmed volunteer
+     * who ticked «Vreau să apar pe lista publică a voluntarilor» (`event_volunteers.list_opt_in`) — and only while the privacy notice
+     * in force describes it (`{{volunteersList}}`) and the volunteer ticked under a notice that did; the others are a count, never
+     * a name, an address or a telephone number. Off by default. Saved by the «Voluntari» card's own form beside the other ticks; the
+     * event's save never writes it. Like `volunteers_access` it travels with a copy of the event, a repeat and the event's file.
+     */
+    volunteersListPublic: boolean("volunteers_list_public").notNull().default(false),
 
     /**
      * The two facts that stopped being free text in migration `0018`.

@@ -19,11 +19,13 @@ import {
   VOLUNTEERS_MERGE_FIELD,
   VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
   VOLUNTEER_MINORS_NOTICE_MERGE_FIELD,
+  VOLUNTEERS_LIST_NOTICE_MERGE_FIELD,
   VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD,
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
   LIST_NUMBERS_MERGE_FIELD,
   RESULTS_MERGE_FIELD,
+  RSVP_ASK_MERGE_FIELD,
   RSVP_MERGE_FIELD,
   GMAIL_FALLBACK_MERGE_FIELD,
   GROUP_RUN_ALONE_MERGE_FIELD,
@@ -43,9 +45,9 @@ import { gmailFallbackClause } from "@/modules/notifications/fallback-notice-wor
 import { eventInvitationsClause } from "@/modules/registrations/invitation-words";
 import { feedbackFormsClause, feedbackFormsNamedClause, feedbackSafetyGmailClause, relayQueueClause } from "@/modules/feedback/notice-words";
 import { membersShopClause } from "@/modules/content/shop/notice-words";
-import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause } from "@/modules/volunteers/notice-words";
+import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause, volunteersListClause } from "@/modules/volunteers/notice-words";
 import { resultsClause } from "@/modules/results/notice-words";
-import { rsvpClause } from "@/modules/rsvp/notice-words";
+import { rsvpAskClause, rsvpClause } from "@/modules/rsvp/notice-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -213,6 +215,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: RSVP_MERGE_FIELD,
     example: inBoth((locale) => rsvpClause(locale)),
   },
+  // The privacy notice's marker for the day-before question (§818): filled with the newsletter topic's own name, and the switch
+  // that lets the question be queued, sent and offered as a topic (`describesRsvpAsk`).
+  {
+    token: `{{${RSVP_ASK_MERGE_FIELD}}}`,
+    messageKey: RSVP_ASK_MERGE_FIELD,
+    example: inBoth((locale) => rsvpAskClause(locale)),
+  },
   // The privacy notice's marker for the newsletter (§445): filled with the pop-up's topics, and the
   // switch that lets the contact page offer it (`describesNewsletter`).
   {
@@ -317,6 +326,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${VOLUNTEER_MINORS_NOTICE_MERGE_FIELD}}}`,
     messageKey: VOLUNTEER_MINORS_NOTICE_MERGE_FIELD,
     example: inBoth((locale) => volunteerMinorsClause(locale)),
+  },
+  // The privacy notice's marker for the volunteers' public list (§821): the tick's own words, and the switch — the event page's card
+  // «Voluntarii», the form's tick and the organizers' record of it wait for a notice naming it (`describesVolunteersList`).
+  {
+    token: `{{${VOLUNTEERS_LIST_NOTICE_MERGE_FIELD}}}`,
+    messageKey: VOLUNTEERS_LIST_NOTICE_MERGE_FIELD,
+    example: inBoth((locale) => volunteersListClause(locale)),
   },
 ];
 

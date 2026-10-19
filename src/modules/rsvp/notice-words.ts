@@ -1,3 +1,4 @@
+import { topicsPhrase } from "@/modules/newsletter/topic-words";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
@@ -11,7 +12,16 @@ export function rsvpClause(locale: string): string {
   return locale === "en" ? `“${en.Event.rsvp.submit}”` : `„${ro.Event.rsvp.submit}”`;
 }
 
-/** The notice's merge value, beside the other features' on the legal pages. */
-export function rsvpMergeValues(locale: string): { rsvp: string } {
-  return { rsvp: rsvpClause(locale) };
+/**
+ * What `{{rsvpAsk}}` becomes (§818, «Vii mâine?»): the newsletter topic that carries the day-before question, quoted, in that
+ * language — „Întrebarea «Vii?» înaintea alergărilor” — read through `topicsPhrase` from the catalogue the pop-up's box reads, so the
+ * approved sentence names what a subscriber ticked.
+ */
+export function rsvpAskClause(locale: string): string {
+  return topicsPhrase(locale, ["RSVP_ASK"]);
+}
+
+/** The notice's merge values, beside the other features' on the legal pages. */
+export function rsvpMergeValues(locale: string): { rsvp: string; rsvpAsk: string } {
+  return { rsvp: rsvpClause(locale), rsvpAsk: rsvpAskClause(locale) };
 }

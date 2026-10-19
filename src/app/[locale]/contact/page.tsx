@@ -29,6 +29,7 @@ import {
   cachedFeedbackFormsDescribed,
   cachedFeedbackOffer,
   cachedNewsletterOffered,
+  cachedRsvpAskDescribed,
   cachedPublicPhone,
   cachedPublishedEventBySlug,
   cachedShownContactAddresses,
@@ -152,6 +153,8 @@ export default async function ContactPage({ params, searchParams }: Props) {
   */
   const newsletterOutcome = parseNewsletterOutcome(newsletter);
   const newsletterOffered = (await orNull(() => cachedNewsletterOffered(now))) === true;
+  // The topic «Întrebarea «Vii?» …» (§818) is a box of the pop-up only once the notice in force describes the question.
+  const rsvpAskOffered = newsletterOffered && (await orNull(() => cachedRsvpAskDescribed(now))) === true;
   const newsletterRefused = newsletterOutcome === "invalid" || newsletterOutcome === "captcha" || newsletterOutcome === "limited";
   // «Vreau să mă dezabonez» (§550): its own answer, and its typed address in the same sealed draft.
   const leaveOutcome = parseNewsletterLeaveOutcome(nleave);
@@ -491,6 +494,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
       {newsletterOffered && (
         <NewsletterSignup
           locale={locale}
+          askOffered={rsvpAskOffered}
           outcome={newsletterOutcome}
           refused={newsletterOutcome === "invalid" ? parseNewsletterFields(nfields) : []}
           typed={

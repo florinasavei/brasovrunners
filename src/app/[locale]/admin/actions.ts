@@ -41,7 +41,7 @@ import {
   type DevIdentityKey,
   ensureDevStaffUser,
 } from "@/modules/staff-identity/dev-switcher";
-import { landingFor, signInTargetOf } from "@/modules/staff-identity/domain/landing";
+import { landingFor, signInBackOf, signInTargetOf } from "@/modules/staff-identity/domain/landing";
 import { MEMBER_ROWS_MAX, parseMemberRows } from "@/modules/staff-identity/domain/member-rows";
 import { findStaffUsersAmong } from "@/modules/staff-identity/repository";
 import { recordAuditEvent } from "@/modules/audit/repository";
@@ -1580,7 +1580,7 @@ export async function signInAsDevIdentityAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
 
   let outcome: { error?: string; saved?: string } | undefined;
-  let landing: "/admin" | "/members-area" = "/admin";
+  let landing: "/admin" | "/members-area" | { pathname: "/events/[slug]/volunteers"; params: { slug: string } } = "/admin";
   try {
     assertDevStaffSwitcherEnabled();
     const staffUser = await ensureDevStaffUser(getDb(), text(form, "identity") as DevIdentityKey);
@@ -1593,6 +1593,9 @@ export async function signInAsDevIdentityAction(form: FormData): Promise<void> {
     // Where the provider's sign-in would land (§524): the page the person came from, and a member
     // always the members' zone.
     landing = landingFor(staffUser.role, signInTargetOf(text(form, "to")));
+    // Back to the volunteers' page the person came from (§820): the slug is checked against the events' pattern, the path rebuilt here.
+    const back = signInBackOf(text(form, "back"), text(form, "slug"));
+    if (back) landing = { pathname: "/events/[slug]/volunteers", params: { slug: back.slug } };
   } catch (error) {
     outcome = outcomeOf(error);
   }

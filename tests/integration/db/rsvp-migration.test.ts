@@ -132,9 +132,11 @@ describe("migration 0168_rsvp_core — the data for «Vin!»", () => {
 
   it("knows RSVP_CONFIRM as a message type, and nothing else new in the enum", async () => {
     const { rows } = await client.query<{ enumlabel: string }>(
-      `SELECT e.enumlabel FROM pg_enum e JOIN pg_type t ON t.oid = e.enumtypid WHERE t.typname = 'email_message_type' ORDER BY e.enumsortorder DESC LIMIT 2`,
+      `SELECT e.enumlabel FROM pg_enum e JOIN pg_type t ON t.oid = e.enumtypid WHERE t.typname = 'email_message_type' ORDER BY e.enumsortorder`,
     );
-    expect(rows.map((row) => row.enumlabel)).toEqual(["RSVP_CONFIRM", "RELAY_NOTICE"]);
+    // Appended right after RELAY_NOTICE by 0168; a later migration (0170 adds RSVP_ASK) appends after it, so the tail is not pinned.
+    const labels = rows.map((row) => row.enumlabel);
+    expect(labels.slice(labels.indexOf("RELAY_NOTICE"), labels.indexOf("RELAY_NOTICE") + 2)).toEqual(["RELAY_NOTICE", "RSVP_CONFIRM"]);
   });
 
   it("is an expand: tables, a column with a default and one enum value — nothing dropped, narrowed or rewritten", () => {

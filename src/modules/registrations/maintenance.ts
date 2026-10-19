@@ -11,6 +11,7 @@ import { queueConfirmationRetries } from "@/modules/notifications/confirmation-r
 import { releaseLegacyHeldNumbers } from "./bibs";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { queueNewEventAlerts } from "@/modules/newsletter/service";
+import { queueRsvpAsks } from "@/modules/rsvp/ask";
 import { announceLegalTemplateChanges, legalFactsInForce } from "@/modules/legal-documents/templates-notice";
 import { applyOutageGrace, type OutageGraceDeps } from "./outage-grace";
 import { purgeLapsedFamilyEntries } from "./family-entries";
@@ -67,6 +68,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
    * Superadministrator on the run that sends the day's digest (§775), zero on every other run.
    */
   legalTemplatesNoticesQueued: number;
+  /** «Vii mâine la …?» messages queued this run (§818): one per subscriber of the topic, on the run that opens an event's window; zero on every other. */
+  rsvpAsksQueued: number;
   /**
    * The outage grace (§657): what the site's name answered this run (`resolves`, `unresolved`,
    * `unknown`, `skipped`), whether this run held every lapse — a `dns` window is open — how many
@@ -291,6 +294,20 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     retryableErrorCount += 1;
   }
 
+  /*
+    «Vii mâine la …?» (§818): the day before an event the club ticked «Vin!» on, once per event, from 08:00 club time (the §775 morning),
+    to the newsletter's subscribers of the topic. Its own try/catch and retryable like the alert's: a failure is a late question, and
+    the ping that follows asks again until midnight closes the window. No row is written for an event whose window is not open, so a
+    run outside it reads one indexed query and nothing else.
+  */
+  let rsvpAsksQueued = 0;
+  try {
+    rsvpAsksQueued = await queueRsvpAsks(db, now);
+  } catch {
+    errorCount += 1;
+    retryableErrorCount += 1;
+  }
+
   /**
    * The Administrators' notice of a moved legal template (§639): a daily digest (§775) — nothing before
    * 08:00 club time, at most one email per Administrator and Superadministrator per club day, naming
@@ -393,6 +410,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
         confirmationRetriesQueued +
         interestsNotified +
         eventAlertsQueued +
+        rsvpAsksQueued +
         legalTemplatesNoticesQueued +
         outageGrace.moved +
         outageGrace.noticesQueued +
@@ -417,6 +435,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     legacyNumbersKept,
     familyEntriesPurged,
     legalTemplatesNoticesQueued,
+    rsvpAsksQueued,
     outageGrace,
     retryableErrorCount,
   };

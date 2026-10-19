@@ -51,6 +51,11 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
     switchVolunteersAction: noop,
     switchVolunteersShirtsAction: noop,
     switchVolunteersCountsAction: noop,
+    switchVolunteersListAction: noop,
+    switchVolunteersAccessAction: noop,
+    sendVolunteerInvitationsAction: noop,
+    resendVolunteerInvitationAction: noop,
+    withdrawVolunteerInvitationAction: noop,
   };
 });
 vi.mock("@/app/[locale]/events/[slug]/volunteers/actions", () => ({ submitVolunteerAction: async () => {} }));
@@ -123,6 +128,7 @@ const PEOPLE: VolunteerItem[] = [
     city: "Brașov",
     volunteeredBefore: true,
     clubMember: true,
+    listOptIn: false,
     shirtSize: "M",
     createdAt: new Date("2026-10-14T09:00:00Z"),
     updatedAt: new Date("2026-10-14T09:00:00Z"),
@@ -162,6 +168,7 @@ const PEOPLE: VolunteerItem[] = [
     city: null,
     volunteeredBefore: false,
     clubMember: false,
+    listOptIn: false,
     shirtSize: null,
     createdAt: new Date("2026-10-14T09:30:00Z"),
     updatedAt: new Date("2026-10-14T09:30:00Z"),

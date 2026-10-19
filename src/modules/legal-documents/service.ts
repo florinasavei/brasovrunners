@@ -5,6 +5,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canWriteLegalTexts } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -408,6 +409,8 @@ export async function approveVersion<T extends Record<string, unknown>>(
   // In force from now, on `/termeni` and `/confidentialitate` — which read the text through the
   // public cache (§333) and must show it on the next visit, not the next day.
   revalidatePublicContent("legal");
+  // A notice that starts describing «Vii mâine?» (§818) opens a window the job may already have slept through: look again at the next ping.
+  wakeJobs("registration-maintenance");
 }
 
 /**

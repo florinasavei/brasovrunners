@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eventResults } from "@/db/schema/event-results";
+import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
@@ -11,6 +12,7 @@ import { registrations } from "@/db/schema/registrations";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { readPublicEventResults } from "@/modules/results/results";
+import { readPublicVolunteersList } from "@/modules/volunteers/public-list";
 import {
   countAnonymousStartListEntries,
   countPublicStartList,
@@ -652,5 +654,53 @@ describe("§810 what a race's public results may contain — a name only for a r
     // Even the record names nobody while no notice in force has described the results.
     const none = await readPublicEventResults(db, race.id, { ...options, firstResultsNoticeVersion: null });
     expect(none?.rows.map((row) => row.name)).toEqual([null, null]);
+  });
+});
+
+describe("§821 what the volunteers' public list may contain — a name only for an adult who ticked, never an address, a phone, a city or a minor", () => {
+  /** The code of readPublicVolunteersList, without its comments: the select list it guards and the mapping of its rows. */
+  function publicReadCode(): string {
+    const source = readFileSync("src/modules/volunteers/public-list.ts", "utf8");
+    const start = "export async function readPublicVolunteersList<";
+    const at = source.indexOf(start);
+    expect(at).toBeGreaterThan(-1);
+    const next = source.slice(at + start.length).search(/\n(export )?(async )?function /);
+    const body = next === -1 ? source.slice(at) : source.slice(at, at + start.length + next);
+    return body.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  }
+
+  it("names no address, phone, city, date of birth, message, note, guardian address or roles ticked in its select", () => {
+    const code = publicReadCode();
+    expect(code).toMatch(/\.select\(/);
+    for (const forbidden of ["email", "Email", "phone", "city", "dateOfBirth", "message", "note", "sex", "shirt", "roleChoices", "agreement"]) {
+      expect(code, forbidden).not.toContain(forbidden);
+    }
+  });
+
+  it("returns a name only through the rule, and the minor's age and guardian only as its input", () => {
+    const code = publicReadCode();
+    expect(code.match(/eventVolunteers\.name\b/g) ?? [], "the name is selected once").toHaveLength(1);
+    expect(code).toMatch(/volunteersListView\(view,/);
+    // The tick is read with the notice version it was given under — its own column, never the sign-up's consent record.
+    expect(code).toMatch(/listNoticeVersion: eventVolunteers\.listOptInNoticeVersion,/);
+    expect(code).not.toContain("privacyNoticeVersion");
+  });
+
+  it("answers with a count, the names of the confirmed adults who ticked, and a count of the others — nothing a page could leak", async () => {
+    const [event] = await db
+      .insert(events)
+      .values({ type: "RACE", startsAt: new Date("2026-11-21T07:00:00.000Z"), registrationMode: "INTERNAL", acceptsVolunteers: true, volunteersListPublic: true })
+      .returning();
+    const base = { eventId: event.id, canonicalizationVersion: 2, phone: "+40712345678", source: "PUBLIC" as const, state: "CONFIRMED" as const, listOptInNoticeVersion: 1 };
+    await db.insert(eventVolunteers).values([
+      { ...base, name: "Ana Adult", email: "ana@example.test", canonicalEmail: "ana@example.test", listOptIn: true, age: 30, city: "Brașov", createdAt: new Date("2026-10-01T10:00:00.000Z") },
+      { ...base, name: "Ion Fără Bifă", email: "ion@example.test", canonicalEmail: "ion@example.test", listOptIn: false, createdAt: new Date("2026-10-02T10:00:00.000Z") },
+      { ...base, name: "Tânăr Minor", email: "minor@example.test", canonicalEmail: "minor@example.test", listOptIn: true, age: 15, guardianName: "Părinte", createdAt: new Date("2026-10-03T10:00:00.000Z") },
+    ]);
+    const read = await readPublicVolunteersList(db, event.id, { firstListNoticeVersion: 1 });
+    expect(read.list).toEqual({ count: 3, named: [{ name: "Ana Adult", roleNameRo: null, roleNameEn: null }], others: 2 });
+    expect(JSON.stringify(read)).not.toMatch(/@example\.test|\+4071|Brașov|Părinte|Tânăr|Fără Bifă/);
+    // Nothing is named while no approved notice has described the list.
+    expect((await readPublicVolunteersList(db, event.id, { firstListNoticeVersion: null })).list.named).toEqual([]);
   });
 });

@@ -1,7 +1,7 @@
 import type { NewsletterTopic } from "@/db/schema/newsletter";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { NEWSLETTER_TOPICS } from "./domain/topics";
+import { AUTOMATIC_TOPICS, NEWSLETTER_TOPICS } from "./domain/topics";
 
 /**
  * The topics' names outside a request (§445): for the privacy notice's `{{newsletterTopics}}`, the
@@ -33,7 +33,12 @@ export function topicsPhrase(locale: string, topics: readonly NewsletterTopic[])
   return `${quoted.slice(0, -1).join(", ")} ${locale === "en" ? "and" : "și"} ${last}`;
 }
 
-/** What `{{newsletterTopics}}` becomes in the privacy notice: every topic a subscriber may choose. */
+/**
+ * What `{{newsletterTopics}}` becomes in the privacy notice: every topic a subscriber may choose and the club writes messages for. The
+ * automatic topics (`AUTOMATIC_TOPICS`: the day-before question) are left out — the notice says «temele pe care le alegi … mesajele scrise
+ * de club despre acele teme», and the question is neither chosen by every reader (its box waits for the club's approval of `{{rsvpAsk}}`)
+ * nor a message the club writes. The template names it itself, in the same section, through `{{rsvpAsk}}`.
+ */
 export function newsletterMergeValues(locale: string): { newsletterTopics: string } {
-  return { newsletterTopics: topicsPhrase(locale, NEWSLETTER_TOPICS) };
+  return { newsletterTopics: topicsPhrase(locale, NEWSLETTER_TOPICS.filter((topic) => !(AUTOMATIC_TOPICS as readonly string[]).includes(topic))) };
 }

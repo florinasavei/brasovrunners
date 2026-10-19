@@ -4,6 +4,7 @@ import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
@@ -15,7 +16,9 @@ import { routing } from "@/i18n/routing";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { readRsvpLink } from "@/modules/rsvp/rsvp";
-import { isWithdrawnProof } from "@/modules/rsvp/withdrawn-proof";
+import AutoConfirm from "@/modules/rsvp/ui/AutoConfirm";
+import { isWithdrawnProof, WITHDRAWN_ASKED_SUFFIX } from "@/modules/rsvp/withdrawn-proof";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
@@ -23,7 +26,7 @@ import { confirmRsvpAction, withdrawRsvpAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ invalid?: string; retras?: string; ok?: string }>;
+  searchParams: Promise<{ invalid?: string; retras?: string; ok?: string; nu?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -39,13 +42,30 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * (`actions.ts`) that spends the link. A link already used, replaced or past its life says so in one sentence and points at the
  * event's page; one that is unknown says so and points at the listing. The read is throttled per link, as every token page is
  * (§19.4, `tokenAttemptAllowed`).
+ *
+ * **The «Vii mâine la …?» email's two buttons (§818) open this page too** — they are the same two links, minted for a row the email
+ * made (`asked`). «Vin» is one press: above the button, an optional name and the tick «Vreau să apar cu numele» (the event page card's
+ * own words) — a person who gives neither is counted without a name, and the newsletter never had one to lend. «Nu vin» is one press
+ * that deletes the row: nobody is counted, and the page says so in the sentence the email promised. The box comes above the button (a
+ * field before its submit), under the intro; the privacy notice is linked beside it, as on the event page's card.
+ * **«Da, vin» presses itself in a browser** (§812, amending §811; the owner, 2026-10-19: «Asta ar trebui să se auto-bifeze când
+ * deschid»). The page above is unchanged — the sentence, the POST form, the button — and, for a live `RSVP_CONFIRM` link whose answer
+ * is not counted yet, the form is wrapped in the one island that presses that button once the page is shown in a browser
+ * (`AutoConfirm`). This GET still writes nothing and does not know whether the island will run: a scanner that fetches the link without
+ * running scripts, and a browser without JavaScript, see the button and count nobody; the island does not press while the page is
+ * prerendered or its tab is hidden. A link sandbox that runs scripts can still count the address (accepted, see `AutoConfirm.tsx`). A spent, expired, withdrawn or already-counted link has no island, and `RSVP_WITHDRAW` is always a press
+ * (it takes something away).
+ * **Where the two meet** (the dispatcher, 2026-10-19, merging the two lanes): an asked row with no name yet keeps its one press —
+ * the optional name and the tick «Vreau să apar cu numele» stand above the button, and a press that came by itself would make that
+ * choice for the person. Every other live, uncounted confirm link — a named asked row included — presses itself.
  */
 export default async function RsvpLinkPage({ params, searchParams }: Props) {
   const { locale, token } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const { invalid, retras, ok } = await searchParams;
+  const { invalid, retras, ok, nu } = await searchParams;
   const t = await getTranslations("Rsvp");
+  const tEvent = await getTranslations("Event");
   const db = getDb();
   const now = new Date();
   const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
@@ -56,15 +76,17 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
     somebody typed) the page names no event and claims nothing.
   */
   if (retras !== undefined && invalid === undefined) {
-    const event = retras && isWithdrawnProof(ok, token, retras) ? await findPublishedEventBySlug(db, locale, retras) : undefined;
+    // `nu` is the email's «Nu vin» (§818): its sentence, only with the proof the action made for it (the server read it from the deleted row).
+    const declined = nu !== undefined && isWithdrawnProof(ok, token, `${retras}${WITHDRAWN_ASKED_SUFFIX}`);
+    const event = retras && (declined || isWithdrawnProof(ok, token, retras)) ? await findPublishedEventBySlug(db, locale, retras) : undefined;
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
-          {t("withdrawnTitle")}
+          {declined ? t("askNoDoneTitle") : t("withdrawnTitle")}
         </Typography>
         <Stack spacing={1.5}>
           <Alert severity="success" role="status" data-testid="rsvp-withdrawn">
-            {event ? t("withdrawDone", { event: event.title }) : t("withdrawDoneNoEvent")}
+            {declined ? t("askNoDone") : event ? t("withdrawDone", { event: event.title }) : t("withdrawDoneNoEvent")}
           </Alert>
           <Typography variant="body2">
             {event ? (
@@ -84,11 +106,21 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
 
   const link = invalid !== undefined || !(await tokenAttemptAllowed(db, token, now)) ? null : await readRsvpLink(db, token, now);
   const live = link?.state === "live" ? link : null;
+  // «Da, vin»: a POST, so the GET above counts nobody (§12.8); the island may press it, a person always can.
+  const confirmForm = (
+    <form action={confirmRsvpAction}>
+      <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="token" value={token} />
+      <SubmitButton label={t("confirmButton")} pendingLabel={t("confirmPending")} size="large">
+        <EventAvailableIcon />
+      </SubmitButton>
+    </form>
+  );
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
-        {!link ? t("linkInvalid") : link.purpose === "RSVP_WITHDRAW" ? t("withdrawTitle") : t("confirmTitle")}
+        {!link ? t("linkInvalid") : link.purpose === "RSVP_WITHDRAW" ? (link.asked ? t("askNoTitle") : t("withdrawTitle")) : link.asked ? t("askTitle") : t("confirmTitle")}
       </Typography>
 
       {!live ? (
@@ -117,31 +149,58 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
         </Stack>
       ) : live.purpose === "RSVP_CONFIRM" ? (
         <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
-          <Typography data-testid="rsvp-confirm-intro">{live.confirmed ? t("confirmAlready", { event: live.title }) : t("confirmIntro", { event: live.title })}</Typography>
-          <form action={confirmRsvpAction}>
-            <input type="hidden" name="locale" value={locale} />
-            <input type="hidden" name="token" value={token} />
-            <SubmitButton label={t("confirmButton")} pendingLabel={t("confirmPending")} size="large">
-              <EventAvailableIcon />
-            </SubmitButton>
-          </form>
+          <Typography data-testid="rsvp-confirm-intro">
+            {live.confirmed ? t("confirmAlready", { event: live.title }) : live.asked ? t("askIntro", { event: live.title }) : t("confirmIntro", { event: live.title })}
+          </Typography>
+          {/* The email's «Vin» with no name yet keeps its press (the name is the person's choice); every other uncounted link presses itself. */}
+          {live.asked && !live.named ? (
+            <form action={confirmRsvpAction} style={{ width: "100%" }}>
+              <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="token" value={token} />
+              {/* The email's «Vin» (§818): the name is the person's to give, here, with the same box and tick as the event page's card. */}
+              {live.asked && !live.named && (
+                <Stack spacing={1.5} sx={{ mb: 2 }} data-testid="rsvp-ask-name">
+                  <TextField name="name" label={tEvent("rsvp.name")} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
+                  <CheckboxField name="showName">{tEvent("rsvp.showName")}</CheckboxField>
+                  <Typography variant="body2" color="text.secondary">
+                    <Link href="/legal/privacy" style={inlineLink}>{tEvent("rsvp.privacy")}</Link>
+                  </Typography>
+                </Stack>
+              )}
+              <SubmitButton label={t("confirmButton")} pendingLabel={t("confirmPending")} size="large">
+                <EventAvailableIcon />
+              </SubmitButton>
+            </form>
+          ) : live.confirmed ? (
+            confirmForm
+          ) : (
+            <AutoConfirm>{confirmForm}</AutoConfirm>
+          )}
+          {!live.confirmed && !(live.asked && !live.named) && (
+            <Typography variant="body2" data-testid="rsvp-confirm-auto">
+              {t("confirmAutoNote")}
+            </Typography>
+          )}
           <Typography variant="body2" color="text.secondary">
             {t("rememberNote")}
           </Typography>
         </Stack>
       ) : (
         <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
-          <Typography data-testid="rsvp-withdraw-intro">{t("withdrawIntro", { event: live.title })}</Typography>
+          <Typography data-testid="rsvp-withdraw-intro">{live.asked ? t("askNoIntro", { event: live.title }) : t("withdrawIntro", { event: live.title })}</Typography>
           <form action={withdrawRsvpAction}>
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="token" value={token} />
-            <SubmitButton label={t("withdrawButton")} pendingLabel={t("withdrawPending")} size="large" variant="outlined">
+            <SubmitButton label={live.asked ? t("askNoButton") : t("withdrawButton")} pendingLabel={t("withdrawPending")} size="large" variant="outlined">
               <EventBusyIcon />
             </SubmitButton>
           </form>
-          <Typography variant="body2" color="text.secondary" data-testid="rsvp-withdraw-remember">
-            {t("withdrawRememberNote")}
-          </Typography>
+          {/* After the email's unanswered question the browser is not remembered (`withdrawRsvpAction`): no note about a cookie. */}
+          {!live.asked && (
+            <Typography variant="body2" color="text.secondary" data-testid="rsvp-withdraw-remember">
+              {t("withdrawRememberNote")}
+            </Typography>
+          )}
         </Stack>
       )}
     </Container>

@@ -632,10 +632,24 @@
       },
       "page": {
         "title": "I want to volunteer at {event}",
-        "back": "Back to {event}"
+        "back": "Back to {event}",
+        "membersOnly": "The volunteers for this event are the club's members — sign in to the members' zone.",
+        "signIn": "Sign in to the members' zone",
+        "invite": {
+          "used": "This invitation has already been used.",
+          "withdrawn": "The club withdrew this invitation.",
+          "expired": "This invitation has expired."
+        }
       },
       "callout": {
-        "line": "We are looking for volunteers: {roles}"
+        "line": "We are looking for volunteers: {roles}",
+        "lineMembers": "We are looking for volunteers among the club's members: {roles}"
+      },
+      "lock": {
+        "leadMember": "You are signed in as a member: the name, the address and the member tick come from your account.",
+        "leadInvite": "The club invited you to volunteer.",
+        "emailMember": "The address of your member account; it does not change here.",
+        "emailInvite": "The address the invitation reached; it does not change here."
       },
       "doneGuardian": "If you are under 18, your parent or guardian is emailed a link to give their consent; until then the organizers cannot confirm you.",
       "doneHeading": "Thank you!",
@@ -653,6 +667,19 @@
         "email": "Parent's or guardian's email",
         "emailHelp": "We send the consent link here. We use it for nothing else.",
         "aware": "My parent or guardian knows and agrees"
+      },
+      "list": {
+        "title": "Volunteers",
+        "heading": "Volunteers ({count})",
+        "forming": "The volunteer team is taking shape.",
+        "names": "Volunteers who chose to appear by name",
+        "others": {
+          "one": "and 1 more volunteer",
+          "few": "and {count} more volunteers",
+          "other": "and {count} more volunteers"
+        },
+        "tick": "I want to appear on the public list of volunteers",
+        "tickHelp": "The event page shows only your name and the role the organizers give you, once they confirm you. You can ask in writing to be taken off it at any time."
       },
       "otherCategory": "Other activities",
       "contactLabel": "Questions?",
@@ -814,7 +841,7 @@
       "rememberedAs": "Answering as {who}",
       "going": "You're coming",
       "cancel": "I'm not coming any more",
-      "notMe": "Not me",
+      "notMe": "Not me — forget me on this device",
       "help": "Your browser stays recognised for a year after “Yes, I'm coming” or “I'm not coming any more”; “Not me” forgets it.",
       "failed": "We could not send your answer. Try again.",
       "calendar": {
@@ -2126,7 +2153,16 @@
       "RESULTS_NOT_STARTED": "The results can be made public after the race has started. You can type them already.",
       "RESULTS_NOT_OPEN": "Only a race has results.",
       "MEMBER_TIER_HAS_MEMBERS": "The level was not deleted. Members with this level: {count}. Give them another level first, on “Team”.",
-      "MEMBER_TIER_IN_CODES": "The level was not deleted. Discount codes for it alone: {count}. Change their levels first."
+      "MEMBER_TIER_IN_CODES": "The level was not deleted. Discount codes for it alone: {count}. Change their levels first.",
+      "VINVITE_NOBODY": "Write at least one address.",
+      "VINVITE_TOO_MANY": "At most {max} addresses at a time. Send the rest in a second round.",
+      "VINVITE_BAD_ADDRESS": "I cannot read these addresses: {addresses}. Nothing was sent.",
+      "VINVITE_MESSAGE_LONG": "The message is too long (at most {max} characters).",
+      "VINVITE_MESSAGE_ONE_LANGUAGE": "Write the message in both Romanian and English, or leave both boxes empty.",
+      "VINVITE_NOT_INVITED_ONLY": "Invitations are sent only while “Who can offer” is “Only by invitation from the club”.",
+      "VINVITE_EVENT_CLOSED": "Invitations cannot be sent now: the volunteers' form is not open. The reason is written above.",
+      "VINVITE_NOT_OPEN": "The invitation is no longer open: it was used or withdrawn, or the event is over or was called off.",
+      "VINVITE_NOT_FOUND": "The invitation no longer exists."
     },
     "editor": {
       "draftPreview": {
@@ -3618,8 +3654,10 @@
         "volunteerProfile": "Privacy notice only: the volunteers' form boxes about the person, in quotes. Without it in the notice in force, the form asks only the minimum-age tick",
         "volunteerGuardian": "Only in the volunteer agreement: the name of a minor volunteer's parent or guardian. For an adult the sentence is left out. Without it in the agreement in force, no minors are taken",
         "volunteerMinors": "Only in the privacy notice: the parent's boxes of the volunteers' form, in quotation marks; without it, the club takes no volunteers under 18",
+        "volunteersList": "Only in the privacy notice: the tick “I want to appear on the public list of volunteers”, in quotes. With it in the notice in force, a public list can show names",
         "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them",
-        "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming"
+        "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming",
+        "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question the day before"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4593,6 +4631,16 @@
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish” — in the same sitting, in both languages."
           ]
         },
+        "volunteersListNotice": {
+          "title": "The text for the volunteers' public list",
+          "todo": "An event has its volunteers' list public, but the privacy notice in force does not describe it yet. Until you approve it, the page shows no “Volunteers” card and the form does not show the tick.",
+          "done": "The notice in force describes the public list of volunteers: the page shows the name and role of confirmed volunteers who ticked, and counts the others.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The paragraph about volunteers now says what the public list shows: the name and given role, only with the person's tick.",
+            "A lawyer should read the paragraph: the basis (consent, art. 6(1)(a)), how long the name stays on the page and the withdrawal of consent.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish” — in both languages, in the same sitting as the other texts for volunteers."
+          ]
+        },
         "emailRoadDown": {
           "title": "A way of sending does not work",
           "todo": "The club's Gmail or Mailgun has refused messages for over an hour; messages leave by the other way.",
@@ -4665,6 +4713,16 @@
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Sections 4, 5, 7 and 10 describe the “I'm coming!” answers and the recognised browser.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”, in both languages.",
             "The terms do not change: “I'm coming!” buys, books and signs nothing."
+          ]
+        },
+        "rsvpAskNotice": {
+          "title": "Privacy notice: the day-before “Coming?” question",
+          "todo": "An event takes “I'm coming!” answers, but the notice in force does not describe the day-before question yet, so no subscriber is asked and the topic's box does not show when subscribing.",
+          "done": "The notice in force describes the day-before question: subscribers who chose the topic (or “All the news”) under a notice that describes it get one email with “I'm coming” and “I'm not coming”.",
+          "how": [
+            "Before approving, have a lawyer read section 5's two paragraphs: the “I'm coming!” one (the address becomes an unconfirmed answer) and the newsletter's.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The question goes out only after the new one, and only to those who chose the topic (or “All the news”) under it.",
+            "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages."
           ]
         }
       },
@@ -5098,6 +5156,8 @@
       "standingNoNumber": "{taken} · no limit",
       "offer": {
         "open": "The “I want to volunteer” page is open: the event's page links to it.",
+        "openMembers": "The volunteers' page is open to signed-in members. The event's page links to it.",
+        "openInvited": "The volunteers' page opens only from the link of an invitation. The event's page says nothing about it.",
         "closed": {
           "off": "The public form is off: tick “Take volunteers on the page” below for the event's page to offer it. Your own list works either way.",
           "notPublished": "The public form is not shown: the event is not published. It appears on the page once the event is.",
@@ -5227,7 +5287,10 @@
         "guardianEmail": "Parent's or guardian's email",
         "guardianHelp": "Only for a volunteer under 18. Without an email, the consent is taken on paper, with the organizers.",
         "guardianValue": "Parent or guardian: {name}",
-        "birthDateHelpMinors": "Optional. At least {age} old on the day of the event. Under 18, add the parent or guardian below."
+        "birthDateHelpMinors": "Optional. At least {age} old on the day of the event. Under 18, add the parent or guardian below.",
+        "listOptIn": "Wants to appear on the public list of volunteers",
+        "listOptInHelp": "Tick only if the person told you they want to, preferably in writing. Your name stays in the log. If the list is public, the page shows the name and given role once you confirm them.",
+        "listOptInOff": "The notice in force does not describe the public list: it cannot be ticked any more. You can only untick it."
       },
       "states": {
         "REGISTERED": "Registered",
@@ -5296,6 +5359,54 @@
       },
       "badgesLink": "Volunteer badges",
       "switchHelp": "Ticked, the event's page shows “We are looking for volunteers” and a button to the volunteers' page. Unticked, nothing is deleted: the roles and the people stay.",
+      "access": {
+        "title": "Who can offer",
+        "ANYONE": "Anyone, from the event's page",
+        "ANYONEHelp": "The form is on the event's page, open to everyone.",
+        "MEMBERS": "Only the club's members (signed in to the members' zone)",
+        "MEMBERSHelp": "The form shows only to a signed-in member, with the name and address of their account.",
+        "INVITED": "Only by invitation from the club",
+        "INVITEDHelp": "The event's page says nothing about volunteers. The form opens only from the link in an invitation sent by email.",
+        "save": "Save",
+        "saving": "Saving…",
+        "scope": "The choice is for this date only: the other dates of a series keep their own."
+      },
+      "invite": {
+        "title": "Invitations",
+        "summary": "Sent: {open} · Used: {used}",
+        "intro": "Write the addresses of the people you invite. Each gets an email with a personal link to the volunteers' page. An invitation holds nothing.",
+        "notInvitedOnly": "Invitations are sent only while “Who can offer” is “Only by invitation from the club”. The ones already sent stay valid until used.",
+        "addresses": "Addresses (one per line)",
+        "addressesHelp": "At most {max} at a time. Anyone already invited or already offered is skipped.",
+        "messageRo": "Mesaj (română)",
+        "messageEn": "Message (English)",
+        "messageHelp": "Optional. Shown in the email as you wrote it, each half in its own language: write it in both languages or in neither. At most {max} characters.",
+        "language": "Language of the invitation",
+        "localeRo": "Română",
+        "localeEn": "English",
+        "send": "Send the invitations",
+        "sending": "Sending…",
+        "empty": "No invitation sent yet.",
+        "state": {
+          "open": "Sent",
+          "used": "Used",
+          "withdrawn": "Withdrawn",
+          "expired": "Expired"
+        },
+        "sentAt": "Sent {at}",
+        "by": "by {name}",
+        "resentAt": "sent again {at}",
+        "usedAt": "used {at}",
+        "withdrawnAt": "withdrawn {at}",
+        "resend": "Send again",
+        "resending": "Sending again…",
+        "resendTitle": "Send the invitation again?",
+        "resendBody": "The person gets a new email. The link in the old email stops working.",
+        "withdraw": "Withdraw",
+        "withdrawing": "Withdrawing…",
+        "withdrawTitle": "Withdraw the invitation?",
+        "withdrawBody": "The link stops working. If the person opens it, they read that the invitation was withdrawn."
+      },
       "shirts": {
         "label": "We give volunteers T-shirts",
         "help": "Ticked, the public form asks for the T-shirt size and you see it on each row. Unticked, the form asks for no size."
@@ -5304,9 +5415,16 @@
         "label": "Show publicly how many volunteers are still needed",
         "help": "Ticked, the volunteers' page tells each role how many more people it needs. Unticked, it shows no number; here you always see the numbers."
       },
+      "list": {
+        "label": "The volunteers' list is public on the event's page",
+        "help": "Ticked, the page shows a “Volunteers” card with the name and given role of confirmed volunteers who ticked; the rest are only counted. Address and telephone never appear.",
+        "noticeOff": "The card is not shown yet: the privacy notice in force does not describe the public list of volunteers, so the form does not show the tick. “Tasks” says what to approve.",
+        "noticeLink": "Legal documents"
+      },
       "chips": {
         "before": "Volunteered before",
-        "club": "From the {club} group"
+        "club": "From the {club} group",
+        "wantsList": "Wants to be on the public list"
       },
       "yes": "Yes",
       "no": "No",
@@ -6246,12 +6364,24 @@
       "rsvpNotice": "notice v{version}",
       "rsvpConfirmedAt": "confirmed {when}",
       "rsvpUnconfirmed": "unconfirmed",
+      "rsvpAsked": "asked {when}, no answer",
       "browserUsed": "used {when}",
       "browserUntil": "until {when}",
       "rsvpsErase": "Erase the “I'm coming!” answers and browsers",
       "rsvpsEraseTitle": "Erase this person's “I'm coming!” answers?",
       "rsvpsEraseBody": "The “I'm coming!” answers and the remembered browsers of this address are erased; registrations are not. This cannot be undone.",
-      "rsvpsErased": "The “I'm coming!” answers and remembered browsers of this address were erased."
+      "rsvpsErased": "The “I'm coming!” answers and remembered browsers of this address were erased.",
+      "volunteerInvitations": "Invitations to volunteer ({count})",
+      "volunteerInvitationSent": "sent {when}",
+      "volunteerInvitationResent": "sent again {when}",
+      "volunteerInvitationUsed": "used {when}",
+      "volunteerInvitationWithdrawn": "withdrawn {when}",
+      "volunteerInvitationUntil": "recorded until {when}",
+      "volunteerInvitationLine": "the club's message: “{ro}” / “{en}”",
+      "volunteerInvitationsErase": "Erase the invitations to volunteer",
+      "volunteerInvitationsEraseTitle": "Erase this person's invitations to volunteer?",
+      "volunteerInvitationsEraseBody": "The invitations sent to this address are erased, with the club's message. Offers to volunteer and registrations stay. This cannot be undone.",
+      "volunteerInvitationsErased": "The invitations to volunteer sent to this address were erased."
     },
     "desk": {
       "title": "Number pickup desk",
@@ -6396,7 +6526,9 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "You accepted the volunteer agreement",
         "VOLUNTEER_ROLE_ASSIGNED": "Your volunteer role",
         "VOLUNTEER_GUARDIAN_REQUEST": "Your consent for a young volunteer",
-        "RSVP_CONFIRM": "Confirm you're coming (“I'm coming!”)"
+        "VOLUNTEER_INVITATION": "Invitation to volunteer",
+        "RSVP_CONFIRM": "Confirm you're coming (“I'm coming!”)",
+        "RSVP_ASK": "Coming tomorrow? (“I'm coming” / “I'm not coming”)"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirm your address",
@@ -6466,7 +6598,9 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role, from the event's «Volunteers» card: a short message naming the role, the date and the place. Nothing to press.",
         "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers, or an organizer presses “Send the parent's link”: the agreement and the link where the parent accepts it in their own name.",
-        "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page: “Yes, I'm coming” counts them, “I'm not coming” takes it back. The page's “not coming any more” sends only the withdraw link."
+        "VOLUNTEER_INVITATION": "When an organizer or an administrator sends invitations from the «Volunteers» card of an event whose volunteers are by invitation only, and on “Send again”. A personal link to the volunteers' page.",
+        "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page: “Yes, I'm coming” counts them, “I'm not coming” takes it back. The page's “not coming any more” sends only the withdraw link.",
+        "RSVP_ASK": "The day before, from {askHour}: subscribers of “The ‘Coming?’ question before runs” and “All the news”. “I'm coming”, then “Yes, I'm coming”, counts them; “I'm not coming” does not. Answered: skipped."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -6511,7 +6645,9 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "after the link or “Signed on paper”",
         "VOLUNTEER_ROLE_ASSIGNED": "when the organizers give a role",
         "VOLUNTEER_GUARDIAN_REQUEST": "when a volunteer under 18 offers",
-        "RSVP_CONFIRM": "when someone says “I'm coming!”, to their address"
+        "VOLUNTEER_INVITATION": "when the club invites someone to volunteer",
+        "RSVP_CONFIRM": "when someone says “I'm coming!”, to their address",
+        "RSVP_ASK": "the day before, from {askHour}, to the topic's subscribers"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -7221,7 +7357,9 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "The role and the event are added by themselves. The PDF shows the accepted text, with the name, the role, the moment and its fingerprint.",
         "VOLUNTEER_ROLE_ASSIGNED": "The role and the event's date and place are added by themselves, however you write the text. The message has no link that does anything.",
         "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old.",
-        "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link."
+        "VOLUNTEER_INVITATION": "The event, the roles wanted and the club's message are added by themselves. The link is for the invited person only, works once, and a new one replaces the old.",
+        "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link.",
+        "RSVP_ASK": "Once per event; one ticked only on its own day is not asked. Sent through “Newsletter”, last in line like the new-event alert. If it has not left by midnight, it is dropped."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0.",
@@ -8648,8 +8786,8 @@
           "other": "{count} pictures or files"
         },
         "series": "The event was a date of a series, or its source. The series' rule is not applied: the copy is one date; you start the series yourself, in the editor.",
-        "volunteers": "The file carries the event's volunteer categories and roles, with their contact persons. “As a new event” writes them into the new draft.",
-        "volunteersOver": "The file carries volunteer categories and roles. An import over an existing event does not write them: they stay as they are here."
+        "volunteers": "The file carries the event's volunteer categories and roles, with their contact persons, and the choice “Who can offer”. “As a new event” writes them into the new draft.",
+        "volunteersOver": "The file carries volunteer categories, roles or the choice “Who can offer”. An import over an existing event does not write them: they stay as they are here."
       },
       "mode": {
         "heading": "What do you want to do with it?"
@@ -12334,9 +12472,20 @@
       "badgeColoursSaved": "The roles' colours were saved.",
       "badgeColoursUnchanged": "Nothing to change in the colours.",
       "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
+      "volunteersAccessSaved": "Saved who can offer.",
+      "volunteerInvitationsSent": {
+        "one": "{count} invitation sent.",
+        "few": "{count} invitations sent.",
+        "other": "{count} invitations sent."
+      },
+      "volunteerInvitationsNone": "Nothing sent: those addresses already have an invitation or have already offered.",
+      "volunteerInvitationResent": "Invitation sent again, with a new link.",
+      "volunteerInvitationWithdrawn": "Invitation withdrawn.",
       "volunteersShirtsOff": "The public form no longer asks for the T-shirt size. Sizes already given are kept.",
       "volunteersCountsOn": "The volunteers' page now says how many more people each role needs.",
       "volunteersCountsOff": "The volunteers' page no longer says how many more people each role needs.",
+      "volunteersListOn": "The event's page can now show the “Volunteers” card: the name and role of confirmed volunteers who ticked.",
+      "volunteersListOff": "The event's page no longer shows the volunteers' list.",
       "volunteerGuardianRequested": "The link to the parent is on its way by email.",
       "volunteerGuardianRecorded": "The parent's consent is recorded as signed on paper.",
       "volunteerCategoryAdded": "Category added.",
@@ -12436,7 +12585,8 @@
       "SPECIAL_EVENTS": "Special events",
       "WEEKLY_RUNS": "The weekly runs",
       "VOLUNTEERING": "Volunteering",
-      "RESULTS_PHOTOS": "Results and photos"
+      "RESULTS_PHOTOS": "Results and photos",
+      "RSVP_ASK": "The ‘Coming?’ question before runs"
     },
     "topicHints": {
       "ALL": "Every topic below, and any we add later.",
@@ -12445,7 +12595,8 @@
       "SPECIAL_EVENTS": "Special editions, themed runs, events held with other organizers and other organizers' events.",
       "WEEKLY_RUNS": "An announcement when a new series of weekly runs starts — once per series, not for every run.",
       "VOLUNTEERING": "When we need help at our races: the kit desk, the course, photographs.",
-      "RESULTS_PHOTOS": "Results and photo albums after the events."
+      "RESULTS_PHOTOS": "Results and photo albums after the events.",
+      "RSVP_ASK": "The day before an event where the club counts who comes, one email with two buttons: “I'm coming” or “I'm not coming”."
     },
     "heading": "The club's news by email",
     "intro": "Pick the topics you care about and we write to you about those alone.",
@@ -12836,7 +12987,8 @@
     "confirmIntro": "Are you coming to {event}?",
     "confirmAlready": "You are already counted for {event}.",
     "confirmButton": "Yes, I'm coming",
-    "confirmPending": "Sending…",
+    "confirmPending": "Counting you…",
+    "confirmAutoNote": "Opened in a browser, the link counts you by itself. If nothing happens, press “Yes, I'm coming”.",
     "withdrawTitle": "Not coming any more?",
     "withdrawIntro": "Are you not coming to {event} any more? Your answer is deleted.",
     "withdrawButton": "I'm not coming any more",
@@ -12851,6 +13003,13 @@
     "withdrawDoneNoEvent": "Done, your answer is deleted.",
     "withdrawnTitle": "Answer deleted",
     "invalidExpired": "The link was valid for a limited time, and that time has passed. The event has not started yet: you can answer again from its page.",
-    "withdrawRememberNote": "After “I'm not coming any more” too, your browser stays recognised for a year: at other events, “I'm coming!” is one press. On the event's page, “Not me” forgets it."
+    "withdrawRememberNote": "After “I'm not coming any more” too, your browser stays recognised for a year: at other events, “I'm coming!” is one press. On the event's page, “Not me” forgets it.",
+    "askTitle": "Coming?",
+    "askIntro": "Are you coming to {event}? One press and you're counted.",
+    "askNoTitle": "Not coming?",
+    "askNoIntro": "Not coming to {event}? Press the button and we don't count you.",
+    "askNoButton": "I'm not coming",
+    "askNoDoneTitle": "Understood",
+    "askNoDone": "Okay, we won't count you. You can answer differently until the start."
   }
 }

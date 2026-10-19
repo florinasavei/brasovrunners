@@ -707,6 +707,8 @@ export function renderBilingual(
     // absent only for a row queued with one text, which both halves then read as before.
     ...(data.organizerNoteOther ? { organizerNote: data.organizerNoteOther } : {}),
     ...(data.cancellationReasonOther ? { cancellationReason: data.cancellationReasonOther } : {}),
+    // The club's line of an invitation to volunteer, in the second half's own language (§354): never the first half's words.
+    ...(data.volunteerInvitation ? { volunteerInvitation: { ...data.volunteerInvitation, message: data.volunteerInvitation.messageOther } } : {}),
     // A family's blocks in the second half: the words and the numbers, not the QR pictures again (§519).
     ...(data.familyConfirmed ? { familyConfirmed: data.familyConfirmed.map((person) => ({ ...person, qrUrl: undefined })) } : {}),
     // The organizer's message (§364): its own subject and body in the second half's language.
@@ -1040,6 +1042,12 @@ export type TemplateData = {
      */
     contacts?: { name: string | null; phone: string | null; email: string | null; categoryRo?: string; categoryEn?: string }[];
   };
+  /**
+   * The club's invitation to volunteer (§820): the club's own line to the person (plain text, at most 500 characters) in the first
+   * half's language (`message`) and the second half's (`messageOther`, §354 — each half reads its own, or both are null), and the roles
+   * the event still needs people for, in each language. The link is the message's button; the address is the recipient's, never a name.
+   */
+  volunteerInvitation?: { message: string | null; messageOther: string | null; rolesRo: string[]; rolesEn: string[] };
   /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
@@ -1918,6 +1926,21 @@ const T = {
       ],
       action: "Citește contractul și dă-ți acordul",
     },
+    // The club's invitation to volunteer (§820): to an address the club typed; the button is the volunteers' page with the invitation's link.
+    volunteerInvitation: {
+      subject: (d: TemplateData) => `Te invităm să fii voluntar la ${d.eventTitle ?? "eveniment"}`,
+      greeting: () => "Bună ziua,",
+      body: (d: TemplateData) => {
+        const roles = d.volunteerInvitation?.rolesRo ?? [];
+        return [
+          `${CLUB_NAME} te invită să fii voluntar la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}.`,
+          ...(roles.length > 0 ? [`Căutăm oameni pentru: **${roles.join(", ")}**.`] : []),
+          "Apasă butonul de mai jos: se deschide pagina voluntarilor, cu adresa ta deja scrisă. Alegi ce ai vrea să faci și completezi restul; apoi organizatorii îți dau un rol și te confirmă.",
+          "Invitația e doar a ta, iar linkul se folosește o singură dată. Dacă nu te așteptai la acest email, ignoră-l: nu se întâmplă nimic.",
+        ];
+      },
+      action: "Mă ofer voluntar",
+    },
     // To each Organizer and Administrator (§754): who offered for which role; the card «Voluntari» has the rest.
     volunteerClubNotice: {
       subject: (d: TemplateData) => `Voluntar nou la ${d.eventTitle ?? "eveniment"}`,
@@ -2139,6 +2162,25 @@ const T = {
       action: "Vezi evenimentul",
       emphasis: (d: TemplateData): Emphasis => ({ highlightLine: eventFacts(d, NO_FACT_LINKS)?.line }),
     },
+    /**
+     * «Vii mâine la …?» (§818), from the maintenance job the day before a ticked turn-up event, to the newsletter's subscribers of its
+     * topics. Two buttons: «Vin» counts the person at once (the personal link is the proof of the address) and «Nu vin», under it, counts
+     * nobody. The club may reword it in `/admin/emails` like the rest (`copyFor`); the buttons' targets, the facts and the newsletter's lines
+     * (the topics, the way out) are the platform's.
+     */
+    rsvpAsk: {
+      subject: (d: TemplateData) => `Vii mâine la ${d.eventTitle ?? "eveniment"}?`,
+      greeting: () => "Salut,",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `Vii mâine la ${d.eventTitle ?? "eveniment"}? Apasă „Vin”, apoi „Da, vin” pe pagina care se deschide — fără cont.`,
+        "„Da, vin” te numără printre cei care vin. „Nu vin” nu te numără și nu te mai întrebăm pentru acest eveniment; poți răspunde altfel, de pe pagina evenimentului, până la start.",
+        "Linkurile sunt doar pentru tine și merg o singură dată.",
+      ],
+      action: "Vin",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] }),
+      links: (d: TemplateData) => [...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : [])],
+    },
     /** The newsletter's own lines (§445), which the platform adds whoever wrote the words above them. */
     newsletterWords: {
       topics: (topics: string) => `Primești noutățile clubului despre: ${topics}.`,
@@ -2157,6 +2199,7 @@ const T = {
       reinstated: () => "Evenimentul nu mai este anulat: are loc.",
       noteLabel: "Mesajul organizatorilor:",
       reasonLabel: "Motivul:",
+      messageLabel: "Mesajul clubului:",
     },
     closing: "Alergare plăcută,",
     /**
@@ -2417,6 +2460,9 @@ const T = {
     /** The guardian's link (§768): the guardian is not on any list — somebody named them as the parent or guardian of a volunteer under eighteen. */
     privacyFooterGuardian: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că cineva te-a trecut ca părinte sau tutore al unui voluntar sub 18 ani la un eveniment al clubului. Cum folosim datele tale:`,
+    /** The club's invitation to volunteer (§820): the club typed the address to send it; nobody asked yet. */
+    privacyFooterVolunteerInvitation: (club: string) =>
+      `Primești acest mesaj de la ${club} pentru că ți-a trecut adresa ca să te invite voluntar la unul dintre evenimentele sale. Cum folosim datele tale:`,
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */
     privacyFooterDeclaration: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai semnat o declarație pe site-ul clubului. Cum folosim datele tale:`,
@@ -2715,6 +2761,20 @@ const T = {
       ],
       action: "Read the agreement and give your consent",
     },
+    volunteerInvitation: {
+      subject: (d: TemplateData) => `We invite you to volunteer at ${d.eventTitle ?? "the event"}`,
+      greeting: () => "Hello,",
+      body: (d: TemplateData) => {
+        const roles = d.volunteerInvitation?.rolesEn ?? [];
+        return [
+          `${CLUB_NAME} invites you to volunteer at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}.`,
+          ...(roles.length > 0 ? [`We are looking for people for: **${roles.join(", ")}**.`] : []),
+          "Press the button below: the volunteers' page opens with your address already written. You choose what you would like to do and fill in the rest; then the organizers give you a role and confirm you.",
+          "The invitation is yours alone, and the link works once. If you were not expecting this email, ignore it: nothing happens.",
+        ];
+      },
+      action: "I want to volunteer",
+    },
     volunteerClubNotice: {
       subject: (d: TemplateData) => `New volunteer for ${d.eventTitle ?? "the event"}`,
       greeting: () => "Hello,",
@@ -2960,6 +3020,20 @@ const T = {
       action: "See the event",
       emphasis: (d: TemplateData): Emphasis => ({ highlightLine: eventFacts(d, NO_FACT_LINKS)?.line }),
     },
+    /** «Coming tomorrow?» (§818): the English half of `rsvpAsk` above. */
+    rsvpAsk: {
+      subject: (d: TemplateData) => `Coming to ${d.eventTitle ?? "the event"} tomorrow?`,
+      greeting: () => "Hello,",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `Are you coming to ${d.eventTitle ?? "the event"} tomorrow? Press “I'm coming”, then “Yes, I'm coming” on the page that opens — no account.`,
+        "“Yes, I'm coming” counts you among those coming. “I'm not coming” counts you out and we don't ask again for this event; you can answer differently, from the event's page, until the start.",
+        "The links are for you only and work once.",
+      ],
+      action: "I'm coming",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] }),
+      links: (d: TemplateData) => [...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : [])],
+    },
     /** The newsletter's own lines (§445), which the platform adds whoever wrote the words above them. */
     newsletterWords: {
       topics: (topics: string) => `You receive the club's news about: ${topics}.`,
@@ -2977,6 +3051,7 @@ const T = {
       reinstated: () => "The event is no longer cancelled: it is going ahead.",
       noteLabel: "A message from the organizers:",
       reasonLabel: "The reason:",
+      messageLabel: "A message from the club:",
     },
     closing: "Happy running,",
     /** In front of a message re-sent because the form was filled in again (§235, §286). */
@@ -3149,6 +3224,8 @@ const T = {
     privacyFooterVolunteerAgreement: (club: string) => `This message comes from ${club} because you are on the volunteers' list of one of the club's events. How we use your data:`,
     privacyFooterGuardian: (club: string) =>
       `This message comes from ${club} because someone named you as the parent or guardian of a volunteer under 18 at one of the club's events. How we use your data:`,
+    privacyFooterVolunteerInvitation: (club: string) =>
+      `This message comes from ${club} because it entered your address to invite you to volunteer at one of its events. How we use your data:`,
     privacyFooterDeclaration: (club: string) => `This message comes from ${club} because you signed a declaration on the club's website. How we use your data:`,
     privacyFooterNewsletter: (club: string) =>
       `This message comes from ${club} because you asked for the club's news at this address. Unsubscribe at any time from the link above. How we use your data:`,
@@ -3181,6 +3258,7 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   STAFF_INVITATION: "staffInvitation",
   REGISTRATION_OPENED: "registrationOpened",
   RSVP_CONFIRM: "rsvpConfirm",
+  RSVP_ASK: "rsvpAsk",
   CLUB_CONFIRMATION_NOTICE: "clubConfirmationNotice",
   EVENT_UPDATE_NOTICE: "eventUpdateNotice",
   EVENT_CANCELLED: "eventCancelled",
@@ -3205,10 +3283,11 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   VOLUNTEER_AGREEMENT_ACCEPTED: "volunteerAgreementAccepted",
   VOLUNTEER_ROLE_ASSIGNED: "volunteerRoleAssigned",
   VOLUNTEER_GUARDIAN_REQUEST: "volunteerGuardianRequest",
+  VOLUNTEER_INVITATION: "volunteerInvitation",
 };
 
-/** The newsletter's three messages (§445): to an address, never about a registration. */
-const NEWSLETTER_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["NEWSLETTER_CONFIRM", "NEWSLETTER", "NEW_EVENT_ALERT"]);
+/** The newsletter's three messages (§445) and «Vii mâine la …?» (§818): to a subscriber's address, never about a registration. */
+const NEWSLETTER_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["NEWSLETTER_CONFIRM", "NEWSLETTER", "NEW_EVENT_ALERT", "RSVP_ASK"]);
 
 /**
  * A newsletter's own words (§445), as the organizer's message's are (§364): the body as typed, a
@@ -3237,7 +3316,7 @@ function newsletterLines(messageType: EmailMessageType, locale: EmailLocale, dat
   const words = T[locale].newsletterWords;
   const confirming = messageType === "NEWSLETTER_CONFIRM" && data.newsletterAlready !== true;
   return [
-    ...(data.newsletterTopics && (confirming || messageType === "NEW_EVENT_ALERT") ? [words.topics(data.newsletterTopics)] : []),
+    ...(data.newsletterTopics && (confirming || messageType === "NEW_EVENT_ALERT" || messageType === "RSVP_ASK") ? [words.topics(data.newsletterTopics)] : []),
     ...(confirming ? [words.link(data.confirmationHours ?? hoursPhrase(locale, DEFAULT_DEADLINES.confirmationHours))] : []),
   ];
 }
@@ -3320,6 +3399,10 @@ function noticeParts(messageType: EmailMessageType, locale: EmailLocale, data: T
   const words = T[locale].noticeWords;
   if (messageType === "EVENT_CANCELLED") {
     return data.cancellationReason ? [organizerTextPart(words.reasonLabel, data.cancellationReason)] : [];
+  }
+  // The club's invitation to volunteer (§820): the club's own line, as typed, after the platform's sentences.
+  if (messageType === "VOLUNTEER_INVITATION") {
+    return data.volunteerInvitation?.message ? [organizerTextPart(words.messageLabel, data.volunteerInvitation.message)] : [];
   }
   if (messageType !== "EVENT_UPDATE_NOTICE") return [];
   const changes = new Set(data.updateChanges ?? []);
@@ -3825,8 +3908,8 @@ export function buildTemplateContent(
     secondaryAction:
       messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && entry.action && actionUrl && data.familyDeclineUrl
         ? { label: copy.familyDecline, url: data.familyDeclineUrl }
-        : // «Vin!» (§811): «Nu vin» under «Da, vin», the same send's other link — only beside the confirm button.
-          messageType === "RSVP_CONFIRM" && (data.rsvpStage === undefined || data.rsvpStage === "confirm") && entry.action && actionUrl && data.rsvpWithdrawUrl
+        : // «Vin!» (§812): «Nu vin» under «Da, vin», the same send's other link — only beside the confirm button. «Vii mâine?» (§818) has the same two.
+          (messageType === "RSVP_ASK" || (messageType === "RSVP_CONFIRM" && (data.rsvpStage === undefined || data.rsvpStage === "confirm"))) && entry.action && actionUrl && data.rsvpWithdrawUrl
           ? { label: copy.rsvpNo, url: data.rsvpWithdrawUrl }
           : undefined,
     /*
@@ -3852,7 +3935,7 @@ export function buildTemplateContent(
         // The club's refusal (§618): the terms it was made under, in this half's language, from `APP_BASE_URL`.
         ...(messageType === "REGISTRATION_CANCELLED" && data.refusedGround ? [{ label: copy.termsLink, url: termsUrl(locale) }] : []),
         // Every newsletter message's way out (§445; Legea 506/2004 art. 12(2)): the subscriber's own page.
-        ...((messageType === "NEWSLETTER" || messageType === "NEW_EVENT_ALERT") && data.newsletterManageUrl
+        ...((messageType === "NEWSLETTER" || messageType === "NEW_EVENT_ALERT" || messageType === "RSVP_ASK") && data.newsletterManageUrl
           ? [{ label: copy.newsletterWords.manage, url: data.newsletterManageUrl }]
           : []),
       ];
@@ -3919,6 +4002,8 @@ export function buildTemplateContent(
                 ? copy.privacyFooterInvitation
               : messageType === "VOLUNTEER_RECEIVED"
                 ? copy.privacyFooterVolunteer
+              : messageType === "VOLUNTEER_INVITATION"
+                ? copy.privacyFooterVolunteerInvitation
               : messageType === "VOLUNTEER_GUARDIAN_REQUEST"
                 ? copy.privacyFooterGuardian
               : messageType === "VOLUNTEER_AGREEMENT_REQUEST" || messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" || messageType === "VOLUNTEER_ROLE_ASSIGNED"
@@ -3997,6 +4082,10 @@ const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set([
   "NEW_EVENT_ALERT",
   // «Vin!» (§811): the person deciding whether to come reads the same when and where as the others.
   "RSVP_CONFIRM",
+  // «Vii mâine la …?» (§818): the same, to the person asked.
+  "RSVP_ASK",
+  // The club's invitation to volunteer (§820): the person deciding whether to help reads the same when and where as the others.
+  "VOLUNTEER_INVITATION",
 ]);
 
 /**

@@ -155,6 +155,13 @@ export const emailMessageType = pgEnum("email_message_type", [
   // link alone. To an address nobody has confirmed, about no registration. The answer's id in the payload; both
   // links are minted at the send and only their hashes kept (`event_rsvp_tokens`, §12.8).
   "RSVP_CONFIRM",
+  // «Vii mâine la …?» (§818): the day-before question to the newsletter's subscribers of a ticked turn-up event — «Vin» counts them,
+  // «Nu vin» counts nobody. The subscriber and the event in the payload; the two links are minted at the send, hashes only.
+  "RSVP_ASK",
+  // «Te invităm să fii voluntar la …» (§820): the club's personal invitation to volunteer at an event that takes volunteers by invitation
+  // only — the club's line, the roles offered, the event's facts and the single-use link to the volunteers' page (minted at the send; only
+  // its hash is kept, on the invitation's row, §12.8). To an address the club typed, about no registration; the invitation's id in the payload.
+  "VOLUNTEER_INVITATION",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

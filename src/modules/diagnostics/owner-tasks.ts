@@ -60,6 +60,7 @@ export type TaskId =
   | "listNumbersNotice"
   | "resultsNotice"
   | "rsvpNotice"
+  | "rsvpAskNotice"
   | "resultsTerms"
   | "invitationsNotice"
   | "promoNotice"
@@ -74,6 +75,7 @@ export type TaskId =
   | "volunteerAgreementNotice"
   | "volunteerProfileNotice"
   | "volunteerMinorsTexts"
+  | "volunteersListNotice"
   | "volunteerAgreement"
   | "volunteerRoleChoicesAgreement"
   | "gmailFallbackNotice"
@@ -117,6 +119,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   listNumbersNotice: "text",
   resultsNotice: "text",
   rsvpNotice: "text",
+  rsvpAskNotice: "text",
   resultsTerms: "text",
   invitationsNotice: "text",
   promoNotice: "text",
@@ -131,6 +134,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   volunteerAgreementNotice: "text",
   volunteerProfileNotice: "text",
   volunteerMinorsTexts: "text",
+  volunteersListNotice: "text",
   volunteerAgreement: "text",
   volunteerRoleChoicesAgreement: "text",
   gmailFallbackNotice: "text",
@@ -254,6 +258,12 @@ export type OwnerTaskInputs = {
    * offers the answer or shows a count, whatever the club ticked.
    */
   rsvpDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe «Vin!» AND the day-before question «Vii mâine?» (§818, `noticeDescribesRsvpAsk`)?
+   * Until it does, no subscriber is asked and the pop-up offers no such topic, whatever the club ticked; the topic is named in a notice
+   * approved before only by `{{newsletterTopics}}`, which asks nobody.
+   */
+  rsvpAskDescribed: boolean;
   /** How many upcoming turn-up events the club ticked «Acceptă răspunsuri „Vin!”» on (`countRsvpEvents`): the row waits only while there is one. */
   rsvpEvents: number;
   /**
@@ -353,6 +363,13 @@ export type OwnerTaskInputs = {
    * they do, the club takes nobody under eighteen: a typed age under eighteen is refused with a sentence that says so.
    */
   volunteerMinorsOpen: boolean;
+  /**
+   * Does the notice in force, in every language, describe the volunteers' public list (§821, `{{volunteersList}}`, `noticeDescribesVolunteersList`)? Until it
+   * does, no event page draws its card «Voluntarii», the form asks no tick «Vreau să apar pe lista publică a voluntarilor» and the organizers record none.
+   */
+  volunteersListDescribed: boolean;
+  /** How many events still ahead have their volunteers' list public and take volunteers (§821, `countVolunteersListEvents`): the row waits only while there is one. */
+  volunteersListEvents: number;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
    * while Mailgun is stopped (§622, `noticeDescribesGmailFallback`)? Until it does, «Gmail preia când
@@ -618,6 +635,17 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
+      The day-before question «Vii mâine?» (§818), the same shape: open while an upcoming event is ticked and the notice in force does not
+      name `{{rsvpAsk}}` (nobody is asked, though the club ticked the box), done by itself the day a notice naming it takes effect, absent
+      while no event is ticked and the notice is silent. Never blocking.
+    */
+    if (input.rsvpAskDescribed || input.rsvpEvents > 0) {
+      push("rsvpAskNotice", {
+        owner: "club",
+        state: input.rsvpAskDescribed ? "done" : "open",
+      });
+    }
+    /*
       The invitations by email (§647), the same shape: open, never blocking — nothing is refused, the
       club may invite while the notice is the older one, as it registers another person on one's own
       address (§389) — and done by itself the day a notice naming `{{eventInvitations}}` takes effect.
@@ -758,6 +786,18 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       push("volunteerMinorsTexts", {
         owner: "club",
         state: input.volunteerMinorsOpen ? "done" : "open",
+      });
+    }
+    /*
+      The volunteers' public list in the notice (§821), the same shape: open while an event ahead has the list public («Lista voluntarilor e publică pe
+      pagina evenimentului») and the notice in force does not name `{{volunteersList}}` — the page draws no card and the form asks no tick, the club must hear
+      why —, done by itself the day a notice naming it takes effect, absent while no event has the list public and the notice is silent. Never blocking:
+      nothing a runner does, and the volunteers' own form and list are untouched.
+    */
+    if (input.volunteersListDescribed || input.volunteersListEvents > 0) {
+      push("volunteersListNotice", {
+        owner: "club",
+        state: input.volunteersListDescribed ? "done" : "open",
       });
     }
     /*
