@@ -39,7 +39,7 @@ This section replaces the plan of 2026-09-30; it is what a session with none of 
   `readRegistrationTokenContext`, `openRefusalsWhere` and the guardian rule; the concurrency suite fails on a seeded
   database; a nightly `yarn test:clock`; a guard for computed `COLOR[...]` keys; the «Invitații fără răspuns» line has
   no order and takes its titles from the registrations' locale; `SubNavCurrent` and `ScrollRow` both watch a scrolling
-  row (one helper later); about 30 test files keep a `§NNN` from older batches; about 170 throwaway local test databases.
+  row (one helper later); about 170 throwaway local test databases.
 
 ### How a change is made here (the owner's standing rules, all still in force)
 
