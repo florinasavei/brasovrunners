@@ -236,10 +236,18 @@ describe("§NNN the name tick's doors", () => {
       expect(markup).toContain("Numele meu apare la „Cine vine”");
       expect(markup).toMatch(/<input[^>]*name="showName"[^>]*type="checkbox"|<input[^>]*type="checkbox"[^>]*name="showName"/);
       expect(markup).not.toMatch(/<input[^>]*name="showName"[^>]*checked|<input[^>]*checked[^>]*name="showName"/);
-      expect(markup).not.toContain('name="name"');
+      // The answer's own name stands in the box, prefilled and editable, and the help says which name the tick shows.
+      expect(markup).toMatch(/<input[^>]*name="name"[^>]*value="Ana"|<input[^>]*value="Ana"[^>]*name="name"/);
+      expect(markup).toContain("Cu bifa apari ca „Ana”");
       expect(markup).toContain("Salvează");
-      // Above the withdraw button, in its own form: two forms, the tick first.
-      expect(markup.indexOf('data-testid="rsvp-name-switch"')).toBeLessThan(markup.indexOf("Nu mai vin</"));
+      // Two jobs, in the order a person reads them: neutral heading and intro, the name tick, and «Nu mai vii? … se șterge» directly above «Nu mai vin».
+      expect(markup).toContain("Răspunsul tău</h1>");
+      expect(markup).not.toContain("Nu mai vii?</h1>");
+      expect(markup.indexOf('data-testid="rsvp-answer-intro"')).toBeLessThan(markup.indexOf('data-testid="rsvp-name-switch"'));
+      expect(markup.indexOf('data-testid="rsvp-name-switch"')).toBeLessThan(markup.indexOf('data-testid="rsvp-withdraw-intro"'));
+      expect(markup.indexOf('data-testid="rsvp-withdraw-intro"')).toBeLessThan(markup.indexOf("Nu mai vin</"));
+      expect(markup).toContain("Vii la Alergarea de joi.");
+      expect(markup).toContain("Răspunsul tău se șterge.");
       expect(markup.match(/<form/g)).toHaveLength(2);
       // The form posts the link and the page's language, and nothing of the person's.
       expect(markup).toContain(`name="token" value="${withdraw}"`);
@@ -256,10 +264,73 @@ describe("§NNN the name tick's doors", () => {
       await db.update(eventRsvps).set({ displayName: "Ana", showName: true });
       const on = await page(withdraw);
       expect(on).toMatch(/<input[^>]*name="showName"[^>]*checked|<input[^>]*checked[^>]*name="showName"/);
-      expect(on).not.toContain('name="name"');
       const english = await page(withdraw, {}, "en");
       expect(english).toContain("My name shows under “Who&#x27;s coming”");
       expect(english).toContain("Save");
+    });
+
+    it("keeps the unconfirmed link's old words: no neutral heading, no name tick (the page has one job there)", async () => {
+      const waiting = await links("ion@example.test", { counted: false });
+      const markup = await page(waiting.withdraw);
+      expect(markup).toContain("Nu mai vii?</h1>");
+      expect(markup).not.toContain('data-testid="rsvp-answer-intro"');
+    });
+
+    it("never publishes a stored name unseen: a name typed on the page with the tick off is drawn in the box, and a bare tick is refused", async () => {
+      const { withdraw } = await links("ana@example.test", { name: "Nume Străin" });
+      const markup = await page(withdraw);
+      expect(markup).toMatch(/<input[^>]*name="name"[^>]*value="Nume Străin"|<input[^>]*value="Nume Străin"[^>]*name="name"/);
+      expect(markup).toContain("Cu bifa apari ca „Nume Străin”");
+      expect(await press(setNameByLinkAction, form(withdraw, { showName: "on" }))).toMatch(/\?nume=name$/);
+      expect(await publicRead()).toEqual({ count: 1, names: [], others: 1 });
+      // Posted back from the box — or typed over — it goes public.
+      expect(await press(setNameByLinkAction, form(withdraw, { showName: "on", name: "Ana" }))).toMatch(/\?nume=shown$/);
+      expect(await publicRead()).toEqual({ count: 1, names: ["Ana"], others: 0 });
+    });
+
+    it("draws a tick with no name unticked, and the box blank with the instruction", async () => {
+      const { withdraw } = await links("ana@example.test", { name: null });
+      await db.update(eventRsvps).set({ showName: true });
+      const markup = await page(withdraw);
+      expect(markup).not.toMatch(/<input[^>]*name="showName"[^>]*checked|<input[^>]*checked[^>]*name="showName"/);
+      expect(markup).toContain("Bifează și scrie numele cu care vrei să apari.");
+    });
+
+    it("draws «Gata: numele tău apare» only while the tick is on — the address alone proves nothing", async () => {
+      const { withdraw } = await links();
+      const forgedShown = await page(withdraw, { nume: "shown" });
+      expect(forgedShown).not.toContain("Gata: numele tău apare");
+      expect(forgedShown).not.toContain('data-testid="rsvp-name-note"');
+      await press(setNameByLinkAction, form(withdraw, { showName: "on", name: "Ana" }));
+      expect(await page(withdraw, { nume: "shown" })).toContain("Gata: numele tău apare");
+      expect(await page(withdraw, { nume: "hidden" })).not.toContain("nu mai apare");
+      await press(setNameByLinkAction, form(withdraw));
+      expect(await page(withdraw, { nume: "hidden" })).toContain("Gata: numele tău nu mai apare");
+    });
+
+    it("flips the name as often as the person likes — each flip followed by the page's GET — and «Nu mai vin» still works from the same link", async () => {
+      const { withdraw } = await links();
+      // Fifteen flips, each answered by the page it redirects to: the old charge of two `token-validate` attempts a flip locked the link after five.
+      for (let flip = 0; flip < 15; flip += 1) {
+        const on = flip % 2 === 0;
+        const landed = await press(setNameByLinkAction, form(withdraw, { showName: on ? "on" : "", name: "Ana" }));
+        expect(landed).toMatch(on ? /\?nume=shown$/ : /\?nume=hidden$/);
+        const drawn = await page(withdraw, { nume: on ? "shown" : "hidden" });
+        expect(drawn).toContain('data-testid="rsvp-name-switch"');
+        expect(drawn).not.toContain("Linkul nu mai merge");
+      }
+      expect(await press(withdrawRsvpAction, form(withdraw))).toMatch(/\?retras=/);
+      expect(await rows()).toHaveLength(0);
+    });
+
+    it("bounds the flips by its own throttle, says so on the page and leaves «Nu mai vin» working", async () => {
+      const { withdraw } = await links();
+      let last: string | undefined;
+      for (let flip = 0; flip < 31; flip += 1) last = await press(setNameByLinkAction, form(withdraw, { showName: flip % 2 === 0 ? "on" : "", name: "Ana" }));
+      expect(last).toMatch(/\?nume=wait$/);
+      expect(await page(withdraw, { nume: "wait" })).toContain("Prea multe schimbări într-o oră");
+      expect(await press(withdrawRsvpAction, form(withdraw))).toMatch(/\?retras=/);
+      expect(await rows()).toHaveLength(0);
     });
 
     it("draws no tick for an uncounted answer, a confirm link, a spent or unknown link", async () => {
@@ -274,7 +345,7 @@ describe("§NNN the name tick's doors", () => {
 
     it("turns the name on and off by POST WITHOUT spending the link: the same link still says «Nu mai vin» afterwards", async () => {
       const { withdraw } = await links();
-      const on = await press(setNameByLinkAction, form(withdraw, { showName: "on" }));
+      const on = await press(setNameByLinkAction, form(withdraw, { showName: "on", name: "Ana" }));
       expect(on).toMatch(/\/ro\/vin\/[A-Za-z0-9_-]{43}\?nume=shown$/);
       expect(await publicRead()).toEqual({ count: 1, names: ["Ana"], others: 0 });
       // The page draws the new state and the sentence; the link is untouched.
@@ -291,7 +362,7 @@ describe("§NNN the name tick's doors", () => {
       expect(await rows()).toMatchObject([{ showName: false, displayName: "Ana" }]);
 
       // Still a live link: «Nu mai vin» deletes the answer, once.
-      await press(setNameByLinkAction, form(withdraw, { showName: "on" }));
+      await press(setNameByLinkAction, form(withdraw, { showName: "on", name: "Ana" }));
       const gone = await press(withdrawRsvpAction, form(withdraw));
       expect(gone).toMatch(/\?retras=/);
       expect(await rows()).toHaveLength(0);
@@ -337,18 +408,40 @@ describe("§NNN the name tick's doors", () => {
     });
   });
 
-  it("the confirmation email says under «Nu vin» that the same link shows or hides the name — in both languages, in the plain text too", async () => {
+  it("the confirmation email says under «Nu vin» when the same link shows or hides the name — in both languages, in the plain text too", async () => {
     await answerRsvp(db, eventId, identityOf("page", { email: "ana@example.test", displayName: "Ana", showName: false, locale: "ro" }), NOW);
     await answerRsvp(db, eventId, identityOf("page", { email: "liz@example.test", displayName: "Liz", showName: false, locale: "en" }), NOW);
     const sent = await db.select().from(emailOutbox);
     const texts = await Promise.all(sent.map(async (row) => ({ to: row.recipientEmail, message: await renderOutboxMessage(row, db, NOW) })));
     const roMail = texts.find((entry) => entry.to === "ana@example.test")!.message;
     const enMail = texts.find((entry) => entry.to === "liz@example.test")!.message;
-    expect(roMail.text).toContain("Tot de aici îți arăți sau ascunzi numele");
-    expect(roMail.html).toContain("Tot de aici îți arăți sau ascunzi numele");
-    expect(enMail.text).toContain("You show or hide your name from here too");
-    expect(enMail.html).toContain("You show or hide your name from here too");
+    const roNote = "După „Da, vin”, tot din „Nu vin” îți arăți sau ascunzi numele; răspunsul se șterge doar dacă apeși „Nu mai vin” pe pagina lui.";
+    const enNote = "After “Yes, I&#39;m coming”, the “I&#39;m not coming” link also lets you show or hide your name; your answer goes only if you press “I&#39;m not coming any more” on its page.";
+    expect(roMail.text).toContain(roNote);
+    expect(roMail.html).toContain(roNote);
+    expect(enMail.text).toContain(enNote.replaceAll("&#39;", "'"));
+    expect(enMail.html).toContain(enNote);
     // Under the «Nu vin» button: after its link in the text, never before it.
-    expect(roMail.text.indexOf("Tot de aici")).toBeGreaterThan(roMail.text.indexOf("Nu vin:"));
+    expect(roMail.text.indexOf("După „Da, vin”")).toBeGreaterThan(roMail.text.indexOf("Nu vin:"));
+  });
+
+  it("the «counted» confirmation, whose one button is the withdraw link, says in its body that the link's page also shows or hides the name", async () => {
+    await answerRsvp(db, eventId, identityOf("page", { email: "ana@example.test", displayName: "Ana", showName: false, locale: "ro" }), NOW);
+    await answerRsvp(db, eventId, identityOf("page", { email: "liz@example.test", displayName: "Liz", showName: false, locale: "en" }), NOW);
+    // Counted by another route, then somebody types the address again: the «counted» shape.
+    await db.update(eventRsvps).set({ confirmedAt: NOW });
+    await db.delete(emailOutbox);
+    await answerRsvp(db, eventId, identityOf("page", { email: "ana@example.test", displayName: "Ana", showName: false, locale: "ro" }), new Date(NOW.getTime() + HOUR));
+    await answerRsvp(db, eventId, identityOf("page", { email: "liz@example.test", displayName: "Liz", showName: false, locale: "en" }), new Date(NOW.getTime() + HOUR));
+    const sent = await db.select().from(emailOutbox);
+    const mails = await Promise.all(sent.map(async (row) => ({ to: row.recipientEmail, message: await renderOutboxMessage(row, db, new Date(NOW.getTime() + HOUR)) })));
+    const roMail = mails.find((entry) => entry.to === "ana@example.test")!.message;
+    const enMail = mails.find((entry) => entry.to === "liz@example.test")!.message;
+    expect(roMail.text).toContain("Pe pagina butonului îți arăți sau ascunzi numele la „Cine vine”; răspunsul se șterge doar dacă apeși acolo „Nu mai vin”.");
+    expect(roMail.html).toContain("Pe pagina butonului îți arăți sau ascunzi numele");
+    expect(enMail.text).toContain("On the button's page you can also show or hide your name under “Who's coming”; your answer goes only if you press “I'm not coming any more” there.");
+    // The shape is the counted one: its button is «Nu mai vin», and the old line under «Nu vin» is not there.
+    expect(roMail.text).toContain("Nu mai vin:");
+    expect(roMail.text).not.toContain("După „Da, vin”");
   });
 });
