@@ -87,7 +87,7 @@ describe("§NNN the card «Voluntarii» — a fold closed on arrival", () => {
     expect(markup).toMatch(/<details\b/);
     // Closed on arrival: the boolean attribute is not there.
     expect(markup).not.toMatch(/<details[^>]*\sopen(=|\s|>)/);
-    expect(markup).toMatch(/<summary[^>]*>\s*<h2[^>]*id="volunteers-list-title"[^>]*>.*Voluntarii \(3\)<\/h2>\s*<\/summary>/s);
+    expect(markup).toMatch(/<summary[^>]*>\s*<h2[^>]*id="volunteers-list-title"[^>]*>[\s\S]*Voluntarii \(3\)<\/h2>\s*<\/summary>/);
     expect(markup).toMatch(/<details[^>]*aria-labelledby="volunteers-list-title"/);
     // Names stay out of search snippets, on the wrapper (Google honours it on a section, not on details).
     expect(markup).toMatch(/<section[^>]*data-nosnippet/);
@@ -145,7 +145,7 @@ describe("§NNN when nobody may be named", () => {
     const markup = await card();
     expect(markup).toContain('data-testid="volunteers-list-forming"');
     expect(markup).toContain("Echipa de voluntari se formează.");
-    expect(markup).toMatch(/<h2[^>]*id="volunteers-list-title"[^>]*>.*Voluntarii<\/h2>/s);
+    expect(markup).toMatch(/<h2[^>]*id="volunteers-list-title"[^>]*>[\s\S]*Voluntarii<\/h2>/);
     expect(markup).not.toMatch(/Voluntarii \(/);
     expect(markup).not.toContain("volunteers-list-person");
     expect(await card("en")).toContain("The volunteer team is taking shape.");
