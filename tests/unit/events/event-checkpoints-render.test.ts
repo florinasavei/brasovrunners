@@ -90,6 +90,22 @@ describe("§757 the checkpoints' table on the event page", () => {
     expect(english[0]).not.toContain("Direcționare");
   });
 
+  it("draws a «Regrupare» point with its word and the group's glyph, in both languages, and its note says how long (§NNN)", async () => {
+    const html = await render([point("a", 5, { kinds: ["REGROUP"], noteRo: "Așteptăm 5 minute", noteEn: "We wait 5 minutes" }), point("b", 9, { kinds: ["WATER", "REGROUP"] })]);
+    const rows = rowsOf(html);
+    expect(rows[0]).toContain("Regrupare");
+    expect(rows[0]).toContain("Așteptăm 5 minute");
+    expect(rows[0]).toContain("MuiChip-icon");
+    expect(rows[0]).not.toContain(ro.Event.checkpoints.kinds.WATER);
+    expect(rows[1]).toContain("Apă");
+    expect(rows[1]).toContain("Regrupare");
+    expect(CHECKPOINT_GLYPH.REGROUP).toBeDefined();
+    const english = rowsOf(await render([point("a", 5, { kinds: ["REGROUP"], noteRo: "Așteptăm 5 minute", noteEn: "We wait 5 minutes" })], NO_LIMIT, "en"));
+    expect(english[0]).toContain("Regroup");
+    expect(english[0]).toContain("We wait 5 minutes");
+    expect(english[0]).not.toContain("Regrupare");
+  });
+
   it("says the time limit in words and the clock it closes at, «Timp limită: 1 h 30 min · se închide la 11:30», and a dash with its words for a point without one", async () => {
     const rows = rowsOf(await render([point("a", 5, { cutoffMinutes: 90, cutoffClock: "11:30" }), point("b", 8)]));
     expect(rows[0]).toContain("Timp limită: 1 h 30 min · se închide la 11:30");
@@ -196,10 +212,15 @@ describe("§757 the checkpoints' table on the event page", () => {
 
   it("has the same words in both catalogues", () => {
     expect(Object.keys(en.Event.checkpoints).sort()).toEqual(Object.keys(ro.Event.checkpoints).sort());
-    expect(Object.keys(en.Event.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "TIMING", "WATER"]);
-    expect(Object.keys(ro.Event.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "TIMING", "WATER"]);
-    expect(Object.keys(en.Admin.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "TIMING", "WATER"]);
-    expect(Object.keys(ro.Admin.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "TIMING", "WATER"]);
+    expect(Object.keys(en.Event.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "REGROUP", "TIMING", "WATER"]);
+    expect(Object.keys(ro.Event.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "REGROUP", "TIMING", "WATER"]);
+    expect(Object.keys(en.Admin.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "REGROUP", "TIMING", "WATER"]);
+    expect(Object.keys(ro.Admin.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "REGROUP", "TIMING", "WATER"]);
+    // «Regrupare» / «Regroup» (§NNN), the same word in the editor and on the page, and the editor's «?» line.
+    expect([ro.Event.checkpoints.kinds.REGROUP, ro.Admin.checkpoints.kinds.REGROUP]).toEqual(["Regrupare", "Regrupare"]);
+    expect([en.Event.checkpoints.kinds.REGROUP, en.Admin.checkpoints.kinds.REGROUP]).toEqual(["Regroup", "Regroup"]);
+    expect(ro.Admin.checkpoints.field.kindsHelp).toContain("așteptăm 5 minute");
+    expect(en.Admin.checkpoints.field.kindsHelp).toContain("we wait 5 minutes");
     expect(Object.keys(en.Admin.checkpoints).sort()).toEqual(Object.keys(ro.Admin.checkpoints).sort());
     expect(Object.keys(en.Admin.checkpoints.field).sort()).toEqual(Object.keys(ro.Admin.checkpoints.field).sort());
     for (const key of Object.keys(ro.Admin.errors).filter((name) => name.startsWith("CHECKPOINT"))) {

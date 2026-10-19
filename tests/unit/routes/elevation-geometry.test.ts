@@ -10,7 +10,7 @@ import {
   niceAltitudes,
   pathOf,
 } from "@/modules/routes/elevation/geometry";
-import { ELEVATION_GLYPH_PATHS } from "@/modules/routes/elevation/glyphs";
+import { ELEVATION_GLYPH_PATHS, GLYPH_EVEN_ODD } from "@/modules/routes/elevation/glyphs";
 import { type ElevationProfileData } from "@/modules/routes/elevation/parse";
 
 /**
@@ -305,6 +305,36 @@ describe("§802 the markers", () => {
     expect(glyphForKinds([])).toBe("none");
     expect(glyphForKinds(["TELEPORT"])).toBe("none");
     for (const glyph of ["water", "food", "firstAid", "timing", "direction", "none"] as const) expect(ELEVATION_GLYPH_PATHS[glyph]).toMatch(/^M/);
+  });
+
+  // «Regrupare» (§NNN): the group's wait is said before anything the point also offers — in both orders.
+  it("pins the group for a «Regrupare» point, before every other kind, in the race number's order and in the page's", () => {
+    for (const foodFirst of [false, true]) {
+      expect(glyphForKinds(["REGROUP"], foodFirst)).toBe("regroup");
+      expect(glyphForKinds(["WATER", "REGROUP"], foodFirst)).toBe("regroup");
+      expect(glyphForKinds(["REGROUP", "WATER", "FOOD"], foodFirst)).toBe("regroup");
+      expect(glyphForKinds(["FOOD", "REGROUP"], foodFirst)).toBe("regroup");
+      expect(glyphForKinds(["FIRST_AID", "TIMING", "DIRECTION", "REGROUP"], foodFirst)).toBe("regroup");
+    }
+    expect(ELEVATION_GLYPH_PATHS.regroup).toMatch(/^M/);
+    expect(GLYPH_EVEN_ODD.regroup).toBe(false);
+  });
+
+  // Nothing stored has the kind yet, so no drawing changes: every set of the five old kinds still pins what it always pinned.
+  it("pins every combination of the five earlier kinds as before: the old order and the page's food-first one (§NNN)", () => {
+    const old = [
+      ["WATER", "water"],
+      ["FOOD", "food"],
+      ["FIRST_AID", "firstAid"],
+      ["TIMING", "timing"],
+      ["DIRECTION", "direction"],
+    ] as const;
+    const foodFirst = [old[1], old[0], old[2], old[3], old[4]];
+    for (let mask = 0; mask < 32; mask += 1) {
+      const kinds = old.filter((_, bit) => (mask >> bit) & 1).map(([kind]) => kind);
+      expect(glyphForKinds(kinds), kinds.join("+")).toBe(old.find(([kind]) => kinds.includes(kind))?.[1] ?? "none");
+      expect(glyphForKinds(kinds, true), kinds.join("+")).toBe(foodFirst.find(([kind]) => kinds.includes(kind))?.[1] ?? "none");
+    }
   });
 
   // §802 amended (the owner, 2026-10-17: «apa e cumva implicită dacă avem mâncare»): the page's chart pins the fork for food + water.

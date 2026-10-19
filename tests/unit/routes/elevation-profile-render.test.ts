@@ -100,13 +100,13 @@ describe("§802 the elevation profile widget: the page", () => {
   });
 
   it("draws the glyph of each kind as a path of its own", () => {
-    const glyphs = ["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION", "none"].map((kind) => {
+    const glyphs = ["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION", "REGROUP", "none"].map((kind) => {
       const markup = render("compact", "ro", [{ km: 4, kinds: kind === "none" ? [] : [kind], name: "x" }]);
       const pin = /<g data-testid="elevation-pin" data-glyph="(\w+)">[\s\S]*?<path d="([^"]+)"/.exec(markup)!;
       return { glyph: pin[1], path: pin[2] };
     });
-    expect(glyphs.map((entry) => entry.glyph)).toEqual(["water", "food", "firstAid", "timing", "direction", "none"]);
-    expect(new Set(glyphs.map((entry) => entry.path)).size).toBe(6);
+    expect(glyphs.map((entry) => entry.glyph)).toEqual(["water", "food", "firstAid", "timing", "direction", "regroup", "none"]);
+    expect(new Set(glyphs.map((entry) => entry.path)).size).toBe(7);
   });
 
   it("draws one dotted line per checkpoint from the pin down to the axis at the point's exact kilometre, under the curve, on the narrow, the wide and the full chart", () => {

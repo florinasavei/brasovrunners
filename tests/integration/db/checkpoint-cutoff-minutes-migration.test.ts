@@ -107,11 +107,11 @@ const minutesOf = async () => {
 };
 
 describe("migration 0156_direction_checkpoint_kind — the fifth kind", () => {
-  it("makes DIRECTION a kind of the enum, after the four, and leaves every row written before it as it was", async () => {
+  it("makes DIRECTION a kind of the enum, after the four (and «Regrupare» after it, 0174), and leaves every row written before it as it was", async () => {
     const { rows } = await client.query<{ label: string }>(
       `SELECT e.enumlabel AS label FROM pg_enum e JOIN pg_type t ON t.oid = e.enumtypid WHERE t.typname = 'event_checkpoint_kind' ORDER BY e.enumsortorder`,
     );
-    expect(rows.map((row) => row.label)).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION"]);
+    expect(rows.map((row) => row.label)).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION", "REGROUP"]);
     const { rows: kinds } = await client.query<{ kinds: string }>(`SELECT DISTINCT array_to_string(kinds, ',') AS kinds FROM event_checkpoints`);
     expect(kinds).toEqual([{ kinds: "WATER" }]);
   });
