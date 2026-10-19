@@ -141,11 +141,15 @@ export async function setNameByLinkAction(form: FormData): Promise<void> {
     now,
   );
   const code = result.ok ? (result.showName ? "shown" : "hidden") : result.reason;
-  // The member tick (§829): its own write and its own sentence; a refusal says so and changes nothing, an unchanged tick says nothing new.
+  // The member tick (§829): its own write and its own sentence — only when the press changes it (a name saved beside an untouched tick says nothing of it, and a
+  // tick left as it was is not asked again); a refusal says so and changes nothing.
   let member = "";
   if (form.get("memberBox") === "1") {
-    const swapped = await setRsvpClubMember(db, link.eventId, { token }, { clubMember: form.get("clubMember") === "on" }, now);
-    member = `&membru=${swapped.ok ? (swapped.clubMember ? "on" : "off") : swapped.reason}`;
+    const wanted = form.get("clubMember") === "on";
+    if (wanted !== (link.clubMember != null)) {
+      const swapped = await setRsvpClubMember(db, link.eventId, { token }, { clubMember: wanted }, now);
+      member = `&membru=${swapped.ok ? (swapped.clubMember ? "on" : "off") : swapped.reason}`;
+    }
   }
   redirect(`${pageOf(locale, token)}?nume=${code}${member}`);
 }

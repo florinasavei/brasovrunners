@@ -561,6 +561,14 @@ describe("§829 the member mark on «Vin!»", () => {
       expect(await page(withdraw, { membru: "off" })).toContain("Gata: nu mai ești numărat printre membri.");
     });
 
+    it("says nothing of a tick the press left as it was: a name saved beside an untouched tick, ticked or not", async () => {
+      const withdraw = await withdrawLink();
+      expect(await press(form(withdraw, { showName: "on", name: "Ana", memberBox: "1" }))).toMatch(/\?nume=shown$/);
+      await db.update(eventRsvps).set({ clubMember: "DECLARED" });
+      expect(await press(form(withdraw, { showName: "on", name: "Ana", memberBox: "1", clubMember: "on" }))).toMatch(/\?nume=shown$/);
+      expect((await rowOf()).clubMember).toBe("DECLARED");
+    });
+
     it("changes nothing about the tick when its box was not drawn: an unticked box posts nothing, and «not drawn» is not «unticked»", async () => {
       const withdraw = await withdrawLink();
       await db.update(eventRsvps).set({ clubMember: "DECLARED" });
