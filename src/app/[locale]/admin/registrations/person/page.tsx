@@ -254,7 +254,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                     <Typography key={index} variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
                       {show(answer.createdAt)} · {answer.eventTitle ?? answer.eventId} · {answer.deliveryEmail} · {show(answer.displayName)} ·{" "}
                       {answer.showName ? t("person.rsvpNameShown") : t("person.rsvpNameHidden")} · {answer.locale} · {t("person.rsvpNotice", { version: answer.privacyNoticeVersion })} ·{" "}
-                      {answer.confirmedAt ? t("person.rsvpConfirmedAt", { when: show(answer.confirmedAt) }) : t("person.rsvpUnconfirmed")}
+                      {answer.confirmedAt ? t("person.rsvpConfirmedAt", { when: show(answer.confirmedAt) }) : answer.askedAt ? t("person.rsvpAsked", { when: show(answer.askedAt) }) : t("person.rsvpUnconfirmed")}
                     </Typography>
                   ))
                 )}

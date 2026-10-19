@@ -43,7 +43,7 @@ const usage = (over: Partial<GmailUsage> = {}): GmailUsage => ({
 });
 
 describe("§443 the message groups and the setting", () => {
-  it("puts every message type in exactly one group, and the newsletter's own three in the newsletter group", () => {
+  it("puts every message type in exactly one group, and the newsletter's own four (with the «Vii?» question, §NNN) in the newsletter group", () => {
     // Every type with a template; a visitor's message and the road notice (§778) take the road on their row.
     const grouped = emailMessageType.enumValues.filter((type) => !isRelayMessage(type)) as (keyof typeof EMAIL_GROUP_OF)[];
     for (const type of grouped) expect(EMAIL_GROUP_OF[type]).toBeDefined();
@@ -51,7 +51,7 @@ describe("§443 the message groups and the setting", () => {
     expect(emailGroupOf("CONTACT_MESSAGE", false)).toBe("club");
     expect(EMAIL_GROUPS).toEqual(["links", "confirmations", "reminders", "announcements", "club", "newsletter"]);
     const newsletter = (Object.keys(EMAIL_GROUP_OF) as (keyof typeof EMAIL_GROUP_OF)[]).filter((type) => EMAIL_GROUP_OF[type] === "newsletter");
-    expect(newsletter.sort()).toEqual(["NEWSLETTER", "NEWSLETTER_CONFIRM", "NEW_EVENT_ALERT"]);
+    expect(newsletter.sort()).toEqual(["NEWSLETTER", "NEWSLETTER_CONFIRM", "NEW_EVENT_ALERT", "RSVP_ASK"]);
   });
 
   it("splits reminders and thank-yous from the organizers' announcements, and files a club copy under the club", () => {

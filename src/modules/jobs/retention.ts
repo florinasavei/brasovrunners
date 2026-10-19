@@ -4,7 +4,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventResults } from "@/db/schema/event-results";
-import { eventRsvps } from "@/db/schema/event-rsvps";
+import { eventRsvpAsks, eventRsvps } from "@/db/schema/event-rsvps";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -190,6 +190,8 @@ export type PruneCounts = {
   results: number;
   /** Answers «Vin!» gone: thirty days after the event, seven unconfirmed, a cancelled event's at once (§811). */
   rsvps: number;
+  /** The «Vii?» marks of events thirty days over (§NNN): a row of an event and a count, nothing personal. */
+  rsvpAsks: number;
   /** Remembered browsers past their year (§811). */
   personSessions: number;
 };
@@ -295,6 +297,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     volunteers: 0,
     results: 0,
     rsvps: 0,
+    rsvpAsks: 0,
     personSessions: 0,
   };
   const failures: PruneFailure[] = [];
@@ -699,6 +702,17 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       )
       .returning({ id: eventRsvps.id });
     counts.rsvps = deleted.length;
+    /*
+      The day-before question's mark (§NNN) goes with the event's other rows, thirty days after its end — NOT at a cancellation: a
+      cancelled event put back on the same day must not be asked a second time, and the row holds nothing personal (an event id and a
+      count). The unanswered rows it made are the seven-day window above; the messages are the outbox's.
+    */
+    const over = tx
+      .select({ id: events.id })
+      .from(events)
+      .where(sql`coalesce(${events.endsAt}, ${events.startsAt}) < ${daysBefore(now, RETENTION.rsvpDaysAfterEvent).toISOString()}::timestamptz`);
+    const askDeleted = await tx.delete(eventRsvpAsks).where(inArray(eventRsvpAsks.eventId, over)).returning({ id: eventRsvpAsks.id });
+    counts.rsvpAsks = askDeleted.length;
   });
 
   /* A remembered browser (§811) is good for a year from its last answer; past it the row is a hash nobody can present any more. */
@@ -732,6 +746,7 @@ export function totalPruned(counts: PruneCounts): number {
     counts.volunteers +
     counts.results +
     counts.rsvps +
+    counts.rsvpAsks +
     counts.personSessions
   );
 }

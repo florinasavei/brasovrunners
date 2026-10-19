@@ -1,6 +1,7 @@
 import { and, asc, count, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventRsvps } from "@/db/schema/event-rsvps";
 import { events } from "@/db/schema/events";
 import { type NewsletterTopic, newsletterSends, newsletterSubscribers } from "@/db/schema/newsletter";
 import { platformSettings } from "@/db/schema/platform-settings";
@@ -10,7 +11,7 @@ import type { Database } from "@/db/types";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { findCurrentApprovedDocument, noticeDescribesNewsletter } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, noticeDescribesNewsletter, noticeDescribesRsvpAsk } from "@/modules/legal-documents/repository";
 import { BULK_MESSAGE_TYPES } from "@/modules/notifications/domain/bulk";
 import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
 import { enqueueBulkClubCopies, enqueueEmail } from "@/modules/notifications/outbox";
@@ -23,7 +24,7 @@ import { canManageRegistrations, canSendNewsletter } from "@/modules/staff-ident
 import { DomainError } from "@/shared/errors/domain-error";
 import { alertDayOf, eventAlertTopics, eventAlertWanted, EVENT_ALERT_WINDOW_DAYS } from "./domain/alerts";
 import { checkNewsletterWords, type NewsletterIssue, newsletterFirstLine, readNewsletterWords } from "./domain/message";
-import { isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, SENDABLE_TOPICS, type SendableTopic } from "./domain/topics";
+import { isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, receives, SENDABLE_TOPICS, type SendableTopic } from "./domain/topics";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { consumeNewsletterToken, issueNewsletterToken, NEWSLETTER_MANAGE_REQUEST, readNewsletterToken } from "./tokens";
 
@@ -75,12 +76,12 @@ export async function subscribeToNewsletter<T extends Record<string, unknown>>(
   const parsed = subscribeSchema.safeParse(rawInput);
   // The ticks are read whatever else is wrong, so a refusal names each box that needs fixing once.
   const rawTopics = (rawInput as { topics?: unknown } | null)?.topics;
-  const topics = normalizeTopics(Array.isArray(rawTopics) ? rawTopics : []);
+  const requested = normalizeTopics(Array.isArray(rawTopics) ? rawTopics : []);
   const consented = (rawInput as { consent?: unknown } | null)?.consent === true;
-  if (!parsed.success || topics.length === 0 || !consented) {
+  if (!parsed.success || requested.length === 0 || !consented) {
     const fields = [
       ...(!parsed.success && parsed.error.issues.some((issue) => issue.path[0] === "email") ? ["email"] : []),
-      ...(topics.length === 0 ? ["topics"] : []),
+      ...(requested.length === 0 ? ["topics"] : []),
       ...(!consented ? ["consent"] : []),
     ];
     throw new DomainError("VALIDATION_ERROR", "the newsletter form is malformed", fields.length > 0 ? fields : ["email"]);
@@ -93,6 +94,13 @@ export async function subscribeToNewsletter<T extends Record<string, unknown>>(
   }
   const notice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", input.locale, now);
   if (!notice) throw new DomainError("CONFLICT", "no approved privacy notice in this language");
+  /*
+    «Întrebarea «Vii?» înaintea alergărilor» is a consent the notice must describe (§NNN): the pop-up draws its box only then, and here the
+    server refuses it too — a hand-made post is not a consent to something the notice in force never said. Left out, not an error;
+    a form with nothing else ticked is the usual "choose a topic".
+  */
+  const topics = (await noticeDescribesRsvpAsk(db, now)) ? requested : requested.filter((topic) => topic !== "RSVP_ASK");
+  if (topics.length === 0) throw new DomainError("VALIDATION_ERROR", "the newsletter form is malformed", ["topics"]);
 
   let identity;
   try {
@@ -294,6 +302,11 @@ export async function readNewsletterSubscription<T extends Record<string, unknow
  * choose again on the same visit, while the link they pressed works no more. Returns the
  * successor's secret, or null for a link that was not live. No topic at all is refused before
  * anything is spent: that is "unsubscribe", its own button.
+ *
+ * **«Întrebarea «Vii?» …» (§NNN) is a consent the notice must describe.** A subscriber who does not have it already cannot add it while the
+ * notice in force is silent on it (left out; a choice with nothing else ticked is refused and nothing is spent), and one who adds it —
+ * or "everything" — records the notice in force as the version they consented under, because the question is sent only to those whose
+ * consent was given under a notice that names it (`findFirstRsvpAskNoticeVersion`). Unticking it deletes the question's unanswered rows.
  */
 export async function updateNewsletterTopics<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -301,17 +314,32 @@ export async function updateNewsletterTopics<T extends Record<string, unknown>>(
   rawTopics: readonly unknown[],
   now: Date,
 ): Promise<string | null> {
-  const topics = normalizeTopics(rawTopics);
-  if (topics.length === 0) throw new DomainError("VALIDATION_ERROR", "choose at least one topic, or unsubscribe", ["topics"]);
+  const requested = normalizeTopics(rawTopics);
+  if (requested.length === 0) throw new DomainError("VALIDATION_ERROR", "choose at least one topic, or unsubscribe", ["topics"]);
+  const askDescribed = await noticeDescribesRsvpAsk(db, now);
   return db.transaction(async (tx) => {
     const spent = await consumeNewsletterToken(tx, { secret, purpose: "MANAGE", now });
     if (!spent) return null;
+    const [current] = await tx
+      .select()
+      .from(newsletterSubscribers)
+      .where(and(eq(newsletterSubscribers.id, spent.subscriberId), isNotNull(newsletterSubscribers.confirmedAt)))
+      .for("update")
+      .limit(1);
+    if (!current) return null;
+    const had = normalizeTopics(current.topics);
+    const topics = requested.filter((topic) => topic !== "RSVP_ASK" || askDescribed || had.includes("RSVP_ASK"));
+    // Thrown inside the transaction: the link is not spent (the rollback), as for an empty choice above.
+    if (topics.length === 0) throw new DomainError("VALIDATION_ERROR", "choose at least one topic, or unsubscribe", ["topics"]);
+    const addsAsk = (topics.includes("RSVP_ASK") && !had.includes("RSVP_ASK")) || (topics.includes("ALL") && !had.includes("ALL"));
+    const notice = addsAsk ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", current.locale, now) : undefined;
     const [updated] = await tx
       .update(newsletterSubscribers)
-      .set({ topics, updatedAt: now })
-      .where(and(eq(newsletterSubscribers.id, spent.subscriberId), isNotNull(newsletterSubscribers.confirmedAt)))
+      .set({ topics, updatedAt: now, ...(notice ? { privacyNoticeVersion: notice.version } : {}) })
+      .where(eq(newsletterSubscribers.id, current.id))
       .returning({ id: newsletterSubscribers.id });
     if (!updated) return null;
+    if (receives(had, ["RSVP_ASK"]) && !receives(topics, ["RSVP_ASK"])) await deleteAskedUnanswered(tx, current.canonicalEmail);
     return issueNewsletterToken(tx, { subscriberId: updated.id, purpose: "MANAGE", expiresAt: spent.expiresAt, now });
   });
 }
@@ -345,7 +373,15 @@ async function deleteSubscriberIn<T extends Record<string, unknown>>(tx: Databas
         sql`${emailOutbox.payloadJson}->>'subscriberId' = ${subscriberId}`,
       ),
     );
+  // The «Vii?» question's unanswered «Vin!» row (§NNN) holds this address too: it goes "pe loc" with the subscription, not at its seven days.
+  const [who] = await tx.select({ canonicalEmail: newsletterSubscribers.canonicalEmail }).from(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriberId)).limit(1);
+  if (who) await deleteAskedUnanswered(tx, who.canonicalEmail);
   await tx.delete(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriberId));
+}
+
+/** The «Vin!» rows the «Vii?» question made for an address and nobody answered (`asked_at` set, never confirmed): they are not an answer, only the address. */
+async function deleteAskedUnanswered<T extends Record<string, unknown>>(tx: Database<T>, canonicalEmail: string): Promise<void> {
+  await tx.delete(eventRsvps).where(and(isNotNull(eventRsvps.askedAt), isNull(eventRsvps.confirmedAt), eq(eventRsvps.canonicalEmail, canonicalEmail)));
 }
 
 /**
@@ -420,7 +456,7 @@ export async function unsubscribeNewsletterSubscriber<T extends Record<string, u
 }
 
 /** `receives` (`domain/topics.ts`) as SQL: the subscriber asked for everything, or for one of these topics. */
-function receivesSql(topics: readonly NewsletterTopic[]) {
+export function receivesSql(topics: readonly NewsletterTopic[]) {
   const wanted = ["ALL", ...topics];
   return sql`${newsletterSubscribers.topics} && ARRAY[${sql.join(
     wanted.map((topic) => sql`${topic}`),

@@ -174,6 +174,8 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       "NEWSLETTER_CONFIRM",
       "NEWSLETTER",
       "NEW_EVENT_ALERT",
+      // «Vii mâine la …?» (§NNN): the newsletter's fourth, to a subscriber, never about a registration.
+      "RSVP_ASK",
     ];
     for (const type of TEMPLATED_MESSAGE_TYPES) {
       expect(isParticipantMessage(type), type).toBe(!excluded.includes(type));

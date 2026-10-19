@@ -167,6 +167,8 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     newsletterBody: sample.newsletterBody,
     newsletterBodyOther: other.newsletterBody,
     newsletterManageUrl: `${base}/${locale}/EXAMPLE-newsletter`,
+    // «Vin!» and «Vii mâine?» (§812, §NNN): the quieter «Nu vin» under the button, so the preview draws both.
+    rsvpWithdrawUrl: `${base}/${locale}/EXAMPLE-rsvp-no`,
   };
 }
 
@@ -329,6 +331,8 @@ const NO_PERSON: ReadonlySet<EmailMessageType> = new Set([
   "REGISTRATION_OPENED",
   // «Vin!» (§811): to an address that typed itself under the answer; the greeting names nobody.
   "RSVP_CONFIRM",
+  // «Vii mâine la …?» (§NNN): to a subscriber's address; the greeting names nobody.
+  "RSVP_ASK",
   "REGISTER_ANOTHER_PERSON",
   "NEWSLETTER_CONFIRM",
   "NEWSLETTER",
@@ -382,6 +386,8 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "REGISTRATION_OPENED",
   // «Vin!» (§811): an answer to a turn-up event, never a registration.
   "RSVP_CONFIRM",
+  // «Vii mâine la …?» (§NNN): the question that asks for it, the same.
+  "RSVP_ASK",
   // An invitation (§647): to an address, before any registration exists.
   "EVENT_INVITATION",
   "GROUP_RUN_DECLARATION_SIGNED",

@@ -111,6 +111,8 @@ export type PersonData = {
     locale: string;
     privacyNoticeVersion: number;
     confirmedAt: Date | null;
+    /** When the «Vii?» email (§NNN) asked and wrote this row; with no `confirmedAt` it is a question nobody answered, not an answer. */
+    askedAt: Date | null;
     createdAt: Date;
   }>;
   /**
@@ -308,6 +310,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
       locale: eventRsvps.locale,
       privacyNoticeVersion: eventRsvps.privacyNoticeVersion,
       confirmedAt: eventRsvps.confirmedAt,
+      askedAt: eventRsvps.askedAt,
       createdAt: eventRsvps.createdAt,
     })
     .from(eventRsvps)

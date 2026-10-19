@@ -122,7 +122,7 @@ describe("§811 the answers «Vin!» in the sweep and in everything held about a
       const admin = await staff("ADMIN");
       const event = await seedEvent(new Date(NOW.getTime() + 2 * DAY));
       await answer(event.id, "Ana.Pop@gmail.com", { canonicalEmail: "ana.pop@gmail.com", displayName: "Ana", showName: true, privacyNoticeVersion: 4 });
-      await answer((await seedEvent(new Date(NOW.getTime() + 5 * DAY))).id, "ana.pop@gmail.com", { confirmedAt: null });
+      await answer((await seedEvent(new Date(NOW.getTime() + 5 * DAY))).id, "ana.pop@gmail.com", { confirmedAt: null, askedAt: NOW });
       await answer(event.id, "other@example.test");
       await db.insert(personSessions).values({ canonicalEmail: "ana.pop@gmail.com", deliveryEmail: "Ana.Pop@gmail.com", displayName: "Ana", canonicalizationVersion: 2, secretHash: "d".repeat(64), expiresAt: new Date(NOW.getTime() + 300 * DAY) });
 
@@ -131,6 +131,9 @@ describe("§811 the answers «Vin!» in the sweep and in everything held about a
       expect(data.rsvpAnswers[0]).toMatchObject({ deliveryEmail: "Ana.Pop@gmail.com", displayName: "Ana", showName: true, locale: "ro", privacyNoticeVersion: 4, eventTitle: "Alergarea de joi" });
       expect(data.rsvpAnswers[0].confirmedAt).not.toBeNull();
       expect(data.rsvpAnswers[1].confirmedAt).toBeNull();
+      // The «Vii?» email's unanswered question is data held, and the view says it was asked (§NNN), not answered.
+      expect(data.rsvpAnswers[0].askedAt).toBeNull();
+      expect(data.rsvpAnswers[1].askedAt).toEqual(NOW);
       expect(data.rememberedBrowsers).toHaveLength(1);
       expect(JSON.stringify(data.rememberedBrowsers)).not.toContain("d".repeat(64));
       expect(Object.keys(data.rememberedBrowsers[0]).sort()).toEqual(["createdAt", "deliveryEmail", "displayName", "expiresAt", "lastUsedAt"]);

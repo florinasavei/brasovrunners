@@ -31,6 +31,8 @@ const EVERY_MESSAGE: Record<Exclude<EmailMessageType, RelayMessageType>, { butto
   REGISTRATION_OPENED: { button: false, why: "«Anunță-mă»: no registration" },
   // «Vin!» (§811): an answer to a turn-up event; its own «Nu vin» is the message's second link, not a registration's cancel.
   RSVP_CONFIRM: { button: false, why: "no registration" },
+  // «Vii mâine la …?» (§NNN): the question that asks for «Vin!», to the newsletter's subscribers; never a registration.
+  RSVP_ASK: { button: false, why: "no registration" },
   CLUB_CONFIRMATION_NOTICE: { button: false, why: "the club's notice" },
   EVENT_UPDATE_NOTICE: { button: true, why: "the organizer's update notice (amending §419)" },
   EVENT_CANCELLED: { button: false, why: "after the fact: the event will not run" },

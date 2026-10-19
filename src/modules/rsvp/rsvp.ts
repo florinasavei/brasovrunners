@@ -52,6 +52,13 @@ const WITHDRAW_LINK_GRACE_DAYS = 60;
 const CONFIRM_THROTTLE_SCOPE = "rsvp-confirm" as const;
 const EVENT_THROTTLE_SCOPE = "rsvp-event" as const;
 
+/**
+ * An answer the «Vii?» email made and nobody has pressed yet (§NNN): `asked_at` set, `confirmed_at` empty. It is data held (the
+ * person's data view lists it) but **not an answer**: the editor's fold and counts leave it out, and «Nu mai vin» on the page
+ * finds nothing in it — an address nobody typed on the page has said nothing, so no withdraw link is mailed for it.
+ */
+const ASKED_UNANSWERED = sql`(${eventRsvps.askedAt} IS NOT NULL AND ${eventRsvps.confirmedAt} IS NULL)`;
+
 const answerSchema = z.object({
   // Trimmed first, like the canonicalizer: a trailing space on a phone keyboard is not a typo.
   email: z.string().trim().max(320).pipe(z.email()),
@@ -194,6 +201,8 @@ export async function answerRsvp<T extends Record<string, unknown>>(
             locale,
             privacyNoticeVersion: notice.version,
             createdAt: now,
+            // The address was typed on the page: the answer is the page's now, not the email's question (its links open the plain wording).
+            askedAt: null,
           })
           .where(eq(eventRsvps.id, existing.id))
           .returning();
@@ -241,7 +250,7 @@ export async function requestWithdrawLink<T extends Record<string, unknown>>(
   const [row] = await db
     .select()
     .from(eventRsvps)
-    .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.canonicalEmail, who.canonicalEmail)))
+    .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.canonicalEmail, who.canonicalEmail), sql`NOT ${ASKED_UNANSWERED}`))
     .limit(1);
   if (!row || !allowed) return;
   await db.transaction(async (tx) => {
@@ -306,6 +315,14 @@ export type RsvpLink = {
   startsAt: Date | null;
   /** The answer is already counted (a confirm link opened after another route confirmed it). */
   confirmed: boolean;
+  /**
+   * The answer was made by the «Vii?» email (§NNN) and nobody has pressed yet: the page of its two links offers the optional name
+   * under the «Vin» button, and says «Bine, nu te numărăm» after «Nu vin». False for an answer typed on the event's page and for one
+   * already counted.
+   */
+  asked: boolean;
+  /** The answer has a name already (typed on the page): the box is then not offered, and the press changes nothing about it. */
+  named: boolean;
 };
 
 /**
@@ -327,6 +344,8 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
         eventId: eventRsvps.eventId,
         locale: eventRsvps.locale,
         confirmedAt: eventRsvps.confirmedAt,
+        askedAt: eventRsvps.askedAt,
+        displayName: eventRsvps.displayName,
         title: eventTranslations.title,
         slug: eventTranslations.slug,
         startsAt: events.startsAt,
@@ -354,6 +373,8 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
       slug: row.slug,
       startsAt: row.startsAt,
       confirmed: row.confirmedAt !== null,
+      asked: row.askedAt !== null && row.confirmedAt === null,
+      named: row.displayName !== null,
     } satisfies RsvpLink;
   });
 }
@@ -401,6 +422,11 @@ export type RsvpProved = {
   slug: string | null;
   email: string;
   displayName: string | null;
+  /**
+   * The row this press used was the «Vii?» email's question, still unanswered (§NNN): read from the row itself, never from the
+   * page's form. A person who only declined a question they never started is not "recognised" for a year by it.
+   */
+  unanswered: boolean;
 };
 
 async function slugOf<T extends Record<string, unknown>>(tx: Database<T>, eventId: string, locale: "ro" | "en"): Promise<string | null> {
@@ -416,8 +442,22 @@ async function slugOf<T extends Record<string, unknown>>(tx: Database<T>, eventI
  * The «Da, vin» button's POST: spends the `RSVP_CONFIRM` link and counts the answer, in one transaction — and expires the
  * event's public count. Returns who the link proved, so the caller can remember the browser (`person-session/`); null when the
  * link was not live (a second press, an expired or superseded link). A link spent after the event started changes nothing.
+ *
+ * **The «Vii?» email's «Vin» (§NNN) is this press.** The link was minted for the subscriber's own address and nobody else holds it, so
+ * the press is a verified one: counted at once, no second email (it calls this function with the token's own proof, not `answerRsvp`, so
+ * the `link` source of `identity.ts` stays free for a later surface). That row has no name — the
+ * newsletter's row never had one, and a name nobody typed is never made up — so the page offers the optional `name` and the tick
+ * `showName` above the one button, and they are taken here **only** for a row the email made (`asked_at`), still unconfirmed and
+ * still nameless: a name typed by whoever typed an address on the page is never replaced, and a counted row is never renamed by a
+ * second press. The tick counts only beside a name, and a name shows publicly only under the notice that described it (`public-name.ts`),
+ * so the row takes the version in force.
  */
-export async function confirmRsvp<T extends Record<string, unknown>>(db: Database<T>, secret: string, now: Date): Promise<RsvpProved | null> {
+export async function confirmRsvp<T extends Record<string, unknown>>(
+  db: Database<T>,
+  secret: string,
+  now: Date,
+  options: { displayName?: string | null; showName?: boolean } = {},
+): Promise<RsvpProved | null> {
   if (!isWellFormedTokenSecret(secret)) return null;
   const proved = await db.transaction(async (tx) => {
     /*
@@ -436,12 +476,21 @@ export async function confirmRsvp<T extends Record<string, unknown>>(db: Databas
     if (event.mode !== "NONE" || !event.enabled) return null;
     const rsvpId = await consumeRsvpToken(tx, secret, "RSVP_CONFIRM", now);
     if (!rsvpId) return null;
+    const [before] = await tx.select().from(eventRsvps).where(eq(eventRsvps.id, rsvpId)).for("update");
+    const typedName = cleanDisplayName(options.displayName);
+    const takesName = before !== undefined && typedName !== null && before.askedAt !== null && before.confirmedAt === null && before.displayName === null;
+    const notice = takesName ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", before.locale, now) : undefined;
     const [row] = await tx
       .update(eventRsvps)
-      .set({ confirmedAt: sql`coalesce(${eventRsvps.confirmedAt}, ${now})` })
+      .set({
+        confirmedAt: sql`coalesce(${eventRsvps.confirmedAt}, ${now})`,
+        ...(takesName ? { displayName: typedName, showName: options.showName === true, ...(notice ? { privacyNoticeVersion: notice.version } : {}) } : {}),
+      })
       .where(eq(eventRsvps.id, rsvpId))
       .returning();
-    return row ? { eventId: row.eventId, locale: row.locale, slug: await slugOf(tx, row.eventId, row.locale), email: row.deliveryEmail, displayName: row.displayName } : null;
+    return row
+      ? { eventId: row.eventId, locale: row.locale, slug: await slugOf(tx, row.eventId, row.locale), email: row.deliveryEmail, displayName: row.displayName, unanswered: false }
+      : null;
   });
   if (proved) revalidatePublicContent("places");
   return proved;
@@ -464,7 +513,17 @@ export async function withdrawRsvp<T extends Record<string, unknown>>(
       const rsvpId = await consumeRsvpToken(tx, who.token, "RSVP_WITHDRAW", now);
       if (!rsvpId) return null;
       const [row] = await tx.delete(eventRsvps).where(eq(eventRsvps.id, rsvpId)).returning();
-      return row ? { eventId: row.eventId, locale: row.locale, slug: await slugOf(tx, row.eventId, row.locale), email: row.deliveryEmail, displayName: row.displayName } : null;
+      return row
+        ? {
+            eventId: row.eventId,
+            locale: row.locale,
+            slug: await slugOf(tx, row.eventId, row.locale),
+            email: row.deliveryEmail,
+            displayName: row.displayName,
+            // From the deleted row: the email's question, declined without ever having been answered.
+            unanswered: row.askedAt !== null && row.confirmedAt === null,
+          }
+        : null;
     });
     if (proved) revalidatePublicContent("places");
     return proved;
@@ -553,23 +612,23 @@ export async function countRsvpEvents<T extends Record<string, unknown>>(db: Dat
   return row?.n ?? 0;
 }
 
-/** One event's answers for the backoffice's fold (Administrator and Organizer see addresses; the others only the count). */
+/** One event's answers for the backoffice's fold (Administrator and Organizer see addresses; the others only the count) — not the «Vii?» email's unanswered questions. */
 export type RsvpAdminRow = { email: string; displayName: string | null; showName: boolean; confirmedAt: Date | null; createdAt: Date };
 
 export async function listRsvpsForAdmin<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<RsvpAdminRow[]> {
   return db
     .select({ email: eventRsvps.deliveryEmail, displayName: eventRsvps.displayName, showName: eventRsvps.showName, confirmedAt: eventRsvps.confirmedAt, createdAt: eventRsvps.createdAt })
     .from(eventRsvps)
-    .where(eq(eventRsvps.eventId, eventId))
+    .where(and(eq(eventRsvps.eventId, eventId), sql`NOT ${ASKED_UNANSWERED}`))
     .orderBy(asc(eventRsvps.createdAt), asc(eventRsvps.id));
 }
 
-/** How many answers an event has, confirmed and not (the backoffice's fold title). */
+/** How many answers an event has, confirmed and not (the backoffice's fold title) — the «Vii?» email's unanswered questions are neither (`ASKED_UNANSWERED`). */
 export async function countRsvpsForAdmin<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ confirmed: number; unconfirmed: number }> {
   const rows = await db
     .select({ confirmed: sql<boolean>`${eventRsvps.confirmedAt} IS NOT NULL`, n: count() })
     .from(eventRsvps)
-    .where(eq(eventRsvps.eventId, eventId))
+    .where(and(eq(eventRsvps.eventId, eventId), sql`NOT ${ASKED_UNANSWERED}`))
     .groupBy(sql`${eventRsvps.confirmedAt} IS NOT NULL`);
   return { confirmed: rows.find((row) => row.confirmed)?.n ?? 0, unconfirmed: rows.find((row) => !row.confirmed)?.n ?? 0 };
 }

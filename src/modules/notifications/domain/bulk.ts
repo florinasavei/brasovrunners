@@ -1,8 +1,8 @@
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 
 /**
- * Mail that goes to many people at once and waits for none of them (§445): the newsletter and the
- * new-event alert. §80's rule for the day a newsletter existed was "it will have to fit under the
+ * Mail that goes to many people at once and waits for none of them (§445): the newsletter, the
+ * new-event alert and the day-before «Vii?» question (§NNN; one message per subscriber of its topic, withdrawn at the send once its day has come). §80's rule for the day a newsletter existed was "it will have to fit under the
  * same number" — the plan's allowance (§100) — and the one thing that must never happen is that a
  * newsletter to three hundred addresses spends the allowance a registration's confirmation link
  * needs at noon the same day. So the outbox treats these types as the last in line and gives them
@@ -20,7 +20,7 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
  * The provider's own refusal still defers any message, bulk or not (§40): the reserve is the
  * club's claim about its plan, the refusal is the fact.
  */
-export const BULK_MESSAGE_TYPES = ["NEWSLETTER", "NEW_EVENT_ALERT"] as const satisfies readonly EmailMessageType[];
+export const BULK_MESSAGE_TYPES = ["NEWSLETTER", "NEW_EVENT_ALERT", "RSVP_ASK"] as const satisfies readonly EmailMessageType[];
 
 export function isBulkMessage(messageType: EmailMessageType): boolean {
   return (BULK_MESSAGE_TYPES as readonly EmailMessageType[]).includes(messageType);

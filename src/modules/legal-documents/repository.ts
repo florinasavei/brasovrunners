@@ -38,6 +38,7 @@ import {
   describesPromotionalMaterialsShared,
   describesResults,
   describesRsvp,
+  describesRsvpAsk,
   describesTeamPage,
   MINIMUM_AGE_MERGE_FIELD,
   mergeFieldsIn,
@@ -400,6 +401,18 @@ export async function noticeDescribesRsvp<T extends Record<string, unknown>>(db:
 }
 
 /**
+ * Whether the privacy notice in force describes the day-before question «Vii mâine?» (§NNN, `describesRsvpAsk`) — in every language,
+ * AND «Vin!» itself (`describesRsvp`), because the question writes a «Vin!» row from the subscriber's address. False while either is
+ * silent. For the queue, the send, the topic's box on the manage page and `/admin/tasks`; the pop-up reads the cached twin
+ * (`cachedRsvpAskDescribed`). A notice approved before the marker existed does not name the topic (`{{newsletterTopics}}` leaves
+ * the automatic topics out), and asks nobody: the club approves the marker.
+ */
+export async function noticeDescribesRsvpAsk<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesRsvp(notice.body) && describesRsvpAsk(notice.body));
+}
+
+/**
  * Whether the privacy notice in force describes what a volunteer says about themselves (§765,
  * `describesVolunteerProfile`) — in every language, like `noticeDescribesVolunteers`. For the public sign-up (which
  * form it takes, asked again at every post), the editor's card and `/admin/tasks`; the event page reads the cached
@@ -657,6 +670,19 @@ export async function findFirstResultsNoticeVersion<T extends Record<string, unk
  */
 export async function findFirstRsvpNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
   return findFirstNoticeVersionDescribing(db, describesRsvp);
+}
+
+/**
+ * The lowest version of an approved, not withdrawn privacy notice that describes the day-before question «Vii?» in **every** language
+ * (`describesRsvpAsk`, and `describesRsvp` beside it, because the question writes a «Vin!» row), or null when none does —
+ * `findFirstRsvpNoticeVersion`'s twin (§NNN, the §421 rule). A newsletter subscription records the notice it was given under
+ * (`newsletter_subscribers.privacy_notice_version`); the question is sent only to a subscriber whose consent — to the topic, or to
+ * «Toate noutățile» — was given under this version or a later one. A subscriber to everything under an older notice agreed to club-written
+ * messages and the new-event alert, not to an automatic question that writes a row from their address: they are asked only after they
+ * choose again (the manage page records the version in force when the topic, or everything, is ticked).
+ */
+export async function findFirstRsvpAskNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
+  return findFirstNoticeVersionDescribing(db, (body) => describesRsvp(body) && describesRsvpAsk(body));
 }
 
 /**

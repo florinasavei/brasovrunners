@@ -1,5 +1,6 @@
 import { and, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventRsvpAsks } from "@/db/schema/event-rsvps";
 import { events } from "@/db/schema/events";
 import { familyPlaceHolds } from "@/db/schema/family-entries";
 import { registrationInterests } from "@/db/schema/registration-interests";
@@ -13,6 +14,7 @@ import { nextConfirmationRetry } from "@/modules/notifications/confirmation-retr
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { PLACE_HOLDING_STATUSES } from "@/modules/registrations/domain/state-machine";
 import { emailLinkLapseSql } from "@/modules/registrations/repository";
+import { rsvpAskNextLook } from "@/modules/rsvp/domain/ask";
 import { nextFamilyEntryLapse } from "@/modules/registrations/family-entries";
 import { nextInvitationLapse } from "@/modules/registrations/invitation-repository";
 import { DNS_CONFIRM_MS, outageGraceMaxMs } from "@/modules/registrations/domain/outage-grace";
@@ -256,6 +258,8 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
   // `queueConfirmationRetries` (§653): the verification email re-sent, the club's hours after the last one left.
   const confirmationRetry = await nextConfirmationRetry(db, now, settings);
   const outage = await nextOutageWork(db, now, outageGraceMaxMs(settings));
+  // `queueRsvpAsks` (§NNN): the morning before each ticked turn-up event, 08:00 club time — without it the job would sleep through it.
+  const rsvpAsk = await nextRsvpAskWork(db, now);
 
   return earliest([
     emailLapses,
@@ -268,7 +272,41 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     toDate(invitationLapse),
     confirmationRetry,
     outage,
+    rsvpAsk,
   ]);
+}
+
+/**
+ * «Vii mâine la …?» (§NNN, `rsvp/ask.ts`): the soonest 08:00 club time on the day before a ticked, scheduled, published, public turn-up
+ * event that has not been asked yet — the window's opening (`rsvpAskNextLook`), when it is still ahead. A window already open is the run
+ * that calls this having just looked at it, or a save that wakes the job itself. The query mirrors `queueRsvpAsks`' candidates without
+ * its look-ahead cap: a far event's look is simply far, and the earliest wins.
+ */
+async function nextRsvpAskWork<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<Date | null> {
+  const any = db as unknown as AnyDb;
+  const rows = await any
+    .select({ startsAt: events.startsAt })
+    .from(events)
+    .leftJoin(eventRsvpAsks, eq(eventRsvpAsks.eventId, events.id))
+    .where(
+      and(
+        isNull(eventRsvpAsks.id),
+        eq(events.rsvpEnabled, true),
+        eq(events.registrationMode, "NONE"),
+        eq(events.eventStatus, "SCHEDULED"),
+        eq(events.editorialStatus, "PUBLISHED"),
+        eq(events.membersOnly, false),
+        eq(events.dateToBeAnnounced, false),
+        eq(events.timeToBeAnnounced, false),
+        gt(events.startsAt, now),
+      ),
+    );
+  return earliest(
+    rows.map((row) => {
+      const startsAt = toDate(row.startsAt);
+      return startsAt ? rsvpAskNextLook(startsAt, now) : null;
+    }),
+  );
 }
 
 /**

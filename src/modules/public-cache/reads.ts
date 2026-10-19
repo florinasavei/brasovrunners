@@ -78,6 +78,7 @@ import {
   describesPromotionalMaterialsShared,
   describesResults,
   describesRsvp,
+  describesRsvpAsk,
   describesVolunteerAgreement,
   describesVolunteerMinors,
   describesVolunteerProfile,
@@ -676,6 +677,15 @@ export async function cachedResultsDescribed(now: Date): Promise<boolean> {
 export async function cachedRsvpDescribed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesRsvp(notice.body));
+}
+
+/**
+ * Whether the newsletter's pop-up may offer the topic «Întrebarea „Vii?” înaintea alergărilor» (§NNN): the notice in force describes
+ * «Vin!» and the day-before question (`describesRsvp`, `describesRsvpAsk`), in every language — `noticeDescribesRsvpAsk`'s cached twin.
+ */
+export async function cachedRsvpAskDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesRsvp(notice.body) && describesRsvpAsk(notice.body));
 }
 
 /**
