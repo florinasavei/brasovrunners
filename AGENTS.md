@@ -1514,6 +1514,19 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   the row and in the audit trail (`event_results.name_agreed_at`, `publicResultName`), and never when
   a confirmed registration holds the number: a registered runner's name follows their own tick, never
   a staff mark;
+- an event's volunteers (§NNN, amending §754) follow the same rule, with their own two ticks: the club's
+  «Lista voluntarilor e publică pe pagina evenimentului» (`events.volunteers_list_public`, off by default)
+  and each volunteer's «Vreau să apar pe lista publică a voluntarilor» (`event_volunteers.list_opt_in`).
+  The page's card «Voluntarii» names only a CONFIRMED volunteer, an adult, whose tick was given under a
+  privacy notice that already described `{{volunteersList}}` (`event_volunteers.list_opt_in_notice_version`,
+  its own column: never the sign-up's consent record, `privacy_notice_version`); it shows the name and the
+  role the organizers gave, never an address, a phone or a city, and counts everyone else («și încă N»). A
+  volunteer under eighteen is counted and never named: the guardian's acceptance covers the agreement, not a
+  disclosure, until the owner and counsel decide how a guardian consents to it. The rows go thirty days
+  after the event, and the page with them. The club's tick travels with a copy and with the event's file
+  because each volunteer ticks on the copy for themselves — the one place a copy inherits a public switch;
+  `readPublicVolunteersList` selects the name, the tick's notice version, the age and the guardian's name
+  (to keep a minor off) and nothing else;
 - `tests/privacy/public-surface.test.ts` is where these are asserted. That file may be extended
   and MUST NOT be weakened.
 

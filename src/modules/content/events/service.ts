@@ -1907,6 +1907,9 @@ const SERIES_COLUMNS = [
   // today; listed so that a save which ever does carries it like the other rules of a series, and so that every date a repeat makes starts with it
   // (`copiedEventValues`).
   "volunteersAccess",
+  // «Lista voluntarilor e publică pe pagina evenimentului» (§NNN): the club's standing rule for the list, saved by the «Voluntari» card on its own like the
+  // choice above, listed for the same reason. It travels with a copy because each volunteer ticks «Vreau să apar» on the copy themselves (AGENTS.md §10.10).
+  "volunteersListPublic",
   // «Copertă» (§709), like the route (§49): the Wednesday run wears one cover every Wednesday, and
   // "from this date" or "all" carries a new one — the picture and its crop together.
   "coverMediaAssetId",

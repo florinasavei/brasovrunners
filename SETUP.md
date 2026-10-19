@@ -2401,7 +2401,7 @@ only ones who see the names, addresses and telephone numbers.
     - **The volunteer ticks.** The volunteers' page then has one more optional box, **«Vreau să apar pe lista publică a voluntarilor»** (off by default, with one line of help), in every
       way in (anyone, a member, an invitation). For a person you enter yourself («Adaugă un voluntar de mână», «Modifică») the same words are a box, **«Vrea să apară pe lista publică
       a voluntarilor»**: tick it only when the person told you they want to, preferably in writing — your name stays in the log, as for a paper agreement. A tick can always be cleared;
-      it cannot be recorded while the notice is silent. A row with the tick says «Pe lista publică». A volunteer who ticked under a notice from before this one is never named.
+      it cannot be recorded while the notice is silent. A row with the tick says «Vrea pe lista publică» (the wish; the page names the person only once confirmed, under the conditions above). A volunteer who ticked under a notice from before this one is never named, and neither is a volunteer under eighteen (counted only: the guardian's acceptance covers the agreement, not a public name).
     - **You confirm them.** The page names only **«Confirmat»** volunteers; the others are not on it at all.
     What the visitor sees: the card **«Voluntarii (N)»**, a fold **closed on arrival** like «Condiții de participare», after «Căutăm voluntari» and before the rules — the names of the
     volunteers who ticked, each with the role you gave them, and «și încă N voluntari» for the rest of the confirmed. Nobody ticked yet but the page is asking for volunteers: the card is

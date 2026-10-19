@@ -170,7 +170,7 @@ export type VolunteerItem = {
   city: string | null;
   volunteeredBefore: boolean;
   clubMember: boolean;
-  /** «Vreau să apar pe lista publică a voluntarilor» (§NNN): the person's own tick (or the organizers' record of it) — the card's «Pe lista publică». */
+  /** «Vreau să apar pe lista publică a voluntarilor» (§NNN): the person's own tick (or the organizers' record of it) — the card's «Vrea pe lista publică». */
   listOptIn: boolean;
   shirtSize: Exclude<RegistrationTshirtSize, "NONE"> | null;
   createdAt: Date;

@@ -98,35 +98,38 @@ export default async function VolunteersList({
             {t("volunteers.list.forming")}
           </Typography>
         ) : (
-          <Box component="ul" aria-label={t("volunteers.list.names")} sx={{ listStyle: "none", m: 0, p: 0 }}>
-            {list.named.map((person, index) => {
-              const role = roleOf(person);
-              return (
-                // A name is not unique — two people may both be called Ana — so the position in the order of sign-ups identifies the row.
-                <Box
-                  component="li"
-                  key={`${index}-${person.name}`}
-                  data-testid="volunteers-list-person"
-                  sx={{ py: 1, borderBottom: 1, borderColor: "divider", overflowWrap: "anywhere" }}
-                >
-                  <Typography component="span" sx={{ fontWeight: 600 }} data-testid="volunteers-list-name">
-                    {person.name}
-                  </Typography>
-                  {role !== null && (
-                    <Typography component="span" color="text.secondary" data-testid="volunteers-list-role">
-                      {" · "}
-                      {role}
+          <>
+            <Box component="ul" aria-label={t("volunteers.list.names")} sx={{ listStyle: "none", m: 0, p: 0 }}>
+              {list.named.map((person, index) => {
+                const role = roleOf(person);
+                return (
+                  // A name is not unique — two people may both be called Ana — so the position in the order of sign-ups identifies the row.
+                  <Box
+                    component="li"
+                    key={`${index}-${person.name}`}
+                    data-testid="volunteers-list-person"
+                    sx={{ py: 1, borderBottom: 1, borderColor: "divider", overflowWrap: "anywhere" }}
+                  >
+                    <Typography component="span" sx={{ fontWeight: 600 }} data-testid="volunteers-list-name">
+                      {person.name}
                     </Typography>
-                  )}
-                </Box>
-              );
-            })}
+                    {role !== null && (
+                      <Typography component="span" color="text.secondary" data-testid="volunteers-list-role">
+                        {" · "}
+                        {role}
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
+            {/* Outside the list: the names' list holds the people who chose to appear, and these did not. */}
             {list.others > 0 && (
-              <Box component="li" data-testid="volunteers-list-others" sx={{ py: 1, color: "text.secondary" }}>
+              <Typography variant="body2" color="text.secondary" data-testid="volunteers-list-others" sx={{ py: 1 }}>
                 {t(`volunteers.list.others.${countForm(list.others, locale)}`, { count: list.others })}
-              </Box>
+              </Typography>
             )}
-          </Box>
+          </>
         )}
       </Box>
     </Box>

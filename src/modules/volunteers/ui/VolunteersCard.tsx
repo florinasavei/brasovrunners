@@ -1032,8 +1032,8 @@ export default async function VolunteersCard({
           and one line of the rest in the row's details. Nothing for a person who said nothing. */}
       {(person.volunteeredBefore || person.clubMember || person.listOptIn) && (
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5, mt: 0.5 }} data-testid="volunteer-claims">
-          {/* «Pe lista publică» (§NNN): the person wants to appear — named on the event's page only once confirmed, while the club's list is public and the notice describes it. */}
-          {person.listOptIn && <StatusChip glyph="visible" variant="outlined" label={t("volunteers.chips.onList")} testId="volunteer-on-list" />}
+          {/* «Vrea pe lista publică» (§NNN): the person wants to appear — named on the event's page only once confirmed, while the club's list is public and the notice describes it. */}
+          {person.listOptIn && <StatusChip glyph="wantsList" variant="outlined" label={t("volunteers.chips.wantsList")} testId="volunteer-on-list" />}
           {person.volunteeredBefore && <StatusChip glyph="experience" variant="outlined" label={t("volunteers.chips.before")} testId="volunteer-before" />}
           {person.clubMember && <StatusChip glyph="club" variant="outlined" label={t("volunteers.chips.club", { club: CLUB_NAME })} testId="volunteer-club" />}
         </Stack>

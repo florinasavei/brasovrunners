@@ -216,7 +216,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   const volunteerOffer = membersOnly ? null : await readOrWhileAway(() => readVolunteerOffer(event, now), null);
   // «Voluntarii» (§NNN): only where the club ticked the list public, never on a members' event; the card asks the notice and the people itself. The page is made
   // again when the volunteers' rows may go, thirty days after the start (§754), so a card never outlives them on a static copy.
-  const volunteersList = !membersOnly && event.volunteersListPublic === true ? { offerOpen: volunteerOffer !== null } : null;
+  const volunteersList = !membersOnly && event.volunteersListPublic === true ? { offerOpen: volunteerOffer !== null && volunteerOffer.access !== "INVITED" } : null;
   if (volunteersList && event.startsAt) await holdPageUntil([new Date(event.startsAt.getTime() + RETENTION_PERIODS.volunteerDaysAfterEvent * 86_400_000)], now);
   const volunteerRoleNames = volunteerOffer
     ? // A name once, though the same role may stand in two categories (§774): the box says what is needed, the page says where.

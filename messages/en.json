@@ -4633,7 +4633,7 @@
         },
         "volunteersListNotice": {
           "title": "The text for the volunteers' public list",
-          "todo": "An event has its volunteers' list public, but the privacy notice in force does not describe it yet. Until you approve it, the page shows no “Volunteers” card and the form does not ask the tick.",
+          "todo": "An event has its volunteers' list public, but the privacy notice in force does not describe it yet. Until you approve it, the page shows no “Volunteers” card and the form does not show the tick.",
           "done": "The notice in force describes the public list of volunteers: the page shows the name and role of confirmed volunteers who ticked, and counts the others.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The paragraph about volunteers now says what the public list shows: the name and given role, only with the person's tick.",
@@ -5289,7 +5289,7 @@
         "guardianValue": "Parent or guardian: {name}",
         "birthDateHelpMinors": "Optional. At least {age} old on the day of the event. Under 18, add the parent or guardian below.",
         "listOptIn": "Wants to appear on the public list of volunteers",
-        "listOptInHelp": "Tick only if the person told you they want to, preferably in writing. Your name stays in the log. The page shows the name and given role, only once you confirm them.",
+        "listOptInHelp": "Tick only if the person told you they want to, preferably in writing. Your name stays in the log. If the list is public, the page shows the name and given role once you confirm them.",
         "listOptInOff": "The notice in force does not describe the public list: it cannot be ticked any more. You can only untick it."
       },
       "states": {
@@ -5417,13 +5417,13 @@
       "list": {
         "label": "The volunteers' list is public on the event's page",
         "help": "Ticked, the page shows a “Volunteers” card with the name and given role of confirmed volunteers who ticked; the rest are only counted. Address and telephone never appear.",
-        "noticeOff": "The card is not shown yet: the privacy notice in force does not describe the public list of volunteers, so the form does not ask the tick. “Tasks” says what to approve.",
+        "noticeOff": "The card is not shown yet: the privacy notice in force does not describe the public list of volunteers, so the form does not show the tick. “Tasks” says what to approve.",
         "noticeLink": "Legal documents"
       },
       "chips": {
         "before": "Volunteered before",
         "club": "From the {club} group",
-        "onList": "On the public list"
+        "wantsList": "Wants to be on the public list"
       },
       "yes": "Yes",
       "no": "No",

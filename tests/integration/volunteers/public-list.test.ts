@@ -297,7 +297,7 @@ describe("§NNN the volunteers' public list", () => {
       expect(data.volunteerOffers.map((offer) => offer.listOptIn)).toEqual([true]);
     });
 
-    it("the card's list carries the tick, so a row can say «Pe lista publică»", async () => {
+    it("the card's list carries the tick, so a row can say «Vrea pe lista publică»", async () => {
       await approveNotice(WITH, 1);
       const event = await seedEvent();
       const role = await seedRole(event.id);
@@ -356,7 +356,7 @@ describe("§NNN the volunteers' public list", () => {
       ]);
       const read = await readPublicVolunteersList(db, event.id, { firstListNoticeVersion: 1 });
       expect(read.list).toEqual({ count: 2, named: [{ name: "Adult Voluntar", roleNameRo: null, roleNameEn: null }], others: 1 });
-      expect(JSON.stringify(read)).not.toMatch(/Tânăr|Părinte|@example.test/);
+      expect(JSON.stringify(read)).not.toMatch(/Tânăr|Părinte|@example\.test/);
     });
 
     it("names nobody whose tick was given under a notice older than the first that described the list: they are counted", async () => {

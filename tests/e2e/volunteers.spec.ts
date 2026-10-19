@@ -1778,11 +1778,11 @@ test.describe("§754 volunteers for a race", () => {
       await expect(list).not.toContainText("Ana Popescu");
       await expect(list).not.toContainText("Ion Ionescu");
 
-      // --- The organizers: Ana's row says «Pe lista publică», Ion's does not; give Ana a role, confirm both ---
+      // --- The organizers: Ana's row says «Vrea pe lista publică», Ion's does not; give Ana a role, confirm both ---
       await page.goto(`/ro/admin/events/${event.id}`);
       await hydrated(page);
       const rowOf = (name: string) => page.locator('[data-testid="volunteer-row"]', { hasText: name });
-      await expect(rowOf("Ana Popescu").getByTestId("volunteer-on-list")).toHaveText("Pe lista publică");
+      await expect(rowOf("Ana Popescu").getByTestId("volunteer-on-list")).toHaveText("Vrea pe lista publică");
       await expect(rowOf("Ion Ionescu").getByTestId("volunteer-on-list")).toHaveCount(0);
       await rowOf("Ana Popescu").getByRole("button", { name: /^Dă-i rolul Punct de apă/ }).click();
       await page.waitForURL(/#box-volunteers$/);

@@ -4633,7 +4633,7 @@
         },
         "volunteersListNotice": {
           "title": "Textul pentru lista publică a voluntarilor",
-          "todo": "Un eveniment are lista voluntarilor publică, dar nota de confidențialitate în vigoare nu o descrie încă. Până o aprobi, pagina nu arată cardul „Voluntarii” și formularul nu cere bifa de apariție.",
+          "todo": "Un eveniment are lista voluntarilor publică, dar nota de confidențialitate în vigoare nu o descrie încă. Până o aprobi, pagina nu arată cardul „Voluntarii” și formularul nu arată bifa de apariție.",
           "done": "Nota în vigoare descrie lista publică a voluntarilor: pagina arată numele și rolul celor confirmați care au bifat, iar pe ceilalți îi numără.",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre voluntari spune acum ce arată lista publică: numele și rolul dat, doar cu bifa persoanei.",
@@ -5289,7 +5289,7 @@
         "guardianValue": "Părinte sau tutore: {name}",
         "birthDateHelpMinors": "Opțional. Cel puțin {age} în ziua evenimentului. Sub 18 ani, trece mai jos și părintele sau tutorele.",
         "listOptIn": "Vrea să apară pe lista publică a voluntarilor",
-        "listOptInHelp": "Bifează doar dacă persoana ți-a spus că vrea, de preferat în scris. Numele tău rămâne în jurnal. Pagina arată numele și rolul dat, doar după ce o confirmi.",
+        "listOptInHelp": "Bifează doar dacă persoana ți-a spus că vrea, de preferat în scris. Numele tău rămâne în jurnal. Dacă lista e publică, pagina arată numele și rolul dat, după ce o confirmi.",
         "listOptInOff": "Nota în vigoare nu descrie lista publică: nu se mai poate bifa. Poți doar s-o debifezi."
       },
       "states": {
@@ -5417,13 +5417,13 @@
       "list": {
         "label": "Lista voluntarilor e publică pe pagina evenimentului",
         "help": "Bifat, pagina arată un card „Voluntarii” cu numele și rolul dat al celor confirmați care au bifat; ceilalți sunt doar numărați. Adresa și telefonul nu apar niciodată.",
-        "noticeOff": "Cardul nu se arată încă: nota de confidențialitate în vigoare nu descrie lista publică a voluntarilor, iar formularul nu cere bifa. «Sarcini» spune ce trebuie aprobat.",
+        "noticeOff": "Cardul nu se arată încă: nota de confidențialitate în vigoare nu descrie lista publică a voluntarilor, iar formularul nu arată bifa. «Sarcini» spune ce trebuie aprobat.",
         "noticeLink": "Documente legale"
       },
       "chips": {
         "before": "A mai fost voluntar",
         "club": "Din grupul {club}",
-        "onList": "Pe lista publică"
+        "wantsList": "Vrea pe lista publică"
       },
       "yes": "Da",
       "no": "Nu",

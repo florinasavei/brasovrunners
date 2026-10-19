@@ -11,7 +11,7 @@ import type { PublicVolunteerRole, VolunteerItem, VolunteerRole } from "@/module
  * §NNN — what the club and the volunteer see of the public list: the «Voluntari» card's tick «Lista voluntarilor e publică pe pagina
  * evenimentului» (a real tick box in its own form, the sentence and the link to the legal texts while the notice does not describe the list),
  * the organizers' record of a person's own tick in «Adaugă» and «Modifică» (a `CheckboxField`, drawn while the notice describes the list or the
- * person is ticked already), the chip «Pe lista publică» on a ticked person's row, and the public form's tick «Vreau să apar pe lista publică a
+ * person is ticked already), the chip «Vrea pe lista publică» on a ticked person's row, and the public form's tick «Vreau să apar pe lista publică a
  * voluntarilor» with its one help line — off by default, drawn only where the offer says so. Both languages.
  */
 const messages = { ro, en } as const;
@@ -264,30 +264,30 @@ describe("§NNN the organizers' record of a person's tick", () => {
     expect(page).toContain("Nota în vigoare nu descrie lista publică: nu se mai poate bifa. Poți doar s-o debifezi.");
   });
 
-  it("marks a ticked person's row «Pe lista publică», in words and a glyph, and an unticked one not at all", async () => {
+  it("marks a ticked person's row «Vrea pe lista publică», in words and a glyph, and an unticked one not at all", async () => {
     const ticked = await drawCard({ listDescribed: true, volunteers: [person({ listOptIn: true })] });
     expect(ticked).toMatch(/data-testid="volunteer-on-list"[^>]*>|<[^>]*data-testid="volunteer-on-list"/);
-    expect(ticked).toContain("Pe lista publică");
-    expect(ticked).toContain("VisibilityIcon");
+    expect(ticked).toContain("Vrea pe lista publică");
+    expect(ticked).toContain("HowToRegIcon");
     const unticked = await drawCard({ listDescribed: true, volunteers: [person({ listOptIn: false })] });
     expect(unticked).not.toContain("volunteer-on-list");
     const english = await drawCard({ listDescribed: true, volunteers: [person({ listOptIn: true })] }, "en");
-    expect(english).toContain("On the public list");
+    expect(english).toContain("Wants to be on the public list");
     expect(english).toContain("Wants to appear on the public list of volunteers");
   });
 });
 
 describe("§NNN «Toate datele unei persoane» says the tick among what is kept", () => {
-  it("adds «Pe lista publică» to the offer's line when the row holds the tick, and nothing when it does not", async () => {
+  it("adds «Vrea pe lista publică» to the offer's line when the row holds the tick, and nothing when it does not", async () => {
     const { default: VolunteerAnswers } = await import("@/modules/volunteers/ui/VolunteerAnswers");
     const base = { age: null, dateOfBirth: null, sex: null, city: null, volunteeredBefore: false, clubMember: false, shirtSize: null, guardianName: null, guardianEmail: null, guardianAcceptedAt: null, guardianMethod: null };
     locale = "ro";
-    expect(await html(createElement("p", null, (await VolunteerAnswers({ offer: { ...base, listOptIn: true } })) as ReactElement))).toBe("<p> · Pe lista publică</p>");
+    expect(await html(createElement("p", null, (await VolunteerAnswers({ offer: { ...base, listOptIn: true } })) as ReactElement))).toBe("<p> · Vrea pe lista publică</p>");
     expect(await html(createElement("p", null, (await VolunteerAnswers({ offer: { ...base, listOptIn: false } })) as ReactElement))).toBe("<p></p>");
     // A caller that predates the tick draws what it always drew.
     expect(await html(createElement("p", null, (await VolunteerAnswers({ offer: base })) as ReactElement))).toBe("<p></p>");
     locale = "en";
-    expect(await html(createElement("p", null, (await VolunteerAnswers({ offer: { ...base, listOptIn: true } })) as ReactElement))).toBe("<p> · On the public list</p>");
+    expect(await html(createElement("p", null, (await VolunteerAnswers({ offer: { ...base, listOptIn: true } })) as ReactElement))).toBe("<p> · Wants to be on the public list</p>");
   });
 });
 
