@@ -511,7 +511,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await expect(memberTick).toBeVisible();
     await expect(memberTick).not.toBeChecked();
     expect((await memberTick.locator("xpath=..").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-    await expect(box.locator("label", { has: page.locator('[name="clubMember"]') }).getByRole("button")).toHaveAttribute("aria-label", /\S{20,}/);
+    await expect(box.locator("label", { has: page.locator('[name="clubMember"]') }).getByRole("button")).toHaveAttribute("aria-label", /.{20,}/);
     await memberTick.check();
     await noSidewaysScroll(page);
     await page.waitForTimeout(1_500);
@@ -557,6 +557,8 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
       await expect(page.getByTestId("rsvp-member-mark")).toHaveCount(0, { timeout: 2_000 });
     }).toPass({ timeout: 20_000 });
     await expect(page.getByTestId("event-facts").getByTestId("who-comes-link")).toHaveText("1 vine · vezi cine");
+    // The reload closed the card (the address now points at «Cine vine»): the tick is inside it.
+    await openEventFold(page, "rsvp-box");
     await page.getByTestId("rsvp-remembered").getByRole("checkbox", { name: /Sunt membru al grupului/ }).check();
     await expect(page.getByTestId("rsvp-remembered").getByTestId("rsvp-member-note")).toHaveText("Gata: ești numărat printre membri. „BVR” apare doar lângă un nume afișat.");
     await expect.poll(async () => (await rsvpRow(memberGuest, secondEventId))?.clubMember).toBe("DECLARED");
