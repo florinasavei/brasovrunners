@@ -9,7 +9,7 @@ import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { secondsUntilFirst } from "@/modules/public-cache/page-lifetime";
 
 /**
- * §NNN — the calendar's «Următorul eveniment» says how far away it is: «Azi», «Mâine», «Peste 5 zile»,
+ * §834 — the calendar's «Următorul eveniment» says how far away it is: «Azi», «Mâine», «Peste 5 zile»,
  * «Peste 3 săptămâni», «Peste 2 luni», «Acum». Calendar days on the club's wall clock
  * (`daysUntilOnWallClock`), across the October clock change; the words in both languages through
  * `countForm`; the card draws them; the page that holds the card is held to the club's midnight.
@@ -56,7 +56,7 @@ const dateAfter = (date: string, days: number) => {
   return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
 };
 
-describe("§NNN awayFrom — the steps", () => {
+describe("§834 awayFrom — the steps", () => {
   // Tuesday 2026-10-20, 09:00 in Brașov; the clocks change on Sunday 2026-10-25, five days on.
   const now = wall("2026-10-20T09:00");
   const raceIn = (days: number, time = "18:30") => wall(`${dateAfter("2026-10-20", days)}T${time}`);
@@ -117,7 +117,7 @@ describe("§NNN awayFrom — the steps", () => {
   });
 });
 
-describe("§NNN NextEventPanel — the card says it", () => {
+describe("§834 NextEventPanel — the card says it", () => {
   // SAMPLE_NOW is Sunday 2026-09-27, noon in Brașov; the race is `days` calendar days on, at 15:30 UTC (18:30 there, summer or winter).
   const card = async (days: number, locale: "ro" | "en") => {
     currentLocale = locale;
@@ -177,7 +177,7 @@ describe("§NNN NextEventPanel — the card says it", () => {
   });
 });
 
-describe("§NNN the cache — the card's words roll with the page at the club's midnight and at the event's start", () => {
+describe("§834 the cache — the card's words roll with the page at the club's midnight and at the event's start", () => {
   const page = readFileSync(path.join(ROOT, "src/app/[locale]/calendar/page.tsx"), "utf8").replace(/\r\n/g, "\n");
 
   it("holds the static calendar to the club's next midnight, whatever the look, and the next event's start", () => {

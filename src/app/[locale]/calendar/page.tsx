@@ -324,7 +324,7 @@ export default async function CalendarPage({ params, query: asked, period: segme
  * The next-event panel's date and its forecast (the facelift's phase 4), or null — read only while
  * «Aspectul nou» is on. The listing's own cached upcoming rows (`public-cache/reads.ts`), narrowed
  * by the page's filters and kind; a failed read is no panel, never a broken page. The card's «Peste 5 zile»
- * (§NNN) rolls at the club's midnight, which the page already holds itself to; the start's instant is held here.
+ * (§834) rolls at the club's midnight, which the page already holds itself to; the start's instant is held here.
  */
 async function readNextEvent(locale: Locale, now: Date, filter: ListingFilter, kind: EventKind | null) {
   try {
@@ -333,7 +333,7 @@ async function readNextEvent(locale: Locale, now: Date, filter: ListingFilter, k
     const door = filter.registration ? await readRegistrationDoors(upcoming, now) : () => false;
     const event = nextCalendarEvent(upcoming, (row) => matchesListingFilter(row, filter, { night: isNight, door }) && matchesKind(row, kind));
     if (!event) return null;
-    // «Azi» becomes «Acum» at the start (§NNN): the page is made again then, whatever the day's midnight says.
+    // «Azi» becomes «Acum» at the start (§834): the page is made again then, whatever the day's midnight says.
     await holdPageUntil([event.startsAt], now);
     return { event, weather: (await forecastForEvent(event, now))?.start ?? null };
   } catch {

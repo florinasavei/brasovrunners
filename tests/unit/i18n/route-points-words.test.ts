@@ -3,7 +3,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-011-01 — the owner's words for the table under the route's maps (§NNN, 2026-10-19):
+ * BR-REQ-011-01 — the owner's words for the table under the route's maps (§833, 2026-10-19):
  * «Puncte pe traseu» / "Points on the route", never «puncte de control» / "checkpoints" in a
  * sentence a person reads. One test pins every surface at once: the public heading, the preview,
  * the editor, the bib settings, the toasts, the import's notes and the diff's labels.

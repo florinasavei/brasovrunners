@@ -1,7 +1,7 @@
 import { daysUntilOnWallClock } from "./race-week";
 
 /**
- * How far away the calendar's next event is, in the steps the card says it in (§NNN):
+ * How far away the calendar's next event is, in the steps the card says it in (§834):
  * «Acum», «Azi», «Mâine», «Peste 5 zile», «Peste 3 săptămâni», «Peste 2 luni».
  *
  * - `now` — it has started (the listing's read keeps an event until it ends, so the card can

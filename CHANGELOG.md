@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.62-2026-10-19
+
+- **The «Vii?» email's tick says what it does** — «Trimite emailul „Vii?” înainte de această dată», with who gets it, how long before and from what hour read from «Termene» and «Emailuri» (links to both), cut by the privacy notice in force («nu pleacă încă» while it is silent), and off with zero days; a test proves the saved value. §832.
+- **«Puncte de control» is «Puncte pe traseu»** — the event page's table, the editor's card, the bib setting, the toasts and the import's notes say «Puncte pe traseu» (English: «Points on the route»); anchors and ids are unchanged. §833.
+- **The calendar's «Următorul eveniment» says how far away it is** — «Azi», «Mâine», «Peste 5 zile», «Peste 3 săptămâni», «Peste 2 luni», «Acum», in calendar days on the club's clock, with an hourglass under the date; no extra database read, the page already rolls at midnight. §834.
 ## BR-V3.61-2026-10-19
 
 - **Five tests that failed by chance are deterministic** — the job throttle spends its bucket by counting, the admin client-boundary guard reads the source tree once, and three tests no longer look for a short string or a made-up id in random values; the stale section-number placeholders of older batches carry their numbers. No product change. §829.

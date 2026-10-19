@@ -22,7 +22,7 @@ export type NextEventPanelProps = {
   event: PublicEvent;
   locale: Locale;
   /**
-   * The page's own clock (§NNN): the card says how far away the event is from it, in calendar days
+   * The page's own clock (§834): the card says how far away the event is from it, in calendar days
    * on the club's wall clock (`CLUB_TIME_ZONE`), deliberately the clock the page rolls at even when the
    * event's own zone differs, so near midnight it may disagree with the day line above it. The calendar
    * page holds itself to the next club midnight (`holdPageUntil`), so the words roll with the page (the
@@ -45,7 +45,7 @@ const FACT_SX = { display: "flex", alignItems: "center", gap: 1, fontSize: "0.93
  * exactly as a listing card draws them (`buildRoutePills`, §366) with the weather at the start as
  * their last (§402, §429), and «Vezi detalii» to the event's page (`ArrowButtonLink`, §708). Under the
  * day, a line says how far away it is — «Azi», «Mâine», «Peste 5 zile», «Peste 3 săptămâni», «Peste 2 luni»,
- * «Acum» once it has started (`awayFrom`, §NNN) — with a calendar glyph (the hourglass already means the waiting list), in the fact lines' own pattern.
+ * «Acum» once it has started (`awayFrom`, §834) — with a calendar glyph (the hourglass already means the waiting list), in the fact lines' own pattern.
  *
  * The page asks for it only while the look is on, so with the setting off the calendar reads
  * nothing more and draws nothing more. A Server Component with typed props; nothing crosses into a
