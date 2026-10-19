@@ -5,23 +5,27 @@ import { getTranslations } from "next-intl/server";
 import { cachedFirstRsvpNoticeVersion, cachedPublicRsvps } from "@/modules/public-cache/reads";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import type { PublicRsvps } from "@/modules/rsvp/rsvp";
-import { FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import { FOLD_GLYPH_INLINE_SX, PUBLIC_FOLD_SX } from "@/shared/ui/disclosure";
 import { DENSITY } from "@/theme/density";
+import { RSVP_WHO_ID } from "../rsvp-box";
 
 /**
- * «Vin (N)» (§811, «Vin!» part 1): how many come to a turn-up event the club ticked, and the names of those who ticked
- * «Vreau să apar cu numele» — in the shape of the start list's rows (`events/ui/StartList.tsx`), one name to a row, «și încă N»
- * for the rest. **A name is a disclosure** (§143, §396): the rule is `rsvp/domain/public-name.ts`, applied by the cached read
- * (`readPublicRsvps`), so a name that is not to be shown is not even in this component's props. Nobody has answered: only the
- * sentence that asks to be first, no empty count.
+ * «Cine vine (N)» on a turn-up event (§811, «Vin!» part 1; moved out of the card by §NNN): how many come to an event the club ticked,
+ * and the names of those who ticked «Vreau să apar cu numele» — in the shape of the start list's rows (`events/ui/StartList.tsx`), one name
+ * to a row, «și încă N» for the rest. **A name is a disclosure** (§143, §396): the rule is `rsvp/domain/public-name.ts`, applied by the
+ * cached read (`readPublicRsvps`), so a name that is not to be shown is not even in this component's props. Nobody has answered: the bar
+ * says «Cine vine» without a number and the fold says «Încă nu a confirmat nimeni.», no empty count.
+ *
+ * **Its own closed fold, right under «Confirmă prezența (opțional)»** (the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil. Că
+ * inițial am citit în „zig-zag" și am sărit peste secțiune»; before it the names sat inside the card's fold, behind a bar that said
+ * «Vii?»): the same `<details>` as the races' list (`StartList`) — the 44-pixel bar, the people glyph, a real `h2` in the summary with the
+ * count on its line — closed on arrival, at `#cine-vine` (`RSVP_WHO_ID`), the anchor the facts' line «N vin · vezi cine» links to and
+ * `OpenFoldFromHash` (mounted by the page) opens. `EventPageView` draws it after the card, in the same condition as the card, handing
+ * both the one read it made (`rsvps`).
  *
  * A Server Component on the static event page (§549): the read is the public cache's, filed under "places", and a confirmation
  * or a withdrawal expires it at once. While the database is away it draws nothing (§281) — a count that cannot be asked is not
  * a count of zero. The wrapper carries `data-nosnippet`, as the start list's does: names stay out of search snippets.
- *
- * **Inside the «Vii?» fold since §812** (the owner, 2026-10-19: «collapsed, ca și condițiile de participare»), under the form, a named
- * sub-card whose heading is an `h3` under the fold's `h2`. `RsvpBox` reads the answers once — the fold's closed line says the
- * same count — and hands them here as `rsvps`; read alone (no `rsvps`), it asks the cache itself.
  */
 export async function readRsvpsOf(eventId: string): Promise<PublicRsvps | null> {
   return readOrWhileAway(async () => cachedPublicRsvps(eventId, await cachedFirstRsvpNoticeVersion()), null);
@@ -33,25 +37,23 @@ export default async function RsvpCount({ eventId, rsvps: given }: { eventId: st
   if (rsvps === null) return null;
 
   return (
-    <Box
-      component="section"
-      data-nosnippet=""
-      data-testid="rsvp-count"
-      aria-labelledby="rsvp-count-title"
-      sx={{ mt: { xs: DENSITY.gapSm, sm: 2 }, p: 2, border: 1, borderColor: "divider", borderRadius: 2 }}
-    >
-      {rsvps.count === 0 ? (
-        <Typography id="rsvp-count-title" variant="body1" data-testid="rsvp-count-empty" sx={{ fontWeight: 600 }}>
-          {t("rsvp.countEmpty")}
-        </Typography>
-      ) : (
-        <>
-          <Typography id="rsvp-count-title" component="h3" variant="h3" data-testid="rsvp-count-heading" sx={{ fontSize: "1.0625rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 1 }}>
-            <GroupsIcon aria-hidden sx={FOLD_GLYPH_SX} />
-            {t("rsvp.countHeading", { count: rsvps.count })}
+    // Google honours `data-nosnippet` only on span, div and section elements, so the wrapper — not the disclosure — carries it.
+    <Box component="section" data-nosnippet="" aria-labelledby={`${RSVP_WHO_ID}-title`} sx={{ mt: { xs: DENSITY.gapSm, sm: 3 } }}>
+      <Box component="details" id={RSVP_WHO_ID} data-testid="rsvp-who" sx={{ ...PUBLIC_FOLD_SX, scrollMarginTop: 16 }}>
+        <Box component="summary">
+          <Typography id={`${RSVP_WHO_ID}-title`} component="h2" variant="h2" data-testid="rsvp-who-heading" sx={{ fontSize: "1.25rem" }}>
+            <GroupsIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+            {/* The races' own words (`startList.title*`): one bar, one wording, wherever «Cine vine» is drawn. */}
+            {rsvps.count === 0 ? t("startList.title") : t("startList.titleCount", { count: rsvps.count })}
           </Typography>
-          {(rsvps.names.length > 0 || rsvps.others > 0) && (
-            <Box component="ul" sx={{ listStyle: "none", m: 0, mt: 1, p: 0 }}>
+        </Box>
+        {rsvps.count === 0 ? (
+          <Typography variant="body1" data-testid="rsvp-who-empty" sx={{ fontWeight: 600 }}>
+            {t("rsvp.whoEmpty")}
+          </Typography>
+        ) : (
+          (rsvps.names.length > 0 || rsvps.others > 0) && (
+            <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
               {rsvps.names.map((name, index) => (
                 // A name is not unique — two people may both be called Ana — so the position in the order of answers identifies the row.
                 <Box
@@ -69,9 +71,9 @@ export default async function RsvpCount({ eventId, rsvps: given }: { eventId: st
                 </Box>
               )}
             </Box>
-          )}
-        </>
-      )}
+          )
+        )}
+      </Box>
     </Box>
   );
 }

@@ -6,8 +6,8 @@ import { rsvpSummarySuffix, type RsvpSummaryWords } from "../domain/summary";
 import { readRsvpGoing, subscribeRsvpGoing } from "./going-store";
 
 /**
- * The words after «Vii?» on the closed fold's line (§812): « · 3 vin», « · Fii primul care spune că vine.», and for a remembered
- * browser that answered « · Tu vii ✓ · 3 vin». The server draws it from the page's cached count; this island adds the tick the moment
+ * The words after «Confirmă prezența (opțional)» on the closed fold's line (§812): « · 3 vin», « · Fii primul care confirmă», and for a
+ * remembered browser that answered « · Tu vii ✓ · 3 vin». The server draws it from the page's cached count; this island adds the tick the moment
  * `RsvpRemembered` knows the browser answered (`going-store.ts`), and a refresh after a press hands it the new count as a prop —
  * the same way the card below is updated. Drawn inside the heading, so the heading's name is the whole line.
  *
