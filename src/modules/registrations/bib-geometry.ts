@@ -108,7 +108,7 @@ export const BIB_LAYOUT = {
   memberTagHeight: 13,
   memberTagPad: 5,
   /**
-   * A member's bib drawn «Tot numărul» (§NNN): the whole card above the small print is the members'
+   * A member's bib drawn «Tot numărul» (§695): the whole card above the small print is the members'
    * background, and the label is a stripe across it, `memberStripeHeight` points tall, its foot on
    * the background's foot — just above the sponsors' strip or the small print, which stay on white.
    * The words are bold, `memberStripeSize` points, `memberStripeSpacing` apart, centred. The stripe's

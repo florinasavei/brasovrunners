@@ -67,7 +67,7 @@ describe("§560 the two places' fixed shapes", () => {
   });
 
   it("leaves a picture without a crop as every bib drew it: the header covers, the sponsors fit whole", () => {
-    // A member's card's photograph (§NNN) covers the card, as the header covers its strip.
+    // A member's card's photograph (§695) covers the card, as the header covers its strip.
     // The profile's picture (§759) is never cropped: it fits whole, as the sponsors' strip does.
     expect(BIB_PICTURE_UNCROPPED).toEqual({ header: "cover", sponsors: "fit", memberCard: "cover", profile: "fit" });
     expect(bibPictureDrawing("header", null, { width: 2000, height: 1000 })).toEqual({ kind: "cover" });

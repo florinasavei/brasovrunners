@@ -23,7 +23,7 @@ import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { COLOR, GRADIENT } from "@/theme/brand";
 
 /**
- * §NNN, BR-REQ-038-01 — a members' race number «Tot numărul»: the whole card above the small print
+ * §695, BR-REQ-038-01 — a members' race number «Tot numărul»: the whole card above the small print
  * in the members' background (a photograph under the navy veil, a colour that carries white at AA, or
  * the kit's gradient), the words on it white, the label an orange stripe; the ordinary bib unchanged.
  */
@@ -91,7 +91,7 @@ async function landscape(width = 1600, height = 1040): Promise<Buffer> {
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the members' style in the design", () => {
+describe("§695 the members' style in the design", () => {
   it("reads a design saved before the style existed as the header alone, as it printed", () => {
     const saved = readBibDesign({ member: { enabled: true, bandColour: PURPLE, label: "BVR" } });
     expect(saved.member.style).toBe("band");
@@ -126,7 +126,7 @@ describe("§NNN the members' style in the design", () => {
   });
 });
 
-describe("§NNN the number stays readable on every background (AA)", () => {
+describe("§695 the number stays readable on every background (AA)", () => {
   it("takes every colour from the brand's tokens, none typed here", () => {
     expect(BIB_MEMBER_CARD.text).toBe(COLOR.surface);
     expect(BIB_MEMBER_CARD.stripe).toBe(COLOR.orange);
@@ -159,14 +159,14 @@ describe("§NNN the number stays readable on every background (AA)", () => {
   });
 });
 
-describe("§NNN the card's photograph has a place of its own", () => {
+describe("§695 the card's photograph has a place of its own", () => {
   it("is the card's width by its height less the small print's one line", () => {
     expect(BIB_PICTURE_BOX.memberCard).toEqual({ width: BIB_CARD.width, height: BIB_CARD.height - BIB_LAYOUT.footerHeight });
     expect(BIB_PICTURE_RATIO.memberCard).toBeCloseTo(1.54, 2);
   });
 });
 
-describe("§NNN the sheet", () => {
+describe("§695 the sheet", () => {
   it("draws a member's card in the members' colour, the stripe in orange, the label in capitals and no small tag", async () => {
     const text = vi.spyOn(PDFDocument.prototype, "text");
     const pdf = await sheet([{ member: true }], card({ bandColour: PURPLE }));
@@ -220,7 +220,7 @@ function pdfHasShading(pdf: Buffer): boolean {
   return /\/ShadingType 2\b/.test(pdf.toString("latin1"));
 }
 
-describe("§NNN the picture", () => {
+describe("§695 the picture", () => {
   const draw = async (over: Partial<Parameters<typeof renderBibImage>[0]> = {}) =>
     Buffer.from(
       await (

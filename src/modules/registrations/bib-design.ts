@@ -143,7 +143,7 @@ const memberColour = z
   .catch(null);
 
 /**
- * How a member's bib differs (§NNN, amending §664; the owner, 2026-10-10: «I do not like the BIB
+ * How a member's bib differs (§695, amending §664; the owner, 2026-10-10: «I do not like the BIB
  * designer of the BVR members, I need a different design for them, different background»):
  *
  * - `band` — «Același fundal ca restul numerelor — doar antet propriu»: §664's look, the members' header and a small label on it.
@@ -162,7 +162,7 @@ export const bibMemberSchema = z
   .object({
     /** «Membrii primesc un număr cu design propriu». */
     enabled: z.boolean().catch(false),
-    /** «Fundalul»: the whole card, or the header alone (§NNN). */
+    /** «Fundalul»: the whole card, or the header alone (§695). */
     style: z.enum(BIB_MEMBER_STYLES).catch("band"),
     /** The members' band colour, or null for the event's. */
     bandColour: memberColour,
@@ -170,7 +170,7 @@ export const bibMemberSchema = z
     headerImageSrc: storedPicture,
     /** Its crop in the header's shape (§560); none without a picture. */
     headerImageCrop: storedCrop,
-    /** «Tot numărul»'s photograph (§NNN), one this site stored, under the navy veil. */
+    /** «Tot numărul»'s photograph (§695), one this site stored, under the navy veil. */
     cardImageSrc: storedPicture,
     /** Its crop in the card's shape (`bib-picture-frame.ts`, `memberCard`); none without a picture. */
     cardImageCrop: storedCrop,
@@ -241,7 +241,7 @@ export function bibMemberBandColour(member: BibMemberDesign, eventColour: string
 }
 
 /**
- * «Tot numărul»'s fixed parts (§NNN): what the club cannot change, so every members' card is the
+ * «Tot numărul»'s fixed parts (§695): what the club cannot change, so every members' card is the
  * club's whatever the event. The words on the background are white (`COLOR.surface`); the stripe is
  * the kit's orange with the body ink on it (6.2 : 1); the photograph lies under the kit's deepest
  * navy at `veil` opacity — at 0.7 white still reads at 6 : 1 over a pure-white photograph, which
@@ -258,13 +258,13 @@ export const BIB_MEMBER_CARD = {
   gradient: [GRADIENT.deep, GRADIENT.mid],
 } as const;
 
-/** Whether white reads at AA on a colour — what a members' card colour must do (§NNN). */
+/** Whether white reads at AA on a colour — what a members' card colour must do (§695). */
 export function bibMemberCardColourReadable(colour: string): boolean {
   return /^#[0-9a-f]{6}$/i.test(colour) && contrastRatio(BIB_MEMBER_CARD.text, colour) >= MIN_TEXT_CONTRAST;
 }
 
 /**
- * The background of a member's bib drawn «Tot numărul» (§NNN), in the order the club's choices win:
+ * The background of a member's bib drawn «Tot numărul» (§695), in the order the club's choices win:
  * the photograph the renderer really holds; else the members' colour, when white reads on it at AA
  * (the green and the orange of the bib colours do not, and print the gradient instead — the editor
  * says so); else the kit's gradient, the default. Never the event's own band or picture: a member's

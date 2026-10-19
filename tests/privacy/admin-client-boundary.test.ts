@@ -1,6 +1,7 @@
+import { readdirSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 /**
  * BR-REQ-060-01 and AGENTS.md §14.5 — no participant data crosses into a Client Component.
@@ -25,7 +26,9 @@ const ROOT = process.cwd();
 const ADMIN_ROUTES = join(ROOT, "src", "app", "[locale]", "admin");
 const SRC = join(ROOT, "src");
 
-async function filesUnder(directory: string, extensions = [".ts", ".tsx"]): Promise<string[]> {
+const EXTENSIONS = [".ts", ".tsx"];
+
+async function filesUnder(directory: string, extensions = EXTENSIONS): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
   const found = await Promise.all(
     entries.map(async (entry) => {
@@ -35,6 +38,37 @@ async function filesUnder(directory: string, extensions = [".ts", ".tsx"]): Prom
     }),
   );
   return found.flat();
+}
+
+/*
+  The source tree, walked and read ONCE for the whole file. Each test used to walk and read every
+  file under `src/` for itself — the property tests two times, the sanity test a third, and that
+  one a file at a time — so on a loaded CI machine the file's work added up past the 30 s test
+  budget and failed by chance. The scan is the same: every `.ts`/`.tsx` file under `src/` with its
+  text, and the last test compares this set with an independent listing.
+*/
+let tree: Map<string, string>;
+
+beforeAll(async () => {
+  tree = new Map();
+  const files = await filesUnder(SRC);
+  // A bounded batch at a time: thousands of reads at once only queue behind the same disk.
+  for (let index = 0; index < files.length; index += 64) {
+    const batch = files.slice(index, index + 64);
+    const sources = await Promise.all(batch.map((file) => readFile(file, "utf8")));
+    batch.forEach((file, position) => tree.set(file, sources[position]));
+  }
+});
+
+/** The scanned files under a directory — the same set `filesUnder(directory)` lists. */
+function scannedUnder(directory: string): Array<[string, string]> {
+  return [...tree].filter(([file]) => file.startsWith(directory + sep));
+}
+
+/** Whether a module's first non-blank line is the directive; it is only a directive there. */
+function isClientModule(source: string): boolean {
+  const firstLine = source.split("\n").find((line) => line.trim() !== "") ?? "";
+  return /^["']use client["']/.test(firstLine.trim());
 }
 
 /** The columns `RegistrationListRow` carries that describe a person rather than a registration. */
@@ -57,12 +91,9 @@ describe("AGENTS.md §14.5 the backoffice renders participant rows on the server
   it("has no Client Component anywhere in the admin route tree", async () => {
     const offenders: string[] = [];
 
-    for (const file of await filesUnder(ADMIN_ROUTES)) {
-      const source = await readFile(file, "utf8");
-      // The directive is only a directive on the first line of the module.
-      const firstLine = source.split("\n").find((line) => line.trim() !== "") ?? "";
+    for (const [file, source] of scannedUnder(ADMIN_ROUTES)) {
       const name = relative(ROOT, file).split(sep).join("/");
-      if (/^["']use client["']/.test(firstLine.trim()) && !NEXT_REQUIRED_CLIENT_FILES.has(name)) {
+      if (isClientModule(source) && !NEXT_REQUIRED_CLIENT_FILES.has(name)) {
         offenders.push(name);
       }
     }
@@ -79,10 +110,8 @@ describe("AGENTS.md §14.5 the backoffice renders participant rows on the server
   it("passes no participant field as a prop to any client island", async () => {
     const offenders: Array<{ file: string; field: string }> = [];
 
-    for (const file of await filesUnder(SRC)) {
-      const source = await readFile(file, "utf8");
-      const firstLine = source.split("\n").find((line) => line.trim() !== "") ?? "";
-      if (!/^["']use client["']/.test(firstLine.trim())) continue;
+    for (const [file, source] of tree) {
+      if (!isClientModule(source)) continue;
 
       for (const field of PARTICIPANT_FIELDS) {
         // A prop name, not a mention: `foo: string` in a Props type, or `foo={...}` at a call.
@@ -126,16 +155,21 @@ describe("AGENTS.md §14.5 the backoffice renders participant rows on the server
   it("checks a source tree it actually found, so a wrong path cannot pass silently", async () => {
     // Without this the two assertions above are green when `ADMIN_ROUTES` is misspelled and the
     // listing is empty — the failure mode that makes property tests worthless.
-    const adminFiles = await filesUnder(ADMIN_ROUTES);
-    const islands: string[] = [];
-
-    for (const file of await filesUnder(SRC)) {
-      const source = await readFile(file, "utf8");
-      const firstLine = source.split("\n").find((line) => line.trim() !== "") ?? "";
-      if (/^["']use client["']/.test(firstLine.trim())) islands.push(file);
-    }
+    const adminFiles = scannedUnder(ADMIN_ROUTES);
+    const islands = [...tree].filter(([, source]) => isClientModule(source));
 
     expect(adminFiles.length).toBeGreaterThan(20);
     expect(islands.length).toBeGreaterThan(0);
+  });
+
+  it("scans exactly the files a fresh listing of src finds, so the shared walk drops nothing", () => {
+    // A second, synchronous listing of names only (no file is read), compared with the walk above:
+    // the speed-up must not have narrowed what the guard looks at.
+    const listed = readdirSync(SRC, { recursive: true, withFileTypes: true })
+      .filter((entry) => entry.isFile() && EXTENSIONS.some((extension) => entry.name.endsWith(extension)))
+      .map((entry) => join(entry.parentPath, entry.name))
+      .sort();
+
+    expect([...tree.keys()].sort()).toEqual(listed);
   });
 });

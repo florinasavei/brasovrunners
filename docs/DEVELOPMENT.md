@@ -257,6 +257,30 @@ What `test:clock` cannot reach: `tests/e2e/` against a running server, and the d
 with a fixed one. The seeds draw their dates from today (`src/db/seeds/sample-dates.ts`, §162) and
 never age.
 
+### Tests that fail by chance
+
+**The practice: a test's verdict never depends on a random value or on how busy the machine is.**
+A red CI on a flake costs a release half an hour and a dispatcher's attention, so the ways it
+happened are closed here (§NNN):
+
+- **Never look for a short string in text that holds a random id, token or ciphertext.** A uuid is
+  hex and spells «0712» or «2012» now and then; a 43-character link token or a sealed string
+  (base64url, a fresh IV each time) spells «ana» or «700». Scrub the random part first
+  (`.replace(/[0-9a-f]{8}-…/g, "<id>")`, `.replace(/[A-Za-z0-9_-]{32,}/g, "<secret>")`) or assert on the
+  one field that holds the value; the whole address, never its first letters.
+- **Never make a «missing» id out of a random one** (`id.replace(/.$/, "0")` is the id itself one time
+  in sixteen, and so is a «tampered» seal that ends in the characters pasted over it). Use an id no
+  row can hold — the nil uuid `00000000-0000-0000-0000-000000000000` — and flip a bit of a seal's bytes.
+- **Spend a counter by counting, not by doing the work.** A throttle test puts the bucket at its limit
+  with one insert and sends the one request that must be refused; thirty real runs of a job on
+  PostgreSQL in WebAssembly is a 30-second test on a loaded runner. Load what the first call
+  imports lazily in its own `beforeAll`, so the test measures the rule and not a cold transform.
+- **Walk and read a source tree once per file** (`tests/privacy/admin-client-boundary.test.ts`: one
+  `beforeAll`, one `Map` of path to text), and pin that the shared walk finds what an independent
+  listing finds. Raising `testTimeout` is the last resort, and a comment says why the work cannot shrink.
+
+To find one: run the file alone in a loop, `for i in $(seq 20); do yarn vitest run <file> --maxWorkers=1 || break; done`.
+
 ## Where the flags come from
 
 `public/flags/` is **generated** and git-ignored: `scripts/sync-flags.mjs` copies the 4:3 SVGs

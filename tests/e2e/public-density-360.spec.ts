@@ -166,14 +166,14 @@ test.describe("§480 the public pages at 360 px", () => {
     const privacyLine = privacy.locator("xpath=ancestor::p[1]");
     await expectInlineTarget(page, privacyLine, privacy, "the privacy notice under the form");
 
-    // The club's address in «Alte căi de contact» (§NNN), where the deployment names one.
+    // The club's address in «Alte căi de contact» (§696), where the deployment names one.
     const direct = page.getByTestId("contact-email");
     if ((await direct.count()) > 0) {
       await expectInlineTarget(page, direct, direct.locator("a[href^='mailto:']").first(), "the club's address");
     }
 
     // The asterisk legend is gone (§546): the first box sits under the form's own heading
-    // («Trimite-ne un mesaj», §NNN), by the heading's margin alone.
+    // («Trimite-ne un mesaj», §698), by the heading's margin alone.
     const gap = await page.evaluate(() => {
       const heading = document.getElementById("contact-form-heading");
       const field = document.getElementById("c-name")?.closest(".MuiFormControl-root");

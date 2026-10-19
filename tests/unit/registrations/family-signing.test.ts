@@ -213,7 +213,11 @@ describe("§471 the pass (AGENTS.md §13.2 step 4)", () => {
     expect(sealed).not.toContain(pass.participantId);
     expect(openFamilyPass(sealed as string, at(10), "secret-one:family-signing")).toEqual(pass);
     expect(openFamilyPass(sealed as string, at(10), "secret-two:family-signing")).toBeNull();
-    expect(openFamilyPass(`${(sealed as string).slice(0, -2)}AA`, at(10), "secret-one:family-signing")).toBeNull();
+    // Flaky before: replacing the last two characters with «AA» changed nothing when the seal (a fresh random IV each
+    // time) already ended so, or only the unused bits of its last base64 character; one flipped bit always fails the tag.
+    const bytes = Buffer.from(sealed as string, "base64url");
+    bytes[bytes.length - 1] ^= 1;
+    expect(openFamilyPass(bytes.toString("base64url"), at(10), "secret-one:family-signing")).toBeNull();
   });
 
   it("keeps whether it came from «Înscrierile mele», and refuses a shape that mixes the two bindings", () => {

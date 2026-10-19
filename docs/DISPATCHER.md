@@ -195,7 +195,7 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   PR only once that run is green, so the release PR's run finds the tree tested and skips; at
   the end, and at any stop, it prints each step's m:ss and appends one JSON line to
   `SHIP_TIMES_FILE` (§504). The release PR merges when GitHub's required checks and the house's four (`tested-tree`, `docs-check`, `e2e` with its shards, `migrate`) are green; a Vercel
-  status is never waited on (§NNN) — each poll prints `waiting on: <name> (required|not required)…`.
+  status is never waited on (§703) — each poll prints `waiting on: <name> (required|not required)…`.
 - **Production's waits** (step 1, the previous baseline; step 7, the new one) print what production
   answers on the first reading and then every two minutes (§658): «no answer for N min: <the fetch
   error>» → the site does not answer at all, `docs/RUNBOOKS.md` § The domain stops answering;
@@ -361,7 +361,7 @@ page. What the dispatcher keeps from it:
     no job ran for seven hours. `SETUP.md` §40 moves both to the address no registrar can hold and
     adds the second health monitor; the dispatcher checks `/devs` → Stare after any name incident.
 
-## When a session stops — credits, a usage limit, a closed laptop (§NNN)
+## When a session stops — credits, a usage limit, a closed laptop (§688)
 
 On 2026-10-10 the owner moved between a phone session and a laptop session on another account,
 and each ran out of credits or hit its limit with work in flight. Nothing was lost, but the

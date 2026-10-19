@@ -404,7 +404,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     words: headerWords(memberLabel !== "" && memberPicture === null),
   };
   /*
-    «Tot numărul» (§NNN): the members' background over the whole card above the small print — their
+    «Tot numărul» (§695): the members' background over the whole card above the small print — their
     photograph under the veil, their colour, or the kit's gradient (`bibMemberCardBackground`) — the
     race and the lockup on it as on a band, the label a stripe. A photograph that could not be
     fetched prints the colour or the gradient, never a failed sheet. The small print is laid out as
@@ -436,12 +436,12 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const left = slot.x + BIB_MARGIN;
     const top = slot.y + BIB_MARGIN;
     const bottom = top + BIB_CARD.height;
-    // The members' design only while the switch is on (§664): their header, or their whole card (§NNN).
+    // The members' design only while the switch is on (§664): their header, or their whole card (§695).
     const card = row.member === true ? memberCard : null;
     const header = row.member === true && design.member.enabled ? memberHeader : eventHeader;
     const footerLines = card ? card.footer.lines : header.footer.lines;
     const footerHeight = card ? card.footer.height : header.footer.height;
-    // Everything above the sponsors' strip and the small print: a member's card's background (§NNN).
+    // Everything above the sponsors' strip and the small print: a member's card's background (§695).
     const cardHeight = BIB_CARD.height - footerHeight - sponsorHeight;
     // The number and the name: white on a member's card, the body ink on the white paper.
     const ink = card ? BIB_MEMBER_CARD.text : COLOR.ink;
@@ -494,7 +494,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
 
     if (card) {
       /*
-        A member's card (§NNN): the background first, then the same lockup and race on it in white.
+        A member's card (§695): the background first, then the same lockup and race on it in white.
         The photograph is clipped to the card's coloured part and veiled in the kit's navy, so the
         words read on any photograph — a white one included (`member-bib-card.test.ts`).
       */

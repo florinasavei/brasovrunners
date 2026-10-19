@@ -112,7 +112,7 @@ export default async function NewsletterSignup({ locale, askOffered = false, out
       data-testid="newsletter-section"
       sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 }, pt: { xs: DENSITY.sectionGap, sm: 3 }, borderTop: 1, borderColor: "divider", scrollMarginTop: 16 }}
     >
-      {/* The contact page's sections each wear a glyph before their heading (§NNN): the megaphone here. */}
+      {/* The contact page's sections each wear a glyph before their heading (§696): the megaphone here. */}
       <Typography id="newsletter-heading" variant="h2" sx={{ fontSize: "1.35rem", mb: 1, display: "flex", alignItems: "center", gap: 1 }}>
         <CampaignOutlinedIcon aria-hidden="true" sx={{ fontSize: 26, color: "primary.main", flexShrink: 0 }} />
         {t("heading")}

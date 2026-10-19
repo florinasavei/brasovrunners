@@ -194,7 +194,7 @@ export default async function BibDesignPanel({
    */
   const picture = (slot: BibPictureSlot, place?: "member") => {
     const field = slot === "header" ? "headerImageSrc" : slot === "profile" ? "profileImageSrc" : "sponsorImageSrc";
-    // A member's card (§NNN) is the members' own place; their header is the header's place under their fields (§664).
+    // A member's card (§695) is the members' own place; their header is the header's place under their fields (§664).
     const card = slot === "memberCard";
     const src = card ? design.member.cardImageSrc : place === "member" ? design.member.headerImageSrc : design[field];
     const stored = src ? facts.get(src) : undefined;
@@ -255,7 +255,7 @@ export default async function BibDesignPanel({
         ...rich.imageShapes,
       },
       // The place's shape in words: the paper's width to the strip's height (`bib-picture-frame.ts`).
-      // The card's 1.54 would round to «2 la 1»; the strips' 9 and 22 read whole (§NNN).
+      // The card's 1.54 would round to «2 la 1»; the strips' 9 and 22 read whole (§695).
       shape: t(`editor.bibDesign.picture.shape.${slot}`, {
         ratio:
           slot === "profile"
