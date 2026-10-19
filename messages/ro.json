@@ -3661,7 +3661,7 @@
         "volunteersList": "Doar în nota de confidențialitate: bifa „Vreau să apar pe lista publică a voluntarilor”, între ghilimele. Cu ea în nota în vigoare, lista publică poate arăta nume",
         "results": "Numele secțiunii „Clasament”, între ghilimele, în nota de confidențialitate și în termeni. Cu el în ambele texte în vigoare, un administrator poate publica clasamentul, iar pagina cursei îl arată",
         "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin",
-        "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc înainte de eveniment (cel mult o săptămână, de la ora aleasă de club) întrebarea „Vii?”",
+        "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc întrebarea „Vii?” înainte de eveniment",
         "rsvpAskAnswerers": "Doar în nota de confidențialitate: numele butonului „Nu mă mai întreba la seria aceasta”, între ghilimele. Cu el în nota în vigoare, se întreabă „Vii?” și cei care au mai răspuns „Vin!”"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
@@ -4725,7 +4725,7 @@
           "todo": "Un eveniment primește răspunsuri „Vin!”, dar nota în vigoare nu descrie încă întrebarea dinaintea evenimentului, așa că abonații nu sunt întrebați, iar căsuța temei nu apare la abonare.",
           "done": "Nota în vigoare descrie întrebarea dinaintea evenimentului: abonații care au ales tema (sau „Toate noutățile”) sub nota care o descrie primesc un singur email cu „Vin” și „Nu vin”.",
           "how": [
-            "Înainte de aprobare, citește cu un avocat cele două paragrafe din șablon, din secțiunea 5: cel despre „Vin!” (adresa abonatului devine răspuns neconfirmat la trimitere) și cel despre newsletter, cu propoziția despre momentul trimiterii (cel mult o săptămână înainte, de la ora aleasă de club).",
+            "Înainte de aprobare, un avocat citește din șablon, în secțiunea 5, paragrafele despre „Vin!” și despre newsletter, cu propoziția despre momentul trimiterii.",
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Întrebarea pleacă abia după nota nouă, și doar celor care au ales tema (sau „Toate noutățile”) sub ea ori sub una mai nouă.",
             "Deschide ciorna, citește, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi."
           ]
