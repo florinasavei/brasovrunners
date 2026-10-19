@@ -209,7 +209,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="token" value={token} />
               <Stack spacing={1.5} sx={{ alignItems: "flex-start" }}>
-                <CheckboxField name="showName" defaultChecked={live.showName} help={tEvent("rsvp.nameHelp")}>
+                <CheckboxField name="showName" defaultChecked={live.showName} help={tEvent("rsvp.nameKept")}>
                   {tEvent("rsvp.nameSwitch")}
                 </CheckboxField>
                 {!live.named && <TextField name="name" label={tEvent("rsvp.nameBox")} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />}

@@ -89,7 +89,7 @@ export default async function RsvpBox({
     submitting: t("rsvp.submitting"),
     showName: t("rsvp.showName"),
     nameSwitch: t("rsvp.nameSwitch"),
-    nameHelp: t("rsvp.nameHelp"),
+    nameHelp: t("rsvp.nameKept"),
     nameBox: t("rsvp.nameBox"),
     nameSave: t("rsvp.nameSave"),
     nameShown: t("rsvp.nameOutcome.shown"),

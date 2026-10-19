@@ -845,7 +845,7 @@
       "help": "Your browser stays recognised for a year after “Yes, I'm coming” or “I'm not coming any more”; “Not me” forgets it.",
       "failed": "We could not send your answer. Try again.",
       "nameSwitch": "My name shows under “Who's coming”",
-      "nameHelp": "Unticked, you are only counted. Your name stays saved and shows again if you tick it.",
+      "nameKept": "Unticked, you are only counted. Your name stays saved and shows again if you tick it.",
       "nameBox": "Your name",
       "nameSave": "Save",
       "nameOutcome": {

@@ -93,7 +93,7 @@ export default async function ZoneRsvp({ locale, eventId, titleId, going, count,
           <form action={setNameAsMemberAction} aria-labelledby={titleId} data-testid="zone-rsvp-name" style={{ flexBasis: "100%" }}>
             {hidden}
             <Stack spacing={1}>
-              <CheckboxField name="showName" defaultChecked={showName} help={hasName ? t("rsvp.nameHelp") : publicName !== null ? tZone("rsvp.nameHelp", { name: publicName }) : undefined}>
+              <CheckboxField name="showName" defaultChecked={showName} help={hasName ? t("rsvp.nameKept") : publicName !== null ? tZone("rsvp.nameHelp", { name: publicName }) : undefined}>
                 {t("rsvp.nameSwitch")}
               </CheckboxField>
               {!hasName && publicName === null && <TextField name="name" label={t("rsvp.nameBox")} autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} sx={{ maxWidth: 360 }} />}

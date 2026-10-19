@@ -845,7 +845,7 @@
       "help": "Browserul tău rămâne recunoscut un an după „Da, vin” sau „Nu mai vin”; „Nu sunt eu” îl uită.",
       "failed": "Nu am putut trimite răspunsul. Încearcă din nou.",
       "nameSwitch": "Numele meu apare la „Cine vine”",
-      "nameHelp": "Debifat, ești doar numărat. Numele rămâne păstrat și apare din nou dacă îl bifezi.",
+      "nameKept": "Debifat, ești doar numărat. Numele rămâne păstrat și apare din nou dacă îl bifezi.",
       "nameBox": "Numele tău",
       "nameSave": "Salvează",
       "nameOutcome": {

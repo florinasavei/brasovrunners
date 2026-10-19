@@ -330,6 +330,63 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     expect(await rsvpCount(guest)).toBe(1);
   });
 
+  test("§NNN a remembered browser shows or hides its name on «Cine vine»: one tick saves at once, and a box asks for the name when there is none", async ({ page, context }) => {
+    // The first event's answer is counted and named (the typed form's tick); this browser is remembered by pressing a link of it.
+    const row = await rsvpRow(guest, eventId);
+    const confirm = await mintRsvpLink(row!.id, "RSVP_CONFIRM");
+    await page.goto(`/ro/vin/${confirm}`);
+    await page.getByRole("button", { name: "Da, vin" }).click();
+    await page.waitForURL(new RegExp(`/ro/evenimente/${slug}#vin$`));
+    await hydrated(page);
+    expect((await context.cookies()).some((cookie) => cookie.name === "br_person")).toBe(true);
+
+    const remembered = page.getByTestId("rsvp-remembered");
+    await expect(remembered.getByTestId("rsvp-going")).toContainText("Tu vii");
+    const tick = remembered.getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" });
+    // A real tick box, 44 pixels to the thumb, drawn as the row keeps it: the typed form's tick was on, so it is ticked and the name shows.
+    await expect(tick).toBeChecked();
+    expect((await tick.locator("xpath=..").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(remembered.getByText("Debifat, ești doar numărat.")).toBeVisible();
+    await expect(page.getByTestId("rsvp-name")).toHaveText(NAME);
+    await noSidewaysScroll(page);
+
+    // Unticked: saved at once, no «Salvează» to press; «Cine vine» counts the person and names nobody.
+    await tick.uncheck();
+    await expect(remembered.getByTestId("rsvp-name-note")).toHaveText("Gata: numele tău nu mai apare; ești doar numărat.");
+    await expect(page.getByTestId("rsvp-others")).toHaveText("și încă 1");
+    await expect(page.getByTestId("rsvp-name")).toHaveCount(0);
+    await expect.poll(async () => (await rsvpRow(guest, eventId))?.showName).toBe(false);
+    // The name stays saved: it is the person's, and comes back with the tick.
+    expect((await rsvpRow(guest, eventId))?.displayName).toBe(NAME);
+
+    await tick.check();
+    await expect(remembered.getByTestId("rsvp-name-note")).toHaveText("Gata: numele tău apare la „Cine vine”.");
+    await expect(page.getByTestId("rsvp-name")).toHaveText(NAME);
+    await expect.poll(async () => (await rsvpRow(guest, eventId))?.showName).toBe(true);
+    expect(await page.content()).not.toContain(guest);
+
+    // An answer with no name: ticking opens one «Numele tău» box and «Salvează»; nothing is written until it is pressed.
+    await withDatabase(async (client) => {
+      await client.query("UPDATE event_rsvps SET display_name = NULL, show_name = false WHERE event_id = $1 AND canonical_email = lower($2)", [eventId, guest]);
+    });
+    await page.goto(`${eventUrl("ro", slug)}#vin`);
+    await hydrated(page);
+    const nameless = page.getByTestId("rsvp-remembered").getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" });
+    await expect(nameless).not.toBeChecked();
+    await expect(page.getByTestId("rsvp-name-box")).toHaveCount(0);
+    await nameless.check();
+    const box = page.getByTestId("rsvp-name-box");
+    await expect(box).toBeVisible();
+    expect((await box.getByRole("button", { name: "Salvează" }).boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    expect((await rsvpRow(guest, eventId))?.showName).toBe(false);
+    await box.getByLabel("Numele tău").fill("Ana Nouă");
+    await box.getByRole("button", { name: "Salvează" }).click();
+    await expect(page.getByTestId("rsvp-name")).toHaveText("Ana Nouă");
+    await expect.poll(async () => (await rsvpRow(guest, eventId))?.displayName).toBe("Ana Nouă");
+    expect((await rsvpRow(guest, eventId))?.showName).toBe(true);
+    await noSidewaysScroll(page);
+  });
+
   test("the small fold «Nu mai vin» answers the same sentence for an address that never answered", async ({ page }) => {
     await page.goto(eventUrl("ro", slug));
     await hydrated(page);
@@ -341,6 +398,54 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await fold.getByRole("button", { name: "Trimite linkul" }).click();
     await page.waitForURL(/vin=retras/);
     await expect(page.getByTestId("rsvp-withdraw-sent")).toHaveText("Dacă adresa ta e printre cei care vin, ți-am trimis pe email un link.");
+  });
+
+  test("§NNN the «Nu mai vin» link's page: the same tick, a POST that does not spend the link — «Nu mai vin» is still there", async ({ page }) => {
+    await withDatabase(async (client) => {
+      await client.query("UPDATE event_rsvps SET display_name = $3, show_name = false WHERE event_id = $1 AND canonical_email = lower($2)", [eventId, guest, NAME]);
+    });
+    const row = await rsvpRow(guest, eventId);
+    const secret = await mintRsvpLink(row!.id, "RSVP_WITHDRAW");
+    await page.goto(`/ro/vin/${secret}`);
+    await hydrated(page);
+    const tick = page.getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" });
+    await expect(tick).not.toBeChecked();
+    expect((await tick.locator("xpath=..").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // The tick sits above «Nu mai vin», in its own small form.
+    const tickAt = await page.getByTestId("rsvp-name-switch").boundingBox();
+    const leaveAt = await page.getByRole("button", { name: "Nu mai vin" }).boundingBox();
+    expect((tickAt?.y ?? 0) + (tickAt?.height ?? 0)).toBeLessThanOrEqual(leaveAt?.y ?? 0);
+    await noSidewaysScroll(page);
+
+    await tick.check();
+    await page.getByTestId("rsvp-name-switch").getByRole("button", { name: "Salvează" }).click();
+    await page.waitForURL(/\?nume=shown$/);
+    await expect(page.getByTestId("rsvp-name-note")).toHaveText("Gata: numele tău apare la „Cine vine”.");
+    await expect(page.getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" })).toBeChecked();
+    await expect.poll(async () => (await rsvpRow(guest, eventId))?.showName).toBe(true);
+
+    await page.getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" }).uncheck();
+    await page.getByTestId("rsvp-name-switch").getByRole("button", { name: "Salvează" }).click();
+    await page.waitForURL(/\?nume=hidden$/);
+    await expect(page.getByTestId("rsvp-name-note")).toHaveText("Gata: numele tău nu mai apare; ești doar numărat.");
+    await expect.poll(async () => (await rsvpRow(guest, eventId))?.showName).toBe(false);
+    expect((await rsvpRow(guest, eventId))?.displayName).toBe(NAME);
+
+    // The tick did not spend the link: the page still offers «Nu mai vin», the answer is still there and the link is unused.
+    await expect(page.getByTestId("rsvp-withdraw-intro")).toHaveText(`Nu mai vii la ${title}? Răspunsul tău se șterge.`);
+    await expect(page.getByRole("button", { name: "Nu mai vin" })).toBeVisible();
+    expect(await rsvpCount(guest)).toBe(1);
+    const spent = await withDatabase(async (client) => {
+      const { rows } = await client.query<{ used: boolean }>("SELECT used_at IS NOT NULL AS used FROM event_rsvp_tokens WHERE rsvp_id = $1 AND purpose = 'RSVP_WITHDRAW'", [row!.id]);
+      return rows.map((token) => token.used);
+    });
+    expect(spent).toContain(false);
+    expect(spent).not.toContain(true);
+    // The unticked answer is only counted: the event's page says «și încă 1» (no name).
+    await page.goto(`${eventUrl("ro", slug)}#vin`);
+    await hydrated(page);
+    await expect(page.getByTestId("rsvp-others")).toHaveText("și încă 1");
+    await expect(page.getByTestId("rsvp-name")).toHaveCount(0);
   });
 
   test("the «Nu mai vin» link deletes the answer, and says so", async ({ page }) => {
@@ -405,6 +510,32 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
       return rows;
     });
     expect(written).toEqual([{ confirmed: true, showName: false, displayName: null }]);
+    await noSidewaysScroll(member);
+
+    // §NNN: the name tick stays on «Tu vii ✓» — unticked, with the account's name used only when ticked, and saved by its own «Salvează».
+    const nameTick = row.getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" });
+    await expect(nameTick).not.toBeChecked();
+    expect((await nameTick.locator("xpath=..").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await nameTick.check();
+    await row.getByRole("button", { name: "Salvează", exact: true }).click();
+    await member.waitForURL(/vin=shown/);
+    await expect(member.getByTestId("zone-rsvp-outcome")).toHaveText("Gata: numele tău apare la „Cine vine”.");
+    await expect(row.getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" })).toBeChecked();
+    const shownName = await withDatabase(async (client) => {
+      const { rows } = await client.query<{ showName: boolean; displayName: string | null }>(`SELECT show_name AS "showName", display_name AS "displayName" FROM event_rsvps WHERE event_id = $1`, [eventId]);
+      return rows[0];
+    });
+    expect(shownName.showName).toBe(true);
+    expect(shownName.displayName).toBeTruthy();
+    await row.getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" }).uncheck();
+    await row.getByRole("button", { name: "Salvează", exact: true }).click();
+    await member.waitForURL(/vin=hidden/);
+    await expect(member.getByTestId("zone-rsvp-outcome")).toHaveText("Gata: numele tău nu mai apare; ești doar numărat.");
+    await expect(row.getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" })).not.toBeChecked();
+    await withDatabase(async (client) => {
+      const { rows } = await client.query<{ showName: boolean; displayName: string | null }>(`SELECT show_name AS "showName", display_name AS "displayName" FROM event_rsvps WHERE event_id = $1`, [eventId]);
+      expect(rows[0]).toEqual({ showName: false, displayName: shownName.displayName });
+    });
     await noSidewaysScroll(member);
 
     // The event's page counts it: the «Vii?» fold's line and its count card say one, and name nobody.

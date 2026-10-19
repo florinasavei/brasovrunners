@@ -499,7 +499,7 @@ describe("§NNN the island's props for the name tick", () => {
   it("has every sentence in both catalogues, one plain sentence each (≤ 200 characters)", () => {
     for (const catalogue of [ro, en]) {
       const rsvp = catalogue.Event.rsvp;
-      for (const sentence of [rsvp.nameSwitch, rsvp.nameHelp, rsvp.nameBox, rsvp.nameSave, ...Object.values(rsvp.nameOutcome)]) {
+      for (const sentence of [rsvp.nameSwitch, rsvp.nameKept, rsvp.nameBox, rsvp.nameSave, ...Object.values(rsvp.nameOutcome)]) {
         expect(sentence.length).toBeGreaterThan(0);
         expect(sentence.length).toBeLessThanOrEqual(200);
         expect(sentence).not.toContain("{");
