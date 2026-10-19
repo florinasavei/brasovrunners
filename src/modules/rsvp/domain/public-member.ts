@@ -1,4 +1,4 @@
-import { atLeast, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { canOpenMembersZone, type StaffRole } from "@/modules/staff-identity/domain/roles";
 
 /**
  * Who is a member on «Cine vine» (§829, amending §812 and §796; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece dacă sunt
@@ -6,8 +6,8 @@ import { atLeast, type StaffRole } from "@/modules/staff-identity/domain/roles";
  *
  *   DECLARED  the person's own tick «Sunt membru al grupului …» on the page's form, in the remembered browser or on the link's page — a claim
  *             the club does not check (the registrations' «Membru (declarat)», §662).
- *   ACCOUNT   an answer given from the members' zone by an account whose role is at least a member (`canOpenMembersZone`'s rule, `atLeast(role,
- *             "MEMBER")`, so every staff role counts: the club's colleagues are members first, §524). Set on the server from the role, **never from
+ *   ACCOUNT   an answer given from the members' zone by an account whose role is at least a member (`canOpenMembersZone`'s rule, so every staff
+ *             role counts: the club's colleagues are members first, §524). Set on the server from the role, **never from
  *             a posted box** (BR-REQ-060-01) — the registrations' «Membru (verificat)».
  *
  * Null is «not said», never «not a member» (§650). Pure, like `public-name.ts`.
@@ -22,7 +22,8 @@ export function parseClubMember(value: string | null | undefined): ClubMemberKin
 
 /** An account's kind: `ACCOUNT` for a role at least a member — every role of the club's accounts — and nothing otherwise. */
 export function accountClubMember(role: StaffRole): ClubMemberKind | null {
-  return atLeast(role, "MEMBER") ? "ACCOUNT" : null;
+  // The members' zone's own door (`canOpenMembersZone`, §524): a role at least a member — no bare rank is asked here (§450).
+  return canOpenMembersZone(role) ? "ACCOUNT" : null;
 }
 
 /**
