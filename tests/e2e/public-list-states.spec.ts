@@ -4,6 +4,7 @@ import pg from "pg";
 import { computeContentHash } from "../../src/modules/legal-documents/domain/content-hash";
 import { confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
+import { openEventFold } from "./support/fold";
 
 /**
  * BR-REQ-039-01, `DECISIONS.md` §396 (amending §32 and §143) — the public participant list says
@@ -244,8 +245,8 @@ async function removeEvent(id: string): Promise<void> {
 /** The list opened, and its rows' names and state words in the order they are printed. */
 async function readList(page: Page, address: string, tag: string) {
   await page.goto(address);
-  const list = page.getByTestId("start-list");
-  await list.locator("summary").click();
+  // «Cine vine» is a closed fold (§812): opened first, the way a person does.
+  const list = await openEventFold(page, "start-list");
   await expect(list.locator("table")).toBeVisible();
   const rows = list.locator("tbody tr");
   const names = (await rows.allInnerTexts()).map((text) => text.replace(/\s+/g, " ").trim());

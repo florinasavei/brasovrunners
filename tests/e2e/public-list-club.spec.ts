@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { existsSync } from "node:fs";
 import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
-import { openEditorBox } from "./support/fold";
+import { openEditorBox, openEventFold } from "./support/fold";
 
 /**
  * §753 and §756 (amending §32, §143 and §396; the owner, 2026-10-13: «people type stupid things there, I just
@@ -103,7 +103,8 @@ test.describe("§753, §756 «Clubul pe lista publică»: only the club's own na
     // both show it, in the club's own spelling; the nonsense and the other club are blank and nowhere on the page.
     await page.goto(`/ro/evenimente/${seeded.slug}`);
     await expect(page.getByTestId("start-list")).toHaveCount(1);
-    const list = page.getByTestId("start-list");
+    // «Cine vine» is a closed fold (§812): the rows are read from the opened one.
+    const list = await openEventFold(page, "start-list");
     await expect(rowOf(page, seeded.names.nickname).locator('td[data-col="club"]')).toHaveText("Brașov Runners");
     await expect(rowOf(page, seeded.names.silly).locator('td[data-col="club"]')).toHaveText("");
     await expect(rowOf(page, seeded.names.stranger).locator('td[data-col="club"]')).toHaveText("Brașov Runners");
@@ -138,6 +139,7 @@ test.describe("§753, §756 «Clubul pe lista publică»: only the club's own na
     await asTyped.check();
     await save();
     await page.goto(`/ro/evenimente/${seeded.slug}`);
+    await openEventFold(page, "start-list");
     await expect(rowOf(page, seeded.names.silly).locator('td[data-col="club"]')).toHaveText(SILLY);
     await expect(rowOf(page, seeded.names.nickname).locator('td[data-col="club"]')).toHaveText("BVR");
     await expect(rowOf(page, seeded.names.stranger).locator('td[data-col="club"]')).toHaveText(VARIANT);
@@ -151,6 +153,7 @@ test.describe("§753, §756 «Clubul pe lista publică»: only the club's own na
     await again.getByTestId("public-list-club-choices").getByRole("radio", { name: "Nu arăta clubul" }).check();
     await save();
     await page.goto(`/ro/evenimente/${seeded.slug}`);
+    await openEventFold(page, "start-list");
     await expect(page.getByTestId("start-list")).toContainText(seeded.names.nickname);
     await expect(page.getByTestId("start-list").locator('th[data-col="club"]')).toHaveCount(0);
     await expect(page.getByTestId("start-list").locator('td[data-col="club"]')).toHaveCount(0);
