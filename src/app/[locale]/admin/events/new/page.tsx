@@ -30,7 +30,9 @@ import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import { blankTranslation } from "@/modules/content/events/ui/TranslationFields";
 import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
+import { rsvpAskTimingOf } from "@/modules/deadlines/domain/deadlines";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
+import { readRsvpAskAudienceSetting } from "@/modules/rsvp/ask-audience";
 import { groupRunDeclarationsInForce, listApprovedRaceDeclarations } from "@/modules/legal-documents/repository";
 import { canCreateEvent, canTransition } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -101,6 +103,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
   const declarations = await listApprovedRaceDeclarations(getDb(), locale);
   // The club's deadlines (§377): the reminder an event left "as usual" gets, and how far ahead a series is created.
   const deadlines = await deadlinesForThisRequest();
+  // The «Vii?» email's days, hour and audience (§823), for the words under the editor's tick.
+  const rsvpAsk = { ...rsvpAskTimingOf(deadlines), audience: (await readRsvpAskAudienceSetting(getDb())).audience };
   const horizon = daysPhrase(locale, deadlines.seriesHorizonDays);
   const t = await getTranslations("Admin");
   // The language endonyms are shared with the public switcher and the editor's tabs.
@@ -232,7 +236,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <DescriptionBox languages={languages} heading={flow.headings.description} />
               <WhenBox {...box} languages={languages} heading={flow.headings.when} />
               <CourseBox {...box} languages={languages} heading={flow.headings.course} />
-              <RegistrationBox {...box} heading={flow.headings.registration} languages={languages} declarations={declarations} locale={locale} clubDeadlines={deadlines} />
+              <RegistrationBox {...box} heading={flow.headings.registration} languages={languages} declarations={declarations} locale={locale} clubDeadlines={deadlines} rsvpAsk={rsvpAsk} />
               <CoHostsBox {...box} locale={locale} heading={flow.headings.coHosts} />
               <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
               <LinksBox {...box} locale={locale} heading={flow.headings.links} />

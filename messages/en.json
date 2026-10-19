@@ -3331,9 +3331,18 @@
       "durationOther": "How long the event lasts",
       "durationOtherHelp": "From the start to the end — 1 hour 45 minutes, say. The end is worked out from it. Leave empty if none was announced.",
       "rsvpEnabled": "Accept “I'm coming!” answers from the page, calendar and email",
-      "rsvpEnabledHelp": "Anyone can leave their address and say they're coming; you see how many are coming here and on the page. The privacy notice must describe the “I'm coming!” answers — see Tasks.",
-      "rsvpAskEnabled": "Send the “Coming?” question before this event",
-      "rsvpAskEnabledHelp": "Ticked, the people who should be asked get an email before the date; how long before and who, you choose in Settings. Unticked, no question goes out for this date.",
+      "rsvpEnabledHelp": "Anyone can leave their address and say they're coming; you see how many are coming here and on the page, and, if you tick below, an email before. The privacy notice must describe “I'm coming!” — see Tasks.",
+      "rsvpAskEnabled": "Send the “Coming?” email before this date",
+      "rsvpAskEnabledHelp": "Ticked, {who} get, {when}, at {hour}, an email “Coming to … {day}?” with the buttons “I'm coming” and “I'm not coming”. Unticked, the email is not sent for this date; answers on the page still work.",
+      "rsvpAskEnabledHelpOff": "The “Coming?” email is off in Settings → “Deadlines” (0 days before): it is sent for no date. The tick here is kept; answers on the page still work.",
+      "rsvpAskChange": "Change in Settings:",
+      "rsvpAskDeadlinesLink": "Deadlines (when and at what time)",
+      "rsvpAskEmailsLink": "Emails (who)",
+      "rsvpAskWho": {
+        "SUBSCRIBERS": "the newsletter's subscribers to “The ‘Coming?’ question before runs” or to “All the news”",
+        "ANSWERERS": "those who answered “I'm coming!” at an earlier date of the same series",
+        "BOTH": "the newsletter's subscribers to “The ‘Coming?’ question before runs” or to “All the news”, and those who answered “I'm coming!” at an earlier date of the series"
+      },
       "rsvpAnswers": {
         "title": "“I'm coming!” answers ({count})",
         "summary": "{confirmed} confirmed, {unconfirmed} unconfirmed",
