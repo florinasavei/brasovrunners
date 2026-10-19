@@ -1,6 +1,6 @@
-import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import PlaceIcon from "@mui/icons-material/Place";
 import ScheduleIcon from "@mui/icons-material/Schedule";
+import TodayIcon from "@mui/icons-material/Today";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -23,8 +23,11 @@ export type NextEventPanelProps = {
   locale: Locale;
   /**
    * The page's own clock (§NNN): the card says how far away the event is from it, in calendar days
-   * on the club's wall clock. The calendar page holds itself to the next club midnight
-   * (`holdPageUntil`), so the words never outlive their day; the design page passes its fixed sample instant.
+   * on the club's wall clock (`CLUB_TIME_ZONE`), deliberately the clock the page rolls at even when the
+   * event's own zone differs, so near midnight it may disagree with the day line above it. The calendar
+   * page holds itself to the next club midnight (`holdPageUntil`), so the words roll with the page (the
+   * visit that triggers the new render may still get the old copy, as for today's square, §549); the
+   * design page passes its fixed sample instant.
    */
   now: Date;
   /** The forecast at its start (§402, cached an hour), or null outside the seven days, on a failure, or for an event that shows none. */
@@ -42,7 +45,7 @@ const FACT_SX = { display: "flex", alignItems: "center", gap: 1, fontSize: "0.93
  * exactly as a listing card draws them (`buildRoutePills`, §366) with the weather at the start as
  * their last (§402, §429), and «Vezi detalii» to the event's page (`ArrowButtonLink`, §708). Under the
  * day, a line says how far away it is — «Azi», «Mâine», «Peste 5 zile», «Peste 3 săptămâni», «Peste 2 luni»,
- * «Acum» once it has started (`awayFrom`, §NNN) — with an hourglass, in the fact lines' own pattern.
+ * «Acum» once it has started (`awayFrom`, §NNN) — with a calendar glyph (the hourglass already means the waiting list), in the fact lines' own pattern.
  *
  * The page asks for it only while the look is on, so with the setting off the calendar reads
  * nothing more and draws nothing more. A Server Component with typed props; nothing crosses into a
@@ -71,7 +74,7 @@ export default async function NextEventPanel({ event, locale, now, weather }: Ne
         {day}
       </Typography>
       <Box sx={{ ...FACT_SX, fontWeight: 600 }} data-testid="calendar-next-away" data-away={away.kind}>
-        <HourglassTopIcon aria-hidden="true" />
+        <TodayIcon aria-hidden="true" />
         <span>{awayWords}</span>
       </Box>
       <Box

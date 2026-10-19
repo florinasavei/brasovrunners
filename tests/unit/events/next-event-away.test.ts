@@ -4,7 +4,9 @@ import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { awayFrom, type AwayFrom } from "@/modules/events/domain/next-event-away";
+import { nextWallMidnight } from "@/modules/events/domain/page-clock";
 import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
+import { secondsUntilFirst } from "@/modules/public-cache/page-lifetime";
 
 /**
  * §NNN — the calendar's «Următorul eveniment» says how far away it is: «Azi», «Mâine», «Peste 5 zile»,
@@ -126,7 +128,7 @@ describe("§NNN NextEventPanel — the card says it", () => {
 
   it("draws a line with a glyph and the step's name, near the day", async () => {
     const html = await card(1, "ro");
-    expect(html).toMatch(/data-testid="calendar-next-away" data-away="tomorrow">.*?<svg[^>]*aria-hidden="true"[^>]*data-testid="HourglassTopIcon".*?<span>Mâine<\/span>/);
+    expect(html).toMatch(/data-testid="calendar-next-away" data-away="tomorrow">.*?<svg[^>]*aria-hidden="true"[^>]*data-testid="TodayIcon".*?<span>Mâine<\/span>/);
     // After the date's line, before the pill and the title.
     expect(html.indexOf("calendar-next-away")).toBeGreaterThan(html.indexOf("septembrie 2026"));
     expect(html.indexOf("calendar-next-away")).toBeLessThan(html.indexOf(`id="calendar-next-title"`));
@@ -175,12 +177,21 @@ describe("§NNN NextEventPanel — the card says it", () => {
   });
 });
 
-describe("§NNN the cache — the card's words never outlive their day", () => {
+describe("§NNN the cache — the card's words roll with the page at the club's midnight and at the event's start", () => {
   const page = readFileSync(path.join(ROOT, "src/app/[locale]/calendar/page.tsx"), "utf8").replace(/\r\n/g, "\n");
 
   it("holds the static calendar to the club's next midnight, whatever the look, and the next event's start", () => {
     expect(page).toContain("await holdPageUntil([nextWallMidnight(now, CLUB_TIME_ZONE)], now);");
     expect(page).toContain("await holdPageUntil([event.startsAt], now);");
+  });
+
+  it("what the hold does: an event later the same day ends the page's life at its start, a running one at the club's midnight", () => {
+    const now = new Date("2026-11-20T08:00:00Z"); // 10:00 in Brașov
+    const midnight = nextWallMidnight(now, "Europe/Bucharest");
+    const startsAt = new Date(now.getTime() + 3 * 3600_000);
+    expect(secondsUntilFirst([midnight, startsAt], now)).toBe(3 * 3600);
+    const running = new Date(now.getTime() - 30 * 60_000);
+    expect(secondsUntilFirst([midnight, running], now)).toBe(Math.ceil((midnight.getTime() - now.getTime()) / 1000));
   });
 
   it("gives the card the page's own clock, so the page that is held and the words that roll are one", () => {
