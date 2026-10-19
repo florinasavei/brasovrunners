@@ -96,7 +96,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     const tick = page.getByRole("checkbox", { name: "Acceptă răspunsuri „Vin!” din pagină, calendar și email" });
     await expect(tick).toBeVisible();
     await expect(tick).not.toBeChecked();
-    await expect(page.getByText("Nota de confidențialitate trebuie să descrie răspunsurile „Vin!” — vezi Sarcini.")).toBeVisible();
+    await expect(page.getByText("Nota de confidențialitate trebuie să descrie „Vin!” — vezi Sarcini.")).toBeVisible();
     expect((await tick.locator("xpath=..").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await tick.check();
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
