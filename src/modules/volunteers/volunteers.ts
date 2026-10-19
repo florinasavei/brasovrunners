@@ -2,6 +2,7 @@ import { and, asc, count, eq, gt, inArray, notInArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { z } from "zod";
 import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
+import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { events } from "@/db/schema/events";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -1706,6 +1707,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     if (request.kind === "delete") {
       // The person's choices go with them (CASCADE).
       await tx.delete(eventVolunteers).where(eq(eventVolunteers.id, current.id));
+      // …and the club's invitation to that address for this event (§NNN): deleting a person leaves no address of theirs behind.
+      await tx.delete(eventVolunteerInvitations).where(and(eq(eventVolunteerInvitations.eventId, current.eventId), eq(eventVolunteerInvitations.canonicalEmail, current.canonicalEmail)));
       await audit("volunteer.deleted", { volunteerId: current.id, roleId: current.roleId, state: current.state });
       return { changed: true, volunteer: summary };
     }

@@ -5,6 +5,7 @@ import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventResults } from "@/db/schema/event-results";
 import { eventRsvpAsks, eventRsvps } from "@/db/schema/event-rsvps";
+import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -657,6 +658,16 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .where(and(inArray(eventVolunteers.eventId, over), lt(eventVolunteers.createdAt, cutoff)))
       .returning({ id: eventVolunteers.id });
     counts.volunteers = deleted.length;
+    /*
+      The club's invitations to volunteer (§NNN) go in the same step and by the same clock: an address the club typed, and its line to
+      the person, kept thirty days after the event's start whatever became of the invitation — used, withdrawn or never opened — and
+      counted with the offers, since the notice's one sentence says they are deleted together. Nothing public showed one.
+    */
+    const invitations = await tx
+      .delete(eventVolunteerInvitations)
+      .where(and(inArray(eventVolunteerInvitations.eventId, over), lt(eventVolunteerInvitations.sentAt, cutoff)))
+      .returning({ id: eventVolunteerInvitations.id });
+    counts.volunteers += invitations.length;
   });
 
   /*

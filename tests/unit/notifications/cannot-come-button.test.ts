@@ -65,6 +65,8 @@ const EVERY_MESSAGE: Record<Exclude<EmailMessageType, RelayMessageType>, { butto
   VOLUNTEER_AGREEMENT_ACCEPTED: { button: false, why: "no registration" },
   VOLUNTEER_ROLE_ASSIGNED: { button: false, why: "no registration" },
   VOLUNTEER_GUARDIAN_REQUEST: { button: false, why: "no registration" },
+  // The club's invitation to volunteer (§NNN): to an address, before any sign-up.
+  VOLUNTEER_INVITATION: { button: false, why: "no registration" },
 };
 
 const TYPES = Object.keys(EVERY_MESSAGE) as (keyof typeof EVERY_MESSAGE)[];

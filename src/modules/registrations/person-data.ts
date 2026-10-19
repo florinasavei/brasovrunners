@@ -4,6 +4,7 @@ import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventResults } from "@/db/schema/event-results";
 import { eventRsvps } from "@/db/schema/event-rsvps";
+import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
@@ -120,6 +121,23 @@ export type PersonData = {
    * fingerprint, which prove nothing to the person and are of no use to the club.
    */
   rememberedBrowsers: Array<{ deliveryEmail: string; displayName: string | null; createdAt: Date; lastUsedAt: Date; expiresAt: Date }>;
+  /**
+   * The club's invitations to volunteer sent to this address (§NNN, art. 15 GDPR): the event, the address as the club typed it, the club's
+   * line, the language and the moments — every column of the row but the link's fingerprint, which proves nothing to the person. Gone with
+   * the event's volunteers, thirty days after the event, or with the person's offer when the card deletes it.
+   */
+  volunteerInvitations: Array<{
+    eventId: string;
+    eventTitle: string | null;
+    deliveryEmail: string;
+    message: string | null;
+    locale: string;
+    sentAt: Date;
+    resentAt: Date | null;
+    usedAt: Date | null;
+    withdrawnAt: Date | null;
+    expiresAt: Date;
+  }>;
   /**
    * What the person offered as a volunteer (§754): the event, the role, the state, where it came from and
    * what was typed — name, address, telephone number, their message and the organizers' note, every column
@@ -329,6 +347,25 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .where(eq(personSessions.canonicalEmail, canonicalEmail))
     .orderBy(asc(personSessions.createdAt));
 
+  // The club's invitations to volunteer (§NNN), by the same canonical address: the event's title in the invitation's language.
+  const volunteerInvitations = await db
+    .select({
+      eventId: eventVolunteerInvitations.eventId,
+      eventTitle: eventTranslations.title,
+      deliveryEmail: eventVolunteerInvitations.deliveryEmail,
+      message: eventVolunteerInvitations.message,
+      locale: eventVolunteerInvitations.locale,
+      sentAt: eventVolunteerInvitations.sentAt,
+      resentAt: eventVolunteerInvitations.resentAt,
+      usedAt: eventVolunteerInvitations.usedAt,
+      withdrawnAt: eventVolunteerInvitations.withdrawnAt,
+      expiresAt: eventVolunteerInvitations.expiresAt,
+    })
+    .from(eventVolunteerInvitations)
+    .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventVolunteerInvitations.eventId), eq(eventTranslations.locale, eventVolunteerInvitations.locale)))
+    .where(eq(eventVolunteerInvitations.canonicalEmail, canonicalEmail))
+    .orderBy(asc(eventVolunteerInvitations.sentAt));
+
   // The offers to volunteer (§754), found by the same canonical address: the event's title in Romanian, the role as the club wrote it.
   const offerRows = await db
     .select({
@@ -492,6 +529,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     announcementRequests,
     rsvpAnswers,
     rememberedBrowsers,
+    volunteerInvitations,
     volunteerOffers,
     groupRunDeclarations: groupRuns,
     results: results.map((row) => ({ ...row, registrationId: row.registrationId as string })),
@@ -626,6 +664,7 @@ export async function exportPersonData<T extends Record<string, unknown>>(
       rsvpAnswers: data.rsvpAnswers.length,
       rememberedBrowsers: data.rememberedBrowsers.length,
       volunteerOffers: data.volunteerOffers.length,
+      volunteerInvitations: data.volunteerInvitations.length,
       groupRunDeclarations: data.groupRunDeclarations.length,
       results: data.results.length,
       notes: data.notes.length,

@@ -98,7 +98,9 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
     back (it carries no secret and the sealed facts are the browser's own), so the door is asked for the form alone.
   */
   const inviteSecret = one(asked.invite);
-  const link = await readOrWhileAway(() => readVolunteerInvitationLink(getDb(), event.id, inviteSecret, now), { reading: null, invitation: null });
+  // No link in the address, no read: an ordinary visit costs the database nothing more than it did.
+  const noLink = { reading: null, invitation: null } as const;
+  const link = inviteSecret ? await readOrWhileAway(() => readVolunteerInvitationLink(getDb(), event.id, inviteSecret, now), noLink) : noLink;
   const viewer = outcome !== "done" && link.reading === null && offer.access === "MEMBERS" ? await membersViewer() : null;
   const door = outcome === "done" ? ({ kind: "open" } as const) : volunteerDoorFor({ access: offer.access, member: viewer !== null, invite: link.reading });
   // By invitation, without a link: the page does not exist for this visitor, as a draft's does not.
