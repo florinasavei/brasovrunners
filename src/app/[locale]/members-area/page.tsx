@@ -190,7 +190,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
             (`ZoneRsvp`, §822, §827) and, directly under them, «Cine vine (N)» open (`RsvpCount` with `open`, §715 amended) — a run that
             takes no answers is the title and the day alone. The next run is the first card, in the lead event's frame and a larger title.
           */
-          <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, display: "grid", gap: { xs: 1.5, sm: 2 }, mb: 1 }}>
+          <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, display: "grid", gap: DENSITY.sectionGap, mb: 1 }}>
             {runs.map((event) => {
               const next = event.id === nextRun?.id;
               const facts = rsvps.get(event.id);
@@ -201,7 +201,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
                   variant="outlined"
                   data-testid={next ? "members-next-run" : "members-run"}
                   data-featured={next ? "true" : undefined}
-                  sx={{ p: { xs: 1.5, sm: next ? 2.5 : 2 }, ...(next ? featuredCard : {}) }}
+                  sx={{ p: 2, ...(next ? featuredCard : {}) }}
                 >
                   {next && (
                     <Typography component="p" variant="overline" color="primary" sx={{ lineHeight: 1.5 }} data-testid="members-next-run-label">
