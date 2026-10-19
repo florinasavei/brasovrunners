@@ -11,6 +11,7 @@ import { noticeDescribesVolunteerAgreement, noticeDescribesVolunteers, volunteer
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
+import { isWrittenText, missingLanguage } from "@/shared/forms/both-languages";
 import { isUuid } from "@/shared/ids";
 import {
   invitationExpiry,
@@ -85,8 +86,12 @@ export type VolunteerInvitationSendInput = {
   eventId: string;
   /** «Adrese (una pe rând)», as typed. */
   addresses: string;
-  /** «Mesaj», optional: the club's line to every address of this press. */
-  message: string;
+  /**
+   * «Mesaj (română)» and «Message (English)», optional: the club's line to every address of this press, in both languages or in
+   * neither (§354) — each half of the email reads its own language's words, never the other's.
+   */
+  messageRo: string;
+  messageEn: string;
   /** «Limba invitației»: the email's first half (both go out, §96). */
   locale: Locale;
 };
@@ -103,7 +108,7 @@ export type VolunteerInvitationSendResult = {
 /**
  * «Trimite invitațiile»: one invitation per address, one email each. Refused whole — nothing written — when no address can be read
  * (`VINVITE_BAD_ADDRESS`, naming the pieces), there are none (`VINVITE_NOBODY`), more than a press may carry (`VINVITE_TOO_MANY`),
- * the line is too long, «Cine se poate oferi» is not «Doar cu invitație de la club» (`VINVITE_NOT_INVITED_ONLY`) or the offer is
+ * the line is too long or written in one language only (`VINVITE_MESSAGE_LONG`, `VINVITE_MESSAGE_ONE_LANGUAGE`), «Cine se poate oferi» is not «Doar cu invitație de la club» (`VINVITE_NOT_INVITED_ONLY`) or the offer is
  * closed (`VINVITE_EVENT_CLOSED`). Within an accepted list: an address with a live invitation is not sent a second one, one that has
  * already offered is not invited, and one whose invitation was withdrawn or ran out is brought back with the same row (the table
  * keeps one per address) — with its old link dead until the new email's is minted.
@@ -116,8 +121,12 @@ export async function sendVolunteerInvitations<T extends Record<string, unknown>
 ): Promise<VolunteerInvitationSendResult> {
   assertMayManage(actor);
   assertId(input.eventId);
-  const message = input.message.trim();
-  if (message.length > VOLUNTEER_INVITATION_MESSAGE_MAX) throw new VolunteerInvitationRefusal("VINVITE_MESSAGE_LONG");
+  const messageRo = input.messageRo.trim();
+  const messageEn = input.messageEn.trim();
+  if (messageRo.length > VOLUNTEER_INVITATION_MESSAGE_MAX || messageEn.length > VOLUNTEER_INVITATION_MESSAGE_MAX) throw new VolunteerInvitationRefusal("VINVITE_MESSAGE_LONG");
+  // Both languages or neither (§354): one written alone would be said to the other half of the email as it stands.
+  if (missingLanguage({ ro: messageRo, en: messageEn }, isWrittenText) !== null) throw new VolunteerInvitationRefusal("VINVITE_MESSAGE_ONE_LANGUAGE");
+  const line = messageRo === "" ? { messageRo: null, messageEn: null } : { messageRo, messageEn };
   const parsed = parseInvitationAddresses(input.addresses);
   if (parsed.unread.length > 0) throw new VolunteerInvitationRefusal("VINVITE_BAD_ADDRESS", parsed.unread);
   if (parsed.addresses.length === 0) throw new VolunteerInvitationRefusal("VINVITE_NOBODY");
@@ -150,7 +159,8 @@ export async function sendVolunteerInvitations<T extends Record<string, unknown>
         continue;
       }
       const existing = invited.get(address.canonicalEmail);
-      if (existing && invitationStandingOf(existing, now) === "open") {
+      // The event is ahead here (a send for one that is not is refused above), so a row neither used nor withdrawn is open.
+      if (existing && invitationStandingOf(existing, true) === "open") {
         result.alreadyInvited += 1;
         continue;
       }
@@ -164,7 +174,7 @@ export async function sendVolunteerInvitations<T extends Record<string, unknown>
         // Withdrawn or run out: the same row, alive again. Its old link stays dead until the new email's is minted.
         await tx
           .update(eventVolunteerInvitations)
-          .set({ withdrawnAt: null, withdrawnByStaffUserId: null, expiresAt, resentAt: now, tokenHash: null, message: message === "" ? null : message, locale: input.locale, deliveryEmail: address.deliveryEmail, invitedByStaffUserId: actor.id })
+          .set({ withdrawnAt: null, withdrawnByStaffUserId: null, expiresAt, resentAt: now, tokenHash: null, ...line, locale: input.locale, deliveryEmail: address.deliveryEmail, invitedByStaffUserId: actor.id })
           .where(eq(eventVolunteerInvitations.id, existing.id));
         invitationId = existing.id;
       } else {
@@ -176,7 +186,7 @@ export async function sendVolunteerInvitations<T extends Record<string, unknown>
             canonicalEmail: address.canonicalEmail,
             canonicalizationVersion: address.canonicalizationVersion,
             locale: input.locale,
-            message: message === "" ? null : message,
+            ...line,
             invitedByStaffUserId: actor.id,
             sentAt: now,
             expiresAt,
@@ -221,13 +231,16 @@ async function queueInvitationEmail<T extends Record<string, unknown>>(
 async function openInvitation<T extends Record<string, unknown>>(tx: Transaction<T>, invitationId: string, now: Date): Promise<EventVolunteerInvitation> {
   const [row] = await tx.select().from(eventVolunteerInvitations).where(eq(eventVolunteerInvitations.id, invitationId)).for("update").limit(1);
   if (!row) throw new VolunteerInvitationRefusal("VINVITE_NOT_FOUND");
-  if (invitationStandingOf(row, now) !== "open") throw new VolunteerInvitationRefusal("VINVITE_NOT_OPEN");
+  // «Expirat» is the event's own state now, not the deadline stored at the send (§NNN): a race moved later keeps its invitations open.
+  const [event] = await tx.select({ eventStatus: events.eventStatus, startsAt: events.startsAt, endsAt: events.endsAt }).from(events).where(eq(events.id, row.eventId)).limit(1);
+  if (invitationStandingOf(row, event ? volunteerEventAhead(event, now) : false) !== "open") throw new VolunteerInvitationRefusal("VINVITE_NOT_OPEN");
   return row;
 }
 
 /**
- * «Retrimite»: another email to the same address, with a new link — the one the earlier email carried stops working when the new one
- * is minted at the send. The deadline is kept. Refused for an invitation that is no longer open, and while the offer is closed.
+ * «Retrimite»: another email to the same address, with a new link — the one the earlier email carried stops working at the press
+ * (its fingerprint is cleared; the new email's is minted when it is rendered). Refused for an invitation that is no longer open
+ * (the event's own state, not a stored deadline), and while the offer is closed.
  */
 export async function resendVolunteerInvitation<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, invitationId: string, now: Date): Promise<void> {
   assertMayManage(actor);
@@ -236,7 +249,8 @@ export async function resendVolunteerInvitation<T extends Record<string, unknown
     const invitation = await openInvitation(tx, invitationId, now);
     const { closed } = await eventOfferClosed(tx, invitation.eventId, now);
     if (closed) throw new VolunteerInvitationRefusal("VINVITE_EVENT_CLOSED");
-    await tx.update(eventVolunteerInvitations).set({ resentAt: now }).where(eq(eventVolunteerInvitations.id, invitation.id));
+    // The earlier link dies at the press, not when the new email is rendered: the paced outbox may hold the message a while (§12.8).
+    await tx.update(eventVolunteerInvitations).set({ resentAt: now, tokenHash: null }).where(eq(eventVolunteerInvitations.id, invitation.id));
     await queueInvitationEmail(tx, { invitationId: invitation.id, eventId: invitation.eventId, locale: invitation.locale, recipient: invitation.deliveryEmail, key: "resent", now, actorId: actor.id });
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,

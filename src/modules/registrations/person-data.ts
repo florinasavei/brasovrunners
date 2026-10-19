@@ -123,14 +123,16 @@ export type PersonData = {
   rememberedBrowsers: Array<{ deliveryEmail: string; displayName: string | null; createdAt: Date; lastUsedAt: Date; expiresAt: Date }>;
   /**
    * The club's invitations to volunteer sent to this address (§NNN, art. 15 GDPR): the event, the address as the club typed it, the club's
-   * line, the language and the moments — every column of the row but the link's fingerprint, which proves nothing to the person. Gone with
-   * the event's volunteers, thirty days after the event, or with the person's offer when the card deletes it.
+   * line in both languages, the language and the moments — every column of the row but the link's fingerprint, which proves nothing to the
+   * person. Gone with the event's volunteers, thirty days after the event,
+   * with the person's offer when the card deletes it, or at an Administrator's press on this screen (`eraseVolunteerInvitationsOfPerson`).
    */
   volunteerInvitations: Array<{
     eventId: string;
     eventTitle: string | null;
     deliveryEmail: string;
-    message: string | null;
+    messageRo: string | null;
+    messageEn: string | null;
     locale: string;
     sentAt: Date;
     resentAt: Date | null;
@@ -353,7 +355,8 @@ async function collectPersonData<T extends Record<string, unknown>>(
       eventId: eventVolunteerInvitations.eventId,
       eventTitle: eventTranslations.title,
       deliveryEmail: eventVolunteerInvitations.deliveryEmail,
-      message: eventVolunteerInvitations.message,
+      messageRo: eventVolunteerInvitations.messageRo,
+      messageEn: eventVolunteerInvitations.messageEn,
       locale: eventVolunteerInvitations.locale,
       sentAt: eventVolunteerInvitations.sentAt,
       resentAt: eventVolunteerInvitations.resentAt,
@@ -607,6 +610,39 @@ export async function eraseRsvpsOfPerson<T extends Record<string, unknown>>(
   });
   if (counts.answers > 0) revalidatePublicContent("places");
   return counts;
+}
+
+/**
+ * Erase the club's invitations to volunteer sent to one canonical address (§NNN, art. 17 GDPR), on the person's request, by an Administrator
+ * (`assertAdministrator`). The rows go whole — the address, the club's line in both languages and the link's fingerprint, so a link already in
+ * an inbox stops working — whatever became of each invitation: an unused or withdrawn one holds an address and a line and nothing else, and
+ * a person's offer (if there is one) is not touched, it has its own delete on the event's «Voluntari» card. One audit row keeps the count
+ * (`participant.volunteer_invitations_erased`), never the address.
+ */
+export async function eraseVolunteerInvitationsOfPerson<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  canonicalEmail: string,
+  now: Date,
+): Promise<{ invitations: number }> {
+  assertAdministrator(actor);
+  return db.transaction(async (tx) => {
+    const deleted = await tx
+      .delete(eventVolunteerInvitations)
+      .where(eq(eventVolunteerInvitations.canonicalEmail, canonicalEmail))
+      .returning({ id: eventVolunteerInvitations.id });
+    const result = { invitations: deleted.length };
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      participantId: null,
+      action: "participant.volunteer_invitations_erased",
+      entityType: "participant",
+      entityId: null,
+      metadata: result,
+      now,
+    });
+    return result;
+  });
 }
 
 /**

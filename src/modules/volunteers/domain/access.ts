@@ -44,6 +44,7 @@ export const VOLUNTEER_INVITATION_REFUSALS = [
   "VINVITE_TOO_MANY",
   "VINVITE_BAD_ADDRESS",
   "VINVITE_MESSAGE_LONG",
+  "VINVITE_MESSAGE_ONE_LANGUAGE",
   "VINVITE_NOT_INVITED_ONLY",
   "VINVITE_EVENT_CLOSED",
   "VINVITE_NOT_OPEN",
@@ -94,18 +95,23 @@ export function parseInvitationAddresses(text: string): { addresses: InvitationA
   return { addresses, unread };
 }
 
-/** Where an invitation stands (`event_volunteer_invitations`): three stamps and a deadline, never a status column. */
+/** Where an invitation stands (`event_volunteer_invitations`): two stamps and the event's own state, never a status column. */
 export type VolunteerInvitationStanding = "open" | "used" | "withdrawn" | "expired";
 
-export function invitationStandingOf(invitation: { usedAt: Date | null; withdrawnAt: Date | null; expiresAt: Date }, now: Date): VolunteerInvitationStanding {
-  // A spent link says so even after the event; a withdrawn one says so before it is called expired.
+/**
+ * Where an invitation stands, asking the event as it is now (`volunteerEventAhead`) and not the deadline stored at the send: a race
+ * moved to a later day keeps its links alive, and one called off or over closes them, whatever `expires_at` recorded (§NNN). A spent
+ * link says so even after the event; a withdrawn one says so before it is called expired.
+ */
+export function invitationStandingOf(invitation: { usedAt: Date | null; withdrawnAt: Date | null }, eventAhead: boolean): VolunteerInvitationStanding {
   if (invitation.usedAt) return "used";
   if (invitation.withdrawnAt) return "withdrawn";
-  return invitation.expiresAt.getTime() <= now.getTime() ? "expired" : "open";
+  return eventAhead ? "open" : "expired";
 }
 
 /**
- * Until when an invitation lasts: the event's end (its start with no end), or a year from the send for a date still to be announced.
+ * The deadline recorded at the send: the event's end (its start with no end), or a year from the send for a date still to be announced.
+ * A record, not the rule (`invitationStandingOf` asks the event).
  * Never earlier than the send itself: an event that is over is refused before this is asked (`VINVITE_EVENT_CLOSED`).
  */
 export function invitationExpiry(event: { startsAt: Date | null; endsAt: Date | null }, now: Date): Date {
@@ -124,27 +130,34 @@ export type InviteReading = null | { standing: VolunteerInvitationStanding | "in
  * signed-in member (or a colleague) reads the page; `invite` what the address's `?invite=` came to.
  *
  * - `invite` — a live invitation: the form, with the invited address locked.
- * - `inviteRefused` — a link that no longer works: a sentence, with its reason, and no form.
+ * - `inviteRefused` — `INVITED` and a link that has been spent, withdrawn or has run out: a sentence, with its reason, and no form.
  * - `open` — `ANYONE`: the form.
  * - `member` — `MEMBERS` and a member: the form, prefilled from the account.
  * - `signIn` — `MEMBERS` and a stranger: one sentence and the way into the members' zone.
- * - `closed` — `INVITED` and no link: the page answers 404.
+ * - `closed` — `INVITED` and no link, or a link that names no invitation: the page answers 404.
+ *
+ * **A dead link does not shut a door the choice opens.** Under `ANYONE`, and under `MEMBERS` for a member, a spent, withdrawn or
+ * run-out link leaves the ordinary door and says which in a sentence above it (`refused`); under `MEMBERS` for a stranger it leaves
+ * the sign-in with the sentence. A link that names nothing (`invalid`) says nothing there — there is nothing to tell — and under
+ * `INVITED` it is a 404, as no link is: the page does not confirm that an address is wrong rather than absent.
  */
+export type InviteRefusal = "used" | "withdrawn" | "expired";
+
 export type VolunteerDoor =
-  | { kind: "open" }
-  | { kind: "member" }
-  | { kind: "signIn" }
+  | { kind: "open"; refused?: InviteRefusal }
+  | { kind: "member"; refused?: InviteRefusal }
+  | { kind: "signIn"; refused?: InviteRefusal }
   | { kind: "invite" }
-  | { kind: "inviteRefused"; reason: "used" | "withdrawn" | "expired" | "invalid" }
+  | { kind: "inviteRefused"; reason: InviteRefusal }
   | { kind: "closed" };
 
 export function volunteerDoorFor(input: { access: VolunteersAccess; member: boolean; invite: InviteReading }): VolunteerDoor {
-  if (input.invite !== null) {
-    return input.invite.standing === "open" ? { kind: "invite" } : { kind: "inviteRefused", reason: input.invite.standing };
-  }
-  if (input.access === "ANYONE") return { kind: "open" };
-  if (input.access === "MEMBERS") return input.member ? { kind: "member" } : { kind: "signIn" };
-  return { kind: "closed" };
+  const standing = input.invite?.standing ?? null;
+  if (standing === "open") return { kind: "invite" };
+  const refused: InviteRefusal | null = standing === null || standing === "invalid" ? null : standing;
+  if (input.access === "INVITED") return refused ? { kind: "inviteRefused", reason: refused } : { kind: "closed" };
+  const ordinary: "open" | "member" | "signIn" = input.access === "ANYONE" ? "open" : input.member ? "member" : "signIn";
+  return refused ? { kind: ordinary, refused } : { kind: ordinary };
 }
 
 /**

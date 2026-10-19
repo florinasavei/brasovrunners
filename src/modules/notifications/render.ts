@@ -1027,16 +1027,19 @@ async function renderRow(
         ? await db.select().from(eventVolunteerInvitations).where(eq(eventVolunteerInvitations.id, invitationId)).limit(1)
         : [];
     if (!invitation) throw new OutboxMessageWithdrawn("the invitation is gone");
-    if (invitationStandingOf(invitation, now) !== "open") throw new OutboxMessageWithdrawn("the invitation was used, withdrawn or has run out");
+    const eventAhead = eventDetails !== undefined && volunteerEventAhead(eventDetails, now);
+    if (invitationStandingOf(invitation, eventAhead) !== "open") throw new OutboxMessageWithdrawn("the invitation was used or withdrawn, or the event was called off or is over");
     if (canonicalOrNull(row.recipientEmail) !== invitation.canonicalEmail) throw new OutboxMessageWithdrawn("the invitation's address changed since it was queued");
-    if (!eventDetails || !eventDetails.slug || !volunteerEventAhead(eventDetails, now)) throw new OutboxMessageWithdrawn("the event was called off or is over");
+    if (!eventDetails || !eventDetails.slug) throw new OutboxMessageWithdrawn("the event has no page to invite to");
     const link = await mintVolunteerInvitationLink(db, invitation.id, row.recipientEmail, now);
     if (!link) throw new OutboxMessageWithdrawn("the invitation can no longer be sent");
     const offer = await readPublicVolunteerRoles(db, invitation.eventId);
     const open = rolesWithCategoryWords(offer.categories, offer.roles.filter((role) => roleTakesPeople(role)));
     data.participantName = "";
     data.volunteerInvitation = {
-      message: invitation.message,
+      // The club's line in each half's own language (§354): the second half reads `messageOther`, never the first half's words.
+      message: locale === "ro" ? invitation.messageRo : invitation.messageEn,
+      messageOther: locale === "ro" ? invitation.messageEn : invitation.messageRo,
       rolesRo: open.map((role) => roleLabel(role, "ro")),
       rolesEn: open.map((role) => roleLabel(role, "en")),
     };

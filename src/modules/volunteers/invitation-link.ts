@@ -1,10 +1,12 @@
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { eventVolunteerInvitations, type EventVolunteerInvitation } from "@/db/schema/event-volunteer-invitations";
+import { events } from "@/db/schema/events";
 import type { Database, Transaction } from "@/db/types";
 import { generateTokenSecret, hashTokenSecret, isWellFormedTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { canonicalOrNull } from "./agreement";
 import { type InviteReading, invitationStandingOf } from "./domain/access";
+import { volunteerEventAhead } from "./domain/volunteer";
 
 /**
  * The link of an invitation to volunteer (§NNN; the registrations' invitation, §647, is the model; AGENTS.md §12.8, BR-REQ-036-02):
@@ -23,8 +25,8 @@ import { type InviteReading, invitationStandingOf } from "./domain/access";
  */
 
 /**
- * A fresh link for one invitation, minted when its email leaves. Null for an invitation that has been used, withdrawn or has run
- * out since the email was queued, or whose address is not the one the email goes to (`recipientEmail`, compared through the
+ * A fresh link for one invitation, minted when its email leaves. Null for an invitation that has been used or withdrawn, whose event is
+ * called off or over (asked now, never from the deadline stored at the send: a race moved later keeps its links), or whose address is not the one the email goes to (`recipientEmail`, compared through the
  * canonicalizer, §10.4): nothing left to invite, and the email is withdrawn.
  */
 export async function mintVolunteerInvitationLink<T extends Record<string, unknown>>(
@@ -35,6 +37,13 @@ export async function mintVolunteerInvitationLink<T extends Record<string, unkno
 ): Promise<{ secret: string } | null> {
   const recipient = canonicalOrNull(recipientEmail);
   if (recipient === null) return null;
+  const [event] = await db
+    .select({ eventStatus: events.eventStatus, startsAt: events.startsAt, endsAt: events.endsAt })
+    .from(eventVolunteerInvitations)
+    .innerJoin(events, eq(events.id, eventVolunteerInvitations.eventId))
+    .where(eq(eventVolunteerInvitations.id, invitationId))
+    .limit(1);
+  if (!event || !volunteerEventAhead(event, now)) return null;
   const secret = generateTokenSecret();
   const [row] = await db
     .update(eventVolunteerInvitations)
@@ -45,7 +54,6 @@ export async function mintVolunteerInvitationLink<T extends Record<string, unkno
         eq(eventVolunteerInvitations.canonicalEmail, recipient),
         isNull(eventVolunteerInvitations.usedAt),
         isNull(eventVolunteerInvitations.withdrawnAt),
-        gt(eventVolunteerInvitations.expiresAt, now),
       ),
     )
     .returning({ id: eventVolunteerInvitations.id });
@@ -67,21 +75,28 @@ export async function readVolunteerInvitationLink<T extends Record<string, unkno
 ): Promise<InvitationLinkRead> {
   if (secret === null || secret === undefined || secret === "") return { reading: null, invitation: null };
   if (!isWellFormedTokenSecret(secret)) return { reading: { standing: "invalid" }, invitation: null };
-  const [row] = await db.select().from(eventVolunteerInvitations).where(eq(eventVolunteerInvitations.tokenHash, hashTokenSecret(secret))).limit(1);
-  if (!row || row.eventId !== eventId) return { reading: { standing: "invalid" }, invitation: null };
-  return { reading: { standing: invitationStandingOf(row, now) }, invitation: row };
+  const [found] = await db
+    .select({ invitation: eventVolunteerInvitations, eventStatus: events.eventStatus, startsAt: events.startsAt, endsAt: events.endsAt })
+    .from(eventVolunteerInvitations)
+    .innerJoin(events, eq(events.id, eventVolunteerInvitations.eventId))
+    .where(eq(eventVolunteerInvitations.tokenHash, hashTokenSecret(secret)))
+    .limit(1);
+  if (!found || found.invitation.eventId !== eventId) return { reading: { standing: "invalid" }, invitation: null };
+  return { reading: { standing: invitationStandingOf(found.invitation, volunteerEventAhead(found, now)) }, invitation: found.invitation };
 }
 
 /**
  * Spends the link in the sign-up's own transaction: `used_at` and the volunteer it became, by one UPDATE that asks the invitation
  * open again (not used, not withdrawn, before its date) — so a link withdrawn between the page and the press, or pressed twice at
- * once, spends nowhere. Returns false when nothing was spent; the caller then rolls the sign-up back. One audit row, no actor: the
+ * once, spends nowhere — nor for an event called off or over (asked now, §NNN). Returns false when nothing was spent; the caller then rolls the sign-up back. One audit row, no actor: the
  * person, from the link (the invitation's and the volunteer's ids, never an address).
  */
 export async function spendVolunteerInvitation<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   input: { invitationId: string; eventId: string; volunteerId: string; now: Date },
 ): Promise<boolean> {
+  const [event] = await tx.select({ eventStatus: events.eventStatus, startsAt: events.startsAt, endsAt: events.endsAt }).from(events).where(eq(events.id, input.eventId)).limit(1);
+  if (!event || !volunteerEventAhead(event, input.now)) return false;
   const [row] = await tx
     .update(eventVolunteerInvitations)
     .set({ usedAt: input.now, volunteerId: input.volunteerId })
@@ -90,7 +105,6 @@ export async function spendVolunteerInvitation<T extends Record<string, unknown>
         eq(eventVolunteerInvitations.id, input.invitationId),
         isNull(eventVolunteerInvitations.usedAt),
         isNull(eventVolunteerInvitations.withdrawnAt),
-        gt(eventVolunteerInvitations.expiresAt, input.now),
       ),
     )
     .returning({ id: eventVolunteerInvitations.id });

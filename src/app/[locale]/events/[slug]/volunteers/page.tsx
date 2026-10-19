@@ -108,15 +108,19 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
   // No link in the address, no read: an ordinary visit costs the database nothing more than it did.
   const noLink = { reading: null, invitation: null } as const;
   const link = inviteSecret ? await readOrWhileAway(() => readVolunteerInvitationLink(getDb(), event.id, inviteSecret, now), noLink) : noLink;
-  const viewer = outcome !== "done" && link.reading === null && offer.access === "MEMBERS" ? await membersViewer() : null;
-  const door = outcome === "done" ? ({ kind: "open" } as const) : volunteerDoorFor({ access: offer.access, member: viewer !== null, invite: link.reading });
-  // By invitation, without a link: the page does not exist for this visitor, as a draft's does not.
+  // A live link is the door by itself; any other reading (none, spent, withdrawn, run out) leaves the choice's own door, which only the members' choice asks the session about.
+  const viewer = outcome !== "done" && link.reading?.standing !== "open" && offer.access === "MEMBERS" ? await membersViewer() : null;
+  // …and, on the thank-you only, what the send kept for it (§800): the first name and the address typed.
+  const sent = outcome === "done" ? await readSubmittedFacts() : null;
+  // The thank-you is the browser's own: a by-invitation event answers `?volunteer=1` with a 404 unless the send's sealed facts came with it.
+  const door = outcome === "done" && (offer.access !== "INVITED" || sent !== null) ? ({ kind: "open" } as const) : volunteerDoorFor({ access: offer.access, member: viewer !== null, invite: link.reading });
+  // By invitation, without a link (or with one that names none): the page does not exist for this visitor, as a draft's does not.
   if (door.kind === "closed") notFound();
 
   // What was typed before a refusal (§142), read only when the page is the answer to one.
   const typed: VolunteerTyped = outcome !== null && outcome !== "done" ? ((await readFormDraft()) ?? {}) : {};
-  // …and, on the thank-you only, what the send kept for it (§800): the first name and the address typed.
-  const sent = outcome === "done" ? await readSubmittedFacts() : null;
+  // A link that no longer works says which, in a sentence above the door the choice gives anyway (`volunteerDoorFor`).
+  const refusedLink = door.kind === "inviteRefused" ? door.reason : "refused" in door ? door.refused : undefined;
   const t = await getTranslations("Event");
   const eventHref = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
   // The date and the place in one short line, in the event's own zone and the page's language (§349); a start to be announced says none (§533).
@@ -144,23 +148,23 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
           {line}
         </Typography>
       )}
+      {refusedLink && (
+        <Alert severity="warning" role="status" sx={{ mb: 2 }} data-testid="volunteers-invite-refused" data-reason={refusedLink}>
+          {t(`volunteers.page.invite.${refusedLink}`)}
+        </Alert>
+      )}
       {door.kind === "signIn" && (
         <Stack spacing={2} sx={{ alignItems: "flex-start" }} data-testid="volunteers-members-only">
           <Alert severity="info" role="note" sx={{ alignSelf: "stretch" }}>
             {t("volunteers.page.membersOnly")}
           </Alert>
           {env.STAFF_AUTH_MODE !== "disabled" && (
-            <ButtonLink href={{ pathname: "/sign-in", query: { to: "members" } }} variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="volunteers-sign-in">
+            <ButtonLink href={{ pathname: "/sign-in", query: { to: "members", back: "volunteers", slug } }} variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="volunteers-sign-in">
               <LoginIcon aria-hidden="true" sx={glyphSx("medium")} />
               {t("volunteers.page.signIn")}
             </ButtonLink>
           )}
         </Stack>
-      )}
-      {door.kind === "inviteRefused" && (
-        <Alert severity="warning" role="status" data-testid="volunteers-invite-refused" data-reason={door.reason}>
-          {t(`volunteers.page.invite.${door.reason}`)}
-        </Alert>
       )}
       {(door.kind === "open" || door.kind === "member" || door.kind === "invite") && (
       <VolunteerBox

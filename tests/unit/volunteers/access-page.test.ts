@@ -24,6 +24,8 @@ const state = vi.hoisted(() => ({
   linkReads: 0,
   locale: "ro" as "ro" | "en",
   authMode: "provider" as "provider" | "disabled",
+  /** What the send's sealed cookie holds for the thank-you (null: this browser sent nothing). */
+  sent: null as null | { email: string; firstName: string },
 }));
 
 const EVENT = {
@@ -78,7 +80,7 @@ vi.mock("@/shared/config/env", async (importOriginal) => {
   return { ...actual, env: new Proxy(actual.env, { get: (target, key) => (key === "STAFF_AUTH_MODE" ? state.authMode : Reflect.get(target, key)) }) };
 });
 vi.mock("@/modules/resilience/event-copy", () => ({ formEventBySlug: async () => EVENT }));
-vi.mock("@/modules/registrations/form-draft", () => ({ readSubmittedFacts: async () => null, readFormDraft: async () => null }));
+vi.mock("@/modules/registrations/form-draft", () => ({ readSubmittedFacts: async () => state.sent, readFormDraft: async () => null }));
 vi.mock("@/modules/events/members-only", () => ({
   membersViewer: async () => {
     state.viewerReads += 1;
@@ -122,6 +124,7 @@ beforeEach(() => {
   state.linkReads = 0;
   state.locale = "ro";
   state.authMode = "provider";
+  state.sent = null;
 });
 
 async function visit(search: Record<string, string> = {}, locale: "ro" | "en" = "ro"): Promise<string | null> {
@@ -160,7 +163,7 @@ describe("§NNN «Doar membrii clubului»", () => {
     expect(page).toContain("Vreau să fiu voluntar la Crosul de toamnă");
     expect(page).toContain('data-testid="volunteers-sign-in"');
     expect(page).toContain("Intră în zona membrilor");
-    expect(JSON.parse(/data-href="([^"]*)"/.exec(page)?.[1]?.replace(/&quot;/g, '"') ?? "null")).toEqual({ pathname: "/sign-in", query: { to: "members" } });
+    expect(JSON.parse(/data-href="([^"]*)"/.exec(page)?.[1]?.replace(/&quot;/g, '"') ?? "null")).toEqual({ pathname: "/sign-in", query: { to: "members", back: "volunteers", slug: "crosul" } });
     expect(state.viewerReads).toBe(1);
     const english = (await visit({}, "en")) ?? "";
     expect(english).toContain("The volunteers for this event are the club&#x27;s members — sign in to the members&#x27; zone.");
@@ -208,7 +211,6 @@ describe("§NNN «Doar cu invitație de la club»", () => {
     ["used", "Invitația asta a fost deja folosită.", "This invitation has already been used."],
     ["withdrawn", "Clubul a retras invitația.", "The club withdrew this invitation."],
     ["expired", "Invitația a expirat.", "This invitation has expired."],
-    ["invalid", "Linkul invitației nu merge. Cere clubului o invitație nouă.", "This invitation link does not work. Ask the club for a new one."],
   ])("says in a sentence, and draws no form, when the link is %s", async (standing, romanian, english) => {
     choose("INVITED");
     state.link = { reading: { standing }, invitation: null };
@@ -220,19 +222,43 @@ describe("§NNN «Doar cu invitație de la club»", () => {
     expect((await visit({ invite: SECRET }, "en")) ?? "").toContain(english);
   });
 
-  it("says a spent link was spent under any choice — a member who reuses it, a stranger on an open event", async () => {
-    state.link = { reading: { standing: "used" }, invitation: null };
-    for (const access of ["ANYONE", "MEMBERS"] as const) {
-      choose(access);
-      expect((await visit({ invite: SECRET })) ?? "").toContain("Invitația asta a fost deja folosită.");
-    }
+  it("answers 404, as no link does, to a link that names no invitation — the page does not confirm that a made-up secret is wrong", async () => {
+    choose("INVITED");
+    state.link = { reading: { standing: "invalid" }, invitation: null };
+    expect(await visit({ invite: SECRET })).toBeNull();
+    expect(await visit({ invite: SECRET }, "en")).toBeNull();
   });
 
-  it("shows the thank-you after a send to whoever the redirect brought back — the link is spent and the address carries none", async () => {
+  it("says a spent link was spent under any choice, and does not shut the door the choice opens: the form (or the sign-in) is drawn under the sentence", async () => {
+    state.link = { reading: { standing: "used" }, invitation: null };
+    choose("ANYONE");
+    const open = (await visit({ invite: SECRET })) ?? "";
+    expect(open).toContain("Invitația asta a fost deja folosită.");
+    expect(open).toContain(`data-reason="used"`);
+    expect(boxOf(open)).toMatchObject({ lock: null, roles: ["r1"] });
+    choose("MEMBERS");
+    const stranger = (await visit({ invite: SECRET })) ?? "";
+    expect(stranger).toContain("Invitația asta a fost deja folosită.");
+    expect(stranger).toContain('data-testid="volunteers-sign-in"');
+    expect(stranger).not.toContain('data-testid="volunteer-box"');
+    state.viewer = { email: "membru@example.test", displayName: "Maria Membra" };
+    const member = (await visit({ invite: SECRET })) ?? "";
+    expect(member).toContain("Invitația asta a fost deja folosită.");
+    expect(boxOf(member)).toMatchObject({ lock: { kind: "member", email: "membru@example.test" } });
+    // A link that names nothing says nothing where the form needed none.
+    state.link = { reading: { standing: "invalid" }, invitation: null };
+    expect((await visit({ invite: SECRET })) ?? "").not.toContain("volunteers-invite-refused");
+  });
+
+  it("shows the thank-you after a send only to the browser that sent: the link is spent and the address carries none, and a bare `?volunteer=1` is a 404", async () => {
     choose("INVITED");
+    // Nobody sent anything from this browser: a typed-in `?volunteer=1` is no thank-you, and does not show that the event exists.
+    expect(await visit({ volunteer: "1" })).toBeNull();
+    state.sent = { email: "ioana@example.test", firstName: "Ioana" };
     const page = (await visit({ volunteer: "1" })) ?? "";
     expect(boxOf(page)).toMatchObject({ outcome: "done", lock: null });
     expect(state.linkReads).toBe(0);
+    state.sent = null;
     // …and the form is drawn again after a refusal only with its link in the address.
     expect(await visit({ volunteer: "invalid" })).toBeNull();
     state.link = { reading: { standing: "open" }, invitation: { deliveryEmail: "ioana@example.test" } };

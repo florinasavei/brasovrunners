@@ -13,7 +13,9 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import Panel from "@/shared/ui/Panel";
 import RadioField from "@/shared/ui/RadioField";
 import StatusChip from "@/shared/ui/StatusChip";
@@ -42,26 +44,29 @@ const STANDING_CHIP: Record<VolunteerInvitationStanding, { glyph: StatusGlyphNam
  * action and the service. A Server Component of plain forms; the addresses are drawn here and on no public page.
  *
  * REUSE: `Panel` (the fold), `ActionForm` + `RecallField` (a refusal keeps what was typed, §315), `RadioField` (the language, a choice),
- * `GlyphSubmitButton` (a glyph before every verb), `StatusChip` (a standing in words and glyph), `confirmWords` (the dialogs).
+ * `GlyphSubmitButton` (a glyph before every verb), `StatusChip` (a standing in words and glyph), `confirmWords` (the dialogs), and for the
+ * club's line `LocaleTabPanels` with `RecallField` and «Tradu din română» — the line is in both languages or neither (§354), as the email
+ * has a half in each (§96).
  */
 export default async function VolunteerInvitations({
   locale,
   eventId,
   access,
   invitations,
-  now,
+  eventAhead,
 }: {
   locale: Locale;
   eventId: string;
   access: VolunteersAccess;
   invitations: readonly VolunteerInvitationItem[];
-  now: Date;
+  /** Whether the event is still ahead (`volunteerEventAhead`): a link works while it is, whatever deadline was recorded at the send. */
+  eventAhead: boolean;
 }) {
   const t = await getTranslations("Admin");
   const dialog = await confirmWords();
-  const messages = await refusalMessages({ addresses: t("volunteers.invite.addresses"), message: t("volunteers.invite.message") });
+  const messages = await refusalMessages({ addresses: t("volunteers.invite.addresses"), messageRo: t("volunteers.invite.messageRo"), messageEn: t("volunteers.invite.messageEn") });
   const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
-  const rows = invitations.map((invitation) => ({ invitation, standing: invitationStandingOf(invitation, now) }));
+  const rows = invitations.map((invitation) => ({ invitation, standing: invitationStandingOf(invitation, eventAhead) }));
   const open = rows.filter((row) => row.standing === "open").length;
   const used = rows.filter((row) => row.standing === "used").length;
   const hidden = (
@@ -101,15 +106,35 @@ export default async function VolunteerInvitations({
                 autoComplete="off"
                 slotProps={{ htmlInput: { spellCheck: false, autoCapitalize: "none", inputMode: "email" } }}
               />
-              <RecallField
-                name="message"
-                label={t("volunteers.invite.message")}
-                helperText={t("volunteers.invite.messageHelp", { max: String(VOLUNTEER_INVITATION_MESSAGE_MAX) })}
-                multiline
-                minRows={2}
-                fullWidth
-                slotProps={{ htmlInput: { maxLength: VOLUNTEER_INVITATION_MESSAGE_MAX } }}
-              />
+              {/* The club's line, in both languages or neither (§354): each half of the email says its own, never the other's. */}
+              <Stack spacing={0.5} data-testid="volunteer-invite-message">
+                <LocaleTabPanels
+                  idPrefix="volunteer-invite-message"
+                  watch={{ names: ["message{Locale}"], rule: "parity" }}
+                  markLabel={t("editor.tabIncomplete")}
+                  panels={(["ro", "en"] as const).map((language) => ({
+                    locale: language,
+                    label: t(language === "ro" ? "volunteers.invite.localeRo" : "volunteers.invite.localeEn"),
+                    content: (
+                      <Stack spacing={1} sx={{ pt: 0.5 }}>
+                        <RecallField
+                          name={language === "ro" ? "messageRo" : "messageEn"}
+                          label={t(language === "ro" ? "volunteers.invite.messageRo" : "volunteers.invite.messageEn")}
+                          multiline
+                          minRows={2}
+                          fullWidth
+                          slotProps={{ htmlInput: { maxLength: VOLUNTEER_INVITATION_MESSAGE_MAX, lang: language } }}
+                        />
+                        {/* «Tradu din română» (§464): the English line from the Romanian one. */}
+                        {language === "en" && <TranslateFieldButton en="messageEn" />}
+                      </Stack>
+                    ),
+                  }))}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+                  {t("volunteers.invite.messageHelp", { max: String(VOLUNTEER_INVITATION_MESSAGE_MAX) })}
+                </Typography>
+              </Stack>
               <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
                 <Typography component="legend" variant="body2" sx={{ fontWeight: 600, p: 0 }}>
                   {t("volunteers.invite.language")}
@@ -162,7 +187,6 @@ export default async function VolunteerInvitations({
                       {invitation.resentAt ? ` · ${t("volunteers.invite.resentAt", { at: day(invitation.resentAt) })}` : ""}
                       {invitation.usedAt ? ` · ${t("volunteers.invite.usedAt", { at: day(invitation.usedAt) })}` : ""}
                       {invitation.withdrawnAt && !invitation.usedAt ? ` · ${t("volunteers.invite.withdrawnAt", { at: day(invitation.withdrawnAt) })}` : ""}
-                      {standing === "expired" ? ` · ${t("volunteers.invite.expiredAt", { at: day(invitation.expiresAt) })}` : ""}
                     </Typography>
                   </Box>
                   {standing === "open" && (

@@ -707,6 +707,8 @@ export function renderBilingual(
     // absent only for a row queued with one text, which both halves then read as before.
     ...(data.organizerNoteOther ? { organizerNote: data.organizerNoteOther } : {}),
     ...(data.cancellationReasonOther ? { cancellationReason: data.cancellationReasonOther } : {}),
+    // The club's line of an invitation to volunteer, in the second half's own language (§354): never the first half's words.
+    ...(data.volunteerInvitation ? { volunteerInvitation: { ...data.volunteerInvitation, message: data.volunteerInvitation.messageOther } } : {}),
     // A family's blocks in the second half: the words and the numbers, not the QR pictures again (§519).
     ...(data.familyConfirmed ? { familyConfirmed: data.familyConfirmed.map((person) => ({ ...person, qrUrl: undefined })) } : {}),
     // The organizer's message (§364): its own subject and body in the second half's language.
@@ -1041,10 +1043,11 @@ export type TemplateData = {
     contacts?: { name: string | null; phone: string | null; email: string | null; categoryRo?: string; categoryEn?: string }[];
   };
   /**
-   * The club's invitation to volunteer (§NNN): the club's own line to the person (plain text, at most 500 characters), and the roles
+   * The club's invitation to volunteer (§NNN): the club's own line to the person (plain text, at most 500 characters) in the first
+   * half's language (`message`) and the second half's (`messageOther`, §354 — each half reads its own, or both are null), and the roles
    * the event still needs people for, in each language. The link is the message's button; the address is the recipient's, never a name.
    */
-  volunteerInvitation?: { message: string | null; rolesRo: string[]; rolesEn: string[] };
+  volunteerInvitation?: { message: string | null; messageOther: string | null; rolesRo: string[]; rolesEn: string[] };
   /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
@@ -2459,7 +2462,7 @@ const T = {
       `Primești acest mesaj de la ${club} pentru că cineva te-a trecut ca părinte sau tutore al unui voluntar sub 18 ani la un eveniment al clubului. Cum folosim datele tale:`,
     /** The club's invitation to volunteer (§NNN): the club typed the address to send it; nobody asked yet. */
     privacyFooterVolunteerInvitation: (club: string) =>
-      `Primești acest mesaj pentru că ${club} ți-a trecut adresa ca să te invite voluntar la un eveniment. Cum folosim datele tale:`,
+      `Primești acest mesaj de la ${club} pentru că ți-a trecut adresa ca să te invite voluntar la unul dintre evenimentele sale. Cum folosim datele tale:`,
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */
     privacyFooterDeclaration: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai semnat o declarație pe site-ul clubului. Cum folosim datele tale:`,
@@ -3222,7 +3225,7 @@ const T = {
     privacyFooterGuardian: (club: string) =>
       `This message comes from ${club} because someone named you as the parent or guardian of a volunteer under 18 at one of the club's events. How we use your data:`,
     privacyFooterVolunteerInvitation: (club: string) =>
-      `This message comes because ${club} entered your address to invite you to volunteer at an event. How we use your data:`,
+      `This message comes from ${club} because it entered your address to invite you to volunteer at one of its events. How we use your data:`,
     privacyFooterDeclaration: (club: string) => `This message comes from ${club} because you signed a declaration on the club's website. How we use your data:`,
     privacyFooterNewsletter: (club: string) =>
       `This message comes from ${club} because you asked for the club's news at this address. Unsubscribe at any time from the link above. How we use your data:`,

@@ -1,5 +1,5 @@
 {
-  "id": "9c2cb752-44d2-4a97-a003-67995b40411a",
+  "id": "68e26c1b-0463-4908-8c6a-bb1a2fa69e60",
   "prevId": "e0b65fce-045f-451f-945d-5c1cf2f2d962",
   "version": "7",
   "dialect": "postgresql",
@@ -2301,8 +2301,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "message": {
-          "name": "message",
+        "message_ro": {
+          "name": "message_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "message_en": {
+          "name": "message_en",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -2465,7 +2471,15 @@
       "checkConstraints": {
         "event_volunteer_invitations_message_length": {
           "name": "event_volunteer_invitations_message_length",
-          "value": "\"event_volunteer_invitations\".\"message\" IS NULL OR char_length(\"event_volunteer_invitations\".\"message\") BETWEEN 1 AND 500"
+          "value": "\"event_volunteer_invitations\".\"message_ro\" IS NULL OR char_length(\"event_volunteer_invitations\".\"message_ro\") BETWEEN 1 AND 500"
+        },
+        "event_volunteer_invitations_message_en_length": {
+          "name": "event_volunteer_invitations_message_en_length",
+          "value": "\"event_volunteer_invitations\".\"message_en\" IS NULL OR char_length(\"event_volunteer_invitations\".\"message_en\") BETWEEN 1 AND 500"
+        },
+        "event_volunteer_invitations_message_both_languages": {
+          "name": "event_volunteer_invitations_message_both_languages",
+          "value": "(\"event_volunteer_invitations\".\"message_ro\" IS NULL) = (\"event_volunteer_invitations\".\"message_en\" IS NULL)"
         },
         "event_volunteer_invitations_used_has_moment": {
           "name": "event_volunteer_invitations_used_has_moment",

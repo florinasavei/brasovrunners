@@ -638,8 +638,7 @@
         "invite": {
           "used": "Invitația asta a fost deja folosită.",
           "withdrawn": "Clubul a retras invitația.",
-          "expired": "Invitația a expirat.",
-          "invalid": "Linkul invitației nu merge. Cere clubului o invitație nouă."
+          "expired": "Invitația a expirat."
         }
       },
       "callout": {
@@ -647,8 +646,8 @@
         "lineMembers": "Căutăm voluntari dintre membrii clubului: {roles}"
       },
       "lock": {
-        "leadMember": "Ești conectat ca membru: numele și adresa vin din contul tău.",
-        "leadInvite": "Clubul te-a invitat să fii voluntar. Adresa este cea la care a ajuns invitația.",
+        "leadMember": "Ești conectat ca membru: numele, adresa și bifa de membru vin din contul tău.",
+        "leadInvite": "Clubul te-a invitat să fii voluntar.",
         "emailMember": "Adresa contului tău de membru; nu se schimbă aici.",
         "emailInvite": "Adresa la care a ajuns invitația; nu se schimbă aici."
       },
@@ -2143,12 +2142,13 @@
       "MEMBER_TIER_HAS_MEMBERS": "Nivelul nu s-a șters. Membri cu acest nivel: {count}. Dă-le alt nivel întâi, în „Echipa”.",
       "MEMBER_TIER_IN_CODES": "Nivelul nu s-a șters. Coduri de reducere doar pentru el: {count}. Schimbă-le nivelurile întâi.",
       "VINVITE_NOBODY": "Scrie cel puțin o adresă.",
-      "VINVITE_TOO_MANY": "Cel mult 50 de adrese odată. Trimite restul într-o a doua rundă.",
+      "VINVITE_TOO_MANY": "Cel mult {max} de adrese odată. Trimite restul într-o a doua rundă.",
       "VINVITE_BAD_ADDRESS": "Nu pot citi aceste adrese: {addresses}. Nu s-a trimis nimic.",
-      "VINVITE_MESSAGE_LONG": "Mesajul are prea multe caractere (cel mult 500).",
+      "VINVITE_MESSAGE_LONG": "Mesajul are prea multe caractere (cel mult {max}).",
+      "VINVITE_MESSAGE_ONE_LANGUAGE": "Scrie mesajul și în română, și în engleză, sau lasă ambele casete goale.",
       "VINVITE_NOT_INVITED_ONLY": "Invitațiile se trimit doar cât „Cine se poate oferi” e „Doar cu invitație de la club”.",
       "VINVITE_EVENT_CLOSED": "Nu se pot trimite invitații acum: formularul de voluntari nu e deschis. Motivul e scris mai sus.",
-      "VINVITE_NOT_OPEN": "Invitația nu mai e deschisă: a fost folosită, retrasă sau a expirat.",
+      "VINVITE_NOT_OPEN": "Invitația nu mai e deschisă: a fost folosită sau retrasă, ori evenimentul s-a terminat sau a fost anulat.",
       "VINVITE_NOT_FOUND": "Invitația nu mai există."
     },
     "editor": {
@@ -5341,17 +5341,19 @@
         "INVITED": "Doar cu invitație de la club",
         "INVITEDHelp": "Pagina evenimentului nu spune nimic de voluntari. Formularul se deschide doar din linkul unei invitații trimise pe email.",
         "save": "Salvează",
-        "saving": "Se salvează…"
+        "saving": "Se salvează…",
+        "scope": "Alegerea e doar pentru această dată: celelalte date ale unei serii își păstrează alegerea lor."
       },
       "invite": {
         "title": "Invitații",
-        "summary": "Deschise: {open} · Folosite: {used}",
+        "summary": "Trimise: {open} · Folosite: {used}",
         "intro": "Scrie adresele celor pe care îi inviți. Fiecare primește un email cu un link personal către pagina voluntarilor. O invitație nu ține nimic ocupat.",
         "notInvitedOnly": "Invitațiile se trimit doar cât „Cine se poate oferi” e „Doar cu invitație de la club”. Cele trimise rămân valabile până se folosesc.",
         "addresses": "Adrese (una pe rând)",
         "addressesHelp": "Cel mult {max} odată. Cine are deja o invitație sau s-a oferit deja e sărit.",
-        "message": "Mesaj (opțional)",
-        "messageHelp": "Apare în email, așa cum l-ai scris. Cel mult {max} de caractere.",
+        "messageRo": "Mesaj (română)",
+        "messageEn": "Message (English)",
+        "messageHelp": "Opțional. Apare în email așa cum l-ai scris, fiecare jumătate în limba ei: scrie-l în ambele limbi sau în niciuna. Cel mult {max} de caractere.",
         "language": "Limba invitației",
         "localeRo": "Română",
         "localeEn": "English",
@@ -5369,7 +5371,6 @@
         "resentAt": "retrimisă {at}",
         "usedAt": "folosită {at}",
         "withdrawnAt": "retrasă {at}",
-        "expiredAt": "a expirat {at}",
         "resend": "Retrimite",
         "resending": "Se retrimite…",
         "resendTitle": "Retrimiți invitația?",
@@ -6335,7 +6336,18 @@
       "rsvpsErase": "Șterge răspunsurile „Vin!” și browserele",
       "rsvpsEraseTitle": "Ștergi răspunsurile „Vin!” ale acestei persoane?",
       "rsvpsEraseBody": "Se șterg răspunsurile „Vin!” și browserele recunoscute pentru această adresă, nu și înscrierile. Ștergerea nu se poate anula.",
-      "rsvpsErased": "Răspunsurile „Vin!” și browserele recunoscute ale acestei adrese au fost șterse."
+      "rsvpsErased": "Răspunsurile „Vin!” și browserele recunoscute ale acestei adrese au fost șterse.",
+      "volunteerInvitations": "Invitații de voluntariat ({count})",
+      "volunteerInvitationSent": "trimisă {when}",
+      "volunteerInvitationResent": "retrimisă {when}",
+      "volunteerInvitationUsed": "folosită {when}",
+      "volunteerInvitationWithdrawn": "retrasă {when}",
+      "volunteerInvitationUntil": "înregistrată până {when}",
+      "volunteerInvitationLine": "mesajul clubului: „{ro}” / „{en}”",
+      "volunteerInvitationsErase": "Șterge invitațiile de voluntariat",
+      "volunteerInvitationsEraseTitle": "Ștergi invitațiile de voluntariat ale acestei persoane?",
+      "volunteerInvitationsEraseBody": "Se șterg invitațiile trimise acestei adrese, cu mesajul clubului. Ofertele de voluntar și înscrierile rămân. Ștergerea nu se poate anula.",
+      "volunteerInvitationsErased": "Invitațiile de voluntariat ale acestei adrese au fost șterse."
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
@@ -6552,7 +6564,7 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Când un voluntar acceptă contractul din link sau un organizator apasă „Semnat pe hârtie”: copia lui, cu contractul atașat ca PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "Când organizatorii îi dau unui voluntar un rol, din cardul «Voluntari» al evenimentului: un mesaj scurt care numește rolul, data și locul. Nimic de apăsat.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Când un voluntar sub 18 ani se oferă, sau un organizator apasă „Trimite linkul părintelui”: contractul și linkul prin care părintele îl acceptă în nume propriu.",
-        "VOLUNTEER_INVITATION": "Când Organizatorul sau un administrator trimite invitații din cardul „Voluntari” al unui eveniment cu voluntari doar pe invitație, și la „Retrimite”. Un link personal spre pagina voluntarilor.",
+        "VOLUNTEER_INVITATION": "Când un organizator sau un administrator trimite invitații din cardul «Voluntari» al unui eveniment cu voluntari doar pe invitație, și la „Retrimite”. Un link personal spre pagina voluntarilor.",
         "RSVP_CONFIRM": "Când cineva scrie o adresă la „Vin!” pe pagina unui eveniment: butonul „Da, vin”, care îl numără, și dedesubt „Nu vin”. La „Nu mai vin” de pe pagină pleacă același mesaj, doar cu linkul de retragere.",
         "RSVP_ASK": "Ziua dinainte, de la ora {askHour}: abonaților temei „Întrebarea «Vii?» înaintea alergărilor” și celor de la „Toate noutățile”, cu „Vin” (îi numără) și „Nu vin”. Cine a răspuns nu mai primește."
       },
@@ -8740,8 +8752,8 @@
           "other": "{count} de imagini sau fișiere"
         },
         "series": "Evenimentul era o dată dintr-o serie sau sursa ei. Regula seriei nu se aplică: copia e o singură dată; seria o pornești tu, din editor.",
-        "volunteers": "Fișierul poartă categoriile și rolurile de voluntari ale evenimentului, cu persoanele lor de contact. „Ca eveniment nou” le scrie în noua ciornă.",
-        "volunteersOver": "Fișierul poartă categorii și roluri de voluntari. Un import peste un eveniment existent nu le scrie: ele rămân cum sunt aici."
+        "volunteers": "Fișierul poartă categoriile și rolurile de voluntari ale evenimentului, cu persoanele lor de contact, și alegerea „Cine se poate oferi”. „Ca eveniment nou” le scrie în noua ciornă.",
+        "volunteersOver": "Fișierul poartă categorii, roluri de voluntari sau alegerea „Cine se poate oferi”. Un import peste un eveniment existent nu le scrie: ele rămân cum sunt aici."
       },
       "mode": {
         "heading": "Ce vrei să faci cu el?"

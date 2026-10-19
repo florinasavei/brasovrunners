@@ -1,4 +1,4 @@
-import { and, asc, count, eq, gt, inArray, notInArray, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, notInArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { z } from "zod";
 import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
@@ -1705,10 +1705,19 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     const summary = { id: current.id };
 
     if (request.kind === "delete") {
+      // The club's invitation to that person for this event (§NNN): deleting a person leaves no address of theirs behind. Found by the address
+      // as it stands and by the sign-up it became (`volunteer_id`), so an address a colleague corrected since (`STAFF_FIELDS`) does not leave the
+      // originally invited one behind. Before the volunteer goes, while `volunteer_id` still points at it (the foreign key then sets it null).
+      await tx
+        .delete(eventVolunteerInvitations)
+        .where(
+          and(
+            eq(eventVolunteerInvitations.eventId, current.eventId),
+            or(eq(eventVolunteerInvitations.canonicalEmail, current.canonicalEmail), eq(eventVolunteerInvitations.volunteerId, current.id)),
+          ),
+        );
       // The person's choices go with them (CASCADE).
       await tx.delete(eventVolunteers).where(eq(eventVolunteers.id, current.id));
-      // …and the club's invitation to that address for this event (§NNN): deleting a person leaves no address of theirs behind.
-      await tx.delete(eventVolunteerInvitations).where(and(eq(eventVolunteerInvitations.eventId, current.eventId), eq(eventVolunteerInvitations.canonicalEmail, current.canonicalEmail)));
       await audit("volunteer.deleted", { volunteerId: current.id, roleId: current.roleId, state: current.state });
       return { changed: true, volunteer: summary };
     }
@@ -2015,9 +2024,14 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   if (credentials.inviteSecret) {
     const link = await readVolunteerInvitationLink(db, eventId, credentials.inviteSecret, now);
     if (!link.invitation || link.reading === null || link.reading.standing !== "open") {
-      return { outcome: "invitation", reason: link.reading === null || link.reading.standing === "open" ? "invalid" : link.reading.standing };
+      // A link that no longer works shuts nothing the choice opens anyway (`volunteerDoorFor`): under «Oricine», or for a member under «Doar membrii
+      // clubului», the post goes on as if it had come without one; only a door that needed the link says so.
+      if (!mayVolunteerWith({ access: event.volunteersAccess, member: credentials.member != null, invite: false })) {
+        return { outcome: "invitation", reason: link.reading === null || link.reading.standing === "open" ? "invalid" : link.reading.standing };
+      }
+    } else {
+      invitation = link.invitation;
     }
-    invitation = link.invitation;
   }
   const member = credentials.member ?? null;
   if (!mayVolunteerWith({ access: event.volunteersAccess, member: member !== null, invite: invitation !== null })) {

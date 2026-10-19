@@ -20,7 +20,7 @@ const data = {
   eventTitleOther: "The cross",
   eventStartsAtFormatted: "sâmbătă, 21 nov. 2026, 10:00",
   eventStartsAtFormattedOther: "Saturday, 21 Nov 2026, 10:00",
-  volunteerInvitation: { message: "Ne bucurăm să te vedem!", rolesRo: ["Punct de apă", "Sosire (Start / Sosire)"], rolesEn: ["Water point", "Finish (Start / Finish)"] },
+  volunteerInvitation: { message: "Ne bucurăm să te vedem!", messageOther: "We are glad to see you!", rolesRo: ["Punct de apă", "Sosire (Start / Sosire)"], rolesEn: ["Water point", "Finish (Start / Finish)"] },
 };
 const LINK = "https://example.test/ro/evenimente/crosul/voluntari?invite=SECRET";
 
@@ -42,12 +42,26 @@ describe("§NNN the VOLUNTEER_INVITATION email", () => {
       "I want to volunteer",
       "The invitation is yours alone, and the link works once.",
       "ignore it",
+      "We are glad to see you!",
     ]) {
       expect(email.text, words).toContain(words);
     }
     expect(email.text).toContain(LINK);
     // The event's facts block rides with it (§392): when, where and what, from the one function every such message uses.
     expect(email.text).toContain("sâmbătă, 21 nov. 2026, 10:00");
+  });
+
+  it("says the club's line in each half's own language — the Romanian words in the Romanian half only, the English in the English (§354)", () => {
+    const email = renderBilingual("VOLUNTEER_INVITATION", "ro", data, LINK);
+    // Each label is followed by its own language's line, and neither line follows the other language's label.
+    expect(email.text).toMatch(/Mesajul clubului:\s*Ne bucurăm să te vedem!/);
+    expect(email.text).toMatch(/A message from the club:\s*We are glad to see you!/);
+    expect(email.text).not.toMatch(/A message from the club:\s*Ne bucurăm/);
+    expect(email.text).not.toMatch(/Mesajul clubului:\s*We are glad/);
+    // The English first half is the mirror: the message's language is the first half's.
+    const mirrored = renderBilingual("VOLUNTEER_INVITATION", "en", { ...data, volunteerInvitation: { ...data.volunteerInvitation, message: "We are glad to see you!", messageOther: "Ne bucurăm să te vedem!" } }, LINK);
+    expect(mirrored.text).toMatch(/A message from the club:\s*We are glad to see you!/);
+    expect(mirrored.text).toMatch(/Mesajul clubului:\s*Ne bucurăm să te vedem!/);
   });
 
   it("greets nobody by name — the club knows an address, not a person — and carries no registration's links", () => {
@@ -59,7 +73,7 @@ describe("§NNN the VOLUNTEER_INVITATION email", () => {
   });
 
   it("is written without the club's line or the roles when there are none, and says so in no empty sentence", () => {
-    const bare = renderBilingual("VOLUNTEER_INVITATION", "ro", { ...data, volunteerInvitation: { message: null, rolesRo: [], rolesEn: [] } }, LINK);
+    const bare = renderBilingual("VOLUNTEER_INVITATION", "ro", { ...data, volunteerInvitation: { message: null, messageOther: null, rolesRo: [], rolesEn: [] } }, LINK);
     expect(bare.text).not.toContain("Mesajul clubului:");
     expect(bare.text).not.toContain("Căutăm oameni pentru");
     expect(bare.text).toContain("Mă ofer voluntar");
@@ -73,8 +87,8 @@ describe("§NNN the VOLUNTEER_INVITATION email", () => {
 
   it("says in the privacy line why a person who never offered received it", () => {
     const email = renderBilingual("VOLUNTEER_INVITATION", "ro", data, LINK);
-    expect(email.text).toContain("ți-a trecut adresa ca să te invite voluntar la un eveniment");
-    expect(email.text).toContain("entered your address to invite you to volunteer at an event");
+    expect(email.text).toContain("de la Brașov Runners pentru că ți-a trecut adresa ca să te invite voluntar la unul dintre evenimentele sale");
+    expect(email.text).toContain("from Brașov Runners because it entered your address to invite you to volunteer at one of its events");
   });
 
   it("takes the announcements' road, is the public's mail and no participant's, and has its words in the emails page of both languages", () => {

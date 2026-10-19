@@ -18,7 +18,6 @@ import {
  * second asking of the same rule (`mayVolunteerWith`) is held to the first (`volunteerDoorFor`) here.
  */
 const NOW = new Date("2026-10-19T10:00:00.000Z");
-const LATER = new Date(NOW.getTime() + 60_000);
 const EARLIER = new Date(NOW.getTime() - 60_000);
 
 describe("§NNN the choice", () => {
@@ -32,29 +31,44 @@ describe("§NNN the choice", () => {
 describe("§NNN the door the volunteers' page opens", () => {
   const readings: InviteReading[] = [{ standing: "open" }, { standing: "used" }, { standing: "withdrawn" }, { standing: "expired" }, { standing: "invalid" }];
 
-  it("«Oricine»: the form for everybody — a stranger, a member — until a link that no longer works says so", () => {
+  it("«Oricine»: the form for everybody — a stranger, a member — and a link that no longer works does not shut it, it says so above it", () => {
     expect(volunteerDoorFor({ access: "ANYONE", member: false, invite: null })).toEqual({ kind: "open" });
     expect(volunteerDoorFor({ access: "ANYONE", member: true, invite: null })).toEqual({ kind: "open" });
-    expect(volunteerDoorFor({ access: "ANYONE", member: false, invite: { standing: "used" } })).toEqual({ kind: "inviteRefused", reason: "used" });
+    expect(volunteerDoorFor({ access: "ANYONE", member: false, invite: { standing: "used" } })).toEqual({ kind: "open", refused: "used" });
+    // A link that names nothing has nothing to say where the form needed none.
+    expect(volunteerDoorFor({ access: "ANYONE", member: false, invite: { standing: "invalid" } })).toEqual({ kind: "open" });
   });
 
-  it("«Doar membrii»: the form for a member, a sentence and the sign-in for a stranger — never the form", () => {
+  it("«Doar membrii»: the form for a member, a sentence and the sign-in for a stranger — never the form — whatever a dead link says", () => {
     expect(volunteerDoorFor({ access: "MEMBERS", member: true, invite: null })).toEqual({ kind: "member" });
     expect(volunteerDoorFor({ access: "MEMBERS", member: false, invite: null })).toEqual({ kind: "signIn" });
+    expect(volunteerDoorFor({ access: "MEMBERS", member: true, invite: { standing: "withdrawn" } })).toEqual({ kind: "member", refused: "withdrawn" });
+    expect(volunteerDoorFor({ access: "MEMBERS", member: false, invite: { standing: "expired" } })).toEqual({ kind: "signIn", refused: "expired" });
+    expect(volunteerDoorFor({ access: "MEMBERS", member: false, invite: { standing: "invalid" } })).toEqual({ kind: "signIn" });
   });
 
-  it("«Doar cu invitație»: 404 without a link, whoever asks — a member included", () => {
+  it("«Doar cu invitație»: 404 without a link or with one that names nothing, whoever asks — a member included; a spent, withdrawn or run-out link says which", () => {
     expect(volunteerDoorFor({ access: "INVITED", member: false, invite: null })).toEqual({ kind: "closed" });
     expect(volunteerDoorFor({ access: "INVITED", member: true, invite: null })).toEqual({ kind: "closed" });
+    expect(volunteerDoorFor({ access: "INVITED", member: false, invite: { standing: "invalid" } })).toEqual({ kind: "closed" });
+    for (const reason of ["used", "withdrawn", "expired"] as const) {
+      expect(volunteerDoorFor({ access: "INVITED", member: false, invite: { standing: reason } })).toEqual({ kind: "inviteRefused", reason });
+    }
   });
 
-  it("a live invitation is a door in every choice, and one that is spent, withdrawn, run out or unknown says which, in every choice", () => {
+  it("a live invitation is a door in every choice; every other reading leaves the choice's own door, with the reason above it where there is one to give", () => {
     for (const access of VOLUNTEERS_ACCESS) {
       for (const member of [false, true]) {
         for (const reading of readings) {
           const door = volunteerDoorFor({ access, member, invite: reading });
-          if (reading?.standing === "open") expect(door).toEqual({ kind: "invite" });
-          else expect(door).toEqual({ kind: "inviteRefused", reason: reading?.standing });
+          if (reading?.standing === "open") {
+            expect(door).toEqual({ kind: "invite" });
+            continue;
+          }
+          const own = volunteerDoorFor({ access, member, invite: null });
+          const reason = reading?.standing === "invalid" ? undefined : reading?.standing;
+          if (access === "INVITED") expect(door).toEqual(reason ? { kind: "inviteRefused", reason } : own);
+          else expect(door).toEqual(reason ? { ...own, refused: reason } : own);
         }
       }
     }
@@ -74,19 +88,18 @@ describe("§NNN the door the volunteers' page opens", () => {
 });
 
 describe("§NNN where an invitation stands", () => {
-  const open = { usedAt: null, withdrawnAt: null, expiresAt: LATER };
-  it("is three stamps and a date: open, used, withdrawn, expired — used first, then withdrawn, then the date", () => {
-    expect(invitationStandingOf(open, NOW)).toBe("open");
-    expect(invitationStandingOf({ ...open, usedAt: EARLIER }, NOW)).toBe("used");
-    expect(invitationStandingOf({ ...open, withdrawnAt: EARLIER }, NOW)).toBe("withdrawn");
-    expect(invitationStandingOf({ ...open, expiresAt: EARLIER }, NOW)).toBe("expired");
-    expect(invitationStandingOf({ ...open, expiresAt: NOW }, NOW)).toBe("expired");
+  const open = { usedAt: null, withdrawnAt: null };
+  it("is two stamps and the event's own state: open, used, withdrawn, expired — used first, then withdrawn, then the event", () => {
+    expect(invitationStandingOf(open, true)).toBe("open");
+    expect(invitationStandingOf({ ...open, usedAt: EARLIER }, true)).toBe("used");
+    expect(invitationStandingOf({ ...open, withdrawnAt: EARLIER }, true)).toBe("withdrawn");
+    expect(invitationStandingOf(open, false)).toBe("expired");
     // A spent link says so even after the event, and a withdrawn one before it says it ran out.
-    expect(invitationStandingOf({ usedAt: EARLIER, withdrawnAt: EARLIER, expiresAt: EARLIER }, NOW)).toBe("used");
-    expect(invitationStandingOf({ usedAt: null, withdrawnAt: EARLIER, expiresAt: EARLIER }, NOW)).toBe("withdrawn");
+    expect(invitationStandingOf({ usedAt: EARLIER, withdrawnAt: EARLIER }, false)).toBe("used");
+    expect(invitationStandingOf({ usedAt: null, withdrawnAt: EARLIER }, false)).toBe("withdrawn");
   });
 
-  it("lasts to the event's end — its start with no end, a year for a date still to be announced", () => {
+  it("records, at the send, the event's end — its start with no end, a year for a date still to be announced (a record: the standing asks the event)", () => {
     const start = new Date("2026-11-21T08:00:00.000Z");
     const end = new Date("2026-11-21T14:00:00.000Z");
     expect(invitationExpiry({ startsAt: start, endsAt: end }, NOW)).toEqual(end);

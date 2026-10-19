@@ -638,8 +638,7 @@
         "invite": {
           "used": "This invitation has already been used.",
           "withdrawn": "The club withdrew this invitation.",
-          "expired": "This invitation has expired.",
-          "invalid": "This invitation link does not work. Ask the club for a new one."
+          "expired": "This invitation has expired."
         }
       },
       "callout": {
@@ -647,8 +646,8 @@
         "lineMembers": "We are looking for volunteers among the club's members: {roles}"
       },
       "lock": {
-        "leadMember": "You are signed in as a member: the name and the address come from your account.",
-        "leadInvite": "The club invited you to volunteer. The address is the one the invitation reached.",
+        "leadMember": "You are signed in as a member: the name, the address and the member tick come from your account.",
+        "leadInvite": "The club invited you to volunteer.",
         "emailMember": "The address of your member account; it does not change here.",
         "emailInvite": "The address the invitation reached; it does not change here."
       },
@@ -2143,12 +2142,13 @@
       "MEMBER_TIER_HAS_MEMBERS": "The level was not deleted. Members with this level: {count}. Give them another level first, on “Team”.",
       "MEMBER_TIER_IN_CODES": "The level was not deleted. Discount codes for it alone: {count}. Change their levels first.",
       "VINVITE_NOBODY": "Write at least one address.",
-      "VINVITE_TOO_MANY": "At most 50 addresses at a time. Send the rest in a second round.",
+      "VINVITE_TOO_MANY": "At most {max} addresses at a time. Send the rest in a second round.",
       "VINVITE_BAD_ADDRESS": "I cannot read these addresses: {addresses}. Nothing was sent.",
-      "VINVITE_MESSAGE_LONG": "The message is too long (at most 500 characters).",
+      "VINVITE_MESSAGE_LONG": "The message is too long (at most {max} characters).",
+      "VINVITE_MESSAGE_ONE_LANGUAGE": "Write the message in both Romanian and English, or leave both boxes empty.",
       "VINVITE_NOT_INVITED_ONLY": "Invitations are sent only while “Who can offer” is “Only by invitation from the club”.",
       "VINVITE_EVENT_CLOSED": "Invitations cannot be sent now: the volunteers' form is not open. The reason is written above.",
-      "VINVITE_NOT_OPEN": "The invitation is no longer open: it was used, withdrawn or has expired.",
+      "VINVITE_NOT_OPEN": "The invitation is no longer open: it was used or withdrawn, or the event is over or was called off.",
       "VINVITE_NOT_FOUND": "The invitation no longer exists."
     },
     "editor": {
@@ -5341,17 +5341,19 @@
         "INVITED": "Only by invitation from the club",
         "INVITEDHelp": "The event's page says nothing about volunteers. The form opens only from the link in an invitation sent by email.",
         "save": "Save",
-        "saving": "Saving…"
+        "saving": "Saving…",
+        "scope": "The choice is for this date only: the other dates of a series keep their own."
       },
       "invite": {
         "title": "Invitations",
-        "summary": "Open: {open} · Used: {used}",
+        "summary": "Sent: {open} · Used: {used}",
         "intro": "Write the addresses of the people you invite. Each gets an email with a personal link to the volunteers' page. An invitation holds nothing.",
         "notInvitedOnly": "Invitations are sent only while “Who can offer” is “Only by invitation from the club”. The ones already sent stay valid until used.",
         "addresses": "Addresses (one per line)",
         "addressesHelp": "At most {max} at a time. Anyone already invited or already offered is skipped.",
-        "message": "Message (optional)",
-        "messageHelp": "Shown in the email as you wrote it. At most {max} characters.",
+        "messageRo": "Mesaj (română)",
+        "messageEn": "Message (English)",
+        "messageHelp": "Optional. Shown in the email as you wrote it, each half in its own language: write it in both languages or in neither. At most {max} characters.",
         "language": "Language of the invitation",
         "localeRo": "Română",
         "localeEn": "English",
@@ -5369,7 +5371,6 @@
         "resentAt": "sent again {at}",
         "usedAt": "used {at}",
         "withdrawnAt": "withdrawn {at}",
-        "expiredAt": "expired {at}",
         "resend": "Send again",
         "resending": "Sending again…",
         "resendTitle": "Send the invitation again?",
@@ -6335,7 +6336,18 @@
       "rsvpsErase": "Erase the “I'm coming!” answers and browsers",
       "rsvpsEraseTitle": "Erase this person's “I'm coming!” answers?",
       "rsvpsEraseBody": "The “I'm coming!” answers and the remembered browsers of this address are erased; registrations are not. This cannot be undone.",
-      "rsvpsErased": "The “I'm coming!” answers and remembered browsers of this address were erased."
+      "rsvpsErased": "The “I'm coming!” answers and remembered browsers of this address were erased.",
+      "volunteerInvitations": "Invitations to volunteer ({count})",
+      "volunteerInvitationSent": "sent {when}",
+      "volunteerInvitationResent": "sent again {when}",
+      "volunteerInvitationUsed": "used {when}",
+      "volunteerInvitationWithdrawn": "withdrawn {when}",
+      "volunteerInvitationUntil": "recorded until {when}",
+      "volunteerInvitationLine": "the club's message: “{ro}” / “{en}”",
+      "volunteerInvitationsErase": "Erase the invitations to volunteer",
+      "volunteerInvitationsEraseTitle": "Erase this person's invitations to volunteer?",
+      "volunteerInvitationsEraseBody": "The invitations sent to this address are erased, with the club's message. Offers to volunteer and registrations stay. This cannot be undone.",
+      "volunteerInvitationsErased": "The invitations to volunteer sent to this address were erased."
     },
     "desk": {
       "title": "Number pickup desk",
@@ -6552,7 +6564,7 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role, from the event's «Volunteers» card: a short message naming the role, the date and the place. Nothing to press.",
         "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers, or an organizer presses “Send the parent's link”: the agreement and the link where the parent accepts it in their own name.",
-        "VOLUNTEER_INVITATION": "When an Organizer or an Administrator sends invitations from the “Volunteers” card of an event whose volunteers are by invitation only, and on “Send again”. A personal link to the volunteers' page.",
+        "VOLUNTEER_INVITATION": "When an organizer or an administrator sends invitations from the «Volunteers» card of an event whose volunteers are by invitation only, and on “Send again”. A personal link to the volunteers' page.",
         "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page: “Yes, I'm coming” counts them, “I'm not coming” takes it back. The page's “not coming any more” sends only the withdraw link.",
         "RSVP_ASK": "The day before, from {askHour}: to subscribers of “The ‘Coming?’ question before runs” and “All the news”, with “I'm coming” (counts them) and “I'm not coming”. Those who answered are skipped."
       },
@@ -8740,8 +8752,8 @@
           "other": "{count} pictures or files"
         },
         "series": "The event was a date of a series, or its source. The series' rule is not applied: the copy is one date; you start the series yourself, in the editor.",
-        "volunteers": "The file carries the event's volunteer categories and roles, with their contact persons. “As a new event” writes them into the new draft.",
-        "volunteersOver": "The file carries volunteer categories and roles. An import over an existing event does not write them: they stay as they are here."
+        "volunteers": "The file carries the event's volunteer categories and roles, with their contact persons, and the choice “Who can offer”. “As a new event” writes them into the new draft.",
+        "volunteersOver": "The file carries volunteer categories, roles or the choice “Who can offer”. An import over an existing event does not write them: they stay as they are here."
       },
       "mode": {
         "heading": "What do you want to do with it?"

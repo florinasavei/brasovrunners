@@ -31,12 +31,16 @@ export default async function VolunteerAccessChoice({ locale, eventId, access }:
               <RadioField name="access" value={choice} defaultChecked={access === choice}>
                 {t(`volunteers.access.${choice}`)}
               </RadioField>
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", pl: 6.5 }} data-testid={`volunteer-access-help-${choice}`}>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6, mt: -0.5 }} data-testid={`volunteer-access-help-${choice}`}>
                 {t(`volunteers.access.${choice}Help`)}
               </Typography>
             </Box>
           ))}
         </Box>
+        {/* The choice is saved for this date alone: the other dates of a series keep their own (the card's form writes one event, never a series). */}
+        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }} data-testid="volunteer-access-scope">
+          {t("volunteers.access.scope")}
+        </Typography>
         <Box sx={{ mt: 1.5 }}>
           <GlyphSubmitButton icon="save" label={t("volunteers.access.save")} pendingLabel={t("volunteers.access.saving")} />
         </Box>

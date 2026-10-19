@@ -26,8 +26,9 @@ import { staffUsers } from "./staff-users";
  * (`canonicalizeEmail`, §10.4); the sign-up through the link is locked to it.
  *
  * Personal data (an address, and the club's line to it): deleted with the event's volunteers, thirty days after the event
- * (`jobs/retention.ts`, step `volunteers`), or when the event goes; found and erased with the rest of a person's data
- * (`registrations/person-data.ts`).
+ * (`jobs/retention.ts`, step `volunteers`), or when the event goes; found on
+ * the person's data screen and in its export (`registrations/person-data.ts`), and erased by an Administrator from that screen, for one
+ * address, with the rest of what the club holds about it (`eraseVolunteerInvitationsOfPerson`).
  */
 export const eventVolunteerInvitations = pgTable(
   "event_volunteer_invitations",
@@ -45,8 +46,12 @@ export const eventVolunteerInvitations = pgTable(
     locale: locale("locale").notNull().default("ro"),
     /** The SHA-256 of the link's secret, or null while no email has been rendered. A newer email replaces it. */
     tokenHash: text("token_hash").unique("event_volunteer_invitations_token_hash_unique"),
-    /** The club's own line to the person, optional (at most 500 characters), said in the email as the club wrote it. */
-    message: text("message"),
+    /**
+     * The club's own line to the person, optional (at most 500 characters), in both languages or neither (§354: the email has a Romanian
+     * half and an English half, §96, and each half reads its own language's words — never the other's). The two are written together.
+     */
+    messageRo: text("message_ro"),
+    messageEn: text("message_en"),
     invitedByStaffUserId: uuid("invited_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
     /** When the first email was queued. */
     sentAt: timestamp("sent_at", { withTimezone: true }).notNull(),
@@ -57,7 +62,10 @@ export const eventVolunteerInvitations = pgTable(
     volunteerId: uuid("volunteer_id").references(() => eventVolunteers.id, { onDelete: "set null" }),
     withdrawnAt: timestamp("withdrawn_at", { withTimezone: true }),
     withdrawnByStaffUserId: uuid("withdrawn_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
-    /** The event's end at the send; the link answers «expirat» after it. */
+    /**
+     * The event's end at the send — a record of what the club saw, never the rule: whether a link still works is asked of the event as it
+     * stands now (`volunteerEventAhead`), so a race moved later keeps its links alive and one called off closes them (§NNN).
+     */
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   },
   (t) => [
@@ -69,7 +77,10 @@ export const eventVolunteerInvitations = pgTable(
     index("event_volunteer_invitations_volunteer_idx")
       .on(t.volunteerId)
       .where(sql`${t.volunteerId} IS NOT NULL`),
-    check("event_volunteer_invitations_message_length", sql`${t.message} IS NULL OR char_length(${t.message}) BETWEEN 1 AND 500`),
+    check("event_volunteer_invitations_message_length", sql`${t.messageRo} IS NULL OR char_length(${t.messageRo}) BETWEEN 1 AND 500`),
+    check("event_volunteer_invitations_message_en_length", sql`${t.messageEn} IS NULL OR char_length(${t.messageEn}) BETWEEN 1 AND 500`),
+    // Both languages or neither (§354): a line in one language only is a cross-language fallback waiting to happen.
+    check("event_volunteer_invitations_message_both_languages", sql`(${t.messageRo} IS NULL) = (${t.messageEn} IS NULL)`),
     // A sign-up is spent at a moment; the row it became may be gone since (set null), but a sign-up without a moment is nothing.
     check("event_volunteer_invitations_used_has_moment", sql`${t.volunteerId} IS NULL OR ${t.usedAt} IS NOT NULL`),
   ],

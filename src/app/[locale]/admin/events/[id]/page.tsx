@@ -452,6 +452,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           minorsOpen: await volunteerMinorsOpen(db, now),
           // The day the entry's date of birth is counted on (§773): the gun's, else the event's.
           eventDay: volunteerEventDay(event, now),
+          eventAhead: volunteerEventAhead(event, now),
           offerClosed: volunteerOfferClosedFor({
             acceptsVolunteers: event.acceptsVolunteers,
             standings,
@@ -468,7 +469,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       })()
     : null;
   const volunteerErrorCode = (
-    ["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_CATEGORY_HAS_ROLES", "VOLUNTEER_NAME_TAKEN", "VOLUNTEER_ALREADY_LISTED", "VOLUNTEER_AGREEMENT_MISSING", "VOLUNTEER_AGREEMENT_ACCEPTED", "VOLUNTEER_AGREEMENT_NOTICE", "VOLUNTEER_AGREEMENT_REPRINT", "VOLUNTEER_GUARDIAN_MISSING", "VOLUNTEER_GUARDIAN_ACCEPTED", "VOLUNTEER_GUARDIAN_NO_EMAIL", "VOLUNTEER_MINORS_CLOSED", "VINVITE_NOBODY", "VINVITE_TOO_MANY", "VINVITE_BAD_ADDRESS", "VINVITE_MESSAGE_LONG", "VINVITE_NOT_INVITED_ONLY", "VINVITE_EVENT_CLOSED", "VINVITE_NOT_OPEN", "VINVITE_NOT_FOUND"] as const
+    ["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_CATEGORY_HAS_ROLES", "VOLUNTEER_NAME_TAKEN", "VOLUNTEER_ALREADY_LISTED", "VOLUNTEER_AGREEMENT_MISSING", "VOLUNTEER_AGREEMENT_ACCEPTED", "VOLUNTEER_AGREEMENT_NOTICE", "VOLUNTEER_AGREEMENT_REPRINT", "VOLUNTEER_GUARDIAN_MISSING", "VOLUNTEER_GUARDIAN_ACCEPTED", "VOLUNTEER_GUARDIAN_NO_EMAIL", "VOLUNTEER_MINORS_CLOSED", "VINVITE_NOBODY", "VINVITE_TOO_MANY", "VINVITE_BAD_ADDRESS", "VINVITE_MESSAGE_LONG", "VINVITE_MESSAGE_ONE_LANGUAGE", "VINVITE_NOT_INVITED_ONLY", "VINVITE_EVENT_CLOSED", "VINVITE_NOT_OPEN", "VINVITE_NOT_FOUND"] as const
   ).find(
     (code) => code === query.volunteerError,
   );
@@ -1480,6 +1481,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   minorsOpen={volunteersCard.minorsOpen}
                   eventDay={volunteersCard.eventDay}
                   offerClosed={volunteersCard.offerClosed}
+                  eventAhead={volunteersCard.eventAhead}
                   roles={volunteersCard.roles}
                   categories={volunteersCard.categories}
                   standings={volunteersCard.standings}

@@ -8,7 +8,8 @@ CREATE TABLE "event_volunteer_invitations" (
 	"canonicalization_version" integer NOT NULL,
 	"locale" "locale" DEFAULT 'ro' NOT NULL,
 	"token_hash" text,
-	"message" text,
+	"message_ro" text,
+	"message_en" text,
 	"invited_by_staff_user_id" uuid,
 	"sent_at" timestamp with time zone NOT NULL,
 	"resent_at" timestamp with time zone,
@@ -19,7 +20,9 @@ CREATE TABLE "event_volunteer_invitations" (
 	"expires_at" timestamp with time zone NOT NULL,
 	CONSTRAINT "event_volunteer_invitations_token_hash_unique" UNIQUE("token_hash"),
 	CONSTRAINT "event_volunteer_invitations_event_canonical_email_unique" UNIQUE("event_id","canonical_email"),
-	CONSTRAINT "event_volunteer_invitations_message_length" CHECK ("event_volunteer_invitations"."message" IS NULL OR char_length("event_volunteer_invitations"."message") BETWEEN 1 AND 500),
+	CONSTRAINT "event_volunteer_invitations_message_length" CHECK ("event_volunteer_invitations"."message_ro" IS NULL OR char_length("event_volunteer_invitations"."message_ro") BETWEEN 1 AND 500),
+	CONSTRAINT "event_volunteer_invitations_message_en_length" CHECK ("event_volunteer_invitations"."message_en" IS NULL OR char_length("event_volunteer_invitations"."message_en") BETWEEN 1 AND 500),
+	CONSTRAINT "event_volunteer_invitations_message_both_languages" CHECK (("event_volunteer_invitations"."message_ro" IS NULL) = ("event_volunteer_invitations"."message_en" IS NULL)),
 	CONSTRAINT "event_volunteer_invitations_used_has_moment" CHECK ("event_volunteer_invitations"."volunteer_id" IS NULL OR "event_volunteer_invitations"."used_at" IS NOT NULL)
 );
 --> statement-breakpoint

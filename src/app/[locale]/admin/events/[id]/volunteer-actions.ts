@@ -27,7 +27,7 @@ import { VOLUNTEER_NEEDED_MAX, VOLUNTEER_ROLE_DESCRIPTION_MAX, VOLUNTEER_ROLE_NA
 import { postedRoleRows } from "@/modules/volunteers/role-rows";
 import { recordPaperVolunteerAgreement, requestVolunteerAgreement } from "@/modules/volunteers/agreement";
 import { recordPaperVolunteerGuardian, requestVolunteerGuardian } from "@/modules/volunteers/guardian";
-import { readVolunteersAccess, VolunteerInvitationRefusal } from "@/modules/volunteers/domain/access";
+import { readVolunteersAccess, VOLUNTEER_INVITATION_BATCH_MAX, VOLUNTEER_INVITATION_MESSAGE_MAX, VolunteerInvitationRefusal } from "@/modules/volunteers/domain/access";
 import { resendVolunteerInvitation, sendVolunteerInvitations, withdrawVolunteerInvitation } from "@/modules/volunteers/invitations";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
@@ -197,12 +197,26 @@ export async function switchVolunteersAccessAction(form: FormData): Promise<void
   }
 }
 
+/**
+ * The boxes a refusal points at: a line too long, both boxes of the pair; a line written in one language only, the empty one (§354, as the
+ * other pairs of the editor name the language still owed); anything else, the addresses.
+ */
+function invitationRefusalFields(error: VolunteerInvitationRefusal, form: FormData): string[] {
+  if (error.refusal === "VINVITE_MESSAGE_LONG") return ["messageRo", "messageEn"];
+  if (error.refusal === "VINVITE_MESSAGE_ONE_LANGUAGE") return [field(form, "messageRo").trim() === "" ? "messageRo" : "messageEn"];
+  return ["addresses"];
+}
+
 /** The refusals of the invitations' presses that say something to the person who pressed, with their sentence in `Admin.errors`. */
 function invitationRefusalOutcome(error: VolunteerInvitationRefusal, form: FormData): FormOutcome {
   return {
     error: error.refusal,
-    ...(error.unread.length > 0 ? { errorValues: { addresses: error.unread.join(", ") } } : {}),
-    fields: error.refusal === "VINVITE_MESSAGE_LONG" ? ["message"] : ["addresses"],
+    // The sentences' numbers and pieces: the lines that could not be read, and the bound the refusal names (`{max}`).
+    errorValues: {
+      ...(error.unread.length > 0 ? { addresses: error.unread.join(", ") } : {}),
+      max: String(error.refusal === "VINVITE_TOO_MANY" ? VOLUNTEER_INVITATION_BATCH_MAX : VOLUNTEER_INVITATION_MESSAGE_MAX),
+    },
+    fields: invitationRefusalFields(error, form),
     values: keptValuesOf(form),
   };
 }
@@ -219,7 +233,7 @@ export async function sendVolunteerInvitationsAction(_previous: FormOutcome | nu
     sent = await sendVolunteerInvitations(
       getDb(),
       actor,
-      { eventId: eventIdOf(form), addresses: field(form, "addresses"), message: field(form, "message"), locale: field(form, "inviteLocale") === "en" ? "en" : "ro" },
+      { eventId: eventIdOf(form), addresses: field(form, "addresses"), messageRo: field(form, "messageRo"), messageEn: field(form, "messageEn"), locale: field(form, "inviteLocale") === "en" ? "en" : "ro" },
       new Date(),
     );
   } catch (error) {

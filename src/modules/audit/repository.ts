@@ -234,6 +234,11 @@ export type AuditAction =
    * something the staff did (a person answers and withdraws on their own).
    */
   | "participant.rsvps_erased"
+  /**
+   * The club's invitations to volunteer sent to one address erased by an Administrator on the person's request (§NNN, art. 17 GDPR) —
+   * `{ invitations }`, the count, never the address, a name or the club's line.
+   */
+  | "participant.volunteer_invitations_erased"
   /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
   | "outbox.sent_by_staff"
   /**

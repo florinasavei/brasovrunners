@@ -187,6 +187,8 @@ export type PruneCounts = {
   invitations: number;
   /** Volunteer offers, gone thirty days after the event started (§754). */
   volunteers: number;
+  /** The club's invitations to volunteer, gone with the offers, thirty days after the event started (§NNN). */
+  volunteerInvitations: number;
   /** A race's results rows deleted with its registrations, three years after the race (§808). */
   results: number;
   /** Answers «Vin!» gone: thirty days after the event, seven unconfirmed, a cancelled event's at once (§811). */
@@ -296,6 +298,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     newsletter: 0,
     invitations: 0,
     volunteers: 0,
+    volunteerInvitations: 0,
     results: 0,
     rsvps: 0,
     rsvpAsks: 0,
@@ -660,14 +663,16 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     counts.volunteers = deleted.length;
     /*
       The club's invitations to volunteer (§NNN) go in the same step and by the same clock: an address the club typed, and its line to
-      the person, kept thirty days after the event's start whatever became of the invitation — used, withdrawn or never opened — and
-      counted with the offers, since the notice's one sentence says they are deleted together. Nothing public showed one.
+      the person, kept thirty days after the event's start whatever became of the invitation — used, withdrawn or never opened. (An event
+      always has a start, even while its date is still to be announced: the placeholder the organizer typed is the clock, as for the
+      offers.) Counted on their own line: the notice's one sentence says they go with the offers, and the log says how many of each.
+      Nothing public showed one.
     */
     const invitations = await tx
       .delete(eventVolunteerInvitations)
       .where(and(inArray(eventVolunteerInvitations.eventId, over), lt(eventVolunteerInvitations.sentAt, cutoff)))
       .returning({ id: eventVolunteerInvitations.id });
-    counts.volunteers += invitations.length;
+    counts.volunteerInvitations = invitations.length;
   });
 
   /*
@@ -755,6 +760,7 @@ export function totalPruned(counts: PruneCounts): number {
     counts.newsletter +
     counts.invitations +
     counts.volunteers +
+    counts.volunteerInvitations +
     counts.results +
     counts.rsvps +
     counts.rsvpAsks +

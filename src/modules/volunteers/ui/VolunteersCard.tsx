@@ -163,6 +163,8 @@ type Props = {
   minorsOpen: boolean;
   /** Why the public form is not on the event's page now, or null when it is (`volunteerOfferClosedFor`). */
   offerClosed: VolunteerOfferClosed | null;
+  /** Whether the event is still ahead (`volunteerEventAhead`): the invitations' standing asks it, never a deadline recorded at the send (§NNN). */
+  eventAhead?: boolean;
   roles: readonly VolunteerRole[];
   /** The headings the roles are grouped under, in the club's order, each with its contact person (§774). */
   categories: readonly VolunteerCategory[];
@@ -214,6 +216,7 @@ export default async function VolunteersCard({
   profileDescribed,
   minorsOpen,
   offerClosed,
+  eventAhead = true,
   roles,
   categories,
   standings,
@@ -1434,7 +1437,7 @@ export default async function VolunteersCard({
         </Stack>
 
         {/* «Invitații» (§NNN): while the choice is «Doar cu invitație de la club», and as long as any invitation exists. */}
-        {acceptsVolunteers && (access === "INVITED" || invitations.length > 0) && <VolunteerInvitations locale={locale} eventId={eventId} access={access} invitations={invitations} now={now} />}
+        {acceptsVolunteers && (access === "INVITED" || invitations.length > 0) && <VolunteerInvitations locale={locale} eventId={eventId} access={access} invitations={invitations} eventAhead={eventAhead} />}
 
         {/* «Categorii» (§774; the owner, 2026-10-14: «categorii cu sub-categorii … Toate astea configurabile»): the headings the roles are grouped
             under on this card and on the volunteers' page — «Start / Sosire», «Traseu» —, each with its optional contact person. */}

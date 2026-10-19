@@ -103,7 +103,8 @@ const invitation = (over: Partial<VolunteerInvitationItem> = {}): VolunteerInvit
   canonicalizationVersion: 2,
   locale: "ro",
   tokenHash: null,
-  message: null,
+  messageRo: null,
+  messageEn: null,
   invitedByStaffUserId: null,
   sentAt: new Date(NOW.getTime() - 2 * HOUR),
   resentAt: null,
@@ -234,13 +235,18 @@ describe("§NNN the card's «Invitații»", () => {
     expect(page).toContain("Invitații");
     expect(page).toContain("Adrese (una pe rând)");
     expect(tagOf(page, "textarea", "addresses")).toContain("required");
-    expect(tagOf(page, "textarea", "message")).toMatch(/maxLength="500"|maxlength="500"/);
+    // The club's line is two boxes, one per language (§354), each bounded, with the English one's translate press beside it.
+    expect(tagOf(page, "textarea", "messageRo")).toMatch(/maxLength="500"|maxlength="500"/);
+    expect(tagOf(page, "textarea", "messageEn")).toMatch(/maxLength="500"|maxlength="500"/);
+    expect(page).toContain("Mesaj (română)");
+    expect(page).toContain("Message (English)");
+    expect(page).not.toContain('name="message"');
     expect(radiosOf(page, "inviteLocale").map((tag) => /value="(\w+)"/.exec(tag)?.[1])).toEqual(["ro", "en"]);
     expect(radiosOf(page, "inviteLocale").filter((tag) => /\bchecked\b/.test(tag))).toHaveLength(1);
     expect(page).toContain("Trimite invitațiile");
     expect(page).toContain("Nicio invitație trimisă încă.");
     expect(page).toContain("O invitație nu ține nimic ocupat.");
-    expect(page).toContain("Deschise: 0 · Folosite: 0");
+    expect(page).toContain("Trimise: 0 · Folosite: 0");
   });
 
   it("is hidden for «Oricine» with none sent, and says so in a sentence — without the box — under another choice once some exist", async () => {
@@ -260,13 +266,12 @@ describe("§NNN the card's «Invitații»", () => {
         invitation(),
         invitation({ id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", deliveryEmail: "andrei@example.test", usedAt: new Date(NOW.getTime() - HOUR), volunteerId: "cccccccc-cccc-4ccc-8ccc-cccccccccccc" }),
         invitation({ id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", deliveryEmail: "vlad@example.test", withdrawnAt: new Date(NOW.getTime() - HOUR) }),
-        invitation({ id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", deliveryEmail: "dan@example.test", expiresAt: new Date(NOW.getTime() - HOUR) }),
       ],
     });
     const rows = [...page.matchAll(/data-testid="volunteer-invite-row" data-standing="(\w+)"/g)].map((match) => match[1]);
-    expect(rows).toEqual(["open", "used", "withdrawn", "expired"]);
-    for (const word of ["Trimisă", "Folosită", "Retrasă", "Expirată"]) expect(page).toContain(word);
-    expect(page).toContain("Deschise: 1 · Folosite: 1");
+    expect(rows).toEqual(["open", "used", "withdrawn"]);
+    for (const word of ["Trimisă", "Folosită", "Retrasă"]) expect(page).toContain(word);
+    expect(page).toContain("Trimise: 1 · Folosite: 1");
     // One open row: one «Retrimite» and one «Retrage», each a confirmed form of its own.
     expect([...page.matchAll(/data-testid="volunteer-invite-resend-form"/g)]).toHaveLength(1);
     expect([...page.matchAll(/data-testid="volunteer-invite-withdraw-form"/g)]).toHaveLength(1);
@@ -275,9 +280,25 @@ describe("§NNN the card's «Invitații»", () => {
     expect(page).toMatch(/<svg[^>]*>[\s\S]{0,400}?Retrimite/);
   });
 
+  it("reads «Expirată» from the event's own state, not from a deadline stored at the send: an event no longer ahead closes every unused row and offers no press", async () => {
+    const page = await drawCard({
+      access: "INVITED",
+      eventAhead: false,
+      invitations: [
+        invitation(),
+        invitation({ id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", deliveryEmail: "andrei@example.test", usedAt: new Date(NOW.getTime() - HOUR), volunteerId: "cccccccc-cccc-4ccc-8ccc-cccccccccccc" }),
+      ],
+    });
+    const rows = [...page.matchAll(/data-testid="volunteer-invite-row" data-standing="(\w+)"/g)].map((match) => match[1]);
+    expect(rows).toEqual(["expired", "used"]);
+    expect(page).toContain("Expirată");
+    expect(page).not.toContain('data-testid="volunteer-invite-resend-form"');
+    expect(page).not.toContain('data-testid="volunteer-invite-withdraw-form"');
+  });
+
   it("says the same in English", async () => {
     const page = await drawCard({ access: "INVITED", invitations: [invitation()] }, "en");
-    for (const words of ["Invitations", "Addresses (one per line)", "Message (optional)", "Language of the invitation", "Send the invitations", "Send again", "Withdraw", "Open: 1 · Used: 0"]) expect(page).toContain(words);
+    for (const words of ["Invitations", "Addresses (one per line)", "Message (English)", "Language of the invitation", "Send the invitations", "Send again", "Withdraw", "Sent: 1 · Used: 0"]) expect(page).toContain(words);
   });
 });
 
@@ -296,7 +317,7 @@ describe("§NNN the form's locked boxes", () => {
   it("fills a member's name, locks the address as read-only and the club's tick as ticked and disabled — carrying the tick in a hidden box — and posts no secret", async () => {
     const page = await drawBox({ lock: { kind: "member", email: "membru@example.test", name: "Maria Membra" } });
     expect(page).toContain('data-testid="volunteer-lock-note"');
-    expect(page).toContain("Ești conectat ca membru: numele și adresa vin din contul tău.");
+    expect(page).toContain("Ești conectat ca membru: numele, adresa și bifa de membru vin din contul tău.");
     const email = tagOf(page, "input", "email");
     expect(email).toContain('value="membru@example.test"');
     expect(email).toMatch(/\breadonly\b/i);
@@ -331,7 +352,7 @@ describe("§NNN the form's locked boxes", () => {
 
   it("says the same in English", async () => {
     const page = await drawBox({ lock: { kind: "member", email: "m@example.test", name: "Maria" } }, "en");
-    expect(page).toContain("You are signed in as a member: the name and the address come from your account.");
+    expect(page).toContain("You are signed in as a member: the name, the address and the member tick come from your account.");
     expect(page).toContain("The address of your member account; it does not change here.");
   });
 });

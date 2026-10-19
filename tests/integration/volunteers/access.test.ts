@@ -19,6 +19,7 @@ import { readVolunteerInvitationLink } from "@/modules/volunteers/invitation-lin
 import { listVolunteerInvitations, resendVolunteerInvitation, sendVolunteerInvitations, withdrawVolunteerInvitation } from "@/modules/volunteers/invitations";
 import { readPublicVolunteerRoles, setVolunteersAccess, submitVolunteer } from "@/modules/volunteers/volunteers";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { bornAged } from "../../helpers/volunteer-birth";
 
 const NOW = new Date("2026-10-13T10:00:00.000Z");
 const DAY = 24 * 60 * 60_000;
@@ -131,8 +132,8 @@ describe("§NNN who may offer as a volunteer", () => {
   const trail = async (action: string) => (await db.select().from(auditLogs).where(eq(auditLogs.action, action as never))).map((row) => row.metadataJson);
 
   /** Sends one invitation and renders its email as the worker would: the link's secret, and the message. */
-  async function invite(eventId: string, address = "ioana@example.test", extra: { message?: string; locale?: "ro" | "en" } = {}) {
-    await sendVolunteerInvitations(db, admin, { eventId, addresses: address, message: extra.message ?? "", locale: extra.locale ?? "ro" }, NOW);
+  async function invite(eventId: string, address = "ioana@example.test", extra: { messageRo?: string; messageEn?: string; locale?: "ro" | "en" } = {}) {
+    await sendVolunteerInvitations(db, admin, { eventId, addresses: address, messageRo: extra.messageRo ?? "", messageEn: extra.messageEn ?? "", locale: extra.locale ?? "ro" }, NOW);
     const [row] = (await invitationMail()).filter((mail) => mail.recipientEmail === address).slice(-1);
     return renderInvitation(row);
   }
@@ -172,7 +173,7 @@ describe("§NNN who may offer as a volunteer", () => {
       expect(await setVolunteersAccess(db, organizer, { eventId: event.id, access: "INVITED" }, NOW)).toEqual({ changed: true });
       expect(await setVolunteersAccess(db, organizer, { eventId: event.id, access: "INVITED" }, NOW)).toEqual({ changed: false });
       expect((await trail("event.volunteers_access_changed")).map((meta) => meta)).toEqual([{ from: "ANYONE", to: "INVITED" }]);
-      await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "x@example.test", message: "", locale: "ro" }, NOW);
+      await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "x@example.test", messageRo: "", messageEn: "", locale: "ro" }, NOW);
       // Narrowing, widening and narrowing again deletes no sign-up and no invitation.
       await setVolunteersAccess(db, admin, { eventId: event.id, access: "ANYONE" }, NOW);
       await setVolunteersAccess(db, admin, { eventId: event.id, access: "MEMBERS" }, NOW);
@@ -224,6 +225,40 @@ describe("§NNN who may offer as a volunteer", () => {
       expect(await volunteers(event.id)).toHaveLength(0);
     });
 
+    it("a link that no longer works shuts nothing the choice opens anyway: under «Oricine» and for a member the post goes on as if it had come without one", async () => {
+      const open = await seedEvent({ volunteersAccess: "ANYONE" });
+      const role = await seedRole(open.id);
+      expect(await submitVolunteer(db, open.id, form(role.id), NOW, undefined, { inviteSecret: "x".repeat(43) })).toEqual({ outcome: "done" });
+      const members = await seedEvent({ volunteersAccess: "MEMBERS" });
+      const memberRole = await seedRole(members.id);
+      expect(await submitVolunteer(db, members.id, form(memberRole.id, { email: "membru@example.test" }), NOW, undefined, { member: { email: "membru@example.test" }, inviteSecret: "x".repeat(43) })).toEqual({ outcome: "done" });
+      // …and a stranger with a dead link to a members' event is still refused by the choice, naming the link.
+      expect(await submitVolunteer(db, members.id, form(memberRole.id, { email: "alta@example.test" }), NOW, undefined, { inviteSecret: "x".repeat(43) })).toEqual({ outcome: "invitation", reason: "invalid" });
+    });
+
+    it("sets «Fac parte din grupul» from the account of a member whatever was posted, when the form asks it", async () => {
+      // A notice that names the profile boxes: the form asks the tick, and for a member the server answers it (§NNN).
+      const body = (text: string) => ({ sections: [{ paragraphs: [`Voluntari ({{volunteers}}, {{volunteerAgreement}}, {{volunteerProfile}}): ${text}`] }] });
+      const notice: LegalDocumentTranslationInput[] = [
+        { locale: "ro", title: "Confidențialitate", body: body("păstrăm numele") },
+        { locale: "en", title: "Privacy", body: body("we keep the name") },
+      ];
+      await insertLegalDocumentVersion(db, {
+        key: "PRIVACY_NOTICE",
+        version: 2,
+        effectiveAt: new Date("2026-02-01T00:00:00.000Z"),
+        isApproved: true,
+        contentSha256: computeContentHash(notice),
+        translations: notice,
+        now: NOW,
+      });
+      const event = await seedEvent({ volunteersAccess: "MEMBERS" });
+      const role = await seedRole(event.id);
+      const answers = { birthDate: bornAged(34, new Date(NOW.getTime() + 30 * DAY)), sex: "FEMALE", city: "Brașov", volunteeredBefore: false, clubMember: false };
+      expect(await submitVolunteer(db, event.id, form(role.id, { ...answers, email: "membru@example.test" }), NOW, undefined, { member: { email: "membru@example.test" } })).toEqual({ outcome: "done" });
+      expect((await volunteers(event.id))[0]).toMatchObject({ canonicalEmail: "membru@example.test", age: 34, clubMember: true });
+    });
+
     it("«Oricine»: nothing changes for a person with no link and no account", async () => {
       const event = await seedEvent({ volunteersAccess: "ANYONE" });
       const role = await seedRole(event.id);
@@ -239,13 +274,13 @@ describe("§NNN who may offer as a volunteer", () => {
       const result = await sendVolunteerInvitations(
         db,
         organizer,
-        { eventId: event.id, addresses: "ioana@example.test\nAndrei@Example.test, ioana@example.test; vlad@example.test", message: " Te așteptăm! ", locale: "en" },
+        { eventId: event.id, addresses: "ioana@example.test\nAndrei@Example.test, ioana@example.test; vlad@example.test", messageRo: " Te așteptăm! ", messageEn: " We are waiting! ", locale: "en" },
         NOW,
       );
       expect(result).toEqual({ sent: 3, alreadyInvited: 0, alreadyOffered: 0 });
       const rows = await invitations(event.id);
       expect(rows.map((row) => row.canonicalEmail).sort()).toEqual(["andrei@example.test", "ioana@example.test", "vlad@example.test"]);
-      expect(rows.every((row) => row.message === "Te așteptăm!" && row.locale === "en" && row.tokenHash === null && row.usedAt === null && row.invitedByStaffUserId === organizer.id)).toBe(true);
+      expect(rows.every((row) => row.messageRo === "Te așteptăm!" && row.messageEn === "We are waiting!" && row.locale === "en" && row.tokenHash === null && row.usedAt === null && row.invitedByStaffUserId === organizer.id)).toBe(true);
       // The expiry is the event's end (its start with no end).
       expect(rows[0].expiresAt.getTime()).toBe(new Date(NOW.getTime() + 30 * DAY).getTime());
       const mail = await invitationMail();
@@ -253,18 +288,18 @@ describe("§NNN who may offer as a volunteer", () => {
       for (const row of mail) {
         expect(row).toMatchObject({ participantId: null, registrationId: null, locale: "en" });
         expect(Object.keys(row.payloadJson as object).sort()).toEqual(["eventId", "invitationId"]);
-        expect(JSON.stringify(row.payloadJson)).not.toMatch(/@|Te a/);
+        expect(JSON.stringify(row.payloadJson)).not.toMatch(/@|Te a|waiting/);
       }
       const sent = await trail("volunteer_invitation.sent");
       expect(sent).toHaveLength(3);
-      expect(JSON.stringify(sent)).not.toMatch(/@|Te a|Andrei|Ioana/i);
+      expect(JSON.stringify(sent)).not.toMatch(/@|Te a|waiting|Andrei|Ioana/i);
     });
 
-    it("refuses the whole send, writing nothing, for an address that cannot be read, an empty box, too many addresses, a long line, another choice, a closed offer and every other role", async () => {
+    it("refuses the whole send, writing nothing, for an address that cannot be read, an empty box, too many addresses, a long line, a line in one language only, another choice, a closed offer and every other role", async () => {
       const event = await seedEvent();
       await seedRole(event.id);
-      const send = (addresses: string, extra: { message?: string } = {}, actor: StaffUser = admin) =>
-        sendVolunteerInvitations(db, actor, { eventId: event.id, addresses, message: extra.message ?? "", locale: "ro" }, NOW);
+      const send = (addresses: string, extra: { messageRo?: string; messageEn?: string } = {}, actor: StaffUser = admin) =>
+        sendVolunteerInvitations(db, actor, { eventId: event.id, addresses, messageRo: extra.messageRo ?? "", messageEn: extra.messageEn ?? "", locale: "ro" }, NOW);
       const refusal = async (promise: Promise<unknown>) => {
         const error = await promise.then(
           () => null,
@@ -277,7 +312,11 @@ describe("§NNN who may offer as a volunteer", () => {
       expect(bad).toMatchObject({ refusal: "VINVITE_BAD_ADDRESS", unread: ["nu-e-adresa", "al-doilea"] });
       expect(await refusal(send(" \n "))).toMatchObject({ refusal: "VINVITE_NOBODY" });
       expect(await refusal(send(Array.from({ length: 51 }, (_, index) => `p${index}@example.test`).join("\n")))).toMatchObject({ refusal: "VINVITE_TOO_MANY" });
-      expect(await refusal(send("a@example.test", { message: "x".repeat(501) }))).toMatchObject({ refusal: "VINVITE_MESSAGE_LONG" });
+      expect(await refusal(send("a@example.test", { messageRo: "x".repeat(501), messageEn: "y" }))).toMatchObject({ refusal: "VINVITE_MESSAGE_LONG" });
+      expect(await refusal(send("a@example.test", { messageRo: "y", messageEn: "x".repeat(501) }))).toMatchObject({ refusal: "VINVITE_MESSAGE_LONG" });
+      // The club's line is in both languages or neither (§354): one written alone is refused, whichever side, whitespace counting for nothing.
+      expect(await refusal(send("a@example.test", { messageRo: "Doar română", messageEn: "  " }))).toMatchObject({ refusal: "VINVITE_MESSAGE_ONE_LANGUAGE" });
+      expect(await refusal(send("a@example.test", { messageRo: "", messageEn: "English only" }))).toMatchObject({ refusal: "VINVITE_MESSAGE_ONE_LANGUAGE" });
       await db.update(events).set({ volunteersAccess: "MEMBERS" }).where(eq(events.id, event.id));
       expect(await refusal(send("a@example.test"))).toMatchObject({ refusal: "VINVITE_NOT_INVITED_ONLY" });
       await db.update(events).set({ volunteersAccess: "INVITED", acceptsVolunteers: false }).where(eq(events.id, event.id));
@@ -293,31 +332,31 @@ describe("§NNN who may offer as a volunteer", () => {
       admin = await person("ADMIN", "Ana Admin");
       const event = await seedEvent();
       await seedRole(event.id);
-      await expect(sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "a@example.test", message: "", locale: "ro" }, NOW)).rejects.toMatchObject({ refusal: "VINVITE_EVENT_CLOSED" });
+      await expect(sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "a@example.test", messageRo: "", messageEn: "", locale: "ro" }, NOW)).rejects.toMatchObject({ refusal: "VINVITE_EVENT_CLOSED" });
     });
 
     it("asks an address once: a live invitation is not sent twice, a person who already offered is not invited, and a withdrawn one comes back with the same row", async () => {
       const event = await seedEvent();
       const role = await seedRole(event.id);
       await db.insert(eventVolunteers).values({ eventId: event.id, roleId: role.id, name: "Deja", email: "deja@example.test", canonicalEmail: "deja@example.test", canonicalizationVersion: 2, phone: "+40712345678", source: "PUBLIC" });
-      const first = await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "ioana@example.test", message: "", locale: "ro" }, NOW);
+      const first = await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "ioana@example.test", messageRo: "", messageEn: "", locale: "ro" }, NOW);
       expect(first.sent).toBe(1);
-      const second = await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "Ioana@example.test\ndeja@example.test", message: "", locale: "ro" }, NOW);
+      const second = await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "Ioana@example.test\ndeja@example.test", messageRo: "", messageEn: "", locale: "ro" }, NOW);
       expect(second).toEqual({ sent: 0, alreadyInvited: 1, alreadyOffered: 1 });
       expect(await invitationMail()).toHaveLength(1);
       const [row] = await invitations(event.id);
       await withdrawVolunteerInvitation(db, admin, row.id, NOW);
-      const third = await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "ioana@example.test", message: "Din nou", locale: "ro" }, new Date(NOW.getTime() + 1000));
+      const third = await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "ioana@example.test", messageRo: "Din nou", messageEn: "Again", locale: "ro" }, new Date(NOW.getTime() + 1000));
       expect(third.sent).toBe(1);
       const [again] = await invitations(event.id);
-      expect(again).toMatchObject({ id: row.id, withdrawnAt: null, message: "Din nou", tokenHash: null });
+      expect(again).toMatchObject({ id: row.id, withdrawnAt: null, messageRo: "Din nou", messageEn: "Again", tokenHash: null });
       expect(await invitationMail()).toHaveLength(2);
     });
 
     it("«Retrimite» queues another email and audits it; «Retrage» ends the invitation and audits it; neither works on an invitation no longer open, and only the Organizer and the Administrators press them", async () => {
       const event = await seedEvent();
       await seedRole(event.id);
-      await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "ioana@example.test", message: "", locale: "ro" }, NOW);
+      await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "ioana@example.test", messageRo: "", messageEn: "", locale: "ro" }, NOW);
       const [row] = await invitations(event.id);
       await expect(resendVolunteerInvitation(db, technician, row.id, NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
       await expect(withdrawVolunteerInvitation(db, technician, row.id, NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
@@ -345,15 +384,17 @@ describe("§NNN who may offer as a volunteer", () => {
       const event = await seedEvent();
       await seedRole(event.id);
       await seedRole(event.id, { nameRo: "Sosire", nameEn: "Finish", position: 1, needed: null });
-      const { message, secret } = await invite(event.id, "ioana@example.test", { message: "Ne bucurăm să te vedem!", locale: "ro" });
+      const { message, secret } = await invite(event.id, "ioana@example.test", { messageRo: "Ne bucurăm să te vedem!", messageEn: "We are glad to see you!", locale: "ro" });
       expect(message.subject).toBe("Te invităm să fii voluntar la Crosul / We invite you to volunteer at The cross");
       expect(message.text).toContain("Căutăm oameni pentru: Punct de apă, Sosire.");
       expect(message.text).toContain("We are looking for people for: Water point, Finish.");
       expect(message.text).toContain("Mesajul clubului:");
-      expect(message.text).toContain("Ne bucurăm să te vedem!");
+      // Each half says the club's line in its own language, never the other's (§354).
+      expect(message.text).toMatch(/Mesajul clubului:\s*Ne bucurăm să te vedem!/);
+      expect(message.text).toMatch(/A message from the club:\s*We are glad to see you!/);
       expect(message.text).toContain("Mă ofer voluntar");
       expect(message.text).toContain("I want to volunteer");
-      expect(message.text).toContain("ți-a trecut adresa ca să te invite voluntar la un eveniment");
+      expect(message.text).toContain("ți-a trecut adresa ca să te invite voluntar la unul dintre evenimentele sale");
       expect(message.text).toContain(`/ro/evenimente/crosul-${event.id.slice(0, 8)}/voluntari?invite=${secret}`);
       const [row] = await invitations(event.id);
       expect(row.tokenHash).toMatch(/^[0-9a-f]{64}$/);
@@ -372,6 +413,9 @@ describe("§NNN who may offer as a volunteer", () => {
       expect((await readVolunteerInvitationLink(db, event.id, first.secret, NOW)).reading).toEqual({ standing: "open" });
       expect(await invitations(event.id)).toEqual(before);
       await resendVolunteerInvitation(db, admin, before[0].id, new Date(NOW.getTime() + 1000));
+      // The earlier link is dead at the press, before the new email is even rendered (the paced outbox may hold it a while).
+      expect((await readVolunteerInvitationLink(db, event.id, first.secret, NOW)).reading).toEqual({ standing: "invalid" });
+      expect((await invitations(event.id))[0].tokenHash).toBeNull();
       const [, resent] = (await invitationMail()).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
       const second = await renderInvitation(resent);
       expect(second.secret).not.toBe(first.secret);
@@ -382,21 +426,48 @@ describe("§NNN who may offer as a volunteer", () => {
     it("withdraws an email whose invitation was used, withdrawn or has run out, or whose event is over, and names nothing of the address", async () => {
       const event = await seedEvent();
       await seedRole(event.id);
-      await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "ioana@example.test", message: "", locale: "ro" }, NOW);
+      await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "ioana@example.test", messageRo: "", messageEn: "", locale: "ro" }, NOW);
       const [mail] = await invitationMail();
       const [row] = await invitations(event.id);
       const row$ = { ...(mail as unknown as OutboxRow), status: "PROCESSING" as const, lockedAt: NOW };
       await db.update(eventVolunteerInvitations).set({ withdrawnAt: NOW });
       await expect(renderOutboxMessage(row$, db, NOW)).rejects.toThrow(/invitation/i);
-      await db.update(eventVolunteerInvitations).set({ withdrawnAt: null, expiresAt: new Date(NOW.getTime() - 1) });
-      await expect(renderOutboxMessage(row$, db, NOW)).rejects.toThrow(/invitation/i);
-      await db.update(eventVolunteerInvitations).set({ expiresAt: new Date(NOW.getTime() + DAY) });
+      await db.update(eventVolunteerInvitations).set({ withdrawnAt: null });
+      // The event is over (asked of the event now, not of a deadline stored at the send).
+      await db.update(events).set({ startsAt: new Date(NOW.getTime() - DAY) }).where(eq(events.id, event.id));
+      await expect(renderOutboxMessage(row$, db, NOW)).rejects.toThrow(/invitation|event/i);
+      await db.update(events).set({ startsAt: new Date(NOW.getTime() + 30 * DAY) }).where(eq(events.id, event.id));
       await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, event.id));
       await expect(renderOutboxMessage(row$, db, NOW)).rejects.toThrow(/event|invitation/i);
       // A corrected address meanwhile: the link would reach the wrong inbox.
       await db.update(events).set({ eventStatus: "SCHEDULED" }).where(eq(events.id, event.id));
       await expect(renderOutboxMessage({ ...row$, recipientEmail: "alta@example.test" }, db, NOW)).rejects.toThrow(/address/i);
       expect(row.tokenHash).toBeNull();
+    });
+  });
+
+  describe("the links follow the event's own date", () => {
+    it("keeps every open link working, and «Retrimite» possible, when the race is moved to a later day — and closes them when it is over", async () => {
+      const event = await seedEvent({ startsAt: new Date(NOW.getTime() + 3 * DAY) });
+      const role = await seedRole(event.id);
+      const { secret } = await invite(event.id, "ioana@example.test");
+      const [recorded] = await invitations(event.id);
+      // The deadline recorded at the send is the old date; the race is postponed past it, and the recorded deadline is now in the past.
+      await db.update(events).set({ startsAt: new Date(NOW.getTime() + 40 * DAY) }).where(eq(events.id, event.id));
+      const afterOldDate = new Date(recorded.expiresAt.getTime() + DAY);
+      expect((await readVolunteerInvitationLink(db, event.id, secret, afterOldDate)).reading).toEqual({ standing: "open" });
+      await resendVolunteerInvitation(db, admin, recorded.id, afterOldDate);
+      const [, resent] = (await invitationMail()).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      const second = await renderOutboxMessage({ ...(resent as unknown as OutboxRow), status: "PROCESSING", lockedAt: afterOldDate }, db, afterOldDate);
+      const minted = SECRET.exec(second.text)?.[1];
+      expect(minted, "the new email carries a link: the invitation is still open").toBeDefined();
+      expect(await submitVolunteer(db, event.id, form(role.id), afterOldDate, undefined, { inviteSecret: minted as string })).toEqual({ outcome: "done" });
+      // And once the event is really over, an unused link says so.
+      const other = await seedEvent({ startsAt: new Date(NOW.getTime() + DAY) });
+      await seedRole(other.id);
+      const late = await invite(other.id, "dan@example.test");
+      await db.update(events).set({ startsAt: new Date(NOW.getTime() - DAY) }).where(eq(events.id, other.id));
+      expect((await readVolunteerInvitationLink(db, other.id, late.secret, NOW)).reading).toEqual({ standing: "expired" });
     });
   });
 
@@ -434,7 +505,8 @@ describe("§NNN who may offer as a volunteer", () => {
       expect(await submitVolunteer(db, other.id, form(role.id), NOW, undefined, { inviteSecret: secret })).toEqual({ outcome: "invitation", reason: "invalid" });
       await withdrawVolunteerInvitation(db, admin, row.id, NOW);
       expect(await submitVolunteer(db, event.id, form(role.id), NOW, undefined, { inviteSecret: secret })).toEqual({ outcome: "invitation", reason: "withdrawn" });
-      await db.update(eventVolunteerInvitations).set({ withdrawnAt: null, expiresAt: new Date(NOW.getTime() - 1) });
+      await db.update(eventVolunteerInvitations).set({ withdrawnAt: null });
+      await db.update(events).set({ startsAt: new Date(NOW.getTime() - DAY) }).where(eq(events.id, event.id));
       expect(await submitVolunteer(db, event.id, form(role.id), NOW, undefined, { inviteSecret: secret })).toEqual({ outcome: "invitation", reason: "expired" });
       expect(await volunteers(event.id)).toHaveLength(0);
     });
@@ -495,11 +567,45 @@ describe("§NNN who may offer as a volunteer", () => {
       expect(await invitations(ahead.id)).toHaveLength(1);
     });
 
+    it("never takes the invitations of an event moved to a later day by the deadline recorded long ago, and counts the ones it deletes on their own line", async () => {
+      const moved = await seedEvent({ startsAt: new Date(NOW.getTime() + 60 * DAY) });
+      const old = await seedEvent({ startsAt: new Date(NOW.getTime() - 40 * DAY) });
+      for (const event of [moved, old]) {
+        await db.insert(eventVolunteerInvitations).values({
+          eventId: event.id,
+          deliveryEmail: "p@example.test",
+          canonicalEmail: "p@example.test",
+          canonicalizationVersion: 2,
+          sentAt: new Date(NOW.getTime() - 100 * DAY),
+          expiresAt: new Date(NOW.getTime() - 90 * DAY),
+        });
+      }
+      const result = await pruneExpiredRows(db, NOW);
+      expect(result.failures).toEqual([]);
+      expect(result.volunteerInvitations).toBe(1);
+      expect(await invitations(moved.id)).toHaveLength(1);
+      expect(await invitations(old.id)).toHaveLength(0);
+    });
+
+    it("deletes the invitation a volunteer came through even when a colleague corrected the address since", async () => {
+      const event = await seedEvent();
+      const role = await seedRole(event.id);
+      const { secret } = await invite(event.id, "ioana@example.test");
+      await submitVolunteer(db, event.id, form(role.id, { name: "Ioana" }), NOW, undefined, { inviteSecret: secret });
+      const [person] = await volunteers(event.id);
+      // The staff's edit rewrites the identity; the invitation still names the address it was sent to.
+      await db.update(eventVolunteers).set({ email: "corectat@example.test", canonicalEmail: "corectat@example.test" }).where(eq(eventVolunteers.id, person.id));
+      const { changeVolunteer } = await import("@/modules/volunteers/volunteers");
+      await changeVolunteer(db, admin, { kind: "delete", eventId: event.id, id: person.id }, NOW);
+      expect(await volunteers(event.id)).toHaveLength(0);
+      expect(await invitations(event.id)).toHaveLength(0);
+    });
+
     it("deletes the invitation of an address with the volunteer the card deletes", async () => {
       const event = await seedEvent({ volunteersAccess: "ANYONE" });
       const role = await seedRole(event.id);
       await db.update(events).set({ volunteersAccess: "INVITED" }).where(eq(events.id, event.id));
-      await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "ioana@example.test", message: "", locale: "ro" }, NOW);
+      await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "ioana@example.test", messageRo: "", messageEn: "", locale: "ro" }, NOW);
       const { secret } = await renderInvitation((await invitationMail())[0]);
       await submitVolunteer(db, event.id, form(role.id, { email: "x@example.test" }), NOW, undefined, { inviteSecret: secret });
       const { changeVolunteer } = await import("@/modules/volunteers/volunteers");
