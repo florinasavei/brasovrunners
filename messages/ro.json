@@ -6444,6 +6444,8 @@
       "askRefusalGone": "o serie care nu mai există",
       "rsvpNameShown": "cu numele pe pagină",
       "rsvpNameHidden": "doar numărat",
+      "rsvpMemberDeclared": "membru (declarat)",
+      "rsvpMemberAccount": "membru (din cont)",
       "rsvpNotice": "nota v{version}",
       "rsvpConfirmedAt": "confirmat {when}",
       "rsvpUnconfirmed": "neconfirmat",

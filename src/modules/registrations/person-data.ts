@@ -21,6 +21,7 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { seriesKey as seriesKeyOf } from "@/modules/events/domain/series";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { parseClubMember } from "@/modules/rsvp/domain/public-member";
 import { roleLabel } from "@/modules/volunteers/domain/volunteer";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -111,6 +112,8 @@ export type PersonData = {
     deliveryEmail: string;
     displayName: string | null;
     showName: boolean;
+    /** The member mark the answer holds (§829): `DECLARED` (the person's tick), `ACCOUNT` (given from a member account), or null — never said. */
+    clubMember: ReturnType<typeof parseClubMember>;
     locale: string;
     privacyNoticeVersion: number;
     confirmedAt: Date | null;
@@ -348,6 +351,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
       deliveryEmail: eventRsvps.deliveryEmail,
       displayName: eventRsvps.displayName,
       showName: eventRsvps.showName,
+      clubMember: eventRsvps.clubMember,
       locale: eventRsvps.locale,
       privacyNoticeVersion: eventRsvps.privacyNoticeVersion,
       confirmedAt: eventRsvps.confirmedAt,
@@ -570,7 +574,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     declarationAcceptances: acceptances,
     messages,
     announcementRequests,
-    rsvpAnswers,
+    rsvpAnswers: rsvpAnswers.map((answer) => ({ ...answer, clubMember: parseClubMember(answer.clubMember) })),
     askRefusals,
     rememberedBrowsers,
     volunteerInvitations,

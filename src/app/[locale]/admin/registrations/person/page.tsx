@@ -258,7 +258,8 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                   data.rsvpAnswers.map((answer, index) => (
                     <Typography key={index} variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
                       {show(answer.createdAt)} · {answer.eventTitle ?? answer.eventId} · {answer.deliveryEmail} · {show(answer.displayName)} ·{" "}
-                      {answer.showName ? t("person.rsvpNameShown") : t("person.rsvpNameHidden")} · {answer.locale} · {t("person.rsvpNotice", { version: answer.privacyNoticeVersion })} ·{" "}
+                      {answer.showName ? t("person.rsvpNameShown") : t("person.rsvpNameHidden")} ·{" "}
+                      {answer.clubMember === "DECLARED" ? `${t("person.rsvpMemberDeclared")} · ` : answer.clubMember === "ACCOUNT" ? `${t("person.rsvpMemberAccount")} · ` : ""}{answer.locale} · {t("person.rsvpNotice", { version: answer.privacyNoticeVersion })} ·{" "}
                       {answer.confirmedAt ? t("person.rsvpConfirmedAt", { when: show(answer.confirmedAt) }) : answer.askedAt ? t("person.rsvpAsked", { when: show(answer.askedAt) }) : t("person.rsvpUnconfirmed")}
                     </Typography>
                   ))

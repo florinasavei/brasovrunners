@@ -6,9 +6,11 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { eventRsvps, eventRsvpTokens } from "@/db/schema/event-rsvps";
 import { eventTranslations, events } from "@/db/schema/events";
+import { staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findFirstRsvpMemberNoticeVersion, findFirstRsvpNoticeVersion, insertLegalDocumentVersion, noticeDescribesRsvpMember } from "@/modules/legal-documents/repository";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
+import { viewPersonData } from "@/modules/registrations/person-data";
 import { rememberPerson } from "@/modules/person-session/session";
 import { answeredByAccount } from "@/modules/rsvp/counts";
 import { accountIdentity } from "@/modules/rsvp/domain/account-identity";
@@ -469,6 +471,14 @@ describe("§829 the member mark on «Vin!»", () => {
     it("says nothing of members when there is none", async () => {
       await answerRsvp(db, eventId, remembered("bia@example.test"), NOW);
       expect(await countRsvpsForAdmin(db, eventId)).toEqual({ confirmed: 1, unconfirmed: 0 });
+    });
+
+    it("lists the kind among everything held about a person (art. 15): the column is personal data, so «all the data of a person» says it", async () => {
+      const [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
+      await answerRsvp(db, eventId, remembered("ana@example.test", { displayName: "Ana", clubMember: true }), NOW);
+      const data = await viewPersonData(db, admin, "ana@example.test", NOW);
+      expect(data.rsvpAnswers).toHaveLength(1);
+      expect(data.rsvpAnswers[0]).toMatchObject({ clubMember: "DECLARED", displayName: "Ana" });
     });
   });
 

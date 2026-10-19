@@ -6444,6 +6444,8 @@
       "askRefusalGone": "a series that no longer exists",
       "rsvpNameShown": "name shown on the page",
       "rsvpNameHidden": "counted only",
+      "rsvpMemberDeclared": "member (declared)",
+      "rsvpMemberAccount": "member (from an account)",
       "rsvpNotice": "notice v{version}",
       "rsvpConfirmedAt": "confirmed {when}",
       "rsvpUnconfirmed": "unconfirmed",

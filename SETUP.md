@@ -2521,6 +2521,7 @@ turns on event by event. Three steps are the club's: the notice (1), the tick (2
    service refuses an answer; the club's tick stays on in the editor, doing nothing. `/admin/tasks` carries the row «Nota de
    confidențialitate: răspunsurile „Vin!”» (open while an upcoming event is ticked and the notice is silent, done by itself the day a
    notice naming it takes effect), and `/admin/legal` says it in a line. **The terms do not change**: an answer buys, books and signs nothing.
+   **The member mark** (`DECISIONS.md` §829) is a marker of its own, `{{rsvpMember}}` („BVR”), in section 4's «Vin!» paragraph — a person who ticks «Sunt membru» (a claim the club does not check), or who answers from a member account, shows „BVR” beside the name they chose to show and is counted among «M membri» without a name — so until a notice that names it is in force in both languages the form has no tick, nothing is marked or counted, and `/admin/tasks` carries the row `rsvpMemberNotice`; an answer given before that notice is never marked (it agreed to a name, not to a mark).
 2. **Tick the event.** `/admin/events` → the event → «Participare, înscrieri și regulament» → **«Acceptă răspunsuri „Vin!” din pagină,
    calendar și email»**. It is shown for a type that takes no registration (a group run) and for any other type saved with «Fără înscrieri»;
    any other mode writes it off. A weekly run's tick travels with the series (a «de acum încolo» save carries it to the later dates, a new
