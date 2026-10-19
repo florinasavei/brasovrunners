@@ -168,6 +168,55 @@ describe("§811 the page of a «Vin!» link", () => {
     expect(await db.select().from(personSessions)).toHaveLength(0);
   });
 
+  it("§812 wraps the form in the self-pressing island for a live «Da, vin» link — and the GET it renders from still changes nothing", async () => {
+    const { confirm } = await sendLinks();
+    const tokensBefore = await db.select().from(eventRsvpTokens);
+    const rowBefore = await db.select().from(eventRsvps);
+    const markup = await page(confirm);
+    // The island wraps the page's own form: the button and the POST stay for a browser without scripts, and for a scanner.
+    expect(markup).toContain('data-testid="rsvp-auto-confirm"');
+    expect(markup.indexOf('data-testid="rsvp-auto-confirm"')).toBeLessThan(markup.indexOf("<form"));
+    expect(markup).toContain("Da, vin");
+    expect(markup.match(/<button/g)).toHaveLength(1);
+    expect(markup).toContain('data-testid="rsvp-confirm-auto"');
+    expect(markup).toContain("Te numărăm acum, fără să apeși nimic");
+    expect(markup).toContain("Browserul tău rămâne recunoscut un an");
+    // Rendering it counted nobody and remembered nobody: only the island's POST does.
+    expect(await db.select().from(eventRsvpTokens)).toEqual(tokensBefore);
+    expect(await db.select().from(eventRsvps)).toEqual(rowBefore);
+    expect(await db.select().from(personSessions)).toHaveLength(0);
+    // …and the same in English.
+    const { confirm: english } = await sendLinks("liz@example.test", "en");
+    const en = await page(english, {}, "en");
+    expect(en).toContain('data-testid="rsvp-auto-confirm"');
+    expect(en).toContain("We are counting you now");
+  });
+
+  it("§812 draws no island for the «Nu mai vin» link, a spent or expired link, an unknown one, or an answer already counted", async () => {
+    const { confirm, withdraw } = await sendLinks();
+    const island = 'data-testid="rsvp-auto-confirm"';
+    // «Nu mai vin» takes something away: always a press.
+    expect(await page(withdraw)).not.toContain(island);
+    // An answer already counted (a one-tap on another browser): the sentence and the button, no second press.
+    await db.update(eventRsvps).set({ confirmedAt: NOW });
+    const counted = await page(confirm);
+    expect(counted).toContain("Ești deja numărat la Alergarea de joi.");
+    expect(counted).not.toContain(island);
+    expect(counted).not.toContain('data-testid="rsvp-confirm-auto"');
+    await db.update(eventRsvps).set({ confirmedAt: null });
+    // The press spends it.
+    await press(confirmRsvpAction, form(confirm));
+    const spent = await page(confirm);
+    expect(spent).not.toContain(island);
+    expect(spent).not.toContain("<form");
+    // Past its life.
+    const second = await sendLinks("ion@example.test");
+    await db.update(eventRsvpTokens).set({ createdAt: new Date(NOW.getTime() - 3 * HOUR), expiresAt: new Date(NOW.getTime() - HOUR) }).where(eq(eventRsvpTokens.purpose, "RSVP_CONFIRM"));
+    expect(await page(second.confirm)).not.toContain(island);
+    // Unknown.
+    expect(await page("x".repeat(43))).not.toContain(island);
+  });
+
   it("draws «Nu mai vin» for the withdraw link, and still deletes nothing on a GET", async () => {
     const { withdraw } = await sendLinks();
     const markup = await page(withdraw);

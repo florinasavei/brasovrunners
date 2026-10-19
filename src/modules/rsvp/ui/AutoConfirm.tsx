@@ -42,5 +42,9 @@ export default function AutoConfirm({ children }: { children: ReactNode }) {
     return stop;
   }, []);
 
-  return <div ref={wrapper}>{children}</div>;
+  return (
+    <div ref={wrapper} data-testid="rsvp-auto-confirm">
+      {children}
+    </div>
+  );
 }
