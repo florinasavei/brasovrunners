@@ -175,7 +175,7 @@ export default async function RegistrationBox({
 }) {
   const t = await getTranslations("Admin");
   // The topic's own label (never retyped here), for the sentence that names whom the «Vii?» email reaches.
-  const topics = await getTranslations("Newsletter.topics");
+  const news = await getTranslations("Newsletter");
   const { words } = await summaryWords();
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
   const initialType = event?.type ?? "GROUP_RUN";
@@ -220,7 +220,7 @@ export default async function RegistrationBox({
             day: rsvpAskDayPhrase(locale, rsvpAsk.daysBefore),
           }),
           // Who the subscribers are, by the topic's own label: a sentence of its own, so none of them outgrows the house's 200 characters.
-          asksSubscribers(rsvpAsk.audience) ? t("editor.rsvpAskEnabledHelpTopics", { topic: topics("RSVP_ASK"), all: topics("ALL") }) : null,
+          asksSubscribers(rsvpAsk.audience) ? t("editor.rsvpAskEnabledHelpTopics", { topic: news("topics.RSVP_ASK"), all: news("topics.ALL") }) : null,
           t("editor.rsvpAskEnabledHelpUnticked"),
         ]
           .filter(Boolean)
