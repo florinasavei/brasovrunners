@@ -5,6 +5,7 @@ import {
   cachedVolunteerProfileDescribed,
   cachedVolunteerRoles,
   cachedVolunteersDescribed,
+  cachedVolunteersListDescribed,
 } from "@/modules/public-cache/reads";
 import { volunteerBoxRoles, volunteerEventAhead, volunteerOfferClosedFor } from "./domain/volunteer";
 import type { PublicVolunteerCategory, PublicVolunteerRole } from "./volunteers";
@@ -39,10 +40,16 @@ export type VolunteerOffer = {
   profile: boolean;
   /** The club may take a person under eighteen (§768): the notice and the agreement in force both describe minors. */
   minors: boolean;
+  /**
+   * The form asks «Vreau să apar pe lista publică a voluntarilor» (§NNN): the club ticked «Lista voluntarilor e publică pe pagina evenimentului» **and**
+   * the notice in force describes the list (`{{volunteersList}}`). Off, the box is not drawn — a tick that promised nothing would mean nothing — and
+   * the service drops one posted anyway (`submitVolunteer`).
+   */
+  listTick: boolean;
 };
 
 export async function readVolunteerOffer(
-  event: { id: string; eventStatus: string; startsAt: Date | null; endsAt: Date | null },
+  event: { id: string; eventStatus: string; startsAt: Date | null; endsAt: Date | null; volunteersListPublic?: boolean | null },
   now: Date,
   answer: "done" | "full" | "invalid" | "captcha" | "limited" | null = null,
 ): Promise<VolunteerOffer | null> {
@@ -65,5 +72,7 @@ export async function readVolunteerOffer(
   // Minors ride on the profile form: no age is asked without it, so no minor is either (§768).
   const minors = profile && (await cachedVolunteerMinorsOpen(now));
   // A cache entry written before the categories existed has none: the roles are then simply listed (§774).
-  return { roles: boxRoles, categories: categories ?? [], shirts, showCounts, profile, minors };
+  // «Vreau să apar pe lista publică a voluntarilor» (§NNN): asked only where the club made the list public and the notice says what it shows. A last good copy of the event made before the column has none.
+  const listTick = event.volunteersListPublic === true && (await cachedVolunteersListDescribed(now));
+  return { roles: boxRoles, categories: categories ?? [], shirts, showCounts, profile, minors, listTick };
 }

@@ -19,6 +19,7 @@ import {
   noticeDescribesVolunteerAgreement,
   noticeDescribesVolunteerProfile,
   noticeDescribesVolunteers,
+  noticeDescribesVolunteersList,
   volunteerAgreementInForce,
   volunteerMinorsOpen,
 } from "@/modules/legal-documents/repository";
@@ -168,6 +169,8 @@ export type VolunteerItem = {
   city: string | null;
   volunteeredBefore: boolean;
   clubMember: boolean;
+  /** «Vreau să apar pe lista publică a voluntarilor» (§NNN): the person's own tick (or the organizers' record of it) — the card's «Pe lista publică». */
+  listOptIn: boolean;
   shirtSize: Exclude<RegistrationTshirtSize, "NONE"> | null;
   createdAt: Date;
   updatedAt: Date;
@@ -312,6 +315,7 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
       city: row.city,
       volunteeredBefore: row.volunteeredBefore,
       clubMember: row.clubMember,
+      listOptIn: row.listOptIn,
       shirtSize: row.shirtSize === null || row.shirtSize === "NONE" ? null : row.shirtSize,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
@@ -1420,6 +1424,7 @@ function staffInputOf(fields: Record<string, unknown>, eventDay: string, keptAge
     // The ticks (§765): true only when the form posted them.
     volunteeredBefore: fields.volunteeredBefore === true,
     clubMember: fields.clubMember === true,
+    listOptIn: fields.listOptIn === true,
   });
   if (!parsed.success) {
     throw new DomainError("VALIDATION_ERROR", parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "), refusedFields(parsed.error));
@@ -1581,6 +1586,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
   }
   // Whether the notice in force names the profile answers (§765): read before the transaction, like the public sign-up does.
   const profileDescribed = input ? await noticeDescribesVolunteerProfile(db, now) : true;
+  // Whether the notice in force describes the volunteers' public list (§NNN): asked only for an entry, like the profile — the organizers' record of the tick waits for it.
+  const listDescribed = input ? await noticeDescribesVolunteersList(db, now) : true;
   // Whether the club may take a person under eighteen (§768): asked only when this entry says one — a card save of a person already
   // under eighteen is never held up by a text withdrawn since, but nobody new is put under eighteen without the texts.
   const minorsOpen = input?.guardian ? await volunteerMinorsOpen(db, now) : true;
@@ -1653,7 +1660,12 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (input.assignedRoleId) await assertEventRoles([input.assignedRoleId], "assignedRoleId");
       if (await holderOf(input.identity.canonicalEmail)) throw alreadyListed();
       if (!profileDescribed) refuseUnnamedProfile(input, null, event.shirts);
+      // The organizers record the person's own tick only under a notice that describes the list: a post that carries it otherwise is a forged or stale one.
+      if (input.listOptIn && !listDescribed) throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not describe the public list yet", ["listOptIn"]);
       if (input.guardian && !minorsOpen) throw new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["birthDate"]);
+      // The notice the tick is recorded under (§421's line): the version in force in the person's language, written beside the tick like a sign-up's.
+      const listNotice = input.listOptIn ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", "ro", now) : undefined;
+      if (input.listOptIn && !listNotice) throw new DomainError("VALIDATION_ERROR", "no approved privacy notice in force", ["listOptIn"]);
       const [row] = await tx
         .insert(eventVolunteers)
         .values({
@@ -1674,6 +1686,9 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           city: input.city,
           volunteeredBefore: input.volunteeredBefore,
           clubMember: input.clubMember,
+          // «Vreau să apar pe lista publică a voluntarilor» (§NNN), recorded by the staff member (the audit row names them) under the notice in force.
+          listOptIn: input.listOptIn,
+          privacyNoticeVersion: input.listOptIn ? (listNotice?.version ?? null) : null,
           // A size only while the event gives a shirt (§765); a stale form posting one for an event without is ignored.
           shirtSize: event.shirts ? input.shirtSize : null,
           // The parent or guardian of a person under eighteen (§768): their name, and the address when the organizer has one.
@@ -1689,7 +1704,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         .returning({ id: eventVolunteers.id, eventId: eventVolunteers.eventId, email: eventVolunteers.email, locale: eventVolunteers.locale, state: eventVolunteers.state });
       if (!row) throw alreadyListed();
       await writeChoices(row.id, input.choiceIds);
-      await audit("volunteer.added", { volunteerId: row.id, roleId: input.assignedRoleId, roleIds: input.choiceIds });
+      await audit("volunteer.added", { volunteerId: row.id, roleId: input.assignedRoleId, roleIds: input.choiceIds, ...(input.listOptIn ? { listOptIn: true } : {}) });
       if (input.assignedRoleId) await queueRoleAssigned(tx, row, input.assignedRoleId, actor.id, now);
       return { changed: true, volunteer: { id: row.id } };
     }
@@ -1774,6 +1789,18 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           clubMember: current.clubMember,
           shirtSize: current.shirtSize,
         };
+    /*
+      «Vreau să apar pe lista publică a voluntarilor» (§NNN): under a notice that describes the list the box says what the person wants; under
+      one that does not, the box is drawn only for a person already ticked and can only be cleared — a tick is never newly recorded without
+      the notice behind it (the refusal names the box), and a post that leaves it alone changes nothing.
+    */
+    if (!listDescribed && input.listOptIn && !current.listOptIn) {
+      throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not describe the public list yet", ["listOptIn"]);
+    }
+    const listNext = listDescribed ? input.listOptIn : current.listOptIn && input.listOptIn;
+    // The notice the tick is newly recorded under: the version in force in the person's language (the tick of a sign-up keeps the one it was given under).
+    const listNotice = listNext && !current.listOptIn ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", current.locale, now) : undefined;
+    if (listNext && !current.listOptIn && !listNotice) throw new DomainError("VALIDATION_ERROR", "no approved privacy notice in force", ["listOptIn"]);
     // `age` is derived from the date: the trail names the date's box, and the age alone only when it moved with no new date (an event moved).
     const { age: nextAge, ...nextAnswers } = profile;
     const next = {
@@ -1782,6 +1809,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       email: input.identity.deliveryEmail,
       phone: input.phone,
       note: input.note,
+      listOptIn: listNext,
       ...nextAnswers,
     };
     const before = {
@@ -1797,6 +1825,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       volunteeredBefore: current.volunteeredBefore,
       clubMember: current.clubMember,
       shirtSize: current.shirtSize,
+      listOptIn: current.listOptIn,
     };
     const choicesBefore = (
       await tx.select({ roleId: eventVolunteerRoleChoices.roleId }).from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.volunteerId, current.id))
@@ -1859,6 +1888,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         .set({
           ...columnsOf(next),
           age: nextAge,
+          ...(listNotice ? { privacyNoticeVersion: listNotice.version } : {}),
           ...guardianSet,
           canonicalEmail: input.identity.canonicalEmail,
           canonicalizationVersion: input.identity.canonicalizationVersion,
@@ -1992,6 +2022,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       acceptsVolunteers: events.acceptsVolunteers,
       volunteersAccess: events.volunteersAccess,
       volunteersShirts: events.volunteersShirts,
+      volunteersListPublic: events.volunteersListPublic,
       startsAt: events.startsAt,
       endsAt: events.endsAt,
       raceStartsAt: events.raceStartsAt,
@@ -2048,6 +2079,14 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   if (looksLikeSpam(input, now)) return { outcome: "done" };
 
   const noticeDescribes = await noticeDescribesVolunteers(db, now);
+  /*
+    «Vreau să apar pe lista publică a voluntarilor» (§NNN): the form asked it only where the club made the list public and the notice in
+    force describes it, so the tick is kept only then — asked again here, the page's cache is not the gate. A tick posted otherwise (a page
+    cached before the club or the notice changed) is dropped, never stored: the person agreed to nothing that was described. The person is
+    never refused for it; the page shows no name for them either way until an organizer confirms them.
+  */
+  const listAsked = event.volunteersListPublic && (await noticeDescribesVolunteersList(db, now));
+  const listOptIn = listAsked && input.listOptIn === true;
   // Conditions (a), (c) and (d), the event published, public and still ahead — the one rule the page and the
   // card read; (b), a role that still needs people, is judged under the lock below.
   const closed = volunteerOfferClosedFor({
@@ -2152,6 +2191,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
         source: "PUBLIC",
         message: input.message,
         privacyNoticeVersion: notice.version,
+        listOptIn,
         // The person's own words about themselves (§765), kept only when the notice in force names them; the size only
         // while the event gives a shirt. A form posted for the other mode (a page cached before the notice changed) is refused at the top, naming its missing boxes; the redirect then draws the form now in force.
         ...(profile
@@ -2225,7 +2265,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       action: "volunteer.signed_up",
       entityType: "event",
       entityId: eventId,
-      metadata: { volunteerId: row.id, roleIds: chosen.map((role) => role.id), ...(guardian ? { minor: true } : {}) },
+      metadata: { volunteerId: row.id, roleIds: chosen.map((role) => role.id), ...(guardian ? { minor: true } : {}), ...(listOptIn ? { listOptIn: true } : {}) },
       now,
     });
     return { outcome: "done", added: row.id, dropped };

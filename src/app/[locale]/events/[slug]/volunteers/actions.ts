@@ -120,6 +120,9 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
         // The volunteer agreement and the age (§758): the same, each its own act.
         agreement: form.get("agreement") === "on",
         adult: form.get("adult") === "on",
+        // «Vreau să apar pe lista publică a voluntarilor» (§NNN): the person's own optional tick, "on" only when ticked — never kept in the draft, like the consent;
+        // the service keeps it only where the form asked it (the club's tick and the notice in force).
+        listOptIn: form.get("listOptIn") === "on",
         // What the person says about themselves (§765), read by the service only while the notice in force names it:
         // the date of birth as typed (§773; the service reads it day first and derives the age on the event's day), the sex, the city, the
         // size, and the two optional ticks — posted as "on" only when ticked.

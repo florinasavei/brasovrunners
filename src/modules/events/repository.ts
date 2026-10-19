@@ -213,6 +213,8 @@ const PUBLIC_COLUMNS = {
   registrationMode: events.registrationMode,
   // «Acceptă răspunsuri „Vin!"» (§811): the club's tick on a turn-up event; `rsvpOffered` adds the rest of the gate.
   rsvpEnabled: events.rsvpEnabled,
+  // «Lista voluntarilor e publică pe pagina evenimentului» (§NNN): the club's tick; the card «Voluntarii» adds the rest of the gate (`volunteersListState`).
+  volunteersListPublic: events.volunteersListPublic,
   registrationOpensAt: events.registrationOpensAt,
   registrationOpensSoon: events.registrationOpensSoon,
   registrationClosesAt: events.registrationClosesAt,

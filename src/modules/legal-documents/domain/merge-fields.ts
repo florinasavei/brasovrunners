@@ -234,6 +234,21 @@ export const VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD = "volunteerProfile";
 export const VOLUNTEER_MINORS_NOTICE_MERGE_FIELD = "volunteerMinors";
 
 /**
+ * The privacy notice's marker for the volunteers' public list (§NNN, amending §754 and §143/§396; the owner, 2026-10-19: «private vs
+ * public lists of volunteers»): the tick's own words on the volunteers' form, quoted, in the reader's language
+ * (`volunteers/notice-words.ts`) — „Vreau să apar pe lista publică a voluntarilor” / “I want to appear on the public list of
+ * volunteers” — inside the volunteers' paragraph's sentence that says what the event's page then shows (the name and the role the
+ * organizers gave, nothing else, only for a volunteer who ticked it and whom the organizers confirmed, with the rest as a count), why
+ * (the person's consent, art. 6(1)(a), withdrawable by writing), and until when (thirty days after the event's start, with the rest of
+ * the offer). Its own marker, §562's, §613's and §765's pattern, and the disclosure rule's gate: the event's page draws the card, the
+ * form asks the tick, and the organizers record it for a person they enter, only while the notice in force names `{{volunteers}}` **and**
+ * this marker in every language (`describesVolunteersList`); a volunteer who ticked under an older notice is never named
+ * (`findFirstVolunteersListNoticeVersion`). `/admin/tasks` carries the row `volunteersListNotice` while an upcoming event's list is public
+ * and the notice is silent.
+ */
+export const VOLUNTEERS_LIST_NOTICE_MERGE_FIELD = "volunteersList";
+
+/**
  * The privacy notice's marker for «Spune-ne ceva»'s named mode (§678): the radio's own words,
  * quoted — „Cu nume și prenume” / “With my name” (`feedback/notice-words.ts`) — in the same
  * paragraph, which then says the forms are anonymous unless the person chooses to give a name, what
@@ -567,6 +582,7 @@ export const MERGE_FIELDS = [
   VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
   VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD,
   VOLUNTEER_MINORS_NOTICE_MERGE_FIELD,
+  VOLUNTEERS_LIST_NOTICE_MERGE_FIELD,
 ] as const;
 
 /**
@@ -828,6 +844,16 @@ export function describesVolunteerProfile(body: unknown): boolean {
  */
 export function describesVolunteerMinors(body: unknown): boolean {
   return mergeFieldsIn(body).has(VOLUNTEER_MINORS_NOTICE_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the volunteers' public list (§NNN): it names `{{volunteersList}}`. With `describesVolunteers` (the
+ * callers ask both: the list is a part of the volunteers' paragraph), the gate for the event page's card «Voluntarii», for the form's
+ * tick «Vreau să apar pe lista publică a voluntarilor» and for the organizers' record of it, and what `/admin/tasks`' row
+ * `volunteersListNotice` reads. Pure; the caller asks it of the notice in force, in every language.
+ */
+export function describesVolunteersList(body: unknown): boolean {
+  return mergeFieldsIn(body).has(VOLUNTEERS_LIST_NOTICE_MERGE_FIELD);
 }
 
 /**

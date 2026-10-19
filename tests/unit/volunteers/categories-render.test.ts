@@ -125,6 +125,7 @@ const person = (over: Partial<VolunteerItem>): VolunteerItem => ({
   city: null,
   volunteeredBefore: false,
   clubMember: false,
+  listOptIn: false,
   shirtSize: null,
   createdAt: AT,
   updatedAt: AT,

@@ -235,6 +235,17 @@ export const eventVolunteers = pgTable(
     /** The T-shirt's size, only while the event gives one (`events.volunteers_shirts`); null is none asked or none wanted. */
     shirtSize: registrationTshirtSize("shirt_size"),
     privacyNoticeVersion: integer("privacy_notice_version"),
+    /**
+     * «Vreau să apar pe lista publică a voluntarilor» (§NNN, amending §754; the owner, 2026-10-19: «private vs public lists of
+     * volunteers»): the person's own tick on the public form, or the organizers' record of it for a person they entered (the card's
+     * «Adaugă», audited with the staff member's name like the paper agreement) — the consent to appear **by name, with the role
+     * given,** on the event page's card «Voluntarii» (`events.volunteers_list_public`). Off by default and never assumed: a person
+     * who did not tick is only counted. A public sign-up keeps it only when the form asked it, i.e. while the club's tick is on and
+     * the notice in force describes the list (`{{volunteersList}}`); the organizers' record only while the notice describes it. A name
+     * is shown only for a row whose notice version (or, for a hand entry, the notice in force at the record) is the first that
+     * described the list or a later one (`domain/public-list.ts`). Kept and deleted with the row.
+     */
+    listOptIn: boolean("list_opt_in").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     /** The staff member who entered the row; null for the public form, and after that account is removed. */

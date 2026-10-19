@@ -102,6 +102,7 @@ export default async function VolunteerBox({
   eventDay,
   profile,
   minors,
+  listTick = false,
   outcome,
   refused,
   typed,
@@ -135,6 +136,12 @@ export default async function VolunteerBox({
   profile: boolean;
   /** The club may take a person under eighteen (§768): the notice and the agreement in force both describe minors — the form draws the guardian's block. */
   minors: boolean;
+  /**
+   * The form asks «Vreau să apar pe lista publică a voluntarilor» (§NNN, `VolunteerOffer.listTick`): an optional tick — off by default, never
+   * kept in the draft, never required — with one help line (name and role only; withdrawable by writing). Drawn for every way in: the page's
+   * own form, a member's and an invited person's.
+   */
+  listTick?: boolean;
   outcome: VolunteerOutcome | null;
   /** The boxes a refusal named (`?vfields=`). */
   refused: readonly BoxName[];
@@ -563,6 +570,15 @@ export default async function VolunteerBox({
             {siteKey && (
               <Box sx={BOT_CHECK_SLOT_SX}>
                 <BotCheck siteKey={siteKey} locale={locale} attempt={attempt} notice />
+              </Box>
+            )}
+
+            {/* «Vreau să apar pe lista publică a voluntarilor» (§NNN): optional, off by default; the house's CheckboxField with its help line. */}
+            {listTick && (
+              <Box data-testid="volunteer-list-optin">
+                <CheckboxField name="listOptIn" id={fieldId("listOptIn")} help={t("volunteers.list.tickHelp")}>
+                  {t("volunteers.list.tick")}
+                </CheckboxField>
               </Box>
             )}
 

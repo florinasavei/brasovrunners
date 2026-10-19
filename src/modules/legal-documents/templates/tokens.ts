@@ -19,6 +19,7 @@ import {
   VOLUNTEERS_MERGE_FIELD,
   VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
   VOLUNTEER_MINORS_NOTICE_MERGE_FIELD,
+  VOLUNTEERS_LIST_NOTICE_MERGE_FIELD,
   VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD,
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
@@ -44,7 +45,7 @@ import { gmailFallbackClause } from "@/modules/notifications/fallback-notice-wor
 import { eventInvitationsClause } from "@/modules/registrations/invitation-words";
 import { feedbackFormsClause, feedbackFormsNamedClause, feedbackSafetyGmailClause, relayQueueClause } from "@/modules/feedback/notice-words";
 import { membersShopClause } from "@/modules/content/shop/notice-words";
-import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause } from "@/modules/volunteers/notice-words";
+import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause, volunteersListClause } from "@/modules/volunteers/notice-words";
 import { resultsClause } from "@/modules/results/notice-words";
 import { rsvpAskClause, rsvpClause } from "@/modules/rsvp/notice-words";
 
@@ -325,6 +326,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${VOLUNTEER_MINORS_NOTICE_MERGE_FIELD}}}`,
     messageKey: VOLUNTEER_MINORS_NOTICE_MERGE_FIELD,
     example: inBoth((locale) => volunteerMinorsClause(locale)),
+  },
+  // The privacy notice's marker for the volunteers' public list (§NNN): the tick's own words, and the switch — the event page's card
+  // «Voluntarii», the form's tick and the organizers' record of it wait for a notice naming it (`describesVolunteersList`).
+  {
+    token: `{{${VOLUNTEERS_LIST_NOTICE_MERGE_FIELD}}}`,
+    messageKey: VOLUNTEERS_LIST_NOTICE_MERGE_FIELD,
+    example: inBoth((locale) => volunteersListClause(locale)),
   },
 ];
 

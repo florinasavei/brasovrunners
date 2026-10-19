@@ -493,6 +493,7 @@ export type AuditAction =
   | "event.volunteers_shirts_switched"
   /** «Arată public câți voluntari mai sunt necesari» (§773), entity `event`: the metadata holds `on` and nothing of a person. */
   | "event.volunteers_counts_switched"
+  | "event.volunteers_list_switched"
   /** «Cine se poate oferi» (§NNN), entity `event`: metadata `{ from, to }` — one of `ANYONE`, `MEMBERS`, `INVITED`; nothing of a person. */
   | "event.volunteers_access_changed"
   /**

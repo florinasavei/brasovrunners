@@ -83,11 +83,13 @@ import {
   describesVolunteerMinors,
   describesVolunteerProfile,
   describesVolunteers,
+  describesVolunteersList,
   namesVolunteerGuardian,
 } from "@/modules/legal-documents/domain/merge-fields";
 import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
+import { readPublicVolunteersList } from "@/modules/volunteers/public-list";
 import { describesRefusal } from "@/modules/legal-documents/domain/refusal-clause";
-import { findCurrentApprovedDocument, findFirstResultsNoticeVersion, findFirstRsvpNoticeVersion, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, findFirstResultsNoticeVersion, findFirstRsvpNoticeVersion, findFirstStatesNoticeVersion, findFirstVolunteersListNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { countRsvpsForEvents } from "@/modules/rsvp/counts";
 import { type PublicRsvps, readPublicRsvps } from "@/modules/rsvp/rsvp";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
@@ -777,6 +779,39 @@ export async function cachedVolunteerAgreementInForce(now: Date): Promise<boolea
  */
 export async function cachedVolunteerRoles(eventId: string) {
   return publicRead(["volunteers.roles", eventId], ["places", "events"], () => readPublicVolunteerRoles(getDb(), eventId));
+}
+
+/**
+ * Whether an event's page may draw the volunteers' public list (§NNN): the privacy notice in force describes the event volunteers and their
+ * public list (`describesVolunteers`, `describesVolunteersList`), in every language — `cachedRsvpDescribed`'s reading, so an approval opens
+ * the card the moment the notice itself changes. `noticeDescribesVolunteersList` is the uncached twin the sign-up and the organizers' record
+ * of the tick ask again.
+ */
+export async function cachedVolunteersListDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesVolunteers(notice.body) && describesVolunteersList(notice.body));
+}
+
+/**
+ * The first approved privacy notice that described the volunteers' public list (`findFirstVolunteersListNoticeVersion`, §NNN), or null —
+ * the line below which a tick «Vreau să apar pe lista publică a voluntarilor» was given under a notice that said nothing about it: those
+ * volunteers are counted and never named. Expired with every legal text, like the results' and «Vin!»'s twins.
+ */
+export async function cachedFirstVolunteersListNoticeVersion(): Promise<number | null> {
+  return publicRead(["legal.first-volunteers-list-notice"], ["legal"], () => findFirstVolunteersListNoticeVersion(getDb()));
+}
+
+/**
+ * The people the event page's card «Voluntarii» may show (`readPublicVolunteersList`, §NNN): the count of the confirmed volunteers and
+ * the names, with the role given, of those who ticked under a notice that described the list. Names and roles only, never an address or a
+ * telephone number. Filed under "places" and "events", the tags every write to the people expires (`revalidatePublicContent`), and with
+ * **no saved copy** (a withdrawn name must not outlive its owner's request, §281, as the start list's and «Vin (N)»'s). The notice's first
+ * version is in the key, so a list made without the gate is never served with it.
+ */
+export async function cachedPublicVolunteersList(eventId: string, firstListNoticeVersion: number | null) {
+  return publicRead(["volunteers.list", eventId, firstListNoticeVersion ?? "none"], ["places", "events"], () =>
+    readPublicVolunteersList(getDb(), eventId, { firstListNoticeVersion }),
+  );
 }
 
 /**

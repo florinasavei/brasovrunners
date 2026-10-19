@@ -29,6 +29,7 @@ import {
   namesVolunteerGuardian,
   namesVolunteerRoleChoices,
   describesVolunteers,
+  describesVolunteersList,
   describesListNumbers,
   describesGmailFallback,
   describesListSocials,
@@ -401,6 +402,17 @@ export async function noticeDescribesRsvp<T extends Record<string, unknown>>(db:
 }
 
 /**
+ * Whether the privacy notice in force describes the volunteers' public list (§NNN, `describesVolunteersList`) — in every language, AND the
+ * event volunteers themselves (`describesVolunteers`), because the list is a part of that paragraph and the tick it asks lives on that form.
+ * False while either is silent. For the sign-up (whether it keeps the tick, asked again at every post), the organizers' record of the tick,
+ * the editor's card and `/admin/tasks`; the event page reads the cached twin (`cachedVolunteersListDescribed`).
+ */
+export async function noticeDescribesVolunteersList<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesVolunteers(notice.body) && describesVolunteersList(notice.body));
+}
+
+/**
  * Whether the privacy notice in force describes the day-before question «Vii mâine?» (§NNN, `describesRsvpAsk`) — in every language,
  * AND «Vin!» itself (`describesRsvp`), because the question writes a «Vin!» row from the subscriber's address. False while either is
  * silent. For the queue, the send, the topic's box on the manage page and `/admin/tasks`; the pop-up reads the cached twin
@@ -670,6 +682,16 @@ export async function findFirstResultsNoticeVersion<T extends Record<string, unk
  */
 export async function findFirstRsvpNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
   return findFirstNoticeVersionDescribing(db, describesRsvp);
+}
+
+/**
+ * The lowest version of an approved, not withdrawn privacy notice that describes the volunteers' public list in **every** language
+ * (`describesVolunteers` and `describesVolunteersList`), or null when none does — `findFirstRsvpNoticeVersion`'s twin (§NNN, the §421
+ * rule). A volunteer's tick records the notice it was given under (`event_volunteers.privacy_notice_version`); the name is shown only for
+ * one given under this version or a later one — a tick under an older notice agreed to nothing that described the list.
+ */
+export async function findFirstVolunteersListNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
+  return findFirstNoticeVersionDescribing(db, (body) => describesVolunteers(body) && describesVolunteersList(body));
 }
 
 /**

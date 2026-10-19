@@ -562,6 +562,17 @@ export const events = pgTable(
     volunteersAccess: volunteersAccess("volunteers_access").notNull().default("ANYONE"),
 
     /**
+     * «Lista voluntarilor e publică pe pagina evenimentului» (§NNN, amending §754 and §143/§396; the owner, 2026-10-19: «private vs
+     * public lists of volunteers»): the volunteers' list is the team's alone (the editor's card, the CSV, the badges) unless the club
+     * ticks this. Ticked, the event's page draws a card «Voluntarii» with the **name and the given role** of each confirmed volunteer
+     * who ticked «Vreau să apar pe lista publică a voluntarilor» (`event_volunteers.list_opt_in`) — and only while the privacy notice
+     * in force describes it (`{{volunteersList}}`) and the volunteer ticked under a notice that did; the others are a count, never
+     * a name, an address or a telephone number. Off by default. Saved by the «Voluntari» card's own form beside the other ticks; the
+     * event's save never writes it. Like `volunteers_access` it travels with a copy of the event, a repeat and the event's file.
+     */
+    volunteersListPublic: boolean("volunteers_list_public").notNull().default(false),
+
+    /**
      * The two facts that stopped being free text in migration `0018`.
      *
      * Null means the club has not said, and the page then omits the row rather than guessing —
