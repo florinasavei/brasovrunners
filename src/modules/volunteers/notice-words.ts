@@ -49,17 +49,28 @@ export function volunteerMinorsClause(locale: string): string {
   return [words.name, words.email].map((label) => `${open}${label}${close}`).join(", ");
 }
 
+/**
+ * What the privacy notice's `{{volunteersList}}` becomes (§821): the tick's own words on the volunteers' form, quoted, in that language —
+ * „Vreau să apar pe lista publică a voluntarilor” / “I want to appear on the public list of volunteers” — read from the catalogue the
+ * form's label reads (`Event.volunteers.list.tick`), so the approved sentence names what a visitor ticks.
+ */
+export function volunteersListClause(locale: string): string {
+  return locale === "en" ? `“${en.Event.volunteers.list.tick}”` : `„${ro.Event.volunteers.list.tick}”`;
+}
+
 /** The notice's merge values, beside the other features' on the legal pages. */
 export function volunteersMergeValues(locale: string): {
   volunteers: string;
   volunteerAgreement: string;
   volunteerProfile: string;
   volunteerMinors: string;
+  volunteersList: string;
 } {
   return {
     volunteers: volunteersClause(locale),
     volunteerAgreement: volunteerAgreementClause(locale),
     volunteerProfile: volunteerProfileClause(locale),
     volunteerMinors: volunteerMinorsClause(locale),
+    volunteersList: volunteersListClause(locale),
   };
 }

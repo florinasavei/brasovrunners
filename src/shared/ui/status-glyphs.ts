@@ -12,6 +12,7 @@ import FlagIcon from "@mui/icons-material/Flag";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HelpIcon from "@mui/icons-material/Help";
 import HistoryIcon from "@mui/icons-material/History";
+import HowToRegIcon from "@mui/icons-material/HowToReg";
 import LinkIcon from "@mui/icons-material/Link";
 import LockClockIcon from "@mui/icons-material/LockClock";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
@@ -65,6 +66,9 @@ export const STATUS_GLYPHS = {
   offered: VolunteerActivismIcon,
   // «A mai fost voluntar» on the same row (§765): what the person did before, not what they offer now.
   experience: HistoryIcon,
+  // «Vrea pe lista publică» on a volunteer's row (§821): the person's wish to be named, not the fact that the page names them — that takes the
+  // club's tick, the notice and a confirmation.
+  wantsList: HowToRegIcon,
   // A guardian's address that is the volunteer's own (§768): a family on one address, marked on the card, never refused.
   family: FamilyRestroomIcon,
   // A visitor's message in the outbox (§778): a message nobody carried; one that left by the other road; its words kept

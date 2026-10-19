@@ -34,6 +34,8 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     const compose = page.locator("#main").getByTestId("newsletter-composer").getByTestId("newsletter-compose");
     // The retired discount codes are no choice (§517).
     await expect(compose.locator('input[name="topic"][value="DISCOUNTS"]')).toHaveCount(0);
+    // The platform's own question has no composer choice (§818): no organizer writes for it.
+    await expect(compose.locator('input[name="topic"][value="RSVP_ASK"]')).toHaveCount(0);
     await compose.locator('input[name="topic"][value="GEAR_TESTING"]').check();
     const subject = `Testare de încălțăminte ${Date.now().toString(36)}`;
     // One language per tab, the letter in the rich-text editor (§550): bold on the first line.
@@ -168,7 +170,8 @@ test.describe("§445 the newsletter pop-up on the contact page", () => {
     // A real modal: the browser's own, over the page.
     expect(await dialog.evaluate((element) => element.matches(":modal"))).toBe(true);
     await expect(dialog.getByRole("heading", { name: "Abonează-te la noutățile clubului" })).toBeVisible();
-    for (const topic of ["ALL", "BIG_EVENTS", "GEAR_TESTING", "SPECIAL_EVENTS", "WEEKLY_RUNS", "VOLUNTEERING", "RESULTS_PHOTOS"]) {
+    // «Întrebarea «Vii?» înaintea alergărilor» (§818) is a topic like the others in the pop-up — and absent from the composer above.
+    for (const topic of ["ALL", "BIG_EVENTS", "GEAR_TESTING", "SPECIAL_EVENTS", "WEEKLY_RUNS", "VOLUNTEERING", "RESULTS_PHOTOS", "RSVP_ASK"]) {
       const row = dialog.getByTestId(`newsletter-topic-${topic}`);
       await expect(row).toBeVisible();
       expect((await row.boundingBox())?.height ?? 0, topic).toBeGreaterThanOrEqual(44);

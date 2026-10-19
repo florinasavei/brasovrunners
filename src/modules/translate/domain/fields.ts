@@ -79,6 +79,8 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^notice\.noteEn$/,
   /^cancel\.reasonEn$/,
   /^(subject|body)En$/,
+  // The club's line of an invitation to volunteer (§820), in the card's «Invitații» fold: one plain box beside its Romanian twin `messageRo`.
+  /^messageEn$/,
   // «Echipa»: the role, a link row's label, the words about the person and the page's introduction.
   /^roleEn$/,
   /^links\[\d{1,2}\]\.labelEn$/,

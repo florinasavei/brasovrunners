@@ -32,6 +32,7 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   listNumbersNotice: { kind: "section", section: "legal" },
   resultsNotice: { kind: "section", section: "legal" },
   rsvpNotice: { kind: "section", section: "legal" },
+  rsvpAskNotice: { kind: "section", section: "legal" },
   resultsTerms: { kind: "section", section: "legal" },
   invitationsNotice: { kind: "section", section: "legal" },
   promoNotice: { kind: "section", section: "legal" },
@@ -47,6 +48,8 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   volunteerProfileNotice: { kind: "section", section: "legal" },
   // The texts for volunteers under eighteen (§768): the notice and the agreement, both approved on «Documente legale».
   volunteerMinorsTexts: { kind: "section", section: "legal" },
+  // The volunteers' public list (§821): the notice, approved on «Documente legale».
+  volunteersListNotice: { kind: "section", section: "legal" },
   // The volunteer agreement (§758) is approved on «Documente legale» too.
   volunteerAgreement: { kind: "section", section: "legal" },
   volunteerRoleChoicesAgreement: { kind: "section", section: "legal" },

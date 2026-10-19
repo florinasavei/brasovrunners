@@ -50,6 +50,11 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
       "switchVolunteersAction",
       "switchVolunteersShirtsAction",
       "switchVolunteersCountsAction",
+      "switchVolunteersListAction",
+      "switchVolunteersAccessAction",
+      "sendVolunteerInvitationsAction",
+      "resendVolunteerInvitationAction",
+      "withdrawVolunteerInvitationAction",
     ].map((name) => [name, noop]),
   );
 });
@@ -125,6 +130,7 @@ const person = (over: Partial<VolunteerItem>): VolunteerItem => ({
   city: null,
   volunteeredBefore: false,
   clubMember: false,
+  listOptIn: false,
   shirtSize: null,
   createdAt: AT,
   updatedAt: AT,

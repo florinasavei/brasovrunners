@@ -108,6 +108,13 @@ describe("§464 the boxes that may be translated", () => {
     // The meeting place's Romanian box has no suffix (§362).
     expect(romanianTwinCandidates("event.locationNameEn")).toContain("event.locationName");
   });
+
+  it("allows the club's line of an invitation to volunteer in English (§820), next to its Romanian twin", () => {
+    expect(isTranslatableEnglishField("messageEn")).toBe(true);
+    expect(isTranslatableEnglishField("messageRo")).toBe(false);
+    expect(isRichTextField("messageEn")).toBe(false);
+    expect(romanianTwinCandidates("messageEn")).toEqual(["messageRo", "message"]);
+  });
 });
 
 describe("§464 the glossary", () => {

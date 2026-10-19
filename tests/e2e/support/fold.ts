@@ -97,3 +97,19 @@ export async function cardOnListing(page: Page, heading: string | RegExp): Promi
   await expect(page.locator("#main ul > li h2").first()).toBeAttached();
   return page.locator("li").filter({ has: page.getByRole("heading", { name: heading }) });
 }
+
+/**
+ * The event page's public folds that start closed (§498, §812): «Condiții de participare», the «Vii?» card and «Cine vine». A spec that
+ * reads a name, a state, the form or the count inside one opens it first — the way a person does, through `openFold`, so it is
+ * idempotent: a fold the address already opened (`#vin`, a pager page) is left open, never toggled shut.
+ *
+ * One helper, so a fold that changes its test id changes it here and nowhere else. Returns the fold, for the reads that follow.
+ */
+export type EventPageFold = "conditions-fold" | "rsvp-box" | "start-list";
+
+export async function openEventFold(page: Page, fold: EventPageFold): Promise<Locator> {
+  const details = page.getByTestId(fold);
+  await details.waitFor({ state: "attached" });
+  await openFold(details);
+  return details;
+}

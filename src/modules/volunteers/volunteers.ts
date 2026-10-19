@@ -1,7 +1,8 @@
-import { and, asc, count, eq, gt, inArray, notInArray, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, notInArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { z } from "zod";
 import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
+import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { events } from "@/db/schema/events";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -19,6 +20,7 @@ import {
   noticeDescribesVolunteerAgreement,
   noticeDescribesVolunteerProfile,
   noticeDescribesVolunteers,
+  noticeDescribesVolunteersList,
   volunteerAgreementInForce,
   volunteerMinorsOpen,
 } from "@/modules/legal-documents/repository";
@@ -63,6 +65,8 @@ import {
   type VolunteerState,
 } from "./domain/volunteer";
 import { agreementAcceptance, canonicalOrNull, readAgreementFacts } from "./agreement";
+import { mayVolunteerWith, VOLUNTEERS_ACCESS as VOLUNTEERS_ACCESS_VALUES, type VolunteersAccess } from "./domain/access";
+import { readVolunteerInvitationLink, spendVolunteerInvitation } from "./invitation-link";
 import { checkedRoleColour } from "./badges/badges";
 import { decodeRoleBaseline, descriptionDigest, roleBaselineOf } from "./role-baseline";
 import { type RoleRowBox, roleBox, roleColourBoxesOf } from "./role-rows";
@@ -166,6 +170,8 @@ export type VolunteerItem = {
   city: string | null;
   volunteeredBefore: boolean;
   clubMember: boolean;
+  /** «Vreau să apar pe lista publică a voluntarilor» (§821): the person's own tick (or the organizers' record of it) — the card's «Vrea pe lista publică». */
+  listOptIn: boolean;
   shirtSize: Exclude<RegistrationTshirtSize, "NONE"> | null;
   createdAt: Date;
   updatedAt: Date;
@@ -310,6 +316,7 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
       city: row.city,
       volunteeredBefore: row.volunteeredBefore,
       clubMember: row.clubMember,
+      listOptIn: row.listOptIn,
       shirtSize: row.shirtSize === null || row.shirtSize === "NONE" ? null : row.shirtSize,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
@@ -389,13 +396,21 @@ export type PublicVolunteerCategory = { id: string; nameRo: string; nameEn: stri
 export async function readPublicVolunteerRoles<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-): Promise<{ acceptsVolunteers: boolean; shirts: boolean; showCounts: boolean; roles: PublicVolunteerRole[]; categories: PublicVolunteerCategory[] }> {
+): Promise<{
+  acceptsVolunteers: boolean;
+  /** «Cine se poate oferi» (§820): the door the volunteers' page opens — read with the roles, so one cache entry answers both. */
+  access: VolunteersAccess;
+  shirts: boolean;
+  showCounts: boolean;
+  roles: PublicVolunteerRole[];
+  categories: PublicVolunteerCategory[];
+}> {
   const [event] = await db
-    .select({ accepts: events.acceptsVolunteers, shirts: events.volunteersShirts, showCounts: events.volunteersShowCounts })
+    .select({ accepts: events.acceptsVolunteers, access: events.volunteersAccess, shirts: events.volunteersShirts, showCounts: events.volunteersShowCounts })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  if (!event?.accepts) return { acceptsVolunteers: false, shirts: false, showCounts: false, roles: [], categories: [] };
+  if (!event?.accepts) return { acceptsVolunteers: false, access: "ANYONE", shirts: false, showCounts: false, roles: [], categories: [] };
   const roles = await listVolunteerRoles(db, eventId);
   const categories = await listVolunteerCategories(db, eventId);
   const people = await db
@@ -404,6 +419,7 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
     .where(eq(eventVolunteers.eventId, eventId));
   return {
     acceptsVolunteers: true,
+    access: event.access,
     // «Oferim tricouri voluntarilor» (§765): the form asks the size only while it is on.
     shirts: event.shirts,
     // «Arată public câți voluntari mai sunt necesari» (§773): the page says how many a role still needs only while it is on.
@@ -444,6 +460,11 @@ function assertMayManage(actor: Actor): void {
 /** A forged form's malformed id is the refusal an unknown one gets, not a database error. */
 function assertIds(...ids: readonly string[]): void {
   if (ids.some((id) => !isUuid(id))) throw new DomainError("NOT_FOUND", "the event, the role or the volunteer is not there");
+}
+
+/** A posted form as a plain record, or null for anything else (a forged call with a string is refused by the schema, not by a crash). */
+function rawRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
 }
 
 function postedStrings(fields: Record<string, unknown>, names: readonly string[]): Record<string, string> {
@@ -1328,6 +1349,43 @@ export async function setVolunteersShowCounts<T extends Record<string, unknown>>
   return result;
 }
 
+/**
+ * «Cine se poate oferi» (§820, amending §754 and §768; the owner, 2026-10-19): anyone from the event's page, the club's signed-in
+ * members only, or only the people the club invited by email — saved by the «Voluntari» card's own form beside the ticks, never by
+ * the editor's save. Changing it later **deletes nothing**: not a sign-up, not an invitation. Narrowing it (`ANYONE` → `INVITED`)
+ * closes the public form at the next read — the public cache is told here — while an invitation already sent keeps its link
+ * (a live invitation is a door in every choice, `volunteerDoorFor`); widening it leaves the links working until used.
+ */
+export async function setVolunteersAccess<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  request: { eventId: string; access: VolunteersAccess },
+  now: Date,
+): Promise<{ changed: boolean }> {
+  assertMayManage(actor);
+  assertIds(request.eventId);
+  if (!(VOLUNTEERS_ACCESS_VALUES as readonly string[]).includes(request.access)) throw new DomainError("VALIDATION_ERROR", "that is not a way to offer", ["access"]);
+  const result = await db.transaction(async (tx) => {
+    const [event] = await tx.select({ access: events.volunteersAccess }).from(events).where(eq(events.id, request.eventId)).for("no key update").limit(1);
+    if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
+    if (event.access === request.access) return { changed: false };
+    // Not `events.version`, like the ticks beside it: it is no edit of the page's text and must not make an open editor's save stale.
+    await tx.update(events).set({ volunteersAccess: request.access }).where(eq(events.id, request.eventId));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event.volunteers_access_changed",
+      entityType: "event",
+      entityId: request.eventId,
+      metadata: { from: event.access, to: request.access },
+      now,
+    });
+    return { changed: true };
+  });
+  // The event's page and the volunteers' page read the choice through the public cache: told once the write has committed.
+  if (result.changed) revalidatePublicContent("events", "places");
+  return result;
+}
+
 const STAFF_FIELDS = ["assignedRoleId", "name", "email", "phone", "note", "birthDate", "sex", "city", "shirtSize", "guardianName", "guardianEmail"] as const;
 
 /**
@@ -1367,6 +1425,7 @@ function staffInputOf(fields: Record<string, unknown>, eventDay: string, keptAge
     // The ticks (§765): true only when the form posted them.
     volunteeredBefore: fields.volunteeredBefore === true,
     clubMember: fields.clubMember === true,
+    listOptIn: fields.listOptIn === true,
   });
   if (!parsed.success) {
     throw new DomainError("VALIDATION_ERROR", parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "), refusedFields(parsed.error));
@@ -1528,6 +1587,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
   }
   // Whether the notice in force names the profile answers (§765): read before the transaction, like the public sign-up does.
   const profileDescribed = input ? await noticeDescribesVolunteerProfile(db, now) : true;
+  // Whether the notice in force describes the volunteers' public list (§821): asked only for an entry, like the profile — the organizers' record of the tick waits for it.
+  const listDescribed = input ? await noticeDescribesVolunteersList(db, now) : true;
   // Whether the club may take a person under eighteen (§768): asked only when this entry says one — a card save of a person already
   // under eighteen is never held up by a text withdrawn since, but nobody new is put under eighteen without the texts.
   const minorsOpen = input?.guardian ? await volunteerMinorsOpen(db, now) : true;
@@ -1600,7 +1661,13 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (input.assignedRoleId) await assertEventRoles([input.assignedRoleId], "assignedRoleId");
       if (await holderOf(input.identity.canonicalEmail)) throw alreadyListed();
       if (!profileDescribed) refuseUnnamedProfile(input, null, event.shirts);
+      // The organizers record the person's own tick only under a notice that describes the list: a post that carries it otherwise is a forged or stale one.
+      if (input.listOptIn && !listDescribed) throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not describe the public list yet", ["listOptIn"]);
       if (input.guardian && !minorsOpen) throw new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["birthDate"]);
+      // The notice the tick is recorded under: the version in force (a document's version is the same in both languages), written in the tick's own column — never in
+      // `privacy_notice_version`, which is the record of a sign-up's consent and stays null on a row the club entered.
+      const listNotice = input.listOptIn ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", "ro", now) : undefined;
+      if (input.listOptIn && !listNotice) throw new DomainError("VALIDATION_ERROR", "no approved privacy notice in force", ["listOptIn"]);
       const [row] = await tx
         .insert(eventVolunteers)
         .values({
@@ -1621,6 +1688,9 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           city: input.city,
           volunteeredBefore: input.volunteeredBefore,
           clubMember: input.clubMember,
+          // «Vreau să apar pe lista publică a voluntarilor» (§821), recorded by the staff member (the audit row names them) under the notice in force.
+          listOptIn: input.listOptIn,
+          listOptInNoticeVersion: input.listOptIn ? (listNotice?.version ?? null) : null,
           // A size only while the event gives a shirt (§765); a stale form posting one for an event without is ignored.
           shirtSize: event.shirts ? input.shirtSize : null,
           // The parent or guardian of a person under eighteen (§768): their name, and the address when the organizer has one.
@@ -1636,7 +1706,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         .returning({ id: eventVolunteers.id, eventId: eventVolunteers.eventId, email: eventVolunteers.email, locale: eventVolunteers.locale, state: eventVolunteers.state });
       if (!row) throw alreadyListed();
       await writeChoices(row.id, input.choiceIds);
-      await audit("volunteer.added", { volunteerId: row.id, roleId: input.assignedRoleId, roleIds: input.choiceIds });
+      await audit("volunteer.added", { volunteerId: row.id, roleId: input.assignedRoleId, roleIds: input.choiceIds, ...(input.listOptIn ? { listOptIn: true } : {}) });
       if (input.assignedRoleId) await queueRoleAssigned(tx, row, input.assignedRoleId, actor.id, now);
       return { changed: true, volunteer: { id: row.id } };
     }
@@ -1651,6 +1721,17 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     const summary = { id: current.id };
 
     if (request.kind === "delete") {
+      // The club's invitation to that person for this event (§820): deleting a person leaves no address of theirs behind. Found by the address
+      // as it stands and by the sign-up it became (`volunteer_id`), so an address a colleague corrected since (`STAFF_FIELDS`) does not leave the
+      // originally invited one behind. Before the volunteer goes, while `volunteer_id` still points at it (the foreign key then sets it null).
+      await tx
+        .delete(eventVolunteerInvitations)
+        .where(
+          and(
+            eq(eventVolunteerInvitations.eventId, current.eventId),
+            or(eq(eventVolunteerInvitations.canonicalEmail, current.canonicalEmail), eq(eventVolunteerInvitations.volunteerId, current.id)),
+          ),
+        );
       // The person's choices go with them (CASCADE).
       await tx.delete(eventVolunteers).where(eq(eventVolunteers.id, current.id));
       await audit("volunteer.deleted", { volunteerId: current.id, roleId: current.roleId, state: current.state });
@@ -1721,6 +1802,19 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           clubMember: current.clubMember,
           shirtSize: current.shirtSize,
         };
+    /*
+      «Vreau să apar pe lista publică a voluntarilor» (§821): under a notice that describes the list the box says what the person wants; under
+      one that does not, the box is drawn only for a person already ticked and can only be cleared — a tick is never newly recorded without
+      the notice behind it (the refusal names the box), and a post that leaves it alone changes nothing.
+    */
+    if (!listDescribed && input.listOptIn && !current.listOptIn) {
+      throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not describe the public list yet", ["listOptIn"]);
+    }
+    const listNext = listDescribed ? input.listOptIn : current.listOptIn && input.listOptIn;
+    // The notice the tick is newly recorded under: the version in force (the tick of a sign-up keeps the one it was given under). Written in the tick's own
+    // column and never in `privacy_notice_version`: a sign-up's consent record is not the organizers' to overwrite.
+    const listNotice = listNext && !current.listOptIn ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", current.locale, now) : undefined;
+    if (listNext && !current.listOptIn && !listNotice) throw new DomainError("VALIDATION_ERROR", "no approved privacy notice in force", ["listOptIn"]);
     // `age` is derived from the date: the trail names the date's box, and the age alone only when it moved with no new date (an event moved).
     const { age: nextAge, ...nextAnswers } = profile;
     const next = {
@@ -1729,6 +1823,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       email: input.identity.deliveryEmail,
       phone: input.phone,
       note: input.note,
+      listOptIn: listNext,
       ...nextAnswers,
     };
     const before = {
@@ -1744,6 +1839,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       volunteeredBefore: current.volunteeredBefore,
       clubMember: current.clubMember,
       shirtSize: current.shirtSize,
+      listOptIn: current.listOptIn,
     };
     const choicesBefore = (
       await tx.select({ roleId: eventVolunteerRoleChoices.roleId }).from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.volunteerId, current.id))
@@ -1806,6 +1902,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         .set({
           ...columnsOf(next),
           age: nextAge,
+          // A tick newly recorded takes the notice in force; one kept keeps its own; one cleared keeps none.
+          listOptInNoticeVersion: !listNext ? null : listNotice ? listNotice.version : current.listOptInNoticeVersion,
           ...guardianSet,
           canonicalEmail: input.identity.canonicalEmail,
           canonicalizationVersion: input.identity.canonicalizationVersion,
@@ -1875,7 +1973,24 @@ export type VolunteerSubmitOutcome =
   /** The address's hour, or the event's, is spent: said plainly, because a person is not a bot. */
   | { outcome: "limited" }
   /** Every role ticked filled while the form was open: the page offers the roles that still need people. */
-  | { outcome: "full" };
+  | { outcome: "full" }
+  /** The invitation's link no longer works (§820): spent, withdrawn, past its date, or unknown — nothing was written. */
+  | { outcome: "invitation"; reason: "used" | "withdrawn" | "expired" | "invalid" };
+
+/**
+ * What the request holds that opens the door of an event whose «Cine se poate oferi» is not «Oricine» (§820). The action reads them
+ * from the request (the session, the form's hidden `invite`); the service decides with them (`mayVolunteerWith`) — a hidden form is
+ * not a permission (BR-REQ-060-01).
+ */
+export type VolunteerCredentials = {
+  /** The members' zone's account reading the request (`membersViewer`: a member, or a colleague), or null. */
+  member?: { email: string } | null;
+  /** The secret of the emailed invitation (`?invite=`), or null. */
+  inviteSecret?: string | null;
+};
+
+/** The invitation spent by another press between this one's read and its write: the sign-up is rolled back and the page says so. */
+class InvitationSpent extends Error {}
 
 /**
  * A person's offer from an event's page. Refuses — as the person's own fix, `VALIDATION_ERROR` naming each
@@ -1904,6 +2019,8 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   now: Date,
   /** The IP address and browser of the press (§771), read by the action from the request: the agreement's tick is an electronic acceptance, and this is its trace. */
   trace?: SignatureTrace,
+  /** Who the request is (§820): the account and the invitation's link, when it has them. */
+  credentials: VolunteerCredentials = {},
 ): Promise<VolunteerSubmitOutcome> {
   assertIds(eventId);
   // What the form asked depends on the notice in force (§765): the profile's boxes while it names them, §758's tick otherwise.
@@ -1918,7 +2035,9 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       editorialStatus: events.editorialStatus,
       membersOnly: events.membersOnly,
       acceptsVolunteers: events.acceptsVolunteers,
+      volunteersAccess: events.volunteersAccess,
       volunteersShirts: events.volunteersShirts,
+      volunteersListPublic: events.volunteersListPublic,
       startsAt: events.startsAt,
       endsAt: events.endsAt,
       raceStartsAt: events.raceStartsAt,
@@ -1929,7 +2048,41 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     .where(eq(events.id, eventId))
     .limit(1);
   if (!event) throw new DomainError("CONFLICT", "this event takes no volunteers on its page");
-  const parsed = volunteerPublicSchemaFor({ profile: profileMode, minors: minorsMode, eventDay: volunteerEventDay(event, now) }).safeParse(rawInput);
+
+  /*
+    Who may offer (§820), asked before anything is read from the form: the emailed link first — a live one is a door in every
+    choice, and the address is the invitation's, never the one posted — then the choice itself. A stranger's post to a members'
+    event is refused here, whatever the page drew; a member's must carry the account's own address.
+  */
+  let invitation: Awaited<ReturnType<typeof readVolunteerInvitationLink>>["invitation"] = null;
+  if (credentials.inviteSecret) {
+    const link = await readVolunteerInvitationLink(db, eventId, credentials.inviteSecret, now);
+    if (!link.invitation || link.reading === null || link.reading.standing !== "open") {
+      // A link that no longer works shuts nothing the choice opens anyway (`volunteerDoorFor`): under «Oricine», or for a member under «Doar membrii
+      // clubului», the post goes on as if it had come without one; only a door that needed the link says so.
+      if (!mayVolunteerWith({ access: event.volunteersAccess, member: credentials.member != null, invite: false })) {
+        return { outcome: "invitation", reason: link.reading === null || link.reading.standing === "open" ? "invalid" : link.reading.standing };
+      }
+    } else {
+      invitation = link.invitation;
+    }
+  }
+  const member = credentials.member ?? null;
+  if (!mayVolunteerWith({ access: event.volunteersAccess, member: member !== null, invite: invitation !== null })) {
+    throw new DomainError("FORBIDDEN", `this event's volunteers are ${event.volunteersAccess === "MEMBERS" ? "the club's members" : "by invitation"} only`);
+  }
+  const posted = (rawRecord(rawInput) ?? {}) as Record<string, unknown>;
+  let formInput: unknown = rawInput;
+  if (invitation) {
+    formInput = { ...posted, email: invitation.deliveryEmail };
+  } else if (event.volunteersAccess === "MEMBERS" && member) {
+    // The account's own address, and «Fac parte din grup» from the account (§820): the form draws both locked, and a forged post cannot change them.
+    if (canonicalOrNull(typeof posted.email === "string" ? posted.email : "") !== canonicalOrNull(member.email)) {
+      throw new DomainError("FORBIDDEN", "a member offers with the account's own address");
+    }
+    formInput = { ...posted, email: member.email, clubMember: true };
+  }
+  const parsed = volunteerPublicSchemaFor({ profile: profileMode, minors: minorsMode, eventDay: volunteerEventDay(event, now) }).safeParse(formInput);
   if (!parsed.success) {
     const fields = refusedFields(parsed.error);
     throw new DomainError("VALIDATION_ERROR", "the volunteer form is malformed", fields.length > 0 ? fields : ["name"]);
@@ -1946,6 +2099,14 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   if (looksLikeSpam(input, now)) return { outcome: "done" };
 
   const noticeDescribes = await noticeDescribesVolunteers(db, now);
+  /*
+    «Vreau să apar pe lista publică a voluntarilor» (§821): the form asked it only where the club made the list public and the notice in
+    force describes it, so the tick is kept only then — asked again here, the page's cache is not the gate. A tick posted otherwise (a page
+    cached before the club or the notice changed) is dropped, never stored: the person agreed to nothing that was described. The person is
+    never refused for it; the page shows no name for them either way until an organizer confirms them.
+  */
+  const listAsked = event.volunteersListPublic && (await noticeDescribesVolunteersList(db, now));
+  const listOptIn = listAsked && input.listOptIn === true;
   // Conditions (a), (c) and (d), the event published, public and still ahead — the one rule the page and the
   // card read; (b), a role that still needs people, is judged under the lock below.
   const closed = volunteerOfferClosedFor({
@@ -1979,7 +2140,12 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   const byGuardian = guardianAddress ? await consumeRateLimit(db, "volunteer-signup", emailBucketKey("volunteer-guardian", guardianAddress), now) : { allowed: true };
   if (!byAddress.allowed || !byEvent.allowed || !byGuardian.allowed) return { outcome: "limited" };
 
-  const outcome = await db.transaction(async (tx): Promise<VolunteerSubmitOutcome & { added?: string; dropped?: boolean }> => {
+  const spendInvitation = async (tx: Transaction<T>, volunteerId: string) => {
+    if (!invitation) return true;
+    return spendVolunteerInvitation(tx, { invitationId: invitation.id, eventId, volunteerId, now });
+  };
+  const outcome = await db
+    .transaction(async (tx): Promise<VolunteerSubmitOutcome & { added?: string; dropped?: boolean }> => {
     // The roles ticked, locked in the order of their ids — the order a role change locks them — while their people
     // are counted: a role given away by the organizers meanwhile is read as it stands, never twice.
     const ticked = await tx
@@ -2016,7 +2182,11 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       .from(eventVolunteers)
       .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.canonicalEmail, identity.canonicalEmail)))
       .limit(1);
-    if (existing) return { outcome: "done", dropped };
+    if (existing) {
+      // The person is on the list already: their invitation, if any, was answered all the same (best effort — the repeat changes nothing else).
+      await spendInvitation(tx, existing.id);
+      return { outcome: "done", dropped };
+    }
 
     // The agreement accepted with the sign-up (§758): the version, the moment, the blanks and their fingerprint —
     // naming the roles chosen, since nobody has given the person one yet (§761).
@@ -2041,6 +2211,9 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
         source: "PUBLIC",
         message: input.message,
         privacyNoticeVersion: notice.version,
+        listOptIn,
+        // The notice the tick was given under: the very one the sign-up's consent is recorded under.
+        listOptInNoticeVersion: listOptIn ? notice.version : null,
         // The person's own words about themselves (§765), kept only when the notice in force names them; the size only
         // while the event gives a shirt. A form posted for the other mode (a page cached before the notice changed) is refused at the top, naming its missing boxes; the redirect then draws the form now in force.
         ...(profile
@@ -2065,6 +2238,8 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       .returning({ id: eventVolunteers.id });
     if (!row) return { outcome: "done", dropped };
     await tx.insert(eventVolunteerRoleChoices).values([...kept].sort().map((roleId) => ({ volunteerId: row.id, roleId, createdAt: now })));
+    // The link is spent with the sign-up it led to, or the sign-up is not written (single use, BR-REQ-036-02).
+    if (!(await spendInvitation(tx, row.id))) throw new InvitationSpent();
 
     await enqueueEmail(tx, {
       participantId: null,
@@ -2112,11 +2287,15 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       action: "volunteer.signed_up",
       entityType: "event",
       entityId: eventId,
-      metadata: { volunteerId: row.id, roleIds: chosen.map((role) => role.id), ...(guardian ? { minor: true } : {}) },
+      metadata: { volunteerId: row.id, roleIds: chosen.map((role) => role.id), ...(guardian ? { minor: true } : {}), ...(listOptIn ? { listOptIn: true } : {}) },
       now,
     });
     return { outcome: "done", added: row.id, dropped };
-  });
+    })
+    .catch((error: unknown): VolunteerSubmitOutcome & { added?: string; dropped?: boolean } => {
+      if (error instanceof InvitationSpent) return { outcome: "invitation", reason: "used" };
+      throw error;
+    });
   // An offer takes no place, so the page's counts did not move — unless the post found a role full that the page
   // still offered: then the page is told once the write has committed.
   if (outcome.dropped) revalidatePublicContent("places");

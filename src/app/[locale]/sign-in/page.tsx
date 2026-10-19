@@ -14,7 +14,7 @@ import { signIn } from "@/auth";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { DEV_IDENTITIES, isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
-import { landingFor, signInTargetOf } from "@/modules/staff-identity/domain/landing";
+import { landingFor, signInBackOf, signInTargetOf } from "@/modules/staff-identity/domain/landing";
 import { getCurrentAccount } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { signInAsDevIdentityAction } from "../admin/actions";
@@ -23,7 +23,7 @@ import { DENSITY } from "@/theme/density";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ error?: string; to?: string }>;
+  searchParams: Promise<{ error?: string; to?: string; back?: string; slug?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -53,14 +53,17 @@ export default async function SignInPage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { error, to } = await searchParams;
+  const { error, to, back: backTo, slug: backSlug } = await searchParams;
   const target = signInTargetOf(to);
+  // The volunteers' page of an event the visitor came from (§820): a closed way back, never a path from the address.
+  const back = signInBackOf(backTo, backSlug);
+  const backHref = back ? ({ pathname: "/events/[slug]/volunteers", params: { slug: back.slug } } as const) : null;
 
   // Already signed in: there is nothing to do here, and a sign-in button shown to somebody who
   // is signed in is how a redirect loop starts. A member asks the account, not the staff session
   // (§524): the backoffice would send them back here, and here back to it.
   const account = await getCurrentAccount();
-  if (account) redirect(getPathname({ locale, href: landingFor(account.role, target) }));
+  if (account) redirect(getPathname({ locale, href: backHref ?? landingFor(account.role, target) }));
 
   const t = await getTranslations("Admin");
   const forMembers = target === "members";
@@ -90,7 +93,7 @@ export default async function SignInPage({ params, searchParams }: Props) {
             // Without `redirectTo`, Auth.js returns the visitor to this page, which then sends them
             // to Zitadel again — a signed-in visitor looking at a sign-in button. A member sent to
             // `/admin` is passed on to the members' zone by its layout (§524).
-            await signIn("zitadel", { redirectTo: getPathname({ locale, href: target === "members" ? "/members-area" : "/admin" }) });
+            await signIn("zitadel", { redirectTo: getPathname({ locale, href: backHref ?? (target === "members" ? "/members-area" : "/admin") }) });
           }}
         >
           <Button type="submit" variant="contained" fullWidth sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
@@ -107,6 +110,8 @@ export default async function SignInPage({ params, searchParams }: Props) {
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="identity" value={identity.key} />
               <input type="hidden" name="to" value={target} />
+              {back && <input type="hidden" name="back" value={back.page} />}
+              {back && <input type="hidden" name="slug" value={back.slug} />}
               <Button type="submit" variant="outlined" fullWidth sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
                 <LoginIcon aria-hidden="true" sx={glyphSx("medium")} />
                 {identity.displayName} · {STAFF_ROLE_LABEL[identity.role]}

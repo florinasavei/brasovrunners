@@ -77,6 +77,21 @@ export const DISCLOSURE_SUMMARY_SX = {
 export const DISCLOSURE_SX = { "& > summary": DISCLOSURE_SUMMARY_SX, ...DISCLOSURE_OPEN_ARROW } as const;
 
 /**
+ * The boxed fold of a public page whose bar is a real heading — «Condiții de participare» (§498), «Vii?» and «Cine vine» (§812): a
+ * bordered card the width of its column, the 44-pixel bar inside it, the arrow and the room under the body only while open. Spread it into
+ * a `Box component="details"`'s `sx`. The footer's and the registration form's folds keep `DISCLOSURE_SX` (a line in a column of prose).
+ */
+export const PUBLIC_FOLD_SX = {
+  border: 1,
+  borderColor: "divider",
+  borderRadius: 2,
+  px: 2,
+  "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
+  ...DISCLOSURE_OPEN_ARROW,
+  "&[open]": { pb: 2 },
+} as const;
+
+/**
  * The glyph a fold's header wears after its arrow (§521; the owner, 2026-09-27: a glyph on every
  * button and every fold header). The arrow says "this opens"; the glyph says what is inside, so a
  * column of closed folds is read by picture as well as by words.

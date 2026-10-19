@@ -401,7 +401,8 @@ const fileDigests = (file: EventFile): Map<string, string> =>
   new Map(file.media.flatMap((entry) => (entry.sha256 ? [[entry.url, entry.sha256] as [string, string]] : [])));
 
 /** Whether the file carries any volunteer category or role (§774). */
-export const hasVolunteers = (file: EventFile): boolean => file.volunteers.categories.length > 0 || file.volunteers.roles.length > 0;
+export const hasVolunteers = (file: EventFile): boolean =>
+  file.volunteers.categories.length > 0 || file.volunteers.roles.length > 0 || file.volunteers.access !== "ANYONE" || file.volunteers.listPublic;
 
 /** Both sides of the comparison for a target: the changes, and the digests the pictures were read by. */
 async function compare<T extends Record<string, unknown>>(

@@ -523,6 +523,8 @@ const volunteerStaffInputBase = (eventDay: string) =>
     city: optionalCity,
     volunteeredBefore: tick,
     clubMember: tick,
+    /** «Vreau să apar pe lista publică a voluntarilor» (§821): the organizers' record of the person's own tick; honoured only while the notice describes it (the service). */
+    listOptIn: tick,
     shirtSize: shirtField,
     /** The parent or guardian of a volunteer under eighteen (§768): the name, and the address only if typed (the consent may be on paper). */
     guardianName: guardianNameBox,
@@ -572,6 +574,8 @@ const publicBase = {
   consent: z.literal(true),
   /** «Am citit și accept contractul de voluntariat» (§758): the person's acceptance of the agreement in force, required. */
   agreement: z.literal(true),
+  /** «Vreau să apar pe lista publică a voluntarilor» (§821): the person's own optional tick; kept only when the form asked it (the club's tick and the notice in force). */
+  listOptIn: tick,
   honeypot: z.string().max(2000).optional(),
   renderedAt: z.iso.datetime().optional(),
 };

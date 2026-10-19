@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { describesRsvp, MERGE_FIELDS, mergeFieldsIn, mergeText, RSVP_MERGE_FIELD } from "@/modules/legal-documents/domain/merge-fields";
+import { describesRsvp, describesRsvpAsk, MERGE_FIELDS, mergeFieldsIn, mergeText, RSVP_ASK_MERGE_FIELD, RSVP_MERGE_FIELD } from "@/modules/legal-documents/domain/merge-fields";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import { termsEn, termsRo } from "@/modules/legal-documents/templates/terms";
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import { TASK_TARGETS } from "@/modules/diagnostics/domain/task-targets";
 import { RSVP_CONFIRM_HOURS } from "@/modules/rsvp/domain/link-life";
-import { rsvpClause, rsvpMergeValues } from "@/modules/rsvp/notice-words";
+import { topicsPhrase } from "@/modules/newsletter/topic-words";
+import { rsvpAskClause, rsvpClause, rsvpMergeValues } from "@/modules/rsvp/notice-words";
 
 /**
  * §811 («Vin!» part 1) — the privacy notice's `{{rsvp}}`: the switch the page, the service and the tasks list read, filled with the
@@ -113,5 +114,62 @@ describe("§812 the notice says what the links and the clean-up really do", () =
     expect(all(privacyNoticeRo)).toContain("la următoarea curățare automată după anulare");
     expect(all(privacyNoticeEn)).toContain("at the next automatic clean-up after the cancellation");
     expect(all(privacyNoticeRo)).not.toContain("odată cu anularea");
+  });
+});
+
+/**
+ * §818 — the day-before question has its own marker, `{{rsvpAsk}}`: the notice's switch for the question (the topic's name is listed by
+ * `{{newsletterTopics}}` at once, so that marker alone could not be the switch), in the two paragraphs that describe it.
+ */
+describe("§818 {{rsvpAsk}} is the notice's switch for the «Vii mâine?» question", () => {
+  it("is known to the editor, filled with the topic's own name, and explained in the legend in both languages", () => {
+    expect(MERGE_FIELDS).toContain(RSVP_ASK_MERGE_FIELD);
+    expect(rsvpAskClause("ro")).toBe(`„${ro.Newsletter.topics.RSVP_ASK}”`);
+    expect(rsvpAskClause("en")).toBe(`“${en.Newsletter.topics.RSVP_ASK}”`);
+    expect(rsvpMergeValues("ro").rsvpAsk).toBe(rsvpAskClause("ro"));
+    const entry = DECLARATION_TOKENS.find((token) => token.token === "{{rsvpAsk}}");
+    expect(entry?.messageKey).toBe("rsvpAsk");
+    expect(entry?.example.ro).toBe(rsvpAskClause("ro"));
+    for (const catalogue of [ro, en]) expect(catalogue.Admin.legal.tokens.rsvpAsk.length).toBeGreaterThan(20);
+  });
+
+  it("is what makes a notice describe the question: the template does, a notice without the marker or any non-body does not", () => {
+    expect(describesRsvpAsk(privacyNoticeRo)).toBe(true);
+    expect(describesRsvpAsk(privacyNoticeEn)).toBe(true);
+    expect(describesRsvpAsk(JSON.parse(JSON.stringify(privacyNoticeRo).replaceAll("{{rsvpAsk}}", "")))).toBe(false);
+    // A notice that names `{{newsletterTopics}}` lists the topic and still does not describe the question.
+    expect(describesRsvpAsk({ sections: [{ heading: "5. Emails", paragraphs: ["Topics: {{newsletterTopics}}"] }] })).toBe(false);
+    expect(describesRsvpAsk("not a body")).toBe(false);
+  });
+
+  it("is named in the newsletter's paragraph and in «Vin!»'s, in each language — and the terms say nothing of it", () => {
+    for (const body of [privacyNoticeRo, privacyNoticeEn]) {
+      const paragraphs = sentences(body).filter((paragraph) => paragraph.includes("{{rsvpAsk}}"));
+      expect(paragraphs).toHaveLength(2);
+      expect(paragraphs.some((paragraph) => paragraph.includes("{{newsletterTopics}}"))).toBe(true);
+      expect(paragraphs.some((paragraph) => paragraph.includes("{{rsvp}}"))).toBe(true);
+    }
+    // What the «Vin!» paragraph says the question does with the address: an unconfirmed answer, deleted at «Nu vin» or after 7 days.
+    const ro5 = sentences(privacyNoticeRo).find((text) => text.startsWith("Răspunsul {{rsvp}}: dacă scrii"))!;
+    const en5 = sentences(privacyNoticeEn).find((text) => text.startsWith("The {{rsvp}} answer: if you type"))!;
+    expect(ro5).toContain("răspuns neconfirmat");
+    expect(ro5).toContain("după 7 zile");
+    expect(en5).toContain("unconfirmed answer");
+    expect(en5).toContain("after 7 days");
+    for (const body of [termsRo, termsEn]) expect(mergeFieldsIn(body).has(RSVP_ASK_MERGE_FIELD)).toBe(false);
+  });
+
+  it("gives its /admin/tasks row words and steps in both languages, pointing at /admin/legal", () => {
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.rsvpAskNotice;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+    expect(TASK_TARGETS.rsvpAskNotice).toEqual({ kind: "section", section: "legal" });
+  });
+
+  it("names the topic without quotes inside its name, because every list wraps each name in a pair of its own", () => {
+    for (const label of [ro.Newsletter.topics.RSVP_ASK, en.Newsletter.topics.RSVP_ASK]) expect(label).not.toMatch(/[„”“"]/);
+    expect(mergeText("{{newsletterTopics}}", { newsletterTopics: topicsPhrase("ro", ["RSVP_ASK"]) })).toBe("„Întrebarea «Vii?» înaintea alergărilor”");
   });
 });

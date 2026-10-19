@@ -41,6 +41,8 @@ const NEWSLETTER_LEAVE_ERROR_ID = "newsletter-leave-errors";
 
 type Props = {
   locale: Locale;
+  /** The notice in force describes the day-before question (`cachedRsvpAskDescribed`, §818): the topic «Întrebarea «Vii?» …» is a box only then. */
+  askOffered?: boolean;
   outcome: NewsletterOutcome | null;
   /** The boxes a refusal named (`?nfields=`). */
   refused: readonly NewsletterBox[];
@@ -77,7 +79,7 @@ type Props = {
  * The page draws this only while the privacy notice in force describes the newsletter
  * (`cachedNewsletterOffered`): nothing is collected before the club's approved text says why.
  */
-export default async function NewsletterSignup({ locale, outcome, refused, typed, siteKey, renderedAt, attempt, leaveOutcome, leaveTyped }: Props) {
+export default async function NewsletterSignup({ locale, askOffered = false, outcome, refused, typed, siteKey, renderedAt, attempt, leaveOutcome, leaveTyped }: Props) {
   const t = await getTranslations("Newsletter");
   const contactPath = getPathname({ locale, href: "/contact" });
   const open = newsletterDialogOpen(outcome);
@@ -86,6 +88,7 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
   const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
   // The confirmation link leaves on the scheduler's tick by default (§513): the sentence says that
   // wait, or "a few minutes" when the club sends right after the request. Read only on "sent".
+  const topicChoices = NEWSLETTER_TOPICS.filter((topic) => topic !== "RSVP_ASK" || askOffered);
   const waitMinutes = outcome === "sent" ? await cachedEmailWaitMinutes(new Date()) : null;
   // Spam and Promotions, the box every page that waits for an email shows (§619): read only when one is waited for.
   const spamHint = outcome === "sent" || leaveOutcome === "sent" ? await spamHintWords() : null;
@@ -275,7 +278,7 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
                 {invalid.has("topics") ? t("errors.topics") : t("topicsHelp")}
               </Typography>
               <Stack spacing={0.5}>
-                {NEWSLETTER_TOPICS.map((topic) => (
+                {topicChoices.map((topic) => (
                   <Box
                     component="label"
                     key={topic}

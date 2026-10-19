@@ -464,7 +464,7 @@ describe("§754 the volunteers' public sign-up", () => {
     await db.update(events).set({ volunteersShowCounts: true });
     expect((await readPublicVolunteerRoles(db, event.id)).showCounts).toBe(true);
     await db.update(events).set({ acceptsVolunteers: false });
-    expect(await readPublicVolunteerRoles(db, event.id)).toEqual({ acceptsVolunteers: false, shirts: false, showCounts: false, roles: [], categories: [] });
+    expect(await readPublicVolunteerRoles(db, event.id)).toEqual({ acceptsVolunteers: false, access: "ANYONE", shirts: false, showCounts: false, roles: [], categories: [] });
   });
 
   it("lists each volunteer with the role given and the roles chosen, in the club's order", async () => {

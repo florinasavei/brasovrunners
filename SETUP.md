@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.58-2026-10-18 -->
+<!-- PROJECT_BASELINE: BR-V3.59-2026-10-19 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.58-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.59-2026-10-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2367,6 +2367,52 @@ only ones who see the names, addresses and telephone numbers.
      nou» writes them into the new draft through the card's own rules (an entry the card would refuse is skipped); an import over an existing event leaves
      its roles and categories as they are, and the preview says so (a skipped entry is counted in words, never silently).
    - **Local and QA databases** get two categories with the owner's example roles on the sample race (`yarn db:seed`; never production, `DECISIONS.md` §30).
+10. **Choose who may offer, and invite people by email** (`DECISIONS.md` §820; the owner, 2026-10-19: «invite only volunteer … Brașov Runners only volunteers»). The card
+    «Voluntari», under «Primește voluntari pe pagină» (shown only while it is ticked), has the choice **«Cine se poate oferi»** — three radios and one **«Salvează»**:
+    - **«Oricine, de pe pagina evenimentului»** — as in step 4 (the default, and what every event was).
+    - **«Doar membrii clubului (conectați în zona membrilor)»** — the event's page says «Căutăm voluntari dintre membrii clubului: …» and the button opens the
+      volunteers' page, which shows the form only to a signed-in member (an account of the members' zone, or any colleague's): the name and the address come from the
+      account, the address is read-only and «Fac parte din grupul …» is ticked and locked. Anyone else reads «Voluntarii pentru acest eveniment sunt membrii clubului — intră
+      în zona membrilor.» with the sign-in button — which brings the member back to this page, not to the members' zone — and a post from a stranger is refused by the server,
+      not only hidden. A member needs an account first («Echipa» → «Adaugă mai mulți membri»).
+    - **«Doar cu invitație de la club»** — the event's page says nothing about volunteers and the volunteers' page answers 404 for everyone without an invitation's link (a
+      made-up link too). The fold **«Invitații»** (it appears with this choice, and stays while any invitation exists) takes **«Adrese (una pe rând)»** — up to 50 at a time — an
+      optional club's line, up to 500 characters, written in **both languages or neither** on the two tabs **«Mesaj (română)»** and **«Message (English)»** (each half of the
+      email says its own, «Tradu din română» fills the second; one language alone is refused) and the email's language, and **«Trimite invitațiile»** sends each address one email,
+      «Te invităm să fii voluntar la …», with the roles that still need people, the event's facts and the button **«Mă ofer voluntar»** — a personal link that opens the form
+      with the invited address locked and works **once**. Nothing is sent while the offer itself is closed (the card's line says why: not published, no role needing people, the
+      notice or the agreement not in force) — a link would lead to a 404. An address that already has an invitation is not sent a second one, one that already offered is
+      skipped, and a withdrawn one comes back on the same row. The list under the box shows each address with «Trimisă», «Folosită», «Retrasă» or «Expirată» (the event itself is over or called off: a race
+      moved to a later day keeps its links, whatever date they were sent under) and, on an open one, **«Retrimite»** (a new email; the old link stops working at once) and **«Retrage»** (the link then says «Clubul a retras invitația.»), each asking first.
+      Organizers and Administrators send; nobody else sees the fold. An invitation holds no role's seat and no place of the race.
+    - **The choice is for one date** — the other dates of a series keep their own (the card's form writes this event, never the series).
+    - **Changing the choice later deletes nothing** — no sign-up, no invitation. A link already sent keeps working in every choice until it is used; «Oricine» → «Doar cu
+      invitație» closes the public form at the next read. The choice travels with a copy of the event, with every date of a repeat and with the event's JSON file (not the tick
+      «Primește voluntari», which a copy starts without).
+    - **The privacy notice** — its volunteers' paragraph has one more sentence for the invitation by email and the member's account (`{{volunteers}}`, no new marker): approve the
+      notice from the template in the next sitting, a lawyer reading that sentence first — it now names the legal basis (the club's legitimate interest in inviting its volunteers,
+      art. 6(1)(f)) and the source of the address (the person or the club's contacts, art. 14(2)(f)). The invitations are deleted with the offers, 30 days after the event's start.
+    - **One person's invitations** — the person's data screen («Toate datele unei persoane», Administrator) lists the invitations sent to an address, with the club's line in both
+      languages, and **«Șterge invitațiile de voluntariat»** erases them on request (art. 17), asking first; the offers and registrations stay.
+
+11. **Show the volunteers on the event's page — or keep the list private** (`DECISIONS.md` §821; the owner, 2026-10-19: «private vs public lists of volunteers»). By default the
+    list of volunteers is the team's alone (the card, the CSV, the badges), exactly as before. The card «Voluntari» has one more tick, under «Arată public câți voluntari mai sunt
+    necesari»: **«Lista voluntarilor e publică pe pagina evenimentului»** (off by default, one press like the others, audited). Three things must hold before a name shows:
+    - **The notice describes it.** Approve the privacy notice from the template once more (`/admin/legal` → the «GDPR» card → «Regenerează din șablon», a lawyer reading the
+      volunteers' paragraph first): it gains a sentence with the marker `{{volunteersList}}` — what the page shows (the name and the role given, nothing else), for whom (only a
+      volunteer who ticked), the basis (their consent, withdrawn by writing) and until when (the offer's deletion, 30 days after the event's start). Until a notice naming it is in
+      force in **both** languages the page shows no card and the form asks no tick; `/admin/tasks` shows the row «Textul pentru lista publică a voluntarilor» while an upcoming
+      event has the list public, and the card says so in a line with a link to «Documente legale».
+    - **The volunteer ticks.** The volunteers' page then has one more optional box, **«Vreau să apar pe lista publică a voluntarilor»** (off by default, with one line of help), in every
+      way in (anyone, a member, an invitation). For a person you enter yourself («Adaugă un voluntar de mână», «Modifică») the same words are a box, **«Vrea să apară pe lista publică
+      a voluntarilor»**: tick it only when the person told you they want to, preferably in writing — your name stays in the log, as for a paper agreement. A tick can always be cleared;
+      it cannot be recorded while the notice is silent. A row with the tick says «Vrea pe lista publică» (the wish; the page names the person only once confirmed, under the conditions above). A volunteer who ticked under a notice from before this one is never named, and neither is a volunteer under eighteen (counted only: the guardian's acceptance covers the agreement, not a public name).
+    - **You confirm them.** The page names only **«Confirmat»** volunteers; the others are not on it at all.
+    What the visitor sees: the card **«Voluntarii (N)»**, a fold **closed on arrival** like «Condiții de participare», after «Căutăm voluntari» and before the rules — the names of the
+    volunteers who ticked, each with the role you gave them, and «și încă N voluntari» for the rest of the confirmed. Nobody ticked yet but the page is asking for volunteers: the card is
+    the one sentence «Echipa de voluntari se formează.»; the offer closed and nobody ticked: no card. Never an address, a telephone number, a city or a date of birth. The card goes 30
+    days after the event's start, when the maintenance job deletes the offers, and at once if you untick the box, switch «Primește voluntari» off or the notice stops describing it.
+    The tick travels with a copy of the event, every date of a repeat and the event's JSON file (never a volunteer, and not «Primește voluntari»).
 
 ## 45. Clasament — put a race's results in the backoffice, and make them public only when the notice says so
 
@@ -2452,7 +2498,7 @@ enter them; **only the Administrator and the Superadministrator make them public
 The answer «Vin!» (`DECISIONS.md` §811; the owner, 2026-10-18: «how do I mark myself as "Going"?») is for the events people simply
 turn up to — the weekly group run, and any hike, coffee or meetup saved with «Fără înscrieri». It is **not a registration**: it holds no
 place, signs no declaration and makes no participant. It is **closed until the privacy notice describes it**, and it is a tick the club
-turns on event by event. Two steps are the club's.
+turns on event by event. Three steps are the club's: the notice (1), the tick (2) and, for the «Vii?» email, the notice once more (7).
 
 1. **Approve a privacy notice that names «Vin!» — a lawyer reads it first.** `/admin/legal` → the «GDPR» card → «Regenerează din șablon»
    → confirm. Four paragraphs gain the answer (the marker `{{rsvp}}` is the button's own name, „Vin!” / “I'm coming!”):
@@ -2476,11 +2522,11 @@ turns on event by event. Two steps are the club's.
    any other mode writes it off. A weekly run's tick travels with the series (a «de acum încolo» save carries it to the later dates, a new
    date copies it), «Duplică» keeps it, and the event's JSON file writes it **only when it is on** (a file without it reads «off», and an older
    release still reads every file that has it off). **The answers themselves are never carried** by a duplicate, a repeat or a file.
-3. **What a visitor sees.** On the event's page, where the registration card would stand, a card **«Vii?»** (`#vin`): the address, an optional
+3. **What a visitor sees.** On the event's page, where the registration card would stand, a fold **«Vii?»** (`#vin`), closed like «Condiții de participare» with «Vii? · N vin» (or «Tu vii ✓») on its line; opened, it holds the address, an optional
    name, the tick «Vreau să apar cu numele» and the button **«Vin!»** (the same honeypot, timing check and Turnstile as the «Anunță-mă» box). The
    page says one sentence whatever the address meant — «Ți-am trimis un email: apasă „Da, vin” ca să te numărăm.» — and the email brings the event's
    facts, the day as a calendar file, **«Da, vin»** and, under it, **«Nu vin»**. The buttons open `/vin/<link>` (`/en/coming/<link>`), whose GET only
-   shows the event and one button: the press is a POST. A link works once: «Da, vin» for 48 hours (never past the start), «Nu vin» until the event starts (the event's start as it is then, so a moved event keeps its links). Under the card, **«Vin (N)»** —
+   shows the event and one button: the press is a POST. In a browser the page presses that button by itself once (§812), so opening **«Da, vin»** is enough; a scanner that fetches the link without running scripts, and a browser without JavaScript, see the button and count nobody (a link sandbox that does run scripts can count the address; the person's own click then reads «Ești deja numărat», and «Nu mai vin» in the same email takes the answer back). A link works once: «Da, vin» for 48 hours (never past the start), «Nu vin» until the event starts (the event's start as it is then, so a moved event keeps its links). Under the card, **«Vin (N)»** —
    the confirmed count and the names of those who ticked, «și încă N» for the rest. Under the form, the fold **«Nu mai vin»** (an address; the link by
    email; it never says whether the address answered).
    **The remembered browser.** The «Da, vin» (or «Nu mai vin») press also makes the browser *remembered* for a year: two cookies, `br_person` (a
@@ -2501,6 +2547,14 @@ turns on event by event. Two steps are the club's.
    run; a remembered browser a year after its last answer). «Toate datele unei persoane» (`/admin/registrations/person`) lists a person's answers and
    browsers, counts them in the JSON export, and an Administrator can **«Șterge răspunsurile „Vin!” și browserele»** on request — one audit row with the
    counts, never the address.
-6. **Not built here.** The «Vii?» email before each event with a personal
-   «Vin» / «Nu vin»; the one-tap answer from the members' zone. They call the same service (`answerRsvp` with an identity of source `link` or `account`)
+6. **Not built here.** The one-tap answer from the members' zone. It calls the same service (`answerRsvp` with an identity of source `account`)
    and the same gate (`rsvpOffered`).
+7. **The «Vii?» email (`DECISIONS.md` §818).** One step for the club: **approve the privacy notice again from the template** (`/admin/legal` → the «GDPR» card → «Regenerează din șablon», as in step 1; a lawyer
+   reads section 5's two paragraphs first — the newsletter's, which now says the automatic question the day before, and «Vin!»'s, which says the subscriber's address is written as
+   an unconfirmed answer when the question is sent and deleted at «Nu vin» or after 7 days). Until a notice naming `{{rsvpAsk}}` (and `{{rsvp}}`) is in force, in both languages, **nobody is asked**
+   and the topic's box does not show in the pop-up or on the subscriber's page; `/admin/tasks` carries the row `rsvpAskNotice` while an upcoming event is ticked. The topic is named in the
+   notice only through `{{rsvpAsk}}` (`{{newsletterTopics}}` leaves it out), so a notice approved before names nothing of it.
+   After that: a newsletter subscriber who ticks the topic **«Întrebarea «Vii?» înaintea alergărilor»** (or «Toate noutățile») gets, the day before a ticked event, from 08:00 club time,
+   one email «Vii mâine la …?» with the two buttons **«Vin»** (then «Da, vin» on the page that opens; counts them, no second email) and **«Nu vin»** (counts nobody, and the browser is not
+   remembered) — once per event, never for an event ticked only on its own day, never to someone already counted, and not sent at all if it would arrive after midnight. It leaves
+   by the newsletter's road, last in line, so it never spends the share kept for registrations' links. No organizer writes for the topic.

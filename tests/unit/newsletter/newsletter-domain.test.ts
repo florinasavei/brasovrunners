@@ -9,12 +9,13 @@ import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import { alertDayOf, EVENT_ALERT_WINDOW_DAYS, eventAlertTopics, eventAlertWanted } from "@/modules/newsletter/domain/alerts";
 import { checkNewsletterWords, NEWSLETTER_BODY_MAX, readNewsletterWords } from "@/modules/newsletter/domain/message";
 import { isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, receives, RETIRED_TOPICS, SENDABLE_TOPICS } from "@/modules/newsletter/domain/topics";
-import { newsletterMergeValues, topicsPhrase } from "@/modules/newsletter/topic-words";
+import { newsletterMergeValues, topicsPhrase, topicWords } from "@/modules/newsletter/topic-words";
 import { newsletterDialogOpen, parseNewsletterFields, parseNewsletterOutcome } from "@/modules/newsletter/ui/newsletter-box";
 import { BULK_MESSAGE_TYPES, bulkBudget, isBulkMessage } from "@/modules/notifications/domain/bulk";
 import { isCopiedPerMessage, isParticipantMessage } from "@/modules/notifications/domain/club-notices";
 import { emailSampleActionUrl, emailSampleFor } from "@/modules/notifications/email-copy-fields";
 import { renderBilingual } from "@/modules/notifications/templates";
+import { rsvpMergeValues } from "@/modules/rsvp/notice-words";
 import { canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -25,7 +26,7 @@ const DAY = 24 * 60 * 60_000;
 /** §445 — the newsletter's pure rules: topics, alerts, words, the reserve, the notice's switch, the messages. */
 describe("§445 the newsletter's topics", () => {
   it("offers the brief's topics but the retired discount codes (§517), in its order, 'all the news' first, every name and hint in both languages", () => {
-    expect(NEWSLETTER_TOPICS).toEqual(["ALL", "BIG_EVENTS", "GEAR_TESTING", "SPECIAL_EVENTS", "WEEKLY_RUNS", "VOLUNTEERING", "RESULTS_PHOTOS"]);
+    expect(NEWSLETTER_TOPICS).toEqual(["ALL", "BIG_EVENTS", "GEAR_TESTING", "SPECIAL_EVENTS", "WEEKLY_RUNS", "VOLUNTEERING", "RESULTS_PHOTOS", "RSVP_ASK"]);
     expect(RETIRED_TOPICS).toEqual(["DISCOUNTS"]);
     expect(ro.Newsletter.topics).toMatchObject({
       ALL: "Toate noutățile",
@@ -36,6 +37,7 @@ describe("§445 the newsletter's topics", () => {
       WEEKLY_RUNS: "Alergările săptămânale",
       VOLUNTEERING: "Voluntariat",
       RESULTS_PHOTOS: "Rezultate și poze",
+      RSVP_ASK: "Întrebarea «Vii?» înaintea alergărilor",
     });
     for (const catalogue of [ro, en]) {
       // Every value keeps its name — an old send's row may still say DISCOUNTS — and every offered one a hint.
@@ -77,6 +79,15 @@ describe("§445 the newsletter's topics", () => {
     // The privacy notice lists what a subscriber may choose — no longer the discount codes (§517).
     expect(newsletterMergeValues("ro").newsletterTopics).not.toContain("Coduri de reducere");
     expect(newsletterMergeValues("en").newsletterTopics).not.toContain("Discount codes");
+  });
+
+  it("leaves the automatic topic out of the notice's list of what a subscriber chooses — the club writes nothing under it, and the notice names it through {{rsvpAsk}}", () => {
+    for (const locale of ["ro", "en"]) {
+      const listed = newsletterMergeValues(locale).newsletterTopics;
+      expect(listed).not.toContain(topicsPhrase(locale, ["RSVP_ASK"]));
+      expect(listed).not.toContain(topicWords(locale).RSVP_ASK);
+      expect(listed).toContain(topicWords(locale).WEEKLY_RUNS);
+    }
   });
 });
 
@@ -167,7 +178,7 @@ describe("§445 the reserve the outbox keeps for everything else", () => {
   });
 
   it("treats the newsletter and the alert as bulk, and nothing a participant is waiting for", () => {
-    expect([...BULK_MESSAGE_TYPES].sort()).toEqual(["NEWSLETTER", "NEW_EVENT_ALERT"]);
+    expect([...BULK_MESSAGE_TYPES].sort()).toEqual(["NEWSLETTER", "NEW_EVENT_ALERT", "RSVP_ASK"]);
     expect(isBulkMessage("NEWSLETTER_CONFIRM")).toBe(false);
     expect(isBulkMessage("VERIFY_REGISTRATION_EMAIL")).toBe(false);
   });
@@ -198,7 +209,7 @@ describe("§445 the privacy notice is the switch", () => {
       expect(describesNewsletter(notice), locale).toBe(true);
       const section = notice.sections.find((candidate) => candidate.heading?.startsWith("5."));
       const paragraph = section?.paragraphs.find((text) => text.includes("{{newsletterTopics}}")) ?? "";
-      const merged = mergeText(paragraph, { ...newsletterMergeValues(locale), ...deadlineMergeValues(locale, DEFAULT_DEADLINES) });
+      const merged = mergeText(paragraph, { ...newsletterMergeValues(locale), ...rsvpMergeValues(locale), ...deadlineMergeValues(locale, DEFAULT_DEADLINES) });
       expect(merged).not.toContain("{{");
       expect(merged).not.toContain("…………");
       expect(merged).toContain(locale === "ro" ? "6(1)(a)" : "6(1)(a)");

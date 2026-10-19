@@ -11,6 +11,9 @@ function secretOf(source: { APP_ENV?: string; AUTH_SECRET?: string; JOB_SECRET?:
   return `${source.AUTH_SECRET ?? source.JOB_SECRET ?? LOCAL_WITHDRAWN_SECRET}:rsvp-withdrawn`;
 }
 
+/** What the proof's slug carries when the deleted row was the «Vii?» email's unanswered question (§818): the page then says «nu te numărăm», and only a press made it. */
+export const WITHDRAWN_ASKED_SUFFIX = ":nu";
+
 /**
  * The proof that «Nu mai vin» was pressed on a link: a keyed digest of the spent link and the event's slug, carried by the redirect
  * that says «Gata, ți-am șters răspunsul». The row and its links are gone by then, so the page cannot ask the database; without the

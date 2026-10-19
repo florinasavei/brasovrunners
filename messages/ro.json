@@ -632,10 +632,24 @@
       },
       "page": {
         "title": "Vreau să fiu voluntar la {event}",
-        "back": "Înapoi la {event}"
+        "back": "Înapoi la {event}",
+        "membersOnly": "Voluntarii pentru acest eveniment sunt membrii clubului — intră în zona membrilor.",
+        "signIn": "Intră în zona membrilor",
+        "invite": {
+          "used": "Invitația asta a fost deja folosită.",
+          "withdrawn": "Clubul a retras invitația.",
+          "expired": "Invitația a expirat."
+        }
       },
       "callout": {
-        "line": "Căutăm voluntari: {roles}"
+        "line": "Căutăm voluntari: {roles}",
+        "lineMembers": "Căutăm voluntari dintre membrii clubului: {roles}"
+      },
+      "lock": {
+        "leadMember": "Ești conectat ca membru: numele, adresa și bifa de membru vin din contul tău.",
+        "leadInvite": "Clubul te-a invitat să fii voluntar.",
+        "emailMember": "Adresa contului tău de membru; nu se schimbă aici.",
+        "emailInvite": "Adresa la care a ajuns invitația; nu se schimbă aici."
       },
       "doneGuardian": "Dacă ai sub 18 ani, părintele sau tutorele tău primește un email cu un link prin care își dă acordul; până atunci organizatorii nu te pot confirma.",
       "doneHeading": "Mulțumim!",
@@ -653,6 +667,19 @@
         "email": "Emailul părintelui sau tutorelui",
         "emailHelp": "Aici trimitem linkul pentru acord. Nu îl folosim pentru altceva.",
         "aware": "Părintele sau tutorele meu știe și e de acord"
+      },
+      "list": {
+        "title": "Voluntarii",
+        "heading": "Voluntarii ({count})",
+        "forming": "Echipa de voluntari se formează.",
+        "names": "Voluntarii care au vrut să apară cu numele",
+        "others": {
+          "one": "și încă 1 voluntar",
+          "few": "și încă {count} voluntari",
+          "other": "și încă {count} de voluntari"
+        },
+        "tick": "Vreau să apar pe lista publică a voluntarilor",
+        "tickHelp": "Pagina evenimentului arată doar numele tău și rolul dat de organizatori, după ce te confirmă. Poți cere oricând, în scris, să fii scos de pe ea."
       },
       "otherCategory": "Alte activități",
       "contactLabel": "Întrebări?",
@@ -814,7 +841,7 @@
       "rememberedAs": "Răspunzi ca {who}",
       "going": "Tu vii",
       "cancel": "Nu mai vin",
-      "notMe": "Nu sunt eu",
+      "notMe": "Nu sunt eu — uită-mă pe acest dispozitiv",
       "help": "Browserul tău rămâne recunoscut un an după „Da, vin” sau „Nu mai vin”; „Nu sunt eu” îl uită.",
       "failed": "Nu am putut trimite răspunsul. Încearcă din nou.",
       "calendar": {
@@ -2126,7 +2153,16 @@
       "RESULTS_NOT_STARTED": "Clasamentul se poate publica după ce a început cursa. Îl poți scrie de pe acum.",
       "RESULTS_NOT_OPEN": "Doar o cursă are clasament.",
       "MEMBER_TIER_HAS_MEMBERS": "Nivelul nu s-a șters. Membri cu acest nivel: {count}. Dă-le alt nivel întâi, în „Echipa”.",
-      "MEMBER_TIER_IN_CODES": "Nivelul nu s-a șters. Coduri de reducere doar pentru el: {count}. Schimbă-le nivelurile întâi."
+      "MEMBER_TIER_IN_CODES": "Nivelul nu s-a șters. Coduri de reducere doar pentru el: {count}. Schimbă-le nivelurile întâi.",
+      "VINVITE_NOBODY": "Scrie cel puțin o adresă.",
+      "VINVITE_TOO_MANY": "Cel mult {max} de adrese odată. Trimite restul într-o a doua rundă.",
+      "VINVITE_BAD_ADDRESS": "Nu pot citi aceste adrese: {addresses}. Nu s-a trimis nimic.",
+      "VINVITE_MESSAGE_LONG": "Mesajul are prea multe caractere (cel mult {max}).",
+      "VINVITE_MESSAGE_ONE_LANGUAGE": "Scrie mesajul și în română, și în engleză, sau lasă ambele casete goale.",
+      "VINVITE_NOT_INVITED_ONLY": "Invitațiile se trimit doar cât „Cine se poate oferi” e „Doar cu invitație de la club”.",
+      "VINVITE_EVENT_CLOSED": "Nu se pot trimite invitații acum: formularul de voluntari nu e deschis. Motivul e scris mai sus.",
+      "VINVITE_NOT_OPEN": "Invitația nu mai e deschisă: a fost folosită sau retrasă, ori evenimentul s-a terminat sau a fost anulat.",
+      "VINVITE_NOT_FOUND": "Invitația nu mai există."
     },
     "editor": {
       "draftPreview": {
@@ -3618,8 +3654,10 @@
         "volunteerProfile": "Doar în nota de confidențialitate: casetele formularului de voluntari despre persoană, între ghilimele. Fără el în nota în vigoare, formularul cere doar bifa vârstei minime",
         "volunteerGuardian": "Doar în contractul de voluntariat: numele părintelui sau tutorelui unui voluntar minor. La un adult, propoziția dispare. Fără el în contractul în vigoare, nu se primesc minori",
         "volunteerMinors": "Doar în nota de confidențialitate: casetele părintelui din formularul de voluntari, între ghilimele; fără el, clubul nu primește voluntari sub 18 ani",
+        "volunteersList": "Doar în nota de confidențialitate: bifa „Vreau să apar pe lista publică a voluntarilor”, între ghilimele. Cu ea în nota în vigoare, lista publică poate arăta nume",
         "results": "Numele secțiunii „Clasament”, între ghilimele, în nota de confidențialitate și în termeni. Cu el în ambele texte în vigoare, un administrator poate publica clasamentul, iar pagina cursei îl arată",
-        "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin"
+        "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin",
+        "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc ziua dinainte întrebarea „Vii?”"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4593,6 +4631,16 @@
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică” — în aceeași ședință, în ambele limbi."
           ]
         },
+        "volunteersListNotice": {
+          "title": "Textul pentru lista publică a voluntarilor",
+          "todo": "Un eveniment are lista voluntarilor publică, dar nota de confidențialitate în vigoare nu o descrie încă. Până o aprobi, pagina nu arată cardul „Voluntarii” și formularul nu arată bifa de apariție.",
+          "done": "Nota în vigoare descrie lista publică a voluntarilor: pagina arată numele și rolul celor confirmați care au bifat, iar pe ceilalți îi numără.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre voluntari spune acum ce arată lista publică: numele și rolul dat, doar cu bifa persoanei.",
+            "Un jurist ar trebui să citească paragraful: temeiul (consimțământul, art. 6(1)(a)), cât timp rămâne numele pe pagină și retragerea acordului.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică” — în ambele limbi, în aceeași ședință cu celelalte texte ale voluntarilor."
+          ]
+        },
         "emailRoadDown": {
           "title": "O cale de trimitere nu merge",
           "todo": "Gmail-ul clubului sau Mailgun refuză mesajele de peste o oră; mesajele pleacă prin cealaltă cale.",
@@ -4665,6 +4713,16 @@
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunile 4, 5, 7 și 10 descriu răspunsurile „Vin!” și browserul recunoscut.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi.",
             "Termenii nu se schimbă: „Vin!” nu cumpără, nu rezervă și nu semnează nimic."
+          ]
+        },
+        "rsvpAskNotice": {
+          "title": "Nota de confidențialitate: întrebarea „Vii?” de ziua dinainte",
+          "todo": "Un eveniment primește răspunsuri „Vin!”, dar nota în vigoare nu descrie încă întrebarea de ziua dinainte, așa că abonații nu sunt întrebați, iar căsuța temei nu apare la abonare.",
+          "done": "Nota în vigoare descrie întrebarea de ziua dinainte: abonații care au ales tema (sau „Toate noutățile”) sub nota care o descrie primesc un singur email cu „Vin” și „Nu vin”.",
+          "how": [
+            "Înainte de aprobare, citește cu un avocat cele două paragrafe din șablon, din secțiunea 5: cel despre „Vin!” (adresa abonatului devine răspuns neconfirmat la trimitere) și cel despre newsletter.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Întrebarea pleacă abia după nota nouă, și doar celor care au ales tema (sau „Toate noutățile”) sub ea ori sub una mai nouă.",
+            "Deschide ciorna, citește, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi."
           ]
         }
       },
@@ -5098,6 +5156,8 @@
       "standingNoNumber": "{taken} · fără număr",
       "offer": {
         "open": "Pagina „Vreau să fiu voluntar” e deschisă: pagina evenimentului trimite la ea.",
+        "openMembers": "Pagina voluntarilor e deschisă membrilor conectați. Pagina evenimentului trimite la ea.",
+        "openInvited": "Pagina voluntarilor se deschide doar din linkul unei invitații. Pagina evenimentului nu spune nimic de ea.",
         "closed": {
           "off": "Formularul public e oprit: bifează mai jos „Primește voluntari pe pagină” ca pagina evenimentului să-l ofere. Lista ta funcționează oricum.",
           "notPublished": "Formularul public nu se arată: evenimentul nu e publicat. Apare pe pagină după publicare.",
@@ -5227,7 +5287,10 @@
         "guardianEmail": "Emailul părintelui sau tutorelui",
         "guardianHelp": "Doar pentru un voluntar sub 18 ani. Fără email, acordul se ia pe hârtie, la organizatori.",
         "guardianValue": "Părinte sau tutore: {name}",
-        "birthDateHelpMinors": "Opțional. Cel puțin {age} în ziua evenimentului. Sub 18 ani, trece mai jos și părintele sau tutorele."
+        "birthDateHelpMinors": "Opțional. Cel puțin {age} în ziua evenimentului. Sub 18 ani, trece mai jos și părintele sau tutorele.",
+        "listOptIn": "Vrea să apară pe lista publică a voluntarilor",
+        "listOptInHelp": "Bifează doar dacă persoana ți-a spus că vrea, de preferat în scris. Numele tău rămâne în jurnal. Dacă lista e publică, pagina arată numele și rolul dat, după ce o confirmi.",
+        "listOptInOff": "Nota în vigoare nu descrie lista publică: nu se mai poate bifa. Poți doar s-o debifezi."
       },
       "states": {
         "REGISTERED": "Înscris",
@@ -5296,6 +5359,54 @@
       },
       "badgesLink": "Ecusoane pentru voluntari",
       "switchHelp": "Bifat, pagina evenimentului arată „Căutăm voluntari” și un buton către pagina de voluntari. Debifat, nu se șterge nimic: rolurile și oamenii rămân.",
+      "access": {
+        "title": "Cine se poate oferi",
+        "ANYONE": "Oricine, de pe pagina evenimentului",
+        "ANYONEHelp": "Formularul e pe pagina evenimentului, deschis oricui.",
+        "MEMBERS": "Doar membrii clubului (conectați în zona membrilor)",
+        "MEMBERSHelp": "Formularul se arată doar unui membru conectat, cu numele și adresa din contul lui.",
+        "INVITED": "Doar cu invitație de la club",
+        "INVITEDHelp": "Pagina evenimentului nu spune nimic de voluntari. Formularul se deschide doar din linkul unei invitații trimise pe email.",
+        "save": "Salvează",
+        "saving": "Se salvează…",
+        "scope": "Alegerea e doar pentru această dată: celelalte date ale unei serii își păstrează alegerea lor."
+      },
+      "invite": {
+        "title": "Invitații",
+        "summary": "Trimise: {open} · Folosite: {used}",
+        "intro": "Scrie adresele celor pe care îi inviți. Fiecare primește un email cu un link personal către pagina voluntarilor. O invitație nu ține nimic ocupat.",
+        "notInvitedOnly": "Invitațiile se trimit doar cât „Cine se poate oferi” e „Doar cu invitație de la club”. Cele trimise rămân valabile până se folosesc.",
+        "addresses": "Adrese (una pe rând)",
+        "addressesHelp": "Cel mult {max} odată. Cine are deja o invitație sau s-a oferit deja e sărit.",
+        "messageRo": "Mesaj (română)",
+        "messageEn": "Message (English)",
+        "messageHelp": "Opțional. Apare în email așa cum l-ai scris, fiecare jumătate în limba ei: scrie-l în ambele limbi sau în niciuna. Cel mult {max} de caractere.",
+        "language": "Limba invitației",
+        "localeRo": "Română",
+        "localeEn": "English",
+        "send": "Trimite invitațiile",
+        "sending": "Se trimit…",
+        "empty": "Nicio invitație trimisă încă.",
+        "state": {
+          "open": "Trimisă",
+          "used": "Folosită",
+          "withdrawn": "Retrasă",
+          "expired": "Expirată"
+        },
+        "sentAt": "Trimisă {at}",
+        "by": "de {name}",
+        "resentAt": "retrimisă {at}",
+        "usedAt": "folosită {at}",
+        "withdrawnAt": "retrasă {at}",
+        "resend": "Retrimite",
+        "resending": "Se retrimite…",
+        "resendTitle": "Retrimiți invitația?",
+        "resendBody": "Persoana primește un email nou. Linkul din emailul vechi nu mai merge.",
+        "withdraw": "Retrage",
+        "withdrawing": "Se retrage…",
+        "withdrawTitle": "Retragi invitația?",
+        "withdrawBody": "Linkul nu mai merge. Dacă persoana îl deschide, află că invitația a fost retrasă."
+      },
       "shirts": {
         "label": "Oferim tricouri voluntarilor",
         "help": "Bifat, formularul public cere mărimea tricoului și o vezi pe fiecare rând. Debifat, formularul nu cere nicio mărime."
@@ -5304,9 +5415,16 @@
         "label": "Arată public câți voluntari mai sunt necesari",
         "help": "Bifat, pagina de voluntari spune la fiecare rol câte persoane mai sunt necesare. Debifat, nu spune nicio cifră; aici vezi mereu numerele."
       },
+      "list": {
+        "label": "Lista voluntarilor e publică pe pagina evenimentului",
+        "help": "Bifat, pagina arată un card „Voluntarii” cu numele și rolul dat al celor confirmați care au bifat; ceilalți sunt doar numărați. Adresa și telefonul nu apar niciodată.",
+        "noticeOff": "Cardul nu se arată încă: nota de confidențialitate în vigoare nu descrie lista publică a voluntarilor, iar formularul nu arată bifa. «Sarcini» spune ce trebuie aprobat.",
+        "noticeLink": "Documente legale"
+      },
       "chips": {
         "before": "A mai fost voluntar",
-        "club": "Din grupul {club}"
+        "club": "Din grupul {club}",
+        "wantsList": "Vrea pe lista publică"
       },
       "yes": "Da",
       "no": "Nu",
@@ -6246,12 +6364,24 @@
       "rsvpNotice": "nota v{version}",
       "rsvpConfirmedAt": "confirmat {when}",
       "rsvpUnconfirmed": "neconfirmat",
+      "rsvpAsked": "întrebat {when}, fără răspuns",
       "browserUsed": "folosit {when}",
       "browserUntil": "până {when}",
       "rsvpsErase": "Șterge răspunsurile „Vin!” și browserele",
       "rsvpsEraseTitle": "Ștergi răspunsurile „Vin!” ale acestei persoane?",
       "rsvpsEraseBody": "Se șterg răspunsurile „Vin!” și browserele recunoscute pentru această adresă, nu și înscrierile. Ștergerea nu se poate anula.",
-      "rsvpsErased": "Răspunsurile „Vin!” și browserele recunoscute ale acestei adrese au fost șterse."
+      "rsvpsErased": "Răspunsurile „Vin!” și browserele recunoscute ale acestei adrese au fost șterse.",
+      "volunteerInvitations": "Invitații de voluntariat ({count})",
+      "volunteerInvitationSent": "trimisă {when}",
+      "volunteerInvitationResent": "retrimisă {when}",
+      "volunteerInvitationUsed": "folosită {when}",
+      "volunteerInvitationWithdrawn": "retrasă {when}",
+      "volunteerInvitationUntil": "înregistrată până {when}",
+      "volunteerInvitationLine": "mesajul clubului: „{ro}” / „{en}”",
+      "volunteerInvitationsErase": "Șterge invitațiile de voluntariat",
+      "volunteerInvitationsEraseTitle": "Ștergi invitațiile de voluntariat ale acestei persoane?",
+      "volunteerInvitationsEraseBody": "Se șterg invitațiile trimise acestei adrese, cu mesajul clubului. Ofertele de voluntar și înscrierile rămân. Ștergerea nu se poate anula.",
+      "volunteerInvitationsErased": "Invitațiile de voluntariat ale acestei adrese au fost șterse."
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
@@ -6396,7 +6526,9 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Ai acceptat contractul de voluntariat",
         "VOLUNTEER_ROLE_ASSIGNED": "Rolul tău de voluntar",
         "VOLUNTEER_GUARDIAN_REQUEST": "Acordul tău pentru un voluntar minor",
-        "RSVP_CONFIRM": "Confirmă că vii („Vin!”)"
+        "VOLUNTEER_INVITATION": "Invitația de a fi voluntar",
+        "RSVP_CONFIRM": "Confirmă că vii („Vin!”)",
+        "RSVP_ASK": "Vii mâine? („Vin” / „Nu vin”)"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirmă adresa",
@@ -6466,7 +6598,9 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Când un voluntar acceptă contractul din link sau un organizator apasă „Semnat pe hârtie”: copia lui, cu contractul atașat ca PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "Când organizatorii îi dau unui voluntar un rol, din cardul «Voluntari» al evenimentului: un mesaj scurt care numește rolul, data și locul. Nimic de apăsat.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Când un voluntar sub 18 ani se oferă, sau un organizator apasă „Trimite linkul părintelui”: contractul și linkul prin care părintele îl acceptă în nume propriu.",
-        "RSVP_CONFIRM": "Când cineva scrie o adresă la „Vin!” pe pagina unui eveniment: butonul „Da, vin”, care îl numără, și dedesubt „Nu vin”. La „Nu mai vin” de pe pagină pleacă același mesaj, doar cu linkul de retragere."
+        "VOLUNTEER_INVITATION": "Când un organizator sau un administrator trimite invitații din cardul «Voluntari» al unui eveniment cu voluntari doar pe invitație, și la „Retrimite”. Un link personal spre pagina voluntarilor.",
+        "RSVP_CONFIRM": "Când cineva scrie o adresă la „Vin!” pe pagina unui eveniment: butonul „Da, vin”, care îl numără, și dedesubt „Nu vin”. La „Nu mai vin” de pe pagină pleacă același mesaj, doar cu linkul de retragere.",
+        "RSVP_ASK": "Ziua dinainte, de la {askHour}: abonaților temei „Întrebarea «Vii?» înaintea alergărilor” și celor de la „Toate noutățile”. „Vin”, apoi „Da, vin”, îi numără; „Nu vin” nu. Cine a răspuns nu primește."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -6511,7 +6645,9 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "după link sau „Semnat pe hârtie”",
         "VOLUNTEER_ROLE_ASSIGNED": "când organizatorii dau un rol",
         "VOLUNTEER_GUARDIAN_REQUEST": "când se oferă un voluntar sub 18 ani",
-        "RSVP_CONFIRM": "când cineva spune „Vin!”, către adresa lui"
+        "VOLUNTEER_INVITATION": "când clubul invită pe cineva să fie voluntar",
+        "RSVP_CONFIRM": "când cineva spune „Vin!”, către adresa lui",
+        "RSVP_ASK": "ziua dinainte, de la ora {askHour}, către abonații temei"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -7221,7 +7357,9 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Rolul și evenimentul se adaugă singure. PDF-ul arată textul acceptat, cu numele, rolul, momentul și amprenta lui.",
         "VOLUNTEER_ROLE_ASSIGNED": "Rolul, data și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Voluntarul și evenimentul se adaugă singure. Linkul e doar pentru părinte sau tutore, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
-        "RSVP_CONFIRM": "Cel mult un mesaj la 10 minute pe adresă. Linkurile sunt doar pentru această adresă, merg o singură dată și le înlocuiește mesajul nou. Cine e deja numărat primește doar „Nu mai vin”."
+        "VOLUNTEER_INVITATION": "Evenimentul, rolurile căutate și mesajul clubului se adaugă singure. Linkul e doar al persoanei invitate, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
+        "RSVP_CONFIRM": "Cel mult un mesaj la 10 minute pe adresă. Linkurile sunt doar pentru această adresă, merg o singură dată și le înlocuiește mesajul nou. Cine e deja numărat primește doar „Nu mai vin”.",
+        "RSVP_ASK": "O dată pe eveniment; unul bifat abia în ziua lui nu se întreabă. Pleacă prin „Newsletter”, la coadă, ca anunțul unui eveniment nou; ce n-a plecat până la miezul nopții se anulează."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0.",
@@ -8648,8 +8786,8 @@
           "other": "{count} de imagini sau fișiere"
         },
         "series": "Evenimentul era o dată dintr-o serie sau sursa ei. Regula seriei nu se aplică: copia e o singură dată; seria o pornești tu, din editor.",
-        "volunteers": "Fișierul poartă categoriile și rolurile de voluntari ale evenimentului, cu persoanele lor de contact. „Ca eveniment nou” le scrie în noua ciornă.",
-        "volunteersOver": "Fișierul poartă categorii și roluri de voluntari. Un import peste un eveniment existent nu le scrie: ele rămân cum sunt aici."
+        "volunteers": "Fișierul poartă categoriile și rolurile de voluntari ale evenimentului, cu persoanele lor de contact, și alegerea „Cine se poate oferi”. „Ca eveniment nou” le scrie în noua ciornă.",
+        "volunteersOver": "Fișierul poartă categorii, roluri de voluntari sau alegerea „Cine se poate oferi”. Un import peste un eveniment existent nu le scrie: ele rămân cum sunt aici."
       },
       "mode": {
         "heading": "Ce vrei să faci cu el?"
@@ -12334,9 +12472,20 @@
       "badgeColoursSaved": "Culorile rolurilor au fost salvate.",
       "badgeColoursUnchanged": "Nimic de schimbat la culori.",
       "volunteersShirtsOn": "Formularul public cere acum mărimea tricoului.",
+      "volunteersAccessSaved": "Am salvat cine se poate oferi.",
+      "volunteerInvitationsSent": {
+        "one": "{count} invitație trimisă.",
+        "few": "{count} invitații trimise.",
+        "other": "{count} de invitații trimise."
+      },
+      "volunteerInvitationsNone": "Nu am trimis nimic: adresele au deja o invitație sau s-au oferit deja.",
+      "volunteerInvitationResent": "Invitație retrimisă, cu un link nou.",
+      "volunteerInvitationWithdrawn": "Invitație retrasă.",
       "volunteersShirtsOff": "Formularul public nu mai cere mărimea tricoului. Mărimile deja date se păstrează.",
       "volunteersCountsOn": "Pagina de voluntari spune acum câte persoane mai sunt necesare la fiecare rol.",
       "volunteersCountsOff": "Pagina de voluntari nu mai spune câte persoane mai sunt necesare.",
+      "volunteersListOn": "Pagina evenimentului poate arăta acum cardul „Voluntarii”: numele și rolul celor confirmați care au bifat.",
+      "volunteersListOff": "Pagina evenimentului nu mai arată lista voluntarilor.",
       "volunteerGuardianRequested": "Linkul pentru părinte pleacă pe email.",
       "volunteerGuardianRecorded": "Acordul părintelui, înregistrat ca semnat pe hârtie.",
       "volunteerCategoryAdded": "Categorie adăugată.",
@@ -12436,7 +12585,8 @@
       "SPECIAL_EVENTS": "Evenimente speciale",
       "WEEKLY_RUNS": "Alergările săptămânale",
       "VOLUNTEERING": "Voluntariat",
-      "RESULTS_PHOTOS": "Rezultate și poze"
+      "RESULTS_PHOTOS": "Rezultate și poze",
+      "RSVP_ASK": "Întrebarea «Vii?» înaintea alergărilor"
     },
     "topicHints": {
       "ALL": "Toate temele de mai jos și cele pe care le vom adăuga.",
@@ -12445,7 +12595,8 @@
       "SPECIAL_EVENTS": "Ediții speciale, alergări tematice, evenimente făcute împreună cu alți organizatori și evenimentele altor organizatori.",
       "WEEKLY_RUNS": "Un anunț când pornește o serie nouă de alergări săptămânale — o dată pe serie, nu la fiecare alergare.",
       "VOLUNTEERING": "Când avem nevoie de ajutor la concursuri: masa de ridicare a kitului, traseu, fotografii.",
-      "RESULTS_PHOTOS": "Rezultatele și albumele de poze de după evenimente."
+      "RESULTS_PHOTOS": "Rezultatele și albumele de poze de după evenimente.",
+      "RSVP_ASK": "În ziua dinainte de un eveniment la care clubul numără cine vine, un singur email cu două butoane: „Vin” sau „Nu vin”."
     },
     "heading": "Noutățile clubului pe email",
     "intro": "Alege temele care te interesează și îți scriem doar despre ele.",
@@ -12836,7 +12987,8 @@
     "confirmIntro": "Confirmi că vii la {event}?",
     "confirmAlready": "Ești deja numărat la {event}.",
     "confirmButton": "Da, vin",
-    "confirmPending": "Se trimite…",
+    "confirmPending": "Te numărăm…",
+    "confirmAutoNote": "Deschis în browser, linkul te numără singur; dacă nu se întâmplă, apasă „Da, vin”.",
     "withdrawTitle": "Nu mai vii?",
     "withdrawIntro": "Nu mai vii la {event}? Răspunsul tău se șterge.",
     "withdrawButton": "Nu mai vin",
@@ -12851,6 +13003,13 @@
     "withdrawDoneNoEvent": "Gata, ți-am șters răspunsul.",
     "withdrawnTitle": "Răspuns șters",
     "invalidExpired": "Linkul a fost valabil doar un timp, iar acesta a trecut. Evenimentul nu a început încă: poți răspunde din nou de pe pagina lui.",
-    "withdrawRememberNote": "Și după „Nu mai vin”, browserul tău rămâne recunoscut un an: la alte evenimente, „Vin!” e o singură apăsare. Pe pagina evenimentului, „Nu sunt eu” îl uită."
+    "withdrawRememberNote": "Și după „Nu mai vin”, browserul tău rămâne recunoscut un an: la alte evenimente, „Vin!” e o singură apăsare. Pe pagina evenimentului, „Nu sunt eu” îl uită.",
+    "askTitle": "Vii?",
+    "askIntro": "Vii la {event}? O apăsare și te numărăm.",
+    "askNoTitle": "Nu vii?",
+    "askNoIntro": "Nu vii la {event}? Apasă butonul și nu te numărăm.",
+    "askNoButton": "Nu vin",
+    "askNoDoneTitle": "Am înțeles",
+    "askNoDone": "Bine, nu te numărăm. Poți răspunde altfel până la start."
   }
 }
