@@ -160,9 +160,9 @@ type Props = {
    */
   listDescribed?: boolean;
   /** «Cine se poate oferi», as saved (§NNN): anyone from the event's page, the club's signed-in members, or only people the club invited. */
-  access: VolunteersAccess;
+  access?: VolunteersAccess;
   /** The event's invitations to volunteer (§NNN), the newest first — read only for whoever may manage volunteers. */
-  invitations: readonly VolunteerInvitationItem[];
+  invitations?: readonly VolunteerInvitationItem[];
   /** The day the entry's date of birth is counted on, `YYYY-MM-DD` (§773, `volunteerEventDay`): the gun's, else the event's. */
   eventDay: string;
   /** The notice in force names what a volunteer says about themselves (§765): the public form asks it — else it is §758's tick. */
@@ -222,8 +222,8 @@ export default async function VolunteersCard({
   volunteersShowCounts,
   volunteersListPublic = false,
   listDescribed = false,
-  access,
-  invitations,
+  access = "ANYONE",
+  invitations = [],
   eventDay,
   profileDescribed,
   minorsOpen,

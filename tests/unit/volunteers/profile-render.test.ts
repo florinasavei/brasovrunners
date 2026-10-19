@@ -52,6 +52,10 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
     switchVolunteersShirtsAction: noop,
     switchVolunteersCountsAction: noop,
     switchVolunteersListAction: noop,
+    switchVolunteersAccessAction: noop,
+    sendVolunteerInvitationsAction: noop,
+    resendVolunteerInvitationAction: noop,
+    withdrawVolunteerInvitationAction: noop,
   };
 });
 vi.mock("@/app/[locale]/events/[slug]/volunteers/actions", () => ({ submitVolunteerAction: async () => {} }));

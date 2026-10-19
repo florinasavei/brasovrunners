@@ -2367,6 +2367,28 @@ only ones who see the names, addresses and telephone numbers.
      nou» writes them into the new draft through the card's own rules (an entry the card would refuse is skipped); an import over an existing event leaves
      its roles and categories as they are, and the preview says so (a skipped entry is counted in words, never silently).
    - **Local and QA databases** get two categories with the owner's example roles on the sample race (`yarn db:seed`; never production, `DECISIONS.md` §30).
+10. **Choose who may offer, and invite people by email** (`DECISIONS.md` §NNN; the owner, 2026-10-19: «invite only volunteer … Brașov Runners only volunteers»). The card
+    «Voluntari», under «Primește voluntari pe pagină» (shown only while it is ticked), has the choice **«Cine se poate oferi»** — three radios and one **«Salvează»**:
+    - **«Oricine, de pe pagina evenimentului»** — as in step 4 (the default, and what every event was).
+    - **«Doar membrii clubului (conectați în zona membrilor)»** — the event's page says «Căutăm voluntari dintre membrii clubului: …» and the button opens the
+      volunteers' page, which shows the form only to a signed-in member (an account of the members' zone, or any colleague's): the name and the address come from the
+      account, the address is read-only and «Fac parte din grupul …» is ticked and locked. Anyone else reads «Voluntarii pentru acest eveniment sunt membrii clubului — intră
+      în zona membrilor.» with the sign-in button, and a post from a stranger is refused by the server, not only hidden. A member needs an account first («Echipa» →
+      «Adaugă mai mulți membri»).
+    - **«Doar cu invitație de la club»** — the event's page says nothing about volunteers and the volunteers' page answers 404 for everyone without an invitation's link.
+      The fold **«Invitații»** (it appears with this choice, and stays while any invitation exists) takes **«Adrese (una pe rând)»** — up to 50 at a time — an optional
+      **«Mesaj»** (the club's own line, up to 500 characters, shown in the email as typed) and the email's language, and **«Trimite invitațiile»** sends each address one email,
+      «Te invităm să fii voluntar la …», with the roles that still need people, the event's facts and the button **«Mă ofer voluntar»** — a personal link that opens the form
+      with the invited address locked and works **once**. Nothing is sent while the offer itself is closed (the card's line says why: not published, no role needing people, the
+      notice or the agreement not in force) — a link would lead to a 404. An address that already has an invitation is not sent a second one, one that already offered is
+      skipped, and a withdrawn one comes back on the same row. The list under the box shows each address with «Trimisă», «Folosită», «Retrasă» or «Expirată» (the event's end)
+      and, on an open one, **«Retrimite»** (a new email; the old link stops working) and **«Retrage»** (the link then says «Clubul a retras invitația.»), each asking first.
+      Organizers and Administrators send; nobody else sees the fold. An invitation holds no role's seat and no place of the race.
+    - **Changing the choice later deletes nothing** — no sign-up, no invitation. A link already sent keeps working in every choice until it is used; «Oricine» → «Doar cu
+      invitație» closes the public form at the next read. The choice travels with a copy of the event, with every date of a repeat and with the event's JSON file (not the tick
+      «Primește voluntari», which a copy starts without).
+    - **The privacy notice** — its volunteers' paragraph has one more sentence for the invitation by email and the member's account (`{{volunteers}}`, no new marker): approve the
+      notice from the template in the next sitting, a lawyer reading that sentence first. The invitations are deleted with the offers, 30 days after the event's start.
 
 ## 45. Clasament — put a race's results in the backoffice, and make them public only when the notice says so
 
