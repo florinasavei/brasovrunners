@@ -236,7 +236,7 @@ export const eventVolunteers = pgTable(
     shirtSize: registrationTshirtSize("shirt_size"),
     privacyNoticeVersion: integer("privacy_notice_version"),
     /**
-     * «Vreau să apar pe lista publică a voluntarilor» (§NNN, amending §754; the owner, 2026-10-19: «private vs public lists of
+     * «Vreau să apar pe lista publică a voluntarilor» (§821, amending §754; the owner, 2026-10-19: «private vs public lists of
      * volunteers»): the person's own tick on the public form, or the organizers' record of it for a person they entered (the card's
      * «Adaugă», audited with the staff member's name like the paper agreement) — the consent to appear **by name, with the role
      * given,** on the event page's card «Voluntarii» (`events.volunteers_list_public`). Off by default and never assumed: a person
@@ -247,7 +247,7 @@ export const eventVolunteers = pgTable(
      */
     listOptIn: boolean("list_opt_in").notNull().default(false),
     /**
-     * The privacy notice version the list tick was given under (§NNN): the sign-up's own notice when the person ticked on the public form,
+     * The privacy notice version the list tick was given under (§821): the sign-up's own notice when the person ticked on the public form,
      * the notice in force when the organizers recorded the tick. Its own column, **never** `privacy_notice_version`: that one is the
      * record of the notice the person consented under when they offered (GDPR art. 7(1)) and stays null for a row the club entered, so a
      * tick the organizers record later must not overwrite it. Null while `list_opt_in` is off.

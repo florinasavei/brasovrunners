@@ -6,7 +6,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — what the event page draws for the volunteers' public list: the card «Voluntarii» (a native fold, closed on arrival like
+ * §821 — what the event page draws for the volunteers' public list: the card «Voluntarii» (a native fold, closed on arrival like
  * «Condiții de participare»; the owner, 2026-10-19: «asta ar trebui să fie collapsed»), with the names and roles the cached read lets through, «și încă N voluntari»
  * for the rest, the one sentence while the team is forming, and nothing at all when the gate says no. The gate and the read are proved in
  * `public-list-domain.test.ts` and `tests/integration/volunteers/`; the editor's ticks and the form's tick below; the whole journey, at 320
@@ -79,7 +79,7 @@ beforeEach(() => {
   state.list = { count: 0, named: [], others: 0 };
 });
 
-describe("§NNN the card «Voluntarii» — a fold closed on arrival", () => {
+describe("§821 the card «Voluntarii» — a fold closed on arrival", () => {
   it("is a native details with no open attribute, its title a real h2 inside the summary with the count — like «Condiții de participare»", async () => {
     state.list = { count: 3, named: [ANA, ION], others: 1 };
     const markup = await card();
@@ -139,7 +139,7 @@ describe("§NNN the card «Voluntarii» — a fold closed on arrival", () => {
   });
 });
 
-describe("§NNN when nobody may be named", () => {
+describe("§821 when nobody may be named", () => {
   it("says only «Echipa de voluntari se formează.» while the offer is open, with no count in the title", async () => {
     state.list = { count: 2, named: [], others: 2 };
     const markup = await card();
@@ -157,7 +157,7 @@ describe("§NNN when nobody may be named", () => {
   });
 });
 
-describe("§NNN the gate — nothing at all, not even a count", () => {
+describe("§821 the gate — nothing at all, not even a count", () => {
   beforeEach(() => {
     state.list = { count: 3, named: [ANA], others: 2 };
   });

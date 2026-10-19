@@ -62,7 +62,7 @@ export default async function NewsletterManagePage({ params, searchParams }: Pro
   }
 
   const subscription = invalid ? null : await readNewsletterSubscription(getDb(), token, new Date());
-  // The topic «Întrebarea «Vii?» …» (§NNN) is offered once the notice in force describes the question — and kept visible for someone who already ticked it.
+  // The topic «Întrebarea «Vii?» …» (§818) is offered once the notice in force describes the question — and kept visible for someone who already ticked it.
   const askOffered = subscription ? await noticeDescribesRsvpAsk(getDb(), new Date()) : false;
   const topicChoices = NEWSLETTER_TOPICS.filter((topic) => topic !== "RSVP_ASK" || askOffered || subscription?.topics.includes(topic));
 

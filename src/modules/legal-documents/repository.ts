@@ -402,7 +402,7 @@ export async function noticeDescribesRsvp<T extends Record<string, unknown>>(db:
 }
 
 /**
- * Whether the privacy notice in force describes the volunteers' public list (§NNN, `describesVolunteersList`) — in every language, AND the
+ * Whether the privacy notice in force describes the volunteers' public list (§821, `describesVolunteersList`) — in every language, AND the
  * event volunteers themselves (`describesVolunteers`), because the list is a part of that paragraph and the tick it asks lives on that form.
  * False while either is silent. For the sign-up (whether it keeps the tick, asked again at every post), the organizers' record of the tick,
  * the editor's card and `/admin/tasks`; the event page reads the cached twin (`cachedVolunteersListDescribed`).
@@ -413,7 +413,7 @@ export async function noticeDescribesVolunteersList<T extends Record<string, unk
 }
 
 /**
- * Whether the privacy notice in force describes the day-before question «Vii mâine?» (§NNN, `describesRsvpAsk`) — in every language,
+ * Whether the privacy notice in force describes the day-before question «Vii mâine?» (§818, `describesRsvpAsk`) — in every language,
  * AND «Vin!» itself (`describesRsvp`), because the question writes a «Vin!» row from the subscriber's address. False while either is
  * silent. For the queue, the send, the topic's box on the manage page and `/admin/tasks`; the pop-up reads the cached twin
  * (`cachedRsvpAskDescribed`). A notice approved before the marker existed does not name the topic (`{{newsletterTopics}}` leaves
@@ -687,7 +687,7 @@ export async function findFirstRsvpNoticeVersion<T extends Record<string, unknow
 /**
  * The lowest version of an approved, not withdrawn privacy notice that describes the day-before question «Vii?» in **every** language
  * (`describesRsvpAsk`, and `describesRsvp` beside it, because the question writes a «Vin!» row), or null when none does —
- * `findFirstRsvpNoticeVersion`'s twin (§NNN, the §421 rule). A newsletter subscription records the notice it was given under
+ * `findFirstRsvpNoticeVersion`'s twin (§818, the §421 rule). A newsletter subscription records the notice it was given under
  * (`newsletter_subscribers.privacy_notice_version`); the question is sent only to a subscriber whose consent — to the topic, or to
  * «Toate noutățile» — was given under this version or a later one. A subscriber to everything under an older notice agreed to club-written
  * messages and the new-event alert, not to an automatic question that writes a row from their address: they are asked only after they
@@ -699,7 +699,7 @@ export async function findFirstRsvpAskNoticeVersion<T extends Record<string, unk
 
 /**
  * The lowest version of an approved, not withdrawn privacy notice that describes the volunteers' public list in **every** language
- * (`describesVolunteers` and `describesVolunteersList`), or null when none does — `findFirstRsvpNoticeVersion`'s twin (§NNN, the §421
+ * (`describesVolunteers` and `describesVolunteersList`), or null when none does — `findFirstRsvpNoticeVersion`'s twin (§821, the §421
  * rule). A volunteer's tick records the notice it was given under (`event_volunteers.privacy_notice_version`); the name is shown only for
  * one given under this version or a later one — a tick under an older notice agreed to nothing that described the list.
  */

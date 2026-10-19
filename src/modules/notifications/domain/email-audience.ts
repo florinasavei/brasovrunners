@@ -41,7 +41,7 @@ export const EMAIL_AUDIENCE = {
   REGISTRATION_OPENED: "public",
   // «Confirmă că vii» (§811, «Vin!»): to an address nobody has confirmed, about no registration — the public's road, like an invitation's.
   RSVP_CONFIRM: "public",
-  // «Vii mâine la …?» (§NNN): to a newsletter subscriber, about no registration — the public's road, like the new-event alert.
+  // «Vii mâine la …?» (§818): to a newsletter subscriber, about no registration — the public's road, like the new-event alert.
   RSVP_ASK: "public",
   CLUB_CONFIRMATION_NOTICE: "club",
   EVENT_UPDATE_NOTICE: "participant",
@@ -77,7 +77,7 @@ export const EMAIL_AUDIENCE = {
   VOLUNTEER_ROLE_ASSIGNED: "public",
   // The link to a minor volunteer's parent or guardian (§768): to an address nobody confirmed, no registration behind it — the public's road.
   VOLUNTEER_GUARDIAN_REQUEST: "public",
-  // The club's invitation to volunteer (§NNN): to an address the club typed, no registration behind it — the public's road, like an event invitation's.
+  // The club's invitation to volunteer (§820): to an address the club typed, no registration behind it — the public's road, like an event invitation's.
   VOLUNTEER_INVITATION: "public",
   // A visitor's message to the club and the platform's notice about a road (§778): to the club's own people, about no
   // participant — the staff's, with no privacy line and no club copy.

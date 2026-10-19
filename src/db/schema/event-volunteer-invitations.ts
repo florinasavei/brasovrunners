@@ -6,7 +6,7 @@ import { locale } from "./locale";
 import { staffUsers } from "./staff-users";
 
 /**
- * An invitation to volunteer at one event (§NNN, amending §754 and §768; the owner, 2026-10-19: «invite only volunteer»), the
+ * An invitation to volunteer at one event (§820, amending §754 and §768; the owner, 2026-10-19: «invite only volunteer»), the
  * table behind «Cine se poate oferi» → «Doar cu invitație de la club».
  *
  * An Administrator or an Organizer writes addresses, one per line, and the platform emails each one a personal link to the volunteers'
@@ -64,7 +64,7 @@ export const eventVolunteerInvitations = pgTable(
     withdrawnByStaffUserId: uuid("withdrawn_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
     /**
      * The event's end at the send — a record of what the club saw, never the rule: whether a link still works is asked of the event as it
-     * stands now (`volunteerEventAhead`), so a race moved later keeps its links alive and one called off closes them (§NNN).
+     * stands now (`volunteerEventAhead`), so a race moved later keeps its links alive and one called off closes them (§820).
      */
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   },

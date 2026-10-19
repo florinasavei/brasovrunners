@@ -259,7 +259,7 @@ export type OwnerTaskInputs = {
    */
   rsvpDescribed: boolean;
   /**
-   * Does the notice in force, in every language, describe «Vin!» AND the day-before question «Vii mâine?» (§NNN, `noticeDescribesRsvpAsk`)?
+   * Does the notice in force, in every language, describe «Vin!» AND the day-before question «Vii mâine?» (§818, `noticeDescribesRsvpAsk`)?
    * Until it does, no subscriber is asked and the pop-up offers no such topic, whatever the club ticked; the topic is named in a notice
    * approved before only by `{{newsletterTopics}}`, which asks nobody.
    */
@@ -364,11 +364,11 @@ export type OwnerTaskInputs = {
    */
   volunteerMinorsOpen: boolean;
   /**
-   * Does the notice in force, in every language, describe the volunteers' public list (§NNN, `{{volunteersList}}`, `noticeDescribesVolunteersList`)? Until it
+   * Does the notice in force, in every language, describe the volunteers' public list (§821, `{{volunteersList}}`, `noticeDescribesVolunteersList`)? Until it
    * does, no event page draws its card «Voluntarii», the form asks no tick «Vreau să apar pe lista publică a voluntarilor» and the organizers record none.
    */
   volunteersListDescribed: boolean;
-  /** How many events still ahead have their volunteers' list public and take volunteers (§NNN, `countVolunteersListEvents`): the row waits only while there is one. */
+  /** How many events still ahead have their volunteers' list public and take volunteers (§821, `countVolunteersListEvents`): the row waits only while there is one. */
   volunteersListEvents: number;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
@@ -635,7 +635,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
-      The day-before question «Vii mâine?» (§NNN), the same shape: open while an upcoming event is ticked and the notice in force does not
+      The day-before question «Vii mâine?» (§818), the same shape: open while an upcoming event is ticked and the notice in force does not
       name `{{rsvpAsk}}` (nobody is asked, though the club ticked the box), done by itself the day a notice naming it takes effect, absent
       while no event is ticked and the notice is silent. Never blocking.
     */
@@ -789,7 +789,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
-      The volunteers' public list in the notice (§NNN), the same shape: open while an event ahead has the list public («Lista voluntarilor e publică pe
+      The volunteers' public list in the notice (§821), the same shape: open while an event ahead has the list public («Lista voluntarilor e publică pe
       pagina evenimentului») and the notice in force does not name `{{volunteersList}}` — the page draws no card and the form asks no tick, the club must hear
       why —, done by itself the day a notice naming it takes effect, absent while no event has the list public and the notice is silent. Never blocking:
       nothing a runner does, and the volunteers' own form and list are untouched.

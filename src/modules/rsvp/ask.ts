@@ -15,7 +15,7 @@ import { rsvpOffered } from "./domain/offered";
 import { mintRsvpLinks } from "./rsvp";
 
 /**
- * «Vii mâine la …?» (§NNN; the owner, 2026-10-18: «I need this "Going" to be via email or something … super easy») — the day before an
+ * «Vii mâine la …?» (§818; the owner, 2026-10-18: «I need this "Going" to be via email or something … super easy») — the day before an
  * event the club ticked «Vin!» on, the newsletter's subscribers who chose the topic «Întrebarea «Vii?» înaintea alergărilor» get ONE
  * email with two personal links: **«Vin»** counts them at once (the link is the proof of the address, and it is theirs alone), **«Nu vin»**
  * counts nobody. Nobody opens the site to say «Vin»; the email asks and one tap answers. It builds on «Vin!» (§812) and changes none of
@@ -86,7 +86,7 @@ export async function queueRsvpAsks<T extends Record<string, unknown>>(db: Datab
   if (!described) return 0;
   /*
     Whose consent covers it: a subscriber is asked only if the notice they consented under (`privacy_notice_version`) already named the
-    question — «Toate noutățile» given before did not say it (§NNN; the §421 line, as for the names on the list).
+    question — «Toate noutățile» given before did not say it (§818; the §421 line, as for the names on the list).
   */
   const firstAskNotice = await findFirstRsvpAskNoticeVersion(db);
   if (firstAskNotice === null) return 0;

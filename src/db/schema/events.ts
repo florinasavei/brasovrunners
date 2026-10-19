@@ -127,7 +127,7 @@ export const publicListClub = pgEnum("public_list_club", ["members_only", "as_ty
 export type PublicListClub = (typeof publicListClub.enumValues)[number];
 
 /**
- * «Cine se poate oferi» (§NNN, amending §754 and §768): who may offer as a volunteer for one event. A closed set at the database,
+ * «Cine se poate oferi» (§820, amending §754 and §768): who may offer as a volunteer for one event. A closed set at the database,
  * like every choice here.
  *
  * - `ANYONE` — «Oricine, de pe pagina evenimentului»: the public form, as it always was. The default.
@@ -553,7 +553,7 @@ export const events = pgTable(
     volunteersShowCounts: boolean("volunteers_show_counts").notNull().default(false),
 
     /**
-     * «Cine se poate oferi» (§NNN, amending §754 and §768; the owner, 2026-10-19: «invite only volunteer … Brașov Runners only
+     * «Cine se poate oferi» (§820, amending §754 and §768; the owner, 2026-10-19: «invite only volunteer … Brașov Runners only
      * volunteers»): anyone from the event's page (the default, what it always was), the club's signed-in members only, or only a
      * person the club invited by email. Saved by the «Voluntari» card's own form beside `accepts_volunteers`; the event's save
      * never writes it. Unlike the ticks above it travels with a copy of the event, a repeat and the event's file: it is the club's
@@ -562,7 +562,7 @@ export const events = pgTable(
     volunteersAccess: volunteersAccess("volunteers_access").notNull().default("ANYONE"),
 
     /**
-     * «Lista voluntarilor e publică pe pagina evenimentului» (§NNN, amending §754 and §143/§396; the owner, 2026-10-19: «private vs
+     * «Lista voluntarilor e publică pe pagina evenimentului» (§821, amending §754 and §143/§396; the owner, 2026-10-19: «private vs
      * public lists of volunteers»): the volunteers' list is the team's alone (the editor's card, the CSV, the badges) unless the club
      * ticks this. Ticked, the event's page draws a card «Voluntarii» with the **name and the given role** of each confirmed volunteer
      * who ticked «Vreau să apar pe lista publică a voluntarilor» (`event_volunteers.list_opt_in`) — and only while the privacy notice

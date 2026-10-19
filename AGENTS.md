@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.58-2026-10-18 -->
+<!-- PROJECT_BASELINE: BR-V3.59-2026-10-19 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V3.58-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.59-2026-10-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1514,7 +1514,7 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   the row and in the audit trail (`event_results.name_agreed_at`, `publicResultName`), and never when
   a confirmed registration holds the number: a registered runner's name follows their own tick, never
   a staff mark;
-- an event's volunteers (§NNN, amending §754) follow the same rule, with their own two ticks: the club's
+- an event's volunteers (§821, amending §754) follow the same rule, with their own two ticks: the club's
   «Lista voluntarilor e publică pe pagina evenimentului» (`events.volunteers_list_public`, off by default)
   and each volunteer's «Vreau să apar pe lista publică a voluntarilor» (`event_volunteers.list_opt_in`).
   The page's card «Voluntarii» names only a CONFIRMED volunteer, an adult, whose tick was given under a

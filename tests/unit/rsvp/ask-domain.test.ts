@@ -3,14 +3,14 @@ import { RSVP_ASK_CLOCK, RSVP_ASK_HOUR, rsvpAskDue, rsvpAskNextLook, rsvpAskWind
 import { AUTOMATIC_TOPICS, isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, receives, SENDABLE_TOPICS } from "@/modules/newsletter/domain/topics";
 
 /**
- * §NNN (builds on §812, amends §775) — «Vii mâine la …?»: WHEN the question goes (the club's calendar day before, from 08:00 club time, until
+ * §818 (builds on §812, amends §775) — «Vii mâine la …?»: WHEN the question goes (the club's calendar day before, from 08:00 club time, until
  * the midnight that opens the event's day, across both changes of the clock) and WHO is asked (the subscribers of the topic and of
  * "everything" — the one `receives` rule — and nobody through the composer).
  *
  * The club's zone is Europe/Bucharest: UTC+3 in summer time, UTC+2 in winter time; the changes are the last Sunday of March (03:00 → 04:00)
  * and of October (04:00 → 03:00).
  */
-describe("§NNN «Vii mâine la …?» — the window", () => {
+describe("§818 «Vii mâine la …?» — the window", () => {
   it("opens at 08:00 club time on the day before and closes at the midnight that opens the event's day", () => {
     // Saturday 2026-10-17, summer time (UTC+3): the run is at 10:00 on Sunday the 18th.
     const startsAt = new Date("2026-10-18T07:00:00.000Z");
@@ -89,7 +89,7 @@ describe("§NNN «Vii mâine la …?» — the window", () => {
   });
 });
 
-describe("§NNN «Vii mâine la …?» — who is asked", () => {
+describe("§818 «Vii mâine la …?» — who is asked", () => {
   it("is a topic of its own that a subscriber chooses, off by default, and a composer never writes for", () => {
     expect(NEWSLETTER_TOPICS).toContain("RSVP_ASK");
     expect(AUTOMATIC_TOPICS).toEqual(["RSVP_ASK"]);

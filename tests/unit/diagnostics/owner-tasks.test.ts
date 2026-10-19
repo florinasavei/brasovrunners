@@ -134,7 +134,7 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, rsvpDescribed: false, rsvpEvents: 0 }).some((task) => task.id === "rsvpNotice")).toBe(false);
   });
 
-  /** §NNN — the day-before question waits on the notice too: open while an upcoming event is ticked and `{{rsvpAsk}}` is not named, done once it is, absent when nothing is ticked and the notice is silent. */
+  /** §818 — the day-before question waits on the notice too: open while an upcoming event is ticked and `{{rsvpAsk}}` is not named, done once it is, absent when nothing is ticked and the notice is silent. */
   it("keeps the «Vii mâine?» row open while a ticked event waits for the notice naming the question, and absent when nothing is ticked", () => {
     expect(stateOf({ ...LAUNCHED, rsvpAskDescribed: false, rsvpEvents: 2 }, "rsvpAskNotice")).toBe("open");
     expect(stateOf({ ...LAUNCHED, rsvpAskDescribed: true, rsvpEvents: 2 }, "rsvpAskNotice")).toBe("done");
@@ -312,7 +312,7 @@ describe("owner tasks", () => {
     }
   });
 
-  it("§NNN: the volunteers' public list row is open while an event ahead has the list public and the notice is silent, done once it names the list, absent while neither is wanted", () => {
+  it("§821: the volunteers' public list row is open while an event ahead has the list public and the notice is silent, done once it names the list, absent while neither is wanted", () => {
     expect(stateOf({ ...LAUNCHED, volunteersListDescribed: false }, "volunteersListNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "volunteersListNotice")).toBe("done");
     // Done by itself the day a notice naming it takes effect, even with no event having the list public.

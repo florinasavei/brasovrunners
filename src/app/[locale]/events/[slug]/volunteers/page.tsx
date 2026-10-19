@@ -72,7 +72,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * does not describe them — never a form that cannot work. The one exception is a person reading the answer to their own post
  * (`?volunteer=`): the last role the organizers gave away meanwhile still owes them «am primit».
  *
- * **Who may offer (§NNN).** «Cine se poate oferi» meets the request here (`volunteerDoorFor`): anyone gets the form; for the club's members
+ * **Who may offer (§820).** «Cine se poate oferi» meets the request here (`volunteerDoorFor`): anyone gets the form; for the club's members
  * a signed-in member gets it with the name and the address of the account locked and a stranger one sentence and the members' sign-in;
  * by invitation the page is a 404 without `?invite=<secret>` and, with a live one, the form with the invited address locked. A link
  * that no longer works says which in a sentence under any choice. The server asks the same rule again at the post (BR-REQ-060-01).
@@ -99,7 +99,7 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
   if (!offer) notFound();
 
   /*
-    Who may offer (§NNN): the choice (from the cached offer, nothing per viewer in it) met with what only this request knows — the
+    Who may offer (§820): the choice (from the cached offer, nothing per viewer in it) met with what only this request knows — the
     emailed link in `?invite=` and, for the members' choice only, the session. The session module is not touched for any other
     choice, so an open event's page costs what it always did. The thank-you after a send is shown to whoever the redirect brought
     back (it carries no secret and the sealed facts are the browser's own); on a by-invitation event it needs those facts, so a typed-in

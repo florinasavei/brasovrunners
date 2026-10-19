@@ -152,7 +152,7 @@ describe("§570 the public-list tick names the list and the results", () => {
   });
 
   it("no catalogue still names the tick by its old words", () => {
-    // The volunteers' own tick (§NNN) is «Vreau să apar pe lista publică a voluntarilor»: a different list, named by its own words.
+    // The volunteers' own tick (§821) is «Vreau să apar pe lista publică a voluntarilor»: a different list, named by its own words.
     expect(JSON.stringify(ro)).not.toMatch(/Vreau să apar pe lista de participanți”|Vreau să apar pe lista publică(?! a voluntarilor)/);
     expect(JSON.stringify(en)).not.toMatch(/appear on the participant list|Show my name on the public list/);
   });

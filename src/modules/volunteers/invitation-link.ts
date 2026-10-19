@@ -9,7 +9,7 @@ import { type InviteReading, invitationStandingOf } from "./domain/access";
 import { volunteerEventAhead } from "./domain/volunteer";
 
 /**
- * The link of an invitation to volunteer (§NNN; the registrations' invitation, §647, is the model; AGENTS.md §12.8, BR-REQ-036-02):
+ * The link of an invitation to volunteer (§820; the registrations' invitation, §647, is the model; AGENTS.md §12.8, BR-REQ-036-02):
  * the three primitives under the volunteers' page and the sign-up, kept apart from the verbs of `invitations.ts` so the sign-up
  * (`volunteers.ts`) can spend a link without importing the module that imports it.
  *
@@ -88,7 +88,7 @@ export async function readVolunteerInvitationLink<T extends Record<string, unkno
 /**
  * Spends the link in the sign-up's own transaction: `used_at` and the volunteer it became, by one UPDATE that asks the invitation
  * open again (not used, not withdrawn, before its date) — so a link withdrawn between the page and the press, or pressed twice at
- * once, spends nowhere — nor for an event called off or over (asked now, §NNN). Returns false when nothing was spent; the caller then rolls the sign-up back. One audit row, no actor: the
+ * once, spends nowhere — nor for an event called off or over (asked now, §820). Returns false when nothing was spent; the caller then rolls the sign-up back. One audit row, no actor: the
  * person, from the link (the invitation's and the volunteer's ids, never an address).
  */
 export async function spendVolunteerInvitation<T extends Record<string, unknown>>(

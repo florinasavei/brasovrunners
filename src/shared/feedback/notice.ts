@@ -141,7 +141,7 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   "eventTodoUnchanged",
   // The same on an event's volunteers (§754).
   "volunteerUnchanged",
-  // «Trimite invitațiile» when every address already had an invitation or had already offered (§NNN).
+  // «Trimite invitațiile» when every address already had an invitation or had already offered (§820).
   "volunteerInvitationsNone",
   // «Salvează toate rolurile» with every role as it was (§791).
   "volunteerRolesUnchanged",

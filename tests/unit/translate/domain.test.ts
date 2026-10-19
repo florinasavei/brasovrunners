@@ -109,7 +109,7 @@ describe("§464 the boxes that may be translated", () => {
     expect(romanianTwinCandidates("event.locationNameEn")).toContain("event.locationName");
   });
 
-  it("allows the club's line of an invitation to volunteer in English (§NNN), next to its Romanian twin", () => {
+  it("allows the club's line of an invitation to volunteer in English (§820), next to its Romanian twin", () => {
     expect(isTranslatableEnglishField("messageEn")).toBe(true);
     expect(isTranslatableEnglishField("messageRo")).toBe(false);
     expect(isRichTextField("messageEn")).toBe(false);

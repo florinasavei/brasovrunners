@@ -21,11 +21,11 @@ const NOW = new Date("2026-10-17T06:00:00.000Z");
 const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 
 /**
- * §NNN — «Întrebarea «Vii?» înaintea alergărilor» is a consent the notice must describe, enforced on the SERVER (the pop-up and the
+ * §818 — «Întrebarea «Vii?» înaintea alergărilor» is a consent the notice must describe, enforced on the SERVER (the pop-up and the
  * manage page only hide the box): refused while the notice in force is silent on it, and the version consented under is recorded
  * when it is ticked, because the question is sent only to a subscriber whose consent predates no notice that names it.
  */
-describe("§NNN the topic «Întrebarea «Vii?» …» is a consent the notice must describe", () => {
+describe("§818 the topic «Întrebarea «Vii?» …» is a consent the notice must describe", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

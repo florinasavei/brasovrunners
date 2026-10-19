@@ -26,7 +26,7 @@ export function landingFor(role: StaffRole, target: SignInTarget): "/admin" | "/
 }
 
 /**
- * A closed way back from the sign-in to the volunteers' page of one event (§NNN; the owner's «Brașov Runners only» volunteers): the
+ * A closed way back from the sign-in to the volunteers' page of one event (§820; the owner's «Brașov Runners only» volunteers): the
  * page sends a stranger to the members' sign-in with `?back=volunteers&slug=<slug>`, and the person lands on that page, not in the zone.
  *
  * Like `to`, it is read from a query string anybody can type, so it is never a path: only the one page name this knows, and a slug

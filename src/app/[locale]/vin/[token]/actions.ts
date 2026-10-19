@@ -47,7 +47,7 @@ export async function confirmRsvpAction(form: FormData): Promise<void> {
   const db = getDb();
   const now = new Date();
   if (!(await tokenAttemptAllowed(db, token, now))) redirect(`${pageOf(locale, token)}?invalid=1`);
-  // The email's «Vin» (§NNN) may carry the name and the tick; for any other link the service ignores them.
+  // The email's «Vin» (§818) may carry the name and the tick; for any other link the service ignores them.
   const proved = await confirmRsvp(db, token, now, { displayName: String(form.get("name") ?? ""), showName: form.get("showName") === "on" });
   if (!proved) redirect(`${pageOf(locale, token)}?invalid=1`);
   await remember(proved, now);
@@ -64,7 +64,7 @@ export async function withdrawRsvpAction(form: FormData): Promise<void> {
   const proved = await withdrawRsvp(db, { token }, now);
   if (!proved) redirect(`${pageOf(locale, token)}?invalid=1`);
   /*
-    «Nu vin» of the «Vii?» email (§NNN): the person declined a question they never started, so nothing they asked for needs the
+    «Nu vin» of the «Vii?» email (§818): the person declined a question they never started, so nothing they asked for needs the
     browser recognised — no cookie (the notice justifies the cookies as strictly necessary to a function the person asked for). The
     row says which it was (`unanswered`, read from the deleted row), never the page's form; «Nu mai vin» after an answer remembers, as before.
   */

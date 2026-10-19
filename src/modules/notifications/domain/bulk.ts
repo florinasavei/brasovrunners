@@ -2,7 +2,7 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 
 /**
  * Mail that goes to many people at once and waits for none of them (§445): the newsletter, the
- * new-event alert and the day-before «Vii?» question (§NNN; one message per subscriber of its topic, withdrawn at the send once its day has come). §80's rule for the day a newsletter existed was "it will have to fit under the
+ * new-event alert and the day-before «Vii?» question (§818; one message per subscriber of its topic, withdrawn at the send once its day has come). §80's rule for the day a newsletter existed was "it will have to fit under the
  * same number" — the plan's allowance (§100) — and the one thing that must never happen is that a
  * newsletter to three hundred addresses spends the allowance a registration's confirmation link
  * needs at noon the same day. So the outbox treats these types as the last in line and gives them

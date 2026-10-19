@@ -170,7 +170,7 @@ export type VolunteerItem = {
   city: string | null;
   volunteeredBefore: boolean;
   clubMember: boolean;
-  /** «Vreau să apar pe lista publică a voluntarilor» (§NNN): the person's own tick (or the organizers' record of it) — the card's «Vrea pe lista publică». */
+  /** «Vreau să apar pe lista publică a voluntarilor» (§821): the person's own tick (or the organizers' record of it) — the card's «Vrea pe lista publică». */
   listOptIn: boolean;
   shirtSize: Exclude<RegistrationTshirtSize, "NONE"> | null;
   createdAt: Date;
@@ -398,7 +398,7 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
   eventId: string,
 ): Promise<{
   acceptsVolunteers: boolean;
-  /** «Cine se poate oferi» (§NNN): the door the volunteers' page opens — read with the roles, so one cache entry answers both. */
+  /** «Cine se poate oferi» (§820): the door the volunteers' page opens — read with the roles, so one cache entry answers both. */
   access: VolunteersAccess;
   shirts: boolean;
   showCounts: boolean;
@@ -1350,7 +1350,7 @@ export async function setVolunteersShowCounts<T extends Record<string, unknown>>
 }
 
 /**
- * «Cine se poate oferi» (§NNN, amending §754 and §768; the owner, 2026-10-19): anyone from the event's page, the club's signed-in
+ * «Cine se poate oferi» (§820, amending §754 and §768; the owner, 2026-10-19): anyone from the event's page, the club's signed-in
  * members only, or only the people the club invited by email — saved by the «Voluntari» card's own form beside the ticks, never by
  * the editor's save. Changing it later **deletes nothing**: not a sign-up, not an invitation. Narrowing it (`ANYONE` → `INVITED`)
  * closes the public form at the next read — the public cache is told here — while an invitation already sent keeps its link
@@ -1587,7 +1587,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
   }
   // Whether the notice in force names the profile answers (§765): read before the transaction, like the public sign-up does.
   const profileDescribed = input ? await noticeDescribesVolunteerProfile(db, now) : true;
-  // Whether the notice in force describes the volunteers' public list (§NNN): asked only for an entry, like the profile — the organizers' record of the tick waits for it.
+  // Whether the notice in force describes the volunteers' public list (§821): asked only for an entry, like the profile — the organizers' record of the tick waits for it.
   const listDescribed = input ? await noticeDescribesVolunteersList(db, now) : true;
   // Whether the club may take a person under eighteen (§768): asked only when this entry says one — a card save of a person already
   // under eighteen is never held up by a text withdrawn since, but nobody new is put under eighteen without the texts.
@@ -1688,7 +1688,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           city: input.city,
           volunteeredBefore: input.volunteeredBefore,
           clubMember: input.clubMember,
-          // «Vreau să apar pe lista publică a voluntarilor» (§NNN), recorded by the staff member (the audit row names them) under the notice in force.
+          // «Vreau să apar pe lista publică a voluntarilor» (§821), recorded by the staff member (the audit row names them) under the notice in force.
           listOptIn: input.listOptIn,
           listOptInNoticeVersion: input.listOptIn ? (listNotice?.version ?? null) : null,
           // A size only while the event gives a shirt (§765); a stale form posting one for an event without is ignored.
@@ -1721,7 +1721,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     const summary = { id: current.id };
 
     if (request.kind === "delete") {
-      // The club's invitation to that person for this event (§NNN): deleting a person leaves no address of theirs behind. Found by the address
+      // The club's invitation to that person for this event (§820): deleting a person leaves no address of theirs behind. Found by the address
       // as it stands and by the sign-up it became (`volunteer_id`), so an address a colleague corrected since (`STAFF_FIELDS`) does not leave the
       // originally invited one behind. Before the volunteer goes, while `volunteer_id` still points at it (the foreign key then sets it null).
       await tx
@@ -1803,7 +1803,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           shirtSize: current.shirtSize,
         };
     /*
-      «Vreau să apar pe lista publică a voluntarilor» (§NNN): under a notice that describes the list the box says what the person wants; under
+      «Vreau să apar pe lista publică a voluntarilor» (§821): under a notice that describes the list the box says what the person wants; under
       one that does not, the box is drawn only for a person already ticked and can only be cleared — a tick is never newly recorded without
       the notice behind it (the refusal names the box), and a post that leaves it alone changes nothing.
     */
@@ -1974,11 +1974,11 @@ export type VolunteerSubmitOutcome =
   | { outcome: "limited" }
   /** Every role ticked filled while the form was open: the page offers the roles that still need people. */
   | { outcome: "full" }
-  /** The invitation's link no longer works (§NNN): spent, withdrawn, past its date, or unknown — nothing was written. */
+  /** The invitation's link no longer works (§820): spent, withdrawn, past its date, or unknown — nothing was written. */
   | { outcome: "invitation"; reason: "used" | "withdrawn" | "expired" | "invalid" };
 
 /**
- * What the request holds that opens the door of an event whose «Cine se poate oferi» is not «Oricine» (§NNN). The action reads them
+ * What the request holds that opens the door of an event whose «Cine se poate oferi» is not «Oricine» (§820). The action reads them
  * from the request (the session, the form's hidden `invite`); the service decides with them (`mayVolunteerWith`) — a hidden form is
  * not a permission (BR-REQ-060-01).
  */
@@ -2019,7 +2019,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   now: Date,
   /** The IP address and browser of the press (§771), read by the action from the request: the agreement's tick is an electronic acceptance, and this is its trace. */
   trace?: SignatureTrace,
-  /** Who the request is (§NNN): the account and the invitation's link, when it has them. */
+  /** Who the request is (§820): the account and the invitation's link, when it has them. */
   credentials: VolunteerCredentials = {},
 ): Promise<VolunteerSubmitOutcome> {
   assertIds(eventId);
@@ -2050,7 +2050,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   if (!event) throw new DomainError("CONFLICT", "this event takes no volunteers on its page");
 
   /*
-    Who may offer (§NNN), asked before anything is read from the form: the emailed link first — a live one is a door in every
+    Who may offer (§820), asked before anything is read from the form: the emailed link first — a live one is a door in every
     choice, and the address is the invitation's, never the one posted — then the choice itself. A stranger's post to a members'
     event is refused here, whatever the page drew; a member's must carry the account's own address.
   */
@@ -2076,7 +2076,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   if (invitation) {
     formInput = { ...posted, email: invitation.deliveryEmail };
   } else if (event.volunteersAccess === "MEMBERS" && member) {
-    // The account's own address, and «Fac parte din grup» from the account (§NNN): the form draws both locked, and a forged post cannot change them.
+    // The account's own address, and «Fac parte din grup» from the account (§820): the form draws both locked, and a forged post cannot change them.
     if (canonicalOrNull(typeof posted.email === "string" ? posted.email : "") !== canonicalOrNull(member.email)) {
       throw new DomainError("FORBIDDEN", "a member offers with the account's own address");
     }
@@ -2100,7 +2100,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
 
   const noticeDescribes = await noticeDescribesVolunteers(db, now);
   /*
-    «Vreau să apar pe lista publică a voluntarilor» (§NNN): the form asked it only where the club made the list public and the notice in
+    «Vreau să apar pe lista publică a voluntarilor» (§821): the form asked it only where the club made the list public and the notice in
     force describes it, so the tick is kept only then — asked again here, the page's cache is not the gate. A tick posted otherwise (a page
     cached before the club or the notice changed) is dropped, never stored: the person agreed to nothing that was described. The person is
     never refused for it; the page shows no name for them either way until an organizer confirms them.

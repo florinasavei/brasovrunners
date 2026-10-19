@@ -165,7 +165,7 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       "VOLUNTEER_ROLE_ASSIGNED",
       // The link to a minor volunteer's parent or guardian (§768): to an address nobody confirmed, no registration behind it.
       "VOLUNTEER_GUARDIAN_REQUEST",
-      // The club's invitation to volunteer (§NNN): to an address the club typed, no registration behind it.
+      // The club's invitation to volunteer (§820): to an address the club typed, no registration behind it.
       "VOLUNTEER_INVITATION",
       "REGISTRATION_OPENED",
       // «Vin!» (§811): to the address typed under the answer, no registration behind it.
@@ -176,7 +176,7 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       "NEWSLETTER_CONFIRM",
       "NEWSLETTER",
       "NEW_EVENT_ALERT",
-      // «Vii mâine la …?» (§NNN): the newsletter's fourth, to a subscriber, never about a registration.
+      // «Vii mâine la …?» (§818): the newsletter's fourth, to a subscriber, never about a registration.
       "RSVP_ASK",
     ];
     for (const type of TEMPLATED_MESSAGE_TYPES) {

@@ -56,7 +56,7 @@ export async function eraseRsvpsAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Șterge invitațiile de voluntariat» (§NNN, art. 17 GDPR): the club's invitations to volunteer sent to the address the page was opened
+ * «Șterge invitațiile de voluntariat» (§820, art. 17 GDPR): the club's invitations to volunteer sent to the address the page was opened
  * for — an address and the club's line, which an unused or withdrawn invitation keeps until retention reaches it. The address comes back
  * through the same sealed lookup, never typed again, and goes no further than the Administrator who pressed (asserted again in the service).
  */

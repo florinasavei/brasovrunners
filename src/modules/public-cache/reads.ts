@@ -682,7 +682,7 @@ export async function cachedRsvpDescribed(now: Date): Promise<boolean> {
 }
 
 /**
- * Whether the newsletter's pop-up may offer the topic «Întrebarea „Vii?” înaintea alergărilor» (§NNN): the notice in force describes
+ * Whether the newsletter's pop-up may offer the topic «Întrebarea „Vii?” înaintea alergărilor» (§818): the notice in force describes
  * «Vin!» and the day-before question (`describesRsvp`, `describesRsvpAsk`), in every language — `noticeDescribesRsvpAsk`'s cached twin.
  */
 export async function cachedRsvpAskDescribed(now: Date): Promise<boolean> {
@@ -782,7 +782,7 @@ export async function cachedVolunteerRoles(eventId: string) {
 }
 
 /**
- * Whether an event's page may draw the volunteers' public list (§NNN): the privacy notice in force describes the event volunteers and their
+ * Whether an event's page may draw the volunteers' public list (§821): the privacy notice in force describes the event volunteers and their
  * public list (`describesVolunteers`, `describesVolunteersList`), in every language — `cachedRsvpDescribed`'s reading, so an approval opens
  * the card the moment the notice itself changes. `noticeDescribesVolunteersList` is the uncached twin the sign-up and the organizers' record
  * of the tick ask again.
@@ -793,7 +793,7 @@ export async function cachedVolunteersListDescribed(now: Date): Promise<boolean>
 }
 
 /**
- * The first approved privacy notice that described the volunteers' public list (`findFirstVolunteersListNoticeVersion`, §NNN), or null —
+ * The first approved privacy notice that described the volunteers' public list (`findFirstVolunteersListNoticeVersion`, §821), or null —
  * the line below which a tick «Vreau să apar pe lista publică a voluntarilor» was given under a notice that said nothing about it: those
  * volunteers are counted and never named. Expired with every legal text, like the results' and «Vin!»'s twins.
  */
@@ -802,7 +802,7 @@ export async function cachedFirstVolunteersListNoticeVersion(): Promise<number |
 }
 
 /**
- * The people the event page's card «Voluntarii» may show (`readPublicVolunteersList`, §NNN): the count of the confirmed volunteers and
+ * The people the event page's card «Voluntarii» may show (`readPublicVolunteersList`, §821): the count of the confirmed volunteers and
  * the names, with the role given, of those who ticked under a notice that described the list. Names and roles only, never an address or a
  * telephone number. Filed under "places" and "events", the tags every write to the people expires (`revalidatePublicContent`), and with
  * **no saved copy** (a withdrawn name must not outlive its owner's request, §281, as the start list's and «Vin (N)»'s). The notice's first

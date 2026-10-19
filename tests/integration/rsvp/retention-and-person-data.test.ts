@@ -131,7 +131,7 @@ describe("§811 the answers «Vin!» in the sweep and in everything held about a
       expect(data.rsvpAnswers[0]).toMatchObject({ deliveryEmail: "Ana.Pop@gmail.com", displayName: "Ana", showName: true, locale: "ro", privacyNoticeVersion: 4, eventTitle: "Alergarea de joi" });
       expect(data.rsvpAnswers[0].confirmedAt).not.toBeNull();
       expect(data.rsvpAnswers[1].confirmedAt).toBeNull();
-      // The «Vii?» email's unanswered question is data held, and the view says it was asked (§NNN), not answered.
+      // The «Vii?» email's unanswered question is data held, and the view says it was asked (§818), not answered.
       expect(data.rsvpAnswers[0].askedAt).toBeNull();
       expect(data.rsvpAnswers[1].askedAt).toEqual(NOW);
       expect(data.rememberedBrowsers).toHaveLength(1);

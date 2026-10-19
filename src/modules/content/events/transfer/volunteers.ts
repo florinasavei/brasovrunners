@@ -111,12 +111,12 @@ export async function importVolunteersFile<T extends Record<string, unknown>>(
     }
   }
   /*
-    «Cine se poate oferi» (§NNN): the club's standing rule travels with the roles — a duplicate, a repeat and this file all start with it —
+    «Cine se poate oferi» (§820): the club's standing rule travels with the roles — a duplicate, a repeat and this file all start with it —
     but not the tick «Primește voluntari», so nothing opens by itself. Through the card's own service, which audits it.
   */
   if (file.access !== DEFAULT_VOLUNTEERS_ACCESS) await setVolunteersAccess(db, actor, { eventId, access: file.access }, now);
   /*
-    «Lista voluntarilor e publică pe pagina evenimentului» (§NNN) travels the same way, through the card's own service: no volunteer is in the file, and a name
+    «Lista voluntarilor e publică pe pagina evenimentului» (§821) travels the same way, through the card's own service: no volunteer is in the file, and a name
     appears only for a confirmed volunteer who ticked under a notice that describes the list.
   */
   if (file.listPublic) await setVolunteersListPublic(db, actor, { eventId, on: true }, now);

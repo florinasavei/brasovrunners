@@ -10,7 +10,7 @@ import {
 } from "@/modules/volunteers/domain/public-list";
 
 /**
- * §NNN — the volunteers' public list (BR-REQ-039-01, BR-REQ-050-02; the disclosure rule of §143 and §396 reaching volunteers): the pure gate
+ * §821 — the volunteers' public list (BR-REQ-039-01, BR-REQ-050-02; the disclosure rule of §143 and §396 reaching volunteers): the pure gate
  * and the rule that names a person. A public name is a disclosure: only a CONFIRMED volunteer who ticked «Vreau să apar pe lista publică a
  * voluntarilor» under a privacy notice that described the list (the first such version or a later one) is named; everyone else is a count.
  */
@@ -42,7 +42,7 @@ const gate = (over: Partial<VolunteersListGate> = {}): VolunteersListGate => ({
   ...over,
 });
 
-describe("§NNN publicVolunteerName — who may be named", () => {
+describe("§821 publicVolunteerName — who may be named", () => {
   const input = (over: Partial<Parameters<typeof publicVolunteerName>[0]> = {}) => ({ ...row(), firstListNoticeVersion: 3, ...over });
 
   it("names a confirmed volunteer who ticked under the first notice that described the list", () => {
@@ -89,7 +89,7 @@ describe("§NNN publicVolunteerName — who may be named", () => {
   });
 });
 
-describe("§NNN volunteersListView — the names, the role given and the count", () => {
+describe("§821 volunteersListView — the names, the role given and the count", () => {
   it("lists the named in the order given, with the role in both languages, and counts the unticked as «și încă N»", () => {
     const view = volunteersListView(
       [
@@ -143,7 +143,7 @@ describe("§NNN volunteersListView — the names, the role given and the count",
   });
 });
 
-describe("§NNN volunteersListState — does the page draw the card, and in which shape", () => {
+describe("§821 volunteersListState — does the page draw the card, and in which shape", () => {
   it("draws the list when the club's tick is on, the notice describes it and somebody may be named", () => {
     expect(volunteersListState(gate())).toBe("list");
   });

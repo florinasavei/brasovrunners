@@ -68,7 +68,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
    * Superadministrator on the run that sends the day's digest (§775), zero on every other run.
    */
   legalTemplatesNoticesQueued: number;
-  /** «Vii mâine la …?» messages queued this run (§NNN): one per subscriber of the topic, on the run that opens an event's window; zero on every other. */
+  /** «Vii mâine la …?» messages queued this run (§818): one per subscriber of the topic, on the run that opens an event's window; zero on every other. */
   rsvpAsksQueued: number;
   /**
    * The outage grace (§657): what the site's name answered this run (`resolves`, `unresolved`,
@@ -295,7 +295,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   }
 
   /*
-    «Vii mâine la …?» (§NNN): the day before an event the club ticked «Vin!» on, once per event, from 08:00 club time (the §775 morning),
+    «Vii mâine la …?» (§818): the day before an event the club ticked «Vin!» on, once per event, from 08:00 club time (the §775 morning),
     to the newsletter's subscribers of the topic. Its own try/catch and retryable like the alert's: a failure is a late question, and
     the ping that follows asks again until midnight closes the window. No row is written for an event whose window is not open, so a
     run outside it reads one indexed query and nothing else.

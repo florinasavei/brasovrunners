@@ -43,7 +43,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * event's page; one that is unknown says so and points at the listing. The read is throttled per link, as every token page is
  * (§19.4, `tokenAttemptAllowed`).
  *
- * **The «Vii mâine la …?» email's two buttons (§NNN) open this page too** — they are the same two links, minted for a row the email
+ * **The «Vii mâine la …?» email's two buttons (§818) open this page too** — they are the same two links, minted for a row the email
  * made (`asked`). «Vin» is one press: above the button, an optional name and the tick «Vreau să apar cu numele» (the event page card's
  * own words) — a person who gives neither is counted without a name, and the newsletter never had one to lend. «Nu vin» is one press
  * that deletes the row: nobody is counted, and the page says so in the sentence the email promised. The box comes above the button (a
@@ -76,7 +76,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
     somebody typed) the page names no event and claims nothing.
   */
   if (retras !== undefined && invalid === undefined) {
-    // `nu` is the email's «Nu vin» (§NNN): its sentence, only with the proof the action made for it (the server read it from the deleted row).
+    // `nu` is the email's «Nu vin» (§818): its sentence, only with the proof the action made for it (the server read it from the deleted row).
     const declined = nu !== undefined && isWithdrawnProof(ok, token, `${retras}${WITHDRAWN_ASKED_SUFFIX}`);
     const event = retras && (declined || isWithdrawnProof(ok, token, retras)) ? await findPublishedEventBySlug(db, locale, retras) : undefined;
     return (
@@ -157,7 +157,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
             <form action={confirmRsvpAction} style={{ width: "100%" }}>
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="token" value={token} />
-              {/* The email's «Vin» (§NNN): the name is the person's to give, here, with the same box and tick as the event page's card. */}
+              {/* The email's «Vin» (§818): the name is the person's to give, here, with the same box and tick as the event page's card. */}
               {live.asked && !live.named && (
                 <Stack spacing={1.5} sx={{ mb: 2 }} data-testid="rsvp-ask-name">
                   <TextField name="name" label={tEvent("rsvp.name")} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />

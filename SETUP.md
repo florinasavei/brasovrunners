@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.58-2026-10-18 -->
+<!-- PROJECT_BASELINE: BR-V3.59-2026-10-19 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.58-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.59-2026-10-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2367,7 +2367,7 @@ only ones who see the names, addresses and telephone numbers.
      nou» writes them into the new draft through the card's own rules (an entry the card would refuse is skipped); an import over an existing event leaves
      its roles and categories as they are, and the preview says so (a skipped entry is counted in words, never silently).
    - **Local and QA databases** get two categories with the owner's example roles on the sample race (`yarn db:seed`; never production, `DECISIONS.md` §30).
-10. **Choose who may offer, and invite people by email** (`DECISIONS.md` §NNN; the owner, 2026-10-19: «invite only volunteer … Brașov Runners only volunteers»). The card
+10. **Choose who may offer, and invite people by email** (`DECISIONS.md` §820; the owner, 2026-10-19: «invite only volunteer … Brașov Runners only volunteers»). The card
     «Voluntari», under «Primește voluntari pe pagină» (shown only while it is ticked), has the choice **«Cine se poate oferi»** — three radios and one **«Salvează»**:
     - **«Oricine, de pe pagina evenimentului»** — as in step 4 (the default, and what every event was).
     - **«Doar membrii clubului (conectați în zona membrilor)»** — the event's page says «Căutăm voluntari dintre membrii clubului: …» and the button opens the
@@ -2395,7 +2395,7 @@ only ones who see the names, addresses and telephone numbers.
     - **One person's invitations** — the person's data screen («Toate datele unei persoane», Administrator) lists the invitations sent to an address, with the club's line in both
       languages, and **«Șterge invitațiile de voluntariat»** erases them on request (art. 17), asking first; the offers and registrations stay.
 
-11. **Show the volunteers on the event's page — or keep the list private** (`DECISIONS.md` §NNN; the owner, 2026-10-19: «private vs public lists of volunteers»). By default the
+11. **Show the volunteers on the event's page — or keep the list private** (`DECISIONS.md` §821; the owner, 2026-10-19: «private vs public lists of volunteers»). By default the
     list of volunteers is the team's alone (the card, the CSV, the badges), exactly as before. The card «Voluntari» has one more tick, under «Arată public câți voluntari mai sunt
     necesari»: **«Lista voluntarilor e publică pe pagina evenimentului»** (off by default, one press like the others, audited). Three things must hold before a name shows:
     - **The notice describes it.** Approve the privacy notice from the template once more (`/admin/legal` → the «GDPR» card → «Regenerează din șablon», a lawyer reading the
@@ -2549,7 +2549,7 @@ turns on event by event. Three steps are the club's: the notice (1), the tick (2
    counts, never the address.
 6. **Not built here.** The one-tap answer from the members' zone. It calls the same service (`answerRsvp` with an identity of source `account`)
    and the same gate (`rsvpOffered`).
-7. **The «Vii?» email (`DECISIONS.md` §NNN).** One step for the club: **approve the privacy notice again from the template** (`/admin/legal` → the «GDPR» card → «Regenerează din șablon», as in step 1; a lawyer
+7. **The «Vii?» email (`DECISIONS.md` §818).** One step for the club: **approve the privacy notice again from the template** (`/admin/legal` → the «GDPR» card → «Regenerează din șablon», as in step 1; a lawyer
    reads section 5's two paragraphs first — the newsletter's, which now says the automatic question the day before, and «Vin!»'s, which says the subscriber's address is written as
    an unconfirmed answer when the question is sent and deleted at «Nu vin» or after 7 days). Until a notice naming `{{rsvpAsk}}` (and `{{rsvp}}`) is in force, in both languages, **nobody is asked**
    and the topic's box does not show in the pop-up or on the subscriber's page; `/admin/tasks` carries the row `rsvpAskNotice` while an upcoming event is ticked. The topic is named in the

@@ -50,7 +50,7 @@ export function volunteerMinorsClause(locale: string): string {
 }
 
 /**
- * What the privacy notice's `{{volunteersList}}` becomes (§NNN): the tick's own words on the volunteers' form, quoted, in that language —
+ * What the privacy notice's `{{volunteersList}}` becomes (§821): the tick's own words on the volunteers' form, quoted, in that language —
  * „Vreau să apar pe lista publică a voluntarilor” / “I want to appear on the public list of volunteers” — read from the catalogue the
  * form's label reads (`Event.volunteers.list.tick`), so the approved sentence names what a visitor ticks.
  */

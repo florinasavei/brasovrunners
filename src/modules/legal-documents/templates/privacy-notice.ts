@@ -147,7 +147,7 @@
  * (`describesVolunteerAgreement`, `/admin/tasks`' row `volunteerAgreementNotice`). The age is the agreement's
  * («vârsta minimă cerută de contract»), never a number here: the agreement states it (`{{minimumAge}}`).
  * **Open for counsel and the owner:** whether a register of agreements must outlive the thirty days.
- * Since §NNN the same paragraph has one sentence more, under the same marker (no new switch): an invitation by email to an event whose
+ * Since §820 the same paragraph has one sentence more, under the same marker (no new switch): an invitation by email to an event whose
  * volunteers are by invitation only (the address it went to, the organizers' line if any, when it was sent, whether it was used or
  * withdrawn, the single-use link; deleted with the offer, thirty days after the event's start — the sweep deletes the invitations in the
  * same step as the offers) with its legal basis and the
@@ -177,7 +177,7 @@
  * **Open for counsel, with the agreement's clause:** Legea nr. 78/2014's rules for minors, and whether a third person's data kept
  * on the minor's own row, with no notice of its own to that person but the email's footer, suffices (art. 14 GDPR).
  *
- * Since §NNN the same paragraph also describes the volunteers' public list, with its own marker, `{{volunteersList}}` (the tick's own words on
+ * Since §821 the same paragraph also describes the volunteers' public list, with its own marker, `{{volunteersList}}` (the tick's own words on
  * the form, quoted): the event's page shows the name and the role given of a confirmed volunteer who ticked it — on the form, or with the
  * organizers who recorded it for a person they entered —, nothing else, the others as a count; basis the person's consent, art. 6(1)(a),
  * withdrawn by writing; gone with the offer. A notice approved before says none of it, so the page's card «Voluntarii», the form's tick and
@@ -197,7 +197,7 @@
  * a notice naming it is in force in every language; `/admin/tasks` carries the row `rsvpNotice`. The terms do not change: an answer
  * buys, books and signs nothing.
  *
- * `{{rsvpAsk}}` (§NNN, «Vii mâine?») is the newsletter topic that carries the day-before question, quoted — „Întrebarea «Vii?»
+ * `{{rsvpAsk}}` (§818, «Vii mâine?») is the newsletter topic that carries the day-before question, quoted — „Întrebarea «Vii?»
  * înaintea alergărilor” — in two paragraphs: section 5's «Vin!» one (the subscriber's address is written as an unconfirmed answer when
  * the question is sent; deleted at «Nu vin» or after 7 days) and its newsletter one (the automatic question). It is also the switch: no
  * question is queued or sent, and the pop-up and the manage page offer no topic, until a notice naming it AND `{{rsvp}}` is in force in

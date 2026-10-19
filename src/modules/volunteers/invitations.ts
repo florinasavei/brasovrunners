@@ -25,7 +25,7 @@ import { volunteerEventAhead, volunteerOfferClosedFor } from "./domain/volunteer
 import { readPublicVolunteerRoles } from "./volunteers";
 
 /**
- * The club's invitations to volunteer (§NNN, amending §754 and §768; the registrations' invitations of §647 are the model, minus
+ * The club's invitations to volunteer (§820, amending §754 and §768; the registrations' invitations of §647 are the model, minus
  * everything that holds a place): «Invitații», the fold of the «Voluntari» card while «Cine se poate oferi» says «Doar cu invitație de
  * la club». Three verbs — send, send again, withdraw — and the read that lists them, each the Organizer's and the Administrators' to
  * make (`canManageVolunteers`, asserted here and in the Server Action behind each button; BR-REQ-060-01), each audited with the
@@ -231,7 +231,7 @@ async function queueInvitationEmail<T extends Record<string, unknown>>(
 async function openInvitation<T extends Record<string, unknown>>(tx: Transaction<T>, invitationId: string, now: Date): Promise<EventVolunteerInvitation> {
   const [row] = await tx.select().from(eventVolunteerInvitations).where(eq(eventVolunteerInvitations.id, invitationId)).for("update").limit(1);
   if (!row) throw new VolunteerInvitationRefusal("VINVITE_NOT_FOUND");
-  // «Expirat» is the event's own state now, not the deadline stored at the send (§NNN): a race moved later keeps its invitations open.
+  // «Expirat» is the event's own state now, not the deadline stored at the send (§820): a race moved later keeps its invitations open.
   const [event] = await tx.select({ eventStatus: events.eventStatus, startsAt: events.startsAt, endsAt: events.endsAt }).from(events).where(eq(events.id, row.eventId)).limit(1);
   if (invitationStandingOf(row, event ? volunteerEventAhead(event, now) : false) !== "open") throw new VolunteerInvitationRefusal("VINVITE_NOT_OPEN");
   return row;

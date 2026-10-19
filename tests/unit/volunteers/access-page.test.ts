@@ -8,7 +8,7 @@ import type { VolunteersAccess } from "@/modules/volunteers/domain/access";
 import type { PublicVolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — the volunteers' own page meets «Cine se poate oferi» with the request (BR-REQ-060-01): «Oricine» is the page it always
+ * §820 — the volunteers' own page meets «Cine se poate oferi» with the request (BR-REQ-060-01): «Oricine» is the page it always
  * was; «Doar membrii» shows the form to a signed-in member — name and address from the account, locked — and a sentence with the
  * members' sign-in to a stranger, never the form; «Doar cu invitație» answers 404 without a link, and with a live link shows the
  * form with the invited address locked and the secret posted back, while a spent, withdrawn, run-out or unknown link says which
@@ -142,7 +142,7 @@ const choose = (access: VolunteersAccess) => {
   state.access = access;
 };
 
-describe("§NNN «Oricine»", () => {
+describe("§820 «Oricine»", () => {
   it("is the page it always was — the form, no lock, and neither the session nor the link's row touched", async () => {
     const page = await visit();
     expect(boxOf(page ?? "")).toMatchObject({ lock: null, roles: ["r1"] });
@@ -154,7 +154,7 @@ describe("§NNN «Oricine»", () => {
   });
 });
 
-describe("§NNN «Doar membrii clubului»", () => {
+describe("§820 «Doar membrii clubului»", () => {
   it("shows a stranger one sentence and the way into the members' zone, in the members' words, and no form — and its title, so the page is still the event's", async () => {
     choose("MEMBERS");
     const page = (await visit()) ?? "";
@@ -187,7 +187,7 @@ describe("§NNN «Doar membrii clubului»", () => {
   });
 });
 
-describe("§NNN «Doar cu invitație de la club»", () => {
+describe("§820 «Doar cu invitație de la club»", () => {
   it("answers 404 without a link, to a stranger and to a member alike — the page does not exist for them", async () => {
     choose("INVITED");
     expect(await visit()).toBeNull();

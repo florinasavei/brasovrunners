@@ -14,7 +14,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — the privacy notice's marker for the volunteers' public list (`{{volunteersList}}`; the owner, 2026-10-19: «private vs public lists
+ * §821 — the privacy notice's marker for the volunteers' public list (`{{volunteersList}}`; the owner, 2026-10-19: «private vs public lists
  * of volunteers»): the tick's own words, quoted, in the volunteers' paragraph, and the switch — the event page's card «Voluntarii», the form's
  * tick and the organizers' record of it wait for a notice naming it. Template only: no text in force is touched, and a lawyer reads the
  * sentence first (the template's header says so).
@@ -22,7 +22,7 @@ import ro from "../../../messages/ro.json";
 const text = (body: LegalDocumentBody) => body.sections.flatMap((section) => [section.heading ?? "", ...section.paragraphs]).join("\n");
 const bodyNaming = (markers: string) => ({ sections: [{ paragraphs: [`Voluntari (${markers}): păstrăm numele`] }] });
 
-describe("§NNN the marker", () => {
+describe("§821 the marker", () => {
   it("is a merge field of the privacy notice, and a notice describes the list only by naming it", () => {
     expect(VOLUNTEERS_LIST_NOTICE_MERGE_FIELD).toBe("volunteersList");
     expect(isMergeField("volunteersList")).toBe(true);
@@ -34,7 +34,7 @@ describe("§NNN the marker", () => {
   });
 });
 
-describe("§NNN the template's sentence", () => {
+describe("§821 the template's sentence", () => {
   it("names the marker in both languages, in the volunteers' paragraph", () => {
     for (const body of [privacyNoticeRo, privacyNoticeEn]) {
       expect(describesVolunteersList(body)).toBe(true);
@@ -66,7 +66,7 @@ describe("§NNN the template's sentence", () => {
   });
 });
 
-describe("§NNN the marker's value", () => {
+describe("§821 the marker's value", () => {
   it("is the form's own tick, quoted, in each language, read from the catalogue the form reads", () => {
     expect(volunteersListClause("ro")).toBe("„Vreau să apar pe lista publică a voluntarilor”");
     expect(volunteersListClause("en")).toBe("“I want to appear on the public list of volunteers”");
@@ -84,7 +84,7 @@ describe("§NNN the marker's value", () => {
   });
 });
 
-describe("§NNN the editor's legend", () => {
+describe("§821 the editor's legend", () => {
   it("has a token and a line for the marker, in both languages", () => {
     expect(DECLARATION_TOKENS.some((token) => token.token === "{{volunteersList}}")).toBe(true);
     expect((ro.Admin.legal.tokens as Record<string, string>).volunteersList).toBeTruthy();

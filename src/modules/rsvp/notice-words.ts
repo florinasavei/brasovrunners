@@ -13,7 +13,7 @@ export function rsvpClause(locale: string): string {
 }
 
 /**
- * What `{{rsvpAsk}}` becomes (§NNN, «Vii mâine?»): the newsletter topic that carries the day-before question, quoted, in that
+ * What `{{rsvpAsk}}` becomes (§818, «Vii mâine?»): the newsletter topic that carries the day-before question, quoted, in that
  * language — „Întrebarea «Vii?» înaintea alergărilor” — read through `topicsPhrase` from the catalogue the pop-up's box reads, so the
  * approved sentence names what a subscriber ticked.
  */

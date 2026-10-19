@@ -44,7 +44,7 @@ export const eventRsvps = pgTable(
     privacyNoticeVersion: integer("privacy_notice_version").notNull(),
     // Null until the emailed link is used, or until a verified identity answered.
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
-    // Set when the row was made by the «Vii?» email (§NNN) for a newsletter subscriber, before any press: the page of its two
+    // Set when the row was made by the «Vii?» email (§818) for a newsletter subscriber, before any press: the page of its two
     // links then offers the optional name and says «Bine, nu te numărăm» for «Nu vin». Null for an answer typed on the page.
     askedAt: timestamp("asked_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -102,7 +102,7 @@ export const eventRsvpTokens = pgTable(
 export type EventRsvpToken = typeof eventRsvpTokens.$inferSelect;
 
 /**
- * «Vii?» (§NNN; the owner, 2026-10-18: «I need this "Going" to be via email or something … super easy») — the mark that an
+ * «Vii?» (§818; the owner, 2026-10-18: «I need this "Going" to be via email or something … super easy») — the mark that an
  * event's day-before question went out. **One row per event, UNIQUE on the event: that is the "once"**, as `newsletter_sends`' UNIQUE
  * event is the new-event alert's. An event with nobody to ask still gets its row (`recipients` 0): it was looked at, and a
  * subscriber who joins tomorrow is not asked about today's event. No address and nothing personal is kept here — the messages

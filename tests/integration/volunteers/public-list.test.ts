@@ -21,13 +21,13 @@ const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 const EFFECTIVE = new Date("2026-01-01T00:00:00.000Z");
 
 /**
- * §NNN — the volunteers' public list (BR-REQ-039-01, BR-REQ-050-02, BR-REQ-060-01; the disclosure rule of §143 and §396 reaching volunteers),
+ * §821 — the volunteers' public list (BR-REQ-039-01, BR-REQ-050-02, BR-REQ-060-01; the disclosure rule of §143 and §396 reaching volunteers),
  * on a real schema: migration 0172's three columns and their defaults; the sign-up keeps the person's tick only where the form asked it (the
  * club's tick AND a notice that describes the list); the organizers' record of the tick is audited, refused without the notice, and a tick is
  * only ever cleared without it; the public read selects a name, a role and a tick and nothing else; a tick given under an older notice names
  * nobody; the club's tick is the club's alone, audited, and travels with a copy and with the event's file.
  */
-describe("§NNN the volunteers' public list", () => {
+describe("§821 the volunteers' public list", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

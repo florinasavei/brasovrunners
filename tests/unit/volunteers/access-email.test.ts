@@ -9,7 +9,7 @@ import { EMAIL_GROUP_OF } from "@/modules/notifications/domain/email-transport";
 import { renderBilingual } from "@/modules/notifications/templates";
 
 /**
- * §NNN — `VOLUNTEER_INVITATION`, the club's invitation to volunteer: written in both languages for an address the club typed, with
+ * §820 — `VOLUNTEER_INVITATION`, the club's invitation to volunteer: written in both languages for an address the club typed, with
  * the event, the roles still wanted, the club's own line, the button to the personal link and the privacy line that says why a
  * person who never offered received it; on the announcements' road, no participant's message, no club copy. The words of the
  * card and the pages are `access-render.test.ts`.
@@ -24,7 +24,7 @@ const data = {
 };
 const LINK = "https://example.test/ro/evenimente/crosul/voluntari?invite=SECRET";
 
-describe("§NNN the VOLUNTEER_INVITATION email", () => {
+describe("§820 the VOLUNTEER_INVITATION email", () => {
   it("invites by name of the club to the event, names the roles wanted and the club's line, and puts the button to the link — in both languages", () => {
     const email = renderBilingual("VOLUNTEER_INVITATION", "ro", data, LINK);
     expect(email.subject).toBe("Te invităm să fii voluntar la Crosul / We invite you to volunteer at The cross");
@@ -103,7 +103,7 @@ describe("§NNN the VOLUNTEER_INVITATION email", () => {
   });
 });
 
-describe("§NNN the privacy notice's one sentence", () => {
+describe("§820 the privacy notice's one sentence", () => {
   it("is in the volunteers' paragraph of both languages, under the marker that already gates the form — no new marker", () => {
     for (const [body, words] of [
       [privacyNoticeRo, ["Dacă organizatorii te invită cu adresa ta de e-mail", "la un eveniment cu voluntari doar pe invitație", "formularul îți completează numele și adresa din contul tău de membru"]],

@@ -11,7 +11,7 @@ import { isUuid } from "@/shared/ids";
 import { type PublicVolunteersList, type VolunteerListRow, volunteersListView } from "./domain/public-list";
 
 /**
- * The volunteers' public list (§NNN, amending §754 and §143/§396; the owner, 2026-10-19: «private vs public lists of volunteers») — the
+ * The volunteers' public list (§821, amending §754 and §143/§396; the owner, 2026-10-19: «private vs public lists of volunteers») — the
  * reads and the one switch behind it. The rule itself is pure and lives in `domain/public-list.ts`; this file only selects the rows it
  * judges, and **selects nothing a public page could leak**: the name, the state, the tick, the notice version of the tick, the age and the guardian's name
  * (only to keep a minor off the page — they never leave `volunteersListView`), and the name of the role given — never an address, a telephone number, a city, a
@@ -86,7 +86,7 @@ export async function countVolunteersListEvents<T extends Record<string, unknown
 type Actor = Pick<StaffUser, "id" | "role">;
 
 /**
- * «Lista voluntarilor e publică pe pagina evenimentului» on or off (§NNN): the event's own tick, saved by the «Voluntari» card's own form
+ * «Lista voluntarilor e publică pe pagina evenimentului» on or off (§821): the event's own tick, saved by the «Voluntari» card's own form
  * like «Arată public câți voluntari mai sunt necesari» — never by the editor's save. Off by default. Ticking it shows nothing by itself:
  * the page names only the confirmed volunteers who ticked, under a notice that describes the list (`volunteersListState`,
  * `publicVolunteerName`). Unticking takes every name off the page at the next read; nothing is deleted. The public cache is told once the

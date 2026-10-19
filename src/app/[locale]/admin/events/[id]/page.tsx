@@ -441,7 +441,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           categories,
           people,
           standings,
-          // The invitations to volunteer (§NNN): addresses, so read only for whoever may manage volunteers — as the people are.
+          // The invitations to volunteer (§820): addresses, so read only for whoever may manage volunteers — as the people are.
           invitations: await listVolunteerInvitations(db, staffUser, event.id),
           agreementInForce,
           agreementNoticeDescribes,
@@ -449,7 +449,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           agreementEvent,
           // Which form the public page draws (§765): the card says so beside the tick.
           profileDescribed: await noticeDescribesVolunteerProfile(db, now),
-          // Whether the notice in force describes the volunteers' public list (§NNN): the entry's box and the club's tick say so.
+          // Whether the notice in force describes the volunteers' public list (§821): the entry's box and the club's tick say so.
           listDescribed: await noticeDescribesVolunteersList(db, now),
           // Whether the club may take a person under eighteen (§768): the guardian's boxes, link and paper wait for it.
           minorsOpen: await volunteerMinorsOpen(db, now),

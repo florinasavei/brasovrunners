@@ -409,7 +409,7 @@ export async function approveVersion<T extends Record<string, unknown>>(
   // In force from now, on `/termeni` and `/confidentialitate` — which read the text through the
   // public cache (§333) and must show it on the next visit, not the next day.
   revalidatePublicContent("legal");
-  // A notice that starts describing «Vii mâine?» (§NNN) opens a window the job may already have slept through: look again at the next ping.
+  // A notice that starts describing «Vii mâine?» (§818) opens a window the job may already have slept through: look again at the next ping.
   wakeJobs("registration-maintenance");
 }
 

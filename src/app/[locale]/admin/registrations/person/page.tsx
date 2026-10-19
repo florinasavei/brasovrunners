@@ -294,7 +294,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
               </Box>
               <Divider />
               {/*
-                The club's invitations to volunteer sent to this address (§NNN; art. 15 GDPR): the event, when it was sent, sent again, used,
+                The club's invitations to volunteer sent to this address (§820; art. 15 GDPR): the event, when it was sent, sent again, used,
                 withdrawn, the deadline recorded, the language and the club's line in both languages — every column but the link's fingerprint.
                 An unused or withdrawn one holds an address and a line and nothing else, so it is erased here on request (art. 17).
               */}

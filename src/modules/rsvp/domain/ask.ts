@@ -2,7 +2,7 @@ import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { fromWallTimeInput, toWallTimeInput } from "@/modules/events/domain/zoned-time";
 
 /**
- * «Vii mâine la …?» (§NNN; the owner, 2026-10-18: «I need this "Going" to be via email or something … super easy») — WHEN the
+ * «Vii mâine la …?» (§818; the owner, 2026-10-18: «I need this "Going" to be via email or something … super easy») — WHEN the
  * day-before question goes out, pure. The rest (who, the links, the row that makes it once) is `rsvp/ask.ts`.
  *
  * **The window.** An event's question is asked on the club's calendar day BEFORE the day its start falls on (Europe/Bucharest,

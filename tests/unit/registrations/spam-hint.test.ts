@@ -203,7 +203,7 @@ describe("§619 the pages that wait for an email point at Spam and Promotions, v
     }
   });
 
-  it("the newsletter pop-up draws the «Vii?» topic's box only once the notice in force describes the question (§NNN)", async () => {
+  it("the newsletter pop-up draws the «Vii?» topic's box only once the notice in force describes the question (§818)", async () => {
     const render = async (askOffered: boolean) => {
       lang.current = "ro";
       return markup(

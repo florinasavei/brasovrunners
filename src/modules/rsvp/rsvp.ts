@@ -53,7 +53,7 @@ const CONFIRM_THROTTLE_SCOPE = "rsvp-confirm" as const;
 const EVENT_THROTTLE_SCOPE = "rsvp-event" as const;
 
 /**
- * An answer the «Vii?» email made and nobody has pressed yet (§NNN): `asked_at` set, `confirmed_at` empty. It is data held (the
+ * An answer the «Vii?» email made and nobody has pressed yet (§818): `asked_at` set, `confirmed_at` empty. It is data held (the
  * person's data view lists it) but **not an answer**: the editor's fold and counts leave it out, and «Nu mai vin» on the page
  * finds nothing in it — an address nobody typed on the page has said nothing, so no withdraw link is mailed for it.
  */
@@ -316,7 +316,7 @@ export type RsvpLink = {
   /** The answer is already counted (a confirm link opened after another route confirmed it). */
   confirmed: boolean;
   /**
-   * The answer was made by the «Vii?» email (§NNN) and nobody has pressed yet: the page of its two links offers the optional name
+   * The answer was made by the «Vii?» email (§818) and nobody has pressed yet: the page of its two links offers the optional name
    * under the «Vin» button, and says «Bine, nu te numărăm» after «Nu vin». False for an answer typed on the event's page and for one
    * already counted.
    */
@@ -423,7 +423,7 @@ export type RsvpProved = {
   email: string;
   displayName: string | null;
   /**
-   * The row this press used was the «Vii?» email's question, still unanswered (§NNN): read from the row itself, never from the
+   * The row this press used was the «Vii?» email's question, still unanswered (§818): read from the row itself, never from the
    * page's form. A person who only declined a question they never started is not "recognised" for a year by it.
    */
   unanswered: boolean;
@@ -443,7 +443,7 @@ async function slugOf<T extends Record<string, unknown>>(tx: Database<T>, eventI
  * event's public count. Returns who the link proved, so the caller can remember the browser (`person-session/`); null when the
  * link was not live (a second press, an expired or superseded link). A link spent after the event started changes nothing.
  *
- * **The «Vii?» email's «Vin» (§NNN) is this press.** The link was minted for the subscriber's own address and nobody else holds it, so
+ * **The «Vii?» email's «Vin» (§818) is this press.** The link was minted for the subscriber's own address and nobody else holds it, so
  * the press is a verified one: counted at once, no second email (it calls this function with the token's own proof, not `answerRsvp`, so
  * the `link` source of `identity.ts` stays free for a later surface). That row has no name — the
  * newsletter's row never had one, and a name nobody typed is never made up — so the page offers the optional `name` and the tick

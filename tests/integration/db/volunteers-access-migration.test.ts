@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0171_volunteers_access` (§NNN, amending §754 and §768), proven on real PostgreSQL (PGlite): an event written before it
+ * Migration `0171_volunteers_access` (§820, amending §754 and §768), proven on real PostgreSQL (PGlite): an event written before it
  * is «Oricine» (`ANYONE`) — what every event was — and a volunteer listed before it is untouched; the choice is a closed set of
  * three; an invitation to volunteer holds one row per address per event, a link's fingerprint once, a line of at most 500
  * characters, and a sign-up only with its moment; its rows go with the event and, when the volunteer goes, lose only the

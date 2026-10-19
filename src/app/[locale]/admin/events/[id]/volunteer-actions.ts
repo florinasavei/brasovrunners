@@ -100,7 +100,7 @@ const staffFields = (form: FormData) => ({
   guardianEmail: field(form, "guardianEmail"),
   volunteeredBefore: form.get("volunteeredBefore") === "on",
   clubMember: form.get("clubMember") === "on",
-  // «Vreau să apar pe lista publică a voluntarilor» (§NNN): the organizers' record of the person's own tick, true only when posted.
+  // «Vreau să apar pe lista publică a voluntarilor» (§821): the organizers' record of the person's own tick, true only when posted.
   listOptIn: form.get("listOptIn") === "on",
 });
 
@@ -183,7 +183,7 @@ export async function switchVolunteersCountsAction(form: FormData): Promise<void
 }
 
 /**
- * «Cine se poate oferi» (§NNN): the card's radio group and its «Salvează». It posts the choice wanted — one of the three, a forged
+ * «Cine se poate oferi» (§820): the card's radio group and its «Salvează». It posts the choice wanted — one of the three, a forged
  * value is refused by name — and the service saves it, audits it and tells the public cache. Changing it deletes nothing.
  */
 export async function switchVolunteersAccessAction(form: FormData): Promise<void> {
@@ -225,7 +225,7 @@ function invitationRefusalOutcome(error: VolunteerInvitationRefusal, form: FormD
 }
 
 /**
- * «Trimite invitațiile» (§NNN): the addresses typed, one per line, the club's optional line and the email's language. The service
+ * «Trimite invitațiile» (§820): the addresses typed, one per line, the club's optional line and the email's language. The service
  * asserts the role (the Organizer and the Administrators) and the choice «Doar cu invitație de la club»; a refusal comes back to the
  * form with what was typed, a send redirects to the card with the toast (how many went).
  */
@@ -248,7 +248,7 @@ export async function sendVolunteerInvitationsAction(_previous: FormOutcome | nu
   return backToCard(form, sent.sent > 0 ? { saved: "volunteerInvitationsSent", count: String(sent.sent) } : { saved: "volunteerInvitationsNone" });
 }
 
-/** «Retrimite» (§NNN): another email with a new link; the earlier link stops working. A refusal is the card's banner. */
+/** «Retrimite» (§820): another email with a new link; the earlier link stops working. A refusal is the card's banner. */
 export async function resendVolunteerInvitationAction(_previous: unknown, form: FormData): Promise<null> {
   try {
     const actor = await requireStaff();
@@ -261,7 +261,7 @@ export async function resendVolunteerInvitationAction(_previous: unknown, form: 
   return backToCard(form, { saved: "volunteerInvitationResent" });
 }
 
-/** «Retrage» (§NNN): the invitation ends now and its link says so. */
+/** «Retrage» (§820): the invitation ends now and its link says so. */
 export async function withdrawVolunteerInvitationAction(_previous: unknown, form: FormData): Promise<null> {
   try {
     const actor = await requireStaff();
@@ -275,7 +275,7 @@ export async function withdrawVolunteerInvitationAction(_previous: unknown, form
 }
 
 /**
- * «Lista voluntarilor e publică pe pagina evenimentului» (§NNN): the card's fourth tick, the event's `volunteers_list_public`, the same submit
+ * «Lista voluntarilor e publică pe pagina evenimentului» (§821): the card's fourth tick, the event's `volunteers_list_public`, the same submit
  * drawn as the checkbox (`TickButton`) — it posts `on=1|0`, the state it wants, never a toggle.
  */
 export async function switchVolunteersListAction(form: FormData): Promise<void> {

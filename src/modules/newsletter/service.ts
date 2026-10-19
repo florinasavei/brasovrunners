@@ -95,7 +95,7 @@ export async function subscribeToNewsletter<T extends Record<string, unknown>>(
   const notice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", input.locale, now);
   if (!notice) throw new DomainError("CONFLICT", "no approved privacy notice in this language");
   /*
-    «Întrebarea «Vii?» înaintea alergărilor» is a consent the notice must describe (§NNN): the pop-up draws its box only then, and here the
+    «Întrebarea «Vii?» înaintea alergărilor» is a consent the notice must describe (§818): the pop-up draws its box only then, and here the
     server refuses it too — a hand-made post is not a consent to something the notice in force never said. Left out, not an error;
     a form with nothing else ticked is the usual "choose a topic".
   */
@@ -303,7 +303,7 @@ export async function readNewsletterSubscription<T extends Record<string, unknow
  * successor's secret, or null for a link that was not live. No topic at all is refused before
  * anything is spent: that is "unsubscribe", its own button.
  *
- * **«Întrebarea «Vii?» …» (§NNN) is a consent the notice must describe.** A subscriber who does not have it already cannot add it while the
+ * **«Întrebarea «Vii?» …» (§818) is a consent the notice must describe.** A subscriber who does not have it already cannot add it while the
  * notice in force is silent on it (left out; a choice with nothing else ticked is refused and nothing is spent), and one who adds it —
  * or "everything" — records the notice in force as the version they consented under, because the question is sent only to those whose
  * consent was given under a notice that names it (`findFirstRsvpAskNoticeVersion`). Unticking it deletes the question's unanswered rows.
@@ -373,7 +373,7 @@ async function deleteSubscriberIn<T extends Record<string, unknown>>(tx: Databas
         sql`${emailOutbox.payloadJson}->>'subscriberId' = ${subscriberId}`,
       ),
     );
-  // The «Vii?» question's unanswered «Vin!» row (§NNN) holds this address too: it goes "pe loc" with the subscription, not at its seven days.
+  // The «Vii?» question's unanswered «Vin!» row (§818) holds this address too: it goes "pe loc" with the subscription, not at its seven days.
   const [who] = await tx.select({ canonicalEmail: newsletterSubscribers.canonicalEmail }).from(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriberId)).limit(1);
   if (who) await deleteAskedUnanswered(tx, who.canonicalEmail);
   await tx.delete(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriberId));

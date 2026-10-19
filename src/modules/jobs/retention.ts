@@ -187,13 +187,13 @@ export type PruneCounts = {
   invitations: number;
   /** Volunteer offers, gone thirty days after the event started (§754). */
   volunteers: number;
-  /** The club's invitations to volunteer, gone with the offers, thirty days after the event started (§NNN). */
+  /** The club's invitations to volunteer, gone with the offers, thirty days after the event started (§820). */
   volunteerInvitations: number;
   /** A race's results rows deleted with its registrations, three years after the race (§808). */
   results: number;
   /** Answers «Vin!» gone: thirty days after the event, seven unconfirmed, a cancelled event's at once (§811). */
   rsvps: number;
-  /** The «Vii?» marks of events thirty days over (§NNN): a row of an event and a count, nothing personal. */
+  /** The «Vii?» marks of events thirty days over (§818): a row of an event and a count, nothing personal. */
   rsvpAsks: number;
   /** Remembered browsers past their year (§811). */
   personSessions: number;
@@ -651,7 +651,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     «Anulat» included — and the privacy notice's section 7 says so; an offer entered after the start, thirty
     days after its entry. The row's own age is asked too, so one wrong year typed in the editor (2025 for
     2026) never takes a whole list at the next run, offers made yesterday among them. The roles stay with the
-    event: they hold no name. Since §NNN an event's page may name the volunteers who ticked (the public list), so the cache is told after the commit.
+    event: they hold no name. Since §821 an event's page may name the volunteers who ticked (the public list), so the cache is told after the commit.
   */
   await step("volunteers", async (tx) => {
     const cutoff = daysBefore(now, RETENTION.volunteerDaysAfterEvent);
@@ -662,7 +662,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .returning({ id: eventVolunteers.id });
     counts.volunteers = deleted.length;
     /*
-      The club's invitations to volunteer (§NNN) go in the same step and by the same clock: an address the club typed, and its line to
+      The club's invitations to volunteer (§820) go in the same step and by the same clock: an address the club typed, and its line to
       the person, kept thirty days after the event's start whatever became of the invitation — used, withdrawn or never opened. (An event
       always has a start, even while its date is still to be announced: the placeholder the organizer typed is the clock, as for the
       offers.) Counted on their own line: the notice's one sentence says they go with the offers, and the log says how many of each.
@@ -674,7 +674,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .returning({ id: eventVolunteerInvitations.id });
     counts.volunteerInvitations = invitations.length;
   });
-  // The event page's card «Voluntarii» (§NNN) is filed under "places": the names this step has just removed must leave it too. After the step's commit.
+  // The event page's card «Voluntarii» (§821) is filed under "places": the names this step has just removed must leave it too. After the step's commit.
   if (counts.volunteers > 0) revalidatePublicContent("places");
 
   /*
@@ -721,7 +721,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .returning({ id: eventRsvps.id });
     counts.rsvps = deleted.length;
     /*
-      The day-before question's mark (§NNN) goes with the event's other rows, thirty days after its end — NOT at a cancellation: a
+      The day-before question's mark (§818) goes with the event's other rows, thirty days after its end — NOT at a cancellation: a
       cancelled event put back on the same day must not be asked a second time, and the row holds nothing personal (an event id and a
       count). The unanswered rows it made are the seven-day window above; the messages are the outbox's.
     */

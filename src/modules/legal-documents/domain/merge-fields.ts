@@ -139,7 +139,7 @@ export const RESULTS_MERGE_FIELD = "results";
 export const RSVP_MERGE_FIELD = "rsvp";
 
 /**
- * The privacy notice's marker for the day-before question «Vii mâine?» (§NNN, `rsvp/ask.ts`): filled, when the notice is shown, with
+ * The privacy notice's marker for the day-before question «Vii mâine?» (§818, `rsvp/ask.ts`): filled, when the notice is shown, with
  * the newsletter topic's own name, quoted (`rsvp/notice-words.ts`) — „Întrebarea «Vii?» înaintea alergărilor” — in two paragraphs of
  * section 5: the newsletter's (the automatic question the day before a ticked event, to the subscribers of that topic and of «Toate
  * noutățile») and «Vin!»'s (the subscriber's address is written into the answers when the question is sent, unconfirmed, and deleted
@@ -235,7 +235,7 @@ export const VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD = "volunteerProfile";
 export const VOLUNTEER_MINORS_NOTICE_MERGE_FIELD = "volunteerMinors";
 
 /**
- * The privacy notice's marker for the volunteers' public list (§NNN, amending §754 and §143/§396; the owner, 2026-10-19: «private vs
+ * The privacy notice's marker for the volunteers' public list (§821, amending §754 and §143/§396; the owner, 2026-10-19: «private vs
  * public lists of volunteers»): the tick's own words on the volunteers' form, quoted, in the reader's language
  * (`volunteers/notice-words.ts`) — „Vreau să apar pe lista publică a voluntarilor” / “I want to appear on the public list of
  * volunteers” — inside the volunteers' paragraph's sentence that says what the event's page then shows (the name and the role the
@@ -766,7 +766,7 @@ export function describesRsvp(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the day-before question «Vii mâine?» (§NNN): it names `{{rsvpAsk}}`. One half of the gate for
+ * Whether a privacy notice describes the day-before question «Vii mâine?» (§818): it names `{{rsvpAsk}}`. One half of the gate for
  * the question — the other is `describesRsvp`, which the caller also asks, because the question writes a «Vin!» row — and what
  * `/admin/tasks`' row `rsvpAskNotice` reads. Pure; the caller asks it of the notice in force, in every language.
  */
@@ -848,7 +848,7 @@ export function describesVolunteerMinors(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the volunteers' public list (§NNN): it names `{{volunteersList}}`. With `describesVolunteers` (the
+ * Whether a privacy notice describes the volunteers' public list (§821): it names `{{volunteersList}}`. With `describesVolunteers` (the
  * callers ask both: the list is a part of the volunteers' paragraph), the gate for the event page's card «Voluntarii», for the form's
  * tick «Vreau să apar pe lista publică a voluntarilor» and for the organizers' record of it, and what `/admin/tasks`' row
  * `volunteersListNotice` reads. Pure; the caller asks it of the notice in force, in every language.

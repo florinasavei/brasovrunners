@@ -1043,7 +1043,7 @@ export type TemplateData = {
     contacts?: { name: string | null; phone: string | null; email: string | null; categoryRo?: string; categoryEn?: string }[];
   };
   /**
-   * The club's invitation to volunteer (§NNN): the club's own line to the person (plain text, at most 500 characters) in the first
+   * The club's invitation to volunteer (§820): the club's own line to the person (plain text, at most 500 characters) in the first
    * half's language (`message`) and the second half's (`messageOther`, §354 — each half reads its own, or both are null), and the roles
    * the event still needs people for, in each language. The link is the message's button; the address is the recipient's, never a name.
    */
@@ -1926,7 +1926,7 @@ const T = {
       ],
       action: "Citește contractul și dă-ți acordul",
     },
-    // The club's invitation to volunteer (§NNN): to an address the club typed; the button is the volunteers' page with the invitation's link.
+    // The club's invitation to volunteer (§820): to an address the club typed; the button is the volunteers' page with the invitation's link.
     volunteerInvitation: {
       subject: (d: TemplateData) => `Te invităm să fii voluntar la ${d.eventTitle ?? "eveniment"}`,
       greeting: () => "Bună ziua,",
@@ -2163,7 +2163,7 @@ const T = {
       emphasis: (d: TemplateData): Emphasis => ({ highlightLine: eventFacts(d, NO_FACT_LINKS)?.line }),
     },
     /**
-     * «Vii mâine la …?» (§NNN), from the maintenance job the day before a ticked turn-up event, to the newsletter's subscribers of its
+     * «Vii mâine la …?» (§818), from the maintenance job the day before a ticked turn-up event, to the newsletter's subscribers of its
      * topics. Two buttons: «Vin» counts the person at once (the personal link is the proof of the address) and «Nu vin», under it, counts
      * nobody. The club may reword it in `/admin/emails` like the rest (`copyFor`); the buttons' targets, the facts and the newsletter's lines
      * (the topics, the way out) are the platform's.
@@ -2460,7 +2460,7 @@ const T = {
     /** The guardian's link (§768): the guardian is not on any list — somebody named them as the parent or guardian of a volunteer under eighteen. */
     privacyFooterGuardian: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că cineva te-a trecut ca părinte sau tutore al unui voluntar sub 18 ani la un eveniment al clubului. Cum folosim datele tale:`,
-    /** The club's invitation to volunteer (§NNN): the club typed the address to send it; nobody asked yet. */
+    /** The club's invitation to volunteer (§820): the club typed the address to send it; nobody asked yet. */
     privacyFooterVolunteerInvitation: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ți-a trecut adresa ca să te invite voluntar la unul dintre evenimentele sale. Cum folosim datele tale:`,
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */
@@ -3020,7 +3020,7 @@ const T = {
       action: "See the event",
       emphasis: (d: TemplateData): Emphasis => ({ highlightLine: eventFacts(d, NO_FACT_LINKS)?.line }),
     },
-    /** «Coming tomorrow?» (§NNN): the English half of `rsvpAsk` above. */
+    /** «Coming tomorrow?» (§818): the English half of `rsvpAsk` above. */
     rsvpAsk: {
       subject: (d: TemplateData) => `Coming to ${d.eventTitle ?? "the event"} tomorrow?`,
       greeting: () => "Hello,",
@@ -3286,7 +3286,7 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   VOLUNTEER_INVITATION: "volunteerInvitation",
 };
 
-/** The newsletter's three messages (§445) and «Vii mâine la …?» (§NNN): to a subscriber's address, never about a registration. */
+/** The newsletter's three messages (§445) and «Vii mâine la …?» (§818): to a subscriber's address, never about a registration. */
 const NEWSLETTER_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["NEWSLETTER_CONFIRM", "NEWSLETTER", "NEW_EVENT_ALERT", "RSVP_ASK"]);
 
 /**
@@ -3400,7 +3400,7 @@ function noticeParts(messageType: EmailMessageType, locale: EmailLocale, data: T
   if (messageType === "EVENT_CANCELLED") {
     return data.cancellationReason ? [organizerTextPart(words.reasonLabel, data.cancellationReason)] : [];
   }
-  // The club's invitation to volunteer (§NNN): the club's own line, as typed, after the platform's sentences.
+  // The club's invitation to volunteer (§820): the club's own line, as typed, after the platform's sentences.
   if (messageType === "VOLUNTEER_INVITATION") {
     return data.volunteerInvitation?.message ? [organizerTextPart(words.messageLabel, data.volunteerInvitation.message)] : [];
   }
@@ -3908,7 +3908,7 @@ export function buildTemplateContent(
     secondaryAction:
       messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && entry.action && actionUrl && data.familyDeclineUrl
         ? { label: copy.familyDecline, url: data.familyDeclineUrl }
-        : // «Vin!» (§812): «Nu vin» under «Da, vin», the same send's other link — only beside the confirm button. «Vii mâine?» (§NNN) has the same two.
+        : // «Vin!» (§812): «Nu vin» under «Da, vin», the same send's other link — only beside the confirm button. «Vii mâine?» (§818) has the same two.
           (messageType === "RSVP_ASK" || (messageType === "RSVP_CONFIRM" && (data.rsvpStage === undefined || data.rsvpStage === "confirm"))) && entry.action && actionUrl && data.rsvpWithdrawUrl
           ? { label: copy.rsvpNo, url: data.rsvpWithdrawUrl }
           : undefined,
@@ -4082,9 +4082,9 @@ const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set([
   "NEW_EVENT_ALERT",
   // «Vin!» (§811): the person deciding whether to come reads the same when and where as the others.
   "RSVP_CONFIRM",
-  // «Vii mâine la …?» (§NNN): the same, to the person asked.
+  // «Vii mâine la …?» (§818): the same, to the person asked.
   "RSVP_ASK",
-  // The club's invitation to volunteer (§NNN): the person deciding whether to help reads the same when and where as the others.
+  // The club's invitation to volunteer (§820): the person deciding whether to help reads the same when and where as the others.
   "VOLUNTEER_INVITATION",
 ]);
 

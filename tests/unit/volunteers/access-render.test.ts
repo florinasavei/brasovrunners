@@ -8,7 +8,7 @@ import type { VolunteerInvitationItem } from "@/modules/volunteers/invitations";
 import type { PublicVolunteerRole, VolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — «Cine se poate oferi» as the server draws it: the card's radio group (three native radios, one help line each, its own
+ * §820 — «Cine se poate oferi» as the server draws it: the card's radio group (three native radios, one help line each, its own
  * «Salvează»), the «Invitații» fold (the box of addresses, the club's line, the language, «Trimite invitațiile», the list with
  * «Retrimite» and «Retrage» on an open row alone), the event page's box in the members' words, and the form's locked boxes for a
  * signed-in member and for an emailed invitation. Both languages. The rules are `access-domain.test.ts`; the pages are
@@ -191,7 +191,7 @@ async function drawCallout(clubOnly: boolean, language: "ro" | "en" = "ro") {
 const tagOf = (page: string, element: "input" | "textarea", name: string) => new RegExp(`<${element}\\b[^>]*\\bname="${name}"[^>]*>`).exec(page)?.[0] ?? "";
 const radiosOf = (page: string, name: string) => [...page.matchAll(new RegExp(`<input\\b[^>]*type="radio"[^>]*\\bname="${name}"[^>]*>`, "g"))].map((match) => match[0]);
 
-describe("§NNN the card's «Cine se poate oferi»", () => {
+describe("§820 the card's «Cine se poate oferi»", () => {
   it("draws three native radios under the tick, the saved one checked, one help line each and a «Salvează» — in Romanian", async () => {
     const page = await drawCard({ access: "MEMBERS" });
     expect(page).toContain('data-testid="volunteer-access"');
@@ -229,7 +229,7 @@ describe("§NNN the card's «Cine se poate oferi»", () => {
   });
 });
 
-describe("§NNN the card's «Invitații»", () => {
+describe("§820 the card's «Invitații»", () => {
   it("is a fold with the box of addresses, the club's line, the language and «Trimite invitațiile» while the choice is «Doar cu invitație»", async () => {
     const page = await drawCard({ access: "INVITED", invitations: [] });
     expect(page).toContain('data-testid="volunteer-invitations"');
@@ -303,7 +303,7 @@ describe("§NNN the card's «Invitații»", () => {
   });
 });
 
-describe("§NNN the event page's box", () => {
+describe("§820 the event page's box", () => {
   it("says the club looks for volunteers among its members, in both languages, and still links the volunteers' page", async () => {
     const ro$ = await drawCallout(true);
     expect(ro$).toContain("Căutăm voluntari dintre membrii clubului: Punct de apă, Sosire");
@@ -314,7 +314,7 @@ describe("§NNN the event page's box", () => {
   });
 });
 
-describe("§NNN the form's locked boxes", () => {
+describe("§820 the form's locked boxes", () => {
   it("fills a member's name, locks the address as read-only and the club's tick as ticked and disabled — carrying the tick in a hidden box — and posts no secret", async () => {
     const page = await drawBox({ lock: { kind: "member", email: "membru@example.test", name: "Maria Membra" } });
     expect(page).toContain('data-testid="volunteer-lock-note"');

@@ -61,7 +61,7 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
   const eventPath = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
   const path = getPathname({ locale, href: { pathname: "/events/[slug]/volunteers", params: { slug } } });
   const since = renderedAt ? `&since=${encodeURIComponent(renderedAt)}` : "";
-  // The emailed invitation's secret (§NNN), as the form posted it back: every redirect to a form that must be drawn again carries it, the thank-you does not.
+  // The emailed invitation's secret (§820), as the form posted it back: every redirect to a form that must be drawn again carries it, the thank-you does not.
   const inviteSecret = text(form, "invite");
   const inviteQuery = inviteSecret ? `&invite=${encodeURIComponent(inviteSecret)}` : "";
   const db = getDb();
@@ -108,7 +108,7 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
   }
 
   /*
-    Who is asking (§NNN): the session is read only for an event whose choice is «Doar membrii clubului» and only when no invitation
+    Who is asking (§820): the session is read only for an event whose choice is «Doar membrii clubului» and only when no invitation
     came with the post — any other event costs this action one primary-key read more. The service decides with what it is given.
   */
   const [{ access } = { access: "ANYONE" as const }] = await db.select({ access: events.volunteersAccess }).from(events).where(eq(events.id, event.id)).limit(1);
@@ -133,7 +133,7 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
         // The volunteer agreement and the age (§758): the same, each its own act.
         agreement: form.get("agreement") === "on",
         adult: form.get("adult") === "on",
-        // «Vreau să apar pe lista publică a voluntarilor» (§NNN): the person's own optional tick, "on" only when ticked — never kept in the draft, like the consent;
+        // «Vreau să apar pe lista publică a voluntarilor» (§821): the person's own optional tick, "on" only when ticked — never kept in the draft, like the consent;
         // the service keeps it only where the form asked it (the club's tick and the notice in force).
         listOptIn: form.get("listOptIn") === "on",
         // What the person says about themselves (§765), read by the service only while the notice in force names it:
@@ -164,13 +164,13 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
       const fields = error.fields.length > 0 ? `&vfields=${error.fields.join(",")}` : "";
       redirect(`${path}?volunteer=invalid${fields}${since}${inviteQuery}#${VOLUNTEER_BOX_ID}`);
     }
-    // A stranger's post to a members' event (§NNN) lands on the volunteers' page, which says what the page is for and offers the sign-in.
+    // A stranger's post to a members' event (§820) lands on the volunteers' page, which says what the page is for and offers the sign-in.
     if (isDomainError(error) && error.code === "FORBIDDEN") redirect(`${path}${inviteSecret ? `?invite=${encodeURIComponent(inviteSecret)}` : ""}`);
     // The form is closed now (the switch, the roles, the texts): the event's page, where the box is gone, not a 404.
     if (isDomainError(error)) redirect(eventPath);
     throw error;
   }
-  // The emailed link no longer works (spent, withdrawn, past its date): the page reads the link again and says which, in a sentence (§NNN).
+  // The emailed link no longer works (spent, withdrawn, past its date): the page reads the link again and says which, in a sentence (§820).
   if (outcome.outcome === "invitation") redirect(`${path}?invite=${encodeURIComponent(inviteSecret)}`);
   if (outcome.outcome === "limited" || outcome.outcome === "full") {
     await keepTyped();

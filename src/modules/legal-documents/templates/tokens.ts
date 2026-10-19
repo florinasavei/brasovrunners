@@ -215,7 +215,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: RSVP_MERGE_FIELD,
     example: inBoth((locale) => rsvpClause(locale)),
   },
-  // The privacy notice's marker for the day-before question (§NNN): filled with the newsletter topic's own name, and the switch
+  // The privacy notice's marker for the day-before question (§818): filled with the newsletter topic's own name, and the switch
   // that lets the question be queued, sent and offered as a topic (`describesRsvpAsk`).
   {
     token: `{{${RSVP_ASK_MERGE_FIELD}}}`,
@@ -327,7 +327,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: VOLUNTEER_MINORS_NOTICE_MERGE_FIELD,
     example: inBoth((locale) => volunteerMinorsClause(locale)),
   },
-  // The privacy notice's marker for the volunteers' public list (§NNN): the tick's own words, and the switch — the event page's card
+  // The privacy notice's marker for the volunteers' public list (§821): the tick's own words, and the switch — the event page's card
   // «Voluntarii», the form's tick and the organizers' record of it wait for a notice naming it (`describesVolunteersList`).
   {
     token: `{{${VOLUNTEERS_LIST_NOTICE_MERGE_FIELD}}}`,

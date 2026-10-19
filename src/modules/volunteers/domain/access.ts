@@ -2,7 +2,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
- * «Cine se poate oferi» (§NNN, amending §754 and §768; the owner, 2026-10-19: «invite only volunteer … Brașov Runners only
+ * «Cine se poate oferi» (§820, amending §754 and §768; the owner, 2026-10-19: «invite only volunteer … Brașov Runners only
  * volunteers»): who may open the volunteers' form of one event — pure rules, so they are tested without a request. The database
  * holds the choice (`events.volunteers_access`, the closed set below) and the invitations (`event_volunteer_invitations`); the
  * session is read in `events/members-only.ts`, the link in `volunteers/invitations.ts`.
@@ -100,7 +100,7 @@ export type VolunteerInvitationStanding = "open" | "used" | "withdrawn" | "expir
 
 /**
  * Where an invitation stands, asking the event as it is now (`volunteerEventAhead`) and not the deadline stored at the send: a race
- * moved to a later day keeps its links alive, and one called off or over closes them, whatever `expires_at` recorded (§NNN). A spent
+ * moved to a later day keeps its links alive, and one called off or over closes them, whatever `expires_at` recorded (§820). A spent
  * link says so even after the event; a withdrawn one says so before it is called expired.
  */
 export function invitationStandingOf(invitation: { usedAt: Date | null; withdrawnAt: Date | null }, eventAhead: boolean): VolunteerInvitationStanding {

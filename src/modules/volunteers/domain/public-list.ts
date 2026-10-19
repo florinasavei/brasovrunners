@@ -1,5 +1,5 @@
 /**
- * The volunteers' public list (§NNN, amending §754 and §143/§396; the owner, 2026-10-19: «private vs public lists of
+ * The volunteers' public list (§821, amending §754 and §143/§396; the owner, 2026-10-19: «private vs public lists of
  * volunteers») — pure rules, so they are tested without a database. **A public name is a disclosure** (CLAUDE.md's unbreakable row):
  * the list the team keeps (the editor's card, the CSV, the badges) stays the team's alone unless the club ticks «Lista voluntarilor e
  * publică pe pagina evenimentului», and even then a name reaches the event's page only for a volunteer who said so themselves.
@@ -74,7 +74,7 @@ export type VolunteerNameInput = {
   listOptIn: boolean;
   /** The privacy notice version the tick was given under (`event_volunteers.list_opt_in_notice_version`: the sign-up's, or the notice in force at the organizers' record); null for a row that recorded none. */
   listNoticeVersion: number | null;
-  /** The age on the event's day, null when none is known. A person under eighteen is counted and never named (§NNN, until the owner and counsel decide otherwise). */
+  /** The age on the event's day, null when none is known. A person under eighteen is counted and never named (§821, until the owner and counsel decide otherwise). */
   age: number | null;
   /** The parent or guardian's name when the person is a minor (§768): its presence is the same fact as the age, read twice so that a row with only one of them still holds. */
   guardianName: string | null;

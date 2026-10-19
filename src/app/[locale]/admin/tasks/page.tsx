@@ -490,7 +490,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       resultsDescribed: await noticeDescribesResults(db, now),
       // §811: the answer «Vin!», described by the notice in force; nothing is refused, the page simply shows nothing until then.
       rsvpDescribed: await noticeDescribesRsvp(db, now),
-      // §NNN: the day-before question, described by the notice in force; nobody is asked until then.
+      // §818: the day-before question, described by the notice in force; nobody is asked until then.
       rsvpAskDescribed: await noticeDescribesRsvpAsk(db, now),
       rsvpEvents: await countRsvpEvents(db, now),
       // §808: the terms in force describe them too — the older ones promised to ask separately before a named result.
@@ -527,7 +527,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       volunteerProfileDescribed: await noticeDescribesVolunteerProfile(db, now),
       // §768: the notice (`{{volunteerMinors}}`) and the agreement (`{{volunteerGuardian}}`) in force both describe volunteers under eighteen.
       volunteerMinorsOpen: await volunteerMinorsOpen(db, now),
-      // §NNN: the notice in force describes the volunteers' public list (`{{volunteersList}}`), in every language; the row waits only while an event ahead has the list public.
+      // §821: the notice in force describes the volunteers' public list (`{{volunteersList}}`), in every language; the row waits only while an event ahead has the list public.
       volunteersListDescribed: await noticeDescribesVolunteersList(db, now),
       volunteersListEvents: await countVolunteersListEvents(db, now),
       gmailFallbackDescribed: await noticeDescribesGmailFallback(db, now),

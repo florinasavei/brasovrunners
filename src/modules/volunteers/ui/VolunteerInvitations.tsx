@@ -32,7 +32,7 @@ const STANDING_CHIP: Record<VolunteerInvitationStanding, { glyph: StatusGlyphNam
 };
 
 /**
- * «Invitații» (§NNN, amending §754 and §768): the fold of the «Voluntari» card where the club writes to the people it wants as
+ * «Invitații» (§820, amending §754 and §768): the fold of the «Voluntari» card where the club writes to the people it wants as
  * volunteers when «Cine se poate oferi» says «Doar cu invitație de la club». A box «Adrese (una pe rând)», an optional «Mesaj», the
  * email's language and «Trimite invitațiile»; under it the list — the address, where it stands (sent, used, withdrawn, expired) and
  * «Retrimite» / «Retrage» on each open one as confirmed actions. An invitation holds nothing and counts nothing: no role's seat and

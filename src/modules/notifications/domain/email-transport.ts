@@ -35,7 +35,7 @@ export type EmailTransport = (typeof EMAIL_TRANSPORTS)[number];
  *   "somebody confirmed", a colleague's invitation. To people who know the sender: Gmail's case.
  * - **newsletter** (E) — the newsletter's own mail (§445): the subscription's confirmation link,
  *   a newsletter the club writes on `/admin/newsletter`, the new-event alert and the day-before
- *   «Vii?» question (§NNN) — to people who asked for the club's news, never about a registration.
+ *   «Vii?» question (§818) — to people who asked for the club's news, never about a registration.
  */
 export const EMAIL_GROUPS = ["links", "confirmations", "reminders", "announcements", "club", "newsletter"] as const;
 export type EmailGroup = (typeof EMAIL_GROUPS)[number];
@@ -99,13 +99,13 @@ export const EMAIL_GROUP_OF: Readonly<Record<Exclude<EmailMessageType, RelayMess
   VOLUNTEER_ROLE_ASSIGNED: "confirmations",
   // The guardian's link (§768) is an action link, on the links' road like the volunteer's own agreement link.
   VOLUNTEER_GUARDIAN_REQUEST: "links",
-  // The club's invitation to volunteer (§NNN): what the club decides to say, to people it chose — rare and paced, the announcements' road
+  // The club's invitation to volunteer (§820): what the club decides to say, to people it chose — rare and paced, the announcements' road
   // (an event invitation, §647, holds a place and rides the links'; this one holds nothing, so a late one loses nobody anything).
   VOLUNTEER_INVITATION: "announcements",
   NEWSLETTER_CONFIRM: "newsletter",
   NEWSLETTER: "newsletter",
   NEW_EVENT_ALERT: "newsletter",
-  // «Vii mâine la …?» (§NNN): one message per subscriber of a topic, the new-event alert's shape — so the newsletter's group (Mailgun) and
+  // «Vii mâine la …?» (§818): one message per subscriber of a topic, the new-event alert's shape — so the newsletter's group (Mailgun) and
   // the bulk road (`BULK_MESSAGE_TYPES`: last in line, the reserve kept for registrations' links, never spilled to the club's Gmail). A
   // question still unsent when its window closes is withdrawn at the send (`prepareRsvpAsk`), not sent late.
   RSVP_ASK: "newsletter",

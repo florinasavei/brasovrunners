@@ -118,10 +118,10 @@ describe("§812 the notice says what the links and the clean-up really do", () =
 });
 
 /**
- * §NNN — the day-before question has its own marker, `{{rsvpAsk}}`: the notice's switch for the question (the topic's name is listed by
+ * §818 — the day-before question has its own marker, `{{rsvpAsk}}`: the notice's switch for the question (the topic's name is listed by
  * `{{newsletterTopics}}` at once, so that marker alone could not be the switch), in the two paragraphs that describe it.
  */
-describe("§NNN {{rsvpAsk}} is the notice's switch for the «Vii mâine?» question", () => {
+describe("§818 {{rsvpAsk}} is the notice's switch for the «Vii mâine?» question", () => {
   it("is known to the editor, filled with the topic's own name, and explained in the legend in both languages", () => {
     expect(MERGE_FIELDS).toContain(RSVP_ASK_MERGE_FIELD);
     expect(rsvpAskClause("ro")).toBe(`„${ro.Newsletter.topics.RSVP_ASK}”`);

@@ -55,7 +55,7 @@ export default async function SignInPage({ params, searchParams }: Props) {
 
   const { error, to, back: backTo, slug: backSlug } = await searchParams;
   const target = signInTargetOf(to);
-  // The volunteers' page of an event the visitor came from (§NNN): a closed way back, never a path from the address.
+  // The volunteers' page of an event the visitor came from (§820): a closed way back, never a path from the address.
   const back = signInBackOf(backTo, backSlug);
   const backHref = back ? ({ pathname: "/events/[slug]/volunteers", params: { slug: back.slug } } as const) : null;
 

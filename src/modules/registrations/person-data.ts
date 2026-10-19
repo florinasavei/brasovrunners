@@ -112,7 +112,7 @@ export type PersonData = {
     locale: string;
     privacyNoticeVersion: number;
     confirmedAt: Date | null;
-    /** When the «Vii?» email (§NNN) asked and wrote this row; with no `confirmedAt` it is a question nobody answered, not an answer. */
+    /** When the «Vii?» email (§818) asked and wrote this row; with no `confirmedAt` it is a question nobody answered, not an answer. */
     askedAt: Date | null;
     createdAt: Date;
   }>;
@@ -122,7 +122,7 @@ export type PersonData = {
    */
   rememberedBrowsers: Array<{ deliveryEmail: string; displayName: string | null; createdAt: Date; lastUsedAt: Date; expiresAt: Date }>;
   /**
-   * The club's invitations to volunteer sent to this address (§NNN, art. 15 GDPR): the event, the address as the club typed it, the club's
+   * The club's invitations to volunteer sent to this address (§820, art. 15 GDPR): the event, the address as the club typed it, the club's
    * line in both languages, the language and the moments — every column of the row but the link's fingerprint, which proves nothing to the
    * person. Gone with the event's volunteers, thirty days after the event,
    * with the person's offer when the card deletes it, or at an Administrator's press on this screen (`eraseVolunteerInvitationsOfPerson`).
@@ -172,9 +172,9 @@ export type PersonData = {
     city: string | null;
     volunteeredBefore: boolean;
     clubMember: boolean;
-    /** «Vreau să apar pe lista publică a voluntarilor» (§NNN): the person's tick, or the organizers' record of it — what the event's page may name them by (art. 15 GDPR). */
+    /** «Vreau să apar pe lista publică a voluntarilor» (§821): the person's tick, or the organizers' record of it — what the event's page may name them by (art. 15 GDPR). */
     listOptIn: boolean;
-    /** The privacy notice version the list tick was given under (§NNN); null with no tick. */
+    /** The privacy notice version the list tick was given under (§821); null with no tick. */
     listOptInNoticeVersion: number | null;
     shirtSize: (typeof eventVolunteers.$inferSelect)["shirtSize"];
     privacyNoticeVersion: number | null;
@@ -353,7 +353,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .where(eq(personSessions.canonicalEmail, canonicalEmail))
     .orderBy(asc(personSessions.createdAt));
 
-  // The club's invitations to volunteer (§NNN), by the same canonical address: the event's title in the invitation's language.
+  // The club's invitations to volunteer (§820), by the same canonical address: the event's title in the invitation's language.
   const volunteerInvitations = await db
     .select({
       eventId: eventVolunteerInvitations.eventId,
@@ -619,7 +619,7 @@ export async function eraseRsvpsOfPerson<T extends Record<string, unknown>>(
 }
 
 /**
- * Erase the club's invitations to volunteer sent to one canonical address (§NNN, art. 17 GDPR), on the person's request, by an Administrator
+ * Erase the club's invitations to volunteer sent to one canonical address (§820, art. 17 GDPR), on the person's request, by an Administrator
  * (`assertAdministrator`). The rows go whole — the address, the club's line in both languages and the link's fingerprint, so a link already in
  * an inbox stops working — whatever became of each invitation: an unused or withdrawn one holds an address and a line and nothing else, and
  * a person's offer (if there is one) is not touched, it has its own delete on the event's «Voluntari» card. One audit row keeps the count

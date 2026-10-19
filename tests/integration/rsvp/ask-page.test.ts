@@ -86,11 +86,11 @@ const HOUR = 60 * 60_000;
 const DAY = 24 * HOUR;
 
 /**
- * §NNN (amends §812) — the page the «Vii mâine la …?» email's two buttons open: the same token page as «Vin!»'s, for a row the
+ * §818 (amends §812) — the page the «Vii mâine la …?» email's two buttons open: the same token page as «Vin!»'s, for a row the
  * email made. «Vin» is ONE press with an optional name and the tick under it; «Nu vin» is ONE press that counts nobody and says so.
  * The GET changes nothing (BR-REQ-036-02 criterion 4).
  */
-describe("§NNN the page of the «Vii?» email's links", () => {
+describe("§818 the page of the «Vii?» email's links", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let eventId: string;

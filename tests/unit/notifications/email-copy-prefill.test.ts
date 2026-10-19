@@ -96,7 +96,7 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   VOLUNTEER_AGREEMENT_ACCEPTED: ["eventTitle"],
   VOLUNTEER_ROLE_ASSIGNED: ["eventTitle"],
   VOLUNTEER_GUARDIAN_REQUEST: ["eventTitle"],
-  // The club's invitation to volunteer (§NNN): the event; the roles and the club's line are the platform's own lines.
+  // The club's invitation to volunteer (§820): the event; the roles and the club's line are the platform's own lines.
   VOLUNTEER_INVITATION: ["eventTitle", "eventStartsAtFormatted"],
   REGISTRATION_OPENED: ["eventTitle"],
   // «Vin!» (§811): the event, and its start in the subject.

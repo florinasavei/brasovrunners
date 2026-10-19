@@ -38,7 +38,7 @@ type RendererDb = Parameters<EmailRenderer>[1];
  * month for the allowance, and an event cancelled, taken down or started in the meantime is no
  * news — the row is withdrawn (`OutboxMessageWithdrawn`), not failed (§331: a cancelled event goes quiet).
  *
- * **«Vii mâine la …?» (§NNN)** is the fourth message here: to a subscriber, about an event, with two personal links instead of one
+ * **«Vii mâine la …?» (§818)** is the fourth message here: to a subscriber, about an event, with two personal links instead of one
  * button. The renderer makes the subscriber's «Vin!» row and mints both links (`prepareRsvpAsk`, §14.5), writes the event's facts as
  * the alert does, and carries the event's calendar file as the confirmation of an answer does. It has no club copy and no allowance
  * rule: it is the question of one day, and a send that arrives after the start is withdrawn.

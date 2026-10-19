@@ -6,7 +6,7 @@ import { findFirstVolunteersListNoticeVersion, insertLegalDocumentVersion, notic
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the event page reads the volunteers' public list through the public cache (`cachedVolunteersListDescribed`,
+ * §821 — the event page reads the volunteers' public list through the public cache (`cachedVolunteersListDescribed`,
  * `cachedFirstVolunteersListNoticeVersion`, `cachedPublicVolunteersList`), and the sign-up asks the database (`noticeDescribesVolunteersList`,
  * `findFirstVolunteersListNoticeVersion`). The two are one rule written twice, so this pins that they agree — a page that shows names must
  * never lead to a sign-up that kept no tick — and that the cached list holds only a name, a role and two numbers.
@@ -26,7 +26,7 @@ const NOW = new Date("2026-10-19T10:00:00.000Z");
 const DAY = 86_400_000;
 const EFFECTIVE = new Date("2026-01-01T00:00:00.000Z");
 
-describe("§NNN the cached twins of «does the notice describe the volunteers' list» agree with the database's", () => {
+describe("§821 the cached twins of «does the notice describe the volunteers' list» agree with the database's", () => {
   beforeAll(async () => {
     ({ db, close } = await createTestDatabase());
   });

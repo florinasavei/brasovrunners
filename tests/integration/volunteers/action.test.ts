@@ -27,7 +27,7 @@ type Set = { name: string; value: string; options: { path?: string; maxAge?: num
 const jar = new Map<string, string>();
 const sets: Set[] = [];
 let turnstile: { on: boolean; verdict: string } = { on: false, verdict: "not_configured" };
-/** The members' zone's account reading the request (§NNN): null is a stranger. */
+/** The members' zone's account reading the request (§820): null is a stranger. */
 const viewer: { current: null | { email: string; displayName: string } } = { current: null };
 
 vi.mock("@/db/client", () => ({ getDb: () => db }));
@@ -297,11 +297,11 @@ describe("§754 submitVolunteerAction's redirects", () => {
 });
 
 /*
-  §NNN — who may offer (BR-REQ-060-01), through the action that reads the session and the form's hidden `invite`: the server asks the
+  §820 — who may offer (BR-REQ-060-01), through the action that reads the session and the form's hidden `invite`: the server asks the
   door again, so a hidden form is not a permission. A wrong condition at the action (reading the session when a link came, or the
   other way round) would refuse every member or let every stranger in while the service's own suite stays green.
 */
-describe("§NNN submitVolunteerAction and «Cine se poate oferi»", () => {
+describe("§820 submitVolunteerAction and «Cine se poate oferi»", () => {
   async function chooseAccess(access: "ANYONE" | "MEMBERS" | "INVITED") {
     await db.update(events).set({ volunteersAccess: access }).where(eq(events.id, eventId));
   }

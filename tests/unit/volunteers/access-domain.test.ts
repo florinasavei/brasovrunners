@@ -13,14 +13,14 @@ import {
 } from "@/modules/volunteers/domain/access";
 
 /**
- * §NNN — who may offer as a volunteer, as pure rules (BR-REQ-060-01, BR-REQ-036-02): the three choices, the door each opens for a
+ * §820 — who may offer as a volunteer, as pure rules (BR-REQ-060-01, BR-REQ-036-02): the three choices, the door each opens for a
  * stranger, a member and a person holding an emailed link, the standing of an invitation, and the box of addresses. The server's
  * second asking of the same rule (`mayVolunteerWith`) is held to the first (`volunteerDoorFor`) here.
  */
 const NOW = new Date("2026-10-19T10:00:00.000Z");
 const EARLIER = new Date(NOW.getTime() - 60_000);
 
-describe("§NNN the choice", () => {
+describe("§820 the choice", () => {
   it("is a closed set of three, «Oricine» first, and anything else is none", () => {
     expect(VOLUNTEERS_ACCESS).toEqual(["ANYONE", "MEMBERS", "INVITED"]);
     for (const value of VOLUNTEERS_ACCESS) expect(readVolunteersAccess(value)).toBe(value);
@@ -28,7 +28,7 @@ describe("§NNN the choice", () => {
   });
 });
 
-describe("§NNN the door the volunteers' page opens", () => {
+describe("§820 the door the volunteers' page opens", () => {
   const readings: InviteReading[] = [{ standing: "open" }, { standing: "used" }, { standing: "withdrawn" }, { standing: "expired" }, { standing: "invalid" }];
 
   it("«Oricine»: the form for everybody — a stranger, a member — and a link that no longer works does not shut it, it says so above it", () => {
@@ -87,7 +87,7 @@ describe("§NNN the door the volunteers' page opens", () => {
   });
 });
 
-describe("§NNN where an invitation stands", () => {
+describe("§820 where an invitation stands", () => {
   const open = { usedAt: null, withdrawnAt: null };
   it("is two stamps and the event's own state: open, used, withdrawn, expired — used first, then withdrawn, then the event", () => {
     expect(invitationStandingOf(open, true)).toBe("open");
@@ -108,7 +108,7 @@ describe("§NNN where an invitation stands", () => {
   });
 });
 
-describe("§NNN «Adrese (una pe rând)»", () => {
+describe("§820 «Adrese (una pe rând)»", () => {
   it("reads one address per line, and commas, semicolons and spaces as line ends, once by identity, in the order typed", () => {
     const read = parseInvitationAddresses("Ioana@Example.test\n andrei@example.test, ioana@example.test;vlad+club@gmail.com  \n\n");
     expect(read.unread).toEqual([]);

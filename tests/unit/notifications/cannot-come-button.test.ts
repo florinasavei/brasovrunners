@@ -31,7 +31,7 @@ const EVERY_MESSAGE: Record<Exclude<EmailMessageType, RelayMessageType>, { butto
   REGISTRATION_OPENED: { button: false, why: "«Anunță-mă»: no registration" },
   // «Vin!» (§811): an answer to a turn-up event; its own «Nu vin» is the message's second link, not a registration's cancel.
   RSVP_CONFIRM: { button: false, why: "no registration" },
-  // «Vii mâine la …?» (§NNN): the question that asks for «Vin!», to the newsletter's subscribers; never a registration.
+  // «Vii mâine la …?» (§818): the question that asks for «Vin!», to the newsletter's subscribers; never a registration.
   RSVP_ASK: { button: false, why: "no registration" },
   CLUB_CONFIRMATION_NOTICE: { button: false, why: "the club's notice" },
   EVENT_UPDATE_NOTICE: { button: true, why: "the organizer's update notice (amending §419)" },
@@ -65,7 +65,7 @@ const EVERY_MESSAGE: Record<Exclude<EmailMessageType, RelayMessageType>, { butto
   VOLUNTEER_AGREEMENT_ACCEPTED: { button: false, why: "no registration" },
   VOLUNTEER_ROLE_ASSIGNED: { button: false, why: "no registration" },
   VOLUNTEER_GUARDIAN_REQUEST: { button: false, why: "no registration" },
-  // The club's invitation to volunteer (§NNN): to an address, before any sign-up.
+  // The club's invitation to volunteer (§820): to an address, before any sign-up.
   VOLUNTEER_INVITATION: { button: false, why: "no registration" },
 };
 

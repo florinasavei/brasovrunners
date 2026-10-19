@@ -657,7 +657,7 @@ describe("§810 what a race's public results may contain — a name only for a r
   });
 });
 
-describe("§NNN what the volunteers' public list may contain — a name only for an adult who ticked, never an address, a phone, a city or a minor", () => {
+describe("§821 what the volunteers' public list may contain — a name only for an adult who ticked, never an address, a phone, a city or a minor", () => {
   /** The code of readPublicVolunteersList, without its comments: the select list it guards and the mapping of its rows. */
   function publicReadCode(): string {
     const source = readFileSync("src/modules/volunteers/public-list.ts", "utf8");

@@ -221,7 +221,7 @@ async function renderRow(
   if (row.messageType === "GROUP_RUN_DECLARATION_SIGNED" || row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE") {
     return renderGroupRunDeclarationRow(row, db, now, eventRows, replyTo);
   }
-  // The newsletter (§445) is about a subscriber, never a registration: its own path too — and so is «Vii mâine la …?» (§NNN), asked of a subscriber.
+  // The newsletter (§445) is about a subscriber, never a registration: its own path too — and so is «Vii mâine la …?» (§818), asked of a subscriber.
   if (row.messageType === "NEWSLETTER_CONFIRM" || row.messageType === "NEWSLETTER" || row.messageType === "NEW_EVENT_ALERT" || row.messageType === "RSVP_ASK") {
     return renderNewsletterRow(row, db, now, eventRows, replyTo);
   }
@@ -1012,7 +1012,7 @@ async function renderRow(
     }
   }
   /*
-    The club's invitation to volunteer (§NNN): the invitation is read now (`payload.invitationId`) and the link minted now, at the send
+    The club's invitation to volunteer (§820): the invitation is read now (`payload.invitationId`) and the link minted now, at the send
     — the secret is in this email alone (§14.5), the row keeps its SHA-256, and this newest email's link replaces the earlier one's
     (`mintVolunteerInvitationLink`). One used, withdrawn or past its date since the press, an address corrected since, or an event
     called off or over withdraws the message (§331's rule at the moment of sending). The roles named are the ones that still need

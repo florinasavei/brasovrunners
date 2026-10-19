@@ -41,7 +41,7 @@ const NEWSLETTER_LEAVE_ERROR_ID = "newsletter-leave-errors";
 
 type Props = {
   locale: Locale;
-  /** The notice in force describes the day-before question (`cachedRsvpAskDescribed`, §NNN): the topic «Întrebarea «Vii?» …» is a box only then. */
+  /** The notice in force describes the day-before question (`cachedRsvpAskDescribed`, §818): the topic «Întrebarea «Vii?» …» is a box only then. */
   askOffered?: boolean;
   outcome: NewsletterOutcome | null;
   /** The boxes a refusal named (`?nfields=`). */

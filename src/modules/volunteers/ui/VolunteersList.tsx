@@ -11,7 +11,7 @@ import { DENSITY } from "@/theme/density";
 import { volunteersListExpired, volunteersListState } from "../domain/public-list";
 
 /**
- * «Voluntarii» (§NNN, amending §754 and §143/§396; the owner, 2026-10-19: «private vs public lists of volunteers», then «asta ar trebui să fie
+ * «Voluntarii» (§821, amending §754 and §143/§396; the owner, 2026-10-19: «private vs public lists of volunteers», then «asta ar trebui să fie
  * collapsed, ca și condițiile de participare»): the volunteers of an event whose club ticked «Lista voluntarilor e publică pe pagina evenimentului» —
  * the **name and the role given** of each confirmed volunteer who ticked «Vreau să apar pe lista publică a voluntarilor», «și încă N voluntari» for
  * the rest. **A name is a disclosure** (CLAUDE.md's unbreakable row): the rule is `domain/public-list.ts`, applied by the cached read

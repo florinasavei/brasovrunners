@@ -150,18 +150,18 @@ type Props = {
   /** «Arată public câți voluntari mai sunt necesari», as saved (§773): the volunteers' page says how many a role needs only while it is on; the card always does. */
   volunteersShowCounts: boolean;
   /**
-   * «Lista voluntarilor e publică pe pagina evenimentului», as saved (§NNN): the event's page draws a card «Voluntarii» with the name and the role given of
+   * «Lista voluntarilor e publică pe pagina evenimentului», as saved (§821): the event's page draws a card «Voluntarii» with the name and the role given of
    * the confirmed volunteers who ticked «Vreau să apar pe lista publică a voluntarilor»; the card here always shows everybody.
    */
   volunteersListPublic?: boolean;
   /**
-   * The notice in force describes the public list (§NNN, `{{volunteersList}}`, in every language): the public form asks the tick and the entry's box records it,
+   * The notice in force describes the public list (§821, `{{volunteersList}}`, in every language): the public form asks the tick and the entry's box records it,
    * only while it does. Off, the club's tick says so and links «Documente legale»; the service refuses a new tick all the same (`changeVolunteer`).
    */
   listDescribed?: boolean;
-  /** «Cine se poate oferi», as saved (§NNN): anyone from the event's page, the club's signed-in members, or only people the club invited. */
+  /** «Cine se poate oferi», as saved (§820): anyone from the event's page, the club's signed-in members, or only people the club invited. */
   access?: VolunteersAccess;
-  /** The event's invitations to volunteer (§NNN), the newest first — read only for whoever may manage volunteers. */
+  /** The event's invitations to volunteer (§820), the newest first — read only for whoever may manage volunteers. */
   invitations?: readonly VolunteerInvitationItem[];
   /** The day the entry's date of birth is counted on, `YYYY-MM-DD` (§773, `volunteerEventDay`): the gun's, else the event's. */
   eventDay: string;
@@ -175,7 +175,7 @@ type Props = {
   minorsOpen: boolean;
   /** Why the public form is not on the event's page now, or null when it is (`volunteerOfferClosedFor`). */
   offerClosed: VolunteerOfferClosed | null;
-  /** Whether the event is still ahead (`volunteerEventAhead`): the invitations' standing asks it, never a deadline recorded at the send (§NNN). */
+  /** Whether the event is still ahead (`volunteerEventAhead`): the invitations' standing asks it, never a deadline recorded at the send (§820). */
   eventAhead?: boolean;
   roles: readonly VolunteerRole[];
   /** The headings the roles are grouped under, in the club's order, each with its contact person (§774). */
@@ -689,7 +689,7 @@ export default async function VolunteersCard({
         </Box>
         </>
       )}
-      {/* «Vrea să apară pe lista publică a voluntarilor» (§NNN): the organizers' record of the person's own tick — drawn while the notice describes the list, and for a
+      {/* «Vrea să apară pe lista publică a voluntarilor» (§821): the organizers' record of the person's own tick — drawn while the notice describes the list, and for a
           person already ticked (so it can be cleared). The service refuses a new tick without the notice, and records who did it in the audit trail. */}
       {(listDescribed || person?.listOptIn) && (
         <Box data-testid="volunteer-list-optin-field">
@@ -1035,7 +1035,7 @@ export default async function VolunteersCard({
           and one line of the rest in the row's details. Nothing for a person who said nothing. */}
       {(person.volunteeredBefore || person.clubMember || person.listOptIn) && (
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5, mt: 0.5 }} data-testid="volunteer-claims">
-          {/* «Vrea pe lista publică» (§NNN): the person wants to appear — named on the event's page only once confirmed, while the club's list is public and the notice describes it. */}
+          {/* «Vrea pe lista publică» (§821): the person wants to appear — named on the event's page only once confirmed, while the club's list is public and the notice describes it. */}
           {person.listOptIn && <StatusChip glyph="wantsList" variant="outlined" label={t("volunteers.chips.wantsList")} testId="volunteer-on-list" />}
           {person.volunteeredBefore && <StatusChip glyph="experience" variant="outlined" label={t("volunteers.chips.before")} testId="volunteer-before" />}
           {person.clubMember && <StatusChip glyph="club" variant="outlined" label={t("volunteers.chips.club", { club: CLUB_NAME })} testId="volunteer-club" />}
@@ -1451,7 +1451,7 @@ export default async function VolunteersCard({
               {t("volunteers.counts.help")}
             </Typography>
           </Box>
-          {/* «Lista voluntarilor e publică pe pagina evenimentului» (§NNN; the owner, 2026-10-19: «private vs public lists of volunteers»): the same tick as the three
+          {/* «Lista voluntarilor e publică pe pagina evenimentului» (§821; the owner, 2026-10-19: «private vs public lists of volunteers»): the same tick as the three
               above — the house's `TickButton`, a submit drawn as the checkbox that posts the state it wants. Off (the default), the list is the team's alone; on, the event's
               page names only the confirmed volunteers who ticked, under a notice that describes it. While the notice does not — ticked or not, so the club hears it
               before it ticks — the page shows nothing and the form asks no tick: the sentence says so and links the legal texts. */}
@@ -1471,7 +1471,7 @@ export default async function VolunteersCard({
               <Link href="/admin/legal">{t("volunteers.list.noticeLink")}</Link>
             </Alert>
           )}
-          {/* «Cine se poate oferi» (§NNN): under the ticks it qualifies, only while the event takes volunteers. */}
+          {/* «Cine se poate oferi» (§820): under the ticks it qualifies, only while the event takes volunteers. */}
           {acceptsVolunteers && <VolunteerAccessChoice locale={locale} eventId={eventId} access={access} />}
           {/* Which form the public page draws (§765): the one that asks the person's date of birth, sex and city only while the notice in force names them. */}
           {!profileDescribed && (
@@ -1481,7 +1481,7 @@ export default async function VolunteersCard({
           )}
         </Stack>
 
-        {/* «Invitații» (§NNN): while the choice is «Doar cu invitație de la club», and as long as any invitation exists. */}
+        {/* «Invitații» (§820): while the choice is «Doar cu invitație de la club», and as long as any invitation exists. */}
         {acceptsVolunteers && (access === "INVITED" || invitations.length > 0) && <VolunteerInvitations locale={locale} eventId={eventId} access={access} invitations={invitations} eventAhead={eventAhead} />}
 
         {/* «Categorii» (§774; the owner, 2026-10-14: «categorii cu sub-categorii … Toate astea configurabile»): the headings the roles are grouped

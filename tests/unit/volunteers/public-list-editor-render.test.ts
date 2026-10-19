@@ -8,7 +8,7 @@ import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/
 import type { PublicVolunteerRole, VolunteerItem, VolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — what the club and the volunteer see of the public list: the «Voluntari» card's tick «Lista voluntarilor e publică pe pagina
+ * §821 — what the club and the volunteer see of the public list: the «Voluntari» card's tick «Lista voluntarilor e publică pe pagina
  * evenimentului» (a real tick box in its own form, the sentence and the link to the legal texts while the notice does not describe the list),
  * the organizers' record of a person's own tick in «Adaugă» and «Modifică» (a `CheckboxField`, drawn while the notice describes the list or the
  * person is ticked already), the chip «Vrea pe lista publică» on a ticked person's row, and the public form's tick «Vreau să apar pe lista publică a
@@ -194,7 +194,7 @@ async function drawBox(over: Record<string, unknown> = {}, language: "ro" | "en"
 const formOf = (page: string, testid: string) => new RegExp(`<form[^>]*data-testid="${testid}"[\\s\\S]*?</form>`).exec(page)?.[0] ?? "";
 const tagOf = (page: string, name: string) => new RegExp(`<input\\b[^>]*\\bname="${name}"[^>]*>`).exec(page)?.[0] ?? "";
 
-describe("§NNN the club's tick — «Lista voluntarilor e publică pe pagina evenimentului»", () => {
+describe("§821 the club's tick — «Lista voluntarilor e publică pe pagina evenimentului»", () => {
   it("is a plain form whose submit is the checkbox (the house's TickButton): role, state, words, the state it wants posted — off by default", async () => {
     const page = await drawCard({ volunteersListPublic: false, listDescribed: true });
     const form = formOf(page, "volunteer-list-form");
@@ -242,7 +242,7 @@ describe("§NNN the club's tick — «Lista voluntarilor e publică pe pagina ev
   });
 });
 
-describe("§NNN the organizers' record of a person's tick", () => {
+describe("§821 the organizers' record of a person's tick", () => {
   it("is a box in «Adaugă un voluntar» while the notice describes the list, with its sentence, off by default", async () => {
     const page = await drawCard({ listDescribed: true, volunteers: [] });
     const add = /data-testid="volunteer-add"[\s\S]*?<\/form>/.exec(page)?.[0] ?? "";
@@ -277,7 +277,7 @@ describe("§NNN the organizers' record of a person's tick", () => {
   });
 });
 
-describe("§NNN «Toate datele unei persoane» says the tick among what is kept", () => {
+describe("§821 «Toate datele unei persoane» says the tick among what is kept", () => {
   it("adds «Vrea pe lista publică» to the offer's line when the row holds the tick, and nothing when it does not", async () => {
     const { default: VolunteerAnswers } = await import("@/modules/volunteers/ui/VolunteerAnswers");
     const base = { age: null, dateOfBirth: null, sex: null, city: null, volunteeredBefore: false, clubMember: false, shirtSize: null, guardianName: null, guardianEmail: null, guardianAcceptedAt: null, guardianMethod: null };
@@ -291,7 +291,7 @@ describe("§NNN «Toate datele unei persoane» says the tick among what is kept"
   });
 });
 
-describe("§NNN the public form's tick — «Vreau să apar pe lista publică a voluntarilor»", () => {
+describe("§821 the public form's tick — «Vreau să apar pe lista publică a voluntarilor»", () => {
   it("is an optional box with its one help line, off by default, where the offer asks it", async () => {
     const page = await drawBox({ listTick: true });
     const box = /data-testid="volunteer-list-optin"[\s\S]*?<\/div>\s*<\/div>/.exec(page)?.[0] ?? page;

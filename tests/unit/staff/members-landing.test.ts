@@ -33,11 +33,11 @@ describe("§524 where a sign-in lands", () => {
 });
 
 /**
- * §NNN — the way back from the members' sign-in to the volunteers' page of one event (the owner's «Brașov Runners only» volunteers): a
+ * §820 — the way back from the members' sign-in to the volunteers' page of one event (the owner's «Brașov Runners only» volunteers): a
  * closed return, never a path. `back` is one page name and `slug` must fit the events' own pattern; the destination is rebuilt from the
  * slug by `getPathname`, so nothing typed in the address is ever a redirect target.
  */
-describe("§NNN the way back to the volunteers' page", () => {
+describe("§820 the way back to the volunteers' page", () => {
   it("reads one page name and a slug, and nothing else", () => {
     expect(signInBackOf("volunteers", "crosul-de-toamna")).toEqual({ page: "volunteers", slug: "crosul-de-toamna" });
     expect(signInBackOf("volunteers", "cursa-2026")).toEqual({ page: "volunteers", slug: "cursa-2026" });

@@ -214,7 +214,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   */
   await holdPageUntil([event.endsAt ?? event.startsAt], now);
   const volunteerOffer = membersOnly ? null : await readOrWhileAway(() => readVolunteerOffer(event, now), null);
-  // «Voluntarii» (§NNN): only where the club ticked the list public, never on a members' event; the card asks the notice and the people itself. The page is made
+  // «Voluntarii» (§821): only where the club ticked the list public, never on a members' event; the card asks the notice and the people itself. The page is made
   // again when the volunteers' rows may go, thirty days after the start (§754), so a card never outlives them on a static copy.
   const volunteersList = !membersOnly && event.volunteersListPublic === true ? { offerOpen: volunteerOffer !== null && volunteerOffer.access !== "INVITED" } : null;
   if (volunteersList && event.startsAt) await holdPageUntil([new Date(event.startsAt.getTime() + RETENTION_PERIODS.volunteerDaysAfterEvent * 86_400_000)], now);
@@ -282,7 +282,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
           rsvpRenderedAt: ((rsvpOutcome === "invalid" || rsvpOutcome === "captcha") && parseInterestSince(since, now)) || now,
           declaratie,
           lista,
-          // «Cine se poate oferi» (§NNN): by invitation, the event's page says nothing about volunteers; for the members, one line says so.
+          // «Cine se poate oferi» (§820): by invitation, the event's page says nothing about volunteers; for the members, one line says so.
           volunteers: volunteerRoleNames.length > 0 && volunteerOffer && volunteerOffer.access !== "INVITED" ? { roleNames: volunteerRoleNames, clubOnly: volunteerOffer.access === "MEMBERS" } : null,
           volunteersList,
         }}

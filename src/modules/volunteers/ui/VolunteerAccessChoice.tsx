@@ -9,7 +9,7 @@ import RadioField from "@/shared/ui/RadioField";
 import { VOLUNTEERS_ACCESS, type VolunteersAccess } from "../domain/access";
 
 /**
- * «Cine se poate oferi» (§NNN, amending §754 and §768; the owner, 2026-10-19: «invite only volunteer … Brașov Runners only
+ * «Cine se poate oferi» (§820, amending §754 and §768; the owner, 2026-10-19: «invite only volunteer … Brașov Runners only
  * volunteers»): the three ways a person may offer for this event, as native radios in a named card — a choice is a radio group,
  * never a button that flips (`RadioField`, the editor's «Clubul pe lista publică» is the model) — with one help line under each and
  * its own «Salvează». A plain form posting to a Server Action, so it works with scripts off, like the card's ticks beside it; the

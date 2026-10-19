@@ -1656,9 +1656,9 @@ describe("§811 the event's tick «Acceptă răspunsuri „Vin!”» travels in 
   });
 });
 
-// --- «Cine se poate oferi» (§NNN) ------------------------------------------------------------------
+// --- «Cine se poate oferi» (§820) ------------------------------------------------------------------
 
-describe("§NNN the volunteers' «Cine se poate oferi» travels in the file — written only when it is not «Oricine»", () => {
+describe("§820 the volunteers' «Cine se poate oferi» travels in the file — written only when it is not «Oricine»", () => {
   it("is exported as the file's volunteers block, left out of the downloaded text for «Oricine» so an older release still reads it, and the file's version stays 3", async () => {
     const { event } = await seedRace();
     const anyone = await fileOf(event.id);

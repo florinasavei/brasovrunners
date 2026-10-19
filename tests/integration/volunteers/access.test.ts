@@ -28,13 +28,13 @@ const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 const SECRET = /invite=([A-Za-z0-9_-]{43})/;
 
 /**
- * §NNN — «Cine se poate oferi» (BR-REQ-060-01, BR-REQ-036-02, BR-REQ-050-02): the club's choice of who may offer as a volunteer —
+ * §820 — «Cine se poate oferi» (BR-REQ-060-01, BR-REQ-036-02, BR-REQ-050-02): the club's choice of who may offer as a volunteer —
  * anyone, its signed-in members, or only people it invites by email. The server asserts the door again at the post (a hidden form
  * is not a permission); an invitation's link is hashed at rest, minted when its email leaves, single use, and spent in the very
  * transaction of the sign-up it leads to; the send, «Retrimite» and «Retrage» are audited with ids and never an address; and the
  * choice is carried by a copy and a repeat. The pages, the card and the email's words are `tests/unit/volunteers/access-*`.
  */
-describe("§NNN who may offer as a volunteer", () => {
+describe("§820 who may offer as a volunteer", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
@@ -238,7 +238,7 @@ describe("§NNN who may offer as a volunteer", () => {
     });
 
     it("sets «Fac parte din grupul» from the account of a member whatever was posted, when the form asks it", async () => {
-      // A notice that names the profile boxes: the form asks the tick, and for a member the server answers it (§NNN).
+      // A notice that names the profile boxes: the form asks the tick, and for a member the server answers it (§820).
       const body = (text: string) => ({ sections: [{ paragraphs: [`Voluntari ({{volunteers}}, {{volunteerAgreement}}, {{volunteerProfile}}): ${text}`] }] });
       const notice: LegalDocumentTranslationInput[] = [
         { locale: "ro", title: "Confidențialitate", body: body("păstrăm numele") },

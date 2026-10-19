@@ -1593,7 +1593,7 @@ export async function signInAsDevIdentityAction(form: FormData): Promise<void> {
     // Where the provider's sign-in would land (§524): the page the person came from, and a member
     // always the members' zone.
     landing = landingFor(staffUser.role, signInTargetOf(text(form, "to")));
-    // Back to the volunteers' page the person came from (§NNN): the slug is checked against the events' pattern, the path rebuilt here.
+    // Back to the volunteers' page the person came from (§820): the slug is checked against the events' pattern, the path rebuilt here.
     const back = signInBackOf(text(form, "back"), text(form, "slug"));
     if (back) landing = { pathname: "/events/[slug]/volunteers", params: { slug: back.slug } };
   } catch (error) {

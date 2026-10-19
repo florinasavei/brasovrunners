@@ -36,11 +36,11 @@ import { blankRoleRow, describeRole, fillRoleRow, roleGroup, roleRow, saveAllRol
  * «0 · fără număr» on that role and «0 din 1 + roluri fără număr» in its closed line; the event's page lists the role, the volunteers' page offers it however many
  * people it was given and never puts a number on it, even with the counts on.
  *
- * §NNN — «Cine se poate oferi» (BR-REQ-060-01, BR-REQ-036-02, BR-REQ-050-02): the card's radio group; «Doar membrii clubului» shows a stranger one sentence and the
+ * §820 — «Cine se poate oferi» (BR-REQ-060-01, BR-REQ-036-02, BR-REQ-050-02): the card's radio group; «Doar membrii clubului» shows a stranger one sentence and the
  * sign-in and a member (the development sign-in's «Dev Member») the form with the account's name and address locked; «Doar cu invitație de la club» makes the page a
  * 404 and the event's page silent until an invitation sent from the «Invitații» fold opens it, with the invited address locked, once.
  *
- * §NNN — the volunteers' public list (the owner, 2026-10-19: «private vs public lists of volunteers»; «asta ar trebui să fie collapsed, ca și condițiile de participare»): the club ticks
+ * §821 — the volunteers' public list (the owner, 2026-10-19: «private vs public lists of volunteers»; «asta ar trebui să fie collapsed, ca și condițiile de participare»): the club ticks
  * «Lista voluntarilor e publică pe pagina evenimentului», a volunteer ticks «Vreau să apar pe lista publică a voluntarilor» on the form and another does not, the organizers give a role and
  * confirm, and the event's page draws a card «Voluntarii» — a fold closed on arrival — with the ticked person's name and role and «și încă 1 voluntar» for the other, never an address; it is the
  * sentence «Echipa de voluntari se formează.» before anybody is confirmed, and gone when the club unticks the box.
@@ -1507,7 +1507,7 @@ test.describe("§754 volunteers for a race", () => {
     }
   });
 
-  test("§NNN «Cine se poate oferi»: members only shows a stranger a sentence and the sign-in that comes back to the page, and a member the form prefilled and sent; by invitation the page is a 404 until an invitation sent from the card (its line in both languages) opens it, once", async ({ page, browser }) => {
+  test("§820 «Cine se poate oferi»: members only shows a stranger a sentence and the sign-in that comes back to the page, and a member the form prefilled and sent; by invitation the page is a 404 until an invitation sent from the card (its line in both languages) opens it, once", async ({ page, browser }) => {
     const tag = `${test.info().project.name}-${Date.now().toString(36)}-acc`;
     const event = await seedEvent(tag);
     const invited = `ioana.${tag}@example.test`;
@@ -1718,7 +1718,7 @@ test.describe("§754 volunteers for a race", () => {
     }
   });
 
-  test("§NNN the volunteers' public list: the club's tick, the volunteer's tick, a card closed like the conditions with the name and the role of the one who ticked and «și încă 1» for the other, and nothing of an address", async ({
+  test("§821 the volunteers' public list: the club's tick, the volunteer's tick, a card closed like the conditions with the name and the role of the one who ticked and «și încă 1» for the other, and nothing of an address", async ({
     page,
     browser,
   }) => {
