@@ -18,6 +18,14 @@ export type RsvpSummaryWords = {
   goingText: string;
 };
 
+/**
+ * The count's words with the members' after them, when there are any (§NNN): «3 vin» and «2 membri» become «3 vin · 2 membri» — the closed fold's line
+ * and the facts line say the same two numbers, the second only when it is not nothing (`members` counts every confirmed member answer, named or not).
+ */
+export function rsvpCountText(count: string, members: string | null): string {
+  return members === null ? count : `${count}${SUMMARY_SEPARATOR}${members}`;
+}
+
 /** The separator between the heading and each part: a middle dot with a space either side, as the editor's folds write their closed line. */
 export const SUMMARY_SEPARATOR = " · ";
 

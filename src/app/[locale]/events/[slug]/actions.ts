@@ -121,7 +121,7 @@ export async function answerRsvpAction(form: FormData): Promise<void> {
     await answerRsvp(
       db,
       event.id,
-      identityOf("page", { email: text(form, "email"), displayName: text(form, "name"), showName: form.get("showName") === "on", locale }),
+      identityOf("page", { email: text(form, "email"), displayName: text(form, "name"), showName: form.get("showName") === "on", clubMember: form.get("clubMember") === "on", locale }),
       now,
     );
   } catch (error) {

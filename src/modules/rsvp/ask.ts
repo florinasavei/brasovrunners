@@ -446,7 +446,8 @@ export async function makeRsvpAsk<T extends Record<string, unknown>>(db: Databas
     }
     await tx
       .update(eventRsvps)
-      .set({ deliveryEmail: recipient.deliveryEmail, displayName: null, showName: false, locale, privacyNoticeVersion: noticeVersion, askedAt: now, askedBasis: checked.kind, createdAt: now })
+      // What a stranger typed is cleared whole: the name, its tick and the member tick (§NNN) — the question's page offers each again, unticked.
+      .set({ deliveryEmail: recipient.deliveryEmail, displayName: null, showName: false, clubMember: null, locale, privacyNoticeVersion: noticeVersion, askedAt: now, askedBasis: checked.kind, createdAt: now })
       .where(eq(eventRsvps.id, existing.id));
     return { id: existing.id };
   });

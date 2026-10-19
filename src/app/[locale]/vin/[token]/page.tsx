@@ -4,6 +4,7 @@ import NotificationsOffIcon from "@mui/icons-material/NotificationsOff";
 import SaveIcon from "@mui/icons-material/Save";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
+import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -14,21 +15,27 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { routing } from "@/i18n/routing";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
+import { noticeDescribesRsvpMember } from "@/modules/legal-documents/repository";
+import { cachedMemberDefinition } from "@/modules/public-cache/reads";
 import { readRsvpLink } from "@/modules/rsvp/rsvp";
+import { memberTickFace } from "@/modules/rsvp/domain/island";
 import AutoConfirm from "@/modules/rsvp/ui/AutoConfirm";
 import { isWithdrawnProof, REFUSED_SUFFIX, WITHDRAWN_ASKED_SUFFIX } from "@/modules/rsvp/withdrawn-proof";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import Hint from "@/shared/ui/Hint";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { CLUB_NAME } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 import { confirmRsvpAction, refuseRsvpAsksAction, setNameByLinkAction, withdrawRsvpAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ invalid?: string; retras?: string; ok?: string; nu?: string; refuz?: string; nume?: string }>;
+  searchParams: Promise<{ invalid?: string; retras?: string; ok?: string; nu?: string; refuz?: string; nume?: string; membru?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -40,6 +47,9 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * «hidden» claim a state, so they are drawn only while the row says so (below): the address alone proves nothing.
  */
 const NAME_OUTCOMES = ["shown", "hidden", "name", "none", "closed", "wait"] as const;
+
+/** What `?membru=` may say after the member tick (§NNN): names of outcomes. «On» and «off» claim a state, so they are drawn only while the row says so, like the name's. */
+const MEMBER_OUTCOMES = ["on", "off", "closed", "none"] as const;
 
 /**
  * The page a «Vin!» message's two buttons open (§811, «Vin!» part 1): «Da, vin» (`RSVP_CONFIRM`) or «Nu mai vin» (`RSVP_WITHDRAW`) —
@@ -79,8 +89,9 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
   const { locale, token } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const { invalid, retras, ok, nu, refuz, nume } = await searchParams;
+  const { invalid, retras, ok, nu, refuz, nume, membru } = await searchParams;
   const nameQuery = NAME_OUTCOMES.find((outcome) => outcome === nume) ?? null;
+  const memberQuery = MEMBER_OUTCOMES.find((outcome) => outcome === membru) ?? null;
   const t = await getTranslations("Rsvp");
   const tEvent = await getTranslations("Event");
   const db = getDb();
@@ -155,7 +166,16 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
   const link = invalid !== undefined || !(await tokenAttemptAllowed(db, token, now)) ? null : await readRsvpLink(db, token, now);
   const live = link?.state === "live" ? link : null;
   // «Gata: numele tău apare» only when the tick is on, «nu mai apare» only when it is off: a sentence from the address alone is not drawn (the «retras» proof's reason).
+  // The member tick (§NNN): offered while the notice in force describes the mark — asked live, this page is never cached — or while a tick was given, so it can be taken back.
+  const memberOffered = live !== null && (await noticeDescribesRsvpMember(db, now));
+  const tForm = await getTranslations("Registration");
+  const memberDefinition = (await cachedMemberDefinition(locale)) ?? tForm("clubMemberDefinition");
+  const memberTick = tForm("clubMemberDeclared", { club: CLUB_NAME });
+  const mark = tEvent("rsvp.memberMark");
+  const memberOutcome = memberQuery === "on" ? (live?.clubMember ? memberQuery : null) : memberQuery === "off" ? (live && !live.clubMember ? memberQuery : null) : memberQuery;
   const nameOutcome = nameQuery === "shown" ? (live?.showName ? nameQuery : null) : nameQuery === "hidden" ? (live && !live.showName ? nameQuery : null) : nameQuery;
+  // A declared member tick beside a shown name, put there by whoever typed the address (§NNN): said before the press, which is then the person's own.
+  const memberUnseen = live !== null && !live.confirmed && !live.asked && live.showName && live.name !== null && live.clubMember === "DECLARED";
   // «Da, vin»: a POST, so the GET above counts nobody (§12.8); the island may press it, a person always can.
   const confirmForm = (
     <form action={confirmRsvpAction}>
@@ -214,6 +234,13 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
           <Typography data-testid="rsvp-confirm-intro">
             {live.confirmed ? t("confirmAlready", { event: live.title }) : live.asked ? t("askIntro", { event: live.title }) : t("confirmIntro", { event: live.title })}
           </Typography>
+          {/*
+            A member tick that whoever typed the address put on the page, beside a name they asked to show (§NNN, §812): the press would publish «BVR» beside the
+            owner's name, so it is said here, as the email said it, and the press is the person's own — it does not press itself.
+          */}
+          {memberUnseen && live.name !== null && (
+            <Typography data-testid="rsvp-confirm-member">{t("confirmMember", { name: live.name, mark })}</Typography>
+          )}
           {/* The email's «Vin» with no name yet keeps its press (the name is the person's choice); every other uncounted link presses itself. */}
           {live.asked && !live.named ? (
             <form action={confirmRsvpAction} style={{ width: "100%" }}>
@@ -224,6 +251,13 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
                 <Stack spacing={1.5} sx={{ mb: 2 }} data-testid="rsvp-ask-name">
                   <TextField name="name" label={tEvent("rsvp.name")} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
                   <CheckboxField name="showName">{tEvent("rsvp.showName")}</CheckboxField>
+                  {/* The declared member tick (§NNN), beside the name's: off by default, the club's sentence behind its «?», while the notice describes the mark. */}
+                  {memberOffered && (
+                    <CheckboxField name="clubMember" help={tEvent("rsvp.memberHelp", { mark })}>
+                      {memberTick}
+                      <Hint text={memberDefinition} />
+                    </CheckboxField>
+                  )}
                   <Typography variant="body2" color="text.secondary">
                     <Link href="/legal/privacy" style={inlineLink}>{tEvent("rsvp.privacy")}</Link>
                   </Typography>
@@ -233,12 +267,12 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
                 <EventAvailableIcon />
               </SubmitButton>
             </form>
-          ) : live.confirmed ? (
+          ) : live.confirmed || memberUnseen ? (
             confirmForm
           ) : (
             <AutoConfirm>{confirmForm}</AutoConfirm>
           )}
-          {!live.confirmed && !(live.asked && !live.named) && (
+          {!live.confirmed && !(live.asked && !live.named) && !memberUnseen && (
             <Typography variant="body2" data-testid="rsvp-confirm-auto">
               {t("confirmAutoNote")}
             </Typography>
@@ -261,6 +295,11 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
             The box «Numele tău» is always there, prefilled with the name the answer holds — the person is shown what the tick publishes and may
             change it (§812: a name typed on the page with the tick off is never published unseen); blank when the answer holds none.
           */}
+          {memberOutcome !== null && (
+            <Alert severity={memberOutcome === "on" || memberOutcome === "off" ? "success" : "warning"} role="status" data-testid="rsvp-member-note">
+              {memberOutcome === "none" ? tEvent("rsvp.nameOutcome.none") : tEvent(`rsvp.memberOutcome.${memberOutcome}`, { mark })}
+            </Alert>
+          )}
           {live.confirmed && (
             <form action={setNameByLinkAction} style={{ width: "100%" }} data-testid="rsvp-name-switch">
               <input type="hidden" name="locale" value={locale} />
@@ -270,6 +309,25 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
                   {tEvent("rsvp.nameSwitch")}
                 </CheckboxField>
                 <TextField name="name" label={tEvent("rsvp.nameBox")} defaultValue={live.name ?? ""} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
+                {/*
+                  «Sunt membru al grupului …» (§NNN): the same form and the same Save. An answer an account made says «Membru» as a fact — the mark is the account's role, not
+                  this box. `memberBox` says the box was drawn, so an unticked one reads as «unticked» and a box never drawn as nothing.
+                */}
+                {memberTickFace(live.clubMember, memberOffered) === "fact" ? (
+                  <Box data-testid="rsvp-member-fact">
+                    <GlyphChip glyph="membersOnly" label={tEvent("rsvp.memberFact")} variant="outlined" color="primary" tooltip={tEvent("rsvp.memberFactHelp", { mark })} />
+                  </Box>
+                ) : (
+                  memberTickFace(live.clubMember, memberOffered) === "box" && (
+                    <>
+                      <input type="hidden" name="memberBox" value="1" />
+                      <CheckboxField name="clubMember" defaultChecked={live.clubMember === "DECLARED"} help={tEvent("rsvp.memberHelp", { mark })}>
+                        {memberTick}
+                        <Hint text={memberDefinition} />
+                      </CheckboxField>
+                    </>
+                  )
+                )}
                 <SubmitButton label={tEvent("rsvp.nameSave")} pendingLabel={tEvent("rsvp.submitting")} variant="outlined">
                   <SaveIcon />
                 </SubmitButton>

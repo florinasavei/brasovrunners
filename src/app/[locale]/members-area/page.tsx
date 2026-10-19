@@ -94,7 +94,7 @@ async function rsvpsOrNone(account: { email: string }, all: readonly PublicEvent
     const ids = [...new Set([...shown, ...(soonest ? [soonest] : [])].filter((event) => coming.has(event.id)).map((event) => event.id))];
     if (ids.length === 0) return new Map();
     const answered = await answeredByAccount(getDb(), account.email, ids);
-    return new Map(ids.map((id) => [id, { count: coming.get(id) ?? 0, going: answered.has(id), showName: answered.get(id)?.showName ?? false, name: answered.get(id)?.name ?? null }]));
+    return new Map(ids.map((id) => [id, { count: coming.get(id) ?? 0, going: answered.has(id), showName: answered.get(id)?.showName ?? false, name: answered.get(id)?.name ?? null, clubMember: answered.get(id)?.clubMember }]));
   } catch (error) {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
@@ -226,7 +226,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
                     {formatDay(event.startsAt, { locale, timeZone: event.timezone, withTime: true })}
                   </Typography>
                   {/* «Vin!» (§825): only a run that takes answers, with this account's own state; a members' event has none (its page draws no «Confirmă prezența (opțional)»). */}
-                  {facts && <ZoneRsvp locale={locale} eventId={event.id} titleId={zoneRsvpTitleId(event.id)} going={facts.going} count={facts.count} publicName={publicName} showName={facts.showName} name={facts.name} />}
+                  {facts && <ZoneRsvp locale={locale} eventId={event.id} titleId={zoneRsvpTitleId(event.id)} going={facts.going} count={facts.count} publicName={publicName} showName={facts.showName} name={facts.name} clubMember={facts.clubMember} />}
                   {facts && who.has(event.id) && <RsvpCount eventId={event.id} rsvps={who.get(event.id)} open />}
                 </Card>
               );

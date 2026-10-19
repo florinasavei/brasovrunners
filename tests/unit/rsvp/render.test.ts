@@ -34,7 +34,7 @@ vi.mock("@/i18n/navigation", async () => {
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }), headers: async () => new Headers() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => {} }), notFound: () => {}, redirect: () => {} }));
 vi.mock("@/app/[locale]/events/[slug]/actions", () => ({ answerRsvpAction: async () => {}, requestRsvpWithdrawAction: async () => {} }));
-vi.mock("@/modules/rsvp/remembered-actions", () => ({ rsvpStateAction: async () => ({ remembered: false }), rsvpGoAction: async () => ({ remembered: false }), rsvpLeaveAction: async () => ({ remembered: false }), rsvpForgetAction: async () => {}, rsvpShowNameAction: async () => ({ state: { remembered: false }, refused: null }) }));
+vi.mock("@/modules/rsvp/remembered-actions", () => ({ rsvpStateAction: async () => ({ remembered: false }), rsvpGoAction: async () => ({ remembered: false }), rsvpLeaveAction: async () => ({ remembered: false }), rsvpForgetAction: async () => {}, rsvpShowNameAction: async () => ({ state: { remembered: false }, refused: null }), rsvpMemberAction: async () => ({ state: { remembered: false }, refused: null }) }));
 vi.mock("@/modules/registrations/turnstile", () => ({ turnstileSiteKey: () => state.siteKey }));
 vi.mock("@/modules/registrations/ui/BotCheck", async () => {
   const { createElement: h } = await import("react");
@@ -43,6 +43,10 @@ vi.mock("@/modules/registrations/ui/BotCheck", async () => {
 vi.mock("@/modules/registrations/ui/link-wait-words", () => ({ spamHintWords: async () => "Uită-te și în Spam." }));
 vi.mock("@/modules/public-cache/reads", () => ({
   cachedFirstRsvpNoticeVersion: async () => 1,
+  // §NNN: the member tick is not offered in these tests (the notice describes no mark); `member-render.test.ts` draws it.
+  cachedFirstRsvpMemberNoticeVersion: async () => null,
+  cachedRsvpMemberDescribed: async () => false,
+  cachedMemberDefinition: async () => null,
   cachedPublicRsvps: async () => {
     if (state.rsvps === null) throw new Error("away");
     return state.rsvps;

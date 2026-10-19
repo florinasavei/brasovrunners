@@ -322,7 +322,6 @@ describe("§811 the member tiers", () => {
       const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "member_tier.deleted"));
       expect(audit).toMatchObject({ entityType: "member_tier", entityId: first.id, metadataJson: { codesUpdated: 0 } });
       expect(JSON.stringify(audit)).not.toContain("Membru");
-      await expect(deleteMemberTier(db, { actor: admin, tierId: second.id.replace(/.$/, (last) => (last === "0" ? "1" : "0")), now: NOW })).rejects.toMatchObject({ code: "NOT_FOUND" });
       // Flaky before: `second.id` with its last character set to "0" is no id at all whenever the random uuid already ended
       // in 0. The nil uuid is a well-formed id no row can hold (`gen_random_uuid()` makes version 4, this is version 0).
       await expect(deleteMemberTier(db, { actor: admin, tierId: "00000000-0000-0000-0000-000000000000", now: NOW })).rejects.toMatchObject({ code: "NOT_FOUND" });

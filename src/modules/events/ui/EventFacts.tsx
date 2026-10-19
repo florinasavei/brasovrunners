@@ -257,7 +257,7 @@ export default async function EventFacts({
    * passes the number it already read (the one read of the answers, or `readStartListCount`'s — the list's own title number), so this component asks nothing
    * and cannot disagree with the fold. Null — no count is public, nobody has confirmed yet — draws nothing. The event page's form only.
    */
-  whoComes?: { count: number; href: string } | null;
+  whoComes?: { count: number; href: string; /** How many of them are members (§NNN): «N vin · M membri · vezi cine»; absent or 0 says nothing of them. */ members?: number } | null;
   /**
    * The editor's preview before saving (§579): the door as the draft would read it, counted by
    * `draftRegistrationDoor` rather than read from the public cache, and its button drawn disabled.
@@ -1341,7 +1341,9 @@ export default async function EventFacts({
       icon: GroupsIcon,
       value: (
         <Link href={whoComes.href} data-testid="who-comes-link" sx={{ display: "inline-flex", alignItems: "center", boxSizing: "border-box", minHeight: 44 }}>
-          {t(`who.count.${countForm(whoComes.count, locale)}`, { count: whoComes.count })}
+          {whoComes.members
+            ? t(`who.withMembers.${countForm(whoComes.count, locale)}`, { count: whoComes.count, members: t(`rsvp.members.${countForm(whoComes.members, locale)}`, { count: whoComes.members }) })
+            : t(`who.count.${countForm(whoComes.count, locale)}`, { count: whoComes.count })}
         </Link>
       ),
     });

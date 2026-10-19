@@ -62,6 +62,7 @@ export type TaskId =
   | "rsvpNotice"
   | "rsvpAskNotice"
   | "rsvpAskAnswerersNotice"
+  | "rsvpMemberNotice"
   | "resultsTerms"
   | "invitationsNotice"
   | "promoNotice"
@@ -122,6 +123,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   rsvpNotice: "text",
   rsvpAskNotice: "text",
   rsvpAskAnswerersNotice: "text",
+  rsvpMemberNotice: "text",
   resultsTerms: "text",
   invitationsNotice: "text",
   promoNotice: "text",
@@ -281,6 +283,11 @@ export type OwnerTaskInputs = {
    * `{{rsvpAskAnswerers}}`, with the question and «Vin!»)? Until it does, nobody of that audience is asked, whatever the club chose.
    */
   rsvpAskAnswerersDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe the member mark on «Cine vine» (§NNN, `noticeDescribesRsvpMember`: `{{rsvpMember}}`, with «Vin!»)?
+   * Until it does, the form has no «Sunt membru» tick and the list shows no mark and counts no member. Absent: the page did not ask, and the row is not drawn.
+   */
+  rsvpMemberDescribed?: boolean;
   /** How many upcoming turn-up events the club ticked «Acceptă răspunsuri „Vin!”» on (`countRsvpEvents`): the row waits only while there is one. */
   rsvpEvents: number;
   /**
@@ -660,6 +667,17 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       push("rsvpAskNotice", {
         owner: "club",
         state: input.rsvpAskDescribed ? "done" : "open",
+      });
+    }
+    /*
+      The member mark on «Cine vine» (§NNN), the same shape: open while an upcoming event is ticked and the notice in force does not name
+      `{{rsvpMember}}` (the form has no tick and the list no mark, though the club ticked the box — it must hear why), done by itself the day a
+      notice naming it takes effect, absent while no event is ticked and the notice is silent. Never blocking.
+    */
+    if (input.rsvpMemberDescribed !== undefined && (input.rsvpMemberDescribed || input.rsvpEvents > 0)) {
+      push("rsvpMemberNotice", {
+        owner: "club",
+        state: input.rsvpMemberDescribed ? "done" : "open",
       });
     }
     /*

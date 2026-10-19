@@ -10,19 +10,23 @@ import { answerRsvpAction, requestRsvpWithdrawAction } from "@/app/[locale]/even
 import { countForm } from "@/i18n/count-form";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { cachedMemberDefinition, cachedRsvpMemberDescribed } from "@/modules/public-cache/reads";
 import { BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import Hint from "@/shared/ui/Hint";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX, PUBLIC_FOLD_SX } from "@/shared/ui/disclosure";
 import SubmitButton from "@/shared/ui/SubmitButton";
+import { CLUB_NAME } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
+import { rsvpCountText } from "../domain/summary";
 import { RSVP_BOX_ID, type RsvpOutcome } from "../rsvp-box";
 import type { PublicRsvps } from "../rsvp";
 import { readRsvpsOf } from "./RsvpCount";
 import RsvpSummary from "./RsvpSummary";
-import { rsvpForgetAction, rsvpGoAction, rsvpLeaveAction, rsvpShowNameAction, rsvpStateAction } from "../remembered-actions";
+import { rsvpForgetAction, rsvpGoAction, rsvpLeaveAction, rsvpMemberAction, rsvpShowNameAction, rsvpStateAction } from "../remembered-actions";
 import RsvpRemembered from "./RsvpRemembered";
 
 /**
@@ -70,11 +74,29 @@ export default async function RsvpBox({
   rsvps?: PublicRsvps | null;
 }) {
   const t = await getTranslations("Event");
+  const tForm = await getTranslations("Registration");
   const siteKey = turnstileSiteKey();
+  /*
+    The member tick (§NNN): «Sunt membru al grupului {club}» with the club's sentence behind its «?» — the registration form's own words (§789, §796), read
+    through the public cache — offered only while the notice in force describes the mark, so a visitor is never asked to declare what the notice does
+    not say. The service asks again at every answer.
+  */
+  const memberOffered = await cachedRsvpMemberDescribed(new Date());
+  const memberHint = (memberOffered ? await cachedMemberDefinition(locale) : null) ?? tForm("clubMemberDefinition");
+  const memberTick = tForm("clubMemberDeclared", { club: CLUB_NAME });
+  // The mark's word is said once, in `rsvp.memberMark`, and read into every sentence that names it.
+  const mark = t("rsvp.memberMark");
   // Read once: the closed line and the fold «Cine vine» under it (the page hands both the same read) say one number, and a database that is away says neither (§281).
   const rsvps = given === undefined ? await readRsvpsOf(eventId) : given;
   const summaryWords = {
-    countText: rsvps !== null && rsvps.count > 0 ? t(`rsvp.chip.${countForm(rsvps.count, locale)}`, { count: rsvps.count }) : null,
+    // «3 vin» — and, when some of them are members, «3 vin · 2 membri» (§NNN): the count's own words, then the members' (`members` counts the named and the unnamed).
+    countText:
+      rsvps !== null && rsvps.count > 0
+        ? rsvpCountText(
+            t(`rsvp.chip.${countForm(rsvps.count, locale)}`, { count: rsvps.count }),
+            rsvps.members ? t(`rsvp.members.${countForm(rsvps.members, locale)}`, { count: rsvps.members }) : null,
+          )
+        : null,
     emptyText: t("rsvp.summaryEmpty"),
     goingText: t("rsvp.going"),
   };
@@ -99,6 +121,14 @@ export default async function RsvpBox({
     nameHidden: t("rsvp.nameOutcome.hidden"),
     nameNeeded: t("rsvp.nameOutcome.name"),
     nameNone: t("rsvp.nameOutcome.none"),
+    memberTick,
+    memberHint,
+    memberHelp: t("rsvp.memberHelp", { mark }),
+    memberOn: t("rsvp.memberOutcome.on", { mark }),
+    memberOff: t("rsvp.memberOutcome.off"),
+    memberClosed: t("rsvp.memberOutcome.closed"),
+    memberFact: t("rsvp.memberFact"),
+    memberFactHelp: t("rsvp.memberFactHelp", { mark }),
   };
 
   return (
@@ -136,7 +166,7 @@ export default async function RsvpBox({
               </Alert>
             </>
           ) : (
-            <RsvpRemembered slug={slug} locale={locale} labels={labels} actions={{ state: rsvpStateAction, go: rsvpGoAction, leave: rsvpLeaveAction, forget: rsvpForgetAction, showName: rsvpShowNameAction }}>
+            <RsvpRemembered slug={slug} locale={locale} labels={labels} memberOffered={memberOffered} actions={{ state: rsvpStateAction, go: rsvpGoAction, leave: rsvpLeaveAction, forget: rsvpForgetAction, showName: rsvpShowNameAction, member: rsvpMemberAction }}>
               {outcome === "withdrawSent" && (
                 <Alert severity="info" role="status" sx={{ mb: 1.5 }} data-testid="rsvp-withdraw-sent">
                   {t("rsvp.withdrawDone")}
@@ -168,6 +198,13 @@ export default async function RsvpBox({
                   />
                   <TextField name="name" label={t("rsvp.name")} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
                   <CheckboxField name="showName">{t("rsvp.showName")}</CheckboxField>
+                  {/* «Sunt membru al grupului …» (§NNN): the person's own declaration, off by default; the club does not check it. Posted as `clubMember`, read by the action. */}
+                  {memberOffered && (
+                    <CheckboxField name="clubMember" help={t("rsvp.memberHelp", { mark })}>
+                      {memberTick}
+                      <Hint text={memberHint} />
+                    </CheckboxField>
+                  )}
 
                   {/* Cloudflare Turnstile, when the club switched it on (§97): the same explicit widget as every other form (§185, §518, §577). */}
                   {siteKey && (

@@ -8,7 +8,8 @@ import { noticeDescribesRsvp } from "@/modules/legal-documents/repository";
 import { forgetPerson, readRememberedPerson, refreshPerson } from "@/modules/person-session/session";
 import { identityOf } from "./domain/identity";
 import { rsvpOffered } from "./domain/offered";
-import { answerRsvp, countRsvps, readOwnRsvpName, setRsvpShowName, withdrawRsvp } from "./rsvp";
+import type { ClubMemberKind } from "./domain/public-member";
+import { answerRsvp, countRsvps, readOwnRsvpName, setRsvpClubMember, setRsvpShowName, withdrawRsvp } from "./rsvp";
 
 /**
  * The remembered browser's one-tap «Vin!» (§811, «Vin!» part 1; the owner, 2026-10-18: «I want the flow to be super easy»).
@@ -31,7 +32,10 @@ export type RsvpIslandState =
    * their answer holds — the island shows it beside the tick and posts it, so a name is never published unseen (§812). It is handed only to
    * the browser whose `httpOnly` cookie proves it is the person's, and never the address. `false` and null while not `going`.
    */
-  | { remembered: true; offered: true; going: boolean; showName: boolean; name: string | null; count: number };
+  | { remembered: true; offered: true; going: boolean; showName: boolean; name: string | null; clubMember?: ClubMemberKind; count: number };
+
+/** What the member tick says back (§NNN): the state as it stands, and why nothing was written (a sentence of the island's own), or null. */
+export type RsvpMemberResult = { state: RsvpIslandState; refused: "none" | "closed" | null };
 
 /** What the name switch says back: the state as it stands, and why nothing was written (a sentence of the island's own), or null. */
 export type RsvpNameResult = { state: RsvpIslandState; refused: "name" | "none" | "closed" | null };
@@ -50,6 +54,8 @@ async function stateFor(slug: string, locale: Locale, now: Date): Promise<RsvpIs
     going: own !== null,
     showName: own?.showName ?? false,
     name: own?.name ?? null,
+    // The member mark the answer holds (§NNN), present only when it holds one: `DECLARED` is the box ticked, `ACCOUNT` a fact the island says.
+    ...(own?.clubMember ? { clubMember: own.clubMember } : {}),
     count: await countRsvps(db, event.id),
   };
 }
@@ -63,8 +69,12 @@ export async function rsvpStateAction(slug: string, locale: string): Promise<Rsv
   return stateFor(slug, localeOf(locale), new Date());
 }
 
-/** «Vin!» in one tap: the remembered address's answer, counted at once. `showName` is the person's tick on this press. */
-export async function rsvpGoAction(slug: string, locale: string, showName: boolean): Promise<RsvpIslandState> {
+/**
+ * «Vin!» in one tap: the remembered address's answer, counted at once. `showName` is the person's tick on this press, and `clubMember` (§NNN) their
+ * declared «Sunt membru» — taken only while the notice in force describes the mark (`answerRsvp` asks), and always `DECLARED`: a remembered browser
+ * proves an address, never an account.
+ */
+export async function rsvpGoAction(slug: string, locale: string, showName: boolean, clubMember = false): Promise<RsvpIslandState> {
   const now = new Date();
   const lang = localeOf(locale);
   const db = getDb();
@@ -76,7 +86,7 @@ export async function rsvpGoAction(slug: string, locale: string, showName: boole
   await answerRsvp(
     db,
     event.id,
-    identityOf("remembered", { email: person.email, displayName: person.displayName, showName: showName && person.displayName !== null, locale: lang }),
+    identityOf("remembered", { email: person.email, displayName: person.displayName, showName: showName && person.displayName !== null, clubMember, locale: lang }),
     now,
   );
   // An answering browser is good for another year.
@@ -107,6 +117,24 @@ export async function rsvpShowNameAction(slug: string, locale: string, showName:
     { showName, displayName: showName ? name : null },
     now,
   );
+  return { state: await stateFor(slug, lang, now), refused: result.ok ? null : result.reason };
+}
+
+/**
+ * «Sunt membru al grupului …» (§NNN): the remembered address's own declared tick on its confirmed answer, any time — `rsvpShowNameAction`'s twin. The
+ * cookie says who (the island never names an address). Turning it on records the notice in force and needs the event to take «Vin!» and the notice
+ * to describe the mark; turning it off needs neither (`setRsvpClubMember`). An account's mark (`ACCOUNT`) is not this tick's to take away.
+ */
+export async function rsvpMemberAction(slug: string, locale: string, clubMember: boolean): Promise<RsvpMemberResult> {
+  const now = new Date();
+  const lang = localeOf(locale);
+  const db = getDb();
+  const jar = await cookies();
+  const person = await readRememberedPerson(db, jar, now);
+  if (!person) return { state: { remembered: false }, refused: null };
+  const event = await findPublishedEventBySlug(db, lang, slug);
+  if (!event) return { state: { remembered: true, offered: false }, refused: null };
+  const result = await setRsvpClubMember(db, event.id, { identity: identityOf("remembered", { email: person.email, showName: false, locale: lang }) }, { clubMember }, now);
   return { state: await stateFor(slug, lang, now), refused: result.ok ? null : result.reason };
 }
 

@@ -79,6 +79,7 @@ import {
   describesResults,
   describesRsvp,
   describesRsvpAsk,
+  describesRsvpMember,
   describesVolunteerAgreement,
   describesVolunteerMinors,
   describesVolunteerProfile,
@@ -89,7 +90,7 @@ import {
 import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { readPublicVolunteersList } from "@/modules/volunteers/public-list";
 import { describesRefusal } from "@/modules/legal-documents/domain/refusal-clause";
-import { findCurrentApprovedDocument, findFirstResultsNoticeVersion, findFirstRsvpNoticeVersion, findFirstStatesNoticeVersion, findFirstVolunteersListNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, findFirstResultsNoticeVersion, findFirstRsvpMemberNoticeVersion, findFirstRsvpNoticeVersion, findFirstStatesNoticeVersion, findFirstVolunteersListNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { countRsvpsForEvents } from "@/modules/rsvp/counts";
 import { type PublicRsvps, readPublicRsvps } from "@/modules/rsvp/rsvp";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
@@ -691,6 +692,25 @@ export async function cachedRsvpAskDescribed(now: Date): Promise<boolean> {
 }
 
 /**
+ * Whether an event page may offer the tick «Sunt membru» on «Vin!» (§NNN): the privacy notice in force describes the member mark
+ * (`describesRsvpMember`) and «Vin!» (`describesRsvp`), in every language — `noticeDescribesRsvpMember`'s cached twin, which the service asks again
+ * at every answer and every tick.
+ */
+export async function cachedRsvpMemberDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesRsvp(notice.body) && describesRsvpMember(notice.body));
+}
+
+/**
+ * The first approved privacy notice that described the member mark (`findFirstRsvpMemberNoticeVersion`, §NNN), or null — the line below which an
+ * answer is not marked and not counted among the members: it was given under a notice that said nothing about it. Expired with every legal text,
+ * like the name's twin.
+ */
+export async function cachedFirstRsvpMemberNoticeVersion(): Promise<number | null> {
+  return publicRead(["legal.first-rsvp-member-notice"], ["legal"], () => findFirstRsvpMemberNoticeVersion(getDb()));
+}
+
+/**
  * The first approved privacy notice that described «Vin!» (`findFirstRsvpNoticeVersion`, §811), or null — the line below which a
  * tick «Vreau să apar cu numele» was given under a notice that said nothing about it: those answers are counted and never named.
  * Expired with every legal text, like the results' twin.
@@ -705,8 +725,10 @@ export async function cachedFirstRsvpNoticeVersion(): Promise<number | null> {
  * saved copy: a withdrawn name must not outlive its owner's answer (§281, as the start list). The notice's first version is in
  * the key, so a list made without the gate is never served with it.
  */
-export async function cachedPublicRsvps(eventId: string, firstRsvpNoticeVersion: number | null): Promise<PublicRsvps> {
-  return publicRead(["places.rsvps", eventId, firstRsvpNoticeVersion ?? "none"], ["places"], () => readPublicRsvps(getDb(), eventId, { firstRsvpNoticeVersion }));
+export async function cachedPublicRsvps(eventId: string, firstRsvpNoticeVersion: number | null, firstMemberNoticeVersion: number | null = null): Promise<PublicRsvps> {
+  return publicRead(["places.rsvps", eventId, firstRsvpNoticeVersion ?? "none", firstMemberNoticeVersion ?? "none"], ["places"], () =>
+    readPublicRsvps(getDb(), eventId, { firstRsvpNoticeVersion, firstMemberNoticeVersion }),
+  );
 }
 
 /**

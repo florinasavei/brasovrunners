@@ -6,16 +6,19 @@ import EventBusyIcon from "@mui/icons-material/EventBusy";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import SaveIcon from "@mui/icons-material/Save";
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { decodeHint, PERSON_HINT_COOKIE } from "@/modules/person-session/domain/hint";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import Hint from "@/shared/ui/Hint";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import type { RsvpIslandState, RsvpNameResult } from "../remembered-actions";
-import { islandFace, rememberedHeading } from "../domain/island";
+import type { RsvpIslandState, RsvpMemberResult, RsvpNameResult } from "../remembered-actions";
+import { islandFace, memberTickFace, rememberedHeading } from "../domain/island";
 import { setRsvpGoing } from "./going-store";
 
 /** The words the island draws, handed over by the Server Component as strings: the island carries no messages of its own. */
@@ -45,20 +48,35 @@ export type RsvpIslandLabels = {
   nameHidden: string;
   nameNeeded: string;
   nameNone: string;
+  /**
+   * The member tick (§NNN): «Sunt membru al grupului {club}» with the club's sentence for what «membru» means behind its «?» (`memberHint`), the help under it, and the
+   * sentences after a save — «on», «off», and «closed» when the event or the notice no longer takes it. `memberFact` says «Membru» for an answer an account made.
+   */
+  memberTick: string;
+  memberHint: string;
+  memberHelp: string;
+  memberOn: string;
+  memberOff: string;
+  memberClosed: string;
+  memberFact: string;
+  /** The fact's help, on its chip's tooltip (the zone's own words, §NNN). */
+  memberFactHelp: string;
 };
 
 /**
- * The server's five actions, handed over by the Server Component as props (`RsvpBox`): an island that imported them would take their
+ * The server's six actions, handed over by the Server Component as props (`RsvpBox`): an island that imported them would take their
  * whole chain — the service, the configuration, Zod — into a visitor's bundle (§489, `public-islands-weight.test.ts`). A Server Action
  * crosses the boundary as a prop, and runs on the server whatever the island does with it.
  */
 export type RsvpIslandActions = {
   state: (slug: string, locale: string) => Promise<RsvpIslandState>;
-  go: (slug: string, locale: string, showName: boolean) => Promise<RsvpIslandState>;
+  go: (slug: string, locale: string, showName: boolean, clubMember: boolean) => Promise<RsvpIslandState>;
   leave: (slug: string, locale: string) => Promise<RsvpIslandState>;
   forget: () => Promise<void>;
   /** The person's own tick «Numele meu apare la „Cine vine"» (§827): on or off, with the name the box holds — the one shown (the answer's own) or the one typed. */
   showName: (slug: string, locale: string, showName: boolean, name: string) => Promise<RsvpNameResult>;
+  /** The person's own declared tick «Sunt membru» (§NNN): on or off, saved at once. */
+  member: (slug: string, locale: string, clubMember: boolean) => Promise<RsvpMemberResult>;
 };
 
 const HINT_EVENT = "br-person-hint";
@@ -94,7 +112,22 @@ function clearHint(): void {
  * A press is a Server Action that reads the `httpOnly` cookie itself (`remembered-actions.ts`): the island never sees the
  * secret, and the hint proves nothing. After an answer the page is refreshed, so «Cine vine (N)» under it counts the person.
  */
-export default function RsvpRemembered({ slug, locale, labels, actions, children }: { slug: string; locale: string; labels: RsvpIslandLabels; actions: RsvpIslandActions; children: ReactNode }) {
+export default function RsvpRemembered({
+  slug,
+  locale,
+  labels,
+  actions,
+  memberOffered = false,
+  children,
+}: {
+  slug: string;
+  locale: string;
+  labels: RsvpIslandLabels;
+  actions: RsvpIslandActions;
+  /** The member tick is offered only while the notice in force describes the mark (`cachedRsvpMemberDescribed`, §NNN); a tick already given stays visible, so it can be taken back. */
+  memberOffered?: boolean;
+  children: ReactNode;
+}) {
   const router = useRouter();
   const raw = useSyncExternalStore(subscribe, () => readCookie(PERSON_HINT_COOKIE), () => "");
   const hint = useMemo(() => decodeHint(raw || null), [raw]);
@@ -106,6 +139,9 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
   const [asking, setAsking] = useState(false);
   const [nameNote, setNameNote] = useState<"shown" | "hidden" | "name" | "none" | null>(null);
   const [refusals, setRefusals] = useState(0);
+  // The member tick (§NNN): the last save's sentence — a status, not a colour — and a remount counter for a refusal, like the name's.
+  const [memberNote, setMemberNote] = useState<"on" | "off" | "closed" | "none" | null>(null);
+  const [memberRefusals, setMemberRefusals] = useState(0);
   const masked = hint?.masked ?? null;
 
   useEffect(() => {
@@ -148,6 +184,7 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
       // A new answer or a taken-back one starts the name tick afresh: no box left open, no sentence of the last save.
       setAsking(false);
       setNameNote(null);
+      setMemberNote(null);
       const next = await call();
       if (!next.remembered) clearHint();
       setState(next);
@@ -167,6 +204,21 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
       setNameNote(refused === "closed" ? null : (refused ?? (on ? "shown" : "hidden")));
       setAsking(refused === "name");
       if (refused !== null) setRefusals((n) => n + 1);
+      router.refresh();
+    } catch {
+      setPressFailed(true);
+    }
+  };
+
+  const runMember = async (on: boolean) => {
+    try {
+      setPressFailed(false);
+      const { state: next, refused } = await actions.member(slug, locale, on);
+      if (!next.remembered) clearHint();
+      setState(next);
+      // A refusal of «none» says the answer is gone; «closed» says the event or the notice no longer takes the tick; the state redraws either way.
+      setMemberNote(refused ?? (on ? "on" : "off"));
+      if (refused !== null) setMemberRefusals((n) => n + 1);
       router.refresh();
     } catch {
       setPressFailed(true);
@@ -227,6 +279,38 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
                     : labels.nameNone}
             </Typography>
           )}
+          {/*
+            «Sunt membru al grupului …» (§NNN): a real tick box in its own small form, saved at once (a change submits it), beside the name's. Drawn while the
+            notice in force describes the mark, or while a tick was given (so it can be taken back); an answer an account made says «Membru» as a fact —
+            the mark comes from the account's role, never from this box. The declaration is the person's: the club does not check it.
+          */}
+          {memberTickFace(state.clubMember, memberOffered) === "fact" ? (
+            <Box data-testid="rsvp-member-fact">
+              <GlyphChip glyph="membersOnly" label={labels.memberFact} variant="outlined" color="primary" tooltip={labels.memberFactHelp} />
+            </Box>
+          ) : (
+            memberTickFace(state.clubMember, memberOffered) === "box" && (
+              <form
+                key={`member-${memberRefusals}`}
+                action={(form: FormData) => runMember(form.get("clubMember") === "on")}
+                onChange={(event) => {
+                  const target = event.target;
+                  if (target instanceof HTMLInputElement && target.name === "clubMember") event.currentTarget.requestSubmit();
+                }}
+                data-testid="rsvp-member-switch"
+              >
+                <CheckboxField name="clubMember" defaultChecked={state.clubMember === "DECLARED"} help={labels.memberHelp}>
+                  {labels.memberTick}
+                  <Hint text={labels.memberHint} />
+                </CheckboxField>
+              </form>
+            )
+          )}
+          {memberNote !== null && (
+            <Typography variant="body2" role="status" data-testid="rsvp-member-note">
+              {memberNote === "on" ? labels.memberOn : memberNote === "off" ? labels.memberOff : memberNote === "closed" ? labels.memberClosed : labels.nameNone}
+            </Typography>
+          )}
           <form action={() => run(() => actions.leave(slug, locale))}>
             <SubmitButton label={labels.cancel} pendingLabel={labels.cancelling} variant="outlined" size="large">
               <EventBusyIcon />
@@ -235,11 +319,18 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
         </>
       ) : (
         <form
-          action={(form: FormData) => run(() => actions.go(slug, locale, form.get("showName") === "on"))}
+          action={(form: FormData) => run(() => actions.go(slug, locale, form.get("showName") === "on", form.get("clubMember") === "on"))}
         >
           <Stack spacing={1.5}>
             {/* A tick only for somebody who gave a name before: with no name there is nothing to show. */}
             {hint.name !== null && <CheckboxField name="showName">{labels.showName}</CheckboxField>}
+            {/* The declared member tick (§NNN): off by default, while the notice in force describes the mark; the club's sentence behind its «?». */}
+            {memberOffered && (
+              <CheckboxField name="clubMember" help={labels.memberHelp}>
+                {labels.memberTick}
+                <Hint text={labels.memberHint} />
+              </CheckboxField>
+            )}
             <SubmitButton label={labels.submit} pendingLabel={labels.submitting} size="large">
               <EventAvailableIcon />
             </SubmitButton>

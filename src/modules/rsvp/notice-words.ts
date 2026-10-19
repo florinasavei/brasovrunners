@@ -29,7 +29,15 @@ export function rsvpAskAnswerersClause(locale: string): string {
   return locale === "en" ? `“${en.Rsvp.askRefuseButton}”` : `„${ro.Rsvp.askRefuseButton}”`;
 }
 
+/**
+ * What `{{rsvpMember}}` becomes (§NNN): the mark beside a shown name, quoted, in that language — „BVR” / “BVR” — read from the catalogue the chip
+ * reads (`Event.rsvp.memberMark`), so the approved sentence names what a visitor sees on «Cine vine».
+ */
+export function rsvpMemberClause(locale: string): string {
+  return locale === "en" ? `“${en.Event.rsvp.memberMark}”` : `„${ro.Event.rsvp.memberMark}”`;
+}
+
 /** The notice's merge values, beside the other features' on the legal pages. */
-export function rsvpMergeValues(locale: string): { rsvp: string; rsvpAsk: string; rsvpAskAnswerers: string } {
-  return { rsvp: rsvpClause(locale), rsvpAsk: rsvpAskClause(locale), rsvpAskAnswerers: rsvpAskAnswerersClause(locale) };
+export function rsvpMergeValues(locale: string): { rsvp: string; rsvpAsk: string; rsvpAskAnswerers: string; rsvpMember: string } {
+  return { rsvp: rsvpClause(locale), rsvpAsk: rsvpAskClause(locale), rsvpAskAnswerers: rsvpAskAnswerersClause(locale), rsvpMember: rsvpMemberClause(locale) };
 }
