@@ -74,7 +74,7 @@ function clearHint(): void {
  *   «Nu mai vin»; and «Nu sunt eu», which forgets the browser.
  *
  * A press is a Server Action that reads the `httpOnly` cookie itself (`remembered-actions.ts`): the island never sees the
- * secret, and the hint proves nothing. After an answer the page is refreshed, so «Vin (N)» under it counts the person.
+ * secret, and the hint proves nothing. After an answer the page is refreshed, so «Cine vine (N)» under it counts the person.
  */
 export default function RsvpRemembered({ slug, locale, labels, actions, children }: { slug: string; locale: string; labels: RsvpIslandLabels; actions: RsvpIslandActions; children: ReactNode }) {
   const router = useRouter();

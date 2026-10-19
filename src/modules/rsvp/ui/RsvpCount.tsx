@@ -9,6 +9,11 @@ import { FOLD_GLYPH_INLINE_SX, PUBLIC_FOLD_SX } from "@/shared/ui/disclosure";
 import { DENSITY } from "@/theme/density";
 import { RSVP_WHO_ID } from "../rsvp-box";
 
+/** The page's one read of the answers (§812): the public cache's, filed under «places»; `null` while the database is away. */
+export async function readRsvpsOf(eventId: string): Promise<PublicRsvps | null> {
+  return readOrWhileAway(async () => cachedPublicRsvps(eventId, await cachedFirstRsvpNoticeVersion()), null);
+}
+
 /**
  * «Cine vine (N)» on a turn-up event (§811, «Vin!» part 1; moved out of the card by §NNN): how many come to an event the club ticked,
  * and the names of those who ticked «Vreau să apar cu numele» — in the shape of the start list's rows (`events/ui/StartList.tsx`), one name
@@ -27,10 +32,6 @@ import { RSVP_WHO_ID } from "../rsvp-box";
  * or a withdrawal expires it at once. While the database is away it draws nothing (§281) — a count that cannot be asked is not
  * a count of zero. The wrapper carries `data-nosnippet`, as the start list's does: names stay out of search snippets.
  */
-export async function readRsvpsOf(eventId: string): Promise<PublicRsvps | null> {
-  return readOrWhileAway(async () => cachedPublicRsvps(eventId, await cachedFirstRsvpNoticeVersion()), null);
-}
-
 export default async function RsvpCount({ eventId, rsvps: given }: { eventId: string; rsvps?: PublicRsvps | null }) {
   const t = await getTranslations("Event");
   const rsvps = given === undefined ? await readRsvpsOf(eventId) : given;

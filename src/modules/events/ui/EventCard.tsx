@@ -164,7 +164,7 @@ export default async function EventCard({
           <PartnerChip event={event} />
           {/* The results are on the event's page (§809): a link to them, 44 pixels tall around the small chip. */}
           {resultsChip && <ResultsChip href={`${page}#clasament`} label={tEvent("results.title")} />}
-          {/* How many come (§815): a link to the page's «Vii?» card, 44 pixels tall around the small chip. */}
+          {/* How many come (§815): a link to the page's «Confirmă prezența (opțional)» card, 44 pixels tall around the small chip. */}
           {comingCount >= 1 && (
             <ComingChip
               href={`${page}#${RSVP_BOX_ID}`}

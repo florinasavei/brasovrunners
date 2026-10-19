@@ -75,7 +75,7 @@ type ZoneRsvpFacts = { count: number; going: boolean };
 
 /**
  * «Vin!» on the runs the zone lists (§NNN): which of the shown runs take answers and how many come — the public pages' one gate and
- * cached counts (`readPublicComing`, §815), so a members' event is never in it (`couldBeOffered`: its page draws no «Vii?», and the
+ * cached counts (`readPublicComing`, §815), so a members' event is never in it (`couldBeOffered`: its page draws no «Confirmă prezența (opțional)», and the
  * service refuses an answer to it) — and, live and for this account alone, which of those it has answered (one query,
  * `answeredByAccount`). A run absent from the map takes no answers and gets no row. Nothing at all while the database is away: a
  * «Vin!» that cannot be told from «Tu vii» is worse than none.
@@ -190,7 +190,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
                   {" · "}
                   {formatDay(event.startsAt, { locale, timeZone: event.timezone, withTime: true })}
                 </Typography>
-                {/* «Vin!» (§NNN): only a run that takes answers, with this account's own state; a members' event has none (its page draws no «Vii?»). */}
+                {/* «Vin!» (§NNN): only a run that takes answers, with this account's own state; a members' event has none (its page draws no «Confirmă prezența (opțional)»). */}
                 {rsvps.has(event.id) && <ZoneRsvp locale={locale} eventId={event.id} titleId={zoneRsvpTitleId(event.id)} going={rsvps.get(event.id)!.going} count={rsvps.get(event.id)!.count} publicName={publicName} />}
               </Box>
             ))}

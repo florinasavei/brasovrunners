@@ -5,7 +5,9 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
+import { draftRegistrationDoor } from "@/modules/events/ui/registration-door";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
@@ -185,7 +187,7 @@ async function confirmedRunner(eventId: string, name: string, listOptOut = false
 }
 
 /** The page the way `events/[slug]/page.tsx` draws it for a visitor: `visit.rsvpBox` is the page's own decision (`rsvpOffered`). */
-async function draw(slug: string, visit: { rsvpBox?: boolean } = { rsvpBox: true }, membersOnly = false) {
+async function draw(slug: string, visit: { rsvpBox?: boolean } | null = { rsvpBox: true }, membersOnly = false, asPreview = false) {
   const found = await findPublishedEventBySlug(db, language, language === "ro" ? slug : `${slug}-en`);
   if (!found || !datedOrNull(found)) throw new Error("the event did not publish");
   const stream = await renderToReadableStream(
@@ -196,7 +198,14 @@ async function draw(slug: string, visit: { rsvpBox?: boolean } = { rsvpBox: true
       now: NOW,
       weather: null,
       membersOnly,
-      visit: { interestBox: false, interestOutcome: null, interestRenderedAt: NOW, rsvpOutcome: null, rsvpRenderedAt: NOW, ...visit },
+      // `visit: null` is the editor's preview before saving (§579): no `visit`, the draft's own door and steps.
+      visit: visit ? { interestBox: false, interestOutcome: null, interestRenderedAt: NOW, rsvpOutcome: null, rsvpRenderedAt: NOW, ...visit } : undefined,
+      preview: asPreview
+        ? {
+            door: { door: await draftRegistrationDoor(db, found, { capacity: found.capacity, waitlistCapacity: null }, NOW), word: "Înscrie-te" },
+            steps: { deadlines: DEFAULT_DEADLINES, familyOpen: false, refusalOn: false },
+          }
+        : undefined,
     }),
   );
   await stream.allReady;
@@ -368,5 +377,48 @@ describe("§NNN a race: the public list moves up under the registration card, an
     const html = await draw(slug, { rsvpBox: false }, true);
     expect(html).not.toContain('data-testid="start-list"');
     expect(link(html)).toBeNull();
+  });
+
+  it("says nothing on a cancelled race or a finished one, though the list and its names stay", async () => {
+    const cancelled = await seedRace({ eventStatus: "CANCELLED" });
+    await confirmedRunner(cancelled.id, "Ana Popescu");
+    await confirmedRunner(cancelled.id, "Ion Vasile");
+    const cancelledHtml = await draw(cancelled.slug, { rsvpBox: false });
+    // The list is drawn as it was; only the facts' «N vin · vezi cine» is not: nobody is coming to an event that will not happen.
+    expect(cancelledHtml).toContain('data-testid="start-list"');
+    expect(cancelledHtml).toContain("Ana Popescu");
+    expect(link(cancelledHtml)).toBeNull();
+    expect(cancelledHtml).not.toContain("vezi cine");
+
+    await resetTables(db);
+    await approveNotice();
+    const completed = await seedRace({ eventStatus: "COMPLETED" });
+    await confirmedRunner(completed.id, "Ana Popescu");
+    expect(link(await draw(completed.slug, { rsvpBox: false }))).toBeNull();
+
+    // A scheduled race whose start has passed (the list stays open for its days): the same.
+    await resetTables(db);
+    await approveNotice();
+    const past = await seedRace({ startsAt: new Date(NOW.getTime() - DAY) });
+    await confirmedRunner(past.id, "Ana Popescu");
+    const pastHtml = await draw(past.slug, { rsvpBox: false });
+    expect(pastHtml).toContain('data-testid="start-list"');
+    expect(link(pastHtml)).toBeNull();
+  });
+});
+
+describe("§NNN the preview before saving carries nothing of it", () => {
+  it("draws no line, no fold of who comes and no list on a race or a turn-up event, whatever is in the database", async () => {
+    const race = await seedRace();
+    await confirmedRunner(race.id, "Ana Popescu");
+    const turnUp = await seed({}, "alergarea-de-vineri");
+    await answerRsvp(db, turnUp.id, confirm("ana@example.test"), NOW);
+    for (const slug of [race.slug, turnUp.slug]) {
+      const html = await draw(slug, null, false, true);
+      expect(html).not.toContain('data-testid="who-comes-link"');
+      expect(html).not.toContain('data-testid="rsvp-who"');
+      expect(html).not.toContain('data-testid="start-list"');
+      expect(html).not.toContain('id="cine-vine"');
+    }
   });
 });

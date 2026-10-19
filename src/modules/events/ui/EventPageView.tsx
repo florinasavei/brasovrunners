@@ -76,7 +76,7 @@ export type EventPageVisit = {
   /** When the render a corrected address is timed from was made (§146). */
   interestRenderedAt: Date;
   /**
-   * «Vii?» (§811, «Vin!» part 1): whether the page offers the answer — `rsvpOffered`, decided by the page from the one rule — and
+   * «Confirmă prezența (opțional)» (§811, «Vin!» part 1): whether the page offers the answer — `rsvpOffered`, decided by the page from the one rule — and
    * how the typed form answered (`?vin=`). Absent in the preview before saving (§579): it takes an address and reads the public cache.
    */
   rsvpBox?: boolean;
@@ -183,14 +183,15 @@ export default async function EventPageView({
     has on its bar, and the fold's own anchor. On a turn-up event the box offers: the page's one read of the answers above (`rsvpsRead`, the
     same the box and the calendar links are handed) — nothing while the database is away (`null`) or nobody has confirmed. Otherwise on a race
     whose public list is drawn (the very condition of the `StartList` below): the list's own title number (`readStartListCount`, the one
-    function the list reads its headline from — never a count of its own), `null` where the numbers are kept private. Never in the
-    preview before saving, nor on a members' event.
+    function the list reads its headline from — never a count of its own), `null` where the numbers are kept private. Only for an event still
+    to be held (scheduled, its start ahead: the reading `rsvpOffered` gives the turn-up branch and the weather row's `goingAhead` gives the
+    facts) — a cancelled or past race keeps its list but says no «N vin». Never in the preview before saving, nor on a members' event.
   */
   const whoComes = visit?.rsvpBox && !membersOnly
     ? rsvpsRead && rsvpsRead.count > 0
       ? { count: rsvpsRead.count, href: `#${RSVP_WHO_ID}` }
       : null
-    : dated && !membersOnly && visit
+    : dated && !membersOnly && visit && event.eventStatus === "SCHEDULED" && dated.startsAt.getTime() > now.getTime()
       ? await readStartListCount(dated).then((count) => (count !== null && count > 0 ? { count, href: "#start-list-title" } : null))
       : null;
   return (

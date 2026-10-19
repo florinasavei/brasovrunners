@@ -1,5 +1,5 @@
 /**
- * Which names «Vin (N)» shows (§811, «Vin!» part 1) — **a public name is a disclosure** (§143, §396, the unbreakable
+ * Which names «Cine vine (N)» shows (§811, «Vin!» part 1) — **a public name is a disclosure** (§143, §396, the unbreakable
  * row of CLAUDE.md), and this is its whole rule, as `results/domain/public-name.ts` is for the ranking:
  *
  *   - the row is confirmed (a person who has not used the link is not counted, let alone named);

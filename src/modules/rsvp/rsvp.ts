@@ -21,7 +21,7 @@ import { publicRsvpName } from "./domain/public-name";
 /**
  * «Vin!» (§811, «Vin!» part 1; the owner, 2026-10-18: «how do I mark myself as "Going"?») — a person's answer «I am coming»
  * to a turn-up event the club ticked: an address, optionally a name to show, and — once the address is proved — a place in
- * the count «Vin (N)».
+ * the count «Cine vine (N)».
  *
  * **Not a registration.** No place is held, no declaration is signed, no participant exists; the allocator, the
  * registrations' states, the desk and the capacity formula are untouched, and nothing here reads `kind`. The model is the
@@ -538,7 +538,7 @@ export async function withdrawRsvp<T extends Record<string, unknown>>(
   return gone.length > 0;
 }
 
-/** How many confirmed answers an event has: the count «Vin (N)» says. */
+/** How many confirmed answers an event has: the count «Cine vine (N)» says. */
 export async function countRsvps<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
   const [row] = await db
     .select({ n: count() })
@@ -557,7 +557,7 @@ export async function hasConfirmedRsvp<T extends Record<string, unknown>>(db: Da
   return row !== undefined;
 }
 
-/** What the page's card «Vin (N)» draws: the count, the names that may be shown, and how many are only counted. */
+/** What the page's card «Cine vine (N)» draws: the count, the names that may be shown, and how many are only counted. */
 export type PublicRsvps = {
   count: number;
   names: string[];
