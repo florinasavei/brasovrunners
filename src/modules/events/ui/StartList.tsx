@@ -21,7 +21,7 @@ import { hiddenListCounting, hiddenListShownPublicly } from "@/modules/registrat
 import { publicListClubOf } from "@/modules/registrations/domain/public-list-club";
 import { LIST_STATE_KEYS, type PublicListGroup } from "@/modules/registrations/domain/public-list-states";
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
+import { FOLD_GLYPH_INLINE_SX, PUBLIC_FOLD_SX } from "@/shared/ui/disclosure";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEvent } from "../repository";
@@ -355,14 +355,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
       // Open when the reader asked for a page: arriving at a closed box from a page link is
       // the one thing a paginated disclosure must not do.
       open={view.page > 1 || undefined}
-      sx={{
-        border: 1,
-        borderColor: "divider",
-        borderRadius: 2,
-        px: 2,
-        "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
-        ...DISCLOSURE_OPEN_ARROW,
-      }}
+      sx={PUBLIC_FOLD_SX}
     >
       {/* The fold's bar, the shape of «Condiții de participare» (§498, §812): a real h2 inside the summary, so the heading
           stays in a screen reader's list while the fold is shut, and `#start-list-title` — the pager's anchor — names the h2:

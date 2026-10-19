@@ -12837,7 +12837,7 @@
     "confirmAlready": "You are already counted for {event}.",
     "confirmButton": "Yes, I'm coming",
     "confirmPending": "Counting you…",
-    "confirmAutoNote": "We are counting you now, with no press; if nothing happens, press “Yes, I'm coming”.",
+    "confirmAutoNote": "Opened in a browser, the link counts you by itself. If nothing happens, press “Yes, I'm coming”.",
     "withdrawTitle": "Not coming any more?",
     "withdrawIntro": "Are you not coming to {event} any more? Your answer is deleted.",
     "withdrawButton": "I'm not coming any more",

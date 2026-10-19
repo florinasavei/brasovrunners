@@ -59,7 +59,7 @@ describe("§812 what the island tells the line", () => {
 });
 
 describe("§812 when the «Da, vin» page may press its own button", () => {
-  it("presses for a page a person is looking at", () => {
+  it("presses for a page that is shown, not prerendered", () => {
     expect(mayCountNow({ prerendering: false, visibilityState: "visible" })).toBe(true);
     expect(mayCountNow({ visibilityState: "visible" })).toBe(true);
   });

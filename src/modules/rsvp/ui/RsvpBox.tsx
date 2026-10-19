@@ -15,7 +15,7 @@ import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX, PUBLIC_FOLD_SX } from "@/shared/ui/disclosure";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { DENSITY } from "@/theme/density";
 import { RSVP_BOX_ID, type RsvpOutcome } from "../rsvp-box";
@@ -91,16 +91,7 @@ export default async function RsvpBox({
         data-testid="rsvp-box"
         // Closed on arrival, like «Condiții de participare»; open when the address carries an answer to read (`?vin=…`).
         open={outcome !== null || undefined}
-        sx={{
-          border: 1,
-          borderColor: "divider",
-          borderRadius: 2,
-          px: 2,
-          scrollMarginTop: 16,
-          "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
-          ...DISCLOSURE_OPEN_ARROW,
-          "&[open]": { pb: 2 },
-        }}
+        sx={{ ...PUBLIC_FOLD_SX, scrollMarginTop: 16 }}
       >
         <Box component="summary">
           <Typography id={`${RSVP_BOX_ID}-heading`} component="h2" variant="h2" sx={{ fontSize: "1.25rem" }}>

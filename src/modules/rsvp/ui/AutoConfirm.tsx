@@ -10,9 +10,12 @@ import { mayCountNow } from "../domain/auto-confirm";
  * press: the POST in `actions.ts` spends the link, counts the answer, remembers the browser and lands on the event page's `#vin`. The
  * button's own pending label («Te numărăm…») shows while it runs.
  *
- * **Why the page's GET is still safe** (AGENTS.md §12.8, BR-REQ-036-02 criterion 4): the GET renders and writes nothing. A mail scanner
- * fetches it and does not run this file; a browser that does run it presses only when the page is one a person is looking at
- * (`mayCountNow`: not prerendering, not in a background tab — it waits for the tab to be shown). Once only: a ref remembers the press,
+ * **Why the page's GET is still safe** (AGENTS.md §12.8, BR-REQ-036-02 criterion 4): the GET renders and writes nothing. A scanner that
+ * fetches the page without running its scripts, and a browser without JavaScript, see the button and count nobody; a browser that does
+ * run this file presses only when it is not prerendering the page and the tab is shown (`mayCountNow` — it waits for the tab to be
+ * shown). **Accepted residual risk:** a link sandbox that renders the page in a real browser, with scripts, looks like a shown tab and
+ * does press; the person's own click then reads «Ești deja numărat» and their browser is not remembered. The owner accepted it for
+ * «auto-bifeze când deschid»; «Nu mai vin» in the same email takes the answer back. Once only: a ref remembers the press,
  * so React's double effect in development, a re-render, or the tab being shown and hidden again never sends a second one.
  *
  * It earns being a client file because pressing a button needs a browser; it draws nothing of its own.

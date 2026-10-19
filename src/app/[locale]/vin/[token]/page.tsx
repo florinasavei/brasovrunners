@@ -43,9 +43,10 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  *
  * **«Da, vin» presses itself in a browser** (§812, amending §811; the owner, 2026-10-19: «Asta ar trebui să se auto-bifeze când
  * deschid»). The page above is unchanged — the sentence, the POST form, the button — and, for a live `RSVP_CONFIRM` link whose answer
- * is not counted yet, the form is wrapped in the one island that presses that button once a person is looking at the page
- * (`AutoConfirm`). This GET still writes nothing and does not know whether the island will run: a scanner that fetches the link sees
- * the button and counts nobody. A spent, expired, withdrawn or already-counted link has no island, and `RSVP_WITHDRAW` is always a press
+ * is not counted yet, the form is wrapped in the one island that presses that button once the page is shown in a browser
+ * (`AutoConfirm`). This GET still writes nothing and does not know whether the island will run: a scanner that fetches the link without
+ * running scripts, and a browser without JavaScript, see the button and count nobody; the island does not press while the page is
+ * prerendered or its tab is hidden. A link sandbox that runs scripts can still count the address (accepted, see `AutoConfirm.tsx`). A spent, expired, withdrawn or already-counted link has no island, and `RSVP_WITHDRAW` is always a press
  * (it takes something away).
  */
 export default async function RsvpLinkPage({ params, searchParams }: Props) {

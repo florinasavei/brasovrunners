@@ -111,6 +111,8 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
   const going = state !== null && state.remembered && state.offered && state.going;
   useEffect(() => {
     setRsvpGoing(slug, going);
+    // Leaving the page forgets it: a client-side return to the event must not flash a stale «Tu vii ✓» before this island has asked again.
+    return () => setRsvpGoing(slug, false);
   }, [slug, going]);
 
   // The typed form: no hint, no JavaScript, a stale hint, an event that takes no answer from this browser, or a server that failed.

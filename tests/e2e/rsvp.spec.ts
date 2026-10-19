@@ -12,7 +12,7 @@ import { mintRsvpLink, rememberedBrowsers, rsvpCount, rsvpMessages, rsvpRow, wit
  *
  * **The card is a closed fold (§812)**, like «Condiții de participare»: its line says «Vii? · N vin», `#vin` and the answer's own redirect open
  * it, and the specs open it first through `openEventFold` (`support/fold.ts`). The link of the email counts the person BY ITSELF when a
- * browser opens it — a scanner, which runs no scripts, sees the button and counts nobody (a context with scripts off stands in for it).
+ * browser opens it — a scanner that fetches without running scripts, and a browser without JavaScript, see the button and count nobody (a context with scripts off stands in for both; a sandbox that runs scripts would count the address — accepted, §NNN).
  *
  * The local seed approves every platform template as a sample version (§29), so the notice in force already names `{{rsvp}}` and the box is
  * live. The spec creates its own group run and its second date (as `group-run-declaration.spec.ts` does), so the two projects, which run side

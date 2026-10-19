@@ -245,7 +245,8 @@ async function removeEvent(id: string): Promise<void> {
 /** The list opened, and its rows' names and state words in the order they are printed. */
 async function readList(page: Page, address: string, tag: string) {
   await page.goto(address);
-  // «Cine vine» is a closed fold (§812): opened first, the way a person does.
+  // «Cine vine» is a closed fold (§812): it arrives shut, and is opened first, the way a person does.
+  await expect(page.getByTestId("start-list")).not.toHaveAttribute("open", /.*/);
   const list = await openEventFold(page, "start-list");
   await expect(list.locator("table")).toBeVisible();
   const rows = list.locator("tbody tr");

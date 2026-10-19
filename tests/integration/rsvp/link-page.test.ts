@@ -179,7 +179,7 @@ describe("§811 the page of a «Vin!» link", () => {
     expect(markup).toContain("Da, vin");
     expect(markup.match(/<button/g)).toHaveLength(1);
     expect(markup).toContain('data-testid="rsvp-confirm-auto"');
-    expect(markup).toContain("Te numărăm acum, fără să apeși nimic");
+    expect(markup).toContain("linkul te numără singur");
     expect(markup).toContain("Browserul tău rămâne recunoscut un an");
     // Rendering it counted nobody and remembered nobody: only the island's POST does.
     expect(await db.select().from(eventRsvpTokens)).toEqual(tokensBefore);
@@ -189,7 +189,7 @@ describe("§811 the page of a «Vin!» link", () => {
     const { confirm: english } = await sendLinks("liz@example.test", "en");
     const en = await page(english, {}, "en");
     expect(en).toContain('data-testid="rsvp-auto-confirm"');
-    expect(en).toContain("We are counting you now");
+    expect(en).toContain("the link counts you by itself");
   });
 
   it("§812 draws no island for the «Nu mai vin» link, a spent or expired link, an unknown one, or an answer already counted", async () => {
