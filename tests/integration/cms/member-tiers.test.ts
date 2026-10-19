@@ -554,7 +554,8 @@ describe("§811 the member tiers", () => {
       expect(mails).toHaveLength(2);
       const [withLevel, without] = ["cu@dev.test", "fara@dev.test"].map((email) => mails.find((row) => row.recipientEmail === email)!);
       expect(withLevel.messageType).toBe(without.messageType);
-      expect(withLevel.payload).toEqual(without.payload);
+      expect(withLevel.payloadJson).toEqual(without.payloadJson);
+      expect(Object.keys(withLevel.payloadJson as object).sort()).toEqual(["displayName", "inviterName", "role"]);
       expect(JSON.stringify(mails)).not.toContain(first.id);
     });
 
