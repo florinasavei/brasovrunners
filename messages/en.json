@@ -779,7 +779,8 @@
         "FOOD": "Food",
         "FIRST_AID": "First aid",
         "TIMING": "Timing",
-        "DIRECTION": "Direction"
+        "DIRECTION": "Direction",
+        "REGROUP": "Regroup"
       },
       "cutoff": "Time limit: {duration} · closes at {time}",
       "cutoffNoClock": "Time limit: {duration}",
@@ -10199,7 +10200,7 @@
     },
     "checkpoints": {
       "title": "Checkpoints",
-      "intro": "Where there is water, food, first aid, timing or someone showing the way, and how long after the start the last runner passes. Shown in the table and on the route profile, and on the number.",
+      "intro": "Where there is water, food, first aid, timing, someone showing the way or a regroup, and how long after the start the last runner passes. Shown in the table, on the route profile and on the number.",
       "saveNote": "The points are saved only with “Save the points”, not with the page's “Save”.",
       "routeLength": "The route is {km} km long. No point can be beyond it.",
       "summaryNone": "no points",
@@ -10221,6 +10222,7 @@
         "nameRo": "Name (Romanian)",
         "nameEn": "Name (English)",
         "kinds": "What is there",
+        "kindsHelp": "Regroup: the group waits here. Write in the note for how long (e.g. “we wait 5 minutes”).",
         "cutoff": "Time limit",
         "cutoffHelp": "From the start: the last runner has to pass by then. Leave empty for no limit.",
         "noteRo": "Note (Romanian)",
@@ -10240,7 +10242,8 @@
         "FOOD": "Food",
         "FIRST_AID": "First aid",
         "TIMING": "Timing",
-        "DIRECTION": "Direction"
+        "DIRECTION": "Direction",
+        "REGROUP": "Regroup"
       },
       "remove": "Remove this point",
       "removeHelp": "It is deleted at “Save the points”.",

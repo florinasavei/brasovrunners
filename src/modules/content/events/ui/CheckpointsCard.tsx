@@ -25,12 +25,14 @@ import { type GpxProposal, MAX_OFF_TRACK_METERS } from "@/modules/event-checkpoi
 import DetachedActionForm, { DetachedFields, DetachedForm } from "@/shared/forms/DetachedActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import { GLYPHS } from "@/modules/events/ui/glyphs";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 import Panel from "@/shared/ui/Panel";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import DurationBoxes from "./DurationBoxes";
 
@@ -181,15 +183,26 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
         </Stack>
       </Stack>
       <Box>
-        <Typography variant="caption" component="p" color="text.secondary" sx={{ m: 0 }}>
-          {t("checkpoints.field.kinds")}
-        </Typography>
+        {/* One «?» for the kinds (§NNN): what «Regrupare» is and where its wait is written — the point's own note. */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          <Typography variant="caption" component="p" color="text.secondary" sx={{ m: 0 }}>
+            {t("checkpoints.field.kinds")}
+          </Typography>
+          <QuietHelp text={t("checkpoints.field.kindsHelp")} testId="checkpoint-kinds-help" />
+        </Box>
         <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 2 }}>
-          {CHECKPOINT_KINDS.map((kind) => (
-            <CheckboxField key={kind} name={checkpointBox(index, "kinds")} value={kind} defaultChecked={saved?.kinds.includes(kind) ?? false}>
-              {t(`checkpoints.kinds.${kind}`)}
-            </CheckboxField>
-          ))}
+          {CHECKPOINT_KINDS.map((kind) => {
+            // Each tick wears its kind's glyph, the one the page's table and the pins draw (the checkpoints' registry, `events/ui/glyphs.ts`).
+            const KindGlyph = GLYPHS[`checkpoint:${kind}`];
+            return (
+              <CheckboxField key={kind} name={checkpointBox(index, "kinds")} value={kind} defaultChecked={saved?.kinds.includes(kind) ?? false}>
+                <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+                  <KindGlyph aria-hidden fontSize="inherit" />
+                  {t(`checkpoints.kinds.${kind}`)}
+                </Box>
+              </CheckboxField>
+            );
+          })}
         </Box>
       </Box>
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>

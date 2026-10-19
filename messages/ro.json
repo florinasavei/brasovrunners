@@ -779,7 +779,8 @@
         "FOOD": "Mâncare",
         "FIRST_AID": "Prim ajutor",
         "TIMING": "Cronometrare",
-        "DIRECTION": "Direcționare"
+        "DIRECTION": "Direcționare",
+        "REGROUP": "Regrupare"
       },
       "cutoff": "Timp limită: {duration} · se închide la {time}",
       "cutoffNoClock": "Timp limită: {duration}",
@@ -10199,7 +10200,7 @@
     },
     "checkpoints": {
       "title": "Puncte de control",
-      "intro": "Unde e apă, mâncare, prim ajutor, cronometrare sau cine arată drumul, și în cât timp de la start trece ultimul alergător. Apar în tabel și pe profilul traseului de pe pagină, și pe număr.",
+      "intro": "Unde e apă, mâncare, prim ajutor, cronometrare, cine arată drumul sau regrupare, și în cât timp de la start trece ultimul alergător. Apar în tabel, pe profilul traseului și pe număr.",
       "saveNote": "Punctele se salvează doar cu „Salvează punctele”, nu cu „Salvează” din pagină.",
       "routeLength": "Lungimea traseului: {km} km. Niciun punct nu poate fi dincolo de ea.",
       "summaryNone": "niciun punct",
@@ -10221,6 +10222,7 @@
         "nameRo": "Numele (română)",
         "nameEn": "Numele (engleză)",
         "kinds": "Ce găsești aici",
+        "kindsHelp": "Regrupare: grupul se așteaptă aici. Scrie în notă cât timp (de ex. „așteptăm 5 minute”).",
         "cutoff": "Timp limită",
         "cutoffHelp": "De la start: până atunci trebuie să treacă ultimul alergător. Lasă gol dacă nu e limită.",
         "noteRo": "Notă (română)",
@@ -10240,7 +10242,8 @@
         "FOOD": "Mâncare",
         "FIRST_AID": "Prim ajutor",
         "TIMING": "Cronometrare",
-        "DIRECTION": "Direcționare"
+        "DIRECTION": "Direcționare",
+        "REGROUP": "Regrupare"
       },
       "remove": "Scoate acest punct",
       "removeHelp": "Se șterge la „Salvează punctele”.",

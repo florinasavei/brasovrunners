@@ -1175,7 +1175,7 @@ async function seedCheckpoints(eventId: string) {
       kind: "save",
       eventId,
       rows: [
-        row(0, { nameRo: "Cronometrare", nameEn: "Timing", km: "15", kinds: ["TIMING"], ...limit(120) }),
+        row(0, { nameRo: "Cronometrare", nameEn: "Timing", km: "15", kinds: ["TIMING", "REGROUP"], ...limit(120), noteRo: "Așteptăm 5 minute", noteEn: "We wait 5 minutes" }),
         row(1, { nameRo: "Apă la cabană", nameEn: "Water at the hut", km: "7,5", kinds: ["WATER", "FOOD"], ...limit(60), noteRo: "Și banane", noteEn: "Bananas too" }),
       ],
     },
@@ -1190,7 +1190,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
     const file = await fileOf(event.id);
     expect(file.event.route.checkpoints).toEqual([
       { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 60, note: { ro: "Și banane", en: "Bananas too" }, onProfile: true },
-      { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING"], cutoffMinutes: 120, note: { ro: null, en: null }, onProfile: true },
+      { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING", "REGROUP"], cutoffMinutes: 120, note: { ro: "Așteptăm 5 minute", en: "We wait 5 minutes" }, onProfile: true },
     ]);
     // Minutes, never a time of the day (§770).
     expect(JSON.stringify(file.event.route.checkpoints)).not.toContain('"cutoff"');
@@ -1200,7 +1200,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
     const copied = await listCheckpoints(db, created.eventId);
     expect(copied.map((row) => [row.km, row.nameRo, row.nameEn, row.kinds, row.cutoffMinutes, row.noteRo, row.noteEn])).toEqual([
       [7.5, "Apă la cabană", "Water at the hut", ["WATER", "FOOD"], 60, "Și banane", "Bananas too"],
-      [15, "Cronometrare", "Timing", ["TIMING"], 120, null, null],
+      [15, "Cronometrare", "Timing", ["TIMING", "REGROUP"], 120, "Așteptăm 5 minute", "We wait 5 minutes"],
     ]);
     // The clock follows the start the import wrote: the gun at 10:00, so an hour is 11:00 and two hours 12:00.
     expect(copied.map((row) => row.cutoffClock)).toEqual(["11:00", "12:00"]);

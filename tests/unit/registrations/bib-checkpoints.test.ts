@@ -35,7 +35,9 @@ import { type BibProfileDrawing, bibProfileDrawing } from "@/modules/registratio
 import { bibProfileRow } from "@/modules/registrations/bib-profile-row";
 import { bibProfileStrip, thinBibCheckpoints } from "@/modules/registrations/bib-profile-strip";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
+import { BIB_DRAWING_VERSION } from "@/modules/registrations/domain/bib-stamp";
 import { elevationGeometry, glyphForKinds, pathOf } from "@/modules/routes/elevation/geometry";
+import { ELEVATION_GLYPH_PATHS } from "@/modules/routes/elevation/glyphs";
 import { clearElevationCache } from "@/modules/routes/elevation/read";
 import { parseGpxElevation } from "@/modules/routes/elevation/parse";
 import { drawnRuns } from "../../helpers/pdf-drawn";
@@ -110,6 +112,28 @@ describe("§757 which checkpoints the strip pins, and what each says", () => {
     expect(glyphForKinds(["TIMING"])).toBe("timing");
     expect(glyphForKinds(["DIRECTION"])).toBe("direction");
     expect(glyphForKinds([])).toBe("none");
+  });
+
+  it("pins a «Regrupare» point with the group's glyph, before what it also offers, and labels it by its kilometre only (§NNN)", () => {
+    expect(glyphForKinds(["REGROUP"])).toBe("regroup");
+    expect(glyphForKinds(["WATER", "FOOD", "REGROUP"])).toBe("regroup");
+    const [regroup, regroupWater] = bibStripCheckpoints([at(4, null, ["REGROUP"]), at(6, null, ["REGROUP", "WATER"])], 9_000, words);
+    expect(regroup.label).toBe("km 4");
+    // The words still say what a runner may take: a point with water and a regroup says its water.
+    expect(regroupWater.label).toBe("km 6 · apă");
+  });
+
+  it("draws the five earlier kinds with the very paths and order they had, so the picture's version stays (§NNN)", () => {
+    expect(BIB_DRAWING_VERSION).toBe(4);
+    const paths = (["water", "food", "firstAid", "timing", "direction", "none"] as const).map((glyph) => ELEVATION_GLYPH_PATHS[glyph]);
+    expect(paths).toEqual([
+      "M0 -7.5C3.6 -3.4 5.8 -0.6 5.8 2.4A5.8 5.8 0 0 1 -5.8 2.4C-5.8 -0.6 -3.6 -3.4 0 -7.5Z",
+      "M-3 -7.5h1.4v4.5h.9v-4.5h1.4v4.5h.9v-4.5h1.4v5.4a2.6 2.6 0 0 1 -2.2 2.6v7h-1.6v-7a2.6 2.6 0 0 1 -2.2 -2.6z",
+      "M-2 -7h4v5h5v4h-5v5h-4v-5h-5v-4h5z",
+      "M0 -7.2a7.2 7.2 0 1 1 0 14.4a7.2 7.2 0 1 1 0 -14.4zM0 -5a5 5 0 1 0 0 10a5 5 0 1 0 0 -10zM-.9 -3.4h1.8v3.9h2.6v1.7h-4.4z",
+      "M0 -7.5l6 7h-3.8v7.5h-4.4v-7.5h-3.8z",
+      "M0 -3.4a3.4 3.4 0 1 1 0 6.8a3.4 3.4 0 1 1 0 -6.8z",
+    ]);
   });
 });
 
@@ -332,6 +356,20 @@ describe("§757 the pins stand side by side, never over one another", () => {
     const waterFirst = thinBibCheckpoints([point(5, ["WATER"]), point(5 + close, ["TIMING"])], BIB_LAYOUT.profileChartWidth, 9_000, radius);
     expect(waterFirst.map((row) => row.kinds)).toEqual([["WATER"]]);
     expect(thinBibCheckpoints([point(5, ["TIMING"]), point(5 + close, ["DIRECTION"])], BIB_LAYOUT.profileChartWidth, 9_000, radius)).toHaveLength(1);
+  });
+
+  // §NNN: «Regrupare» is first among one point's own glyphs; between two points that would touch, the aid station's rule (§757) is older and stays.
+  it("gives a regroup point way to an aid station within a pin's reach, in either order, and keeps the group's glyph on a point that is both", () => {
+    const close = 0.5 * ((radius * 2 + radius * 0.5) / BIB_LAYOUT.profileChartWidth) * 9;
+    const regroupFirst = thinBibCheckpoints([point(5, ["REGROUP"]), point(5 + close, ["WATER"])], BIB_LAYOUT.profileChartWidth, 9_000, radius);
+    expect(regroupFirst.map((row) => row.kinds)).toEqual([["WATER"]]);
+    const waterFirst = thinBibCheckpoints([point(5, ["WATER"]), point(5 + close, ["REGROUP"])], BIB_LAYOUT.profileChartWidth, 9_000, radius);
+    expect(waterFirst.map((row) => row.kinds)).toEqual([["WATER"]]);
+    // Two regroup points that touch are one pin; a point that is both an aid station and a regroup still pins the group.
+    expect(thinBibCheckpoints([point(5, ["REGROUP"]), point(5 + close, ["REGROUP"])], BIB_LAYOUT.profileChartWidth, 9_000, radius)).toHaveLength(1);
+    const both = thinBibCheckpoints([point(5, ["WATER", "REGROUP"]), point(5 + close, ["TIMING"])], BIB_LAYOUT.profileChartWidth, 9_000, radius);
+    expect(both.map((row) => row.kinds)).toEqual([["WATER", "REGROUP"]]);
+    expect(glyphForKinds(both[0].kinds)).toBe("regroup");
   });
 
   it("says both when a water station and a food station are too close to pin apart, in either order — «km 4 · apă + hrană», the drop", () => {

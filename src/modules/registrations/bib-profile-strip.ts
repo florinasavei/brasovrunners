@@ -62,7 +62,9 @@ const isAid = (kinds: readonly string[]): boolean => kinds.includes("WATER") || 
 /**
  * The pins that fit side by side: one that would touch the one kept before it — less than a head's diameter and its gap
  * away — is not drawn, and the aid station takes the place of a point that is not one. Two aid stations that touch are one
- * pin that says both («km 4 · apă + hrană»), so a water point followed by a food point never reads as «no food here».
+ * pin that says both («km 4 · apă + hrană»), so a water point followed by a food point never reads as «no food here». A «Regrupare»
+ * point (§NNN) is first among one point's own glyphs, but between two points that touch the aid station's rule stands: a regroup
+ * point within a pin's reach of an aid station gives way to it, while a point that is both keeps the group's glyph.
  * `checkpoints` are by distance.
  */
 export function thinBibCheckpoints(checkpoints: readonly BibStripCheckpoint[], chartWidth: number, distanceMeters: number, pinRadius: number): BibStripCheckpoint[] {

@@ -158,23 +158,38 @@ describe("§757 the card «Puncte de control»", () => {
     expect(html).toContain("timp limită 45 min");
   });
 
-  it("offers the five kinds as words, «Direcționare» among them, ticks the saved ones, and posts them under one name", async () => {
+  it("offers the six kinds as words, «Direcționare» and «Regrupare» among them, ticks the saved ones, and posts them under one name", async () => {
     const html = await render({ checkpoints: [point("a", 5, { kinds: ["WATER", "DIRECTION"] })] });
     const first = html.slice(html.indexOf('data-testid="checkpoint-edit-row"'), html.indexOf('data-testid="checkpoint-add"'));
-    for (const word of ["Apă", "Mâncare", "Prim ajutor", "Cronometrare", "Direcționare"]) expect(first).toContain(word);
+    for (const word of ["Apă", "Mâncare", "Prim ajutor", "Cronometrare", "Direcționare", "Regrupare"]) expect(first).toContain(word);
     const box = (kind: string) => first.match(new RegExp(`<input[^>]*name="cp\\[0\\]\\.kinds"[^>]*value="${kind}"[^>]*>`))?.[0] ?? "";
     expect(box("WATER")).toContain("checked");
     expect(box("DIRECTION")).toContain("checked");
     expect(box("FOOD")).not.toContain("checked");
     expect(box("FIRST_AID")).not.toContain("checked");
     expect(box("TIMING")).not.toContain("checked");
-    // Five ticks per point, each naming the list's form.
-    expect(first.match(/name="cp\[0\]\.kinds"/g)).toHaveLength(5);
+    expect(box("REGROUP")).not.toContain("checked");
+    // Six ticks per point, «Regrupare» last, each naming the list's form.
+    expect(first.match(/name="cp\[0\]\.kinds"/g)).toHaveLength(6);
+    expect(first.indexOf('value="REGROUP"')).toBeGreaterThan(first.indexOf('value="DIRECTION"'));
+    expect(box("REGROUP")).toContain('form="checkpoints-form"');
     expect(box("DIRECTION")).toContain('form="checkpoints-form"');
     // And on a spare row too.
     const add = html.slice(html.indexOf('data-testid="checkpoint-add"'));
-    expect(add.match(/name="cp\[1\]\.kinds"/g)).toHaveLength(5);
+    expect(add.match(/name="cp\[1\]\.kinds"/g)).toHaveLength(6);
     expect(add).toContain('name="cp[1].kinds" value="DIRECTION"');
+    expect(add).toContain('name="cp[1].kinds" value="REGROUP"');
+  });
+
+  it("draws a glyph before each kind's word, and one «?» on the kinds row that says where «Regrupare»'s wait is written (§NNN)", async () => {
+    const html = await render({ checkpoints: [point("a", 5, { kinds: ["REGROUP"] })] });
+    const first = html.slice(html.indexOf('data-testid="checkpoint-edit-row"'), html.indexOf('data-testid="checkpoint-add"'));
+    // Each kind's own glyph, aria-hidden, before its word: the one the page's table draws (the group of people for «Regrupare»).
+    for (const glyph of ["WaterDrop", "Restaurant", "MedicalServices", "Timer", "Directions", "Groups"]) expect(first, glyph).toContain('data-testid="' + glyph + 'Icon"');
+    expect(first.match(/<svg[^>]*aria-hidden="true"/g)?.length ?? 0).toBeGreaterThanOrEqual(6);
+    expect(first).toContain('data-testid="checkpoint-kinds-help"');
+    expect(first).toContain(ro.Admin.checkpoints.field.kindsHelp);
+    expect(first.match(/<input[^>]*value="REGROUP"[^>]*>/)?.[0]).toContain("checked");
   });
 
   it("draws three spare rows for new points under «Adaugă puncte», numbered after the saved ones, with no «Scoate»", async () => {

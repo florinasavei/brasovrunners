@@ -115,6 +115,9 @@ export function kindsFromWords(words: string, symbols = ""): CheckpointKind[] {
   ) {
     kinds.push("DIRECTION");
   }
+  // «Regrupare» (§NNN): where a group waits for the others — «regrupare», «regrupăm», «regroup», «regroupement», «adunare», «ne adunăm», «așteptăm» (we wait), «waiting for».
+  // «așteptare» alone is a queue or a waiting room, not the group's wait, so only the first-person plural is a stem; «wait» needs its «for».
+  if (/\b(?:regrupar\w*|regrupam|regroup\w*|adunar\w*|ne adunam|asteptam|wait\w* for)\b/.test(text)) kinds.push("REGROUP");
   return kinds;
 }
 
