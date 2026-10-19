@@ -782,6 +782,14 @@ export const events = pgTable(
      * the JSON file like the route's profile tick (§805); the answers themselves (`event_rsvps`) are never carried.
      */
     rsvpEnabled: boolean("rsvp_enabled").notNull().default(false),
+    /**
+     * «Trimite întrebarea „Vii?" înainte de acest eveniment» (§NNN; the owner, 2026-10-19: «I need to set how these emails are
+     * sent»): under «Acceptă răspunsuri „Vin!"», whether the day-before question (§818) is sent for THIS event. On for every event
+     * that exists and every one created after this column — the question goes out, as it did, unless the club unticks it for one
+     * date. It decides nothing else: «Vin!» on the page, the calendar and the count follow `rsvp_enabled` alone. Carried by a
+     * series, a duplicate and the JSON file like the profile tick (§805), the JSON written only when it is **off**.
+     */
+    rsvpAskEnabled: boolean("rsvp_ask_enabled").notNull().default(true),
     registrationOpensAt: timestamp("registration_opens_at", { withTimezone: true }),
     /**
      * «Înscrierile se deschid în curând» — announced, with no date yet (§451). While true, an

@@ -7059,7 +7059,9 @@
           "familySittingMinutes": "Emailul unei înscrieri de familie așteaptă „Gata” cel mult (minute)",
           "verificationRetryHours": "Linkul de confirmare a adresei se retrimite după (ore)",
           "verificationRetries": "De câte ori se retrimite linkul (0–3)",
-          "outageGraceMaxHours": "Ceasul termenelor stă pe loc cât site-ul nu poate fi accesat, cel mult (ore)"
+          "outageGraceMaxHours": "Ceasul termenelor stă pe loc cât site-ul nu poate fi accesat, cel mult (ore)",
+          "rsvpAskDaysBefore": "Întrebarea „Vii?” pleacă înainte de start cu (zile)",
+          "rsvpAskHour": "Întrebarea „Vii?” pleacă de la ora (0–23, ora clubului)"
         },
         "help": {
           "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră.",
@@ -7074,7 +7076,9 @@
           "familySittingMinutes": "După „Da, încă o persoană”, emailul familiei așteaptă „Gata” cel mult atâtea minute de la ultimul formular și pleacă o singură dată, pentru toți; la 0, fiecare email pleacă imediat.",
           "verificationRetryHours": "Socotit de când a plecat ultimul email de confirmare, către cine nu a confirmat încă. Termenul linkului nu se mută.",
           "verificationRetries": "Fiecare email de confirmare se socotește, și «Retrimite» sau o retrimitere din backoffice. 0 = nu se retrimite singur. Termenul nu se mută.",
-          "outageGraceMaxHours": "Cât numele nu se găsește, termenele care curg se mută la fiecare rulare; după o tăcere a verificărilor, ulterior. Cel mult atâtea ore; 0 = fără mutare, întreruperile se înregistrează totuși."
+          "outageGraceMaxHours": "Cât numele nu se găsește, termenele care curg se mută la fiecare rulare; după o tăcere a verificărilor, ulterior. Cel mult atâtea ore; 0 = fără mutare, întreruperile se înregistrează totuși.",
+          "rsvpAskDaysBefore": "0 = nu se trimite deloc. Cine a bifat tema ei primește un singur email, cu „Vin” și „Nu vin”. Un eveniment poate renunța la ea, în editor, la „Vin!”.",
+          "rsvpAskHour": "Ora clubului (Brașov) de la care pleacă, în ziua aleasă mai sus; emailul pleacă la prima trecere a jobului după ea. Miezul nopții e 0."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablon, care le citește de aici.",
         "updatedAt": "Setat {when}.",
@@ -7100,7 +7104,9 @@
           "seriesHorizonDays": "datele create cu {value} înainte",
           "publicListDays": "lista publică {value}",
           "familySittingMinutes": "emailul așteaptă {value}",
-          "outageGraceMaxHours": "mutare cel mult {value}"
+          "outageGraceMaxHours": "mutare cel mult {value}",
+          "rsvpAskDaysBefore": "„Vii?” cu {value} înainte",
+          "rsvpAskHour": "la {value}"
         },
         "shortZero": {
           "verificationRetries": "fără retrimiteri",
@@ -7108,7 +7114,8 @@
           "lastCallHours": "fără ultimă chemare",
           "raceWeekDays": "numărătoare inversă doar în ziua cursei",
           "familySittingMinutes": "emailul pleacă imediat",
-          "outageGraceMaxHours": "fără mutare"
+          "outageGraceMaxHours": "fără mutare",
+          "rsvpAskDaysBefore": "„Vii?” nu se trimite"
         },
         "groups": {
           "confirmation": {
@@ -7121,7 +7128,7 @@
           },
           "beforeStart": {
             "title": "Înainte de start",
-            "intro": "Ce pleacă și ce se deschide înainte de start: reminderul, ultima chemare la semnat, „Am ajuns” și numărătoarea inversă."
+            "intro": "Ce pleacă și ce se deschide înainte de start: reminderul, ultima chemare la semnat, întrebarea „Vii?”, „Am ajuns” și numărătoarea inversă."
           },
           "afterEvent": {
             "title": "După eveniment",

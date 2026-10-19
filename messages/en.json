@@ -7059,7 +7059,9 @@
           "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)",
           "verificationRetryHours": "The address-confirmation link is re-sent after (hours)",
           "verificationRetries": "How many times the link is re-sent (0–3)",
-          "outageGraceMaxHours": "The deadlines' clock stands still while the site cannot be reached, at most (hours)"
+          "outageGraceMaxHours": "The deadlines' clock stands still while the site cannot be reached, at most (hours)",
+          "rsvpAskDaysBefore": "The “Coming?” question is sent before the start by (days)",
+          "rsvpAskHour": "The “Coming?” question is sent from the hour (0–23, club time)"
         },
         "help": {
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses.",
@@ -7074,7 +7076,9 @@
           "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once.",
           "verificationRetryHours": "Counted from when the last confirmation email left, to whoever has not confirmed yet. The link's deadline does not move.",
           "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move.",
-          "outageGraceMaxHours": "While the name is not found, running deadlines move on every run; after a silence of the scheduled calls, afterwards. At most this many hours; 0 = no moving, the outages are still recorded."
+          "outageGraceMaxHours": "While the name is not found, running deadlines move on every run; after a silence of the scheduled calls, afterwards. At most this many hours; 0 = no moving, the outages are still recorded.",
+          "rsvpAskDaysBefore": "0 = never sent. Whoever ticked its topic gets one email, with “I'm coming” and “I'm not coming”. An event can opt out, in the editor, under “I'm coming!”.",
+          "rsvpAskHour": "The club's clock (Brașov): it leaves from this hour on the chosen day, on the job's first run after it. Midnight is 0."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -7100,7 +7104,9 @@
           "seriesHorizonDays": "dates created {value} ahead",
           "publicListDays": "public list {value}",
           "familySittingMinutes": "email waits {value}",
-          "outageGraceMaxHours": "moves by {value} at most"
+          "outageGraceMaxHours": "moves by {value} at most",
+          "rsvpAskDaysBefore": "“Coming?” {value} before",
+          "rsvpAskHour": "at {value}"
         },
         "shortZero": {
           "verificationRetries": "no re-sends",
@@ -7108,7 +7114,8 @@
           "lastCallHours": "no last call",
           "raceWeekDays": "countdown on race day only",
           "familySittingMinutes": "email leaves at once",
-          "outageGraceMaxHours": "no moving"
+          "outageGraceMaxHours": "no moving",
+          "rsvpAskDaysBefore": "“Coming?” is not sent"
         },
         "groups": {
           "confirmation": {
@@ -7121,7 +7128,7 @@
           },
           "beforeStart": {
             "title": "Before the start",
-            "intro": "What goes out and what opens before the start: the reminder, the last call to sign, “I have arrived” and the countdown."
+            "intro": "What goes out and what opens before the start: the reminder, the last call to sign, the “Coming?” question, “I have arrived” and the countdown."
           },
           "afterEvent": {
             "title": "After the event",

@@ -60,9 +60,12 @@ export const eventRsvps = pgTable(
 export type EventRsvp = typeof eventRsvps.$inferSelect;
 
 /** The two links of the message: «Da, vin» confirms the answer; «Nu vin / Nu mai vin» takes it back. */
-export const eventRsvpTokenPurpose = pgEnum("event_rsvp_token_purpose", ["RSVP_CONFIRM", "RSVP_WITHDRAW"]);
+export const eventRsvpTokenPurpose = pgEnum("event_rsvp_token_purpose", ["RSVP_CONFIRM", "RSVP_WITHDRAW", "RSVP_REFUSE"]);
 
 /**
+ * (`RSVP_REFUSE`, §NNN, is a third link, minted only in the «Vii?» question an earlier answerer receives: «Nu mă mai întreba la seria
+ * aceasta», lives until the event's start like «Nu vin».)
+ *
  * The «Vin!» links (§811) — the same secret and the same stored hash as every email action link (AGENTS.md
  * §12.8, §13.2; `action-tokens/domain/token-secret.ts`), in a table of their own because they belong to an
  * answer, which is not a participant (the newsletter's `newsletter_tokens` is the precedent, §445).
@@ -121,3 +124,28 @@ export const eventRsvpAsks = pgTable("event_rsvp_asks", {
 });
 
 export type EventRsvpAsk = typeof eventRsvpAsks.$inferSelect;
+
+/**
+ * «Nu mă mai întreba la seria aceasta» (§NNN): a person's refusal of the day-before question for a SERIES of events — the one press of
+ * the link an earlier answerer's question carries (`RSVP_REFUSE`). **By canonical address and series, not by event**: the club's
+ * «Vin!» answers are asked again at every date of a weekly run, so a refusal for one date would be asked again next week.
+ * `series_key` is the key the listing groups by (`events/domain/series.ts#seriesKey`: the type and the default-language title, as
+ * §523's declarations record it), so renaming a date takes it out of the series on purpose. UNIQUE on (address, series): the press
+ * is idempotent. The address is the versioned canonical form (AGENTS.md §10.4); nothing else is kept — no name, no event, no
+ * message. It is read by the question's queue and send (never asking a refuser, as an answerer OR as a subscriber of the topic),
+ * listed and erased with "all the data of a person" (`registrations/person-data.ts`), and swept once no event of the series is left
+ * (`jobs/retention.ts`: the row lives while the series does, and a series is gone when its last date's rows are).
+ */
+export const rsvpAskRefusals = pgTable(
+  "rsvp_ask_refusals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    canonicalEmail: text("canonical_email").notNull(),
+    canonicalizationVersion: integer("canonicalization_version").notNull(),
+    seriesKey: text("series_key").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique("rsvp_ask_refusals_email_series_unique").on(t.canonicalEmail, t.seriesKey)],
+);
+
+export type RsvpAskRefusal = typeof rsvpAskRefusals.$inferSelect;
