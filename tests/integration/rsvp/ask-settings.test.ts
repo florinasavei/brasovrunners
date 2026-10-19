@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
-import { eventRsvpAsks, eventRsvps, eventRsvpTokens, rsvpAskRefusals } from "@/db/schema/event-rsvps";
+import { eventRsvpAsks, eventRsvps, rsvpAskRefusals, rsvpRefuseTokens } from "@/db/schema/event-rsvps";
 import { eventTranslations, events } from "@/db/schema/events";
 import { newsletterSubscribers, type NewsletterTopic } from "@/db/schema/newsletter";
 import { staffUsers } from "@/db/schema/staff-users";
@@ -15,11 +15,11 @@ import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/temp
 import { OutboxMessageWithdrawn } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { viewPersonData } from "@/modules/registrations/person-data";
+import { eraseRsvpsOfPerson, viewPersonData } from "@/modules/registrations/person-data";
 import { readRsvpAskAudienceSetting, updateRsvpAskAudience } from "@/modules/rsvp/ask-audience";
 import { eventSeriesKey, refuseRsvpAsks } from "@/modules/rsvp/ask-refusal";
 import { queueRsvpAsks } from "@/modules/rsvp/ask";
-import { readRsvpLink } from "@/modules/rsvp/rsvp";
+import { confirmRsvp, readRsvpLink, withdrawRsvp } from "@/modules/rsvp/rsvp";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 vi.mock("@/modules/public-cache/cache", async (importOriginal) => ({
@@ -149,6 +149,9 @@ describe("§NNN the «Vii?» question's settings", () => {
   const rowsOf = (eventId: string) => db.select().from(eventRsvps).where(eq(eventRsvps.eventId, eventId));
   const refusals = () => db.select().from(rsvpAskRefusals);
   const linksOf = (text: string) => [...new Set([...text.matchAll(/\/(?:vin|coming)\/([A-Za-z0-9_-]{43})/g)].map((match) => match[1]))];
+  /** The link of one purpose in an email's text: the refusal link is a table of its own, so `readRsvpLink` names every one the same way. */
+  const linkOf = async (text: string, purpose: "RSVP_CONFIRM" | "RSVP_WITHDRAW" | "RSVP_REFUSE", at = NOW) =>
+    (await Promise.all(linksOf(text).map(async (link) => ((await readRsvpLink(db, link, at))?.purpose === purpose ? link : null)))).find((link) => link !== null)!;
   const purposesOf = async (text: string, at = NOW) => (await Promise.all(linksOf(text).map((link) => readRsvpLink(db, link, at)))).map((link) => link?.purpose).sort();
 
   /** A series of three dates of «Alergarea de duminică»: last week's, this Sunday's (asked about) and next week's. */
@@ -169,8 +172,11 @@ describe("§NNN the «Vii?» question's settings", () => {
       ).rejects.toThrow();
       await db.insert(rsvpAskRefusals).values({ canonicalEmail: "ana@example.test", canonicalizationVersion: 2, seriesKey: "GROUP_RUN\naltceva" });
       expect(await refusals()).toHaveLength(2);
-      const rsvp = await answered(event.id, "ana@example.test");
-      await db.insert(eventRsvpTokens).values({ rsvpId: rsvp.id, purpose: "RSVP_REFUSE", tokenHash: "f".repeat(64), createdAt: NOW, expiresAt: STARTS_AT });
+      // The refusal link is a table of its own — no key to an answer — with one row per hash.
+      const link = { eventId: event.id, locale: "ro" as const, canonicalEmail: "ana@example.test", canonicalizationVersion: 2, seriesKey: "GROUP_RUN\nalergarea", createdAt: NOW, expiresAt: STARTS_AT };
+      await db.insert(rsvpRefuseTokens).values({ ...link, tokenHash: "f".repeat(64) });
+      await expect(db.insert(rsvpRefuseTokens).values({ ...link, tokenHash: "f".repeat(64) })).rejects.toThrow();
+      await expect(db.insert(rsvpRefuseTokens).values({ ...link, tokenHash: "not-a-hash" })).rejects.toThrow();
     });
   });
 
@@ -210,6 +216,22 @@ describe("§NNN the «Vii?» question's settings", () => {
   });
 
   describe("how many days before, and at what hour", () => {
+    it("keeps the question's «Vin» alive until the start when the question went out three days ahead: a press on the evening before still counts", async () => {
+      const event = await seedEvent();
+      await subscribe("ana@example.test", ["RSVP_ASK"]);
+      await setDeadlines({ rsvpAskDaysBefore: 3, rsvpAskHour: 8 });
+      // Thursday 2026-10-15, 08:00 club time (summer time, UTC+3): the run is on Sunday 10:00.
+      const sent = new Date("2026-10-15T05:00:00.000Z");
+      expect(await queueRsvpAsks(db, sent)).toBe(1);
+      const message = await renderOutboxMessage((await asks())[0], db, sent);
+      const confirm = await linkOf(message.text, "RSVP_CONFIRM", sent);
+      // Sixty hours later is Saturday 17:00 club time: past the 48 hours of a confirmation message, before the start.
+      const evening = new Date(sent.getTime() + 60 * HOUR);
+      expect(await readRsvpLink(db, confirm, evening)).toMatchObject({ purpose: "RSVP_CONFIRM", state: "live" });
+      expect(await confirmRsvp(db, confirm, evening)).not.toBeNull();
+      expect(await rowsOf(event.id)).toEqual([expect.objectContaining({ canonicalEmail: "ana@example.test", confirmedAt: evening })]);
+    });
+
     it("asks three days before at the club's hour, not a minute earlier, and says «peste 3 zile» in the email", async () => {
       await seedEvent();
       await subscribe("ana@example.test", ["RSVP_ASK"]);
@@ -306,6 +328,35 @@ describe("§NNN the «Vii?» question's settings", () => {
       await answered((await db.select().from(events).where(eq(events.startsAt, EARLIER)))[0].id, "dan@example.test", { privacyNoticeVersion: 2 });
       expect(await queueRsvpAsks(db, new Date(NOW.getTime() + 2 * HOUR))).toBe(1);
       expect((await asks()).map((row) => row.recipientEmail)).toEqual(["dan@example.test"]);
+    });
+
+    it("does not ask, as an earlier answerer, someone whose «Vin» came from a subscriber's question and who has left the topic since — in the queue and at the send", async () => {
+      const { earlier } = await seedSeries();
+      const askedAt = new Date(EARLIER.getTime() - 3 * HOUR);
+      const ana = await subscribe("ana@example.test", ["RSVP_ASK"]);
+      await answered(earlier.id, "ana@example.test", { askedAt, askedBasis: "SUBSCRIBER" });
+      // Ion said «Vin» in an answerers' question: no subscription to keep. Eva pressed «Vin» in a subscriber's question and is no subscriber now.
+      await answered(earlier.id, "ion@example.test", { askedAt, askedBasis: "ANSWERER" });
+      await answered(earlier.id, "eva@example.test", { askedAt, askedBasis: "SUBSCRIBER" });
+      await setAudience("ANSWERERS");
+      expect(await queueRsvpAsks(db, NOW)).toBe(2);
+      const queued = await asks();
+      expect(queued.map((row) => row.recipientEmail)).toEqual(["ana@example.test", "ion@example.test"]);
+
+      // Ana unticks the topic after the queue: the send withdraws her message, and tomorrow's queue never lists her.
+      await db.update(newsletterSubscribers).set({ topics: ["RESULTS_PHOTOS"] }).where(eq(newsletterSubscribers.id, ana.id));
+      await expect(renderOutboxMessage(queued[0], db, NOW)).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
+      await db.delete(emailOutbox);
+      await db.delete(eventRsvpAsks);
+      expect(await queueRsvpAsks(db, NOW)).toBe(1);
+      expect((await asks()).map((row) => row.recipientEmail)).toEqual(["ion@example.test"]);
+
+      // Under BOTH she is neither a subscriber nor an answerer.
+      await db.delete(emailOutbox);
+      await db.delete(eventRsvpAsks);
+      await setAudience("BOTH");
+      expect(await queueRsvpAsks(db, NOW)).toBe(1);
+      expect((await asks()).map((row) => row.recipientEmail)).toEqual(["ion@example.test"]);
     });
 
     it("keeps the subscribers' list as it was when the club chose the answerers and the notice is silent about them under BOTH", async () => {
@@ -426,8 +477,41 @@ describe("§NNN the «Vii?» question's settings", () => {
       expect(await rowsOf(earlier.id)).toHaveLength(1);
       expect(await refuseRsvpAsks(db, refuse, new Date(NOW.getTime() + 2 * HOUR))).toBeNull();
       expect(await refusals()).toHaveLength(1);
-      // The row the question made went with its links: the page says «invalid», not an error.
-      expect(await readRsvpLink(db, refuse, new Date(NOW.getTime() + 2 * HOUR))).toBeNull();
+      // The link is spent: its page says so (never an error).
+      expect(await readRsvpLink(db, refuse, new Date(NOW.getTime() + 2 * HOUR))).toMatchObject({ purpose: "RSVP_REFUSE", state: "used" });
+    });
+
+    it("still records the refusal after «Nu vin» in the same email deleted the answer row the question made", async () => {
+      const { message, current, later } = await askedOfAnswerer();
+      const withdraw = await linkOf(message.text, "RSVP_WITHDRAW");
+      const refuse = await linkOf(message.text, "RSVP_REFUSE");
+      expect(await withdrawRsvp(db, { token: withdraw }, new Date(NOW.getTime() + HOUR))).not.toBeNull();
+      expect(await rowsOf(current.id)).toHaveLength(0);
+      // The row is gone and its links with it; the refusal link has its own table and is live.
+      expect(await readRsvpLink(db, withdraw, NOW)).toBeNull();
+      expect(await readRsvpLink(db, refuse, new Date(NOW.getTime() + HOUR))).toMatchObject({ purpose: "RSVP_REFUSE", state: "live", eventId: current.id });
+      expect(await refuseRsvpAsks(db, refuse, new Date(NOW.getTime() + 2 * HOUR))).toMatchObject({ eventId: current.id, locale: "ro" });
+      expect(await refusals()).toEqual([expect.objectContaining({ canonicalEmail: "ana@example.test", seriesKey: await eventSeriesKey(db, current.id) })]);
+      // Next week's date does not ask her, though her earlier answer still stands.
+      expect(await queueRsvpAsks(db, new Date("2026-10-24T06:00:00.000Z"))).toBe(0);
+      expect((await askRows()).filter((row) => row.eventId === later.id)).toEqual([expect.objectContaining({ recipients: 0 })]);
+    });
+
+    it("records the refusal when the link is pressed after the event started, for sixty days, and not after", async () => {
+      const { message, current } = await askedOfAnswerer();
+      const refuse = await linkOf(message.text, "RSVP_REFUSE");
+      const afterTheRun = new Date(STARTS_AT.getTime() + 3 * HOUR);
+      expect(await readRsvpLink(db, refuse, afterTheRun)).toMatchObject({ purpose: "RSVP_REFUSE", state: "live" });
+      expect(await refuseRsvpAsks(db, refuse, afterTheRun)).toMatchObject({ eventId: current.id });
+      expect(await refusals()).toHaveLength(1);
+
+      // A link nobody pressed lives sixty days after the start and then answers «expired» and records nothing.
+      await db.delete(rsvpAskRefusals);
+      await db.update(rsvpRefuseTokens).set({ usedAt: null });
+      const late = new Date(STARTS_AT.getTime() + 61 * DAY);
+      expect(await readRsvpLink(db, refuse, late)).toMatchObject({ purpose: "RSVP_REFUSE", state: "expired" });
+      expect(await refuseRsvpAsks(db, refuse, late)).toBeNull();
+      expect(await refusals()).toHaveLength(0);
     });
 
     it("never asks the person again for that series — the next date, as an answerer or as a subscriber — while another series still asks them", async () => {
@@ -485,6 +569,42 @@ describe("§NNN the «Vii?» question's settings", () => {
       const late = new Date(LATER.getTime() + 366 * DAY);
       expect((await pruneExpiredRows(db, late)).rsvpAskRefusals).toBe(1);
       expect(await refusals()).toHaveLength(0);
+    });
+
+    it("keeps a still-unanswered row the question made past seven days, sweeps a typed unconfirmed one, and sweeps the refusal links once spent or expired", async () => {
+      const event = await seedEvent();
+      const old = new Date(NOW.getTime() - 8 * DAY);
+      // A question sent a week ahead leaves a row nobody has pressed yet; an address typed on the page and never confirmed is a stranger's typing.
+      await answered(event.id, "asked@example.test", { confirmedAt: null, askedAt: old, askedBasis: "SUBSCRIBER", createdAt: old });
+      await answered(event.id, "typed@example.test", { confirmedAt: null, createdAt: old });
+      const link = { eventId: event.id, locale: "ro" as const, canonicalEmail: "ana@example.test", canonicalizationVersion: 2, seriesKey: "GROUP_RUN\nalergarea" };
+      await db.insert(rsvpRefuseTokens).values([
+        { ...link, tokenHash: "a".repeat(64), createdAt: new Date(NOW.getTime() - DAY), expiresAt: new Date(NOW.getTime() + DAY) },
+        { ...link, tokenHash: "b".repeat(64), createdAt: new Date(NOW.getTime() - DAY), expiresAt: new Date(NOW.getTime() + DAY), usedAt: NOW },
+        { ...link, tokenHash: "c".repeat(64), createdAt: new Date(NOW.getTime() - 70 * DAY), expiresAt: new Date(NOW.getTime() - HOUR) },
+      ]);
+      const counts = await pruneExpiredRows(db, NOW);
+      expect(counts.rsvps).toBe(1);
+      expect((await rowsOf(event.id)).map((row) => row.canonicalEmail)).toEqual(["asked@example.test"]);
+      expect(counts.rsvpRefuseTokens).toBe(2);
+      expect((await db.select().from(rsvpRefuseTokens)).map((row) => row.tokenHash)).toEqual(["a".repeat(64)]);
+      // Once the event has started the unanswered row goes like any other.
+      expect((await pruneExpiredRows(db, new Date(STARTS_AT.getTime() + HOUR))).rsvps).toBe(1);
+      expect(await rowsOf(event.id)).toHaveLength(0);
+    });
+
+    it("erases the refusal links with the answers and leaves the refusal itself", async () => {
+      const { current } = await seedSeries();
+      const key = await eventSeriesKey(db, current.id);
+      await db.insert(rsvpAskRefusals).values({ canonicalEmail: "ana@example.test", canonicalizationVersion: 2, seriesKey: key });
+      const link = { eventId: current.id, locale: "ro" as const, canonicalizationVersion: 2, seriesKey: key, createdAt: NOW, expiresAt: STARTS_AT };
+      await db.insert(rsvpRefuseTokens).values([
+        { ...link, canonicalEmail: "ana@example.test", tokenHash: "d".repeat(64) },
+        { ...link, canonicalEmail: "ion@example.test", tokenHash: "e".repeat(64) },
+      ]);
+      await eraseRsvpsOfPerson(db, await admin(), "ana@example.test", NOW);
+      expect((await db.select().from(rsvpRefuseTokens)).map((row) => row.canonicalEmail)).toEqual(["ion@example.test"]);
+      expect(await refusals()).toHaveLength(1);
     });
 
     it("lists a person's refusals in everything held about them, and an erase of the answers leaves the refusal where it is", async () => {

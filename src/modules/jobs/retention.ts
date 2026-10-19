@@ -4,7 +4,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventResults } from "@/db/schema/event-results";
-import { eventRsvpAsks, eventRsvps, rsvpAskRefusals } from "@/db/schema/event-rsvps";
+import { eventRsvpAsks, eventRsvps, rsvpAskRefusals, rsvpRefuseTokens } from "@/db/schema/event-rsvps";
 import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -201,6 +201,8 @@ export type PruneCounts = {
   rsvpAsks: number;
   /** Refusals of the «Vii?» question for a series gone a year (§NNN): an address and a series' key. */
   rsvpAskRefusals: number;
+  /** «Nu mă mai întreba» links spent or past their life (§NNN): an address, a series' key and the hash of a secret. */
+  rsvpRefuseTokens: number;
   /** Remembered browsers past their year (§811). */
   personSessions: number;
 };
@@ -226,6 +228,7 @@ export const PRUNE_STEPS = [
   "volunteers",
   "event-results",
   "rsvps",
+  "rsvp-ask-refusals",
   "person-sessions",
 ] as const;
 export type PruneStep = (typeof PRUNE_STEPS)[number];
@@ -309,6 +312,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     rsvps: 0,
     rsvpAsks: 0,
     rsvpAskRefusals: 0,
+    rsvpRefuseTokens: 0,
     personSessions: 0,
   };
   const failures: PruneFailure[] = [];
@@ -708,7 +712,9 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     The answer «Vin!» (§811): an address and, if the person ticked it, a name — kept to count and show who comes, and for nothing else.
     Three windows, one statement (`event_rsvp_tokens` go with their answer, `on delete cascade`): thirty days after the event's end (its
     start when it has none), seven days after the typing for an answer whose address never used the emailed link, and at once — at the next
-    run — for an event that was cancelled. The privacy notice's section 7 says exactly this. The row's own age is NOT asked for the
+    run — for an event that was cancelled. **A row the «Vii?» question made** (§NNN, `asked_at`) **leaves after the seven days only once its
+    event has started**: the club may send the question a week ahead, so a still-unanswered row would otherwise be swept hours before the
+    event, taking the person's «Nu vin» with it. The privacy notice's section 7 says exactly this. The row's own age is NOT asked for the
     first window, unlike the volunteers': an answer can only be given before the start, so it is never newer than the event. Nothing
     public shows a cancelled or finished event's count (the gate is closed), so no cache needs telling.
   */
@@ -717,12 +723,17 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .select({ id: events.id })
       .from(events)
       .where(or(eq(events.eventStatus, "CANCELLED"), sql`coalesce(${events.endsAt}, ${events.startsAt}) < ${daysBefore(now, RETENTION.rsvpDaysAfterEvent).toISOString()}::timestamptz`));
+    const started = tx.select({ id: events.id }).from(events).where(lt(events.startsAt, now));
     const deleted = await tx
       .delete(eventRsvps)
       .where(
         or(
           inArray(eventRsvps.eventId, finished),
-          and(isNull(eventRsvps.confirmedAt), lt(eventRsvps.createdAt, daysBefore(now, RETENTION.rsvpUnconfirmedDays))),
+          and(
+            isNull(eventRsvps.confirmedAt),
+            lt(eventRsvps.createdAt, daysBefore(now, RETENTION.rsvpUnconfirmedDays)),
+            or(isNull(eventRsvps.askedAt), inArray(eventRsvps.eventId, started)),
+          ),
         ),
       )
       .returning({ id: eventRsvps.id });
@@ -738,6 +749,19 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .where(sql`coalesce(${events.endsAt}, ${events.startsAt}) < ${daysBefore(now, RETENTION.rsvpDaysAfterEvent).toISOString()}::timestamptz`);
     const askDeleted = await tx.delete(eventRsvpAsks).where(inArray(eventRsvpAsks.eventId, over)).returning({ id: eventRsvpAsks.id });
     counts.rsvpAsks = askDeleted.length;
+  });
+
+  /*
+    The refusal's own rows (§NNN), a step of their own so that a failure here never rolls back the answers' thirty-day deletion above.
+    First the links: «Nu mă mai întreba» (`rsvp_refuse_tokens`) is dead once spent or past its life (sixty days after the event's start), and
+    holds an address until then. Then the refusals themselves.
+  */
+  await step("rsvp-ask-refusals", async (tx) => {
+    const tokens = await tx
+      .delete(rsvpRefuseTokens)
+      .where(or(isNotNull(rsvpRefuseTokens.usedAt), lt(rsvpRefuseTokens.expiresAt, now)))
+      .returning({ id: rsvpRefuseTokens.id });
+    counts.rsvpRefuseTokens = tokens.length;
     /*
       A refusal of the question for a series (§NNN) lives while its series does and a year after the series' last date
       (`rsvpAskRefusalDaysAfterSeries`). A series is not a row — the listing groups events by type and default-language title
@@ -799,6 +823,7 @@ export function totalPruned(counts: PruneCounts): number {
     counts.rsvps +
     counts.rsvpAsks +
     counts.rsvpAskRefusals +
+    counts.rsvpRefuseTokens +
     counts.personSessions
   );
 }

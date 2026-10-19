@@ -3,7 +3,7 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventResults } from "@/db/schema/event-results";
-import { eventRsvps, rsvpAskRefusals } from "@/db/schema/event-rsvps";
+import { eventRsvps, rsvpAskRefusals, rsvpRefuseTokens } from "@/db/schema/event-rsvps";
 import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -614,6 +614,8 @@ export async function eraseRsvpsOfPerson<T extends Record<string, unknown>>(
   const counts = await db.transaction(async (tx) => {
     const answers = await tx.delete(eventRsvps).where(eq(eventRsvps.canonicalEmail, canonicalEmail)).returning({ id: eventRsvps.id });
     const browsers = await tx.delete(personSessions).where(eq(personSessions.canonicalEmail, canonicalEmail)).returning({ id: personSessions.id });
+    // The «Nu mă mai întreba» links hold the address too (§NNN): they go with the answers. The refusals themselves stay — they are the objection.
+    await tx.delete(rsvpRefuseTokens).where(eq(rsvpRefuseTokens.canonicalEmail, canonicalEmail));
     const result = { answers: answers.length, browsers: browsers.length };
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
