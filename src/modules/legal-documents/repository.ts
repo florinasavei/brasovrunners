@@ -38,6 +38,7 @@ import {
   describesPromotionalMaterialsShared,
   describesResults,
   describesRsvp,
+  describesRsvpAsk,
   describesTeamPage,
   MINIMUM_AGE_MERGE_FIELD,
   mergeFieldsIn,
@@ -397,6 +398,18 @@ export async function noticeDescribesResults<T extends Record<string, unknown>>(
 export async function noticeDescribesRsvp<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesRsvp(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes the day-before question «Vii mâine?» (§NNN, `describesRsvpAsk`) — in every language,
+ * AND «Vin!» itself (`describesRsvp`), because the question writes a «Vin!» row from the subscriber's address. False while either is
+ * silent. For the queue, the send, the topic's box on the manage page and `/admin/tasks`; the pop-up reads the cached twin
+ * (`cachedRsvpAskDescribed`). A notice approved before the marker existed still lists the topic in `{{newsletterTopics}}` (filled
+ * when the notice is shown), and still asks nobody: the club approves the marker.
+ */
+export async function noticeDescribesRsvpAsk<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesRsvp(notice.body) && describesRsvpAsk(notice.body));
 }
 
 /**

@@ -3619,7 +3619,8 @@
         "volunteerGuardian": "Doar în contractul de voluntariat: numele părintelui sau tutorelui unui voluntar minor. La un adult, propoziția dispare. Fără el în contractul în vigoare, nu se primesc minori",
         "volunteerMinors": "Doar în nota de confidențialitate: casetele părintelui din formularul de voluntari, între ghilimele; fără el, clubul nu primește voluntari sub 18 ani",
         "results": "Numele secțiunii „Clasament”, între ghilimele, în nota de confidențialitate și în termeni. Cu el în ambele texte în vigoare, un administrator poate publica clasamentul, iar pagina cursei îl arată",
-        "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin"
+        "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin",
+        "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc ziua dinainte întrebarea „Vii?”."
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4665,6 +4666,16 @@
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunile 4, 5, 7 și 10 descriu răspunsurile „Vin!” și browserul recunoscut.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi.",
             "Termenii nu se schimbă: „Vin!” nu cumpără, nu rezervă și nu semnează nimic."
+          ]
+        },
+        "rsvpAskNotice": {
+          "title": "Nota de confidențialitate: întrebarea „Vii mâine?”",
+          "todo": "Un eveniment primește răspunsuri „Vin!”, dar nota în vigoare nu descrie încă întrebarea de ziua dinainte, așa că abonații nu sunt întrebați, iar căsuța temei nu apare la abonare.",
+          "done": "Nota în vigoare descrie întrebarea de ziua dinainte: abonații temei și cei de la „Toate noutățile” primesc un singur e-mail cu „Vin” și „Nu vin”.",
+          "how": [
+            "Înainte de aprobare, citește cu un avocat cele două paragrafe din șablon, din secțiunea 5: cel despre „Vin!” (adresa abonatului devine răspuns neconfirmat la trimitere) și cel despre newsletter.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Tema apare în nota în vigoare, prin lista temelor, încă de la lansare; întrebarea pleacă abia după nota nouă.",
+            "Deschide ciorna, citește, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi."
           ]
         }
       },
@@ -6246,6 +6257,7 @@
       "rsvpNotice": "nota v{version}",
       "rsvpConfirmedAt": "confirmat {when}",
       "rsvpUnconfirmed": "neconfirmat",
+      "rsvpAsked": "întrebat {when}, fără răspuns",
       "browserUsed": "folosit {when}",
       "browserUntil": "până {when}",
       "rsvpsErase": "Șterge răspunsurile „Vin!” și browserele",
@@ -6396,7 +6408,8 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Ai acceptat contractul de voluntariat",
         "VOLUNTEER_ROLE_ASSIGNED": "Rolul tău de voluntar",
         "VOLUNTEER_GUARDIAN_REQUEST": "Acordul tău pentru un voluntar minor",
-        "RSVP_CONFIRM": "Confirmă că vii („Vin!”)"
+        "RSVP_CONFIRM": "Confirmă că vii („Vin!”)",
+        "RSVP_ASK": "Vii mâine? („Vin” / „Nu vin”)"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirmă adresa",
@@ -6466,7 +6479,8 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Când un voluntar acceptă contractul din link sau un organizator apasă „Semnat pe hârtie”: copia lui, cu contractul atașat ca PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "Când organizatorii îi dau unui voluntar un rol, din cardul «Voluntari» al evenimentului: un mesaj scurt care numește rolul, data și locul. Nimic de apăsat.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Când un voluntar sub 18 ani se oferă, sau un organizator apasă „Trimite linkul părintelui”: contractul și linkul prin care părintele îl acceptă în nume propriu.",
-        "RSVP_CONFIRM": "Când cineva scrie o adresă la „Vin!” pe pagina unui eveniment: butonul „Da, vin”, care îl numără, și dedesubt „Nu vin”. La „Nu mai vin” de pe pagină pleacă același mesaj, doar cu linkul de retragere."
+        "RSVP_CONFIRM": "Când cineva scrie o adresă la „Vin!” pe pagina unui eveniment: butonul „Da, vin”, care îl numără, și dedesubt „Nu vin”. La „Nu mai vin” de pe pagină pleacă același mesaj, doar cu linkul de retragere.",
+        "RSVP_ASK": "Ziua dinainte, de la ora {askHour}: abonaților temei „Întrebarea «Vii?» înaintea alergărilor” și celor de la „Toate noutățile”, cu „Vin” (îi numără) și „Nu vin”. Cine a răspuns nu mai primește."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -6511,7 +6525,8 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "după link sau „Semnat pe hârtie”",
         "VOLUNTEER_ROLE_ASSIGNED": "când organizatorii dau un rol",
         "VOLUNTEER_GUARDIAN_REQUEST": "când se oferă un voluntar sub 18 ani",
-        "RSVP_CONFIRM": "când cineva spune „Vin!”, către adresa lui"
+        "RSVP_CONFIRM": "când cineva spune „Vin!”, către adresa lui",
+        "RSVP_ASK": "ziua dinainte, de la ora {askHour}, către abonații temei"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -7221,7 +7236,8 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Rolul și evenimentul se adaugă singure. PDF-ul arată textul acceptat, cu numele, rolul, momentul și amprenta lui.",
         "VOLUNTEER_ROLE_ASSIGNED": "Rolul, data și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Voluntarul și evenimentul se adaugă singure. Linkul e doar pentru părinte sau tutore, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
-        "RSVP_CONFIRM": "Cel mult un mesaj la 10 minute pe adresă. Linkurile sunt doar pentru această adresă, merg o singură dată și le înlocuiește mesajul nou. Cine e deja numărat primește doar „Nu mai vin”."
+        "RSVP_CONFIRM": "Cel mult un mesaj la 10 minute pe adresă. Linkurile sunt doar pentru această adresă, merg o singură dată și le înlocuiește mesajul nou. Cine e deja numărat primește doar „Nu mai vin”.",
+        "RSVP_ASK": "O singură dată pe eveniment; unul bifat abia în ziua lui nu se mai întreabă. Pleacă prin „Newsletter”, la coada rândului; ce n-a plecat până la miezul nopții se anulează."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0.",
@@ -12436,7 +12452,8 @@
       "SPECIAL_EVENTS": "Evenimente speciale",
       "WEEKLY_RUNS": "Alergările săptămânale",
       "VOLUNTEERING": "Voluntariat",
-      "RESULTS_PHOTOS": "Rezultate și poze"
+      "RESULTS_PHOTOS": "Rezultate și poze",
+      "RSVP_ASK": "Întrebarea «Vii?» înaintea alergărilor"
     },
     "topicHints": {
       "ALL": "Toate temele de mai jos și cele pe care le vom adăuga.",
@@ -12445,7 +12462,8 @@
       "SPECIAL_EVENTS": "Ediții speciale, alergări tematice, evenimente făcute împreună cu alți organizatori și evenimentele altor organizatori.",
       "WEEKLY_RUNS": "Un anunț când pornește o serie nouă de alergări săptămânale — o dată pe serie, nu la fiecare alergare.",
       "VOLUNTEERING": "Când avem nevoie de ajutor la concursuri: masa de ridicare a kitului, traseu, fotografii.",
-      "RESULTS_PHOTOS": "Rezultatele și albumele de poze de după evenimente."
+      "RESULTS_PHOTOS": "Rezultatele și albumele de poze de după evenimente.",
+      "RSVP_ASK": "În ziua dinainte de un eveniment la care clubul numără cine vine, un singur email cu două butoane: „Vin” sau „Nu vin”."
     },
     "heading": "Noutățile clubului pe email",
     "intro": "Alege temele care te interesează și îți scriem doar despre ele.",
@@ -12851,6 +12869,13 @@
     "withdrawDoneNoEvent": "Gata, ți-am șters răspunsul.",
     "withdrawnTitle": "Răspuns șters",
     "invalidExpired": "Linkul a fost valabil doar un timp, iar acesta a trecut. Evenimentul nu a început încă: poți răspunde din nou de pe pagina lui.",
-    "withdrawRememberNote": "Și după „Nu mai vin”, browserul tău rămâne recunoscut un an: la alte evenimente, „Vin!” e o singură apăsare. Pe pagina evenimentului, „Nu sunt eu” îl uită."
+    "withdrawRememberNote": "Și după „Nu mai vin”, browserul tău rămâne recunoscut un an: la alte evenimente, „Vin!” e o singură apăsare. Pe pagina evenimentului, „Nu sunt eu” îl uită.",
+    "askTitle": "Vii?",
+    "askIntro": "Vii la {event}? O apăsare și te numărăm.",
+    "askNoTitle": "Nu vii?",
+    "askNoIntro": "Nu vii la {event}? Apasă butonul și nu te numărăm.",
+    "askNoButton": "Nu vin",
+    "askNoDoneTitle": "Am înțeles",
+    "askNoDone": "Bine, nu te numărăm. Poți răspunde altfel până la start."
   }
 }

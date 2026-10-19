@@ -60,6 +60,7 @@ export type TaskId =
   | "listNumbersNotice"
   | "resultsNotice"
   | "rsvpNotice"
+  | "rsvpAskNotice"
   | "resultsTerms"
   | "invitationsNotice"
   | "promoNotice"
@@ -117,6 +118,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   listNumbersNotice: "text",
   resultsNotice: "text",
   rsvpNotice: "text",
+  rsvpAskNotice: "text",
   resultsTerms: "text",
   invitationsNotice: "text",
   promoNotice: "text",
@@ -254,6 +256,12 @@ export type OwnerTaskInputs = {
    * offers the answer or shows a count, whatever the club ticked.
    */
   rsvpDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe «Vin!» AND the day-before question «Vii mâine?» (§NNN, `noticeDescribesRsvpAsk`)?
+   * Until it does, no subscriber is asked and the pop-up offers no such topic, whatever the club ticked; the topic is named in a notice
+   * approved before only by `{{newsletterTopics}}`, which asks nobody.
+   */
+  rsvpAskDescribed: boolean;
   /** How many upcoming turn-up events the club ticked «Acceptă răspunsuri „Vin!”» on (`countRsvpEvents`): the row waits only while there is one. */
   rsvpEvents: number;
   /**
@@ -615,6 +623,17 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       push("rsvpNotice", {
         owner: "club",
         state: input.rsvpDescribed ? "done" : "open",
+      });
+    }
+    /*
+      The day-before question «Vii mâine?» (§NNN), the same shape: open while an upcoming event is ticked and the notice in force does not
+      name `{{rsvpAsk}}` (nobody is asked, though the club ticked the box), done by itself the day a notice naming it takes effect, absent
+      while no event is ticked and the notice is silent. Never blocking.
+    */
+    if (input.rsvpAskDescribed || input.rsvpEvents > 0) {
+      push("rsvpAskNotice", {
+        owner: "club",
+        state: input.rsvpAskDescribed ? "done" : "open",
       });
     }
     /*

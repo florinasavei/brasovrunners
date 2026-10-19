@@ -2501,6 +2501,13 @@ turns on event by event. Two steps are the club's.
    run; a remembered browser a year after its last answer). «Toate datele unei persoane» (`/admin/registrations/person`) lists a person's answers and
    browsers, counts them in the JSON export, and an Administrator can **«Șterge răspunsurile „Vin!” și browserele»** on request — one audit row with the
    counts, never the address.
-6. **Not built here.** The «Vii?» email before each event with a personal
-   «Vin» / «Nu vin»; the one-tap answer from the members' zone. They call the same service (`answerRsvp` with an identity of source `link` or `account`)
-   and the same gate (`rsvpOffered`).
+6. **Not built here.** The one-tap answer from the members' zone. It calls the same service (`answerRsvp` with an identity of source `account`) and the same gate (`rsvpOffered`).
+7. **The «Vii?» email (`DECISIONS.md` §NNN).** One step for the club: **approve the privacy notice again from the template** (`/admin/legal` → «Pornește de la șablon»; a lawyer
+   reads section 5's two paragraphs first — the newsletter's, which now says the automatic question the day before, and «Vin!»'s, which says the subscriber's address is written as
+   an unconfirmed answer when the question is sent and deleted at «Nu vin» or after 7 days). Until a notice naming `{{rsvpAsk}}` (and `{{rsvp}}`) is in force, in both languages, **nobody is asked**
+   and the topic's box does not show in the pop-up or on the subscriber's page; `/admin/tasks` carries the row `rsvpAskNotice` while an upcoming event is ticked. Note that the topic's *name*
+   is listed in the notice in force at once, because `{{newsletterTopics}}` is filled when the notice is shown: that names the topic, it does not switch the question on.
+   After that: a newsletter subscriber who ticks the topic **«Întrebarea «Vii?» înaintea alergărilor»** (or «Toate noutățile») gets, the day before a ticked event, from 08:00 club time,
+   one email «Vii mâine la …?» with the two buttons **«Vin»** (then «Da, vin» on the page that opens; counts them, no second email) and **«Nu vin»** (counts nobody, and the browser is not
+   remembered) — once per event, never for an event ticked only on its own day, never to someone already counted, and not sent at all if it would arrive after midnight. It leaves
+   by the newsletter's road, last in line, so it never spends the share kept for registrations' links. No organizer writes for the topic.

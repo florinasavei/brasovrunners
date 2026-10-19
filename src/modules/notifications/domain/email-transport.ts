@@ -34,8 +34,8 @@ export type EmailTransport = (typeof EMAIL_TRANSPORTS)[number];
  * - **club** (D) — mail to the club's own mailboxes: the club's copies, the declaration archive,
  *   "somebody confirmed", a colleague's invitation. To people who know the sender: Gmail's case.
  * - **newsletter** (E) — the newsletter's own mail (§445): the subscription's confirmation link,
- *   a newsletter the club writes on `/admin/newsletter`, and the new-event alert — to people who
- *   asked for the club's news, never about a registration.
+ *   a newsletter the club writes on `/admin/newsletter`, the new-event alert and the day-before
+ *   «Vii?» question (§NNN) — to people who asked for the club's news, never about a registration.
  */
 export const EMAIL_GROUPS = ["links", "confirmations", "reminders", "announcements", "club", "newsletter"] as const;
 export type EmailGroup = (typeof EMAIL_GROUPS)[number];
@@ -102,6 +102,10 @@ export const EMAIL_GROUP_OF: Readonly<Record<Exclude<EmailMessageType, RelayMess
   NEWSLETTER_CONFIRM: "newsletter",
   NEWSLETTER: "newsletter",
   NEW_EVENT_ALERT: "newsletter",
+  // «Vii mâine la …?» (§NNN): one message per subscriber of a topic, the new-event alert's shape — so the newsletter's group (Mailgun) and
+  // the bulk road (`BULK_MESSAGE_TYPES`: last in line, the reserve kept for registrations' links, never spilled to the club's Gmail). A
+  // question still unsent when its window closes is withdrawn at the send (`prepareRsvpAsk`), not sent late.
+  RSVP_ASK: "newsletter",
 };
 
 /**

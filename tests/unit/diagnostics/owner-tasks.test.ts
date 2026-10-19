@@ -30,6 +30,7 @@ const LAUNCHED: OwnerTaskInputs = {
   listNumbersDescribed: true,
   resultsDescribed: true,
   rsvpDescribed: true,
+  rsvpAskDescribed: true,
   rsvpEvents: 0,
   resultsTermsDescribed: true,
   invitationsDescribed: true,
@@ -129,6 +130,14 @@ describe("owner tasks", () => {
     expect(stateOf({ ...LAUNCHED, rsvpDescribed: true, rsvpEvents: 2 }, "rsvpNotice")).toBe("done");
     expect(stateOf({ ...LAUNCHED, rsvpDescribed: true, rsvpEvents: 0 }, "rsvpNotice")).toBe("done");
     expect(ownerTasks({ ...LAUNCHED, rsvpDescribed: false, rsvpEvents: 0 }).some((task) => task.id === "rsvpNotice")).toBe(false);
+  });
+
+  /** §NNN — the day-before question waits on the notice too: open while an upcoming event is ticked and `{{rsvpAsk}}` is not named, done once it is, absent when nothing is ticked and the notice is silent. */
+  it("keeps the «Vii mâine?» row open while a ticked event waits for the notice naming the question, and absent when nothing is ticked", () => {
+    expect(stateOf({ ...LAUNCHED, rsvpAskDescribed: false, rsvpEvents: 2 }, "rsvpAskNotice")).toBe("open");
+    expect(stateOf({ ...LAUNCHED, rsvpAskDescribed: true, rsvpEvents: 2 }, "rsvpAskNotice")).toBe("done");
+    expect(stateOf({ ...LAUNCHED, rsvpAskDescribed: true, rsvpEvents: 0 }, "rsvpAskNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, rsvpAskDescribed: false, rsvpEvents: 0 }).some((task) => task.id === "rsvpAskNotice")).toBe(false);
   });
 
   /** §808 — a race's published results wait on the club's notice: open until it names `{{results}}`, never blocking, and no row without a notice at all. */
@@ -572,6 +581,7 @@ describe("owner tasks", () => {
       "listNumbersNotice",
       "resultsNotice",
       "rsvpNotice",
+      "rsvpAskNotice",
       "invitationsNotice",
       "promoNotice",
       "sponsorNotice",

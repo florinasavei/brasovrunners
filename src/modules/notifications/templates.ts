@@ -2139,6 +2139,25 @@ const T = {
       action: "Vezi evenimentul",
       emphasis: (d: TemplateData): Emphasis => ({ highlightLine: eventFacts(d, NO_FACT_LINKS)?.line }),
     },
+    /**
+     * «Vii mâine la …?» (§NNN), from the maintenance job the day before a ticked turn-up event, to the newsletter's subscribers of its
+     * topics. Two buttons: «Vin» counts the person at once (the personal link is the proof of the address) and «Nu vin», under it, counts
+     * nobody. The club may reword it in `/admin/emails` like the rest (`copyFor`); the buttons' targets, the facts and the newsletter's lines
+     * (the topics, the way out) are the platform's.
+     */
+    rsvpAsk: {
+      subject: (d: TemplateData) => `Vii mâine la ${d.eventTitle ?? "eveniment"}?`,
+      greeting: () => "Salut,",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `Vii mâine la ${d.eventTitle ?? "eveniment"}? Apasă „Vin”, apoi „Da, vin” pe pagina care se deschide — fără cont.`,
+        "„Da, vin” te numără printre cei care vin. „Nu vin” nu te numără și nu te mai întrebăm pentru acest eveniment; poți răspunde altfel, de pe pagina evenimentului, până la start.",
+        "Linkurile sunt doar pentru tine și merg o singură dată. Primești întrebarea pentru că ești abonat la noutățile clubului.",
+      ],
+      action: "Vin",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] }),
+      links: (d: TemplateData) => [...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : [])],
+    },
     /** The newsletter's own lines (§445), which the platform adds whoever wrote the words above them. */
     newsletterWords: {
       topics: (topics: string) => `Primești noutățile clubului despre: ${topics}.`,
@@ -2960,6 +2979,20 @@ const T = {
       action: "See the event",
       emphasis: (d: TemplateData): Emphasis => ({ highlightLine: eventFacts(d, NO_FACT_LINKS)?.line }),
     },
+    /** «Coming tomorrow?» (§NNN): the English half of `rsvpAsk` above. */
+    rsvpAsk: {
+      subject: (d: TemplateData) => `Coming to ${d.eventTitle ?? "the event"} tomorrow?`,
+      greeting: () => "Hello,",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `Are you coming to ${d.eventTitle ?? "the event"} tomorrow? Press “I'm coming”, then “Yes, I'm coming” on the page that opens — no account.`,
+        "“Yes, I'm coming” counts you among those coming. “I'm not coming” counts you out and we don't ask again for this event; you can answer differently, from the event's page, until the start.",
+        "The links are for you only and work once. You get this question because you subscribed to the club's news.",
+      ],
+      action: "I'm coming",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] }),
+      links: (d: TemplateData) => [...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : [])],
+    },
     /** The newsletter's own lines (§445), which the platform adds whoever wrote the words above them. */
     newsletterWords: {
       topics: (topics: string) => `You receive the club's news about: ${topics}.`,
@@ -3181,6 +3214,7 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   STAFF_INVITATION: "staffInvitation",
   REGISTRATION_OPENED: "registrationOpened",
   RSVP_CONFIRM: "rsvpConfirm",
+  RSVP_ASK: "rsvpAsk",
   CLUB_CONFIRMATION_NOTICE: "clubConfirmationNotice",
   EVENT_UPDATE_NOTICE: "eventUpdateNotice",
   EVENT_CANCELLED: "eventCancelled",
@@ -3207,8 +3241,8 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   VOLUNTEER_GUARDIAN_REQUEST: "volunteerGuardianRequest",
 };
 
-/** The newsletter's three messages (§445): to an address, never about a registration. */
-const NEWSLETTER_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["NEWSLETTER_CONFIRM", "NEWSLETTER", "NEW_EVENT_ALERT"]);
+/** The newsletter's three messages (§445) and «Vii mâine la …?» (§NNN): to a subscriber's address, never about a registration. */
+const NEWSLETTER_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["NEWSLETTER_CONFIRM", "NEWSLETTER", "NEW_EVENT_ALERT", "RSVP_ASK"]);
 
 /**
  * A newsletter's own words (§445), as the organizer's message's are (§364): the body as typed, a
@@ -3237,7 +3271,7 @@ function newsletterLines(messageType: EmailMessageType, locale: EmailLocale, dat
   const words = T[locale].newsletterWords;
   const confirming = messageType === "NEWSLETTER_CONFIRM" && data.newsletterAlready !== true;
   return [
-    ...(data.newsletterTopics && (confirming || messageType === "NEW_EVENT_ALERT") ? [words.topics(data.newsletterTopics)] : []),
+    ...(data.newsletterTopics && (confirming || messageType === "NEW_EVENT_ALERT" || messageType === "RSVP_ASK") ? [words.topics(data.newsletterTopics)] : []),
     ...(confirming ? [words.link(data.confirmationHours ?? hoursPhrase(locale, DEFAULT_DEADLINES.confirmationHours))] : []),
   ];
 }
@@ -3825,8 +3859,8 @@ export function buildTemplateContent(
     secondaryAction:
       messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && entry.action && actionUrl && data.familyDeclineUrl
         ? { label: copy.familyDecline, url: data.familyDeclineUrl }
-        : // «Vin!» (§811): «Nu vin» under «Da, vin», the same send's other link — only beside the confirm button.
-          messageType === "RSVP_CONFIRM" && (data.rsvpStage === undefined || data.rsvpStage === "confirm") && entry.action && actionUrl && data.rsvpWithdrawUrl
+        : // «Vin!» (§812): «Nu vin» under «Da, vin», the same send's other link — only beside the confirm button. «Vii mâine?» (§NNN) has the same two.
+          (messageType === "RSVP_ASK" || (messageType === "RSVP_CONFIRM" && (data.rsvpStage === undefined || data.rsvpStage === "confirm"))) && entry.action && actionUrl && data.rsvpWithdrawUrl
           ? { label: copy.rsvpNo, url: data.rsvpWithdrawUrl }
           : undefined,
     /*
@@ -3852,7 +3886,7 @@ export function buildTemplateContent(
         // The club's refusal (§618): the terms it was made under, in this half's language, from `APP_BASE_URL`.
         ...(messageType === "REGISTRATION_CANCELLED" && data.refusedGround ? [{ label: copy.termsLink, url: termsUrl(locale) }] : []),
         // Every newsletter message's way out (§445; Legea 506/2004 art. 12(2)): the subscriber's own page.
-        ...((messageType === "NEWSLETTER" || messageType === "NEW_EVENT_ALERT") && data.newsletterManageUrl
+        ...((messageType === "NEWSLETTER" || messageType === "NEW_EVENT_ALERT" || messageType === "RSVP_ASK") && data.newsletterManageUrl
           ? [{ label: copy.newsletterWords.manage, url: data.newsletterManageUrl }]
           : []),
       ];
@@ -3997,6 +4031,8 @@ const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set([
   "NEW_EVENT_ALERT",
   // «Vin!» (§811): the person deciding whether to come reads the same when and where as the others.
   "RSVP_CONFIRM",
+  // «Vii mâine la …?» (§NNN): the same, to the person asked.
+  "RSVP_ASK",
 ]);
 
 /**
