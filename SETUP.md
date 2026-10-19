@@ -2122,8 +2122,11 @@ on «Pagini» → «Membri» → «Niveluri de membru» (a name in both language
 languages — or in neither — the order in «Poziția», «Ascuns» for a level no longer given) and presses the one
 «Salvează toate nivelurile»; **gives each member one** on «Echipa», in «Nivel» on the member's row — chosen in the same
 step when adding one person (under the role «Membru» in «Adaugă o persoană») — or one for all
-the people added at once in «Adaugă mai mulți membri»; and **limits a code** with the chips «Pentru nivelurile» in
-«Coduri de reducere» (nothing ticked is every member). In the zone's «Coduri de reducere» a member then sees the
+the people added at once in «Adaugă mai mulți membri»; and **says who each code is for** with the chips «Pentru cine e codul» in
+«Coduri de reducere»: «Toți membrii» (members with or without a level) or one or more levels, chosen on every code — a new
+code starts with nothing ticked and is not saved until one is, and «Toți membrii» cannot be ticked together with a level
+(§811, amended by §NNN). Every code's line says «Pentru: …». The codes saved before the choice was explicit read as «Toți membrii».
+In the zone's «Coduri de reducere» a member then sees the
 codes for everyone and those for their own level; a member with no level sees the codes for everyone alone. **No
 member sees their level, and no visitor sees the levels:** the zone draws no badge, the public «Beneficiile membrilor»
 page has no section of levels, and no code card says why it is there. Only the administrators see a level, on «Echipa»

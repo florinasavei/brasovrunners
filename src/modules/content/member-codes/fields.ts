@@ -9,7 +9,7 @@ import { refuseOneLanguage } from "@/shared/forms/both-languages";
  * line or two, in Romanian **and** English or in neither (§352). An optional https link where the
  * code is used, and an optional last day, `YYYY-MM-DD` — the day it stops being shown. One side of
  * the description written and the other empty is refused on the empty box, every other box kept
- * (§315).
+ * (§315). Who the code is for is chosen, not defaulted: levels or «Toți membrii» (§811, amended by §NNN).
  */
 
 export const CODE_PARTNER_MAX = 80;
@@ -70,8 +70,9 @@ export const discountCodeFieldsSchema = z
       .transform((value) => value.trim())
       .refine((value) => value === "" || isCalendarDay(value), "not a day")
       .transform((value) => (value === "" ? null : value)),
-    // «Pentru nivelurile» (§811): the member tiers that see the code; none ticked is every member. Ids only —
-    // whether each names a tier is the service's question, asked under a lock.
+    // «Pentru cine e codul» (§811, amended by §NNN): the member tiers that see the code, ticked as chips. Ids only —
+    // whether each names a tier is the service's question, asked under a lock. The club's choice is explicit:
+    // levels here, or «Toți membrii» in `forAll` below, one of the two and never both, never neither.
     tierIds: z
       .array(z.string())
       .max(MEMBER_TIERS_MAX)
@@ -80,8 +81,19 @@ export const discountCodeFieldsSchema = z
       .transform((ids) => [...new Set(ids.map((id) => id.trim().toLowerCase()))])
       // One issue on the chips' box, whichever id is wrong.
       .refine((ids) => ids.every((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)), "not a member tier"),
+    // «Toți membrii»: the chip that says the code is for members with or without a level. A post of its own, kept out
+    // of the uuid list; a tick posts `1`, a caller may pass `true`. It is stored as the limit's absence (`tier_ids` null).
+    forAll: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .default(false)
+      .transform((value) => value === true || (typeof value === "string" && ["1", "true", "on"].includes(value.trim().toLowerCase()))),
   })
   .superRefine((fields, ctx) => {
+    // Who the code is for is chosen, never left empty (§811 amended): one issue, on the chips' box `tierIds`, whichever way it is wrong.
+    if (fields.forAll === (fields.tierIds.length > 0)) {
+      ctx.addIssue({ code: "custom", path: ["tierIds"], message: fields.forAll ? "choose all members or some levels, not both" : "choose who the code is for" });
+    }
     refuseOneLanguage(ctx, { ro: fields.descriptionRo, en: fields.descriptionEn }, { ro: ["descriptionRo"], en: ["descriptionEn"] }, "the description");
   });
 

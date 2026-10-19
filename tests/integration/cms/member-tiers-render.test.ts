@@ -1,9 +1,11 @@
 import { createElement, type ReactElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import { createTranslator } from "next-intl";
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { memberDiscountCodes } from "@/db/schema/member-discount-codes";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -11,7 +13,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * §811, amended by §817 — where a member's level does NOT show, and what it decides, read from a real database and drawn by the
  * real pages: the zone draws no badge and names no level (the level is the staff's label alone), the public members' page has no
  * section of levels, the zone's «Coduri de reducere» tab lists the codes for everyone and those of the member's level with no
- * mark saying why a code is there — and the codes' editor, which gives each code the chips «Pentru nivelurile».
+ * mark saying why a code is there — and the codes' editor, which gives each code the chips «Pentru cine e codul»: «Toți membrii»
+ * first, then the levels, chosen and never left empty (§811, amended by §NNN).
  * A level is a label: the zone opens for a member with a level exactly as for one with none.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, cookie: undefined as string | undefined, locale: "ro" as "ro" | "en" }));
@@ -60,6 +63,9 @@ async function markup(node: ReactElement): Promise<string> {
 
 const NOW = new Date("2026-10-18T09:00:00.000Z");
 const CODE = { partnerName: "Magazinul", code: "BVR15", descriptionRo: "15% la încălțăminte.", descriptionEn: "15% off shoes.", link: "", validUntil: "" };
+
+/** A code for «Toți membrii»: who a code is for is chosen, never left empty (§811, amended by §NNN). */
+const EVERYONE = { ...CODE, forAll: true };
 
 function rowsOf(spec: Record<string, Record<string, string>>) {
   const entries: [string, string][] = [];
@@ -139,7 +145,7 @@ describe("§811 where the member's level shows", () => {
     });
 
     it("shows the codes for everyone and those of the member's level, with no mark saying why a code is there", async () => {
-      await createDiscountCode(db, { actor: admin, fields: { ...CODE, code: "TOTI", partnerName: "Pentru toți" }, now: NOW });
+      await createDiscountCode(db, { actor: admin, fields: { ...EVERYONE, code: "TOTI", partnerName: "Pentru toți" }, now: NOW });
       await createDiscountCode(db, { actor: admin, fields: { ...CODE, code: "SIMPLU", partnerName: "Doar nivelul simplu", tierIds: [plain.id] }, now: NOW });
       await createDiscountCode(db, { actor: admin, fields: { ...CODE, code: "FONDAT", partnerName: "Doar fondatorii", tierIds: [founders.id] }, now: NOW });
       await createDiscountCode(db, { actor: admin, fields: { ...CODE, code: "AMBELE", partnerName: "Ambele", tierIds: [plain.id, founders.id] }, now: NOW });
@@ -210,37 +216,74 @@ describe("§811 where the member's level shows", () => {
       );
     };
 
-    it("gives each code the chips «Pentru nivelurile», every level a native tick, the code's levels ticked", async () => {
+    it("gives each code the chips «Pentru cine e codul»: «Toți membrii» first, every level a native tick, the code's levels ticked, a new code nothing", async () => {
       await createDiscountCode(db, { actor: admin, fields: { ...CODE, code: "FONDAT", tierIds: [founders.id] }, now: NOW });
       const html = await editor(true);
       // The add form and the code's own form each carry the chips.
       expect(html.match(/data-testid="tier-chips"/g)).toHaveLength(2);
       expect(html).toContain(ro.Admin.members.codes.forTiers);
       expect(html).toContain(ro.Admin.members.codes.forTiersHelp);
+      expect(ro.Admin.members.codes.forTiers).toBe("Pentru cine e codul");
       const boxes = html.match(/<input[^>]*name="tierIds"[^>]*>/g) ?? [];
       expect(boxes).toHaveLength(6);
       for (const box of boxes) expect(box).toContain('type="checkbox"');
       const ticked = boxes.filter((box) => box.includes("checked"));
       expect(ticked).toHaveLength(1);
       expect(ticked[0]).toContain(`value="${founders.id}"`);
+      // «Toți membrii» is the first chip of each form, its own post (`forAll`), ticked on neither: the new code starts with nothing, this one has a level.
+      const everyone = html.match(/<input[^>]*name="forAll"[^>]*>/g) ?? [];
+      expect(everyone).toHaveLength(2);
+      for (const box of everyone) {
+        expect(box).toContain('type="checkbox"');
+        expect(box).toContain('value="1"');
+        expect(box).not.toContain("checked");
+      }
+      expect(html.match(/data-testid="tier-chip-all"/g)).toHaveLength(2);
+      for (const chips of html.split('data-testid="tier-chips"').slice(1)) {
+        expect(chips.indexOf('name="forAll"')).toBeGreaterThan(-1);
+        expect(chips.indexOf('name="forAll"')).toBeLessThan(chips.indexOf('name="tierIds"'));
+        expect(chips).toContain(ro.Admin.members.codes.forAllMembers);
+      }
       // A hidden level is still named, marked, so a code limited to it can be seen and changed.
       expect(html).toContain("Vechi (ascuns)");
       // The code's line names the limit in words; a code for everyone says so.
       expect(html).toContain("Pentru: Fondator");
     });
 
-    it("says «Pentru toți membrii» on a code with no limit, and draws no chips while the club named no level", async () => {
-      await createDiscountCode(db, { actor: admin, fields: CODE, now: NOW });
-      expect(await editor(true)).toContain(ro.Admin.members.codes.forEveryone);
+    it("shows «Toți membrii» ticked on a code with no limit and says «Pentru: Toți membrii» on its line, and draws no chips while the club named no level", async () => {
+      await createDiscountCode(db, { actor: admin, fields: EVERYONE, now: NOW });
+      const old = await editor(true);
+      expect(old).toContain(ro.Admin.members.codes.forEveryone);
+      expect(ro.Admin.members.codes.forEveryone).toBe("Pentru: Toți membrii");
+      // The code's own form has «Toți membrii» ticked and no level; the add form beside it, nothing.
+      const forms = old.split('data-testid="tier-chips"').slice(1);
+      expect(forms).toHaveLength(2);
+      const tickedIn = (chunk: string) => (chunk.match(/<input[^>]*name="(?:forAll|tierIds)"[^>]*>/g) ?? []).filter((box) => box.includes("checked")).map((box) => /name="(\w+)"/.exec(box)?.[1]);
+      expect(tickedIn(forms[0])).toEqual([]);
+      expect(tickedIn(forms[1])).toEqual(["forAll"]);
       const { deleteMemberTier } = await import("@/modules/content/member-tiers/service");
       const { listAllMemberTiers } = await import("@/modules/content/member-tiers/repository");
       for (const tier of await listAllMemberTiers(db)) await deleteMemberTier(db, { actor: admin, tierId: tier.id, now: NOW });
       const html = await editor(true);
       expect(html).not.toContain("tier-chips");
       expect(html).not.toContain('name="tierIds"');
-      // …and no line says «for everyone» either: before any level exists the chip would say nothing.
-      expect(html).not.toContain("code-tiers-chip");
-      expect(html).not.toContain(ro.Admin.members.codes.forEveryone);
+      // Nothing to choose between: the form posts «Toți membrii» itself, and the code's line still says who it is for, always.
+      expect(html).not.toMatch(/<input[^>]*type="checkbox"[^>]*name="forAll"/);
+      expect(html.match(/<input[^>]*type="hidden"[^>]*name="forAll"[^>]*value="1"|<input[^>]*name="forAll"[^>]*type="hidden"[^>]*value="1"/g)).toHaveLength(2);
+      expect(html).toContain("code-tiers-chip");
+      expect(html).toContain(ro.Admin.members.codes.forEveryone);
+    });
+
+    it("never calls a code «Toți membrii» when its stored list names no level: the line says so and the form ticks nothing", async () => {
+      // Only a hand edit of the database leaves such a list (deleting a level takes it off every code): both halves read the stored ids.
+      const created = await createDiscountCode(db, { actor: admin, fields: EVERYONE, now: NOW });
+      await db.update(memberDiscountCodes).set({ tierIds: ["99999999-9999-4999-8999-999999999999"] }).where(eq(memberDiscountCodes.id, created.id));
+      const html = await editor(true);
+      const line = (html.split('data-testid="code-tiers-chip"')[1] ?? "").slice(0, 300);
+      expect(line).toContain("niveluri negăsite: 1");
+      expect(line).not.toContain(ro.Admin.members.codes.forEveryone);
+      const own = html.split('data-testid="tier-chips"').slice(1)[0] ?? "";
+      expect((own.match(/<input[^>]*type="checkbox"[^>]*>/g) ?? []).filter((box) => box.includes("checked"))).toEqual([]);
     });
 
     it("shows the chips to the Administrator alone: the Redactor, who writes the words, sees none", async () => {
@@ -255,6 +298,8 @@ describe("§811 where the member's level shows", () => {
       await createDiscountCode(db, { actor: admin, fields: { ...CODE, tierIds: [founders.id] }, now: NOW });
       const html = await editor(true, "en");
       expect(html).toContain(en.Admin.members.codes.forTiers);
+      expect(en.Admin.members.codes.forTiers).toBe("Who the code is for");
+      expect(html).toContain(en.Admin.members.codes.forAllMembers);
       expect(html).toContain("For: Founder");
       expect(html).not.toContain("Pentru nivelurile");
     });
