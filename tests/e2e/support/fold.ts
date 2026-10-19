@@ -99,13 +99,14 @@ export async function cardOnListing(page: Page, heading: string | RegExp): Promi
 }
 
 /**
- * The event page's public folds that start closed (§498, §812): «Condiții de participare», the «Vii?» card and «Cine vine». A spec that
+ * The event page's public folds that start closed (§498, §812): «Condiții de participare», the «Confirmă prezența (opțional)» card, the turn-up event's
+ * «Cine vine (N)» under it (§NNN) and a race's «Cine vine (N)». A spec that
  * reads a name, a state, the form or the count inside one opens it first — the way a person does, through `openFold`, so it is
  * idempotent: a fold the address already opened (`#vin`, a pager page) is left open, never toggled shut.
  *
  * One helper, so a fold that changes its test id changes it here and nowhere else. Returns the fold, for the reads that follow.
  */
-export type EventPageFold = "conditions-fold" | "rsvp-box" | "start-list";
+export type EventPageFold = "conditions-fold" | "rsvp-box" | "rsvp-who" | "start-list";
 
 export async function openEventFold(page: Page, fold: EventPageFold): Promise<Locator> {
   const details = page.getByTestId(fold);
