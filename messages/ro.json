@@ -4786,7 +4786,7 @@
         },
         "rsvpMemberNotice": {
           "title": "Nota de confidențialitate: semnul de membru la „Cine vine”",
-          "todo": "Un eveniment primește răspunsuri „Vin!”, dar nota în vigoare nu descrie încă semnul de membru: formularul nu are bifa „Sunt membru al grupului …”, iar „Cine vine” nu arată niciun semn și nu numără membrii.",
+          "todo": "Un eveniment primește răspunsuri „Vin!”, dar nota în vigoare nu descrie încă semnul de membru: formularul nu are bifa „Sunt membru al grupului …”, iar „Cine vine” nu arată semn și nu numără membrii.",
           "done": "Nota în vigoare descrie semnul de membru: cine bifează „Sunt membru al grupului …” (sau răspunde din contul de membru) sub ea apare cu „BVR” lângă numele afișat, iar membrii sunt numărați.",
           "how": [
             "Înainte de aprobare, un avocat citește din șablon, în secțiunea 4, propoziția despre semnul „BVR” lângă nume și despre numărul membrilor.",

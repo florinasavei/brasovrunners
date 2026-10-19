@@ -522,9 +522,14 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     const waiting = await rsvpRow(memberGuest, secondEventId);
     expect(waiting).toMatchObject({ confirmedAt: null, displayName: MEMBER_NAME, showName: true, clubMember: "DECLARED" });
 
-    // The link counts them (the browser presses its own button); the event page then says it in all three places.
+    // The link's page says, before the press, that it shows the mark beside the name (the tick was typed beside this address), and it does not press itself:
+    // the press is the owner's own. Pressing it counts them; the event page then says it in all three places.
     const secret = await mintRsvpLink(waiting!.id, "RSVP_CONFIRM");
-    await page.goto(`/ro/vin/${secret}`, { waitUntil: "commit" });
+    await page.goto(`/ro/vin/${secret}`);
+    await expect(page.getByTestId("rsvp-confirm-member")).toContainText(`numele „${MEMBER_NAME}” va apărea cu semnul „BVR”`);
+    await expect(page.getByTestId("rsvp-auto-confirm")).toHaveCount(0);
+    await hydrated(page);
+    await page.getByRole("button", { name: "Da, vin" }).click();
     await page.waitForURL(new RegExp(`/ro/evenimente/${secondSlug}#vin$`));
     await hydrated(page);
     await expect(page.getByTestId("rsvp-box").getByTestId("rsvp-summary-line")).toContainText("1 vine · 1 membru");
