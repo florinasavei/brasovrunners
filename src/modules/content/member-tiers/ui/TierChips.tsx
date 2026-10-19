@@ -9,7 +9,7 @@ import { CHOICE_CARD_SX, CHOICE_INPUT_SX } from "@/shared/ui/choice-card";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * «Pentru cine e codul» (§811, amended by §NNN): who a discount code is for, as chips — first «Toți membrii», then one pill per
+ * «Pentru cine e codul» (§811, amended by §828): who a discount code is for, as chips — first «Toți membrii», then one pill per
  * level, the native checkbox visible in each (`CHOICE_CARD_SX` and `CHOICE_INPUT_SX`, the house's selectable pill that the
  * volunteers' role chips draw, §780): the tick is the state, never the colour alone, and the whole pill is its label, 44
  * pixels tall.

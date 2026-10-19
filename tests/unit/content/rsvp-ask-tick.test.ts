@@ -8,7 +8,7 @@ import type { LanguageEntry } from "@/modules/content/events/ui/boxes/box-kit";
 import { blankTranslation } from "@/modules/content/events/ui/TranslationFields";
 
 /**
- * §NNN — the event editor's tick «Trimite întrebarea „Vii?” înainte de acest eveniment», rendered: under «Acceptă răspunsuri „Vin!”»,
+ * §823 — the event editor's tick «Trimite întrebarea „Vii?” înainte de acest eveniment», rendered: under «Acceptă răspunsuri „Vin!”»,
  * a real tick box (never a toggle button), on by default, with the marker that tells the server the form carried it, shown only while
  * «Acceptă răspunsuri» is ticked (hidden, never removed — `OnlyWhenTicked`) and only on an event one simply turns up to.
  */
@@ -91,7 +91,7 @@ function hidden(markup: string): boolean {
   return wrapper.includes("data-hidden-block");
 }
 
-describe("§NNN the editor's tick for the «Vii?» question", () => {
+describe("§823 the editor's tick for the «Vii?» question", () => {
   it("draws a real tick box with the marker, checked by default, under «Acceptă răspunsuri „Vin!”»", async () => {
     const markup = await render({ ...RUN, rsvpAskEnabled: undefined } as unknown as EditableEvent);
     expect(markup).toContain('<input type="hidden" name="event.rsvpAskEnabled.present" value="1"/>');

@@ -274,7 +274,7 @@ export async function updateCalendarRsvpAction(_previous: FormOutcome | null, fo
 }
 
 /**
- * «Cui îi trimitem întrebarea „Vii?"» (§NNN): who the day-before question is asked of — one of three radios. The calendar address's gate and
+ * «Cui îi trimitem întrebarea „Vii?"» (§823): who the day-before question is asked of — one of three radios. The calendar address's gate and
  * shape: Administrator at the door, the service asserting the role again and validating the choice, a refusal returned as the form's state
  * (§315). The privacy notice's gate for the earlier answerers is not this action's: the choice is saved either way, and the queue and the send
  * ask the notice again (`/admin/tasks` says what is owed).

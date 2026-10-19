@@ -1,5 +1,5 @@
 /**
- * Points along an SVG path's outline — enough to measure how far a drawn glyph reaches from its centre (§NNN). Reads the commands
+ * Points along an SVG path's outline — enough to measure how far a drawn glyph reaches from its centre (§824). Reads the commands
  * the elevation glyphs use (M L H V C A and their lowercase forms, Z) and walks every curve and arc in small steps, arcs by the
  * standard endpoint-to-centre conversion with no rotation, so an arc's own extreme counts, not only its ends.
  */

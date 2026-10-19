@@ -51,7 +51,7 @@ describe("§377 the club's deadlines, unset", () => {
       verificationRetryHours: 20,
       verificationRetries: 1,
       outageGraceMaxHours: 48,
-      // The «Vii?» question (§818, §NNN): the day before, from 08:00 club time — what the platform did before the club could choose.
+      // The «Vii?» question (§818, §823): the day before, from 08:00 club time — what the platform did before the club could choose.
       rsvpAskDaysBefore: 1,
       rsvpAskHour: 8,
     });

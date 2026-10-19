@@ -344,7 +344,7 @@ function eventFieldsFrom(form: FormData) {
     // — a form without the card is "not editing it" (a reader who may not change the settings), never "off".
     showRouteProfile: form.get("event.showRouteProfile.present") === "1" ? form.get("event.showRouteProfile") === "on" : undefined,
     rsvpEnabled: form.get("event.rsvpEnabled.present") === "1" ? form.get("event.rsvpEnabled") === "on" : undefined,
-    // «Trimite întrebarea „Vii?” înainte de acest eveniment» (§NNN): read only when the form carried its marker, like the tick above.
+    // «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823): read only when the form carried its marker, like the tick above.
     rsvpAskEnabled: form.get("event.rsvpAskEnabled.present") === "1" ? form.get("event.rsvpAskEnabled") === "on" : undefined,
     distanceMeters: value("distanceMeters"),
     // «Aproximativ» (§598): a checkbox beside the distance; `service.ts` drops it when the distance is empty.

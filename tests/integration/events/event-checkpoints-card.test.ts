@@ -181,7 +181,7 @@ describe("§757 the card «Puncte de control»", () => {
     expect(add).toContain('name="cp[1].kinds" value="REGROUP"');
   });
 
-  it("draws a glyph before each kind's word, and one «?» on the kinds row that says where «Regrupare»'s wait is written (§NNN)", async () => {
+  it("draws a glyph before each kind's word, and one «?» on the kinds row that says where «Regrupare»'s wait is written (§824)", async () => {
     const html = await render({ checkpoints: [point("a", 5, { kinds: ["REGROUP"] })] });
     const first = html.slice(html.indexOf('data-testid="checkpoint-edit-row"'), html.indexOf('data-testid="checkpoint-add"'));
     // Each kind's own glyph, aria-hidden, before its word: the one the page's table draws (the group of people for «Regrupare»).

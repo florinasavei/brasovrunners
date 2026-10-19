@@ -200,7 +200,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     maySendNow ? countRetryableFailed(db, now) : 0,
     // «Răspunsurile din calendar merg la» (§672): the club's own address, read straight through like the others.
     readCalendarRsvpTo(db),
-    // «Cui îi trimitem întrebarea „Vii?"» (§NNN): who the day-before question is asked of, and whether the notice in force names the second audience.
+    // «Cui îi trimitem întrebarea „Vii?"» (§823): who the day-before question is asked of, and whether the notice in force names the second audience.
     readRsvpAskAudienceSetting(db),
     noticeDescribesRsvpAskAnswerers(db, now),
   ]);
@@ -229,10 +229,10 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     reminder: pageWords.reminder ?? "",
     // The hour the legal templates' digest opens at (§775), from the one constant the email reads too.
     digestHour: LEGAL_TEMPLATES_DIGEST_CLOCK,
-    // The hour the «Vii?» question opens at, and how many days before the start (§818, §NNN), from the club's «Termene» — the numbers the job reads too.
+    // The hour the «Vii?» question opens at, and how many days before the start (§818, §823), from the club's «Termene» — the numbers the job reads too.
     askHour: rsvpAskClock(deadlines.deadlines.rsvpAskHour),
     askDays: daysPhrase(locale, Math.max(deadlines.deadlines.rsvpAskDaysBefore, 1)),
-    // Who it is asked of (§NNN), in the club's choice: said in the long line and the short one.
+    // Who it is asked of (§823), in the club's choice: said in the long line and the short one.
     askWho: t(`emails.rsvpAskWho.long.${rsvpAskAudience.audience}`),
     askWhoShort: t(`emails.rsvpAskWho.short.${rsvpAskAudience.audience}`),
     // The club's limit per address, for the one message that states it (§389).
@@ -248,7 +248,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const retryWords = hoursPhrase(locale, verificationRetryHours);
   const retryLine =
     verificationRetries > 0 ? t("emails.confirmationRetry", { retry: retryWords, times: t(`emails.retryTimes.${countForm(verificationRetries, locale)}`, { count: verificationRetries }) }) : t("emails.confirmationRetryOff");
-  // «Vii?» switched off (§NNN): zero days is «not at all», said in words of its own as the reminder's zero is.
+  // «Vii?» switched off (§823): zero days is «not at all», said in words of its own as the reminder's zero is.
   const askOff = deadlines.deadlines.rsvpAskDaysBefore === 0;
   const whenOf = (type: EmailMessageType): string => {
     if (type === "EVENT_REMINDER" && reminderOff) return t("emails.reminderOff.when");
@@ -301,7 +301,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     // The club's deadlines in force (§377), which the send gives every message as numbers.
     sample.timings = timings;
     sample.replyTo = replyTo;
-    // «Vii {rsvpAskDay} la …?» says the club's days from «Termene», each half in its own language (§NNN).
+    // «Vii {rsvpAskDay} la …?» says the club's days from «Termene», each half in its own language (§823).
     if (messageType === "RSVP_ASK") {
       sample.rsvpAskDay = emailSampleDeadlines(emailLocale, deadlines.deadlines).rsvpAskDay;
       sample.rsvpAskDayOther = emailSampleDeadlines(emailLocale === "ro" ? "en" : "ro", deadlines.deadlines).rsvpAskDay;
@@ -460,7 +460,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         the Administrator changes it.
       */}
       <CalendarRsvpPanel locale={locale} state={calendarRsvp} mayEdit={mayEditEmail} openWhen={{ saved: saved === "calendarRsvp" }} />
-      {/* «Cui îi trimitem întrebarea „Vii?"» (§NNN): beside the calendar's answers — both say what the club sends to whom. */}
+      {/* «Cui îi trimitem întrebarea „Vii?"» (§823): beside the calendar's answers — both say what the club sends to whom. */}
       <RsvpAskAudiencePanel locale={locale} state={rsvpAskAudience} answerersDescribed={answerersDescribed} mayEdit={mayEditEmail} openWhen={{ saved: saved === "rsvpAskAudience" }} />
 
       {/* The club's mailboxes that refuse its emails (§671), under the lists that name them; nothing when none did. */}

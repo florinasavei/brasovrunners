@@ -6,7 +6,7 @@
 export const RSVP_CONFIRM_HOURS = 48;
 
 /**
- * A withdraw link (and, §NNN, the question's «Nu mă mai întreba la seria aceasta») outlives the start it was sent with by this many days;
+ * A withdraw link (and, §823, the question's «Nu mă mai întreba la seria aceasta») outlives the start it was sent with by this many days;
  * the event's start at the press decides «Nu mai vin» (a moved event keeps its links), while the refusal link simply lives this long after it.
  */
 export const RSVP_LINK_GRACE_DAYS = 60;

@@ -7,7 +7,7 @@ import { events } from "./events";
  * and, since §770, direction (a volunteer who shows the way at a junction) — in the backoffice's words
  * «Apă», «Mâncare», «Prim ajutor», «Cronometrare», «Direcționare». A sixth is a migration, like every
  * other state here; the page and the bib draw each with its glyph and its word. A sixth came with
- * «Regrupare» (§NNN; the owner, 2026-10-19: «un punct de control de tipul „regrupare" … foarte util
+ * «Regrupare» (§824; the owner, 2026-10-19: «un punct de control de tipul „regrupare" … foarte util
  * pentru alergările de grup»): the group waits here — the point's note says for how long.
  */
 export const eventCheckpointKind = pgEnum("event_checkpoint_kind", ["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION", "REGROUP"]);

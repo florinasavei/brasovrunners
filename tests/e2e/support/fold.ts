@@ -100,7 +100,7 @@ export async function cardOnListing(page: Page, heading: string | RegExp): Promi
 
 /**
  * The event page's public folds that start closed (§498, §812): «Condiții de participare», the «Confirmă prezența (opțional)» card, the turn-up event's
- * «Cine vine (N)» under it (§NNN) and a race's «Cine vine (N)». A spec that
+ * «Cine vine (N)» under it (§825) and a race's «Cine vine (N)». A spec that
  * reads a name, a state, the form or the count inside one opens it first — the way a person does, through `openFold`, so it is
  * idempotent: a fold the address already opened (`#vin`, a pager page) is left open, never toggled shut.
  *

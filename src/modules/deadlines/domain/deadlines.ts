@@ -47,7 +47,7 @@ export const DEADLINE_KEYS = [
 export type DeadlineKey = (typeof DEADLINE_KEYS)[number];
 
 /**
- * `count` is a number of times, not a duration (§653: how many times the address link is re-sent); `hourOfDay` (§NNN) is a time on the
+ * `count` is a number of times, not a duration (§653: how many times the address link is re-sent); `hourOfDay` (§823) is a time on the
  * club's clock, 0–23, not a length — zero is midnight, a real answer, never «none».
  */
 export type DeadlineUnit = "minutes" | "hours" | "days" | "count" | "hourOfDay";
@@ -111,7 +111,7 @@ export type DeadlineRule = {
  *   (`registrations/domain/outage-grace.ts`). 0 switches the moving off while the windows are still
  *   recorded and announced; a week is the most a deadline should be carried for a door nobody
  *   reopened, and two days covers a registrar's hold over a weekend.
- * - **the «Vii?» question** (§818, §NNN): how many days before the start it goes, 0 to 7, one by default — 0 asks nobody, the club's
+ * - **the «Vii?» question** (§818, §823): how many days before the start it goes, 0 to 7, one by default — 0 asks nobody, the club's
  *   «not at all» — and from which hour of the club's clock, 0 to 23, eight by default. A week at most: a question further ahead
  *   than that is no longer about «this week's run»; `hourOfDay` is a time of day, so zero is midnight and not «none».
  */
@@ -171,7 +171,7 @@ export const DEFAULT_DEADLINES: Deadlines = Object.freeze(
 export const RECOMMENDED: Deadlines = DEFAULT_DEADLINES;
 
 /**
- * §NNN: the «Vii?» question's two numbers, as `rsvp/domain/ask.ts` reads them — the days before the start (0 = none) and the club hour.
+ * §823: the «Vii?» question's two numbers, as `rsvp/domain/ask.ts` reads them — the days before the start (0 = none) and the club hour.
  * One place picks them out of the deadlines, so the queue, the send, the job's plan and the words all read the same two.
  */
 export function rsvpAskTimingOf(deadlines: Pick<Deadlines, "rsvpAskDaysBefore" | "rsvpAskHour">): { daysBefore: number; hour: number } {

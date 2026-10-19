@@ -12,7 +12,7 @@ import { mintRsvpLink, rememberedBrowsers, rsvpCount, rsvpMessages, rsvpRow, wit
  *
  * **The card is a closed fold (§812)**, like «Condiții de participare»: its line says «Confirmă prezența (opțional) · N vin», `#vin` and the
  * answer's own redirect open it, and the specs open it first through `openEventFold` (`support/fold.ts`). **Who comes is its own closed fold under
- * it (§NNN)**, `#cine-vine`, «Cine vine (N)», and the facts say «N vin · vezi cine», a link that opens it. The link of the email counts the person BY ITSELF when a
+ * it (§825)**, `#cine-vine`, «Cine vine (N)», and the facts say «N vin · vezi cine», a link that opens it. The link of the email counts the person BY ITSELF when a
  * browser opens it — a scanner that fetches without running scripts, and a browser without JavaScript, see the button and count nobody (a context with scripts off stands in for both; a sandbox that runs scripts would count the address — accepted, §819).
  *
  * The local seed approves every platform template as a sample version (§29), so the notice in force already names `{{rsvp}}` and the box is
@@ -252,7 +252,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await expect(page.getByTestId("rsvp-remembered")).toBeVisible();
     await expect(page.getByTestId("rsvp-going")).toContainText("Tu vii");
     await expect(page.getByTestId("rsvp-remembered-as")).toContainText("an…@example.test");
-    // «Cine vine (1)» is its own fold under the card (§NNN), closed — the names are in it, never in the card.
+    // «Cine vine (1)» is its own fold under the card (§825), closed — the names are in it, never in the card.
     await expect(landed.getByTestId("rsvp-name")).toHaveCount(0);
     const who = page.getByTestId("rsvp-who");
     await expect(who).not.toHaveAttribute("open", /.*/);
@@ -358,7 +358,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     expect(await rsvpCount(guest)).toBe(1);
   });
 
-  test("§NNN a remembered browser shows or hides its name on «Cine vine»: one tick saves at once, and a box asks for the name when there is none", async ({ page, context }) => {
+  test("§827 a remembered browser shows or hides its name on «Cine vine»: one tick saves at once, and a box asks for the name when there is none", async ({ page, context }) => {
     // The first event's answer is counted and named (the typed form's tick); this browser is remembered by pressing a link of it.
     const row = await rsvpRow(guest, eventId);
     const confirm = await mintRsvpLink(row!.id, "RSVP_CONFIRM");
@@ -434,7 +434,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await expect(page.getByTestId("rsvp-withdraw-sent")).toHaveText("Dacă adresa ta e printre cei care vin, ți-am trimis pe email un link.");
   });
 
-  test("§NNN the «Nu mai vin» link's page: the same tick, a POST that does not spend the link — «Nu mai vin» is still there", async ({ page }) => {
+  test("§827 the «Nu mai vin» link's page: the same tick, a POST that does not spend the link — «Nu mai vin» is still there", async ({ page }) => {
     await withDatabase(async (client) => {
       await client.query("UPDATE event_rsvps SET display_name = $3, show_name = false WHERE event_id = $1 AND canonical_email = lower($2)", [eventId, guest, NAME]);
     });
@@ -495,7 +495,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await noSidewaysScroll(page);
   });
 
-  test("§NNN the members' zone: «Vin!» is one press, counted at once and unnamed, the event page counts it, «Nu mai vin» takes it back", async ({ page, browser }) => {
+  test("§822 the members' zone: «Vin!» is one press, counted at once and unnamed, the event page counts it, «Nu mai vin» takes it back", async ({ page, browser }) => {
     // The zone lists the five soonest runs, so the run is moved to tomorrow in the database and saved once in the editor, which expires the
     // public cache the zone reads (a write straight to the table would not).
     const tomorrow = new Date(Date.now() + 24 * 3_600_000);
@@ -546,7 +546,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     expect(written).toEqual([{ confirmed: true, showName: false, displayName: null }]);
     await noSidewaysScroll(member);
 
-    // §NNN: the name tick stays on «Tu vii ✓» — unticked, with the account's name used only when ticked, and saved by its own «Salvează».
+    // §827: the name tick stays on «Tu vii ✓» — unticked, with the account's name used only when ticked, and saved by its own «Salvează».
     const nameTick = row.getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" });
     await expect(nameTick).not.toBeChecked();
     expect((await nameTick.locator("xpath=..").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);

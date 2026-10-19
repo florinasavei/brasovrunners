@@ -90,7 +90,7 @@ describe("§757 the checkpoints' table on the event page", () => {
     expect(english[0]).not.toContain("Direcționare");
   });
 
-  it("draws a «Regrupare» point with its word and the group's glyph, in both languages, and its note says how long (§NNN)", async () => {
+  it("draws a «Regrupare» point with its word and the group's glyph, in both languages, and its note says how long (§824)", async () => {
     const html = await render([point("a", 5, { kinds: ["REGROUP"], noteRo: "Așteptăm 5 minute", noteEn: "We wait 5 minutes" }), point("b", 9, { kinds: ["WATER", "REGROUP"] })]);
     const rows = rowsOf(html);
     expect(rows[0]).toContain("Regrupare");
@@ -217,7 +217,7 @@ describe("§757 the checkpoints' table on the event page", () => {
     expect(Object.keys(ro.Event.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "REGROUP", "TIMING", "WATER"]);
     expect(Object.keys(en.Admin.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "REGROUP", "TIMING", "WATER"]);
     expect(Object.keys(ro.Admin.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "REGROUP", "TIMING", "WATER"]);
-    // «Regrupare» / «Regroup» (§NNN), the same word in the editor and on the page, and the editor's «?» line.
+    // «Regrupare» / «Regroup» (§824), the same word in the editor and on the page, and the editor's «?» line.
     expect([ro.Event.checkpoints.kinds.REGROUP, ro.Admin.checkpoints.kinds.REGROUP]).toEqual(["Regrupare", "Regrupare"]);
     expect([en.Event.checkpoints.kinds.REGROUP, en.Admin.checkpoints.kinds.REGROUP]).toEqual(["Regroup", "Regroup"]);
     expect(ro.Admin.checkpoints.field.kindsHelp).toContain("așteptăm 5 minute");

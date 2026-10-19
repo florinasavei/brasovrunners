@@ -7,7 +7,7 @@ import type { ElevationGlyph } from "./geometry";
  * PDF writer can walk.
  *
  * A drop for water, a fork for food, a cross for first aid, a stopwatch for timing, an arrow for direction, three people
- * for a point where the group regroups (§NNN), a dot for a point that offers none of them. Never the only sign: the visually hidden list and the `<title>` say the point's name,
+ * for a point where the group regroups (§824), a dot for a point that offers none of them. Never the only sign: the visually hidden list and the `<title>` say the point's name,
  * and the table under the chart says what it offers in words.
  */
 

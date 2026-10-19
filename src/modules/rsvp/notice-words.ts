@@ -22,7 +22,7 @@ export function rsvpAskClause(locale: string): string {
 }
 
 /**
- * What `{{rsvpAskAnswerers}}` becomes (§NNN): the refusal button's own name, quoted, in that language — „Nu mă mai întreba la seria aceasta”
+ * What `{{rsvpAskAnswerers}}` becomes (§823): the refusal button's own name, quoted, in that language — „Nu mă mai întreba la seria aceasta”
  * — read from the catalogue the token page's button reads (`Rsvp.askRefuseButton`), so the approved sentence names what a person presses.
  */
 export function rsvpAskAnswerersClause(locale: string): string {

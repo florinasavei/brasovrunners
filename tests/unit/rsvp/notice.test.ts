@@ -63,7 +63,7 @@ describe("§811 the template says what «Vin!» publishes, keeps, mails and reme
     expect(en4).toContain("holds no place");
   });
 
-  it("says where the name is unticked, and that a hidden name stays in the answer, not public (§NNN)", () => {
+  it("says where the name is unticked, and that a hidden name stays in the answer, not public (§827)", () => {
     const ro4 = privacyNoticeRo.sections[3].paragraphs.find((paragraph) => paragraph.includes("{{rsvp}}")) ?? "";
     expect(ro4).toContain("debifând numele din browserul recunoscut, din zona membrilor sau pe pagina linkului „Nu mai vin”");
     expect(ro4).toContain("Debifat, numele rămâne în răspuns, dar nu mai apare public; îl poți bifa din nou.");
@@ -184,11 +184,11 @@ describe("§818 {{rsvpAsk}} is the notice's switch for the «Vii mâine?» quest
 });
 
 /**
- * §NNN — `{{rsvpAskAnswerers}}`, the notice's marker for the «Vii?» question's second audience (the people who answered «Vin!» at an earlier date of
+ * §823 — `{{rsvpAskAnswerers}}`, the notice's marker for the «Vii?» question's second audience (the people who answered «Vin!» at an earlier date of
  * the series): a marker of its own, so no notice approved before it is read as describing it; filled with the refusal button's own name; in the
  * template's «Vin!» paragraph and its retention line, in both languages.
  */
-describe("§NNN {{rsvpAskAnswerers}} is the switch of the earlier answerers' audience", () => {
+describe("§823 {{rsvpAskAnswerers}} is the switch of the earlier answerers' audience", () => {
   it("is known to the editor and filled with the refusal button's own name in each language", () => {
     expect(MERGE_FIELDS).toContain(RSVP_ASK_ANSWERERS_MERGE_FIELD);
     expect(rsvpAskAnswerersClause("ro")).toBe(`„${ro.Rsvp.askRefuseButton}”`);

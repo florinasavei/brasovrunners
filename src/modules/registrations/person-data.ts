@@ -119,7 +119,7 @@ export type PersonData = {
     createdAt: Date;
   }>;
   /**
-   * The series this address refused the «Vii?» question for («Nu mă mai întreba la seria aceasta», §NNN, art. 15 GDPR): the series' key (the
+   * The series this address refused the «Vii?» question for («Nu mă mai întreba la seria aceasta», §823, art. 15 GDPR): the series' key (the
    * event type and the default-language title, one line) and when, every column of the row but the address itself. Not erased with the
    * answers: the row is the objection, and forgetting it would ask the person again; it goes a year after the series' last date.
    */
@@ -637,7 +637,7 @@ export async function eraseRsvpsOfPerson<T extends Record<string, unknown>>(
   const counts = await db.transaction(async (tx) => {
     const answers = await tx.delete(eventRsvps).where(eq(eventRsvps.canonicalEmail, canonicalEmail)).returning({ id: eventRsvps.id });
     const browsers = await tx.delete(personSessions).where(eq(personSessions.canonicalEmail, canonicalEmail)).returning({ id: personSessions.id });
-    // The «Nu mă mai întreba» links hold the address too (§NNN): they go with the answers. The refusals themselves stay — they are the objection.
+    // The «Nu mă mai întreba» links hold the address too (§823): they go with the answers. The refusals themselves stay — they are the objection.
     await tx.delete(rsvpRefuseTokens).where(eq(rsvpRefuseTokens.canonicalEmail, canonicalEmail));
     const result = { answers: answers.length, browsers: browsers.length };
     await recordAuditEvent(tx, {

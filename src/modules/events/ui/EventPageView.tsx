@@ -169,7 +169,7 @@ export default async function EventPageView({
   const dated = datedOrNull(event);
   // The one entry the file, the feed and the calendar row's add links all read (§107, §159).
   /*
-    «Vin! → <page>#vin» and «N vin până acum» in the add links' description (§815, §NNN): from the one read of the answers the page makes
+    «Vin! → <page>#vin» and «N vin până acum» in the add links' description (§815, §822): from the one read of the answers the page makes
     — the box below is handed the same (`rsvps`), so there is no second read — and only where the page draws the box (`visit.rsvpBox`, the
     one rule `rsvpOffered`, decided by the page): not in the preview, not on a members' event, not once the start has passed, not while
     the database is away (`null`). Then the entry carries the count exactly as the `.ics` file and the feed do, and the Google and Outlook
@@ -179,7 +179,7 @@ export default async function EventPageView({
   const coming = rsvpsRead ? new Map([[event.id, rsvpsRead.count]]) : undefined;
   const calendarEntry = dated ? toCalendarEvent(dated, locale, now, coming ? { coming } : {}) : null;
   /*
-    «N vin · vezi cine» in the facts (§NNN; the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil»): the number the fold with the names
+    «N vin · vezi cine» in the facts (§825; the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil»): the number the fold with the names
     has on its bar, and the fold's own anchor. On a turn-up event the box offers: the page's one read of the answers above (`rsvpsRead`, the
     same the box and the calendar links are handed) — nothing while the database is away (`null`) or nobody has confirmed. Otherwise on a race
     whose public list is drawn (the very condition of the `StartList` below): the list's own title number (`readStartListCount`, the one
@@ -278,7 +278,7 @@ export default async function EventPageView({
       {/* In the preview before saving (§579) the draft's door, its button disabled. */}
       <RegistrationCta event={event} now={now} previewDoor={previewDoor} />
 
-      {/* «Confirmă prezența (opțional)» (§811, §NNN) and «Cine vine (N)» right under it, where the registration card would stand on a turn-up
+      {/* «Confirmă prezența (opțional)» (§811, §825) and «Cine vine (N)» right under it, where the registration card would stand on a turn-up
           event — `#vin` and `#cine-vine`, two closed bars together near the top: only while the page decided the answer is offered
           (`rsvpOffered`), and never in the preview before saving (§579) or on a members' event (§552). Both are handed the one read. */}
       {visit?.rsvpBox && !membersOnly && (
@@ -288,7 +288,7 @@ export default async function EventPageView({
         </>
       )}
 
-      {/* «Cine vine (N)» of a race (§32, §250; moved up by §NNN — the owner, 2026-10-19: «am citit în „zig-zag" și am sărit peste secțiune»): the public
+      {/* «Cine vine (N)» of a race (§32, §250; moved up by §825 — the owner, 2026-10-19: «am citit în „zig-zag" și am sărit peste secțiune»): the public
           list, right under the registration card, the place the turn-up bars have — it was under «Condiții de participare», near the bottom.
           Nothing at all unless this event publishes one (BR-REQ-039-01); nobody registers before the date is announced (§533), so an undated
           event has no list; nor a members' event (§552), where the public list would be a public disclosure on a page that is not public; nor
@@ -482,7 +482,7 @@ export default async function EventPageView({
         <OpenFoldFromHash />
       </Box>
 
-      {/* «Clasament» (§809, race results part 2), under `#clasament`, after the participation rules (the start list is above, since §NNN): a race's published results, and
+      {/* «Clasament» (§809, race results part 2), under `#clasament`, after the participation rules (the start list is above, since §825): a race's published results, and
           nothing at all — no heading, no «în curând» — unless the Administrator published them, the notice and the terms in force
           describe them, the race has started and the public list's period is not over (`readEventResultsForPage`). The same three
           conditions as the list above, and not in the preview before saving (§579): a draft has no results, and the section reads

@@ -159,7 +159,7 @@ export const RETENTION = {
   rsvpDaysAfterEvent: RETENTION_PERIODS.rsvpDaysAfterEvent,
   /** …and seven days after it was typed when its address never used the emailed link. */
   rsvpUnconfirmedDays: RETENTION_PERIODS.rsvpUnconfirmedDays,
-  /** A refusal of the «Vii?» question for a series (§NNN) goes a year after the series' last date; the privacy notice says exactly this. */
+  /** A refusal of the «Vii?» question for a series (§823) goes a year after the series' last date; the privacy notice says exactly this. */
   rsvpAskRefusalDaysAfterSeries: RETENTION_PERIODS.rsvpAskRefusalDaysAfterSeries,
   /** The log of staff actions: three years, as the notice says. */
   auditLogYears: 3,
@@ -199,9 +199,9 @@ export type PruneCounts = {
   rsvps: number;
   /** The «Vii?» marks of events thirty days over (§818): a row of an event and a count, nothing personal. */
   rsvpAsks: number;
-  /** Refusals of the «Vii?» question for a series gone a year (§NNN): an address and a series' key. */
+  /** Refusals of the «Vii?» question for a series gone a year (§823): an address and a series' key. */
   rsvpAskRefusals: number;
-  /** «Nu mă mai întreba» links spent or past their life (§NNN): an address, a series' key and the hash of a secret. */
+  /** «Nu mă mai întreba» links spent or past their life (§823): an address, a series' key and the hash of a secret. */
   rsvpRefuseTokens: number;
   /** Remembered browsers past their year (§811). */
   personSessions: number;
@@ -712,7 +712,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     The answer «Vin!» (§811): an address and, if the person ticked it, a name — kept to count and show who comes, and for nothing else.
     Three windows, one statement (`event_rsvp_tokens` go with their answer, `on delete cascade`): thirty days after the event's end (its
     start when it has none), seven days after the typing for an answer whose address never used the emailed link, and at once — at the next
-    run — for an event that was cancelled. **A row the «Vii?» question made** (§NNN, `asked_at`) **leaves after the seven days only once its
+    run — for an event that was cancelled. **A row the «Vii?» question made** (§823, `asked_at`) **leaves after the seven days only once its
     event has started**: the club may send the question a week ahead, so a still-unanswered row would otherwise be swept hours before the
     event, taking the person's «Nu vin» with it. The privacy notice's section 7 says exactly this. The row's own age is NOT asked for the
     first window, unlike the volunteers': an answer can only be given before the start, so it is never newer than the event. Nothing
@@ -752,7 +752,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   });
 
   /*
-    The refusal's own rows (§NNN), a step of their own so that a failure here never rolls back the answers' thirty-day deletion above.
+    The refusal's own rows (§823), a step of their own so that a failure here never rolls back the answers' thirty-day deletion above.
     First the links: «Nu mă mai întreba» (`rsvp_refuse_tokens`) is dead once spent or past its life (sixty days after the event's start), and
     holds an address until then. Then the refusals themselves.
   */
@@ -763,7 +763,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .returning({ id: rsvpRefuseTokens.id });
     counts.rsvpRefuseTokens = tokens.length;
     /*
-      A refusal of the question for a series (§NNN) lives while its series does and a year after the series' last date
+      A refusal of the question for a series (§823) lives while its series does and a year after the series' last date
       (`rsvpAskRefusalDaysAfterSeries`). A series is not a row — the listing groups events by type and default-language title
       (`seriesKey`) — so the latest start of each key is read here, with that same function, from the few hundred events there are, and only
       when a refusal exists at all. A refusal whose series has no date ahead or within the year is gone; its key may be an event alone

@@ -367,7 +367,7 @@ describe("§818 «Vii mâine la …?»", () => {
       const [yes, no] = linksOf(message.text);
       expect(yes).not.toBe(no);
       expect(message.text).toMatch(/\/ro\/vin\/[A-Za-z0-9_-]{43}/);
-      // Under «Nu vin», in both languages and in the HTML too (§NNN): the name line says when it is true, and that the link deletes nothing on its own.
+      // Under «Nu vin», in both languages and in the HTML too (§827): the name line says when it is true, and that the link deletes nothing on its own.
       for (const line of [
         "După „Da, vin”, tot din „Nu vin” îți arăți sau ascunzi numele; răspunsul se șterge doar dacă apeși „Nu mai vin” pe pagina lui.",
         "After “Yes, I'm coming”, the “I'm not coming” link also lets you show or hide your name; your answer goes only if you press “I'm not coming any more” on its page.",

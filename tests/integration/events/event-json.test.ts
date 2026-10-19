@@ -1569,9 +1569,9 @@ describe("§802 the event's tick «Arată profilul traseului pe pagină» travel
   });
 });
 
-// --- «Trimite întrebarea „Vii?” înainte de acest eveniment» (§NNN) ------------------------------------
+// --- «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823) ------------------------------------
 
-describe("§NNN the event's tick «Trimite întrebarea „Vii?”» travels in the file", () => {
+describe("§823 the event's tick «Trimite întrebarea „Vii?”» travels in the file", () => {
   it("is exported as it is, written in the downloaded text only when it is off, and the file's version stays 3", async () => {
     const { event } = await seedRace({}, {}, false);
     const on = await fileOf(event.id);

@@ -1,7 +1,7 @@
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
 
 /**
- * «Vii mâine la …?» says WHEN the day is, in the club's words (§NNN: the club chose how many days before the start the question goes, so the
+ * «Vii mâine la …?» says WHEN the day is, in the club's words (§823: the club chose how many days before the start the question goes, so the
  * email can no longer say «mâine» for all of them). Pure; the email's words are in code, like every message's (`notifications/templates.ts`,
  * which is built by the outbox worker outside any request and has no `next-intl` locale to ask).
  *

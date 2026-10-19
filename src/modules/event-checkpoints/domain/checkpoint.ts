@@ -25,7 +25,7 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 
 /**
  * What a checkpoint can have, most basic first: the order the glyphs and the words are drawn in.
- * «Direcționare» (§770) is a volunteer who shows the way at a junction, not something a runner takes; «Regrupare» (§NNN) is last:
+ * «Direcționare» (§770) is a volunteer who shows the way at a junction, not something a runner takes; «Regrupare» (§824) is last:
  * the group waits here, and the point's note says for how long. It is the editor's tick order; the pin's order is `geometry.ts`'s.
  */
 export const CHECKPOINT_KINDS = ["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION", "REGROUP"] as const;

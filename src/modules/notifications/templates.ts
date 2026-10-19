@@ -77,7 +77,7 @@ export type TemplateContent = {
    * A second, quieter button under the action (§468): an outlined one in the club's blue, for the
    * choice that is not the message's point — «Nu înscriu această persoană» under the family link's
    * «Confirm că înscriu altă persoană». Only beside an action, never on its own. `note` is one quiet line under the button — «Vin!»'s
-   * «Nu vin» says its page is also where the person shows or hides their name (§NNN).
+   * «Nu vin» says its page is also where the person shows or hides their name (§827).
    */
   secondaryAction?: { label: string; url: string; note?: string };
   /**
@@ -724,7 +724,7 @@ export function renderBilingual(
     // lists the form in this half's own language under it (`feedbackButtonOtherLanguage`).
     ...(data.feedbackUrlOther ? { feedbackUrl: data.feedbackUrlOther, feedbackButtonOtherLanguage: true } : {}),
     ...(data.feedbackLinkOther ? { feedbackLink: data.feedbackLinkOther } : {}),
-    // «Vii mâine?» (§NNN): the day in the second half's own words.
+    // «Vii mâine?» (§823): the day in the second half's own words.
     ...(data.rsvpAskDayOther ? { rsvpAskDay: data.rsvpAskDayOther } : {}),
     // The newsletter's own words and topics in the second half's language (§445).
     ...(data.newsletterSubjectOther ? { newsletterSubject: data.newsletterSubjectOther } : {}),
@@ -1120,18 +1120,18 @@ export type TemplateData = {
   /** The `RSVP_WITHDRAW` link of the same send (§811), under the confirm button as «Nu vin». Minted at the send, never stored. */
   rsvpWithdrawUrl?: string;
   /**
-   * «Vii …?» (§818, §NNN): when the day is, in words — «mâine», «poimâine», «peste 3 zile» — read at the send from the club's calendar, so a
+   * «Vii …?» (§818, §823): when the day is, in words — «mâine», «poimâine», «peste 3 zile» — read at the send from the club's calendar, so a
    * question the club set three days ahead never says «mâine». Absent is «mâine»/«tomorrow», the question's own starting text.
    */
   rsvpAskDay?: string;
-  /** `rsvpAskDay` in the second half's language (§NNN): both halves of the message say the day in their own words. */
+  /** `rsvpAskDay` in the second half's language (§823): both halves of the message say the day in their own words. */
   rsvpAskDayOther?: string;
   /**
-   * The question went to an address that answered «Vin!» at an earlier date of the series (§NNN), not to a subscriber: the message says why
+   * The question went to an address that answered «Vin!» at an earlier date of the series (§823), not to a subscriber: the message says why
    * it is received, and carries `rsvpRefuseUrl`. Absent for a subscriber, whose way out is the topics page.
    */
   rsvpAskAnswerer?: boolean;
-  /** The `RSVP_REFUSE` link of the same send (§NNN), «Nu mă mai întreba la seria aceasta»: one press, for this series for good. Minted at the send. */
+  /** The `RSVP_REFUSE` link of the same send (§823), «Nu mă mai întreba la seria aceasta»: one press, for this series for good. Minted at the send. */
   rsvpRefuseUrl?: string;
   /**
    * The name the answer asks to show on the event's page (§811), on the `confirm` shape only: whoever typed the address chose it, so the person who
@@ -1524,7 +1524,7 @@ export function lawyerReads(locale: EmailLocale, keys: readonly string[]): strin
 }
 
 /**
- * One line of the «Vin!» confirmation's «counted» shape (§NNN), whose one button is the withdraw link itself: that link's page also shows or hides
+ * One line of the «Vin!» confirmation's «counted» shape (§827), whose one button is the withdraw link itself: that link's page also shows or hides
  * the person's name, and the answer goes only by the page's own button. Above `T` because both languages' bodies read it.
  */
 const RSVP_NAME_COUNTED = {
@@ -2219,7 +2219,7 @@ const T = {
       topics: (topics: string) => `Primești noutățile clubului despre: ${topics}.`,
       link: (lifetime: string) => `Linkul este valabil ${lifetime} și se poate folosi o singură dată. Dacă nu tu ai cerut, ignoră acest mesaj.`,
       manage: "Alege ce primești sau dezabonează-te",
-      // §NNN: the question to someone who answered «Vin!» before: why it came, and the way out for the whole series.
+      // §823: the question to someone who answered «Vin!» before: why it came, and the way out for the whole series.
       answerer: "Îți scriem pentru că ai răspuns „Vin!” la un eveniment anterior din aceeași serie. Dacă nu vrei să mai fii întrebat, apasă linkul de mai jos: nu te mai întrebăm niciodată pentru această serie.",
       refuse: "Nu mă mai întreba la seria aceasta",
     },
@@ -2393,7 +2393,7 @@ const T = {
     /** «Vin!» (§811): the quieter button under «Da, vin» — the same message's other link. */
     rsvpNo: "Nu vin",
     /**
-     * Under «Nu vin» (§NNN), before the answer is counted: the same link's page shows or hides the name once it is — and says that the answer goes
+     * Under «Nu vin» (§827), before the answer is counted: the same link's page shows or hides the name once it is — and says that the answer goes
      * only by the page's own button, since the body above says «Nu vin» deletes it.
      */
     rsvpNameNote: "După „Da, vin”, tot din „Nu vin” îți arăți sau ascunzi numele; răspunsul se șterge doar dacă apeși „Nu mai vin” pe pagina lui.",
@@ -3083,7 +3083,7 @@ const T = {
       topics: (topics: string) => `You receive the club's news about: ${topics}.`,
       link: (lifetime: string) => `The link is valid for ${lifetime} and can be used once. If you did not ask for this, ignore this message.`,
       manage: "Choose what you receive, or unsubscribe",
-      // §NNN: the question to someone who answered “I'm coming!” before: why it came, and the way out for the whole series.
+      // §823: the question to someone who answered “I'm coming!” before: why it came, and the way out for the whole series.
       answerer: "We write because you answered “I'm coming!” at an earlier event of the same series. If you do not want to be asked again, press the link below: we will never ask you again for this series.",
       refuse: "Don't ask me again for this series",
     },
@@ -3204,7 +3204,7 @@ const T = {
     },
     familyDecline: "I am not registering this person",
     rsvpNo: "I'm not coming",
-    /** Under “I'm not coming” (§NNN), before the answer is counted: see the Romanian note. */
+    /** Under “I'm not coming” (§827), before the answer is counted: see the Romanian note. */
     rsvpNameNote: "After “Yes, I'm coming”, the “I'm not coming” link also lets you show or hide your name; your answer goes only if you press “I'm not coming any more” on its page.",
     rsvpShownName: (name: string) => `If you press “Yes, I'm coming”, the name “${name}” will show on the event's page: whoever typed the address ticked that they want their name to show. If you don't, press “I'm not coming”.`,
     cannotCome: {
@@ -3366,7 +3366,7 @@ function newsletterLines(messageType: EmailMessageType, locale: EmailLocale, dat
   const confirming = messageType === "NEWSLETTER_CONFIRM" && data.newsletterAlready !== true;
   return [
     ...(data.newsletterTopics && (confirming || messageType === "NEW_EVENT_ALERT" || messageType === "RSVP_ASK") ? [words.topics(data.newsletterTopics)] : []),
-    // §NNN: an answerer's question says why it came — and only theirs: a subscriber's says the topics they chose.
+    // §823: an answerer's question says why it came — and only theirs: a subscriber's says the topics they chose.
     ...(messageType === "RSVP_ASK" && data.rsvpAskAnswerer === true && data.rsvpRefuseUrl ? [words.answerer] : []),
     ...(confirming ? [words.link(data.confirmationHours ?? hoursPhrase(locale, DEFAULT_DEADLINES.confirmationHours))] : []),
   ];
@@ -3989,7 +3989,7 @@ export function buildTemplateContent(
         ...((messageType === "NEWSLETTER" || messageType === "NEW_EVENT_ALERT" || messageType === "RSVP_ASK") && data.newsletterManageUrl
           ? [{ label: copy.newsletterWords.manage, url: data.newsletterManageUrl }]
           : []),
-        // «Nu mă mai întreba la seria aceasta» (§NNN): in the question an earlier answerer gets, never in a subscriber's — their way out is above.
+        // «Nu mă mai întreba la seria aceasta» (§823): in the question an earlier answerer gets, never in a subscriber's — their way out is above.
         ...(messageType === "RSVP_ASK" && data.rsvpAskAnswerer === true && data.rsvpRefuseUrl ? [{ label: copy.newsletterWords.refuse, url: data.rsvpRefuseUrl }] : []),
       ];
       // The club's archive copy and the staff invitation are not a participant's message.

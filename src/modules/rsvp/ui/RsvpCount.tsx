@@ -15,7 +15,7 @@ export async function readRsvpsOf(eventId: string): Promise<PublicRsvps | null> 
 }
 
 /**
- * «Cine vine (N)» on a turn-up event (§811, «Vin!» part 1; moved out of the card by §NNN): how many come to an event the club ticked,
+ * «Cine vine (N)» on a turn-up event (§811, «Vin!» part 1; moved out of the card by §825): how many come to an event the club ticked,
  * and the names of those who ticked «Vreau să apar cu numele» — in the shape of the start list's rows (`events/ui/StartList.tsx`), one name
  * to a row, «și încă N» for the rest. **A name is a disclosure** (§143, §396): the rule is `rsvp/domain/public-name.ts`, applied by the
  * cached read (`readPublicRsvps`), so a name that is not to be shown is not even in this component's props. Nobody has answered: the bar

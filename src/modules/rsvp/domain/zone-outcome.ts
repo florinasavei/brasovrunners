@@ -1,5 +1,5 @@
 /**
- * What the members' zone says after a press on «Vin!» or «Nu mai vin» (§NNN): one language-neutral code in the address (`?vin=`),
+ * What the members' zone says after a press on «Vin!» or «Nu mai vin» (§822): one language-neutral code in the address (`?vin=`),
  * which the page turns into a sentence — the shop's way (`content/shop/zone-outcome.ts`), so a refresh or a shared link carries
  * nothing of the person's. Kept out of the actions' module because a "use server" file may export only async functions.
  *
@@ -7,7 +7,7 @@
  *   left    the answer was taken back.
  *   closed  the event no longer takes answers (it started, was cancelled, was unticked, or the notice stopped describing «Vin!»).
  *
- * And the name tick «Numele meu apare la „Cine vine"» (§NNN): `shown` and `hidden` say what the person did; `name` that ticking needed a name
+ * And the name tick «Numele meu apare la „Cine vine"» (§827): `shown` and `hidden` say what the person did; `name` that ticking needed a name
  * and there was none; `none` that no answer of this account was found (a stale page). Their sentences are the event page's (`Event.rsvp.nameOutcome`).
  */
 export const ZONE_RSVP_OUTCOMES = ["went", "left", "closed", "shown", "hidden", "name", "none"] as const;

@@ -426,7 +426,7 @@ export async function noticeDescribesRsvpAsk<T extends Record<string, unknown>>(
 }
 
 /**
- * Whether the privacy notice in force describes the day-before question's SECOND audience (§NNN, `describesRsvpAskAnswerers`) — in every
+ * Whether the privacy notice in force describes the day-before question's SECOND audience (§823, `describesRsvpAskAnswerers`) — in every
  * language, AND the question and «Vin!» themselves (`describesRsvpAsk`, `describesRsvp`): the question writes a «Vin!» row from the address
  * of an earlier answer. False while any is silent. For the queue and the send (the club's choice of the audience is only half of it) and
  * `/admin/tasks`' row `rsvpAskAnswerersNotice`. A notice approved before the marker existed is silent, and asks no answerer: the club
@@ -713,7 +713,7 @@ export async function findFirstRsvpAskNoticeVersion<T extends Record<string, unk
 /**
  * The lowest version of an approved, not withdrawn privacy notice that describes the question's second audience in **every** language
  * (`describesRsvpAskAnswerers`, with `describesRsvpAsk` and `describesRsvp` beside it), or null when none does —
- * `findFirstRsvpAskNoticeVersion`'s twin (§NNN, the §421 rule). An answer «Vin!» records the notice it was given under
+ * `findFirstRsvpAskNoticeVersion`'s twin (§823, the §421 rule). An answer «Vin!» records the notice it was given under
  * (`event_rsvps.privacy_notice_version`); its address is asked again, at a later date of the series, only if it was given under this version
  * or a later one — an answer given under an older notice agreed to be counted, never to be asked again.
  */

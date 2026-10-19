@@ -117,7 +117,7 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    */
   "rsvp-event": { limit: 200, windowMs: 60 * 60_000 },
   /**
-   * The name tick on the «Nu mai vin» link's page (§NNN), keyed on the link's hash: its own bucket, so flipping a name never spends the
+   * The name tick on the «Nu mai vin» link's page (§827), keyed on the link's hash: its own bucket, so flipping a name never spends the
    * ten `token-validate` attempts that «Nu mai vin» itself depends on. Thirty an hour is far more flips than a person makes, and it bounds
    * the public-cache expiries (`places`) a leaked link could cause.
    */

@@ -9,7 +9,7 @@ import { RSVP_LINK_GRACE_DAYS } from "./domain/link-life";
 import type { RsvpLink } from "./rsvp";
 
 /**
- * «Nu mă mai întreba la seria aceasta» (§NNN; the owner, 2026-10-19: «I need to set how these emails are sent») — the one press that stops the
+ * «Nu mă mai întreba la seria aceasta» (§823; the owner, 2026-10-19: «I need to set how these emails are sent») — the one press that stops the
  * day-before question (§818) for good, for a SERIES of events, for an address.
  *
  * It is the third link of a question sent to an earlier answerer (`rsvp_refuse_tokens`, minted by `makeRsvpAsk`, never in a subscriber's: their way

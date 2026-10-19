@@ -8,7 +8,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { DEFAULT_RSVP_ASK_AUDIENCE, readRsvpAskAudience, type RsvpAskAudience, rsvpAskAudienceSchema } from "./domain/ask-audience";
 
 /**
- * «Cui îi trimitem întrebarea „Vii?"» (§NNN): the shape every club setting on «Emailuri» has (§100, §164, §672) — one `platform_settings`
+ * «Cui îi trimitem întrebarea „Vii?"» (§823): the shape every club setting on «Emailuri» has (§100, §164, §672) — one `platform_settings`
  * row, written by an Administrator, audited with what it was and what it became. Read straight through: the queue reads it once, and
  * only when an event's window is open (`rsvp/ask.ts`), and the page that sets it reads it as it is.
  */

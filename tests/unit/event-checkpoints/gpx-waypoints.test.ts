@@ -161,7 +161,7 @@ describe("§757 what a waypoint's words say it offers", () => {
     ["", []],
   ])("reads %j as %j", (words, kinds) => expect(kindsFromWords(words)).toEqual(kinds));
 
-  // «Regrupare» (§NNN): where the group waits — accent-insensitive like the others, one family per row.
+  // «Regrupare» (§824): where the group waits — accent-insensitive like the others, one family per row.
   it.each([
     ["Regrupare", ["REGROUP"]],
     ["REGRUPARE la cabană", ["REGROUP"]],
@@ -185,7 +185,7 @@ describe("§757 what a waypoint's words say it offers", () => {
     ["Regrupez", []],
   ])("reads %j as %j", (words, kinds) => expect(kindsFromWords(words)).toEqual(kinds));
 
-  it("keeps every earlier guess as it was: a name with none of the new words reads exactly as before (§NNN)", () => {
+  it("keeps every earlier guess as it was: a name with none of the new words reads exactly as before (§824)", () => {
     const before: Array<[string, string, string[]]> = [
       ["Fântână", "", ["WATER"]],
       ["Punct de apă și mâncare", "", ["WATER", "FOOD"]],

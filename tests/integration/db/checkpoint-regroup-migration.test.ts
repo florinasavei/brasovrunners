@@ -9,7 +9,7 @@ import { auditMigration } from "../../../scripts/migration-check.mjs";
 import { CHECKPOINT_KINDS } from "@/modules/event-checkpoints/domain/checkpoint";
 
 /**
- * Migration `0174_checkpoint_regroup` (§NNN), proven on real PostgreSQL (PGlite): «Regrupare» is the sixth value of the
+ * Migration `0174_checkpoint_regroup` (§824), proven on real PostgreSQL (PGlite): «Regrupare» is the sixth value of the
  * `event_checkpoint_kind` enum, after the five; every checkpoint written before it reads back as it was; the value
  * takes its place in an array beside the others; and the file only expands (one `ADD VALUE`, never used in the file
  * that adds it — PostgreSQL refuses that inside the transaction).

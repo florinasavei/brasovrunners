@@ -16,11 +16,11 @@ import { emailCopyKey } from "@/modules/notifications/domain/email-copy";
 import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
 
 /**
- * §NNN (amends §818) — WHO the day-before question is asked of: the audience's three answers and its arithmetic (pure), the card in «Emailuri»
+ * §823 (amends §818) — WHO the day-before question is asked of: the audience's three answers and its arithmetic (pure), the card in «Emailuri»
  * that sets it (three radios, the gate in words while the earlier answerers are chosen), and the email's refusal link, an earlier answerer's alone.
  * The queue and the send are proved on a database in `tests/integration/rsvp/ask-settings.test.ts`.
  */
-describe("§NNN the «Vii?» audience, pure", () => {
+describe("§823 the «Vii?» audience, pure", () => {
   it("is the subscribers alone by default — the answerers need the club's choice and the notice — and reads anything else it cannot read as that", () => {
     expect(DEFAULT_RSVP_ASK_AUDIENCE).toBe("SUBSCRIBERS");
     expect(RSVP_ASK_AUDIENCES).toEqual(["SUBSCRIBERS", "ANSWERERS", "BOTH"]);
@@ -101,7 +101,7 @@ async function panel(audience: (typeof RSVP_ASK_AUDIENCES)[number], options: { d
 
 const radios = (markup: string) => [...markup.matchAll(/<input\b[^>]*type="radio"[^>]*>/g)].map((match) => match[0]);
 
-describe("§NNN the card «Cui îi trimitem întrebarea „Vii?”» in «Emailuri»", () => {
+describe("§823 the card «Cui îi trimitem întrebarea „Vii?”» in «Emailuri»", () => {
   it("draws three radios named audience — a choice, never a toggle — with the one in force checked, a closed fold with a glyph", async () => {
     const markup = await panel("SUBSCRIBERS");
     const inputs = radios(markup);
@@ -167,7 +167,7 @@ describe("§NNN the card «Cui îi trimitem întrebarea „Vii?”» in «Emailu
   });
 });
 
-describe("§NNN the question's email: the refusal link is an earlier answerer's alone", () => {
+describe("§823 the question's email: the refusal link is an earlier answerer's alone", () => {
   const data = (extra: Partial<TemplateData> = {}): TemplateData =>
     ({
       eventTitle: "Alergarea de duminică",

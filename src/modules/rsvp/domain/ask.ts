@@ -2,7 +2,7 @@ import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { fromWallTimeInput, toWallTimeInput } from "@/modules/events/domain/zoned-time";
 
 /**
- * «Vii?» (§818, settings §NNN; the owner, 2026-10-18: «I need this "Going" to be via email or something … super easy», then
+ * «Vii?» (§818, settings §823; the owner, 2026-10-18: «I need this "Going" to be via email or something … super easy», then
  * 2026-10-19: «I need to set how these emails are sent») — WHEN the question goes out, pure. The rest (who, the links, the row that makes
  * it once) is `rsvp/ask.ts`.
  *

@@ -47,7 +47,7 @@ export const eventRsvps = pgTable(
     // Set when the row was made by the «Vii?» email (§818) for a newsletter subscriber, before any press: the page of its two
     // links then offers the optional name and says «Bine, nu te numărăm» for «Nu vin». Null for an answer typed on the page.
     askedAt: timestamp("asked_at", { withTimezone: true }),
-    // Whom the question was sent as (§NNN): `SUBSCRIBER` (a newsletter subscriber of the topic) or `ANSWERER` (an earlier answerer). Null for an
+    // Whom the question was sent as (§823): `SUBSCRIBER` (a newsletter subscriber of the topic) or `ANSWERER` (an earlier answerer). Null for an
     // answer typed on the page. A «Vin» pressed in a subscriber's question is an earlier answer only while that address still receives the topic.
     askedBasis: text("asked_basis"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -69,7 +69,7 @@ export const eventRsvpTokenPurpose = pgEnum("event_rsvp_token_purpose", ["RSVP_C
 /**
  * (The third link of the «Vii?» question an earlier answerer receives, «Nu mă mai întreba la seria aceasta», is NOT in this table: it must
  * outlive the answer row — «Nu vin» deletes that row, and a link that went with it would break the promise that a person may object at any
- * time. It is `rsvp_refuse_tokens`, below, §NNN.)
+ * time. It is `rsvp_refuse_tokens`, below, §823.)
  *
  * The «Vin!» links (§811) — the same secret and the same stored hash as every email action link (AGENTS.md
  * §12.8, §13.2; `action-tokens/domain/token-secret.ts`), in a table of their own because they belong to an
@@ -131,7 +131,7 @@ export const eventRsvpAsks = pgTable("event_rsvp_asks", {
 export type EventRsvpAsk = typeof eventRsvpAsks.$inferSelect;
 
 /**
- * «Nu mă mai întreba la seria aceasta» (§NNN): a person's refusal of the day-before question for a SERIES of events — the one press of
+ * «Nu mă mai întreba la seria aceasta» (§823): a person's refusal of the day-before question for a SERIES of events — the one press of
  * the link an earlier answerer's question carries (`rsvp_refuse_tokens`). **By canonical address and series, not by event**: the club's
  * «Vin!» answers are asked again at every date of a weekly run, so a refusal for one date would be asked again next week.
  * `series_key` is the key the listing groups by (`events/domain/series.ts#seriesKey`: the type and the default-language title, as
@@ -156,7 +156,7 @@ export const rsvpAskRefusals = pgTable(
 export type RsvpAskRefusal = typeof rsvpAskRefusals.$inferSelect;
 
 /**
- * The link «Nu mă mai întreba la seria aceasta» (§NNN) of the question an earlier answerer receives. **A table of its own, with no key to
+ * The link «Nu mă mai întreba la seria aceasta» (§823) of the question an earlier answerer receives. **A table of its own, with no key to
  * the answer**: the question made an answer row, and «Nu vin» in the same email deletes it — a link that went with the row would have been
  * dead after the person's first press, and the notice promises the objection «oricând». So the token carries what the refusal needs
  * (the address's canonical form, its canonicalizer's version, the series key, the event and the language for the page) and nothing else.

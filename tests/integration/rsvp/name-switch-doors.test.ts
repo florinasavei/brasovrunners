@@ -77,11 +77,11 @@ const HOUR = 60 * 60_000;
 const DAY = 24 * HOUR;
 
 /**
- * §NNN (BR-REQ-039-01, BR-REQ-036-02, BR-REQ-060-01; amends §812) — the name tick's two doors that are not the zone: the remembered browser's
+ * §827 (BR-REQ-039-01, BR-REQ-036-02, BR-REQ-060-01; amends §812) — the name tick's two doors that are not the zone: the remembered browser's
  * server action (who is the cookie's, the island sees booleans only) and the «Nu mai vin» link's page (a GET that draws, a POST that reads the
  * link and does not spend it). The zone's door is proved in `zone-rsvp.test.ts`, the service in `name-switch.test.ts`, the journey in `rsvp.spec.ts`.
  */
-describe("§NNN the name tick's doors", () => {
+describe("§827 the name tick's doors", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let eventId: string;

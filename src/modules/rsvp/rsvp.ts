@@ -273,7 +273,7 @@ type EventRsvpTokenPurpose = (typeof eventRsvpTokens.$inferSelect)["purpose"];
  * newer link of the same purpose supersedes the older. `confirm` is minted only when asked (the "confirm" message of a row
  * still unconfirmed); `withdraw` always, valid until the event's start. Null when the event has started: nothing to answer.
  *
- * `confirmUntilStart` (§NNN) is the «Vii?» question's «Vin»: the club may now send the question up to seven days ahead, so its button lives
+ * `confirmUntilStart` (§823) is the «Vii?» question's «Vin»: the club may now send the question up to seven days ahead, so its button lives
  * until the event's start instead of the 48 hours of a confirmation message — a person who presses it the evening before is counted by
  * the one tap the question exists for, not sent to type their address again. (The refusal link is not minted here: `ask-refusal.ts`,
  * a table of its own, so it outlives the answer.)
@@ -307,7 +307,7 @@ export async function mintRsvpLinks<T extends Record<string, unknown>>(
 
 /** What a link's page needs: the answer's event, in the language the answer was given in, and what the link would do. */
 export type RsvpLink = {
-  /** `RSVP_REFUSE` (§NNN) is the question's «Nu mă mai întreba la seria aceasta»: not an answer's link (`rsvp_refuse_tokens`), so no answer row stands behind it. */
+  /** `RSVP_REFUSE` (§823) is the question's «Nu mă mai întreba la seria aceasta»: not an answer's link (`rsvp_refuse_tokens`), so no answer row stands behind it. */
   purpose: EventRsvpTokenPurpose | "RSVP_REFUSE";
   /**
    * `live`: pressing the button would act. `used`: spent, or replaced by a newer email. `expired`: the link's own life ran out while
@@ -331,13 +331,13 @@ export type RsvpLink = {
   /** The answer has a name already (typed on the page): the box is then not offered, and the press changes nothing about it. */
   named: boolean;
   /**
-   * The person's tick «Numele meu apare la „Cine vine"» as it stands (§NNN): the row's `show_name` AND a name to show. A tick with no name
+   * The person's tick «Numele meu apare la „Cine vine"» as it stands (§827): the row's `show_name` AND a name to show. A tick with no name
    * (the page's form lets one be ticked with the box empty) shows nothing, so the page does not draw it ticked either.
    */
   showName: boolean;
   /**
    * The name the row holds — the person's own link, so the page may draw it: the tick would show exactly this, and the box is prefilled
-   * with it, so a name is never published that the person was not shown (§NNN, §812).
+   * with it, so a name is never published that the person was not shown (§827, §812).
    */
   name: string | null;
 };
@@ -378,7 +378,7 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
       .innerJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, eventRsvps.locale)))
       .where(eq(eventRsvpTokens.tokenHash, hashTokenSecret(secret)))
       .limit(1);
-    // Not one of the answer's links: perhaps the question's refusal link, which has a table of its own (§NNN).
+    // Not one of the answer's links: perhaps the question's refusal link, which has a table of its own (§823).
     if (!row) return readRefuseLink(tx, secret, now);
     const over = row.startsAt !== null && row.startsAt.getTime() <= now.getTime();
     const state = row.usedAt !== null || row.invalidatedAt !== null ? "used" : over ? "over" : row.expiresAt.getTime() <= now.getTime() ? "expired" : "live";
@@ -570,7 +570,7 @@ export async function withdrawRsvp<T extends Record<string, unknown>>(
 export type RsvpNameSwitch = { ok: true; showName: boolean } | { ok: false; reason: "none" | "name" | "closed" };
 
 /**
- * «Numele meu apare la „Cine vine"» (§NNN, amending §812; the owner, 2026-10-19: «oamenii să poată ușor să zică „afișează / ascunde"
+ * «Numele meu apare la „Cine vine"» (§827, amending §812; the owner, 2026-10-19: «oamenii să poată ușor să zică „afișează / ascunde"
  * numele meu public») — the person flips their own tick on a «Vin!» answer, any time, from where they already see it: the remembered
  * browser (`remembered`), the members' zone (`account`) or the «Nu mai vin» link's page (`token`). §186's shape for «Vin!»: one write,
  * reversible, low-stakes, never audited with the name.
@@ -678,7 +678,7 @@ export async function hasConfirmedRsvp<T extends Record<string, unknown>>(db: Da
 }
 
 /**
- * The person's own confirmed answer, as the tick «Numele meu apare la „Cine vine"» needs it (§NNN): whether the name shows (the tick AND a
+ * The person's own confirmed answer, as the tick «Numele meu apare la „Cine vine"» needs it (§827): whether the name shows (the tick AND a
  * name) and the name the row holds, which the tick would show — handed only to the browser the cookie proves is the person's, never the
  * address. Null when there is no confirmed answer of this address. The remembered browser's state.
  */

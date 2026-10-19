@@ -308,7 +308,7 @@ describe("§802 the markers", () => {
     for (const glyph of ["water", "food", "firstAid", "timing", "direction", "none"] as const) expect(ELEVATION_GLYPH_PATHS[glyph]).toMatch(/^M/);
   });
 
-  // «Regrupare» (§NNN): the group's wait is said before anything the point also offers — in both orders.
+  // «Regrupare» (§824): the group's wait is said before anything the point also offers — in both orders.
   it("pins the group for a «Regrupare» point, before every other kind, in the race number's order and in the page's", () => {
     for (const foodFirst of [false, true]) {
       expect(glyphForKinds(["REGROUP"], foodFirst)).toBe("regroup");
@@ -325,7 +325,7 @@ describe("§802 the markers", () => {
   // scaled so a point 7.5 from the centre lands at 0.78 of it. The food fork's tines are the farthest a glyph with corners
   // reaches (8.08); the drop's round bulb reaches 8.2 but follows the ring's own curve, so it never meets it. No other glyph
   // may reach past 8.1, curves and arcs included.
-  it("keeps every glyph's outline within 8.1 of its centre (the drop's bulb 8.2), so none runs into its ring (§NNN)", () => {
+  it("keeps every glyph's outline within 8.1 of its centre (the drop's bulb 8.2), so none runs into its ring (§824)", () => {
     for (const [name, path] of Object.entries(ELEVATION_GLYPH_PATHS)) {
       expect(maxRadius(path), name).toBeLessThanOrEqual(name === "water" ? 8.2 : 8.1);
       expect(maxRadius(path), name).toBeGreaterThan(3);
@@ -337,7 +337,7 @@ describe("§802 the markers", () => {
   });
 
   // Nothing stored has the kind yet, so no drawing changes: every set of the five old kinds still pins what it always pinned.
-  it("pins every combination of the five earlier kinds as before: the old order and the page's food-first one (§NNN)", () => {
+  it("pins every combination of the five earlier kinds as before: the old order and the page's food-first one (§824)", () => {
     const old = [
       ["WATER", "water"],
       ["FOOD", "food"],

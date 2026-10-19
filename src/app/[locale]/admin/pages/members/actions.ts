@@ -162,7 +162,7 @@ function codeFieldsOf(form: FormData) {
     descriptionEn: text(form, "descriptionEn"),
     link: text(form, "link"),
     validUntil: text(form, "validUntil"),
-    // «Pentru cine e codul» (§811, amended by §NNN): one id per ticked level chip, and `forAll` when «Toți membrii» is ticked. The
+    // «Pentru cine e codul» (§811, amended by §828): one id per ticked level chip, and `forAll` when «Toți membrii» is ticked. The
     // fields' schema refuses neither and both, on the chips' box; the service stores «Toți membrii» as no limit.
     tierIds: form.getAll("tierIds").filter((value): value is string => typeof value === "string"),
     forAll: form.getAll("forAll").length > 0,

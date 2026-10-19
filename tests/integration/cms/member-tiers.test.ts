@@ -87,7 +87,7 @@ const CODE = {
   validUntil: "",
 };
 
-/** A code for «Toți membrii»: who a code is for is chosen, never left empty (§811, amended by §NNN). */
+/** A code for «Toți membrii»: who a code is for is chosen, never left empty (§811, amended by §828). */
 const EVERYONE = { ...CODE, forAll: true };
 
 describe("§811 the member tiers", () => {
@@ -595,7 +595,7 @@ describe("§811 the member tiers", () => {
       expect(kept.tierIds).toEqual([first.id]);
     });
 
-    it("refuses a code that chose nobody or both, naming the chips' box, and stores «Toți membrii» as no limit (§811, amended by §NNN)", async () => {
+    it("refuses a code that chose nobody or both, naming the chips' box, and stores «Toți membrii» as no limit (§811, amended by §828)", async () => {
       const { first } = await twoTiers();
       // Neither a level nor «Toți membrii»: the club must choose, an empty list is no answer.
       await expect(createDiscountCode(db, { actor: admin, fields: { ...CODE, tierIds: [] }, now: NOW })).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["tierIds"] });

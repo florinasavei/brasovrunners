@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * «Cui îi trimitem întrebarea „Vii?"» (§NNN; the owner, 2026-10-19: «I need to set how these emails are sent») — WHO the day-before
+ * «Cui îi trimitem întrebarea „Vii?"» (§823; the owner, 2026-10-19: «I need to set how these emails are sent») — WHO the day-before
  * question (§818) is asked of, pure. One club setting with three answers, a choice and never a pair of switches:
  *
  *   - `SUBSCRIBERS` — **the default, and what the platform did until the club could choose**: the confirmed newsletter subscribers

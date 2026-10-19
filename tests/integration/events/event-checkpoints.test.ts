@@ -292,7 +292,7 @@ describe("§757 an event's checkpoints", () => {
     expect((await listCheckpoints(db, eventId)).at(-1)?.kinds).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION"]);
   });
 
-  it("saves «Regrupare» as the sixth kind, last in the closed set's order, with the note that says how long, and reads it back (§NNN)", async () => {
+  it("saves «Regrupare» as the sixth kind, last in the closed set's order, with the note that says how long, and reads it back (§824)", async () => {
     expect(
       await save([
         { ...WATER, kinds: ["REGROUP", "WATER"] },

@@ -14,7 +14,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * real pages: the zone draws no badge and names no level (the level is the staff's label alone), the public members' page has no
  * section of levels, the zone's «Coduri de reducere» tab lists the codes for everyone and those of the member's level with no
  * mark saying why a code is there — and the codes' editor, which gives each code the chips «Pentru cine e codul»: «Toți membrii»
- * first, then the levels, chosen and never left empty (§811, amended by §NNN).
+ * first, then the levels, chosen and never left empty (§811, amended by §828).
  * A level is a label: the zone opens for a member with a level exactly as for one with none.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, cookie: undefined as string | undefined, locale: "ro" as "ro" | "en" }));
@@ -64,7 +64,7 @@ async function markup(node: ReactElement): Promise<string> {
 const NOW = new Date("2026-10-18T09:00:00.000Z");
 const CODE = { partnerName: "Magazinul", code: "BVR15", descriptionRo: "15% la încălțăminte.", descriptionEn: "15% off shoes.", link: "", validUntil: "" };
 
-/** A code for «Toți membrii»: who a code is for is chosen, never left empty (§811, amended by §NNN). */
+/** A code for «Toți membrii»: who a code is for is chosen, never left empty (§811, amended by §828). */
 const EVERYONE = { ...CODE, forAll: true };
 
 function rowsOf(spec: Record<string, Record<string, string>>) {

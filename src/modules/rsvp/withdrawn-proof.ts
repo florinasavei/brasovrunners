@@ -14,7 +14,7 @@ function secretOf(source: { APP_ENV?: string; AUTH_SECRET?: string; JOB_SECRET?:
 /** What the proof's slug carries when the deleted row was the «Vii?» email's unanswered question (§818): the page then says «nu te numărăm», and only a press made it. */
 export const WITHDRAWN_ASKED_SUFFIX = ":nu";
 
-/** The same, for «Nu mă mai întreba la seria aceasta» (§NNN): the keyed slug carries it, so the page says the refusal only when a press made it. */
+/** The same, for «Nu mă mai întreba la seria aceasta» (§823): the keyed slug carries it, so the page says the refusal only when a press made it. */
 export const REFUSED_SUFFIX = ":refuz";
 
 /**

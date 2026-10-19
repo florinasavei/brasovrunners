@@ -27,7 +27,7 @@ export type RsvpIslandState =
   /** Remembered, but the event takes no answers now (or the page is stale): the island draws nothing. */
   | { remembered: true; offered: false }
   /**
-   * `showName` and `name` (§NNN) are the person's own tick «Numele meu apare la „Cine vine"» as it stands (the tick and a name) and the name
+   * `showName` and `name` (§827) are the person's own tick «Numele meu apare la „Cine vine"» as it stands (the tick and a name) and the name
    * their answer holds — the island shows it beside the tick and posts it, so a name is never published unseen (§812). It is handed only to
    * the browser whose `httpOnly` cookie proves it is the person's, and never the address. `false` and null while not `going`.
    */
@@ -85,7 +85,7 @@ export async function rsvpGoAction(slug: string, locale: string, showName: boole
 }
 
 /**
- * «Numele meu apare la „Cine vine"» (§NNN): the remembered address's own tick on its confirmed answer, any time. The cookie says who (the
+ * «Numele meu apare la „Cine vine"» (§827): the remembered address's own tick on its confirmed answer, any time. The cookie says who (the
  * island never names an address); `name` is what the box holds — the answer's own name the island showed, or one typed when it held none —
  * taken only with the tick, and a name the answer already holds is never published without it (`setRsvpShowName`). Turning it off needs
  * no open event and no notice (`setRsvpShowName`); turning it on records the notice in force. No audit row, nothing about the name kept anywhere else.

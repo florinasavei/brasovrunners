@@ -245,7 +245,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   //
   // Asked inside «Program, regulament și declarație» from §512 and, since §760, inside «Participare,
   // înscrieri și regulament» — the last of its cards in the editor: no number and no chip of its own.
-  // The page draws it right under the registration card since §NNN (the owner, 2026-10-19: «Cine vine
+  // The page draws it right under the registration card since §825 (the owner, 2026-10-19: «Cine vine
   // trebuie să fie mai vizibil»), so the list stands there, before the share links.
   {
     id: "startList",

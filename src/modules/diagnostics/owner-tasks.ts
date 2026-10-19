@@ -267,7 +267,7 @@ export type OwnerTaskInputs = {
    */
   rsvpAskDescribed: boolean;
   /**
-   * Did the club choose to ask the people who answered «Vin!» at an earlier date of the series too (§NNN, the setting in «Emailuri»:
+   * Did the club choose to ask the people who answered «Vin!» at an earlier date of the series too (§823, the setting in «Emailuri»:
    * `ANSWERERS` or `BOTH`)? The row below exists only while it did: a club that asks its subscribers alone owes the notice nothing more.
    */
   rsvpAskAnswerersChosen: boolean;
@@ -277,7 +277,7 @@ export type OwnerTaskInputs = {
    */
   rsvpAskAnswerersOnly?: boolean;
   /**
-   * Does the notice in force, in every language, describe the question's second audience too (§NNN, `noticeDescribesRsvpAskAnswerers`:
+   * Does the notice in force, in every language, describe the question's second audience too (§823, `noticeDescribesRsvpAskAnswerers`:
    * `{{rsvpAskAnswerers}}`, with the question and «Vin!»)? Until it does, nobody of that audience is asked, whatever the club chose.
    */
   rsvpAskAnswerersDescribed: boolean;
@@ -663,7 +663,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
-      The question's second audience (§NNN): the people who answered «Vin!» at an earlier date of the series. The gate is real, so the
+      The question's second audience (§823): the people who answered «Vin!» at an earlier date of the series. The gate is real, so the
       row is the club's to see: it exists while the club CHOSE that audience («Emailuri» → «Cui îi trimitem întrebarea „Vii?”»), is open
       until a notice naming `{{rsvpAskAnswerers}}` is in force in every language (nobody of that audience is asked meanwhile, though the
       club chose it — it must hear why), and done by itself the day one takes effect. Absent while the audience is the subscribers alone.

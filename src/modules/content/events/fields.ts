@@ -814,7 +814,7 @@ export const eventFieldsSchema = z
      */
     rsvpEnabled: z.boolean().optional(),
     /**
-     * «Trimite întrebarea „Vii?” înainte de acest eveniment» (§NNN): whether the day-before question is sent for this event, under
+     * «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823): whether the day-before question is sent for this event, under
      * «Acceptă răspunsuri „Vin!”». Absent means this caller is not editing it (the kit's discipline, §554); the editor posts it with
      * a marker. On by default on every event; it decides nothing but the question (`rsvp/ask.ts`).
      */

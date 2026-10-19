@@ -37,12 +37,12 @@ const EARLIER = new Date(STARTS_AT.getTime() - 7 * DAY);
 const LATER = new Date(STARTS_AT.getTime() + 7 * DAY);
 
 /**
- * §NNN (amends §818, §813; the owner, 2026-10-19: «I need to set how these emails are sent») — the «Vii?» question's three settings:
+ * §823 (amends §818, §813; the owner, 2026-10-19: «I need to set how these emails are sent») — the «Vii?» question's three settings:
  * WHEN (days before the start, hour: «Termene»), WHO («Emailuri»: the subscribers by default; the people who answered «Vin!» at an earlier date of
  * the series only while the club chose it AND the notice names it, each email with its «Nu mă mai întreba la seria aceasta» link) and WHICH EVENTS
  * (the per-event tick). Migration 0173 is exercised by all of it: the column's default, the refusals' table and its unique key, the new link purpose.
  */
-describe("§NNN the «Vii?» question's settings", () => {
+describe("§823 the «Vii?» question's settings", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

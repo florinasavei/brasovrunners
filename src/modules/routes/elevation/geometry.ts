@@ -37,7 +37,7 @@ export type ElevationGlyph = "water" | "food" | "firstAid" | "timing" | "directi
 
 /**
  * The glyph a point's kinds give it, most useful to a runner first: water, food, first aid, timing, direction (the race number's strip, §804).
- * «Regrupare» (§NNN) is before them all, in both orders: a point where the group waits says so before anything it also offers.
+ * «Regrupare» (§824) is before them all, in both orders: a point where the group waits says so before anything it also offers.
  */
 const GLYPH_OF_KIND: ReadonlyArray<readonly [string, ElevationGlyph]> = [
   ["REGROUP", "regroup"],
@@ -51,7 +51,7 @@ const GLYPH_OF_KIND: ReadonlyArray<readonly [string, ElevationGlyph]> = [
 /**
  * The page's order (§802, amended; the owner, 2026-10-17: «dacă am apă și hrană, trebuie arătată iconița de hrană, pentru
  * că aia e mai valoroasă; apa e cumva implicită dacă avem mâncare»): food, water, first aid, timing, direction — the fork
- * wins over the drop, the other kinds keep their places — and «Regrupare» (§NNN) stays first.
+ * wins over the drop, the other kinds keep their places — and «Regrupare» (§824) stays first.
  */
 const GLYPH_OF_KIND_FOOD_FIRST: ReadonlyArray<readonly [string, ElevationGlyph]> = [GLYPH_OF_KIND[0], GLYPH_OF_KIND[2], GLYPH_OF_KIND[1], ...GLYPH_OF_KIND.slice(3)];
 

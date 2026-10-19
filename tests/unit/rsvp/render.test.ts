@@ -8,7 +8,7 @@ import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 
 /**
  * §811 («Vin!» part 1) — what the page and the editor draw: the box «Confirmă prezența (opțional)» (the typed form, its outcomes, the small fold «Nu mai vin»,
- * the anti-bot widget only when the club switched it on), the fold «Cine vine (N)» under it (§NNN) with the names that may be shown and none of the addresses,
+ * the anti-bot widget only when the club switched it on), the fold «Cine vine (N)» under it (§825) with the names that may be shown and none of the addresses,
  * the club's tick in the registration card (a real tick box, never a toggle), and the read-only fold of answers by role. The service
  * and the gate are proved in `tests/integration/rsvp/` and `domain.test.ts`; the whole journey in `tests/e2e/rsvp.spec.ts`.
  */
@@ -94,7 +94,7 @@ describe("§811 the box «Confirmă prezența (opțional)» — the typed form",
     expect(markup).toContain('id="vin"');
     expect(markup).toContain('data-testid="rsvp-box"');
     expect(markup).toMatch(/<h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?Confirmă prezența \(opțional\)/);
-    // §NNN: said in words that it is not a registration, and no longer promising the list it does not hold.
+    // §825: said in words that it is not a registration, and no longer promising the list it does not hold.
     expect(markup).toContain("Nu e o înscriere: ne ajută să știm câți venim.");
     expect(markup).not.toContain("vezi cine mai vine");
     expect(markup).toMatch(/<input[^>]*name="email"[^>]*type="email"|<input[^>]*type="email"[^>]*name="email"/);
@@ -182,7 +182,7 @@ describe("§811 the box «Confirmă prezența (opțional)» — the typed form",
     expect(markup).not.toContain("Răspunzi ca");
   });
 
-  it("no longer holds who comes: the names are the fold under it (§NNN), so the box draws no count card and no names", async () => {
+  it("no longer holds who comes: the names are the fold under it (§825), so the box draws no count card and no names", async () => {
     state.rsvps = { count: 2, names: ["Ana Popescu"], others: 1 };
     const markup = await box();
     expect(markup).not.toContain('data-testid="rsvp-who"');
@@ -234,7 +234,7 @@ describe("§812 the card «Confirmă prezența (opțional)» is a closed fold wi
     expect(lineOf(await box(null, "en"))).toBe(" · 25 coming");
     expect(summaryOf(await box(null, "en"))).toContain("Confirm you&#x27;re coming (optional)");
     expect(summaryOf(await box(null, "en"))).toContain("coming");
-    // The names, when ticked, are in the fold under the card (§NNN) — never on the bar, never in the card.
+    // The names, when ticked, are in the fold under the card (§825) — never on the bar, never in the card.
     state.rsvps = { count: 3, names: ["Ana Popescu"], others: 2 };
     const markup = await box();
     expect(summaryOf(markup)).not.toContain("Ana Popescu");
@@ -269,11 +269,11 @@ describe("§812 the card «Confirmă prezența (opțional)» is a closed fold wi
 });
 
 /**
- * §NNN — «Cine vine (N)» on a turn-up event is a closed fold of its own, the races' list's shape (`StartList`): a real h2 in the summary
+ * §825 — «Cine vine (N)» on a turn-up event is a closed fold of its own, the races' list's shape (`StartList`): a real h2 in the summary
  * with the people glyph and the count on it, the names inside, the anchor `#cine-vine`. The disclosure rule is unchanged (§143, §812): the
  * names are the cached read's, never an address.
  */
-describe("§NNN the fold «Cine vine (N)» under the card", () => {
+describe("§825 the fold «Cine vine (N)» under the card", () => {
   const detailsTag = (markup: string) => /<details\b[^>]*>/.exec(markup)?.[0] ?? "";
   const summaryOf = (markup: string) => /<summary\b[\s\S]*?<\/summary>/.exec(markup)?.[0] ?? "";
 
@@ -478,10 +478,10 @@ describe("§811 the fold «Răspunsuri „Vin!” (N)» — read-only, addresses
 });
 
 /**
- * §NNN — the name tick's words and what the island is handed. The island is a client component the page renders from the server: what
+ * §827 — the name tick's words and what the island is handed. The island is a client component the page renders from the server: what
  * it receives is the page's strings and the server's actions as props — never an address, never a name.
  */
-describe("§NNN the island's props for the name tick", () => {
+describe("§827 the island's props for the name tick", () => {
   type Node = { type?: unknown; props?: Record<string, unknown> } | null | undefined;
   /** The element of the one client island, found in the tree the server component returns. */
   function findIsland(node: unknown): { labels: Record<string, string>; actions: Record<string, unknown> } | null {

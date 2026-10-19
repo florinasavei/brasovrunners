@@ -259,7 +259,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
   // `queueConfirmationRetries` (§653): the verification email re-sent, the club's hours after the last one left.
   const confirmationRetry = await nextConfirmationRetry(db, now, settings);
   const outage = await nextOutageWork(db, now, outageGraceMaxMs(settings));
-  // `queueRsvpAsks` (§818): the club's hour on the day N days before each ticked turn-up event (§NNN) — without it the job would sleep through it.
+  // `queueRsvpAsks` (§818): the club's hour on the day N days before each ticked turn-up event (§823) — without it the job would sleep through it.
   const rsvpAsk = await nextRsvpAskWork(db, now, rsvpAskTimingOf(settings));
 
   return earliest([
@@ -278,7 +278,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
 }
 
 /**
- * «Vii mâine la …?» (§818, `rsvp/ask.ts`): the soonest opening of the club's hour (§NNN: the days before and the hour, «Termene») for a ticked,
+ * «Vii mâine la …?» (§818, `rsvp/ask.ts`): the soonest opening of the club's hour (§823: the days before and the hour, «Termene») for a ticked,
  * scheduled, published, public turn-up event whose own tick for the question is on and that has not been asked yet — the window's opening
  * (`rsvpAskNextLook`), when it is still ahead. With zero days the club asks nobody, and the job has nothing to wake for. A window already open is the run
  * that calls this having just looked at it, or a save that wakes the job itself. The query mirrors `queueRsvpAsks`' candidates without

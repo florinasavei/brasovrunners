@@ -114,7 +114,7 @@ describe("§757 which checkpoints the strip pins, and what each says", () => {
     expect(glyphForKinds([])).toBe("none");
   });
 
-  it("pins a «Regrupare» point with the group's glyph, before what it also offers, and labels it by its kilometre only (§NNN)", () => {
+  it("pins a «Regrupare» point with the group's glyph, before what it also offers, and labels it by its kilometre only (§824)", () => {
     expect(glyphForKinds(["REGROUP"])).toBe("regroup");
     expect(glyphForKinds(["WATER", "FOOD", "REGROUP"])).toBe("regroup");
     const [regroup, regroupWater] = bibStripCheckpoints([at(4, null, ["REGROUP"]), at(6, null, ["REGROUP", "WATER"])], 9_000, words);
@@ -123,7 +123,7 @@ describe("§757 which checkpoints the strip pins, and what each says", () => {
     expect(regroupWater.label).toBe("km 6 · apă");
   });
 
-  it("draws the five earlier kinds with the very paths and order they had, so the picture's version stays (§NNN)", () => {
+  it("draws the five earlier kinds with the very paths and order they had, so the picture's version stays (§824)", () => {
     expect(BIB_DRAWING_VERSION).toBe(4);
     const paths = (["water", "food", "firstAid", "timing", "direction", "none"] as const).map((glyph) => ELEVATION_GLYPH_PATHS[glyph]);
     expect(paths).toEqual([
@@ -358,7 +358,7 @@ describe("§757 the pins stand side by side, never over one another", () => {
     expect(thinBibCheckpoints([point(5, ["TIMING"]), point(5 + close, ["DIRECTION"])], BIB_LAYOUT.profileChartWidth, 9_000, radius)).toHaveLength(1);
   });
 
-  // §NNN: «Regrupare» is first among one point's own glyphs; between two points that would touch, the aid station's rule (§757) is older and stays.
+  // §824: «Regrupare» is first among one point's own glyphs; between two points that would touch, the aid station's rule (§757) is older and stays.
   it("gives a regroup point way to an aid station within a pin's reach, in either order, and keeps the group's glyph on a point that is both", () => {
     const close = 0.5 * ((radius * 2 + radius * 0.5) / BIB_LAYOUT.profileChartWidth) * 9;
     const regroupFirst = thinBibCheckpoints([point(5, ["REGROUP"]), point(5 + close, ["WATER"])], BIB_LAYOUT.profileChartWidth, 9_000, radius);

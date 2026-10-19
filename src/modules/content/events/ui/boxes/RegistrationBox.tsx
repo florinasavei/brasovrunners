@@ -506,7 +506,7 @@ export default async function RegistrationBox({
               </CheckboxField>
               <BoxNote>{t("editor.rsvpEnabledHelp")}</BoxNote>
               {/*
-                «Trimite întrebarea „Vii?” înainte de acest eveniment» (§NNN; the owner, 2026-10-19: «I need to set how these emails are sent»):
+                «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823; the owner, 2026-10-19: «I need to set how these emails are sent»):
                 the question's own tick, under «Acceptă răspunsuri», shown only while that is ticked (`OnlyWhenTicked`: hidden, never removed).
                 On by default — the question goes out unless the club unticks it for one date. Carried by a series, «Duplică» and the JSON file.
               */}

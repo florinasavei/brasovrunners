@@ -8,6 +8,15 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.60-2026-10-19
+
+- **«Vin!» from the home page, the calendar links and the members' zone** — the home page's run cards say «N vin», the event page's Google and Outlook links carry «Vin! → page» and the count as the `.ics` and the feed do, and in «Alergări» a signed-in member answers with one tap («Vin!», then «Tu vii ✓ · Nu mai vin»), their name shown only on their own tick. §822.
+- **How the «Vii?» question is sent** — «Termene» sets how many days before the start (0 to 7, 0 = never) and from which hour; «Emailuri» sets who is asked (the subscribers, the people who answered «Vin!» before in the same series, or both — the answerers only under a notice that says so, each email with «Nu mă mai întreba la seria aceasta»); the event's «Vin!» block has a tick to skip one date. §823.
+- **A «Regrupare» checkpoint** — a sixth kind for the point where the group waits, with the group-of-people glyph on the page's table, in the editor's ticks, on the profile's pins (first, before water or food) and on the race number; its note says how long, and a GPX waypoint named «regrupare», «adunare» or «așteptăm» is offered as one. §824.
+- **«Cine vine» is easy to find** — the group run's card is «Confirmă prezența (opțional)» with «Nu e o înscriere» under it and «Cine vine (N)» a closed fold of its own right beneath, a race's list sits under the registration card instead of the rules, and the facts say «N vin · vezi cine», a link that opens the names. §825.
+- **«Adaugă o persoană» sets a member's level** — under the role «Membru», a select «Nivel» writes the level with the account in the same step, audited, and the invitation email is unchanged; the same select as the member rows and «Adaugă mai mulți membri». §826.
+- **«Numele meu apare la „Cine vine”»** — anyone who said «Vin» can show or hide their name on the list at any time, from the page (remembered browser), from the members' zone's «Alergări», or from the page of the email's «Nu mai vin» link (which the tick does not spend); the confirmation email says so under «Nu vin». §827.
+- **Every discount code says who it is for** — the codes' chips «Pentru cine e codul» start with «Toți membrii», then the levels; one of the two must be ticked, never both, and each code's line says «Pentru: …»; codes already saved read as «Toți membrii», nothing a member sees changes. §828.
 ## BR-V3.59-2026-10-19
 
 - **«Vii mâine la …?» by email** — the day before a ticked run, from 08:00 club time, the newsletter's subscribers of the new topic «Întrebarea «Vii?» înaintea alergărilor» get one email with **«Vin»** (counted at once, with an optional name) and **«Nu vin»** (counted nowhere), once per event. §818.

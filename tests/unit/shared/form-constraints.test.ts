@@ -67,7 +67,7 @@ const NOT_A_BOX = new Set([
   "showRouteProfile",
   // «Acceptă răspunsuri „Vin!”» (§811): a tick in «Participare, înscrieri și regulament», for an event one simply turns up to.
   "rsvpEnabled",
-  // «Trimite întrebarea „Vii?” înainte de acest eveniment» (§NNN): a tick under «Acceptă răspunsuri „Vin!”».
+  // «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823): a tick under «Acceptă răspunsuri „Vin!”».
   "rsvpAskEnabled",
   // «Estimativ» beside «Diferență de nivel (m)» (§585): a tick in «Traseu».
   "elevationGainEstimated",

@@ -251,7 +251,7 @@ export default async function EventFacts({
   whoComes = null,
 }: {
   /**
-   * «Cine vine» in the facts (§NNN; the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil. Că inițial am citit în „zig-zag" și am sărit
+   * «Cine vine» in the facts (§825; the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil. Că inițial am citit în „zig-zag" și am sărit
    * peste secțiune»): one line with the people glyph, «12 vin · vezi cine», its words the link to the fold that holds the names — `#cine-vine` on a
    * turn-up event, `#start-list-title` on a race whose public list is shown; the browser, or `OpenFoldFromHash`, opens the fold. The page
    * passes the number it already read (the one read of the answers, or `readStartListCount`'s — the list's own title number), so this component asks nothing
@@ -1331,7 +1331,7 @@ export default async function EventFacts({
   }
 
   /*
-    «N vin · vezi cine» (§NNN): the last short fact, right above the folds it points at — the number is the page's one read, the words the
+    «N vin · vezi cine» (§825): the last short fact, right above the folds it points at — the number is the page's one read, the words the
     link to the fold with the names, 44 pixels tall like every link here. Nothing when the page passed no count.
   */
   if (whoComes !== null && whoComes.count > 0) {

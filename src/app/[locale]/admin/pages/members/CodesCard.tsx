@@ -157,7 +157,7 @@ function CodeRow({
 }) {
   const shown = codeShownToMembers(code, today);
   // The levels the code is for, named (§811); an id whose level is gone is not named (deleting a level takes it off the codes).
-  // A code with no stored limit is «Toți membrii» (§811, amended by §NNN): its line says so, always.
+  // A code with no stored limit is «Toți membrii» (§811, amended by §828): its line says so, always.
   // One decision on the stored value, for the line and for the form's tick alike: an empty list is «Toți membrii»; a list that names no level never is.
   const forEveryone = (code.tierIds?.length ?? 0) === 0;
   const limited = (code.tierIds ?? []).flatMap((id) => tiers.find((tier) => tier.id === id)?.name ?? []);
@@ -187,7 +187,7 @@ function CodeRow({
         {code.validUntil && (
           <Chip size="small" variant="outlined" label={t("members.codes.until", { day: formatCalendarDay(code.validUntil, { locale, position: "inline" }) })} />
         )}
-        {/* Who the code is for, always (§811, amended by §NNN): the levels, or «Toți membrii». */}
+        {/* Who the code is for, always (§811, amended by §828): the levels, or «Toți membrii». */}
         <Chip
           size="small"
           variant="outlined"
@@ -271,7 +271,7 @@ function CodeRow({
 /**
  * The boxes of a code, for adding one and for writing one: the partner and the code, the description
  * Română and English side by side from `sm` — both or neither (§352) — the link, the last day and the
- * chips «Pentru cine e codul» (§811, amended by §NNN): «Toți membrii» or the levels, chosen — a new code starts with
+ * chips «Pentru cine e codul» (§811, amended by §828): «Toți membrii» or the levels, chosen — a new code starts with
  * nothing ticked, an older one with no limit shows «Toți membrii» ticked. A role that writes the words alone sees the code as
  * text, and the link, the day and the chips not at all: the service keeps them as stored whatever is posted.
  */
@@ -337,7 +337,7 @@ function CodeFields({ code, words: t, mayManage, tiers }: { code: AdminDiscountC
             slotProps={{ htmlInput: { maxLength: CODE_LINK_MAX } }}
           />
           <DateField name="validUntil" label={t("members.codes.validUntil")} defaultValue={code?.validUntil ?? ""} helperText={t("members.codes.validUntilHelp")} />
-          {/* «Pentru cine e codul» (§811, amended by §NNN): chips with the native tick, «Toți membrii» first, exclusive with the levels. Before the club named a level there is nothing to choose between: the code is for «Toți membrii» and the form posts it. */}
+          {/* «Pentru cine e codul» (§811, amended by §828): chips with the native tick, «Toți membrii» first, exclusive with the levels. Before the club named a level there is nothing to choose between: the code is for «Toți membrii» and the form posts it. */}
           {tiers.length > 0 ? (
             <TierChips
               name="tierIds"

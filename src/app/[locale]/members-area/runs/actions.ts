@@ -14,7 +14,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /**
- * The members' zone's one tap on «Alergări» (§NNN): «Vin!» and «Nu mai vin» on a run that takes answers.
+ * The members' zone's one tap on «Alergări» (§822): «Vin!» and «Nu mai vin» on a run that takes answers.
  *
  * **Who answers is read here, from the session, and nowhere else** (BR-REQ-060-01): the form carries the event, the page's language
  * and the person's tick «Vreau să apar cu numele» — never an address, never a name, never a role. The door is the zone's own
@@ -98,7 +98,7 @@ export async function leaveAsMemberAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Numele meu apare la „Cine vine"» (§NNN): the account's own tick on its confirmed answer, any time — on or off, one write, reversible, no
+ * «Numele meu apare la „Cine vine"» (§827): the account's own tick on its confirmed answer, any time — on or off, one write, reversible, no
  * audit row (§186's shape for «Vin!»). The account is read from the session; the form carries the event, the tick and, only when the answer holds
  * no name and the account has none, the one the person typed in the box. The account's own name is the fallback ONLY when ticking and only when
  * the row has none (`defaultName`): a stale tab cannot swap a name the person typed on the event's page for the one an Administrator typed in

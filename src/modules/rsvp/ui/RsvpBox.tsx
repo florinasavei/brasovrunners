@@ -26,7 +26,7 @@ import { rsvpForgetAction, rsvpGoAction, rsvpLeaveAction, rsvpShowNameAction, rs
 import RsvpRemembered from "./RsvpRemembered";
 
 /**
- * «Confirmă prezența (opțional)» (§811, «Vin!» part 1, named «Vii?» until §NNN; the owner, 2026-10-19: «Și pune „Confirmă prezența
+ * «Confirmă prezența (opțional)» (§811, «Vin!» part 1, named «Vii?» until §825; the owner, 2026-10-19: «Și pune „Confirmă prezența
  * (opțional)", ceva de genul») — the answer «Vin!» on a turn-up event the club ticked. Drawn by `EventPageView` where the registration
  * card would stand, with the anchor `#vin`, **only while `rsvpOffered` says so** (the page decides, from the one rule): otherwise the page
  * shows nothing — no box, no count, no sentence. Who comes is **not in it any more**: «Cine vine (N)» is the fold right under it
@@ -64,7 +64,7 @@ export default async function RsvpBox({
   renderedAt: Date;
   outcome: RsvpOutcome | null;
   /**
-   * The answers the page already read (`readRsvpsOf`, §NNN): `EventPageView` reads them once, before the calendar's add links, so the links'
+   * The answers the page already read (`readRsvpsOf`, §822): `EventPageView` reads them once, before the calendar's add links, so the links'
    * «N vin până acum» and this card say one number from one read. Absent, the box reads them itself; `null` is «the database is away».
    */
   rsvps?: PublicRsvps | null;

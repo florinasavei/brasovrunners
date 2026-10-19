@@ -36,7 +36,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * What `?nume=` may say after the name tick (§NNN): names of outcomes, never a value of the person's; anything else is nothing. «Shown» and
+ * What `?nume=` may say after the name tick (§827): names of outcomes, never a value of the person's; anything else is nothing. «Shown» and
  * «hidden» claim a state, so they are drawn only while the row says so (below): the address alone proves nothing.
  */
 const NAME_OUTCOMES = ["shown", "hidden", "name", "none", "closed", "wait"] as const;
@@ -56,7 +56,7 @@ const NAME_OUTCOMES = ["shown", "hidden", "name", "none", "closed", "wait"] as c
  * own words) — a person who gives neither is counted without a name, and the newsletter never had one to lend. «Nu vin» is one press
  * that deletes the row: nobody is counted, and the page says so in the sentence the email promised. The box comes above the button (a
  * field before its submit), under the intro; the privacy notice is linked beside it, as on the event page's card.
- * **«Nu mă mai întreba la seria aceasta» (§NNN)** is the third link, in the question an earlier answerer receives (`RSVP_REFUSE`): the same page,
+ * **«Nu mă mai întreba la seria aceasta» (§823)** is the third link, in the question an earlier answerer receives (`RSVP_REFUSE`): the same page,
  * the same rule — the GET names the event and shows ONE button, the button is a POST (`refuseRsvpAsksAction`) that records the refusal for the
  * series and spends the link. After it, the sentence «Gata: nu te mai întrebăm» comes from a keyed proof, like «Nu mai vin»'s; no cookie is set.
  * **«Da, vin» presses itself in a browser** (§812, amending §811; the owner, 2026-10-19: «Asta ar trebui să se auto-bifeze când
@@ -66,7 +66,7 @@ const NAME_OUTCOMES = ["shown", "hidden", "name", "none", "closed", "wait"] as c
  * running scripts, and a browser without JavaScript, see the button and count nobody; the island does not press while the page is
  * prerendered or its tab is hidden. A link sandbox that runs scripts can still count the address (accepted, see `AutoConfirm.tsx`). A spent, expired, withdrawn or already-counted link has no island, and `RSVP_WITHDRAW` is always a press
  * (it takes something away).
- * **«Nu mai vin» is also where the name is shown or hidden** (§NNN, amending §812; the owner, 2026-10-19: «oamenii să poată ușor să zică
+ * **«Nu mai vin» is also where the name is shown or hidden** (§827, amending §812; the owner, 2026-10-19: «oamenii să poată ușor să zică
  * „afișează / ascunde" numele meu public»). A live `RSVP_WITHDRAW` link of a COUNTED answer carries, above the button, the tick «Numele meu apare
  * la „Cine vine"» in its own small form (`setNameByLinkAction`): a real tick box and «Salvează», the «Numele tău» box only when the answer holds no
  * name. That POST does not spend the link, so «Nu mai vin» still works from the same page afterwards; the GET draws it and writes nothing. A spent,
@@ -88,7 +88,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
   const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
 
   /*
-    After «Nu mă mai întreba la seria aceasta» (§NNN): the refusal is recorded and the link is spent; the sentence comes only with the keyed
+    After «Nu mă mai întreba la seria aceasta» (§823): the refusal is recorded and the link is spent; the sentence comes only with the keyed
     proof the action made (an address somebody typed claims nothing), and names the event's page when the slug is the proof's.
   */
   if (refuz !== undefined && invalid === undefined && isWithdrawnProof(ok, token, `${refuz}${REFUSED_SUFFIX}`)) {
@@ -257,7 +257,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {/*
-            The name tick (§NNN): only a counted answer has a name to show; its POST reads the link and does not spend it (`setNameByLinkAction`).
+            The name tick (§827): only a counted answer has a name to show; its POST reads the link and does not spend it (`setNameByLinkAction`).
             The box «Numele tău» is always there, prefilled with the name the answer holds — the person is shown what the tick publishes and may
             change it (§812: a name typed on the page with the tick off is never published unseen); blank when the answer holds none.
           */}

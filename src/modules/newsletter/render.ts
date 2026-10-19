@@ -85,7 +85,7 @@ export async function renderNewsletterRow(
 
   const subscriberId = typeof payload.subscriberId === "string" ? payload.subscriberId : null;
   const asking = row.messageType === "RSVP_ASK";
-  // §NNN: the question goes to a subscriber, or to an address that answered «Vin!» at an earlier date of the series (named by that answer's id).
+  // §823: the question goes to a subscriber, or to an address that answered «Vin!» at an earlier date of the series (named by that answer's id).
   const answererRsvpId = typeof payload.answererRsvpId === "string" ? payload.answererRsvpId : null;
   if (asking && (!eventId || (!subscriberId && !answererRsvpId))) throw new Error("rsvp ask: the message names no event or no one to ask");
   const [subscriber] = !clubCopy && subscriberId
@@ -213,7 +213,7 @@ export async function renderNewsletterRow(
     actionUrl = data.eventUrl;
     data.newsletterManageUrl = await manageUrl();
     if (checked) {
-      // The day in words (§NNN): the club's days before the start, so «mâine» only when it is tomorrow — each half in its own language.
+      // The day in words (§823): the club's days before the start, so «mâine» only when it is tomorrow — each half in its own language.
       data.rsvpAskDay = rsvpAskDayPhrase(locale, checked.daysAway);
       data.rsvpAskDayOther = rsvpAskDayPhrase(other, checked.daysAway);
       if (checked.kind === "ANSWERER") data.rsvpAskAnswerer = true;
@@ -240,7 +240,7 @@ export async function renderNewsletterRow(
       const tokenPage = (secret: string) => `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/vin/[token]", params: { token: secret } } })}`;
       actionUrl = tokenPage(asked.confirm);
       data.rsvpWithdrawUrl = tokenPage(asked.withdraw);
-      // An earlier answerer's third link (§NNN): «Nu mă mai întreba la seria aceasta» — never in a subscriber's question.
+      // An earlier answerer's third link (§823): «Nu mă mai întreba la seria aceasta» — never in a subscriber's question.
       if (asked.refuse) data.rsvpRefuseUrl = tokenPage(asked.refuse);
     }
   }

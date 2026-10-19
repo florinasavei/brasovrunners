@@ -7,7 +7,7 @@ import { accountIdentity, accountPublicName } from "@/modules/rsvp/domain/accoun
 import { isNameZoneOutcome, isRefusedZoneOutcome, parseZoneRsvpOutcome, ZONE_RSVP_OUTCOMES, zoneRsvpAnchor, zoneRsvpTitleId } from "@/modules/rsvp/domain/zone-outcome";
 
 /**
- * §NNN («Vin!» in the members' zone; amends §812) — what the row under a run in «Alergări» draws, in both languages, and the pure rules
+ * §822 («Vin!» in the members' zone; amends §812) — what the row under a run in «Alergări» draws, in both languages, and the pure rules
  * the zone's action builds its identity with. The action and the page are proved against a database in
  * `tests/integration/rsvp/zone-rsvp.test.ts`; the whole journey in `tests/e2e/rsvp.spec.ts`.
  */
@@ -42,7 +42,7 @@ beforeEach(() => {
   state.language = "ro";
 });
 
-describe("§NNN the zone's row under a run that takes answers", () => {
+describe("§822 the zone's row under a run that takes answers", () => {
   it("offers «Vin!» and the unticked tick «Vreau să apar cu numele» with the name it would show, in Română", async () => {
     const markup = await row({ count: 3 });
     expect(markup).toContain(`id="${zoneRsvpAnchor(EVENT_ID)}"`);
@@ -91,7 +91,7 @@ describe("§NNN the zone's row under a run that takes answers", () => {
     expect(await row({ going: true, count: 4 }, "en")).toMatch(/data-testid="zone-rsvp-going"[^>]*>You&#x27;re coming ✓</);
   });
 
-  it("keeps the name tick «Numele meu apare la „Cine vine”» on «Tu vii ✓»: a real checkbox in its own form, drawn as the answer keeps it (§NNN)", async () => {
+  it("keeps the name tick «Numele meu apare la „Cine vine”» on «Tu vii ✓»: a real checkbox in its own form, drawn as the answer keeps it (§827)", async () => {
     const off = await row({ going: true, count: 2, showName: false, name: "Ana" });
     expect(off).toContain('data-testid="zone-rsvp-name"');
     expect(off).toContain("Numele meu apare la „Cine vine”");
@@ -133,7 +133,7 @@ describe("§NNN the zone's row under a run that takes answers", () => {
   });
 });
 
-describe("§NNN the identity the zone answers as (§812's source `account`)", () => {
+describe("§822 the identity the zone answers as (§812's source `account`)", () => {
   const account = { email: "ana@example.test", displayName: "  Ana   Membru " };
 
   it("is verified and made from the account alone: its address, its name cleaned, the language of the page", () => {
@@ -154,7 +154,7 @@ describe("§NNN the identity the zone answers as (§812's source `account`)", ()
   });
 });
 
-describe("§NNN what the address says after a press", () => {
+describe("§822 what the address says after a press", () => {
   it("knows seven codes and nothing else", () => {
     expect([...ZONE_RSVP_OUTCOMES]).toEqual(["went", "left", "closed", "shown", "hidden", "name", "none"]);
     for (const code of ZONE_RSVP_OUTCOMES) expect(parseZoneRsvpOutcome(code)).toBe(code);

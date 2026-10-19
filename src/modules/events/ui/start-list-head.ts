@@ -11,7 +11,7 @@ import { readRegistrationDoor, type RegistrationDoor } from "./registration-door
 /**
  * The part of the public start list that names its number (§632, §647) — the counts, the door's places line and the title's headline —
  * read **once, by one function, for both callers**: `StartList` (the fold's title and the line under it) and the event page's facts, whose
- * line «N vin · vezi cine» says the very number the fold's title has (§NNN; the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil»).
+ * line «N vin · vezi cine» says the very number the fold's title has (§825; the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil»).
  *
  * No query of its own: every read below is the public cache's, asked once per request however many parts of the page need it (§489,
  * `request-memo.ts`), and `readRegistrationDoor` is the entry `RegistrationCta` has just read. So the facts asking first costs the list

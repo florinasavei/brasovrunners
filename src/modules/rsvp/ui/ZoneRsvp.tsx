@@ -15,7 +15,7 @@ import SubmitButton from "@/shared/ui/SubmitButton";
 import { zoneRsvpAnchor } from "../domain/zone-outcome";
 
 /**
- * «Vin!» in the members' zone (§NNN; the owner, 2026-10-18: «I want the flow to be super easy, also later to integrate with the member
+ * «Vin!» in the members' zone (§822; the owner, 2026-10-18: «I want the flow to be super easy, also later to integrate with the member
  * zone») — one row under a run in «Alergări» that takes answers: «N vin», and for the signed-in account one press, «Vin!», or, once it
  * has answered, «Tu vii ✓» with «Nu mai vin». No form to fill: the account is the address and the name.
  *
@@ -27,12 +27,12 @@ import { zoneRsvpAnchor } from "../domain/zone-outcome";
  * would show underneath, and only while the account has a name to show. Unticked, the answer is counted and never named. The tick is
  * read again by the service against the notice in force, so the zone cannot publish a name the page would not.
  *
- * **Once «Tu vii ✓», the same tick stays** (§NNN, amending §812; the owner, 2026-10-19: «oamenii să poată ușor să zică „afișează / ascunde"
+ * **Once «Tu vii ✓», the same tick stays** (§827, amending §812; the owner, 2026-10-19: «oamenii să poată ușor să zică „afișează / ascunde"
  * numele meu public»): «Numele meu apare la „Cine vine"», drawn from the answer's own `showName`, in its own small form with «Salvează» — a real
  * tick box, saved by one press, working without JavaScript. When neither the answer nor the account holds a name, a «Numele tău» box stands
  * with it. The account's name is used only when ticked (`setNameAsMemberAction`).
  *
- * **A name the person was not shown is never published** (§NNN, §812): when the answer holds a name — one a stranger may have typed on the
+ * **A name the person was not shown is never published** (§827, §812): when the answer holds a name — one a stranger may have typed on the
  * page with the tick off — the box «Numele tău» stands prefilled with it, editable, and the help says «Apari ca „…”»; the press posts what
  * the box holds. Only when the answer holds none is the account's own name the fallback, named in the help beside the tick.
  */
@@ -93,7 +93,7 @@ export default async function ZoneRsvp({ locale, eventId, titleId, going, count,
               <EventBusyIcon />
             </SubmitButton>
           </form>
-          {/* The name tick (§NNN): the box prefilled with the name the answer holds (shown, editable, posted), or blank when no name is anywhere; the help says which name the tick shows. */}
+          {/* The name tick (§827): the box prefilled with the name the answer holds (shown, editable, posted), or blank when no name is anywhere; the help says which name the tick shows. */}
           <form action={setNameAsMemberAction} aria-labelledby={titleId} data-testid="zone-rsvp-name" style={{ flexBasis: "100%" }}>
             {hidden}
             <Stack spacing={1}>

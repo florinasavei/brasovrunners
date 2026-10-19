@@ -66,7 +66,7 @@ describe("§377 the deadline groups", () => {
   });
 
   it("has a zero-line for exactly the deadlines that accept zero", () => {
-    // A time of day (`hourOfDay`, §NNN) accepts zero as midnight, a real answer, never «none»: it has no zero-line, `deadlineDuration` says "00:00".
+    // A time of day (`hourOfDay`, §823) accepts zero as midnight, a real answer, never «none»: it has no zero-line, `deadlineDuration` says "00:00".
     const acceptZero = DEADLINE_KEYS.filter((key) => DEADLINE_RULES[key].min === 0 && DEADLINE_RULES[key].unit !== "hourOfDay").sort();
     for (const messages of [ro, en]) expect(Object.keys(messages.Admin.emails.deadlines.shortZero).sort()).toEqual(acceptZero);
   });

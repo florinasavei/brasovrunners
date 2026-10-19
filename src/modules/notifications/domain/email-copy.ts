@@ -54,7 +54,7 @@ export const EMAIL_COPY_PLACEHOLDERS = [
   "offerHours",
   "reminderHours",
   /*
-    «Vii mâine la …?» (§818, §NNN), in that message alone (`ONLY_IN`): when the event is, in the half's own words — «mâine», «poimâine»,
+    «Vii mâine la …?» (§818, §823), in that message alone (`ONLY_IN`): when the event is, in the half's own words — «mâine», «poimâine»,
     «peste 3 zile» — from the calendar days between the send and the start, which the club sets in «Termene» → «Înainte de start». A
     text that wrote «mâine» itself would say it for every number of days the club later chose; this field is how it stays true.
   */

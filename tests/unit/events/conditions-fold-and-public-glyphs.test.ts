@@ -25,7 +25,7 @@ const OFFER = read("src/modules/group-run-declarations/ui/DeclarationOffer.tsx")
 describe("§498 «Condiții de participare»", () => {
   const fold = PAGE.slice(PAGE.indexOf('data-testid="conditions-fold"'), PAGE.indexOf("<OpenFoldFromHash />"));
 
-  it("is one closed native fold after the programme and — since the list moved up (§NNN) — after the start list, titled by a real h2 in its summary", () => {
+  it("is one closed native fold after the programme and — since the list moved up (§825) — after the start list, titled by a real h2 in its summary", () => {
     expect(fold.length).toBeGreaterThan(0);
     expect(PAGE.indexOf('data-testid="conditions-fold"')).toBeGreaterThan(PAGE.indexOf("<EventProgramme "));
     expect(PAGE.indexOf('data-testid="conditions-fold"')).toBeGreaterThan(PAGE.indexOf("<StartList "));

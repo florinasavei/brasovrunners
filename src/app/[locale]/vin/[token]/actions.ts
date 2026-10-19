@@ -58,7 +58,7 @@ export async function confirmRsvpAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Nu mă mai întreba la seria aceasta» (§NNN): spends the `RSVP_REFUSE` link of a question an earlier answerer received, records the refusal for
+ * «Nu mă mai întreba la seria aceasta» (§823): spends the `RSVP_REFUSE` link of a question an earlier answerer received, records the refusal for
  * the series (`ask-refusal.ts`) and says so on the same address. **No cookie**: the person asked for nothing the browser needs to remember, and
  * the notice justifies the cookies only as strictly necessary to a function the person asked for. The row and the link are spent, so the
  * redirect carries a keyed proof of the press, as «Nu mai vin» does.
@@ -99,7 +99,7 @@ export async function withdrawRsvpAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Numele meu apare la „Cine vine"» (§NNN, amending §812; the owner, 2026-10-19: «oamenii să poată ușor să zică „afișează / ascunde" numele
+ * «Numele meu apare la „Cine vine"» (§827, amending §812; the owner, 2026-10-19: «oamenii să poată ușor să zică „afișează / ascunde" numele
  * meu public») on a live «Nu mai vin» link's page: the person's own tick on their counted answer, any time. §186's shape for «Vin!».
  *
  * **This POST does NOT spend the link** (`setRsvpShowName` reads the token, it does not consume it): showing or hiding a name is a reversible,

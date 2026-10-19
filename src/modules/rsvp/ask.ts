@@ -34,7 +34,7 @@ import { mintRsvpLinks } from "./rsvp";
  * its rules: an answer is still not a registration (no place, no declaration, no participant), the count and the names still follow
  * the gate `rsvpOffered`, a name is still public only by the person's own tick.
  *
- * **The club sets how it is sent** (§NNN; the owner, 2026-10-19: «I need to set how these emails are sent»), in three places:
+ * **The club sets how it is sent** (§823; the owner, 2026-10-19: «I need to set how these emails are sent»), in three places:
  *   - **when** — «Termene» → «Înainte de start»: how many days before the start (0–7, one by default; 0 asks nobody) and from which hour
  *     of the club's clock (eight by default); `domain/ask.ts` holds the window, the queue and the send both read it;
  *   - **who** — «Emailuri» → «Cui îi trimitem întrebarea „Vii?"»: the subscribers of the topic (the default), the people who answered
@@ -64,7 +64,7 @@ import { mintRsvpLinks } from "./rsvp";
  * the event's, and nothing secret.
  * When it is SENT (`checkRsvpAsk` first and `makeRsvpAsk` last, called by the renderer, AGENTS.md §14.5) the person's «Vin!» row is made — unconfirmed, with
  * no name and no tick, `asked_at` set — and the links of the existing machinery are minted for it: `RSVP_CONFIRM` (the «Vin» button)
- * and `RSVP_WITHDRAW` (the «Nu vin» button) — and, to an earlier answerer, a refusal link of its own table (§NNN, «Nu mă mai întreba la seria
+ * and `RSVP_WITHDRAW` (the «Nu vin» button) — and, to an earlier answerer, a refusal link of its own table (§823, «Nu mă mai întreba la seria
  * aceasta», `rsvp_refuse_tokens`: it has no key to the answer, so it outlives «Nu vin» and the event's start; its press records the refusal in
  * `ask-refusal.ts`). The «Vin» link lives until the event's start (the question may go a week ahead); a «Vin» pressed in a SUBSCRIBER's question
  * is an earlier answer only while that address still receives the topic (`asked_basis`). The page `/vin/<link>` (§812) does the rest: the GET changes nothing, the press is a
@@ -77,7 +77,7 @@ import { mintRsvpLinks } from "./rsvp";
 const ASK_TOPICS = ["RSVP_ASK"] as const;
 
 /**
- * Which of these addresses are, today, subscribers who receive the question's topic under a notice that named it (§NNN). A «Vin» pressed in
+ * Which of these addresses are, today, subscribers who receive the question's topic under a notice that named it (§823). A «Vin» pressed in
  * a SUBSCRIBER's question (`asked_basis`) is an earlier answer only while this holds: whoever unticked «Întrebarea „Vii?”» or unsubscribed
  * withdrew from exactly this email, and is not asked again through the back door of the answerers' list.
  */
@@ -97,7 +97,7 @@ async function stillOnTopic<T extends Record<string, unknown>>(db: Database<T>, 
   return new Set(rows.map((row) => row.canonicalEmail));
 }
 
-/** Whether anyone ever refused a series (§NNN): while nobody has, a subscribers-only question never needs to read the series at all. */
+/** Whether anyone ever refused a series (§823): while nobody has, a subscribers-only question never needs to read the series at all. */
 async function anyRefusal<T extends Record<string, unknown>>(db: Database<T>): Promise<boolean> {
   const [row] = await db.select({ id: rsvpAskRefusals.id }).from(rsvpAskRefusals).limit(1);
   return row !== undefined;
@@ -109,7 +109,7 @@ async function anyRefusal<T extends Record<string, unknown>>(db: Database<T>): P
  * one is.
  */
 export async function queueRsvpAsks<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {
-  // The club's two numbers (§NNN): zero days is «not at all», and the look-ahead follows the days.
+  // The club's two numbers (§823): zero days is «not at all», and the look-ahead follows the days.
   const timing = rsvpAskTimingOf(await currentDeadlines(db));
   if (timing.daysBefore <= 0) return 0;
   const candidates = await db
@@ -120,7 +120,7 @@ export async function queueRsvpAsks<T extends Record<string, unknown>>(db: Datab
       and(
         isNull(eventRsvpAsks.id),
         eq(events.rsvpEnabled, true),
-        // The per-event tick (§NNN): the club may keep «Vin!» on a date and not ask about it.
+        // The per-event tick (§823): the club may keep «Vin!» on a date and not ask about it.
         eq(events.rsvpAskEnabled, true),
         eq(events.registrationMode, "NONE"),
         eq(events.eventStatus, "SCHEDULED"),
@@ -148,7 +148,7 @@ export async function queueRsvpAsks<T extends Record<string, unknown>>(db: Datab
     Whose consent covers it: a subscriber is asked only if the notice they consented under (`privacy_notice_version`) already named the
     question — «Toate noutățile» given before did not say it (§818; the §421 line, as for the names on the list). An earlier answerer
     is asked only under the same line drawn on their ANSWER's version, for the marker of their own (`{{rsvpAskAnswerers}}`), and only
-    while the notice in force names it: the club's choice of the audience is half of the switch, the notice the other (§NNN).
+    while the notice in force names it: the club's choice of the audience is half of the switch, the notice the other (§823).
   */
   const firstAskNotice = asksSubscribers(audience) ? await findFirstRsvpAskNoticeVersion(db) : null;
   const subscribersOn = asksSubscribers(audience) && firstAskNotice !== null;
@@ -177,7 +177,7 @@ export async function queueRsvpAsks<T extends Record<string, unknown>>(db: Datab
       const answered = new Set(
         (await tx.select({ canonicalEmail: eventRsvps.canonicalEmail }).from(eventRsvps).where(and(eq(eventRsvps.eventId, event.id), isNotNull(eventRsvps.confirmedAt)))).map((row) => row.canonicalEmail),
       );
-      // Refused for good, for this series (§NNN) — by an answerer's press; it holds for the subscribers' list too.
+      // Refused for good, for this series (§823) — by an answerer's press; it holds for the subscribers' list too.
       const refused = new Set(
         series.key === null
           ? []
@@ -252,7 +252,7 @@ export type PreparedRsvpAsk = {
   startsAt: Date;
   confirm: string;
   withdraw: string;
-  /** «Nu mă mai întreba la seria aceasta» (§NNN): only in the question an earlier answerer receives; null for a subscriber. */
+  /** «Nu mă mai întreba la seria aceasta» (§823): only in the question an earlier answerer receives; null for a subscriber. */
   refuse: string | null;
   locale: "ro" | "en";
 };
@@ -263,7 +263,7 @@ type AskRecipientRow = { deliveryEmail: string; canonicalEmail: string; canonica
 /** What `checkRsvpAsk` found true, and `makeRsvpAsk` writes from: nothing is written yet. */
 export type CheckedRsvpAsk = {
   eventId: string;
-  /** `SUBSCRIBER`: a newsletter subscriber of the topic. `ANSWERER` (§NNN): an address with a counted «Vin!» at an earlier date of the series. */
+  /** `SUBSCRIBER`: a newsletter subscriber of the topic. `ANSWERER` (§823): an address with a counted «Vin!» at an earlier date of the series. */
   kind: "SUBSCRIBER" | "ANSWERER";
   recipient: AskRecipientRow;
   locale: "ro" | "en";
@@ -278,7 +278,7 @@ export type RsvpAskParams = {
   eventId: string;
   /** The subscriber the message names (a subscriber's question). */
   subscriberId?: string;
-  /** The earlier answer the message names (an answerer's question, §NNN). */
+  /** The earlier answer the message names (an answerer's question, §823). */
   answererRsvpId?: string;
   recipientEmail: string;
   now: Date;
@@ -290,10 +290,10 @@ export type RsvpAskParams = {
  * failed (§331) — when there is nothing to ask any more: the subscriber unsubscribed, never confirmed or unticked the topic, consented
  * under a notice that did not describe the question (`findFirstRsvpAskNoticeVersion`), the address on the row is not theirs, the event was
  * cancelled, unticked, handed a registration, made the members' or moved out of its window (or started), or the notice stopped
- * describing «Vin!» or the question — and the club's settings since the queue (§NNN): the question switched off (zero days), the event's tick
+ * describing «Vin!» or the question — and the club's settings since the queue (§823): the question switched off (zero days), the event's tick
  * unticked, the audience changed away from this person's list.
  *
- * An earlier answerer's question (§NNN) is dropped too when the answer it names is gone, was not counted, is not at this address or was
+ * An earlier answerer's question (§823) is dropped too when the answer it names is gone, was not counted, is not at this address or was
  * given under a notice that did not name this use, when the series no longer holds that date, when the notice in force stopped naming
  * `{{rsvpAskAnswerers}}`, or when the address has refused the series meanwhile.
  */
@@ -354,7 +354,7 @@ export async function checkRsvpAsk<T extends Record<string, unknown>>(db: Databa
     }
     recipient = { deliveryEmail: subscriber.deliveryEmail, canonicalEmail: subscriber.canonicalEmail, canonicalizationVersion: subscriber.canonicalizationVersion };
     locale = subscriber.locale;
-    // A refusal for the series holds for the topic's subscribers too (§NNN): «never» means never, whichever list the address is on.
+    // A refusal for the series holds for the topic's subscribers too (§823): «never» means never, whichever list the address is on.
     seriesKey = (await anyRefusal(db)) ? (await findRunSeries(db, eventId)).key : null;
   }
 
@@ -373,13 +373,13 @@ export async function checkRsvpAsk<T extends Record<string, unknown>>(db: Databa
   if (!stored || stored.membersOnly || !event || !rsvpOffered(event, now, await noticeDescribesRsvpAsk(db, now)) || event.startsAt === null) {
     throw new OutboxMessageWithdrawn("rsvp ask: the event no longer takes «Vin!» answers, or the notice stopped describing the question");
   }
-  // The per-event tick (§NNN): unticked after the queue, the question for this date is not sent.
+  // The per-event tick (§823): unticked after the queue, the question for this date is not sent.
   if (!stored.askEnabled) throw new OutboxMessageWithdrawn("rsvp ask: the club switched the question off for this event");
   /*
     The window as it is at the SEND, not only at the queue: a send held past midnight (a failure, the hourly pace, a pause), or an
     event moved a day later since, would still say «mâine». The question is then dropped; the page's «Vin!» and the calendar still take
     the answer. (An event moved after its question was queued is not asked again for its new day: the queue is once per event.) With the
-    club's numbers as they are now (§NNN): zero days since the queue drops it.
+    club's numbers as they are now (§823): zero days since the queue drops it.
   */
   const timing = rsvpAskTimingOf(await currentDeadlines(db));
   if (!rsvpAskDue(event.startsAt, now, timing)) throw new OutboxMessageWithdrawn("rsvp ask: the window of the question is closed");
@@ -455,10 +455,10 @@ export async function makeRsvpAsk<T extends Record<string, unknown>>(db: Databas
   }
   const rsvpId = written.id;
 
-  // The question's «Vin» lives until the start: the club may send it a week ahead, and 48 hours would leave the last days with a dead button (§NNN).
+  // The question's «Vin» lives until the start: the club may send it a week ahead, and 48 hours would leave the last days with a dead button (§823).
   const links = await mintRsvpLinks(db, { rsvpId, startsAt, confirm: true, confirmUntilStart: true, now });
   if (!links || links.confirm === null) throw new OutboxMessageWithdrawn("rsvp ask: the event has started");
-  // The refusal link has a table of its own, so it outlives the row «Nu vin» deletes (§NNN).
+  // The refusal link has a table of its own, so it outlives the row «Nu vin» deletes (§823).
   const refuse =
     checked.kind === "ANSWERER"
       ? await mintRefuseLink(db, { eventId, locale, canonicalEmail: recipient.canonicalEmail, canonicalizationVersion: recipient.canonicalizationVersion, startsAt, now })

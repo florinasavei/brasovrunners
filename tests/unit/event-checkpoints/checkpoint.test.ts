@@ -207,7 +207,7 @@ describe("§757 the rules a checkpoint is held to", () => {
     expect(CHECKPOINT_KINDS).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION", "REGROUP"]);
   });
 
-  it("takes «Regrupare» as the sixth kind, last in the editor's order, alone or with the others, and keeps the five where they were (§NNN)", () => {
+  it("takes «Regrupare» as the sixth kind, last in the editor's order, alone or with the others, and keeps the five where they were (§824)", () => {
     const rows = prepareCheckpoints(
       [row(0, { kinds: ["REGROUP", "DIRECTION", "WATER"] }), row(1, { km: "9", kinds: ["REGROUP"] }), row(2, { km: "11", kinds: ["FOOD", "REGROUP"] })],
       CONTEXT,

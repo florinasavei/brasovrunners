@@ -32,7 +32,7 @@ describe("§392 the facts block is not a placeholder", () => {
       "holdMinutes",
       "offerHours",
       "reminderHours",
-      // «Vii {rsvpAskDay} la …?» (§NNN): the question's day in words, in that message alone.
+      // «Vii {rsvpAskDay} la …?» (§823): the question's day in words, in that message alone.
       "rsvpAskDay",
       // «Spune-ne cum a fost» in the organizer's message (§676) — a field, not the facts block.
       "feedbackLink",

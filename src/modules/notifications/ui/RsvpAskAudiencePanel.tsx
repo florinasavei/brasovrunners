@@ -23,7 +23,7 @@ type Props = {
   state: RsvpAskAudienceState;
   /**
    * Whether the privacy notice in force describes the second audience too (`noticeDescribesRsvpAskAnswerers`): said beside the choice, so the
-   * club that picks the earlier answerers learns at once that nobody of them is asked until the notice is approved (§NNN).
+   * club that picks the earlier answerers learns at once that nobody of them is asked until the notice is approved (§823).
    */
   answerersDescribed: boolean;
   /** Administrator only (§291); `updateRsvpAskAudience` refuses anybody else. */
@@ -32,7 +32,7 @@ type Props = {
 };
 
 /**
- * «Cui îi trimitem întrebarea „Vii?"» (§NNN; the owner, 2026-10-19: «I need to set how these emails are sent»): who the day-before question
+ * «Cui îi trimitem întrebarea „Vii?"» (§823; the owner, 2026-10-19: «I need to set how these emails are sent»): who the day-before question
  * (§818) is asked of — **a choice, so three radios** (`RadioField`, the editor's «Clubul pe lista publică» is the model) in a named, folded card
  * beside «Răspunsurile din calendar» (both answer «what does the club send to whom»): the newsletter's subscribers of the topic (the default),
  * the people who answered «Vin!» at an earlier date of the same series, or both. One help line under each; the default's help says it is what the

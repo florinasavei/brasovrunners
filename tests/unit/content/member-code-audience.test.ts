@@ -8,7 +8,7 @@ import TierChips from "@/modules/content/member-tiers/ui/TierChips";
 import { RecallProvider, type Recall } from "@/shared/forms/recall";
 
 /**
- * §811, amended by §NNN — every discount code says who it is for: one or more levels, or «Toți membrii», chosen explicitly. Never by
+ * §811, amended by §828 — every discount code says who it is for: one or more levels, or «Toți membrii», chosen explicitly. Never by
  * leaving the chips empty, never both. The schema is the one place that says so; the service stores «Toți membrii» as no limit.
  */
 const BASE = { partnerName: "Magazinul", code: "BVR15", descriptionRo: "15% la încălțăminte.", descriptionEn: "15% off shoes." };

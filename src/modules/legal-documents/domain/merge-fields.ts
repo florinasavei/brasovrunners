@@ -151,7 +151,7 @@ export const RSVP_MERGE_FIELD = "rsvp";
 export const RSVP_ASK_MERGE_FIELD = "rsvpAsk";
 
 /**
- * The privacy notice's marker for the day-before question's SECOND audience (§NNN; the owner, 2026-10-19: «I need to set how these emails
+ * The privacy notice's marker for the day-before question's SECOND audience (§823; the owner, 2026-10-19: «I need to set how these emails
  * are sent»): the people who answered «Vin!» at an earlier date of the same series. Filled, when the notice is shown, with the refusal
  * button's own name, quoted (`rsvp/notice-words.ts`) — „Nu mă mai întreba la seria aceasta” / “Don't ask me again for this series” — in the
  * «Vin!» paragraph of section 5, which says that the club may ask them too, with the address of the answer, while the answer is kept
@@ -794,7 +794,7 @@ export function describesRsvpAsk(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the question's second audience, the earlier answerers of a series (§NNN): it names
+ * Whether a privacy notice describes the question's second audience, the earlier answerers of a series (§823): it names
  * `{{rsvpAskAnswerers}}`. The gate the club's choice of that audience waits on — together with `describesRsvpAsk` and `describesRsvp`,
  * which the caller also asks, because the question writes a «Vin!» row — and what `/admin/tasks`' row `rsvpAskAnswerersNotice` reads.
  * Pure; the caller asks it of the notice in force, in every language.

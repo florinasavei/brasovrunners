@@ -103,7 +103,7 @@ test.describe("§753, §756 «Clubul pe lista publică»: only the club's own na
     // both show it, in the club's own spelling; the nonsense and the other club are blank and nowhere on the page.
     await page.goto(`/ro/evenimente/${seeded.slug}`);
     await expect(page.getByTestId("start-list")).toHaveCount(1);
-    // §NNN: the race's «Cine vine» sits right under the registration card, and the facts say how many come — the title's own number —
+    // §825: the race's «Cine vine» sits right under the registration card, and the facts say how many come — the title's own number —
     // in a 44-pixel link whose press opens the closed fold the names are in.
     const title = await page.locator("#start-list-title").innerText();
     const coming = /\((\d+)\)/.exec(title)?.[1] ?? "";

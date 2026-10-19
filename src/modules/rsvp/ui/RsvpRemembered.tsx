@@ -32,7 +32,7 @@ export type RsvpIslandLabels = {
   submitting: string;
   showName: string;
   /**
-   * The tick on «Tu vii ✓» (§NNN): «Numele meu apare la „Cine vine"»; its help with `{name}` when the answer holds a name (it says which one the
+   * The tick on «Tu vii ✓» (§827): «Numele meu apare la „Cine vine"»; its help with `{name}` when the answer holds a name (it says which one the
    * tick shows); the help when it holds none; the box shown then, and the save.
    */
   nameSwitch: string;
@@ -57,7 +57,7 @@ export type RsvpIslandActions = {
   go: (slug: string, locale: string, showName: boolean) => Promise<RsvpIslandState>;
   leave: (slug: string, locale: string) => Promise<RsvpIslandState>;
   forget: () => Promise<void>;
-  /** The person's own tick «Numele meu apare la „Cine vine"» (§NNN): on or off, with the name the box holds — the one shown (the answer's own) or the one typed. */
+  /** The person's own tick «Numele meu apare la „Cine vine"» (§827): on or off, with the name the box holds — the one shown (the answer's own) or the one typed. */
   showName: (slug: string, locale: string, showName: boolean, name: string) => Promise<RsvpNameResult>;
 };
 
@@ -102,7 +102,7 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
   // Two failures, two behaviours: a state that could not be read falls back to the typed form; a press that failed keeps the one-tap state and says so.
   const [readFailed, setReadFailed] = useState(false);
   const [pressFailed, setPressFailed] = useState(false);
-  // The name tick (§NNN): the box opens when the person ticks with no name to show; `nameNote` is the last save's sentence; `refusals` remounts the tick form after a refusal only (a saved tick already shows what the person did, and a remount would drop the keyboard's focus), so the box shows what the server kept.
+  // The name tick (§827): the box opens when the person ticks with no name to show; `nameNote` is the last save's sentence; `refusals` remounts the tick form after a refusal only (a saved tick already shows what the person did, and a remount would drop the keyboard's focus), so the box shows what the server kept.
   const [asking, setAsking] = useState(false);
   const [nameNote, setNameNote] = useState<"shown" | "hidden" | "name" | "none" | null>(null);
   const [refusals, setRefusals] = useState(0);
@@ -186,7 +186,7 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
             {labels.going}
           </Typography>
           {/*
-            «Numele meu apare la „Cine vine"» (§NNN): a real tick box in its own small form, saved at once when the answer holds a name
+            «Numele meu apare la „Cine vine"» (§827): a real tick box in its own small form, saved at once when the answer holds a name
             (a change submits the form); with no name, ticking opens one «Numele tău» box and «Salvează». The server reads the cookie.
             With a name, the help says which name the tick shows and the form posts it: a name is never published unposted (§812).
           */}

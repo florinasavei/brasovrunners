@@ -223,7 +223,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: RSVP_ASK_MERGE_FIELD,
     example: inBoth((locale) => rsvpAskClause(locale)),
   },
-  // The privacy notice's marker for the question's second audience (§NNN): filled with the refusal button's own name, and the switch
+  // The privacy notice's marker for the question's second audience (§823): filled with the refusal button's own name, and the switch
   // that lets the club ask the people who answered «Vin!» at an earlier date of the series (`describesRsvpAskAnswerers`).
   {
     token: `{{${RSVP_ASK_ANSWERERS_MERGE_FIELD}}}`,

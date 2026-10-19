@@ -8,7 +8,7 @@
  * glyphs, their heads' rows and which words fit is the core's (`routes/elevation/geometry.ts`, asked once by
  * `bib-profile-strip.ts` for both renderers). Each pin is the kind's glyph in a ring above the plot — a drop for
  * water, a fork for food, a cross for first aid, a stopwatch for timing, an arrow for direction, three people for
- * a point where the group regroups (§NNN: first of them all; its label is still only what a runner may take, «km 12» when that is nothing; but between two points that would touch, an aid station keeps the older rule — a regroup point within a pin's reach of one gives way to it, while a point that is both keeps the group's glyph), a dot for a point that offers none — with a stem down to the plot's foot, and under the stem, in the foot row of «Start» and
+ * a point where the group regroups (§824: first of them all; its label is still only what a runner may take, «km 12» when that is nothing; but between two points that would touch, an aid station keeps the older rule — a regroup point within a pin's reach of one gives way to it, while a point that is both keeps the group's glyph), a dot for a point that offers none — with a stem down to the plot's foot, and under the stem, in the foot row of «Start» and
  * «Sosire»:
  *
  * - with «…cu orele limită» off, **«km 5 · apă»** or **«km 9 · hrană»** (both: «km 5 · apă + hrană») for an aid

@@ -88,7 +88,7 @@ function groupSummary(t: Translate, locale: Locale, fields: readonly DeadlineKey
   const parts: string[] = [];
   for (const key of fields) {
     const value = deadlines[key];
-    // §NNN: the «Vii?» question's hour is said beside its days, "„Vii?” cu o zi înainte, la 08:00" — and not at all when the days are
+    // §823: the «Vii?» question's hour is said beside its days, "„Vii?” cu o zi înainte, la 08:00" — and not at all when the days are
     // zero, `„Vii?” nu se trimite`: an hour of a question nobody is asked is no information. (Zero is a real hour, midnight, never «none».)
     if (key === "rsvpAskHour") {
       const last = parts.length - 1;

@@ -1,6 +1,6 @@
 /**
  * The words on the closed «Confirmă prezența (opțional)» fold's line (§812, amended by the fold: the owner, 2026-10-19, «Asta ar trebui să
- * fie collapsed, ca și condițiile de participare»; named «Vii?» until §NNN), as pure rules outside the client file so a test reads them
+ * fie collapsed, ca și condițiile de participare»; named «Vii?» until §825), as pure rules outside the client file so a test reads them
  * without a browser.
  *
  * The line is the heading, then — after a dot — what a reader decides by without opening it: **how many come** («Confirmă prezența

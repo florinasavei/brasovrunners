@@ -183,7 +183,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
         </Stack>
       </Stack>
       <Box>
-        {/* One «?» for the kinds (§NNN): what «Regrupare» is and where its wait is written — the point's own note. */}
+        {/* One «?» for the kinds (§824): what «Regrupare» is and where its wait is written — the point's own note. */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
           <Typography variant="caption" component="p" color="text.secondary" sx={{ m: 0 }}>
             {t("checkpoints.field.kinds")}

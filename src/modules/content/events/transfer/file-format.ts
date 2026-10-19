@@ -242,7 +242,7 @@ export const eventConfigSchema = z
         askHealthNote: z.boolean(),
         /** «Acceptă răspunsuri „Vin!”» (§811): a file made before the tick existed has none: off. Written only when it is on. */
         rsvpEnabled: z.boolean().default(false),
-        /** «Trimite întrebarea „Vii?” înainte de acest eveniment» (§NNN): a file made before the tick existed has none: on. Written only when it is off. */
+        /** «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823): a file made before the tick existed has none: on. Written only when it is off. */
         rsvpAskEnabled: z.boolean().default(true),
       })
       .strict(),
@@ -441,7 +441,7 @@ export function upgradeCheckpoints(file: EventFile): { file: EventFile; notes: F
  * existed (its checkpoint schema refuses a key it does not know) — QA ships a day before production, and its files travel.
  * The same for the route's `showRouteProfile` (§802, §805): written only when it is **off**; the file's version stays 3,
  * because a reader without the key reads «on» and a file with it, when off, is the only one an older release would refuse.
- * The registration block's `rsvpAskEnabled` (§NNN) is written only when it is **off** (on is what a file without it means), like `showRouteProfile`.
+ * The registration block's `rsvpAskEnabled` (§823) is written only when it is **off** (on is what a file without it means), like `showRouteProfile`.
  * The registration block's `rsvpEnabled` (§811) is the mirror: written only when it is **on**, because «off» is what a file without it
  * means, and the file's version stays 3 for the same reason. So is the volunteers block's `access` (§821): written only when it is not «Oricine» (`ANYONE`);
  * and its `listPublic` (§821), written only when it is **on**.

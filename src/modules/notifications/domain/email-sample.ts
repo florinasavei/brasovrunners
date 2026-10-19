@@ -154,7 +154,7 @@ export function emailSampleDeadlines(locale: EmailLocale, deadlines: Deadlines =
     holdMinutes: words.hold,
     offerHours: words.offer,
     reminderHours: words.reminder ?? "",
-    // «Vii {rsvpAskDay} la …?» (§NNN): the question goes `rsvpAskDaysBefore` days ahead; zero days sends nothing, so the preview says «mâine» then.
+    // «Vii {rsvpAskDay} la …?» (§823): the question goes `rsvpAskDaysBefore` days ahead; zero days sends nothing, so the preview says «mâine» then.
     rsvpAskDay: rsvpAskDayPhrase(locale, Math.max(deadlines.rsvpAskDaysBefore, 1)),
   };
 }
@@ -176,7 +176,7 @@ export type EmailSampleValues = {
   holdMinutes: string;
   offerHours: string;
   reminderHours: string;
-  /** «Vii {rsvpAskDay} la …?» (§NNN): the question's day in words, from the club's days (`emailSampleDeadlines`). */
+  /** «Vii {rsvpAskDay} la …?» (§823): the question's day in words, from the club's days (`emailSampleDeadlines`). */
   rsvpAskDay: string;
   /**
    * The staff invitation (§141): a made-up colleague, added by a made-up administrator — a name

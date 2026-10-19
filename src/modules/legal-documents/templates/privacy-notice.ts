@@ -204,7 +204,7 @@
  * every language (`describesRsvpAsk`); `{{newsletterTopics}}` leaves the topic out, so this marker is the only place the notice names it.
  * Only a subscriber who chose the topic under a notice naming it is asked (`findFirstRsvpAskNoticeVersion`). `/admin/tasks` carries the row `rsvpAskNotice`. A lawyer reads both paragraphs first.
  *
- * `{{rsvpAskAnswerers}}` (§NNN; the owner, 2026-10-19: «I need to set how these emails are sent») is the refusal button's name, quoted — „Nu mă mai
+ * `{{rsvpAskAnswerers}}` (§823; the owner, 2026-10-19: «I need to set how these emails are sent») is the refusal button's name, quoted — „Nu mă mai
  * întreba la seria aceasta” / “Don't ask me again for this series” — in section 5's «Vin!» paragraph, which says the club may ask the people who
  * answered «Vin!» at an earlier date of the series too, at the answer's address, while it is kept, and what the refusal keeps (the address's canonical
  * form and the series, nothing else, while the series lives and a year after its last date — section 7 says the same, `RETENTION_PERIODS.

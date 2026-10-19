@@ -119,7 +119,7 @@ describe("§377 «Termene» in seven folds", () => {
   });
 
   /**
-   * §NNN — the «Vii?» question's two boxes sit in «Înainte de start» and the fold's closed line says them together: «„Vii?” cu o zi înainte,
+   * §823 — the «Vii?» question's two boxes sit in «Înainte de start» and the fold's closed line says them together: «„Vii?” cu o zi înainte,
    * la 08:00». With zero days the question is not sent, so the hour is not said at all; an hour of zero is midnight, "00:00", never «none».
    */
   it("says the «Vii?» question's days and hour together on the «Înainte de start» line, in both languages", async () => {

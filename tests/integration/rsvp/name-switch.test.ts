@@ -25,12 +25,12 @@ const DAY = 24 * HOUR;
 const STARTS_AT = new Date(NOW.getTime() + 2 * DAY + 6 * HOUR);
 
 /**
- * §NNN (BR-REQ-039-01, BR-REQ-036-02; amends §812) — «Numele meu apare la „Cine vine"»: the service behind the three doors. A person flips
+ * §827 (BR-REQ-039-01, BR-REQ-036-02; amends §812) — «Numele meu apare la „Cine vine"»: the service behind the three doors. A person flips
  * their own tick on a CONFIRMED «Vin!» answer — as a verified identity (a remembered browser, a signed-in account) or by a live «Nu mai vin»
  * link that is read and NOT spent. ON needs a name and records the notice in force; OFF keeps the name and needs nothing; only that
  * person's own counted row is touched; the public cache is told once, and only when something changed.
  */
-describe("§NNN «Vin!» — the name switch", () => {
+describe("§827 «Vin!» — the name switch", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

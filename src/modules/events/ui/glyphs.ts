@@ -89,7 +89,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
 /**
  * What a checkpoint has (§757), one metaphor each, written down: water is a drop, food the cutlery,
  * first aid the medical case, timing the stopwatch, direction the road sign with its arrow (§770), regroup
- * the group of people (§NNN) — the same glyph the «other event» type wears: people together. On purpose, the same
+ * the group of people (§824) — the same glyph the «other event» type wears: people together. On purpose, the same
  * picture also draws «Vin (N)» and the start list on a group run's page: all of them mean «the group», and each
  * sits beside its own word.
  * Always beside the word — «Apă», «Mâncare», «Direcționare», «Regrupare» —

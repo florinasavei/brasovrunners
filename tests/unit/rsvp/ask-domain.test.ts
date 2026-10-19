@@ -121,12 +121,12 @@ describe("§818 «Vii mâine la …?» — who is asked", () => {
 });
 
 /**
- * §NNN (amends §818, §813) — the club sets how many days before the start the question goes (0–7) and from which hour of its clock (0–23).
+ * §823 (amends §818, §813) — the club sets how many days before the start the question goes (0–7) and from which hour of its clock (0–23).
  * The window is found on the wall clock of Europe/Bucharest, never by adding hours, so each answer below is the instant the CLUB's clock
  * reads that hour on that calendar day. Summer time is UTC+3, winter UTC+2; the changes are the last Sunday of March (the hour 03:00–03:59
  * does not exist) and of October (the hour 03:00–03:59 is read twice).
  */
-describe("§NNN the «Vii?» window — days before and hour, set by the club", () => {
+describe("§823 the «Vii?» window — days before and hour, set by the club", () => {
   const opens = (startsAt: string, daysBefore: number, hour: number) => rsvpAskWindow(new Date(startsAt), { daysBefore, hour })?.opensAt.toISOString();
   const closes = (startsAt: string, daysBefore: number, hour: number) => rsvpAskWindow(new Date(startsAt), { daysBefore, hour })?.closesAt.toISOString();
 

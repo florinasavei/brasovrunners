@@ -145,7 +145,7 @@ describe("owner tasks", () => {
   });
 
   /**
-   * §NNN — the question's second audience (the people who answered «Vin!» at an earlier date of the series): the row exists only while the club
+   * §823 — the question's second audience (the people who answered «Vin!» at an earlier date of the series): the row exists only while the club
    * CHOSE it, is open until the notice names `{{rsvpAskAnswerers}}`, done once it does, and never blocking — the choice then does nothing.
    */
   it("keeps the earlier answerers' row open while the club chose that audience and the notice is silent, and absent while it asks subscribers only", () => {

@@ -20,7 +20,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { fakeNextCache } from "../../helpers/next-cache";
 
 /**
- * §NNN (BR-REQ-039-01, amending §812 and §819) — «Cine vine» is seen at a glance (the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil.
+ * §825 (BR-REQ-039-01, amending §812 and §819) — «Cine vine» is seen at a glance (the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil.
  * Că inițial am citit în „zig-zag" și am sărit peste secțiune. Și pune „Confirmă prezența (opțional)"»). The real `EventPageView`, drawn the way
  * the page draws it, over a real database (PGlite) and the real catalogue, proves four things the pieces cannot prove alone:
  *
@@ -222,7 +222,7 @@ const link = (html: string) => /<a[^>]*data-testid="who-comes-link"[^>]*>([^<]*)
 const hrefOf = (anchor: string) => /href="([^"]*)"/.exec(anchor)?.[1];
 const text = (html: string) => html.replace(/<[^>]+>/g, "").replace(/&#x27;/g, "'");
 
-describe("§NNN a turn-up event: «Confirmă prezența (opțional)» and «Cine vine (N)» stand together near the top", () => {
+describe("§825 a turn-up event: «Confirmă prezența (opțional)» and «Cine vine (N)» stand together near the top", () => {
   it("draws facts → the card → the fold of who comes → the rest, the fold its own closed <details> at #cine-vine", async () => {
     const { id, slug } = await seed();
     await answerRsvp(db, id, confirm("ana@example.test"), NOW);
@@ -305,7 +305,7 @@ describe("§NNN a turn-up event: «Confirmă prezența (opțional)» and «Cine 
   });
 });
 
-describe("§NNN a race: the public list moves up under the registration card, and the facts say how many", () => {
+describe("§825 a race: the public list moves up under the registration card, and the facts say how many", () => {
   it("draws facts → the registration card → «Cine vine (N)» → «Condiții de participare», no longer the list last", async () => {
     const { slug, id } = await seedRace();
     await confirmedRunner(id, "Ana Popescu");
@@ -407,7 +407,7 @@ describe("§NNN a race: the public list moves up under the registration card, an
   });
 });
 
-describe("§NNN the preview before saving carries nothing of it", () => {
+describe("§825 the preview before saving carries nothing of it", () => {
   it("draws no line, no fold of who comes and no list on a race or a turn-up event, whatever is in the database", async () => {
     const race = await seedRace();
     await confirmedRunner(race.id, "Ana Popescu");

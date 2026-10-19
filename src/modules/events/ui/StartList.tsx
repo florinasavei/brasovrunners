@@ -39,7 +39,7 @@ const NO_NUMBER = "—";
  * A native disclosure, closed, with the count in its summary: a page whose middle is a
  * list of names reads like a list of names, and the event page is about the event. **The same fold as
  * «Condiții de participare» and the «Confirmă prezența (opțional)» card** (§498, §812; the owner, 2026-10-19: «Cine vine
- * collapsed»): **drawn right under the registration card since §NNN** (the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil. Că inițial am citit
+ * collapsed»): **drawn right under the registration card since §825** (the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil. Că inițial am citit
  * în „zig-zag" și am sărit peste secțiune» — it stood under «Condiții de participare», near the bottom), where a turn-up event's
  * «Cine vine (N)» fold stands too, and the facts' line «N vin · vezi cine» links its bar. Its bar is a real `h2` in the `<summary>`, «Cine vine (N)» on its line (just «Cine
  * vine» when the count is not public), the table, the legend and the notes inside. It opens by itself
@@ -173,7 +173,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   // Cheap and first: an event with no public list (the default) loads nothing below.
   if (event.participantListVisibility !== "NAMES") return null;
   /*
-    The counts, the places line and the title's headline come from `readStartListHead` (§NNN): one function, which the event page's
+    The counts, the places line and the title's headline come from `readStartListHead` (§825): one function, which the event page's
     facts line «N vin · vezi cine» reads too, so the two say one number — and nothing here asks the database for it twice (every read is
     the public cache's, once per request). It also decides whether the list is shown at all: the club's days after the event (§421), and
     a static page made again when it closes (§549). The page and the hidden rows are drawn from the anonymous count alone — the cache

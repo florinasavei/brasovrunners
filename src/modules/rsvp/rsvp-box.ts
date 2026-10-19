@@ -6,7 +6,7 @@
 export const RSVP_BOX_ID = "vin";
 
 /**
- * The id of the fold «Cine vine (N)» right under that box (§812, amended by §NNN — the owner, 2026-10-19: «„Cine vine" trebuie să fie
+ * The id of the fold «Cine vine (N)» right under that box (§812, amended by §825 — the owner, 2026-10-19: «„Cine vine" trebuie să fie
  * mai vizibil»): the names of those who ticked, in a closed fold of its own beside the box rather than inside it. The anchor the facts'
  * line «N vin · vezi cine» links to, and the fold the browser — or `OpenFoldFromHash` — opens around it.
  */

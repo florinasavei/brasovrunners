@@ -139,7 +139,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(eventResults);
   // The answers «Vin!» (§811) cascade from their event, their links from them; the remembered browsers reference nothing.
   await db.delete(eventRsvps);
-  // The refusals of the «Vii?» question (§NNN) reference nothing: an address and a series' key.
+  // The refusals of the «Vii?» question (§823) reference nothing: an address and a series' key.
   await db.delete(rsvpAskRefusals);
   await db.delete(personSessions);
   // An event's own to-dos (§749) cascade from it; deleted first like the translations.
