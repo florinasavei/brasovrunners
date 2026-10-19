@@ -369,7 +369,8 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await withDatabase(async (client) => {
       await client.query("UPDATE event_rsvps SET display_name = NULL, show_name = false WHERE event_id = $1 AND canonical_email = lower($2)", [eventId, guest]);
     });
-    await page.goto(`${eventUrl("ro", slug)}#vin`);
+    // A reload, not a goto: the address differs only by its hash, which would keep the page the island already drew.
+    await page.reload();
     await hydrated(page);
     const nameless = page.getByTestId("rsvp-remembered").getByRole("checkbox", { name: "Numele meu apare la „Cine vine”" });
     await expect(nameless).not.toBeChecked();
