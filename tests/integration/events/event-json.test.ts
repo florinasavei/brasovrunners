@@ -1569,6 +1569,82 @@ describe("§802 the event's tick «Arată profilul traseului pe pagină» travel
   });
 });
 
+// --- «Trimite întrebarea „Vii?” înainte de acest eveniment» (§NNN) ------------------------------------
+
+describe("§NNN the event's tick «Trimite întrebarea „Vii?”» travels in the file", () => {
+  it("is exported as it is, written in the downloaded text only when it is off, and the file's version stays 3", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const on = await fileOf(event.id);
+    expect(on.version).toBe(3);
+    expect(on.event.registration.rsvpAskEnabled).toBe(true);
+    // «On» is what a file without the key means: left out, so a release before the tick still reads the file.
+    expect(serializeEventFile(on)).not.toContain("rsvpAskEnabled");
+
+    await db.update(events).set({ rsvpAskEnabled: false }).where(eq(events.id, event.id));
+    const off = await fileOf(event.id);
+    expect(off.version).toBe(3);
+    expect(off.event.registration.rsvpAskEnabled).toBe(false);
+    expect(serializeEventFile(off)).toContain('"rsvpAskEnabled": false');
+  });
+
+  it("is imported as new as it was, and the round trip is the same", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await db.update(events).set({ rsvpAskEnabled: false }).where(eq(events.id, event.id));
+    const file = await fileOf(event.id);
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).rsvpAskEnabled).toBe(false);
+    const back = await fileOf(created.eventId);
+    expect(diffConfigs(back.event, file.event).map((change) => change.key).sort()).toEqual(["translations.en.slug", "translations.ro.slug"]);
+
+    // An event that is on comes back on.
+    const { event: shown } = await seedRace({}, { ro: { slug: "alta-cursa-cu-intrebare", title: "Altă cursă" }, en: { slug: "another-race-with-question", title: "Another race" } }, false);
+    const copy = await importEventAsNew(db, { actor: admin, file: await fileOf(shown.id), fetchImpl: serving(), now: NOW });
+    expect((await reload(copy.eventId)).rsvpAskEnabled).toBe(true);
+  });
+
+  it("reads a file made before the tick existed — no `rsvpAskEnabled` — as on, and imports it so", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await db.update(events).set({ rsvpAskEnabled: false }).where(eq(events.id, event.id));
+    const old = JSON.parse(serializeEventFile(await fileOf(event.id))) as { event: { registration: Record<string, unknown> } };
+    delete old.event.registration.rsvpAskEnabled;
+    expect(JSON.stringify(old)).not.toContain("rsvpAskEnabled");
+    const read = readEventFile(JSON.stringify(old));
+    if (!read.ok) throw new Error(`a file without the tick did not read: ${read.refusal} ${read.detail ?? ""}`);
+    expect(read.file.event.registration.rsvpAskEnabled).toBe(true);
+    const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).rsvpAskEnabled).toBe(true);
+  });
+
+  it("refuses a tick that is not true or false", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const bad = JSON.parse(JSON.stringify(await fileOf(event.id))) as { event: { registration: Record<string, unknown> } };
+    bad.event.registration.rsvpAskEnabled = "no";
+    expect(readEventFile(JSON.stringify(bad)).ok).toBe(false);
+  });
+
+  it("sees a changed tick in the diff, and writes the file's tick over an event — both ways", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const { target } = await seedTarget();
+    // The file's is on, the target's off: the diff names it, the import turns it on.
+    await db.update(events).set({ rsvpAskEnabled: false }).where(eq(events.id, target.id));
+    const on = await fileOf(event.id);
+    const diff = await diffEventImport(db, { actor: admin, file: on, eventId: target.id });
+    const change = diff.changes.find((candidate) => candidate.key === "registration.rsvpAskEnabled");
+    expect(change).toMatchObject({ label: "registration.rsvpAskEnabled", from: { type: "boolean", value: false }, to: { type: "boolean", value: true } });
+    await importEventOver(db, await overInput(on, target.id));
+    expect((await reload(target.id)).rsvpAskEnabled).toBe(true);
+
+    // The other way: the file's off, the target's on.
+    await db.update(events).set({ rsvpAskEnabled: false }).where(eq(events.id, event.id));
+    const off = await fileOf(event.id);
+    await importEventOver(db, await overInput(off, target.id));
+    expect((await reload(target.id)).rsvpAskEnabled).toBe(false);
+    // And a second import of the same file changes nothing about it.
+    const after = await diffEventImport(db, { actor: admin, file: off, eventId: target.id });
+    expect(after.changes.map((candidate) => candidate.key)).not.toContain("registration.rsvpAskEnabled");
+  });
+});
+
 // --- «Acceptă răspunsuri „Vin!”» (§811) ---------------------------------------------------------------
 
 /** A hike one simply turns up to: the shape the tick belongs to (no places, no declaration, no window). */

@@ -7418,7 +7418,7 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "Voluntarul și evenimentul se adaugă singure. Linkul e doar pentru părinte sau tutore, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "VOLUNTEER_INVITATION": "Evenimentul, rolurile căutate și mesajul clubului se adaugă singure. Linkul e doar al persoanei invitate, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "RSVP_CONFIRM": "Cel mult un mesaj la 10 minute pe adresă. Linkurile sunt doar pentru această adresă, merg o singură dată și le înlocuiește mesajul nou. Cine e deja numărat primește doar „Nu mai vin”.",
-        "RSVP_ASK": "O dată pe eveniment, dacă nu l-ai debifat în editor. Bifat după deschiderea ferestrei, se întreabă la prima trecere a jobului; bifat abia în ziua lui, nu. Ce n-a plecat până la miezul nopții dinainte se anulează."
+        "RSVP_ASK": "O dată pe eveniment, dacă nu l-ai debifat în editor. Bifat după deschidere, se întreabă la prima trecere; bifat abia în ziua lui, nu. Ce n-a plecat până la miezul nopții dinainte se anulează."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0.",
