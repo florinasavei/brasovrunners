@@ -61,8 +61,15 @@ async function assertTiersExist<T extends Record<string, unknown>>(db: Database<
   if (ids.some((id) => !known.has(id))) throw new DomainError("VALIDATION_ERROR", "a limit names a member tier that does not exist", ["tierIds"]);
 }
 
-/** The limit as stored: no tier ticked is `null`, every member. */
-const storedTierIds = (ids: readonly string[]): string[] | null => (ids.length > 0 ? [...ids] : null);
+/**
+ * The limit as stored: «Toți membrii» is `null`, every member (§811, amended — the meaning of the column did not change, so every
+ * code saved before the choice was explicit reads as «Toți membrii»); levels are their ids. The fields' schema has already refused
+ * a post that chose neither or both, so `forAll` and an empty list are the same fact here.
+ */
+const storedTierIds = (fields: Pick<DiscountCodeFields, "forAll" | "tierIds">): string[] | null => (fields.forAll || fields.tierIds.length === 0 ? null : [...fields.tierIds]);
+
+/** The choice a stored code stands for, in the shape the fields' schema reads: no limit is «Toți membrii», else its levels. */
+const choiceOf = (stored: readonly string[] | null) => ({ tierIds: stored ?? [], forAll: stored === null || stored.length === 0 });
 
 /** Add a code at the end of the list. Shown at once: the members' zone is not public. */
 export async function createDiscountCode<T extends Record<string, unknown>>(
@@ -77,11 +84,12 @@ export async function createDiscountCode<T extends Record<string, unknown>>(
     const [last] = await tx
       .select({ position: sql<number>`coalesce(max(${memberDiscountCodes.position}), 0)`.mapWith(Number) })
       .from(memberDiscountCodes);
+    const { forAll: _forAll, ...columns } = fields;
     const [row] = await tx
       .insert(memberDiscountCodes)
       .values({
-        ...fields,
-        tierIds: storedTierIds(fields.tierIds),
+        ...columns,
+        tierIds: storedTierIds(fields),
         position: (last?.position ?? 0) + 1,
         hidden: false,
         createdByStaffUserId: input.actor.id,
@@ -124,9 +132,11 @@ export async function saveDiscountCode<T extends Record<string, unknown>>(
   const posted = (input.fields ?? {}) as Record<string, unknown>;
   const fields = parseOrThrow(
     manage
-      ? // A caller that posts no limit at all (a script, a test) keeps the one stored; the form always posts it, none ticked being every member.
-        { ...posted, tierIds: posted.tierIds ?? current.tierIds ?? [] }
-      : { ...posted, code: current.code, link: current.link ?? "", validUntil: current.validUntil ?? "", tierIds: current.tierIds ?? [] },
+      ? // A caller that posts no choice at all (a script, a test) keeps the one stored; the form always posts one — levels or «Toți membrii».
+        posted.tierIds === undefined && posted.forAll === undefined
+        ? { ...posted, ...choiceOf(current.tierIds) }
+        : posted
+      : { ...posted, code: current.code, link: current.link ?? "", validUntil: current.validUntil ?? "", ...choiceOf(current.tierIds) },
   );
   const row = await db.transaction(async (tx) => {
     if (manage) await assertTiersExist(tx, fields.tierIds);
@@ -136,7 +146,7 @@ export async function saveDiscountCode<T extends Record<string, unknown>>(
         partnerName: fields.partnerName,
         descriptionRo: fields.descriptionRo,
         descriptionEn: fields.descriptionEn,
-        ...(manage ? { code: fields.code, link: fields.link, validUntil: fields.validUntil, tierIds: storedTierIds(fields.tierIds) } : {}),
+        ...(manage ? { code: fields.code, link: fields.link, validUntil: fields.validUntil, tierIds: storedTierIds(fields) } : {}),
         updatedByStaffUserId: input.actor.id,
         version: input.expectedVersion + 1,
         updatedAt: now,
