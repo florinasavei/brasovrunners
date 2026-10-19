@@ -9,7 +9,7 @@ import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import { alertDayOf, EVENT_ALERT_WINDOW_DAYS, eventAlertTopics, eventAlertWanted } from "@/modules/newsletter/domain/alerts";
 import { checkNewsletterWords, NEWSLETTER_BODY_MAX, readNewsletterWords } from "@/modules/newsletter/domain/message";
 import { isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, receives, RETIRED_TOPICS, SENDABLE_TOPICS } from "@/modules/newsletter/domain/topics";
-import { newsletterMergeValues, topicsPhrase } from "@/modules/newsletter/topic-words";
+import { newsletterMergeValues, topicsPhrase, topicWords } from "@/modules/newsletter/topic-words";
 import { newsletterDialogOpen, parseNewsletterFields, parseNewsletterOutcome } from "@/modules/newsletter/ui/newsletter-box";
 import { BULK_MESSAGE_TYPES, bulkBudget, isBulkMessage } from "@/modules/notifications/domain/bulk";
 import { isCopiedPerMessage, isParticipantMessage } from "@/modules/notifications/domain/club-notices";
@@ -79,6 +79,15 @@ describe("§445 the newsletter's topics", () => {
     // The privacy notice lists what a subscriber may choose — no longer the discount codes (§517).
     expect(newsletterMergeValues("ro").newsletterTopics).not.toContain("Coduri de reducere");
     expect(newsletterMergeValues("en").newsletterTopics).not.toContain("Discount codes");
+  });
+
+  it("leaves the automatic topic out of the notice's list of what a subscriber chooses — the club writes nothing under it, and the notice names it through {{rsvpAsk}}", () => {
+    for (const locale of ["ro", "en"]) {
+      const listed = newsletterMergeValues(locale).newsletterTopics;
+      expect(listed).not.toContain(topicsPhrase(locale, ["RSVP_ASK"]));
+      expect(listed).not.toContain(topicWords(locale).RSVP_ASK);
+      expect(listed).toContain(topicWords(locale).WEEKLY_RUNS);
+    }
   });
 });
 

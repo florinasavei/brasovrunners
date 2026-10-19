@@ -6480,7 +6480,7 @@
         "VOLUNTEER_ROLE_ASSIGNED": "Când organizatorii îi dau unui voluntar un rol, din cardul «Voluntari» al evenimentului: un mesaj scurt care numește rolul, data și locul. Nimic de apăsat.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Când un voluntar sub 18 ani se oferă, sau un organizator apasă „Trimite linkul părintelui”: contractul și linkul prin care părintele îl acceptă în nume propriu.",
         "RSVP_CONFIRM": "Când cineva scrie o adresă la „Vin!” pe pagina unui eveniment: butonul „Da, vin”, care îl numără, și dedesubt „Nu vin”. La „Nu mai vin” de pe pagină pleacă același mesaj, doar cu linkul de retragere.",
-        "RSVP_ASK": "Ziua dinainte, de la ora {askHour}: abonaților temei „Întrebarea «Vii?» înaintea alergărilor” și celor de la „Toate noutățile”, cu „Vin” (apoi „Da, vin” îi numără) și „Nu vin”. Cine a răspuns nu mai primește."
+        "RSVP_ASK": "Ziua dinainte, de la {askHour}: abonaților temei „Întrebarea «Vii?» înaintea alergărilor” și celor de la „Toate noutățile”. „Vin”, apoi „Da, vin”, îi numără; „Nu vin” nu. Cine a răspuns nu primește."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -7237,7 +7237,7 @@
         "VOLUNTEER_ROLE_ASSIGNED": "Rolul, data și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Voluntarul și evenimentul se adaugă singure. Linkul e doar pentru părinte sau tutore, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "RSVP_CONFIRM": "Cel mult un mesaj la 10 minute pe adresă. Linkurile sunt doar pentru această adresă, merg o singură dată și le înlocuiește mesajul nou. Cine e deja numărat primește doar „Nu mai vin”.",
-        "RSVP_ASK": "O singură dată pe eveniment; unul bifat abia în ziua lui nu se mai întreabă. Linkurile merg o singură dată. Pleacă prin „Newsletter”, la coada rândului, ca anunțul unui eveniment nou; ce n-a plecat până la miezul nopții se anulează."
+        "RSVP_ASK": "O dată pe eveniment; unul bifat abia în ziua lui nu se întreabă. Pleacă prin „Newsletter”, la coadă, ca anunțul unui eveniment nou; ce n-a plecat până la miezul nopții se anulează."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0.",

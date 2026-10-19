@@ -14,7 +14,7 @@ import type { EmailSender } from "@/infrastructure/email/delivery";
 import { OutboxMessageWithdrawn, processOutboxBatch } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { queueRsvpAsks } from "@/modules/rsvp/ask";
+import { checkRsvpAsk, makeRsvpAsk, queueRsvpAsks } from "@/modules/rsvp/ask";
 import { identityOf } from "@/modules/rsvp/domain/identity";
 import {
   answerRsvp,
@@ -160,6 +160,35 @@ describe("§NNN «Vii mâine la …?»", () => {
       expect(await rowsOf(event.id)).toHaveLength(0);
     });
 
+    it("asks only a subscriber whose consent was given under a notice that names the question — «Toate noutățile» ticked earlier agreed to less", async () => {
+      await resetTables(db);
+      await approveNotice(1, true, false);
+      const event = await seedEvent();
+      // Consented to everything under version 1, which says nothing of the question; and to the topic itself, by a manage-page tick, under 2.
+      await subscribe("old-all@example.test", ["ALL"], { privacyNoticeVersion: 1 });
+      await subscribe("old-topic@example.test", ["RSVP_ASK"], { privacyNoticeVersion: 1 });
+      await approveNotice(2, true, true);
+      await subscribe("new-all@example.test", ["ALL"], { privacyNoticeVersion: 2 });
+      await subscribe("new-topic@example.test", ["RSVP_ASK"], { privacyNoticeVersion: 2 });
+
+      expect(await queueRsvpAsks(db, NOW)).toBe(2);
+      expect((await asks()).map((row) => row.recipientEmail)).toEqual(["new-all@example.test", "new-topic@example.test"]);
+      expect(await rowsOf(event.id)).toHaveLength(0);
+    });
+
+    it("withdraws, at the send, a question queued for a subscriber whose recorded consent predates the notice that names it", async () => {
+      await resetTables(db);
+      await approveNotice(1, true, false);
+      const event = await seedEvent();
+      await approveNotice(2, true, true);
+      const subscriber = await subscribe("ana@example.test", ["ALL"], { privacyNoticeVersion: 2 });
+      await queueRsvpAsks(db, NOW);
+      const [row] = await asks();
+      await db.update(newsletterSubscribers).set({ privacyNoticeVersion: 1 }).where(eq(newsletterSubscribers.id, subscriber.id));
+      await expect(renderOutboxMessage(row, db, NOW)).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
+      expect(await rowsOf(event.id)).toHaveLength(0);
+    });
+
     it("does not ask a subscriber whose address already has a counted answer — however the address is spelled — but asks an unconfirmed one", async () => {
       const event = await seedEvent();
       await subscribe("Ana.Pop+club@gmail.com", ["RSVP_ASK"]);
@@ -248,6 +277,8 @@ describe("§NNN «Vii mâine la …?»", () => {
       expect(await queueRsvpAsks(db, NOW)).toBe(0);
       expect(await askRows()).toHaveLength(0);
       await approveNotice(2, true);
+      // The subscriber chose the topic under the new notice (the manage page records its version): only then is the question theirs.
+      await db.update(newsletterSubscribers).set({ privacyNoticeVersion: 2 });
       expect(await queueRsvpAsks(db, new Date(NOW.getTime() + HOUR))).toBe(1);
     });
 
@@ -259,6 +290,7 @@ describe("§NNN «Vii mâine la …?»", () => {
       expect(await queueRsvpAsks(db, NOW)).toBe(0);
       expect(await askRows()).toHaveLength(0);
       await approveNotice(2, true, true);
+      await db.update(newsletterSubscribers).set({ privacyNoticeVersion: 2 });
       expect(await queueRsvpAsks(db, new Date(NOW.getTime() + HOUR))).toBe(1);
     });
 
@@ -404,7 +436,7 @@ describe("§NNN «Vii mâine la …?»", () => {
       expect(await readPublicRsvps(db, event.id, { firstRsvpNoticeVersion: 1 })).toEqual({ count: 1, names: [], others: 1 });
     });
 
-    it("counts nobody on «Nu vin»: the answer is deleted, the count stays at zero, and the browser may be remembered", async () => {
+    it("counts nobody on «Nu vin»: the answer is deleted, the count stays at zero, and no browser is remembered (ask-page.test.ts)", async () => {
       const { event, row } = await asked();
       const [, no] = linksOf((await renderOutboxMessage(row, db, NOW)).text);
       const proved = await withdrawRsvp(db, { token: no }, new Date(NOW.getTime() + HOUR));
@@ -423,20 +455,33 @@ describe("§NNN «Vii mâine la …?»", () => {
       expect(await countRsvps(db, event.id)).toBe(1);
     });
 
-    it("clears a name and a tick a stranger typed for the address before the email's press, and kills the older link", async () => {
+    it("clears a name and a tick a stranger typed for the address before the email's press (the page's own message not yet sent)", async () => {
       const event = await seedEvent();
       await subscribe("ana@example.test", ["RSVP_ASK"]);
       await answerRsvp(db, event.id, identityOf("page", { email: "ana@example.test", displayName: "Mallory", showName: true, locale: "ro" }), NOW);
-      const [typedMessage] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "RSVP_CONFIRM"));
-      const [older] = linksOf((await renderOutboxMessage(typedMessage, db, NOW)).text);
       await queueRsvpAsks(db, NOW);
       const [ask] = await asks();
       const [yes] = linksOf((await renderOutboxMessage(ask, db, NOW)).text);
       const [answer] = await rowsOf(event.id);
       expect(answer).toMatchObject({ displayName: null, showName: false });
-      expect(await readRsvpLink(db, older, NOW)).toMatchObject({ state: "used" });
       await confirmRsvp(db, yes, NOW);
       expect(await readPublicRsvps(db, event.id, { firstRsvpNoticeVersion: 1 })).toEqual({ count: 1, names: [], others: 1 });
+    });
+
+    it("drops the question, and leaves the page's answer and its live «Da, vin» link alone, when the address typed on the page has that link", async () => {
+      const event = await seedEvent();
+      await subscribe("ana@example.test", ["RSVP_ASK"]);
+      await answerRsvp(db, event.id, identityOf("page", { email: "ana@example.test", displayName: "Ana", showName: true, locale: "ro" }), NOW);
+      const [typedMessage] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "RSVP_CONFIRM"));
+      const [older] = linksOf((await renderOutboxMessage(typedMessage, db, NOW)).text);
+      await queueRsvpAsks(db, new Date(NOW.getTime() + 2 * HOUR));
+      const [ask] = await asks();
+      await expect(renderOutboxMessage(ask, db, new Date(NOW.getTime() + 2 * HOUR))).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
+      // Nothing of the typed answer was touched, and its link was not superseded: it still opens and counts.
+      expect((await rowsOf(event.id))[0]).toMatchObject({ displayName: "Ana", showName: true, askedAt: null });
+      expect(await readRsvpLink(db, older, NOW)).toMatchObject({ state: "live" });
+      await confirmRsvp(db, older, NOW);
+      expect(await countRsvps(db, event.id)).toBe(1);
     });
 
     it("does not let a press rename a row the person typed on the page themselves", async () => {
@@ -460,6 +505,17 @@ describe("§NNN «Vii mâine la …?»", () => {
       await change({ eventId: event.id, subscriberId: subscriber.id });
       await expect(renderOutboxMessage(row, db, NOW)).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
       expect(await rowsOf(event.id)).toHaveLength(0);
+    });
+
+    it("writes nothing while the message is checked: the row and the links are made by the last step alone", async () => {
+      const { event, subscriber } = await asked();
+      const checked = await checkRsvpAsk(db, { eventId: event.id, subscriberId: subscriber.id, recipientEmail: "ana@example.test", now: NOW });
+      expect(await rowsOf(event.id)).toHaveLength(0);
+      expect(await db.select().from(eventRsvpTokens)).toHaveLength(0);
+      const made = await makeRsvpAsk(db, checked);
+      expect(await rowsOf(event.id)).toHaveLength(1);
+      expect(await db.select().from(eventRsvpTokens)).toHaveLength(2);
+      expect(made.confirm).not.toBe(made.withdraw);
     });
 
     it("is withdrawn when it would be sent after the start, and when the address is already counted", async () => {
