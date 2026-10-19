@@ -21,6 +21,7 @@
  * What is never here: an address, a telephone number, a city, a date of birth, the sex, a T-shirt size, a message, a note, the
  * roles a person ticked, the guardian — the read selects none of them (`readPublicVolunteersList`).
  */
+import { RETENTION_PERIODS } from "@/modules/jobs/domain/retention-periods";
 import type { VolunteerState } from "./volunteer";
 
 /** The most names the card lists; the rest are «și încă N». */
@@ -52,11 +53,8 @@ export type VolunteersListGate = {
   now: Date;
 };
 
-/** Volunteers' rows are deleted this many days after the event's start (`RETENTION_PERIODS.volunteerDaysAfterEvent`, §754): the card goes with them. */
-const RETENTION_DAYS = 30;
-
-/** Whether the event is past the retention of the volunteers' rows: the page stops drawing the card on the day the sweep may take the rows. */
-export function volunteersListExpired(startsAt: Date | null, now: Date, retentionDays: number = RETENTION_DAYS): boolean {
+/** Whether the event is past the retention of the volunteers' rows (`RETENTION_PERIODS.volunteerDaysAfterEvent`, §754): the page stops drawing the card on the day the sweep may take the rows. */
+export function volunteersListExpired(startsAt: Date | null, now: Date, retentionDays: number = RETENTION_PERIODS.volunteerDaysAfterEvent): boolean {
   return startsAt !== null && now.getTime() >= startsAt.getTime() + retentionDays * 86_400_000;
 }
 

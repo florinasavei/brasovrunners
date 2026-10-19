@@ -33,6 +33,7 @@ import type { parseInterestOutcome } from "@/modules/registrations/interest-box"
 import type { RsvpOutcome } from "@/modules/rsvp/rsvp-box";
 import RsvpBox from "@/modules/rsvp/ui/RsvpBox";
 import VolunteerCallout from "@/modules/volunteers/ui/VolunteerCallout";
+import VolunteersList from "@/modules/volunteers/ui/VolunteersList";
 import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInterestForm";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import type { EventForecast } from "@/modules/weather/domain/forecast";
@@ -86,6 +87,12 @@ export type EventPageVisit = {
    * every role is full, or the privacy notice or the volunteer agreement in force does not describe them.
    */
   volunteers?: { roleNames: readonly string[]; clubOnly?: boolean } | null;
+  /**
+   * «Voluntarii» (§NNN): the club ticked «Lista voluntarilor e publică pe pagina evenimentului». The card decides the rest itself (the notice in force,
+   * who ticked, the thirty days) and draws nothing when it must not; `offerOpen` is whether the volunteers' offer is open, for its one sentence
+   * «Echipa de voluntari se formează.». A visit's page only, like the callout.
+   */
+  volunteersList?: { offerOpen: boolean } | null;
 };
 
 /**
@@ -366,6 +373,13 @@ export default async function EventPageView({
           page would answer 200 (the page decides, from the one read both share) — the preview before saving reads no
           public cache and takes no name. */}
       {visit?.volunteers && !membersOnly && <VolunteerCallout slug={slug} roleNames={visit.volunteers.roleNames} clubOnly={visit.volunteers.clubOnly === true} />}
+
+      {/* «Voluntarii» (§NNN), right after: a fold closed on arrival like «Condiții de participare», the names and roles of the confirmed volunteers who
+          ticked «Vreau să apar pe lista publică a voluntarilor» — only where the club made the list public and the notice in force describes it (the card
+          asks, from the public cache, and draws nothing otherwise). A visit's page only; never on a members' event, never in the preview before saving. */}
+      {visit?.volunteersList && !membersOnly && (
+        <VolunteersList eventId={event.id} locale={locale} startsAt={event.startsAt} offerOpen={visit.volunteersList.offerOpen} now={now} />
+      )}
 
       {/*
         «Condiții de participare» / "Participation rules" (§498; the owner, 2026-09-27): the

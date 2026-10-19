@@ -41,6 +41,7 @@ import {
   noticeDescribesVolunteers,
   noticeDescribesVolunteerAgreement,
   noticeDescribesVolunteerProfile,
+  noticeDescribesVolunteersList,
   volunteerMinorsOpen,
   noticeDescribesTeamPage,
   termsDescribeRefusal,
@@ -55,6 +56,7 @@ import { branchesSwitchedOn } from "@/modules/feedback/domain/branches";
 import { readFeedbackSettings } from "@/modules/feedback/settings";
 import { countVisibleProducts } from "@/modules/content/shop/repository";
 import { countRsvpEvents } from "@/modules/rsvp/rsvp";
+import { countVolunteersListEvents } from "@/modules/volunteers/public-list";
 import { countVolunteeringEvents } from "@/modules/volunteers/volunteers";
 import {
   countTasks,
@@ -525,6 +527,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       volunteerProfileDescribed: await noticeDescribesVolunteerProfile(db, now),
       // §768: the notice (`{{volunteerMinors}}`) and the agreement (`{{volunteerGuardian}}`) in force both describe volunteers under eighteen.
       volunteerMinorsOpen: await volunteerMinorsOpen(db, now),
+      // §NNN: the notice in force describes the volunteers' public list (`{{volunteersList}}`), in every language; the row waits only while an event ahead has the list public.
+      volunteersListDescribed: await noticeDescribesVolunteersList(db, now),
+      volunteersListEvents: await countVolunteersListEvents(db, now),
       gmailFallbackDescribed: await noticeDescribesGmailFallback(db, now),
       // §636: the terms in force carry the club's right to refuse a registration, in every language.
       refusalDescribed: await termsDescribeRefusal(db, now),
