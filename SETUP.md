@@ -2547,8 +2547,7 @@ turns on event by event. Three steps are the club's: the notice (1), the tick (2
    run; a remembered browser a year after its last answer). «Toate datele unei persoane» (`/admin/registrations/person`) lists a person's answers and
    browsers, counts them in the JSON export, and an Administrator can **«Șterge răspunsurile „Vin!” și browserele»** on request — one audit row with the
    counts, never the address.
-6. **Not built here.** The one-tap answer from the members' zone. It calls the same service (`answerRsvp` with an identity of source `account`)
-   and the same gate (`rsvpOffered`).
+6. **From the members' zone (§NNN).** In «Alergări» a signed-in member answers a run that takes answers with one press, **«Vin!»** (the account's address, counted at once, no email; the name only on their own tick), and the home page's and the event page's calendar links say «N vin» like the rest, except on a repeating run's card, which shows no count. **One step for the club:** approve the privacy notice again from the template (step 7's click), so it describes this answer; the gate stays the one for «Vin!» (§NNN), so nothing waits on it.
 7. **The «Vii?» email (`DECISIONS.md` §818).** One step for the club: **approve the privacy notice again from the template** (`/admin/legal` → the «GDPR» card → «Regenerează din șablon», as in step 1; a lawyer
    reads section 5's two paragraphs first — the newsletter's, which now says the automatic question the day before, and «Vin!»'s, which says the subscriber's address is written as
    an unconfirmed answer when the question is sent and deleted at «Nu vin» or after 7 days). Until a notice naming `{{rsvpAsk}}` (and `{{rsvp}}`) is in force, in both languages, **nobody is asked**

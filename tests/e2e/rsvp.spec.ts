@@ -356,6 +356,80 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await noSidewaysScroll(page);
   });
 
+  test("§NNN the members' zone: «Vin!» is one press, counted at once and unnamed, the event page counts it, «Nu mai vin» takes it back", async ({ page, browser }) => {
+    // The zone lists the five soonest runs, so the run is moved to tomorrow in the database and saved once in the editor, which expires the
+    // public cache the zone reads (a write straight to the table would not).
+    const tomorrow = new Date(Date.now() + 24 * 3_600_000);
+    await withDatabase(async (client) => {
+      await client.query("UPDATE events SET starts_at = $2, ends_at = $2::timestamptz + interval '2 hours' WHERE id = $1", [eventId, tomorrow.toISOString()]);
+    });
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/events/${eventId}`);
+    await hydrated(page);
+    await page.getByRole("checkbox", { name: /Am înțeles că modific conținut publicat/ }).check();
+    await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    await page.waitForURL(/saved=event/);
+
+    // A member signs in through the development switcher and opens «Alergări».
+    const memberContext = await browser.newContext();
+    const member = await memberContext.newPage();
+    await member.goto("/ro/autentificare?to=members");
+    await member.getByRole("button", { name: /Dev Member/ }).click();
+    await expect(member).toHaveURL(/\/ro\/zona-membri$/, { timeout: 30_000 });
+    await member.goto("/ro/zona-membri/alergari");
+    await hydrated(member);
+    const row = member.locator(`#vin-${eventId}`);
+    await expect(async () => {
+      await member.goto("/ro/zona-membri/alergari");
+      await expect(row).toHaveCount(1, { timeout: 1_000 });
+    }).toPass({ timeout: 20_000, intervals: [1_000] });
+    await expect(row).toHaveAttribute("data-going", "false");
+    const press = row.getByRole("button", { name: "Vin!", exact: true });
+    expect((await press.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // The name tick is beside the button, off by default.
+    await expect(row.getByRole("checkbox", { name: "Vreau să apar cu numele" })).not.toBeChecked();
+    await noSidewaysScroll(member);
+
+    await press.click();
+    await member.waitForURL(/vin=went/);
+    await expect(member.getByTestId("zone-rsvp-outcome")).toHaveText("Am notat că vii.");
+    await expect(row).toHaveAttribute("data-going", "true");
+    await expect(row.getByTestId("zone-rsvp-going")).toHaveText("Tu vii ✓");
+    await expect(row.getByTestId("zone-rsvp-count")).toContainText("1 vine");
+    // Counted at once, unnamed and no name kept: the member did not tick the box.
+    const written = await withDatabase(async (client) => {
+      const { rows } = await client.query<{ confirmed: boolean; showName: boolean; displayName: string | null }>(
+        `SELECT confirmed_at IS NOT NULL AS confirmed, show_name AS "showName", display_name AS "displayName" FROM event_rsvps WHERE event_id = $1`,
+        [eventId],
+      );
+      return rows;
+    });
+    expect(written).toEqual([{ confirmed: true, showName: false, displayName: null }]);
+    await noSidewaysScroll(member);
+
+    // The event's page counts it: the «Vii?» fold's line and its count card say one, and name nobody.
+    await member.goto(eventUrl("ro", slug));
+    await hydrated(member);
+    const box = await openEventFold(member, "rsvp-box");
+    await expect(box.getByTestId("rsvp-summary-line")).toContainText("1 vine");
+    await expect(member.getByTestId("rsvp-count-heading")).toContainText("Vin (1)");
+    await expect(member.getByTestId("rsvp-others")).toHaveText("și încă 1");
+
+    // One press back.
+    await member.goto("/ro/zona-membri/alergari");
+    await hydrated(member);
+    await member.locator(`#vin-${eventId}`).getByRole("button", { name: "Nu mai vin", exact: true }).click();
+    await member.waitForURL(/vin=left/);
+    await expect(member.getByTestId("zone-rsvp-outcome")).toHaveText("Am șters răspunsul: nu mai vii.");
+    await expect(member.locator(`#vin-${eventId}`)).toHaveAttribute("data-going", "false");
+    await expect(member.locator(`#vin-${eventId}`).getByRole("button", { name: "Vin!", exact: true })).toBeVisible();
+    await memberContext.close();
+    await withDatabase(async (client) => {
+      const { rows } = await client.query<{ n: string }>("SELECT count(*) AS n FROM event_rsvps WHERE event_id = $1", [eventId]);
+      expect(Number(rows[0].n)).toBe(0);
+    });
+  });
+
   test("with the club's tick off, the page shows nothing of it — no box, no count, no sentence", async ({ page, browser }) => {
     await signIn(page, "Dev Administrator");
     await page.goto(`/ro/admin/events/${eventId}`);
