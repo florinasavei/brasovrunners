@@ -37,10 +37,12 @@ const NO_NUMBER = "—";
  * those who ticked "Vreau să apar pe lista de participanți & rezultate", and as "Participant (nume ascuns)"
  * for everybody else.
  *
- * A native disclosure, closed, with the count in its summary: a page whose bottom third is a
+ * A native disclosure, closed, with the count in its summary: a page whose middle is a
  * list of names reads like a list of names, and the event page is about the event. **The same fold as
- * «Condiții de participare» and the «Vii?» card** (§498, §812; the owner, 2026-10-19: «Cine vine
- * collapsed»): its bar is a real `h2` in the `<summary>`, «Cine vine (N)» on its line (just «Cine
+ * «Condiții de participare» and the «Confirmă prezența (opțional)» card** (§498, §812; the owner, 2026-10-19: «Cine vine
+ * collapsed»): **drawn right under the registration card since §NNN** (the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil. Că inițial am citit
+ * în „zig-zag" și am sărit peste secțiune» — it stood under «Condiții de participare», near the bottom), where a turn-up event's
+ * «Cine vine (N)» fold stands too, and the facts' line «N vin · vezi cine» links its bar. Its bar is a real `h2` in the `<summary>`, «Cine vine (N)» on its line (just «Cine
  * vine» when the count is not public), the table, the legend and the notes inside. It opens by itself
  * only on a pager page (`?lista=2`), or for the fragment `#start-list-title`. «Clasament» (§809) is
  * not a fold: after a race the results are the point of the page.
