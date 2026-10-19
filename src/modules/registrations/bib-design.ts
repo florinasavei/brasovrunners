@@ -457,7 +457,7 @@ export const bibDesignSchema = z
     /** «Orientarea profilului» (§759): normal, or turned half a circle for the runner. */
     profileOrientation: z.enum(BIB_PROFILE_ORIENTATIONS).catch("normal"),
     /**
-     * «Punctele de control pe profil» (§757): a small mark at each checkpoint's kilometre on the
+     * «Punctele de pe traseu pe profil» (§757): a small mark at each checkpoint's kilometre on the
      * profile's strip, with its cut-off in small type where it fits (`bib-checkpoints.ts`). **On by
      * default**, whatever a design saved before this key says: it draws only when the strip itself is
      * drawn and the event has checkpoints, so ticking «Profilul traseului» on an event with

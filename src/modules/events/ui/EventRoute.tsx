@@ -128,7 +128,7 @@ export default function EventRoute({
           </RouteMapTabs>
         </Box>
       )}
-      {/* The route's elevation profile (§802), under the maps and above the file and the table «Puncte de control»: only when
+      {/* The route's elevation profile (§802), under the maps and above the file and the table «Puncte pe traseu»: only when
           the GPX has altitudes, and only the checkpoints the club left ticked. The picture is built from the club's own file
           on its own storage — no third party is asked, so no notice changes. */}
       {profile && (

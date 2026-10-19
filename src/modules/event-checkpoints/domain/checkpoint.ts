@@ -451,7 +451,7 @@ export type CheckpointRow =
   | { kind: "finish"; km: number | null; cutoffMinutes: number; cutoffClock: string | null };
 
 /**
- * The table «Puncte de control» as rows (§757): the checkpoints by distance and — **the finish as the
+ * The table «Puncte pe traseu» as rows (§757): the checkpoints by distance and — **the finish as the
  * last row when the event has a time limit**, its limit being the event's «Timp limită» in minutes and
  * the clock it closes at, the event's end on the event's clock (§770) — **null while the race's gun time is
  * not set**, when the row says the duration alone (`start.ts#cutoffClockStart`) — at the route's length when
@@ -482,7 +482,7 @@ export function checkpointRows(
  * The checkpoints the elevation profile pins (§802; the owner, 2026-10-16: «select which ones to show on the elevation
  * profile»): the ones the club left ticked «Arată pe profilul traseului», by distance, each with its name in the page's
  * language. A row without the flag — a copy of the list kept by the public cache before the column existed — is on, as the
- * column's default is. The table «Puncte de control» never uses this: it lists every point.
+ * column's default is. The table «Puncte pe traseu» never uses this: it lists every point.
  */
 export function profileMarkers(
   checkpoints: readonly (Pick<Checkpoint, "km" | "kinds" | "nameRo" | "nameEn"> & { onProfile?: boolean })[],

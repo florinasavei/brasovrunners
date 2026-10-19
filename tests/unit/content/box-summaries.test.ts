@@ -273,11 +273,11 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(courseSummary(words, { distanceMeters: 21_100, elevationGainMeters: null, routeUrl: null, nightOverride: null }, { surface: null })).toBe(
       "21,1 km · de zi (automat)",
     );
-    // §760: «Puncte de control» is «Traseul»'s card, so a closed «Traseul» counts its points — and says nothing of none.
+    // §760: «Puncte pe traseu» is «Traseul»'s card, so a closed «Traseul» counts its points — and says nothing of none.
     expect(
-      courseSummary(words, { distanceMeters: 12_000, elevationGainMeters: null, routeUrl: "https://x.test", nightOverride: null }, { surface: "Trail", checkpoints: "3 puncte de control" }),
-    ).toBe("Trail · 12 km · de zi (automat) · traseu · 3 puncte de control");
-    expect(courseSummary(words, null, { surface: null, checkpoints: "1 punct de control" })).toBe("1 punct de control");
+      courseSummary(words, { distanceMeters: 12_000, elevationGainMeters: null, routeUrl: "https://x.test", nightOverride: null }, { surface: "Trail", checkpoints: "3 puncte pe traseu" }),
+    ).toBe("Trail · 12 km · de zi (automat) · traseu · 3 puncte pe traseu");
+    expect(courseSummary(words, null, { surface: null, checkpoints: "1 punct pe traseu" })).toBe("1 punct pe traseu");
     expect(courseSummary(words, null, { surface: null, checkpoints: null })).toBe("Nimic completat");
     expect(linksSummary(words, null, {}, "ro")).toBe("Niciun link");
     expect(

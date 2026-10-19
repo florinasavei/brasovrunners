@@ -497,7 +497,7 @@ export function canTransitionEvent(
  * Pages and albums borrowed this gate for their own settings; they ask `isEditorial` now, so
  * nothing about them moved.
  *
- * **Two exceptions, each amending this one:** an event's «Puncte de control» (§757) — where the
+ * **Two exceptions, each amending this one:** an event's «Puncte pe traseu» (§757) — where the
  * water is, by when the last runner passes — are the Organizer's to write too, through their own card
  * and service (`event-checkpoints/domain/checkpoint.ts#canEditCheckpoints`); and the volunteer
  * badges' design (§764), the column `events.badge_design`, is written by whoever runs the volunteers

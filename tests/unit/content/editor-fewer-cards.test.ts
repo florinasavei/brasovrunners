@@ -159,7 +159,7 @@ describe("§760 «Participare, înscrieri și regulament»: cards 6 and 9 in one
   });
 });
 
-describe("§760, amended by §763: «Puncte de control» inside «Traseul», «Voluntari» with the registrations", () => {
+describe("§760, amended by §763: «Puncte pe traseu» inside «Traseul», «Voluntari» with the registrations", () => {
   it("draws the checkpoints card inside «Traseul», in the save form, and its detached forms around and after it", () => {
     const saveStart = at(EDIT, 'id="event-save-form"');
     const saveEnd = at(EDIT, "</ActionForm>", saveStart);

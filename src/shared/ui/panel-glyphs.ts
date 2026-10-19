@@ -176,7 +176,7 @@ export const PANEL_GLYPHS = {
   badgeFreeText: TextFieldsIcon,
   badgeMarker: GestureIcon,
   badgeCut: ContentCutIcon,
-  // «Puncte de control» (§757): the points of the route, a pin on the ground.
+  // «Puncte pe traseu» (§757): the points of the route, a pin on the ground.
   checkpoints: PinDropIcon,
   // The route's elevation profile (§802): the card's preview «Așa apare pe pagină» and the tick on each point — the ground's own outline.
   routeProfile: TerrainIcon,

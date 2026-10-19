@@ -88,7 +88,7 @@ export type BibDesignFormValues = {
   profileFiguresPlace: string;
   /** «Orientarea profilului» (§759): `normal` or `turned`. */
   profileOrientation: string;
-  /** «Punctele de control pe profil» (§757): on by default, drawn only with the profile and the event's checkpoints. */
+  /** «Punctele de pe traseu pe profil» (§757): on by default, drawn only with the profile and the event's checkpoints. */
   showCheckpoints: boolean;
   /** «…cu orele limită» (§757): the cut-offs beside the points; off by default. */
   showCheckpointTimes: boolean;

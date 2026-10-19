@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.61-2026-10-19 -->
+<!-- PROJECT_BASELINE: BR-V3.62-2026-10-19 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.61-2026-10-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.62-2026-10-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27618,3 +27618,54 @@ Baseline `BR-V3.61-2026-10-19`.
 **Refused.** A mark beside «și încă N», or any mark beside a name that is not shown. A member count or a mark read from an answer given under a notice that did not describe it. A sentence under `{{rsvp}}`. A member kind read from the form for an account, a role or a kind posted beside a tick. A tick for an account. «Verificat» for a tick. A toggle-glyph button (the owner, 2026-10-14). A second wording of the chip for the same fact. A kind derived from the address at read time (the registrations' way): a «Vin!» answer's «from an account» is the moment's, not the address's. Marking the answers given before the notice by the next press of «Vin!» alone (the person is asked, with the tick, under the notice that says it).
 
 Baseline `BR-V3.61-2026-10-19`.
+
+## 832. The «Vii?» email's tick says what it does, with the club's days, hour and audience (amending §823)
+
+**The owner, 2026-10-19 21:15, with a screenshot of the event editor's «Vin!» block:** the tick «Acceptă răspunsuri „Vin!” din pagină, calendar și email» ticked, and under it the tick «Trimite întrebarea „Vii?” înainte de acest eveniment» unticked, with the help «Cu bifa, cei care trebuie întrebați primesc un email înainte de dată; cât timp înainte și cui, alegi în Setări…» — «nu înțeleg a doua bifă».
+
+**Decision (amending §823's third setting, «Which events»).** Two things, the words and the value.
+
+1. **The words.** The tick is «Trimite emailul „Vii?” înainte de această dată» (EN «Send the “Coming?” email before this date»): it names the email, not «the question». Its help is written from the club's own settings, on the server, in both languages, as up to three sentences each within the house's 200 characters — «Cu bifa, {cine} primesc cu {câte zile} înainte, de la {ora}, emailul „Vii {mâine / poimâine / peste 3 zile} la …?” cu „Vin” și „Nu vin”.», «Abonații sunt cei care au ales „{tema}” sau „{Toate noutățile}”.» (only when subscribers are asked; the topic's names are read from its own labels) and «Debifat, emailul nu pleacă pentru această dată; răspunsurile din pagină nu se schimbă.» — the days and the hour («de la»: the job sends at the first run from that hour) from «Termene» (`rsvpAskDaysBefore`, `rsvpAskHour`), who from «Emailuri» (`rsvpAskAudience`) **cut by the privacy notice in force exactly as the queue cuts it** (`reachedAudience`: no «{{rsvpAsk}}» in the notice, nobody; the answerers only while «{{rsvpAskAnswerers}}» is in it; «Ambele» with that silent is the subscribers alone), the day in the email's own words (`rsvpAskDayPhrase`). While nobody can be asked the help says «Emailul nu pleacă încă: nota de confidențialitate nu-l descrie — vezi Sarcini.» instead of promising an email the sender holds back. (A members-only event is not named: the editor's own field may change before a save, so a stored-state sentence would mislead.) The event-JSON screen names the field «Emailul „Vii?” se trimite» too. Under it, «Schimbă în Setări:» with a link to each of the two screens. With **0 days** the email is off for every date: the help says so («Emailul „Vii?” e oprit din Setări → „Termene”»), the tick is drawn disabled, and a hidden field carries its stored answer (a disabled box posts nothing), so a save never changes it and the days turned up again find it as it was. The first tick's help names the email only as «și, dacă bifezi mai jos, un email înainte». `RegistrationBox` takes the settings as the `rsvpAsk` prop, which the two editor pages fill with `readRsvpAskSettings`; absent, the platform's defaults (the day before, 08:00, the subscribers).
+
+2. **The value, proved.** The tick is drawn from `events.rsvp_ask_enabled`, which the migration made true for every event. A test now saves a turn-up event through the editor's real action in every shape the browser posts — «Vin!» and the tick ticked, the tick unticked, «Vin!» unticked while the tick under it stays ticked, a form without either block, a race whose turn-up block is hidden — and every save writes the value the form shows or leaves the stored one alone: the `.present` marker means «the box was on the form», a hidden block still posts its state, and no save path writes false by itself (no mapping was wrong, so no event needs re-checking on this account). An event showing the tick unticked was unticked by the club, or copied (a series, «Duplică», the JSON file) from one that was.
+
+**Refused.** Removing the tick (the club may want one date not asked); a second tick for the audience (that is one setting for the club, not per event); hiding the tick while the days are 0 (the owner would not find where the email went).
+
+Baseline `BR-V3.62-2026-10-19`.
+
+## 833. «Puncte de control» is «Puncte pe traseu» everywhere a person reads it (amending §757)
+
+**The owner, 2026-10-19, with a screenshot of a group run's public page** (the table «Puncte de control» — Km · Punct · Ce găsești aici · Limită — with the rows «Regrupare» and «Apă»): «În loc de „puncte de control" spune „puncte pe traseu"».
+
+**Why it fits.** Since «Regrupare» (§824) and the water and food kinds, most rows of the table are not controls at all, and a group run has no control. The table is a list of the places along the route, so it says so.
+
+**Decision.** One vocabulary on every surface, in both languages. The heading of the event page's table (§757), the preview, the editor's card under «Traseul» (§763), the bib design's tick («Punctele de pe traseu pe profil») and the import diff's label for it («Număr: punctele de pe traseu pe profil»), the save toasts and the refusals (`CHECKPOINTS_NO_LONGER_HOLD`), the JSON import's notes and the import diff's label for the list («Punctele de pe traseu»), the box summary of a closed «Traseul» («3 puncte pe traseu») and the editor's field labels read «Puncte pe traseu» (heading), «punctele de pe traseu» (running text) and «{count} puncte pe traseu»; in English «Points on the route» and «points on the route». A sentence never says «pe traseu» twice by accident. One messages test (`tests/unit/i18n/route-points-words.test.ts`) pins it: no Romanian message says «puncte de control», no English one says «checkpoint», and the public heading is the owner's words.
+
+**What stays.** Code identifiers (`checkpoint`, `event_checkpoints`, `CheckpointsCard`, the message keys, the test ids), the anchors and section ids (`#checkpoints`, `#box-checkpoints`: a link someone shared still lands), the history in `DECISIONS.md` and `CHANGELOG.md`, the owner's quotations kept verbatim in comments, and the GPX reader's pattern that still recognises a waypoint called «punct de control» or «control point» as a timing point. No legal template said «puncte de control», so no text the club approved changes. No migration.
+
+**Amends** §757 (the table's name), §763 and §802 (the card's and the profile's words) and §824 (the kinds' vocabulary); their rules are untouched.
+
+Baseline `BR-V3.62-2026-10-19`.
+
+## 834. The next event says how far away it is
+
+**The owner, 2026-10-19, with a screenshot of the calendar's «Următorul eveniment» card:** "la calendar, la următorul eveniment vreau să zic peste cât timp va fi". He meant to build it from his phone on another account as a demo, then at 22:30 said "nu mai fac niciun PR de pe telefon": the dispatcher built it.
+
+**Decision.** The card (`NextEventPanel`, §708 and the facelift's phase 4) gains one line under the day, an hourglass and the words, drawn on the server by the pure `awayFrom(startsAt, now, timeZone)` in `src/modules/events/domain/next-event-away.ts`:
+
+- **«Acum» / «Now»** — the event has started (the listing's read keeps an event until it ends, so the card can show one that is running);
+- **«Azi» / «Today»** — the same calendar day, not started. Not «Azi, la 18:30»: the card's own time line, two rows below, already says the hour;
+- **«Mâine» / «Tomorrow»** — the next calendar day;
+- **«Peste 2 zile» … «Peste 13 zile» / «In 2 days»** — two to thirteen days;
+- **«Peste 2 săptămâni» … «Peste 8 săptămâni» / «In 3 weeks»** — from fourteen days, whole weeks rounded down, up to 59 days;
+- **«Peste 2 luni» … / «In 2 months»** — from sixty days, thirty-day months rounded down.
+
+**Calendar days, never 24-hour blocks.** The count is `daysUntilOnWallClock` (§78), the one day count the race-week countdown already uses, read on the club's wall clock (`CLUB_TIME_ZONE`, the zone the page rolls at). A race on Saturday is «Mâine» all of Friday, and the October clock change (a 25-hour Sunday) and the March one move nothing: a test fixes `now` across both. There is no second day count.
+
+**The words** are `Events.calendar.look.nextEvent.away.*` in both languages, the three Romanian plural forms through `countForm` (§341), never ICU: «Peste 2 zile», «Peste 20 de luni», «Peste o zi». The card takes the page's own clock as a prop, `now`, so the design page (`/admin/design` → «Mostre») passes its fixed `SAMPLE_NOW` and draws the same words on every visit («Peste 7 săptămâni»). The count is deliberately on the club's clock, the clock the page rolls at, even when an event's own zone differs: near midnight the day line (in the event's zone) and this line may then disagree, and the page's roll is the reason the club's clock wins.
+
+**The cache answer: it holds, and costs nothing.** The calendar is a static page kept by the CDN (§549); it already calls `holdPageUntil([nextWallMidnight(now, CLUB_TIME_ZONE)], now)` unconditionally, so it is made again at the club's midnight, the very instant at which every step of the countdown can change («Peste 5 zile» to «Peste 4 zile», «Mâine» to «Azi»). So the card's words roll with the page at the club's midnight, with no client island and no new dependency; as for today's square (§549), the one visit that triggers the new render may still get the old copy (the CDN serves the stale page once, then refreshes). One instant was missing: «Azi» becomes «Acum» at the event's start, which no midnight names, so `readNextEvent` now holds the page to that start as well (`holdPageUntil([event.startsAt], now)`) — one extra render per event, at its start. Neither hold reads the database or calls a provider; the rows come from the listing's own cached read, as before. The card is drawn only while «Tema v2» is on (§708), so with the setting off the page reads and holds nothing more than it did.
+
+**Refused.** A client island that recomputes the words in the browser (the cache already rolls at the club's midnight, and an island would be a script on the calendar for words the server writes correctly); «Azi, la 18:30» (the time is on the card already); a countdown in hours or minutes (the page is cached, so any finer step would be stale).
+
+Baseline `BR-V3.62-2026-10-19`.

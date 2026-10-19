@@ -242,7 +242,7 @@ export const eventConfigSchema = z
         askHealthNote: z.boolean(),
         /** «Acceptă răspunsuri „Vin!”» (§811): a file made before the tick existed has none: off. Written only when it is on. */
         rsvpEnabled: z.boolean().default(false),
-        /** «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823): a file made before the tick existed has none: on. Written only when it is off. */
+        /** «Trimite emailul „Vii?” înainte de această dată» (§823): a file made before the tick existed has none: on. Written only when it is off. */
         rsvpAskEnabled: z.boolean().default(true),
       })
       .strict(),

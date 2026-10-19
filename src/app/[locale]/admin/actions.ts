@@ -167,7 +167,7 @@ function hiddenListOutcome(error: unknown, locale: Locale): { error: string; err
 }
 
 /**
- * The saved «Puncte de control» would no longer hold against the event as this save leaves it (§757):
+ * The saved «Puncte pe traseu» would no longer hold against the event as this save leaves it (§757):
  * a moved start or gun, a shorter «Timp limită» or route. The card's own sentence about the point, in
  * the page's language, inside one that names the card (and the date, on another date of a series);
  * no box of this form is linked — the point is changed in its own card.
@@ -344,7 +344,7 @@ function eventFieldsFrom(form: FormData) {
     // — a form without the card is "not editing it" (a reader who may not change the settings), never "off".
     showRouteProfile: form.get("event.showRouteProfile.present") === "1" ? form.get("event.showRouteProfile") === "on" : undefined,
     rsvpEnabled: form.get("event.rsvpEnabled.present") === "1" ? form.get("event.rsvpEnabled") === "on" : undefined,
-    // «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823): read only when the form carried its marker, like the tick above.
+    // «Trimite emailul „Vii?” înainte de această dată» (§823): read only when the form carried its marker, like the tick above.
     rsvpAskEnabled: form.get("event.rsvpAskEnabled.present") === "1" ? form.get("event.rsvpAskEnabled") === "on" : undefined,
     distanceMeters: value("distanceMeters"),
     // «Aproximativ» (§598): a checkbox beside the distance; `service.ts` drops it when the distance is empty.

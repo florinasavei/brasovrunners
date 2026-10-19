@@ -291,7 +291,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     its two forms beside the save form and never in it; neither save posts the other's boxes.
     «Voluntari» (§754) is with the registrations, below the grid.
   */
-  test("«Puncte de control» inside «Traseul», in the document and on the screen; «Voluntari» below the grid", async ({ page }) => {
+  test("«Puncte pe traseu» inside «Traseul», in the document and on the screen; «Voluntari» below the grid", async ({ page }) => {
     test.skip(!editorUrl, "the create step did not run");
     await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
@@ -318,7 +318,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
 
     // The screen: opened the way a person does, its box inside «Traseul»'s box, under the route's fields and under card 1.
     const course = await openEditorBox(page, "Traseul");
-    const card = await openEditorBox(page, "Puncte de control");
+    const card = await openEditorBox(page, "Puncte pe traseu");
     const courseBox = (await course.boundingBox())!;
     const cardBox = (await card.boundingBox())!;
     const kindBox = (await page.locator("#box-kind").boundingBox())!;
@@ -354,7 +354,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     // the point is kept, the distance is not.
     await openEditorBox(page, "Traseul");
     await page.locator('[name="event.distanceMeters"]').fill("4321");
-    const cardAgain = await openEditorBox(page, "Puncte de control");
+    const cardAgain = await openEditorBox(page, "Puncte pe traseu");
     await openEditorBox(page, "Adaugă puncte");
     const row = cardAgain.getByTestId("checkpoint-new-row").first();
     await row.getByLabel("Kilometrul").fill("2");
@@ -364,7 +364,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await cardAgain.getByRole("button", { name: "Salvează punctele" }).click();
     const pointNames = postedNames(await pointsPress);
     expect(pointNames.filter((name) => name.startsWith("event.") || name.startsWith("translations."))).toEqual([]);
-    await expect(page.getByTestId("toast-live")).toContainText("Punctele de control au fost salvate.", { timeout: 20_000 });
+    await expect(page.getByTestId("toast-live")).toContainText("Punctele de pe traseu au fost salvate.", { timeout: 20_000 });
     await page.goto(editorUrl);
     await hydrated(page);
     await expect(page.getByTestId("checkpoint-card")).toHaveCount(1);

@@ -13,7 +13,7 @@ import { withClientWords } from "../../helpers/client-words";
 import { elevationGpx } from "../../helpers/elevation-gpx";
 
 /**
- * §757 — the card «Puncte de control» as the editor draws it (BR-REQ-050-02, BR-REQ-041-01 criterion 6):
+ * §757 — the card «Puncte pe traseu» as the editor draws it (BR-REQ-050-02, BR-REQ-041-01 criterion 6):
  * its closed line and when it opens by itself, one block per saved point with every box named
  * `cp[i].…`, the spare rows for new ones, «Scoate» on a saved point only, the GPX's offer and its
  * preview with what is ticked, a reader's list with no form, both languages. The forms are plain
@@ -73,10 +73,10 @@ async function render(props: Partial<Parameters<typeof CheckpointsCard>[0]> = {}
 const TRANSLATES: TranslateOffer = { action: async () => ({ ok: false, reason: "notConfigured" }), setupHref: null };
 const NO_KEY: TranslateOffer = { action: null, setupHref: null };
 
-describe("§757 the card «Puncte de control»", () => {
+describe("§757 the card «Puncte pe traseu»", () => {
   it("is a named card of «Traseul» (§763): closed by default, a level-3 heading, its closed line saying there is none", async () => {
     const html = await render();
-    expect(html).toContain("Puncte de control");
+    expect(html).toContain("Puncte pe traseu");
     expect(html).toContain("niciun punct");
     expect(html).toMatch(/<details[^>]*id="box-checkpoints"/);
     expect(html).not.toMatch(/<details[^>]*id="box-checkpoints"[^>]*open/);
@@ -237,7 +237,7 @@ describe("§757 the card «Puncte de control»", () => {
     language = "en";
     try {
       const html = await render({ locale: "en", checkpoints: [point("a", 5, { cutoffMinutes: 75, cutoffClock: "10:15" })] });
-      expect(html).toContain("Checkpoints");
+      expect(html).toContain("Points on the route");
       expect(html).toContain("Save the points");
       expect(html).toContain("Name (Romanian)");
       expect(html).toContain("Name (English)");

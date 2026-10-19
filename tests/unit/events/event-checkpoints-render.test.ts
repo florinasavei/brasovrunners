@@ -17,7 +17,7 @@ import EventCheckpoints from "@/modules/events/ui/EventCheckpoints";
 import { checkpointFinish, withCutoffClocks } from "@/modules/event-checkpoints/domain/start";
 
 /**
- * §757, §770, BR-REQ-011-01 — the table «Puncte de control» on the event page: the kilometre, the point,
+ * §757, §770, BR-REQ-011-01 — the table «Puncte pe traseu» on the event page: the kilometre, the point,
  * what is there (a glyph with its word, «Direcționare» among them), the time limit in words — «Timp
  * limită: 1 h 30 min · se închide la 11:30» — the finish last when the event has a time limit; both
  * languages; nothing without checkpoints; every cell carries its column's word so the table reads as a
@@ -191,7 +191,7 @@ describe("§757 the checkpoints' table on the event page", () => {
 
   it("is in both languages: the heading, the names, the kinds and the time limit", async () => {
     const html = await render([point("a", 5, { cutoffMinutes: 90, cutoffClock: "11:30", kinds: ["TIMING"] })], { km: 21.1, limit: "12:00", minutes: 180 }, "en");
-    expect(html).toContain(">Checkpoints</h2>");
+    expect(html).toContain(">Points on the route</h2>");
     expect(html).toContain("Point a");
     expect(html).not.toContain("Punct a");
     expect(html).toContain("Timing");

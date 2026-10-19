@@ -32,7 +32,7 @@ export type BibStripOptions = {
   chartWidth: number;
   /** «Kilometrii și altitudinile pe profil» (§804): the kilometre ticks and labels, the highest and the lowest altitude. */
   showScale: boolean;
-  /** «Punctele de control pe profil» (§757): the pins of the checkpoints the drawing carries. */
+  /** «Punctele de pe traseu pe profil» (§757): the pins of the checkpoints the drawing carries. */
   showCheckpoints: boolean;
   /** «…cu orele limită» (§757): the cut-offs beside the points, where every one fits. */
   showTimes: boolean;
