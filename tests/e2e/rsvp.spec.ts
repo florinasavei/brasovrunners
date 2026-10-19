@@ -319,7 +319,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     // another one, stays remembered: one row each).
     const browsersBefore = await rememberedBrowsers(guest);
     expect(browsersBefore).toBe(2);
-    await page.getByRole("button", { name: "Nu sunt eu" }).click();
+    await page.getByRole("button", { name: "Nu sunt eu — uită-mă pe acest dispozitiv" }).click();
     await expect(page.getByTestId("rsvp-box").locator('input[name="email"]')).toBeVisible();
     await expect(page.getByTestId("rsvp-remembered")).toHaveCount(0);
     const left = (await context.cookies()).map((cookie) => cookie.name);

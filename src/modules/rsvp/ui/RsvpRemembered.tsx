@@ -170,6 +170,11 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
         </Alert>
       )}
 
+      <Typography variant="caption" color="text.secondary">
+        {labels.help}
+      </Typography>
+
+      {/* A small link under the help line, not a second button beside «Nu mai vin»: it forgets the browser, for a shared or borrowed device. */}
       <form
         action={async () => {
           await actions.forget();
@@ -182,10 +187,6 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
           <PersonOffIcon />
         </SubmitButton>
       </form>
-
-      <Typography variant="caption" color="text.secondary">
-        {labels.help}
-      </Typography>
     </Stack>
   );
 }
