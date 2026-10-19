@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { createTranslator } from "next-intl";
 import ro from "../../../messages/ro.json";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { memberDiscountCodes } from "@/db/schema/member-discount-codes";
 import { memberTiers } from "@/db/schema/member-tiers";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
@@ -43,8 +44,8 @@ const { TIER_GLYPH_KEYS, isTierGlyphKey } = await import("@/modules/content/memb
 const { tierFieldsSchema } = await import("@/modules/content/member-tiers/fields");
 const { createDiscountCode, saveDiscountCode } = await import("@/modules/content/member-codes/service");
 const { codeIsForTier, listDiscountCodesForAdmin, listDiscountCodesForMembers } = await import("@/modules/content/member-codes/repository");
-const { changeStaffRole, inviteMembers, setMemberTier } = await import("@/modules/staff-identity/service");
-const { inviteMembersAction } = await import("@/app/[locale]/admin/actions");
+const { changeStaffRole, inviteMembers, inviteStaffUser, setMemberTier } = await import("@/modules/staff-identity/service");
+const { inviteMembersAction, inviteStaffAction } = await import("@/app/[locale]/admin/actions");
 const { saveMemberTiersAction, deleteMemberTierAction } = await import("@/app/[locale]/admin/pages/members/actions");
 const { setMemberTierAction } = await import("@/app/[locale]/admin/actions");
 const { parseMemberRows } = await import("@/modules/staff-identity/domain/member-rows");
@@ -475,6 +476,101 @@ describe("§811 the member tiers", () => {
       // The empty choice is no level at all.
       await redirectedTo(inviteMembersAction(null, form({ uiLocale: "ro", preferredLocale: "ro", members: "fara@dev.test", tierId: "" })));
       expect((await db.select().from(staffUsers).where(eq(staffUsers.email, "fara@dev.test")))[0].memberTierId).toBeNull();
+    });
+  });
+
+  /*
+    «Adaugă o persoană» with a level (§811, §817): «Nivel» under the role «Membru», written with the row in the same
+    transaction and audited by id. The service refuses what the form would never post, naming the box.
+  */
+  describe("«Adaugă o persoană» with a level", () => {
+    const person = (role: string, extra: Record<string, string> = {}) => ({ email: "nou@dev.test", displayName: "Nou Venit", role, preferredLocale: "ro", ...extra });
+    const stored = async (email = "nou@dev.test") => (await db.select().from(staffUsers).where(eq(staffUsers.email, email)))[0];
+
+    it("writes the level with the account, audits it by id and names no person in the audit row", async () => {
+      const { first } = await twoTiers();
+      const added = await inviteStaffUser(db, admin, person("MEMBER"), { tierId: first.id });
+      expect([added.role, added.memberTierId]).toEqual(["MEMBER", first.id]);
+      expect((await stored()).memberTierId).toBe(first.id);
+      const trail = await db.select().from(auditLogs).where(eq(auditLogs.entityId, added.id));
+      expect(trail.map((row) => [row.action, row.actorStaffUserId, row.metadataJson])).toEqual([
+        ["staff.member_tier.set", admin.id, { staffUserId: added.id, tierId: first.id, previousTierId: null, reason: "invite" }],
+      ]);
+      expect(JSON.stringify(trail)).not.toMatch(/Nou Venit|nou@dev\.test|Membru|Fondator/);
+    });
+
+    it("an id in capitals is the same level, stored and audited as the database holds it", async () => {
+      const { first } = await twoTiers();
+      const added = await inviteStaffUser(db, admin, person("MEMBER"), { tierId: first.id.toUpperCase() });
+      expect(added.memberTierId).toBe(first.id);
+      const [row] = await db.select().from(auditLogs).where(eq(auditLogs.action, "staff.member_tier.set"));
+      expect(row.metadataJson).toMatchObject({ tierId: first.id });
+    });
+
+    it("adds a member with no level — none given, or «—» — and audits no level", async () => {
+      await twoTiers();
+      await inviteStaffUser(db, admin, person("MEMBER"));
+      await inviteStaffUser(db, admin, person("MEMBER", { email: "alta@dev.test" }), { tierId: null });
+      expect([(await stored()).memberTierId, (await stored("alta@dev.test")).memberTierId]).toEqual([null, null]);
+      expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "staff.member_tier.set"))).toEqual([]);
+    });
+
+    it("refuses a level on any role that is not «Membru», naming the box, and adds nobody", async () => {
+      const { first } = await twoTiers();
+      for (const role of ["CONTRIBUTOR", "COPYWRITER", "ADMIN"]) {
+        await expect(inviteStaffUser(db, admin, person(role), { tierId: first.id })).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["tierId"] });
+      }
+      expect(await stored()).toBeUndefined();
+      expect(await db.select().from(emailOutbox)).toHaveLength(0);
+    });
+
+    it("refuses a hidden level and an unknown or malformed id, naming the box, and adds nobody", async () => {
+      const { first, second } = await twoTiers();
+      await saveMemberTiers(db, { actor: admin, rows: rowsOf({ [first.id]: { ...unchanged(first, 1), hidden: "on" }, [second.id]: unchanged(second, 2) }), now: NOW });
+      for (const tierId of [first.id, "00000000-0000-4000-8000-000000000099", "nu-e-un-id"]) {
+        await expect(inviteStaffUser(db, admin, person("MEMBER"), { tierId })).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["tierId"] });
+      }
+      expect(await stored()).toBeUndefined();
+      expect(await db.select().from(emailOutbox)).toHaveLength(0);
+      // The level that is still given works.
+      expect((await inviteStaffUser(db, admin, person("MEMBER"), { tierId: second.id })).memberTierId).toBe(second.id);
+    });
+
+    it("is the Administrator's alone: a posted level from anyone else is refused, and nothing is written", async () => {
+      const { first } = await twoTiers();
+      for (const actor of [copywriter, volunteer, member]) {
+        await expect(inviteStaffUser(db, actor as StaffUser, person("MEMBER"), { tierId: first.id })).rejects.toMatchObject({ code: "FORBIDDEN" });
+      }
+      state.cookie = volunteer.id;
+      expect(await inviteStaffAction(null, form({ uiLocale: "ro", ...person("MEMBER"), tierId: first.id }))).toMatchObject({ error: "FORBIDDEN" });
+      expect(await stored()).toBeUndefined();
+    });
+
+    it("sends the same invitation with a level as without: the level is the staff's label and never told to the member", async () => {
+      const { first } = await twoTiers();
+      await inviteStaffUser(db, admin, person("MEMBER", { email: "cu@dev.test" }), { tierId: first.id });
+      await inviteStaffUser(db, admin, person("MEMBER", { email: "fara@dev.test" }));
+      const mails = await db.select().from(emailOutbox);
+      expect(mails).toHaveLength(2);
+      const [withLevel, without] = ["cu@dev.test", "fara@dev.test"].map((email) => mails.find((row) => row.recipientEmail === email)!);
+      expect(withLevel.messageType).toBe(without.messageType);
+      expect(withLevel.payload).toEqual(without.payload);
+      expect(JSON.stringify(mails)).not.toContain(first.id);
+    });
+
+    it("through the action: the level rides on the form; «—» is no level; a level on a colleague comes back naming «Nivel»", async () => {
+      const { first } = await twoTiers();
+      const done = await redirectedTo(inviteStaffAction(null, form({ uiLocale: "ro", ...person("MEMBER"), tierId: first.id })));
+      expect(done).toContain("saved=invited");
+      expect((await stored()).memberTierId).toBe(first.id);
+      await redirectedTo(inviteStaffAction(null, form({ uiLocale: "ro", ...person("MEMBER", { email: "fara@dev.test" }), tierId: "" })));
+      expect((await stored("fara@dev.test")).memberTierId).toBeNull();
+      // A press with no tier box at all (the box is drawn only while the club has a level to give) is the same as «—».
+      await redirectedTo(inviteStaffAction(null, form({ uiLocale: "ro", ...person("CONTRIBUTOR", { email: "coleg@dev.test" }) })));
+      expect((await stored("coleg@dev.test")).memberTierId).toBeNull();
+      const refused = await inviteStaffAction(null, form({ uiLocale: "ro", ...person("CONTRIBUTOR", { email: "altul@dev.test" }), tierId: first.id }));
+      expect(refused).toMatchObject({ error: "VALIDATION_ERROR", fields: ["tierId"] });
+      expect(await stored("altul@dev.test")).toBeUndefined();
     });
   });
 

@@ -48,7 +48,9 @@ import { causeLabel } from "@/modules/registrations/ui/rejected-email-words";
 import { env } from "@/shared/config/env";
 import { findAuditEvent } from "@/modules/audit/repository";
 import { listAllMemberTiers, tierViewOf } from "@/modules/content/member-tiers/repository";
+import MemberTierSelect from "@/modules/content/member-tiers/ui/MemberTierSelect";
 import TierBadge from "@/modules/content/member-tiers/ui/TierBadge";
+import OnlyForType from "@/modules/content/events/ui/OnlyForType";
 import { MEMBER_ROWS_MAX } from "@/modules/staff-identity/domain/member-rows";
 import type { MemberAccountLine } from "@/modules/staff-identity/member-accounts";
 
@@ -106,6 +108,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const tiers = (await listAllMemberTiers(getDb())).map((tier) => ({ ...tierViewOf(tier, locale), hidden: tier.hidden }));
   const givableTiers = tiers.filter((tier) => !tier.hidden);
   const tierBoxes = await refusalMessages({ tierId: t("staff.memberTier") });
+  const hiddenTierLabel = (name: string) => t("staff.memberTierHiddenOption", { name });
   const tierOf = (id: string | null) => (id === null ? undefined : tiers.find((tier) => tier.id === id));
   // «Retrimite invitația» asks «Trimite acum» or «Pune la coadă» (§540), under the scheduled timing only.
   const sendNow = await sendNowChoiceFor(getDb(), locale);
@@ -288,6 +291,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
             displayName: t("staff.name"),
             role: t("staff.role"),
             preferredLocale: t("staff.preferredLocale"),
+            tierId: t("staff.memberTier"),
           })}
           confirm={{ title: t("confirm.inviteStaffTitle"), body: t("confirm.inviteStaffBody"), confirmLabel: t("staff.invite"), cancelLabel: words.cancel }}
           data-testid="staff-invite-form"
@@ -318,6 +322,25 @@ export default async function StaffPage({ params, searchParams }: Props) {
                 </MenuItem>
               ))}
             </RecallField>
+            {/*
+              «Nivel» (§811, §817), under the role: a club member's level chosen in the same step, shown while the role is «Membru»
+              and only once the club named a level the press may give (the page is the Administrator's, so the select is too — the
+              service asserts both again). The same select as a member's row and «Adaugă mai mulți membri» (`MemberTierSelect`);
+              the level is the staff's label, so the invitation email does not mention it.
+            */}
+            {offered.includes("MEMBER") && givableTiers.length > 0 && (
+              <OnlyForType type="MEMBER" selectName="role" initialType="CONTRIBUTOR">
+                <MemberTierSelect
+                  tiers={givableTiers}
+                  noneLabel={t("staff.memberTierNone")}
+                  hiddenOption={hiddenTierLabel}
+                  label={t("staff.memberTier")}
+                  defaultValue=""
+                  helperText={t("staff.memberTierInviteHelp")}
+                  data-testid="staff-invite-tier"
+                />
+              </OnlyForType>
+            )}
             <RecallField name="preferredLocale" label={t("staff.preferredLocale")} defaultValue="ro" select>
               {routing.locales.map((value) => (
                 <MenuItem key={value} value={value}>
@@ -366,6 +389,8 @@ export default async function StaffPage({ params, searchParams }: Props) {
       <Panel glyph="members" title={t("staff.membersTitle")} aside={t("staff.membersAside")} collapsible id="staff-members" data-testid="staff-members">
         <ActionForm
           action={inviteMembersAction}
+          // Its own boxes' ids, apart from «Adaugă o persoană»'s namesakes (the language, the level).
+          scope="members"
           messages={await refusalMessages({ members: t("staff.membersRows"), preferredLocale: t("staff.preferredLocale"), tierId: t("staff.memberTier") })}
           confirm={{ title: t("confirm.inviteMembersTitle"), body: t("confirm.inviteMembersBody"), confirmLabel: t("staff.membersInvite"), cancelLabel: words.cancel }}
           data-testid="staff-members-form"
@@ -389,22 +414,15 @@ export default async function StaffPage({ params, searchParams }: Props) {
             </RecallField>
             {/* «Nivel» (§811): one level for every member this press adds — the club's visible levels, or none. Only once the club named one. */}
             {givableTiers.length > 0 && (
-              <RecallField
-                name="tierId"
+              <MemberTierSelect
+                tiers={givableTiers}
+                noneLabel={t("staff.memberTierNone")}
+                hiddenOption={hiddenTierLabel}
                 label={t("staff.memberTier")}
-                select
                 defaultValue=""
                 helperText={t("staff.memberTierBulkHelp")}
-                slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
                 data-testid="staff-members-tier"
-              >
-                <option value="">{t("staff.memberTierNone")}</option>
-                {givableTiers.map((tier) => (
-                  <option key={tier.id} value={tier.id}>
-                    {tier.name}
-                  </option>
-                ))}
-              </RecallField>
+              />
             )}
             <Box>
               <GlyphSubmitButton
@@ -516,24 +534,18 @@ export default async function StaffPage({ params, searchParams }: Props) {
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="staffUserId" value={member.id} />
                   <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-                    <TextField
-                      name="tierId"
+                    <MemberTierSelect
+                      tiers={tiers}
+                      noneLabel={t("staff.memberTierNone")}
+                      hiddenOption={hiddenTierLabel}
+                      keepId={member.memberTierId}
+                      // One box per row, so each carries its own id (the refusal summary's link is for a form that is alone).
+                      id={`member-tier-${member.id}`}
                       label={t("staff.memberTier")}
                       defaultValue={member.memberTierId ?? ""}
-                      select
                       size="small"
                       sx={{ minWidth: 150 }}
-                      slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-                    >
-                      <option value="">{t("staff.memberTierNone")}</option>
-                      {tiers
-                        .filter((tier) => !tier.hidden || tier.id === member.memberTierId)
-                        .map((tier) => (
-                          <option key={tier.id} value={tier.id}>
-                            {tier.hidden ? t("staff.memberTierHiddenOption", { name: tier.name }) : tier.name}
-                          </option>
-                        ))}
-                    </TextField>
+                    />
                     <GlyphSubmitButton label={t("staff.memberTierSave")} pendingLabel={t("staff.memberTierSaving")} icon="save" variant="outlined" />
                   </Stack>
                 </ActionForm>

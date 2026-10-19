@@ -3388,6 +3388,7 @@
       "memberTierSave": "Salvează nivelul",
       "memberTierSaving": "Se salvează nivelul…",
       "memberTierBulkHelp": "Nivelul membrilor adăugați acum. Cine era deja membru își păstrează nivelul.",
+      "memberTierInviteHelp": "Nivelul membrului adăugat acum; îl poți schimba oricând pe rândul lui. Nu i se arată.",
       "memberTierHiddenOption": "{name} (ascuns)",
       "membersTitle": "Adaugă mai mulți membri",
       "membersAside": "o adresă pe rând, rolul Membru",
