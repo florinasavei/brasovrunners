@@ -3654,7 +3654,7 @@
         "volunteerProfile": "Doar în nota de confidențialitate: casetele formularului de voluntari despre persoană, între ghilimele. Fără el în nota în vigoare, formularul cere doar bifa vârstei minime",
         "volunteerGuardian": "Doar în contractul de voluntariat: numele părintelui sau tutorelui unui voluntar minor. La un adult, propoziția dispare. Fără el în contractul în vigoare, nu se primesc minori",
         "volunteerMinors": "Doar în nota de confidențialitate: casetele părintelui din formularul de voluntari, între ghilimele; fără el, clubul nu primește voluntari sub 18 ani",
-        "volunteersList": "Doar în nota de confidențialitate: bifa „Vreau să apar pe lista publică a voluntarilor”, între ghilimele. Cu ea în nota în vigoare, pagina unui eveniment cu lista publică arată numele și rolul celor care au bifat",
+        "volunteersList": "Doar în nota de confidențialitate: bifa „Vreau să apar pe lista publică a voluntarilor”, între ghilimele. Cu ea în nota în vigoare, lista publică poate arăta nume",
         "results": "Numele secțiunii „Clasament”, între ghilimele, în nota de confidențialitate și în termeni. Cu el în ambele texte în vigoare, un administrator poate publica clasamentul, iar pagina cursei îl arată",
         "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin",
         "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc ziua dinainte întrebarea „Vii?”."
@@ -5416,7 +5416,7 @@
       },
       "list": {
         "label": "Lista voluntarilor e publică pe pagina evenimentului",
-        "help": "Bifat, pagina are un card „Voluntarii” cu numele și rolul dat al celor confirmați care au bifat că vor să apară; ceilalți sunt doar numărați. Adresa și telefonul nu apar niciodată.",
+        "help": "Bifat, pagina arată un card „Voluntarii” cu numele și rolul dat al celor confirmați care au bifat; ceilalți sunt doar numărați. Adresa și telefonul nu apar niciodată.",
         "noticeOff": "Cardul nu se arată încă: nota de confidențialitate în vigoare nu descrie lista publică a voluntarilor, iar formularul nu cere bifa. «Sarcini» spune ce trebuie aprobat.",
         "noticeLink": "Documente legale"
       },

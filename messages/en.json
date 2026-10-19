@@ -3654,7 +3654,7 @@
         "volunteerProfile": "Privacy notice only: the volunteers' form boxes about the person, in quotes. Without it in the notice in force, the form asks only the minimum-age tick",
         "volunteerGuardian": "Only in the volunteer agreement: the name of a minor volunteer's parent or guardian. For an adult the sentence is left out. Without it in the agreement in force, no minors are taken",
         "volunteerMinors": "Only in the privacy notice: the parent's boxes of the volunteers' form, in quotation marks; without it, the club takes no volunteers under 18",
-        "volunteersList": "Only in the privacy notice: the tick “I want to appear on the public list of volunteers”, in quotes. With it in the notice in force, the page of an event with a public list shows the name and role of those who ticked",
+        "volunteersList": "Only in the privacy notice: the tick “I want to appear on the public list of volunteers”, in quotes. With it in the notice in force, a public list can show names",
         "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them",
         "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming",
         "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question the day before."
@@ -5416,7 +5416,7 @@
       },
       "list": {
         "label": "The volunteers' list is public on the event's page",
-        "help": "Ticked, the page has a “Volunteers” card with the name and given role of confirmed volunteers who ticked that they want to appear; the others are only counted. The address and telephone number never appear.",
+        "help": "Ticked, the page shows a “Volunteers” card with the name and given role of confirmed volunteers who ticked; the rest are only counted. Address and telephone never appear.",
         "noticeOff": "The card is not shown yet: the privacy notice in force does not describe the public list of volunteers, so the form does not ask the tick. “Tasks” says what to approve.",
         "noticeLink": "Legal documents"
       },

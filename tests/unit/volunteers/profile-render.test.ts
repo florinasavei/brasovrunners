@@ -51,6 +51,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
     switchVolunteersAction: noop,
     switchVolunteersShirtsAction: noop,
     switchVolunteersCountsAction: noop,
+    switchVolunteersListAction: noop,
   };
 });
 vi.mock("@/app/[locale]/events/[slug]/volunteers/actions", () => ({ submitVolunteerAction: async () => {} }));
