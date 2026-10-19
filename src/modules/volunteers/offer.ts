@@ -8,6 +8,7 @@ import {
   cachedVolunteersListDescribed,
 } from "@/modules/public-cache/reads";
 import { volunteerBoxRoles, volunteerEventAhead, volunteerOfferClosedFor } from "./domain/volunteer";
+import type { VolunteersAccess } from "./domain/access";
 import type { PublicVolunteerCategory, PublicVolunteerRole } from "./volunteers";
 
 /**
@@ -25,6 +26,13 @@ import type { PublicVolunteerCategory, PublicVolunteerRole } from "./volunteers"
  * stays for them with no role and no form. The event page passes none.
  */
 export type VolunteerOffer = {
+  /**
+   * «Cine se poate oferi» (§NNN): the choice, read with the roles from the same cache entry. It decides what each surface draws, never
+   * whether the offer is open (`null` is that): the event page's box (anyone, the club's members, or no box at all) and the volunteers'
+   * page's door (`volunteerDoorFor`), which adds what only a request knows — the session and the emailed link. The read itself holds
+   * nothing per viewer, so everything it feeds stays shareable.
+   */
+  access: VolunteersAccess;
   /** The roles still needing people, in the club's order — empty only for a person reading the answer to their own post. */
   roles: PublicVolunteerRole[];
   /** The event's categories in the club's order, each with its contact person (§774): the page draws a heading for each that has a role in `roles`. */
@@ -53,7 +61,7 @@ export async function readVolunteerOffer(
   now: Date,
   answer: "done" | "full" | "invalid" | "captcha" | "limited" | null = null,
 ): Promise<VolunteerOffer | null> {
-  const { acceptsVolunteers, shirts, showCounts, roles, categories } = await cachedVolunteerRoles(event.id);
+  const { acceptsVolunteers, access, shirts, showCounts, roles, categories } = await cachedVolunteerRoles(event.id);
   if (!acceptsVolunteers) return null;
   const closed = volunteerOfferClosedFor({
     acceptsVolunteers,
@@ -74,5 +82,5 @@ export async function readVolunteerOffer(
   // A cache entry written before the categories existed has none: the roles are then simply listed (§774).
   // «Vreau să apar pe lista publică a voluntarilor» (§NNN): asked only where the club made the list public and the notice says what it shows. A last good copy of the event made before the column has none.
   const listTick = event.volunteersListPublic === true && (await cachedVolunteersListDescribed(now));
-  return { roles: boxRoles, categories: categories ?? [], shirts, showCounts, profile, minors, listTick };
+  return { access: access ?? "ANYONE", roles: boxRoles, categories: categories ?? [], shirts, showCounts, profile, minors, listTick };
 }

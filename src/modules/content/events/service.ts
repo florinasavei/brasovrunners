@@ -3007,6 +3007,8 @@ function blankEventRow(now: Date): EditableEvent {
     volunteersShowCounts: false,
     // «Lista voluntarilor e publică pe pagina evenimentului» (§NNN): off the same way — a name on a public page is never the default. A copy and a repeat carry the source's tick (`copiedEventValues`).
     volunteersListPublic: false,
+    // «Cine se poate oferi» (§NNN): anyone, until the club narrows it in the «Voluntari» card.
+    volunteersAccess: "ANYONE",
     difficulty: null,
     difficultyLevel: null,
     costType: COST_TYPE_ON_CREATE,
@@ -3595,6 +3597,10 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // repeat, like «Cine se poate oferi»: the club's standing rule for the event's volunteers. It shows nothing by itself — no volunteer is copied,
     // and a name appears only for a confirmed volunteer who ticked, under a notice that describes the list.
     volunteersListPublic: source.volunteersListPublic,
+    // «Cine se poate oferi» (§NNN) travels to a duplicate and to every date of a repeat: it is the club's standing rule for who helps
+    // (members only, by invitation), and every value but the default only narrows the door. The tick «Primește voluntari», the
+    // invitations and the people never travel — a copy starts with the tick off.
+    volunteersAccess: source.volunteersAccess,
     // «Copertă» (§709), like the route: every date of a repeat wears the series' cover, and a
     // duplicate starts with last year's until the club picks this year's.
     coverMediaAssetId: source.coverMediaAssetId,

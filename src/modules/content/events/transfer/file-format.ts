@@ -9,6 +9,7 @@ import { minutesFromClock } from "@/modules/event-checkpoints/domain/start";
 import { DURATION_MAX_MINUTES } from "@/modules/content/events/duration";
 import { fromWallTimeInput, toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
+import { DEFAULT_VOLUNTEERS_ACCESS, VOLUNTEERS_ACCESS } from "@/modules/volunteers/domain/access";
 import { WAITLIST_CHOICES } from "../waitlist-choice";
 
 /**
@@ -333,6 +334,12 @@ export const volunteersFileSchema = z
           .strict(),
       )
       .max(30),
+    /**
+     * «Cine se poate oferi» (§NNN): anyone, the club's members, or only people it invites. A file made before the setting existed has none:
+     * anyone. Written only when it is **not** the default, so a file from an event that never narrowed it stays readable by the release
+     * before this one (its reader refuses a key it does not know — QA ships a day before production, and its files travel).
+     */
+    access: z.enum(VOLUNTEERS_ACCESS).default(DEFAULT_VOLUNTEERS_ACCESS),
   })
   .strict();
 
@@ -347,7 +354,7 @@ export const eventFileSchema = z
     series: seriesSchema,
     event: eventConfigSchema,
     /** The volunteer categories and roles (§774): applied where an event is made new, never over an existing one. */
-    volunteers: volunteersFileSchema.default(() => ({ categories: [], roles: [] })),
+    volunteers: volunteersFileSchema.default(() => ({ categories: [], roles: [], access: DEFAULT_VOLUNTEERS_ACCESS })),
     media: z.array(mediaEntrySchema).max(MAX_EVENT_FILE_MEDIA),
   })
   .strict();
@@ -427,10 +434,10 @@ export function upgradeCheckpoints(file: EventFile): { file: EventFile; notes: F
  * The same for the route's `showRouteProfile` (§802, §805): written only when it is **off**; the file's version stays 3,
  * because a reader without the key reads «on» and a file with it, when off, is the only one an older release would refuse.
  * The registration block's `rsvpEnabled` (§811) is the mirror: written only when it is **on**, because «off» is what a file without it
- * means, and the file's version stays 3 for the same reason.
+ * means, and the file's version stays 3 for the same reason. So is the volunteers block's `access` (§NNN): written only when it is not «Oricine» (`ANYONE`).
  */
 export const serializeEventFile = (file: EventFile): string =>
-  `${JSON.stringify(file, (key, value) => (((key === "onProfile" || key === "showRouteProfile") && value === true) || (key === "rsvpEnabled" && value === false) ? undefined : value), 2)}\n`;
+  `${JSON.stringify(file, (key, value) => (((key === "onProfile" || key === "showRouteProfile") && value === true) || (key === "rsvpEnabled" && value === false) || (key === "access" && value === DEFAULT_VOLUNTEERS_ACCESS) ? undefined : value), 2)}\n`;
 
 /** Why a file was refused, as a code the page says in words (`Admin.eventJson.refusals.<code>`). */
 export type EventFileRefusal = "tooLarge" | "notJson" | "notAnEventFile" | "unknownVersion" | "invalid";

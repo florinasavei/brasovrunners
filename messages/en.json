@@ -632,10 +632,25 @@
       },
       "page": {
         "title": "I want to volunteer at {event}",
-        "back": "Back to {event}"
+        "back": "Back to {event}",
+        "membersOnly": "The volunteers for this event are the club's members — sign in to the members' zone.",
+        "signIn": "Sign in to the members' zone",
+        "invite": {
+          "used": "This invitation has already been used.",
+          "withdrawn": "The club withdrew this invitation.",
+          "expired": "This invitation has expired.",
+          "invalid": "This invitation link does not work. Ask the club for a new one."
+        }
       },
       "callout": {
-        "line": "We are looking for volunteers: {roles}"
+        "line": "We are looking for volunteers: {roles}",
+        "lineMembers": "We are looking for volunteers among the club's members: {roles}"
+      },
+      "lock": {
+        "leadMember": "You are signed in as a member: the name and the address come from your account.",
+        "leadInvite": "The club invited you to volunteer. The address is the one the invitation reached.",
+        "emailMember": "The address of your member account; it does not change here.",
+        "emailInvite": "The address the invitation reached; it does not change here."
       },
       "doneGuardian": "If you are under 18, your parent or guardian is emailed a link to give their consent; until then the organizers cannot confirm you.",
       "doneHeading": "Thank you!",
@@ -2139,7 +2154,15 @@
       "RESULTS_NOT_STARTED": "The results can be made public after the race has started. You can type them already.",
       "RESULTS_NOT_OPEN": "Only a race has results.",
       "MEMBER_TIER_HAS_MEMBERS": "The level was not deleted. Members with this level: {count}. Give them another level first, on “Team”.",
-      "MEMBER_TIER_IN_CODES": "The level was not deleted. Discount codes for it alone: {count}. Change their levels first."
+      "MEMBER_TIER_IN_CODES": "The level was not deleted. Discount codes for it alone: {count}. Change their levels first.",
+      "VINVITE_NOBODY": "Write at least one address.",
+      "VINVITE_TOO_MANY": "At most 50 addresses at a time. Send the rest in a second round.",
+      "VINVITE_BAD_ADDRESS": "I cannot read these addresses: {addresses}. Nothing was sent.",
+      "VINVITE_MESSAGE_LONG": "The message is too long (at most 500 characters).",
+      "VINVITE_NOT_INVITED_ONLY": "Invitations are sent only while “Who can offer” is “Only by invitation from the club”.",
+      "VINVITE_EVENT_CLOSED": "Invitations cannot be sent now: the volunteers' form is not open. The reason is written above.",
+      "VINVITE_NOT_OPEN": "The invitation is no longer open: it was used, withdrawn or has expired.",
+      "VINVITE_NOT_FOUND": "The invitation no longer exists."
     },
     "editor": {
       "draftPreview": {
@@ -5133,6 +5156,8 @@
       "standingNoNumber": "{taken} · no limit",
       "offer": {
         "open": "The “I want to volunteer” page is open: the event's page links to it.",
+        "openMembers": "The volunteers' page is open to signed-in members. The event's page links to it.",
+        "openInvited": "The volunteers' page opens only from the link of an invitation. The event's page says nothing about it.",
         "closed": {
           "off": "The public form is off: tick “Take volunteers on the page” below for the event's page to offer it. Your own list works either way.",
           "notPublished": "The public form is not shown: the event is not published. It appears on the page once the event is.",
@@ -5334,6 +5359,53 @@
       },
       "badgesLink": "Volunteer badges",
       "switchHelp": "Ticked, the event's page shows “We are looking for volunteers” and a button to the volunteers' page. Unticked, nothing is deleted: the roles and the people stay.",
+      "access": {
+        "title": "Who can offer",
+        "ANYONE": "Anyone, from the event's page",
+        "ANYONEHelp": "The form is on the event's page, open to everyone.",
+        "MEMBERS": "Only the club's members (signed in to the members' zone)",
+        "MEMBERSHelp": "The form shows only to a signed-in member, with the name and address of their account.",
+        "INVITED": "Only by invitation from the club",
+        "INVITEDHelp": "The event's page says nothing about volunteers. The form opens only from the link in an invitation sent by email.",
+        "save": "Save",
+        "saving": "Saving…"
+      },
+      "invite": {
+        "title": "Invitations",
+        "summary": "Open: {open} · Used: {used}",
+        "intro": "Write the addresses of the people you invite. Each gets an email with a personal link to the volunteers' page. An invitation holds nothing.",
+        "notInvitedOnly": "Invitations are sent only while “Who can offer” is “Only by invitation from the club”. The ones already sent stay valid until used.",
+        "addresses": "Addresses (one per line)",
+        "addressesHelp": "At most {max} at a time. Anyone already invited or already offered is skipped.",
+        "message": "Message (optional)",
+        "messageHelp": "Shown in the email as you wrote it. At most {max} characters.",
+        "language": "Language of the invitation",
+        "localeRo": "Română",
+        "localeEn": "English",
+        "send": "Send the invitations",
+        "sending": "Sending…",
+        "empty": "No invitation sent yet.",
+        "state": {
+          "open": "Sent",
+          "used": "Used",
+          "withdrawn": "Withdrawn",
+          "expired": "Expired"
+        },
+        "sentAt": "Sent {at}",
+        "by": "by {name}",
+        "resentAt": "sent again {at}",
+        "usedAt": "used {at}",
+        "withdrawnAt": "withdrawn {at}",
+        "expiredAt": "expired {at}",
+        "resend": "Send again",
+        "resending": "Sending again…",
+        "resendTitle": "Send the invitation again?",
+        "resendBody": "The person gets a new email. The link in the old email stops working.",
+        "withdraw": "Withdraw",
+        "withdrawing": "Withdrawing…",
+        "withdrawTitle": "Withdraw the invitation?",
+        "withdrawBody": "The link stops working. If the person opens it, they read that the invitation was withdrawn."
+      },
       "shirts": {
         "label": "We give volunteers T-shirts",
         "help": "Ticked, the public form asks for the T-shirt size and you see it on each row. Unticked, the form asks for no size."
@@ -6442,6 +6514,7 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "You accepted the volunteer agreement",
         "VOLUNTEER_ROLE_ASSIGNED": "Your volunteer role",
         "VOLUNTEER_GUARDIAN_REQUEST": "Your consent for a young volunteer",
+        "VOLUNTEER_INVITATION": "Invitation to volunteer",
         "RSVP_CONFIRM": "Confirm you're coming (“I'm coming!”)",
         "RSVP_ASK": "Coming tomorrow? (“I'm coming” / “I'm not coming”)"
       },
@@ -6513,6 +6586,7 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role, from the event's «Volunteers» card: a short message naming the role, the date and the place. Nothing to press.",
         "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers, or an organizer presses “Send the parent's link”: the agreement and the link where the parent accepts it in their own name.",
+        "VOLUNTEER_INVITATION": "When an Organizer or an Administrator sends invitations from the “Volunteers” card of an event whose volunteers are by invitation only, and on “Send again”. A personal link to the volunteers' page.",
         "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page: “Yes, I'm coming” counts them, “I'm not coming” takes it back. The page's “not coming any more” sends only the withdraw link.",
         "RSVP_ASK": "The day before, from {askHour}: to subscribers of “The ‘Coming?’ question before runs” and “All the news”, with “I'm coming” (counts them) and “I'm not coming”. Those who answered are skipped."
       },
@@ -6559,6 +6633,7 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "after the link or “Signed on paper”",
         "VOLUNTEER_ROLE_ASSIGNED": "when the organizers give a role",
         "VOLUNTEER_GUARDIAN_REQUEST": "when a volunteer under 18 offers",
+        "VOLUNTEER_INVITATION": "when the club invites someone to volunteer",
         "RSVP_CONFIRM": "when someone says “I'm coming!”, to their address",
         "RSVP_ASK": "the day before, from {askHour}, to the topic's subscribers"
       },
@@ -7270,6 +7345,7 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "The role and the event are added by themselves. The PDF shows the accepted text, with the name, the role, the moment and its fingerprint.",
         "VOLUNTEER_ROLE_ASSIGNED": "The role and the event's date and place are added by themselves, however you write the text. The message has no link that does anything.",
         "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old.",
+        "VOLUNTEER_INVITATION": "The event, the roles wanted and the club's message are added by themselves. The link is for the invited person only, works once, and a new one replaces the old.",
         "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link.",
         "RSVP_ASK": "Once per event; one ticked only on its own day is not asked. The links work once. Sent through “Newsletter”, last in line like the new-event alert. If it has not left by midnight, it is dropped."
       },
@@ -12384,6 +12460,15 @@
       "badgeColoursSaved": "The roles' colours were saved.",
       "badgeColoursUnchanged": "Nothing to change in the colours.",
       "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
+      "volunteersAccessSaved": "Saved who can offer.",
+      "volunteerInvitationsSent": {
+        "one": "{count} invitation sent.",
+        "few": "{count} invitations sent.",
+        "other": "{count} invitations sent."
+      },
+      "volunteerInvitationsNone": "Nothing sent: those addresses already have an invitation or have already offered.",
+      "volunteerInvitationResent": "Invitation sent again, with a new link.",
+      "volunteerInvitationWithdrawn": "Invitation withdrawn.",
       "volunteersShirtsOff": "The public form no longer asks for the T-shirt size. Sizes already given are kept.",
       "volunteersCountsOn": "The volunteers' page now says how many more people each role needs.",
       "volunteersCountsOff": "The volunteers' page no longer says how many more people each role needs.",

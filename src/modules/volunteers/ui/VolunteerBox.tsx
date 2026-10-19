@@ -108,6 +108,7 @@ export default async function VolunteerBox({
   typed,
   renderedAt,
   attempt,
+  lock,
 }: {
   locale: Locale;
   slug: string;
@@ -151,6 +152,12 @@ export default async function VolunteerBox({
   renderedAt: Date;
   /** This render's own time: Turnstile resets on it, so a refusal never posts the spent token again (§185). */
   attempt: string;
+  /**
+   * Who may offer (§NNN): the form of a signed-in member (`member`: the account's name, its address locked, «Fac parte din grupul» ticked
+   * and locked) or of an emailed invitation (`invite`: the invited address locked, and the link's secret posted back so the server can
+   * spend it). Absent for «Oricine». The server asserts both again — a locked box is a courtesy, never the permission.
+   */
+  lock?: { kind: "member"; email: string; name: string } | { kind: "invite"; email: string; secret: string };
 }) {
   const t = await getTranslations("Event");
   const tForm = await getTranslations("Registration");
@@ -230,6 +237,14 @@ export default async function VolunteerBox({
             {/* Bots fill every field; a human never sees or fills this one. */}
             <input type="text" name="honeypot" autoComplete="off" tabIndex={-1} aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }} />
             <input type="hidden" name="renderedAt" value={renderedAt.toISOString()} />
+            {/* The emailed invitation's secret (§NNN), posted back as it came: the server finds the invitation by its hash and spends it with the sign-up. */}
+            {lock?.kind === "invite" && <input type="hidden" name="invite" value={lock.secret} />}
+
+            {lock && (
+              <Alert severity="info" role="note" data-testid="volunteer-lock-note">
+                {t(lock.kind === "member" ? "volunteers.lock.leadMember" : "volunteers.lock.leadInvite")}
+              </Alert>
+            )}
 
             <Typography variant="body2" color="text.secondary">
               {t("volunteers.intro")}
@@ -366,7 +381,7 @@ export default async function VolunteerBox({
               required
               fullWidth
               autoComplete="name"
-              defaultValue={typed.name}
+              defaultValue={typed.name ?? (lock?.kind === "member" ? lock.name : undefined)}
               error={invalid.has("name")}
               slotProps={{ htmlInput: { maxLength: VOLUNTEER_NAME_MAX } }}
             />
@@ -375,13 +390,14 @@ export default async function VolunteerBox({
               name="email"
               type="email"
               label={t("volunteers.email")}
-              helperText={t("volunteers.emailHelp")}
+              helperText={lock ? t(lock.kind === "member" ? "volunteers.lock.emailMember" : "volunteers.lock.emailInvite") : t("volunteers.emailHelp")}
               required
               fullWidth
               autoComplete="email"
-              defaultValue={typed.email}
+              defaultValue={lock ? lock.email : typed.email}
               error={invalid.has("email")}
-              slotProps={{ htmlInput: { maxLength: 320 } }}
+              // A locked address is read-only, not disabled: it is posted with the form (and checked again on the server).
+              slotProps={{ htmlInput: { maxLength: 320, ...(lock ? { readOnly: true } : {}) } }}
             />
 
             {/* The country and the digits (§84): what is kept is one number a phone can dial. */}
@@ -543,7 +559,9 @@ export default async function VolunteerBox({
                   <CheckboxField name="volunteeredBefore" id={fieldId("volunteeredBefore")} defaultChecked={typed.volunteeredBefore === "on"}>
                     {t("volunteers.profile.before")}
                   </CheckboxField>
-                  <CheckboxField name="clubMember" id={fieldId("clubMember")} defaultChecked={typed.clubMember === "on"}>
+                  {/* A signed-in member (§NNN): the club's own account says it. The box is shown ticked and locked; the value rides in a hidden field, and the server sets it from the account whatever is posted. */}
+                  {lock?.kind === "member" && <input type="hidden" name="clubMember" value="on" />}
+                  <CheckboxField name="clubMember" id={fieldId("clubMember")} defaultChecked={lock?.kind === "member" || typed.clubMember === "on"} disabled={lock?.kind === "member"}>
                     {t("volunteers.profile.club", { club: CLUB_NAME })}
                     {/* The «?» of the registration form's own member tick, with the same words (§789): the club's sentence from «Pagini» → «Membri», else the platform's. */}
                     <Hint text={(await cachedMemberDefinition(locale)) ?? tForm("clubMemberDefinition")} />

@@ -26,6 +26,7 @@ import { listEventTodos } from "@/modules/event-todos/event-todos";
 import EventTodoCard from "@/modules/event-todos/ui/EventTodoCard";
 import { volunteerEventAhead, volunteerEventDay, volunteerOfferClosedFor } from "@/modules/volunteers/domain/volunteer";
 import VolunteersCard from "@/modules/volunteers/ui/VolunteersCard";
+import { listVolunteerInvitations } from "@/modules/volunteers/invitations";
 import { listVolunteerCategories, listVolunteerRoles, listVolunteers, volunteerStandings } from "@/modules/volunteers/volunteers";
 import {
   findCurrentApprovedDocument,
@@ -439,6 +440,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           categories,
           people,
           standings,
+          // The invitations to volunteer (§NNN): addresses, so read only for whoever may manage volunteers — as the people are.
+          invitations: await listVolunteerInvitations(db, staffUser, event.id),
           agreementInForce,
           agreementNoticeDescribes,
           agreementDocumentIds,
@@ -465,7 +468,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       })()
     : null;
   const volunteerErrorCode = (
-    ["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_CATEGORY_HAS_ROLES", "VOLUNTEER_NAME_TAKEN", "VOLUNTEER_ALREADY_LISTED", "VOLUNTEER_AGREEMENT_MISSING", "VOLUNTEER_AGREEMENT_ACCEPTED", "VOLUNTEER_AGREEMENT_NOTICE", "VOLUNTEER_AGREEMENT_REPRINT", "VOLUNTEER_GUARDIAN_MISSING", "VOLUNTEER_GUARDIAN_ACCEPTED", "VOLUNTEER_GUARDIAN_NO_EMAIL", "VOLUNTEER_MINORS_CLOSED"] as const
+    ["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_CATEGORY_HAS_ROLES", "VOLUNTEER_NAME_TAKEN", "VOLUNTEER_ALREADY_LISTED", "VOLUNTEER_AGREEMENT_MISSING", "VOLUNTEER_AGREEMENT_ACCEPTED", "VOLUNTEER_AGREEMENT_NOTICE", "VOLUNTEER_AGREEMENT_REPRINT", "VOLUNTEER_GUARDIAN_MISSING", "VOLUNTEER_GUARDIAN_ACCEPTED", "VOLUNTEER_GUARDIAN_NO_EMAIL", "VOLUNTEER_MINORS_CLOSED", "VINVITE_NOBODY", "VINVITE_TOO_MANY", "VINVITE_BAD_ADDRESS", "VINVITE_MESSAGE_LONG", "VINVITE_NOT_INVITED_ONLY", "VINVITE_EVENT_CLOSED", "VINVITE_NOT_OPEN", "VINVITE_NOT_FOUND"] as const
   ).find(
     (code) => code === query.volunteerError,
   );
@@ -1471,6 +1474,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   acceptsVolunteers={event.acceptsVolunteers}
                   volunteersShirts={event.volunteersShirts}
                   volunteersShowCounts={event.volunteersShowCounts}
+                  access={event.volunteersAccess}
+                  invitations={volunteersCard.invitations}
                   profileDescribed={volunteersCard.profileDescribed}
                   minorsOpen={volunteersCard.minorsOpen}
                   eventDay={volunteersCard.eventDay}

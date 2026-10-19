@@ -2,9 +2,12 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
+import { events } from "@/db/schema/events";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { membersViewer } from "@/modules/events/members-only";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
@@ -58,6 +61,9 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
   const eventPath = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
   const path = getPathname({ locale, href: { pathname: "/events/[slug]/volunteers", params: { slug } } });
   const since = renderedAt ? `&since=${encodeURIComponent(renderedAt)}` : "";
+  // The emailed invitation's secret (§NNN), as the form posted it back: every redirect to a form that must be drawn again carries it, the thank-you does not.
+  const inviteSecret = text(form, "invite");
+  const inviteQuery = inviteSecret ? `&invite=${encodeURIComponent(inviteSecret)}` : "";
   const db = getDb();
   const event = await findPublishedEventBySlug(db, locale, slug);
   if (!event) redirect(getPathname({ locale, href: "/events" }));
@@ -98,8 +104,15 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
     : "not_configured";
   if (verdict === "failed") {
     await keepTyped();
-    redirect(`${path}?volunteer=captcha${since}#${VOLUNTEER_BOX_ID}`);
+    redirect(`${path}?volunteer=captcha${since}${inviteQuery}#${VOLUNTEER_BOX_ID}`);
   }
+
+  /*
+    Who is asking (§NNN): the session is read only for an event whose choice is «Doar membrii clubului» and only when no invitation
+    came with the post — any other event costs this action one primary-key read more. The service decides with what it is given.
+  */
+  const [{ access } = { access: "ANYONE" as const }] = await db.select({ access: events.volunteersAccess }).from(events).where(eq(events.id, event.id)).limit(1);
+  const viewer = access === "MEMBERS" && !inviteSecret ? await membersViewer() : null;
 
   let outcome: Awaited<ReturnType<typeof submitVolunteer>>;
   try {
@@ -143,20 +156,25 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
       new Date(),
       // The agreement's tick is an electronic acceptance: this request's IP address and browser are its trace (§771).
       readSignatureTrace(requestHeaders),
+      { member: viewer ? { email: viewer.email } : null, inviteSecret: inviteSecret || null },
     );
   } catch (error) {
     if (isDomainError(error) && error.code === "VALIDATION_ERROR") {
       await keepTyped();
       const fields = error.fields.length > 0 ? `&vfields=${error.fields.join(",")}` : "";
-      redirect(`${path}?volunteer=invalid${fields}${since}#${VOLUNTEER_BOX_ID}`);
+      redirect(`${path}?volunteer=invalid${fields}${since}${inviteQuery}#${VOLUNTEER_BOX_ID}`);
     }
+    // A stranger's post to a members' event (§NNN) lands on the volunteers' page, which says what the page is for and offers the sign-in.
+    if (isDomainError(error) && error.code === "FORBIDDEN") redirect(`${path}${inviteSecret ? `?invite=${encodeURIComponent(inviteSecret)}` : ""}`);
     // The form is closed now (the switch, the roles, the texts): the event's page, where the box is gone, not a 404.
     if (isDomainError(error)) redirect(eventPath);
     throw error;
   }
+  // The emailed link no longer works (spent, withdrawn, past its date): the page reads the link again and says which, in a sentence (§NNN).
+  if (outcome.outcome === "invitation") redirect(`${path}?invite=${encodeURIComponent(inviteSecret)}`);
   if (outcome.outcome === "limited" || outcome.outcome === "full") {
     await keepTyped();
-    redirect(`${path}?volunteer=${outcome.outcome}${since}#${VOLUNTEER_BOX_ID}`);
+    redirect(`${path}?volunteer=${outcome.outcome}${since}${inviteQuery}#${VOLUNTEER_BOX_ID}`);
   }
   await clearFormDraft(path);
   /*
