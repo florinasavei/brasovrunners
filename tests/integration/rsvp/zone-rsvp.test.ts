@@ -38,7 +38,7 @@ vi.mock("@/app/[locale]/admin/actions", () => ({ signOutAction: async () => {} }
 vi.mock("@/modules/diagnostics/budget-level", () => ({ peekNeonBudgetLevel: () => "unknown", lastKnownBudget: () => null }));
 const request = vi.hoisted(() => ({ reads: new Map<string, Promise<unknown>>() }));
 // The two reads the page makes for «Vin!»: wrapped, not replaced, so they still run for real — the test counts the calls and, once, makes the database go away.
-const spied = vi.hoisted(() => ({ answered: [] as string[][], away: false, noSignIn: false, notice: 0, publicReads: [] as string[], gathered: [] as string[][] }));
+const spied = vi.hoisted(() => ({ answered: [] as string[][], away: false, namesAway: false, noSignIn: false, notice: 0, publicReads: [] as string[], gathered: [] as string[][] }));
 // A deployment with no sign-in at all (`STAFF_AUTH_MODE=disabled`): the one value the test flips, read live.
 vi.mock("@/shared/config/env", async (original) => {
   const real = await original<typeof import("@/shared/config/env")>();
@@ -63,6 +63,8 @@ vi.mock("@/modules/rsvp/public-page", async (original) => {
       return real.readPublicComing(...args);
     },
     readPublicRsvpsFor: (...args: Parameters<typeof real.readPublicRsvpsFor>) => {
+      // The names' gathering alone goes away: the counts' read (`readPublicComing`) still answers, so the card's «Vin!» row can be drawn.
+      if (spied.namesAway) throw Object.assign(new Error("connect ECONNREFUSED 10.0.0.1:5432"), { code: "ECONNREFUSED" });
       spied.gathered.push([...args[0]]);
       return real.readPublicRsvpsFor(...args);
     },
@@ -117,6 +119,7 @@ beforeEach(async () => {
   request.reads.clear();
   spied.answered.length = 0;
   spied.away = false;
+  spied.namesAway = false;
   spied.noSignIn = false;
   spied.notice = 0;
   spied.publicReads.length = 0;
@@ -374,7 +377,7 @@ describe("§822 «Alergări» draws the row only under a run that takes answers"
     expect(row).toContain("Vin!");
     expect(row).toContain('name="showName"');
     expect(row).not.toMatch(/name="showName"[^>]*checked/);
-    expect(row).toContain("Dacă bifezi, pe pagina alergării apari ca „Ana Membru”.");
+    expect(row).toContain("Dacă bifezi, apari ca „Ana Membru” pe pagina alergării și la „Cine vine”.");
     // Never the other member's name or address: the row says a number.
     expect(html).not.toContain("alt.membru");
     expect(html).not.toContain("Dan Altul");
@@ -613,7 +616,9 @@ describe("§715 «Cine vine» open under each run, the next run first", () => {
     // Open and always showing: a heading and a list, never a fold.
     expect(card).not.toContain("<details");
     expect(card).not.toContain("<summary");
-    expect(card).toMatch(/<h3[^>]*data-testid="rsvp-who-heading"/);
+    // One level under the run's own title (an h3), and the region named by the run's title and the heading together.
+    expect(card).toMatch(/<h4[^>]*data-testid="rsvp-who-heading"/);
+    expect(card).toContain(`aria-labelledby="vin-title-${eventId} cine-vine-${eventId}-title"`);
     // Under «Vin!» / «Tu vii ✓», in the same card.
     expect(card.indexOf('data-testid="zone-rsvp"')).toBeLessThan(card.indexOf('data-testid="rsvp-who"'));
     expect(card.indexOf("Tu vii ✓")).toBeLessThan(card.indexOf("Cine vine (3)"));
@@ -664,7 +669,9 @@ describe("§715 «Cine vine» open under each run, the next run first", () => {
     // One featured card, the next run's, with its label; it is drawn before every other.
     expect(html.match(/data-featured="true"/g)).toHaveLength(1);
     expect(html.match(/data-testid="members-next-run"/g)).toHaveLength(1);
-    expect(html.match(/data-testid="members-next-run-label"[^>]*>Următoarea alergare</g)).toHaveLength(1);
+    // Said to a screen reader only (no visible chip or overline, the lead card's rule): the words ride in the title's heading, before the link.
+    expect(html.match(/data-testid="members-next-run-label"[^>]*>Următoarea alergare: </g)).toHaveLength(1);
+    expect(html).not.toMatch(/<p[^>]*members-next-run-label/);
     const at = (id: string) => html.indexOf(`id="vin-title-${id}"`);
     expect(at(next)).toBeGreaterThan(-1);
     expect(at(next)).toBeLessThan(at(soonestClosed));
@@ -695,7 +702,32 @@ describe("§715 «Cine vine» open under each run, the next run first", () => {
     expect(cardOf(html, ids[0])).toContain("Dan Altul");
   });
 
-  it("draws no list while the database is away, and none before the notice describes «Vin!»", async () => {
+  it("keeps the zone up while only the names cannot be read: the card still draws «Vin!» and the count, with no list", async () => {
+    const eventId = await seed("Alergarea de joi");
+    await come(eventId, other.email, "Dan Altul", true);
+    state.cookie = member.id;
+    // The first render fills nothing the second may use: the names' read is down from the start, the counts' read is up.
+    spied.namesAway = true;
+    fakeNextCache.reset();
+    const html = await runs();
+    expect(html).toContain('data-testid="zone-rsvp"');
+    expect(rowOf(html, eventId)).toContain("1 vine");
+    expect(html).not.toContain("rsvp-who");
+    expect(html).not.toContain("Dan Altul");
+  });
+
+  it("features the soonest run that takes answers even when the five soonest runs take none", async () => {
+    for (let index = 1; index <= 5; index += 1) await seed(`Fără răspunsuri ${index}`, { rsvpEnabled: false }, index);
+    const sixth = await seed("A șasea, cu «Vin!»", {}, 8);
+    state.cookie = member.id;
+    const html = await runs();
+    expect(html.match(/data-featured="true"/g)).toHaveLength(1);
+    expect(html.indexOf('data-testid="members-next-run"')).toBeLessThan(html.indexOf("Fără răspunsuri 1"));
+    expect(rowOf(html, sixth)).not.toBeNull();
+    expect(html.indexOf(`id="vin-title-${sixth}"`)).toBeLessThan(html.indexOf("Fără răspunsuri 1"));
+  });
+
+  it("draws no list before the notice describes «Vin!»", async () => {
     const eventId = await seed("Alergarea de joi");
     await come(eventId, other.email, "Dan Altul", true);
     state.cookie = member.id;

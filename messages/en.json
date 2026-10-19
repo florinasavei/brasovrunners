@@ -12915,7 +12915,7 @@
     "nextRun": "The next run",
     "upcomingAll": "Every event",
     "rsvp": {
-      "nameHelp": "If you tick it, the run's page shows you as “{name}”.",
+      "nameHelp": "If you tick it, you show as “{name}” on the run's page and under “Who's coming”.",
       "outcome": {
         "went": "Noted: you're coming.",
         "left": "Answer removed: you're not coming any more.",

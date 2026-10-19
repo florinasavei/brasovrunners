@@ -45,10 +45,10 @@ async function codesOrAway(now: Date, account: { role: Parameters<typeof canHold
  * The door is asserted here, on this page, as on every tab (`openZone`, BR-REQ-060-01): a hidden tab
  * is not a lock. The account, never the staff session: a member (`MEMBER`) and every colleague open
  * it (`canOpenMembersZone`). Signed out, the visitor is sent to the sign-in in the members' words
- * (`?to=members`), which lands back here; where this deployment has no sign-in at all, the answer is
+ * (`?to=members`), which lands on the zone's own address, `/members-area` («Alergări»), a tab away from here; where this deployment has no sign-in at all, the answer is
  * 404, the backoffice's rule. The page is `force-dynamic`, `noindex`, listed in `private-paths.ts`
- * (a `no-store`, `noindex` header) and `robots.txt`; a member who types `/admin` is redirected here
- * by the backoffice's layout.
+ * (a `no-store`, `noindex` header) and `robots.txt`; a member who types `/admin` is redirected
+ * by the backoffice's layout to that same zone address.
  */
 export default async function MembersAreaPage({ params }: Props) {
   const opened = await openZone((await params).locale);

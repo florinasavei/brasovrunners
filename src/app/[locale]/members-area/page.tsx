@@ -27,6 +27,7 @@ import { readPublicComing, readPublicRsvpsFor } from "@/modules/rsvp/public-page
 import RsvpCount from "@/modules/rsvp/ui/RsvpCount";
 import ZoneRsvp from "@/modules/rsvp/ui/ZoneRsvp";
 import { DENSITY } from "@/theme/density";
+import { SR_ONLY_SX } from "@/shared/ui/sr-only";
 import { featuredCard } from "@/theme/surfaces";
 import ZoneFrame, { frameParts, openZone } from "./zone";
 
@@ -61,7 +62,7 @@ const UPCOMING_SHOWN = 5;
 /**
  * «Următoarele alergări» (§524): the published events ahead, soonest first — the public listing's own
  * cached read (§333), so the zone costs the database nothing the listing has not already paid, and
- * shows nothing a stranger could not see. The page shows the first `UPCOMING_SHOWN`; «Vin!»'s gate and counts are read over all of
+ * shows nothing a stranger could not see. The page shows the first `UPCOMING_SHOWN`, and the soonest run that takes answers besides if it is further down; «Vin!»'s gate and counts are read over all of
  * them, the same list the listing reads, so they share its cache entry (§822). Empty while the database is away.
  */
 async function upcomingOrNone(locale: Locale, now: Date) {
@@ -88,7 +89,9 @@ type ZoneRsvpFacts = { count: number; going: boolean } & AccountAnswer;
 async function rsvpsOrNone(account: { email: string }, all: readonly PublicEvent[], shown: readonly PublicEvent[], now: Date): Promise<ReadonlyMap<string, ZoneRsvpFacts>> {
   try {
     const coming = await readPublicComing(all, now);
-    const ids = shown.filter((event) => coming.has(event.id)).map((event) => event.id);
+    // The soonest run that takes answers is always among them, even past the shown ones: the zone is built around it (§715 amended).
+    const soonest = all.find((event) => coming.has(event.id));
+    const ids = [...new Set([...shown, ...(soonest ? [soonest] : [])].filter((event) => coming.has(event.id)).map((event) => event.id))];
     if (ids.length === 0) return new Map();
     const answered = await answeredByAccount(getDb(), account.email, ids);
     return new Map(ids.map((id) => [id, { count: coming.get(id) ?? 0, going: answered.has(id), showName: answered.get(id)?.showName ?? false, name: answered.get(id)?.name ?? null }]));
@@ -150,7 +153,8 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
   // «Cine vine» (§715 amended): the one gathering for the page, over the runs that take answers.
   const who = await whoComesOrNone([...rsvps.keys()]);
   // The next run: the soonest one that takes answers, first and featured; `upcoming` is already by date.
-  const nextRun = upcoming.find((event) => rsvps.has(event.id)) ?? null;
+  // It is searched over every upcoming run, not the shown five: with five runs ahead that take no answers, the sixth still leads (`rsvpsOrNone` answered for it).
+  const nextRun = upcomingAll.find((event) => rsvps.has(event.id)) ?? null;
   const runs = nextRun ? [nextRun, ...upcoming.filter((event) => event.id !== nextRun.id)] : upcoming;
   const publicName = accountPublicName(account);
   const vin = parseZoneRsvpOutcome((await searchParams)?.vin);
@@ -203,12 +207,13 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
                   data-featured={next ? "true" : undefined}
                   sx={{ p: 2, ...(next ? featuredCard : {}) }}
                 >
-                  {next && (
-                    <Typography component="p" variant="overline" color="primary" sx={{ lineHeight: 1.5 }} data-testid="members-next-run-label">
-                      {t("nextRun")}
-                    </Typography>
-                  )}
                   <Typography variant="h3" component="h3" sx={{ fontSize: next ? { xs: "1.25rem", sm: "1.5rem" } : "1.0625rem", fontWeight: 700, lineHeight: 1.3 }}>
+                    {/* The frame, the larger title and the weight are the only visible marks (the owner, 2026-10-16, on `EventCard`'s lead: «nu vreau și încă un cip»); the words are for a screen reader, before the link as the lead card's are. */}
+                    {next && (
+                      <Box component="span" sx={SR_ONLY_SX} data-testid="members-next-run-label">
+                        {`${t("nextRun")}: `}
+                      </Box>
+                    )}
                     <MuiLink
                       id={zoneRsvpTitleId(event.id)}
                       href={getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: event.slug } } })}

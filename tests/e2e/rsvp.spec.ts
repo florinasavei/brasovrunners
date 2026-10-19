@@ -563,6 +563,12 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await expect(who.getByTestId("rsvp-who-heading")).toContainText("Cine vine (1)");
     await expect(who.getByTestId("rsvp-name")).toHaveCount(1);
     await expect(who.getByTestId("rsvp-others")).toHaveCount(0);
+    // The soonest run that takes answers is the zone's first card, featured, and carries its open list; which event it is is the seed's to say.
+    const first = member.locator('[data-testid="members-upcoming"] ul > li').first();
+    await expect(first).toHaveAttribute("data-testid", "members-next-run");
+    await expect(first).toHaveAttribute("data-featured", "true");
+    await expect(member.locator('[data-featured="true"]')).toHaveCount(1);
+    if ((await first.locator(`#vin-${eventId}`).count()) === 1) await expect(first.getByTestId("rsvp-who")).toBeVisible();
     await noSidewaysScroll(member);
     const shownName = await withDatabase(async (client) => {
       const { rows } = await client.query<{ showName: boolean; displayName: string | null }>(`SELECT show_name AS "showName", display_name AS "displayName" FROM event_rsvps WHERE event_id = $1`, [eventId]);
