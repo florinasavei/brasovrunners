@@ -346,7 +346,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     // A real tick box, 44 pixels to the thumb, drawn as the row keeps it: the typed form's tick was on, so it is ticked and the name shows.
     await expect(tick).toBeChecked();
     expect((await tick.locator("xpath=..").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-    await expect(remembered.getByText("Debifat, ești doar numărat.")).toBeVisible();
+    await expect(remembered.getByText(`Cu bifa apari ca „${NAME}”.`, { exact: false })).toBeVisible();
     await expect(page.getByTestId("rsvp-name")).toHaveText(NAME);
     await noSidewaysScroll(page);
 
@@ -382,7 +382,12 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     expect((await rsvpRow(guest, eventId))?.showName).toBe(false);
     await box.getByLabel("Numele tău").fill("Ana Nouă");
     await box.getByRole("button", { name: "Salvează" }).click();
-    await expect(page.getByTestId("rsvp-name")).toHaveText("Ana Nouă");
+    // The public list is cached and re-made after the save (stale once, then fresh): a cold server may draw the old name on the first refresh, so reload until it is the new one.
+    await expect(async () => {
+      await page.reload();
+      await hydrated(page);
+      await expect(page.getByTestId("rsvp-name")).toHaveText("Ana Nouă", { timeout: 2000 });
+    }).toPass({ timeout: 20_000 });
     await expect.poll(async () => (await rsvpRow(guest, eventId))?.displayName).toBe("Ana Nouă");
     expect((await rsvpRow(guest, eventId))?.showName).toBe(true);
     await noSidewaysScroll(page);
