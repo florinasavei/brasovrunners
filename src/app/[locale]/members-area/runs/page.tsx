@@ -17,9 +17,9 @@ import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import type { PublicEvent } from "@/modules/events/repository";
 import { cachedUpcomingEvents } from "@/modules/public-cache/reads";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
-import { answeredByAccount } from "@/modules/rsvp/counts";
+import { answeredByAccount, type AccountAnswer } from "@/modules/rsvp/counts";
 import { accountPublicName } from "@/modules/rsvp/domain/account-identity";
-import { parseZoneRsvpOutcome, ZONE_RSVP_OUTCOME_ANCHOR, zoneRsvpTitleId } from "@/modules/rsvp/domain/zone-outcome";
+import { isNameZoneOutcome, isRefusedZoneOutcome, parseZoneRsvpOutcome, ZONE_RSVP_OUTCOME_ANCHOR, zoneRsvpTitleId } from "@/modules/rsvp/domain/zone-outcome";
 import { readPublicComing } from "@/modules/rsvp/public-page";
 import ZoneRsvp from "@/modules/rsvp/ui/ZoneRsvp";
 import { DENSITY } from "@/theme/density";
@@ -71,7 +71,7 @@ async function upcomingOrNone(locale: Locale, now: Date) {
 }
 
 /** One run's row: how many come and whether this account does. */
-type ZoneRsvpFacts = { count: number; going: boolean };
+type ZoneRsvpFacts = { count: number; going: boolean } & AccountAnswer;
 
 /**
  * «Vin!» on the runs the zone lists (§NNN): which of the shown runs take answers and how many come — the public pages' one gate and
@@ -86,7 +86,7 @@ async function rsvpsOrNone(account: { email: string }, all: readonly PublicEvent
     const ids = shown.filter((event) => coming.has(event.id)).map((event) => event.id);
     if (ids.length === 0) return new Map();
     const answered = await answeredByAccount(getDb(), account.email, ids);
-    return new Map(ids.map((id) => [id, { count: coming.get(id) ?? 0, going: answered.has(id) }]));
+    return new Map(ids.map((id) => [id, { count: coming.get(id) ?? 0, going: answered.has(id), showName: answered.get(id)?.showName ?? false, name: answered.get(id)?.name ?? null }]));
   } catch (error) {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
@@ -119,6 +119,8 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
   const { locale, account } = opened;
 
   const t = await getTranslations("Members");
+  // The name tick's sentences are the event page's own words (§NNN): one wording for the three doors.
+  const tEvent = await getTranslations("Event");
   const now = new Date();
   const [parts, upcomingAll, membersEvents] = await Promise.all([frameParts(account, locale, now), upcomingOrNone(locale, now), membersOnlyOrNone(account, locale, now)]);
   const upcoming = upcomingAll.slice(0, UPCOMING_SHOWN);
@@ -167,8 +169,8 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
           {t("upcomingTitle")}
         </Typography>
         {vin !== null && (
-          <Alert id={ZONE_RSVP_OUTCOME_ANCHOR} severity={vin === "closed" ? "warning" : "success"} role="status" sx={{ mb: 1.5, scrollMarginTop: 16 }} data-testid="zone-rsvp-outcome">
-            {t(`rsvp.outcome.${vin}`)}
+          <Alert id={ZONE_RSVP_OUTCOME_ANCHOR} severity={isRefusedZoneOutcome(vin) ? "warning" : "success"} role="status" sx={{ mb: 1.5, scrollMarginTop: 16 }} data-testid="zone-rsvp-outcome">
+            {isNameZoneOutcome(vin) ? tEvent(`rsvp.nameOutcome.${vin}`) : t(`rsvp.outcome.${vin}`)}
           </Alert>
         )}
         {upcoming.length === 0 ? (
@@ -191,7 +193,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
                   {formatDay(event.startsAt, { locale, timeZone: event.timezone, withTime: true })}
                 </Typography>
                 {/* «Vin!» (§NNN): only a run that takes answers, with this account's own state; a members' event has none (its page draws no «Confirmă prezența (opțional)»). */}
-                {rsvps.has(event.id) && <ZoneRsvp locale={locale} eventId={event.id} titleId={zoneRsvpTitleId(event.id)} going={rsvps.get(event.id)!.going} count={rsvps.get(event.id)!.count} publicName={publicName} />}
+                {rsvps.has(event.id) && <ZoneRsvp locale={locale} eventId={event.id} titleId={zoneRsvpTitleId(event.id)} going={rsvps.get(event.id)!.going} count={rsvps.get(event.id)!.count} publicName={publicName} showName={rsvps.get(event.id)!.showName} name={rsvps.get(event.id)!.name} />}
               </Box>
             ))}
           </Box>

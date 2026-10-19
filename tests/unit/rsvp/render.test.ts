@@ -34,7 +34,7 @@ vi.mock("@/i18n/navigation", async () => {
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }), headers: async () => new Headers() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => {} }), notFound: () => {}, redirect: () => {} }));
 vi.mock("@/app/[locale]/events/[slug]/actions", () => ({ answerRsvpAction: async () => {}, requestRsvpWithdrawAction: async () => {} }));
-vi.mock("@/modules/rsvp/remembered-actions", () => ({ rsvpStateAction: async () => ({ remembered: false }), rsvpGoAction: async () => ({ remembered: false }), rsvpLeaveAction: async () => ({ remembered: false }), rsvpForgetAction: async () => {} }));
+vi.mock("@/modules/rsvp/remembered-actions", () => ({ rsvpStateAction: async () => ({ remembered: false }), rsvpGoAction: async () => ({ remembered: false }), rsvpLeaveAction: async () => ({ remembered: false }), rsvpForgetAction: async () => {}, rsvpShowNameAction: async () => ({ state: { remembered: false }, refused: null }) }));
 vi.mock("@/modules/registrations/turnstile", () => ({ turnstileSiteKey: () => state.siteKey }));
 vi.mock("@/modules/registrations/ui/BotCheck", async () => {
   const { createElement: h } = await import("react");
@@ -474,5 +474,80 @@ describe("§811 the fold «Răspunsuri „Vin!” (N)» — read-only, addresses
     const markup = await fold({}, "en");
     expect(markup).toContain("“I&#x27;m coming!” answers (2)");
     expect(markup).toContain("1 confirmed, 1 unconfirmed");
+  });
+});
+
+/**
+ * §NNN — the name tick's words and what the island is handed. The island is a client component the page renders from the server: what
+ * it receives is the page's strings and the server's actions as props — never an address, never a name.
+ */
+describe("§NNN the island's props for the name tick", () => {
+  type Node = { type?: unknown; props?: Record<string, unknown> } | null | undefined;
+  /** The element of the one client island, found in the tree the server component returns. */
+  function findIsland(node: unknown): { labels: Record<string, string>; actions: Record<string, unknown> } | null {
+    if (!node || typeof node !== "object") return null;
+    if (Array.isArray(node)) {
+      for (const child of node) {
+        const found = findIsland(child);
+        if (found) return found;
+      }
+      return null;
+    }
+    const element = node as Node;
+    const props = element?.props;
+    if (props && typeof props.labels === "object" && typeof props.actions === "object") return { labels: props.labels as never, actions: props.actions as never };
+    return props ? findIsland(props.children) : null;
+  }
+  const island = async (locale: "ro" | "en") => {
+    state.language = locale;
+    const element = await RsvpBox({ locale, slug: "alergarea-de-joi", eventId: "11111111-1111-4111-8111-111111111111", renderedAt: RENDERED_AT, outcome: null });
+    return findIsland(element)!;
+  };
+
+  it("hands over the five words of the tick and the fifth action, in Română", async () => {
+    const { labels, actions } = await island("ro");
+    expect(labels).toMatchObject({
+      nameSwitch: "Numele meu apare la „Cine vine”",
+      nameBox: "Numele tău",
+      nameSave: "Salvează",
+      nameShown: "Gata: numele tău apare la „Cine vine”.",
+      nameHidden: "Gata: numele tău nu mai apare; ești doar numărat.",
+      nameNeeded: "Scrie numele cu care vrei să apari.",
+    });
+    // The help carries `{name}` for the island to fill with the answer's own name; a second sentence says what to do when it holds none.
+    expect(labels.nameHelp).toContain("Cu bifa apari ca „{name}”");
+    expect(labels.nameHelp).toContain("numele rămâne păstrat");
+    expect(labels.nameAsk).toBe("Bifează și scrie numele cu care vrei să apari.");
+    expect(typeof actions.showName).toBe("function");
+  });
+
+  it("hands over the same words in English", async () => {
+    const { labels } = await island("en");
+    expect(labels.nameSwitch).toBe("My name shows under “Who's coming”");
+    expect(labels.nameSave).toBe("Save");
+    expect(labels.nameHelp).toContain("Ticked, you show as “{name}”");
+    expect(labels.nameAsk).toBe("Tick it and type the name you want to show.");
+    // «Closed» has no sentence in the island: the state turns it to the typed form, which cannot show one.
+    expect(labels).not.toHaveProperty("nameClosed");
+  });
+
+  it("holds no address and no person's name in anything it is handed", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      const { labels } = await island(locale);
+      for (const value of Object.values(labels)) expect(value).not.toMatch(/@|example\.test/);
+    }
+  });
+
+  it("has every sentence in both catalogues, one plain sentence each (≤ 200 characters)", () => {
+    for (const catalogue of [ro, en]) {
+      const rsvp = catalogue.Event.rsvp;
+      for (const sentence of [rsvp.nameSwitch, rsvp.nameKept, rsvp.nameAsk, rsvp.nameBox, rsvp.nameSave, ...Object.values(rsvp.nameOutcome)]) {
+        expect(sentence.length).toBeGreaterThan(0);
+        expect(sentence.length).toBeLessThanOrEqual(200);
+        // Only the help that names the name has a placeholder.
+        if (sentence !== rsvp.nameKept) expect(sentence).not.toContain("{");
+      }
+      expect(rsvp.nameKept).toContain("{name}");
+    }
   });
 });

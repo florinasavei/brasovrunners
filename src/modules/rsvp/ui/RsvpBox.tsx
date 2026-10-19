@@ -22,7 +22,7 @@ import { RSVP_BOX_ID, type RsvpOutcome } from "../rsvp-box";
 import type { PublicRsvps } from "../rsvp";
 import { readRsvpsOf } from "./RsvpCount";
 import RsvpSummary from "./RsvpSummary";
-import { rsvpForgetAction, rsvpGoAction, rsvpLeaveAction, rsvpStateAction } from "../remembered-actions";
+import { rsvpForgetAction, rsvpGoAction, rsvpLeaveAction, rsvpShowNameAction, rsvpStateAction } from "../remembered-actions";
 import RsvpRemembered from "./RsvpRemembered";
 
 /**
@@ -90,6 +90,15 @@ export default async function RsvpBox({
     submit: t("rsvp.submit"),
     submitting: t("rsvp.submitting"),
     showName: t("rsvp.showName"),
+    nameSwitch: t("rsvp.nameSwitch"),
+    nameHelp: t.raw("rsvp.nameKept") as string,
+    nameAsk: t("rsvp.nameAsk"),
+    nameBox: t("rsvp.nameBox"),
+    nameSave: t("rsvp.nameSave"),
+    nameShown: t("rsvp.nameOutcome.shown"),
+    nameHidden: t("rsvp.nameOutcome.hidden"),
+    nameNeeded: t("rsvp.nameOutcome.name"),
+    nameNone: t("rsvp.nameOutcome.none"),
   };
 
   return (
@@ -127,7 +136,7 @@ export default async function RsvpBox({
               </Alert>
             </>
           ) : (
-            <RsvpRemembered slug={slug} locale={locale} labels={labels} actions={{ state: rsvpStateAction, go: rsvpGoAction, leave: rsvpLeaveAction, forget: rsvpForgetAction }}>
+            <RsvpRemembered slug={slug} locale={locale} labels={labels} actions={{ state: rsvpStateAction, go: rsvpGoAction, leave: rsvpLeaveAction, forget: rsvpForgetAction, showName: rsvpShowNameAction }}>
               {outcome === "withdrawSent" && (
                 <Alert severity="info" role="status" sx={{ mb: 1.5 }} data-testid="rsvp-withdraw-sent">
                   {t("rsvp.withdrawDone")}

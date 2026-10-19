@@ -99,6 +99,8 @@ export async function readRefuseLink<T extends Record<string, unknown>>(db: Data
     confirmed: false,
     asked: false,
     named: false,
+    showName: false,
+    name: null,
   };
 }
 

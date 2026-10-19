@@ -4,9 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { accountIdentity } from "@/modules/rsvp/domain/account-identity";
-import { ZONE_RSVP_OUTCOME_ANCHOR, type ZoneRsvpOutcome, zoneRsvpAnchor } from "@/modules/rsvp/domain/zone-outcome";
-import { answerRsvp, withdrawRsvp } from "@/modules/rsvp/rsvp";
+import { accountIdentity, accountPublicName } from "@/modules/rsvp/domain/account-identity";
+import { isRefusedZoneOutcome, ZONE_RSVP_OUTCOME_ANCHOR, type ZoneRsvpOutcome, zoneRsvpAnchor } from "@/modules/rsvp/domain/zone-outcome";
+import { answerRsvp, setRsvpShowName, withdrawRsvp } from "@/modules/rsvp/rsvp";
 import { canOpenMembersZone } from "@/modules/staff-identity/domain/roles";
 import { getCurrentAccount } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
@@ -37,12 +37,12 @@ function text(form: FormData, name: string): string {
 }
 
 /**
- * The zone again, with what happened said once. At the pressed row — unless the run no longer takes answers (`closed`): its row is
- * gone, so the page lands on the sentence itself. With no outcome (nothing was taken back) the zone is simply shown again.
+ * The zone again, with what happened said once. At the pressed row — unless the press was refused (`isRefusedZoneOutcome`: the run no longer
+ * takes answers, the name tick had no name, no answer was found): the page lands on the sentence itself. With no outcome (nothing was taken back) the zone is simply shown again.
  */
 function back(locale: Locale, outcome: ZoneRsvpOutcome | null, eventId: string): never {
   const path = getPathname({ locale, href: outcome ? { pathname: "/members-area/runs", query: { vin: outcome } } : "/members-area/runs" });
-  const anchor = outcome === "closed" ? `#${ZONE_RSVP_OUTCOME_ANCHOR}` : isUuid(eventId) ? `#${zoneRsvpAnchor(eventId)}` : "";
+  const anchor = outcome !== null && isRefusedZoneOutcome(outcome) ? `#${ZONE_RSVP_OUTCOME_ANCHOR}` : isUuid(eventId) ? `#${zoneRsvpAnchor(eventId)}` : "";
   redirect(`${path}${anchor}`);
 }
 
@@ -93,6 +93,31 @@ export async function leaveAsMemberAction(form: FormData): Promise<void> {
       closedOrThrow(error);
       outcome = "closed";
     }
+  }
+  back(locale, outcome, eventId);
+}
+
+/**
+ * «Numele meu apare la „Cine vine"» (§NNN): the account's own tick on its confirmed answer, any time — on or off, one write, reversible, no
+ * audit row (§186's shape for «Vin!»). The account is read from the session; the form carries the event, the tick and, only when the answer holds
+ * no name and the account has none, the one the person typed in the box. The account's own name is the fallback ONLY when ticking and only when
+ * the row has none (`defaultName`): a stale tab cannot swap a name the person typed on the event's page for the one an Administrator typed in
+ * «Echipa» (§143, §396). Turning it off needs no open run; turning it on records the notice in force and needs the run to take answers.
+ */
+export async function setNameAsMemberAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const account = await memberOrSignIn(locale);
+  let outcome: ZoneRsvpOutcome = "none";
+  if (isUuid(eventId)) {
+    const result = await setRsvpShowName(
+      getDb(),
+      eventId,
+      { identity: accountIdentity(account, locale, false) },
+      { showName: form.get("showName") === "on", displayName: text(form, "name"), defaultName: accountPublicName(account) },
+      new Date(),
+    );
+    outcome = result.ok ? (result.showName ? "shown" : "hidden") : result.reason === "closed" ? "closed" : result.reason;
   }
   back(locale, outcome, eventId);
 }

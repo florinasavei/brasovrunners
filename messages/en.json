@@ -854,6 +854,19 @@
       "notMe": "Not me — forget me on this device",
       "help": "Your browser stays recognised for a year after “Yes, I'm coming” or “I'm not coming any more”; “Not me” forgets it.",
       "failed": "We could not send your answer. Try again.",
+      "nameSwitch": "My name shows under “Who's coming”",
+      "nameKept": "Ticked, you show as “{name}”. Unticked, you are only counted; the name stays saved and shows again if you tick it again.",
+      "nameAsk": "Tick it and type the name you want to show.",
+      "nameBox": "Your name",
+      "nameSave": "Save",
+      "nameOutcome": {
+        "shown": "Done: your name shows under “Who's coming”.",
+        "hidden": "Done: your name no longer shows; you are only counted.",
+        "name": "Type the name you want to appear with.",
+        "none": "We can't find an “I'm coming” answer of yours here.",
+        "closed": "This event no longer takes “I'm coming!” answers, so the name can't be shown now.",
+        "wait": "Too many changes in an hour. Try again later; “I'm not coming any more” works any time."
+      },
       "calendar": {
         "link": "I'm coming!",
         "count": {
@@ -13092,6 +13105,8 @@
     "confirmPending": "Counting you…",
     "confirmAutoNote": "Opened in a browser, the link counts you by itself. If nothing happens, press “Yes, I'm coming”.",
     "withdrawTitle": "Not coming any more?",
+    "answerTitle": "Your answer",
+    "answerIntro": "You're coming to {event}.",
     "withdrawIntro": "Are you not coming to {event} any more? Your answer is deleted.",
     "withdrawButton": "I'm not coming any more",
     "withdrawPending": "Sending…",

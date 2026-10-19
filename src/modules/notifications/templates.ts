@@ -76,9 +76,10 @@ export type TemplateContent = {
   /**
    * A second, quieter button under the action (§468): an outlined one in the club's blue, for the
    * choice that is not the message's point — «Nu înscriu această persoană» under the family link's
-   * «Confirm că înscriu altă persoană». Only beside an action, never on its own.
+   * «Confirm că înscriu altă persoană». Only beside an action, never on its own. `note` is one quiet line under the button — «Vin!»'s
+   * «Nu vin» says its page is also where the person shows or hides their name (§NNN).
    */
-  secondaryAction?: { label: string; url: string };
+  secondaryAction?: { label: string; url: string; note?: string };
   /**
    * «Nu mai pot ajunge» (§558): the registration's own cancel, a full-width outlined button with the
    * cancel glyph under the action — or the one button when the message has no other — and one plain
@@ -439,7 +440,10 @@ export function renderContent(
         // The second choice (§468): outlined, so the eye takes the first button for the message's point.
         ...(content.secondaryAction
           ? [
-              `<p style="margin:-8px 0 20px"><a href="${content.secondaryAction.url}" style="display:inline-block;background:${COLOR.surface};color:${COLOR.blueInk};text-decoration:none;font-weight:700;font-size:15px;padding:12px 20px;border:2px solid ${COLOR.blueInk};border-radius:10px">${escapeHtml(content.secondaryAction.label)}</a></p>`,
+              `<p style="margin:-8px 0 ${content.secondaryAction.note ? "8px" : "20px"}"><a href="${content.secondaryAction.url}" style="display:inline-block;background:${COLOR.surface};color:${COLOR.blueInk};text-decoration:none;font-weight:700;font-size:15px;padding:12px 20px;border:2px solid ${COLOR.blueInk};border-radius:10px">${escapeHtml(content.secondaryAction.label)}</a></p>`,
+              ...(content.secondaryAction.note
+                ? [`<p style="margin:0 0 20px;font-size:14px;line-height:1.5;color:${EMAIL_EMPHASIS.quiet}">${escapeHtml(content.secondaryAction.note)}</p>`]
+                : []),
             ]
           : []),
       ]
@@ -448,6 +452,7 @@ export function renderContent(
     ? [
         `${content.action.label}: ${content.action.url}`,
         ...(content.secondaryAction ? [`${content.secondaryAction.label}: ${content.secondaryAction.url}`] : []),
+        ...(content.secondaryAction?.note ? [content.secondaryAction.note] : []),
       ]
     : [];
 
@@ -1518,6 +1523,15 @@ export function lawyerReads(locale: EmailLocale, keys: readonly string[]): strin
   return `${words.lead} ${words.changed}, ${words.first} ${named}.`;
 }
 
+/**
+ * One line of the «Vin!» confirmation's «counted» shape (§NNN), whose one button is the withdraw link itself: that link's page also shows or hides
+ * the person's name, and the answer goes only by the page's own button. Above `T` because both languages' bodies read it.
+ */
+const RSVP_NAME_COUNTED = {
+  ro: "Pe pagina butonului îți arăți sau ascunzi numele la „Cine vine”; răspunsul se șterge doar dacă apeși acolo „Nu mai vin”.",
+  en: "On the button's page you can also show or hide your name under “Who's coming”; your answer goes only if you press “I'm not coming any more” there.",
+} as const;
+
 const T = {
   ro: {
     hi: (name: string) => `Salut, ${name},`,
@@ -1609,6 +1623,7 @@ const T = {
         d.rsvpStage === "counted"
           ? [
               `Ești deja numărat printre cei care vin la ${d.eventTitle ?? "eveniment"}. Dacă nu mai poți veni, apasă butonul de mai jos și răspunsul tău se șterge.`,
+              RSVP_NAME_COUNTED.ro,
               "Primești acest mesaj pentru că cineva a scris adresa ta la „Vin!” pe pagina evenimentului.",
             ]
           : d.rsvpStage === "withdraw"
@@ -1623,9 +1638,11 @@ const T = {
               ],
       action: (d: TemplateData) => (d.rsvpStage === "counted" || d.rsvpStage === "withdraw" ? "Nu mai vin" : "Da, vin"),
       emphasis: (d: TemplateData, b: readonly string[]): Emphasis =>
-        d.rsvpStage === "counted" || d.rsvpStage === "withdraw"
-          ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1]] }
-          : { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] },
+        d.rsvpStage === "counted"
+          ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] }
+          : d.rsvpStage === "withdraw"
+            ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1]] }
+            : { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] },
       links: (d: TemplateData) => [...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : [])],
     },
     registrationConfirmed: {
@@ -2375,6 +2392,11 @@ const T = {
     familyDecline: "Nu înscriu această persoană",
     /** «Vin!» (§811): the quieter button under «Da, vin» — the same message's other link. */
     rsvpNo: "Nu vin",
+    /**
+     * Under «Nu vin» (§NNN), before the answer is counted: the same link's page shows or hides the name once it is — and says that the answer goes
+     * only by the page's own button, since the body above says «Nu vin» deletes it.
+     */
+    rsvpNameNote: "După „Da, vin”, tot din „Nu vin” îți arăți sau ascunzi numele; răspunsul se șterge doar dacă apeși „Nu mai vin” pe pagina lui.",
     /** «Vin!» (§811): which name the press makes public, since whoever typed the address chose it. */
     rsvpShownName: (name: string) => `Dacă apeși „Da, vin”, pe pagina evenimentului va apărea numele „${name}”: cine a scris adresa a bifat că vrea să apară cu numele. Dacă nu vrei, apasă „Nu vin”.`,
     /** «Nu mai pot ajunge» (§558; the owner's words), and its one sentence under the button. */
@@ -2844,6 +2866,7 @@ const T = {
         d.rsvpStage === "counted"
           ? [
               `You are already counted among those coming to ${d.eventTitle ?? "the event"}. If you can't come any more, press the button below and your answer is deleted.`,
+              RSVP_NAME_COUNTED.en,
               "You are getting this because someone typed your address under “I'm coming!” on the event's page.",
             ]
           : d.rsvpStage === "withdraw"
@@ -2858,9 +2881,11 @@ const T = {
               ],
       action: (d: TemplateData) => (d.rsvpStage === "counted" || d.rsvpStage === "withdraw" ? "I'm not coming any more" : "Yes, I'm coming"),
       emphasis: (d: TemplateData, b: readonly string[]): Emphasis =>
-        d.rsvpStage === "counted" || d.rsvpStage === "withdraw"
-          ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1]] }
-          : { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] },
+        d.rsvpStage === "counted"
+          ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] }
+          : d.rsvpStage === "withdraw"
+            ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1]] }
+            : { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] },
       links: (d: TemplateData) => [...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : [])],
     },
     registrationConfirmed: {
@@ -3179,6 +3204,8 @@ const T = {
     },
     familyDecline: "I am not registering this person",
     rsvpNo: "I'm not coming",
+    /** Under “I'm not coming” (§NNN), before the answer is counted: see the Romanian note. */
+    rsvpNameNote: "After “Yes, I'm coming”, the “I'm not coming” link also lets you show or hide your name; your answer goes only if you press “I'm not coming any more” on its page.",
     rsvpShownName: (name: string) => `If you press “Yes, I'm coming”, the name “${name}” will show on the event's page: whoever typed the address ticked that they want their name to show. If you don't, press “I'm not coming”.`,
     cannotCome: {
       label: "I can't make it any more",
@@ -3934,7 +3961,7 @@ export function buildTemplateContent(
         ? { label: copy.familyDecline, url: data.familyDeclineUrl }
         : // «Vin!» (§812): «Nu vin» under «Da, vin», the same send's other link — only beside the confirm button. «Vii mâine?» (§818) has the same two.
           (messageType === "RSVP_ASK" || (messageType === "RSVP_CONFIRM" && (data.rsvpStage === undefined || data.rsvpStage === "confirm"))) && entry.action && actionUrl && data.rsvpWithdrawUrl
-          ? { label: copy.rsvpNo, url: data.rsvpWithdrawUrl }
+          ? { label: copy.rsvpNo, url: data.rsvpWithdrawUrl, note: copy.rsvpNameNote }
           : undefined,
     /*
       «Nu mai pot ajunge» (§558): only on a message about a live registration, and only with the link

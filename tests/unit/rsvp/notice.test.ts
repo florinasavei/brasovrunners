@@ -63,6 +63,15 @@ describe("§811 the template says what «Vin!» publishes, keeps, mails and reme
     expect(en4).toContain("holds no place");
   });
 
+  it("says where the name is unticked, and that a hidden name stays in the answer, not public (§NNN)", () => {
+    const ro4 = privacyNoticeRo.sections[3].paragraphs.find((paragraph) => paragraph.includes("{{rsvp}}")) ?? "";
+    expect(ro4).toContain("debifând numele din browserul recunoscut, din zona membrilor sau pe pagina linkului „Nu mai vin”");
+    expect(ro4).toContain("Debifat, numele rămâne în răspuns, dar nu mai apare public; îl poți bifa din nou.");
+    const en4 = privacyNoticeEn.sections[3].paragraphs.find((paragraph) => paragraph.includes("{{rsvp}}")) ?? "";
+    expect(en4).toContain("by unticking the name in a recognised browser, in the members' zone or on the page of the “I'm not coming any more” link");
+    expect(en4).toContain("Unticked, the name stays in the answer but no longer shows publicly; you can tick it again.");
+  });
+
   it("states the retention (section 7) and the cookie (section 10) with the numbers the sweep enforces", () => {
     const text = (body: typeof privacyNoticeRo, section: number) => body.sections[section - 1].paragraphs.join("\n");
     expect(text(privacyNoticeRo, 7)).toContain("30 de zile de la sfârșitul evenimentului");
