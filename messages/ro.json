@@ -3331,7 +3331,7 @@
       "durationOther": "Cât durează evenimentul",
       "durationOtherHelp": "De la start până la final — de exemplu 1 oră și 45 de minute. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
       "rsvpEnabled": "Acceptă răspunsuri „Vin!” din pagină, calendar și email",
-      "rsvpEnabledHelp": "Oricine își poate lăsa adresa și spune că vine; vezi câți vin aici și pe pagină, și, dacă bifezi mai jos, un email înainte. Nota de confidențialitate trebuie să descrie „Vin!” — vezi Sarcini.",
+      "rsvpEnabledHelp": "Oricine își lasă adresa și spune că vine; vezi câți vin aici și pe pagină, și, dacă bifezi mai jos, un email înainte. Nota de confidențialitate trebuie să descrie „Vin!” — vezi Sarcini.",
       "rsvpAskEnabled": "Trimite emailul „Vii?” înainte de această dată",
       "rsvpAskEnabledHelp": "Cu bifa, {who} primesc {when}, la {hour}, un email „Vii {day} la …?” cu butoanele „Vin” și „Nu vin”. Debifat, emailul nu pleacă pentru această dată; răspunsurile din pagină merg oricum.",
       "rsvpAskEnabledHelpOff": "Emailul „Vii?” e oprit din Setări → „Termene” (0 zile înainte): nu pleacă pentru nicio dată. Bifa de aici se păstrează; răspunsurile din pagină merg oricum.",

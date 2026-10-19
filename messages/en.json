@@ -3331,7 +3331,7 @@
       "durationOther": "How long the event lasts",
       "durationOtherHelp": "From the start to the end — 1 hour 45 minutes, say. The end is worked out from it. Leave empty if none was announced.",
       "rsvpEnabled": "Accept “I'm coming!” answers from the page, calendar and email",
-      "rsvpEnabledHelp": "Anyone can leave their address and say they're coming; you see how many are coming here and on the page, and, if you tick below, an email before. The privacy notice must describe “I'm coming!” — see Tasks.",
+      "rsvpEnabledHelp": "Anyone can leave their address and say they're coming; you see how many here and on the page, and, if you tick below, an email before. The privacy notice must describe “I'm coming!” — see Tasks.",
       "rsvpAskEnabled": "Send the “Coming?” email before this date",
       "rsvpAskEnabledHelp": "Ticked, {who} get, {when}, at {hour}, an email “Coming to … {day}?” with the buttons “I'm coming” and “I'm not coming”. Unticked, the email is not sent for this date; answers on the page still work.",
       "rsvpAskEnabledHelpOff": "The “Coming?” email is off in Settings → “Deadlines” (0 days before): it is sent for no date. The tick here is kept; answers on the page still work.",

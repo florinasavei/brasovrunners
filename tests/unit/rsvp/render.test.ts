@@ -390,8 +390,9 @@ describe("§811 the editor's tick «Acceptă răspunsuri „Vin!” din pagină,
     expect(tick).not.toMatch(/\schecked/);
     expect(markup).toMatch(/<input[^>]*type="hidden"[^>]*name="event\.rsvpEnabled\.present"[^>]*value="1"/);
     expect(markup).toContain("Acceptă răspunsuri „Vin!” din pagină, calendar și email");
-    expect(markup).toContain("Oricine își poate lăsa adresa și spune că vine; vezi câți vin aici și pe pagină.");
-    expect(markup).toContain("Nota de confidențialitate trebuie să descrie răspunsurile „Vin!” — vezi Sarcini.");
+    // §823: the email before the date is named here only as a thing to tick below.
+    expect(markup).toContain("Oricine își lasă adresa și spune că vine; vezi câți vin aici și pe pagină, și, dacă bifezi mai jos, un email înainte.");
+    expect(markup).toContain("Nota de confidențialitate trebuie să descrie „Vin!” — vezi Sarcini.");
     expect(markup).not.toMatch(/role="switch"/);
   });
 
