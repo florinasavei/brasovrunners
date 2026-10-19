@@ -3415,6 +3415,7 @@
       "memberTierSave": "Save the level",
       "memberTierSaving": "Saving the level…",
       "memberTierBulkHelp": "The level of the members added now. Anyone who was a member already keeps their level.",
+      "memberTierInviteHelp": "The level of the member added now; you can change it any time on their row. It is not shown to them.",
       "memberTierHiddenOption": "{name} (hidden)",
       "membersTitle": "Add several members",
       "membersAside": "one address per row, the Member role",

@@ -2120,7 +2120,8 @@ with its cards in the order you fill them.
 member, and its one use is to decide **which member sees which discount code**. An Administrator **names the levels**
 on «Pagini» → «Membri» → «Niveluri de membru» (a name in both languages, a note for the administrators in both
 languages — or in neither — the order in «Poziția», «Ascuns» for a level no longer given) and presses the one
-«Salvează toate nivelurile»; **gives each member one** on «Echipa», in «Nivel» on the member's row — or one for all
+«Salvează toate nivelurile»; **gives each member one** on «Echipa», in «Nivel» on the member's row — chosen in the same
+step when adding one person (under the role «Membru» in «Adaugă o persoană») — or one for all
 the people added at once in «Adaugă mai mulți membri»; and **limits a code** with the chips «Pentru nivelurile» in
 «Coduri de reducere» (nothing ticked is every member). In the zone's «Coduri de reducere» a member then sees the
 codes for everyone and those for their own level; a member with no level sees the codes for everyone alone. **No

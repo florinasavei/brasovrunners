@@ -1298,7 +1298,7 @@ export async function eraseGroupRunDeclarationsAction(_previous: FormOutcome | n
   return backTo(path, { saved: "groupRunDeclarationsErased", erased: String(erased) });
 }
 
-/** Adding a colleague (§123). A refused address or name comes back in its box (§315). */
+/** Adding a person (§123); a member may get a level in the same step (§811, §817). A refused address or name comes back in its box (§315). */
 export async function inviteStaffAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });
@@ -1309,12 +1309,20 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
     // The coarse gate first, so a non-Administrator never reaches the service; the service
     // asserts it again for callers that are not this action.
     const actor = await requireStaffCapability(canManageStaff);
-    const member = await inviteStaffUser(getDb(), actor, {
-      email: text(form, "email"),
-      displayName: text(form, "displayName"),
-      role: text(form, "role") as StaffRole,
-      preferredLocale: toLocale(form.get("preferredLocale")),
-    });
+    // «Nivel» (§811, §817): chosen under the role «Membru»; «—» posts nothing. The service refuses a level on any other
+    // role, a hidden one and an unknown id, naming the box.
+    const tierId = text(form, "tierId").trim();
+    const member = await inviteStaffUser(
+      getDb(),
+      actor,
+      {
+        email: text(form, "email"),
+        displayName: text(form, "displayName"),
+        role: text(form, "role") as StaffRole,
+        preferredLocale: toLocale(form.get("preferredLocale")),
+      },
+      { tierId: tierId === "" ? null : tierId },
+    );
     // The allowlist row exists; now the account and its invitation, where Zitadel is the
     // provider and a key is set (§123). Locally the switcher is the provider: nothing to send.
     const invite =
