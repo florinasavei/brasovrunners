@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { accountIdentity, accountPublicName } from "@/modules/rsvp/domain/account-identity";
-import { parseZoneRsvpOutcome, ZONE_RSVP_OUTCOMES, zoneRsvpAnchor, zoneRsvpTitleId } from "@/modules/rsvp/domain/zone-outcome";
+import { isNameZoneOutcome, isRefusedZoneOutcome, parseZoneRsvpOutcome, ZONE_RSVP_OUTCOMES, zoneRsvpAnchor, zoneRsvpTitleId } from "@/modules/rsvp/domain/zone-outcome";
 
 /**
  * §NNN («Vin!» in the members' zone; amends §812) — what the row under a run in «Alergări» draws, in both languages, and the pure rules
@@ -21,7 +21,7 @@ vi.mock("next-intl/server", async () => {
       createTranslator({ locale: state.language, messages: messages[state.language] as never, namespace: (typeof namespace === "string" ? namespace : namespace.namespace) as never }),
   };
 });
-vi.mock("@/app/[locale]/members-area/runs/actions", () => ({ answerAsMemberAction: async () => {}, leaveAsMemberAction: async () => {} }));
+vi.mock("@/app/[locale]/members-area/runs/actions", () => ({ answerAsMemberAction: async () => {}, leaveAsMemberAction: async () => {}, setNameAsMemberAction: async () => {} }));
 
 const { default: ZoneRsvp } = await import("@/modules/rsvp/ui/ZoneRsvp");
 
@@ -33,9 +33,9 @@ async function html(element: ReactElement): Promise<string> {
   return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<script[^>]*>[\s\S]*?<\/script>/g, "");
 }
 
-const row = async (props: { going?: boolean; count?: number; publicName?: string | null }, locale: "ro" | "en" = "ro") => {
+const row = async (props: { going?: boolean; count?: number; publicName?: string | null; showName?: boolean; hasName?: boolean }, locale: "ro" | "en" = "ro") => {
   state.language = locale;
-  return html(await ZoneRsvp({ locale, eventId: EVENT_ID, titleId: zoneRsvpTitleId(EVENT_ID), going: false, count: 0, publicName: "Ana Membru", ...props }));
+  return html(await ZoneRsvp({ locale, eventId: EVENT_ID, titleId: zoneRsvpTitleId(EVENT_ID), going: false, count: 0, publicName: "Ana Membru", showName: false, hasName: false, ...props }));
 };
 
 beforeEach(() => {
@@ -80,16 +80,48 @@ describe("§NNN the zone's row under a run that takes answers", () => {
     expect(markup).not.toContain('data-testid="zone-rsvp-count"');
   });
 
-  it("says «Tu vii ✓» beside «Nu mai vin» once the account answered, and offers no second «Vin!» and no tick", async () => {
+  it("says «Tu vii ✓» beside «Nu mai vin» once the account answered, and offers no second «Vin!»", async () => {
     const markup = await row({ going: true, count: 4 });
     expect(markup).toContain('data-going="true"');
     expect(markup).toMatch(/data-testid="zone-rsvp-going"[^>]*>Tu vii ✓</);
     expect(markup).toContain("Nu mai vin");
     expect(markup).toContain("4 vin");
-    expect(markup).not.toContain('name="showName"');
     // «Vin!» is not drawn at all: the one press left is the one that takes the answer back.
     expect(markup).not.toMatch(/>Vin!</);
     expect(await row({ going: true, count: 4 }, "en")).toMatch(/data-testid="zone-rsvp-going"[^>]*>You&#x27;re coming ✓</);
+  });
+
+  it("keeps the name tick «Numele meu apare la „Cine vine”» on «Tu vii ✓»: a real checkbox in its own form, drawn as the answer keeps it (§NNN)", async () => {
+    const off = await row({ going: true, count: 2, showName: false, hasName: true });
+    expect(off).toContain('data-testid="zone-rsvp-name"');
+    expect(off).toContain("Numele meu apare la „Cine vine”");
+    expect(off).toMatch(/<input[^>]*type="checkbox"[^>]*name="showName"|<input[^>]*name="showName"[^>]*type="checkbox"/);
+    expect(off).not.toMatch(/<input[^>]*name="showName"[^>]*checked/);
+    // The answer holds a name: no box, and the help says the name stays saved.
+    expect(off).not.toContain('name="name"');
+    expect(off).toContain("Numele rămâne păstrat");
+    expect(off).toContain("Salvează");
+    const on = await row({ going: true, count: 2, showName: true, hasName: true });
+    expect(on).toMatch(/<input[^>]*name="showName"[^>]*checked|<input[^>]*checked[^>]*name="showName"/);
+    // The form carries the event and the language and nothing of the person's: no address, no role.
+    expect(on).not.toMatch(/name="(email|displayName|role)"/);
+    expect(on).toContain(`name="eventId" value="${EVENT_ID}"`);
+  });
+
+  it("asks for a name only when neither the answer nor the account has one, and says which name the account would show otherwise", async () => {
+    const nobody = await row({ going: true, showName: false, hasName: false, publicName: null });
+    expect(nobody).toContain('name="name"');
+    expect(nobody).toContain("Numele tău");
+    // The account has a name and the answer none: the tick uses it, the help says which — no box.
+    const account = await row({ going: true, showName: false, hasName: false, publicName: "Ana Membru" });
+    expect(account).not.toContain('name="name"');
+    expect(account).toContain("Dacă bifezi, pe pagina alergării apari ca „Ana Membru”.");
+  });
+
+  it("says the same tick in English", async () => {
+    const markup = await row({ going: true, showName: true, hasName: true }, "en");
+    expect(markup).toContain("My name shows under “Who&#x27;s coming”");
+    expect(markup).toContain("Save");
   });
 
   it("draws no tick for an account with no name to show: nothing to publish, nothing to ask", async () => {
@@ -121,8 +153,8 @@ describe("§NNN the identity the zone answers as (§812's source `account`)", ()
 });
 
 describe("§NNN what the address says after a press", () => {
-  it("knows three codes and nothing else", () => {
-    expect([...ZONE_RSVP_OUTCOMES]).toEqual(["went", "left", "closed"]);
+  it("knows seven codes and nothing else", () => {
+    expect([...ZONE_RSVP_OUTCOMES]).toEqual(["went", "left", "closed", "shown", "hidden", "name", "none"]);
     for (const code of ZONE_RSVP_OUTCOMES) expect(parseZoneRsvpOutcome(code)).toBe(code);
     expect(parseZoneRsvpOutcome(["left", "went"])).toBe("left");
     for (const other of [undefined, "", "Went", "went ", "<script>", "1"]) expect(parseZoneRsvpOutcome(other)).toBeNull();
@@ -130,7 +162,13 @@ describe("§NNN what the address says after a press", () => {
 
   it("has a sentence for each, in both languages", () => {
     for (const catalogue of [ro, en]) {
-      for (const code of ZONE_RSVP_OUTCOMES) expect(catalogue.Members.rsvp.outcome[code].length).toBeGreaterThan(0);
+      // The name tick's four are the event page's own sentences (`Event.rsvp.nameOutcome`), the rest the zone's.
+      for (const code of ZONE_RSVP_OUTCOMES) {
+        const sentence = isNameZoneOutcome(code) ? catalogue.Event.rsvp.nameOutcome[code] : catalogue.Members.rsvp.outcome[code];
+        expect(sentence.length).toBeGreaterThan(0);
+      }
+      expect(isRefusedZoneOutcome("closed") && isRefusedZoneOutcome("name") && isRefusedZoneOutcome("none")).toBe(true);
+      expect(isRefusedZoneOutcome("shown") || isRefusedZoneOutcome("went")).toBe(false);
       expect(catalogue.Members.rsvp.nameHelp).toContain("{name}");
     }
   });

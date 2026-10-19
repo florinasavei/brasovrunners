@@ -7,7 +7,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { rememberPerson } from "@/modules/person-session/session";
-import { confirmRsvp, withdrawRsvp, type RsvpProved } from "@/modules/rsvp/rsvp";
+import { confirmRsvp, readRsvpLink, setRsvpShowName, withdrawRsvp, type RsvpProved } from "@/modules/rsvp/rsvp";
 import { RSVP_BOX_ID } from "@/modules/rsvp/rsvp-box";
 import { WITHDRAWN_ASKED_SUFFIX, withdrawnProof } from "@/modules/rsvp/withdrawn-proof";
 
@@ -74,4 +74,34 @@ export async function withdrawRsvpAction(form: FormData): Promise<void> {
   // `nu`: the sentence of the email's «Nu vin» (nobody was counted). The server's reading of the row, folded into the proof.
   const proof = withdrawnProof(token, proved.unanswered ? `${slug}${WITHDRAWN_ASKED_SUFFIX}` : slug);
   redirect(`${pageOf(proved.locale, token)}?retras=${encodeURIComponent(slug)}&ok=${proof}${proved.unanswered ? "&nu=1" : ""}`);
+}
+
+/**
+ * «Numele meu apare la „Cine vine"» (§NNN, amending §812; the owner, 2026-10-19: «oamenii să poată ușor să zică „afișează / ascunde" numele
+ * meu public») on a live «Nu mai vin» link's page: the person's own tick on their counted answer, any time. §186's shape for «Vin!».
+ *
+ * **This POST does NOT spend the link** (`setRsvpShowName` reads the token, it does not consume it): showing or hiding a name is a reversible,
+ * low-stakes choice — the precedent is the registration's `LIST_CONSENT` link (§186) — so the same link still takes the answer back with
+ * «Nu mai vin» afterwards, and the tick can be flipped as often as the person likes until the event starts. The GET of the page changed
+ * nothing and still does not (BR-REQ-036-02); only this press writes, and it writes the one tick (and the name typed in the box, when the answer
+ * holds none). A link that is not live — spent, replaced, expired, the event started, or a confirm link — lands on the page's «linkul nu mai merge»,
+ * and no address or name is ever read from the form. The page is read again live, drawing the new state and one sentence from `?nume=`.
+ */
+export async function setNameByLinkAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("locale"));
+  const token = String(form.get("token") ?? "");
+  const db = getDb();
+  const now = new Date();
+  if (!(await tokenAttemptAllowed(db, token, now))) redirect(`${pageOf(locale, token)}?invalid=1`);
+  const link = await readRsvpLink(db, token, now);
+  if (!link || link.state !== "live" || link.purpose !== "RSVP_WITHDRAW") redirect(`${pageOf(locale, token)}?invalid=1`);
+  const result = await setRsvpShowName(
+    db,
+    link.eventId,
+    { token },
+    { showName: form.get("showName") === "on", displayName: String(form.get("name") ?? "") },
+    now,
+  );
+  const code = result.ok ? (result.showName ? "shown" : "hidden") : result.reason;
+  redirect(`${pageOf(locale, token)}?nume=${code}`);
 }

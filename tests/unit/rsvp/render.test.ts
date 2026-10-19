@@ -34,7 +34,7 @@ vi.mock("@/i18n/navigation", async () => {
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }), headers: async () => new Headers() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => {} }), notFound: () => {}, redirect: () => {} }));
 vi.mock("@/app/[locale]/events/[slug]/actions", () => ({ answerRsvpAction: async () => {}, requestRsvpWithdrawAction: async () => {} }));
-vi.mock("@/modules/rsvp/remembered-actions", () => ({ rsvpStateAction: async () => ({ remembered: false }), rsvpGoAction: async () => ({ remembered: false }), rsvpLeaveAction: async () => ({ remembered: false }), rsvpForgetAction: async () => {} }));
+vi.mock("@/modules/rsvp/remembered-actions", () => ({ rsvpStateAction: async () => ({ remembered: false }), rsvpGoAction: async () => ({ remembered: false }), rsvpLeaveAction: async () => ({ remembered: false }), rsvpForgetAction: async () => {}, rsvpShowNameAction: async () => ({ state: { remembered: false }, refused: null }) }));
 vi.mock("@/modules/registrations/turnstile", () => ({ turnstileSiteKey: () => state.siteKey }));
 vi.mock("@/modules/registrations/ui/BotCheck", async () => {
   const { createElement: h } = await import("react");

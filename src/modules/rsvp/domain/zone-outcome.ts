@@ -6,13 +6,29 @@
  *   went    the answer is counted.
  *   left    the answer was taken back.
  *   closed  the event no longer takes answers (it started, was cancelled, was unticked, or the notice stopped describing «Vin!»).
+ *
+ * And the name tick «Numele meu apare la „Cine vine"» (§NNN): `shown` and `hidden` say what the person did; `name` that ticking needed a name
+ * and there was none; `none` that no answer of this account was found (a stale page). Their sentences are the event page's (`Event.rsvp.nameOutcome`).
  */
-export const ZONE_RSVP_OUTCOMES = ["went", "left", "closed"] as const;
+export const ZONE_RSVP_OUTCOMES = ["went", "left", "closed", "shown", "hidden", "name", "none"] as const;
 export type ZoneRsvpOutcome = (typeof ZONE_RSVP_OUTCOMES)[number];
 
 export function parseZoneRsvpOutcome(value: string | string[] | undefined): ZoneRsvpOutcome | null {
   const one = Array.isArray(value) ? value[0] : value;
   return (ZONE_RSVP_OUTCOMES as readonly string[]).includes(one ?? "") ? (one as ZoneRsvpOutcome) : null;
+}
+
+/**
+ * Outcomes that are a refusal, said as a warning at the top of the list rather than at the row: the row either is gone (`closed`) or has
+ * nothing new to show (`name`, `none`), so the sentence is what the person came back for.
+ */
+export function isRefusedZoneOutcome(outcome: ZoneRsvpOutcome): boolean {
+  return outcome === "closed" || outcome === "name" || outcome === "none";
+}
+
+/** The outcomes whose sentence is the event page's own (`Event.rsvp.nameOutcome.*`): the name tick's. */
+export function isNameZoneOutcome(outcome: ZoneRsvpOutcome): outcome is "shown" | "hidden" | "name" | "none" {
+  return outcome === "shown" || outcome === "hidden" || outcome === "name" || outcome === "none";
 }
 
 /** The anchor of an event's row in the zone: where a press lands again, so the phone's page does not jump to the top. */

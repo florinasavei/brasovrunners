@@ -844,6 +844,17 @@
       "notMe": "Nu sunt eu — uită-mă pe acest dispozitiv",
       "help": "Browserul tău rămâne recunoscut un an după „Da, vin” sau „Nu mai vin”; „Nu sunt eu” îl uită.",
       "failed": "Nu am putut trimite răspunsul. Încearcă din nou.",
+      "nameSwitch": "Numele meu apare la „Cine vine”",
+      "nameHelp": "Debifat, ești doar numărat. Numele rămâne păstrat și apare din nou dacă îl bifezi.",
+      "nameBox": "Numele tău",
+      "nameSave": "Salvează",
+      "nameOutcome": {
+        "shown": "Gata: numele tău apare la „Cine vine”.",
+        "hidden": "Gata: numele tău nu mai apare; ești doar numărat.",
+        "name": "Scrie numele cu care vrei să apari.",
+        "none": "Nu găsim un răspuns „Vin!” de-al tău aici.",
+        "closed": "Evenimentul nu mai primește răspunsuri „Vin!”, așa că numele nu se mai poate arăta."
+      },
       "calendar": {
         "link": "Vin!",
         "count": {

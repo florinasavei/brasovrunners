@@ -844,6 +844,17 @@
       "notMe": "Not me — forget me on this device",
       "help": "Your browser stays recognised for a year after “Yes, I'm coming” or “I'm not coming any more”; “Not me” forgets it.",
       "failed": "We could not send your answer. Try again.",
+      "nameSwitch": "My name shows under “Who's coming”",
+      "nameHelp": "Unticked, you are only counted. Your name stays saved and shows again if you tick it.",
+      "nameBox": "Your name",
+      "nameSave": "Save",
+      "nameOutcome": {
+        "shown": "Done: your name shows under “Who's coming”.",
+        "hidden": "Done: your name no longer shows; you are only counted.",
+        "name": "Type the name you want to appear with.",
+        "none": "We can't find an “I'm coming” answer of yours here.",
+        "closed": "This event no longer takes “I'm coming!” answers, so the name can't be shown now."
+      },
       "calendar": {
         "link": "I'm coming!",
         "count": {

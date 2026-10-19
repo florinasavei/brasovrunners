@@ -6,13 +6,14 @@ import EventBusyIcon from "@mui/icons-material/EventBusy";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import Alert from "@mui/material/Alert";
 import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { decodeHint, PERSON_HINT_COOKIE } from "@/modules/person-session/domain/hint";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import type { RsvpIslandState } from "../remembered-actions";
+import type { RsvpIslandState, RsvpNameResult } from "../remembered-actions";
 import { islandFace, rememberedHeading } from "../domain/island";
 import { setRsvpGoing } from "./going-store";
 
@@ -29,10 +30,21 @@ export type RsvpIslandLabels = {
   submit: string;
   submitting: string;
   showName: string;
+  /** The tick on «Tu vii ✓» (§NNN): «Numele meu apare la „Cine vine"», its help, the box shown when the answer holds no name, and the save. */
+  nameSwitch: string;
+  nameHelp: string;
+  nameBox: string;
+  nameSave: string;
+  /** One sentence after each save (a status, not a colour) and one per refusal. */
+  nameShown: string;
+  nameHidden: string;
+  nameNeeded: string;
+  nameNone: string;
+  nameClosed: string;
 };
 
 /**
- * The server's four actions, handed over by the Server Component as props (`RsvpBox`): an island that imported them would take their
+ * The server's five actions, handed over by the Server Component as props (`RsvpBox`): an island that imported them would take their
  * whole chain — the service, the configuration, Zod — into a visitor's bundle (§489, `public-islands-weight.test.ts`). A Server Action
  * crosses the boundary as a prop, and runs on the server whatever the island does with it.
  */
@@ -41,6 +53,8 @@ export type RsvpIslandActions = {
   go: (slug: string, locale: string, showName: boolean) => Promise<RsvpIslandState>;
   leave: (slug: string, locale: string) => Promise<RsvpIslandState>;
   forget: () => Promise<void>;
+  /** The person's own tick «Numele meu apare la „Cine vine"» (§NNN): on or off, with the name typed in the box when the answer holds none. */
+  showName: (slug: string, locale: string, showName: boolean, name: string) => Promise<RsvpNameResult>;
 };
 
 const HINT_EVENT = "br-person-hint";
@@ -84,6 +98,10 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
   // Two failures, two behaviours: a state that could not be read falls back to the typed form; a press that failed keeps the one-tap state and says so.
   const [readFailed, setReadFailed] = useState(false);
   const [pressFailed, setPressFailed] = useState(false);
+  // The name tick (§NNN): the box opens when the person ticks with no name to show; `nameNote` is the last save's sentence; `refusals` remounts the tick form after a refusal only (a saved tick already shows what the person did, and a remount would drop the keyboard's focus), so the box shows what the server kept.
+  const [asking, setAsking] = useState(false);
+  const [nameNote, setNameNote] = useState<"shown" | "hidden" | "name" | "none" | "closed" | null>(null);
+  const [refusals, setRefusals] = useState(0);
   const masked = hint?.masked ?? null;
 
   useEffect(() => {
@@ -132,6 +150,21 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
     }
   };
 
+  const runName = async (on: boolean, name: string) => {
+    try {
+      setPressFailed(false);
+      const { state: next, refused } = await actions.showName(slug, locale, on, name);
+      if (!next.remembered) clearHint();
+      setState(next);
+      setNameNote(refused ?? (on ? "shown" : "hidden"));
+      setAsking(refused === "name");
+      if (refused !== null) setRefusals((n) => n + 1);
+      router.refresh();
+    } catch {
+      setPressFailed(true);
+    }
+  };
+
   return (
     <Stack spacing={1.5} data-testid="rsvp-remembered">
       <Typography variant="body2" data-testid="rsvp-remembered-as" sx={{ overflowWrap: "anywhere" }}>
@@ -144,6 +177,48 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
             <CheckCircleIcon aria-hidden color="success" sx={{ fontSize: "1.4em" }} />
             {labels.going}
           </Typography>
+          {/*
+            «Numele meu apare la „Cine vine"» (§NNN): a real tick box in its own small form, saved at once when the answer holds a name
+            (a change submits the form); with no name, ticking opens one «Numele tău» box and «Salvează». The server reads the cookie.
+          */}
+          <form
+            key={refusals}
+            action={(form: FormData) => runName(form.get("showName") === "on", String(form.get("name") ?? ""))}
+            onChange={(event) => {
+              const target = event.target;
+              if (!(target instanceof HTMLInputElement) || target.name !== "showName") return;
+              if (state.hasName) event.currentTarget.requestSubmit();
+              else setAsking(target.checked);
+            }}
+            data-testid="rsvp-name-switch"
+          >
+            <Stack spacing={1}>
+              <CheckboxField name="showName" defaultChecked={state.showName || asking} help={labels.nameHelp}>
+                {labels.nameSwitch}
+              </CheckboxField>
+              {asking && !state.hasName && (
+                <Stack spacing={1.5} data-testid="rsvp-name-box">
+                  <TextField name="name" label={labels.nameBox} required fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
+                  <SubmitButton label={labels.nameSave} pendingLabel={labels.submitting} size="large">
+                    <EventAvailableIcon />
+                  </SubmitButton>
+                </Stack>
+              )}
+            </Stack>
+          </form>
+          {nameNote !== null && (
+            <Typography variant="body2" role="status" data-testid="rsvp-name-note">
+              {nameNote === "shown"
+                ? labels.nameShown
+                : nameNote === "hidden"
+                  ? labels.nameHidden
+                  : nameNote === "name"
+                    ? labels.nameNeeded
+                    : nameNote === "none"
+                      ? labels.nameNone
+                      : labels.nameClosed}
+            </Typography>
+          )}
           <form action={() => run(() => actions.leave(slug, locale))}>
             <SubmitButton label={labels.cancel} pendingLabel={labels.cancelling} variant="outlined" size="large">
               <EventBusyIcon />

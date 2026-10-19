@@ -366,7 +366,9 @@ describe("§NNN «Alergări» draws the row only under a run that takes answers"
     expect(mine).toContain("Tu vii ✓");
     expect(mine).toContain("Nu mai vin");
     expect(mine).toContain("1 vine");
-    expect(mine).not.toContain('name="showName"');
+    // The name tick stays on the answered row (§NNN), unticked: the press carried none.
+    expect(mine).toContain('data-testid="zone-rsvp-name"');
+    expect(mine).not.toMatch(/<input[^>]*name="showName"[^>]*checked|<input[^>]*checked[^>]*name="showName"/);
 
     // Another account on the same page sees the same count and its own state: not going.
     state.cookie = other.id;
