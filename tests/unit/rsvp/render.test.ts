@@ -440,3 +440,70 @@ describe("§811 the fold «Răspunsuri „Vin!” (N)» — read-only, addresses
     expect(markup).toContain("1 confirmed, 1 unconfirmed");
   });
 });
+
+/**
+ * §NNN — the name tick's words and what the island is handed. The island is a client component the page renders from the server: what
+ * it receives is the page's strings and the server's actions as props — never an address, never a name.
+ */
+describe("§NNN the island's props for the name tick", () => {
+  type Node = { type?: unknown; props?: Record<string, unknown> } | null | undefined;
+  /** The element of the one client island, found in the tree the server component returns. */
+  function findIsland(node: unknown): { labels: Record<string, string>; actions: Record<string, unknown> } | null {
+    if (!node || typeof node !== "object") return null;
+    if (Array.isArray(node)) {
+      for (const child of node) {
+        const found = findIsland(child);
+        if (found) return found;
+      }
+      return null;
+    }
+    const element = node as Node;
+    const props = element?.props;
+    if (props && typeof props.labels === "object" && typeof props.actions === "object") return { labels: props.labels as never, actions: props.actions as never };
+    return props ? findIsland(props.children) : null;
+  }
+  const island = async (locale: "ro" | "en") => {
+    state.language = locale;
+    const element = await RsvpBox({ locale, slug: "alergarea-de-joi", eventId: "11111111-1111-4111-8111-111111111111", renderedAt: RENDERED_AT, outcome: null });
+    return findIsland(element)!;
+  };
+
+  it("hands over the five words of the tick and the fifth action, in Română", async () => {
+    const { labels, actions } = await island("ro");
+    expect(labels).toMatchObject({
+      nameSwitch: "Numele meu apare la „Cine vine”",
+      nameBox: "Numele tău",
+      nameSave: "Salvează",
+      nameShown: "Gata: numele tău apare la „Cine vine”.",
+      nameHidden: "Gata: numele tău nu mai apare; ești doar numărat.",
+      nameNeeded: "Scrie numele cu care vrei să apari.",
+    });
+    expect(labels.nameHelp).toContain("Numele rămâne păstrat");
+    expect(typeof actions.showName).toBe("function");
+  });
+
+  it("hands over the same words in English", async () => {
+    const { labels } = await island("en");
+    expect(labels.nameSwitch).toBe("My name shows under “Who's coming”");
+    expect(labels.nameSave).toBe("Save");
+    expect(labels.nameClosed).toContain("no longer takes");
+  });
+
+  it("holds no address and no person's name in anything it is handed", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      const { labels } = await island(locale);
+      for (const value of Object.values(labels)) expect(value).not.toMatch(/@|example\.test/);
+    }
+  });
+
+  it("has every sentence in both catalogues, one plain sentence each (≤ 200 characters)", () => {
+    for (const catalogue of [ro, en]) {
+      const rsvp = catalogue.Event.rsvp;
+      for (const sentence of [rsvp.nameSwitch, rsvp.nameHelp, rsvp.nameBox, rsvp.nameSave, ...Object.values(rsvp.nameOutcome)]) {
+        expect(sentence.length).toBeGreaterThan(0);
+        expect(sentence.length).toBeLessThanOrEqual(200);
+        expect(sentence).not.toContain("{");
+      }
+    }
+  });
+});

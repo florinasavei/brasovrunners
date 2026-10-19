@@ -2533,6 +2533,7 @@ turns on event by event. Three steps are the club's: the notice (1), the tick (2
    random secret, readable only by the server, its fingerprint kept) and `br_person_hint` (the masked address and the name, no secret). On any other event that
    takes answers the page then says «Răspunzi ca an…@gmail.com» and **«Vin!»** is one tap, counted at once, no email; **«Nu mai vin»** is one tap
    too, and **«Nu sunt eu»** forgets the browser. Without JavaScript the typed form stands. This is not a login and opens nothing else.
+   **The name, any time (§NNN).** Once counted, a person shows or hides their name from the tick **«Numele meu apare la „Cine vine”»** — on «Tu vii ✓» in that remembered browser, in the members' zone's row, or on the page of the «Nu mai vin» link in the email (a POST that does not spend the link, so «Nu mai vin» still works from it); the notice's paragraph says so, and approving it again from the template (step 7's click) carries the sentence.
    **From a calendar (§815).** For an event that offers the answer, the club's calendar feed, the event's `.ics` file and the file attached to the
    emails say **«Vin! → <the event's page>#vin»** and under it **«N vin până acum»** (nobody yet: «Fii primul care spune că vine.»). Google and Apple make
    the link tappable, and it lands on the «Vii?» card — one more tap in a remembered browser, an email once in any other. A calendar cannot take the
