@@ -2124,7 +2124,7 @@ languages — or in neither — the order in «Poziția», «Ascuns» for a leve
 the people added at once in «Adaugă mai mulți membri»; and **says who each code is for** with the chips «Pentru cine e codul» in
 «Coduri de reducere»: «Toți membrii» (members with or without a level) or one or more levels, chosen on every code — a new
 code starts with nothing ticked and is not saved until one is, and «Toți membrii» cannot be ticked together with a level
-(§811, amended). Every code's line says «Pentru: …». The codes saved before the choice was explicit read as «Toți membrii».
+(§811, amended by §NNN). Every code's line says «Pentru: …». The codes saved before the choice was explicit read as «Toți membrii».
 In the zone's «Coduri de reducere» a member then sees the
 codes for everyone and those for their own level; a member with no level sees the codes for everyone alone. **No
 member sees their level, and no visitor sees the levels:** the zone draws no badge, the public «Beneficiile membrilor»

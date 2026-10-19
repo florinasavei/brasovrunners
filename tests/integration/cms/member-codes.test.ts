@@ -41,7 +41,7 @@ const CODE = {
   validUntil: "",
 };
 
-/** A code for «Toți membrii»: who a code is for is chosen, never left empty (§811, amended). */
+/** A code for «Toți membrii»: who a code is for is chosen, never left empty (§811, amended by §NNN). */
 const EVERYONE = { ...CODE, forAll: true };
 
 describe("§552 the members' discount codes", () => {

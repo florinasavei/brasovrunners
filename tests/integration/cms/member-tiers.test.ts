@@ -86,7 +86,7 @@ const CODE = {
   validUntil: "",
 };
 
-/** A code for «Toți membrii»: who a code is for is chosen, never left empty (§811, amended). */
+/** A code for «Toți membrii»: who a code is for is chosen, never left empty (§811, amended by §NNN). */
 const EVERYONE = { ...CODE, forAll: true };
 
 describe("§811 the member tiers", () => {
@@ -321,7 +321,7 @@ describe("§811 the member tiers", () => {
       const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "member_tier.deleted"));
       expect(audit).toMatchObject({ entityType: "member_tier", entityId: first.id, metadataJson: { codesUpdated: 0 } });
       expect(JSON.stringify(audit)).not.toContain("Membru");
-      await expect(deleteMemberTier(db, { actor: admin, tierId: second.id.replace(/.$/, "0"), now: NOW })).rejects.toMatchObject({ code: "NOT_FOUND" });
+      await expect(deleteMemberTier(db, { actor: admin, tierId: second.id.replace(/.$/, (last) => (last === "0" ? "1" : "0")), now: NOW })).rejects.toMatchObject({ code: "NOT_FOUND" });
       await expect(deleteMemberTier(db, { actor: admin, tierId: "nu-e-un-id", now: NOW })).rejects.toMatchObject({ code: "NOT_FOUND" });
     });
 
@@ -498,7 +498,7 @@ describe("§811 the member tiers", () => {
       expect(kept.tierIds).toEqual([first.id]);
     });
 
-    it("refuses a code that chose nobody or both, naming the chips' box, and stores «Toți membrii» as no limit (§811, amended)", async () => {
+    it("refuses a code that chose nobody or both, naming the chips' box, and stores «Toți membrii» as no limit (§811, amended by §NNN)", async () => {
       const { first } = await twoTiers();
       // Neither a level nor «Toți membrii»: the club must choose, an empty list is no answer.
       await expect(createDiscountCode(db, { actor: admin, fields: { ...CODE, tierIds: [] }, now: NOW })).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["tierIds"] });
@@ -560,6 +560,17 @@ describe("§811 the member tiers", () => {
       const code = await createDiscountCode(db, { actor: admin, fields: { ...CODE, tierIds: [first.id] }, now: NOW });
       const saved = await saveDiscountCode(db, { actor: copywriter, codeId: code.id, expectedVersion: code.version, fields: { ...CODE, partnerName: "Alt partener", tierIds: [] }, now: NOW });
       expect([saved.partnerName, saved.tierIds]).toEqual(["Alt partener", [first.id]]);
+    });
+
+    it("lets a Redactor write the words of a code for «Toți membrii» with the post the real form sends, and keeps it for everyone", async () => {
+      const code = await createDiscountCode(db, { actor: admin, fields: EVERYONE, now: NOW });
+      expect(code.tierIds).toBeNull();
+      // The Redactor's form draws no chips, so it posts neither the levels nor «Toți membrii»: the stored choice stands in for the post.
+      const saved = await saveDiscountCode(db, { actor: copywriter, codeId: code.id, expectedVersion: code.version, fields: { ...CODE, partnerName: "Alt partener", tierIds: [], forAll: false }, now: NOW });
+      expect(saved.partnerName).toBe("Alt partener");
+      expect(saved.tierIds).toBeNull();
+      const [stored] = await db.select().from(memberDiscountCodes).where(eq(memberDiscountCodes.id, code.id));
+      expect(stored.tierIds).toBeNull();
     });
 
     it("shows a member the codes for everyone and those of their level, a member with no level the first alone", async () => {

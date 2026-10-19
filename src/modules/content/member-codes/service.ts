@@ -62,7 +62,7 @@ async function assertTiersExist<T extends Record<string, unknown>>(db: Database<
 }
 
 /**
- * The limit as stored: «Toți membrii» is `null`, every member (§811, amended — the meaning of the column did not change, so every
+ * The limit as stored: «Toți membrii» is `null`, every member (§811, amended by §NNN — the meaning of the column did not change, so every
  * code saved before the choice was explicit reads as «Toți membrii»); levels are their ids. The fields' schema has already refused
  * a post that chose neither or both, so `forAll` and an empty list are the same fact here.
  */

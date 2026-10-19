@@ -9,7 +9,7 @@ import { CHOICE_CARD_SX, CHOICE_INPUT_SX } from "@/shared/ui/choice-card";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * «Pentru cine e codul» (§811, amended): who a discount code is for, as chips — first «Toți membrii», then one pill per
+ * «Pentru cine e codul» (§811, amended by §NNN): who a discount code is for, as chips — first «Toți membrii», then one pill per
  * level, the native checkbox visible in each (`CHOICE_CARD_SX` and `CHOICE_INPUT_SX`, the house's selectable pill that the
  * volunteers' role chips draw, §780): the tick is the state, never the colour alone, and the whole pill is its label, 44
  * pixels tall.
@@ -103,11 +103,14 @@ export default function TierChips({
       <Typography component="legend" variant="body2" sx={{ fontWeight: 600, p: 0, mb: 0.5 }}>
         {legend}
       </Typography>
-      <Box key={recall.generation} sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+      {/* «Toți membrii» stands on its own line above the levels: it is the other answer, not one more level. */}
+      <Box key={recall.generation} sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
         {pill("all", { name: allName, value: "1", checked: recall.has ? postedAll : allChecked, label: allLabel, testId: "tier-chip-all" })}
-        {tiers.map((tier) =>
-          pill(tier.id, { name, value: tier.id, checked: recall.has ? (postedLevels?.includes(tier.id) ?? false) : checkedIds.includes(tier.id), label: tier.label, testId: "tier-chip" }),
-        )}
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+          {tiers.map((tier) =>
+            pill(tier.id, { name, value: tier.id, checked: recall.has ? (postedLevels?.includes(tier.id) ?? false) : checkedIds.includes(tier.id), label: tier.label, testId: "tier-chip" }),
+          )}
+        </Box>
       </Box>
       <Typography id={hintId} variant="caption" color={refused ? "error" : "text.secondary"} sx={{ display: "block", mt: 0.5 }} data-testid={refused ? "tier-chips-refusal" : undefined}>
         {refusal ? `${refusal} ` : ""}

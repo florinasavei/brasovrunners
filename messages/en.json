@@ -9618,7 +9618,7 @@
           "other": "{count} levels"
         },
         "intro": "A level decides which discount codes a member sees; members do not see their level.",
-        "introMore": "The level is your own label: only administrators see it. Give it to each member on “Team”, then tick on each code which levels it is for. It changes nothing a person may do on the site.",
+        "introMore": "The level is your own label: only administrators see it. Give it to each member on “Team”, then choose on each code who it is for: all members or some levels. It changes nothing a person may do on the site.",
         "empty": "You have no level yet. Until then, a member sees only the discount codes that are for everyone.",
         "rowsIntro": "Write a level in the empty row at the end and press “Save all levels”. The order is the one in “Position”.",
         "listLabel": "The member levels, in the club's order",
@@ -9711,6 +9711,7 @@
         "forTiersBoth": "Choose “All members” or levels, not both.",
         "forTiersChip": "For: {tiers}",
         "forEveryone": "For: All members",
+        "tiersGone": "levels not found: {count}",
         "createTitle": "Add the code?",
         "createBody": "Members see it in their area as soon as you add it."
       },

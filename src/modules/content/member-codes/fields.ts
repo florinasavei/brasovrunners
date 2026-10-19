@@ -9,7 +9,7 @@ import { refuseOneLanguage } from "@/shared/forms/both-languages";
  * line or two, in Romanian **and** English or in neither (§352). An optional https link where the
  * code is used, and an optional last day, `YYYY-MM-DD` — the day it stops being shown. One side of
  * the description written and the other empty is refused on the empty box, every other box kept
- * (§315). Who the code is for is chosen, not defaulted: levels or «Toți membrii» (§811, amended).
+ * (§315). Who the code is for is chosen, not defaulted: levels or «Toți membrii» (§811, amended by §NNN).
  */
 
 export const CODE_PARTNER_MAX = 80;
@@ -70,7 +70,7 @@ export const discountCodeFieldsSchema = z
       .transform((value) => value.trim())
       .refine((value) => value === "" || isCalendarDay(value), "not a day")
       .transform((value) => (value === "" ? null : value)),
-    // «Pentru cine e codul» (§811, amended): the member tiers that see the code, ticked as chips. Ids only —
+    // «Pentru cine e codul» (§811, amended by §NNN): the member tiers that see the code, ticked as chips. Ids only —
     // whether each names a tier is the service's question, asked under a lock. The club's choice is explicit:
     // levels here, or «Toți membrii» in `forAll` below, one of the two and never both, never neither.
     tierIds: z

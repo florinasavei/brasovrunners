@@ -1,9 +1,11 @@
 import { createElement, type ReactElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import { createTranslator } from "next-intl";
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { memberDiscountCodes } from "@/db/schema/member-discount-codes";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -12,7 +14,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * real pages: the zone draws no badge and names no level (the level is the staff's label alone), the public members' page has no
  * section of levels, the zone's «Coduri de reducere» tab lists the codes for everyone and those of the member's level with no
  * mark saying why a code is there — and the codes' editor, which gives each code the chips «Pentru cine e codul»: «Toți membrii»
- * first, then the levels, chosen and never left empty (§811, amended).
+ * first, then the levels, chosen and never left empty (§811, amended by §NNN).
  * A level is a label: the zone opens for a member with a level exactly as for one with none.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, cookie: undefined as string | undefined, locale: "ro" as "ro" | "en" }));
@@ -62,7 +64,7 @@ async function markup(node: ReactElement): Promise<string> {
 const NOW = new Date("2026-10-18T09:00:00.000Z");
 const CODE = { partnerName: "Magazinul", code: "BVR15", descriptionRo: "15% la încălțăminte.", descriptionEn: "15% off shoes.", link: "", validUntil: "" };
 
-/** A code for «Toți membrii»: who a code is for is chosen, never left empty (§811, amended). */
+/** A code for «Toți membrii»: who a code is for is chosen, never left empty (§811, amended by §NNN). */
 const EVERYONE = { ...CODE, forAll: true };
 
 function rowsOf(spec: Record<string, Record<string, string>>) {
@@ -270,6 +272,18 @@ describe("§811 where the member's level shows", () => {
       expect(html.match(/<input[^>]*type="hidden"[^>]*name="forAll"[^>]*value="1"|<input[^>]*name="forAll"[^>]*type="hidden"[^>]*value="1"/g)).toHaveLength(2);
       expect(html).toContain("code-tiers-chip");
       expect(html).toContain(ro.Admin.members.codes.forEveryone);
+    });
+
+    it("never calls a code «Toți membrii» when its stored list names no level: the line says so and the form ticks nothing", async () => {
+      // Only a hand edit of the database leaves such a list (deleting a level takes it off every code): both halves read the stored ids.
+      const created = await createDiscountCode(db, { actor: admin, fields: EVERYONE, now: NOW });
+      await db.update(memberDiscountCodes).set({ tierIds: ["99999999-9999-4999-8999-999999999999"] }).where(eq(memberDiscountCodes.id, created.id));
+      const html = await editor(true);
+      const line = (html.split('data-testid="code-tiers-chip"')[1] ?? "").slice(0, 300);
+      expect(line).toContain("niveluri negăsite: 1");
+      expect(line).not.toContain(ro.Admin.members.codes.forEveryone);
+      const own = html.split('data-testid="tier-chips"').slice(1)[0] ?? "";
+      expect((own.match(/<input[^>]*type="checkbox"[^>]*>/g) ?? []).filter((box) => box.includes("checked"))).toEqual([]);
     });
 
     it("shows the chips to the Administrator alone: the Redactor, who writes the words, sees none", async () => {
