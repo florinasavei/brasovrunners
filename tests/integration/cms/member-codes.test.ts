@@ -41,6 +41,9 @@ const CODE = {
   validUntil: "",
 };
 
+/** A code for «Toți membrii»: who a code is for is chosen, never left empty (§811, amended by §828). */
+const EVERYONE = { ...CODE, forAll: true };
+
 describe("§552 the members' discount codes", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
@@ -63,10 +66,10 @@ describe("§552 the members' discount codes", () => {
   });
 
   it("an Administrator adds, writes, hides, shows, moves and deletes, each with an audit row naming no code", async () => {
-    const first = await createDiscountCode(db, { actor: admin, fields: CODE, now: NOW });
-    const second = await createDiscountCode(db, { actor: admin, fields: { ...CODE, partnerName: "Sala", code: "SALA10" }, now: NOW });
+    const first = await createDiscountCode(db, { actor: admin, fields: EVERYONE, now: NOW });
+    const second = await createDiscountCode(db, { actor: admin, fields: { ...EVERYONE, partnerName: "Sala", code: "SALA10" }, now: NOW });
     expect([first.position, second.position]).toEqual([1, 2]);
-    const saved = await saveDiscountCode(db, { actor: admin, codeId: first.id, expectedVersion: first.version, fields: { ...CODE, code: "BVR20" }, now: NOW });
+    const saved = await saveDiscountCode(db, { actor: admin, codeId: first.id, expectedVersion: first.version, fields: { ...EVERYONE, code: "BVR20" }, now: NOW });
     expect(saved.code).toBe("BVR20");
     const hidden = await setDiscountCodeHidden(db, { actor: admin, codeId: first.id, expectedVersion: saved.version, hidden: true, now: NOW });
     expect(hidden.hidden).toBe(true);
@@ -83,10 +86,10 @@ describe("§552 the members' discount codes", () => {
   });
 
   it("refuses a volunteer and a member at every write", async () => {
-    const code = await createDiscountCode(db, { actor: admin, fields: CODE, now: NOW });
+    const code = await createDiscountCode(db, { actor: admin, fields: EVERYONE, now: NOW });
     for (const actor of [volunteer, member]) {
-      await expect(createDiscountCode(db, { actor, fields: CODE, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
-      await expect(saveDiscountCode(db, { actor, codeId: code.id, expectedVersion: code.version, fields: CODE, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(createDiscountCode(db, { actor, fields: EVERYONE, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(saveDiscountCode(db, { actor, codeId: code.id, expectedVersion: code.version, fields: EVERYONE, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
       await expect(setDiscountCodeHidden(db, { actor, codeId: code.id, expectedVersion: code.version, hidden: true, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
       await expect(deleteDiscountCode(db, { actor, codeId: code.id, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
     }
@@ -94,32 +97,32 @@ describe("§552 the members' discount codes", () => {
   });
 
   it("lets the Redactor write the words alone, keeping the code, the link and the day", async () => {
-    const code = await createDiscountCode(db, { actor: admin, fields: { ...CODE, validUntil: "2026-12-31" }, now: NOW });
-    await expect(createDiscountCode(db, { actor: copywriter, fields: CODE, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    const code = await createDiscountCode(db, { actor: admin, fields: { ...EVERYONE, validUntil: "2026-12-31" }, now: NOW });
+    await expect(createDiscountCode(db, { actor: copywriter, fields: EVERYONE, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
     const saved = await saveDiscountCode(db, {
       actor: copywriter,
       codeId: code.id,
       expectedVersion: code.version,
-      fields: { ...CODE, partnerName: "Magazinul nou", code: "FURAT", link: "https://example.ro/altul", validUntil: "2030-01-01", descriptionRo: "Altă reducere.", descriptionEn: "Another discount." },
+      fields: { ...EVERYONE, partnerName: "Magazinul nou", code: "FURAT", link: "https://example.ro/altul", validUntil: "2030-01-01", descriptionRo: "Altă reducere.", descriptionEn: "Another discount." },
       now: NOW,
     });
     expect(saved).toMatchObject({ partnerName: "Magazinul nou", descriptionEn: "Another discount.", code: "BVR15", link: "https://example.ro/reduceri", validUntil: "2026-12-31" });
   });
 
   it("refuses one language of the description, a link that is not https and a day that does not exist", async () => {
-    await expect(createDiscountCode(db, { actor: admin, fields: { ...CODE, descriptionEn: "" }, now: NOW })).rejects.toMatchObject({ fields: ["descriptionEn"] });
-    await expect(createDiscountCode(db, { actor: admin, fields: { ...CODE, link: "http://example.ro" }, now: NOW })).rejects.toMatchObject({ fields: ["link"] });
-    await expect(createDiscountCode(db, { actor: admin, fields: { ...CODE, validUntil: "2027-02-30" }, now: NOW })).rejects.toMatchObject({ fields: ["validUntil"] });
-    await expect(saveDiscountCode(db, { actor: admin, codeId: "nu-e-un-id", expectedVersion: 1, fields: CODE, now: NOW })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(createDiscountCode(db, { actor: admin, fields: { ...EVERYONE, descriptionEn: "" }, now: NOW })).rejects.toMatchObject({ fields: ["descriptionEn"] });
+    await expect(createDiscountCode(db, { actor: admin, fields: { ...EVERYONE, link: "http://example.ro" }, now: NOW })).rejects.toMatchObject({ fields: ["link"] });
+    await expect(createDiscountCode(db, { actor: admin, fields: { ...EVERYONE, validUntil: "2027-02-30" }, now: NOW })).rejects.toMatchObject({ fields: ["validUntil"] });
+    await expect(saveDiscountCode(db, { actor: admin, codeId: "nu-e-un-id", expectedVersion: 1, fields: EVERYONE, now: NOW })).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(await db.select().from(memberDiscountCodes)).toEqual([]);
   });
 
   it("shows members neither a hidden code nor one past its last day, and today's last day still", async () => {
-    await createDiscountCode(db, { actor: admin, fields: { ...CODE, code: "AZI", validUntil: "2026-10-01" }, now: NOW });
-    await createDiscountCode(db, { actor: admin, fields: { ...CODE, code: "IERI", validUntil: "2026-09-30" }, now: NOW });
-    const hidden = await createDiscountCode(db, { actor: admin, fields: { ...CODE, code: "ASCUNS" }, now: NOW });
+    await createDiscountCode(db, { actor: admin, fields: { ...EVERYONE, code: "AZI", validUntil: "2026-10-01" }, now: NOW });
+    await createDiscountCode(db, { actor: admin, fields: { ...EVERYONE, code: "IERI", validUntil: "2026-09-30" }, now: NOW });
+    const hidden = await createDiscountCode(db, { actor: admin, fields: { ...EVERYONE, code: "ASCUNS" }, now: NOW });
     await setDiscountCodeHidden(db, { actor: admin, codeId: hidden.id, expectedVersion: hidden.version, hidden: true, now: NOW });
-    await createDiscountCode(db, { actor: admin, fields: { ...CODE, code: "MEREU" }, now: NOW });
+    await createDiscountCode(db, { actor: admin, fields: { ...EVERYONE, code: "MEREU" }, now: NOW });
     const shown = await listDiscountCodesForMembers(db, NOW);
     expect(shown.map((code) => code.code)).toEqual(["AZI", "MEREU"]);
     // Past the club's midnight, the day it named is over (Europe/Bucharest, UTC+3 in October).

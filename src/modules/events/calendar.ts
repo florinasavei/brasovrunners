@@ -16,7 +16,7 @@ type Locale = "ro" | "en";
  *
  * **«Vin!» is the one fact that is not on the row** (§815): how many say they come. A caller that has it — the feed, the
  * event's file, the emails' attachment — passes `coming` (`readComing`: id → count, present exactly where the page draws
- * «Vii?»), and the description gains «Vin! → <page>#vin» and the count. The entry's stamp then moves to `now`: the
+ * «Confirmă prezența (opțional)»), and the description gains «Vin! → <page>#vin» and the count. The entry's stamp then moves to `now`: the
  * count changed with no write to the row, and a subscribed app that re-reads an entry only when its stamp moves would keep
  * the old number. Absent, the entry is what it was.
  */

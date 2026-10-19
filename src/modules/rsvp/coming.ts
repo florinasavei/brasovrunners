@@ -6,7 +6,7 @@ import { type RsvpGateInput, rsvpOffered } from "./domain/offered";
 /**
  * Which events say «Vin!» outside their own page, and how many come to each (§815): the calendar's feed, the
  * `.ics` files, the emails' calendar attachment and the listing's cards all ask this, so none of them can draw the gate
- * differently from the page's «Vii?» card (`rsvpOffered`, §812 — the one rule).
+ * differently from the page's «Confirmă prezența (opțional)» card (`rsvpOffered`, §812 — the one rule).
  *
  * **A map from id to count, and absence is the answer "not offered".** An event is in the map exactly when the page would draw the
  * card — published, scheduled, no registration, ahead, ticked, and the notice in force describing «Vin!» — with the number of
@@ -19,7 +19,7 @@ import { type RsvpGateInput, rsvpOffered } from "./domain/offered";
  */
 export type ComingEvent = RsvpGateInput & {
   id: string;
-  /** «Doar pentru membrii BVR» (§552): the page draws no «Vii?» on a members' event (its box is a public form), so no surface links one. */
+  /** «Doar pentru membrii BVR» (§552): the page draws no «Confirmă prezența (opțional)» on a members' event (its box is a public form), so no surface links one. */
   membersOnly?: boolean | null;
 };
 

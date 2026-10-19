@@ -3,6 +3,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
+import { rsvpAskDayPhrase } from "@/modules/rsvp/domain/ask-words";
 import { DomainError } from "@/shared/errors/domain-error";
 import type { EmailCopyPlaceholder } from "./email-copy";
 import { registrationStatusWords } from "./registration-status-words";
@@ -135,7 +136,7 @@ export function emailSampleWhen(locale: EmailLocale): string {
 }
 
 /** The four deadline fields of the closed set (§377). */
-export type EmailSampleDeadlines = Pick<EmailSampleValues, "confirmationHours" | "holdMinutes" | "offerHours" | "reminderHours">;
+export type EmailSampleDeadlines = Pick<EmailSampleValues, "confirmationHours" | "holdMinutes" | "offerHours" | "reminderHours" | "rsvpAskDay">;
 
 /**
  * The club's deadlines as the four fields' values, in one language (§377) — through the branch's one
@@ -153,6 +154,8 @@ export function emailSampleDeadlines(locale: EmailLocale, deadlines: Deadlines =
     holdMinutes: words.hold,
     offerHours: words.offer,
     reminderHours: words.reminder ?? "",
+    // «Vii {rsvpAskDay} la …?» (§823): the question goes `rsvpAskDaysBefore` days ahead; zero days sends nothing, so the preview says «mâine» then.
+    rsvpAskDay: rsvpAskDayPhrase(locale, Math.max(deadlines.rsvpAskDaysBefore, 1)),
   };
 }
 
@@ -173,6 +176,8 @@ export type EmailSampleValues = {
   holdMinutes: string;
   offerHours: string;
   reminderHours: string;
+  /** «Vii {rsvpAskDay} la …?» (§823): the question's day in words, from the club's days (`emailSampleDeadlines`). */
+  rsvpAskDay: string;
   /**
    * The staff invitation (§141): a made-up colleague, added by a made-up administrator — a name
    * nobody at the club has, so it is refused in every message, as the runner's is (§359).

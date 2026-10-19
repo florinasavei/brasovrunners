@@ -779,7 +779,8 @@
         "FOOD": "Food",
         "FIRST_AID": "First aid",
         "TIMING": "Timing",
-        "DIRECTION": "Direction"
+        "DIRECTION": "Direction",
+        "REGROUP": "Regroup"
       },
       "cutoff": "Time limit: {duration} · closes at {time}",
       "cutoffNoClock": "Time limit: {duration}",
@@ -817,9 +818,17 @@
         "none": "No row matches."
       }
     },
+    "who": {
+      "label": "Who's coming",
+      "count": {
+        "one": "{count} coming · see who",
+        "few": "{count} coming · see who",
+        "other": "{count} coming · see who"
+      }
+    },
     "rsvp": {
-      "heading": "Coming?",
-      "intro": "Tell us you're coming and see who else is.",
+      "heading": "Confirm you're coming (optional)",
+      "intro": "This is not a registration: it helps us know how many of us are coming.",
       "email": "Your email address",
       "name": "Your name (optional)",
       "showName": "I want my name to show",
@@ -835,7 +844,8 @@
       "withdrawSubmit": "Send the link",
       "withdrawSubmitting": "Sending…",
       "withdrawDone": "If your address is among those coming, we've emailed you a link.",
-      "countHeading": "Coming ({count})",
+      "summaryEmpty": "Be the first to confirm",
+      "whoEmpty": "Nobody has confirmed yet.",
       "countEmpty": "Be the first to say you're coming.",
       "countOthers": "and {count} more",
       "rememberedAs": "Answering as {who}",
@@ -844,6 +854,19 @@
       "notMe": "Not me — forget me on this device",
       "help": "Your browser stays recognised for a year after “Yes, I'm coming” or “I'm not coming any more”; “Not me” forgets it.",
       "failed": "We could not send your answer. Try again.",
+      "nameSwitch": "My name shows under “Who's coming”",
+      "nameKept": "Ticked, you show as “{name}”. Unticked, you are only counted; the name stays saved and shows again if you tick it again.",
+      "nameAsk": "Tick it and type the name you want to show.",
+      "nameBox": "Your name",
+      "nameSave": "Save",
+      "nameOutcome": {
+        "shown": "Done: your name shows under “Who's coming”.",
+        "hidden": "Done: your name no longer shows; you are only counted.",
+        "name": "Type the name you want to appear with.",
+        "none": "We can't find an “I'm coming” answer of yours here.",
+        "closed": "This event no longer takes “I'm coming!” answers, so the name can't be shown now.",
+        "wait": "Too many changes in an hour. Try again later; “I'm not coming any more” works any time."
+      },
       "calendar": {
         "link": "I'm coming!",
         "count": {
@@ -2038,7 +2061,9 @@
       "memberSetTitle": "Set the member tick?",
       "memberSetBody": "You set the member tick on {name}; their club on the list becomes {club}. Nothing else changes, no email.",
       "noteDeleteTitle": "Delete the note?",
-      "noteDeleteBody": "The note is deleted for good, along with its text. The trail keeps only who deleted it and when."
+      "noteDeleteBody": "The note is deleted for good, along with its text. The trail keeps only who deleted it and when.",
+      "rsvpAskAudienceTitle": "Change who we ask “Coming?”",
+      "rsvpAskAudienceBody": "From the save on, the question before events goes to the people chosen. Whoever answered “I'm coming!” is asked only under a notice that describes it, and can refuse, per series."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -3286,6 +3311,8 @@
       "durationOtherHelp": "From the start to the end — 1 hour 45 minutes, say. The end is worked out from it. Leave empty if none was announced.",
       "rsvpEnabled": "Accept “I'm coming!” answers from the page, calendar and email",
       "rsvpEnabledHelp": "Anyone can leave their address and say they're coming; you see how many are coming here and on the page. The privacy notice must describe the “I'm coming!” answers — see Tasks.",
+      "rsvpAskEnabled": "Send the “Coming?” question before this event",
+      "rsvpAskEnabledHelp": "Ticked, the people who should be asked get an email before the date; how long before and who, you choose in Settings. Unticked, no question goes out for this date.",
       "rsvpAnswers": {
         "title": "“I'm coming!” answers ({count})",
         "summary": "{confirmed} confirmed, {unconfirmed} unconfirmed",
@@ -3388,6 +3415,7 @@
       "memberTierSave": "Save the level",
       "memberTierSaving": "Saving the level…",
       "memberTierBulkHelp": "The level of the members added now. Anyone who was a member already keeps their level.",
+      "memberTierInviteHelp": "The level of the member added now; you can change it any time on their row. It is not shown to them.",
       "memberTierHiddenOption": "{name} (hidden)",
       "membersTitle": "Add several members",
       "membersAside": "one address per row, the Member role",
@@ -3657,7 +3685,8 @@
         "volunteersList": "Only in the privacy notice: the tick “I want to appear on the public list of volunteers”, in quotes. With it in the notice in force, a public list can show names",
         "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them",
         "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming",
-        "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question the day before"
+        "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question before the event",
+        "rsvpAskAnswerers": "Only in the privacy notice: the name of the button “Don't ask me again for this series”, in quotes. With it in the notice in force, those who answered “I'm coming!” before are asked too"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4716,13 +4745,24 @@
           ]
         },
         "rsvpAskNotice": {
-          "title": "Privacy notice: the day-before “Coming?” question",
-          "todo": "An event takes “I'm coming!” answers, but the notice in force does not describe the day-before question yet, so no subscriber is asked and the topic's box does not show when subscribing.",
-          "done": "The notice in force describes the day-before question: subscribers who chose the topic (or “All the news”) under a notice that describes it get one email with “I'm coming” and “I'm not coming”.",
+          "title": "Privacy notice: the “Coming?” question before the event",
+          "todo": "An event takes “I'm coming!” answers, but the notice in force does not describe the question before the event yet, so no subscriber is asked and the topic's box does not show when subscribing.",
+          "done": "The notice in force describes the question before the event: subscribers who chose the topic (or “All the news”) under a notice that describes it get one email with “I'm coming” and “I'm not coming”.",
           "how": [
-            "Before approving, have a lawyer read section 5's two paragraphs: the “I'm coming!” one (the address becomes an unconfirmed answer) and the newsletter's.",
+            "Before approving, have a lawyer read section 5's two paragraphs: the “I'm coming!” one (the address becomes an unconfirmed answer) and the newsletter's, with the sentence about when it is sent.",
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The question goes out only after the new one, and only to those who chose the topic (or “All the news”) under it.",
             "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages."
+          ]
+        },
+        "rsvpAskAnswerersNotice": {
+          "title": "Privacy notice: the “Coming?” question for those who answered “I'm coming!” before",
+          "todo": "You chose to ask those who answered “I'm coming!” before too, but the notice in force does not describe it, so none of them is asked. Subscribers are asked as before.",
+          "todoOnly": "You chose to ask only those who answered “I'm coming!” before, but the notice in force does not describe it, so nobody gets the “Coming?” question.",
+          "done": "The notice in force describes this group: whoever answered “I'm coming!” under it or a newer one gets the question, with “Don't ask me again for this series”.",
+          "how": [
+            "Read with a lawyer the new sentences in the template, section 5, the “I'm coming!” paragraph: who is asked, for how long, what we keep after a refusal and the basis.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The question goes only to those whose answer was given under the new notice or a newer one.",
+            "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages. If you do not want this group, in “Settings” → “Emails” choose “The newsletter's subscribers” again."
           ]
         }
       },
@@ -6359,6 +6399,9 @@
       "newSearch": "Another lookup",
       "rsvps": "“I'm coming!” answers ({count})",
       "browsers": "Remembered browsers ({count})",
+      "askRefusals": "“Coming?” refusals by series ({count})",
+      "askRefusalsKept": "The refusal stays after the answers are erased: without it the person would be asked again. It goes one year after the series' last date.",
+      "askRefusalGone": "a series that no longer exists",
       "rsvpNameShown": "name shown on the page",
       "rsvpNameHidden": "counted only",
       "rsvpNotice": "notice v{version}",
@@ -6600,7 +6643,7 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers, or an organizer presses “Send the parent's link”: the agreement and the link where the parent accepts it in their own name.",
         "VOLUNTEER_INVITATION": "When an organizer or an administrator sends invitations from the «Volunteers» card of an event whose volunteers are by invitation only, and on “Send again”. A personal link to the volunteers' page.",
         "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page: “Yes, I'm coming” counts them, “I'm not coming” takes it back. The page's “not coming any more” sends only the withdraw link.",
-        "RSVP_ASK": "The day before, from {askHour}: subscribers of “The ‘Coming?’ question before runs” and “All the news”. “I'm coming”, then “Yes, I'm coming”, counts them; “I'm not coming” does not. Answered: skipped."
+        "RSVP_ASK": "{askDays} before the start, from {askHour}: {askWho}. “I'm coming”, then “Yes, I'm coming”, counts them; “I'm not coming” does not. Answered: skipped."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -6647,7 +6690,7 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "when a volunteer under 18 offers",
         "VOLUNTEER_INVITATION": "when the club invites someone to volunteer",
         "RSVP_CONFIRM": "when someone says “I'm coming!”, to their address",
-        "RSVP_ASK": "the day before, from {askHour}, to the topic's subscribers"
+        "RSVP_ASK": "{askDays} before, from {askHour}, {askWhoShort}"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -6710,6 +6753,43 @@
         "save": "Save the address",
         "saving": "Saving…",
         "saved": "The address for calendar answers was saved."
+      },
+      "rsvpAskAudience": {
+        "title": "Who we ask “Coming?”",
+        "intro": "The question before an event with “I'm coming!” can go to the newsletter's subscribers, to those who answered “I'm coming!” in the same series before, or to both.",
+        "aside": {
+          "SUBSCRIBERS": "The newsletter's subscribers",
+          "ANSWERERS": "Those who answered “I'm coming!” in the series before",
+          "BOTH": "Subscribers and those who answered before"
+        },
+        "inForce": {
+          "SUBSCRIBERS": "In force: the question goes to subscribers who chose its topic (or “All the news”), under a notice that describes it.",
+          "ANSWERERS": "In force: the question goes to those who answered “I'm coming!” at an earlier date of the same series, not to subscribers.",
+          "BOTH": "In force: the question goes to the topic's subscribers and to those who answered “I'm coming!” at an earlier date of the series."
+        },
+        "option": {
+          "SUBSCRIBERS": "The newsletter's subscribers: the question's topic or “All the news”",
+          "ANSWERERS": "Those who answered “I'm coming!” at an earlier date of the same series",
+          "BOTH": "Both"
+        },
+        "help": {
+          "SUBSCRIBERS": "How it works now: whoever subscribed to the question's topic or to “All the news”, under a notice that describes the question.",
+          "ANSWERERS": "An “I'm coming!” answer is kept 30 days after each date: the question reaches those who answered in the last ~30 days. Every email has “Don't ask me again for this series”.",
+          "BOTH": "The two lists, one email per person: whoever is also a subscriber is asked as a subscriber."
+        },
+        "noticeDone": "The notice in force describes this group too",
+        "noticeOpen": "The notice in force does not describe this group yet",
+        "noticeSilent": {
+          "ANSWERERS": "Until you approve a new notice from the template, nobody gets the “Coming?” question: you chose only those who answered “I'm coming!”.",
+          "BOTH": "Until you approve a new notice from the template, none of those who answered “I'm coming!” gets the question; subscribers are asked as before."
+        },
+        "noticeLink": "Open “Legal texts”",
+        "field": "The “Coming?” question goes to",
+        "save": "Save the choice",
+        "saving": "Saving…",
+        "saved": "The choice was saved.",
+        "updatedAt": "Changed {when}.",
+        "readOnly": "The Administrator makes this choice; you see what is in force."
       },
       "clubRejections": {
         "title": "The club's addresses that reject emails",
@@ -6855,6 +6935,7 @@
             "holdMinutes": "How long a place is held while the declaration is signed, from “Deadlines”, with its unit",
             "offerHours": "How long a waiting-list offer stays open, from “Deadlines”, with its unit",
             "reminderHours": "How long before the start the reminder goes — this event's own, else the club's from “Deadlines” — with its unit; none when the event sends no reminder",
+            "rsvpAskDay": "When the event is, in words — “tomorrow”, “the day after tomorrow”, “in 3 days” — by how many days before the start the question goes, from “Deadlines”; do not type “tomorrow” by hand",
             "feedbackLink": "The link to “Tell us how it was” for this event while the form is on; otherwise the contact page"
           }
         },
@@ -7059,7 +7140,9 @@
           "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)",
           "verificationRetryHours": "The address-confirmation link is re-sent after (hours)",
           "verificationRetries": "How many times the link is re-sent (0–3)",
-          "outageGraceMaxHours": "The deadlines' clock stands still while the site cannot be reached, at most (hours)"
+          "outageGraceMaxHours": "The deadlines' clock stands still while the site cannot be reached, at most (hours)",
+          "rsvpAskDaysBefore": "How many days before the start the “Coming?” question goes (days)",
+          "rsvpAskHour": "The hour it goes from (club time, 0–23)"
         },
         "help": {
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses.",
@@ -7074,7 +7157,9 @@
           "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once.",
           "verificationRetryHours": "Counted from when the last confirmation email left, to whoever has not confirmed yet. The link's deadline does not move.",
           "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move.",
-          "outageGraceMaxHours": "While the name is not found, running deadlines move on every run; after a silence of the scheduled calls, afterwards. At most this many hours; 0 = no moving, the outages are still recorded."
+          "outageGraceMaxHours": "While the name is not found, running deadlines move on every run; after a silence of the scheduled calls, afterwards. At most this many hours; 0 = no moving, the outages are still recorded.",
+          "rsvpAskDaysBefore": "0 = never sent. You choose who is asked in “Emails”; each person gets one email, with “I'm coming” and “I'm not coming”. An event can opt out, in the editor, under “I'm coming!”.",
+          "rsvpAskHour": "The club's clock (Brașov): it leaves from this hour on the chosen day, on the job's first run after it. Midnight is 0."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -7100,7 +7185,9 @@
           "seriesHorizonDays": "dates created {value} ahead",
           "publicListDays": "public list {value}",
           "familySittingMinutes": "email waits {value}",
-          "outageGraceMaxHours": "moves by {value} at most"
+          "outageGraceMaxHours": "moves by {value} at most",
+          "rsvpAskDaysBefore": "“Coming?” {value} before",
+          "rsvpAskHour": "at {value}"
         },
         "shortZero": {
           "verificationRetries": "no re-sends",
@@ -7108,7 +7195,8 @@
           "lastCallHours": "no last call",
           "raceWeekDays": "countdown on race day only",
           "familySittingMinutes": "email leaves at once",
-          "outageGraceMaxHours": "no moving"
+          "outageGraceMaxHours": "no moving",
+          "rsvpAskDaysBefore": "“Coming?” is not sent"
         },
         "groups": {
           "confirmation": {
@@ -7121,7 +7209,7 @@
           },
           "beforeStart": {
             "title": "Before the start",
-            "intro": "What goes out and what opens before the start: the reminder, the last call to sign, “I have arrived” and the countdown."
+            "intro": "What goes out and what opens before the start: the reminder, the last call to sign, the “Coming?” question, “I have arrived” and the countdown."
           },
           "afterEvent": {
             "title": "After the event",
@@ -7359,7 +7447,7 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old.",
         "VOLUNTEER_INVITATION": "The event, the roles wanted and the club's message are added by themselves. The link is for the invited person only, works once, and a new one replaces the old.",
         "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link.",
-        "RSVP_ASK": "Once per event; one ticked only on its own day is not asked. Sent through “Newsletter”, last in line like the new-event alert. If it has not left by midnight, it is dropped."
+        "RSVP_ASK": "Once per event, unless unticked in the editor. Ticked after the window opened, it goes on the next run; ticked only on its own day, it does not. What has not left by the midnight before is dropped."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0.",
@@ -7400,6 +7488,22 @@
         "sentAt": "carried {when}",
         "failure": "{road} refused {count} times: {error}",
         "pinned": "stays on this road for now: we cannot tell whether it was already taken"
+      },
+      "rsvpAskWho": {
+        "long": {
+          "SUBSCRIBERS": "subscribers of the topic “The ‘Coming?’ question before runs” and of “All the news”",
+          "ANSWERERS": "those who answered “I'm coming!” at an earlier date of the same series, with the button “Don't ask me again for this series”",
+          "BOTH": "the topic's subscribers, those of “All the news” and those who answered “I'm coming!” at an earlier date of the series"
+        },
+        "short": {
+          "SUBSCRIBERS": "to the topic's subscribers",
+          "ANSWERERS": "to those who answered “I'm coming!” in the series",
+          "BOTH": "to the topic's subscribers and those who answered “I'm coming!” in the series"
+        }
+      },
+      "rsvpAskOff": {
+        "when": "Switched off in “Deadlines” → “Before the start” (0 days): never sent.",
+        "whenShort": "off: 0 days in “Deadlines”"
       }
     },
     "design": {
@@ -8980,7 +9084,8 @@
           },
           "kitShirt": "T-shirt in the kit",
           "askHealthNote": "Health note asked",
-          "rsvpEnabled": "“I'm coming!” answers are taken"
+          "rsvpEnabled": "“I'm coming!” answers are taken",
+          "rsvpAskEnabled": "The “Coming?” question is sent"
         },
         "publicList": {
           "names": "Public participant list",
@@ -9618,7 +9723,7 @@
           "other": "{count} levels"
         },
         "intro": "A level decides which discount codes a member sees; members do not see their level.",
-        "introMore": "The level is your own label: only administrators see it. Give it to each member on “Team”, then tick on each code which levels it is for. It changes nothing a person may do on the site.",
+        "introMore": "The level is your own label: only administrators see it. Give it to each member on “Team”, then choose on each code who it is for. It changes nothing a person may do on the site.",
         "empty": "You have no level yet. Until then, a member sees only the discount codes that are for everyone.",
         "rowsIntro": "Write a level in the empty row at the end and press “Save all levels”. The order is the one in “Position”.",
         "listLabel": "The member levels, in the club's order",
@@ -9704,10 +9809,14 @@
         "linkHelp": "Where the code is used, with https://.",
         "validUntil": "Valid until (optional)",
         "validUntilHelp": "The last day members see it. Empty: no end.",
-        "forTiers": "For the levels",
-        "forTiersHelp": "Nothing ticked: the code is for every member.",
+        "forTiers": "Who the code is for",
+        "forTiersHelp": "Choose “All members” or one or more levels. A member with no level sees only the codes for all members.",
+        "forAllMembers": "All members",
+        "forTiersNone": "Choose who the code is for.",
+        "forTiersBoth": "Choose “All members” or levels, not both.",
         "forTiersChip": "For: {tiers}",
-        "forEveryone": "For every member",
+        "forEveryone": "For: All members",
+        "tiersGone": "levels not found: {count}",
         "createTitle": "Add the code?",
         "createBody": "Members see it in their area as soon as you add it."
       },
@@ -10118,7 +10227,7 @@
     },
     "checkpoints": {
       "title": "Checkpoints",
-      "intro": "Where there is water, food, first aid, timing or someone showing the way, and how long after the start the last runner passes. Shown in the table and on the route profile, and on the number.",
+      "intro": "Where there is water, food, first aid, timing, someone showing the way or a regroup, and how long after the start the last runner passes. Shown in the table, on the route profile and on the number.",
       "saveNote": "The points are saved only with “Save the points”, not with the page's “Save”.",
       "routeLength": "The route is {km} km long. No point can be beyond it.",
       "summaryNone": "no points",
@@ -10140,6 +10249,7 @@
         "nameRo": "Name (Romanian)",
         "nameEn": "Name (English)",
         "kinds": "What is there",
+        "kindsHelp": "Regroup: the group waits here. Write in the note for how long (e.g. “we wait 5 minutes”).",
         "cutoff": "Time limit",
         "cutoffHelp": "From the start: the last runner has to pass by then. Leave empty for no limit.",
         "noteRo": "Note (Romanian)",
@@ -10159,7 +10269,8 @@
         "FOOD": "Food",
         "FIRST_AID": "First aid",
         "TIMING": "Timing",
-        "DIRECTION": "Direction"
+        "DIRECTION": "Direction",
+        "REGROUP": "Regroup"
       },
       "remove": "Remove this point",
       "removeHelp": "It is deleted at “Save the points”.",
@@ -12514,7 +12625,8 @@
       "resultDeleted": "Result deleted. The others' places were worked out again.",
       "resultsPublished": "The results are now public on the event's page.",
       "resultsUnpublished": "The results are no longer public on the event's page.",
-      "resultsPublicUnchanged": "It was already so; nothing to change."
+      "resultsPublicUnchanged": "It was already so; nothing to change.",
+      "rsvpAskAudience": "The choice for the “Coming?” question was saved."
     }
   },
   "Network": {
@@ -12596,7 +12708,7 @@
       "WEEKLY_RUNS": "An announcement when a new series of weekly runs starts — once per series, not for every run.",
       "VOLUNTEERING": "When we need help at our races: the kit desk, the course, photographs.",
       "RESULTS_PHOTOS": "Results and photo albums after the events.",
-      "RSVP_ASK": "The day before an event where the club counts who comes, one email with two buttons: “I'm coming” or “I'm not coming”."
+      "RSVP_ASK": "Before an event where the club counts who comes (as many days ahead and from the hour the club chose), one email with two buttons: “I'm coming” or “I'm not coming”."
     },
     "heading": "The club's news by email",
     "intro": "Pick the topics you care about and we write to you about those alone.",
@@ -12801,6 +12913,14 @@
     "upcomingTitle": "The next runs",
     "upcomingEmpty": "No run is announced right now.",
     "upcomingAll": "Every event",
+    "rsvp": {
+      "nameHelp": "If you tick it, the run's page shows you as “{name}”.",
+      "outcome": {
+        "went": "Noted: you're coming.",
+        "left": "Answer removed: you're not coming any more.",
+        "closed": "This run no longer takes “I'm coming!” answers."
+      }
+    },
     "eventsTitle": "Events for members",
     "codesTitle": "Discount codes",
     "tabsLabel": "Parts of the members' zone",
@@ -12990,6 +13110,8 @@
     "confirmPending": "Counting you…",
     "confirmAutoNote": "Opened in a browser, the link counts you by itself. If nothing happens, press “Yes, I'm coming”.",
     "withdrawTitle": "Not coming any more?",
+    "answerTitle": "Your answer",
+    "answerIntro": "You're coming to {event}.",
     "withdrawIntro": "Are you not coming to {event} any more? Your answer is deleted.",
     "withdrawButton": "I'm not coming any more",
     "withdrawPending": "Sending…",
@@ -13010,6 +13132,11 @@
     "askNoIntro": "Not coming to {event}? Press the button and we don't count you.",
     "askNoButton": "I'm not coming",
     "askNoDoneTitle": "Understood",
-    "askNoDone": "Okay, we won't count you. You can answer differently until the start."
+    "askNoDone": "Okay, we won't count you. You can answer differently until the start.",
+    "askRefuseTitle": "Stop asking you?",
+    "askRefuseIntro": "Do you no longer want to be asked “Coming?” about {event} and the other dates of the series? Press the button and we never ask you again for this series. An “I'm coming” you already gave, if any, stays.",
+    "askRefuseButton": "Don't ask me again for this series",
+    "askRefuseDoneTitle": "Understood",
+    "askRefuseDone": "Done: we will not ask you “Coming?” again for this series. You can still answer, yourself, from any event's page."
   }
 }

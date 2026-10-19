@@ -430,7 +430,7 @@ async function ListingBody({
   undatedBelow?: boolean;
   /** The races whose «Clasament» is on show (§809): between seasons the last race is an ordinary card, and wears the chip. */
   withResults: ReadonlySet<string>;
-  /** «N vin» (§815): the events ahead whose page offers «Vii?», with how many confirmed they come. */
+  /** «N vin» (§815): the events ahead whose page offers «Confirmă prezența (opțional)», with how many confirmed they come. */
   coming: ReadonlyMap<string, number>;
 }) {
   const t = await getTranslations("Events");

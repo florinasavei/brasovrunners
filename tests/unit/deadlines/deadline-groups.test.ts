@@ -39,7 +39,7 @@ describe("§377 the deadline groups", () => {
     expect(byGroup).toEqual({
       confirmation: ["confirmationHours", "verificationRetryHours", "verificationRetries"],
       hold: ["holdMinutes", "offerHours"],
-      beforeStart: ["reminderHours", "lastCallHours", "selfCheckinHours", "raceWeekDays"],
+      beforeStart: ["reminderHours", "lastCallHours", "selfCheckinHours", "raceWeekDays", "rsvpAskDaysBefore", "rsvpAskHour"],
       afterEvent: ["publicListDays"],
       series: ["seriesHorizonDays"],
       family: ["familySittingMinutes"],
@@ -66,7 +66,8 @@ describe("§377 the deadline groups", () => {
   });
 
   it("has a zero-line for exactly the deadlines that accept zero", () => {
-    const acceptZero = DEADLINE_KEYS.filter((key) => DEADLINE_RULES[key].min === 0).sort();
+    // A time of day (`hourOfDay`, §823) accepts zero as midnight, a real answer, never «none»: it has no zero-line, `deadlineDuration` says "00:00".
+    const acceptZero = DEADLINE_KEYS.filter((key) => DEADLINE_RULES[key].min === 0 && DEADLINE_RULES[key].unit !== "hourOfDay").sort();
     for (const messages of [ro, en]) expect(Object.keys(messages.Admin.emails.deadlines.shortZero).sort()).toEqual(acceptZero);
   });
 });
@@ -87,8 +88,18 @@ describe("§377 a deadline's value in the house's words, for a fold's closed lin
 
   it("leaves zero to the catalogue: it is «none», or «race day only», never «0 ore»", () => {
     for (const key of DEADLINE_KEYS) {
-      if (key === "verificationRetries") continue;
+      if (key === "verificationRetries" || key === "rsvpAskHour") continue;
       expect(deadlineDuration("ro", key, 0), key).toBeNull();
     }
+  });
+
+  it("says the «Vii?» question's days as days and its hour as a clock: zero is midnight, never «none»", () => {
+    expect(deadlineDuration("ro", "rsvpAskDaysBefore", 1)).toBe("o zi");
+    expect(deadlineDuration("ro", "rsvpAskDaysBefore", 3)).toBe("3 zile");
+    expect(deadlineDuration("en", "rsvpAskDaysBefore", 3)).toBe("3 days");
+    expect(deadlineDuration("ro", "rsvpAskDaysBefore", 0)).toBeNull();
+    expect(deadlineDuration("ro", "rsvpAskHour", 8)).toBe("08:00");
+    expect(deadlineDuration("en", "rsvpAskHour", 23)).toBe("23:00");
+    expect(deadlineDuration("ro", "rsvpAskHour", 0)).toBe("00:00");
   });
 });

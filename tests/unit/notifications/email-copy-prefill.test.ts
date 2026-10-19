@@ -101,7 +101,8 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   REGISTRATION_OPENED: ["eventTitle"],
   // «Vin!» (§811): the event, and its start in the subject.
   RSVP_CONFIRM: ["eventTitle", "eventStartsAtFormatted"],
-  RSVP_ASK: ["eventTitle"],
+  // …and the day in words, which the club's «Termene» sets (§823): never a «mâine» typed into the text.
+  RSVP_ASK: ["eventTitle", "rsvpAskDay"],
   // An invitation (§647): the event, its start and until when the place is kept.
   EVENT_INVITATION: ["eventTitle", "eventStartsAtFormatted", "holdExpiresAtFormatted"],
   CLUB_CONFIRMATION_NOTICE: ["participantName", "eventTitle", "eventStartsAtFormatted", "bibNumber"],
@@ -152,6 +153,9 @@ const REAL: TemplateData = {
   signedAtFormattedOther: "Thursday, 19 Nov 2026, 18:00",
   staffRole: "Redactor",
   inviterName: "Dan",
+  // «Vii {rsvpAskDay} la …?» (§823): the send always has the day in words, each half in its own language.
+  rsvpAskDay: "mâine",
+  rsvpAskDayOther: "tomorrow",
   eventUrl: "https://example.test/ro/e",
   manageUrl: "https://example.test/manage",
   declarationPdfUrl: "https://example.test/pdf",

@@ -218,10 +218,35 @@ export async function setMemberTier<T extends Record<string, unknown>>(
   });
 }
 
+/**
+ * The level an Administrator may give now (§811, §817): it must exist and not be hidden — a hidden level is no longer
+ * given — and an id that is not one is the same refusal as one that is not there. Asked before anything is written, by
+ * «Adaugă o persoană» and «Adaugă mai mulți membri» alike, naming the box `tierId`. Returns the id as the database stores
+ * it (lower case), which the audit row carries.
+ */
+async function givableTierId<T extends Record<string, unknown>>(db: Database<T>, tierId: string): Promise<string> {
+  const tier = isUuid(tierId) ? await findMemberTier(db, tierId.toLowerCase()) : undefined;
+  if (!tier || tier.hidden) throw new DomainError("VALIDATION_ERROR", "no such member tier to give", ["tierId"]);
+  return tier.id;
+}
+
+/** The same level held for share inside the transaction that writes the rows: a delete of it waits, then counts these members. */
+async function holdGivableTier<T extends Record<string, unknown>>(tx: Database<T>, tierId: string): Promise<void> {
+  if (!(await findMemberTierShared(tx, tierId))) throw new DomainError("VALIDATION_ERROR", "no such member tier to give", ["tierId"]);
+}
+
+/**
+ * «Adaugă o persoană» (§123). With `options.tierId` — «Nivel», chosen under the role «Membru» (§811, §817) — the level is
+ * written with the row, in the same transaction, and audited as `staff.member_tier.set` with `reason: "invite"` (the row and
+ * the level by id, never a name or an address). A level goes to a club member's account only (`canHoldMemberTier`): any
+ * other role with a level is refused, naming the box. The invitation email is the same with or without one — the level is
+ * the staff's label and the member is never told it.
+ */
 export async function inviteStaffUser<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: StaffUser,
   input: unknown,
+  options: { tierId?: string | null } = {},
 ): Promise<StaffUser> {
   assertAdministrator(actor);
 
@@ -236,6 +261,13 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
   }
   // Before the address is looked up: whether this actor may give this role at all (§450).
   assertMayAssign(actor, parsed.data.role);
+  // «Nivel» (§811): a level goes to a club member's account only, and a level that is not there or is hidden refuses
+  // the add before any row is written — both naming the box.
+  let tierId: string | null = null;
+  if (options.tierId != null) {
+    if (!canHoldMemberTier(parsed.data.role)) throw new DomainError("VALIDATION_ERROR", "a level is given to a club member's account only", ["tierId"]);
+    tierId = await givableTierId(db, options.tierId);
+  }
 
   // Checked before inserting so the Administrator gets "this person is already staff" rather
   // than a unique-violation stack. The database constraint stays the authority: two requests
@@ -247,7 +279,18 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
 
   const now = new Date();
   return db.transaction(async (tx) => {
-    const member = await insertStaffUser(tx, { ...parsed.data, email: normalizeStaffEmail(parsed.data.email) });
+    if (tierId !== null) await holdGivableTier(tx, tierId);
+    const member = await insertStaffUser(tx, { ...parsed.data, email: normalizeStaffEmail(parsed.data.email), memberTierId: tierId });
+    if (tierId !== null) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        action: "staff.member_tier.set",
+        entityType: "staff_user",
+        entityId: member.id,
+        metadata: { staffUserId: member.id, tierId, previousTierId: null, reason: "invite" },
+        now,
+      });
+    }
     await enqueueStaffInvitation(tx, actor, member, now);
     return member;
   });
@@ -284,11 +327,7 @@ export async function inviteMembers<T extends Record<string, unknown>>(
     only: an address that was already a member keeps the level it has — pressing again to retry an
     account must not change somebody's level.
   */
-  const tierId = input.tierId ?? null;
-  if (tierId !== null) {
-    const tier = isUuid(tierId) ? await findMemberTier(db, tierId) : undefined;
-    if (!tier || tier.hidden) throw new DomainError("VALIDATION_ERROR", "no such member tier to give", ["tierId"]);
-  }
+  const tierId = input.tierId == null ? null : await givableTierId(db, input.tierId);
 
   if (input.rows.length === 0) throw new DomainError("VALIDATION_ERROR", "no member rows", ["members"]);
   if (input.rows.length > MEMBER_ROWS_MAX) throw new DomainError("VALIDATION_ERROR", `more than ${MEMBER_ROWS_MAX} member rows`, ["members"]);
@@ -311,7 +350,7 @@ export async function inviteMembers<T extends Record<string, unknown>>(
   const now = new Date();
   const added = await db.transaction(async (tx) => {
     // The level held for share while the rows are written: a delete of it waits, then counts these members.
-    if (tierId !== null && !(await findMemberTierShared(tx, tierId))) throw new DomainError("VALIDATION_ERROR", "no such member tier to give", ["tierId"]);
+    if (tierId !== null) await holdGivableTier(tx, tierId);
     const members: StaffUser[] = [];
     for (const invite of invites) {
       const email = normalizeStaffEmail(invite.email);

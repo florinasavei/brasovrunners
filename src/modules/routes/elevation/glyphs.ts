@@ -6,8 +6,8 @@ import type { ElevationGlyph } from "./geometry";
  * SVG (an icon is a component, and a Server Component must not hand one to a client island; §370), and the same data a
  * PDF writer can walk.
  *
- * A drop for water, a fork for food, a cross for first aid, a stopwatch for timing, an arrow for direction, a dot for a
- * point that offers none of them. Never the only sign: the visually hidden list and the `<title>` say the point's name,
+ * A drop for water, a fork for food, a cross for first aid, a stopwatch for timing, an arrow for direction, three people
+ * for a point where the group regroups (§824), a dot for a point that offers none of them. Never the only sign: the visually hidden list and the `<title>` say the point's name,
  * and the table under the chart says what it offers in words.
  */
 
@@ -26,6 +26,9 @@ export const ELEVATION_GLYPH_PATHS: Readonly<Record<ElevationGlyph, string>> = {
     "M0 -7.2a7.2 7.2 0 1 1 0 14.4a7.2 7.2 0 1 1 0 -14.4zM0 -5a5 5 0 1 0 0 10a5 5 0 1 0 0 -10zM-.9 -3.4h1.8v3.9h2.6v1.7h-4.4z",
   // An arrow, pointing up.
   direction: "M0 -7.5l6 7h-3.8v7.5h-4.4v-7.5h-3.8z",
+  // Three people, shoulders and heads — Material's «Groups», redrawn solid in the 16 × 16 box: the one in the middle larger, the two beside it shorter so no corner leaves the ring (every glyph stays within 8.1 of the centre, a test walks the paths).
+  regroup:
+    "M0 -6.8a2.4 2.4 0 1 1 0 4.8a2.4 2.4 0 1 1 0 -4.8zM-3.2 6.5V2.4a3.2 3 0 0 1 6.4 0V6.5zM-5.6 -2.9a1.7 1.7 0 1 1 0 3.4a1.7 1.7 0 1 1 0 -3.4zM-7 4V3.2a1.4 2 0 0 1 2.8 0V4zM5.6 -2.9a1.7 1.7 0 1 1 0 3.4a1.7 1.7 0 1 1 0 -3.4zM4.2 4V3.2a1.4 2 0 0 1 2.8 0V4z",
   // A dot.
   none: "M0 -3.4a3.4 3.4 0 1 1 0 6.8a3.4 3.4 0 1 1 0 -6.8z",
 };
@@ -37,5 +40,6 @@ export const GLYPH_EVEN_ODD: Readonly<Record<ElevationGlyph, boolean>> = {
   firstAid: false,
   timing: true,
   direction: false,
+  regroup: false,
   none: false,
 };

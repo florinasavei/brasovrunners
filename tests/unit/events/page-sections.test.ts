@@ -166,7 +166,8 @@ describe("§406 the editor lays its cards out in the page's order, on both pages
       // The public list inside the same card since §512.
       // «Puncte de control» inside «Traseul» (§757): its own forms, linked from the course card.
       // The programme, the rules and the public list inside «Participare, înscrieri și regulament» (§760).
-      expect(NESTED).toEqual(["place", "cost", "checkpoints", "programme", "rules", "startList"]);
+      // The public list stands right under the registration card since §825, so it is listed before the share links.
+      expect(NESTED).toEqual(["place", "cost", "startList", "checkpoints", "programme", "rules"]);
       expect(positions.sort((a, b) => a.index - b.index).map((entry) => entry.id)).toEqual(ids.filter((id) => !NESTED.includes(id)));
       for (const gone of [
         "<CostBox",

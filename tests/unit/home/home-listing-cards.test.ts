@@ -40,12 +40,22 @@ vi.mock("@/i18n/navigation", () => {
   };
 });
 
-// What `readHomeContent` reads: the listing's cached upcoming events and the forecast — nothing else of the database.
+// What `readHomeContent` reads: the listing's cached upcoming events, the forecast and «Vin!»'s two cached reads — nothing else of the database.
 const upcoming: PublicEvent[] = [];
 const forecastCalls: string[][] = [];
+/** «N vin» (§822): the notice flag and the counts the cache would answer, and every ask made of them. */
+const rsvp = { described: true, counts: {} as Record<string, number>, describedCalls: 0, countCalls: [] as string[][] };
 vi.mock("@/modules/public-cache/reads", () => ({
   cachedUpcomingEvents: async () => upcoming,
   cachedPublishedPages: async () => [],
+  cachedRsvpDescribed: async () => {
+    rsvp.describedCalls += 1;
+    return rsvp.described;
+  },
+  cachedRsvpCounts: async (ids: readonly string[]) => {
+    rsvp.countCalls.push([...ids]);
+    return Object.fromEntries(ids.map((id) => [id, rsvp.counts[id] ?? 0]));
+  },
 }));
 vi.mock("@/modules/resilience/last-good", () => ({
   readWithLastGood: async <T,>(_key: string, read: () => Promise<T>) => ({ value: await read(), freshness: "live", takenAt: new Date(0), restingUntil: null }),
@@ -70,6 +80,7 @@ afterEach(() => {
   currentLocale = "ro";
   upcoming.length = 0;
   forecastCalls.length = 0;
+  Object.assign(rsvp, { described: true, counts: {}, describedCalls: 0, countCalls: [] });
 });
 
 /** Rendered as the server renders it, async parts and all; Emotion's `<style>` elements out. */
@@ -177,5 +188,88 @@ describe("§726 the home page hands the cards what the listing hands them, from 
     expect(props.nextRun).toBeNull();
     expect(props.weekly).toMatchObject({ id: "weekly", title: "Weekly runs", cards: [] });
     expect(props.special.more).toEqual({ label: "See all events" });
+  });
+});
+
+/**
+ * §822 («Vin!» everywhere else; amends §815) — the home page's run cards wear «N vin»: the counts and the notice flag are read ONCE for the
+ * page, through the listing's own gate (`readPublicComing`), and handed to the cards of a date alone; a series card never wears one; and a page
+ * with no ticked event ahead reads neither.
+ */
+describe("§822 the home page's cards say how many come", () => {
+  const ticked = (event: PublicEvent): PublicEvent => ({ ...event, rsvpEnabled: true }) as PublicEvent;
+
+  it("reads the gate and the counts once for the page and gives each date alone its count — the next run's card and its section's alike", async () => {
+    const race = ticked(sampleRace("ro"));
+    upcoming.push(race);
+    rsvp.counts[race.id] = 4;
+    const { props } = await readHomeContent("ro", SAMPLE_NOW, { ...DEFAULT_HOME_PAGE_SETTING, on: true });
+
+    expect(props.nextRun?.cards[0].comingCount).toBe(4);
+    expect(props.special.cards[0].comingCount).toBe(4);
+    // One read of each for the whole page, never one per card: the two cards above share it.
+    expect(rsvp.describedCalls).toBe(1);
+    expect(rsvp.countCalls).toEqual([[race.id]]);
+  });
+
+  it("puts the count on the right card only: the offered date, not a date that is not ticked", async () => {
+    const race = ticked(sampleRace("ro"));
+    const other = { ...sampleSeries("ro")[0], id: "00000000-0000-4000-8000-000000000099", slug: "alone", startsAt: new Date("2026-11-30T15:30:00Z"), isSpecial: true } as PublicEvent;
+    upcoming.push(race, other);
+    rsvp.counts[race.id] = 2;
+    rsvp.counts[other.id] = 9;
+    const { props } = await readHomeContent("ro", SAMPLE_NOW, { ...DEFAULT_HOME_PAGE_SETTING, on: true });
+
+    const byId = new Map([...props.special.cards, ...props.weekly.cards].map((card) => [card.members[0].id, card.comingCount]));
+    expect(byId.get(race.id)).toBe(2);
+    // Not ticked: not in the gate's map, so no count is even asked for it, whatever the cache holds.
+    expect(byId.get(other.id)).toBe(0);
+    expect(rsvp.countCalls).toEqual([[race.id]]);
+  });
+
+  it("never gives a series card a count, whatever its dates say (§815): its dates do", async () => {
+    const series = weeklySeries().map(ticked);
+    upcoming.push(...series);
+    for (const date of series) rsvp.counts[date.id] = 5;
+    const { props } = await readHomeContent("ro", SAMPLE_NOW, { ...DEFAULT_HOME_PAGE_SETTING, on: true });
+
+    expect(props.weekly.cards[0].members).toHaveLength(3);
+    expect(props.weekly.cards[0].comingCount).toBe(0);
+    expect(props.nextRun?.cards[0].comingCount).toBe(0);
+  });
+
+  it("reads nothing, and shows nothing, while no event ahead is ticked", async () => {
+    upcoming.push(...weeklySeries(), sampleRace("ro"));
+    const { props } = await readHomeContent("ro", SAMPLE_NOW, { ...DEFAULT_HOME_PAGE_SETTING, on: true });
+
+    for (const card of [...(props.nextRun?.cards ?? []), ...props.weekly.cards, ...props.special.cards]) expect(card.comingCount).toBe(0);
+    expect(rsvp.describedCalls).toBe(0);
+    expect(rsvp.countCalls).toEqual([]);
+  });
+
+  it("says nothing before the privacy notice describes «Vin!», and then asks for no count", async () => {
+    const race = ticked(sampleRace("ro"));
+    upcoming.push(race);
+    rsvp.described = false;
+    rsvp.counts[race.id] = 4;
+    const { props } = await readHomeContent("ro", SAMPLE_NOW, { ...DEFAULT_HOME_PAGE_SETTING, on: true });
+
+    expect(props.special.cards[0].comingCount).toBe(0);
+    expect(rsvp.describedCalls).toBe(1);
+    expect(rsvp.countCalls).toEqual([]);
+  });
+
+  it("draws the chip on the card that was given a count, as the listing does, in both languages", async () => {
+    for (const [locale, words] of [["ro", /5 vin</], ["en", /5 coming</]] as const) {
+      currentLocale = locale;
+      const race = ticked(sampleRace(locale));
+      upcoming.length = 0;
+      upcoming.push(race);
+      rsvp.counts[race.id] = 5;
+      const { props } = await readHomeContent(locale, SAMPLE_NOW, { ...DEFAULT_HOME_PAGE_SETTING, on: true });
+      const section = await html(createElement(RunSection, { ...props.special }));
+      expect(section, locale).toContain('data-testid="coming-chip"');
+      expect(section, locale).toMatch(words);
+    }
   });
 });

@@ -78,7 +78,7 @@ function sampleConfig(): EventConfig {
       // The route's checkpoints (§757, §770): one with a time limit in minutes and a note, one without either and with a direction kind.
       checkpoints: [
         { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 45, note: { ro: "Și banane", en: "Bananas too" }, onProfile: true },
-        { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING", "DIRECTION"], cutoffMinutes: null, note: { ro: null, en: null }, onProfile: true },
+        { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING", "DIRECTION", "REGROUP"], cutoffMinutes: null, note: { ro: "Așteptăm 5 minute", en: "We wait 5 minutes" }, onProfile: true },
       ],
     },
     links: [],
@@ -108,6 +108,7 @@ function sampleConfig(): EventConfig {
       declaration: { key: "EVENT_DECLARATION" },
       external: { provider: null, url: null },
       rsvpEnabled: false,
+      rsvpAskEnabled: true,
       kitShirt: false,
       askHealthNote: false,
     },
@@ -125,7 +126,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V3.59-2026-10-19" },
+    exportedFrom: { environment: "production", baseline: "BR-V3.60-2026-10-19" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     // The volunteers' categories and roles (§774): none in the sample; the round trip with some is in the integration test.
@@ -174,6 +175,27 @@ describe("the event file's reader", () => {
     expect(read.file.version).toBe(3);
     // The checkpoints' own tick is a different key and is not touched by it.
     expect(written).not.toContain("onProfile");
+  });
+
+  it("writes the «Vii?» question's tick only when it is OFF, reads «not written» as on, and keeps the version (§823)", () => {
+    const file = sampleFile();
+    expect(file.version).toBe(3);
+    expect(file.event.registration.rsvpAskEnabled).toBe(true);
+    // «On» is what a file without the key means: left out, so a release before the tick still reads the file (its registration block is strict).
+    expect(serializeEventFile(file)).not.toContain("rsvpAskEnabled");
+    const readOn = readEventFile(serializeEventFile(file));
+    if (!readOn.ok) throw new Error("the file did not read back");
+    expect(readOn.file.event.registration.rsvpAskEnabled).toBe(true);
+
+    file.event.registration.rsvpAskEnabled = false;
+    const written = serializeEventFile(file);
+    expect((JSON.parse(written) as { event: { registration: Record<string, unknown> } }).event.registration).toHaveProperty("rsvpAskEnabled", false);
+    const read = readEventFile(written);
+    if (!read.ok) throw new Error("the file did not read back");
+    expect(read.file.event.registration.rsvpAskEnabled).toBe(false);
+    expect(read.file.version).toBe(3);
+    // The «Vin!» tick is its own key and is not touched by it.
+    expect(written).not.toContain("rsvpEnabled");
   });
 
   it("writes the registration block's «Vin!» tick only when it is ON, reads «not written» as off, and keeps the version (§811)", () => {

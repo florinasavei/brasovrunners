@@ -15,6 +15,7 @@ import { readEmailCopyForSending } from "@/modules/notifications/email-copy";
 import { renderCalendarPart } from "@/modules/notifications/calendar-part";
 import { type EmailRenderer, OutboxMessageWithdrawn, type OutboxRow } from "@/modules/notifications/outbox";
 import { checkRsvpAsk, makeRsvpAsk, type PreparedRsvpAsk } from "@/modules/rsvp/ask";
+import { rsvpAskDayPhrase } from "@/modules/rsvp/domain/ask-words";
 import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
 import { env } from "@/shared/config/env";
 import { readNewsletterWords } from "./domain/message";
@@ -58,7 +59,7 @@ export async function renderNewsletterRow(
 ): Promise<OutgoingEmail> {
   const locale = row.locale as Locale;
   const other: Locale = locale === "ro" ? "en" : "ro";
-  const payload = (row.payloadJson ?? {}) as { subscriberId?: unknown; sendId?: unknown; eventId?: unknown };
+  const payload = (row.payloadJson ?? {}) as { subscriberId?: unknown; sendId?: unknown; eventId?: unknown; answererRsvpId?: unknown };
   let attachments: OutgoingEmail["attachments"];
   const clubCopy = isClubCopy(row.payloadJson) && row.messageType !== "NEWSLETTER_CONFIRM";
   const eventId = typeof payload.eventId === "string" ? payload.eventId : null;
@@ -84,12 +85,14 @@ export async function renderNewsletterRow(
 
   const subscriberId = typeof payload.subscriberId === "string" ? payload.subscriberId : null;
   const asking = row.messageType === "RSVP_ASK";
-  if (asking && (!eventId || !subscriberId)) throw new Error("rsvp ask: the message names no event or no subscriber");
+  // §823: the question goes to a subscriber, or to an address that answered «Vin!» at an earlier date of the series (named by that answer's id).
+  const answererRsvpId = typeof payload.answererRsvpId === "string" ? payload.answererRsvpId : null;
+  if (asking && (!eventId || (!subscriberId && !answererRsvpId))) throw new Error("rsvp ask: the message names no event or no one to ask");
   const [subscriber] = !clubCopy && subscriberId
     ? await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriberId)).limit(1)
     : [];
   // A question for a subscriber who has gone since is no question (§331: withdrawn, not failed).
-  if (!clubCopy && !subscriber) {
+  if (!clubCopy && !subscriber && !(asking && answererRsvpId)) {
     if (asking) throw new OutboxMessageWithdrawn("rsvp ask: the subscriber is no longer on the list");
     throw new Error("newsletter: the subscriber is no longer on the list");
   }
@@ -167,7 +170,15 @@ export async function renderNewsletterRow(
   } else {
     if (subscriber && subscriber.confirmedAt === null) throw new Error("newsletter: the address never confirmed");
     // «Vii mâine la …?»: every reason to drop the message is read first, with nothing written (`rsvp/ask.ts`); the writing is the last step.
-    const checked = asking && eventId && subscriberId ? await checkRsvpAsk(db, { eventId, subscriberId, recipientEmail: row.recipientEmail, now }) : null;
+    const checked =
+      asking && eventId && (subscriberId || answererRsvpId)
+        ? await checkRsvpAsk(db, {
+            eventId,
+            ...(answererRsvpId ? { answererRsvpId } : { subscriberId: subscriberId ?? undefined }),
+            recipientEmail: row.recipientEmail,
+            now,
+          })
+        : null;
     const texts = eventId ? await eventRows(db, eventId) : [];
     const details = eventNotificationDetailsIn(texts, locale);
     if (!details) {
@@ -202,6 +213,10 @@ export async function renderNewsletterRow(
     actionUrl = data.eventUrl;
     data.newsletterManageUrl = await manageUrl();
     if (checked) {
+      // The day in words (§823): the club's days before the start, so «mâine» only when it is tomorrow — each half in its own language.
+      data.rsvpAskDay = rsvpAskDayPhrase(locale, checked.daysAway);
+      data.rsvpAskDayOther = rsvpAskDayPhrase(other, checked.daysAway);
+      if (checked.kind === "ANSWERER") data.rsvpAskAnswerer = true;
       // The event in the person's calendar, the same file the event's page offers (§174): so the day is there whichever they answer.
       if (details.slug) {
         const carried = await renderCalendarPart(db, {
@@ -225,6 +240,8 @@ export async function renderNewsletterRow(
       const tokenPage = (secret: string) => `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/vin/[token]", params: { token: secret } } })}`;
       actionUrl = tokenPage(asked.confirm);
       data.rsvpWithdrawUrl = tokenPage(asked.withdraw);
+      // An earlier answerer's third link (§823): «Nu mă mai întreba la seria aceasta» — never in a subscriber's question.
+      if (asked.refuse) data.rsvpRefuseUrl = tokenPage(asked.refuse);
     }
   }
 

@@ -10,6 +10,7 @@ import { addressListRefusal, parseAddressList } from "@/modules/contact/domain/r
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { TEMPLATED_MESSAGE_TYPES } from "@/modules/notifications/domain/relay";
 import { updateCalendarRsvpTo } from "@/modules/notifications/calendar-rsvp";
+import { updateRsvpAskAudience } from "@/modules/rsvp/ask-audience";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import { CLUB_NOTICE_RECIPIENTS_MAX, clubNoticeBoxesOf } from "@/modules/notifications/domain/club-notices";
 import { EmailCopySampleValueError, type EmailSampleHit } from "@/modules/notifications/domain/email-sample";
@@ -270,6 +271,27 @@ export async function updateCalendarRsvpAction(_previous: FormOutcome | null, fo
   revalidatePath(path);
   await flashOutcome({ saved: "calendarRsvp" });
   redirect(`${path}?saved=calendarRsvp#admin-alert`);
+}
+
+/**
+ * «Cui îi trimitem întrebarea „Vii?"» (§823): who the day-before question is asked of — one of three radios. The calendar address's gate and
+ * shape: Administrator at the door, the service asserting the role again and validating the choice, a refusal returned as the form's state
+ * (§315). The privacy notice's gate for the earlier answerers is not this action's: the choice is saved either way, and the queue and the send
+ * ask the notice again (`/admin/tasks` says what is owed).
+ */
+export async function updateRsvpAskAudienceAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/settings/emails" });
+  try {
+    const actor = await requireStaffCapability(canManageClubSettings);
+    const audience = form.get("audience");
+    await updateRsvpAskAudience(getDb(), actor, { audience: typeof audience === "string" ? audience : "" }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "rsvpAskAudience" });
+  redirect(`${path}?saved=rsvpAskAudience#admin-alert`);
 }
 
 /**

@@ -201,6 +201,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateClubNoticesAction: [],
   // «Răspunsurile din calendar merg la» (§672): every invitation from now on asks, and the answers go there.
   updateCalendarRsvpAction: [],
+  // «Cui îi trimitem întrebarea „Vii?»» (§823): from the save on, the addresses of a new audience are used — the people who answered «Vin!» before.
+  updateRsvpAskAudienceAction: [],
   // Asks for "Revino la textul implicit" (`reset=1`) only; saving the wording is an editorial save.
   updateEmailCopyAction: [],
   updateNeonPlanAction: [],

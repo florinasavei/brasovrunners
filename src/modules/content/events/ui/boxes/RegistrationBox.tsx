@@ -49,6 +49,7 @@ import { countForm } from "@/i18n/count-form";
 import OnlyForMode from "../OnlyForMode";
 import OnlyForTurnUp from "../OnlyForTurnUp";
 import OnlyForType from "../OnlyForType";
+import OnlyWhenTicked from "../OnlyWhenTicked";
 import WaitlistLimitOnly from "../WaitlistLimitOnly";
 import WallTimeField from "../WallTimeField";
 import { BoxNote, type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
@@ -504,6 +505,20 @@ export default async function RegistrationBox({
                 {t("editor.rsvpEnabled")}
               </CheckboxField>
               <BoxNote>{t("editor.rsvpEnabledHelp")}</BoxNote>
+              {/*
+                «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823; the owner, 2026-10-19: «I need to set how these emails are sent»):
+                the question's own tick, under «Acceptă răspunsuri», shown only while that is ticked (`OnlyWhenTicked`: hidden, never removed).
+                On by default — the question goes out unless the club unticks it for one date. Carried by a series, «Duplică» and the JSON file.
+              */}
+              <OnlyWhenTicked name="event.rsvpEnabled" initiallyTicked={event?.rsvpEnabled ?? false}>
+                <Box data-testid="rsvp-ask-enabled" sx={{ pl: { xs: 1.5, sm: 3.5 }, borderLeft: 2, borderColor: "divider", minWidth: 0 }}>
+                  <input type="hidden" name="event.rsvpAskEnabled.present" value="1" />
+                  <CheckboxField name="event.rsvpAskEnabled" defaultChecked={event?.rsvpAskEnabled ?? true}>
+                    {t("editor.rsvpAskEnabled")}
+                  </CheckboxField>
+                  <BoxNote>{t("editor.rsvpAskEnabledHelp")}</BoxNote>
+                </Box>
+              </OnlyWhenTicked>
             </Stack>
           </OnlyForTurnUp>
         </Stack>

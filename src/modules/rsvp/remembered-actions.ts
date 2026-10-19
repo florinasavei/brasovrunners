@@ -8,7 +8,7 @@ import { noticeDescribesRsvp } from "@/modules/legal-documents/repository";
 import { forgetPerson, readRememberedPerson, refreshPerson } from "@/modules/person-session/session";
 import { identityOf } from "./domain/identity";
 import { rsvpOffered } from "./domain/offered";
-import { answerRsvp, countRsvps, hasConfirmedRsvp, withdrawRsvp } from "./rsvp";
+import { answerRsvp, countRsvps, readOwnRsvpName, setRsvpShowName, withdrawRsvp } from "./rsvp";
 
 /**
  * The remembered browser's one-tap «Vin!» (§811, «Vin!» part 1; the owner, 2026-10-18: «I want the flow to be super easy»).
@@ -26,7 +26,15 @@ export type RsvpIslandState =
   | { remembered: false }
   /** Remembered, but the event takes no answers now (or the page is stale): the island draws nothing. */
   | { remembered: true; offered: false }
-  | { remembered: true; offered: true; going: boolean; count: number };
+  /**
+   * `showName` and `name` (§827) are the person's own tick «Numele meu apare la „Cine vine"» as it stands (the tick and a name) and the name
+   * their answer holds — the island shows it beside the tick and posts it, so a name is never published unseen (§812). It is handed only to
+   * the browser whose `httpOnly` cookie proves it is the person's, and never the address. `false` and null while not `going`.
+   */
+  | { remembered: true; offered: true; going: boolean; showName: boolean; name: string | null; count: number };
+
+/** What the name switch says back: the state as it stands, and why nothing was written (a sentence of the island's own), or null. */
+export type RsvpNameResult = { state: RsvpIslandState; refused: "name" | "none" | "closed" | null };
 
 async function stateFor(slug: string, locale: Locale, now: Date): Promise<RsvpIslandState> {
   const db = getDb();
@@ -35,10 +43,13 @@ async function stateFor(slug: string, locale: Locale, now: Date): Promise<RsvpIs
   if (!person) return { remembered: false };
   const event = await findPublishedEventBySlug(db, locale, slug);
   if (!event || !rsvpOffered(event, now, await noticeDescribesRsvp(db, now))) return { remembered: true, offered: false };
+  const own = await readOwnRsvpName(db, event.id, person.canonicalEmail);
   return {
     remembered: true,
     offered: true,
-    going: await hasConfirmedRsvp(db, event.id, person.canonicalEmail),
+    going: own !== null,
+    showName: own?.showName ?? false,
+    name: own?.name ?? null,
     count: await countRsvps(db, event.id),
   };
 }
@@ -71,6 +82,32 @@ export async function rsvpGoAction(slug: string, locale: string, showName: boole
   // An answering browser is good for another year.
   await refreshPerson(db, jar, person, now);
   return stateFor(slug, lang, now);
+}
+
+/**
+ * «Numele meu apare la „Cine vine"» (§827): the remembered address's own tick on its confirmed answer, any time. The cookie says who (the
+ * island never names an address); `name` is what the box holds — the answer's own name the island showed, or one typed when it held none —
+ * taken only with the tick, and a name the answer already holds is never published without it (`setRsvpShowName`). Turning it off needs
+ * no open event and no notice (`setRsvpShowName`); turning it on records the notice in force. No audit row, nothing about the name kept anywhere else.
+ */
+export async function rsvpShowNameAction(slug: string, locale: string, showName: boolean, name: string): Promise<RsvpNameResult> {
+  const now = new Date();
+  const lang = localeOf(locale);
+  const db = getDb();
+  const jar = await cookies();
+  const person = await readRememberedPerson(db, jar, now);
+  if (!person) return { state: { remembered: false }, refused: null };
+  const event = await findPublishedEventBySlug(db, lang, slug);
+  if (!event) return { state: { remembered: true, offered: false }, refused: null };
+  const result = await setRsvpShowName(
+    db,
+    event.id,
+    { identity: identityOf("remembered", { email: person.email, showName: false, locale: lang }) },
+    // A typed name is the person's own, taken only with the tick; an unticked press writes nothing of it.
+    { showName, displayName: showName ? name : null },
+    now,
+  );
+  return { state: await stateFor(slug, lang, now), refused: result.ok ? null : result.reason };
 }
 
 /** «Nu mai vin» in one tap. Never gated by the notice or the tick (a person may always take an answer back). */

@@ -62,6 +62,7 @@ vi.mock("@/app/[locale]/admin/actions", () => ({
 }));
 
 const { default: StaffPage } = await import("@/app/[locale]/admin/staff/page");
+const { default: MemberTierSelect } = await import("@/modules/content/member-tiers/ui/MemberTierSelect");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
@@ -72,7 +73,9 @@ function elements(node: ReactNode, acc: ReactElement<Props>[] = []): ReactElemen
   }
   if (!isValidElement<Props>(node)) return acc;
   acc.push(node);
-  elements(node.props.children, acc);
+  // The one shared select (§811, §817) is a component of its own: drawn here, as the browser would, to reach its `<option>`s.
+  if (node.type === MemberTierSelect) elements((MemberTierSelect as (props: Props) => ReactNode)(node.props), acc);
+  else elements(node.props.children, acc);
   return acc;
 }
 

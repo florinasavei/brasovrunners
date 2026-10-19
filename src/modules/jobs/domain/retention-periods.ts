@@ -39,4 +39,11 @@ export const RETENTION_PERIODS = {
   rsvpDaysAfterEvent: 30,
   /** An answer «Vin!» whose address never used the emailed link: seven days from the typing, then it is a stranger's typing, not an answer. */
   rsvpUnconfirmedDays: 7,
+  /**
+   * A refusal of the «Vii?» question for a series (§823, `rsvp_ask_refusals`: an address and the series' key, nothing else): kept while the
+   * series lives and this many days after its last date, then gone. Keeping it is what makes the refusal true — deleting it would ask the
+   * person again — so it is bounded by the series, not by a clock of its own; a year after the last date, because a weekly run's winter
+   * break must not forget who said no. The privacy notice's section 7 says exactly this.
+   */
+  rsvpAskRefusalDaysAfterSeries: 365,
 } as const;

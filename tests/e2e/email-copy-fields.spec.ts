@@ -40,13 +40,13 @@ test.describe("the fields of an email's words, as a legend", () => {
     await expect(legend).not.toHaveAttribute("open", "");
     const summary = legend.locator(":scope > summary");
     await expect(summary).toContainText("Câmpurile pe care le poți folosi");
-    await expect(summary).toContainText("17 câmpuri · 4 câmpuri folosite aici");
+    await expect(summary).toContainText("18 câmpuri · 4 câmpuri folosite aici");
     // A thumb opens it (BR-REQ-041-01 criterion 6).
     expect((await summary.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await openFold(legend);
 
     const terms = legend.locator("dt");
-    await expect(terms).toHaveCount(17);
+    await expect(terms).toHaveCount(18);
     await expect(terms.nth(0)).toContainText("{eventTitle}");
     await expect(terms.nth(0)).toContainText("folosit în textul implicit");
     // The example is the preview's: the sample's title, in italics beside what the field is.
@@ -58,7 +58,9 @@ test.describe("the fields of an email's words, as a legend", () => {
     await expect(role).not.toHaveCSS("opacity", "0.6");
     await expect(legend.locator("dd").nth(14)).toContainText("nu se completează în acest mesaj");
     await expect(terms.nth(15)).toContainText("{inviterName}");
-    await expect(terms.nth(16)).toContainText("{feedbackLink}");
+    // `{rsvpAskDay}` (§823) belongs to the «Vii?» question alone: dimmed here, in the closed set's order between the two.
+    await expect(terms.nth(16)).toContainText("{rsvpAskDay}");
+    await expect(terms.nth(17)).toContainText("{feedbackLink}");
 
     // The old sentence is gone, and the phone keeps its width with the card open (criterion 1).
     await expect(main.getByTestId("email-copy-placeholders")).toHaveCount(0);
@@ -114,7 +116,7 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
     await expect(words).not.toContainText("Crosul de toamnă");
     // The fields are a legend under the box now (§373, email follow-up), the ones this text uses first (§419).
     const legend = editor.getByTestId("email-fields-VERIFY_REGISTRATION_EMAIL");
-    await expect(legend).toContainText("17 câmpuri · 3 câmpuri folosite aici");
+    await expect(legend).toContainText("18 câmpuri · 3 câmpuri folosite aici");
     await openFold(legend);
     await expect(legend.locator("dt").first()).toContainText("{participantName}");
     await expect(legend.locator("dt").first()).toContainText("folosit în textul implicit");

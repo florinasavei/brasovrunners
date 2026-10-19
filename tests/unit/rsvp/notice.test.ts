@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { describesRsvp, describesRsvpAsk, MERGE_FIELDS, mergeFieldsIn, mergeText, RSVP_ASK_MERGE_FIELD, RSVP_MERGE_FIELD } from "@/modules/legal-documents/domain/merge-fields";
+import { describesRsvp, describesRsvpAsk, describesRsvpAskAnswerers, MERGE_FIELDS, mergeFieldsIn, mergeText, RSVP_ASK_ANSWERERS_MERGE_FIELD, RSVP_ASK_MERGE_FIELD, RSVP_MERGE_FIELD } from "@/modules/legal-documents/domain/merge-fields";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import { termsEn, termsRo } from "@/modules/legal-documents/templates/terms";
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import { TASK_TARGETS } from "@/modules/diagnostics/domain/task-targets";
 import { RSVP_CONFIRM_HOURS } from "@/modules/rsvp/domain/link-life";
 import { topicsPhrase } from "@/modules/newsletter/topic-words";
-import { rsvpAskClause, rsvpClause, rsvpMergeValues } from "@/modules/rsvp/notice-words";
+import { rsvpAskAnswerersClause, rsvpAskClause, rsvpClause, rsvpMergeValues } from "@/modules/rsvp/notice-words";
 
 /**
  * §811 («Vin!» part 1) — the privacy notice's `{{rsvp}}`: the switch the page, the service and the tasks list read, filled with the
@@ -61,6 +61,15 @@ describe("§811 the template says what «Vin!» publishes, keeps, mails and reme
     const en4 = privacyNoticeEn.sections[3].paragraphs.find((paragraph) => paragraph.includes("{{rsvp}}")) ?? "";
     expect(en4).toContain("I want my name to show");
     expect(en4).toContain("holds no place");
+  });
+
+  it("says where the name is unticked, and that a hidden name stays in the answer, not public (§827)", () => {
+    const ro4 = privacyNoticeRo.sections[3].paragraphs.find((paragraph) => paragraph.includes("{{rsvp}}")) ?? "";
+    expect(ro4).toContain("debifând numele din browserul recunoscut, din zona membrilor sau pe pagina linkului „Nu mai vin”");
+    expect(ro4).toContain("Debifat, numele rămâne în răspuns, dar nu mai apare public; îl poți bifa din nou.");
+    const en4 = privacyNoticeEn.sections[3].paragraphs.find((paragraph) => paragraph.includes("{{rsvp}}")) ?? "";
+    expect(en4).toContain("by unticking the name in a recognised browser, in the members' zone or on the page of the “I'm not coming any more” link");
+    expect(en4).toContain("Unticked, the name stays in the answer but no longer shows publicly; you can tick it again.");
   });
 
   it("states the retention (section 7) and the cookie (section 10) with the numbers the sweep enforces", () => {
@@ -171,5 +180,55 @@ describe("§818 {{rsvpAsk}} is the notice's switch for the «Vii mâine?» quest
   it("names the topic without quotes inside its name, because every list wraps each name in a pair of its own", () => {
     for (const label of [ro.Newsletter.topics.RSVP_ASK, en.Newsletter.topics.RSVP_ASK]) expect(label).not.toMatch(/[„”“"]/);
     expect(mergeText("{{newsletterTopics}}", { newsletterTopics: topicsPhrase("ro", ["RSVP_ASK"]) })).toBe("„Întrebarea «Vii?» înaintea alergărilor”");
+  });
+});
+
+/**
+ * §823 — `{{rsvpAskAnswerers}}`, the notice's marker for the «Vii?» question's second audience (the people who answered «Vin!» at an earlier date of
+ * the series): a marker of its own, so no notice approved before it is read as describing it; filled with the refusal button's own name; in the
+ * template's «Vin!» paragraph and its retention line, in both languages.
+ */
+describe("§823 {{rsvpAskAnswerers}} is the switch of the earlier answerers' audience", () => {
+  it("is known to the editor and filled with the refusal button's own name in each language", () => {
+    expect(MERGE_FIELDS).toContain(RSVP_ASK_ANSWERERS_MERGE_FIELD);
+    expect(rsvpAskAnswerersClause("ro")).toBe(`„${ro.Rsvp.askRefuseButton}”`);
+    expect(rsvpAskAnswerersClause("en")).toBe(`“${en.Rsvp.askRefuseButton}”`);
+    expect(mergeText("butonul {{rsvpAskAnswerers}}", rsvpMergeValues("ro"))).toBe("butonul „Nu mă mai întreba la seria aceasta”");
+    const entry = DECLARATION_TOKENS.find((token) => token.token === "{{rsvpAskAnswerers}}");
+    expect(entry?.messageKey).toBe("rsvpAskAnswerers");
+    expect(entry?.example.ro).toBe(rsvpAskAnswerersClause("ro"));
+    expect(ro.Admin.legal.tokens.rsvpAskAnswerers.length).toBeGreaterThan(20);
+    expect(en.Admin.legal.tokens.rsvpAskAnswerers.length).toBeGreaterThan(20);
+  });
+
+  it("is what makes a notice describe the audience — the template does, one without the marker, or any non-body, does not", () => {
+    expect(describesRsvpAskAnswerers(privacyNoticeRo)).toBe(true);
+    expect(describesRsvpAskAnswerers(privacyNoticeEn)).toBe(true);
+    expect(describesRsvpAskAnswerers(JSON.parse(JSON.stringify(privacyNoticeRo).replaceAll("{{rsvpAskAnswerers}}", "")))).toBe(false);
+    // Taking out the question's own marker leaves this one: each is read on its own, and the gate asks all three.
+    expect(describesRsvpAskAnswerers(JSON.parse(JSON.stringify(privacyNoticeRo).replaceAll("{{rsvpAsk}}", "")))).toBe(true);
+    expect(describesRsvpAsk(JSON.parse(JSON.stringify(privacyNoticeRo).replaceAll("{{rsvpAsk}}", "")))).toBe(false);
+    expect(describesRsvpAskAnswerers({ sections: [{ heading: "5", paragraphs: ["Nimic despre cei care au răspuns."] }] })).toBe(false);
+    expect(describesRsvpAskAnswerers(null)).toBe(false);
+  });
+
+  it("is named once in each language, beside the refusal's retention in section 7, and says what the refusal keeps", () => {
+    for (const body of [privacyNoticeRo, privacyNoticeEn]) {
+      expect(mergeFieldsIn(body).has(RSVP_ASK_ANSWERERS_MERGE_FIELD)).toBe(true);
+      expect(sentences(body).filter((paragraph) => paragraph.includes("{{rsvpAskAnswerers}}"))).toHaveLength(1);
+    }
+    const roParagraph = sentences(privacyNoticeRo).find((paragraph) => paragraph.includes("{{rsvpAskAnswerers}}")) ?? "";
+    expect(roParagraph).toContain("la un eveniment anterior din aceeași serie");
+    expect(roParagraph).toContain("nu te mai întrebăm niciodată");
+    expect(roParagraph).toContain("art. 6(1)(f) GDPR");
+    const enParagraph = sentences(privacyNoticeEn).find((paragraph) => paragraph.includes("{{rsvpAskAnswerers}}")) ?? "";
+    expect(enParagraph).toContain("at an earlier event of the same series");
+    expect(enParagraph).toContain("we never ask you again");
+    expect(sentences(privacyNoticeRo).some((paragraph) => paragraph.includes("Refuzul de a mai fi întrebat pentru o serie:"))).toBe(true);
+    expect(sentences(privacyNoticeEn).some((paragraph) => paragraph.includes("The refusal to be asked again for a series:"))).toBe(true);
+  });
+
+  it("has its row on the tasks list, going to the legal texts", () => {
+    expect(TASK_TARGETS.rsvpAskAnswerersNotice).toEqual({ kind: "section", section: "legal" });
   });
 });

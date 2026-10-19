@@ -8,7 +8,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { eventResults } from "@/db/schema/event-results";
-import { eventRsvps } from "@/db/schema/event-rsvps";
+import { eventRsvps, rsvpAskRefusals } from "@/db/schema/event-rsvps";
 import { personSessions } from "@/db/schema/person-sessions";
 import { eventTodos } from "@/db/schema/event-todos";
 import { eventVolunteerCategories, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
@@ -139,6 +139,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(eventResults);
   // The answers «Vin!» (§811) cascade from their event, their links from them; the remembered browsers reference nothing.
   await db.delete(eventRsvps);
+  // The refusals of the «Vii?» question (§823) reference nothing: an address and a series' key.
+  await db.delete(rsvpAskRefusals);
   await db.delete(personSessions);
   // An event's own to-dos (§749) cascade from it; deleted first like the translations.
   await db.delete(eventTodos);

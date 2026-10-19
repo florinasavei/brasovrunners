@@ -178,6 +178,7 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
       kitShirt: event.kitShirt,
       askHealthNote: event.askHealthNote,
       rsvpEnabled: event.rsvpEnabled,
+      rsvpAskEnabled: event.rsvpAskEnabled,
     },
     publicList: {
       names: event.participantListVisibility === "NAMES",

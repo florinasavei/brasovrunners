@@ -47,6 +47,7 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     // «Arată profilul traseului pe pagină» (§802, §805): the draft's own tick, so the preview draws the chart as the save would.
     showRouteProfile: event.showRouteProfile,
     rsvpEnabled: event.rsvpEnabled,
+    rsvpAskEnabled: event.rsvpAskEnabled,
     // «Lista voluntarilor e publică» (§821): the draft's own tick; the card is a visit's, so the preview never draws it.
     volunteersListPublic: event.volunteersListPublic,
     stravaEventUrl: event.stravaEventUrl,

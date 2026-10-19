@@ -21,7 +21,15 @@ export function rsvpAskClause(locale: string): string {
   return topicsPhrase(locale, ["RSVP_ASK"]);
 }
 
+/**
+ * What `{{rsvpAskAnswerers}}` becomes (§823): the refusal button's own name, quoted, in that language — „Nu mă mai întreba la seria aceasta”
+ * — read from the catalogue the token page's button reads (`Rsvp.askRefuseButton`), so the approved sentence names what a person presses.
+ */
+export function rsvpAskAnswerersClause(locale: string): string {
+  return locale === "en" ? `“${en.Rsvp.askRefuseButton}”` : `„${ro.Rsvp.askRefuseButton}”`;
+}
+
 /** The notice's merge values, beside the other features' on the legal pages. */
-export function rsvpMergeValues(locale: string): { rsvp: string; rsvpAsk: string } {
-  return { rsvp: rsvpClause(locale), rsvpAsk: rsvpAskClause(locale) };
+export function rsvpMergeValues(locale: string): { rsvp: string; rsvpAsk: string; rsvpAskAnswerers: string } {
+  return { rsvp: rsvpClause(locale), rsvpAsk: rsvpAskClause(locale), rsvpAskAnswerers: rsvpAskAnswerersClause(locale) };
 }

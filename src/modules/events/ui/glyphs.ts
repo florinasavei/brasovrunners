@@ -88,8 +88,11 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
 
 /**
  * What a checkpoint has (§757), one metaphor each, written down: water is a drop, food the cutlery,
- * first aid the medical case, timing the stopwatch, direction the road sign with its arrow (§770).
- * Always beside the word — «Apă», «Mâncare», «Direcționare» —
+ * first aid the medical case, timing the stopwatch, direction the road sign with its arrow (§770), regroup
+ * the group of people (§824) — the same glyph the «other event» type wears: people together. On purpose, the same
+ * picture also draws «Vin (N)» and the start list on a group run's page: all of them mean «the group», and each
+ * sits beside its own word.
+ * Always beside the word — «Apă», «Mâncare», «Direcționare», «Regrupare» —
  * on the event page's table (`EventCheckpoints`); never the glyph alone.
  */
 export const CHECKPOINT_GLYPH: Record<CheckpointKind, Glyph> = {
@@ -98,6 +101,7 @@ export const CHECKPOINT_GLYPH: Record<CheckpointKind, Glyph> = {
   FIRST_AID: MedicalServicesIcon,
   TIMING: TimerIcon,
   DIRECTION: DirectionsIcon,
+  REGROUP: GroupsIcon,
 };
 
 /**
@@ -181,7 +185,7 @@ export const GLYPHS = {
   // «Clasament» on a finished race's card (§809): a ranked list, the way the results are drawn — not a trophy, which says one winner
   // where the table has every finisher (the chequered flag is the race itself, above). Always beside its word.
   results: LeaderboardIcon,
-  // «N vin» on an upcoming turn-up event's card (§815): the group of people the page's own count «Vin (N)» draws (`RsvpCount`) — the
+  // «N vin» on an upcoming turn-up event's card (§815): the group of people the page's own fold «Cine vine (N)» draws (`RsvpCount`) — the
   // same glyph for the same number. Always beside its word.
   coming: GroupsIcon,
 };
