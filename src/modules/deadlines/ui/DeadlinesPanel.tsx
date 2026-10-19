@@ -118,7 +118,7 @@ function groupSummary(t: Translate, locale: Locale, fields: readonly DeadlineKey
  * (`DEADLINE_RULES`), carried as `min`/`max` so the browser refuses "0 hours" before the server
  * does (§315).
  *
- * **Thirteen boxes in seven named folds** (the owner, 2026-10-18: «partea asta de termene trebuie
+ * **Fifteen boxes in seven named folds** (the owner, 2026-10-18: «partea asta de termene trebuie
  * grupată mai bine»): `DEADLINE_GROUPS` says which box sits in which fold, and each fold is a nested
  * `Panel` — closed, a glyph, a closed line of its values and how many differ from the recommendation.
  * The form is still ONE, with one «Salvează termenele» and one «Completează valorile recomandate»
@@ -244,7 +244,7 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
                   );
                 }),
               )}
-              {/* One save for the thirteen, under the folds and outside them (§377 amended). */}
+              {/* One save for the fifteen, under the folds and outside them (§377 amended). */}
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                 <GlyphSubmitButton label={t("emails.deadlines.save")} pendingLabel={t("emails.deadlines.saving")} icon="save" />
                 {/* §456: fills the boxes, never saves — the save above does, after its question. */}

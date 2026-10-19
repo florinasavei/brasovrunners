@@ -149,7 +149,5 @@ export function deadlineDuration(locale: string, key: Exclude<DeadlineKey, "veri
     case "publicListDays":
     case "rsvpAskDaysBefore":
       return daysPhrase(locale, value);
-    case "rsvpAskHour":
-      return rsvpAskClock(value);
   }
 }

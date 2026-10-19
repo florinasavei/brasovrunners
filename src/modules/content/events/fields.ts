@@ -814,6 +814,12 @@ export const eventFieldsSchema = z
      */
     rsvpEnabled: z.boolean().optional(),
     /**
+     * «Trimite întrebarea „Vii?” înainte de acest eveniment» (§NNN): whether the day-before question is sent for this event, under
+     * «Acceptă răspunsuri „Vin!”». Absent means this caller is not editing it (the kit's discipline, §554); the editor posts it with
+     * a marker. On by default on every event; it decides nothing but the question (`rsvp/ask.ts`).
+     */
+    rsvpAskEnabled: z.boolean().optional(),
+    /**
      * «Traseul»'s GPX (§718): the editor's hidden input — the JSON the upload answered
      * (`/api/admin/route-gpx`), or "" after «Scoate». Absent means this caller is not editing it.
      * Anything that is not a GPX the upload wrote is refused; the save also asks that it be this

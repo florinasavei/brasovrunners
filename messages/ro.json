@@ -3288,6 +3288,8 @@
       "durationOtherHelp": "De la start până la final — de exemplu 1 oră și 45 de minute. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
       "rsvpEnabled": "Acceptă răspunsuri „Vin!” din pagină, calendar și email",
       "rsvpEnabledHelp": "Oricine își poate lăsa adresa și spune că vine; vezi câți vin aici și pe pagină. Nota de confidențialitate trebuie să descrie răspunsurile „Vin!” — vezi Sarcini.",
+      "rsvpAskEnabled": "Trimite întrebarea „Vii?” înainte de acest eveniment",
+      "rsvpAskEnabledHelp": "Cu bifa, cei care trebuie întrebați primesc un email înainte de dată; cât timp înainte și cui, alegi în Setări. Debifat, nu pleacă nicio întrebare pentru această dată.",
       "rsvpAnswers": {
         "title": "Răspunsuri „Vin!” ({count})",
         "summary": "{confirmed} confirmate, {unconfirmed} neconfirmate",

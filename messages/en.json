@@ -3288,6 +3288,8 @@
       "durationOtherHelp": "From the start to the end — 1 hour 45 minutes, say. The end is worked out from it. Leave empty if none was announced.",
       "rsvpEnabled": "Accept “I'm coming!” answers from the page, calendar and email",
       "rsvpEnabledHelp": "Anyone can leave their address and say they're coming; you see how many are coming here and on the page. The privacy notice must describe the “I'm coming!” answers — see Tasks.",
+      "rsvpAskEnabled": "Send the “Coming?” question before this event",
+      "rsvpAskEnabledHelp": "Ticked, the people who should be asked get an email before the date; how long before and who, you choose in Settings. Unticked, no question goes out for this date.",
       "rsvpAnswers": {
         "title": "“I'm coming!” answers ({count})",
         "summary": "{confirmed} confirmed, {unconfirmed} unconfirmed",
