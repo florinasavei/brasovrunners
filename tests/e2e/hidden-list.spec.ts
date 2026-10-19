@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import pg from "pg";
 import { cancelDialog, confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
-import { openEditorBox } from "./support/fold";
+import { openEditorBox, openEventFold } from "./support/fold";
 
 /**
  * §647 (amending §643; the owner, 2026-10-02: «Nu îmi place deloc cum arată bifa asta, trebuia să fie
@@ -111,6 +111,8 @@ test.describe("§743 «Arată invitații speciali pe lista publică»: off by de
 
     await page.goto(`/ro/evenimente/${seeded.slug}`);
     await expect(page.getByTestId("start-list")).toHaveCount(1);
+    // «Cine vine» is a closed fold (§812): the names are read from the opened one.
+    await openEventFold(page, "start-list");
     await expect(page.getByTestId("start-list")).not.toContainText(seeded.guest);
 
     // The same event: tick «Arată invitații speciali pe lista publică» in the editor and save.
@@ -126,6 +128,7 @@ test.describe("§743 «Arată invitații speciali pe lista publică»: off by de
 
     // The saved tick expires the public cache: the same page now names the guest.
     await page.goto(`/ro/evenimente/${seeded.slug}`);
+    await openEventFold(page, "start-list");
     await expect(page.getByTestId("start-list")).toContainText(seeded.guest);
   });
 });

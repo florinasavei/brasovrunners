@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { languagePanel, languageTab, openEditorBox, openEventFold, openFold } from "./support/fold";
 import { mintRsvpLink, rememberedBrowsers, rsvpCount, rsvpMessages, rsvpRow, withDatabase } from "./support/rsvp-link";
 
 /**
@@ -9,6 +9,10 @@ import { mintRsvpLink, rememberedBrowsers, rsvpCount, rsvpMessages, rsvpRow, wit
  * address and a name and ticks «Vreau să apar cu numele», the link of the email (the setup, not the subject: `support/rsvp-link.ts`) opens a
  * page that changes nothing, «Da, vin» counts the answer and remembers the browser — and then, on a SECOND ticked event in the same browser,
  * «Vin!» is one tap, counted at once with no email; «Nu mai vin» is one tap; «Nu sunt eu» brings the typed form back.
+ *
+ * **The card is a closed fold (§812)**, like «Condiții de participare»: its line says «Vii? · N vin», `#vin` and the answer's own redirect open
+ * it, and the specs open it first through `openEventFold` (`support/fold.ts`). The link of the email counts the person BY ITSELF when a
+ * browser opens it — a scanner that fetches without running scripts, and a browser without JavaScript, see the button and count nobody (a context with scripts off stands in for both; a sandbox that runs scripts would count the address — accepted, §NNN).
  *
  * The local seed approves every platform template as a sample version (§29), so the notice in force already names `{{rsvp}}` and the box is
  * live. The spec creates its own group run and its second date (as `group-run-declaration.spec.ts` does), so the two projects, which run side
@@ -133,7 +137,18 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await hydrated(page);
     const box = page.getByTestId("rsvp-box");
     await expect(box).toBeVisible();
-    await expect(box.getByRole("heading", { name: "Vii?" })).toBeVisible();
+    // Closed on arrival, like «Condiții de participare»: the bar says «Vii?» and, with nobody yet, the sentence that asks to be first.
+    await expect(box).not.toHaveAttribute("open", /.*/);
+    await expect(box.getByRole("heading", { name: "Vii? · Fii primul care spune că vine." })).toBeVisible();
+    await expect(box.locator('input[name="email"]')).toBeHidden();
+    expect((await box.locator(":scope > summary").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await noSidewaysScroll(page);
+    // …and a link to #vin (the calendar's «Vin! →», the listing's chip) opens it.
+    await page.goto(`${eventUrl("ro", slug)}#vin`);
+    await expect(box).toHaveAttribute("open", "");
+    await expect(box.locator('input[name="email"]')).toBeVisible();
+
+    await openEventFold(page, "rsvp-box");
     await expect(box).toContainText("Spune-ne că vii și vezi cine mai vine.");
     // Nobody has answered: only the sentence that asks to be first.
     await expect(page.getByTestId("rsvp-count-empty")).toHaveText("Fii primul care spune că vine.");
@@ -152,6 +167,8 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await page.waitForTimeout(1_500);
     await button.click();
     await page.waitForURL(/vin=1/);
+    // The answer's own redirect opens the fold, or its sentence would sit behind a closed bar.
+    await expect(box).toHaveAttribute("open", "");
     await expect(page.getByTestId("rsvp-sent")).toHaveText("Ți-am trimis un email: apasă „Da, vin” ca să te numărăm.");
     await expect(page.getByTestId("spam-hint")).toBeVisible();
     await noSidewaysScroll(page);
@@ -164,37 +181,46 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     // English: the same card, in its own words.
     await page.goto(eventUrl("en", englishSlug));
     await hydrated(page);
-    const english = page.getByTestId("rsvp-box");
-    await expect(english.getByRole("heading", { name: "Coming?" })).toBeVisible();
+    const english = await openEventFold(page, "rsvp-box");
+    await expect(english.getByRole("heading", { name: "Coming? · Be the first to say you're coming." })).toBeVisible();
     await expect(english.getByRole("button", { name: "I'm coming!", exact: true })).toBeVisible();
     await expect(english.getByRole("checkbox", { name: "I want my name to show" })).toBeVisible();
     await noSidewaysScroll(page);
   });
 
-  test("the link opens a page that counts nobody until its button is pressed — then «Vin (1)» names the person and the browser is remembered", async ({ page }) => {
+  test("the link counts nobody for a scanner — then a browser that opens it counts the person by itself, and «Vin (1)» names them and the browser is remembered", async ({ page, browser }) => {
     const row = await rsvpRow(guest, eventId);
     const secret = await mintRsvpLink(row!.id, "RSVP_CONFIRM");
 
-    // A scanner or a curious click: the GET names the event and draws ONE button, and changes nothing.
+    // A scanner (it fetches the page and runs no scripts) or a browser without them: the GET names the event and draws ONE button — the
+    // no-JavaScript path — and changes nothing, however often it is opened (BR-REQ-036-02).
+    const scanner = await browser.newContext({ javaScriptEnabled: false });
+    const scanned = await scanner.newPage();
     for (let i = 0; i < 2; i += 1) {
-      await page.goto(`/ro/vin/${secret}`);
-      await hydrated(page);
-      await expect(page.getByTestId("rsvp-confirm-intro")).toHaveText(`Confirmi că vii la ${title}?`);
-      await expect(page.getByRole("button", { name: "Da, vin" })).toHaveCount(1);
-      await noSidewaysScroll(page);
+      await scanned.goto(`/ro/vin/${secret}`);
+      await expect(scanned.getByTestId("rsvp-confirm-intro")).toHaveText(`Confirmi că vii la ${title}?`);
+      await expect(scanned.getByRole("button", { name: "Da, vin" })).toHaveCount(1);
+      await expect(scanned.getByRole("button", { name: "Da, vin" })).toBeEnabled();
+      await expect(scanned.getByTestId("rsvp-confirm-auto")).toBeVisible();
     }
+    await scanner.close();
     expect((await rsvpRow(guest, eventId))?.confirmedAt).toBeNull();
     expect(await rememberedBrowsers(guest)).toBe(0);
     // Before the answer: the event's calendar file exists and says nobody has yet — the file the confirmation below must expire.
     const before = await page.request.get(`/ro/events/${slug}/calendar.ics`);
     expect((await before.text()).replace(/\r\n /g, "").replace(/\\n/g, "\n")).toContain("Fii primul care spune că vine.");
 
-    const press = page.getByRole("button", { name: "Da, vin" });
-    expect((await press.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-    await press.click();
+    // A person's browser (§812): opening the link is enough — the page presses its own button once, and lands on the event page's «Vii?»
+    // fold, open (the landing is `#vin`), with the tick on its line. No press from the spec.
+    await page.goto(`/ro/vin/${secret}`, { waitUntil: "commit" });
     await page.waitForURL(new RegExp(`/ro/evenimente/${slug}#vin$`));
     expect((await rsvpRow(guest, eventId))?.confirmedAt).not.toBeNull();
     expect(await rememberedBrowsers(guest)).toBe(1);
+    await hydrated(page);
+    const landed = page.getByTestId("rsvp-box");
+    await expect(landed).toHaveAttribute("open", "");
+    await expect(landed.getByTestId("rsvp-summary-line")).toContainText("Tu vii ✓");
+    await expect(landed.getByTestId("rsvp-summary-line")).toContainText("1 vine");
 
     // The browser carries the secret where scripts cannot read it, and a hint with no secret where they can.
     const cookies = await page.context().cookies();
@@ -221,8 +247,14 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
 
     // The listing's card for this date (the second date has a title of its own, so this one is not a series' card): «1 vine», a link to the
     // page's «Vii?» card, and the 44 pixels every link on a card has in both directions.
-    await page.goto("/ro/evenimente");
+    // The link now counts by itself, so the listing is asked within seconds of the write: the public cache expires a second time three
+    // seconds after it (§583) for a render that was already running, so a visit inside that window may be given the page it made before.
+    // A person reloads; so does the spec, until the chip is there.
     const chip = page.locator(`[data-testid="coming-chip"][href$="/${slug}#vin"]`);
+    await expect(async () => {
+      await page.goto("/ro/evenimente");
+      await expect(chip).toHaveCount(1, { timeout: 1_000 });
+    }).toPass({ timeout: 15_000, intervals: [1_000] });
     await expect(chip).toHaveCount(1);
     await expect(chip).toContainText("1 vine");
     const chipBox = await chip.boundingBox();
@@ -247,9 +279,11 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     expect((await context.cookies()).some((cookie) => cookie.name === "br_person")).toBe(true);
     const messagesBefore = await rsvpMessages(guest);
 
-    // The second date: the remembered state, not the typed form.
+    // The second date: the remembered state, not the typed form — inside the closed fold, whose line has no tick for this event yet.
     await page.goto(eventUrl("ro", secondSlug));
     await hydrated(page);
+    await expect(page.getByTestId("rsvp-box").getByRole("heading", { name: "Vii? · Fii primul care spune că vine." })).toBeVisible();
+    await openEventFold(page, "rsvp-box");
     const remembered = page.getByTestId("rsvp-remembered");
     await expect(remembered).toBeVisible();
     await expect(remembered).toContainText("Răspunzi ca");
@@ -262,6 +296,8 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
 
     await go.click();
     await expect(page.getByTestId("rsvp-going")).toContainText("Tu vii");
+    // …and the fold's line says so too, with the count once the page has refreshed.
+    await expect(page.getByTestId("rsvp-box").getByTestId("rsvp-summary-line")).toContainText("Tu vii ✓");
     // Counted at once: the row is confirmed, no message was queued, and the count under the card says one (the person asked for no name).
     const second = await rsvpRow(guest, secondEventId);
     expect(second?.confirmedAt).not.toBeNull();
@@ -274,6 +310,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     // One tap back.
     await page.getByRole("button", { name: "Nu mai vin", exact: true }).click();
     await expect(remembered.getByRole("button", { name: "Vin!", exact: true })).toBeVisible();
+    await expect(page.getByTestId("rsvp-box").getByTestId("rsvp-summary-line")).not.toContainText("Tu vii");
     // …and the second event's answer is gone, the first one's is not.
     expect(await rsvpCount(guest)).toBe(1);
     await expect(page.getByTestId("rsvp-count-empty")).toHaveText("Fii primul care spune că vine.");
@@ -282,7 +319,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     // another one, stays remembered: one row each).
     const browsersBefore = await rememberedBrowsers(guest);
     expect(browsersBefore).toBe(2);
-    await page.getByRole("button", { name: "Nu sunt eu" }).click();
+    await page.getByRole("button", { name: "Nu sunt eu — uită-mă pe acest dispozitiv" }).click();
     await expect(page.getByTestId("rsvp-box").locator('input[name="email"]')).toBeVisible();
     await expect(page.getByTestId("rsvp-remembered")).toHaveCount(0);
     const left = (await context.cookies()).map((cookie) => cookie.name);
@@ -296,6 +333,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
   test("the small fold «Nu mai vin» answers the same sentence for an address that never answered", async ({ page }) => {
     await page.goto(eventUrl("ro", slug));
     await hydrated(page);
+    await openEventFold(page, "rsvp-box");
     const fold = page.getByTestId("rsvp-withdraw");
     await fold.locator("summary").click();
     await fold.locator('input[name="withdrawEmail"]').fill(`nimeni.${Date.now().toString(36)}@example.test`);

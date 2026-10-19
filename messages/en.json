@@ -841,7 +841,7 @@
       "rememberedAs": "Answering as {who}",
       "going": "You're coming",
       "cancel": "I'm not coming any more",
-      "notMe": "Not me",
+      "notMe": "Not me — forget me on this device",
       "help": "Your browser stays recognised for a year after “Yes, I'm coming” or “I'm not coming any more”; “Not me” forgets it.",
       "failed": "We could not send your answer. Try again.",
       "calendar": {
@@ -12987,7 +12987,8 @@
     "confirmIntro": "Are you coming to {event}?",
     "confirmAlready": "You are already counted for {event}.",
     "confirmButton": "Yes, I'm coming",
-    "confirmPending": "Sending…",
+    "confirmPending": "Counting you…",
+    "confirmAutoNote": "Opened in a browser, the link counts you by itself. If nothing happens, press “Yes, I'm coming”.",
     "withdrawTitle": "Not coming any more?",
     "withdrawIntro": "Are you not coming to {event} any more? Your answer is deleted.",
     "withdrawButton": "I'm not coming any more",

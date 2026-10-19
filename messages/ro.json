@@ -841,7 +841,7 @@
       "rememberedAs": "Răspunzi ca {who}",
       "going": "Tu vii",
       "cancel": "Nu mai vin",
-      "notMe": "Nu sunt eu",
+      "notMe": "Nu sunt eu — uită-mă pe acest dispozitiv",
       "help": "Browserul tău rămâne recunoscut un an după „Da, vin” sau „Nu mai vin”; „Nu sunt eu” îl uită.",
       "failed": "Nu am putut trimite răspunsul. Încearcă din nou.",
       "calendar": {
@@ -12987,7 +12987,8 @@
     "confirmIntro": "Confirmi că vii la {event}?",
     "confirmAlready": "Ești deja numărat la {event}.",
     "confirmButton": "Da, vin",
-    "confirmPending": "Se trimite…",
+    "confirmPending": "Te numărăm…",
+    "confirmAutoNote": "Deschis în browser, linkul te numără singur; dacă nu se întâmplă, apasă „Da, vin”.",
     "withdrawTitle": "Nu mai vii?",
     "withdrawIntro": "Nu mai vii la {event}? Răspunsul tău se șterge.",
     "withdrawButton": "Nu mai vin",

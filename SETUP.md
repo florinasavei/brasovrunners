@@ -2522,11 +2522,11 @@ turns on event by event. Three steps are the club's: the notice (1), the tick (2
    any other mode writes it off. A weekly run's tick travels with the series (a «de acum încolo» save carries it to the later dates, a new
    date copies it), «Duplică» keeps it, and the event's JSON file writes it **only when it is on** (a file without it reads «off», and an older
    release still reads every file that has it off). **The answers themselves are never carried** by a duplicate, a repeat or a file.
-3. **What a visitor sees.** On the event's page, where the registration card would stand, a card **«Vii?»** (`#vin`): the address, an optional
+3. **What a visitor sees.** On the event's page, where the registration card would stand, a fold **«Vii?»** (`#vin`), closed like «Condiții de participare» with «Vii? · N vin» (or «Tu vii ✓») on its line; opened, it holds the address, an optional
    name, the tick «Vreau să apar cu numele» and the button **«Vin!»** (the same honeypot, timing check and Turnstile as the «Anunță-mă» box). The
    page says one sentence whatever the address meant — «Ți-am trimis un email: apasă „Da, vin” ca să te numărăm.» — and the email brings the event's
    facts, the day as a calendar file, **«Da, vin»** and, under it, **«Nu vin»**. The buttons open `/vin/<link>` (`/en/coming/<link>`), whose GET only
-   shows the event and one button: the press is a POST. A link works once: «Da, vin» for 48 hours (never past the start), «Nu vin» until the event starts (the event's start as it is then, so a moved event keeps its links). Under the card, **«Vin (N)»** —
+   shows the event and one button: the press is a POST. In a browser the page presses that button by itself once (§812), so opening **«Da, vin»** is enough; a scanner that fetches the link without running scripts, and a browser without JavaScript, see the button and count nobody (a link sandbox that does run scripts can count the address; the person's own click then reads «Ești deja numărat», and «Nu mai vin» in the same email takes the answer back). A link works once: «Da, vin» for 48 hours (never past the start), «Nu vin» until the event starts (the event's start as it is then, so a moved event keeps its links). Under the card, **«Vin (N)»** —
    the confirmed count and the names of those who ticked, «și încă N» for the rest. Under the form, the fold **«Nu mai vin»** (an address; the link by
    email; it never says whether the address answered).
    **The remembered browser.** The «Da, vin» (or «Nu mai vin») press also makes the browser *remembered* for a year: two cookies, `br_person` (a

@@ -153,6 +153,28 @@ describe("§346 the rendered start list carries a name only for those who ticked
     expect(html).toMatch(/<section[^>]*data-nosnippet=""/);
     expect(html).not.toMatch(/<details[^>]*data-nosnippet=""/);
   });
+  /*
+    §812 (the owner, 2026-10-19: «Cine vine collapsed»): the same closed fold as «Condiții de participare» — a real h2 in the
+    summary with the count on it, everything else inside, open only on a pager page.
+  */
+  it("§812 is a closed fold: the count on the bar's h2, the table, the legend and the notes inside", async () => {
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Ana Popescu", email: "ana@example.org", listOptOut: false });
+    await createRegistration(event.id, { name: "Ion Vasile", email: "ion@example.org", listOptOut: false });
+
+    const html = renderToStaticMarkup(await StartList({ event }));
+    const tag = /<details\b[^>]*>/.exec(html)?.[0] ?? "";
+    expect(tag).toContain('data-testid="start-list"');
+    expect(tag).not.toMatch(/\sopen[\s=>]/);
+    expect(html.match(/<details\b/g)).toHaveLength(1);
+    const summary = /<summary\b[\s\S]*?<\/summary>/.exec(html)?.[0] ?? "";
+    expect(summary).toMatch(/<h2[^>]*id="start-list-title"[^>]*>[\s\S]*Cine vine \(2\)<\/h2>/);
+    expect(summary).toContain("<svg");
+    // Everything but the bar is inside the fold, after it.
+    const after = html.slice(html.indexOf("</summary>"));
+    for (const needle of ["<table", "Ana Popescu", ro.Event.startList.caption, ro.Event.startList.note.slice(0, 40)]) expect(after, needle).toContain(needle);
+    expect(summary).not.toContain("Ana Popescu");
+  });
 
   /*
     §613: the race number is a column only behind the privacy notice's marker. With no notice that

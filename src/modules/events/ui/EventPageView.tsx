@@ -40,7 +40,7 @@ import type { EventForecast } from "@/modules/weather/domain/forecast";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { LIVE_SEGMENT } from "@/i18n/live-twin";
 import { env } from "@/shared/config/env";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
+import { FOLD_GLYPH_INLINE_SX, PUBLIC_FOLD_SX } from "@/shared/ui/disclosure";
 import OpenFoldFromHash from "@/shared/ui/OpenFoldFromHash";
 import { DENSITY } from "@/theme/density";
 import { eventCalendarFileUrl } from "./CalendarAddress";
@@ -401,15 +401,7 @@ export default async function EventPageView({
           component="details"
           id="conditions"
           data-testid="conditions-fold"
-          sx={{
-            border: 1,
-            borderColor: "divider",
-            borderRadius: 2,
-            px: 2,
-            "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
-            ...DISCLOSURE_OPEN_ARROW,
-            "&[open]": { pb: 2 },
-          }}
+          sx={PUBLIC_FOLD_SX}
         >
           <Box component="summary">
             <Typography component="h2" id="conditions-title" variant="h2" sx={{ fontSize: "1.25rem" }}>

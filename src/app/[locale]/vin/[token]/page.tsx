@@ -16,6 +16,7 @@ import { routing } from "@/i18n/routing";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { readRsvpLink } from "@/modules/rsvp/rsvp";
+import AutoConfirm from "@/modules/rsvp/ui/AutoConfirm";
 import { isWithdrawnProof, WITHDRAWN_ASKED_SUFFIX } from "@/modules/rsvp/withdrawn-proof";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
@@ -47,6 +48,16 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * own words) — a person who gives neither is counted without a name, and the newsletter never had one to lend. «Nu vin» is one press
  * that deletes the row: nobody is counted, and the page says so in the sentence the email promised. The box comes above the button (a
  * field before its submit), under the intro; the privacy notice is linked beside it, as on the event page's card.
+ * **«Da, vin» presses itself in a browser** (§812, amending §811; the owner, 2026-10-19: «Asta ar trebui să se auto-bifeze când
+ * deschid»). The page above is unchanged — the sentence, the POST form, the button — and, for a live `RSVP_CONFIRM` link whose answer
+ * is not counted yet, the form is wrapped in the one island that presses that button once the page is shown in a browser
+ * (`AutoConfirm`). This GET still writes nothing and does not know whether the island will run: a scanner that fetches the link without
+ * running scripts, and a browser without JavaScript, see the button and count nobody; the island does not press while the page is
+ * prerendered or its tab is hidden. A link sandbox that runs scripts can still count the address (accepted, see `AutoConfirm.tsx`). A spent, expired, withdrawn or already-counted link has no island, and `RSVP_WITHDRAW` is always a press
+ * (it takes something away).
+ * **Where the two meet** (the dispatcher, 2026-10-19, merging the two lanes): an asked row with no name yet keeps its one press —
+ * the optional name and the tick «Vreau să apar cu numele» stand above the button, and a press that came by itself would make that
+ * choice for the person. Every other live, uncounted confirm link — a named asked row included — presses itself.
  */
 export default async function RsvpLinkPage({ params, searchParams }: Props) {
   const { locale, token } = await params;
@@ -95,6 +106,16 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
 
   const link = invalid !== undefined || !(await tokenAttemptAllowed(db, token, now)) ? null : await readRsvpLink(db, token, now);
   const live = link?.state === "live" ? link : null;
+  // «Da, vin»: a POST, so the GET above counts nobody (§12.8); the island may press it, a person always can.
+  const confirmForm = (
+    <form action={confirmRsvpAction}>
+      <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="token" value={token} />
+      <SubmitButton label={t("confirmButton")} pendingLabel={t("confirmPending")} size="large">
+        <EventAvailableIcon />
+      </SubmitButton>
+    </form>
+  );
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -131,23 +152,35 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
           <Typography data-testid="rsvp-confirm-intro">
             {live.confirmed ? t("confirmAlready", { event: live.title }) : live.asked ? t("askIntro", { event: live.title }) : t("confirmIntro", { event: live.title })}
           </Typography>
-          <form action={confirmRsvpAction} style={{ width: "100%" }}>
-            <input type="hidden" name="locale" value={locale} />
-            <input type="hidden" name="token" value={token} />
-            {/* The email's «Vin» (§NNN): the name is the person's to give, here, with the same box and tick as the event page's card. */}
-            {live.asked && !live.named && (
-              <Stack spacing={1.5} sx={{ mb: 2 }} data-testid="rsvp-ask-name">
-                <TextField name="name" label={tEvent("rsvp.name")} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
-                <CheckboxField name="showName">{tEvent("rsvp.showName")}</CheckboxField>
-                <Typography variant="body2" color="text.secondary">
-                  <Link href="/legal/privacy" style={inlineLink}>{tEvent("rsvp.privacy")}</Link>
-                </Typography>
-              </Stack>
-            )}
-            <SubmitButton label={t("confirmButton")} pendingLabel={t("confirmPending")} size="large">
-              <EventAvailableIcon />
-            </SubmitButton>
-          </form>
+          {/* The email's «Vin» with no name yet keeps its press (the name is the person's choice); every other uncounted link presses itself. */}
+          {live.asked && !live.named ? (
+            <form action={confirmRsvpAction} style={{ width: "100%" }}>
+              <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="token" value={token} />
+              {/* The email's «Vin» (§NNN): the name is the person's to give, here, with the same box and tick as the event page's card. */}
+              {live.asked && !live.named && (
+                <Stack spacing={1.5} sx={{ mb: 2 }} data-testid="rsvp-ask-name">
+                  <TextField name="name" label={tEvent("rsvp.name")} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
+                  <CheckboxField name="showName">{tEvent("rsvp.showName")}</CheckboxField>
+                  <Typography variant="body2" color="text.secondary">
+                    <Link href="/legal/privacy" style={inlineLink}>{tEvent("rsvp.privacy")}</Link>
+                  </Typography>
+                </Stack>
+              )}
+              <SubmitButton label={t("confirmButton")} pendingLabel={t("confirmPending")} size="large">
+                <EventAvailableIcon />
+              </SubmitButton>
+            </form>
+          ) : live.confirmed ? (
+            confirmForm
+          ) : (
+            <AutoConfirm>{confirmForm}</AutoConfirm>
+          )}
+          {!live.confirmed && !(live.asked && !live.named) && (
+            <Typography variant="body2" data-testid="rsvp-confirm-auto">
+              {t("confirmAutoNote")}
+            </Typography>
+          )}
           <Typography variant="body2" color="text.secondary">
             {t("rememberNote")}
           </Typography>
