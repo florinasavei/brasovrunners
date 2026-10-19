@@ -137,7 +137,27 @@
           "title": "Next event",
           "details": "See the details",
           "time": "Time",
-          "place": "Place"
+          "place": "Place",
+          "away": {
+            "now": "Now",
+            "today": "Today",
+            "tomorrow": "Tomorrow",
+            "days": {
+              "one": "In 1 day",
+              "few": "In {count} days",
+              "other": "In {count} days"
+            },
+            "weeks": {
+              "one": "In 1 week",
+              "few": "In {count} weeks",
+              "other": "In {count} weeks"
+            },
+            "months": {
+              "one": "In 1 month",
+              "few": "In {count} months",
+              "other": "In {count} months"
+            }
+          }
         },
         "subscribe": {
           "title": "Don't want to miss a run?",

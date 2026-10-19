@@ -137,7 +137,27 @@
           "title": "Următorul eveniment",
           "details": "Vezi detalii",
           "time": "Ora",
-          "place": "Locul"
+          "place": "Locul",
+          "away": {
+            "now": "Acum",
+            "today": "Azi",
+            "tomorrow": "Mâine",
+            "days": {
+              "one": "Peste o zi",
+              "few": "Peste {count} zile",
+              "other": "Peste {count} de zile"
+            },
+            "weeks": {
+              "one": "Peste o săptămână",
+              "few": "Peste {count} săptămâni",
+              "other": "Peste {count} de săptămâni"
+            },
+            "months": {
+              "one": "Peste o lună",
+              "few": "Peste {count} luni",
+              "other": "Peste {count} de luni"
+            }
+          }
         },
         "subscribe": {
           "title": "Vrei să nu ratezi alergările?",
