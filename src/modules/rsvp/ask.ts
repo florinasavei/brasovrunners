@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, gte, inArray, isNotNull, isNull, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, isNotNull, isNull, lt } from "drizzle-orm";
 import { eventRsvpAsks, eventRsvps, eventRsvpTokens, rsvpAskRefusals } from "@/db/schema/event-rsvps";
 import { events } from "@/db/schema/events";
 import { newsletterSubscribers } from "@/db/schema/newsletter";
