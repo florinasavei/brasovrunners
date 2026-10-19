@@ -311,7 +311,7 @@ describe("§811 the member tiers", () => {
 
   describe("«Șterge nivelul»", () => {
     it("deletes a level nobody holds, closes the gap, and audits it by id with no name", async () => {
-      const { first, second } = await twoTiers();
+      const { first } = await twoTiers();
       await deleteMemberTier(db, { actor: admin, tierId: first.id, now: NOW });
       const rest = await listAllMemberTiers(db);
       expect(rest.map((tier) => [tier.nameRo, tier.position])).toEqual([["Fondator", 1]]);
