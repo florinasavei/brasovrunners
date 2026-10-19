@@ -94,7 +94,7 @@ describe("§NNN the cached twins of «does the notice describe the volunteers' l
     await notice(1, "{{volunteers}}, {{volunteersList}}");
     const [event] = await db.insert(events).values({ type: "RACE", startsAt: new Date(NOW.getTime() + 30 * DAY), editorialStatus: "PUBLISHED", publishedAt: new Date(NOW.getTime() - DAY), acceptsVolunteers: true, volunteersListPublic: true }).returning();
     const [role] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Sosire", nameEn: "Finish", needed: 2 }).returning();
-    const base = { eventId: event.id, canonicalizationVersion: 2, phone: "+40712345678", source: "PUBLIC" as const, state: "CONFIRMED" as const, privacyNoticeVersion: 1 };
+    const base = { eventId: event.id, canonicalizationVersion: 2, phone: "+40712345678", source: "PUBLIC" as const, state: "CONFIRMED" as const, listOptInNoticeVersion: 1 };
     await db.insert(eventVolunteers).values([
       { ...base, name: "Ana Popescu", email: "ana@example.test", canonicalEmail: "ana@example.test", listOptIn: true, roleId: role.id, createdAt: new Date(NOW.getTime() - 2 * DAY) },
       { ...base, name: "Ion Ionescu", email: "ion@example.test", canonicalEmail: "ion@example.test", listOptIn: false, createdAt: new Date(NOW.getTime() - DAY) },

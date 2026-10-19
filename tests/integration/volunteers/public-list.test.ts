@@ -22,7 +22,7 @@ const EFFECTIVE = new Date("2026-01-01T00:00:00.000Z");
 
 /**
  * §NNN — the volunteers' public list (BR-REQ-039-01, BR-REQ-050-02, BR-REQ-060-01; the disclosure rule of §143 and §396 reaching volunteers),
- * on a real schema: migration 0172's two columns and their defaults; the sign-up keeps the person's tick only where the form asked it (the
+ * on a real schema: migration 0172's three columns and their defaults; the sign-up keeps the person's tick only where the form asked it (the
  * club's tick AND a notice that describes the list); the organizers' record of the tick is audited, refused without the notice, and a tick is
  * only ever cleared without it; the public read selects a name, a role and a tick and nothing else; a tick given under an older notice names
  * nobody; the club's tick is the club's alone, audited, and travels with a copy and with the event's file.
@@ -127,7 +127,7 @@ describe("§NNN the volunteers' public list", () => {
   const rows = (eventId: string) => db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId));
 
   describe("migration 0172", () => {
-    it("adds both columns, off by default, so an existing event and an existing volunteer stay private", async () => {
+    it("adds the columns, off and empty by default, so an existing event and an existing volunteer stay private", async () => {
       await approveNotice(WITHOUT, 1);
       const event = await seedEvent();
       const role = await seedRole(event.id);
@@ -135,6 +135,7 @@ describe("§NNN the volunteers' public list", () => {
       await submitVolunteer(db, event.id, signup(role.id), NOW);
       const [volunteer] = await rows(event.id);
       expect(volunteer.listOptIn).toBe(false);
+      expect(volunteer.listOptInNoticeVersion).toBeNull();
     });
   });
 
@@ -145,7 +146,7 @@ describe("§NNN the volunteers' public list", () => {
       const role = await seedRole(event.id);
       expect(await submitVolunteer(db, event.id, signup(role.id, { listOptIn: true }), NOW)).toEqual({ outcome: "done" });
       const [volunteer] = await rows(event.id);
-      expect(volunteer).toMatchObject({ listOptIn: true, privacyNoticeVersion: 1, state: "REGISTERED", source: "PUBLIC" });
+      expect(volunteer).toMatchObject({ listOptIn: true, listOptInNoticeVersion: 1, privacyNoticeVersion: 1, state: "REGISTERED", source: "PUBLIC" });
       // The trail says a tick was given, and nothing of the person.
       const [signedUp] = await db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.signed_up"));
       expect((signedUp.metadataJson as { listOptIn?: boolean }).listOptIn).toBe(true);
@@ -206,7 +207,7 @@ describe("§NNN the volunteers' public list", () => {
       const role = await seedRole(event.id);
       const { volunteer } = await changeVolunteer(db, organizer, { kind: "add", eventId: event.id, fields: staffEntry(role.id, { listOptIn: true }) }, NOW);
       const [row] = await rows(event.id);
-      expect(row).toMatchObject({ id: volunteer.id, listOptIn: true, privacyNoticeVersion: 4, source: "STAFF", createdByStaffUserId: organizer.id });
+      expect(row).toMatchObject({ id: volunteer.id, listOptIn: true, listOptInNoticeVersion: 4, privacyNoticeVersion: null, source: "STAFF", createdByStaffUserId: organizer.id });
       const [added] = await db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.added"));
       expect(added.actorStaffUserId).toBe(organizer.id);
       expect((added.metadataJson as { listOptIn?: boolean }).listOptIn).toBe(true);
@@ -218,7 +219,7 @@ describe("§NNN the volunteers' public list", () => {
       const event = await seedEvent();
       const role = await seedRole(event.id);
       await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: staffEntry(role.id) }, NOW);
-      expect((await rows(event.id))[0]).toMatchObject({ listOptIn: false, privacyNoticeVersion: null });
+      expect((await rows(event.id))[0]).toMatchObject({ listOptIn: false, listOptInNoticeVersion: null, privacyNoticeVersion: null });
     });
 
     it("an edit ticks and unticks it, naming the box in the audit row — and a post that changes nothing writes nothing", async () => {
@@ -228,10 +229,12 @@ describe("§NNN the volunteers' public list", () => {
       const { volunteer } = await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: staffEntry(role.id) }, NOW);
       const edit = (extra: Record<string, unknown>) => changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id: volunteer.id, fields: staffEntry(role.id, extra) }, NOW);
       expect((await edit({ listOptIn: true })).changed).toBe(true);
-      expect((await rows(event.id))[0]).toMatchObject({ listOptIn: true, privacyNoticeVersion: 2 });
+      expect((await rows(event.id))[0]).toMatchObject({ listOptIn: true, listOptInNoticeVersion: 2, privacyNoticeVersion: null });
+
       expect((await edit({ listOptIn: true })).changed).toBe(false);
       expect((await edit({})).changed).toBe(true);
-      expect((await rows(event.id))[0].listOptIn).toBe(false);
+      // Cleared, the tick keeps no notice behind it.
+      expect((await rows(event.id))[0]).toMatchObject({ listOptIn: false, listOptInNoticeVersion: null });
       const edited = await db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.edited"));
       expect(edited.map((row) => (row.metadataJson as { fields: string[] }).fields)).toEqual([["listOptIn"], ["listOptIn"]]);
       expect(edited.every((row) => row.actorStaffUserId === admin.id)).toBe(true);
@@ -252,6 +255,29 @@ describe("§NNN the volunteers' public list", () => {
       expect((await edit({})).changed).toBe(true);
       expect((await rows(event.id))[0].listOptIn).toBe(false);
       await expect(edit({ listOptIn: true })).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["listOptIn"] });
+    });
+
+    it("a tick the organizers record on a PUBLIC sign-up leaves the sign-up's consent record alone, and then names the person once confirmed", async () => {
+      await approveNotice(WITHOUT, 3);
+      const event = await seedEvent({ volunteersListPublic: true });
+      const role = await seedRole(event.id);
+      await submitVolunteer(db, event.id, signup(role.id), NOW);
+      const [signedUp] = await rows(event.id);
+      expect(signedUp).toMatchObject({ source: "PUBLIC", privacyNoticeVersion: 3, listOptIn: false, listOptInNoticeVersion: null });
+      // A later notice describes the list; an organizer ticks the box for the person under it.
+      await approveNotice(WITH, 5);
+      const edited = await changeVolunteer(
+        db,
+        organizer,
+        { kind: "edit", eventId: event.id, id: signedUp.id, fields: staffEntry(role.id, { name: "Maria Test", email: "maria@example.test", listOptIn: true }) },
+        NOW,
+      );
+      expect(edited.changed).toBe(true);
+      const [ticked] = await rows(event.id);
+      expect(ticked).toMatchObject({ source: "PUBLIC", privacyNoticeVersion: 3, listOptIn: true, listOptInNoticeVersion: 5 });
+      await db.update(eventVolunteers).set({ state: "CONFIRMED" }).where(eq(eventVolunteers.id, signedUp.id));
+      const read = await readPublicVolunteersList(db, event.id, { firstListNoticeVersion: await findFirstVolunteersListNoticeVersion(db) });
+      expect(read.list.named.map((one) => one.name)).toEqual(["Maria Test"]);
     });
 
     it("is for whoever manages volunteers alone: the Tehnic role is refused", async () => {
@@ -283,7 +309,7 @@ describe("§NNN the volunteers' public list", () => {
   describe("the public read", () => {
     /** Four people: a confirmed one who ticked (with a role given), a confirmed one who did not, a ticked one nobody confirmed, a ticked one who withdrew. */
     async function seedPeople(eventId: string, roleId: string, versions: { ticked: number } = { ticked: 2 }) {
-      const base = { eventId, canonicalizationVersion: 2, phone: "+40712345678", source: "PUBLIC" as const, listOptIn: true, privacyNoticeVersion: versions.ticked };
+      const base = { eventId, canonicalizationVersion: 2, phone: "+40712345678", source: "PUBLIC" as const, listOptIn: true, listOptInNoticeVersion: versions.ticked };
       await db.insert(eventVolunteers).values([
         { ...base, name: "Ana Popescu", email: "ana@example.test", canonicalEmail: "ana@example.test", state: "CONFIRMED", roleId, createdAt: new Date(NOW.getTime() - 4 * DAY) },
         { ...base, name: "Ion Fără Bifă", email: "ion2@example.test", canonicalEmail: "ion2@example.test", state: "CONFIRMED", listOptIn: false, createdAt: new Date(NOW.getTime() - 3 * DAY) },
@@ -319,6 +345,18 @@ describe("§NNN the volunteers' public list", () => {
       expect(json).not.toMatch(/@example\.test|\+4071|Nici Confirmat|Anulat Tot|Fără Bifă/);
       expect(Object.keys(read.list).sort()).toEqual(["count", "named", "others"]);
       expect(Object.keys(read.list.named[0]).sort()).toEqual(["name", "roleNameEn", "roleNameRo"]);
+    });
+
+    it("counts a confirmed minor who ticked and never names them, whatever the notice (the guardian's acceptance covers the agreement alone)", async () => {
+      await approveNotice(WITH, 1);
+      const event = await seedEvent({ volunteersListPublic: true });
+      await db.insert(eventVolunteers).values([
+        { eventId: event.id, canonicalizationVersion: 2, phone: "+40712345678", source: "PUBLIC", state: "CONFIRMED", listOptIn: true, listOptInNoticeVersion: 1, name: "Tânăr Voluntar", email: "t@example.test", canonicalEmail: "t@example.test", age: 16, guardianName: "Părinte Tânăr", createdAt: new Date(NOW.getTime() - 2 * DAY) },
+        { eventId: event.id, canonicalizationVersion: 2, phone: "+40712345678", source: "PUBLIC", state: "CONFIRMED", listOptIn: true, listOptInNoticeVersion: 1, name: "Adult Voluntar", email: "a@example.test", canonicalEmail: "a@example.test", age: 30, createdAt: new Date(NOW.getTime() - DAY) },
+      ]);
+      const read = await readPublicVolunteersList(db, event.id, { firstListNoticeVersion: 1 });
+      expect(read.list).toEqual({ count: 2, named: [{ name: "Adult Voluntar", roleNameRo: null, roleNameEn: null }], others: 1 });
+      expect(JSON.stringify(read)).not.toMatch(/Tânăr|Părinte|@example.test/);
     });
 
     it("names nobody whose tick was given under a notice older than the first that described the list: they are counted", async () => {

@@ -30,9 +30,9 @@ beforeAll(async () => {
   const journal = JSON.parse(readFileSync(`${MIGRATIONS}/meta/_journal.json`, "utf8")) as Journal;
   const position = journal.entries.findIndex((entry) => entry.tag === TAG);
   expect(position, "the journal lists the migration").toBeGreaterThan(0);
-  // Sorts after every migration before it (drizzle applies by `when`), and is the last one.
+  // Sorts after every migration before it (drizzle applies by `when`); a migration stacked on it (the volunteers' public list, 0172) comes after and sorts later still.
   expect(journal.entries[position].when).toBeGreaterThan(journal.entries[position - 1].when);
-  expect(position).toBe(journal.entries.length - 1);
+  for (const later of journal.entries.slice(position + 1)) expect(later.when).toBeGreaterThan(journal.entries[position].when);
   expect(journal.entries[position].idx).toBe(position);
 
   folder = mkdtempSync(path.join(tmpdir(), "volunteers-access-"));
