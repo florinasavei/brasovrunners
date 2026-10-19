@@ -7,8 +7,8 @@ import type { EditableEvent } from "@/modules/content/events/repository";
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 
 /**
- * §811 («Vin!» part 1) — what the page and the editor draw: the box «Vii?» (the typed form, its outcomes, the small fold «Nu mai vin»,
- * the anti-bot widget only when the club switched it on), the count «Vin (N)» with the names that may be shown and none of the addresses,
+ * §811 («Vin!» part 1) — what the page and the editor draw: the box «Confirmă prezența (opțional)» (the typed form, its outcomes, the small fold «Nu mai vin»,
+ * the anti-bot widget only when the club switched it on), the fold «Cine vine (N)» under it (§825) with the names that may be shown and none of the addresses,
  * the club's tick in the registration card (a real tick box, never a toggle), and the read-only fold of answers by role. The service
  * and the gate are proved in `tests/integration/rsvp/` and `domain.test.ts`; the whole journey in `tests/e2e/rsvp.spec.ts`.
  */
@@ -34,7 +34,7 @@ vi.mock("@/i18n/navigation", async () => {
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }), headers: async () => new Headers() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => {} }), notFound: () => {}, redirect: () => {} }));
 vi.mock("@/app/[locale]/events/[slug]/actions", () => ({ answerRsvpAction: async () => {}, requestRsvpWithdrawAction: async () => {} }));
-vi.mock("@/modules/rsvp/remembered-actions", () => ({ rsvpStateAction: async () => ({ remembered: false }), rsvpGoAction: async () => ({ remembered: false }), rsvpLeaveAction: async () => ({ remembered: false }), rsvpForgetAction: async () => {} }));
+vi.mock("@/modules/rsvp/remembered-actions", () => ({ rsvpStateAction: async () => ({ remembered: false }), rsvpGoAction: async () => ({ remembered: false }), rsvpLeaveAction: async () => ({ remembered: false }), rsvpForgetAction: async () => {}, rsvpShowNameAction: async () => ({ state: { remembered: false }, refused: null }) }));
 vi.mock("@/modules/registrations/turnstile", () => ({ turnstileSiteKey: () => state.siteKey }));
 vi.mock("@/modules/registrations/ui/BotCheck", async () => {
   const { createElement: h } = await import("react");
@@ -88,13 +88,15 @@ beforeEach(() => {
   state.rsvps = { count: 0, names: [], others: 0 };
 });
 
-describe("§811 the box «Vii?» — the typed form", () => {
+describe("§811 the box «Confirmă prezența (opțional)» — the typed form", () => {
   it("is a named fold at #vin: the heading, the one line, the address, the optional name, the tick, the button — in Română", async () => {
     const markup = await box();
     expect(markup).toContain('id="vin"');
     expect(markup).toContain('data-testid="rsvp-box"');
-    expect(markup).toMatch(/<h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?Vii\?/);
-    expect(markup).toContain("Spune-ne că vii și vezi cine mai vine.");
+    expect(markup).toMatch(/<h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?Confirmă prezența \(opțional\)/);
+    // §825: said in words that it is not a registration, and no longer promising the list it does not hold.
+    expect(markup).toContain("Nu e o înscriere: ne ajută să știm câți venim.");
+    expect(markup).not.toContain("vezi cine mai vine");
     expect(markup).toMatch(/<input[^>]*name="email"[^>]*type="email"|<input[^>]*type="email"[^>]*name="email"/);
     expect(markup).toContain("Adresa ta de email");
     expect(markup).toContain("Numele tău (opțional)");
@@ -106,8 +108,8 @@ describe("§811 the box «Vii?» — the typed form", () => {
 
   it("says it in English too", async () => {
     const markup = await box(null, "en");
-    expect(markup).toContain("Coming?");
-    expect(markup).toContain("Tell us you&#x27;re coming and see who else is.");
+    expect(markup).toContain("Confirm you&#x27;re coming (optional)");
+    expect(markup).toContain("This is not a registration: it helps us know how many of us are coming.");
     expect(markup).toContain("I want my name to show");
     expect(markup).toContain("I&#x27;m coming!");
   });
@@ -180,13 +182,15 @@ describe("§811 the box «Vii?» — the typed form", () => {
     expect(markup).not.toContain("Răspunzi ca");
   });
 
-  it("draws the count card inside it, in the same render", async () => {
+  it("no longer holds who comes: the names are the fold under it (§825), so the box draws no count card and no names", async () => {
     state.rsvps = { count: 2, names: ["Ana Popescu"], others: 1 };
     const markup = await box();
-    expect(markup).toContain('data-testid="rsvp-count"');
-    // Inside the fold, under the form and its «Nu mai vin»: the count is the fold's last part, not a card after it.
-    expect(markup.indexOf('data-testid="rsvp-count"')).toBeGreaterThan(markup.indexOf('data-testid="rsvp-withdraw"'));
-    expect(markup.indexOf('data-testid="rsvp-count"')).toBeLessThan(markup.lastIndexOf("</details>"));
+    expect(markup).not.toContain('data-testid="rsvp-who"');
+    expect(markup).not.toContain('data-testid="rsvp-name"');
+    expect(markup).not.toContain("Ana Popescu");
+    expect(markup).not.toContain("și încă");
+    // …but the bar's line still says how many.
+    expect(markup).toContain(" · 2 vin");
   });
 });
 
@@ -194,7 +198,7 @@ describe("§811 the box «Vii?» — the typed form", () => {
  * §812 — the card is a closed fold, like «Condiții de participare» (the owner, 2026-10-19: «Asta ar trebui să fie collapsed»): one
  * `<details>` at `#vin`, a real h2 in its summary, the count on its line, open only when the address carries an answer to read.
  */
-describe("§812 the card «Vii?» is a closed fold with its count on the line", () => {
+describe("§812 the card «Confirmă prezența (opțional)» is a closed fold with its count on the line", () => {
   const detailsTag = (markup: string) => /<details\b[^>]*>/.exec(markup)?.[0] ?? "";
   const lineOf = (markup: string) => /data-testid="rsvp-summary-line"[^>]*>([^<]*)</.exec(markup)?.[1] ?? "";
   const summaryOf = (markup: string) => /<summary\b[\s\S]*?<\/summary>/.exec(markup)?.[0] ?? "";
@@ -212,10 +216,11 @@ describe("§812 the card «Vii?» is a closed fold with its count on the line", 
     expect(summaryOf(markup)).toContain("<svg");
   });
 
-  it("says «Fii primul care spune că vine.» on its line while nobody has answered — no «0 vin»", async () => {
+  it("says «Fii primul care confirmă» on its line while nobody has answered — no «0 vin»", async () => {
     const summary = summaryOf(await box());
-    expect(summary).toContain("Vii?");
-    expect(summary).toContain(" · Fii primul care spune că vine.");
+    expect(summary).toContain("Confirmă prezența (opțional)");
+    expect(summary).toContain(" · Fii primul care confirmă");
+    expect(summary).not.toContain("Vii?");
     expect(summary).not.toMatch(/\b0 vin/);
   });
 
@@ -227,27 +232,31 @@ describe("§812 the card «Vii?» is a closed fold with its count on the line", 
     state.rsvps = { count: 25, names: [], others: 25 };
     expect(lineOf(await box())).toBe(" · 25 vin");
     expect(lineOf(await box(null, "en"))).toBe(" · 25 coming");
-    expect(summaryOf(await box(null, "en"))).toContain("Coming?");
-    // The names, when ticked, are inside the fold with the count card — never on the bar.
+    expect(summaryOf(await box(null, "en"))).toContain("Confirm you&#x27;re coming (optional)");
+    expect(summaryOf(await box(null, "en"))).toContain("coming");
+    // The names, when ticked, are in the fold under the card (§825) — never on the bar, never in the card.
     state.rsvps = { count: 3, names: ["Ana Popescu"], others: 2 };
     const markup = await box();
     expect(summaryOf(markup)).not.toContain("Ana Popescu");
-    expect(markup.indexOf("Ana Popescu")).toBeGreaterThan(markup.indexOf("</summary>"));
+    expect(markup).not.toContain("Ana Popescu");
+  });
+
+  it("says it in English at zero too: «Be the first to confirm»", async () => {
+    expect(summaryOf(await box(null, "en"))).toContain(" · Be the first to confirm");
   });
 
   it("says nothing about the count while the database is away — a count that cannot be asked is not zero", async () => {
     state.rsvps = null;
     const markup = await box();
-    expect(summaryOf(markup)).toContain("Vii?");
+    expect(summaryOf(markup)).toContain("Confirmă prezența (opțional)");
     expect(markup).not.toContain('data-testid="rsvp-summary-line"');
     expect(markup).not.toContain("Fii primul");
-    expect(markup).not.toContain('data-testid="rsvp-count"');
   });
 
   it("draws the form, the help and the small «Nu mai vin» fold inside the fold, after the bar", async () => {
     const markup = await box();
     const after = markup.slice(markup.indexOf("</summary>"));
-    for (const needle of ['name="email"', "Spune-ne că vii și vezi cine mai vine.", 'data-testid="rsvp-withdraw"']) expect(after).toContain(needle);
+    for (const needle of ['name="email"', "Nu e o înscriere: ne ajută să știm câți venim.", 'data-testid="rsvp-withdraw"']) expect(after).toContain(needle);
     expect(summaryOf(markup)).not.toContain('name="email"');
   });
 
@@ -259,32 +268,55 @@ describe("§812 the card «Vii?» is a closed fold with its count on the line", 
   });
 });
 
-describe("§811 the card «Vin (N)»", () => {
-  it("says only «Fii primul care spune că vine.» while nobody has answered — no empty count", async () => {
+/**
+ * §825 — «Cine vine (N)» on a turn-up event is a closed fold of its own, the races' list's shape (`StartList`): a real h2 in the summary
+ * with the people glyph and the count on it, the names inside, the anchor `#cine-vine`. The disclosure rule is unchanged (§143, §812): the
+ * names are the cached read's, never an address.
+ */
+describe("§825 the fold «Cine vine (N)» under the card", () => {
+  const detailsTag = (markup: string) => /<details\b[^>]*>/.exec(markup)?.[0] ?? "";
+  const summaryOf = (markup: string) => /<summary\b[\s\S]*?<\/summary>/.exec(markup)?.[0] ?? "";
+
+  it("is one native <details id=cine-vine>, closed on arrival, its bar a real h2 with the people glyph — like the races' list", async () => {
+    state.rsvps = { count: 5, names: ["Ana Popescu"], others: 4 };
     const markup = await count();
-    expect(markup).toContain("Fii primul care spune că vine.");
-    expect(markup).toContain('data-testid="rsvp-count-empty"');
-    expect(markup).not.toContain("Vin (0)");
-    expect(markup).not.toContain('data-testid="rsvp-count-heading"');
+    const tag = detailsTag(markup);
+    expect(tag).toContain('id="cine-vine"');
+    expect(tag).toContain('data-testid="rsvp-who"');
+    expect(tag).not.toMatch(/\sopen[\s=>]/);
+    expect(markup.match(/<details\b/g)).toHaveLength(1);
+    expect(summaryOf(markup)).toMatch(/<h2[^>]*id="cine-vine-title"[^>]*>(?:<svg[\s\S]*?<\/svg>)?Cine vine \(5\)<\/h2>/);
+    // A glyph beside the words, never instead of them.
+    expect(summaryOf(markup)).toContain("<svg");
+    // A disclosure keeps names out of search snippets, as the start list's does: the section wrapper carries it.
+    expect(markup).toMatch(/<section[^>]*data-nosnippet=""/);
+    expect(detailsTag(markup)).not.toContain("data-nosnippet");
   });
 
-  it("shows the count, the names that may be shown in the start list's rows, and «și încă N» for the rest", async () => {
+  it("says «Încă nu a confirmat nimeni.» inside while nobody has answered, and the bar without a number — no «(0)»", async () => {
+    const markup = await count();
+    expect(summaryOf(markup)).toMatch(/Cine vine<\/h2>/);
+    expect(summaryOf(markup)).not.toContain("(0)");
+    expect(markup.slice(markup.indexOf("</summary>"))).toContain("Încă nu a confirmat nimeni.");
+    expect(markup).toContain('data-testid="rsvp-who-empty"');
+    expect(markup).not.toContain('data-testid="rsvp-name"');
+  });
+
+  it("shows the names that may be shown in the start list's rows, and «și încă N» for the rest — all inside the fold, none on the bar", async () => {
     state.rsvps = { count: 5, names: ["Ana Popescu", "Ion Vasile", "Maria Ene"], others: 2 };
     const markup = await count();
-    expect(markup).toContain('data-testid="rsvp-count-heading"');
-    expect(markup).toContain("Vin (5)");
     expect(markup.match(/data-testid="rsvp-name"/g)).toHaveLength(3);
     expect(markup).toContain("Ana Popescu");
     expect(markup).toContain('data-testid="rsvp-others"');
     expect(markup).toContain("și încă 2");
-    // A disclosure keeps names out of search snippets, as the start list's does.
-    expect(markup).toContain("data-nosnippet");
+    expect(summaryOf(markup)).not.toContain("Ana Popescu");
+    expect(markup.indexOf("Ana Popescu")).toBeGreaterThan(markup.indexOf("</summary>"));
   });
 
-  it("shows the count alone when nobody ticked a name — no list, no «și încă»", async () => {
+  it("shows the count alone when nobody ticked a name — no list, no names, only «și încă N»", async () => {
     state.rsvps = { count: 4, names: [], others: 4 };
     const markup = await count();
-    expect(markup).toContain("Vin (4)");
+    expect(summaryOf(markup)).toContain("Cine vine (4)");
     expect(markup).toContain("și încă 4");
     expect(markup).not.toContain('data-testid="rsvp-name"');
     state.rsvps = { count: 3, names: ["Ana", "Ion", "Maria"], others: 0 };
@@ -294,9 +326,13 @@ describe("§811 the card «Vin (N)»", () => {
   it("never carries an address, and reads in English", async () => {
     state.rsvps = { count: 2, names: ["Ana"], others: 1 };
     const markup = await count("en");
-    expect(markup).toContain("Coming (2)");
+    expect(summaryOf(markup)).toContain("Who&#x27;s coming (2)");
     expect(markup).toContain("and 1 more");
     expect(markup).not.toContain("@");
+    state.rsvps = { count: 0, names: [], others: 0 };
+    const empty = await count("en");
+    expect(empty).toContain("Nobody has confirmed yet.");
+    expect(summaryOf(empty)).not.toContain("(0)");
   });
 
   it("draws nothing while the database is away, rather than a count of zero", async () => {
@@ -438,5 +474,80 @@ describe("§811 the fold «Răspunsuri „Vin!” (N)» — read-only, addresses
     const markup = await fold({}, "en");
     expect(markup).toContain("“I&#x27;m coming!” answers (2)");
     expect(markup).toContain("1 confirmed, 1 unconfirmed");
+  });
+});
+
+/**
+ * §827 — the name tick's words and what the island is handed. The island is a client component the page renders from the server: what
+ * it receives is the page's strings and the server's actions as props — never an address, never a name.
+ */
+describe("§827 the island's props for the name tick", () => {
+  type Node = { type?: unknown; props?: Record<string, unknown> } | null | undefined;
+  /** The element of the one client island, found in the tree the server component returns. */
+  function findIsland(node: unknown): { labels: Record<string, string>; actions: Record<string, unknown> } | null {
+    if (!node || typeof node !== "object") return null;
+    if (Array.isArray(node)) {
+      for (const child of node) {
+        const found = findIsland(child);
+        if (found) return found;
+      }
+      return null;
+    }
+    const element = node as Node;
+    const props = element?.props;
+    if (props && typeof props.labels === "object" && typeof props.actions === "object") return { labels: props.labels as never, actions: props.actions as never };
+    return props ? findIsland(props.children) : null;
+  }
+  const island = async (locale: "ro" | "en") => {
+    state.language = locale;
+    const element = await RsvpBox({ locale, slug: "alergarea-de-joi", eventId: "11111111-1111-4111-8111-111111111111", renderedAt: RENDERED_AT, outcome: null });
+    return findIsland(element)!;
+  };
+
+  it("hands over the five words of the tick and the fifth action, in Română", async () => {
+    const { labels, actions } = await island("ro");
+    expect(labels).toMatchObject({
+      nameSwitch: "Numele meu apare la „Cine vine”",
+      nameBox: "Numele tău",
+      nameSave: "Salvează",
+      nameShown: "Gata: numele tău apare la „Cine vine”.",
+      nameHidden: "Gata: numele tău nu mai apare; ești doar numărat.",
+      nameNeeded: "Scrie numele cu care vrei să apari.",
+    });
+    // The help carries `{name}` for the island to fill with the answer's own name; a second sentence says what to do when it holds none.
+    expect(labels.nameHelp).toContain("Cu bifa apari ca „{name}”");
+    expect(labels.nameHelp).toContain("numele rămâne păstrat");
+    expect(labels.nameAsk).toBe("Bifează și scrie numele cu care vrei să apari.");
+    expect(typeof actions.showName).toBe("function");
+  });
+
+  it("hands over the same words in English", async () => {
+    const { labels } = await island("en");
+    expect(labels.nameSwitch).toBe("My name shows under “Who's coming”");
+    expect(labels.nameSave).toBe("Save");
+    expect(labels.nameHelp).toContain("Ticked, you show as “{name}”");
+    expect(labels.nameAsk).toBe("Tick it and type the name you want to show.");
+    // «Closed» has no sentence in the island: the state turns it to the typed form, which cannot show one.
+    expect(labels).not.toHaveProperty("nameClosed");
+  });
+
+  it("holds no address and no person's name in anything it is handed", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      const { labels } = await island(locale);
+      for (const value of Object.values(labels)) expect(value).not.toMatch(/@|example\.test/);
+    }
+  });
+
+  it("has every sentence in both catalogues, one plain sentence each (≤ 200 characters)", () => {
+    for (const catalogue of [ro, en]) {
+      const rsvp = catalogue.Event.rsvp;
+      for (const sentence of [rsvp.nameSwitch, rsvp.nameKept, rsvp.nameAsk, rsvp.nameBox, rsvp.nameSave, ...Object.values(rsvp.nameOutcome)]) {
+        expect(sentence.length).toBeGreaterThan(0);
+        expect(sentence.length).toBeLessThanOrEqual(200);
+        // Only the help that names the name has a placeholder.
+        if (sentence !== rsvp.nameKept) expect(sentence).not.toContain("{");
+      }
+      expect(rsvp.nameKept).toContain("{name}");
+    }
   });
 });

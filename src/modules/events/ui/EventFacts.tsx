@@ -1,4 +1,5 @@
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import GroupsIcon from "@mui/icons-material/Groups";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import PlaceIcon from "@mui/icons-material/Place";
@@ -12,6 +13,7 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
+import { countForm } from "@/i18n/count-form";
 import { durationShort, formatDay, formatTime } from "@/i18n/dates";
 import { raceTimeLimitMinutes } from "@/modules/event-checkpoints/domain/start";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
@@ -246,7 +248,16 @@ export default async function EventFacts({
   cardWeather = null,
   raceWeek = false,
   previewDoor,
+  whoComes = null,
 }: {
+  /**
+   * «Cine vine» in the facts (§825; the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil. Că inițial am citit în „zig-zag" și am sărit
+   * peste secțiune»): one line with the people glyph, «12 vin · vezi cine», its words the link to the fold that holds the names — `#cine-vine` on a
+   * turn-up event, `#start-list-title` on a race whose public list is shown; the browser, or `OpenFoldFromHash`, opens the fold. The page
+   * passes the number it already read (the one read of the answers, or `readStartListCount`'s — the list's own title number), so this component asks nothing
+   * and cannot disagree with the fold. Null — no count is public, nobody has confirmed yet — draws nothing. The event page's form only.
+   */
+  whoComes?: { count: number; href: string } | null;
   /**
    * The editor's preview before saving (§579): the door as the draft would read it, counted by
    * `draftRegistrationDoor` rather than read from the public cache, and its button drawn disabled.
@@ -1315,6 +1326,23 @@ export default async function EventFacts({
         <Box data-testid="event-weather">
           {flow(withScope([words.summary, ...(words.temperature !== null ? [words.temperature] : []), ...(likelyMark ? [likelyMark] : [])], words))}
         </Box>
+      ),
+    });
+  }
+
+  /*
+    «N vin · vezi cine» (§825): the last short fact, right above the folds it points at — the number is the page's one read, the words the
+    link to the fold with the names, 44 pixels tall like every link here. Nothing when the page passed no count.
+  */
+  if (whoComes !== null && whoComes.count > 0) {
+    rows.push({
+      key: "whoComes",
+      label: t("who.label"),
+      icon: GroupsIcon,
+      value: (
+        <Link href={whoComes.href} data-testid="who-comes-link" sx={{ display: "inline-flex", alignItems: "center", boxSizing: "border-box", minHeight: 44 }}>
+          {t(`who.count.${countForm(whoComes.count, locale)}`, { count: whoComes.count })}
+        </Link>
       ),
     });
   }

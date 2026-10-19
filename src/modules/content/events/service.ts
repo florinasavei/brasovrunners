@@ -564,6 +564,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Acceptă răspunsuri „Vin!”» (§811), by the same discipline: a caller that did not post the tick writes nothing, so no save
     // takes the answers off a page by not mentioning it. Only an event that asks for no registration keeps it (`hiddenByMode`).
     ...(fields.rsvpEnabled === undefined ? {} : { rsvpEnabled: fields.rsvpEnabled }),
+    // «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823), by the same discipline: a caller that did not post the tick writes nothing.
+    ...(fields.rsvpAskEnabled === undefined ? {} : { rsvpAskEnabled: fields.rsvpAskEnabled }),
     // No `video_url` (§481): a film is a figure in the description (§266); the column is unread
     // and leaves the database in BR-V2.11 (§491).
     stravaEventUrl: fields.stravaEventUrl,
@@ -1874,6 +1876,8 @@ const SERIES_COLUMNS = [
   "showRouteProfile",
   // Whether the weekly run takes «Vin!» answers (§811) is a property of the series: every date of it does, or none.
   "rsvpEnabled",
+  // Whether the weekly run's day-before question is sent (§823) is the series' too: every date asks, or none.
+  "rsvpAskEnabled",
   "coHosts",
   // Not `locationName` and `locationAddress`: the place travels by what each language's page
   // shows (`placesShown`, §362), in `applyToSeries` below, with the names on each language's row.
@@ -2988,6 +2992,7 @@ function blankEventRow(now: Date): EditableEvent {
     routeGpx: null,
     showRouteProfile: true,
     rsvpEnabled: false,
+    rsvpAskEnabled: true,
     resultsPublished: false,
     resultsPublishedAt: null,
     repeatRule: null,
@@ -3600,6 +3605,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     showRouteProfile: source.showRouteProfile,
     // «Acceptă răspunsuri „Vin!”» (§811) travels with the event it is the tick of; the answers themselves never do.
     rsvpEnabled: source.rsvpEnabled,
+    // «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823) travels with the tick it hangs under: to a duplicate and to every date of a repeat.
+    rsvpAskEnabled: source.rsvpAskEnabled,
     // «Lista voluntarilor e publică pe pagina evenimentului» (§821) travels with the event it is the tick of, to a duplicate and to every date of a
     // repeat, like «Cine se poate oferi»: the club's standing rule for the event's volunteers. It shows nothing by itself — no volunteer is copied,
     // and a name appears only for a confirmed volunteer who ticked, under a notice that describes the list.

@@ -40,6 +40,7 @@ import {
   describesResults,
   describesRsvp,
   describesRsvpAsk,
+  describesRsvpAskAnswerers,
   describesTeamPage,
   MINIMUM_AGE_MERGE_FIELD,
   mergeFieldsIn,
@@ -425,6 +426,18 @@ export async function noticeDescribesRsvpAsk<T extends Record<string, unknown>>(
 }
 
 /**
+ * Whether the privacy notice in force describes the day-before question's SECOND audience (§823, `describesRsvpAskAnswerers`) — in every
+ * language, AND the question and «Vin!» themselves (`describesRsvpAsk`, `describesRsvp`): the question writes a «Vin!» row from the address
+ * of an earlier answer. False while any is silent. For the queue and the send (the club's choice of the audience is only half of it) and
+ * `/admin/tasks`' row `rsvpAskAnswerersNotice`. A notice approved before the marker existed is silent, and asks no answerer: the club
+ * approves the marker.
+ */
+export async function noticeDescribesRsvpAskAnswerers<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesRsvp(notice.body) && describesRsvpAsk(notice.body) && describesRsvpAskAnswerers(notice.body));
+}
+
+/**
  * Whether the privacy notice in force describes what a volunteer says about themselves (§765,
  * `describesVolunteerProfile`) — in every language, like `noticeDescribesVolunteers`. For the public sign-up (which
  * form it takes, asked again at every post), the editor's card and `/admin/tasks`; the event page reads the cached
@@ -695,6 +708,17 @@ export async function findFirstRsvpNoticeVersion<T extends Record<string, unknow
  */
 export async function findFirstRsvpAskNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
   return findFirstNoticeVersionDescribing(db, (body) => describesRsvp(body) && describesRsvpAsk(body));
+}
+
+/**
+ * The lowest version of an approved, not withdrawn privacy notice that describes the question's second audience in **every** language
+ * (`describesRsvpAskAnswerers`, with `describesRsvpAsk` and `describesRsvp` beside it), or null when none does —
+ * `findFirstRsvpAskNoticeVersion`'s twin (§823, the §421 rule). An answer «Vin!» records the notice it was given under
+ * (`event_rsvps.privacy_notice_version`); its address is asked again, at a later date of the series, only if it was given under this version
+ * or a later one — an answer given under an older notice agreed to be counted, never to be asked again.
+ */
+export async function findFirstRsvpAskAnswerersNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
+  return findFirstNoticeVersionDescribing(db, (body) => describesRsvp(body) && describesRsvpAsk(body) && describesRsvpAskAnswerers(body));
 }
 
 /**

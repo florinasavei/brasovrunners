@@ -66,7 +66,7 @@ type PublishedEvent = NonNullable<Awaited<ReturnType<typeof cachedPublishedEvent
 
 type EventQuery = {
   interest?: string | string[];
-  /** The «Vii?» box's outcome (§811): the typed answer's redirect. */
+  /** The «Confirmă prezența (opțional)» box's outcome (§811): the typed answer's redirect. */
   vin?: string | string[];
   since?: string | string[];
   lista?: string | string[];
@@ -169,7 +169,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
         registrationState(found, now) === "NOT_YET_OPEN" &&
         (await cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)) !== undefined;
       /*
-        «Vii?» (§811): offered only where `rsvpOffered` says so — the one rule the action asks again before it keeps an
+        «Confirmă prezența (opțional)» (§811): offered only where `rsvpOffered` says so — the one rule the action asks again before it keeps an
         address. The notice's description is read (cached, keyed by the clock) only for an event the club ticked; otherwise no read.
       */
       const rsvpBox = found.registrationMode === "NONE" && found.rsvpEnabled === true && rsvpOffered(found, now, await cachedRsvpDescribed(now));
@@ -188,7 +188,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   const event = read.value.event ?? membersEvent ?? null;
   // No «Anunță-mă» on a members' event: its box is a public form, and a member is told by the zone.
   const interestBox = membersEvent ? false : read.value.interestBox;
-  // Nor «Vii?» on a members' event: its box is a public form (§552). A last good copy made before the field existed carries none.
+  // Nor «Confirmă prezența (opțional)» on a members' event: its box is a public form (§552). A last good copy made before the field existed carries none.
   // The start is asked here with the request's own clock, outside the loader: a copy made before the start must not draw the box after it.
   const rsvpBox = membersEvent ? false : read.value.rsvpBox === true && event !== null && event.startsAt !== null && event.startsAt.getTime() > now.getTime();
   const membersOnly = membersEvent !== undefined;

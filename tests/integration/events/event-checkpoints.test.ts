@@ -292,6 +292,24 @@ describe("§757 an event's checkpoints", () => {
     expect((await listCheckpoints(db, eventId)).at(-1)?.kinds).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION"]);
   });
 
+  it("saves «Regrupare» as the sixth kind, last in the closed set's order, with the note that says how long, and reads it back (§824)", async () => {
+    expect(
+      await save([
+        { ...WATER, kinds: ["REGROUP", "WATER"] },
+        { nameRo: "Regrupare la cabană", nameEn: "Regroup at the hut", km: "9", kinds: ["REGROUP"], noteRo: "Așteptăm 5 minute", noteEn: "We wait 5 minutes" },
+      ]),
+    ).toBe("redirected");
+    const rows = await listCheckpoints(db, eventId);
+    expect(rows.map((row) => row.kinds)).toEqual([["WATER", "REGROUP"], ["REGROUP"]]);
+    expect(rows[1].noteRo).toBe("Așteptăm 5 minute");
+    expect(rows[1].noteEn).toBe("We wait 5 minutes");
+    const stored = await db.select({ kinds: eventCheckpoints.kinds }).from(eventCheckpoints).where(eq(eventCheckpoints.eventId, eventId));
+    expect(stored.flatMap((row) => row.kinds).sort()).toEqual(["REGROUP", "REGROUP", "WATER"]);
+    // All six values round-trip through the column.
+    await db.insert(eventCheckpoints).values({ eventId, nameRo: "Toate", nameEn: "All", km: "20.00", kinds: ["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION", "REGROUP"] });
+    expect((await listCheckpoints(db, eventId)).at(-1)?.kinds).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION", "REGROUP"]);
+  });
+
   it("refuses a time limit longer than the one of a point further along, naming the earlier point's box", async () => {
     const refusal = await save([
       { ...WATER, nameRo: "Prima", limit: 120 },

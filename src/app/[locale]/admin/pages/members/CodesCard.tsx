@@ -51,7 +51,7 @@ export default function CodesCard({
   tiers,
 }: {
   codes: readonly AdminDiscountCode[];
-  /** The member tiers, in the club's order (§811): the chips «Pentru nivelurile» of each code, and the names of the limit on its line. */
+  /** The member tiers, in the club's order (§811): the chips «Pentru cine e codul» of each code, and the names of the limit on its line. */
   tiers: readonly CodeTier[];
   /** The club's calendar day, `YYYY-MM-DD`: a code past its last day is marked as not shown. */
   today: string;
@@ -156,8 +156,13 @@ function CodeRow({
   tiers: readonly CodeTier[];
 }) {
   const shown = codeShownToMembers(code, today);
-  // The levels the code is limited to, named (§811); an id whose level is gone is not named (deleting a level takes it off the codes).
+  // The levels the code is for, named (§811); an id whose level is gone is not named (deleting a level takes it off the codes).
+  // A code with no stored limit is «Toți membrii» (§811, amended by §828): its line says so, always.
+  // One decision on the stored value, for the line and for the form's tick alike: an empty list is «Toți membrii»; a list that names no level never is.
+  const forEveryone = (code.tierIds?.length ?? 0) === 0;
   const limited = (code.tierIds ?? []).flatMap((id) => tiers.find((tier) => tier.id === id)?.name ?? []);
+  const gone = (code.tierIds?.length ?? 0) - limited.length;
+  const audience = forEveryone ? t("members.codes.forEveryone") : t("members.codes.forTiersChip", { tiers: [...limited, ...(gone > 0 ? [t("members.codes.tiersGone", { count: gone })] : [])].join(", ") });
   const expired = !code.hidden && !shown;
   const hidden = (
     <>
@@ -182,15 +187,13 @@ function CodeRow({
         {code.validUntil && (
           <Chip size="small" variant="outlined" label={t("members.codes.until", { day: formatCalendarDay(code.validUntil, { locale, position: "inline" }) })} />
         )}
-        {/* Said only once the club has named a level: before that every code is for everyone and the chip would say nothing. */}
-        {tiers.length > 0 && (
-          <Chip
-            size="small"
-            variant="outlined"
-            label={limited.length > 0 ? t("members.codes.forTiersChip", { tiers: limited.join(", ") }) : t("members.codes.forEveryone")}
-            data-testid="code-tiers-chip"
-          />
-        )}
+        {/* Who the code is for, always (§811, amended by §828): the levels, or «Toți membrii». */}
+        <Chip
+          size="small"
+          variant="outlined"
+          label={audience}
+          data-testid="code-tiers-chip"
+        />
         {(code.descriptionRo === null) !== (code.descriptionEn === null) && (
           <Chip size="small" variant="outlined" color="warning" label={t("members.codes.oneLanguage")} />
         )}
@@ -268,8 +271,9 @@ function CodeRow({
 /**
  * The boxes of a code, for adding one and for writing one: the partner and the code, the description
  * Română and English side by side from `sm` — both or neither (§352) — the link, the last day and the
- * chips «Pentru nivelurile» (§811). A role that writes the words alone sees the code as text, and the
- * link, the day and the chips not at all: the service keeps them as stored whatever is posted.
+ * chips «Pentru cine e codul» (§811, amended by §828): «Toți membrii» or the levels, chosen — a new code starts with
+ * nothing ticked, an older one with no limit shows «Toți membrii» ticked. A role that writes the words alone sees the code as
+ * text, and the link, the day and the chips not at all: the service keeps them as stored whatever is posted.
  */
 function CodeFields({ code, words: t, mayManage, tiers }: { code: AdminDiscountCode | null; words: Words; mayManage: boolean; tiers: readonly CodeTier[] }) {
   const pairSx = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 } as const;
@@ -333,15 +337,22 @@ function CodeFields({ code, words: t, mayManage, tiers }: { code: AdminDiscountC
             slotProps={{ htmlInput: { maxLength: CODE_LINK_MAX } }}
           />
           <DateField name="validUntil" label={t("members.codes.validUntil")} defaultValue={code?.validUntil ?? ""} helperText={t("members.codes.validUntilHelp")} />
-          {/* «Pentru nivelurile» (§811): chips with the native tick; none ticked is every member. Only once the club named a level. */}
-          {tiers.length > 0 && (
+          {/* «Pentru cine e codul» (§811, amended by §828): chips with the native tick, «Toți membrii» first, exclusive with the levels. Before the club named a level there is nothing to choose between: the code is for «Toți membrii» and the form posts it. */}
+          {tiers.length > 0 ? (
             <TierChips
               name="tierIds"
+              allName="forAll"
               legend={t("members.codes.forTiers")}
               hint={t("members.codes.forTiersHelp")}
+              allLabel={t("members.codes.forAllMembers")}
+              noneMessage={t("members.codes.forTiersNone")}
+              bothMessage={t("members.codes.forTiersBoth")}
               tiers={tiers.map((tier) => ({ id: tier.id, label: tier.hidden ? t("members.tiers.hiddenOption", { name: tier.name }) : tier.name }))}
               checkedIds={code?.tierIds ?? []}
+              allChecked={code !== null && (code.tierIds?.length ?? 0) === 0}
             />
+          ) : (
+            <input type="hidden" name="forAll" value="1" />
           )}
         </>
       )}

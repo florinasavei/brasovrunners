@@ -103,6 +103,18 @@ test.describe("§753, §756 «Clubul pe lista publică»: only the club's own na
     // both show it, in the club's own spelling; the nonsense and the other club are blank and nowhere on the page.
     await page.goto(`/ro/evenimente/${seeded.slug}`);
     await expect(page.getByTestId("start-list")).toHaveCount(1);
+    // §825: the race's «Cine vine» sits right under the registration card, and the facts say how many come — the title's own number —
+    // in a 44-pixel link whose press opens the closed fold the names are in.
+    const title = await page.locator("#start-list-title").innerText();
+    const coming = /\((\d+)\)/.exec(title)?.[1] ?? "";
+    expect(coming).not.toBe("");
+    const factsLine = page.getByTestId("event-facts").getByTestId("who-comes-link");
+    await expect(factsLine).toHaveText(new RegExp(`^${coming} vine? · vezi cine$`));
+    await expect(factsLine).toHaveAttribute("href", "#start-list-title");
+    expect((await factsLine.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(page.getByTestId("start-list")).not.toHaveAttribute("open", /.*/);
+    await factsLine.click();
+    await expect(page.getByTestId("start-list")).toHaveAttribute("open", "");
     // «Cine vine» is a closed fold (§812): the rows are read from the opened one.
     const list = await openEventFold(page, "start-list");
     await expect(rowOf(page, seeded.names.nickname).locator('td[data-col="club"]')).toHaveText("Brașov Runners");

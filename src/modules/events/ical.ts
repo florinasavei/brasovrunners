@@ -49,7 +49,7 @@ function qaMarked(value: string): string {
  * start of the long one, the times and the facts in one line each, where registration stands
  * and the link to it, the page, the rules, the programme, the route, the film, the Strava and
  * Facebook events, the programme's rows and text, what to bring and the co-host — and, for an
- * event the page offers «Vii?» to, «Vin! → <page>#vin» with how many come (§815) — as plain
+ * event the page offers «Confirmă prezența (opțional)» to, «Vin! → <page>#vin» with how many come (§815) — as plain
  * text in `DESCRIPTION`, where Apple and Google make the bare addresses tappable (which is
  * why the plain twin writes `words — address`), and the same as minimal HTML in `X-ALT-DESC`,
  * which Outlook renders with the words as the links.
@@ -526,7 +526,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     // pack, read on the morning of a dark evening's run, not one more word lost among the route's.
     [times, facts, nightLine].filter((text) => text.length > 0).map((text) => ({ text })),
     registration ? [registration] : [],
-    // «Vin!» (§815): the link into the page's «Vii?» card and how many come — right under the times and the registration line,
+    // «Vin!» (§815): the link into the page's «Confirmă prezența (opțional)» card and how many come — right under the times and the registration line,
     // where a reader of the entry looks for what to do about it. The link is the address Google and Apple make tappable.
     comingLines(event, labels),
     links,

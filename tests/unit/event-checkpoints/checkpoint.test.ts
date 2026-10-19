@@ -204,7 +204,20 @@ describe("§757 the rules a checkpoint is held to", () => {
     );
     expect(rows.map((r) => r.nameRo)).toEqual(["A", "B", "C"]);
     expect(rows[0].kinds).toEqual(["WATER", "TIMING"]);
-    expect(CHECKPOINT_KINDS).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION"]);
+    expect(CHECKPOINT_KINDS).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION", "REGROUP"]);
+  });
+
+  it("takes «Regrupare» as the sixth kind, last in the editor's order, alone or with the others, and keeps the five where they were (§824)", () => {
+    const rows = prepareCheckpoints(
+      [row(0, { kinds: ["REGROUP", "DIRECTION", "WATER"] }), row(1, { km: "9", kinds: ["REGROUP"] }), row(2, { km: "11", kinds: ["FOOD", "REGROUP"] })],
+      CONTEXT,
+    );
+    expect(rows[0].kinds).toEqual(["WATER", "DIRECTION", "REGROUP"]);
+    expect(rows[1].kinds).toEqual(["REGROUP"]);
+    expect(rows[2].kinds).toEqual(["FOOD", "REGROUP"]);
+    // The first five keep their places: nothing was inserted before «Direcționare».
+    expect(CHECKPOINT_KINDS.slice(0, 5)).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION"]);
+    expect(CHECKPOINT_KINDS.at(-1)).toBe("REGROUP");
   });
 
   it("takes «Direcționare» as the fifth kind, with the others in the closed set's own order (§770)", () => {
@@ -460,6 +473,7 @@ describe("§757 the picture stamp covers the checkpoints", () => {
     expect(checkpointsStampPart([{ ...base, km: 5.5 }])).not.toBe(stamp);
     expect(checkpointsStampPart([{ ...base, kinds: ["WATER", "FOOD"] }])).not.toBe(stamp);
     expect(checkpointsStampPart([{ ...base, kinds: ["WATER", "DIRECTION"] }])).not.toBe(stamp);
+    expect(checkpointsStampPart([{ ...base, kinds: ["WATER", "REGROUP"] }])).not.toBe(stamp);
     expect(checkpointsStampPart([{ ...base, cutoffMinutes: 65, cutoffClock: "10:05" }])).not.toBe(stamp);
     // A moved start moves the clock though the limit is the same: a new picture address.
     expect(checkpointsStampPart([{ ...base, cutoffClock: "10:30" }])).not.toBe(stamp);

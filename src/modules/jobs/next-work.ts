@@ -9,12 +9,13 @@ import { unreachableWindows } from "@/db/schema/unreachable-windows";
 import type { Database } from "@/db/types";
 import { PROCESSING_LOCK_TIMEOUT_MS } from "@/modules/notifications/domain/retry";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
+import { rsvpAskTimingOf } from "@/modules/deadlines/domain/deadlines";
 import { declarationLastCallDueAt, eventReminderDueAt, windowLastCallAt } from "@/modules/notifications/domain/automatic-sends";
 import { nextConfirmationRetry } from "@/modules/notifications/confirmation-retry";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { PLACE_HOLDING_STATUSES } from "@/modules/registrations/domain/state-machine";
 import { emailLinkLapseSql } from "@/modules/registrations/repository";
-import { rsvpAskNextLook } from "@/modules/rsvp/domain/ask";
+import { rsvpAskNextLook, type RsvpAskTiming } from "@/modules/rsvp/domain/ask";
 import { nextFamilyEntryLapse } from "@/modules/registrations/family-entries";
 import { nextInvitationLapse } from "@/modules/registrations/invitation-repository";
 import { DNS_CONFIRM_MS, outageGraceMaxMs } from "@/modules/registrations/domain/outage-grace";
@@ -258,8 +259,8 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
   // `queueConfirmationRetries` (§653): the verification email re-sent, the club's hours after the last one left.
   const confirmationRetry = await nextConfirmationRetry(db, now, settings);
   const outage = await nextOutageWork(db, now, outageGraceMaxMs(settings));
-  // `queueRsvpAsks` (§818): the morning before each ticked turn-up event, 08:00 club time — without it the job would sleep through it.
-  const rsvpAsk = await nextRsvpAskWork(db, now);
+  // `queueRsvpAsks` (§818): the club's hour on the day N days before each ticked turn-up event (§823) — without it the job would sleep through it.
+  const rsvpAsk = await nextRsvpAskWork(db, now, rsvpAskTimingOf(settings));
 
   return earliest([
     emailLapses,
@@ -277,12 +278,14 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
 }
 
 /**
- * «Vii mâine la …?» (§818, `rsvp/ask.ts`): the soonest 08:00 club time on the day before a ticked, scheduled, published, public turn-up
- * event that has not been asked yet — the window's opening (`rsvpAskNextLook`), when it is still ahead. A window already open is the run
+ * «Vii mâine la …?» (§818, `rsvp/ask.ts`): the soonest opening of the club's hour (§823: the days before and the hour, «Termene») for a ticked,
+ * scheduled, published, public turn-up event whose own tick for the question is on and that has not been asked yet — the window's opening
+ * (`rsvpAskNextLook`), when it is still ahead. With zero days the club asks nobody, and the job has nothing to wake for. A window already open is the run
  * that calls this having just looked at it, or a save that wakes the job itself. The query mirrors `queueRsvpAsks`' candidates without
  * its look-ahead cap: a far event's look is simply far, and the earliest wins.
  */
-async function nextRsvpAskWork<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<Date | null> {
+async function nextRsvpAskWork<T extends Record<string, unknown>>(db: Database<T>, now: Date, timing: RsvpAskTiming): Promise<Date | null> {
+  if (timing.daysBefore <= 0) return null;
   const any = db as unknown as AnyDb;
   const rows = await any
     .select({ startsAt: events.startsAt })
@@ -292,6 +295,7 @@ async function nextRsvpAskWork<T extends Record<string, unknown>>(db: Database<T
       and(
         isNull(eventRsvpAsks.id),
         eq(events.rsvpEnabled, true),
+        eq(events.rsvpAskEnabled, true),
         eq(events.registrationMode, "NONE"),
         eq(events.eventStatus, "SCHEDULED"),
         eq(events.editorialStatus, "PUBLISHED"),
@@ -304,7 +308,7 @@ async function nextRsvpAskWork<T extends Record<string, unknown>>(db: Database<T
   return earliest(
     rows.map((row) => {
       const startsAt = toDate(row.startsAt);
-      return startsAt ? rsvpAskNextLook(startsAt, now) : null;
+      return startsAt ? rsvpAskNextLook(startsAt, now, timing) : null;
     }),
   );
 }

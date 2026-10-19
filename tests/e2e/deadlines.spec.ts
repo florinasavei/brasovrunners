@@ -15,7 +15,7 @@ import { openFold } from "./support/fold";
  * on this database reading three-day reminders. Desktop only, like the Mailgun plan beside it: one
  * `platform_settings` row, two projects, one database.
  *
- * The thirteen boxes sit in seven named folds, closed on arrival (§377 amended, 2026-10-18): a spec
+ * The fifteen boxes sit in seven named folds, closed on arrival (§377 amended, 2026-10-18): a spec
  * that types into a box opens the fold that holds it first, the way a person does. The one save and
  * the fill button are under the folds, outside them.
  */

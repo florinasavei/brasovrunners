@@ -14,21 +14,21 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.58`** (2026-10-18 20:57, through the `ship` label: §817 member levels are the staff's label alone; no
-  migration). Waiting for «prod»: `BR-V3.59` (below — **migrations `0170`, `0171`, `0172`**, applied by the gated run `yarn ship`
-  approves).
-- **QA: `BR-V3.59`** — §818 «Vii mâine la …?»: the day before a ticked run, the newsletter's subscribers of the new topic (and of
-  «Toate noutățile», only under a notice that describes the question) get one email, «Vin» counts at once, «Nu vin» writes nothing;
-  §819 the «Vii?» card and «Cine vine» are closed folds with their counts on the line, and the «Da, vin» link page presses itself in
-  a browser (the «Vii?» email's link with no name yet keeps its one press, the optional name above it); §820 who may offer to
-  volunteer — anyone, the club's signed-in members, or only people it invites by email (invitations with resend and withdraw);
-  §821 the volunteers' list may be public on the event page — names and roles of the confirmed volunteers who ticked, once the
-  notice names `{{volunteersList}}`. **The club's steps:** the privacy notice from the new template (it now also names
-  `{{rsvpAsk}}`, the volunteers' invitations and `{{volunteersList}}`; `/admin/tasks` rows `rsvpAskNotice`, `volunteersListNotice`).
-- **Building:** nothing. Queued: the «Vii?» sending settings (how many days before, the hour, the audience, a per-event tick) — the
-  owner has not answered the proposal; the home page's run cards with «N vin» and the event page's Google/Outlook links with the
-  «Vin!» lines; a signed-in member answers «Vin» from the zone's «Alergări» tab (the `account` identity source exists). The owner's
-  decisions from §803 (retention periods, December on Hobby or Pro, the Basic build machine, QA's region/Node) are open.
+- **Production: `BR-V3.59`** (2026-10-19 13:14: §818 the «Vii mâine la …?» email, §819 the folds and the self-pressing «Da, vin»,
+  §820 who may volunteer, §821 the volunteers' public list; **migrations `0170`–`0172`**). Waiting for «prod»: `BR-V3.60`
+  (below — **migrations `0173` + `0174`**, applied by the gated run `yarn ship` approves).
+- **QA: `BR-V3.60`** — §822 «Vin!» from the home page's cards, the event page's Google/Outlook links and the members' zone (one tap
+  from the account; the account's name only with the tick); §823 the «Vii?» question's settings (days before + hour in «Termene»,
+  the audience in «Emailuri» — subscribers by default, the earlier answerers only once chosen and the notice says so, with a
+  «Nu mă mai întreba» link —, a per-event tick); §824 the checkpoint kind «Regrupare»; §825 «Confirmă prezența (opțional)» and
+  «Cine vine (N)» together near the top, and «N vin · vezi cine» in the facts; §826 the level chosen in «Adaugă o persoană»; §827
+  «Numele meu apare la „Cine vine"» — a person shows or hides their name at any time from the page, the zone or the email's link;
+  §828 every discount code says who it is for (levels or «Toți membrii»). **The club's step:** the privacy notice from the new
+  template (it now also names `{{rsvpAskAnswerers}}` and the zone's answer).
+- **Building:** `chore/flaky-tests` (five tests that failed by chance; stale `§NNN`). Queued, stacked on batch CR:
+  `feat/zone-runs-first` (the members' zone opens on «Alergări», «Cine vine» open on each run) and `feat/rsvp-member-mark`
+  (a «BVR» mark beside a shown name on «Cine vine», declared or from the account; **migration `0175`**). The owner's decisions from
+  §803 (retention periods, December on Hobby or Pro, the Basic build machine, QA's region/Node) are open.
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
   art. 4(6) of Legea nr. 506/2004, while the same paragraph says Strava may set its own cookies without a press — the
@@ -144,6 +144,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.60` | «Vin!» from the home page, the calendar links and the members' zone: a signed-in member answers with one tap (§822) · the «Vii?» question: how many days before, at what hour, to whom, and a per-event tick (§823) · a checkpoint kind «Regrupare» — the group waits here — first on the profile's pins (§824) · «Confirmă prezența (opțional)» and «Cine vine (N)» stand together near the top, and the facts say how many come (§825) · «Adaugă o persoană» on «Echipa» sets a member's level in the same step (§826) · anyone who said «Vin» can show or hide their name on «Cine vine» at any time, from the page, the zone or the email's link (§827) · every discount code says who it is for: chosen levels or «Toți membrii», never by leaving it empty (§828) |
 | `BR-V3.59` | the day before a ticked run, the newsletter's subscribers are asked «Vii?» with one-tap «Vin» / «Nu vin» links (§818) · the «Vii?» card and «Cine vine» are closed folds with the count on their line; opening the «Da, vin» link counts you without a press (§819) · volunteers: the club chooses who may offer — anyone, the club's signed-in members, or only people it invites by email (§820) · the volunteers' list can be public on the event page: names and roles, only of those who ticked, once the notice describes it (§821) |
 | `BR-V3.58` | member levels are the staff's label alone: they decide which discount codes a member sees, and nothing shows them to members or visitors (§817) |
 | `BR-V3.57` | glyphs on the last three sub-tab rows: «Sarcini», «Galerie», the RO/EN switch (§814) · the calendar feed, the .ics files and the email attachments carry «Vin! → link» and how many come; the listing card wears «N vin» (§815) · the «Clasament» door opens before the race starts, like the page behind it (§816) |

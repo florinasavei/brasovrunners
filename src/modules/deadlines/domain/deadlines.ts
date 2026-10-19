@@ -40,12 +40,17 @@ export const DEADLINE_KEYS = [
   "verificationRetryHours",
   "verificationRetries",
   "outageGraceMaxHours",
+  "rsvpAskDaysBefore",
+  "rsvpAskHour",
 ] as const;
 
 export type DeadlineKey = (typeof DEADLINE_KEYS)[number];
 
-/** `count` is a number of times, not a duration (§653: how many times the address link is re-sent). */
-export type DeadlineUnit = "minutes" | "hours" | "days" | "count";
+/**
+ * `count` is a number of times, not a duration (§653: how many times the address link is re-sent); `hourOfDay` (§823) is a time on the
+ * club's clock, 0–23, not a length — zero is midnight, a real answer, never «none».
+ */
+export type DeadlineUnit = "minutes" | "hours" | "days" | "count" | "hourOfDay";
 
 export type DeadlineRule = {
   unit: DeadlineUnit;
@@ -106,6 +111,9 @@ export type DeadlineRule = {
  *   (`registrations/domain/outage-grace.ts`). 0 switches the moving off while the windows are still
  *   recorded and announced; a week is the most a deadline should be carried for a door nobody
  *   reopened, and two days covers a registrar's hold over a weekend.
+ * - **the «Vii?» question** (§818, §823): how many days before the start it goes, 0 to 7, one by default — 0 asks nobody, the club's
+ *   «not at all» — and from which hour of the club's clock, 0 to 23, eight by default. A week at most: a question further ahead
+ *   than that is no longer about «this week's run»; `hourOfDay` is a time of day, so zero is midnight and not «none».
  */
 export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   confirmationHours: { unit: "hours", min: 12, max: 168, default: 48 },
@@ -121,6 +129,8 @@ export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   verificationRetryHours: { unit: "hours", min: 2, max: 72, default: 20 },
   verificationRetries: { unit: "count", min: 0, max: 3, default: 1 },
   outageGraceMaxHours: { unit: "hours", min: 0, max: 168, default: 48 },
+  rsvpAskDaysBefore: { unit: "days", min: 0, max: 7, default: 1 },
+  rsvpAskHour: { unit: "hourOfDay", min: 0, max: 23, default: 8 },
 };
 
 /**
@@ -138,7 +148,7 @@ export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
 export const DEADLINE_GROUPS = [
   { key: "confirmation", fields: ["confirmationHours", "verificationRetryHours", "verificationRetries"] },
   { key: "hold", fields: ["holdMinutes", "offerHours"] },
-  { key: "beforeStart", fields: ["reminderHours", "lastCallHours", "selfCheckinHours", "raceWeekDays"] },
+  { key: "beforeStart", fields: ["reminderHours", "lastCallHours", "selfCheckinHours", "raceWeekDays", "rsvpAskDaysBefore", "rsvpAskHour"] },
   { key: "afterEvent", fields: ["publicListDays"] },
   { key: "series", fields: ["seriesHorizonDays"] },
   { key: "family", fields: ["familySittingMinutes"] },
@@ -159,6 +169,14 @@ export const DEFAULT_DEADLINES: Deadlines = Object.freeze(
  * read the same numbers and no catalogue carries one.
  */
 export const RECOMMENDED: Deadlines = DEFAULT_DEADLINES;
+
+/**
+ * §823: the «Vii?» question's two numbers, as `rsvp/domain/ask.ts` reads them — the days before the start (0 = none) and the club hour.
+ * One place picks them out of the deadlines, so the queue, the send, the job's plan and the words all read the same two.
+ */
+export function rsvpAskTimingOf(deadlines: Pick<Deadlines, "rsvpAskDaysBefore" | "rsvpAskHour">): { daysBefore: number; hour: number } {
+  return { daysBefore: deadlines.rsvpAskDaysBefore, hour: deadlines.rsvpAskHour };
+}
 
 /** The per-event reminder's column bounds (`events.reminder_hours_before`): 0 is "no reminder". */
 export const EVENT_REMINDER_MAX_HOURS = DEADLINE_RULES.reminderHours.max;
@@ -195,6 +213,8 @@ export const deadlinesSettingSchema = z
     verificationRetryHours: bounded("verificationRetryHours"),
     verificationRetries: bounded("verificationRetries"),
     outageGraceMaxHours: bounded("outageGraceMaxHours"),
+    rsvpAskDaysBefore: bounded("rsvpAskDaysBefore"),
+    rsvpAskHour: bounded("rsvpAskHour"),
   })
   .strict();
 

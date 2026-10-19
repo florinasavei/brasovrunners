@@ -14,14 +14,15 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { DomainError } from "@/shared/errors/domain-error";
 import { cleanDisplayName, isConsistent, type RsvpIdentity } from "./domain/identity";
-import { RSVP_CONFIRM_HOURS } from "./domain/link-life";
+import { RSVP_CONFIRM_HOURS, RSVP_LINK_GRACE_DAYS } from "./domain/link-life";
+import { readRefuseLink } from "./ask-refusal";
 import { rsvpOffered } from "./domain/offered";
 import { publicRsvpName } from "./domain/public-name";
 
 /**
  * «Vin!» (§811, «Vin!» part 1; the owner, 2026-10-18: «how do I mark myself as "Going"?») — a person's answer «I am coming»
  * to a turn-up event the club ticked: an address, optionally a name to show, and — once the address is proved — a place in
- * the count «Vin (N)».
+ * the count «Cine vine (N)».
  *
  * **Not a registration.** No place is held, no declaration is signed, no participant exists; the allocator, the
  * registrations' states, the desk and the capacity formula are untouched, and nothing here reads `kind`. The model is the
@@ -44,9 +45,6 @@ import { publicRsvpName } from "./domain/public-name";
  */
 
 export { RSVP_CONFIRM_HOURS };
-
-/** A withdraw link outlives the start it was sent with by this much; the event's start at the press decides (a moved event keeps its links). */
-const WITHDRAW_LINK_GRACE_DAYS = 60;
 
 /** One message per address and event in this window — the form answers the same sentence either way. */
 const CONFIRM_THROTTLE_SCOPE = "rsvp-confirm" as const;
@@ -274,13 +272,20 @@ type EventRsvpTokenPurpose = (typeof eventRsvpTokens.$inferSelect)["purpose"];
  * Mint the links of one `RSVP_CONFIRM` message, at the send (§14.5): the secret goes into that email and nowhere else, and a
  * newer link of the same purpose supersedes the older. `confirm` is minted only when asked (the "confirm" message of a row
  * still unconfirmed); `withdraw` always, valid until the event's start. Null when the event has started: nothing to answer.
+ *
+ * `confirmUntilStart` (§823) is the «Vii?» question's «Vin»: the club may now send the question up to seven days ahead, so its button lives
+ * until the event's start instead of the 48 hours of a confirmation message — a person who presses it the evening before is counted by
+ * the one tap the question exists for, not sent to type their address again. (The refusal link is not minted here: `ask-refusal.ts`,
+ * a table of its own, so it outlives the answer.)
  */
 export async function mintRsvpLinks<T extends Record<string, unknown>>(
   db: Database<T>,
-  params: { rsvpId: string; startsAt: Date; confirm: boolean; now: Date },
+  params: { rsvpId: string; startsAt: Date; confirm: boolean; confirmUntilStart?: boolean; now: Date },
 ): Promise<{ confirm: string | null; withdraw: string } | null> {
   if (params.startsAt.getTime() <= params.now.getTime()) return null;
-  const confirmExpires = new Date(Math.min(params.now.getTime() + RSVP_CONFIRM_HOURS * 3_600_000, params.startsAt.getTime()));
+  const confirmExpires = params.confirmUntilStart
+    ? params.startsAt
+    : new Date(Math.min(params.now.getTime() + RSVP_CONFIRM_HOURS * 3_600_000, params.startsAt.getTime()));
   return db.transaction(async (tx) => {
     const mint = async (purpose: EventRsvpTokenPurpose, expiresAt: Date): Promise<string> => {
       const secret = generateTokenSecret();
@@ -291,23 +296,25 @@ export async function mintRsvpLinks<T extends Record<string, unknown>>(
       await tx.insert(eventRsvpTokens).values({ rsvpId: params.rsvpId, purpose, tokenHash: hashTokenSecret(secret), expiresAt, createdAt: params.now });
       return secret;
     };
+    const lives = new Date(params.startsAt.getTime() + RSVP_LINK_GRACE_DAYS * 86_400_000);
     return {
       confirm: params.confirm ? await mint("RSVP_CONFIRM", confirmExpires) : null,
       // The start can move after the message left: the link lives generously and `consumeRsvpToken` asks the event's start as it is then.
-      withdraw: await mint("RSVP_WITHDRAW", new Date(params.startsAt.getTime() + WITHDRAW_LINK_GRACE_DAYS * 86_400_000)),
+      withdraw: await mint("RSVP_WITHDRAW", lives),
     };
   });
 }
 
 /** What a link's page needs: the answer's event, in the language the answer was given in, and what the link would do. */
 export type RsvpLink = {
-  purpose: EventRsvpTokenPurpose;
+  /** `RSVP_REFUSE` (§823) is the question's «Nu mă mai întreba la seria aceasta»: not an answer's link (`rsvp_refuse_tokens`), so no answer row stands behind it. */
+  purpose: EventRsvpTokenPurpose | "RSVP_REFUSE";
   /**
    * `live`: pressing the button would act. `used`: spent, or replaced by a newer email. `expired`: the link's own life ran out while
    * the event is still ahead (the person can answer again from the page). `over`: the event has started, so no answer is taken.
    */
   state: "live" | "used" | "expired" | "over";
-  rsvpId: string;
+  rsvpId: string | null;
   eventId: string;
   locale: "ro" | "en";
   title: string;
@@ -323,6 +330,16 @@ export type RsvpLink = {
   asked: boolean;
   /** The answer has a name already (typed on the page): the box is then not offered, and the press changes nothing about it. */
   named: boolean;
+  /**
+   * The person's tick «Numele meu apare la „Cine vine"» as it stands (§827): the row's `show_name` AND a name to show. A tick with no name
+   * (the page's form lets one be ticked with the box empty) shows nothing, so the page does not draw it ticked either.
+   */
+  showName: boolean;
+  /**
+   * The name the row holds — the person's own link, so the page may draw it: the tick would show exactly this, and the box is prefilled
+   * with it, so a name is never published that the person was not shown (§827, §812).
+   */
+  name: string | null;
 };
 
 /**
@@ -346,6 +363,7 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
         confirmedAt: eventRsvps.confirmedAt,
         askedAt: eventRsvps.askedAt,
         displayName: eventRsvps.displayName,
+        showName: eventRsvps.showName,
         title: eventTranslations.title,
         slug: eventTranslations.slug,
         startsAt: events.startsAt,
@@ -360,7 +378,8 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
       .innerJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, eventRsvps.locale)))
       .where(eq(eventRsvpTokens.tokenHash, hashTokenSecret(secret)))
       .limit(1);
-    if (!row) return null;
+    // Not one of the answer's links: perhaps the question's refusal link, which has a table of its own (§823).
+    if (!row) return readRefuseLink(tx, secret, now);
     const over = row.startsAt !== null && row.startsAt.getTime() <= now.getTime();
     const state = row.usedAt !== null || row.invalidatedAt !== null ? "used" : over ? "over" : row.expiresAt.getTime() <= now.getTime() ? "expired" : "live";
     return {
@@ -375,12 +394,14 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
       confirmed: row.confirmedAt !== null,
       asked: row.askedAt !== null && row.confirmedAt === null,
       named: row.displayName !== null,
+      showName: row.showName && row.displayName !== null,
+      name: row.displayName,
     } satisfies RsvpLink;
   });
 }
 
 /** Spend a link of `purpose` inside the caller's transaction: the answer it named, or null when it was not live. One UPDATE, one winner. */
-async function consumeRsvpToken<T extends Record<string, unknown>>(
+export async function consumeRsvpToken<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   secret: string,
   purpose: EventRsvpTokenPurpose,
@@ -538,7 +559,106 @@ export async function withdrawRsvp<T extends Record<string, unknown>>(
   return gone.length > 0;
 }
 
-/** How many confirmed answers an event has: the count «Vin (N)» says. */
+/**
+ * What `setRsvpShowName` tells its caller: the tick as it stands now, or why nothing was written — each reason is a sentence of the
+ * caller's own, never an error page.
+ *   `none`    the person has no confirmed answer here (taken back, never confirmed, a link that is not live): nothing is touched.
+ *   `name`    the tick was turned ON and there is no name to show — none stored, none posted.
+ *   `closed`  the tick was turned ON and the event no longer takes «Vin!» or the notice in force no longer describes it: a name is
+ *             not made public under a notice that does not describe it (§143, §396). Turning OFF is never refused for this.
+ */
+export type RsvpNameSwitch = { ok: true; showName: boolean } | { ok: false; reason: "none" | "name" | "closed" };
+
+/**
+ * «Numele meu apare la „Cine vine"» (§827, amending §812; the owner, 2026-10-19: «oamenii să poată ușor să zică „afișează / ascunde"
+ * numele meu public») — the person flips their own tick on a «Vin!» answer, any time, from where they already see it: the remembered
+ * browser (`remembered`), the members' zone (`account`) or the «Nu mai vin» link's page (`token`). §186's shape for «Vin!»: one write,
+ * reversible, low-stakes, never audited with the name.
+ *
+ * **Who is read here, never taken from the form** (BR-REQ-060-01): a verified identity the caller built from the cookie or the session,
+ * or a token — an `RSVP_WITHDRAW` link, **read and not spent** (BR-REQ-036-02: the same link must still take the answer back; the
+ * choice is reversible and low-stakes, the §186 precedent). A token proves only the answer it was minted for, and only while it is live
+ * (not used, not replaced, not expired, the event not started) and `eventId` is that answer's event. Only a CONFIRMED row of that person is
+ * touched: a name is public only for a counted answer (`publicRsvpName`), and an unconfirmed or «Vii?»-asked row is not the person's yet.
+ *
+ * - **ON** needs a name to show, and it is **the one posted now** (`displayName`, cleaned like every typed name) — or, only when the row
+ *   holds none, `defaultName` (the signed-in account's own, which the zone offers only for the person's tick and names beside it). A name
+ *   already on the row is never published unposted: it may be one a stranger typed on the page with the tick off (§812: an unconfirmed
+ *   row never lends a stranger's typed name to a verified press), so every door shows it, prefilled and editable, and posts it. The
+ *   press records the privacy notice in force on the row (`privacy_notice_version`): the tick is a fresh consent, under the notice that
+ *   describes it, and it needs the event to take «Vin!» (`rsvpOffered`: published, ahead, ticked, the notice describing «Vin!»).
+ * - **OFF** clears `show_name` and keeps the name stored — it is the person's, used again if they turn it back on. It needs no notice and
+ *   no open event: a person may always stop being named.
+ *
+ * The public cache is told once, only when something changed. No audit row: nothing here is something the staff did.
+ */
+export async function setRsvpShowName<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  who: { identity: RsvpIdentity } | { token: string },
+  input: { showName: boolean; displayName?: string | null; defaultName?: string | null },
+  now: Date,
+): Promise<RsvpNameSwitch> {
+  let canonicalEmail: string | null = null;
+  if ("identity" in who) {
+    if (!who.identity.verified || !isConsistent(who.identity)) throw new DomainError("FORBIDDEN", "an unverified address cannot change what is shown");
+    canonicalEmail = canonicalOf(who.identity.email).canonicalEmail;
+  } else if (!isWellFormedTokenSecret(who.token)) {
+    return { ok: false, reason: "none" };
+  }
+  const result = await db.transaction(async (tx): Promise<RsvpNameSwitch & { changed?: boolean }> => {
+    // The answer: by the identity's address, or by the live withdraw link of this event — read, never spent.
+    let rsvpId: string | null = null;
+    if ("token" in who) {
+      const [link] = await tx
+        .select({ rsvpId: eventRsvpTokens.rsvpId, eventId: eventRsvps.eventId, startsAt: events.startsAt })
+        .from(eventRsvpTokens)
+        .innerJoin(eventRsvps, eq(eventRsvps.id, eventRsvpTokens.rsvpId))
+        .innerJoin(events, eq(events.id, eventRsvps.eventId))
+        .where(
+          and(
+            eq(eventRsvpTokens.tokenHash, hashTokenSecret(who.token)),
+            eq(eventRsvpTokens.purpose, "RSVP_WITHDRAW"),
+            isNull(eventRsvpTokens.usedAt),
+            isNull(eventRsvpTokens.invalidatedAt),
+            gt(eventRsvpTokens.expiresAt, now),
+          ),
+        )
+        .limit(1);
+      // The same life `consumeRsvpToken` gives «Nu mai vin»: until the event's start as it is now.
+      if (link && link.eventId === eventId && !(link.startsAt && link.startsAt.getTime() <= now.getTime())) rsvpId = link.rsvpId;
+    }
+    const [row] =
+      "token" in who
+        ? rsvpId === null
+          ? []
+          : await tx.select().from(eventRsvps).where(and(eq(eventRsvps.id, rsvpId), isNotNull(eventRsvps.confirmedAt))).for("update")
+        : await tx
+            .select()
+            .from(eventRsvps)
+            .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.canonicalEmail, canonicalEmail ?? ""), isNotNull(eventRsvps.confirmedAt)))
+            .for("update");
+    if (!row) return { ok: false, reason: "none" };
+
+    if (!input.showName) {
+      if (!row.showName) return { ok: true, showName: false };
+      await tx.update(eventRsvps).set({ showName: false }).where(eq(eventRsvps.id, row.id));
+      return { ok: true, showName: false, changed: true };
+    }
+
+    const name = cleanDisplayName(input.displayName) ?? (cleanDisplayName(row.displayName) === null ? cleanDisplayName(input.defaultName) : null);
+    if (name === null) return { ok: false, reason: "name" };
+    const event = await findPublishedEventById(tx, row.locale, row.eventId);
+    const notice = event ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", row.locale, now) : undefined;
+    if (!event || !notice || !rsvpOffered(event, now, await noticeDescribesRsvp(tx, now))) return { ok: false, reason: "closed" };
+    await tx.update(eventRsvps).set({ showName: true, displayName: name, privacyNoticeVersion: notice.version }).where(eq(eventRsvps.id, row.id));
+    return { ok: true, showName: true, changed: true };
+  });
+  if (result.ok && result.changed) revalidatePublicContent("places");
+  return result.ok ? { ok: true, showName: result.showName } : result;
+}
+
+/** How many confirmed answers an event has: the count «Cine vine (N)» says. */
 export async function countRsvps<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
   const [row] = await db
     .select({ n: count() })
@@ -557,7 +677,25 @@ export async function hasConfirmedRsvp<T extends Record<string, unknown>>(db: Da
   return row !== undefined;
 }
 
-/** What the page's card «Vin (N)» draws: the count, the names that may be shown, and how many are only counted. */
+/**
+ * The person's own confirmed answer, as the tick «Numele meu apare la „Cine vine"» needs it (§827): whether the name shows (the tick AND a
+ * name) and the name the row holds, which the tick would show — handed only to the browser the cookie proves is the person's, never the
+ * address. Null when there is no confirmed answer of this address. The remembered browser's state.
+ */
+export async function readOwnRsvpName<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  canonicalEmail: string,
+): Promise<{ showName: boolean; name: string | null } | null> {
+  const [row] = await db
+    .select({ showName: eventRsvps.showName, displayName: eventRsvps.displayName })
+    .from(eventRsvps)
+    .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.canonicalEmail, canonicalEmail), isNotNull(eventRsvps.confirmedAt)))
+    .limit(1);
+  return row ? { showName: row.showName && row.displayName !== null, name: row.displayName } : null;
+}
+
+/** What the page's card «Cine vine (N)» draws: the count, the names that may be shown, and how many are only counted. */
 export type PublicRsvps = {
   count: number;
   names: string[];

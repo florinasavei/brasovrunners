@@ -47,12 +47,12 @@ export const PAGE_SECTION_IDS = [
   "cost",
   "registration",
   "coHosts",
+  "startList",
   "share",
   "checkpoints",
   "links",
   "programme",
   "rules",
-  "startList",
 ] as const;
 
 export type PageSectionId = (typeof PAGE_SECTION_IDS)[number];
@@ -234,6 +234,28 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   },
   // "Împreună cu": each partner's card, the last of the facts (§344).
   { id: "coHosts", card: "box-cohosts", anchor: null, glyph: "partner", automatic: false, drawn: ({ event }) => readCoHosts(event).length > 0 },
+  // The public participant list (BR-REQ-039-01): only where the event publishes one.
+  //
+  // Left as the switch alone, not also `publicListStillOpen` (§421, finding (11) of the fix
+  // round on `feat/registration-consent-and-terms`): the editor's page map has no `now` or the
+  // club's deadlines to consult, and it says "drawn", not "drawn right now" — the list the club
+  // switched on stays marked drawn on the map after the club's period has closed it on the
+  // public page, the way every other still-true fact does. Wiring the deadlines through here
+  // would tell the editor something the public page already tells a visitor more plainly.
+  //
+  // Asked inside «Program, regulament și declarație» from §512 and, since §760, inside «Participare,
+  // înscrieri și regulament» — the last of its cards in the editor: no number and no chip of its own.
+  // The page draws it right under the registration card since §825 (the owner, 2026-10-19: «Cine vine
+  // trebuie să fie mai vizibil»), so the list stands there, before the share links.
+  {
+    id: "startList",
+    card: "box-start-list",
+    anchor: null,
+    glyph: "startList",
+    automatic: false,
+    nestedIn: "registration",
+    drawn: ({ event }) => event.participantListVisibility === "NAMES",
+  },
   // Facebook, WhatsApp, Instagram and the calendar (§90, §107): from the page's own address.
   { id: "share", card: null, anchor: null, glyph: "share", automatic: true, drawn: () => true },
   /*
@@ -288,27 +310,6 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
     automatic: false,
     nestedIn: "registration",
     drawn: (data) => inSomeLanguage(data, (text) => hasDoc(text.rulesJson)),
-  },
-  // The public participant list (BR-REQ-039-01): only where the event publishes one.
-  //
-  // Left as the switch alone, not also `publicListStillOpen` (§421, finding (11) of the fix
-  // round on `feat/registration-consent-and-terms`): the editor's page map has no `now` or the
-  // club's deadlines to consult, and it says "drawn", not "drawn right now" — the list the club
-  // switched on stays marked drawn on the map after the club's period has closed it on the
-  // public page, the way every other still-true fact does. Wiring the deadlines through here
-  // would tell the editor something the public page already tells a visitor more plainly.
-  //
-  // Asked inside «Program, regulament și declarație» from §512 and, since §760, inside «Participare,
-  // înscrieri și regulament» — the last of its cards, as the page draws the list last: no number and
-  // no chip of its own.
-  {
-    id: "startList",
-    card: "box-start-list",
-    anchor: null,
-    glyph: "startList",
-    automatic: false,
-    nestedIn: "registration",
-    drawn: ({ event }) => event.participantListVisibility === "NAMES",
   },
 ];
 

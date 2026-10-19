@@ -130,6 +130,7 @@ export function eventFieldsFromConfig(context: PostedFieldsContext): Record<stri
     waitlistAutoOffer: config.registration.waitlistAutoOffer,
     askHealthNote: config.registration.askHealthNote,
     rsvpEnabled: config.registration.rsvpEnabled,
+    rsvpAskEnabled: config.registration.rsvpAskEnabled,
     bibStartNumber: String(config.bib.startNumber),
     bibColour: asText(config.bib.colour),
     ...(context.includeBibDesign ? { bibDesign: config.bib.design } : {}),

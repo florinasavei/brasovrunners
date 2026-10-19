@@ -1175,7 +1175,7 @@ async function seedCheckpoints(eventId: string) {
       kind: "save",
       eventId,
       rows: [
-        row(0, { nameRo: "Cronometrare", nameEn: "Timing", km: "15", kinds: ["TIMING"], ...limit(120) }),
+        row(0, { nameRo: "Cronometrare", nameEn: "Timing", km: "15", kinds: ["TIMING", "REGROUP"], ...limit(120), noteRo: "Așteptăm 5 minute", noteEn: "We wait 5 minutes" }),
         row(1, { nameRo: "Apă la cabană", nameEn: "Water at the hut", km: "7,5", kinds: ["WATER", "FOOD"], ...limit(60), noteRo: "Și banane", noteEn: "Bananas too" }),
       ],
     },
@@ -1190,7 +1190,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
     const file = await fileOf(event.id);
     expect(file.event.route.checkpoints).toEqual([
       { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 60, note: { ro: "Și banane", en: "Bananas too" }, onProfile: true },
-      { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING"], cutoffMinutes: 120, note: { ro: null, en: null }, onProfile: true },
+      { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING", "REGROUP"], cutoffMinutes: 120, note: { ro: "Așteptăm 5 minute", en: "We wait 5 minutes" }, onProfile: true },
     ]);
     // Minutes, never a time of the day (§770).
     expect(JSON.stringify(file.event.route.checkpoints)).not.toContain('"cutoff"');
@@ -1200,7 +1200,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
     const copied = await listCheckpoints(db, created.eventId);
     expect(copied.map((row) => [row.km, row.nameRo, row.nameEn, row.kinds, row.cutoffMinutes, row.noteRo, row.noteEn])).toEqual([
       [7.5, "Apă la cabană", "Water at the hut", ["WATER", "FOOD"], 60, "Și banane", "Bananas too"],
-      [15, "Cronometrare", "Timing", ["TIMING"], 120, null, null],
+      [15, "Cronometrare", "Timing", ["TIMING", "REGROUP"], 120, "Așteptăm 5 minute", "We wait 5 minutes"],
     ]);
     // The clock follows the start the import wrote: the gun at 10:00, so an hour is 11:00 and two hours 12:00.
     expect(copied.map((row) => row.cutoffClock)).toEqual(["11:00", "12:00"]);
@@ -1566,6 +1566,82 @@ describe("§802 the event's tick «Arată profilul traseului pe pagină» travel
     // And a second import of the same file changes nothing about it.
     const after = await diffEventImport(db, { actor: admin, file: off, eventId: target.id });
     expect(after.changes.map((candidate) => candidate.key)).not.toContain("route.showRouteProfile");
+  });
+});
+
+// --- «Trimite întrebarea „Vii?” înainte de acest eveniment» (§823) ------------------------------------
+
+describe("§823 the event's tick «Trimite întrebarea „Vii?”» travels in the file", () => {
+  it("is exported as it is, written in the downloaded text only when it is off, and the file's version stays 3", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const on = await fileOf(event.id);
+    expect(on.version).toBe(3);
+    expect(on.event.registration.rsvpAskEnabled).toBe(true);
+    // «On» is what a file without the key means: left out, so a release before the tick still reads the file.
+    expect(serializeEventFile(on)).not.toContain("rsvpAskEnabled");
+
+    await db.update(events).set({ rsvpAskEnabled: false }).where(eq(events.id, event.id));
+    const off = await fileOf(event.id);
+    expect(off.version).toBe(3);
+    expect(off.event.registration.rsvpAskEnabled).toBe(false);
+    expect(serializeEventFile(off)).toContain('"rsvpAskEnabled": false');
+  });
+
+  it("is imported as new as it was, and the round trip is the same", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await db.update(events).set({ rsvpAskEnabled: false }).where(eq(events.id, event.id));
+    const file = await fileOf(event.id);
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).rsvpAskEnabled).toBe(false);
+    const back = await fileOf(created.eventId);
+    expect(diffConfigs(back.event, file.event).map((change) => change.key).sort()).toEqual(["translations.en.slug", "translations.ro.slug"]);
+
+    // An event that is on comes back on.
+    const { event: shown } = await seedRace({}, { ro: { slug: "alta-cursa-cu-intrebare", title: "Altă cursă" }, en: { slug: "another-race-with-question", title: "Another race" } }, false);
+    const copy = await importEventAsNew(db, { actor: admin, file: await fileOf(shown.id), fetchImpl: serving(), now: NOW });
+    expect((await reload(copy.eventId)).rsvpAskEnabled).toBe(true);
+  });
+
+  it("reads a file made before the tick existed — no `rsvpAskEnabled` — as on, and imports it so", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await db.update(events).set({ rsvpAskEnabled: false }).where(eq(events.id, event.id));
+    const old = JSON.parse(serializeEventFile(await fileOf(event.id))) as { event: { registration: Record<string, unknown> } };
+    delete old.event.registration.rsvpAskEnabled;
+    expect(JSON.stringify(old)).not.toContain("rsvpAskEnabled");
+    const read = readEventFile(JSON.stringify(old));
+    if (!read.ok) throw new Error(`a file without the tick did not read: ${read.refusal} ${read.detail ?? ""}`);
+    expect(read.file.event.registration.rsvpAskEnabled).toBe(true);
+    const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).rsvpAskEnabled).toBe(true);
+  });
+
+  it("refuses a tick that is not true or false", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const bad = JSON.parse(JSON.stringify(await fileOf(event.id))) as { event: { registration: Record<string, unknown> } };
+    bad.event.registration.rsvpAskEnabled = "no";
+    expect(readEventFile(JSON.stringify(bad)).ok).toBe(false);
+  });
+
+  it("sees a changed tick in the diff, and writes the file's tick over an event — both ways", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const { target } = await seedTarget();
+    // The file's is on, the target's off: the diff names it, the import turns it on.
+    await db.update(events).set({ rsvpAskEnabled: false }).where(eq(events.id, target.id));
+    const on = await fileOf(event.id);
+    const diff = await diffEventImport(db, { actor: admin, file: on, eventId: target.id });
+    const change = diff.changes.find((candidate) => candidate.key === "registration.rsvpAskEnabled");
+    expect(change).toMatchObject({ label: "registration.rsvpAskEnabled", from: { type: "boolean", value: false }, to: { type: "boolean", value: true } });
+    await importEventOver(db, await overInput(on, target.id));
+    expect((await reload(target.id)).rsvpAskEnabled).toBe(true);
+
+    // The other way: the file's off, the target's on.
+    await db.update(events).set({ rsvpAskEnabled: false }).where(eq(events.id, event.id));
+    const off = await fileOf(event.id);
+    await importEventOver(db, await overInput(off, target.id));
+    expect((await reload(target.id)).rsvpAskEnabled).toBe(false);
+    // And a second import of the same file changes nothing about it.
+    const after = await diffEventImport(db, { actor: admin, file: off, eventId: target.id });
+    expect(after.changes.map((candidate) => candidate.key)).not.toContain("registration.rsvpAskEnabled");
   });
 });
 

@@ -61,6 +61,7 @@ export type TaskId =
   | "resultsNotice"
   | "rsvpNotice"
   | "rsvpAskNotice"
+  | "rsvpAskAnswerersNotice"
   | "resultsTerms"
   | "invitationsNotice"
   | "promoNotice"
@@ -120,6 +121,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   resultsNotice: "text",
   rsvpNotice: "text",
   rsvpAskNotice: "text",
+  rsvpAskAnswerersNotice: "text",
   resultsTerms: "text",
   invitationsNotice: "text",
   promoNotice: "text",
@@ -264,6 +266,21 @@ export type OwnerTaskInputs = {
    * approved before only by `{{newsletterTopics}}`, which asks nobody.
    */
   rsvpAskDescribed: boolean;
+  /**
+   * Did the club choose to ask the people who answered «Vin!» at an earlier date of the series too (§823, the setting in «Emailuri»:
+   * `ANSWERERS` or `BOTH`)? The row below exists only while it did: a club that asks its subscribers alone owes the notice nothing more.
+   */
+  rsvpAskAnswerersChosen: boolean;
+  /**
+   * The club chose the earlier answerers ALONE (`ANSWERERS`, not `BOTH`): while the notice is silent nobody at all is asked, not even the
+   * subscribers, and the row says so in its own sentence (`todoOnly`) instead of «subscribers are asked as before».
+   */
+  rsvpAskAnswerersOnly?: boolean;
+  /**
+   * Does the notice in force, in every language, describe the question's second audience too (§823, `noticeDescribesRsvpAskAnswerers`:
+   * `{{rsvpAskAnswerers}}`, with the question and «Vin!»)? Until it does, nobody of that audience is asked, whatever the club chose.
+   */
+  rsvpAskAnswerersDescribed: boolean;
   /** How many upcoming turn-up events the club ticked «Acceptă răspunsuri „Vin!”» on (`countRsvpEvents`): the row waits only while there is one. */
   rsvpEvents: number;
   /**
@@ -643,6 +660,20 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       push("rsvpAskNotice", {
         owner: "club",
         state: input.rsvpAskDescribed ? "done" : "open",
+      });
+    }
+    /*
+      The question's second audience (§823): the people who answered «Vin!» at an earlier date of the series. The gate is real, so the
+      row is the club's to see: it exists while the club CHOSE that audience («Emailuri» → «Cui îi trimitem întrebarea „Vii?”»), is open
+      until a notice naming `{{rsvpAskAnswerers}}` is in force in every language (nobody of that audience is asked meanwhile, though the
+      club chose it — it must hear why), and done by itself the day one takes effect. Absent while the audience is the subscribers alone.
+      Never blocking: the choice stays and does nothing.
+    */
+    if (input.rsvpAskAnswerersChosen) {
+      push("rsvpAskAnswerersNotice", {
+        owner: "club",
+        state: input.rsvpAskAnswerersDescribed ? "done" : "open",
+        ...(!input.rsvpAskAnswerersDescribed && input.rsvpAskAnswerersOnly ? { text: "todoOnly" } : {}),
       });
     }
     /*

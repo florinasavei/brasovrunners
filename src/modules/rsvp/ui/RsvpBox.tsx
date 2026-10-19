@@ -19,29 +19,32 @@ import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX, PUB
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { DENSITY } from "@/theme/density";
 import { RSVP_BOX_ID, type RsvpOutcome } from "../rsvp-box";
-import RsvpCount, { readRsvpsOf } from "./RsvpCount";
+import type { PublicRsvps } from "../rsvp";
+import { readRsvpsOf } from "./RsvpCount";
 import RsvpSummary from "./RsvpSummary";
-import { rsvpForgetAction, rsvpGoAction, rsvpLeaveAction, rsvpStateAction } from "../remembered-actions";
+import { rsvpForgetAction, rsvpGoAction, rsvpLeaveAction, rsvpShowNameAction, rsvpStateAction } from "../remembered-actions";
 import RsvpRemembered from "./RsvpRemembered";
 
 /**
- * «Vii?» (§811, «Vin!» part 1; the owner, 2026-10-18: «how do I mark myself as "Going"?») — the answer «Vin!» on a turn-up event
- * the club ticked, and under it «Vin (N)»: who comes. Drawn by `EventPageView` where the registration card would stand, with the
- * anchor `#vin`, **only while `rsvpOffered` says so** (the page decides, from the one rule): otherwise the page shows nothing — no
- * box, no count, no sentence.
+ * «Confirmă prezența (opțional)» (§811, «Vin!» part 1, named «Vii?» until §825; the owner, 2026-10-19: «Și pune „Confirmă prezența
+ * (opțional)", ceva de genul») — the answer «Vin!» on a turn-up event the club ticked. Drawn by `EventPageView` where the registration
+ * card would stand, with the anchor `#vin`, **only while `rsvpOffered` says so** (the page decides, from the one rule): otherwise the page
+ * shows nothing — no box, no count, no sentence. Who comes is **not in it any more**: «Cine vine (N)» is the fold right under it
+ * (`RsvpCount`, anchor `#cine-vine`), so a reader who skims sees both bars together.
  *
- * Not a registration: no place, no declaration. The interest box's twin (`registrations/ui/RegistrationInterestForm.tsx`) in how
- * it works — a Server Component around a Server Action, the honeypot and the rendering time riding along as hidden fields, the
- * Turnstile widget when the club switched it on, the answer a sentence after a redirect, **the same sentence whatever the address
- * turned out to mean** — plus a tick, «Vreau să apar cu numele», which is the person's own consent to a public name (§143, §396).
+ * Not a registration: no place, no declaration — the sentence under the bar says so («Nu e o înscriere: ne ajută să știm câți venim.»).
+ * The interest box's twin (`registrations/ui/RegistrationInterestForm.tsx`) in how it works — a Server Component around a Server Action,
+ * the honeypot and the rendering time riding along as hidden fields, the Turnstile widget when the club switched it on, the answer a
+ * sentence after a redirect, **the same sentence whatever the address turned out to mean** — plus a tick, «Vreau să apar cu numele»,
+ * which is the person's own consent to a public name (§143, §396).
  *
  * **A closed fold since §812** (the owner, 2026-10-19: «Asta ar trebui să fie collapsed, ca și condițiile de participare»): the same
  * `<details>` as «Condiții de participare» (`EventPageView`) — the 44-pixel bar, the glyph, a real `h2` in the summary — closed on
- * arrival, with what a reader decides by on its line: «Vii? · 3 vin», «Vii? · Fii primul care spune că vine.» when nobody has answered,
- * «Vii? · Tu vii ✓ · 3 vin» once the island knows this browser did (`RsvpSummary`, `domain/summary.ts`). Opened: the form (or the one-tap
- * state), its help, «Nu mai vin», then «Vin (N)» with the names. The anchor `#vin` is the fold's own id, so a link to it — the
- * calendar's «Vin! →», the listing's chip, the link page's landing — opens it (`OpenFoldFromHash`, mounted by the page), and the answer
- * a post leaves in the address (`?vin=…`) opens it on the server, or the sentence would sit behind a closed bar.
+ * arrival, with what a reader decides by on its line: «Confirmă prezența (opțional) · 3 vin», «… · Fii primul care confirmă» when nobody has
+ * answered, «… · Tu vii ✓ · 3 vin» once the island knows this browser did (`RsvpSummary`, `domain/summary.ts`). Opened: the form (or the
+ * one-tap state), its help and «Nu mai vin». The anchor `#vin` is the fold's own id, so a link to it — the calendar's «Vin! →», the
+ * listing's chip, the link page's landing — opens it (`OpenFoldFromHash`, mounted by the page), and the answer a post leaves in the
+ * address (`?vin=…`) opens it on the server, or the sentence would sit behind a closed bar.
  *
  * Without JavaScript the typed form stands and works. The one client island (`RsvpRemembered`) wraps it: a browser that used a
  * «Da, vin» link carries a hint cookie, and the island swaps the typed form for one tap. The page stays static for everybody.
@@ -52,6 +55,7 @@ export default async function RsvpBox({
   eventId,
   renderedAt,
   outcome,
+  rsvps: given,
 }: {
   locale: Locale;
   slug: string;
@@ -59,14 +63,19 @@ export default async function RsvpBox({
   /** When this form was rendered — or, on a corrected address, when the one it corrects was. */
   renderedAt: Date;
   outcome: RsvpOutcome | null;
+  /**
+   * The answers the page already read (`readRsvpsOf`, §822): `EventPageView` reads them once, before the calendar's add links, so the links'
+   * «N vin până acum» and this card say one number from one read. Absent, the box reads them itself; `null` is «the database is away».
+   */
+  rsvps?: PublicRsvps | null;
 }) {
   const t = await getTranslations("Event");
   const siteKey = turnstileSiteKey();
-  // Read once: the closed line and the count card inside say the same number, and a database that is away says neither (§281).
-  const rsvps = await readRsvpsOf(eventId);
+  // Read once: the closed line and the fold «Cine vine» under it (the page hands both the same read) say one number, and a database that is away says neither (§281).
+  const rsvps = given === undefined ? await readRsvpsOf(eventId) : given;
   const summaryWords = {
     countText: rsvps !== null && rsvps.count > 0 ? t(`rsvp.chip.${countForm(rsvps.count, locale)}`, { count: rsvps.count }) : null,
-    emptyText: t("rsvp.countEmpty"),
+    emptyText: t("rsvp.summaryEmpty"),
     goingText: t("rsvp.going"),
   };
 
@@ -81,6 +90,15 @@ export default async function RsvpBox({
     submit: t("rsvp.submit"),
     submitting: t("rsvp.submitting"),
     showName: t("rsvp.showName"),
+    nameSwitch: t("rsvp.nameSwitch"),
+    nameHelp: t.raw("rsvp.nameKept") as string,
+    nameAsk: t("rsvp.nameAsk"),
+    nameBox: t("rsvp.nameBox"),
+    nameSave: t("rsvp.nameSave"),
+    nameShown: t("rsvp.nameOutcome.shown"),
+    nameHidden: t("rsvp.nameOutcome.hidden"),
+    nameNeeded: t("rsvp.nameOutcome.name"),
+    nameNone: t("rsvp.nameOutcome.none"),
   };
 
   return (
@@ -118,7 +136,7 @@ export default async function RsvpBox({
               </Alert>
             </>
           ) : (
-            <RsvpRemembered slug={slug} locale={locale} labels={labels} actions={{ state: rsvpStateAction, go: rsvpGoAction, leave: rsvpLeaveAction, forget: rsvpForgetAction }}>
+            <RsvpRemembered slug={slug} locale={locale} labels={labels} actions={{ state: rsvpStateAction, go: rsvpGoAction, leave: rsvpLeaveAction, forget: rsvpForgetAction, showName: rsvpShowNameAction }}>
               {outcome === "withdrawSent" && (
                 <Alert severity="info" role="status" sx={{ mb: 1.5 }} data-testid="rsvp-withdraw-sent">
                   {t("rsvp.withdrawDone")}
@@ -196,7 +214,6 @@ export default async function RsvpBox({
               </Box>
             </RsvpRemembered>
           )}
-          <RsvpCount eventId={eventId} rsvps={rsvps} />
         </Box>
       </Box>
     </Box>

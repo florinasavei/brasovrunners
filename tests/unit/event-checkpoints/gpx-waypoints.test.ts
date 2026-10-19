@@ -161,6 +161,52 @@ describe("§757 what a waypoint's words say it offers", () => {
     ["", []],
   ])("reads %j as %j", (words, kinds) => expect(kindsFromWords(words)).toEqual(kinds));
 
+  // «Regrupare» (§824): where the group waits — accent-insensitive like the others, one family per row.
+  it.each([
+    ["Regrupare", ["REGROUP"]],
+    ["REGRUPARE la cabană", ["REGROUP"]],
+    ["Regrupăm aici", ["REGROUP"]],
+    ["Regroup", ["REGROUP"]],
+    ["Regrouping point", ["REGROUP"]],
+    ["Point de regroupement", ["REGROUP"]],
+    ["Adunare", ["REGROUP"]],
+    ["Adunarea grupului", ["REGROUP"]],
+    ["Ne adunăm la fântână", ["WATER", "REGROUP"]],
+    ["Așteptăm ceilalți", ["REGROUP"]],
+    ["Asteptam ceilalti", ["REGROUP"]],
+    ["Waiting for the group", ["REGROUP"]],
+    ["We wait for everyone", ["REGROUP"]],
+    ["Regrupare + apă", ["WATER", "REGROUP"]],
+    // A word that only begins like one of these, or a wait that is not the group's, is not one.
+    ["Așteptare", []],
+    ["Waiting room", []],
+    ["Wait", []],
+    ["Adunat", []],
+    ["Regrupez", []],
+  ])("reads %j as %j", (words, kinds) => expect(kindsFromWords(words)).toEqual(kinds));
+
+  it("keeps every earlier guess as it was: a name with none of the new words reads exactly as before (§824)", () => {
+    const before: Array<[string, string, string[]]> = [
+      ["Fântână", "", ["WATER"]],
+      ["Punct de apă și mâncare", "", ["WATER", "FOOD"]],
+      ["Prim ajutor", "", ["FIRST_AID"]],
+      ["Control point", "", ["TIMING"]],
+      ["Marshal at the junction", "", ["DIRECTION"]],
+      ["Punct de apă la intersecție", "", ["WATER", "DIRECTION"]],
+      ["River crossing", "Crossing", ["DIRECTION"]],
+      ["Cabana", "", []],
+    ];
+    for (const [words, symbols, kinds] of before) expect(kindsFromWords(words, symbols), words).toEqual(kinds);
+  });
+
+  it("puts a waypoint named «Regrupare» on the list as such", () => {
+    const parsed = parseGpxWaypoints(gpx(wpt(LAT, 25.52, "<name>Regrupare</name>") + wpt(LAT, 25.53, "<name>Regroup here</name>")));
+    expect(parsed.proposals.map((p) => [p.name, p.kinds])).toEqual([
+      ["Regrupare", ["REGROUP"]],
+      ["Regroup here", ["REGROUP"]],
+    ]);
+  });
+
   it("reads «Crossing» as a junction only from the symbol, never from a name", () => {
     expect(kindsFromWords("River crossing")).toEqual([]);
     expect(kindsFromWords("River crossing", "Crossing")).toEqual(["DIRECTION"]);

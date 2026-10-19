@@ -805,7 +805,7 @@ export async function cachedFirstVolunteersListNoticeVersion(): Promise<number |
  * The people the event page's card «Voluntarii» may show (`readPublicVolunteersList`, §821): the count of the confirmed volunteers and
  * the names, with the role given, of those who ticked under a notice that described the list. Names and roles only, never an address or a
  * telephone number. Filed under "places" and "events", the tags every write to the people expires (`revalidatePublicContent`), and with
- * **no saved copy** (a withdrawn name must not outlive its owner's request, §281, as the start list's and «Vin (N)»'s). The notice's first
+ * **no saved copy** (a withdrawn name must not outlive its owner's request, §281, as the start list's and «Cine vine (N)»'s). The notice's first
  * version is in the key, so a list made without the gate is never served with it.
  */
 export async function cachedPublicVolunteersList(eventId: string, firstListNoticeVersion: number | null) {

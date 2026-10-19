@@ -1,0 +1,1 @@
+ALTER TYPE "public"."event_checkpoint_kind" ADD VALUE 'REGROUP';

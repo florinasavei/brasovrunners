@@ -1,4 +1,5 @@
 import { countForm, type CountForm } from "@/i18n/count-form";
+import { rsvpAskClock } from "@/modules/rsvp/domain/ask";
 import type { DeadlineKey, Deadlines } from "./deadlines";
 
 /**
@@ -127,6 +128,8 @@ export function deadlineWords(
  * with the number in the catalogue (`retryTimes`), so it is outside this function's keys.
  */
 export function deadlineDuration(locale: string, key: Exclude<DeadlineKey, "verificationRetries">, value: number): string | null {
+  // A time of day is never «none»: zero is midnight, "00:00" (§823).
+  if (key === "rsvpAskHour") return rsvpAskClock(value);
   if (value === 0) return null;
   switch (key) {
     case "confirmationHours":
@@ -144,6 +147,7 @@ export function deadlineDuration(locale: string, key: Exclude<DeadlineKey, "veri
     case "raceWeekDays":
     case "seriesHorizonDays":
     case "publicListDays":
+    case "rsvpAskDaysBefore":
       return daysPhrase(locale, value);
   }
 }
