@@ -749,7 +749,8 @@ export async function setRsvpClubMember<T extends Record<string, unknown>>(
     const event = await findPublishedEventById(tx, row.locale, row.eventId);
     const notice = event ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", row.locale, now) : undefined;
     if (!event || !notice || !rsvpOffered(event, now, await noticeDescribesRsvp(tx, now)) || !(await noticeDescribesRsvpMember(tx, now))) return { ok: false, reason: "closed" };
-    if (held === "DECLARED") return { ok: true, clubMember: true };
+    // Already ticked under this very notice: nothing to write. Ticked under an older one, the press is the fresh declaration and moves the version (§421).
+    if (held === "DECLARED" && row.privacyNoticeVersion === notice.version) return { ok: true, clubMember: true };
     await tx.update(eventRsvps).set({ clubMember: "DECLARED", privacyNoticeVersion: notice.version }).where(eq(eventRsvps.id, row.id));
     return { ok: true, clubMember: true, changed: true };
   });
