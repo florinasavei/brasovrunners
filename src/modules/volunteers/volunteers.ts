@@ -1664,7 +1664,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       // The organizers record the person's own tick only under a notice that describes the list: a post that carries it otherwise is a forged or stale one.
       if (input.listOptIn && !listDescribed) throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not describe the public list yet", ["listOptIn"]);
       if (input.guardian && !minorsOpen) throw new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["birthDate"]);
-      // The notice the tick is recorded under (§421's line): the version in force in the person's language, written beside the tick like a sign-up's.
+      // The notice the tick is recorded under: the version in force (a document's version is the same in both languages), written in the tick's own column — never in
+      // `privacy_notice_version`, which is the record of a sign-up's consent and stays null on a row the club entered.
       const listNotice = input.listOptIn ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", "ro", now) : undefined;
       if (input.listOptIn && !listNotice) throw new DomainError("VALIDATION_ERROR", "no approved privacy notice in force", ["listOptIn"]);
       const [row] = await tx
@@ -1689,7 +1690,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           clubMember: input.clubMember,
           // «Vreau să apar pe lista publică a voluntarilor» (§NNN), recorded by the staff member (the audit row names them) under the notice in force.
           listOptIn: input.listOptIn,
-          privacyNoticeVersion: input.listOptIn ? (listNotice?.version ?? null) : null,
+          listOptInNoticeVersion: input.listOptIn ? (listNotice?.version ?? null) : null,
           // A size only while the event gives a shirt (§765); a stale form posting one for an event without is ignored.
           shirtSize: event.shirts ? input.shirtSize : null,
           // The parent or guardian of a person under eighteen (§768): their name, and the address when the organizer has one.
@@ -1801,7 +1802,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not describe the public list yet", ["listOptIn"]);
     }
     const listNext = listDescribed ? input.listOptIn : current.listOptIn && input.listOptIn;
-    // The notice the tick is newly recorded under: the version in force in the person's language (the tick of a sign-up keeps the one it was given under).
+    // The notice the tick is newly recorded under: the version in force (the tick of a sign-up keeps the one it was given under). Written in the tick's own
+    // column and never in `privacy_notice_version`: a sign-up's consent record is not the organizers' to overwrite.
     const listNotice = listNext && !current.listOptIn ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", current.locale, now) : undefined;
     if (listNext && !current.listOptIn && !listNotice) throw new DomainError("VALIDATION_ERROR", "no approved privacy notice in force", ["listOptIn"]);
     // `age` is derived from the date: the trail names the date's box, and the age alone only when it moved with no new date (an event moved).
@@ -1891,7 +1893,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         .set({
           ...columnsOf(next),
           age: nextAge,
-          ...(listNotice ? { privacyNoticeVersion: listNotice.version } : {}),
+          // A tick newly recorded takes the notice in force; one kept keeps its own; one cleared keeps none.
+          listOptInNoticeVersion: !listNext ? null : listNotice ? listNotice.version : current.listOptInNoticeVersion,
           ...guardianSet,
           canonicalEmail: input.identity.canonicalEmail,
           canonicalizationVersion: input.identity.canonicalizationVersion,
@@ -2195,6 +2198,8 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
         message: input.message,
         privacyNoticeVersion: notice.version,
         listOptIn,
+        // The notice the tick was given under: the very one the sign-up's consent is recorded under.
+        listOptInNoticeVersion: listOptIn ? notice.version : null,
         // The person's own words about themselves (§765), kept only when the notice in force names them; the size only
         // while the event gives a shirt. A form posted for the other mode (a page cached before the notice changed) is refused at the top, naming its missing boxes; the redirect then draws the form now in force.
         ...(profile

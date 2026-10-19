@@ -10,8 +10,8 @@
  *    (`events.accepts_volunteers`), whose club ticked the list public, while the privacy notice in force describes it
  *    (`{{volunteersList}}`, in every language) and the volunteers' rows still exist (thirty days after the event's start, §754).
  *    Anything else draws nothing — not a count, not a sentence.
- * 2. `publicVolunteerName` — which person is named? A **confirmed** volunteer (a person nobody has accepted, or who withdrew, is not
- *    "the team") who ticked «Vreau să apar pe lista publică a voluntarilor» under a privacy notice that described the list — the
+ * 2. `publicVolunteerName` — which person is named? A **confirmed** adult volunteer (a person nobody has accepted, or who withdrew, is not
+ *    "the team"; a minor is counted and never named, §768 — the guardian's acceptance covers the agreement, not a disclosure) who ticked «Vreau să apar pe lista publică a voluntarilor» under a privacy notice that described the list — the
  *    first such notice or a later one (`findFirstVolunteersListNoticeVersion`, §421's line), because a tick given under a notice that
  *    said nothing about it agreed to nothing this shows. Everyone else is only counted.
  * 3. `volunteersListView` — the names in the club's order (the oldest sign-up first, so the list does not reshuffle when somebody
@@ -19,10 +19,10 @@
  *    many are only counted («și încă N»).
  *
  * What is never here: an address, a telephone number, a city, a date of birth, the sex, a T-shirt size, a message, a note, the
- * roles a person ticked, the guardian — the read selects none of them (`readPublicVolunteersList`).
+ * roles a person ticked — the read selects none of them (`readPublicVolunteersList`); the age and the guardian's name it selects only to keep a minor off the page.
  */
 import { RETENTION_PERIODS } from "@/modules/jobs/domain/retention-periods";
-import type { VolunteerState } from "./volunteer";
+import { isVolunteerMinor, type VolunteerState } from "./volunteer";
 
 /** The most names the card lists; the rest are «și încă N». */
 export const VOLUNTEERS_LIST_NAMES_SHOWN = 100;
@@ -72,8 +72,12 @@ export type VolunteerNameInput = {
   name: string;
   /** `event_volunteers.list_opt_in`. */
   listOptIn: boolean;
-  /** The privacy notice version the tick was given under (the sign-up's, or the organizers' record's); null for a row that recorded none. */
-  privacyNoticeVersion: number | null;
+  /** The privacy notice version the tick was given under (`event_volunteers.list_opt_in_notice_version`: the sign-up's, or the notice in force at the organizers' record); null for a row that recorded none. */
+  listNoticeVersion: number | null;
+  /** The age on the event's day, null when none is known. A person under eighteen is counted and never named (§NNN, until the owner and counsel decide otherwise). */
+  age: number | null;
+  /** The parent or guardian's name when the person is a minor (§768): its presence is the same fact as the age, read twice so that a row with only one of them still holds. */
+  guardianName: string | null;
   /** `findFirstVolunteersListNoticeVersion`: the first approved notice that described the list, or null when none did. */
   firstListNoticeVersion: number | null;
 };
@@ -84,7 +88,10 @@ export type VolunteerNameInput = {
  */
 export function publicVolunteerName(row: VolunteerNameInput): string | null {
   if (row.state !== "CONFIRMED" || !row.listOptIn) return null;
-  if (row.firstListNoticeVersion === null || row.privacyNoticeVersion === null || row.privacyNoticeVersion < row.firstListNoticeVersion) return null;
+  // A minor is never named on a public page on their own tick: the guardian's acceptance covers the agreement alone (§768), and a tick for a list is
+  // another disclosure (§323 keeps a minor off every public list). Counted, not named, until the owner and counsel decide how a guardian consents to it.
+  if (isVolunteerMinor(row.age) || row.guardianName !== null) return null;
+  if (row.firstListNoticeVersion === null || row.listNoticeVersion === null || row.listNoticeVersion < row.firstListNoticeVersion) return null;
   const name = row.name.trim().replace(/\s+/g, " ");
   return name === "" ? null : name;
 }

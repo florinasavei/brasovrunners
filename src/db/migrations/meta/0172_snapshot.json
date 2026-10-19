@@ -1,5 +1,5 @@
 {
-  "id": "4648ac84-0271-4072-a391-0a00c016e272",
+  "id": "16e5ea37-8544-4067-9ef8-2f5f919dd3a0",
   "prevId": "9c2cb752-44d2-4a97-a003-67995b40411a",
   "version": "7",
   "dialect": "postgresql",
@@ -3121,6 +3121,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "list_opt_in_notice_version": {
+          "name": "list_opt_in_notice_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",

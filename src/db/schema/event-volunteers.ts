@@ -242,10 +242,17 @@ export const eventVolunteers = pgTable(
      * given,** on the event page's card «Voluntarii» (`events.volunteers_list_public`). Off by default and never assumed: a person
      * who did not tick is only counted. A public sign-up keeps it only when the form asked it, i.e. while the club's tick is on and
      * the notice in force describes the list (`{{volunteersList}}`); the organizers' record only while the notice describes it. A name
-     * is shown only for a row whose notice version (or, for a hand entry, the notice in force at the record) is the first that
-     * described the list or a later one (`domain/public-list.ts`). Kept and deleted with the row.
+     * is shown only for a row whose `listOptInNoticeVersion` is the first notice that described the list or a later one
+     * (`domain/public-list.ts`). Kept and deleted with the row.
      */
     listOptIn: boolean("list_opt_in").notNull().default(false),
+    /**
+     * The privacy notice version the list tick was given under (§NNN): the sign-up's own notice when the person ticked on the public form,
+     * the notice in force when the organizers recorded the tick. Its own column, **never** `privacy_notice_version`: that one is the
+     * record of the notice the person consented under when they offered (GDPR art. 7(1)) and stays null for a row the club entered, so a
+     * tick the organizers record later must not overwrite it. Null while `list_opt_in` is off.
+     */
+    listOptInNoticeVersion: integer("list_opt_in_notice_version"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     /** The staff member who entered the row; null for the public form, and after that account is removed. */

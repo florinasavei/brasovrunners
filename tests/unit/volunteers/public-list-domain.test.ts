@@ -21,7 +21,9 @@ const row = (over: Partial<VolunteerListRow> = {}): VolunteerListRow => ({
   state: "CONFIRMED",
   name: "Ana Popescu",
   listOptIn: true,
-  privacyNoticeVersion: 3,
+  listNoticeVersion: 3,
+  age: 30,
+  guardianName: null,
   roleNameRo: "Punct de apă",
   roleNameEn: "Water point",
   ...over,
@@ -48,7 +50,16 @@ describe("§NNN publicVolunteerName — who may be named", () => {
   });
 
   it("names one who ticked under a later notice too", () => {
-    expect(publicVolunteerName(input({ privacyNoticeVersion: 4 }))).toBe("Ana Popescu");
+    expect(publicVolunteerName(input({ listNoticeVersion: 4 }))).toBe("Ana Popescu");
+  });
+
+  it("counts a minor and never names one, on their own tick (§768: the guardian's acceptance covers the agreement, not a disclosure)", () => {
+    expect(publicVolunteerName(input({ age: 16 }))).toBeNull();
+    expect(publicVolunteerName(input({ age: 17, guardianName: "Maria Popescu" }))).toBeNull();
+    // A row that holds only one of the two facts of a minor still holds.
+    expect(publicVolunteerName(input({ age: null, guardianName: "Maria Popescu" }))).toBeNull();
+    expect(publicVolunteerName(input({ age: 18 }))).toBe("Ana Popescu");
+    expect(publicVolunteerName(input({ age: null }))).toBe("Ana Popescu");
   });
 
   it("does not name one who did not tick", () => {
@@ -56,7 +67,7 @@ describe("§NNN publicVolunteerName — who may be named", () => {
   });
 
   it("does not name one whose tick was given under an older notice that said nothing about the list", () => {
-    expect(publicVolunteerName(input({ privacyNoticeVersion: 2 }))).toBeNull();
+    expect(publicVolunteerName(input({ listNoticeVersion: 2 }))).toBeNull();
   });
 
   it("does not name anyone while no approved notice has described the list yet", () => {
@@ -64,7 +75,7 @@ describe("§NNN publicVolunteerName — who may be named", () => {
   });
 
   it("does not name a tick that recorded no notice at all", () => {
-    expect(publicVolunteerName(input({ privacyNoticeVersion: null }))).toBeNull();
+    expect(publicVolunteerName(input({ listNoticeVersion: null }))).toBeNull();
   });
 
   it("does not name a person nobody confirmed, or one who withdrew", () => {
@@ -106,9 +117,15 @@ describe("§NNN volunteersListView — the names, the role given and the count",
   });
 
   it("names nobody whose tick predates the notice that described the list, and counts them", () => {
-    const view = volunteersListView([row({ privacyNoticeVersion: 1 }), row({ name: "Ion", privacyNoticeVersion: 5 })], 3);
+    const view = volunteersListView([row({ listNoticeVersion: 1 }), row({ name: "Ion", listNoticeVersion: 5 })], 3);
     expect(view.named.map((person) => person.name)).toEqual(["Ion"]);
     expect(view.others).toBe(1);
+  });
+
+  it("counts a minor among the others", () => {
+    const view = volunteersListView([row({ age: 15, guardianName: "Maria Popescu" }), row({ name: "Ion" })], 3);
+    expect(view.named.map((person) => person.name)).toEqual(["Ion"]);
+    expect(view).toMatchObject({ count: 2, others: 1 });
   });
 
   it("caps the names it lists and counts the rest among the others", () => {

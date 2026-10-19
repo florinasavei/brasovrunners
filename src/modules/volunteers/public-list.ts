@@ -13,8 +13,9 @@ import { type PublicVolunteersList, type VolunteerListRow, volunteersListView } 
 /**
  * The volunteers' public list (§NNN, amending §754 and §143/§396; the owner, 2026-10-19: «private vs public lists of volunteers») — the
  * reads and the one switch behind it. The rule itself is pure and lives in `domain/public-list.ts`; this file only selects the rows it
- * judges, and **selects nothing a public page could leak**: the name, the state, the tick, the notice version, and the name of the role
- * given — never an address, a telephone number, a city, a date of birth, a message, a note, the roles ticked, the guardian.
+ * judges, and **selects nothing a public page could leak**: the name, the state, the tick, the notice version of the tick, the age and the guardian's name
+ * (only to keep a minor off the page — they never leave `volunteersListView`), and the name of the role given — never an address, a telephone number, a city, a
+ * date of birth, a message, a note, the roles ticked.
  */
 
 /**
@@ -36,7 +37,10 @@ export async function readPublicVolunteersList<T extends Record<string, unknown>
       state: eventVolunteers.state,
       name: eventVolunteers.name,
       listOptIn: eventVolunteers.listOptIn,
-      privacyNoticeVersion: eventVolunteers.privacyNoticeVersion,
+      listNoticeVersion: eventVolunteers.listOptInNoticeVersion,
+      // Read only to keep a minor off the page (`publicVolunteerName`); never part of what `volunteersListView` returns.
+      age: eventVolunteers.age,
+      guardianName: eventVolunteers.guardianName,
       roleNameRo: eventVolunteerRoles.nameRo,
       roleNameEn: eventVolunteerRoles.nameEn,
     })
@@ -49,7 +53,9 @@ export async function readPublicVolunteersList<T extends Record<string, unknown>
     state: row.state,
     name: row.name,
     listOptIn: row.listOptIn,
-    privacyNoticeVersion: row.privacyNoticeVersion,
+    listNoticeVersion: row.listNoticeVersion,
+    age: row.age,
+    guardianName: row.guardianName,
     roleNameRo: row.roleNameRo,
     roleNameEn: row.roleNameEn,
   }));
