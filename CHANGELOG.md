@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.61-2026-10-19
+
+- **Five tests that failed by chance are deterministic** — the job throttle spends its bucket by counting, the admin client-boundary guard reads the source tree once, and three tests no longer look for a short string or a made-up id in random values; the stale section-number placeholders of older batches carry their numbers. No product change. §829.
+- **The members' zone opens on «Alergări»** — the tabs are «Alergări», «Coduri de reducere», «Magazin»; each run shows «Vin!» and «Cine vine (N)» open (the names of those who ticked, «și încă N»), and the next run that takes answers is the first, larger card. The codes moved to their own address; the old runs address redirects. §830.
+- **«Cine vine» shows who is a member** — «Sunt membru al grupului …» on «Vin!» (the page's form, the remembered browser, the link's page), a small «BVR» mark beside a name its owner chose to show, «N vin · M membri» on the fold's line and in the facts, «Membru» for an account in the members' zone (every staff role counts), the editor's «Membru (declarat/verificat)»; kept and shown only under a privacy notice that names the mark (`{{rsvpMember}}`). §831.
 ## BR-V3.60-2026-10-19
 
 - **«Vin!» from the home page, the calendar links and the members' zone** — the home page's run cards say «N vin», the event page's Google and Outlook links carry «Vin! → page» and the count as the `.ics` and the feed do, and in «Alergări» a signed-in member answers with one tap («Vin!», then «Tu vii ✓ · Nu mai vin»), their name shown only on their own tick. §822.

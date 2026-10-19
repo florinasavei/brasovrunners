@@ -169,7 +169,7 @@ export const RSVP_ASK_MERGE_FIELD = "rsvpAsk";
 export const RSVP_ASK_ANSWERERS_MERGE_FIELD = "rsvpAskAnswerers";
 
 /**
- * The privacy notice's marker for the member mark on «Cine vine» (§NNN; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece
+ * The privacy notice's marker for the member mark on «Cine vine» (§831; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece
  * dacă sunt membru BVR»). Filled, when the notice is shown, with the mark's own word, quoted (`rsvp/notice-words.ts`) — „BVR” / “BVR” — in the
  * «Vin!» paragraph of section 4, which says that a person who ticked that they are a member, or who answered from the members' zone, shows that
  * word beside the name they chose to show, that the members are counted without names, that a tick is the person's claim which the club does not
@@ -822,7 +822,7 @@ export function describesRsvpAskAnswerers(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the member mark on «Cine vine» (§NNN): it names `{{rsvpMember}}`. The gate for offering the tick «Sunt
+ * Whether a privacy notice describes the member mark on «Cine vine» (§831): it names `{{rsvpMember}}`. The gate for offering the tick «Sunt
  * membru» on a «Vin!» answer and for showing the mark and the member count — together with `describesRsvp`, which the caller also asks, because the
  * mark is a part of that answer — and what `/admin/tasks`' row `rsvpMemberNotice` reads. Pure; the caller asks it of the notice in force, in every
  * language.

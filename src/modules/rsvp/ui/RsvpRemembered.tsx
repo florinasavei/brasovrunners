@@ -49,7 +49,7 @@ export type RsvpIslandLabels = {
   nameNeeded: string;
   nameNone: string;
   /**
-   * The member tick (§NNN): «Sunt membru al grupului {club}» with the club's sentence for what «membru» means behind its «?» (`memberHint`), the help under it, and the
+   * The member tick (§831): «Sunt membru al grupului {club}» with the club's sentence for what «membru» means behind its «?» (`memberHint`), the help under it, and the
    * sentences after a save — «on», «off», and «closed» when the event or the notice no longer takes it. `memberFact` says «Membru» for an answer an account made.
    */
   memberTick: string;
@@ -59,7 +59,7 @@ export type RsvpIslandLabels = {
   memberOff: string;
   memberClosed: string;
   memberFact: string;
-  /** The fact's help, on its chip's tooltip (the zone's own words, §NNN). */
+  /** The fact's help, on its chip's tooltip (the zone's own words, §831). */
   memberFactHelp: string;
 };
 
@@ -75,7 +75,7 @@ export type RsvpIslandActions = {
   forget: () => Promise<void>;
   /** The person's own tick «Numele meu apare la „Cine vine"» (§827): on or off, with the name the box holds — the one shown (the answer's own) or the one typed. */
   showName: (slug: string, locale: string, showName: boolean, name: string) => Promise<RsvpNameResult>;
-  /** The person's own declared tick «Sunt membru» (§NNN): on or off, saved at once. */
+  /** The person's own declared tick «Sunt membru» (§831): on or off, saved at once. */
   member: (slug: string, locale: string, clubMember: boolean) => Promise<RsvpMemberResult>;
 };
 
@@ -124,7 +124,7 @@ export default function RsvpRemembered({
   locale: string;
   labels: RsvpIslandLabels;
   actions: RsvpIslandActions;
-  /** The member tick is offered only while the notice in force describes the mark (`cachedRsvpMemberDescribed`, §NNN); a tick already given stays visible, so it can be taken back. */
+  /** The member tick is offered only while the notice in force describes the mark (`cachedRsvpMemberDescribed`, §831); a tick already given stays visible, so it can be taken back. */
   memberOffered?: boolean;
   children: ReactNode;
 }) {
@@ -139,7 +139,7 @@ export default function RsvpRemembered({
   const [asking, setAsking] = useState(false);
   const [nameNote, setNameNote] = useState<"shown" | "hidden" | "name" | "none" | null>(null);
   const [refusals, setRefusals] = useState(0);
-  // The member tick (§NNN): the last save's sentence — a status, not a colour — and a remount counter for a refusal, like the name's.
+  // The member tick (§831): the last save's sentence — a status, not a colour — and a remount counter for a refusal, like the name's.
   const [memberNote, setMemberNote] = useState<"on" | "off" | "closed" | "none" | null>(null);
   const [memberRefusals, setMemberRefusals] = useState(0);
   const masked = hint?.masked ?? null;
@@ -280,7 +280,7 @@ export default function RsvpRemembered({
             </Typography>
           )}
           {/*
-            «Sunt membru al grupului …» (§NNN): a real tick box in its own small form, saved at once (a change submits it), beside the name's. Drawn while the
+            «Sunt membru al grupului …» (§831): a real tick box in its own small form, saved at once (a change submits it), beside the name's. Drawn while the
             notice in force describes the mark, or while a tick was given (so it can be taken back); an answer an account made says «Membru» as a fact —
             the mark comes from the account's role, never from this box. The declaration is the person's: the club does not check it.
           */}
@@ -324,7 +324,7 @@ export default function RsvpRemembered({
           <Stack spacing={1.5}>
             {/* A tick only for somebody who gave a name before: with no name there is nothing to show. */}
             {hint.name !== null && <CheckboxField name="showName">{labels.showName}</CheckboxField>}
-            {/* The declared member tick (§NNN): off by default, while the notice in force describes the mark; the club's sentence behind its «?». */}
+            {/* The declared member tick (§831): off by default, while the notice in force describes the mark; the club's sentence behind its «?». */}
             {memberOffered && (
               <CheckboxField name="clubMember" help={labels.memberHelp}>
                 {labels.memberTick}

@@ -284,7 +284,7 @@ export type OwnerTaskInputs = {
    */
   rsvpAskAnswerersDescribed: boolean;
   /**
-   * Does the notice in force, in every language, describe the member mark on «Cine vine» (§NNN, `noticeDescribesRsvpMember`: `{{rsvpMember}}`, with «Vin!»)?
+   * Does the notice in force, in every language, describe the member mark on «Cine vine» (§831, `noticeDescribesRsvpMember`: `{{rsvpMember}}`, with «Vin!»)?
    * Until it does, the form has no «Sunt membru» tick and the list shows no mark and counts no member. Absent: the page did not ask, and the row is not drawn.
    */
   rsvpMemberDescribed?: boolean;
@@ -670,7 +670,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
-      The member mark on «Cine vine» (§NNN), the same shape: open while an upcoming event is ticked and the notice in force does not name
+      The member mark on «Cine vine» (§831), the same shape: open while an upcoming event is ticked and the notice in force does not name
       `{{rsvpMember}}` (the form has no tick and the list no mark, though the club ticked the box — it must hear why), done by itself the day a
       notice naming it takes effect, absent while no event is ticked and the notice is silent. Never blocking.
     */

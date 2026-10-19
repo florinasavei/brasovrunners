@@ -1,7 +1,7 @@
 import { canOpenMembersZone, type StaffRole } from "@/modules/staff-identity/domain/roles";
 
 /**
- * Who is a member on «Cine vine» (§NNN, amending §812 and §796; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece dacă sunt
+ * Who is a member on «Cine vine» (§831, amending §812 and §796; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece dacă sunt
  * membru BVR»; then: «organizatorii și administratorii sunt peste membri»). Two kinds, kept as the row's `club_member`:
  *
  *   DECLARED  the person's own tick «Sunt membru al grupului …» on the page's form, in the remembered browser or on the link's page — a claim

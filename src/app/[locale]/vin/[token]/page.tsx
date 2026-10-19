@@ -48,7 +48,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  */
 const NAME_OUTCOMES = ["shown", "hidden", "name", "none", "closed", "wait"] as const;
 
-/** What `?membru=` may say after the member tick (§NNN): names of outcomes. «On» and «off» claim a state, so they are drawn only while the row says so, like the name's. */
+/** What `?membru=` may say after the member tick (§831): names of outcomes. «On» and «off» claim a state, so they are drawn only while the row says so, like the name's. */
 const MEMBER_OUTCOMES = ["on", "off", "closed", "none"] as const;
 
 /**
@@ -166,7 +166,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
   const link = invalid !== undefined || !(await tokenAttemptAllowed(db, token, now)) ? null : await readRsvpLink(db, token, now);
   const live = link?.state === "live" ? link : null;
   // «Gata: numele tău apare» only when the tick is on, «nu mai apare» only when it is off: a sentence from the address alone is not drawn (the «retras» proof's reason).
-  // The member tick (§NNN): offered while the notice in force describes the mark — asked live, this page is never cached — or while a tick was given, so it can be taken back.
+  // The member tick (§831): offered while the notice in force describes the mark — asked live, this page is never cached — or while a tick was given, so it can be taken back.
   const memberOffered = live !== null && (await noticeDescribesRsvpMember(db, now));
   const tForm = await getTranslations("Registration");
   const memberDefinition = (await cachedMemberDefinition(locale)) ?? tForm("clubMemberDefinition");
@@ -174,7 +174,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
   const mark = tEvent("rsvp.memberMark");
   const memberOutcome = memberQuery === "on" ? (live?.clubMember ? memberQuery : null) : memberQuery === "off" ? (live && !live.clubMember ? memberQuery : null) : memberQuery;
   const nameOutcome = nameQuery === "shown" ? (live?.showName ? nameQuery : null) : nameQuery === "hidden" ? (live && !live.showName ? nameQuery : null) : nameQuery;
-  // A declared member tick beside a shown name, put there by whoever typed the address (§NNN): said before the press, which is then the person's own.
+  // A declared member tick beside a shown name, put there by whoever typed the address (§831): said before the press, which is then the person's own.
   const memberUnseen = live !== null && !live.confirmed && !live.asked && live.showName && live.name !== null && live.clubMember === "DECLARED";
   // «Da, vin»: a POST, so the GET above counts nobody (§12.8); the island may press it, a person always can.
   const confirmForm = (
@@ -235,7 +235,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
             {live.confirmed ? t("confirmAlready", { event: live.title }) : live.asked ? t("askIntro", { event: live.title }) : t("confirmIntro", { event: live.title })}
           </Typography>
           {/*
-            A member tick that whoever typed the address put on the page, beside a name they asked to show (§NNN, §812): the press would publish «BVR» beside the
+            A member tick that whoever typed the address put on the page, beside a name they asked to show (§831, §812): the press would publish «BVR» beside the
             owner's name, so it is said here, as the email said it, and the press is the person's own — it does not press itself.
           */}
           {memberUnseen && live.name !== null && (
@@ -251,7 +251,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
                 <Stack spacing={1.5} sx={{ mb: 2 }} data-testid="rsvp-ask-name">
                   <TextField name="name" label={tEvent("rsvp.name")} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
                   <CheckboxField name="showName">{tEvent("rsvp.showName")}</CheckboxField>
-                  {/* The declared member tick (§NNN), beside the name's: off by default, the club's sentence behind its «?», while the notice describes the mark. */}
+                  {/* The declared member tick (§831), beside the name's: off by default, the club's sentence behind its «?», while the notice describes the mark. */}
                   {memberOffered && (
                     <CheckboxField name="clubMember" help={tEvent("rsvp.memberHelp", { mark })}>
                       {memberTick}
@@ -310,7 +310,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
                 </CheckboxField>
                 <TextField name="name" label={tEvent("rsvp.nameBox")} defaultValue={live.name ?? ""} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
                 {/*
-                  «Sunt membru al grupului …» (§NNN): the same form and the same Save. An answer an account made says «Membru» as a fact — the mark is the account's role, not
+                  «Sunt membru al grupului …» (§831): the same form and the same Save. An answer an account made says «Membru» as a fact — the mark is the account's role, not
                   this box. `memberBox` says the box was drawn, so an unticked one reads as «unticked» and a box never drawn as nothing.
                 */}
                 {memberTickFace(live.clubMember, memberOffered) === "fact" ? (

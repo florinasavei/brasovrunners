@@ -502,7 +502,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       rsvpAskAnswerersChosen: asksAnswerers(rsvpAskAudience),
       rsvpAskAnswerersOnly: rsvpAskAudience === "ANSWERERS",
       rsvpAskAnswerersDescribed: await noticeDescribesRsvpAskAnswerers(db, now),
-      // §NNN: the member mark on «Cine vine», described by the notice in force; the tick and the mark wait for it, nothing is refused.
+      // §831: the member mark on «Cine vine», described by the notice in force; the tick and the mark wait for it, nothing is refused.
       rsvpMemberDescribed: await noticeDescribesRsvpMember(db, now),
       rsvpEvents: await countRsvpEvents(db, now),
       // §808: the terms in force describe them too — the older ones promised to ask separately before a named result.

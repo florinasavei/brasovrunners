@@ -33,7 +33,7 @@ import { zoneRsvpAnchor } from "../domain/zone-outcome";
  * tick box, saved by one press, working without JavaScript. When neither the answer nor the account holds a name, a «Numele tău» box stands
  * with it. The account's name is used only when ticked (`setNameAsMemberAction`).
  *
- * **«Membru» is a fact here, not a tick** (§NNN; the owner, 2026-10-19: «organizatorii și administratorii sunt peste membri»): an answer an account made
+ * **«Membru» is a fact here, not a tick** (§831; the owner, 2026-10-19: «organizatorii și administratorii sunt peste membri»): an answer an account made
  * from this page holds the mark `ACCOUNT`, set by the server from the account's role (every role of the club's accounts is at least a member), so the row says
  * «Membru» beside «Tu vii ✓» and offers nothing to tick — the mark «BVR» then stands beside the name the person chose to show on «Cine vine».
  *
@@ -55,7 +55,7 @@ export type ZoneRsvpProps = {
   /** The answer's own tick «Numele meu apare la „Cine vine"» as it stands (the tick and a name), and the name the row holds (`answeredByAccount`). Only read while `going`. */
   showName: boolean;
   name: string | null;
-  /** The member mark the answer holds (`answeredByAccount`, §NNN): `ACCOUNT` is drawn as the fact «Membru»; only read while `going`. */
+  /** The member mark the answer holds (`answeredByAccount`, §831): `ACCOUNT` is drawn as the fact «Membru»; only read while `going`. */
   clubMember?: ClubMemberKind | null;
 };
 

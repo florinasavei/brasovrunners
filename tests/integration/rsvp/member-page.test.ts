@@ -145,7 +145,7 @@ async function draw(slug: string, visit: { rsvpBox?: boolean } | null = { rsvpBo
 }
 
 /**
- * §NNN (BR-REQ-039-01, BR-REQ-060-01; amends §812 and §825) — «Cine vine» says who is a member: the real `EventPageView`, drawn the way the page draws it, over a
+ * §831 (BR-REQ-039-01, BR-REQ-060-01; amends §812 and §825) — «Cine vine» says who is a member: the real `EventPageView`, drawn the way the page draws it, over a
  * real database (PGlite) and the real catalogue and template. A small «BVR» chip stands beside a name its owner chose to show — never beside «și încă N» — the
  * fold says «Dintre ei: M membri», and the closed fold's line and the facts say «N vin · M membri». Nothing of it while no notice describes the mark. The
  * rules are `member-domain.test.ts`, the service `member-mark.test.ts`, the journey `tests/e2e/rsvp.spec.ts`.
@@ -166,7 +166,7 @@ async function answers(eventId: string) {
   await answerRsvp(db, eventId, accountIdentity({ email: "cont@example.test", displayName: "Cont Admin", role: "ADMIN" }, "ro", true), at(4));
 }
 
-describe("§NNN «Cine vine» marks the members who show their name", () => {
+describe("§831 «Cine vine» marks the members who show their name", () => {
   it("puts «BVR» beside a shown member's name, and nowhere else — the unnamed member is only counted", async () => {
     const { id, slug } = await seed();
     await answers(id);
@@ -263,7 +263,7 @@ describe("§NNN «Cine vine» marks the members who show their name", () => {
   });
 });
 
-describe("§NNN the form's tick «Sunt membru al grupului …» is offered only while the notice describes the mark", () => {
+describe("§831 the form's tick «Sunt membru al grupului …» is offered only while the notice describes the mark", () => {
   it("draws the declared tick, off by default, with the club's words behind its «?», in both languages", async () => {
     const { slug } = await seed();
     const html = await draw(slug);

@@ -15,12 +15,12 @@ import { rsvpMemberClause, rsvpMergeValues } from "@/modules/rsvp/notice-words";
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
- * §NNN (BR-REQ-039-01, BR-REQ-060-01; amends §812 and §796) — «Cine vine» says who is a member: the pure rules. A declared tick is `DECLARED`; an answer from
+ * §831 (BR-REQ-039-01, BR-REQ-060-01; amends §812 and §796) — «Cine vine» says who is a member: the pure rules. A declared tick is `DECLARED`; an answer from
  * the members' zone by an account of the club is `ACCOUNT`, from the role and never from a tick; the mark and the member count are read against the notice
  * version that described them (§421); the privacy notice's own marker `{{rsvpMember}}` is the switch. The service over a database is in
  * `tests/integration/rsvp/member-mark.test.ts`, the pages in `member-page.test.ts`.
  */
-describe("§NNN which kind of member an answer is", () => {
+describe("§831 which kind of member an answer is", () => {
   it("reads «declared» from the person's own tick on the three doors that prove an address, and nothing without it", () => {
     for (const source of ["remembered", "link"] as const) {
       expect(identityClubMember(identityOf(source, { email: "a@example.test", showName: false, locale: "ro", clubMember: true }))).toBe("DECLARED");
@@ -72,7 +72,7 @@ describe("§NNN which kind of member an answer is", () => {
   });
 });
 
-describe("§NNN who counts as a member on the public page — the §421 line", () => {
+describe("§831 who counts as a member on the public page — the §421 line", () => {
   const base = { confirmed: true, clubMember: "DECLARED" as const, privacyNoticeVersion: 2, firstMemberNoticeVersion: 2 };
 
   it("counts a confirmed answer that says it is a member, given under the first notice that described the mark or a later one", () => {
@@ -92,7 +92,7 @@ describe("§NNN who counts as a member on the public page — the §421 line", (
   });
 });
 
-describe("§NNN the words of «N vin · M membri»", () => {
+describe("§831 the words of «N vin · M membri»", () => {
   it("joins the count and the members with the house's middle dot, and says only the count when there is no member", () => {
     expect(rsvpCountText("3 vin", "2 membri")).toBe("3 vin · 2 membri");
     expect(rsvpCountText("3 vin", null)).toBe("3 vin");
@@ -115,7 +115,7 @@ describe("§NNN the words of «N vin · M membri»", () => {
   });
 });
 
-describe("§NNN {{rsvpMember}} is a merge field, the notice's switch, and the mark's name", () => {
+describe("§831 {{rsvpMember}} is a merge field, the notice's switch, and the mark's name", () => {
   it("is known to the editor and filled with the mark's own word, quoted, in each language", () => {
     expect(MERGE_FIELDS).toContain(RSVP_MEMBER_MERGE_FIELD);
     expect(rsvpMemberClause("ro")).toBe(`„${ro.Event.rsvp.memberMark}”`);
@@ -150,7 +150,7 @@ describe("§NNN {{rsvpMember}} is a merge field, the notice's switch, and the ma
   });
 });
 
-describe("§NNN the template says what the mark shows, who decides, and how it is taken back — in both languages", () => {
+describe("§831 the template says what the mark shows, who decides, and how it is taken back — in both languages", () => {
   const paragraphOf = (body: { sections: readonly { paragraphs: readonly string[] }[] }, section: number, needle: string) =>
     body.sections[section].paragraphs.find((paragraph) => paragraph.includes(needle)) ?? "";
 
@@ -184,7 +184,7 @@ describe("§NNN the template says what the mark shows, who decides, and how it i
   });
 });
 
-describe("§NNN the row on /admin/tasks", () => {
+describe("§831 the row on /admin/tasks", () => {
   it("has its words and its steps in both languages, pointing at /admin/legal", () => {
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.rsvpMemberNotice;
@@ -195,7 +195,7 @@ describe("§NNN the row on /admin/tasks", () => {
   });
 });
 
-describe("§NNN the words of the tick, the mark and the editor's chips, in both catalogues", () => {
+describe("§831 the words of the tick, the mark and the editor's chips, in both catalogues", () => {
   it("says the mark in its own word and its accessible name with the club's name filled from the constant", () => {
     expect(ro.Event.rsvp.memberMark).toBe("BVR");
     expect(en.Event.rsvp.memberMark).toBe("BVR");
@@ -227,7 +227,7 @@ describe("§NNN the words of the tick, the mark and the editor's chips, in both 
   });
 });
 
-describe("§NNN the member tick of a counted answer on the one-tap state and the link's page", () => {
+describe("§831 the member tick of a counted answer on the one-tap state and the link's page", () => {
   it("draws no box for an answer that holds no tick while the notice in force is silent about the mark — the island's state omits the kind, it never says null", () => {
     // The island's state has no `clubMember` for an answer without one: «absent», not `null` — the rule is about the kind drawn, not «not null».
     expect(memberTickFace(undefined, false)).toBe("none");

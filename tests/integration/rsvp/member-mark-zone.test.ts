@@ -168,7 +168,7 @@ const answers = () => db.select().from(eventRsvps);
 const press = (eventId: string, extra: Record<string, string> = {}) => formOf({ uiLocale: "ro", eventId, ...extra });
 
 /**
- * §NNN (BR-REQ-060-01, BR-REQ-039-01; amends §812 and §796) — the member mark on the zone's door of «Vin!». An answer an account gives from «Alergări» is
+ * §831 (BR-REQ-060-01, BR-REQ-039-01; amends §812 and §796) — the member mark on the zone's door of «Vin!». An answer an account gives from «Alergări» is
  * marked `ACCOUNT` **by the server, from the account's role**: every role the club's accounts have is at least a member (the owner, 2026-10-19: «organizatorii
  * și administratorii sunt peste membri»), and nothing the form posts — a tick, a kind, a role — can make it «declared» or take the mark away. The row says
  * «Membru» as a fact, with no box. Real database (PGlite), the real session, the real service; the other doors are `member-mark.test.ts`.
@@ -199,7 +199,7 @@ const ROLES = ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN
 const publicRead = async (eventId: string) =>
   readPublicRsvps(db, eventId, { firstRsvpNoticeVersion: await findFirstRsvpNoticeVersion(db), firstMemberNoticeVersion: await findFirstRsvpMemberNoticeVersion(db) });
 
-describe("§NNN the zone's answer is marked from the account's role", () => {
+describe("§831 the zone's answer is marked from the account's role", () => {
   it("marks ACCOUNT for every role of the club's accounts, with no tick on the form", async () => {
     const eventId = await seed("Alergarea de joi");
     for (const role of ROLES) {
@@ -254,7 +254,7 @@ describe("§NNN the zone's answer is marked from the account's role", () => {
   });
 });
 
-describe("§NNN the zone's row says «Membru» as a fact", () => {
+describe("§831 the zone's row says «Membru» as a fact", () => {
   it("draws «Membru» beside «Tu vii ✓» for an account's answer — no box, no kind in the markup — in both languages", async () => {
     const eventId = await seed("Alergarea de joi");
     state.cookie = member.id;

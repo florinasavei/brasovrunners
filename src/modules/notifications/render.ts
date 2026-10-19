@@ -1089,7 +1089,7 @@ async function renderRow(
     data.rsvpStage = stage;
     // The name the press would make public, said before it is pressed (the person who typed the address chose it, not the one who presses).
     if (stage === "confirm" && answer.showName && answer.displayName) data.rsvpShownName = answer.displayName;
-    // The member mark that name would carry (§NNN): a tick whoever typed the address put on the page is declared for the owner, so the owner is told before it shows.
+    // The member mark that name would carry (§831): a tick whoever typed the address put on the page is declared for the owner, so the owner is told before it shows.
     if (stage === "confirm" && answer.showName && answer.displayName && answer.clubMember === "DECLARED") data.rsvpShownMember = true;
     if (stage === "confirm" && links.confirm) {
       payloadActionUrl = linkUrl("/vin/[token]", links.confirm);

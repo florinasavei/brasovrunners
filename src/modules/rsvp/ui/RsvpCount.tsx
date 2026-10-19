@@ -32,7 +32,7 @@ export async function readRsvpsOf(eventId: string): Promise<PublicRsvps | null> 
  * `OpenFoldFromHash` (mounted by the page) opens. `EventPageView` draws it after the card, in the same condition as the card, handing
  * both the one read it made (`rsvps`).
  *
- * **The member mark** (§NNN; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece dacă sunt membru BVR»): beside the name of a member who
+ * **The member mark** (§831; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece dacă sunt membru BVR»): beside the name of a member who
  * chose to show it, a small «BVR» chip (the members' glyph, `aria-label` «Membru Brașov Runners»); **never beside «și încă N»** — an answer with no shown name adds
  * to «Dintre ei: M membri» only, and the cached read puts no mark in its props for it (`readPublicRsvps`: the mark is the name's, under the notice version
  * that described it). The words are the club's own constants and the catalogue's, nothing else about a member is on the page.
@@ -74,7 +74,7 @@ export default async function RsvpCount({ eventId, rsvps: given, open = false }:
         ) : (
           (rsvps.names.length > 0 || rsvps.others > 0 || rsvps.members) && (
             <>
-              {/* «Dintre ei: 2 membri.» (§NNN): every confirmed member answer, the named and the unnamed, so a mark is never the only way a member is counted. */}
+              {/* «Dintre ei: 2 membri.» (§831): every confirmed member answer, the named and the unnamed, so a mark is never the only way a member is counted. */}
               {rsvps.members ? (
                 <Typography variant="body2" color="text.secondary" data-testid="rsvp-who-members" sx={{ mb: 0.5 }}>
                   {t("rsvp.whoMembers", { members: t(`rsvp.members.${countForm(rsvps.members, locale)}`, { count: rsvps.members }) })}

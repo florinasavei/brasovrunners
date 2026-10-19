@@ -231,7 +231,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: RSVP_ASK_ANSWERERS_MERGE_FIELD,
     example: inBoth((locale) => rsvpAskAnswerersClause(locale)),
   },
-  // The privacy notice's marker for the member mark on «Cine vine» (§NNN): filled with the mark's own word, and the switch that lets the form
+  // The privacy notice's marker for the member mark on «Cine vine» (§831): filled with the mark's own word, and the switch that lets the form
   // offer the tick «Sunt membru» and the list show the mark and count the members (`describesRsvpMember`).
   {
     token: `{{${RSVP_MEMBER_MERGE_FIELD}}}`,

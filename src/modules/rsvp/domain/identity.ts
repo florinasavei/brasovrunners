@@ -29,11 +29,11 @@ export type RsvpIdentity = {
   /** «Vreau să apar cu numele»: the person's own tick. */
   showName: boolean;
   /**
-   * «Sunt membru al grupului …» (§NNN): the person's own tick, **declared** — taken from the page, the remembered browser and the link, and
+   * «Sunt membru al grupului …» (§831): the person's own tick, **declared** — taken from the page, the remembered browser and the link, and
    * only while the notice in force describes the mark (the service asks). An `account` identity never carries it: its kind comes from `role`.
    */
   clubMember?: boolean;
-  /** The signed-in account's role, read on the server from the session (§NNN, BR-REQ-060-01): only for `source: "account"`. A role at least a member makes the answer `ACCOUNT`. */
+  /** The signed-in account's role, read on the server from the session (§831, BR-REQ-060-01): only for `source: "account"`. A role at least a member makes the answer `ACCOUNT`. */
   role?: StaffRole;
   locale: "ro" | "en";
   source: RsvpSource;
@@ -53,7 +53,7 @@ export function identityOf(source: RsvpSource, parts: Omit<RsvpIdentity, "source
 /** Whether `verified` says what the source proves: the service refuses an identity that claims otherwise. */
 export function isConsistent(identity: RsvpIdentity): boolean {
   if (identity.verified !== isVerifiedSource(identity.source)) return false;
-  // A role belongs to a signed-in account and to nothing else; a tick belongs to everything but an account (§NNN).
+  // A role belongs to a signed-in account and to nothing else; a tick belongs to everything but an account (§831).
   if (identity.role !== undefined && identity.source !== "account") return false;
   if (identity.clubMember === true && identity.source === "account") return false;
   return true;

@@ -52,7 +52,7 @@ export async function confirmRsvpAction(form: FormData): Promise<void> {
   const now = new Date();
   if (!(await tokenAttemptAllowed(db, token, now))) redirect(`${pageOf(locale, token)}?invalid=1`);
   // The email's «Vin» (§818) may carry the name and the tick; for any other link the service ignores them.
-  // The member tick (§NNN) rides with them, and is taken only for that same row and only under a notice that describes it.
+  // The member tick (§831) rides with them, and is taken only for that same row and only under a notice that describes it.
   const proved = await confirmRsvp(db, token, now, { displayName: String(form.get("name") ?? ""), showName: form.get("showName") === "on", clubMember: form.get("clubMember") === "on" });
   if (!proved) redirect(`${pageOf(locale, token)}?invalid=1`);
   await remember(proved, now);
@@ -111,7 +111,7 @@ export async function withdrawRsvpAction(form: FormData): Promise<void> {
  * A link that is not live — spent, replaced, expired, the event started, or a confirm link — lands on the page's «linkul nu mai merge»,
  * and no address or name is ever read from the form. The page is read again live, drawing the new state and one sentence from `?nume=`.
  *
- * **The member tick rides in the same form and the same press** (§NNN, amending §812; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece dacă sunt
+ * **The member tick rides in the same form and the same press** (§831, amending §812; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece dacă sunt
  * membru BVR»): «Sunt membru al grupului …», the person's declared claim, saved by `setRsvpClubMember` under the same rules — the link is read, never spent, and
  * no address, name or kind is read from the form. A box that was not drawn (`memberBox`) changes nothing: an unticked box posts nothing, so «not drawn»
  * must not read as «unticked». The sentence comes from `?membru=`, beside the name's.
@@ -135,7 +135,7 @@ export async function setNameByLinkAction(form: FormData): Promise<void> {
   await refundRateLimit(db, "token-validate", key, now);
   if (!allowed || !link) redirect(`${pageOf(locale, token)}?nume=wait`);
   /*
-    Each tick answers for itself (§NNN): a press that changed only the member tick says nothing of the name, which never showed and did not change —
+    Each tick answers for itself (§831): a press that changed only the member tick says nothing of the name, which never showed and did not change —
     as a press that changed only the name says nothing of the tick (the name's own refusal still says so). A press that changed neither says the name's
     state, so a Save is never silent.
   */
@@ -149,7 +149,7 @@ export async function setNameByLinkAction(form: FormData): Promise<void> {
     const result = await setRsvpShowName(db, link.eventId, { token }, { showName: postedShow, displayName: String(form.get("name") ?? "") }, now);
     name = `nume=${result.ok ? (result.showName ? "shown" : "hidden") : result.reason}`;
   }
-  // The member tick (§NNN): its own write and its own sentence — only when the press changes it (a tick left as it was is not asked again); a refusal says so and changes nothing.
+  // The member tick (§831): its own write and its own sentence — only when the press changes it (a tick left as it was is not asked again); a refusal says so and changes nothing.
   let member = "";
   if (memberTouched) {
     const swapped = await setRsvpClubMember(db, link.eventId, { token }, { clubMember: wantedMember === true }, now);

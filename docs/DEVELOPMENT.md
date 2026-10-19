@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.60-2026-10-19 -->
+<!-- PROJECT_BASELINE: BR-V3.61-2026-10-19 -->
 
 # Running this locally
 
-**Baseline `BR-V3.60-2026-10-19`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V3.61-2026-10-19`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -261,7 +261,7 @@ never age.
 
 **The practice: a test's verdict never depends on a random value or on how busy the machine is.**
 A red CI on a flake costs a release half an hour and a dispatcher's attention, so the ways it
-happened are closed here (§NNN):
+happened are closed here (§829):
 
 - **Never look for a short string in text that holds a random id, token or ciphertext.** A uuid is
   hex and spells «0712» or «2012» now and then; a 43-character link token or a sealed string

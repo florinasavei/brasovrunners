@@ -204,14 +204,14 @@
  * every language (`describesRsvpAsk`); `{{newsletterTopics}}` leaves the topic out, so this marker is the only place the notice names it.
  * Only a subscriber who chose the topic under a notice naming it is asked (`findFirstRsvpAskNoticeVersion`). `/admin/tasks` carries the row `rsvpAskNotice`. A lawyer reads both paragraphs first.
  *
- * `{{rsvpMember}}` (§NNN; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece dacă sunt membru BVR») is the mark's own word, quoted — „BVR” /
+ * `{{rsvpMember}}` (§831; the owner, 2026-10-19: «Și aici, la „Cine vine", trebuie să pot trece dacă sunt membru BVR») is the mark's own word, quoted — „BVR” /
  * “BVR” (`rsvp/notice-words.ts`) — in section 4's «Vin!» paragraph: a person who ticked that they are a member, or answered from the members' zone, shows
  * the mark beside the name they chose to show, the members are counted without names, the tick is the person's claim (the club does not check it) and is
  * taken back in the recognised browser and on the link's page (an account's mark goes with the name's tick or the answer), and the mark shows only for answers given or changed after the sentence took effect; section 5 names the tick among what
  * is kept. A marker of its own, not a sentence under `{{rsvp}}`, so no notice approved before it is read as describing it (`describesRsvpMember`, the
  * §421 line `findFirstRsvpMemberNoticeVersion`); the tick is not offered and nothing is marked until a notice naming it AND `{{rsvp}}` is in force in
  * every language. `/admin/tasks` carries the row `rsvpMemberNotice`. A lawyer reads first: that a declared membership beside a name is not special-category
- * data, the sentence on the account's role, and the basis clause («Temei pentru semn», §NNN: the member tick, or the name's tick for an account's answer) with the places the tick is taken back.
+ * data, the sentence on the account's role, and the basis clause («Temei pentru semn», §831: the member tick, or the name's tick for an account's answer) with the places the tick is taken back.
  *
  * `{{rsvpAskAnswerers}}` (§823; the owner, 2026-10-19: «I need to set how these emails are sent») is the refusal button's name, quoted — „Nu mă mai
  * întreba la seria aceasta” / “Don't ask me again for this series” — in section 5's «Vin!» paragraph, which says the club may ask the people who

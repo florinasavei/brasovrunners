@@ -77,7 +77,7 @@ export default async function RsvpBox({
   const tForm = await getTranslations("Registration");
   const siteKey = turnstileSiteKey();
   /*
-    The member tick (§NNN): «Sunt membru al grupului {club}» with the club's sentence behind its «?» — the registration form's own words (§789, §796), read
+    The member tick (§831): «Sunt membru al grupului {club}» with the club's sentence behind its «?» — the registration form's own words (§789, §796), read
     through the public cache — offered only while the notice in force describes the mark, so a visitor is never asked to declare what the notice does
     not say. The service asks again at every answer.
   */
@@ -89,7 +89,7 @@ export default async function RsvpBox({
   // Read once: the closed line and the fold «Cine vine» under it (the page hands both the same read) say one number, and a database that is away says neither (§281).
   const rsvps = given === undefined ? await readRsvpsOf(eventId) : given;
   const summaryWords = {
-    // «3 vin» — and, when some of them are members, «3 vin · 2 membri» (§NNN): the count's own words, then the members' (`members` counts the named and the unnamed).
+    // «3 vin» — and, when some of them are members, «3 vin · 2 membri» (§831): the count's own words, then the members' (`members` counts the named and the unnamed).
     countText:
       rsvps !== null && rsvps.count > 0
         ? rsvpCountText(
@@ -198,7 +198,7 @@ export default async function RsvpBox({
                   />
                   <TextField name="name" label={t("rsvp.name")} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
                   <CheckboxField name="showName">{t("rsvp.showName")}</CheckboxField>
-                  {/* «Sunt membru al grupului …» (§NNN): the person's own declaration, off by default; the club does not check it. Posted as `clubMember`, read by the action. */}
+                  {/* «Sunt membru al grupului …» (§831): the person's own declaration, off by default; the club does not check it. Posted as `clubMember`, read by the action. */}
                   {memberOffered && (
                     <CheckboxField name="clubMember" help={t("rsvp.memberHelp", { mark })}>
                       {memberTick}

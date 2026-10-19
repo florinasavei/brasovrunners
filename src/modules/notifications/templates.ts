@@ -1140,7 +1140,7 @@ export type TemplateData = {
    * whoever wrote it, like the waiting list's standing.
    */
   rsvpShownName?: string;
-  /** With `rsvpShownName` (§NNN): the same press would also show the member mark beside that name, ticked by whoever typed the address. */
+  /** With `rsvpShownName` (§831): the same press would also show the member mark beside that name, ticked by whoever typed the address. */
   rsvpShownMember?: boolean;
   /**
    * A family sitting's one message (§519): everybody the sitting sent the form for and nobody
@@ -2402,7 +2402,7 @@ const T = {
     rsvpNameNote: "După „Da, vin”, tot din „Nu vin” îți arăți sau ascunzi numele; răspunsul se șterge doar dacă apeși „Nu mai vin” pe pagina lui.",
     /** «Vin!» (§811): which name the press makes public, since whoever typed the address chose it. */
     rsvpShownName: (name: string) => `Dacă apeși „Da, vin”, pe pagina evenimentului va apărea numele „${name}”: cine a scris adresa a bifat că vrea să apară cu numele. Dacă nu vrei, apasă „Nu vin”.`,
-    /** «Vin!» (§NNN): the mark that goes with the name, ticked by whoever typed the address — said before the press, like the name. */
+    /** «Vin!» (§831): the mark that goes with the name, ticked by whoever typed the address — said before the press, like the name. */
     rsvpShownMember: (name: string, mark: string) => `Dacă apeși „Da, vin”, numele „${name}” va apărea cu semnul ${mark}: cine a scris adresa a bifat că ești membru. Dacă nu vrei, apasă „Nu vin”.`,
     /** «Nu mai pot ajunge» (§558; the owner's words), and its one sentence under the button. */
     cannotCome: {

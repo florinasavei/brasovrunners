@@ -83,13 +83,13 @@ const HOUR = 60 * 60_000;
 const DAY = 24 * HOUR;
 
 /**
- * §NNN (BR-REQ-039-01, BR-REQ-060-01, BR-REQ-036-02; amends §812 and §796) — the member mark on «Cine vine»: the service and the doors that are not the zone.
+ * §831 (BR-REQ-039-01, BR-REQ-060-01, BR-REQ-036-02; amends §812 and §796) — the member mark on «Cine vine»: the service and the doors that are not the zone.
  * A declared tick is `DECLARED` and is kept only while the notice in force describes the mark; an account's answer is `ACCOUNT` from its role alone; the
  * public read marks a member only beside a name that may be shown, counts every confirmed member answer, and reads the §421 line (the version a tick was
  * last given under). The member tick flips like the name's — a remembered browser or a live «Nu mai vin» link, never spent. Real database (PGlite).
  * The zone's door is `member-mark-zone.test.ts`; the pages, `member-page.test.ts`; the journey, `tests/e2e/rsvp.spec.ts`.
  */
-describe("§NNN the member mark on «Vin!»", () => {
+describe("§831 the member mark on «Vin!»", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let eventId: string;
@@ -485,7 +485,7 @@ describe("§NNN the member mark on «Vin!»", () => {
     });
   });
 
-  describe("a tick typed beside somebody else's address (§NNN, amending §812)", () => {
+  describe("a tick typed beside somebody else's address (§831, amending §812)", () => {
     const askOf = (email = "ana@example.test") => ({
       eventId,
       kind: "SUBSCRIBER" as const,
