@@ -1,17 +1,18 @@
 /**
- * The words on the closed «Vii?» fold's line (§812, amended by the fold: the owner, 2026-10-19, «Asta ar trebui să fie collapsed, ca și
- * condițiile de participare»), as pure rules outside the client file so a test reads them without a browser.
+ * The words on the closed «Confirmă prezența (opțional)» fold's line (§812, amended by the fold: the owner, 2026-10-19, «Asta ar trebui să
+ * fie collapsed, ca și condițiile de participare»; named «Vii?» until §NNN), as pure rules outside the client file so a test reads them
+ * without a browser.
  *
- * The line is the heading, then — after a dot — what a reader decides by without opening it: **how many come** («Vii? · 3 vin»),
- * **the sentence that asks to be first** when nobody has answered («Vii? · Fii primul care spune că vine.»), and **that this browser
- * answered** («Vii? · Tu vii ✓ · 3 vin»). The server draws the line from the page's one cached read; the island (`RsvpRemembered`)
+ * The line is the heading, then — after a dot — what a reader decides by without opening it: **how many come** («Confirmă prezența
+ * (opțional) · 3 vin»), **the sentence that asks to be first** when nobody has answered («… · Fii primul care confirmă») and **that this
+ * browser answered** («… · Tu vii ✓ · 3 vin»). The server draws the line from the page's one cached read; the island (`RsvpRemembered`)
  * knows the browser answered and says so through `going-store.ts`. The tick is beside the words «Tu vii», never alone: state is not
  * colour or a glyph by itself.
  */
 export type RsvpSummaryWords = {
   /** «3 vin» / «1 vine» (the house's count form, made by the caller), or null when the count is unknown or zero. */
   countText: string | null;
-  /** «Fii primul care spune că vine.»: said only when nobody has answered and this browser has not either. */
+  /** «Fii primul care confirmă»: said only when nobody has answered and this browser has not either. */
   emptyText: string;
   /** «Tu vii»: the tick is added here. */
   goingText: string;

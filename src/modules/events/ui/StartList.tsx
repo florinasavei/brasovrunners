@@ -3,21 +3,15 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { getLocale, getTranslations } from "next-intl/server";
-import { publicListClosesAt, publicListStillOpen } from "@/modules/deadlines/domain/deadlines";
-import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import {
-  cachedDeadlines,
   cachedFirstStatesNoticeVersion,
   cachedListNumbersDisclosed,
   cachedListSocialsDisclosed,
   cachedListStatesDisclosed,
-  cachedStartListCounts,
   cachedStartListOthersCounts,
   cachedStartListOthersPage,
   cachedStartListPage,
 } from "@/modules/public-cache/reads";
-import { hiddenListCounting, hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
 import { publicListClubOf } from "@/modules/registrations/domain/public-list-club";
 import { LIST_STATE_KEYS, type PublicListGroup } from "@/modules/registrations/domain/public-list-states";
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
@@ -25,8 +19,8 @@ import { FOLD_GLYPH_INLINE_SX, PUBLIC_FOLD_SX } from "@/shared/ui/disclosure";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEvent } from "../repository";
-import { othersPhrases, startListHeadline } from "./counted-phrases";
-import { readRegistrationDoor } from "./registration-door";
+import { othersPhrases } from "./counted-phrases";
+import { readStartListHead } from "./start-list-head";
 import { listStateLegend } from "./list-state-legend";
 import ListStateLabel from "./ListStateLabel";
 import StartListSocials from "./StartListSocials";
@@ -42,10 +36,12 @@ const NO_NUMBER = "—";
  * those who ticked "Vreau să apar pe lista de participanți & rezultate", and as "Participant (nume ascuns)"
  * for everybody else.
  *
- * A native disclosure, closed, with the count in its summary: a page whose bottom third is a
+ * A native disclosure, closed, with the count in its summary: a page whose middle is a
  * list of names reads like a list of names, and the event page is about the event. **The same fold as
- * «Condiții de participare» and the «Vii?» card** (§498, §812; the owner, 2026-10-19: «Cine vine
- * collapsed»): its bar is a real `h2` in the `<summary>`, «Cine vine (N)» on its line (just «Cine
+ * «Condiții de participare» and the «Confirmă prezența (opțional)» card** (§498, §812; the owner, 2026-10-19: «Cine vine
+ * collapsed»): **drawn right under the registration card since §NNN** (the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil. Că inițial am citit
+ * în „zig-zag" și am sărit peste secțiune» — it stood under «Condiții de participare», near the bottom), where a turn-up event's
+ * «Cine vine (N)» fold stands too, and the facts' line «N vin · vezi cine» links its bar. Its bar is a real `h2` in the `<summary>`, «Cine vine (N)» on its line (just «Cine
  * vine» when the count is not public), the table, the legend and the notes inside. It opens by itself
  * only on a pager page (`?lista=2`), or for the fragment `#start-list-title`. «Clasament» (§809) is
  * not a fold: after a race the results are the point of the page.
@@ -174,34 +170,18 @@ type StartListProps = {
 };
 
 async function startListOrThrow({ event, page: requestedPage }: StartListProps) {
+  // Cheap and first: an event with no public list (the default) loads nothing below.
   if (event.participantListVisibility !== "NAMES") return null;
   /*
-    The list closes by itself (§421): the club's number of days after the event ("Termene"), asked
-    now, at the request — the cached rows below expire on writes, and a date passing is not one. The
-    same component draws every `?lista=` page, so a page link past the date shows nothing either.
+    The counts, the places line and the title's headline come from `readStartListHead` (§NNN): one function, which the event page's
+    facts line «N vin · vezi cine» reads too, so the two say one number — and nothing here asks the database for it twice (every read is
+    the public cache's, once per request). It also decides whether the list is shown at all: the club's days after the event (§421), and
+    a static page made again when it closes (§549). The page and the hidden rows are drawn from the anonymous count alone — the cache
+    holds a number for them, never a row, a position or an initial (§346).
   */
-  const now = new Date();
-  const deadlines = await cachedDeadlines();
-  // A static event page is made again when the list closes (§549), or the CDN would keep the names.
-  await holdPageUntil([publicListClosesAt(event, deadlines)], now);
-  if (!publicListStillOpen(event, now, deadlines)) return null;
-
-  const t = await getTranslations("Event");
-  const locale = await getLocale();
-  // Two counts first, so one page of fifty never fetches four hundred rows (§250). Both, and the
-  // page, from the public cache (§333): a confirmation, a cancellation, an erasure or somebody
-  // leaving the list expires them, so a name is never shown after its owner withdrew it. The
-  // hidden rows (§346) are drawn from the anonymous count alone — the cache holds a number for
-  // them, never a row, a position or an initial.
-  // «Arată invitații speciali pe lista publică» (§743): off, no row on the hidden list is on any list below.
-  const hiddenShown = hiddenListShownPublicly(event);
-  const { named, anonymous, outsideNamed, hidden } = await cachedStartListCounts(event.id, hiddenShown);
-  /*
-    «Lista ascunsă» (§647): whether the list says its numbers at all («Arată public numărătoarea»), and
-    whether they count the hidden list («Numără și lista ascunsă») — the first on every event, the second
-    only while the hidden list's switch is on. Numbers only: which rows the table holds never depends on them (§32).
-  */
-  const { countPublic, countHidden } = hiddenListCounting(event);
+  const head = await readStartListHead(event);
+  if (head === null) return null;
+  const { t, locale, now, deadlines, hiddenShown, named, anonymous, outsideNamed, hidden, countPublic, countHidden, door, headline } = head;
   // The gate (§396): the notice in force, in every language, describes the states. Off, nothing
   // below reads a pending or waiting row at all — not even their count.
   const statesOn = await cachedListStatesDisclosed(now);
@@ -225,34 +205,6 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   const others =
     firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice, waitlistOn, hiddenShown) : { pending: 0, waitlisted: 0, outsidePending: 0 };
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE, others.pending + others.waitlisted);
-  /*
-    The title's number and the line under it (§632): the confirmed, plus — on a capped event — those the
-    places line says are completing their registration. The places come from the door's own cached read
-    (`readRegistrationDoor`: the entry the page's `RegistrationCta` reads, for an open internal event
-    only), so this costs no query of its own; a door that read nothing (uncapped, closed, unreadable)
-    leaves the confirmed alone, today's title and line. Accepted knowingly: when that read fails, the
-    request memo forgets the failed promise, so this call asks the database once more and logs a second
-    «[registration-door] could not read the availability» after the card's — the breaker fails fast once
-    open, and threading the card's door down to the list would couple two islands for a log line.
-  */
-  const door = await readRegistrationDoor(event, now);
-  /*
-    «Lista ascunsă» (§643): a runner the club put on the hidden list keeps their row in the table when
-    they ticked — the list is a disclosure they chose, and nothing marks them there — and leaves the
-    title's and the summary line's numbers, which count the places, as the places line does. Unless the
-    event counts the hidden list (§647): then those numbers are everybody on it with a place, ticked or
-    not — its confirmed among «confirmați», its holds among «în curs de confirmare» — while the places
-    line above, and the rows, stay as they are.
-  */
-  const headline = startListHeadline(
-    t,
-    locale,
-    countHidden
-      ? { confirmed: Math.max(view.confirmed - outsideNamed, 0) + hidden.confirmed, named }
-      : { confirmed: Math.max(view.confirmed - outsideNamed, 0), named: Math.max(named - outsideNamed, 0) },
-    door.kind === "KNOWN" ? door.fill : null,
-    countHidden ? hidden.held : 0,
-  );
   // The note that the hidden list is not counted, only where it is not and the numbers are said.
   const outsideShown = countPublic && !countHidden && outsideNamed + (others.outsidePending ?? 0) > 0;
   /*

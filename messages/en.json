@@ -818,9 +818,17 @@
         "none": "No row matches."
       }
     },
+    "who": {
+      "label": "Who's coming",
+      "count": {
+        "one": "{count} coming · see who",
+        "few": "{count} coming · see who",
+        "other": "{count} coming · see who"
+      }
+    },
     "rsvp": {
-      "heading": "Coming?",
-      "intro": "Tell us you're coming and see who else is.",
+      "heading": "Confirm you're coming (optional)",
+      "intro": "This is not a registration: it helps us know how many of us are coming.",
       "email": "Your email address",
       "name": "Your name (optional)",
       "showName": "I want my name to show",
@@ -836,7 +844,8 @@
       "withdrawSubmit": "Send the link",
       "withdrawSubmitting": "Sending…",
       "withdrawDone": "If your address is among those coming, we've emailed you a link.",
-      "countHeading": "Coming ({count})",
+      "summaryEmpty": "Be the first to confirm",
+      "whoEmpty": "Nobody has confirmed yet.",
       "countEmpty": "Be the first to say you're coming.",
       "countOthers": "and {count} more",
       "rememberedAs": "Answering as {who}",

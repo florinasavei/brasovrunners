@@ -818,9 +818,17 @@
         "none": "Niciun rând nu se potrivește."
       }
     },
+    "who": {
+      "label": "Cine vine",
+      "count": {
+        "one": "{count} vine · vezi cine",
+        "few": "{count} vin · vezi cine",
+        "other": "{count} vin · vezi cine"
+      }
+    },
     "rsvp": {
-      "heading": "Vii?",
-      "intro": "Spune-ne că vii și vezi cine mai vine.",
+      "heading": "Confirmă prezența (opțional)",
+      "intro": "Nu e o înscriere: ne ajută să știm câți venim.",
       "email": "Adresa ta de email",
       "name": "Numele tău (opțional)",
       "showName": "Vreau să apar cu numele",
@@ -836,7 +844,8 @@
       "withdrawSubmit": "Trimite linkul",
       "withdrawSubmitting": "Se trimite…",
       "withdrawDone": "Dacă adresa ta e printre cei care vin, ți-am trimis pe email un link.",
-      "countHeading": "Vin ({count})",
+      "summaryEmpty": "Fii primul care confirmă",
+      "whoEmpty": "Încă nu a confirmat nimeni.",
       "countEmpty": "Fii primul care spune că vine.",
       "countOthers": "și încă {count}",
       "rememberedAs": "Răspunzi ca {who}",

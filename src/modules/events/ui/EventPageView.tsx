@@ -31,8 +31,9 @@ import GroupRunSafetyRules from "@/modules/group-run-declarations/ui/GroupRunSaf
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import type { parseInterestOutcome } from "@/modules/registrations/interest-box";
 import type { RsvpOutcome } from "@/modules/rsvp/rsvp-box";
+import { RSVP_WHO_ID } from "@/modules/rsvp/rsvp-box";
 import RsvpBox from "@/modules/rsvp/ui/RsvpBox";
-import { readRsvpsOf } from "@/modules/rsvp/ui/RsvpCount";
+import RsvpCount, { readRsvpsOf } from "@/modules/rsvp/ui/RsvpCount";
 import VolunteerCallout from "@/modules/volunteers/ui/VolunteerCallout";
 import VolunteersList from "@/modules/volunteers/ui/VolunteersList";
 import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInterestForm";
@@ -62,6 +63,7 @@ import ShareLinks from "./ShareLinks";
 import EventFeedbackButton from "@/modules/feedback/ui/EventFeedbackButton";
 import ResultsSection from "@/modules/results/ui/ResultsSection";
 import StartList from "./StartList";
+import { readStartListCount } from "./start-list-head";
 
 /**
  * What only a page a visitor opens has (§549): the «Anunță-mă» box and how it answered, the
@@ -74,7 +76,7 @@ export type EventPageVisit = {
   /** When the render a corrected address is timed from was made (§146). */
   interestRenderedAt: Date;
   /**
-   * «Vii?» (§811, «Vin!» part 1): whether the page offers the answer — `rsvpOffered`, decided by the page from the one rule — and
+   * «Confirmă prezența (opțional)» (§811, «Vin!» part 1): whether the page offers the answer — `rsvpOffered`, decided by the page from the one rule — and
    * how the typed form answered (`?vin=`). Absent in the preview before saving (§579): it takes an address and reads the public cache.
    */
   rsvpBox?: boolean;
@@ -176,6 +178,22 @@ export default async function EventPageView({
   const rsvpsRead = visit?.rsvpBox && !membersOnly ? await readRsvpsOf(event.id) : undefined;
   const coming = rsvpsRead ? new Map([[event.id, rsvpsRead.count]]) : undefined;
   const calendarEntry = dated ? toCalendarEvent(dated, locale, now, coming ? { coming } : {}) : null;
+  /*
+    «N vin · vezi cine» in the facts (§NNN; the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil»): the number the fold with the names
+    has on its bar, and the fold's own anchor. On a turn-up event the box offers: the page's one read of the answers above (`rsvpsRead`, the
+    same the box and the calendar links are handed) — nothing while the database is away (`null`) or nobody has confirmed. Otherwise on a race
+    whose public list is drawn (the very condition of the `StartList` below): the list's own title number (`readStartListCount`, the one
+    function the list reads its headline from — never a count of its own), `null` where the numbers are kept private. Only for an event still
+    to be held (scheduled, its start ahead: the reading `rsvpOffered` gives the turn-up branch and the weather row's `goingAhead` gives the
+    facts) — a cancelled or past race keeps its list but says no «N vin». Never in the preview before saving, nor on a members' event.
+  */
+  const whoComes = visit?.rsvpBox && !membersOnly
+    ? rsvpsRead && rsvpsRead.count > 0
+      ? { count: rsvpsRead.count, href: `#${RSVP_WHO_ID}` }
+      : null
+    : dated && !membersOnly && visit && event.eventStatus === "SCHEDULED" && dated.startsAt.getTime() > now.getTime()
+      ? await readStartListCount(dated).then((count) => (count !== null && count > 0 ? { count, href: "#start-list-title" } : null))
+      : null;
   return (
     <>
       <Stack direction="row" spacing={2} sx={{ mb: { xs: DENSITY.gapSm, sm: 2 }, alignItems: "center", justifyContent: "space-between" }}>
@@ -251,7 +269,7 @@ export default async function EventPageView({
       <Divider sx={{ my: { xs: DENSITY.gapSm, sm: 3 } }} />
       {/* The page's own facts (§168, §356): grouped by question, the route and the cost as pills,
           the address under the place. */}
-      <EventFacts event={event} now={now} stacked weather={weather} />
+      <EventFacts event={event} now={now} stacked weather={weather} whoComes={whoComes} />
 
       {/* The photographs notice and the group run's self-declaration were here, under the facts;
           since §498 they sit in «Condiții de participare», with the rules, after the programme. */}
@@ -260,11 +278,22 @@ export default async function EventPageView({
       {/* In the preview before saving (§579) the draft's door, its button disabled. */}
       <RegistrationCta event={event} now={now} previewDoor={previewDoor} />
 
-      {/* «Vii?» and «Vin (N)» (§811), where the registration card would stand on a turn-up event, at `#vin`: only while the page
-          decided the answer is offered (`rsvpOffered`), and never in the preview before saving (§579) or on a members' event (§552). */}
+      {/* «Confirmă prezența (opțional)» (§811, §NNN) and «Cine vine (N)» right under it, where the registration card would stand on a turn-up
+          event — `#vin` and `#cine-vine`, two closed bars together near the top: only while the page decided the answer is offered
+          (`rsvpOffered`), and never in the preview before saving (§579) or on a members' event (§552). Both are handed the one read. */}
       {visit?.rsvpBox && !membersOnly && (
-        <RsvpBox locale={locale} slug={slug} eventId={event.id} renderedAt={visit.rsvpRenderedAt ?? now} outcome={visit.rsvpOutcome ?? null} rsvps={rsvpsRead} />
+        <>
+          <RsvpBox locale={locale} slug={slug} eventId={event.id} renderedAt={visit.rsvpRenderedAt ?? now} outcome={visit.rsvpOutcome ?? null} rsvps={rsvpsRead} />
+          <RsvpCount eventId={event.id} rsvps={rsvpsRead} />
+        </>
       )}
+
+      {/* «Cine vine (N)» of a race (§32, §250; moved up by §NNN — the owner, 2026-10-19: «am citit în „zig-zag" și am sărit peste secțiune»): the public
+          list, right under the registration card, the place the turn-up bars have — it was under «Condiții de participare», near the bottom.
+          Nothing at all unless this event publishes one (BR-REQ-039-01); nobody registers before the date is announced (§533), so an undated
+          event has no list; nor a members' event (§552), where the public list would be a public disclosure on a page that is not public; nor
+          the preview (§579): the list reads the public cache, and a draft has nobody on it. */}
+      {dated && !membersOnly && visit && <StartList event={dated} page={visit.lista} />}
 
       {/* "Tell me when registration opens" (§146), under the date, only while the window is ahead
           and the notice that describes it is approved. A corrected address is timed from the
@@ -453,13 +482,7 @@ export default async function EventPageView({
         <OpenFoldFromHash />
       </Box>
 
-      {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
-      {/* Nobody registers before the date is announced (§533), so an undated event has no list. */}
-      {/* Nor a members' event (§552): the public list is a public disclosure (§32), and this page is not public. */}
-      {/* Nor in the preview (§579): the list reads the public cache, and a draft has nobody on it. */}
-      {dated && !membersOnly && visit && <StartList event={dated} page={visit.lista} />}
-
-      {/* «Clasament» (§809, race results part 2), under `#clasament`, right after the start list: a race's published results, and
+      {/* «Clasament» (§809, race results part 2), under `#clasament`, after the participation rules (the start list is above, since §NNN): a race's published results, and
           nothing at all — no heading, no «în curând» — unless the Administrator published them, the notice and the terms in force
           describe them, the race has started and the public list's period is not over (`readEventResultsForPage`). The same three
           conditions as the list above, and not in the preview before saving (§579): a draft has no results, and the section reads
