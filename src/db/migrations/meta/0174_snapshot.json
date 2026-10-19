@@ -1,6 +1,6 @@
 {
   "id": "d1aa1ed0-d5f7-4b5f-9413-fbcd3374d361",
-  "prevId": "9d88368f-3290-47fd-9dbd-47e87571674a",
+  "prevId": "e189730f-ada9-49b7-a2e3-15bff48d6262",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2041,6 +2041,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "asked_basis": {
+          "name": "asked_basis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -2097,6 +2103,10 @@
         "event_rsvps_display_name_length": {
           "name": "event_rsvps_display_name_length",
           "value": "\"event_rsvps\".\"display_name\" IS NULL OR char_length(\"event_rsvps\".\"display_name\") <= 80"
+        },
+        "event_rsvps_asked_basis_known": {
+          "name": "event_rsvps_asked_basis_known",
+          "value": "\"event_rsvps\".\"asked_basis\" IS NULL OR \"event_rsvps\".\"asked_basis\" IN ('SUBSCRIBER', 'ANSWERER')"
         }
       },
       "isRLSEnabled": false
@@ -2153,6 +2163,129 @@
       },
       "policies": {},
       "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.rsvp_refuse_tokens": {
+      "name": "rsvp_refuse_tokens",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locale": {
+          "name": "locale",
+          "type": "locale",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "canonical_email": {
+          "name": "canonical_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "canonicalization_version": {
+          "name": "canonicalization_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "series_key": {
+          "name": "series_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "used_at": {
+          "name": "used_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "rsvp_refuse_tokens_canonical_email_idx": {
+          "name": "rsvp_refuse_tokens_canonical_email_idx",
+          "columns": [
+            {
+              "expression": "canonical_email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "rsvp_refuse_tokens_event_id_events_id_fk": {
+          "name": "rsvp_refuse_tokens_event_id_events_id_fk",
+          "tableFrom": "rsvp_refuse_tokens",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "rsvp_refuse_tokens_token_hash_unique": {
+          "name": "rsvp_refuse_tokens_token_hash_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token_hash"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "rsvp_refuse_tokens_hash_is_sha256_hex": {
+          "name": "rsvp_refuse_tokens_hash_is_sha256_hex",
+          "value": "\"rsvp_refuse_tokens\".\"token_hash\" ~ '^[0-9a-f]{64}$'"
+        },
+        "rsvp_refuse_tokens_expiry_after_creation": {
+          "name": "rsvp_refuse_tokens_expiry_after_creation",
+          "value": "\"rsvp_refuse_tokens\".\"expires_at\" > \"rsvp_refuse_tokens\".\"created_at\""
+        }
+      },
       "isRLSEnabled": false
     },
     "public.event_todos": {
@@ -10627,8 +10760,7 @@
       "schema": "public",
       "values": [
         "RSVP_CONFIRM",
-        "RSVP_WITHDRAW",
-        "RSVP_REFUSE"
+        "RSVP_WITHDRAW"
       ]
     },
     "public.event_todo_priority": {
