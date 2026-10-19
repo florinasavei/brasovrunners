@@ -6,7 +6,7 @@ import { countForm } from "@/i18n/count-form";
 import type { Locale } from "@/i18n/routing";
 import { cachedFirstVolunteersListNoticeVersion, cachedPublicVolunteersList, cachedVolunteersListDescribed } from "@/modules/public-cache/reads";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 import { DENSITY } from "@/theme/density";
 import { volunteersListExpired, volunteersListState } from "../domain/public-list";
 
@@ -19,8 +19,8 @@ import { volunteersListExpired, volunteersListState } from "../domain/public-lis
  * a city or a birth date, which the read does not select.
  *
  * **A native disclosure, closed on arrival** (the owner: «collapsed, ca și condițiile de participare»): `details` in the start list's outlined
- * shape (`StartList`, «Condiții de participare»), working without JavaScript, its title a real `h2` inside the `<summary>` with the count, a
- * glyph before it. The page is about the event; the people are one press away.
+ * shape (`StartList`, «Condiții de participare»), working without JavaScript, its title a real `h2` inside the `<summary>` — as the conditions'
+ * fold's is, so it stays in a screen reader's list of headings while the fold is shut (§336) — with the count, a glyph before it. The page is about the event; the people are one press away.
  *
  * Drawn only while `volunteersListState` says so: the club's tick is on (the page passes this component only then), the event still takes
  * volunteers, the notice in force describes the list (`cachedVolunteersListDescribed`), the volunteers' rows still exist (thirty days after the
@@ -86,10 +86,12 @@ export default async function VolunteersList({
           "&[open]": { pb: 1 },
         }}
       >
-        <Typography component="summary" id="volunteers-list-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
-          <VolunteerActivismIcon aria-hidden sx={FOLD_GLYPH_SX} />
-          {state === "list" ? t("volunteers.list.heading", { count: list.count }) : t("volunteers.list.title")}
-        </Typography>
+        <Box component="summary">
+          <Typography component="h2" id="volunteers-list-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
+            <VolunteerActivismIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+            {state === "list" ? t("volunteers.list.heading", { count: list.count }) : t("volunteers.list.title")}
+          </Typography>
+        </Box>
 
         {state === "forming" ? (
           <Typography variant="body2" color="text.secondary" data-testid="volunteers-list-forming" sx={{ pb: 1 }}>
