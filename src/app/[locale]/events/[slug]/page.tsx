@@ -277,7 +277,8 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
           rsvpRenderedAt: ((rsvpOutcome === "invalid" || rsvpOutcome === "captcha") && parseInterestSince(since, now)) || now,
           declaratie,
           lista,
-          volunteers: volunteerRoleNames.length > 0 ? { roleNames: volunteerRoleNames } : null,
+          // «Cine se poate oferi» (§NNN): by invitation, the event's page says nothing about volunteers; for the members, one line says so.
+          volunteers: volunteerRoleNames.length > 0 && volunteerOffer && volunteerOffer.access !== "INVITED" ? { roleNames: volunteerRoleNames, clubOnly: volunteerOffer.access === "MEMBERS" } : null,
         }}
       />
     </Container>

@@ -99,6 +99,9 @@ export const EMAIL_GROUP_OF: Readonly<Record<Exclude<EmailMessageType, RelayMess
   VOLUNTEER_ROLE_ASSIGNED: "confirmations",
   // The guardian's link (§768) is an action link, on the links' road like the volunteer's own agreement link.
   VOLUNTEER_GUARDIAN_REQUEST: "links",
+  // The club's invitation to volunteer (§NNN): what the club decides to say, to people it chose — rare and paced, the announcements' road
+  // (an event invitation, §647, holds a place and rides the links'; this one holds nothing, so a late one loses nobody anything).
+  VOLUNTEER_INVITATION: "announcements",
   NEWSLETTER_CONFIRM: "newsletter",
   NEWSLETTER: "newsletter",
   NEW_EVENT_ALERT: "newsletter",

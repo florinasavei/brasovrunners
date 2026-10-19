@@ -1,10 +1,12 @@
 import { eq } from "drizzle-orm";
 import { eventVolunteerCategories, eventVolunteerRoles } from "@/db/schema/event-volunteers";
+import { events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { hasRichTextContent, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { compareCategories, compareRoles } from "@/modules/volunteers/domain/volunteer";
-import { changeVolunteerCategory, changeVolunteerRole, ROLE_FORM_COLOUR_BOXES } from "@/modules/volunteers/volunteers";
+import { DEFAULT_VOLUNTEERS_ACCESS } from "@/modules/volunteers/domain/access";
+import { changeVolunteerCategory, changeVolunteerRole, ROLE_FORM_COLOUR_BOXES, setVolunteersAccess } from "@/modules/volunteers/volunteers";
 import { TYPED_COLOUR } from "@/modules/volunteers/badges/badges";
 import { isDomainError } from "@/shared/errors/domain-error";
 import type { VolunteersFile } from "./file-format";
@@ -33,12 +35,14 @@ export async function readVolunteersFile<T extends Record<string, unknown>>(db: 
   const categories = (await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, eventId))).sort(compareCategories);
   const roles = (await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, eventId))).sort(compareRoles);
   const position = new Map(categories.map((category, index) => [category.id, index]));
+  const [event] = await db.select({ access: events.volunteersAccess }).from(events).where(eq(events.id, eventId)).limit(1);
   const document = (stored: unknown): Record<string, unknown> | null => {
     if (stored === null || stored === undefined) return null;
     const read = readRichText(stored);
     return hasRichTextContent(read) ? (read as unknown as Record<string, unknown>) : null;
   };
   return {
+    access: event?.access ?? DEFAULT_VOLUNTEERS_ACCESS,
     categories: categories.map((category) => ({
       name: { ro: category.nameRo, en: category.nameEn },
       contact:
@@ -104,6 +108,11 @@ export async function importVolunteersFile<T extends Record<string, unknown>>(
       skipped += 1;
     }
   }
+  /*
+    «Cine se poate oferi» (§NNN): the club's standing rule travels with the roles — a duplicate, a repeat and this file all start with it —
+    but not the tick «Primește voluntari», so nothing opens by itself. Through the card's own service, which audits it.
+  */
+  if (file.access !== DEFAULT_VOLUNTEERS_ACCESS) await setVolunteersAccess(db, actor, { eventId, access: file.access }, now);
   let roles = 0;
   for (const role of file.roles) {
     const under = role.category !== null && role.category >= 0 ? created[role.category] : undefined;
