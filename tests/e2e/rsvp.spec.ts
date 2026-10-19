@@ -247,8 +247,14 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
 
     // The listing's card for this date (the second date has a title of its own, so this one is not a series' card): «1 vine», a link to the
     // page's «Vii?» card, and the 44 pixels every link on a card has in both directions.
-    await page.goto("/ro/evenimente");
+    // The link now counts by itself, so the listing is asked within seconds of the write: the public cache expires a second time three
+    // seconds after it (§583) for a render that was already running, so a visit inside that window may be given the page it made before.
+    // A person reloads; so does the spec, until the chip is there.
     const chip = page.locator(`[data-testid="coming-chip"][href$="/${slug}#vin"]`);
+    await expect(async () => {
+      await page.goto("/ro/evenimente");
+      await expect(chip).toHaveCount(1, { timeout: 1_000 });
+    }).toPass({ timeout: 15_000, intervals: [1_000] });
     await expect(chip).toHaveCount(1);
     await expect(chip).toContainText("1 vine");
     const chipBox = await chip.boundingBox();
