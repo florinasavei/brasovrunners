@@ -16,7 +16,9 @@ import { registrationNotes } from "@/db/schema/registration-notes";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import { routing } from "@/i18n/routing";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { seriesKey as seriesKeyOf } from "@/modules/events/domain/series";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { roleLabel } from "@/modules/volunteers/domain/volunteer";
@@ -121,7 +123,16 @@ export type PersonData = {
    * event type and the default-language title, one line) and when, every column of the row but the address itself. Not erased with the
    * answers: the row is the objection, and forgetting it would ask the person again; it goes a year after the series' last date.
    */
-  askRefusals: Array<{ seriesKey: string; canonicalizationVersion: number; createdAt: Date }>;
+  askRefusals: Array<{
+    seriesKey: string;
+    /**
+     * The series as the club wrote it — the event type and the title of the series' latest date — for a screen that names it in words;
+     * null when no event of the series is left (a series that no longer exists, or an `event:<id>` key of a deleted event).
+     */
+    series: { type: (typeof events.$inferSelect)["type"]; title: string } | null;
+    canonicalizationVersion: number;
+    createdAt: Date;
+  }>;
   /**
    * The browsers remembered for this address (§811): when each was remembered, last used and expires — never the secret or its
    * fingerprint, which prove nothing to the person and are of no use to the club.
@@ -347,11 +358,23 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventRsvps.eventId), eq(eventTranslations.locale, eventRsvps.locale)))
     .where(eq(eventRsvps.canonicalEmail, canonicalEmail))
     .orderBy(asc(eventRsvps.createdAt));
-  const askRefusals = await db
+  const refusalRows = await db
     .select({ seriesKey: rsvpAskRefusals.seriesKey, canonicalizationVersion: rsvpAskRefusals.canonicalizationVersion, createdAt: rsvpAskRefusals.createdAt })
     .from(rsvpAskRefusals)
     .where(eq(rsvpAskRefusals.canonicalEmail, canonicalEmail))
     .orderBy(asc(rsvpAskRefusals.createdAt));
+  // The key is the listing's (`events/domain/series.ts`): a lowercased title and an enum code. Staff read the series as the club wrote it, from its latest date.
+  const askRefusals: PersonData["askRefusals"] = [];
+  if (refusalRows.length > 0) {
+    const dated = await db
+      .select({ type: events.type, title: eventTranslations.title, startsAt: events.startsAt })
+      .from(events)
+      .innerJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, routing.defaultLocale)))
+      .orderBy(asc(events.startsAt));
+    const latest = new Map<string, { type: (typeof events.$inferSelect)["type"]; title: string }>();
+    for (const row of dated) latest.set(seriesKeyOf({ type: row.type, title: row.title }), { type: row.type, title: row.title });
+    for (const row of refusalRows) askRefusals.push({ ...row, series: latest.get(row.seriesKey) ?? null });
+  }
   const rememberedBrowsers = await db
     .select({
       deliveryEmail: personSessions.deliveryEmail,

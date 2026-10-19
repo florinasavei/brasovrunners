@@ -6376,7 +6376,8 @@
       "rsvps": "“I'm coming!” answers ({count})",
       "browsers": "Remembered browsers ({count})",
       "askRefusals": "“Coming?” refusals by series ({count})",
-      "askRefusalsKept": "A refusal is not deleted with the answers: it is the refusal, and without it the person would be asked again. It goes one year after the series' last date.",
+      "askRefusalsKept": "The refusal stays after the answers are erased: without it the person would be asked again. It goes one year after the series' last date.",
+      "askRefusalGone": "a series that no longer exists",
       "rsvpNameShown": "name shown on the page",
       "rsvpNameHidden": "counted only",
       "rsvpNotice": "notice v{version}",
@@ -6744,12 +6745,12 @@
         },
         "option": {
           "SUBSCRIBERS": "The newsletter's subscribers: the question's topic or “All the news”",
-          "ANSWERERS": "Those who answered “I'm coming” at an earlier date of the same series",
+          "ANSWERERS": "Those who answered “I'm coming!” at an earlier date of the same series",
           "BOTH": "Both"
         },
         "help": {
           "SUBSCRIBERS": "How it works now: whoever subscribed to the question's topic or to “All the news”, under a notice that describes the question.",
-          "ANSWERERS": "An “I'm coming” answer is kept 30 days after each date: the question reaches those who answered in the last ~30 days. Every email has “Don't ask me again for this series”.",
+          "ANSWERERS": "An “I'm coming!” answer is kept 30 days after each date: the question reaches those who answered in the last ~30 days. Every email has “Don't ask me again for this series”.",
           "BOTH": "The two lists, one email per person: whoever is also a subscriber is asked as a subscriber."
         },
         "noticeDone": "The notice in force describes this group too",
@@ -7116,8 +7117,8 @@
           "verificationRetryHours": "The address-confirmation link is re-sent after (hours)",
           "verificationRetries": "How many times the link is re-sent (0–3)",
           "outageGraceMaxHours": "The deadlines' clock stands still while the site cannot be reached, at most (hours)",
-          "rsvpAskDaysBefore": "The “Coming?” question is sent before the start by (days)",
-          "rsvpAskHour": "The “Coming?” question is sent from the hour (0–23, club time)"
+          "rsvpAskDaysBefore": "How many days before the start the “Coming?” question goes (days)",
+          "rsvpAskHour": "The hour it goes from (club time, 0–23)"
         },
         "help": {
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses.",
@@ -7133,7 +7134,7 @@
           "verificationRetryHours": "Counted from when the last confirmation email left, to whoever has not confirmed yet. The link's deadline does not move.",
           "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move.",
           "outageGraceMaxHours": "While the name is not found, running deadlines move on every run; after a silence of the scheduled calls, afterwards. At most this many hours; 0 = no moving, the outages are still recorded.",
-          "rsvpAskDaysBefore": "0 = never sent. Whoever ticked its topic gets one email, with “I'm coming” and “I'm not coming”. An event can opt out, in the editor, under “I'm coming!”.",
+          "rsvpAskDaysBefore": "0 = never sent. You choose who is asked in “Emails”; each person gets one email, with “I'm coming” and “I'm not coming”. An event can opt out, in the editor, under “I'm coming!”.",
           "rsvpAskHour": "The club's clock (Brașov): it leaves from this hour on the chosen day, on the job's first run after it. Midnight is 0."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",

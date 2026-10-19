@@ -612,9 +612,14 @@ describe("§NNN the «Vii?» question's settings", () => {
       const key = await eventSeriesKey(db, current.id);
       await db.insert(rsvpAskRefusals).values({ canonicalEmail: "ana@example.test", canonicalizationVersion: 2, seriesKey: key });
       await db.insert(rsvpAskRefusals).values({ canonicalEmail: "ion@example.test", canonicalizationVersion: 2, seriesKey: key });
+      // A series with no event left is named in words by the page, never by the raw key.
+      await db.insert(rsvpAskRefusals).values({ canonicalEmail: "ana@example.test", canonicalizationVersion: 2, seriesKey: "GROUP_RUN\nmută-te acum" });
       const data = await viewPersonData(db, await admin(), "ana@example.test", NOW);
-      expect(data.askRefusals).toEqual([expect.objectContaining({ seriesKey: key, canonicalizationVersion: 2 })]);
-      expect(data.askRefusals).toHaveLength(1);
+      // The series as the club wrote it (the type and the title of its latest date), not the lowercased key.
+      expect(data.askRefusals).toEqual([
+        expect.objectContaining({ seriesKey: key, canonicalizationVersion: 2, series: { type: "GROUP_RUN", title: "Alergarea de duminică" } }),
+        expect.objectContaining({ seriesKey: "GROUP_RUN\nmută-te acum", series: null }),
+      ]);
     });
   });
 });

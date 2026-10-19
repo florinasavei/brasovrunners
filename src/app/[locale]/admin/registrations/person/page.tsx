@@ -53,6 +53,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
   const { q, error, erased } = await searchParams;
   const words = await confirmWords();
   const t = await getTranslations("Admin");
+  const tEvent = await getTranslations("Event");
   const now = new Date();
   const canonicalEmail = q ? openPersonLookup(q, now) : null;
   const data = canonicalEmail ? await viewPersonData(getDb(), actor, canonicalEmail, now) : null;
@@ -271,7 +272,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                   <>
                     {data.askRefusals.map((refusal, index) => (
                       <Typography key={index} variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
-                        {show(refusal.createdAt)} · {refusal.seriesKey.replace("\n", " · ")}
+                        {show(refusal.createdAt)} · {refusal.series ? `${tEvent(`type.${refusal.series.type}`)} · ${refusal.series.title}` : t("person.askRefusalGone")}
                       </Typography>
                     ))}
                     <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>

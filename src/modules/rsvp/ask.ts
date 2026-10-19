@@ -64,8 +64,10 @@ import { mintRsvpLinks } from "./rsvp";
  * the event's, and nothing secret.
  * When it is SENT (`checkRsvpAsk` first and `makeRsvpAsk` last, called by the renderer, AGENTS.md §14.5) the person's «Vin!» row is made — unconfirmed, with
  * no name and no tick, `asked_at` set — and the links of the existing machinery are minted for it: `RSVP_CONFIRM` (the «Vin» button)
- * and `RSVP_WITHDRAW` (the «Nu vin» button) — and, to an earlier answerer, `RSVP_REFUSE` (§NNN, «Nu mă mai întreba la seria aceasta», whose press
- * records the refusal in `ask-refusal.ts`). The page `/vin/<link>` (§812) does the rest: the GET changes nothing, the press is a
+ * and `RSVP_WITHDRAW` (the «Nu vin» button) — and, to an earlier answerer, a refusal link of its own table (§NNN, «Nu mă mai întreba la seria
+ * aceasta», `rsvp_refuse_tokens`: it has no key to the answer, so it outlives «Nu vin» and the event's start; its press records the refusal in
+ * `ask-refusal.ts`). The «Vin» link lives until the event's start (the question may go a week ahead); a «Vin» pressed in a SUBSCRIBER's question
+ * is an earlier answer only while that address still receives the topic (`asked_basis`). The page `/vin/<link>` (§812) does the rest: the GET changes nothing, the press is a
  * POST that spends the link. «Vin» confirms the row (`confirmRsvp`, counted at once, the browser remembered); «Nu vin» deletes it
  * (`withdrawRsvp`), so the person is simply not on the list. Nothing in the allocator, the registrations or the capacity formula
  * meets any of it.

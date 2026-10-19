@@ -6376,7 +6376,8 @@
       "rsvps": "Răspunsuri „Vin!” ({count})",
       "browsers": "Browsere recunoscute ({count})",
       "askRefusals": "Refuzuri „Vii?” pe serie ({count})",
-      "askRefusalsKept": "Un refuz nu se șterge odată cu răspunsurile: el e refuzul, iar fără el persoana ar fi întrebată din nou. Dispare la un an după ultima dată a seriei.",
+      "askRefusalsKept": "Refuzul rămâne după ce răspunsurile se șterg: fără el, persoana ar fi întrebată din nou. Se șterge la un an după ultima dată a seriei.",
+      "askRefusalGone": "o serie care nu mai există",
       "rsvpNameShown": "cu numele pe pagină",
       "rsvpNameHidden": "doar numărat",
       "rsvpNotice": "nota v{version}",
@@ -6744,12 +6745,12 @@
         },
         "option": {
           "SUBSCRIBERS": "Abonații newsletterului (subiectul întrebării sau „Toate noutățile”)",
-          "ANSWERERS": "Cei care au răspuns „Vin” la o dată anterioară a aceleiași serii",
+          "ANSWERERS": "Cei care au răspuns „Vin!” la o dată anterioară a aceleiași serii",
           "BOTH": "Amândouă"
         },
         "help": {
           "SUBSCRIBERS": "Cum merge acum: cine s-a abonat la tema întrebării sau la „Toate noutățile”, sub o notă care descrie întrebarea.",
-          "ANSWERERS": "Un răspuns „Vin” se păstrează 30 de zile după fiecare dată: întrebarea ajunge la cei care au răspuns în ultimele ~30 de zile. Fiecare email are „Nu mă mai întreba la seria aceasta”.",
+          "ANSWERERS": "Un răspuns „Vin!” se păstrează 30 de zile după fiecare dată: întrebarea ajunge la cei care au răspuns în ultimele ~30 de zile. Fiecare email are „Nu mă mai întreba la seria aceasta”.",
           "BOTH": "Cele două liste, un singur email pe persoană: cine e și abonat e întrebat ca abonat."
         },
         "noticeDone": "Nota în vigoare descrie și această categorie",
@@ -7117,7 +7118,7 @@
           "verificationRetries": "De câte ori se retrimite linkul (0–3)",
           "outageGraceMaxHours": "Ceasul termenelor stă pe loc cât site-ul nu poate fi accesat, cel mult (ore)",
           "rsvpAskDaysBefore": "Întrebarea „Vii?” pleacă înainte de start cu (zile)",
-          "rsvpAskHour": "Întrebarea „Vii?” pleacă de la ora (0–23, ora clubului)"
+          "rsvpAskHour": "Întrebarea „Vii?” pleacă de la (ora clubului, 0–23)"
         },
         "help": {
           "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră.",
@@ -7133,7 +7134,7 @@
           "verificationRetryHours": "Socotit de când a plecat ultimul email de confirmare, către cine nu a confirmat încă. Termenul linkului nu se mută.",
           "verificationRetries": "Fiecare email de confirmare se socotește, și «Retrimite» sau o retrimitere din backoffice. 0 = nu se retrimite singur. Termenul nu se mută.",
           "outageGraceMaxHours": "Cât numele nu se găsește, termenele care curg se mută la fiecare rulare; după o tăcere a verificărilor, ulterior. Cel mult atâtea ore; 0 = fără mutare, întreruperile se înregistrează totuși.",
-          "rsvpAskDaysBefore": "0 = nu se trimite deloc. Cine a bifat tema ei primește un singur email, cu „Vin” și „Nu vin”. Un eveniment poate renunța la ea, în editor, la „Vin!”.",
+          "rsvpAskDaysBefore": "0 = nu se trimite deloc. Cine e întrebat alegi în „Emailuri”; fiecare primește un singur email, cu „Vin” și „Nu vin”. Un eveniment poate renunța la ea, în editor, la „Vin!”.",
           "rsvpAskHour": "Ora clubului (Brașov) de la care pleacă, în ziua aleasă mai sus; emailul pleacă la prima trecere a jobului după ea. Miezul nopții e 0."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablon, care le citește de aici.",
