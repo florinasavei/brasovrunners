@@ -8,6 +8,8 @@ import { pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
 import { getStorage, isStorageConfigured, objectKey } from "@/modules/media/storage";
 import { cachedPublishedPages, cachedUpcomingEvents } from "@/modules/public-cache/reads";
 import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
+import { readOrWhileAway } from "@/modules/resilience/optional-read";
+import { readPublicComing } from "@/modules/rsvp/public-page";
 import { forecastsForEvents } from "@/modules/weather/source";
 import { clubSocialLinks } from "@/shared/ui/club-socials";
 import { homeFigures } from "./domain/numbers";
@@ -97,10 +99,19 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
   // «Următoarea alergare» is drawn as the listing would draw that date: its series' card when it belongs to a series (the whole series, as `groupSeries` holds it), else the date alone.
   const nextMembers: readonly PublicEvent[] = sections.next ? (groupSeries(upcoming).find((series) => series.members.some((member) => member.id === sections.next!.id))?.members ?? [sections.next]) : [];
   const forecasts = await forecastsForEvents([...nextMembers.slice(0, 1), ...shownCards.map((card) => card.members[0])], now);
+  /*
+    «N vin» (§815, last surface, §NNN): how many confirmed they come, for the upcoming events whose page offers the answer — read once for
+    the page, never per card, through the same gate and the same cached reads the listing's chips use (`readPublicComing`), over the same
+    list the listing reads, so the two share one cache entry and cannot disagree. Nothing is read while no event ahead is ticked; nothing
+    while the database is away (a chip is not worth a page). The page is kept until the first offered event starts, when its chip goes.
+  */
+  const coming = await readOrWhileAway(() => readPublicComing(upcoming, now), new Map<string, number>());
   const cardOf = (key: string, members: readonly PublicEvent[]): RunSectionCard => ({
     key,
     members,
     weather: forecasts.get(members[0].id)?.start ?? null,
+    // A series card never wears the chip: its dates do (§815). A date alone on its card wears its own count.
+    comingCount: members.length === 1 ? (coming.get(members[0].id) ?? 0) : 0,
     // A date alone on its card still wears its series' chip (§486); a series card has its own dates.
     seriesDates: members.length > 1 ? undefined : seriesOf(members[0]),
   });

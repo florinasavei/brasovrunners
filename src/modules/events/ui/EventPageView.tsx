@@ -32,6 +32,7 @@ import { confirmationWindow } from "@/modules/registrations/domain/hold-deadline
 import type { parseInterestOutcome } from "@/modules/registrations/interest-box";
 import type { RsvpOutcome } from "@/modules/rsvp/rsvp-box";
 import RsvpBox from "@/modules/rsvp/ui/RsvpBox";
+import { readRsvpsOf } from "@/modules/rsvp/ui/RsvpCount";
 import VolunteerCallout from "@/modules/volunteers/ui/VolunteerCallout";
 import VolunteersList from "@/modules/volunteers/ui/VolunteersList";
 import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInterestForm";
@@ -165,7 +166,16 @@ export default async function EventPageView({
   const linkKindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, t(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
   const dated = datedOrNull(event);
   // The one entry the file, the feed and the calendar row's add links all read (§107, §159).
-  const calendarEntry = dated ? toCalendarEvent(dated, locale, now) : null;
+  /*
+    «Vin! → <page>#vin» and «N vin până acum» in the add links' description (§815, §NNN): from the one read of the answers the page makes
+    — the box below is handed the same (`rsvps`), so there is no second read — and only where the page draws the box (`visit.rsvpBox`, the
+    one rule `rsvpOffered`, decided by the page): not in the preview, not on a members' event, not once the start has passed, not while
+    the database is away (`null`). Then the entry carries the count exactly as the `.ics` file and the feed do, and the Google and Outlook
+    links, which read the same entry, say the same thing.
+  */
+  const rsvpsRead = visit?.rsvpBox && !membersOnly ? await readRsvpsOf(event.id) : undefined;
+  const coming = rsvpsRead ? new Map([[event.id, rsvpsRead.count]]) : undefined;
+  const calendarEntry = dated ? toCalendarEvent(dated, locale, now, coming ? { coming } : {}) : null;
   return (
     <>
       <Stack direction="row" spacing={2} sx={{ mb: { xs: DENSITY.gapSm, sm: 2 }, alignItems: "center", justifyContent: "space-between" }}>
@@ -253,7 +263,7 @@ export default async function EventPageView({
       {/* «Vii?» and «Vin (N)» (§811), where the registration card would stand on a turn-up event, at `#vin`: only while the page
           decided the answer is offered (`rsvpOffered`), and never in the preview before saving (§579) or on a members' event (§552). */}
       {visit?.rsvpBox && !membersOnly && (
-        <RsvpBox locale={locale} slug={slug} eventId={event.id} renderedAt={visit.rsvpRenderedAt ?? now} outcome={visit.rsvpOutcome ?? null} />
+        <RsvpBox locale={locale} slug={slug} eventId={event.id} renderedAt={visit.rsvpRenderedAt ?? now} outcome={visit.rsvpOutcome ?? null} rsvps={rsvpsRead} />
       )}
 
       {/* "Tell me when registration opens" (§146), under the date, only while the window is ahead
