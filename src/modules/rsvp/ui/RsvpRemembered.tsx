@@ -4,6 +4,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
+import SaveIcon from "@mui/icons-material/Save";
 import Alert from "@mui/material/Alert";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -141,6 +142,9 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
   const run = async (call: () => Promise<RsvpIslandState>) => {
     try {
       setPressFailed(false);
+      // A new answer or a taken-back one starts the name tick afresh: no box left open, no sentence of the last save.
+      setAsking(false);
+      setNameNote(null);
       const next = await call();
       if (!next.remembered) clearHint();
       setState(next);
@@ -200,7 +204,7 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
                 <Stack spacing={1.5} data-testid="rsvp-name-box">
                   <TextField name="name" label={labels.nameBox} required fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
                   <SubmitButton label={labels.nameSave} pendingLabel={labels.submitting} size="large">
-                    <EventAvailableIcon />
+                    <SaveIcon />
                   </SubmitButton>
                 </Stack>
               )}
