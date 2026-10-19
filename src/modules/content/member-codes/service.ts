@@ -84,11 +84,15 @@ export async function createDiscountCode<T extends Record<string, unknown>>(
     const [last] = await tx
       .select({ position: sql<number>`coalesce(max(${memberDiscountCodes.position}), 0)`.mapWith(Number) })
       .from(memberDiscountCodes);
-    const { forAll: _forAll, ...columns } = fields;
     const [row] = await tx
       .insert(memberDiscountCodes)
       .values({
-        ...columns,
+        partnerName: fields.partnerName,
+        code: fields.code,
+        descriptionRo: fields.descriptionRo,
+        descriptionEn: fields.descriptionEn,
+        link: fields.link,
+        validUntil: fields.validUntil,
         tierIds: storedTierIds(fields),
         position: (last?.position ?? 0) + 1,
         hidden: false,
