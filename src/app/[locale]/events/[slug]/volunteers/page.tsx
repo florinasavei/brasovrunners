@@ -102,7 +102,8 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
     Who may offer (§NNN): the choice (from the cached offer, nothing per viewer in it) met with what only this request knows — the
     emailed link in `?invite=` and, for the members' choice only, the session. The session module is not touched for any other
     choice, so an open event's page costs what it always did. The thank-you after a send is shown to whoever the redirect brought
-    back (it carries no secret and the sealed facts are the browser's own), so the door is asked for the form alone.
+    back (it carries no secret and the sealed facts are the browser's own); on a by-invitation event it needs those facts, so a typed-in
+    `?volunteer=1` is a 404 like any address without a link.
   */
   const inviteSecret = one(asked.invite);
   // No link in the address, no read: an ordinary visit costs the database nothing more than it did.

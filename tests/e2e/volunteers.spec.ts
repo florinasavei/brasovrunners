@@ -1680,7 +1680,8 @@ test.describe("§754 volunteers for a race", () => {
       expect(kept).toEqual([{ email: invited, name: "Ioana Invitata" }]);
 
       // The link was spent with the sign-up: the card says «Folosită», the link says so in a sentence, and the thank-you needs no link.
-      await page.reload();
+      // (The administrator's page was left on `/devs` to read the email: back to the event's editor.)
+      await page.goto(`/ro/admin/events/${event.id}`);
       await hydrated(page);
       await expect(async () => {
         await openFold(card);
