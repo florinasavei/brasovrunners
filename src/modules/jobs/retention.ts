@@ -4,10 +4,10 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventResults } from "@/db/schema/event-results";
-import { eventRsvpAsks, eventRsvps } from "@/db/schema/event-rsvps";
+import { eventRsvpAsks, eventRsvps, rsvpAskRefusals } from "@/db/schema/event-rsvps";
 import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
-import { events } from "@/db/schema/events";
+import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { emailOutbox } from "@/db/schema/email-outbox";
@@ -18,6 +18,8 @@ import { personSessions } from "@/db/schema/person-sessions";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
 import { scrubCorrectedAnswerValues, scrubRegistrationsFromAudit } from "@/modules/audit/repository";
+import { seriesKey } from "@/modules/events/domain/series";
+import { routing } from "@/i18n/routing";
 import { SOCIAL_ANSWERS } from "@/modules/registrations/answers";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS } from "@/modules/group-run-declarations/domain";
@@ -157,6 +159,8 @@ export const RETENTION = {
   rsvpDaysAfterEvent: RETENTION_PERIODS.rsvpDaysAfterEvent,
   /** …and seven days after it was typed when its address never used the emailed link. */
   rsvpUnconfirmedDays: RETENTION_PERIODS.rsvpUnconfirmedDays,
+  /** A refusal of the «Vii?» question for a series (§NNN) goes a year after the series' last date; the privacy notice says exactly this. */
+  rsvpAskRefusalDaysAfterSeries: RETENTION_PERIODS.rsvpAskRefusalDaysAfterSeries,
   /** The log of staff actions: three years, as the notice says. */
   auditLogYears: 3,
 } as const;
@@ -195,6 +199,8 @@ export type PruneCounts = {
   rsvps: number;
   /** The «Vii?» marks of events thirty days over (§818): a row of an event and a count, nothing personal. */
   rsvpAsks: number;
+  /** Refusals of the «Vii?» question for a series gone a year (§NNN): an address and a series' key. */
+  rsvpAskRefusals: number;
   /** Remembered browsers past their year (§811). */
   personSessions: number;
 };
@@ -302,6 +308,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     results: 0,
     rsvps: 0,
     rsvpAsks: 0,
+    rsvpAskRefusals: 0,
     personSessions: 0,
   };
   const failures: PruneFailure[] = [];
@@ -731,6 +738,31 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .where(sql`coalesce(${events.endsAt}, ${events.startsAt}) < ${daysBefore(now, RETENTION.rsvpDaysAfterEvent).toISOString()}::timestamptz`);
     const askDeleted = await tx.delete(eventRsvpAsks).where(inArray(eventRsvpAsks.eventId, over)).returning({ id: eventRsvpAsks.id });
     counts.rsvpAsks = askDeleted.length;
+    /*
+      A refusal of the question for a series (§NNN) lives while its series does and a year after the series' last date
+      (`rsvpAskRefusalDaysAfterSeries`). A series is not a row — the listing groups events by type and default-language title
+      (`seriesKey`) — so the latest start of each key is read here, with that same function, from the few hundred events there are, and only
+      when a refusal exists at all. A refusal whose series has no date ahead or within the year is gone; its key may be an event alone
+      (`event:<id>`, an event with no default-language title), which lives as long as that event does.
+    */
+    const refusals = await tx.select({ id: rsvpAskRefusals.id, seriesKey: rsvpAskRefusals.seriesKey }).from(rsvpAskRefusals);
+    if (refusals.length > 0) {
+      const dated = await tx
+        .select({ id: events.id, type: events.type, title: eventTranslations.title, startsAt: events.startsAt })
+        .from(events)
+        .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, routing.defaultLocale)));
+      const latest = new Map<string, number>();
+      for (const row of dated) {
+        const key = row.title !== null ? seriesKey({ type: row.type, title: row.title }) : `event:${row.id}`;
+        latest.set(key, Math.max(latest.get(key) ?? 0, row.startsAt.getTime()));
+      }
+      const cutoff = daysBefore(now, RETENTION.rsvpAskRefusalDaysAfterSeries).getTime();
+      const gone = refusals.filter((refusal) => (latest.get(refusal.seriesKey) ?? 0) < cutoff).map((refusal) => refusal.id);
+      if (gone.length > 0) {
+        const removed = await tx.delete(rsvpAskRefusals).where(inArray(rsvpAskRefusals.id, gone)).returning({ id: rsvpAskRefusals.id });
+        counts.rsvpAskRefusals = removed.length;
+      }
+    }
   });
 
   /* A remembered browser (§811) is good for a year from its last answer; past it the row is a hash nobody can present any more. */
@@ -766,6 +798,7 @@ export function totalPruned(counts: PruneCounts): number {
     counts.results +
     counts.rsvps +
     counts.rsvpAsks +
+    counts.rsvpAskRefusals +
     counts.personSessions
   );
 }

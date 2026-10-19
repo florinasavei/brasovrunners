@@ -273,12 +273,13 @@ type EventRsvpTokenPurpose = (typeof eventRsvpTokens.$inferSelect)["purpose"];
 /**
  * Mint the links of one `RSVP_CONFIRM` message, at the send (§14.5): the secret goes into that email and nowhere else, and a
  * newer link of the same purpose supersedes the older. `confirm` is minted only when asked (the "confirm" message of a row
- * still unconfirmed); `withdraw` always, valid until the event's start. Null when the event has started: nothing to answer.
+ * still unconfirmed); `withdraw` always, valid until the event's start; `refuse` (§NNN, «Nu mă mai întreba la seria aceasta») only
+ * in the «Vii?» question an earlier answerer receives, with the withdraw link's life. Null when the event has started: nothing to answer.
  */
 export async function mintRsvpLinks<T extends Record<string, unknown>>(
   db: Database<T>,
-  params: { rsvpId: string; startsAt: Date; confirm: boolean; now: Date },
-): Promise<{ confirm: string | null; withdraw: string } | null> {
+  params: { rsvpId: string; startsAt: Date; confirm: boolean; refuse?: boolean; now: Date },
+): Promise<{ confirm: string | null; withdraw: string; refuse: string | null } | null> {
   if (params.startsAt.getTime() <= params.now.getTime()) return null;
   const confirmExpires = new Date(Math.min(params.now.getTime() + RSVP_CONFIRM_HOURS * 3_600_000, params.startsAt.getTime()));
   return db.transaction(async (tx) => {
@@ -291,10 +292,12 @@ export async function mintRsvpLinks<T extends Record<string, unknown>>(
       await tx.insert(eventRsvpTokens).values({ rsvpId: params.rsvpId, purpose, tokenHash: hashTokenSecret(secret), expiresAt, createdAt: params.now });
       return secret;
     };
+    const lives = new Date(params.startsAt.getTime() + WITHDRAW_LINK_GRACE_DAYS * 86_400_000);
     return {
       confirm: params.confirm ? await mint("RSVP_CONFIRM", confirmExpires) : null,
       // The start can move after the message left: the link lives generously and `consumeRsvpToken` asks the event's start as it is then.
-      withdraw: await mint("RSVP_WITHDRAW", new Date(params.startsAt.getTime() + WITHDRAW_LINK_GRACE_DAYS * 86_400_000)),
+      withdraw: await mint("RSVP_WITHDRAW", lives),
+      refuse: params.refuse ? await mint("RSVP_REFUSE", lives) : null,
     };
   });
 }
@@ -380,15 +383,15 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
 }
 
 /** Spend a link of `purpose` inside the caller's transaction: the answer it named, or null when it was not live. One UPDATE, one winner. */
-async function consumeRsvpToken<T extends Record<string, unknown>>(
+export async function consumeRsvpToken<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   secret: string,
   purpose: EventRsvpTokenPurpose,
   now: Date,
 ): Promise<string | null> {
   if (!isWellFormedTokenSecret(secret)) return null;
-  if (purpose === "RSVP_WITHDRAW") {
-    // «Nu mai vin» works until the event's start as it is now — not as it was when the email left (a moved event moves its links).
+  if (purpose === "RSVP_WITHDRAW" || purpose === "RSVP_REFUSE") {
+    // «Nu mai vin» (and «Nu mă mai întreba», §NNN) work until the event's start as it is now — not as it was when the email left (a moved event moves its links).
     const [event] = await tx
       .select({ startsAt: events.startsAt })
       .from(eventRsvpTokens)

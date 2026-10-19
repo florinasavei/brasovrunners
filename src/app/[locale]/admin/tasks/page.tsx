@@ -27,6 +27,7 @@ import {
   noticeDescribesResults,
   noticeDescribesRsvp,
   noticeDescribesRsvpAsk,
+  noticeDescribesRsvpAskAnswerers,
   noticeDescribesListSocials,
   noticeDescribesGmailFallback,
   noticeDescribesPromotionalMaterials,
@@ -55,6 +56,8 @@ import {
 import { branchesSwitchedOn } from "@/modules/feedback/domain/branches";
 import { readFeedbackSettings } from "@/modules/feedback/settings";
 import { countVisibleProducts } from "@/modules/content/shop/repository";
+import { readRsvpAskAudienceSetting } from "@/modules/rsvp/ask-audience";
+import { asksAnswerers } from "@/modules/rsvp/domain/ask-audience";
 import { countRsvpEvents } from "@/modules/rsvp/rsvp";
 import { countVolunteersListEvents } from "@/modules/volunteers/public-list";
 import { countVolunteeringEvents } from "@/modules/volunteers/volunteers";
@@ -492,6 +495,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       rsvpDescribed: await noticeDescribesRsvp(db, now),
       // §818: the day-before question, described by the notice in force; nobody is asked until then.
       rsvpAskDescribed: await noticeDescribesRsvpAsk(db, now),
+      // §NNN: the question's second audience — chosen in «Emailuri», and described by the notice in force; nobody of it is asked until both.
+      rsvpAskAnswerersChosen: asksAnswerers((await readRsvpAskAudienceSetting(db)).audience),
+      rsvpAskAnswerersDescribed: await noticeDescribesRsvpAskAnswerers(db, now),
       rsvpEvents: await countRsvpEvents(db, now),
       // §808: the terms in force describe them too — the older ones promised to ask separately before a named result.
       resultsTermsDescribed: await termsDescribeResults(db, now),
