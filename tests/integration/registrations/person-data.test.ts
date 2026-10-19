@@ -303,12 +303,20 @@ describe("BR-REQ-070-01 everything held about a person", () => {
   it("carries the address sealed, never readable, and only for half an hour", () => {
     const sealed = sealPersonLookup("ana.pop@gmail.com", NOW) ?? "";
 
-    expect(sealed).not.toContain("ana");
+    // Flaky before: `not.toContain("ana")` on a random base64url string (a fresh IV every seal) fails whenever the
+    // ciphertext happens to spell «ana». The address is looked for whole, as text and inside the decoded bytes, where a
+    // chance match is not possible.
+    expect(sealed).not.toContain("ana.pop");
+    expect(Buffer.from(sealed, "base64url").toString("utf8")).not.toContain("ana.pop");
     expect(openPersonLookup(sealed, NOW)).toBe("ana.pop@gmail.com");
     expect(openPersonLookup(sealed, new Date(NOW.getTime() + (PERSON_LOOKUP_MINUTES - 1) * 60_000))).toBe("ana.pop@gmail.com");
     expect(openPersonLookup(sealed, new Date(NOW.getTime() + (PERSON_LOOKUP_MINUTES + 1) * 60_000))).toBeNull();
     // Tampered or made for something else: nothing.
-    expect(openPersonLookup(`${sealed.slice(0, -2)}xx`, NOW)).toBeNull();
+    // (One bit of the ciphertext flipped: replacing the last characters with «xx» changed nothing when the seal already
+    // ended so, or only the unused bits of the final base64 character.)
+    const bytes = Buffer.from(sealed, "base64url");
+    bytes[bytes.length - 1] ^= 1;
+    expect(openPersonLookup(bytes.toString("base64url"), NOW)).toBeNull();
     expect(openPersonLookup("ana.pop@gmail.com", NOW)).toBeNull();
   });
 });

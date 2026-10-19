@@ -34,6 +34,14 @@ const STARTS_AT = new Date("2026-10-24T07:00:00.000Z");
 const CLOSES_AT = new Date("2026-10-23T07:00:00.000Z");
 const later = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000);
 
+/**
+ * A message without its action links' secrets. Those are random base64url runs of 43 characters, and a
+ * three-digit number looked for in a message can be spelled by one of them by chance — that made the
+ * «no race number before the confirmation» checks fail once in a few thousand runs. The same pattern the
+ * outbox uses to redact a secret from an error (`SECRET_LIKE`, `notifications/domain/retry.ts`).
+ */
+const withoutSecrets = (text: string) => text.replace(/[A-Za-z0-9_-]{32,}/g, "<secret>");
+
 async function approveDocuments(db: TestDatabase) {
   const translations: LegalDocumentTranslationInput[] = [
     { locale: "ro", title: "Document", body: { sections: [{ paragraphs: ["d"] }] } },
@@ -280,7 +288,7 @@ describe("BR-REQ-038-01 §548 a race number only once a registration is confirme
     };
     for (const type of ["VERIFY_REGISTRATION_EMAIL", "COMPLETE_DECLARATION"] as const) {
       const message = await rendered(type);
-      expect(message.text, type).not.toContain("700");
+      expect(withoutSecrets(message.text), type).not.toContain("700");
       expect(message.text, type).not.toMatch(/num[ăa]r(ul)? (tău )?de concurs/i);
     }
     const confirmation = await rendered("REGISTRATION_CONFIRMED");
@@ -344,7 +352,7 @@ describe("BR-REQ-038-01 §548 a race number only once a registration is confirme
         db,
         later(2),
       );
-      expect(`${message.subject}\n${message.text}\n${message.html}`, messageType).not.toContain("777");
+      expect(withoutSecrets(`${message.subject}\n${message.text}\n${message.html}`), messageType).not.toContain("777");
     }
   });
 
