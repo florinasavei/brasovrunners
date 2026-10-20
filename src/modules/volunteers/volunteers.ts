@@ -403,7 +403,7 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
   shirts: boolean;
   showCounts: boolean;
   /**
-   * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§NNN): whether the public site advertises the volunteers' page. Read with the
+   * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§835): whether the public site advertises the volunteers' page. Read with the
    * roles so one cache entry answers every surface; the page itself ignores it (a link that is not advertised still works).
    */
   buttonShown: boolean;
@@ -435,7 +435,7 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
     shirts: event.shirts,
     // «Arată public câți voluntari mai sunt necesari» (§773): the page says how many a role still needs only while it is on.
     showCounts: event.showCounts,
-    // «Arată butonul „Vreau să fiu voluntar"» (§NNN): the event page's box and button only while it is on.
+    // «Arată butonul „Vreau să fiu voluntar"» (§835): the event page's box and button only while it is on.
     buttonShown: event.buttonShown,
     roles: roles.map((role) => {
       const standing = standingOf(role, people);
@@ -1363,7 +1363,7 @@ export async function setVolunteersShowCounts<T extends Record<string, unknown>>
 }
 
 /**
- * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» on or off (§NNN, amending §754 and §820; the owner, 2026-10-20: «I want to be able
+ * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» on or off (§835, amending §754 and §820; the owner, 2026-10-20: «I want to be able
  * to allow registration for volunteers but I want to control if the button is visible on the website or not»): the event's own tick, saved by the
  * «Voluntari» card's own form like «Arată public câți voluntari mai sunt necesari» — never by the editor's save. On by default, so no event changes.
  * Switching it changes only what the public site **advertises**: «Primește voluntari», the roles, the people, «Cine se poate oferi» and every

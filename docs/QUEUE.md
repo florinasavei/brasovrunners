@@ -14,12 +14,12 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.61`** (2026-10-19 21:06: §829–§831 — the members' zone opens on «Alergări», the «BVR» mark on «Cine
-  vine», deterministic tests; **migration `0175`**). Waiting for «prod»: `BR-V3.62` (below — no migration).
-- **QA: `BR-V3.62`** — the «Vii?» email's tick reads «Trimite emailul „Vii?" înainte de această dată» and its help names who
-  receives it, how many days before and at what hour, cut by the privacy notice in force (silent notice: «Emailul nu pleacă
-  încă…»); a test proves no save unticks it (§832) · «Puncte de control» is «Puncte pe traseu» everywhere a person reads it
-  (§833) · the calendar's «Următorul eveniment» says «Azi», «Mâine», «Peste 5 zile», «Peste 3 săptămâni», «Peste 2 luni» (§834).
+- **Production: `BR-V3.62`** (2026-10-20 01:02: §832–§834 — the «Vii?» email's tick says what it does, «Puncte pe traseu», the
+  calendar's next event says how far away it is; no migration). Waiting for «prod»: `BR-V3.63` (below — **migration `0176`**,
+  applied by the gated run `yarn ship` approves).
+- **QA: `BR-V3.63`** — hotfixes: the «Voluntari» card's tick «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului»
+  (on by default; off, the sign-up stays open by its link, shown in the card with «Copiază») (§835, migration `0176`) ·
+  «Confirmă prezența (opțional)» and «Cine vine (N)» are the last thing on the event page (§836).
 - **Building:** nothing. The owner's decisions from §803 (retention periods, December on Hobby or Pro, the Basic build machine,
   QA's region/Node) are open.
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.63` | the club chooses whether the event page shows «Vreau să fiu voluntar»; the sign-up stays open by its link (§835) · «Confirmă prezența» and «Cine vine» are the last thing on the event page (§836) |
 | `BR-V3.62` | the «Vii?» email's tick says what it does, with the club's days, hour and audience (§832) · «Puncte de control» is «Puncte pe traseu» everywhere a person reads it (§833) · the calendar's «Următorul eveniment» says how far away it is — «Mâine», «Peste 5 zile», «Peste 3 săptămâni» (§834) |
 | `BR-V3.61` | five tests that failed by chance under CI load or on a random id are deterministic (§829) · the members' zone opens on «Alergări»: each run with «Vin!» and who is coming, the next run first (§830) · «Cine vine» shows which runners are Brașov Runners members — declared by them or from their members' account, beside the names they show (§831) |
 | `BR-V3.60` | «Vin!» from the home page, the calendar links and the members' zone: a signed-in member answers with one tap (§822) · the «Vii?» question: how many days before, at what hour, to whom, and a per-event tick (§823) · a checkpoint kind «Regrupare» — the group waits here — first on the profile's pins (§824) · «Confirmă prezența (opțional)» and «Cine vine (N)» stand together near the top, and the facts say how many come (§825) · «Adaugă o persoană» on «Echipa» sets a member's level in the same step (§826) · anyone who said «Vin» can show or hide their name on «Cine vine» at any time, from the page, the zone or the email's link (§827) · every discount code says who it is for: chosen levels or «Toți membrii», never by leaving it empty (§828) |

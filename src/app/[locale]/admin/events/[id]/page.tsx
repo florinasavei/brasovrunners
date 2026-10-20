@@ -460,7 +460,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           // The day the entry's date of birth is counted on (§773): the gun's, else the event's.
           eventDay: volunteerEventDay(event, now),
           eventAhead: volunteerEventAhead(event, now),
-          // The volunteers' page's own address in each language the event has a page in (§NNN), for the club to copy: absolute, from `APP_BASE_URL`.
+          // The volunteers' page's own address in each language the event has a page in (§835), for the club to copy: absolute, from `APP_BASE_URL`.
           pageLinks: Object.fromEntries(
             orderedTranslations
               .filter((translation) => translation.slug.trim() !== "")

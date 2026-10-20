@@ -122,7 +122,7 @@ export async function importVolunteersFile<T extends Record<string, unknown>>(
   */
   if (file.listPublic) await setVolunteersListPublic(db, actor, { eventId, on: true }, now);
   /*
-    «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§NNN) travels the same way, through the card's own service: a file that says «off» (the club
+    «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§835) travels the same way, through the card's own service: a file that says «off» (the club
     shares the volunteers' page by link) makes an event that does the same; a file without the key leaves the default, shown.
   */
   if (!file.buttonShown) await setVolunteersButtonShown(db, actor, { eventId, on: false }, now);

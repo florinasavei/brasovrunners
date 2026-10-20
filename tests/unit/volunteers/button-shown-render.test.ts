@@ -8,7 +8,7 @@ import { volunteersAdvertised } from "@/modules/volunteers/domain/access";
 import type { VolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (BR-REQ-031-01, BR-REQ-050-02; the owner, 2026-10-20: «I want to be able to allow registration
+ * §835 — «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (BR-REQ-031-01, BR-REQ-050-02; the owner, 2026-10-20: «I want to be able to allow registration
  * for volunteers but I want to control if the button is visible on the website or not»): the rule that decides what the event's page advertises, and the
  * card's fifth tick with the volunteers' page link to copy. «Primește voluntari» keeps opening the sign-up; this only decides whether the public site
  * says so. The reads under the page are `own-page.test.ts`'s; the saving is `tests/integration/volunteers/button-shown.test.ts`.
@@ -124,7 +124,7 @@ async function drawCard(over: Partial<ComponentProps<typeof VolunteersCard>> = {
 
 const buttonForm = (page: string) => /<form[^>]*data-testid="volunteer-button-form"[\s\S]*?<\/form>/.exec(page)?.[0] ?? "";
 
-describe("§NNN what the event's page advertises: the rule", () => {
+describe("§835 what the event's page advertises: the rule", () => {
   it("advertises an open offer to anyone or to the members while the tick is on, and nothing once it is off", () => {
     expect(volunteersAdvertised({ access: "ANYONE", buttonShown: true })).toBe(true);
     expect(volunteersAdvertised({ access: "MEMBERS", buttonShown: true })).toBe(true);
@@ -139,7 +139,7 @@ describe("§NNN what the event's page advertises: the rule", () => {
   });
 });
 
-describe("§NNN the card's fifth tick: «Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului»", () => {
+describe("§835 the card's fifth tick: «Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului»", () => {
   it("is ticked by default, a submit drawn as the checkbox that posts the state it wants, with its help and no «Salvează»", async () => {
     const page = await drawCard();
     const form = buttonForm(page);
@@ -186,7 +186,7 @@ describe("§NNN the card's fifth tick: «Arată butonul „Vreau să fiu volunta
   });
 });
 
-describe("§NNN the volunteers' page link, to copy", () => {
+describe("§835 the volunteers' page link, to copy", () => {
   it("draws the address in each language in the house's read-only box with «Copiază» beside it, while the event takes volunteers", async () => {
     for (const volunteersButtonShown of [true, false]) {
       const page = await drawCard({ pageLinks: LINKS, volunteersButtonShown });
@@ -228,7 +228,7 @@ describe("§NNN the volunteers' page link, to copy", () => {
   });
 });
 
-describe("§NNN every public entry point to the volunteers' page asks the same rule", () => {
+describe("§835 every public entry point to the volunteers' page asks the same rule", () => {
   /** Every source file under `src/` that names the volunteers' page's route. */
   async function filesNamingTheRoute(): Promise<string[]> {
     const { readdirSync, readFileSync, statSync } = await import("node:fs");

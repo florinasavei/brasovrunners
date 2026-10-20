@@ -45,7 +45,7 @@ import { blankRoleRow, describeRole, fillRoleRow, roleGroup, roleRow, saveAllRol
  * confirm, and the event's page draws a card «Voluntarii» — a fold closed on arrival — with the ticked person's name and role and «și încă 1 voluntar» for the other, never an address; it is the
  * sentence «Echipa de voluntari se formează.» before anybody is confirmed, and gone when the club unticks the box.
  *
- * §NNN — «Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului» (the owner, 2026-10-20): a real tick, on by default; unticked, the event's page draws no «Căutăm voluntari» and
+ * §835 — «Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului» (the owner, 2026-10-20): a real tick, on by default; unticked, the event's page draws no «Căutăm voluntari» and
  * no button, the card shows the volunteers' page address in both languages with «Copiază», and the page still takes an offer by its link (noindex); ticked again, the button is back.
  *
  * The event is written straight into the database — the setup, not the subject — one per project and run, so
@@ -1871,7 +1871,7 @@ test.describe("§754 volunteers for a race", () => {
     }
   });
 
-  test("§NNN «Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului»: unticked, the event's page draws no «Căutăm voluntari» and no button, the card shows the page's link in both languages, and the page still takes an offer by its link", async ({
+  test("§835 «Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului»: unticked, the event's page draws no «Căutăm voluntari» and no button, the card shows the page's link in both languages, and the page still takes an offer by its link", async ({
     page,
     browser,
   }) => {

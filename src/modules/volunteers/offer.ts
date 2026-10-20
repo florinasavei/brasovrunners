@@ -55,7 +55,7 @@ export type VolunteerOffer = {
    */
   listTick: boolean;
   /**
-   * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§NNN): whether the public site **advertises** the volunteers' page — the event page's box
+   * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§835): whether the public site **advertises** the volunteers' page — the event page's box
    * «Căutăm voluntari» and its button, the one sentence of the volunteers' list card. It never decides whether the offer is open (`null` is that) or whether
    * the volunteers' page answers: a page the club did not advertise still works for whoever has its link, under «Cine se poate oferi».
    */
@@ -88,6 +88,6 @@ export async function readVolunteerOffer(
   // A cache entry written before the categories existed has none: the roles are then simply listed (§774).
   // «Vreau să apar pe lista publică a voluntarilor» (§821): asked only where the club made the list public and the notice says what it shows. A last good copy of the event made before the column has none.
   const listTick = event.volunteersListPublic === true && (await cachedVolunteersListDescribed(now));
-  // A cache entry written before the tick existed has none: the button is shown, as it always was (§NNN).
+  // A cache entry written before the tick existed has none: the button is shown, as it always was (§835).
   return { access: access ?? "ANYONE", roles: boxRoles, categories: categories ?? [], shirts, showCounts, profile, minors, listTick, buttonShown: buttonShown ?? true };
 }

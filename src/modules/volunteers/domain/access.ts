@@ -32,7 +32,7 @@ export function readVolunteersAccess(value: unknown): VolunteersAccess | null {
 }
 
 /**
- * Whether the public site **advertises** the volunteers' page on the event's own page (§NNN, amending §754 and §820; the owner, 2026-10-20: «I want to be able
+ * Whether the public site **advertises** the volunteers' page on the event's own page (§835, amending §754 and §820; the owner, 2026-10-20: «I want to be able
  * to allow registration for volunteers but I want to control if the button is visible on the website or not»): the box «Căutăm voluntari» with its button and
  * the one sentence of the volunteers' list. Only an open offer is advertised (`null`, closed, never is), by invitation nothing is (the page is the invited
  * person's alone), and the club's tick «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» can take the rest off the page. It is **not** a door:

@@ -293,7 +293,7 @@ describe("§773 the public count of volunteers is the club's tick, and the date 
   });
 });
 
-describe("§NNN the club's tick «Arată butonul „Vreau să fiu voluntar”» advertises the page; it never closes it", () => {
+describe("§835 the club's tick «Arată butonul „Vreau să fiu voluntar”» advertises the page; it never closes it", () => {
   const event = { id: EVENT.id, eventStatus: "SCHEDULED", startsAt: EVENT.startsAt, endsAt: null as Date | null };
 
   it("hands the event page the tick through the one read: on by default, and on for a cache entry written before the tick existed", async () => {

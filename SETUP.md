@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.62-2026-10-19 -->
+<!-- PROJECT_BASELINE: BR-V3.63-2026-10-20 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.62-2026-10-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.63-2026-10-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2420,7 +2420,7 @@ only ones who see the names, addresses and telephone numbers.
     the one sentence «Echipa de voluntari se formează.»; the offer closed and nobody ticked: no card. Never an address, a telephone number, a city or a date of birth. The card goes 30
     days after the event's start, when the maintenance job deletes the offers, and at once if you untick the box, switch «Primește voluntari» off or the notice stops describing it.
     The tick travels with a copy of the event, every date of a repeat and the event's JSON file (never a volunteer, and not «Primește voluntari»).
-12. **Take volunteers without showing the button — send the link yourself** (`DECISIONS.md` §NNN; the owner, 2026-10-20: «I want to be able to allow registration for volunteers but I want to
+12. **Take volunteers without showing the button — send the link yourself** (`DECISIONS.md` §835; the owner, 2026-10-20: «I want to be able to allow registration for volunteers but I want to
     control if the button is visible on the website or not»). «Primește voluntari» still opens the sign-up; one more tick on the card, **«Arată butonul „Vreau să fiu voluntar” pe pagina
     evenimentului»**, decides whether the public site **says so**. It is **ticked by default**, so every event keeps looking as it did. Untick it (one press, audited, nothing else changes) and:
     - the event's page no longer draws «Căutăm voluntari: …» with its button, nor the sentence «Echipa de voluntari se formează.» in the volunteers' card; nothing else on the site links to the page;

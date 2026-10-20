@@ -863,7 +863,7 @@ describe("§784 a role «fără număr» — the tick of the role's form", () =>
   });
 });
 
-describe("§NNN «Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului» is the card's fifth tick", () => {
+describe("§835 «Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului» is the card's fifth tick", () => {
   const buttonTrail = async () => (await trail()).filter((row) => row.action === "event.volunteers_button_switched").map((row) => row.metadataJson);
   const shown = async () => (await db.select().from(events).where(eq(events.id, eventId)))[0].volunteersButtonShown;
 

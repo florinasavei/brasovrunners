@@ -157,12 +157,12 @@ type Props = {
    */
   volunteersListPublic?: boolean;
   /**
-   * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului», as saved (§NNN): the event's page draws the box «Căutăm voluntari» and its button only
+   * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului», as saved (§835): the event's page draws the box «Căutăm voluntari» and its button only
    * while it is ticked. Unticked, the sign-up stays open (this card's «Primește voluntari» decides that) and the page is reached by its link, shown below.
    */
   volunteersButtonShown?: boolean;
   /**
-   * The volunteers' page's absolute address in each language the event has a page in (§NNN, from `APP_BASE_URL`), for the club to copy and send by hand —
+   * The volunteers' page's absolute address in each language the event has a page in (§835, from `APP_BASE_URL`), for the club to copy and send by hand —
    * the way in while the button is not shown. A language with no page of its own has none.
    */
   pageLinks?: Partial<Record<Locale, string>>;
@@ -1473,7 +1473,7 @@ export default async function VolunteersCard({
               {t("volunteers.counts.help")}
             </Typography>
           </Box>
-          {/* «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§NNN; the owner, 2026-10-20: «I want to be able to allow registration for volunteers
+          {/* «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§835; the owner, 2026-10-20: «I want to be able to allow registration for volunteers
               but I want to control if the button is visible on the website or not»): the same tick as the ones above — `TickButton`, a submit drawn as the checkbox that
               posts the state it wants. «Primește voluntari» stays what opens the sign-up; this decides only whether the public site advertises it. Ticked by default. */}
           <Box component="form" action={switchVolunteersButtonAction} data-testid="volunteer-button-form">
@@ -1486,7 +1486,7 @@ export default async function VolunteersCard({
               {t("volunteers.button.help")}
             </Typography>
           </Box>
-          {/* The page's own address, to copy (§NNN; `CalendarAddress`, the house's read-only box with «Copiază» beside it): the way in while the button is not shown, and
+          {/* The page's own address, to copy (§835; `CalendarAddress`, the house's read-only box with «Copiază» beside it): the way in while the button is not shown, and
               handy while it is. Only while the event takes volunteers — before that the page does not exist. «Cine se poate oferi» still applies to whoever opens it. */}
           {acceptsVolunteers && Object.keys(pageLinks).length > 0 && (
             <Box data-testid="volunteer-page-links">

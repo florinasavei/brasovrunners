@@ -349,7 +349,7 @@ export const volunteersFileSchema = z
      */
     listPublic: z.boolean().default(false),
     /**
-     * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§NNN): the club's tick. A file made before it existed has none: shown, as every event
+     * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§835): the club's tick. A file made before it existed has none: shown, as every event
      * was. Written only when it is **off**, the mirror of `listPublic`'s rule the other way round (a file without the key reads «on»), so a file from an
      * event that always showed the button stays readable by the release before this one (its reader refuses a key it does not know — QA ships a day
      * before production, and its files travel). It names no volunteer and opens nothing by itself.
@@ -451,7 +451,7 @@ export function upgradeCheckpoints(file: EventFile): { file: EventFile; notes: F
  * The registration block's `rsvpAskEnabled` (§823) is written only when it is **off** (on is what a file without it means), like `showRouteProfile`.
  * The registration block's `rsvpEnabled` (§811) is the mirror: written only when it is **on**, because «off» is what a file without it
  * means, and the file's version stays 3 for the same reason. So is the volunteers block's `access` (§821): written only when it is not «Oricine» (`ANYONE`);
- * and its `listPublic` (§821), written only when it is **on**; and its `buttonShown` (§NNN), written only when it is **off**.
+ * and its `listPublic` (§821), written only when it is **on**; and its `buttonShown` (§835), written only when it is **off**.
  */
 export const serializeEventFile = (file: EventFile): string =>
   `${JSON.stringify(file, (key, value) => (((key === "onProfile" || key === "showRouteProfile") && value === true) || (key === "rsvpEnabled" && value === false) || (key === "rsvpAskEnabled" && value === true) || (key === "access" && value === DEFAULT_VOLUNTEERS_ACCESS) || (key === "listPublic" && value === false) || (key === "buttonShown" && value === true) ? undefined : value), 2)}\n`;

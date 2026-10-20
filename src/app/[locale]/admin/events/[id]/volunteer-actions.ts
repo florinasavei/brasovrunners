@@ -184,7 +184,7 @@ export async function switchVolunteersCountsAction(form: FormData): Promise<void
 }
 
 /**
- * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§NNN): the card's fifth tick, the event's `volunteers_button_shown`, the same submit
+ * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§835): the card's fifth tick, the event's `volunteers_button_shown`, the same submit
  * drawn as the checkbox (`TickButton`) — it posts `on=1|0`, the state it wants, never a toggle.
  */
 export async function switchVolunteersButtonAction(form: FormData): Promise<void> {

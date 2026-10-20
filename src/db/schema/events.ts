@@ -573,7 +573,7 @@ export const events = pgTable(
     volunteersListPublic: boolean("volunteers_list_public").notNull().default(false),
 
     /**
-     * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§NNN, amending §754 and §820; the owner, 2026-10-20: «I want to be able to
+     * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§835, amending §754 and §820; the owner, 2026-10-20: «I want to be able to
      * allow registration for volunteers but I want to control if the button is visible on the website or not»): «Primește voluntari»
      * (`accepts_volunteers`) stays the switch that opens the sign-up; this tick decides whether the public site **advertises** it. Ticked
      * (the default, so every event looks as it always did) the event's page draws the box «Căutăm voluntari» and its button. Unticked, no
