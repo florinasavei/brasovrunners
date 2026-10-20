@@ -52,6 +52,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
     switchVolunteersShirtsAction: noop,
     switchVolunteersCountsAction: noop,
     switchVolunteersListAction: noop,
+    switchVolunteersButtonAction: noop,
     switchVolunteersAccessAction: noop,
     sendVolunteerInvitationsAction: noop,
     resendVolunteerInvitationAction: noop,

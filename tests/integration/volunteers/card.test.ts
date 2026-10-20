@@ -862,3 +862,54 @@ describe("§784 a role «fără număr» — the tick of the role's form", () =>
     ]);
   });
 });
+
+describe("§835 «Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului» is the card's fifth tick", () => {
+  const buttonTrail = async () => (await trail()).filter((row) => row.action === "event.volunteers_button_switched").map((row) => row.metadataJson);
+  const shown = async () => (await db.select().from(events).where(eq(events.id, eventId)))[0].volunteersButtonShown;
+
+  it("is on for a new event, switches through its own form, audits a change and not a repeat, and leaves the event's version alone", async () => {
+    const [before] = await db.select().from(events).where(eq(events.id, eventId));
+    expect(before.volunteersButtonShown).toBe(true);
+    // The state it wants, never a toggle: «1» on an event already shown changes nothing.
+    expect(await press(actions.switchVolunteersButtonAction, form({ on: "1" }))).not.toContain("volunteerError");
+    expect(await buttonTrail()).toEqual([]);
+    await press(actions.switchVolunteersButtonAction, form({ on: "0" }));
+    expect(await shown()).toBe(false);
+    expect((await db.select().from(events).where(eq(events.id, eventId)))[0].version).toBe(before.version);
+    await press(actions.switchVolunteersButtonAction, form({ on: "0" }));
+    await press(actions.switchVolunteersButtonAction, form({ on: "1" }));
+    expect(await shown()).toBe(true);
+    expect(await buttonTrail()).toEqual([{ on: false }, { on: true }]);
+    expect(JSON.stringify(await trail())).not.toMatch(/Maria|maria@/);
+    // A form with no state at all is «off», not «flip».
+    await press(actions.switchVolunteersButtonAction, form({}));
+    expect(await shown()).toBe(false);
+  });
+
+  it("touches only the one tick: «Primește voluntari», the other ticks, the roles and the people stay", async () => {
+    const role = await addRole();
+    await addPerson(role.id);
+    await press(actions.switchVolunteersAction, form({ on: "1" }));
+    await press(actions.switchVolunteersShirtsAction, form({ on: "1" }));
+    await press(actions.switchVolunteersButtonAction, form({ on: "0" }));
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    expect(event).toMatchObject({ acceptsVolunteers: true, volunteersShirts: true, volunteersShowCounts: false, volunteersListPublic: false, volunteersButtonShown: false });
+    expect((await readPublicVolunteerRoles(db, eventId)).buttonShown).toBe(false);
+    expect(await listVolunteerRoles(db, eventId)).toHaveLength(1);
+    expect(await listVolunteers(db, eventId)).toHaveLength(1);
+  });
+
+  it("is the Organizer's and the Administrators', whatever the card drew: the service asserts the role and writes nothing for anybody else", async () => {
+    for (const actor of [staff.MODERATOR!, staff.ADMIN!, await person("SUPERADMIN", "Sara Superadmin")]) {
+      state.actor = actor;
+      await press(actions.switchVolunteersButtonAction, form({ on: "0" }));
+      expect(await shown(), actor.role).toBe(false);
+      await press(actions.switchVolunteersButtonAction, form({ on: "1" }));
+    }
+    for (const key of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) {
+      state.actor = staff[key];
+      expect(await press(actions.switchVolunteersButtonAction, form({ on: "0" })), key).toContain("volunteerError=FORBIDDEN");
+    }
+    expect(await shown()).toBe(true);
+  });
+});

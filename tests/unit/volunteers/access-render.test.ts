@@ -60,6 +60,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
       "switchVolunteersShirtsAction",
       "switchVolunteersCountsAction",
       "switchVolunteersListAction",
+      "switchVolunteersButtonAction",
       "switchVolunteersAccessAction",
       "sendVolunteerInvitationsAction",
       "resendVolunteerInvitationAction",

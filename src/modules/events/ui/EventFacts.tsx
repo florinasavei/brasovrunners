@@ -1331,8 +1331,9 @@ export default async function EventFacts({
   }
 
   /*
-    «N vin · vezi cine» (§825): the last short fact, right above the folds it points at — the number is the page's one read, the words the
-    link to the fold with the names, 44 pixels tall like every link here. Nothing when the page passed no count.
+    «N vin · vezi cine» (§825): the last short fact. It links to the fold at the very end of the page (`#cine-vine`, §825 amended). The
+    number is the page's one read, the words the link to the fold with the names, 44 pixels tall like every link here. Nothing when the
+    page passed no count.
   */
   if (whoComes !== null && whoComes.count > 0) {
     rows.push({

@@ -1130,7 +1130,7 @@ describe("§774 the volunteers' categories and roles in the file", () => {
     const read = readEventFile(JSON.stringify(older));
     expect(read.ok).toBe(true);
     if (!read.ok) return;
-    expect(read.file.volunteers).toEqual({ categories: [], roles: [], access: "ANYONE", listPublic: false });
+    expect(read.file.volunteers).toEqual({ categories: [], roles: [], access: "ANYONE", listPublic: false, buttonShown: true });
     const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
     expect(await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, created.eventId))).toEqual([]);
 

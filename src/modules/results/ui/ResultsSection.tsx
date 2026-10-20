@@ -27,7 +27,7 @@ type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "star
 
 /**
  * **«Clasament»** — a race's published results on its page, under `#clasament` (§809, race results part 2; the owner, 2026-10-17:
- * «Aș vrea să pot pune și clasament la final după cursă»). Drawn by `EventPageView` after «Cine vine», the way the start list is: a
+ * «Aș vrea să pot pune și clasament la final după cursă»). Drawn by `EventPageView` after the race's start list («Cine vine (N)», under the registration card) and «Condiții de participare»; only the two turn-up folds come after it, last on the page (§825 amended). A
  * native `<details>` in the same outlined shape, **open** on arrival — after a race the results are what a visitor came for.
  *
  * ## When there is nothing at all

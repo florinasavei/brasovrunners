@@ -484,7 +484,7 @@ describe("§774 the public read: the headings, their roles and the contact perso
 
   it("says nothing of the categories while the event takes no volunteers", async () => {
     await addCategory(ROUTE);
-    expect(await readPublicVolunteerRoles(db, eventId)).toEqual({ acceptsVolunteers: false, access: "ANYONE", shirts: false, showCounts: false, roles: [], categories: [] });
+    expect(await readPublicVolunteerRoles(db, eventId)).toEqual({ acceptsVolunteers: false, access: "ANYONE", shirts: false, showCounts: false, buttonShown: true, roles: [], categories: [] });
   });
 
   it("drops a role that is full from its heading, and with it a heading with no other role", async () => {

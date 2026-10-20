@@ -573,6 +573,17 @@ export const events = pgTable(
     volunteersListPublic: boolean("volunteers_list_public").notNull().default(false),
 
     /**
+     * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§835, amending §754 and §820; the owner, 2026-10-20: «I want to be able to
+     * allow registration for volunteers but I want to control if the button is visible on the website or not»): «Primește voluntari»
+     * (`accepts_volunteers`) stays the switch that opens the sign-up; this tick decides whether the public site **advertises** it. Ticked
+     * (the default, so every event looks as it always did) the event's page draws the box «Căutăm voluntari» and its button. Unticked, no
+     * public surface links to the volunteers' page — but the page still answers, under «Cine se poate oferi», to whoever has its link
+     * (the club shares it by hand: the «Voluntari» card shows it, to copy). Saved by the card's own form beside the other ticks; the
+     * event's save never writes it. Travels with a copy of the event, a repeat and the event's file, like `volunteers_access`.
+     */
+    volunteersButtonShown: boolean("volunteers_button_shown").notNull().default(true),
+
+    /**
      * The two facts that stopped being free text in migration `0018`.
      *
      * Null means the club has not said, and the page then omits the row rather than guessing —
