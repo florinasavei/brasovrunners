@@ -577,7 +577,10 @@ Use lowercase kebab-case. Delete after merge.
 
 Step 4 is enforced locally, not left to memory. `yarn setup` sets `core.hooksPath` to the
 tracked `.githooks`, whose `pre-commit` runs `yarn check` and blocks a failing commit. CI
-runs the same `yarn check`, so the two cannot drift as `check` grows (BR-REQ-090-02).
+runs the same `yarn check` — its static half (`yarn check:static`) on one runner and `yarn test`
+on four shards (`--shard=i/4`, the union exactly the suite), the verdict reported as the one check
+`docs-check` — so the two cannot drift as `check` grows (BR-REQ-090-02): what is split is the
+runner, never the command.
 Hooks need no dependency: husky and lint-staged are deliberately not installed (§1.5
 priority 4 and 6). `--no-verify` exists for emergencies and does not bypass CI. The one
 documented exception is the landing commit of a batch (`docs/DISPATCHER.md` § Land a batch):
@@ -3635,9 +3638,11 @@ Fail CI for key/interpolation mismatch, invalid JSON, unsupported locale, missin
 ## 21. Continuous integration
 
 Today `.github/workflows/docs-check.yml` runs on PRs/pushes to `qa`/`main`. It invokes
-`yarn check`, the same command `.githooks/pre-commit` runs. Keep it that way: CI and the
-hook must never name different commands, or a change can pass locally and fail in CI
-(BR-REQ-090-02). The workflow is renamed to `ci.yml` when the full pipeline below replaces
+`yarn check`, the same command `.githooks/pre-commit` runs — as its two halves, `yarn check:static`
+in the `checks` job and `yarn test` in four `unit` shards, whose joint verdict is the check
+`docs-check` (2026-10-20: one four-core runner took thirty minutes over 16 000 tests while the e2e
+shards were long done). Keep it that way: CI and the hook must never name different commands, or a
+change can pass locally and fail in CI (BR-REQ-090-02); a shard is a slice of the same command. The workflow is renamed to `ci.yml` when the full pipeline below replaces
 it; until then its check name stays stable for branch protection.
 
 Typical order once the application exists:
@@ -3662,7 +3667,7 @@ Playwright may run in same/parallel job after build depending runtime.
 Rules:
 
 - lockfile install only;
-- every CI step a developer can run locally belongs inside `yarn check`, so the hook and CI stay one command;
+- every CI step a developer can run locally belongs inside `yarn check`, so the hook and CI stay one command (CI may cut that command into runners — `check:static` and sharded `test` — never into other commands);
 - least-privilege workflow token;
 - no production secrets on PR jobs;
 - no untrusted fork code with privileged secrets;

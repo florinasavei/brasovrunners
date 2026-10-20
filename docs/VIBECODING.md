@@ -14,7 +14,7 @@ long one; `AGENTS.md` is the law.
 git checkout qa && git pull                       start from qa, never from main
 git checkout -b feat/<what> --no-track            one branch per unit of work
 …change…                                          keep going until the ask is done, not half
-yarn check                                        docs + migrations + types + lint + 1 000 tests (~1 min)
+yarn check                                        docs + migrations + types + lint + 16 000 tests (a minute on many cores; CI shards the tests)
 docker compose up -d db && yarn db:reset:local    local Postgres with the sample data
 yarn build && yarn start --port 4783              a production build, like Vercel's
 yarn test:e2e                                     140 Playwright runs, phone + desktop (~35 s)

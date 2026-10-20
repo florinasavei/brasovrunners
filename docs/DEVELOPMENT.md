@@ -86,7 +86,8 @@ validation, while an absent one is allowed. Come back here when you have a Neon 
 yarn dev                 dev server on http://localhost:47821 (next free port if taken)
 yarn build               production build
 yarn start               production server; honours PORT
-yarn check               docs:check + secrets:check + migrations:check + typecheck + lint + tests — the pre-commit gate
+yarn check               check:static + tests — the pre-commit gate
+yarn check:static        docs:check + secrets:check + migrations:check + typecheck + lint — the half CI runs on one runner (the tests go to four shards)
 yarn test                all tests
 yarn test:unit           pure-rule tests only
 yarn test:integration    database tests only
@@ -115,7 +116,7 @@ yarn db:reset:local      drop both schemas, migrate and seed from nothing
 yarn release             versioned archive and share copies under dist/
 ```
 
-`yarn check` is the single gate. The pre-commit hook runs it and CI runs it, so they cannot
+`yarn check` is the single gate. The pre-commit hook runs it and CI runs it (its two halves on five runners), so they cannot
 drift. When a step is added to CI that a developer can run locally, it belongs inside `check`.
 
 **A hook forgets git's own environment first (§553).** git exports `GIT_DIR` and `GIT_INDEX_FILE`

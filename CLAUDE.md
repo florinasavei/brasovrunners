@@ -40,7 +40,8 @@ yarn test:clock   the suite with the real clock at +1 month, +1 year, +10 years:
                   `--concurrency` for the two-connection suite
 yarn test:e2e     Playwright, 320px mobile and desktop; needs the database running
 yarn test:e2e:dev  Playwright against `next dev`: every backoffice and public route, twice; minutes; not in CI (§370)
-yarn check        docs:check + secrets:check + migrations:check + typecheck + lint + test; CI and the pre-commit hook run this
+yarn check        check:static + test; CI and the pre-commit hook run this (CI: the static half on one runner, the tests on four shards)
+yarn check:static  docs:check + secrets:check + migrations:check + typecheck + lint — everything in `check` but the tests
 yarn docs:check   documentation consistency
 yarn secrets:check  refuse a commit carrying a provider credential — the repository is public (§98)
 yarn migrations:check  a migration expands or contracts, never both (AGENTS.md §7.6)

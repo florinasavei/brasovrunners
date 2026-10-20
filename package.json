@@ -39,7 +39,8 @@
     "batch:merge": "node scripts/merge-branches.mjs",
     "secrets:check": "node scripts/secrets-check.mjs",
     "migrations:check": "node scripts/migration-check.mjs",
-    "check": "yarn docs:check && yarn secrets:check && yarn migrations:check && yarn typecheck && yarn lint && yarn test",
+    "check:static": "yarn docs:check && yarn secrets:check && yarn migrations:check && yarn typecheck && yarn lint",
+    "check": "yarn check:static && yarn test",
     "release": "node scripts/release.mjs",
     "flags:sync": "node scripts/sync-flags.mjs",
     "postinstall": "node scripts/sync-flags.mjs"

@@ -863,9 +863,9 @@ not `feature/update-registrations`.
 yarn check
 ```
 
-This is the same command the pre-commit hook runs and the same command CI runs, so a clean
-result locally means a clean result in CI. Once the application exists, also run
-`yarn build`.
+This is the same command the pre-commit hook runs and the same command CI runs (there in two
+halves, `yarn check:static` and `yarn test` on four shards), so a clean result locally means a
+clean result in CI. Once the application exists, also run `yarn build`.
 
 **Opening the pull request:**
 
@@ -961,7 +961,7 @@ Repository/delivery:
 - [x] `qa` default and protected — default branch; the `docs-check` status is required and
       strict on both branches.
 - [x] `main` protected — same rule, and it accepts releases from `qa` only.
-- [x] CI required — `docs-check` (`yarn check`) on both branches.
+- [x] CI required — `docs-check` (`yarn check`: the static half in `checks`, the tests in four `unit` shards) on both branches.
 - [x] Release PR process rehearsed — `qa → main` #45 (2026-09-17, the first production
       deployment) and #47 (2026-09-18): merge, the gated migration run approved, the build
       that waited for it. One lesson from #47: the build times out after twenty minutes if the
