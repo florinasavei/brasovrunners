@@ -31,10 +31,10 @@ import RsvpRemembered from "./RsvpRemembered";
 
 /**
  * «Confirmă prezența (opțional)» (§811, «Vin!» part 1, named «Vii?» until §825; the owner, 2026-10-19: «Și pune „Confirmă prezența
- * (opțional)", ceva de genul») — the answer «Vin!» on a turn-up event the club ticked. Drawn by `EventPageView` where the registration
- * card would stand, with the anchor `#vin`, **only while `rsvpOffered` says so** (the page decides, from the one rule): otherwise the page
+ * (opțional)", ceva de genul») — the answer «Vin!» on a turn-up event the club ticked. Drawn by `EventPageView` as the LAST thing on the event
+ * page (§825 amended; the owner, 2026-10-20: «adică trebuie să fie ultima chestie de pe site»), with the anchor `#vin`, **only while `rsvpOffered` says so** (the page decides, from the one rule): otherwise the page
  * shows nothing — no box, no count, no sentence. Who comes is **not in it any more**: «Cine vine (N)» is the fold right under it
- * (`RsvpCount`, anchor `#cine-vine`), so a reader who skims sees both bars together.
+ * (`RsvpCount`, anchor `#cine-vine`), so a reader who gets to the end sees both bars together.
  *
  * Not a registration: no place, no declaration — the sentence under the bar says so («Nu e o înscriere: ne ajută să știm câți venim.»).
  * The interest box's twin (`registrations/ui/RegistrationInterestForm.tsx`) in how it works — a Server Component around a Server Action,

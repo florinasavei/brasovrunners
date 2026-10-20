@@ -2,6 +2,7 @@ import { createFormatter, createTranslator } from "next-intl";
 import { createElement, type ReactNode } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { eq } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
@@ -24,7 +25,8 @@ import { fakeNextCache } from "../../helpers/next-cache";
  * Că inițial am citit în „zig-zag" și am sărit peste secțiune. Și pune „Confirmă prezența (opțional)"»). The real `EventPageView`, drawn the way
  * the page draws it, over a real database (PGlite) and the real catalogue, proves four things the pieces cannot prove alone:
  *
- * - on a turn-up event the page's top reads facts → «Confirmă prezența (opțional)» → «Cine vine (N)» → the rest, two closed folds together;
+ * - on a turn-up event the page reads facts → the rest → «Confirmă prezența (opțional)» → «Cine vine (N)», two closed folds together, the LAST thing
+ *   on the page (§825 put them at the top; the owner, 2026-10-20, «adică trebuie să fie ultima chestie de pe site», put them at the very end);
  * - on a race the public list is right under the registration card, no longer under «Condiții de participare»;
  * - the facts carry «N vin · vezi cine», a link to the fold that holds the names, with the very number the fold's bar says — on a race from the
  *   list's own headline, with no count query of its own — and nothing when no count is public;
@@ -222,8 +224,8 @@ const link = (html: string) => /<a[^>]*data-testid="who-comes-link"[^>]*>([^<]*)
 const hrefOf = (anchor: string) => /href="([^"]*)"/.exec(anchor)?.[1];
 const text = (html: string) => html.replace(/<[^>]+>/g, "").replace(/&#x27;/g, "'");
 
-describe("§825 a turn-up event: «Confirmă prezența (opțional)» and «Cine vine (N)» stand together near the top", () => {
-  it("draws facts → the card → the fold of who comes → the rest, the fold its own closed <details> at #cine-vine", async () => {
+describe("§825 a turn-up event: «Confirmă prezența (opțional)» and «Cine vine (N)» stand together, last on the page", () => {
+  it("draws facts → «Condiții de participare» → the card → the fold of who comes, the fold its own closed <details> at #cine-vine", async () => {
     const { id, slug } = await seed();
     await answerRsvp(db, id, confirm("ana@example.test"), NOW);
     await answerRsvp(db, id, confirm("dan@example.test"), NOW);
@@ -233,9 +235,9 @@ describe("§825 a turn-up event: «Confirmă prezența (opțional)» and «Cine 
     const card = at(html, 'data-testid="rsvp-box"');
     const who = at(html, 'data-testid="rsvp-who"');
     const conditions = at(html, 'data-testid="conditions-fold"');
-    expect(facts).toBeLessThan(card);
+    expect(facts).toBeLessThan(conditions);
+    expect(conditions).toBeLessThan(card);
     expect(card).toBeLessThan(who);
-    expect(who).toBeLessThan(conditions);
     // Right under the card: nothing but the card's own closing parts between its bar and the fold's — no other section of the page.
     const between = html.slice(card, who);
     expect(between).not.toContain('id="route"');
@@ -302,6 +304,65 @@ describe("§825 a turn-up event: «Confirmă prezența (opțional)» and «Cine 
       expect(html).not.toContain('data-testid="who-comes-link"');
       expect(html).not.toContain("vezi cine");
     }
+  });
+});
+
+/** The sections the page draws for an event, by what each one's markup carries: every one must stand above the two turn-up folds. */
+const SECTIONS_ABOVE = ['data-testid="event-facts"', 'id="route"', 'id="links"', 'id="schedule"', 'data-testid="conditions-fold"'] as const;
+
+describe("§825 amended (the owner, 2026-10-20): the two turn-up folds are the last thing on the event page, with a route and without", () => {
+  const fullPage = async (slug: string, id: string) => {
+    const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
+    await db
+      .update(eventTranslations)
+      .set({ routeDescriptionJson: doc("Oprire cu apă la km 4."), scheduleJson: doc("18:00 plecarea."), rulesJson: doc("Fiecare aleargă pe riscul lui.") })
+      .where(eq(eventTranslations.eventId, id));
+    await db
+      .update(events)
+      .set({ links: [{ kind: "DOCUMENT", url: "https://example.test/regulament.pdf", labelRo: "Regulament", labelEn: "Rules" }] })
+      .where(eq(events.id, id));
+    return draw(slug);
+  };
+
+  it("with a route, a programme, links and rules: every one of them is above «Confirmă prezența», then «Cine vine», then nothing", async () => {
+    const { id, slug } = await seed();
+    await answerRsvp(db, id, confirm("ana@example.test"), NOW);
+    const html = await fullPage(slug, id);
+
+    const card = at(html, 'data-testid="rsvp-box"');
+    const who = at(html, 'data-testid="rsvp-who"');
+    for (const marker of SECTIONS_ABOVE) expect(at(html, marker), marker).toBeLessThan(card);
+    expect(card).toBeLessThan(who);
+    // Nothing of the page's own follows «Cine vine»: no other section, fold or heading after its closing tag.
+    const after = html.slice(html.indexOf("</details>", who) + "</details>".length);
+    expect(after).not.toMatch(/<(section|details|h2)\b/);
+    expect(after).not.toContain("data-testid=");
+  });
+
+  it("without a route (nothing but the facts and the rules): still after «Condiții de participare», and last", async () => {
+    const { id, slug } = await seed();
+    const html = await draw(slug);
+
+    expect(html).not.toContain('id="route"');
+    const conditions = at(html, 'data-testid="conditions-fold"');
+    const card = at(html, 'data-testid="rsvp-box"');
+    const who = at(html, 'data-testid="rsvp-who"');
+    expect(conditions).toBeLessThan(card);
+    expect(card).toBeLessThan(who);
+    const after = html.slice(html.indexOf("</details>", who) + "</details>".length);
+    expect(after).not.toMatch(/<(section|details|h2)\b/);
+    expect(id).toBeDefined();
+  });
+
+  it("keeps both anchors where the facts' link, the calendar and the email point: #vin on the card and #cine-vine on the fold", async () => {
+    const { id, slug } = await seed();
+    await answerRsvp(db, id, confirm("ana@example.test"), NOW);
+    const html = await fullPage(slug, id);
+    expect(/<details\b[^>]*id="vin"[^>]*data-testid="rsvp-box"|<details\b[^>]*data-testid="rsvp-box"[^>]*id="vin"/.exec(html)).not.toBeNull();
+    expect(/<details\b[^>]*id="cine-vine"[^>]*>/.exec(html)).not.toBeNull();
+    expect(hrefOf(link(html)![0])).toBe("#cine-vine");
+    // The facts' link stands above the fold it points at, as before: a link to an anchor lower down the page.
+    expect(at(html, 'data-testid="who-comes-link"')).toBeLessThan(at(html, 'id="cine-vine"'));
   });
 });
 
