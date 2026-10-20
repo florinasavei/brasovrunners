@@ -1908,6 +1908,8 @@ test.describe("§754 volunteers for a race", () => {
       await hydrated(page);
       await expect(tickOf()).toHaveAttribute("aria-checked", "false", { timeout: 30_000 });
       await expect(page.getByTestId("volunteer-offer-state")).toContainText("nu trimite la ea: se ajunge la ea doar prin link");
+      // The press reloads the page with the card folded again: open it to read the addresses.
+      await openFold(page.getByTestId("event-volunteers"));
       const links = page.getByTestId("volunteer-page-links");
       await expect(links).toBeVisible();
       await expect(links.locator("#volunteer-page-link-ro")).toHaveValue(new RegExp(`/ro/evenimente/${event.slug}/voluntari$`));
