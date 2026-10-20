@@ -5472,7 +5472,7 @@
         "guardianConsent": "Acordul părintelui"
       },
       "badgesLink": "Ecusoane pentru voluntari",
-      "switchHelp": "Bifat, se pot oferi voluntari, iar pagina evenimentului arată „Căutăm voluntari” cu un buton cât timp bifa „Arată butonul” de mai jos e pusă. Debifat, nu se șterge nimic: rolurile și oamenii rămân.",
+      "switchHelp": "Bifat, se pot oferi voluntari; butonul de pe pagina evenimentului se arată cât e pusă bifa „Arată butonul”. Debifat, nu se șterge nimic: rolurile și oamenii rămân.",
       "access": {
         "title": "Cine se poate oferi",
         "ANYONE": "Oricine, de pe pagina evenimentului",

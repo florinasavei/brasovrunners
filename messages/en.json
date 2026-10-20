@@ -5472,7 +5472,7 @@
         "guardianConsent": "Parent's consent"
       },
       "badgesLink": "Volunteer badges",
-      "switchHelp": "Ticked, people can volunteer, and the event's page shows “We are looking for volunteers” with a button while the “Show the button” tick below is on. Unticked, nothing is deleted: the roles and the people stay.",
+      "switchHelp": "Ticked, people can volunteer; the event page button shows while the “Show the button” tick is on. Unticked, nothing is deleted: the roles and the people stay.",
       "access": {
         "title": "Who can offer",
         "ANYONE": "Anyone, from the event's page",

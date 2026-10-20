@@ -23,6 +23,7 @@ import { isStorageConfigured } from "@/modules/media/storage";
 import { parseInterestOutcome, parseInterestSince } from "@/modules/registrations/interest-box";
 import { rsvpOffered } from "@/modules/rsvp/domain/offered";
 import { parseRsvpOutcome } from "@/modules/rsvp/rsvp-box";
+import { volunteersAdvertised } from "@/modules/volunteers/domain/access";
 import { openRoleNames } from "@/modules/volunteers/domain/volunteer";
 import { readVolunteerOffer } from "@/modules/volunteers/offer";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
@@ -217,8 +218,8 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   // «Voluntarii» (§821): only where the club ticked the list public, never on a members' event; the card asks the notice and the people itself. The page is made
   // again when the volunteers' rows may go, thirty days after the start (§754), so a card never outlives them on a static copy.
   // «Arată butonul „Vreau să fiu voluntar"» (§NNN): a club that did not advertise the volunteers' page has no «Echipa de voluntari se formează.» on this one either.
-  const volunteersAdvertised = volunteerOffer !== null && volunteerOffer.access !== "INVITED" && volunteerOffer.buttonShown;
-  const volunteersList = !membersOnly && event.volunteersListPublic === true ? { offerOpen: volunteersAdvertised } : null;
+  const advertised = volunteersAdvertised(volunteerOffer);
+  const volunteersList = !membersOnly && event.volunteersListPublic === true ? { offerOpen: advertised } : null;
   if (volunteersList && event.startsAt) await holdPageUntil([new Date(event.startsAt.getTime() + RETENTION_PERIODS.volunteerDaysAfterEvent * 86_400_000)], now);
   const volunteerRoleNames = volunteerOffer
     ? // A name once, though the same role may stand in two categories (§774): the box says what is needed, the page says where.
@@ -286,7 +287,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
           lista,
           // «Cine se poate oferi» (§820): by invitation, the event's page says nothing about volunteers; for the members, one line says so.
           // «Arată butonul „Vreau să fiu voluntar"» (§NNN): unticked, the page says nothing about them either — the sign-up stays open by its link.
-          volunteers: volunteerRoleNames.length > 0 && volunteerOffer && volunteersAdvertised ? { roleNames: volunteerRoleNames, clubOnly: volunteerOffer.access === "MEMBERS" } : null,
+          volunteers: volunteerRoleNames.length > 0 && volunteerOffer && advertised ? { roleNames: volunteerRoleNames, clubOnly: volunteerOffer.access === "MEMBERS" } : null,
           volunteersList,
         }}
       />

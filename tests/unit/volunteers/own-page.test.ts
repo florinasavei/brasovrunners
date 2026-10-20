@@ -18,6 +18,7 @@ const state = vi.hoisted(() => ({
   accepts: true,
   shirts: false,
   showCounts: false,
+  buttonShown: true as boolean | undefined,
   roles: [] as unknown[],
   noticeDescribes: true,
   agreementInForce: true,
@@ -87,7 +88,7 @@ vi.mock("@/modules/registrations/form-draft", () => ({
   },
 }));
 vi.mock("@/modules/public-cache/reads", () => ({
-  cachedVolunteerRoles: async () => ({ acceptsVolunteers: state.accepts, shirts: state.shirts, showCounts: state.showCounts, roles: state.roles }),
+  cachedVolunteerRoles: async () => ({ acceptsVolunteers: state.accepts, shirts: state.shirts, showCounts: state.showCounts, buttonShown: state.buttonShown, roles: state.roles }),
   cachedVolunteersDescribed: async () => state.noticeDescribes,
   cachedVolunteerAgreementInForce: async () => state.agreementInForce,
   cachedVolunteerAgreementDescribed: async () => state.agreementDescribed,
@@ -128,6 +129,7 @@ beforeEach(() => {
   state.accepts = true;
   state.shirts = false;
   state.showCounts = false;
+  state.buttonShown = true;
   state.roles = [role("r1", "Punct de apă", "Water point", 2), role("r2", "Sosire", "Finish", 1)];
   state.noticeDescribes = true;
   state.agreementInForce = true;
@@ -288,6 +290,63 @@ describe("§773 the public count of volunteers is the club's tick, and the date 
     // No gun: the event's own start.
     state.event = { ...EVENT, startsAt: new Date("2026-11-21T22:30:00.000Z"), raceStartsAt: null };
     expect(boxOf((await visit()) ?? "")).toMatchObject({ eventDay: "2026-11-22" });
+  });
+});
+
+describe("§NNN the club's tick «Arată butonul „Vreau să fiu voluntar”» advertises the page; it never closes it", () => {
+  const event = { id: EVENT.id, eventStatus: "SCHEDULED", startsAt: EVENT.startsAt, endsAt: null as Date | null };
+
+  it("hands the event page the tick through the one read: on by default, and on for a cache entry written before the tick existed", async () => {
+    expect((await readVolunteerOffer(event, new Date(NOW_EVENT_AHEAD)))?.buttonShown).toBe(true);
+    state.buttonShown = false;
+    expect((await readVolunteerOffer(event, new Date(NOW_EVENT_AHEAD)))?.buttonShown).toBe(false);
+    state.buttonShown = undefined;
+    expect((await readVolunteerOffer(event, new Date(NOW_EVENT_AHEAD)))?.buttonShown).toBe(true);
+  });
+
+  it("leaves the offer open with the tick off: the same roles, the same switches, only the flag differs", async () => {
+    const shown = await readVolunteerOffer(event, new Date(NOW_EVENT_AHEAD));
+    state.buttonShown = false;
+    const hidden = await readVolunteerOffer(event, new Date(NOW_EVENT_AHEAD));
+    expect(hidden).not.toBeNull();
+    expect({ ...hidden, buttonShown: true }).toEqual(shown);
+  });
+
+  it("keeps the volunteers' page answering with the tick off — the form, the title and the roles are all there, by the link alone", async () => {
+    state.buttonShown = false;
+    const page = await visit();
+    expect(page).not.toBeNull();
+    expect(page).toContain("Vreau să fiu voluntar la Crosul de toamnă");
+    expect(boxOf(page ?? "")).toMatchObject({ roles: ["r1", "r2"], eventTitle: "Crosul de toamnă" });
+    expect(await visit({}, "en")).not.toBeNull();
+    // …and the answer to a person's own post is read just the same.
+    expect(await visit({ volunteer: "1" })).not.toBeNull();
+  });
+
+  it("is still closed by every gate with the tick off: the tick opens nothing", async () => {
+    state.buttonShown = false;
+    state.accepts = false;
+    expect(await visit()).toBeNull();
+    state.accepts = true;
+    state.roles = [];
+    expect(await visit()).toBeNull();
+    state.roles = [role("r1", "Punct de apă", "Water point", 1)];
+    state.noticeDescribes = false;
+    expect(await visit()).toBeNull();
+  });
+
+  it("stays noindex with the tick off — as with it on — so a link shared by hand is not found by a search", async () => {
+    for (const buttonShown of [true, false]) {
+      state.buttonShown = buttonShown;
+      const head = await generateMetadata({ params: Promise.resolve({ locale: "ro", slug: "crosul" }), searchParams: Promise.resolve({}) });
+      expect(head.robots, String(buttonShown)).toEqual({ index: false, follow: false });
+    }
+  });
+
+  it("is not in the sitemap, and robots.txt keeps the page out of the crawl, whatever the tick says", async () => {
+    const { readFileSync } = await import("node:fs");
+    expect(readFileSync("src/app/sitemap.ts", "utf8")).not.toMatch(/voluntari|volunteers/);
+    expect(readFileSync("src/app/robots.ts", "utf8")).toContain('"/en/events/*/volunteers"');
   });
 });
 
