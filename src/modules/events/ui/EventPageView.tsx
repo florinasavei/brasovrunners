@@ -278,18 +278,8 @@ export default async function EventPageView({
       {/* In the preview before saving (§579) the draft's door, its button disabled. */}
       <RegistrationCta event={event} now={now} previewDoor={previewDoor} />
 
-      {/* «Confirmă prezența (opțional)» (§811, §825) and «Cine vine (N)» right under it, where the registration card would stand on a turn-up
-          event — `#vin` and `#cine-vine`, two closed bars together near the top: only while the page decided the answer is offered
-          (`rsvpOffered`), and never in the preview before saving (§579) or on a members' event (§552). Both are handed the one read. */}
-      {visit?.rsvpBox && !membersOnly && (
-        <>
-          <RsvpBox locale={locale} slug={slug} eventId={event.id} renderedAt={visit.rsvpRenderedAt ?? now} outcome={visit.rsvpOutcome ?? null} rsvps={rsvpsRead} />
-          <RsvpCount eventId={event.id} rsvps={rsvpsRead} />
-        </>
-      )}
-
       {/* «Cine vine (N)» of a race (§32, §250; moved up by §825 — the owner, 2026-10-19: «am citit în „zig-zag" și am sărit peste secțiune»): the public
-          list, right under the registration card, the place the turn-up bars have — it was under «Condiții de participare», near the bottom.
+          list, right under the registration card — it was under «Condiții de participare», near the bottom. (A turn-up event's two bars are the last thing on the page, since 2026-10-20.)
           Nothing at all unless this event publishes one (BR-REQ-039-01); nobody registers before the date is announced (§533), so an undated
           event has no list; nor a members' event (§552), where the public list would be a public disclosure on a page that is not public; nor
           the preview (§579): the list reads the public cache, and a draft has nobody on it. */}
@@ -488,6 +478,19 @@ export default async function EventPageView({
           conditions as the list above, and not in the preview before saving (§579): a draft has no results, and the section reads
           the public cache. Nor a members' event (§552): the results are a public disclosure, and this page is not public. */}
       {dated && !membersOnly && visit && <ResultsSection event={dated} />}
+
+      {/* «Confirmă prezența (opțional)» (§811) and «Cine vine (N)» — `#vin` and `#cine-vine`, two closed bars together, the LAST thing on the
+          event page (§825 amended; the owner, 2026-10-20: «adică trebuie să fie ultima chestie de pe site»): after the route, the checkpoints,
+          the links, the programme, the volunteers, «Condiții de participare» and the results, whatever the event fills in — just before the
+          footer. Only while the page decided the answer is offered (`rsvpOffered`), and never in the preview before saving (§579) or on a
+          members' event (§552). Both are handed the one read. The facts' «N vin · vezi cine» and the calendar and email links reach them by
+          their anchors, wherever they stand. */}
+      {visit?.rsvpBox && !membersOnly && (
+        <>
+          <RsvpBox locale={locale} slug={slug} eventId={event.id} renderedAt={visit.rsvpRenderedAt ?? now} outcome={visit.rsvpOutcome ?? null} rsvps={rsvpsRead} />
+          <RsvpCount eventId={event.id} rsvps={rsvpsRead} />
+        </>
+      )}
     </>
   );
 }

@@ -151,8 +151,8 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await expect(who.getByRole("heading", { name: "Cine vine", exact: true })).toBeVisible();
     expect((await who.locator(":scope > summary").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(page.getByTestId("who-comes-link")).toHaveCount(0);
-    // The two bars stand together near the top: the card, then «Cine vine», then «Condiții de participare».
-    const tops = await Promise.all([box, who, page.getByTestId("conditions-fold")].map(async (fold) => (await fold.boundingBox())?.y ?? -1));
+    // The two bars stand together at the very end of the page (§825 amended): «Condiții de participare», then the card, then «Cine vine».
+    const tops = await Promise.all([page.getByTestId("conditions-fold"), box, who].map(async (fold) => (await fold.boundingBox())?.y ?? -1));
     expect(tops[0]).toBeGreaterThan(0);
     expect(tops[0]).toBeLessThan(tops[1]);
     expect(tops[1]).toBeLessThan(tops[2]);
