@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.62-2026-10-19 -->
+<!-- PROJECT_BASELINE: BR-V3.63-2026-10-20 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.62-2026-10-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.63-2026-10-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2221,7 +2221,7 @@ only ones who see the names, addresses and telephone numbers.
    takes volunteers, the event is published and not for the members alone (the form is public), the
    event is not cancelled or over, a role still needs people, the notice describes them, a volunteer
    agreement is in force, and the notice describes its acceptance. While they all hold, the event's page says «Căutăm voluntari:» and the names of the
-   roles that still need people, with the button «Vreau să fiu voluntar»; the page it opens — «Vreau să fiu voluntar la …», the event's date and
+   roles that still need people, with the button «Vreau să fiu voluntar» (unless you unticked «Arată butonul …», step 12); the page it opens — «Vreau să fiu voluntar la …», the event's date and
    place, the roles with their descriptions and how many places each still has — asks the name,
    the address, the telephone number, «Ce ești dispus(ă) să faci» — one box per role that still needs
    people, as many ticked as the person would do, at least one (§761) —, an optional
@@ -2420,6 +2420,15 @@ only ones who see the names, addresses and telephone numbers.
     the one sentence «Echipa de voluntari se formează.»; the offer closed and nobody ticked: no card. Never an address, a telephone number, a city or a date of birth. The card goes 30
     days after the event's start, when the maintenance job deletes the offers, and at once if you untick the box, switch «Primește voluntari» off or the notice stops describing it.
     The tick travels with a copy of the event, every date of a repeat and the event's JSON file (never a volunteer, and not «Primește voluntari»).
+12. **Take volunteers without showing the button — send the link yourself** (`DECISIONS.md` §835; the owner, 2026-10-20: «I want to be able to allow registration for volunteers but I want to
+    control if the button is visible on the website or not»). «Primește voluntari» still opens the sign-up; one more tick on the card, **«Arată butonul „Vreau să fiu voluntar” pe pagina
+    evenimentului»**, decides whether the public site **says so**. It is **ticked by default**, so every event keeps looking as it did. Untick it (one press, audited, nothing else changes) and:
+    - the event's page no longer draws «Căutăm voluntari: …» with its button, nor the sentence «Echipa de voluntari se formează.» in the volunteers' card; nothing else on the site links to the page;
+    - the volunteers' page **keeps working** for whoever has its link, under the same «Cine se poate oferi» (anyone; the club's signed-in members; only with an invitation's own link), and is
+      still never in a search index or the sitemap;
+    - the card shows the page's **link in Romanian and in English**, each in a box with «Copiază» beside it (shown while «Primește voluntari» is ticked): copy it and send it in the group chat or an email.
+      The card's line above the ticks says «… dar pagina evenimentului nu trimite la ea: se ajunge la ea doar prin link». Every other condition of step 4 still has to hold, or the link answers «not found».
+    The tick travels with a copy of the event, every date of a repeat and the event's JSON file (written only when unticked; a file without it means shown).
 
 ## 45. Clasament — put a race's results in the backoffice, and make them public only when the notice says so
 

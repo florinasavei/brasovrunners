@@ -15,6 +15,7 @@ import {
   changeVolunteerRoles,
   setAcceptsVolunteers,
   setVolunteersAccess,
+  setVolunteersButtonShown,
   setVolunteersShirts,
   setVolunteersShowCounts,
   type VolunteerCategoryRequest,
@@ -176,6 +177,22 @@ export async function switchVolunteersCountsAction(form: FormData): Promise<void
     const actor = await requireStaff();
     const result = await setVolunteersShowCounts(getDb(), actor, { eventId: eventIdOf(form), on }, new Date());
     return backToCard(form, { saved: result.changed ? (on ? "volunteersCountsOn" : "volunteersCountsOff") : "volunteerUnchanged" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+}
+
+/**
+ * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§835): the card's fifth tick, the event's `volunteers_button_shown`, the same submit
+ * drawn as the checkbox (`TickButton`) — it posts `on=1|0`, the state it wants, never a toggle.
+ */
+export async function switchVolunteersButtonAction(form: FormData): Promise<void> {
+  const on = field(form, "on") === "1";
+  try {
+    const actor = await requireStaff();
+    const result = await setVolunteersButtonShown(getDb(), actor, { eventId: eventIdOf(form), on }, new Date());
+    return backToCard(form, { saved: result.changed ? (on ? "volunteersButtonOn" : "volunteersButtonOff") : "volunteerUnchanged" });
   } catch (error) {
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.62-2026-10-19 -->
+<!-- PROJECT_BASELINE: BR-V3.63-2026-10-20 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.62-2026-10-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.63-2026-10-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27669,3 +27669,28 @@ Baseline `BR-V3.62-2026-10-19`.
 **Refused.** A client island that recomputes the words in the browser (the cache already rolls at the club's midnight, and an island would be a script on the calendar for words the server writes correctly); «Azi, la 18:30» (the time is on the card already); a countdown in hours or minutes (the page is cached, so any finer step would be stale).
 
 Baseline `BR-V3.62-2026-10-19`.
+
+## 835. The club chooses whether the event page shows „Vreau să fiu voluntar”
+
+**The owner, 2026-10-20:** «I want to be able to allow registration for volunteers but I want to control if the button is visible on the website or not, I want this to be a quick hotfix.»
+
+**Decision (amending §754 and §820).** «Primește voluntari» (`events.accepts_volunteers`) stays the one switch that opens the sign-up. A new tick, **«Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului»** (`events.volunteers_button_shown`, migration `0176`, expand only, **default true**, so no existing event changes), decides only whether the public site **advertises** the sign-up.
+
+- **Off hides every public entry point.** The event page's box «Căutăm voluntari: …» and its button, and the one sentence «Echipa de voluntari se formează.» of the «Voluntarii» card (§821), which would otherwise tell a visitor the club is asking. One pure rule, `volunteersAdvertised` (`modules/volunteers/domain/access.ts`: an open offer, not by invitation, tick on), is asked by the event page; nothing else on the public site linked to the volunteers' page, and a test lists every file that names its route so a future link has to decide.
+- **Off closes nothing.** The volunteers' page answers by its link under the same «Cine se poate oferi» (§820: anyone, the club's members, only with an invitation's own link), asks the same server-side gates at the post (`submitVolunteer`), and was already — and stays — `noindex`, outside the sitemap and `Disallow`ed in `robots.txt`. `readVolunteerOffer` carries the flag but never lets it close the offer, and the volunteers' page does not read it. The club's own invitation emails keep their personal link.
+- **The card shows the way in.** Under the ticks, while «Primește voluntari» is ticked, the page's absolute address in each language the event has a page in (from `APP_BASE_URL`, in the house's read-only box with «Copiază», `CalendarAddress`), for the club to send by hand; the line above the ticks says «… dar pagina evenimentului nu trimite la ea: se ajunge la ea doar prin link». The tick is a real checkbox (`TickButton`, one press, audited as `event.volunteers_button_switched`, the page's version untouched), like the card's other ticks — saved by the card's own form, never by the editor's save.
+- **It travels** with a copy of the event, every date of a repeat and the event's JSON file (`volunteers.buttonShown`, written only when off so a file stays readable by the release before; absent means shown).
+
+**Refused.** A second switch that hides the volunteers' page itself (the page already behaves by «Cine se poate oferi»); a per-language button (the event is published in both languages together, §28); a tick that shows the link on the public page for the club to copy (the card is the backoffice).
+
+Baseline `BR-V3.63-2026-10-20`.
+
+## 836. «Confirmă prezența (opțional)» and «Cine vine (N)» are the last thing on the event page (amending §825)
+
+**The owner, 2026-10-20, looking at the two folds «Confirmă prezența (opțional) · Fii primul care confirmă» and «Cine vine» near the top of a group run's page:** «Confirmă prezența și Cine vine trebuie să fie sub traseu», and at once: «adică trebuie să fie ultima chestie de pe site». §825 had moved them up, to where the registration card stands, because a reader skimming «am citit în „zig-zag" și am sărit peste secțiune»; the owner now wants them where a reader who has read the whole page decides — at its very end.
+
+**Decision (position only; amends §825's title and the page order in its third point, nothing else of it).** On a turn-up event `EventPageView` draws the two closed folds, together and in the same order — first «Confirmă prezența (opțional)» (`#vin`), then «Cine vine (N)» (`#cine-vine`) — as the **last content of the event page**: after the route and its maps, «Puncte pe traseu», the links, the programme, the volunteers' line and list, «Condiții de participare» and the race's results, and just before the footer. Whatever the event fills in or leaves empty, they are the last. Their condition is unchanged: only while the page decided the answer is offered (`rsvpOffered`), never in the preview before saving (§579), never on a members' event (§552), both handed the one read of the answers. **Every anchor keeps working:** the facts' «N vin · vezi cine» link to `#cine-vine`, the calendar's and the listing's links and the answer's own redirect to `#vin`, and `OpenFoldFromHash` opens a fold the browser's own reveal does not. A race's public list (`StartList`, «Cine vine (N)» of a race) is **not** among the two folds and stays under the registration card, where §825 put it. `PAGE_SECTION_IDS` does not name the two folds, so the page's order list and its test are unchanged. No new text, no setting, no table.
+
+**Refused.** Moving the race's list with them (the owner named the two turn-up folds). A second copy of the folds near the top, or a jump link from the top that scrolls to the end beyond the facts' existing one. Making the position a setting. **No migration.**
+
+Baseline `BR-V3.63-2026-10-20`.

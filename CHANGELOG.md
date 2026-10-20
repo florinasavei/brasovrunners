@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.63-2026-10-20
+
+- **The club chooses whether the event page shows «Vreau să fiu voluntar»** — a new tick in the «Voluntari» card (on by default): unticked, the event page draws no «Căutăm voluntari» and no button, while the sign-up stays open by its link, which the card shows in Romanian and English with «Copiază». Migration 0176. §835.
+- **«Confirmă prezența (opțional)» and «Cine vine» are the last thing on the event page** — after the route, the programme and «Condiții de participare», just before the footer; the links to them still land. §836.
 ## BR-V3.62-2026-10-19
 
 - **The «Vii?» email's tick says what it does** — «Trimite emailul „Vii?” înainte de această dată», with who gets it, how long before and from what hour read from «Termene» and «Emailuri» (links to both), cut by the privacy notice in force («nu pleacă încă» while it is silent), and off with zero days; a test proves the saved value. §832.

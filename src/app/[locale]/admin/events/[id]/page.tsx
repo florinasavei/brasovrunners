@@ -11,6 +11,7 @@ import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
+import { env } from "@/shared/config/env";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
 import { eventPageTodos } from "@/modules/content/events/domain/page-todos";
 import { resultsRowFor } from "@/modules/results/public-page";
@@ -459,6 +460,15 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           // The day the entry's date of birth is counted on (§773): the gun's, else the event's.
           eventDay: volunteerEventDay(event, now),
           eventAhead: volunteerEventAhead(event, now),
+          // The volunteers' page's own address in each language the event has a page in (§835), for the club to copy: absolute, from `APP_BASE_URL`.
+          pageLinks: Object.fromEntries(
+            orderedTranslations
+              .filter((translation) => translation.slug.trim() !== "")
+              .map((translation) => [
+                translation.locale,
+                `${env.APP_BASE_URL}${getPathname({ locale: translation.locale, href: { pathname: "/events/[slug]/volunteers", params: { slug: translation.slug } } })}`,
+              ]),
+          ) as Partial<Record<Locale, string>>,
           offerClosed: volunteerOfferClosedFor({
             acceptsVolunteers: event.acceptsVolunteers,
             standings,
@@ -1483,6 +1493,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   volunteersShirts={event.volunteersShirts}
                   volunteersShowCounts={event.volunteersShowCounts}
                   volunteersListPublic={event.volunteersListPublic}
+                  volunteersButtonShown={event.volunteersButtonShown}
+                  pageLinks={volunteersCard.pageLinks}
                   listDescribed={volunteersCard.listDescribed}
                   access={event.volunteersAccess}
                   invitations={volunteersCard.invitations}

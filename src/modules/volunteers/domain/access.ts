@@ -31,6 +31,17 @@ export function readVolunteersAccess(value: unknown): VolunteersAccess | null {
   return typeof value === "string" && (VOLUNTEERS_ACCESS as readonly string[]).includes(value) ? (value as VolunteersAccess) : null;
 }
 
+/**
+ * Whether the public site **advertises** the volunteers' page on the event's own page (§835, amending §754 and §820; the owner, 2026-10-20: «I want to be able
+ * to allow registration for volunteers but I want to control if the button is visible on the website or not»): the box «Căutăm voluntari» with its button and
+ * the one sentence of the volunteers' list. Only an open offer is advertised (`null`, closed, never is), by invitation nothing is (the page is the invited
+ * person's alone), and the club's tick «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» can take the rest off the page. It is **not** a door:
+ * the volunteers' page answers by its link whatever this says (`volunteerDoorFor`, `readVolunteerOffer`).
+ */
+export function volunteersAdvertised(offer: { access: VolunteersAccess; buttonShown: boolean } | null): boolean {
+  return offer !== null && offer.access !== "INVITED" && offer.buttonShown;
+}
+
 /** One press invites at most this many addresses: a longer list is a second press (the registrations' invitation's own bound, §647). */
 export const VOLUNTEER_INVITATION_BATCH_MAX = 50;
 /** The club's line in the email, at most this many characters (the table's CHECK). */
