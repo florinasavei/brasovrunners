@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createFormatter, createTranslator } from "next-intl";
 import { createElement, type ReactNode } from "react";
 import { renderToReadableStream } from "react-dom/server";
@@ -340,7 +341,7 @@ describe("§825 amended (the owner, 2026-10-20): the two turn-up folds are the l
   });
 
   it("without a route (nothing but the facts and the rules): still after «Condiții de participare», and last", async () => {
-    const { id, slug } = await seed();
+    const { slug } = await seed();
     const html = await draw(slug);
 
     expect(html).not.toContain('id="route"');
@@ -351,7 +352,21 @@ describe("§825 amended (the owner, 2026-10-20): the two turn-up folds are the l
     expect(card).toBeLessThan(who);
     const after = html.slice(html.indexOf("</details>", who) + "</details>".length);
     expect(after).not.toMatch(/<(section|details|h2)\b/);
-    expect(id).toBeDefined();
+  });
+
+  it("in the source: the two folds are the last child of EventPageView, after every section the page can draw (the rendered pages above seed only some)", () => {
+    const source = readFileSync("src/modules/events/ui/EventPageView.tsx", "utf8").replace(/\r\n/g, "\n");
+    const folds = source.indexOf("<RsvpBox ");
+    expect(folds).toBeGreaterThan(0);
+    // Every section component the page draws stands above the folds ...
+    for (const section of ["<EventCheckpoints", "<VolunteerCallout", "<VolunteersList", "<StartList", "conditions-fold", "<ResultsSection"]) {
+      const index = source.indexOf(section);
+      expect(index, section).toBeGreaterThan(-1);
+      expect(index, section).toBeLessThan(folds);
+    }
+    // ... and after the folds only the closing of their own fragment and of the page remain.
+    const tail = source.slice(source.indexOf("<RsvpCount ", folds));
+    expect(tail.replace(/<RsvpCount[^>]*\/>/, "").replace(/\s+/g, "")).toBe("</>)}</>);}");
   });
 
   it("keeps both anchors where the facts' link, the calendar and the email point: #vin on the card and #cine-vine on the fold", async () => {

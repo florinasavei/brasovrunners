@@ -25,7 +25,7 @@ export async function readRsvpsOf(eventId: string): Promise<PublicRsvps | null> 
  * cached read (`readPublicRsvps`), so a name that is not to be shown is not even in this component's props. Nobody has answered: the bar
  * says «Cine vine» without a number and the fold says «Încă nu a confirmat nimeni.», no empty count.
  *
- * **Its own closed fold, right under «Confirmă prezența (opțional)»** (the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil. Că
+ * **Its own closed fold, right under «Confirmă prezența (opțional)»; the two are the last thing on the event page (§825 amended, 2026-10-20)** (the owner, 2026-10-19: «„Cine vine" trebuie să fie mai vizibil. Că
  * inițial am citit în „zig-zag" și am sărit peste secțiune»; before it the names sat inside the card's fold, behind a bar that said
  * «Vii?»): the same `<details>` as the races' list (`StartList`) — the 44-pixel bar, the people glyph, a real `h2` in the summary with the
  * count on its line — closed on arrival, at `#cine-vine` (`RSVP_WHO_ID`), the anchor the facts' line «N vin · vezi cine» links to and

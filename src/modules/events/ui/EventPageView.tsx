@@ -279,7 +279,7 @@ export default async function EventPageView({
       <RegistrationCta event={event} now={now} previewDoor={previewDoor} />
 
       {/* «Cine vine (N)» of a race (§32, §250; moved up by §825 — the owner, 2026-10-19: «am citit în „zig-zag" și am sărit peste secțiune»): the public
-          list, right under the registration card, where the registration card is — it was under «Condiții de participare», near the bottom. (A turn-up event's two bars are the last thing on the page, since 2026-10-20.)
+          list, right under the registration card — it was under «Condiții de participare», near the bottom. (A turn-up event's two bars are the last thing on the page, since 2026-10-20.)
           Nothing at all unless this event publishes one (BR-REQ-039-01); nobody registers before the date is announced (§533), so an undated
           event has no list; nor a members' event (§552), where the public list would be a public disclosure on a page that is not public; nor
           the preview (§579): the list reads the public cache, and a draft has nobody on it. */}
