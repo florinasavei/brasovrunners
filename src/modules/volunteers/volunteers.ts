@@ -402,15 +402,26 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
   access: VolunteersAccess;
   shirts: boolean;
   showCounts: boolean;
+  /**
+   * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§NNN): whether the public site advertises the volunteers' page. Read with the
+   * roles so one cache entry answers every surface; the page itself ignores it (a link that is not advertised still works).
+   */
+  buttonShown: boolean;
   roles: PublicVolunteerRole[];
   categories: PublicVolunteerCategory[];
 }> {
   const [event] = await db
-    .select({ accepts: events.acceptsVolunteers, access: events.volunteersAccess, shirts: events.volunteersShirts, showCounts: events.volunteersShowCounts })
+    .select({
+      accepts: events.acceptsVolunteers,
+      access: events.volunteersAccess,
+      shirts: events.volunteersShirts,
+      showCounts: events.volunteersShowCounts,
+      buttonShown: events.volunteersButtonShown,
+    })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  if (!event?.accepts) return { acceptsVolunteers: false, access: "ANYONE", shirts: false, showCounts: false, roles: [], categories: [] };
+  if (!event?.accepts) return { acceptsVolunteers: false, access: "ANYONE", shirts: false, showCounts: false, buttonShown: true, roles: [], categories: [] };
   const roles = await listVolunteerRoles(db, eventId);
   const categories = await listVolunteerCategories(db, eventId);
   const people = await db
@@ -424,6 +435,8 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
     shirts: event.shirts,
     // «Arată public câți voluntari mai sunt necesari» (§773): the page says how many a role still needs only while it is on.
     showCounts: event.showCounts,
+    // «Arată butonul „Vreau să fiu voluntar"» (§NNN): the event page's box and button only while it is on.
+    buttonShown: event.buttonShown,
     roles: roles.map((role) => {
       const standing = standingOf(role, people);
       return {
@@ -1345,6 +1358,42 @@ export async function setVolunteersShowCounts<T extends Record<string, unknown>>
     return { changed: true };
   });
   // The volunteers' page reads the tick through the public cache: it is told once the write has committed.
+  if (result.changed) revalidatePublicContent("events", "places");
+  return result;
+}
+
+/**
+ * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» on or off (§NNN, amending §754 and §820; the owner, 2026-10-20: «I want to be able
+ * to allow registration for volunteers but I want to control if the button is visible on the website or not»): the event's own tick, saved by the
+ * «Voluntari» card's own form like «Arată public câți voluntari mai sunt necesari» — never by the editor's save. On by default, so no event changes.
+ * Switching it changes only what the public site **advertises**: «Primește voluntari», the roles, the people, «Cine se poate oferi» and every
+ * invitation are untouched, and the volunteers' page keeps answering to whoever has its link (`readVolunteerOffer` ignores the tick).
+ */
+export async function setVolunteersButtonShown<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  request: { eventId: string; on: boolean },
+  now: Date,
+): Promise<{ changed: boolean }> {
+  assertMayManage(actor);
+  assertIds(request.eventId);
+  const result = await db.transaction(async (tx) => {
+    const [event] = await tx.select({ on: events.volunteersButtonShown }).from(events).where(eq(events.id, request.eventId)).for("no key update").limit(1);
+    if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
+    if (event.on === request.on) return { changed: false };
+    // Not `events.version`, like the ticks beside it: it is no edit of the page's text and must not make an open editor's save stale.
+    await tx.update(events).set({ volunteersButtonShown: request.on }).where(eq(events.id, request.eventId));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event.volunteers_button_switched",
+      entityType: "event",
+      entityId: request.eventId,
+      metadata: { on: request.on },
+      now,
+    });
+    return { changed: true };
+  });
+  // The event's page reads the tick through the public cache and is static (§549): both are told once the write has committed.
   if (result.changed) revalidatePublicContent("events", "places");
   return result;
 }

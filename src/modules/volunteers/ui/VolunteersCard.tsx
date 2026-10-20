@@ -22,6 +22,7 @@ import {
   requestVolunteerGuardianAction,
   setVolunteerStateAction,
   switchVolunteersAction,
+  switchVolunteersButtonAction,
   switchVolunteersCountsAction,
   switchVolunteersListAction,
   switchVolunteersShirtsAction,
@@ -29,6 +30,7 @@ import {
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import CalendarAddress from "@/modules/events/ui/CalendarAddress";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
@@ -155,6 +157,16 @@ type Props = {
    */
   volunteersListPublic?: boolean;
   /**
+   * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului», as saved (§NNN): the event's page draws the box «Căutăm voluntari» and its button only
+   * while it is ticked. Unticked, the sign-up stays open (this card's «Primește voluntari» decides that) and the page is reached by its link, shown below.
+   */
+  volunteersButtonShown?: boolean;
+  /**
+   * The volunteers' page's absolute address in each language the event has a page in (§NNN, from `APP_BASE_URL`), for the club to copy and send by hand —
+   * the way in while the button is not shown. A language with no page of its own has none.
+   */
+  pageLinks?: Partial<Record<Locale, string>>;
+  /**
    * The notice in force describes the public list (§821, `{{volunteersList}}`, in every language): the public form asks the tick and the entry's box records it,
    * only while it does. Off, the club's tick says so and links «Documente legale»; the service refuses a new tick all the same (`changeVolunteer`).
    */
@@ -223,6 +235,8 @@ export default async function VolunteersCard({
   volunteersShirts,
   volunteersShowCounts,
   volunteersListPublic = false,
+  volunteersButtonShown = true,
+  pageLinks = {},
   listDescribed = false,
   access = "ANYONE",
   invitations = [],
@@ -1387,7 +1401,15 @@ export default async function VolunteersCard({
         {/* The tick, and what keeps the public form off the page, named in words. */}
         <Stack spacing={1} data-testid="volunteer-switch">
           <Alert severity={offerClosed === null ? "success" : "info"} data-testid="volunteer-offer-state">
-            {offerClosed === null ? t(access === "ANYONE" ? "volunteers.offer.open" : access === "MEMBERS" ? "volunteers.offer.openMembers" : "volunteers.offer.openInvited") : t(`volunteers.offer.closed.${offerClosed}`)}
+            {offerClosed === null
+              ? t(
+                  access === "ANYONE"
+                    ? volunteersButtonShown ? "volunteers.offer.open" : "volunteers.offer.openHidden"
+                    : access === "MEMBERS"
+                      ? volunteersButtonShown ? "volunteers.offer.openMembers" : "volunteers.offer.openMembersHidden"
+                      : "volunteers.offer.openInvited",
+                )
+              : t(`volunteers.offer.closed.${offerClosed}`)}
           </Alert>
           {/* «Primește voluntari pe pagină» (§765; the owner, 2026-10-14: «nu mai folosi niciodată» a button that flips a setting): a real tick —
               a plain form whose submit is drawn as the checkbox, the words beside it, `role="checkbox"` and `aria-checked`, 44 pixels, working with
@@ -1451,6 +1473,43 @@ export default async function VolunteersCard({
               {t("volunteers.counts.help")}
             </Typography>
           </Box>
+          {/* «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§NNN; the owner, 2026-10-20: «I want to be able to allow registration for volunteers
+              but I want to control if the button is visible on the website or not»): the same tick as the ones above — `TickButton`, a submit drawn as the checkbox that
+              posts the state it wants. «Primește voluntari» stays what opens the sign-up; this decides only whether the public site advertises it. Ticked by default. */}
+          <Box component="form" action={switchVolunteersButtonAction} data-testid="volunteer-button-form">
+            {hidden}
+            <input type="hidden" name="on" value={volunteersButtonShown ? "0" : "1"} />
+            <TickButton checked={volunteersButtonShown} data-testid="volunteer-button-tick">
+              {t("volunteers.button.label")}
+            </TickButton>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", pl: 0.5 }}>
+              {t("volunteers.button.help")}
+            </Typography>
+          </Box>
+          {/* The page's own address, to copy (§NNN; `CalendarAddress`, the house's read-only box with «Copiază» beside it): the way in while the button is not shown, and
+              handy while it is. Only while the event takes volunteers — before that the page does not exist. «Cine se poate oferi» still applies to whoever opens it. */}
+          {acceptsVolunteers && Object.keys(pageLinks).length > 0 && (
+            <Box data-testid="volunteer-page-links">
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {t("volunteers.link.title")}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                {t("volunteers.link.help")}
+              </Typography>
+              {(Object.entries(pageLinks) as Array<[Locale, string]>).map(([language, address]) => (
+                <Box key={language} data-testid={`volunteer-page-link-${language}`}>
+                  <CalendarAddress
+                    id={`volunteer-page-link-${language}`}
+                    address={address}
+                    label={t(`volunteers.link.label.${language}`)}
+                    copyLabel={t("volunteers.link.copy")}
+                    copiedLabel={t("volunteers.link.copied")}
+                    hints={[]}
+                  />
+                </Box>
+              ))}
+            </Box>
+          )}
           {/* «Lista voluntarilor e publică pe pagina evenimentului» (§821; the owner, 2026-10-19: «private vs public lists of volunteers»): the same tick as the three
               above — the house's `TickButton`, a submit drawn as the checkbox that posts the state it wants. Off (the default), the list is the team's alone; on, the event's
               page names only the confirmed volunteers who ticked, under a notice that describes it. While the notice does not — ticked or not, so the club hears it

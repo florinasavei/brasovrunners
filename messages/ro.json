@@ -5268,6 +5268,8 @@
       "standingNoNumber": "{taken} · fără număr",
       "offer": {
         "open": "Pagina „Vreau să fiu voluntar” e deschisă: pagina evenimentului trimite la ea.",
+        "openHidden": "Pagina „Vreau să fiu voluntar” e deschisă, dar pagina evenimentului nu trimite la ea: se ajunge la ea doar prin link.",
+        "openMembersHidden": "Pagina voluntarilor e deschisă membrilor conectați, dar pagina evenimentului nu trimite la ea: se ajunge la ea doar prin link.",
         "openMembers": "Pagina voluntarilor e deschisă membrilor conectați. Pagina evenimentului trimite la ea.",
         "openInvited": "Pagina voluntarilor se deschide doar din linkul unei invitații. Pagina evenimentului nu spune nimic de ea.",
         "closed": {
@@ -5470,11 +5472,11 @@
         "guardianConsent": "Acordul părintelui"
       },
       "badgesLink": "Ecusoane pentru voluntari",
-      "switchHelp": "Bifat, pagina evenimentului arată „Căutăm voluntari” și un buton către pagina de voluntari. Debifat, nu se șterge nimic: rolurile și oamenii rămân.",
+      "switchHelp": "Bifat, se pot oferi voluntari; pagina evenimentului arată butonul cât e bifată căsuța de mai jos. Debifat, nu se șterge nimic: rolurile și oamenii rămân.",
       "access": {
         "title": "Cine se poate oferi",
         "ANYONE": "Oricine, de pe pagina evenimentului",
-        "ANYONEHelp": "Formularul e pe pagina evenimentului, deschis oricui.",
+        "ANYONEHelp": "Formularul e deschis oricui; pagina evenimentului trimite la el cât e bifat „Arată butonul”, altfel doar prin link.",
         "MEMBERS": "Doar membrii clubului (conectați în zona membrilor)",
         "MEMBERSHelp": "Formularul se arată doar unui membru conectat, cu numele și adresa din contul lui.",
         "INVITED": "Doar cu invitație de la club",
@@ -5526,6 +5528,20 @@
       "counts": {
         "label": "Arată public câți voluntari mai sunt necesari",
         "help": "Bifat, pagina de voluntari spune la fiecare rol câte persoane mai sunt necesare. Debifat, nu spune nicio cifră; aici vezi mereu numerele."
+      },
+      "button": {
+        "label": "Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului",
+        "help": "Bifat, pagina evenimentului arată căsuța „Căutăm voluntari” cu butonul. Debifat, doar prin link, din caseta de mai jos, care apare cât se primesc voluntari."
+      },
+      "link": {
+        "title": "Linkul paginii de voluntari",
+        "help": "Merge pentru oricine îl are, după regula „Cine se poate oferi”. La „Doar cu invitație de la club” e nevoie de linkul din invitație.",
+        "label": {
+          "ro": "Linkul paginii de voluntari, în română",
+          "en": "Linkul paginii de voluntari, în engleză"
+        },
+        "copy": "Copiază",
+        "copied": "Copiat"
       },
       "list": {
         "label": "Lista voluntarilor e publică pe pagina evenimentului",
@@ -12669,6 +12685,8 @@
       "volunteersShirtsOff": "Formularul public nu mai cere mărimea tricoului. Mărimile deja date se păstrează.",
       "volunteersCountsOn": "Pagina de voluntari spune acum câte persoane mai sunt necesare la fiecare rol.",
       "volunteersCountsOff": "Pagina de voluntari nu mai spune câte persoane mai sunt necesare.",
+      "volunteersButtonOn": "Pagina evenimentului arată din nou butonul „Vreau să fiu voluntar”.",
+      "volunteersButtonOff": "Pagina evenimentului nu mai arată butonul „Vreau să fiu voluntar”. Înscrierea rămâne deschisă prin link.",
       "volunteersListOn": "Pagina evenimentului poate arăta acum cardul „Voluntarii”: numele și rolul celor confirmați care au bifat.",
       "volunteersListOff": "Pagina evenimentului nu mai arată lista voluntarilor.",
       "volunteerGuardianRequested": "Linkul pentru părinte pleacă pe email.",

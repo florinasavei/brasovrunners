@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "volunteers_button_shown" boolean DEFAULT true NOT NULL;

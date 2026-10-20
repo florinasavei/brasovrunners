@@ -499,6 +499,8 @@ export type AuditAction =
   /** «Arată public câți voluntari mai sunt necesari» (§773), entity `event`: the metadata holds `on` and nothing of a person. */
   | "event.volunteers_counts_switched"
   | "event.volunteers_list_switched"
+  /** «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§NNN), entity `event`: metadata `{ on }` and nothing of a person. */
+  | "event.volunteers_button_switched"
   /** «Cine se poate oferi» (§820), entity `event`: metadata `{ from, to }` — one of `ANYONE`, `MEMBERS`, `INVITED`; nothing of a person. */
   | "event.volunteers_access_changed"
   /**
