@@ -8,7 +8,7 @@ import { volunteersAdvertised } from "@/modules/volunteers/domain/access";
 import type { VolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (BR-REQ-050-02; the owner, 2026-10-20: «I want to be able to allow registration
+ * §NNN — «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (BR-REQ-031-01, BR-REQ-050-02; the owner, 2026-10-20: «I want to be able to allow registration
  * for volunteers but I want to control if the button is visible on the website or not»): the rule that decides what the event's page advertises, and the
  * card's fifth tick with the volunteers' page link to copy. «Primește voluntari» keeps opening the sign-up; this only decides whether the public site
  * says so. The reads under the page are `own-page.test.ts`'s; the saving is `tests/integration/volunteers/button-shown.test.ts`.

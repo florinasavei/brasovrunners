@@ -22,7 +22,7 @@ const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 const EFFECTIVE = new Date("2026-01-01T00:00:00.000Z");
 
 /**
- * §NNN — «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (BR-REQ-050-02, BR-REQ-060-01; the owner, 2026-10-20), on a real schema:
+ * §NNN — «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (BR-REQ-031-01, BR-REQ-050-02, BR-REQ-060-01; the owner, 2026-10-20), on a real schema:
  * migration 0176's column and its default (every event keeps its button); the club's tick saved by whoever manages volunteers, audited, no change
  * to the page's version; the public read carries it; **a sign-up with the button hidden still goes through the real service** and is kept exactly
  * as one with the button shown; and the tick travels with a copy, a repeat and the event's file (absent in a file = shown). The card and the page

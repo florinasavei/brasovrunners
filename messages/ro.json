@@ -5472,11 +5472,11 @@
         "guardianConsent": "Acordul părintelui"
       },
       "badgesLink": "Ecusoane pentru voluntari",
-      "switchHelp": "Bifat, se pot oferi voluntari; butonul de pe pagina evenimentului se arată cât e pusă bifa „Arată butonul”. Debifat, nu se șterge nimic: rolurile și oamenii rămân.",
+      "switchHelp": "Bifat, se pot oferi voluntari; pagina evenimentului arată butonul cât e bifată căsuța de mai jos. Debifat, nu se șterge nimic: rolurile și oamenii rămân.",
       "access": {
         "title": "Cine se poate oferi",
         "ANYONE": "Oricine, de pe pagina evenimentului",
-        "ANYONEHelp": "Formularul e pe pagina evenimentului, deschis oricui.",
+        "ANYONEHelp": "Formularul e deschis oricui; pagina evenimentului trimite la el cât e bifat „Arată butonul”, altfel doar prin link.",
         "MEMBERS": "Doar membrii clubului (conectați în zona membrilor)",
         "MEMBERSHelp": "Formularul se arată doar unui membru conectat, cu numele și adresa din contul lui.",
         "INVITED": "Doar cu invitație de la club",
@@ -5531,11 +5531,11 @@
       },
       "button": {
         "label": "Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului",
-        "help": "Bifat, pagina evenimentului arată căsuța „Căutăm voluntari” cu butonul. Debifat, înscrierea rămâne deschisă doar prin link: copiază-l mai jos și trimite-l cui vrei."
+        "help": "Bifat, pagina evenimentului arată căsuța „Căutăm voluntari” cu butonul. Debifat, doar prin link, din caseta de mai jos, care apare cât se primesc voluntari."
       },
       "link": {
         "title": "Linkul paginii de voluntari",
-        "help": "Merge pentru oricine îl are, după regula „Cine se poate oferi”. La „Doar cu invitație” e nevoie de linkul din invitație.",
+        "help": "Merge pentru oricine îl are, după regula „Cine se poate oferi”. La „Doar cu invitație de la club” e nevoie de linkul din invitație.",
         "label": {
           "ro": "Linkul paginii de voluntari, în română",
           "en": "Linkul paginii de voluntari, în engleză"
