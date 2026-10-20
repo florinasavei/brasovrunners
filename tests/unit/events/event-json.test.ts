@@ -130,7 +130,7 @@ function sampleFile(): EventFile {
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     // The volunteers' categories and roles (§774): none in the sample; the round trip with some is in the integration test.
-    volunteers: { categories: [], roles: [], access: "ANYONE", listPublic: false },
+    volunteers: { categories: [], roles: [], access: "ANYONE", listPublic: false, buttonShown: true },
     media: [{ role: "cover", url: PICTURE, contentType: "image/webp", size: 10, sha256: "a".repeat(64) }],
   };
 }

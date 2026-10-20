@@ -5268,6 +5268,8 @@
       "standingNoNumber": "{taken} · no limit",
       "offer": {
         "open": "The “I want to volunteer” page is open: the event's page links to it.",
+        "openHidden": "The “I want to volunteer” page is open, but the event's page does not link to it: it is reached by link only.",
+        "openMembersHidden": "The volunteers' page is open to signed-in members, but the event's page does not link to it: it is reached by link only.",
         "openMembers": "The volunteers' page is open to signed-in members. The event's page links to it.",
         "openInvited": "The volunteers' page opens only from the link of an invitation. The event's page says nothing about it.",
         "closed": {
@@ -5470,7 +5472,7 @@
         "guardianConsent": "Parent's consent"
       },
       "badgesLink": "Volunteer badges",
-      "switchHelp": "Ticked, the event's page shows “We are looking for volunteers” and a button to the volunteers' page. Unticked, nothing is deleted: the roles and the people stay.",
+      "switchHelp": "Ticked, people can volunteer, and the event's page shows “We are looking for volunteers” with a button while the “Show the button” tick below is on. Unticked, nothing is deleted: the roles and the people stay.",
       "access": {
         "title": "Who can offer",
         "ANYONE": "Anyone, from the event's page",
@@ -5526,6 +5528,20 @@
       "counts": {
         "label": "Show publicly how many volunteers are still needed",
         "help": "Ticked, the volunteers' page tells each role how many more people it needs. Unticked, it shows no number; here you always see the numbers."
+      },
+      "button": {
+        "label": "Show the “I want to volunteer” button on the event page",
+        "help": "Ticked, the event page shows the “We're looking for volunteers” box with the button. Unticked, sign-up stays open by link only: copy it below and send it to whoever you want."
+      },
+      "link": {
+        "title": "The volunteers' page link",
+        "help": "It works for anyone who has it, under the rule “Who can volunteer”. With “By invitation only”, the link from the invitation is needed.",
+        "label": {
+          "ro": "The volunteers' page link, in Romanian",
+          "en": "The volunteers' page link, in English"
+        },
+        "copy": "Copy",
+        "copied": "Copied"
       },
       "list": {
         "label": "The volunteers' list is public on the event's page",
@@ -12669,6 +12685,8 @@
       "volunteersShirtsOff": "The public form no longer asks for the T-shirt size. Sizes already given are kept.",
       "volunteersCountsOn": "The volunteers' page now says how many more people each role needs.",
       "volunteersCountsOff": "The volunteers' page no longer says how many more people each role needs.",
+      "volunteersButtonOn": "The event's page shows the “I want to volunteer” button again.",
+      "volunteersButtonOff": "The event's page no longer shows the “I want to volunteer” button. Sign-up stays open by link.",
       "volunteersListOn": "The event's page can now show the “Volunteers” card: the name and role of confirmed volunteers who ticked.",
       "volunteersListOff": "The event's page no longer shows the volunteers' list.",
       "volunteerGuardianRequested": "The link to the parent is on its way by email.",

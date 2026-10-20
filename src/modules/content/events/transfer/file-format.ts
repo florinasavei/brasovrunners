@@ -348,6 +348,13 @@ export const volunteersFileSchema = z
      * no volunteer — the people never travel — and shows nothing by itself: a name appears only for a confirmed volunteer who ticked, under a notice that describes the list.
      */
     listPublic: z.boolean().default(false),
+    /**
+     * «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului» (§NNN): the club's tick. A file made before it existed has none: shown, as every event
+     * was. Written only when it is **off**, the mirror of `listPublic`'s rule the other way round (a file without the key reads «on»), so a file from an
+     * event that always showed the button stays readable by the release before this one (its reader refuses a key it does not know — QA ships a day
+     * before production, and its files travel). It names no volunteer and opens nothing by itself.
+     */
+    buttonShown: z.boolean().default(true),
   })
   .strict();
 
@@ -362,7 +369,7 @@ export const eventFileSchema = z
     series: seriesSchema,
     event: eventConfigSchema,
     /** The volunteer categories and roles (§774): applied where an event is made new, never over an existing one. */
-    volunteers: volunteersFileSchema.default(() => ({ categories: [], roles: [], access: DEFAULT_VOLUNTEERS_ACCESS, listPublic: false })),
+    volunteers: volunteersFileSchema.default(() => ({ categories: [], roles: [], access: DEFAULT_VOLUNTEERS_ACCESS, listPublic: false, buttonShown: true })),
     media: z.array(mediaEntrySchema).max(MAX_EVENT_FILE_MEDIA),
   })
   .strict();
@@ -444,10 +451,10 @@ export function upgradeCheckpoints(file: EventFile): { file: EventFile; notes: F
  * The registration block's `rsvpAskEnabled` (§823) is written only when it is **off** (on is what a file without it means), like `showRouteProfile`.
  * The registration block's `rsvpEnabled` (§811) is the mirror: written only when it is **on**, because «off» is what a file without it
  * means, and the file's version stays 3 for the same reason. So is the volunteers block's `access` (§821): written only when it is not «Oricine» (`ANYONE`);
- * and its `listPublic` (§821), written only when it is **on**.
+ * and its `listPublic` (§821), written only when it is **on**; and its `buttonShown` (§NNN), written only when it is **off**.
  */
 export const serializeEventFile = (file: EventFile): string =>
-  `${JSON.stringify(file, (key, value) => (((key === "onProfile" || key === "showRouteProfile") && value === true) || (key === "rsvpEnabled" && value === false) || (key === "rsvpAskEnabled" && value === true) || (key === "access" && value === DEFAULT_VOLUNTEERS_ACCESS) || (key === "listPublic" && value === false) ? undefined : value), 2)}\n`;
+  `${JSON.stringify(file, (key, value) => (((key === "onProfile" || key === "showRouteProfile") && value === true) || (key === "rsvpEnabled" && value === false) || (key === "rsvpAskEnabled" && value === true) || (key === "access" && value === DEFAULT_VOLUNTEERS_ACCESS) || (key === "listPublic" && value === false) || (key === "buttonShown" && value === true) ? undefined : value), 2)}\n`;
 
 /** Why a file was refused, as a code the page says in words (`Admin.eventJson.refusals.<code>`). */
 export type EventFileRefusal = "tooLarge" | "notJson" | "notAnEventFile" | "unknownVersion" | "invalid";
