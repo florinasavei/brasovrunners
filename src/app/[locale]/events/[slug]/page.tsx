@@ -212,6 +212,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
     people and the texts, and the event's own end held so the page is made again when it is over. The form is not here any
     more, and neither is its draft or its answer: this page reads no query for it, so it stays static. Never on a members'
     event (§552): the page is public. While the database is away the box is simply not drawn.
+    «Arată butonul „Vreau să fiu voluntar”» (§NNN) unticked: the box is not drawn either (`volunteersAdvertised`) — the volunteers' page still answers by its link.
   */
   await holdPageUntil([event.endsAt ?? event.startsAt], now);
   const volunteerOffer = membersOnly ? null : await readOrWhileAway(() => readVolunteerOffer(event, now), null);
