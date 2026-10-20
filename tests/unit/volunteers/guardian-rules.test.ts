@@ -112,7 +112,7 @@ describe("§768 the age boundary: fourteen, and eighteen for a person alone", ()
 });
 
 describe("§768 the organizers' entry holds the same line", () => {
-  const staff = { roleIds: [ID], assignedRoleId: "", name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "" };
+  const staff = { roleIds: [ID], assignedRoleIds: [], name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "" };
 
   it("asks a name for a person under eighteen, and the address only if the organizer has it — the consent may be on paper", () => {
     const noGuardian = volunteerStaffInputSchema.safeParse({ ...staff, birthDate: aged(16) });
@@ -190,7 +190,7 @@ describe("§768 every refused box is named in one pass, and the text read decide
     const verdict = volunteerPublicProfileSchemaFor(true, EVENT_DAY).safeParse({ ...PUBLIC, sex: "ROBOT", birthDate: aged(15) });
     expect(verdict.success).toBe(false);
     if (!verdict.success) expect(refusedFields(verdict.error)).toEqual(["sex", "guardianName", "guardianEmail", "guardianAware"]);
-    const staff = volunteerStaffInputSchema.safeParse({ roleIds: [ID], assignedRoleId: "", name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "", birthDate: aged(15), sex: "ROBOT" });
+    const staff = volunteerStaffInputSchema.safeParse({ roleIds: [ID], assignedRoleIds: [], name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "", birthDate: aged(15), sex: "ROBOT" });
     expect(staff.success).toBe(false);
     if (!staff.success) expect(refusedFields(staff.error)).toEqual(["sex", "guardianName"]);
     // While the club cannot take a minor the guardian's boxes are not asked: the age alone.

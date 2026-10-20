@@ -1,7 +1,7 @@
 import { and, asc, count, eq, gt, inArray, notInArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { z } from "zod";
-import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
+import { eventVolunteerCategories, eventVolunteerRoleAssignments, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
 import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { events } from "@/db/schema/events";
 import { legalDocuments } from "@/db/schema/legal-documents";
@@ -151,8 +151,8 @@ export type VolunteerCategory = {
 export type VolunteerItem = {
   id: string;
   eventId: string;
-  /** The role the organizers gave the person, or null while nobody has (§761): «De repartizat» on the card. */
-  roleId: string | null;
+  /** The roles the organizers gave the person, in the club's order (§761, several since §837): empty while nobody has — «De repartizat» on the card. */
+  roleIds: string[];
   /** The roles the person said they would do, in the club's order (§761): their chips on the card. */
   choiceIds: string[];
   name: string;
@@ -265,24 +265,44 @@ function roleOf(row: typeof eventVolunteerRoles.$inferSelect): VolunteerRole {
   };
 }
 
+/** The two tables that link a volunteer to roles: what they offered (§761) and what they were given (§837). */
+type RoleLink = typeof eventVolunteerRoleChoices | typeof eventVolunteerRoleAssignments;
+
 /**
- * The roles each of an event's volunteers chose (§761), volunteer → role ids in the club's order (`compareRoles`):
- * one read for the whole list.
+ * The roles each of an event's volunteers is linked to by one table — chosen (§761) or given (§837) —, volunteer → role ids
+ * in the club's order (`compareRoles`): one read for the whole list.
  */
-async function choicesOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Map<string, string[]>> {
+async function linkedRolesOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string, link: RoleLink): Promise<Map<string, string[]>> {
   const rows = await db
     .select({
-      volunteerId: eventVolunteerRoleChoices.volunteerId,
+      volunteerId: link.volunteerId,
       id: eventVolunteerRoles.id,
       position: eventVolunteerRoles.position,
       createdAt: eventVolunteerRoles.createdAt,
     })
-    .from(eventVolunteerRoleChoices)
-    .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteerRoleChoices.roleId))
+    .from(link)
+    .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, link.roleId))
     .where(eq(eventVolunteerRoles.eventId, eventId));
   const byVolunteer = new Map<string, string[]>();
   for (const row of rows.sort(compareRoles)) byVolunteer.set(row.volunteerId, [...(byVolunteer.get(row.volunteerId) ?? []), row.id]);
   return byVolunteer;
+}
+
+/** The people counted against roles, one entry per role given (§837), with each person's state: what `standingOf` reads. */
+type PersonOnRole = { roleIds: string[]; state: VolunteerState };
+
+/**
+ * Every role given to a volunteer of one event — or of the roles `roleIds` names, when given — each as its own entry with the
+ * person's state: a person given two roles counts against both («N din M», §837). One read.
+ */
+async function peopleOnRoles<T extends Record<string, unknown>>(db: Database<T>, scope: { eventId: string } | { roleIds: readonly string[] }): Promise<PersonOnRole[]> {
+  if ("roleIds" in scope && scope.roleIds.length === 0) return [];
+  const rows = await db
+    .select({ roleId: eventVolunteerRoleAssignments.roleId, state: eventVolunteers.state })
+    .from(eventVolunteerRoleAssignments)
+    .innerJoin(eventVolunteers, eq(eventVolunteers.id, eventVolunteerRoleAssignments.volunteerId))
+    .where("eventId" in scope ? eq(eventVolunteers.eventId, scope.eventId) : inArray(eventVolunteerRoleAssignments.roleId, [...scope.roleIds]));
+  return rows.map((row) => ({ roleIds: [row.roleId], state: row.state }));
 }
 
 /** An event's volunteers, oldest first (the card groups them by the role given, «De repartizat» first). */
@@ -295,13 +315,14 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
     .leftJoin(guardianDocument, eq(guardianDocument.id, eventVolunteers.guardianDocumentId))
     .where(eq(eventVolunteers.eventId, eventId))
     .orderBy(asc(eventVolunteers.createdAt), asc(eventVolunteers.id));
-  const choices = await choicesOf(db, eventId);
+  const choices = await linkedRolesOf(db, eventId, eventVolunteerRoleChoices);
+  const given = await linkedRolesOf(db, eventId, eventVolunteerRoleAssignments);
   return rows.map(({ row, agreementVersion, guardianVersion }) => {
     const facts = readAgreementFacts(row.agreementFacts);
     return {
       id: row.id,
       eventId: row.eventId,
-      roleId: row.roleId,
+      roleIds: given.get(row.id) ?? [],
       choiceIds: choices.get(row.id) ?? [],
       name: row.name,
       email: row.email,
@@ -345,7 +366,7 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
  * The roles of one event with how each stands, in the club's order: «N din M» and what is still needed — the people
  * given each role, never those who only ticked it (§761).
  */
-export function volunteerStandings(roles: readonly VolunteerRole[], volunteers: readonly Pick<VolunteerItem, "roleId" | "state">[]): RoleStanding[] {
+export function volunteerStandings(roles: readonly VolunteerRole[], volunteers: readonly Pick<VolunteerItem, "roleIds" | "state">[]): RoleStanding[] {
   return roles.map((role) => standingOf(role, volunteers));
 }
 
@@ -424,10 +445,7 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
   if (!event?.accepts) return { acceptsVolunteers: false, access: "ANYONE", shirts: false, showCounts: false, buttonShown: true, roles: [], categories: [] };
   const roles = await listVolunteerRoles(db, eventId);
   const categories = await listVolunteerCategories(db, eventId);
-  const people = await db
-    .select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state })
-    .from(eventVolunteers)
-    .where(eq(eventVolunteers.eventId, eventId));
+  const people = await peopleOnRoles(db, { eventId });
   return {
     acceptsVolunteers: true,
     access: event.access,
@@ -619,7 +637,7 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
     if (request.kind === "delete") {
       // Anybody given the role, or who ticked it (§761) — cancelled people too: the people are asked to move first,
       // never dropped from a role under them (the choices' own reference cascades only for an event's delete).
-      const [people] = await tx.select({ n: count() }).from(eventVolunteers).where(eq(eventVolunteers.roleId, current.id));
+      const [people] = await tx.select({ n: count() }).from(eventVolunteerRoleAssignments).where(eq(eventVolunteerRoleAssignments.roleId, current.id));
       const [choosers] = await tx.select({ n: count() }).from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.roleId, current.id));
       if ((people?.n ?? 0) + (choosers?.n ?? 0) > 0) throw new DomainError("VOLUNTEER_ROLE_HAS_PEOPLE", "move the volunteers to another role first", ["roleId"]);
       await tx.delete(eventVolunteerRoles).where(eq(eventVolunteerRoles.id, current.id));
@@ -1435,7 +1453,7 @@ export async function setVolunteersAccess<T extends Record<string, unknown>>(
   return result;
 }
 
-const STAFF_FIELDS = ["assignedRoleId", "name", "email", "phone", "note", "birthDate", "sex", "city", "shirtSize", "guardianName", "guardianEmail"] as const;
+const STAFF_FIELDS = ["name", "email", "phone", "note", "birthDate", "sex", "city", "shirtSize", "guardianName", "guardianEmail"] as const;
 
 /**
  * The day an event's volunteers' ages are counted on (§773, `volunteerEventDay`): the gun's day, else the event's, in the event's own
@@ -1455,8 +1473,10 @@ export type VolunteerRequest =
   | { kind: "add"; eventId: string; fields: Record<string, unknown> }
   | { kind: "edit"; eventId: string; id: string; fields: Record<string, unknown> }
   | { kind: "setState"; eventId: string; id: string; state: unknown }
-  /** «Dă-i rolul …» (§761): the organizers give the person one role of the event, ticked by them or not. */
+  /** «Dă-i rolul …» / «Dă-i și rolul …» (§761, §837): the organizers give the person one more role of the event, ticked by them or not. */
   | { kind: "assign"; eventId: string; id: string; roleId: unknown }
+  /** «Ia-i rolul …» (§837): one role given is taken back; the person's other roles stand. */
+  | { kind: "unassign"; eventId: string; id: string; roleId: unknown }
   | { kind: "delete"; eventId: string; id: string };
 
 export type VolunteerResult = { changed: boolean; volunteer: { id: string } };
@@ -1471,6 +1491,8 @@ function staffInputOf(fields: Record<string, unknown>, eventDay: string, keptAge
   const parsed = volunteerStaffInputSchemaFor(eventDay, keptAge).safeParse({
     ...postedStrings(fields, STAFF_FIELDS),
     roleIds: postedIds(fields.roleIds),
+    // «Rolurile date» (§837): every box ticked, none for a person still to place.
+    assignedRoleIds: postedIds(fields.assignedRoleIds),
     // The ticks (§765): true only when the form posted them.
     volunteeredBefore: fields.volunteeredBefore === true,
     clubMember: fields.clubMember === true,
@@ -1567,29 +1589,31 @@ function sameIds(a: readonly string[], b: readonly string[]): boolean {
 }
 
 /**
- * The one short email that names the role the organizers gave a volunteer (§761), through the outbox in the same
- * transaction as the change, in the person's language. Never to a cancelled person (nothing to do), and withdrawn at
- * the send when the role was changed again or the person cancelled meanwhile (`render.ts`), so only the role that
- * stands is ever announced. Each assignment is its own message: the moment and why it is sent are in the key —
- * `given`, `readdressed` (the role kept, the address corrected) or `reopened` (a cancelled person back with a role).
+ * The one short email that names the roles the organizers gave a volunteer (§761; several since §837), through the outbox
+ * in the same transaction as the change, in the person's language. Never to a cancelled person (nothing to do), and never
+ * while no role stands; withdrawn at the send when the roles were changed again or the person cancelled meanwhile
+ * (`render.ts`), so only the roles that stand are ever announced — all of them, in one message, whichever press changed
+ * them. Each change is its own message: the moment and why it is sent are in the key — `given`, `readdressed` (the roles
+ * kept, the address corrected) or `reopened` (a cancelled person back with roles).
  */
 async function queueRoleAssigned<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   volunteer: { id: string; eventId: string; email: string; locale: Locale; state: VolunteerState },
-  roleId: string,
+  roleIds: readonly string[],
   actorId: string,
   now: Date,
   why: "given" | "readdressed" | "reopened" = "given",
 ): Promise<void> {
-  if (volunteer.state === "CANCELLED") return;
+  if (volunteer.state === "CANCELLED" || roleIds.length === 0) return;
+  const sorted = [...roleIds].sort();
   await enqueueEmail(tx, {
     participantId: null,
     registrationId: null,
     messageType: "VOLUNTEER_ROLE_ASSIGNED",
     locale: volunteer.locale,
     recipientEmail: volunteer.email,
-    payload: { eventId: volunteer.eventId, volunteerId: volunteer.id, roleId },
-    idempotencyKey: `volunteer:${volunteer.id}:assigned:${roleId}:${why}:${now.getTime()}`,
+    payload: { eventId: volunteer.eventId, volunteerId: volunteer.id, roleIds: sorted },
+    idempotencyKey: `volunteer:${volunteer.id}:assigned:${sorted.join("+")}:${why}:${now.getTime()}`,
     requestedByStaffUserId: actorId,
     now,
   });
@@ -1597,14 +1621,16 @@ async function queueRoleAssigned<T extends Record<string, unknown>>(
 
 /**
  * One change to one event's volunteers, by one staff member: enter one by hand, change what was typed
- * (the name, the address, the telephone number, the roles they would do, the role given, the organizers' note),
- * give them a role («Dă-i rolul …», §761), confirm or cancel, delete. The address goes through the canonicalizer
- * and is unique per event (`VOLUNTEER_ALREADY_LISTED`, naming the box); every role ticked or given must be this
- * event's (VALIDATION_ERROR naming `roleIds`, `assignedRoleId` or `roleId`); a person who is not there, or is on
- * another event, is NOT_FOUND; a cancelled person is given no role (CONFLICT: reopen first). A role may be given to
- * more people than it asked (the card then reads «3 din 2»). A press that changes nothing writes nothing. Every
- * change is audited with the ids and the names of the fields — never the person's own words — and every new role
- * given is told to the person by one email (`VOLUNTEER_ROLE_ASSIGNED`).
+ * (the name, the address, the telephone number, the roles they would do, the roles given, the organizers' note),
+ * give them a role («Dă-i rolul …», §761; one more, «Dă-i și rolul …», §837) or take one back («Ia-i rolul …»),
+ * confirm or cancel, delete. The address goes through the canonicalizer and is unique per event
+ * (`VOLUNTEER_ALREADY_LISTED`, naming the box); every role ticked or given must be this event's (VALIDATION_ERROR
+ * naming `roleIds`, `assignedRoleIds` or `roleId`); a person who is not there, or is on another event, is NOT_FOUND;
+ * a cancelled person is given no role (CONFLICT: reopen first). A role may be given to more people than it asked (the
+ * card then reads «3 din 2»), and a person may be given several roles, counting against each. A press that changes
+ * nothing writes nothing. Every change is audited with the ids and the names of the fields — never the person's own
+ * words — and every change of the roles given is told to the person by one email naming the roles that stand
+ * (`VOLUNTEER_ROLE_ASSIGNED`). `event_volunteers.role_id` mirrors the first role given until its contract release (§837).
  */
 export async function changeVolunteer<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -1648,8 +1674,9 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         : null
       : null;
   if (request.kind === "setState" && !state) throw new DomainError("VALIDATION_ERROR", "that is not a state", ["state"]);
-  const assigned = request.kind === "assign" && typeof request.roleId === "string" ? request.roleId.trim() : "";
-  if (request.kind === "assign" && !isUuid(assigned)) throw new DomainError("VALIDATION_ERROR", "that is not a role", ["roleId"]);
+  const oneRole = request.kind === "assign" || request.kind === "unassign";
+  const assigned = oneRole && typeof request.roleId === "string" ? request.roleId.trim() : "";
+  if (oneRole && !isUuid(assigned)) throw new DomainError("VALIDATION_ERROR", "that is not a role", ["roleId"]);
 
   const result = await db.transaction(async (tx) => {
     const [event] = await tx.select({ id: events.id, shirts: events.volunteersShirts }).from(events).where(eq(events.id, request.eventId)).limit(1);
@@ -1661,7 +1688,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     // the order of their ids: the order a sign-up locks the roles it ticked and a role change locks them all (§761).
     // Without it the insert's foreign keys take KEY SHARE on each role in the order posted, and a hand entry naming
     // two roles against a sign-up ticking both waits in a circle (40P01) — one side aborted, someone's typing lost.
-    if (request.kind === "add" || request.kind === "edit" || request.kind === "assign") {
+    if (request.kind === "add" || request.kind === "edit" || oneRole) {
       await tx
         .select({ id: eventVolunteerRoles.id })
         .from(eventVolunteerRoles)
@@ -1687,27 +1714,36 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         .limit(1);
       return row;
     };
-    /** The person's choices become exactly `ids`: the ones no longer ticked go, the new ones come. */
-    const writeChoices = async (volunteerId: string, ids: readonly string[]) => {
-      await tx
-        .delete(eventVolunteerRoleChoices)
-        .where(
-          ids.length > 0
-            ? and(eq(eventVolunteerRoleChoices.volunteerId, volunteerId), notInArray(eventVolunteerRoleChoices.roleId, [...ids]))
-            : eq(eventVolunteerRoleChoices.volunteerId, volunteerId),
-        );
+    /** The person's rows in one link table become exactly `ids`: the ones no longer there go, the new ones come. */
+    const writeLinks = async (link: RoleLink, volunteerId: string, ids: readonly string[]) => {
+      await tx.delete(link).where(ids.length > 0 ? and(eq(link.volunteerId, volunteerId), notInArray(link.roleId, [...ids])) : eq(link.volunteerId, volunteerId));
       if (ids.length > 0) {
         await tx
-          .insert(eventVolunteerRoleChoices)
+          .insert(link)
           // In the order of the ids, as the roles were locked above.
           .values([...ids].sort().map((roleId) => ({ volunteerId, roleId, createdAt: now })))
           .onConflictDoNothing();
       }
     };
+    /** The person's choices become exactly `ids`: the ones no longer ticked go, the new ones come. */
+    const writeChoices = (volunteerId: string, ids: readonly string[]) => writeLinks(eventVolunteerRoleChoices, volunteerId, ids);
+    /**
+     * The roles given become exactly `ids` (§837), and `role_id` mirrors the first of them (null for none) for the code
+     * serving while migration `0177` runs and for its RESTRICT, until the column's contract release.
+     */
+    const writeAssignments = async (volunteerId: string, ids: readonly string[]) => {
+      await writeLinks(eventVolunteerRoleAssignments, volunteerId, ids);
+      await tx.update(eventVolunteers).set({ roleId: ids[0] ?? null }).where(eq(eventVolunteers.id, volunteerId));
+    };
+    /** The roles one person holds now, in the order of their ids. */
+    const assignedTo = async (volunteerId: string) =>
+      (await tx.select({ roleId: eventVolunteerRoleAssignments.roleId }).from(eventVolunteerRoleAssignments).where(eq(eventVolunteerRoleAssignments.volunteerId, volunteerId)))
+        .map((row) => row.roleId)
+        .sort();
 
     if (request.kind === "add" && input) {
       await assertEventRoles(input.roleIds, "roleIds");
-      if (input.assignedRoleId) await assertEventRoles([input.assignedRoleId], "assignedRoleId");
+      await assertEventRoles(input.assignedRoleIds, "assignedRoleIds");
       if (await holderOf(input.identity.canonicalEmail)) throw alreadyListed();
       if (!profileDescribed) refuseUnnamedProfile(input, null, event.shirts);
       // The organizers record the person's own tick only under a notice that describes the list: a post that carries it otherwise is a forged or stale one.
@@ -1721,7 +1757,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         .insert(eventVolunteers)
         .values({
           eventId: request.eventId,
-          roleId: input.assignedRoleId,
+          // The mirror of the first role given (§837), until the column's contract release.
+          roleId: input.assignedRoleIds[0] ?? null,
           name: input.name,
           email: input.identity.deliveryEmail,
           canonicalEmail: input.identity.canonicalEmail,
@@ -1755,8 +1792,9 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         .returning({ id: eventVolunteers.id, eventId: eventVolunteers.eventId, email: eventVolunteers.email, locale: eventVolunteers.locale, state: eventVolunteers.state });
       if (!row) throw alreadyListed();
       await writeChoices(row.id, input.choiceIds);
-      await audit("volunteer.added", { volunteerId: row.id, roleId: input.assignedRoleId, roleIds: input.choiceIds, ...(input.listOptIn ? { listOptIn: true } : {}) });
-      if (input.assignedRoleId) await queueRoleAssigned(tx, row, input.assignedRoleId, actor.id, now);
+      if (input.assignedRoleIds.length > 0) await writeLinks(eventVolunteerRoleAssignments, row.id, input.assignedRoleIds);
+      await audit("volunteer.added", { volunteerId: row.id, assignedRoleIds: input.assignedRoleIds, roleIds: input.choiceIds, ...(input.listOptIn ? { listOptIn: true } : {}) });
+      await queueRoleAssigned(tx, row, input.assignedRoleIds, actor.id, now);
       return { changed: true, volunteer: { id: row.id } };
     }
 
@@ -1768,6 +1806,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       .limit(1);
     if (!current) throw new DomainError("NOT_FOUND", "the volunteer is not there");
     const summary = { id: current.id };
+    // The roles the person holds now (§837): what every verb below compares with, audits and announces.
+    const heldRoleIds = await assignedTo(current.id);
 
     if (request.kind === "delete") {
       // The club's invitation to that person for this event (§820): deleting a person leaves no address of theirs behind. Found by the address
@@ -1783,7 +1823,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         );
       // The person's choices go with them (CASCADE).
       await tx.delete(eventVolunteers).where(eq(eventVolunteers.id, current.id));
-      await audit("volunteer.deleted", { volunteerId: current.id, roleId: current.roleId, state: current.state });
+      await audit("volunteer.deleted", { volunteerId: current.id, assignedRoleIds: heldRoleIds, state: current.state });
       return { changed: true, volunteer: summary };
     }
 
@@ -1794,30 +1834,46 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         throw new DomainError("VOLUNTEER_GUARDIAN_MISSING", "the parent's or guardian's agreement is missing", ["guardian"]);
       }
       await tx.update(eventVolunteers).set({ state, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
-      await audit("volunteer.state_changed", { volunteerId: current.id, roleId: current.roleId, from: current.state, to: state });
-      // A cancelled person reopened with a role given is told it: the email queued when it was given was withdrawn at
+      await audit("volunteer.state_changed", { volunteerId: current.id, assignedRoleIds: heldRoleIds, from: current.state, to: state });
+      // A cancelled person reopened with roles given is told them: the email queued when they were given was withdrawn at
       // the send while they were cancelled, or never queued (`queueRoleAssigned`), and the receipt promised one.
-      if (current.state === "CANCELLED" && current.roleId) await queueRoleAssigned(tx, { ...current, state }, current.roleId, actor.id, now, "reopened");
+      if (current.state === "CANCELLED") await queueRoleAssigned(tx, { ...current, state }, heldRoleIds, actor.id, now, "reopened");
       return { changed: true, volunteer: summary };
     }
 
     if (request.kind === "assign") {
       await assertEventRoles([assigned], "roleId");
       if (current.state === "CANCELLED") throw new DomainError("CONFLICT", "a cancelled volunteer is given no role: reopen them first");
-      if (current.roleId === assigned) return { changed: false, volunteer: summary };
-      await tx.update(eventVolunteers).set({ roleId: assigned, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
-      await audit("volunteer.assigned", { volunteerId: current.id, roleId: assigned, from: current.roleId });
-      await queueRoleAssigned(tx, current, assigned, actor.id, now);
+      if (heldRoleIds.includes(assigned)) return { changed: false, volunteer: summary };
+      // One more role beside those the person holds (§837): the others stand, and the email names them all.
+      const next = [...heldRoleIds, assigned].sort();
+      await writeAssignments(current.id, next);
+      await tx.update(eventVolunteers).set({ updatedAt: now }).where(eq(eventVolunteers.id, current.id));
+      await audit("volunteer.assigned", { volunteerId: current.id, roleId: assigned, assignedRoleIds: next, from: heldRoleIds });
+      await queueRoleAssigned(tx, current, next, actor.id, now);
       return { changed: true, volunteer: summary };
     }
 
-    // «Salvează» on a volunteer: every box, the roles ticked and the role given included.
+    if (request.kind === "unassign") {
+      // «Ia-i rolul …» (§837): the one role goes, the others stand; the person hears which roles still stand, when any does.
+      // A role that is not this event's, or not the person's, changes nothing (the chip is gone with the role).
+      if (!heldRoleIds.includes(assigned)) return { changed: false, volunteer: summary };
+      const next = heldRoleIds.filter((roleId) => roleId !== assigned);
+      await writeAssignments(current.id, next);
+      await tx.update(eventVolunteers).set({ updatedAt: now }).where(eq(eventVolunteers.id, current.id));
+      await audit("volunteer.unassigned", { volunteerId: current.id, roleId: assigned, assignedRoleIds: next, from: heldRoleIds });
+      await queueRoleAssigned(tx, current, next, actor.id, now);
+      return { changed: true, volunteer: summary };
+    }
+
+    // «Salvează» on a volunteer: every box, the roles ticked and the roles given included.
     if (!input) throw new DomainError("VALIDATION_ERROR", "nothing to save");
     await assertEventRoles(input.roleIds, "roleIds");
-    if (input.assignedRoleId) await assertEventRoles([input.assignedRoleId], "assignedRoleId");
+    await assertEventRoles(input.assignedRoleIds, "assignedRoleIds");
+    const rolesGivenChanged = !sameIds(heldRoleIds, input.assignedRoleIds);
     // The same line «Dă-i rolul» holds: a cancelled person is given no new role — reopen them first. Taking a role
-    // back, or keeping the one they had, is still an edit.
-    if (current.state === "CANCELLED" && input.assignedRoleId && input.assignedRoleId !== current.roleId) {
+    // back, or keeping the ones they had, is still an edit.
+    if (current.state === "CANCELLED" && input.assignedRoleIds.some((roleId) => !heldRoleIds.includes(roleId))) {
       throw new DomainError("CONFLICT", "a cancelled volunteer is given no role: reopen them first");
     }
     if (input.identity.canonicalEmail !== current.canonicalEmail) {
@@ -1867,7 +1923,6 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     // `age` is derived from the date: the trail names the date's box, and the age alone only when it moved with no new date (an event moved).
     const { age: nextAge, ...nextAnswers } = profile;
     const next = {
-      roleId: input.assignedRoleId,
       name: input.name,
       email: input.identity.deliveryEmail,
       phone: input.phone,
@@ -1876,7 +1931,6 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       ...nextAnswers,
     };
     const before = {
-      roleId: current.roleId,
       name: current.name,
       email: current.email,
       phone: current.phone,
@@ -1895,6 +1949,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     ).map((row) => row.roleId);
     const changedFields: string[] = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== next[key]);
     if (!sameIds(choicesBefore, input.choiceIds)) changedFields.push("roleIds");
+    if (rolesGivenChanged) changedFields.push("assignedRoleIds");
     if (nextAge !== current.age && !changedFields.includes("birthDate")) changedFields.push("age");
 
     // The parent or guardian follows the age typed (§768): a person under eighteen has one — the name, and the address if
@@ -1968,13 +2023,13 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       throw error;
     }
     if (changedFields.includes("roleIds")) await writeChoices(current.id, input.choiceIds);
-    await audit("volunteer.edited", { volunteerId: current.id, fields: changedFields, roleId: input.assignedRoleId });
-    // A role newly given is told to the person, at the address the row now holds — and so is a role kept when the
-    // address was corrected: the earlier email went to the old address (or is withdrawn at the send for it).
+    if (rolesGivenChanged) await writeAssignments(current.id, input.assignedRoleIds);
+    await audit("volunteer.edited", { volunteerId: current.id, fields: changedFields, assignedRoleIds: input.assignedRoleIds });
+    // Roles newly given or changed are told to the person, at the address the row now holds — and so are roles kept
+    // when the address was corrected: the earlier email went to the old address (or is withdrawn at the send for it).
     const addressCorrected = input.identity.canonicalEmail !== current.canonicalEmail;
-    if (input.assignedRoleId && (input.assignedRoleId !== current.roleId || addressCorrected)) {
-      const why = input.assignedRoleId !== current.roleId ? "given" : "readdressed";
-      await queueRoleAssigned(tx, { ...current, email: next.email }, input.assignedRoleId, actor.id, now, why);
+    if (rolesGivenChanged || addressCorrected) {
+      await queueRoleAssigned(tx, { ...current, email: next.email }, input.assignedRoleIds, actor.id, now, rolesGivenChanged ? "given" : "readdressed");
     }
     return { changed: true, volunteer: summary };
   });
@@ -2207,10 +2262,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
 
     // Full roles first, for everybody: asked after the repeat, a forged post naming only full roles would answer
     // «full» to a stranger and «am primit» to a person already listed — an oracle. This way both hear «full».
-    const people = await tx
-      .select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state })
-      .from(eventVolunteers)
-      .where(inArray(eventVolunteers.roleId, input.roleIds));
+    const people = await peopleOnRoles(tx, { roleIds: input.roleIds });
     const kept = openChoices(input.roleIds, new Map(ticked.map((role) => [role.id, standingOf(role, people)])));
     if (kept.length === 0) return { outcome: "full", dropped: true };
     const dropped = kept.length < input.roleIds.length;
@@ -2241,7 +2293,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     // naming the roles chosen, since nobody has given the person one yet (§761).
     const acceptance = await agreementAcceptance(
       tx,
-      { eventId, name: input.name, roles: { assigned: null, chosen }, locale: input.locale, document: agreement, method: "FORM", guardianName: guardian?.name ?? null, trace },
+      { eventId, name: input.name, roles: { assigned: [], chosen }, locale: input.locale, document: agreement, method: "FORM", guardianName: guardian?.name ?? null, trace },
       now,
     );
     const [row] = await tx

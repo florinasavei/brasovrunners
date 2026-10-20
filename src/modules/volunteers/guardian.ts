@@ -90,7 +90,7 @@ export async function guardianAcceptance<T extends Record<string, unknown>>(
     eventId: string;
     volunteerName: string;
     guardianName: string;
-    roles: { assigned: (RoleWords & { id: string }) | null; chosen: readonly RoleWords[] };
+    roles: { assigned: readonly (RoleWords & { id: string })[]; chosen: readonly RoleWords[] };
     locale: Locale;
     document: { id: string; title: string; body: unknown };
     method: "LINK" | "PAPER";
@@ -179,7 +179,6 @@ async function liveGuardianRow<T extends Record<string, unknown>>(db: Database<T
     .select({
       id: eventVolunteers.id,
       eventId: eventVolunteers.eventId,
-      roleId: eventVolunteers.roleId,
       name: eventVolunteers.name,
       age: eventVolunteers.age,
       locale: eventVolunteers.locale,
@@ -241,7 +240,7 @@ export async function readVolunteerGuardianLink<T extends Record<string, unknown
   // minted before the club approved such a version finds nothing to accept, and nothing is recorded against words that never name them.
   if (!document || !namesVolunteerGuardian(document.body)) return { status: "noAgreement" };
   const roles = await volunteerRoles(db, row);
-  if (!roles.assigned && roles.chosen.length === 0) return { status: "invalid" };
+  if (roles.assigned.length === 0 && roles.chosen.length === 0) return { status: "invalid" };
   const blanks = await agreementBlanks(db, {
     eventId: row.eventId,
     name: row.name,
@@ -292,7 +291,7 @@ export async function acceptVolunteerGuardianByLink<T extends Record<string, unk
     const document = await findCurrentApprovedDocument(tx, VOLUNTEER_AGREEMENT_KEY, input.locale, now);
     if (!document || !namesVolunteerGuardian(document.body)) return { outcome: "noAgreement" };
     const roles = await volunteerRoles(tx, row);
-    if (!roles.assigned && roles.chosen.length === 0) return { outcome: "invalid" };
+    if (roles.assigned.length === 0 && roles.chosen.length === 0) return { outcome: "invalid" };
     const acceptance = await guardianAcceptance(
       tx,
       {
@@ -437,11 +436,11 @@ export async function recordPaperVolunteerGuardian<T extends Record<string, unkn
     const document = await findCurrentApprovedDocument(tx, VOLUNTEER_AGREEMENT_KEY, row.locale, now);
     if (!document) throw new DomainError("VOLUNTEER_AGREEMENT_MISSING", "no volunteer agreement is in force");
     const roles = await volunteerRoles(tx, row);
-    const stamp = agreementRolesStamp(roles.assigned?.id ?? null, roles.chosen.map((role) => role.id));
+    const stamp = agreementRolesStamp(roles.assigned.map((role) => role.id), roles.chosen.map((role) => role.id));
     if (document.id !== request.printed.documentId || stamp !== request.printed.roles) {
       throw new DomainError("VOLUNTEER_AGREEMENT_REPRINT", "the version in force or the roles changed since the sheet was printed");
     }
-    if (!roles.assigned && roles.chosen.length === 0) throw new DomainError("NOT_FOUND", "the volunteer has no role");
+    if (roles.assigned.length === 0 && roles.chosen.length === 0) throw new DomainError("NOT_FOUND", "the volunteer has no role");
     const acceptance = await guardianAcceptance(
       tx,
       {

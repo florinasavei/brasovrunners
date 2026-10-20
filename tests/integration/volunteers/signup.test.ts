@@ -16,6 +16,7 @@ import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { roleDescription } from "../../helpers/role-description";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { mirrorRolesGiven } from "../../helpers/volunteer-roles";
 
 const NOW = new Date("2026-10-13T10:00:00.000Z");
 const DAY = 24 * 60 * 60_000;
@@ -121,6 +122,7 @@ describe("§754 the volunteers' public sign-up", () => {
       .insert(eventVolunteers)
       .values({ eventId, roleId, name: "Dat De Organizatori", email, canonicalEmail: email, canonicalizationVersion: 2, phone: "+40712345678", state, source: "STAFF" })
       .returning();
+    await mirrorRolesGiven(db);
     return row;
   }
 
@@ -473,7 +475,7 @@ describe("§754 the volunteers' public sign-up", () => {
     const finish = await seedRole(event.id, { nameRo: "Sosire", nameEn: "Finish", position: 1 });
     await submitVolunteer(db, event.id, form([finish.id, water.id]), NOW);
     const [listed] = await listVolunteers(db, event.id);
-    expect(listed).toMatchObject({ roleId: null, choiceIds: [water.id, finish.id] });
+    expect(listed).toMatchObject({ roleIds: [], choiceIds: [water.id, finish.id] });
   });
 
   it("counts the events ahead that take volunteers, for the task row", async () => {
@@ -516,6 +518,7 @@ describe("§754 the volunteers' public sign-up", () => {
         .returning();
       await db.insert(eventVolunteerRoleChoices).values({ volunteerId: row.id, roleId: role.id });
     }
+    await mirrorRolesGiven(db);
     const result = await pruneExpiredRows(db, NOW);
     expect(result.failures).toEqual([]);
     expect(result.volunteers).toBe(2);

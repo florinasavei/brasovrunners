@@ -5,7 +5,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventResults } from "@/db/schema/event-results";
 import { eventRsvps, rsvpAskRefusals, rsvpRefuseTokens } from "@/db/schema/event-rsvps";
 import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
-import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteerCategories, eventVolunteerRoleAssignments, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { legalDocuments } from "@/db/schema/legal-documents";
@@ -417,10 +417,6 @@ async function collectPersonData<T extends Record<string, unknown>>(
       id: eventVolunteers.id,
       eventId: eventVolunteers.eventId,
       eventTitle: eventTranslations.title,
-      roleNameRo: eventVolunteerRoles.nameRo,
-      roleNameEn: eventVolunteerRoles.nameEn,
-      roleCategoryRo: eventVolunteerCategories.nameRo,
-      roleCategoryEn: eventVolunteerCategories.nameEn,
       state: eventVolunteers.state,
       source: eventVolunteers.source,
       name: eventVolunteers.name,
@@ -453,39 +449,40 @@ async function collectPersonData<T extends Record<string, unknown>>(
       guardianUserAgent: eventVolunteers.guardianUserAgent,
     })
     .from(eventVolunteers)
-    // The role given, when there is one (§761: an offer nobody placed has none).
-    .leftJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteers.roleId))
-    .leftJoin(eventVolunteerCategories, eq(eventVolunteerCategories.id, eventVolunteerRoles.categoryId))
     .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventVolunteers.eventId), eq(eventTranslations.locale, "ro")))
     // The agreement's version number (§758), through the row's own reference.
     .leftJoin(legalDocuments, eq(legalDocuments.id, eventVolunteers.agreementDocumentId))
     .where(eq(eventVolunteers.canonicalEmail, canonicalEmail))
     .orderBy(asc(eventVolunteers.createdAt));
-  // The roles each offer chose (§761), every one of them: an access request is complete (art. 15 GDPR).
-  const choiceRows =
+  // The roles each offer chose (§761) and the roles given (§837), every one of them: an access request is complete (art. 15 GDPR).
+  const linkedRoles = (link: typeof eventVolunteerRoleChoices | typeof eventVolunteerRoleAssignments) =>
     offerRows.length > 0
-      ? await db
+      ? db
           .select({
-            volunteerId: eventVolunteerRoleChoices.volunteerId,
+            volunteerId: link.volunteerId,
             nameRo: eventVolunteerRoles.nameRo,
             nameEn: eventVolunteerRoles.nameEn,
             categoryRo: eventVolunteerCategories.nameRo,
             categoryEn: eventVolunteerCategories.nameEn,
             position: eventVolunteerRoles.position,
           })
-          .from(eventVolunteerRoleChoices)
-          .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteerRoleChoices.roleId))
+          .from(link)
+          .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, link.roleId))
           .leftJoin(eventVolunteerCategories, eq(eventVolunteerCategories.id, eventVolunteerRoles.categoryId))
-          .where(inArray(eventVolunteerRoleChoices.volunteerId, offerRows.map((offer) => offer.id)))
+          .where(inArray(link.volunteerId, offerRows.map((offer) => offer.id)))
           .orderBy(asc(eventVolunteerRoles.position), asc(eventVolunteerRoles.createdAt), asc(eventVolunteerRoles.id))
       : [];
-  // A role is named as a role is named alone (§774): «Direcționare (Traseu)», so the same name under two categories is two roles to read.
-  const volunteerOffers = offerRows.map(({ id, roleCategoryRo, roleCategoryEn, ...offer }) => {
+  const choiceRows = await linkedRoles(eventVolunteerRoleChoices);
+  const givenRows = await linkedRoles(eventVolunteerRoleAssignments);
+  // A role is named as a role is named alone (§774): «Direcționare (Traseu)», so the same name under two categories is two roles to read;
+  // several roles given are joined by «, » (§837), none is null.
+  const volunteerOffers = offerRows.map(({ id, ...offer }) => {
     const chosen = choiceRows.filter((choice) => choice.volunteerId === id);
+    const given = givenRows.filter((role) => role.volunteerId === id);
     return {
       ...offer,
-      roleNameRo: offer.roleNameRo === null ? null : roleLabel({ nameRo: offer.roleNameRo, nameEn: offer.roleNameEn ?? "", categoryRo: roleCategoryRo, categoryEn: roleCategoryEn }, "ro"),
-      roleNameEn: offer.roleNameEn === null ? null : roleLabel({ nameRo: offer.roleNameRo ?? "", nameEn: offer.roleNameEn, categoryRo: roleCategoryRo, categoryEn: roleCategoryEn }, "en"),
+      roleNameRo: given.length > 0 ? given.map((role) => roleLabel(role, "ro")).join(", ") : null,
+      roleNameEn: given.length > 0 ? given.map((role) => roleLabel(role, "en")).join(", ") : null,
       chosenRolesRo: chosen.map((choice) => roleLabel(choice, "ro")),
       chosenRolesEn: chosen.map((choice) => roleLabel(choice, "en")),
     };

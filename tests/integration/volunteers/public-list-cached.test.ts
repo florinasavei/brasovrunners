@@ -4,6 +4,7 @@ import { events } from "@/db/schema/events";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findFirstVolunteersListNoticeVersion, insertLegalDocumentVersion, noticeDescribesVolunteersList } from "@/modules/legal-documents/repository";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { mirrorRolesGiven } from "../../helpers/volunteer-roles";
 
 /**
  * §821 — the event page reads the volunteers' public list through the public cache (`cachedVolunteersListDescribed`,
@@ -99,6 +100,7 @@ describe("§821 the cached twins of «does the notice describe the volunteers' l
       { ...base, name: "Ana Popescu", email: "ana@example.test", canonicalEmail: "ana@example.test", listOptIn: true, roleId: role.id, createdAt: new Date(NOW.getTime() - 2 * DAY) },
       { ...base, name: "Ion Ionescu", email: "ion@example.test", canonicalEmail: "ion@example.test", listOptIn: false, createdAt: new Date(NOW.getTime() - DAY) },
     ]);
+    await mirrorRolesGiven(db);
     const list = await reads.cachedPublicVolunteersList(event.id, await reads.cachedFirstVolunteersListNoticeVersion());
     expect(list).toEqual({
       acceptsVolunteers: true,

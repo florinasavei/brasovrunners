@@ -1030,10 +1030,12 @@ export type TemplateData = {
    */
   volunteer?: {
     name: string;
-    /** The role the organizers gave the person, in each language — or null while nobody has (§761). */
+    /** The roles the organizers gave the person, in each language, joined by «, » — or null while nobody has (§761, §837). */
     roleRo: string | null;
     roleEn: string | null;
-    /** What the given role asks, in each language, when the club wrote it (the role-given message says it). */
+    /** How many roles were given (§837): the role-given message says «rolul» for one and «rolurile» for several. */
+    roleCount?: number;
+    /** What the given roles ask, in each language, when the club wrote it (the role-given message says it). */
     roleDescriptionRo?: string | null;
     roleDescriptionEn?: string | null;
     /** The roles the person said they would do (§761), in the club's order, in each language. */
@@ -1394,8 +1396,9 @@ function volunteerFacts(locale: EmailLocale, d: TemplateData, labels: { map: str
   const role = locale === "ro" ? d.volunteer?.roleRo : d.volunteer?.roleEn;
   const chosen = (locale === "ro" ? d.volunteer?.chosenRo : d.volunteer?.chosenEn) ?? [];
   const event = eventFacts(d, labels);
+  const several = (d.volunteer?.roleCount ?? 1) > 1;
   const roleLine = role
-    ? `${locale === "ro" ? "Rol" : "Role"}: ${role}`
+    ? `${locale === "ro" ? (several ? "Roluri" : "Rol") : several ? "Roles" : "Role"}: ${role}`
     : chosen.length > 0
       ? `${locale === "ro" ? "Te-ai oferit pentru" : "You offered for"}: ${chosen.join(", ")}`
       : undefined;
@@ -1996,8 +1999,10 @@ const T = {
       subject: (d: TemplateData) => `Rolul tău de voluntar la ${d.eventTitle ?? "eveniment"}`,
       facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        `Mulțumim că ne ajuți! Organizatorii ți-au dat un rol la ${d.eventTitle ?? "eveniment"}: ${d.volunteer?.roleRo ?? "cel scris mai sus"}. Data și locul sunt scrise mai sus.`,
-        ...(d.volunteer?.roleDescriptionRo ? [`Ce presupune rolul: ${d.volunteer.roleDescriptionRo}`] : []),
+        (d.volunteer?.roleCount ?? 1) > 1
+          ? `Mulțumim că ne ajuți! Organizatorii ți-au dat mai multe roluri la ${d.eventTitle ?? "eveniment"}: ${d.volunteer?.roleRo ?? "cele scrise mai sus"}. Data și locul sunt scrise mai sus.`
+          : `Mulțumim că ne ajuți! Organizatorii ți-au dat un rol la ${d.eventTitle ?? "eveniment"}: ${d.volunteer?.roleRo ?? "cel scris mai sus"}. Data și locul sunt scrise mai sus.`,
+        ...(d.volunteer?.roleDescriptionRo ? [`${(d.volunteer.roleCount ?? 1) > 1 ? "Ce presupune fiecare rol" : "Ce presupune rolul"}: ${d.volunteer.roleDescriptionRo}`] : []),
         "Ora de întâlnire și ce mai e de știut le afli de la organizatori, înainte de eveniment. Dacă nu mai poți veni, scrie-ne din pagina de contact.",
       ],
     },
@@ -2838,8 +2843,10 @@ const T = {
       subject: (d: TemplateData) => `Your volunteer role at ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        `Thank you for helping! The organizers have given you a role at ${d.eventTitle ?? "the event"}: ${d.volunteer?.roleEn ?? "the one written above"}. The date and place are written above.`,
-        ...(d.volunteer?.roleDescriptionEn ? [`What the role involves: ${d.volunteer.roleDescriptionEn}`] : []),
+        (d.volunteer?.roleCount ?? 1) > 1
+          ? `Thank you for helping! The organizers have given you several roles at ${d.eventTitle ?? "the event"}: ${d.volunteer?.roleEn ?? "the ones written above"}. The date and place are written above.`
+          : `Thank you for helping! The organizers have given you a role at ${d.eventTitle ?? "the event"}: ${d.volunteer?.roleEn ?? "the one written above"}. The date and place are written above.`,
+        ...(d.volunteer?.roleDescriptionEn ? [`${(d.volunteer.roleCount ?? 1) > 1 ? "What each role involves" : "What the role involves"}: ${d.volunteer.roleDescriptionEn}`] : []),
         "The meeting time and anything else you need to know come from the organizers, before the event. If you can no longer come, write to us from the contact page.",
       ],
     },

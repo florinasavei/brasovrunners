@@ -1,5 +1,6 @@
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
@@ -64,6 +65,8 @@ export const STATUS_GLYPHS = {
   priorityLow: ArrowDownwardIcon,
   // A role a volunteer offered to do (§761): «S-a oferit pentru» on the «Voluntari» card.
   offered: VolunteerActivismIcon,
+  // A role the organizers gave a volunteer (§837): «Roluri date» on the same row, one chip per role.
+  given: AssignmentIndIcon,
   // «A mai fost voluntar» on the same row (§765): what the person did before, not what they offer now.
   experience: HistoryIcon,
   // «Vrea pe lista publică» on a volunteer's row (§821): the person's wish to be named, not the fact that the page names them — that takes the

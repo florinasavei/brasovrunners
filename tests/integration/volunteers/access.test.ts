@@ -21,6 +21,7 @@ import { listVolunteerInvitations, resendVolunteerInvitation, sendVolunteerInvit
 import { readPublicVolunteerRoles, setVolunteersAccess, submitVolunteer } from "@/modules/volunteers/volunteers";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { bornAged } from "../../helpers/volunteer-birth";
+import { mirrorRolesGiven } from "../../helpers/volunteer-roles";
 
 const NOW = new Date("2026-10-13T10:00:00.000Z");
 const DAY = 24 * 60 * 60_000;
@@ -171,6 +172,7 @@ describe("§820 who may offer as a volunteer", () => {
       const event = await seedEvent({ volunteersAccess: "ANYONE" });
       const role = await seedRole(event.id);
       await db.insert(eventVolunteers).values({ eventId: event.id, roleId: role.id, name: "Dat", email: "d@example.test", canonicalEmail: "d@example.test", canonicalizationVersion: 2, phone: "+40712345678", source: "STAFF" });
+      await mirrorRolesGiven(db);
       expect(await setVolunteersAccess(db, organizer, { eventId: event.id, access: "INVITED" }, NOW)).toEqual({ changed: true });
       expect(await setVolunteersAccess(db, organizer, { eventId: event.id, access: "INVITED" }, NOW)).toEqual({ changed: false });
       expect((await trail("event.volunteers_access_changed")).map((meta) => meta)).toEqual([{ from: "ANYONE", to: "INVITED" }]);
@@ -189,6 +191,7 @@ describe("§820 who may offer as a volunteer", () => {
       const source = await seedEvent({ volunteersAccess: "MEMBERS", endsAt: new Date(NOW.getTime() + 30 * DAY + 3_600_000) });
       const role = await seedRole(source.id);
       await db.insert(eventVolunteers).values({ eventId: source.id, roleId: role.id, name: "Dat", email: "d@example.test", canonicalEmail: "d@example.test", canonicalizationVersion: 2, phone: "+40712345678", source: "STAFF" });
+      await mirrorRolesGiven(db);
       const copy = await duplicateEvent(db, { actor: admin, eventId: source.id });
       expect(copy.volunteersAccess).toBe("MEMBERS");
       expect(copy.acceptsVolunteers).toBe(false);
@@ -340,6 +343,7 @@ describe("§820 who may offer as a volunteer", () => {
       const event = await seedEvent();
       const role = await seedRole(event.id);
       await db.insert(eventVolunteers).values({ eventId: event.id, roleId: role.id, name: "Deja", email: "deja@example.test", canonicalEmail: "deja@example.test", canonicalizationVersion: 2, phone: "+40712345678", source: "PUBLIC" });
+      await mirrorRolesGiven(db);
       const first = await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "ioana@example.test", messageRo: "", messageEn: "", locale: "ro" }, NOW);
       expect(first.sent).toBe(1);
       const second = await sendVolunteerInvitations(db, admin, { eventId: event.id, addresses: "Ioana@example.test\ndeja@example.test", messageRo: "", messageEn: "", locale: "ro" }, NOW);
@@ -518,6 +522,7 @@ describe("§820 who may offer as a volunteer", () => {
       const { secret } = await invite(event.id, "ioana@example.test");
       // The organizers gave the one place away: the answer is the polite «full», and the link is not spent.
       await db.insert(eventVolunteers).values({ eventId: event.id, roleId: role.id, name: "Dat", email: "d@example.test", canonicalEmail: "d@example.test", canonicalizationVersion: 2, phone: "+40712345678", source: "STAFF", state: "CONFIRMED" });
+      await mirrorRolesGiven(db);
       expect(await submitVolunteer(db, event.id, form(role.id), NOW, undefined, { inviteSecret: secret })).toEqual({ outcome: "full" });
       expect((await invitations(event.id))[0].usedAt).toBeNull();
       // INVITED → MEMBERS: the invited person is not a member, and the club wrote to them: the link still opens the door.

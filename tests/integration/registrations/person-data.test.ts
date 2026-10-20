@@ -22,6 +22,7 @@ import {
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { mirrorRolesGiven } from "../../helpers/volunteer-roles";
 
 /**
  * BR-REQ-070-01, BR-REQ-060-01 — everything held about one person, for an access request
@@ -171,6 +172,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     const [route] = await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.nameEn, "Route"));
     const [guide] = await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.categoryId, route.id));
     await db.update(eventVolunteers).set({ roleId: guide.id });
+    await mirrorRolesGiven(db);
 
     const data = await viewPersonData(db, admin, canonicalLookupOf("ANA.POP+other@gmail.com"), NOW);
 

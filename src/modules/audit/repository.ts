@@ -531,8 +531,10 @@ export type AuditAction =
   | "volunteer.deleted"
   | "volunteer.signed_up"
   | "volunteer.exported"
-  /** «Dă-i rolul …» (§761): the organizers gave a volunteer one role — the volunteer's id, the role's and the one before. */
+  /** «Dă-i rolul …» (§761, §837): the organizers gave a volunteer one more role — the volunteer's id, the role's, the roles now held and those before. */
   | "volunteer.assigned"
+  /** «Ia-i rolul …» (§837): one role given was taken back — the same ids. */
+  | "volunteer.unassigned"
   /**
    * An event's checkpoints saved on its editor's «Puncte pe traseu» card (§757), or taken from the
    * route's GPX: how many were added, changed and removed, and the list before and after — each

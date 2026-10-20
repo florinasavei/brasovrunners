@@ -62,7 +62,7 @@ describe("§784 the role's form: a number, or the tick «Fără număr»", () =>
 describe("§784 how a role without a number stands", () => {
   const role = { id: "r1", needed: null };
   const people = (count: number, state: "REGISTERED" | "CONFIRMED" | "CANCELLED" = "CONFIRMED") =>
-    Array.from({ length: count }, () => ({ roleId: "r1", state }));
+    Array.from({ length: count }, () => ({ roleIds: ["r1"], state }));
 
   it("counts the people given the role and has no places left to count: free is null, never zero", () => {
     expect(standingOf(role, [])).toEqual({ roleId: "r1", needed: null, taken: 0, confirmed: 0, free: null });

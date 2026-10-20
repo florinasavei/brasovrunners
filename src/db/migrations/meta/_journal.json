@@ -1205,6 +1205,13 @@
       "when": 1792482046919,
       "tag": "0176_volunteers_button_shown",
       "breakpoints": true
+    },
+    {
+      "idx": 172,
+      "version": "7",
+      "when": 1792515190718,
+      "tag": "0177_volunteer_role_assignments",
+      "breakpoints": true
     }
   ]
 }

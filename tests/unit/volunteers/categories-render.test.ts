@@ -34,6 +34,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
       "addVolunteerAction",
       "addVolunteerCategoryAction",
       "assignVolunteerAction",
+      "unassignVolunteerAction",
       "deleteVolunteerAction",
       "deleteVolunteerCategoryAction",
       "deleteVolunteerRoleAction",
@@ -116,7 +117,7 @@ const ROLES = [AT_START, ON_ROUTE, ROUTE_WATER, LOOSE];
 const person = (over: Partial<VolunteerItem>): VolunteerItem => ({
   id: "e1111111-1111-4111-8111-111111111111",
   eventId: EVENT,
-  roleId: null,
+  roleIds: [],
   choiceIds: [],
   name: "Maria Test",
   email: "maria@example.test",
@@ -413,7 +414,7 @@ describe("§774 the card: «Categorii», «Categoria» and the roles under their
 
 describe("§784 a role without a number", () => {
   const NO_NUMBER: VolunteerRole = { ...ROUTE_WATER, needed: null };
-  const given = (state: "REGISTERED" | "CONFIRMED") => person({ roleId: NO_NUMBER.id, choiceIds: [NO_NUMBER.id], state });
+  const given = (state: "REGISTERED" | "CONFIRMED") => person({ roleIds: [NO_NUMBER.id], choiceIds: [NO_NUMBER.id], state });
   const standingChips = (page: string) => [...new Set([...page.matchAll(/data-testid="volunteer-role-standing"[^>]*>(?:<[^>]*>)*([^<]*)</g)].map((match) => match[1]))];
   const tickTags = (page: string) => [...page.matchAll(/<input[^>]*name="roles\[[^"]*\]\.unlimited"[^>]*>/g)].map((match) => match[0]);
 
@@ -425,7 +426,7 @@ describe("§784 a role without a number", () => {
   });
 
   it("counts only the numbered roles in the card's summary and adds «+ roluri fără număr» when there is any", async () => {
-    const people = [given("CONFIRMED"), { ...given("CONFIRMED"), id: "e2222222-2222-4222-8222-222222222222" }, person({ id: "e4444444-4444-4444-8444-444444444444", roleId: AT_START.id, state: "CONFIRMED" })];
+    const people = [given("CONFIRMED"), { ...given("CONFIRMED"), id: "e2222222-2222-4222-8222-222222222222" }, person({ id: "e4444444-4444-4444-8444-444444444444", roleIds: [AT_START.id], state: "CONFIRMED" })];
     const mixed = await drawCard({ roles: [AT_START, ON_ROUTE, NO_NUMBER], volunteers: people });
     expect(mixed).toContain("1 din 4 + roluri fără număr");
     expect(await drawCard({ roles: [AT_START, ON_ROUTE, NO_NUMBER], volunteers: people }, "en")).toContain("1 of 4 + roles with no limit");
@@ -439,7 +440,7 @@ describe("§784 a role without a number", () => {
   });
 
   it("says «fără număr» beside the role's name where an organizer gives it to someone", async () => {
-    const waiting = person({ id: "e5555555-5555-4555-8555-555555555555", roleId: null, choiceIds: [NO_NUMBER.id] });
+    const waiting = person({ id: "e5555555-5555-4555-8555-555555555555", roleIds: [], choiceIds: [NO_NUMBER.id] });
     const page = await drawCard({ roles: [AT_START, NO_NUMBER], volunteers: [waiting, given("CONFIRMED")], acceptsVolunteers: true });
     expect(page).toContain("Punct de hidratare (Traseu) · 1 · fără număr");
     expect(page).toContain("Direcționare (Start / Sosire) · 0 din 2");
