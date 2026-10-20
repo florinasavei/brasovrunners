@@ -45,6 +45,9 @@ import { blankRoleRow, describeRole, fillRoleRow, roleGroup, roleRow, saveAllRol
  * confirm, and the event's page draws a card «Voluntarii» — a fold closed on arrival — with the ticked person's name and role and «și încă 1 voluntar» for the other, never an address; it is the
  * sentence «Echipa de voluntari se formează.» before anybody is confirmed, and gone when the club unticks the box.
  *
+ * §NNN — «Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului» (the owner, 2026-10-20): a real tick, on by default; unticked, the event's page draws no «Căutăm voluntari» and
+ * no button, the card shows the volunteers' page address in both languages with «Copiază», and the page still takes an offer by its link (noindex); ticked again, the button is back.
+ *
  * The event is written straight into the database — the setup, not the subject — one per project and run, so
  * the two projects never share a row.
  */
@@ -1862,6 +1865,96 @@ test.describe("§754 volunteers for a race", () => {
       await expect(async () => {
         await guest.goto(eventPage);
         await expect(guest.getByTestId("volunteers-list")).toHaveCount(0, { timeout: 3_000 });
+      }).toPass({ timeout: 60_000 });
+    } finally {
+      await visitor.close();
+    }
+  });
+
+  test("§NNN «Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului»: unticked, the event's page draws no «Căutăm voluntari» and no button, the card shows the page's link in both languages, and the page still takes an offer by its link", async ({
+    page,
+    browser,
+  }) => {
+    const tag = `${test.info().project.name}-${Date.now().toString(36)}-btn`;
+    const event = await seedEvent(tag);
+    await seedVolunteering(event.id);
+    const maria = `maria.${tag}@example.test`;
+    const buttonTickName = "Arată butonul „Vreau să fiu voluntar” pe pagina evenimentului";
+
+    // --- The club: the tick is a real checkbox, ticked by default ------------------------------------------------
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/events/${event.id}`);
+    await hydrated(page);
+    const card = page.getByTestId("event-volunteers");
+    await openFold(card);
+    const tickOf = () => page.getByTestId("volunteer-button-form").getByRole("checkbox", { name: buttonTickName, includeHidden: true });
+    await expect(tickOf()).toHaveAttribute("aria-checked", "true");
+    expect((await tickOf().boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(page.getByTestId("volunteer-button-form").getByRole("button", { name: buttonTickName, exact: true })).toHaveCount(0);
+
+    const visitor = await browser.newContext({ baseURL: test.info().project.use.baseURL, viewport: test.info().project.use.viewport ?? undefined });
+    try {
+      const guest = await visitor.newPage();
+      const eventPage = `/ro/evenimente/${event.slug}`;
+      // Shown, as every event always was: the line and the button.
+      await expect(async () => {
+        await guest.goto(eventPage);
+        await expect(guest.getByTestId("volunteer-callout-line")).toContainText("Căutăm voluntari", { timeout: 3_000 });
+      }).toPass({ timeout: 60_000 });
+
+      // --- Unticked: one press, the card says the page is reached by its link, and shows the link to copy -----------
+      await tickOf().click();
+      await page.waitForURL(/#box-volunteers$/);
+      await hydrated(page);
+      await expect(tickOf()).toHaveAttribute("aria-checked", "false", { timeout: 30_000 });
+      await expect(page.getByTestId("volunteer-offer-state")).toContainText("nu trimite la ea: se ajunge la ea doar prin link");
+      const links = page.getByTestId("volunteer-page-links");
+      await expect(links).toBeVisible();
+      await expect(links.locator("#volunteer-page-link-ro")).toHaveValue(new RegExp(`/ro/evenimente/${event.slug}/voluntari$`));
+      await expect(links.locator("#volunteer-page-link-en")).toHaveValue(new RegExp(`/en/events/volunteers-${tag}/volunteers$`));
+      await expect(links.getByTestId("copy-code")).toHaveCount(2);
+
+      // --- The public site advertises nothing, in either language ---------------------------------------------------
+      await expect(async () => {
+        await guest.goto(eventPage);
+        await expect(guest.getByTestId("volunteer-callout")).toHaveCount(0, { timeout: 3_000 });
+      }).toPass({ timeout: 60_000 });
+      await guest.goto(`/en/events/volunteers-${tag}`);
+      await expect(guest.getByTestId("volunteer-callout")).toHaveCount(0);
+      await expect(guest.getByRole("link", { name: /voluntar|volunteer/i })).toHaveCount(0);
+
+      // --- …and the page still answers by its link, noindex, and takes an offer ------------------------------------
+      const answered = await guest.goto(`${eventPage}/voluntari`);
+      expect(answered?.status()).toBe(200);
+      await hydrated(guest);
+      await expect(guest.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+      await expect(guest.getByTestId("volunteer-box")).toBeVisible();
+      await guest.getByTestId("volunteer-roles").getByRole("checkbox", { name: "Punct de apă" }).check();
+      await guest.getByLabel("Numele tău").fill("Maria Popescu");
+      await guest.getByLabel("Adresa ta de email").fill(maria);
+      await guest.locator('[name="phone"]').fill("712345678");
+      await typeBirth(guest.locator('input[name="birthDate"]'), typedBirth(34));
+      await chooseSex(guest, "FEMALE");
+      await guest.locator('input[name="city"]').fill("Brașov");
+      await guest.locator('input[name="consent"]').check();
+      await guest.locator('input[name="agreement"]').check();
+      // A person takes a moment: the form's timing check refuses a post within the second of its render.
+      await guest.waitForTimeout(1_200);
+      await guest.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
+      await expect(guest.getByTestId("volunteer-done")).toContainText("Am primit oferta ta", { timeout: 30_000 });
+
+      // --- The organizers see the offer as always; ticking again brings the button back ----------------------------
+      await page.goto(`/ro/admin/events/${event.id}`);
+      await hydrated(page);
+      await expect(page.locator('[data-testid="volunteer-row"]', { hasText: "Maria Popescu" })).toHaveCount(1);
+      await openFold(page.getByTestId("event-volunteers"));
+      await tickOf().click();
+      await page.waitForURL(/#box-volunteers$/);
+      await hydrated(page);
+      await expect(tickOf()).toHaveAttribute("aria-checked", "true", { timeout: 30_000 });
+      await expect(async () => {
+        await guest.goto(eventPage);
+        await expect(guest.getByTestId("volunteer-callout-line")).toContainText("Căutăm voluntari", { timeout: 3_000 });
       }).toPass({ timeout: 60_000 });
     } finally {
       await visitor.close();
