@@ -8233,7 +8233,7 @@
             {
               "title": "Pagina «Echipa» ca panou cu niveluri: cine stă pe ce rând, responsabilitățile și casetele",
               "steps": [
-                "«Pagini» → «Echipa» → «Editează cardul» pe rândul persoanei, sau «Adaugă o persoană».",
+                "«Pagini» → «Echipa» → «Modifică cardul» pe rândul persoanei, sau «Adaugă o persoană».",
                 "Sub rol scrie «Subtitlu (Română)» și «Subtitlu (English)» — o linie, de exemplu sub-rolul — apoi «Responsabilități (Română)» și «Responsabilități (English)», una pe rând. Fiecare pereche în ambele limbi sau în niciuna.",
                 "La «Nivel» alegi rândul de pe panoul albastru: 1 e vârful (cardul lat), 2, 3… rândurile de sub el (carduri înalte); o jumătate — 1,5; 2,5 — e un card mic, alături de cardurile rândului său. «— fără nivel: cardul stă în grilă —» îl lasă în grila de sub panou.",
                 "Apasă «Salvează». De îndată ce un card de pe site are un nivel, pagina desenează panoul; până atunci rămâne grila. Pe site, fiecare card arată primele trei responsabilități și «Mai multe» le desface pe toate, cu descrierea și linkurile.",
@@ -8288,7 +8288,7 @@
               "steps": [
                 "«Înscrieri» → alege evenimentul → «Filtrează».",
                 "Bifează «Doar cu oferte și beneficii» ca să vezi doar cine a spus da la oferte; exportul ia același filtru.",
-                "Apasă «Exportă Excel» (sau «Exportă CSV»). Fișierul are exact rândurile filtrate, fără înscrierile de test.",
+                "Apasă «Descarcă Excel» (sau «Descarcă CSV»). Fișierul are exact rândurile filtrate, fără înscrierile de test.",
                 "Fișierul se termină cu «Note interne»: o notă pe rând, cu rolul celui care a scris. Coloana are cuvintele limbii paginii pe care ai apăsat butonul.",
                 "Sub tabel, după un rând gol, «Statistici» numără aceleași rânduri: totalul, cei confirmați (activii), fiecare altă stare, câți sunt din club și, pe categorii (sex și vârstă), fiecare grup. Apare doar în Excel, niciodată în CSV.",
                 "În Excel, rândul are culoarea stării, celulele de membru sunt albastre când coloana Member tick (declared) spune Yes, și lila pentru alt alergător al clubului. Numărul și numele unui invitat special sunt piersică și cursiv. Numerele din «Statistici» sunt formule: le schimbi offline și se recalculează singure.",

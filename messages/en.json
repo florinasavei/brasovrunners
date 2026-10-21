@@ -8288,7 +8288,7 @@
               "steps": [
                 "«Registrations» → pick the event → «Filter».",
                 "Tick «Only with offers and benefits» to see only who said yes to offers; the export follows the filter.",
-                "Press «Export to Excel» (or «Export CSV»). The file holds exactly the filtered rows, without test registrations.",
+                "Press «Download Excel» (or «Download CSV»). The file holds exactly the filtered rows, without test registrations.",
                 "The file ends with «Internal notes»: one note a line, with the author's role. The column is named in the language of the page where you pressed the button.",
                 "Under the table, after one empty row, «Statistics» counts the same rows: the total, the confirmed (the active ones), each other state, how many are the club's own runners and, by sex and age band, each category. It is in the Excel only, never in the CSV.",
                 "In Excel, a row takes the colour of its state, the member cells are blue when the Member tick (declared) column says Yes, and lavender for another club runner. A special guest's number and names are peach and italic. The numbers in «Statistics» are formulas: change something offline and they recount by themselves.",
