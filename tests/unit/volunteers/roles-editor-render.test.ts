@@ -288,8 +288,11 @@ describe("§791 the blank row adds a role", () => {
       // The last row of the card: nothing of a saved role comes after it.
       expect(card[2].lastIndexOf('data-testid="volunteer-role-new"')).toBeGreaterThan(card[2].lastIndexOf('data-testid="volunteer-role"'));
     }
-    const blank = /<li[^>]*data-testid="volunteer-role-new"[\s\S]*?<\/li>/.exec(cards[1][2])?.[0] ?? "";
-    expect(blank).toContain("Rol nou");
+    // The blank boxes stand in «Adaugă un rol» (§NNN), a fold of their category's card like every «Adaugă…» of the backoffice.
+    const fold = /<details[^>]*data-testid="volunteer-role-add-fold"[\s\S]*?<\/details>/.exec(cards[1][2])?.[0] ?? "";
+    expect(fold).toContain("Adaugă un rol");
+    const blank = fold.slice(fold.indexOf('data-testid="volunteer-role-new"'));
+    expect(blank).toContain('data-translate-row="Rol nou"');
     expect(blank).toContain(`name="roles[new-${ROUTE_ID}].nameRo"`);
     expect(blank).toContain(`name="roles[new-${ROUTE_ID}].nameEn"`);
     expect(/<input[^>]*name="roles\[[^"]*\]\.nameRo"[^>]*>/.exec(blank)?.[0]).not.toMatch(/\srequired(=|\s|>)/);
@@ -391,7 +394,7 @@ describe("§791 the words", () => {
     for (const words of [ro.Admin.volunteers.rolesIntro, en.Admin.volunteers.rolesIntro]) {
       for (const sentence of words.split(/(?<=[.!?”])\s+/)) expect(sentence.length).toBeLessThanOrEqual(200);
     }
-    expect(ro.Admin.volunteers.rolesIntro).toContain("Poziția dă ordinea din categorie; un rând gol la final adaugă un rol.");
+    expect(ro.Admin.volunteers.rolesIntro).toContain("Poziția dă ordinea din categorie; „Adaugă un rol”, la finalul fiecărei categorii, adaugă unul.");
     expect(ro.Feedback.toast.volunteerRolesSaved).toEqual({ one: "Am salvat {count} rol.", few: "Am salvat {count} roluri.", other: "Am salvat {count} de roluri." });
     expect(ro.Feedback.toast.volunteerRolesUnchanged).toBe("Nimic de schimbat la roluri.");
     expect(en.Feedback.toast.volunteerRolesSaved.one).toBe("Saved {count} role.");

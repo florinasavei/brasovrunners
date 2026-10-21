@@ -5,7 +5,7 @@ import { capturedEmail } from "./support/captured-email";
 import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 import { chooseSex } from "./support/sex-choice";
-import { blankRoleRow, describeRole, fillRoleRow, roleGroup, roleRow, saveAllRoles } from "./support/volunteer-roles";
+import { blankRoleRow, describeRole, fillRoleRow, openRoleRow, roleGroup, roleRow, saveAllRoles } from "./support/volunteer-roles";
 
 /**
  * §754 — «Voluntari» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-031-01): an Administrator defines two roles on a
@@ -189,10 +189,13 @@ test.describe("§754 volunteers for a race", () => {
     await expect(moreLine("Punct de apă")).toContainText("Stai la masa cu apă, la kilometrul 5.");
     await expect(moreLine("Sosire")).toContainText("Stai la linia de sosire.");
     // The description is one strip of two tabs (§572) in the fold, and the card's «Tradu cardul» is greyed with its reason where there is no translation key (§482).
+    // A role's line is a fold (§NNN): its boxes open in place.
+    await openRoleRow(roleRow(page, "Punct de apă"));
     await openFold(roleRow(page, "Punct de apă").getByTestId("volunteer-role-more"));
     await expect(roleRow(page, "Punct de apă").getByRole("tab")).toHaveText([/Română/, /English/]);
     await expect(page.getByTestId("volunteer-roles-form").getByTestId("translate-card-off")).toBeVisible();
     // The position box and the number are boxes a thumb can use: 44 pixels tall.
+    await openRoleRow(roleRow(page, "Sosire"));
     expect((await roleRow(page, "Sosire").getByLabel("Poziția").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(40);
     await fillRoleRow(roleRow(page, "Sosire"), { position: "1" });
     await fillRoleRow(roleRow(page, "Punct de apă"), { needed: "3" });
@@ -1421,6 +1424,7 @@ test.describe("§754 volunteers for a race", () => {
     await expect(blank.getByLabel("Nume (RO)")).toHaveValue("Ajutor");
     await expect(blank.getByLabel("Câte persoane", { exact: true })).toHaveAttribute("aria-invalid", "true");
     // Ticked: the number box goes (the stylesheet alone), and the role is saved without one.
+    await openRoleRow(blank);
     await blank.getByRole("checkbox", { name: "Nelimitat" }).check();
     await expect(blank.getByLabel("Câte persoane", { exact: true })).toBeHidden();
     await saveAllRoles(page);
@@ -1433,6 +1437,7 @@ test.describe("§754 volunteers for a race", () => {
     await expect(card.locator("summary").first()).toContainText("0 din 1 + roluri fără număr");
     // The role's row: the tick is on, so the box that would say a number is not shown.
     const ajutor = roleRow(page, "Ajutor");
+    await openRoleRow(ajutor);
     await expect(ajutor.getByRole("checkbox", { name: "Nelimitat" })).toBeChecked();
     await expect(ajutor.getByLabel("Câte persoane", { exact: true })).toBeHidden();
 

@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
+import { openRoleRow } from "./support/volunteer-roles";
 
 /**
  * §764 — «Ecusoane pentru voluntari» (BR-REQ-050-02, BR-REQ-060-01): the Organizer opens the badges' page
@@ -87,10 +88,13 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     const row = page.locator(`[data-testid="volunteer-role"][data-role-id="${event.water}"]`);
     const finishRow = page.locator(`[data-testid="volunteer-role"][data-role-id="${event.finish}"]`);
     await expect(row.getByTestId("volunteer-role-colour")).toContainText("Portocaliul clubului");
+    // A role's line is a fold (§NNN): its boxes open in place.
+    await openRoleRow(row);
     await openFold(row.getByTestId("volunteer-role-more"));
     await row.getByLabel("Culoarea benzii").selectOption({ label: "Roșu" });
     // §783: the colour serves the badge per role only, and the role's form says so in one line.
     await expect(row.getByTestId("badge-colour-per-role-only")).toContainText("doar când ecusonul e pe roluri");
+    await openRoleRow(finishRow);
     await openFold(finishRow.getByTestId("volunteer-role-more"));
     await finishRow.getByLabel("Culoarea benzii").selectOption({ label: "Violet" });
     await page.getByRole("button", { name: "Salvează toate rolurile", exact: true }).click();
