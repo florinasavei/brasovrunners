@@ -10,7 +10,7 @@ import { VOLUNTEER_STATES, type VolunteerState } from "./domain/volunteer";
 import { type VolunteerItem, volunteerItemsOf } from "./volunteers";
 
 /**
- * The «Voluntari» screen's reads (§NNN; the owner, 2026-10-21: «a nicer volunteers screen, similar to the participants area»):
+ * The «Voluntari» screen's reads (§839; the owner, 2026-10-21: «a nicer volunteers screen, similar to the participants area»):
  * the people across events as one sorted, searched, server-paginated list, the way the registrations list reads its rows
  * (`admin-repository.ts`), and one person by id for their own page. The card on the event's editor keeps the roles, the
  * categories and the event's switches; this is where the people are worked.
@@ -178,7 +178,7 @@ export async function summariseVolunteersForAdmin<T extends Record<string, unkno
   return { total: grouped.reduce((sum, row) => sum + row.n, 0), byState, unassigned: waiting?.n ?? 0 };
 }
 
-/** The tab's figure (§NNN): how many offers still wait for an answer — «Înscris» on an event not yet over. */
+/** The tab's figure (§839): how many offers still wait for an answer — «Înscris» on an event not yet over. */
 export async function countVolunteersAwaiting<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {
   const [row] = await db
     .select({ n: count() })

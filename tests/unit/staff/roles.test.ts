@@ -390,7 +390,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // The line that carries the weight (§38): DEV helps with the platform and never sees the
     // people who registered.
     expect(sections).not.toContain("registrations");
-    // Nor the volunteers (§NNN): their addresses and telephone numbers are the same kind of data (§754).
+    // Nor the volunteers (§839): their addresses and telephone numbers are the same kind of data (§754).
     expect(sections).not.toContain("volunteers");
     expect(sections).not.toContain("staff");
     // Nor writes to anybody: the newsletter is the club speaking, never the platform's helper (§445).

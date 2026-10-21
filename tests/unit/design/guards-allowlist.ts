@@ -234,7 +234,7 @@ const BACKOFFICE_FILES: ReadonlySet<string> = new Set([
   "src/modules/newsletter/ui/SubscriberListFields.tsx",
   // The event editor's «Voluntari» card (§754): the staff's; the public form beside it, `VolunteerBox`, stays public.
   "src/modules/volunteers/ui/VolunteersCard.tsx",
-  // One volunteer's block (§NNN), drawn by the card above and by the person's own page under «Voluntari»: the staff's.
+  // One volunteer's block (§839), drawn by the card above and by the person's own page under «Voluntari»: the staff's.
   "src/modules/volunteers/ui/VolunteerPerson.tsx",
   // The card's «Cine se poate oferi» and «Invitații» (§820): the staff's, drawn inside the card above.
   "src/modules/volunteers/ui/VolunteerAccessChoice.tsx",

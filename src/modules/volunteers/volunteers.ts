@@ -271,7 +271,7 @@ type RoleLink = typeof eventVolunteerRoleChoices | typeof eventVolunteerRoleAssi
 /**
  * The roles a set of volunteers is linked to by one table — chosen (§761) or given (§837) —, volunteer → role ids in the
  * club's order (`compareRoles`): one read for a whole list, by the event (the card) or by the volunteers' ids (a page of the
- * «Voluntari» list, §NNN, whose rows may span events).
+ * «Voluntari» list, §839, whose rows may span events).
  */
 async function linkedRolesOf<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -294,7 +294,7 @@ async function linkedRolesOf<T extends Record<string, unknown>>(
   return byVolunteer;
 }
 
-/** A volunteer's row with the two agreement versions joined, as `listVolunteers` and the «Voluntari» list (§NNN) select it. */
+/** A volunteer's row with the two agreement versions joined, as `listVolunteers` and the «Voluntari» list (§839) select it. */
 export type VolunteerRowJoined = { row: typeof eventVolunteers.$inferSelect; agreementVersion: number | null; guardianVersion: number | null };
 
 /** One joined row as the card and the list read it, with the roles chosen and given already looked up. */
@@ -345,7 +345,7 @@ function volunteerItemOf(joined: VolunteerRowJoined, choiceIds: string[], roleId
 
 /**
  * The items of a set of joined rows, in the order given, each with its roles chosen and given — two reads for the whole set,
- * by the event when the rows are one event's (the card), else by the rows' ids (the «Voluntari» list, §NNN).
+ * by the event when the rows are one event's (the card), else by the rows' ids (the «Voluntari» list, §839).
  */
 export async function volunteerItemsOf<T extends Record<string, unknown>>(db: Database<T>, joined: readonly VolunteerRowJoined[], eventId?: string): Promise<VolunteerItem[]> {
   const scope = eventId ? { eventId } : { volunteerIds: joined.map(({ row }) => row.id) };

@@ -89,7 +89,7 @@ const ICONS: Record<AdminSection, ComponentType<SvgIconProps>> = {
   // The list, not the person with the tick: that is checking a runner in, a verb the desk and
   // the registration's "⋮" wear, and a tab must not look like one of its own verbs (§318).
   registrations: ListAltIcon,
-  // «Voluntari» (§NNN): the heart in the hand the event card's «Voluntari» box wears, asked of the registry by name (§318) — the panel table is the server's alone.
+  // «Voluntari» (§839): the heart in the hand the event card's «Voluntari» box wears, asked of the registry by name (§318) — the panel table is the server's alone.
   volunteers: ACTION_ICONS.volunteers,
   tasks: ChecklistIcon,
   legal: GavelIcon,

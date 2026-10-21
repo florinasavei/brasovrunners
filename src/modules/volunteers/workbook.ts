@@ -2,7 +2,7 @@ import { onClubClock, type SheetColumn, STAMP_FORMAT, writeSheet } from "@/modul
 import type { VolunteerCsvHeader, VolunteerCsvRow } from "./csv";
 
 /**
- * «Descarcă Excel» for an event's volunteers (§NNN; the owner, 2026-10-21: «I wanna be able to export volunteers in excel
+ * «Descarcă Excel» for an event's volunteers (§839; the owner, 2026-10-21: «I wanna be able to export volunteers in excel
  * as well»): the CSV's rows (`csv.ts`), the same words in the same language, as a spreadsheet through the one writer every
  * backoffice sheet goes through (`registrations/workbook.ts#writeSheet`) — a bold header kept on screen, widths that read,
  * the sign-up's moment on the club's clock in the club's format rather than the CSV's ISO instant, the age a number.

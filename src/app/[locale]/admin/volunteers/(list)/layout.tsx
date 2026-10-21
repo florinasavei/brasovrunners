@@ -6,7 +6,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 export const dynamic = "force-dynamic";
 
 /**
- * The role gate for «Voluntari» (§NNN), deliberately **above** the `loading.tsx` boundary beside it, for the same
+ * The role gate for «Voluntari» (§839), deliberately **above** the `loading.tsx` boundary beside it, for the same
  * reason the registrations list has one (`admin/registrations/(list)/layout.tsx`): a `notFound()` raised after
  * the Suspense shell has flushed cannot change the status any more, and BR-REQ-060-01 asks for a real 404. The
  * page asserts the same thing again — a page is a request of its own. The `(list)` route group keeps this

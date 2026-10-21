@@ -27,7 +27,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * One volunteer (§NNN): the block the event's «Voluntari» card draws for them (`VolunteerPerson`) on a page of its
+ * One volunteer (§839): the block the event's «Voluntari» card draws for them (`VolunteerPerson`) on a page of its
  * own — the contact, what they said about themselves, the roles given and offered with «Dă-i rolul …» and
  * «Ia-i rolul …», the agreement, the guardian, the state verbs and «Modifică» — reached from the list's row. The
  * same three roles as the card; an id nobody has, or a guessed one, is a 404 (BR-REQ-060-01). Every verb comes

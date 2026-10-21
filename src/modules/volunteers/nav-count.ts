@@ -6,7 +6,7 @@ const CACHE_MS = 60_000;
 let cached: { at: number; value: number } | null = null;
 
 /**
- * The «Voluntari» tab's figure (§NNN): how many offers still wait for an answer — «Înscris» on an event not yet over —
+ * The «Voluntari» tab's figure (§839): how many offers still wait for an answer — «Înscris» on an event not yet over —
  * memoized a minute per process, so the badge costs about one indexed count a minute rather than one per page view (the
  * club's database bills compute time, §68). `null` when the database cannot be read: the tab then shows no number.
  */

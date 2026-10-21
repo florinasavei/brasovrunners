@@ -16,7 +16,7 @@ import type { VolunteerPersonContext } from "./ui/VolunteerPerson";
 import { listVolunteerCategories, listVolunteerRoles, listVolunteers, volunteerStandings } from "./volunteers";
 
 /**
- * What one event's people share on the «Voluntari» screen (§NNN): the event's roles under their categories, how each stands
+ * What one event's people share on the «Voluntari» screen (§839): the event's roles under their categories, how each stands
  * today, the event's switches, the texts in force in each language and the clock — the same reads the event editor's card makes
  * (`admin/events/[id]/page.tsx`), gathered once so a person's page draws exactly what the card draws for them. `returnTo` is
  * where the person's verbs come back to: their own page.

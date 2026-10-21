@@ -54,7 +54,7 @@ export default async function BackofficeShell({
     pages: getPathname({ locale, href: "/admin/pages" }),
     gallery: getPathname({ locale, href: "/admin/gallery" }),
     registrations: getPathname({ locale, href: "/admin/registrations" }),
-    // «Voluntari» (§NNN): the events' volunteers as one list, beside «Înscrieri».
+    // «Voluntari» (§839): the events' volunteers as one list, beside «Înscrieri».
     volunteers: getPathname({ locale, href: "/admin/volunteers" }),
     tasks: getPathname({ locale, href: "/admin/tasks" }),
     legal: getPathname({ locale, href: "/admin/legal" }),
@@ -123,7 +123,7 @@ export default async function BackofficeShell({
     : undefined;
 
   /*
-    How many offers wait for an answer, beside «Voluntari» (§NNN): «Înscris» on an event not yet over, memoized a minute like the
+    How many offers wait for an answer, beside «Voluntari» (§839): «Înscris» on an event not yet over, memoized a minute like the
     registrations' badge, read only for the roles that may open the list.
   */
   const awaitingVolunteers = canManageVolunteers(staffUser.role) ? await volunteersBadgeCount(getDb(), new Date()) : null;

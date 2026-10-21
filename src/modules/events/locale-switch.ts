@@ -98,7 +98,7 @@ export async function resolveLocaleSwitch(
     parsed.route === "/admin/events/[id]/results" ||
     parsed.route === "/preview/events/[id]" ||
     parsed.route === "/admin/registrations/[id]" ||
-    // A volunteer's page (§NNN), the same rule.
+    // A volunteer's page (§839), the same rule.
     parsed.route === "/admin/volunteers/[id]" ||
     parsed.route === "/admin/legal/[id]" ||
     parsed.route === "/admin/legal/[id]/delete" ||

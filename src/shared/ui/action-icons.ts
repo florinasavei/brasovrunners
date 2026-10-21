@@ -263,7 +263,7 @@ export type ActionIconName =
   | "badges"
   // «Clasament» (§808): the podium bars, on the links to a race's results page — never the trophy, which is the desk's.
   | "results"
-  // «Voluntari» (§NNN): the tab's icon, the event card's «Voluntari» box's heart in the hand.
+  // «Voluntari» (§839): the tab's icon, the event card's «Voluntari» box's heart in the hand.
   | "volunteers";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).
@@ -367,6 +367,6 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   sizeChart: StraightenIcon,
   badges: BadgeIcon,
   results: LeaderboardIcon,
-  // «Voluntari» (§NNN): the heart in the hand the event card's «Voluntari» box wears, so the tab and the box read as one subject.
+  // «Voluntari» (§839): the heart in the hand the event card's «Voluntari» box wears, so the tab and the box read as one subject.
   volunteers: VolunteerActivismIcon,
 };

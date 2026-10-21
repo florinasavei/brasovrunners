@@ -52,7 +52,7 @@ function isVolunteerState(value: string | undefined): value is VolunteerState {
 }
 
 /**
- * «Voluntari» (§NNN; the owner, 2026-10-21: «a nicer volunteers screen, similar to the participants area»): the
+ * «Voluntari» (§839; the owner, 2026-10-21: «a nicer volunteers screen, similar to the participants area»): the
  * events' volunteers as one sorted, searched, server-paginated list (`AdminTable`, the registrations list's shape,
  * §312) — until now they were read only on each event's card, under the editor's seventeen boxes, one event at a
  * time. The same three roles as that card (`canManageVolunteers`), asserted here again and by the layout above for
@@ -127,7 +127,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     perPage: current.perPage,
   };
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
-  // A press on a row comes back to this page of the list, every filter kept (§NNN), so the row's new chip is in view.
+  // A press on a row comes back to this page of the list, every filter kept (§839), so the row's new chip is in view.
   const returnTo = buildListHref(basePath, listParams, { page: current.page });
   const hasFilters = Boolean(eventId || stateFilter || roleFilter || q);
   const autoScopedToFeatured = !hasFilters && eventFilter.eventId !== undefined;

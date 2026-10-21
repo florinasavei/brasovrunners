@@ -10,7 +10,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { readSheet } from "../../helpers/xlsx";
 
 /**
- * §NNN — «Descarcă Excel» for an event's volunteers (the owner, 2026-10-21: «I wanna be able to export volunteers in
+ * §839 — «Descarcă Excel» for an event's volunteers (the owner, 2026-10-21: «I wanna be able to export volunteers in
  * excel as well»): `format=xlsx` on the CSV's route answers a spreadsheet with the CSV's words — the header in the
  * reader's language, one row per volunteer, the roles given and offered joined by «, », the sheet named «Voluntari» —
  * named by the club's date like the CSV; the CSV itself is unchanged; the role gate is the card's (`canManageVolunteers`).
@@ -86,7 +86,7 @@ beforeEach(async () => {
 
 const download = (query: string) => GET(new Request(`http://localhost/api/admin/events/${eventId}/volunteers?${query}`), { params: Promise.resolve({ id: eventId }) });
 
-describe("«Descarcă Excel» (§NNN)", () => {
+describe("«Descarcă Excel» (§839)", () => {
   it("answers a spreadsheet with the CSV's words in the reader's language, named by the club's date", async () => {
     const response = await download("format=xlsx&lang=ro");
     expect(response.status).toBe(200);

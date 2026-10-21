@@ -230,7 +230,7 @@ export default async function VolunteersCard({
   const personBoxes = await volunteerPersonBoxes(t);
 
   const hidden = volunteerHiddenFields({ locale, eventId });
-  /** What every person's block shares (`VolunteerPerson`, §NNN): the roles, the switches, the texts in force, the clock. */
+  /** What every person's block shares (`VolunteerPerson`, §839): the roles, the switches, the texts in force, the clock. */
   const personContext: VolunteerPersonContext = {
     locale,
     eventId,
@@ -996,7 +996,7 @@ export default async function VolunteersCard({
 
         {volunteers.length > 0 && (
           <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1.5 }}>
-            {/* Excel first (§NNN), because that is what somebody opens; the CSV stays for whoever feeds it to something else. */}
+            {/* Excel first (§839), because that is what somebody opens; the CSV stays for whoever feeds it to something else. */}
             <GlyphButton icon="spreadsheet" href={`/api/admin/events/${eventId}/volunteers?format=xlsx&lang=${locale}`} variant="outlined" sx={{ minHeight: 44 }} data-testid="volunteers-xlsx">
               {t("volunteers.excel")}
             </GlyphButton>

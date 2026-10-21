@@ -57,13 +57,13 @@ import type { VolunteerCategory, VolunteerItem, VolunteerRole } from "../volunte
 import VolunteerBirthDateField from "./VolunteerBirthDateField";
 
 /**
- * One volunteer, in full (§754, §761, §837, §NNN): the name with its chips, the contact, what the person said about themselves,
+ * One volunteer, in full (§754, §761, §837, §839): the name with its chips, the contact, what the person said about themselves,
  * the roles given and offered, the agreement and the guardian's, the verbs and the «Modifică» form. Drawn by the event editor's
- * «Voluntari» card for each person in a role's group, and by the person's own page under «Voluntari» (§NNN) — one component, so the
+ * «Voluntari» card for each person in a role's group, and by the person's own page under «Voluntari» (§839) — one component, so the
  * two never disagree about a person; every form posts to the same Server Actions, which ask the service for the role again.
  *
  * `context` is what every person of one event shares: the roles with their categories, how each stands, the event's switches,
- * the texts in force and the clock. `returnTo` is where a one-button verb comes back to (§NNN): the person's own page, when it is
+ * the texts in force and the clock. `returnTo` is where a one-button verb comes back to (§839): the person's own page, when it is
  * drawn there, else the card.
  */
 export type VolunteerPersonContext = {
@@ -87,7 +87,7 @@ export type VolunteerPersonContext = {
   agreementDocumentIds: Partial<Record<Locale, string>>;
   agreementEvent: Partial<Record<Locale, { eventDate: string; eventLocation: string }>>;
   now: Date;
-  /** The admin path a verb returns to, when not the card: the person's own page (§NNN). */
+  /** The admin path a verb returns to, when not the card: the person's own page (§839). */
   returnTo?: string;
 };
 
@@ -131,7 +131,7 @@ export async function volunteerPersonBoxes(t: Awaited<ReturnType<typeof getTrans
   });
 }
 
-/** The hidden fields every form of a person posts: the language, the event and, from the person's page, where to come back to (§NNN). */
+/** The hidden fields every form of a person posts: the language, the event and, from the person's page, where to come back to (§839). */
 export function volunteerHiddenFields(context: Pick<VolunteerPersonContext, "locale" | "eventId" | "returnTo">) {
   return (
     <>

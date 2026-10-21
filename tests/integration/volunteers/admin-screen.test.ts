@@ -26,7 +26,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Voluntari», the events' volunteers as one screen (the owner, 2026-10-21: «a nicer volunteers screen, similar
+ * §839 — «Voluntari», the events' volunteers as one screen (the owner, 2026-10-21: «a nicer volunteers screen, similar
  * to the participants area»), from a real database:
  *
  * - the list reads the rows the filters leave — one event or every event, a state, a role or «De repartizat», a name
@@ -231,7 +231,7 @@ async function press(action: (form: FormData) => Promise<void>, data: FormData):
   return state.redirected.at(-1) ?? "";
 }
 
-describe("the list's repository (§NNN)", () => {
+describe("the list's repository (§839)", () => {
   it("offers the events that take volunteers or have any, the featured one first, titled in the reader's language", async () => {
     const listed = await listEventsWithVolunteers(db, "ro");
     expect(listed.map((event) => [event.id, event.title])).toEqual([
@@ -326,7 +326,7 @@ describe("the list's repository (§NNN)", () => {
   });
 });
 
-describe("the list page (§NNN)", () => {
+describe("the list page (§839)", () => {
   it("opens on the featured event, every row's verbs coming back to this page, with the event's card and file one link away", async () => {
     const page = await listPage();
     expect(page).toContain("Ana Pop");
@@ -392,7 +392,7 @@ describe("the list page (§NNN)", () => {
   });
 });
 
-describe("the person's page (§NNN)", () => {
+describe("the person's page (§839)", () => {
   it("draws the card's block for one person, coming back to itself, with the way back to the list and to the event", async () => {
     const page = await personPage(people.stefan);
     expect(page).toContain("Ștefan Tănase");
@@ -413,7 +413,7 @@ describe("the person's page (§NNN)", () => {
   });
 });
 
-describe("a verb pressed on the screen comes back to it (§NNN)", () => {
+describe("a verb pressed on the screen comes back to it (§839)", () => {
   it("returns to the list's page it came from, filters kept, and to the person's page", async () => {
     const back = `/ro/admin/volunteers?eventId=${raceId}&state=REGISTERED&page=2`;
     expect(await press(actions.setVolunteerStateAction, form({ volunteerId: people.ana, state: "CONFIRMED", returnTo: back }))).toBe(back);

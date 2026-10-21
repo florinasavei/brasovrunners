@@ -254,7 +254,7 @@ export const routing = defineRouting({
      */
     "/admin/registrations/person": "/admin/registrations/person",
     "/admin/registrations/[id]": "/admin/registrations/[id]",
-    /** «Voluntari» (§NNN): the events' volunteers as one list, and one person's own page, beside «Înscrieri». */
+    /** «Voluntari» (§839): the events' volunteers as one list, and one person's own page, beside «Înscrieri». */
     "/admin/volunteers": "/admin/volunteers",
     "/admin/volunteers/[id]": "/admin/volunteers/[id]",
     "/devs/theme": "/devs/theme",

@@ -60,7 +60,7 @@ function eventIdOf(form: FormData): string {
 }
 
 /**
- * Where a verb pressed on the «Voluntari» screen comes back to (§NNN): the list or one person's page, named by the form's
+ * Where a verb pressed on the «Voluntari» screen comes back to (§839): the list or one person's page, named by the form's
  * `returnTo` — accepted only as a path of that screen, so a forged field can send nobody anywhere else. Null for the card.
  */
 const VOLUNTEERS_SCREEN_PATH = /^\/(ro|en)\/admin\/volunteers(\/[0-9a-f-]{36})?(\?[A-Za-z0-9=&%._+-]*)?$/;
@@ -72,7 +72,7 @@ function returnToOf(form: FormData): string | null {
 /**
  * Back to the card, with the toast's word in the flash cookie (§384) or, for a one-button form that has
  * no boxes to keep, the refusal's code in the address for the card's banner — or back to the «Voluntari»
- * screen's page the form came from (§NNN), the same two ways.
+ * screen's page the form came from (§839), the same two ways.
  */
 async function backToCard(form: FormData, outcome: { saved?: string; error?: string; count?: string }): Promise<never> {
   const locale = localeOf(form);

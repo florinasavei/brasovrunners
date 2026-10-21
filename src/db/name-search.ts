@@ -1,7 +1,7 @@
 import { type AnyColumn, type SQL, sql } from "drizzle-orm";
 
 /**
- * Searching a person by name, the way the registrations list has done it since §312 and the volunteers list since §NNN: the
+ * Searching a person by name, the way the registrations list has done it since §312 and the volunteers list since §839: the
  * stored name and the typed term are both lowered and stripped of the Romanian diacritics before `LIKE`, so `stefan` finds
  * «Ștefan» and `Tanase` finds «Tănase» — an organizer at a desk types what they hear. Every `%` and `_` of the term is a
  * literal; the pattern's own wildcards are the two around it.

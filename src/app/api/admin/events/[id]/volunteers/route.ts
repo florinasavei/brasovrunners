@@ -18,7 +18,7 @@ import { isUuid } from "@/shared/ids";
 /**
  * «Descarcă CSV» on an event's «Voluntari» card (§754): the volunteers of one event, grouped by the role given,
  * with the roles each offered for (§761), in the reader's language (`lang`), as a UTF-8 file with a BOM — or, with
- * `format=xlsx` (§NNN; the owner: «export volunteers in excel as well»), the same rows as a spreadsheet («Descarcă Excel»,
+ * `format=xlsx` (§839; the owner: «export volunteers in excel as well»), the same rows as a spreadsheet («Descarcă Excel»,
  * on the card and on the «Voluntari» screen), through the writer every backoffice sheet uses.
  *
  * Whoever reads the card may take it — `canManageVolunteers`, the card's own gate, asserted here again
