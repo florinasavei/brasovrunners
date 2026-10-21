@@ -157,7 +157,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             bibNumber: t("desk.handedBib"),
           })}
           // The entry emails the person — the link, or the confirmation on the fast track — and says so (§384).
-          confirm={{ title: t("confirm.createRegistrationTitle"), body: t("confirm.createRegistrationBody"), email: words.email(1), confirmLabel: t("registrations.create"), cancelLabel: words.cancel }}
+          confirm={{ title: t("confirm.createRegistrationTitle"), body: t("confirm.createRegistrationBody"), email: words.email(1), road: words.road("links"), confirmLabel: t("registrations.create"), cancelLabel: words.cancel }}
           data-testid="registration-new-form"
         >
           <input type="hidden" name="uiLocale" value={locale} />

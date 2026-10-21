@@ -31,6 +31,8 @@ const ITEMS: AdminFaqItem[] = [1, 2].map((n) => ({
 
 const forms = vi.hoisted(() => [] as Array<{ testId?: string; confirm?: ConfirmSpec | ConfirmSpec[] }>);
 
+// The dialogs' road line (§NNN) reads the club's roads once per request: no database here.
+vi.mock("@/shared/feedback/email-roads-request", () => ({ emailRoadsForThisRequest: async () => ({ groups: { links: "mailgun", confirmations: "mailgun", reminders: "mailgun", announcements: "mailgun", club: "gmail", newsletter: "mailgun" }, gmail: false }) }));
 vi.mock("@/modules/staff-identity/session", () => ({ requireStaff: async () => ({ id: "staff", role: "ADMIN" }) }));
 vi.mock("@/db/client", () => ({ getDb: () => ({}) }));
 vi.mock("@/modules/content/faq/repository", () => ({ listFaqItemsForAdmin: async () => ITEMS }));

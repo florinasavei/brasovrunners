@@ -22,6 +22,7 @@
  */
 
 import { type CountForm, countForm } from "@/i18n/count-form";
+import type { EmailGroup, EmailTransport } from "@/modules/notifications/domain/email-transport";
 
 /**
  * `warning` and `error` are for the one in-browser press with no refusal summary to land on:
@@ -306,6 +307,15 @@ export type ConfirmSpec = {
    */
   emailCount?: EmailCount;
   /**
+   * Which road the announced email takes (§NNN, `confirmWords().road`): the group's setting today,
+   * the road the platform recommends for the group and why, and — where both roads exist — the
+   * switch to the other one for this press alone. The dialog writes the choice into a cookie as it
+   * confirms (`email-road.ts`); the action's `enqueueEmail` stamps the row with it and the toast
+   * names it. Beside `email` or `emailCount`, never alone: a dialog that announces no email says
+   * nothing about roads.
+   */
+  road?: ConfirmRoad;
+  /**
    * Ask only when the form, as submitted, matches every condition: `notice.notify` ticked (a
    * tick posts `on`), the status select on `CANCELLED`. A form whose conditions all fail is
    * submitted without a question — the save that changes nothing outward asks nothing.
@@ -338,6 +348,27 @@ export type ConfirmSpec = {
    * which says nothing would change (`resolveChangedFields`).
    */
   changedFields?: ChangedFields;
+};
+
+/** `ConfirmSpec.road`: the facts and the words of the dialog's road line, worded on the server. */
+export type ConfirmRoad = {
+  group: EmailGroup;
+  /** The road the group's setting gives this message today — Mailgun wherever Gmail is not configured. */
+  current: EmailTransport;
+  /** The road the platform recommends for the group (`RECOMMENDED_ROAD`). */
+  recommended: EmailTransport;
+  /** Both roads exist on this deployment: the dialog offers the other one for this press. */
+  switchable: boolean;
+  /** «Pleacă prin {road}.», raw: the one line a dialog that cannot switch shows. */
+  leaves: string;
+  /** The legend over the two choices: «Prin ce pleacă». */
+  legend: string;
+  /** The mark on the recommended road's label: «recomandat». */
+  recommendedMark: string;
+  /** Why the platform recommends that road for this group — one sentence under the choices. */
+  why: string;
+  /** Each road's name: «Mailgun», «Gmail-ul clubului». */
+  names: Readonly<Record<EmailTransport, string>>;
 };
 
 /** `ConfirmSpec.changedFields`: each field's label, in the form's order, and how the names are joined. */

@@ -2106,7 +2106,20 @@
       "noteDeleteTitle": "Ștergi nota?",
       "noteDeleteBody": "Nota se șterge definitiv, împreună cu textul ei. În jurnal rămân doar cine a șters-o și când.",
       "rsvpAskAudienceTitle": "Schimbi cui îi trimitem „Vii?”",
-      "rsvpAskAudienceBody": "De la salvare, întrebarea de dinaintea evenimentelor merge celor alese. Cine a răspuns „Vin!” e întrebat doar sub o notă care descrie asta și poate refuza, pe serie."
+      "rsvpAskAudienceBody": "De la salvare, întrebarea de dinaintea evenimentelor merge celor alese. Cine a răspuns „Vin!” e întrebat doar sub o notă care descrie asta și poate refuza, pe serie.",
+      "road": {
+        "leaves": "Pleacă prin {road}.",
+        "legend": "Prin ce pleacă emailul",
+        "recommended": "recomandat",
+        "why": {
+          "links": "Recomandat Mailgun: un link de acțiune care întârzie sau ajunge în spam înseamnă un loc pierdut.",
+          "confirmations": "Recomandat Mailgun: confirmările ajung sigur și la timp; un Gmail personal care trimite multe mesaje automate e restricționat de Google.",
+          "reminders": "Recomandat Mailgun: câte un mesaj pentru fiecare alergător, toate la aceeași oră — rafala pe care Google o blochează la un cont personal.",
+          "announcements": "Recomandat Mailgun: un anunț pleacă la mulți deodată, iar Gmail-ul clubului e făcut pentru mesaje puține, de la om la om.",
+          "club": "Recomandat Gmail-ul clubului: mesajul ajunge în căsuțele clubului, la oameni care cunosc expeditorul, și nu costă nimic din Mailgun.",
+          "newsletter": "Recomandat Mailgun: un Gmail personal care trimite la multe adrese e restricționat de Google."
+        }
+      }
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -11923,8 +11936,8 @@
       "cycleMore": "Luna calendaristică, în UTC. Pagina Usage a Vercel numără de la începutul ciclului de facturare, care începe în altă zi.",
       "subscription": "Abonamentul în sine: {usd} $ până acum.",
       "cpu": "Timp de CPU al funcțiilor: {hours} din cele {of} ore de CPU incluse pe lună în planul Hobby ({percent}%).",
-        "cpuNear": "Aproape de limită: {hours} din cele {of} ore de CPU incluse pe lună în planul Hobby ({percent}%). Peste ea, pe Hobby nu se mai poate folosi acea funcție circa 30 de zile.",
-        "cpuUnknown": "Timpul de CPU al funcțiilor nu se poate compara cu limita Hobby: Vercel l-a dat în «{unit}», nu în ore.",
+      "cpuNear": "Aproape de limită: {hours} din cele {of} ore de CPU incluse pe lună în planul Hobby ({percent}%). Peste ea, pe Hobby nu se mai poate folosi acea funcție circa 30 de zile.",
+      "cpuUnknown": "Timpul de CPU al funcțiilor nu se poate compara cu limita Hobby: Vercel l-a dat în «{unit}», nu în ore.",
       "linesTitle": "Pe servicii",
       "line": "{quantity} {unit} · {usd} $",
       "buildsTitle": "Build-uri pe proiect",
@@ -12756,6 +12769,10 @@
       "resultsUnpublished": "Clasamentul nu mai e public pe pagina evenimentului.",
       "resultsPublicUnchanged": "Era deja așa; nimic de schimbat.",
       "rsvpAskAudience": "Alegerea pentru întrebarea „Vii?” a fost salvată."
+    },
+    "via": {
+      "mailgun": "Pleacă prin Mailgun.",
+      "gmail": "Pleacă prin Gmail-ul clubului."
     }
   },
   "Network": {

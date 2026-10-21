@@ -239,6 +239,38 @@ export function preferredTransport(
 }
 
 /**
+ * The road the platform recommends for each group (§NNN) — what the setting's own help has said
+ * since §443, as one fact the confirmation dialog can mark: Mailgun for everything a participant
+ * must receive on time or in numbers (a personal Gmail that bursts or bulks is what Google blocks),
+ * the club's Gmail for mail to the club's own mailboxes, where the reader knows the sender.
+ */
+export const RECOMMENDED_ROAD: Readonly<Record<EmailGroup, EmailTransport>> = {
+  links: "mailgun",
+  confirmations: "mailgun",
+  reminders: "mailgun",
+  announcements: "mailgun",
+  club: "gmail",
+  newsletter: "mailgun",
+};
+
+/**
+ * The road one outbox row asks for (§NNN): the road the press chose for it, stamped on the row
+ * (`email_outbox.road`) by `enqueueEmail`, else its group's setting (`preferredTransport`). A stamp
+ * naming Gmail where Gmail is not configured is the group's road again — a deployment that lost
+ * its account still sends. The claim (`gmailRoadCondition`) and the sender's `route` both answer
+ * through this, so the two cannot differ.
+ */
+export function rowTransport(
+  setting: EmailTransportSetting,
+  row: { messageType: EmailMessageType; road: EmailTransport | null },
+  clubCopy: boolean,
+  gmailConfigured = true,
+): EmailTransport {
+  if (row.road === "mailgun" || (row.road === "gmail" && gmailConfigured)) return row.road;
+  return preferredTransport(setting, row.messageType, clubCopy);
+}
+
+/**
  * The road every participant message type takes as things stand — the club's choice for its group,
  * or Mailgun wherever Gmail is not configured — for the pages that say it (the forecast, §383).
  * Gmail's cap is not in it: that is a moment's fact, and the panel beside it says it.

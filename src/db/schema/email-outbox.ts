@@ -290,7 +290,8 @@ export const emailOutbox = pgTable(
     */
     /**
      * The road the club chose for this message (`gmail` or `mailgun`) — a visitor's message carries it from the
-     * moment it is queued; null on every other row, whose road is its group's setting (§443). `transport` is the
+     * moment it is queued (§778), and since §NNN so does any message whose press chose a road in its confirmation
+     * dialog; null on every other row, whose road is its group's setting (§443, `rowTransport`). `transport` is the
      * road it left by: when the two differ the message went «prin cealaltă cale» (the chosen road was down).
      */
     road: text("road", { enum: ["mailgun", "gmail"] }),

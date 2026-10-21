@@ -74,12 +74,17 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
     if (notice.sentence) return notice.sentence;
     const values = notice.values ?? {};
     const base = `toast.${notice.key}`;
-    if (t.has(`${base}.other`)) {
-      const count = Number.isFinite(Number(values.count)) ? Number(values.count) : 0;
-      return t(`${base}.${countForm(count, locale)}`, { ...values, count: String(count) });
-    }
-    if (t.has(base)) return t(base, values);
-    return t("toast.saved");
+    const said = (() => {
+      if (t.has(`${base}.other`)) {
+        const count = Number.isFinite(Number(values.count)) ? Number(values.count) : 0;
+        return t(`${base}.${countForm(count, locale)}`, { ...values, count: String(count) });
+      }
+      if (t.has(base)) return t(base, values);
+      return t("toast.saved");
+    })();
+    // The road the press chose for its email (§NNN, `flashOutcome`): «… Pleacă prin Mailgun.»
+    const via = values.via === "mailgun" || values.via === "gmail" ? ` ${t(`via.${values.via}`)}` : "";
+    return `${said}${via}`;
   };
 
   const current = queue.current;

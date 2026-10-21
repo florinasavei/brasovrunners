@@ -8,6 +8,8 @@ import { describe, expect, it, vi } from "vitest";
  * unchanged (`look` = off | on); only the words moved, and «Aspectul nou» is read nowhere.
  */
 let locale: "ro" | "en" = "ro";
+// The dialogs' road line (§NNN) reads the club's roads once per request: no database here.
+vi.mock("@/shared/feedback/email-roads-request", () => ({ emailRoadsForThisRequest: async () => ({ groups: { links: "mailgun", confirmations: "mailgun", reminders: "mailgun", announcements: "mailgun", club: "gmail", newsletter: "mailgun" }, gmail: false }) }));
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
   const ro = (await import("../../../messages/ro.json")).default;

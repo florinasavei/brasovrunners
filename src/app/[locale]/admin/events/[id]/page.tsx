@@ -631,6 +631,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     title: t("thanks.confirmTitle"),
     body: thanksRecipients.test > 0 ? `${t("thanks.confirmBody")} ${t("participantMessages.testLine", { test: String(thanksRecipients.test) })}` : t("thanks.confirmBody"),
     ...(thanksRecipients.real > 0 ? { email: words.email(thanksRecipients.real) } : {}),
+    road: words.road("reminders"),
     confirmLabel: t("thanks.send"),
     cancelLabel: words.cancel,
   };
@@ -659,6 +660,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           title: t("bulkResend.confirmTitle"),
           body: testCounts.queued > 0 ? `${body} ${t("participantMessages.testLine", { test: String(testCounts.queued) })}` : body,
           ...(counts.queued > 0 ? { email: words.email(counts.queued) } : {}),
+          road: words.road("links"),
           confirmLabel: t("bulkResend.button"),
           cancelLabel: words.cancel,
         };
@@ -709,6 +711,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             body: t("confirm.cancelEventBody"),
             email: noticeEmail,
             emailCount: noticeEmailCount,
+            road: words.road("announcements"),
             confirmLabel: t("editor.save"),
             cancelLabel: words.cancel,
             destructive: true,
@@ -729,6 +732,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       body: t("confirm.saveNoticeBody"),
       email: noticeEmail,
       emailCount: noticeEmailCount,
+      road: words.road("announcements"),
       confirmLabel: t("editor.save"),
       cancelLabel: words.cancel,
     },

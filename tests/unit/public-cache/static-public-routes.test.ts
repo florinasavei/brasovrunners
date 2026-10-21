@@ -264,6 +264,13 @@ const REQUEST_READERS_ALLOWED: Record<string, string> = {
     the entry is gone, which is what this list is for.
   */
   /*
+    The road a press chose for its email (§NNN): `enqueueEmail` asks the request's cookie jar for it, and every static
+    page reaches `outbox.ts` — through the registration door, the volunteers' service, the public reads. It is asked only
+    inside a transaction a Server Action or a job opens, which no render does, and the read is wrapped: outside a request
+    it answers null. Nothing else in the file touches the request.
+  */
+  "src/shared/feedback/email-road-request.ts": "the press's road, read only when a row is queued",
+  /*
     The session: every static page reaches it only through a Server Action it names as a form's
     `action` (the interest box, the newsletter pop-up), never by calling it while it renders.
   */

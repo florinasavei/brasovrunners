@@ -193,7 +193,7 @@ export default async function VolunteerInvitations({
                     <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
                       <ActionForm
                         action={resendVolunteerInvitationAction}
-                        confirm={{ title: t("volunteers.invite.resendTitle"), body: t("volunteers.invite.resendBody"), email: dialog.email(1), confirmLabel: t("volunteers.invite.resend"), cancelLabel: dialog.cancel }}
+                        confirm={{ title: t("volunteers.invite.resendTitle"), body: t("volunteers.invite.resendBody"), email: dialog.email(1), road: dialog.road("announcements"), confirmLabel: t("volunteers.invite.resend"), cancelLabel: dialog.cancel }}
                         data-testid="volunteer-invite-resend-form"
                       >
                         {hidden}
