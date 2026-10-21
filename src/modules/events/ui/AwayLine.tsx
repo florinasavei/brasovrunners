@@ -8,7 +8,7 @@ import { awayPrecise } from "@/modules/events/domain/next-event-away";
 const TICK_MS = 60_000;
 
 /**
- * The calendar card's countdown to the hour (§NNN; the owner, 2026-10-21: «tell me also the hours until the event, not just the
+ * The calendar card's countdown to the hour (§843; the owner, 2026-10-21: «tell me also the hours until the event, not just the
  * day»). The page is cached until the club's midnight (§549, §834), so the server can only say the day («Peste 4 zile»); that is
  * what this island draws first — the same words, so hydration matches and a visitor without scripts reads them — and then, on the
  * visitor's own clock, the hours: «Peste 4 zile și 3 ore», «Mâine, peste 14 ore», «Azi, peste 40 de minute», «Acum», said again

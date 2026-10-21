@@ -35,7 +35,7 @@ export function awayFrom(startsAt: Date, now: Date, timeZone: string): AwayFrom 
 }
 
 /**
- * The same distance to the hour (§NNN; the owner, 2026-10-21, of «Peste 4 zile» on the calendar's card: «Here I want you to
+ * The same distance to the hour (§843; the owner, 2026-10-21, of «Peste 4 zile» on the calendar's card: «Here I want you to
  * tell me also the hours until the event, not just the day»), for the line the browser refines (`AwayLine`) — the page is
  * cached until the club's midnight, so only the visitor's own clock can say the hours (§834's reason for refusing them).
  *

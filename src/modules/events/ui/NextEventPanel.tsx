@@ -35,7 +35,7 @@ export type NextEventPanelProps = {
   /** The forecast at its start (§402, cached an hour), or null outside the seven days, on a failure, or for an event that shows none. */
   weather: WeatherReading | null;
   /**
-   * Whether the countdown refines itself to the hour on the visitor's clock (§NNN, `AwayLine`). On for the calendar; the design
+   * Whether the countdown refines itself to the hour on the visitor's clock (§843, `AwayLine`). On for the calendar; the design
    * page's fixed sample (`SAMPLE_NOW`) turns it off, so its words stay the sample's.
    */
   live?: boolean;
@@ -52,7 +52,7 @@ const FACT_SX = { display: "flex", alignItems: "center", gap: 1, fontSize: "0.93
  * exactly as a listing card draws them (`buildRoutePills`, §366) with the weather at the start as
  * their last (§402, §429), and «Vezi detalii» to the event's page (`ArrowButtonLink`, §708). Under the
  * day, a line says how far away it is — «Azi», «Mâine», «Peste 5 zile», «Peste 3 săptămâni», «Peste 2 luni»,
- * «Acum» once it has started (`awayFrom`, §834), refined in the browser to the hour, «Peste 4 zile și 3 ore» (`AwayLine`, §NNN) — with a calendar glyph (the hourglass already means the waiting list), in the fact lines' own pattern.
+ * «Acum» once it has started (`awayFrom`, §834), refined in the browser to the hour, «Peste 4 zile și 3 ore» (`AwayLine`, §843) — with a calendar glyph (the hourglass already means the waiting list), in the fact lines' own pattern.
  *
  * The page asks for it only while the look is on, so with the setting off the calendar reads
  * nothing more and draws nothing more. A Server Component with typed props; nothing crosses into a
@@ -69,7 +69,7 @@ export default async function NextEventPanel({ event, locale, now, weather, live
     away.kind === "days" || away.kind === "weeks" || away.kind === "months"
       ? t(`calendar.look.nextEvent.away.${away.kind}.${countForm(away.count, locale)}`, { count: away.count })
       : t(`calendar.look.nextEvent.away.${away.kind}`);
-  // The countdown's words to the hour, raw, for the island (§NNN): the server says the day, the visitor's clock the hours.
+  // The countdown's words to the hour, raw, for the island (§843): the server says the day, the visitor's clock the hours.
   const raw = (key: string) => t.raw(`calendar.look.nextEvent.away.${key}`) as never;
   const awayWordsRaw: AwayWords = {
     now: raw("now"),

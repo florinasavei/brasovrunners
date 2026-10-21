@@ -127,7 +127,7 @@ describe("§834 NextEventPanel — the card says it", () => {
     const race = { ...sampleRace(locale), startsAt: new Date(Date.UTC(2026, 8, 27 + days, 15, 30)) };
     return renderToStaticMarkup(await NextEventPanel({ event: race, locale, now: SAMPLE_NOW, weather: null }));
   };
-  // The server's words: what the island (`AwayLine`, §NNN) draws first, before the visitor's clock refines them to the hour.
+  // The server's words: what the island (`AwayLine`, §843) draws first, before the visitor's clock refines them to the hour.
   const says = async (days: number, locale: "ro" | "en" = "ro") => /data-away="[a-z]+".*?<span data-testid="calendar-next-away-words">([^<]*)<\/span>/.exec(await card(days, locale))?.[1];
 
   it("draws a line with a glyph and the step's name, near the day", async () => {
@@ -208,7 +208,7 @@ describe("§834 the cache — the card's words roll with the page at the club's 
   });
 });
 
-describe("§NNN the countdown to the hour — the visitor's clock refines the server's day", () => {
+describe("§843 the countdown to the hour — the visitor's clock refines the server's day", () => {
   // Tuesday 2026-10-20, 09:00 in Brașov; the clocks go back at 04:00 on Sunday 2026-10-25.
   const now = wall("2026-10-20T09:00");
   const wordsOf = (catalogue: typeof ro): AwayWords => {

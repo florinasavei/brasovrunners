@@ -5,7 +5,7 @@ import type { AwayPrecise } from "./next-event-away";
 type Counted = Readonly<Record<CountForm, string>>;
 
 /**
- * The words of the calendar card's countdown to the hour (§NNN), raw from `Events.calendar.look.nextEvent.away`, handed by the
+ * The words of the calendar card's countdown to the hour (§843), raw from `Events.calendar.look.nextEvent.away`, handed by the
  * server to the island (`AwayLine`) as strings: no catalogue crosses to the browser for one line.
  */
 export type AwayWords = {
