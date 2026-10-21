@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.66-2026-10-21
+
+- **A volunteer's roles under their categories** — in «Modifică» the boxes of «Ce e dispus(ă) să facă» and «Rolurile date» stand under the categories' headings, each role by its name, and «Alt rol» groups its options the same way; on the event's card and on the volunteer's page alike. §840.
 ## BR-V3.65-2026-10-21
 
 - **«Voluntari», a screen of its own** — the events' volunteers as one list beside «Înscrieri»: searched by name, filtered by event, state and role, a pill per state and «De repartizat», each row with the state verbs, and a page per person with everything the event's card shows for them; the tab counts the offers still waiting; and «Descarcă Excel» beside the CSV, on the card and on the screen. §839.

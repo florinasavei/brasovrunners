@@ -443,7 +443,22 @@ describe("§784 a role without a number", () => {
     const waiting = person({ id: "e5555555-5555-4555-8555-555555555555", roleIds: [], choiceIds: [NO_NUMBER.id] });
     const page = await drawCard({ roles: [AT_START, NO_NUMBER], volunteers: [waiting, given("CONFIRMED")], acceptsVolunteers: true });
     expect(page).toContain("Punct de hidratare (Traseu) · 1 · fără număr");
-    expect(page).toContain("Direcționare (Start / Sosire) · 0 din 2");
+    // «Alt rol» (§840): the select's options under one group per category, each role by its own name.
+    expect(page).toMatch(/<optgroup label="Start \/ Sosire"><option value="[^"]+"[^>]*>Direcționare · 0 din 2<\/option>/);
+    expect(page).not.toContain("Direcționare (Start / Sosire) · 0 din 2");
+  });
+
+  it("groups the boxes of «Modifică» and «Adaugă un voluntar de mână» under the categories' headings, each role by its own name (§840)", async () => {
+    const page = await drawCard({ volunteers: [person({ choiceIds: [ON_ROUTE.id] })], acceptsVolunteers: true });
+    // One group per category in the club's order, then «Alte roluri» for the role under none, in each of the two box groups.
+    const groups = [...page.matchAll(/data-testid="volunteer-role-category"[^>]*>/g)];
+    expect(groups.length).toBeGreaterThanOrEqual(2);
+    expect(page).toMatch(/role="group" aria-label="Traseu"/);
+    expect(page).toMatch(/role="group" aria-label="Alte roluri"/);
+    // The heading says the category: the box says the role alone.
+    const choices = page.slice(page.indexOf('data-testid="volunteer-choices-field"'), page.indexOf('data-testid="volunteer-assigned-field"'));
+    expect(choices).toContain(">Direcționare<");
+    expect(choices).not.toContain("Direcționare (Traseu)");
   });
 
   it("draws the tick «Nelimitat» beside «Câte persoane» in every role's row and in each blank row, ticked only on the role without a number, and the number box never required", async () => {
