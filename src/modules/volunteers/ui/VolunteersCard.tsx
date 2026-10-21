@@ -414,7 +414,7 @@ export default async function VolunteersCard({
   };
 
   /**
-   * One role's row in the «Roluri» card (§NNN; the owner, 2026-10-21: the editor «looked like it was from a different app»): the house's row fold
+   * One role's row in the «Roluri» card (§842; the owner, 2026-10-21: the editor «looked like it was from a different app»): the house's row fold
    * (`shared/ui/row-fold.ts`, the to-dos' shape) — the line reads as words, the name in both languages and the «N din M» chip with the pencil at the
    * end, and a press anywhere on it opens the role's boxes (`roleBoxesOf`) in place, inside the one form of «Salvează toate rolurile». «Șterge rolul»
    * stands last in the fold. The fold is keyed on the role's facts, so a save that changed them draws it closed.
@@ -458,7 +458,7 @@ export default async function VolunteersCard({
   );
 
   /**
-   * «Adaugă un rol» (§NNN): the blank row at the end of a category, behind a fold like every «Adaugă…» of the backoffice (the to-dos', the checkpoints'),
+   * «Adaugă un rol» (§842): the blank row at the end of a category, behind a fold like every «Adaugă…» of the backoffice (the to-dos', the checkpoints'),
    * open by itself only while the category has no role. Its boxes are the same as a saved role's, posted by the same form: a name typed in them is a new role.
    */
   const addRoleOf = (categoryId: string | null, index: number, level: 4 | 5, empty: boolean) => (

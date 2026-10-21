@@ -288,7 +288,7 @@ describe("§791 the blank row adds a role", () => {
       // The last row of the card: nothing of a saved role comes after it.
       expect(card[2].lastIndexOf('data-testid="volunteer-role-new"')).toBeGreaterThan(card[2].lastIndexOf('data-testid="volunteer-role"'));
     }
-    // The blank boxes stand in «Adaugă un rol» (§NNN), a fold of their category's card like every «Adaugă…» of the backoffice.
+    // The blank boxes stand in «Adaugă un rol» (§842), a fold of their category's card like every «Adaugă…» of the backoffice.
     const fold = /<details[^>]*data-testid="volunteer-role-add-fold"[\s\S]*?<\/details>/.exec(cards[1][2])?.[0] ?? "";
     expect(fold).toContain("Adaugă un rol");
     const blank = fold.slice(fold.indexOf('data-testid="volunteer-role-new"'));

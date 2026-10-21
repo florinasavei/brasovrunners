@@ -1,5 +1,5 @@
 /**
- * One list row that folds open onto its own boxes (§NNN; the owner, 2026-10-21, of the roles and the
+ * One list row that folds open onto its own boxes (§842; the owner, 2026-10-21, of the roles and the
  * checkpoints editors: «they look like they are from a different app, not consistent at all»).
  *
  * The backoffice's list of things a person edits — the event's to-dos (§749), the volunteers' roles,

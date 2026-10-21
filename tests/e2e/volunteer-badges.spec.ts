@@ -88,7 +88,7 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     const row = page.locator(`[data-testid="volunteer-role"][data-role-id="${event.water}"]`);
     const finishRow = page.locator(`[data-testid="volunteer-role"][data-role-id="${event.finish}"]`);
     await expect(row.getByTestId("volunteer-role-colour")).toContainText("Portocaliul clubului");
-    // A role's line is a fold (§NNN): its boxes open in place.
+    // A role's line is a fold (§842): its boxes open in place.
     await openRoleRow(row);
     await openFold(row.getByTestId("volunteer-role-more"));
     await row.getByLabel("Culoarea benzii").selectOption({ label: "Roșu" });

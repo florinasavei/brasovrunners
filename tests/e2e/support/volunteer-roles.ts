@@ -38,7 +38,7 @@ export type RoleBoxes = {
 };
 
 /**
- * Opens a row's boxes the way a person does (§NNN): a saved role's line is a fold whose summary is the role in words, the blank row stands in its
+ * Opens a row's boxes the way a person does (§842): a saved role's line is a fold whose summary is the role in words, the blank row stands in its
  * category's «Adaugă un rol» fold — every fold around the row, outermost first, then the row's own.
  */
 export async function openRoleRow(row: Locator): Promise<void> {

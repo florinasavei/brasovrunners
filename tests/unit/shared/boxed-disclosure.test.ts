@@ -151,7 +151,7 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
   const UNBOXED_FOLDS: Record<string, number> = { "src/shared/ui/Panel.tsx": 1 };
 
   /**
-   * The list row that folds open onto its boxes (§NNN, `shared/ui/row-fold.ts`): the to-dos', the roles', the checkpoints'
+   * The list row that folds open onto its boxes (§842, `shared/ui/row-fold.ts`): the to-dos', the roles', the checkpoints'
    * rows — a line in words with the pencil, not a card, so no box around it. Counted by its summary's one shared object
    * (`sx={SUMMARY_SX}`), so a row fold drawn by hand is still a fold too many.
    */

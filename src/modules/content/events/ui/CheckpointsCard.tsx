@@ -464,7 +464,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
             {gpxOffer}
             <DetachedFields form={CHECKPOINTS_FORM}>
               <Stack spacing={2} data-testid="checkpoints-fields">
-                {/* The saved points as the house's row folds (§NNN, `shared/ui/row-fold.ts`): each line the point in words — the kilometre and the name,
+                {/* The saved points as the house's row folds (§842, `shared/ui/row-fold.ts`): each line the point in words — the kilometre and the name,
                     what is there, its limit — with the pencil at the end; a press on it opens the point's boxes in place. */}
                 {count > 0 && (
                   <Stack spacing={0} component="ul" aria-label={t("checkpoints.title")} sx={{ listStyle: "none", m: 0, p: 0 }}>
@@ -502,7 +502,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
                     collapsible
                     level={4}
                     title={t("checkpoints.add.title")}
-                    // The kilometre's rule once, over the rows, rather than under each box (§NNN).
+                    // The kilometre's rule once, over the rows, rather than under each box (§842).
                     intro={routeKm !== null ? t("checkpoints.field.kmHelp", { max: km(routeKm) }) : t("checkpoints.field.kmHelpNoRoute")}
                     openWhen={{ primary: count === 0 }}
                     data-testid="checkpoint-add"

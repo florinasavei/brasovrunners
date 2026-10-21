@@ -189,7 +189,7 @@ test.describe("§754 volunteers for a race", () => {
     await expect(moreLine("Punct de apă")).toContainText("Stai la masa cu apă, la kilometrul 5.");
     await expect(moreLine("Sosire")).toContainText("Stai la linia de sosire.");
     // The description is one strip of two tabs (§572) in the fold, and the card's «Tradu cardul» is greyed with its reason where there is no translation key (§482).
-    // A role's line is a fold (§NNN): its boxes open in place.
+    // A role's line is a fold (§842): its boxes open in place.
     await openRoleRow(roleRow(page, "Punct de apă"));
     await openFold(roleRow(page, "Punct de apă").getByTestId("volunteer-role-more"));
     await expect(roleRow(page, "Punct de apă").getByRole("tab")).toHaveText([/Română/, /English/]);

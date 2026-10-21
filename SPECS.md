@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.67-2026-10-21 -->
+<!-- PROJECT_BASELINE: BR-V3.68-2026-10-21 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.67-2026-10-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.68-2026-10-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.

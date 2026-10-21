@@ -136,7 +136,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     // Two points: water and food at 7,5 with one hour, timing and direction at 15 with two.
     await fillRow(spare.nth(0), { km: "7,5", ro: "Apă la cabană", en: "Water at the hut", kinds: [], hours: "1", minutes: "0" });
     await spare.nth(0).getByRole("checkbox", { name: "Mâncare", exact: true }).check();
-    // The second spare row stands behind «Încă două puncte, în aceeași salvare» (§NNN): the usual press adds one point.
+    // The second spare row stands behind «Încă două puncte, în aceeași salvare» (§842): the usual press adds one point.
     await openFold(card.getByTestId("checkpoints-more-rows"));
     await fillRow(spare.nth(1), { km: "15", ro: "Cronometrare", en: "Timing", kinds: ["Cronometrare", "Direcționare"], hours: "2", minutes: "0" });
     const save = card.getByRole("button", { name: "Salvează punctele" });

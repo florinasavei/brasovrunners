@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.68-2026-10-21
+
+- **The roles and the checkpoints editors look like the rest of the backoffice** — each role and each point is one line in words with a pencil, its boxes open in place; «Adaugă un rol» per category and «Adaugă puncte» are folds like every «Adaugă…», the to-dos' row shape shared by all three. §842.
 ## BR-V3.67-2026-10-21
 
 - **The email's road, press by press** — every confirmation that announces an email says whether it leaves by Mailgun or the club's Gmail, marks the recommended road and why, lets you switch for that one press where both exist, and the toast afterwards names the road it took. §841.
