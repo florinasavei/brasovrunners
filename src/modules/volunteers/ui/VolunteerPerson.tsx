@@ -163,7 +163,7 @@ async function sharedOf(context: VolunteerPersonContext) {
     chosen: person.choiceIds.flatMap((id) => roleById.get(id) ?? []),
   });
   /*
-    The roles under their categories (§774, §NNN; the owner, 2026-10-21: «on the volunteer individual page, the roles should be grouped
+    The roles under their categories (§774, §840; the owner, 2026-10-21: «on the volunteer individual page, the roles should be grouped
     by category, as in any other page»): the boxes of «Modifică» and the select of «Alt rol» list them under the category's heading,
     each role by its own name — the heading says the category, as the public form and the «Roluri» card do. An event with no
     category has one group and no heading, and a role named alone keeps saying «Direcționare (Traseu)».
@@ -187,7 +187,7 @@ async function sharedOf(context: VolunteerPersonContext) {
 export async function VolunteerPersonFields({ person, context }: { person: VolunteerItem | null; context: VolunteerPersonContext }) {
   const { locale, volunteersShirts, profileDescribed, minorsOpen, listDescribed, eventDay } = context;
   const { t, tReg, labelOf, roleGroups, headed, groupName, nameOf } = await sharedOf(context);
-  /** One group's boxes under its category's heading (§NNN); without categories, the boxes alone, each role named as before. */
+  /** One group's boxes under its category's heading (§840); without categories, the boxes alone, each role named as before. */
   const roleBoxes = (name: "roleIds" | "assignedRoleIds", ticked: (role: VolunteerRole) => boolean) =>
     roleGroups.map((group) => {
       const boxes = group.roles.map((role) => (
@@ -642,7 +642,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
               slotProps={{ select: { native: true }, inputLabel: { shrink: true }, htmlInput: { "aria-label": `${t("volunteers.assign.other")}: ${shortText(person.name)}` } }}
               sx={{ minWidth: 200 }}
             >
-              {/* The other roles under their categories (§NNN): one group per category, each role by its own name with how it stands. */}
+              {/* The other roles under their categories (§840): one group per category, each role by its own name with how it stands. */}
               {roleGroups.map((group) => {
                 const offered = group.roles.filter((role) => others.some((other) => other.id === role.id));
                 if (offered.length === 0) return null;

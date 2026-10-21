@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.66` | a volunteer's roles under their categories, in «Modifică» and «Alt rol» (§840) |
 | `BR-V3.65` | «Voluntari», the events' volunteers as one screen, in Excel too (§839) |
 | `BR-V3.64` | a volunteer may be given several roles (§837) · the test gate in minutes: one migrated database per run, four CI shards (§838) |
 | `BR-V3.63` | the club chooses whether the event page shows «Vreau să fiu voluntar»; the sign-up stays open by its link (§835) · «Confirmă prezența» and «Cine vine» are the last thing on the event page (§836) |
