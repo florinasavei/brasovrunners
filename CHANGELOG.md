@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.67-2026-10-21
+
+- **The email's road, press by press** — every confirmation that announces an email says whether it leaves by Mailgun or the club's Gmail, marks the recommended road and why, lets you switch for that one press where both exist, and the toast afterwards names the road it took. §841.
 ## BR-V3.66-2026-10-21
 
 - **A volunteer's roles under their categories** — in «Modifică» the boxes of «Ce e dispus(ă) să facă» and «Rolurile date» stand under the categories' headings, each role by its name, and «Alt rol» groups its options the same way; on the event's card and on the volunteer's page alike. §840.

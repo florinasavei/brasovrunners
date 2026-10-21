@@ -148,6 +148,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
         body: choice.testLine ? `${t("participantMessages.confirmBody")} ${choice.testLine}` : t("participantMessages.confirmBody"),
         // No "0 participants" for a group of test rows alone: the test line says who is written to.
         ...(choice.real > 0 ? { email: words.email(choice.real) } : {}),
+        road: words.road("announcements"),
         confirmLabel: t("participantMessages.confirmSend"),
         cancelLabel: words.cancel,
       },

@@ -82,6 +82,7 @@ export default async function NewsletterPanel({ locale, audience, history, volum
     title: t(`newsletter.confirmTitle.${countForm(choice.count, locale)}`, { count: choice.count }),
     body: t("newsletter.confirmBody", { topic: tn(`topics.${choice.topic}`) }),
     ...(choice.count > 0 ? { email: words.email(choice.count) } : {}),
+    road: words.road("newsletter"),
     confirmLabel: t("newsletter.send"),
     cancelLabel: words.cancel,
   }));

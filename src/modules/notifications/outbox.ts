@@ -35,7 +35,8 @@ import {
   fallbackRetryAt,
   type MailgunStop,
 } from "./domain/mailgun-stop";
-import { GMAIL_CAP_DEFERRED_ERROR } from "./domain/email-transport";
+import { emailGroupOf, GMAIL_CAP_DEFERRED_ERROR } from "./domain/email-transport";
+import { emailRoadChoice } from "@/shared/feedback/email-road-request";
 import { heldByMailgunCondition, readMailgunStop, recordMailgunStop } from "./mailgun-stop";
 import { applyDeadlineRebase, type DeadlineRebase, planDeadlineRebase } from "./deadline-rebase";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
@@ -170,6 +171,8 @@ export async function enqueueEmail<T extends Record<string, unknown>>(
       messageType: params.messageType,
       locale: params.locale,
       recipientEmail: params.recipientEmail,
+      // The road the press's dialog promised for this message's group (§841), when it chose one.
+      road: await roadChosenFor(params.messageType, isClubCopy(params.payload)),
       // The participant's own message, exactly as asked for: no club address rides on it (§320).
       payloadJson: params.payload,
       idempotencyKey: params.idempotencyKey,
@@ -191,6 +194,18 @@ export async function enqueueEmail<T extends Record<string, unknown>>(
   // transaction commits before the response does, so the drain sees the row.
   if (params.drainAfter !== false) drainOutboxAfterResponse();
   return row;
+}
+
+/**
+ * The road stamped on a row the request's press chose one for (§841, `shared/feedback/email-road.ts`):
+ * the dialog's choice, only for rows of the group the dialog announced — a participant's resend
+ * sent «prin Gmail» moves that message alone; the club's copies that ride on it keep the club's
+ * road. Outside a press — a job, a public form, a test — there is no choice and the row's road is
+ * its group's setting at sending time, as before: `null`.
+ */
+async function roadChosenFor(messageType: EmailMessageType, clubCopy: boolean): Promise<EmailTransportName | null> {
+  const choice = await emailRoadChoice();
+  return choice && emailGroupOf(messageType, clubCopy) === choice.group ? choice.road : null;
 }
 
 /**
@@ -351,17 +366,25 @@ export type OutboxRoads = {
   fallbackToGmail?: boolean;
 };
 
-/** A row whose road is Gmail, as SQL: a club copy when the club's mail goes by Gmail, or a listed type. */
+/**
+ * A row whose road is Gmail, as SQL: one a press stamped `gmail` (§841), or — with no stamp — a club
+ * copy when the club's mail goes by Gmail, or a listed type. A row stamped `mailgun` is Mailgun's
+ * whatever its group's setting says (`rowTransport`).
+ */
 export function gmailRoadCondition(roads: OutboxRoads): SQL {
   // `::text`: jsonb has `->` for a key and for an index, and an untyped parameter matches both.
   const clubCopy = sql`coalesce(${emailOutbox.payloadJson} -> ${CLUB_COPY_FLAG}::text = 'true'::jsonb, false)`;
   const listed = roads.gmailMessageTypes.length > 0 ? inArray(emailOutbox.messageType, [...roads.gmailMessageTypes]) : sql`false`;
   const participantRow = and(not(clubCopy), listed) as SQL;
-  return roads.gmailClubCopies ? (or(clubCopy, participantRow) as SQL) : participantRow;
+  const bySetting = roads.gmailClubCopies ? (or(clubCopy, participantRow) as SQL) : participantRow;
+  // `coalesce`, so a row with no stamp reads false here rather than NULL — NOT of which would claim it on no road.
+  const stampedGmail = sql`coalesce(${emailOutbox.road} = 'gmail', false)`;
+  return or(stampedGmail, and(isNull(emailOutbox.road), bySetting)) as SQL;
 }
 
 /** The same answer for one claimed row: whether `gmailRoadCondition` put it on Gmail's road. */
 function onGmailRoad(row: OutboxRow, roads: OutboxRoads): boolean {
+  if (row.road) return row.road === "gmail";
   return isClubCopy(row.payloadJson) ? roads.gmailClubCopies : roads.gmailMessageTypes.includes(row.messageType);
 }
 

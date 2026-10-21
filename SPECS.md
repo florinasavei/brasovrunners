@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.66-2026-10-21 -->
+<!-- PROJECT_BASELINE: BR-V3.67-2026-10-21 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.66-2026-10-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.67-2026-10-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2927,6 +2927,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 46. Given a Gmail connection or greeting that never answered (`Connection timeout`, `Greeting never received`), a refused or unresolved connection, or a failure that names an SMTP command ahead of `DATA`, when the Gmail road reports it, then it is a failure before acceptance — the sender hands the message to Mailgun at once for a group the club put on Gmail — and every other timeout (`Timeout`), socket error on a connection that was made and connection closed with no answer from the server stays "may have been accepted" (Nodemailer labels all of them `CONN`, so the message decides, not the command); given a Mailgun request that never reached it (DNS, refused, connect timeout) the result is not ambiguous, and any other network failure is (2026-10-15, `DECISIONS.md` §778).
 47. Amends criterion 43. Given a change of the roles given to a volunteer — a role added, one taken back, the set ticked anew in «Modifică», roles kept while the address is corrected, or a cancelled person with roles reopened — then one `VOLUNTEER_ROLE_ASSIGNED` is queued naming every role that stands, none when none stands, with the sorted set as its payload; it reads as before for one role and «Roluri: …», «Organizatorii ți-au dat mai multe roluri la …» and «Ce presupune fiecare rol: … — …; … — …» for several (English likewise), its footer naming the contact of every category concerned; it is withdrawn at the send when the person's roles are no longer that set (2026-10-21, `DECISIONS.md` §837).
 48. Amends criterion 44. Given a volunteer's sign-up, then the organizers' `VOLUNTEER_CLUB_NOTICE` keeps its line «name — roles offered for» and adds one boxed block (`data-email-part="volunteer-checklist"`, in both languages): «Roluri bifate» with one role per line, «Mesaj» when written, «A mai fost voluntar la alte curse» and «Face parte din grupul clubului» as Da/Nu only when the form asked the profile, «Mărimea tricoului» while the event gives shirts, the public-list tick when given and the minor's line when a parent is asked; the plain text reads one line per fact, the roles each after a dash; it never carries the address, the telephone number, the city, the date of birth or the sex (2026-10-21, `DECISIONS.md` §837).
+49. A row `enqueueEmail` queues in a request whose press chose a road carries that road in `road` when the row's group is the dialog's, and null otherwise; the claim and the sender's route take a stamped row by its stamp before the group's setting, and a Gmail stamp where Gmail is not configured is the group's road (2026-10-21, `DECISIONS.md` §841).
 
 **Verification:** integration `notifications/outbox.test.ts`; integration `notifications/send-now.test.ts`; integration `notifications/email-health.test.ts`; integration `notifications/email-plan.test.ts` (7); unit `notifications/email-plan.test.ts`; e2e `email-plan.spec.ts` (8)
 

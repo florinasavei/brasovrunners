@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.67` | the email's road in every confirmation dialog, switchable per press, named in the toast (§841) |
 | `BR-V3.66` | a volunteer's roles under their categories, in «Modifică» and «Alt rol» (§840) |
 | `BR-V3.65` | «Voluntari», the events' volunteers as one screen, in Excel too (§839) |
 | `BR-V3.64` | a volunteer may be given several roles (§837) · the test gate in minutes: one migrated database per run, four CI shards (§838) |

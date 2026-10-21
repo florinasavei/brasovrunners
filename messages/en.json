@@ -2106,7 +2106,20 @@
       "noteDeleteTitle": "Delete the note?",
       "noteDeleteBody": "The note is deleted for good, along with its text. The trail keeps only who deleted it and when.",
       "rsvpAskAudienceTitle": "Change who we ask “Coming?”",
-      "rsvpAskAudienceBody": "From the save on, the question before events goes to the people chosen. Whoever answered “I'm coming!” is asked only under a notice that describes it, and can refuse, per series."
+      "rsvpAskAudienceBody": "From the save on, the question before events goes to the people chosen. Whoever answered “I'm coming!” is asked only under a notice that describes it, and can refuse, per series.",
+      "road": {
+        "leaves": "Leaves by {road}.",
+        "legend": "Which road the email takes",
+        "recommended": "recommended",
+        "why": {
+          "links": "Mailgun recommended: an action link that is late or lands in spam is a place lost.",
+          "confirmations": "Mailgun recommended: confirmations arrive surely and on time; a personal Gmail sending many automated messages gets restricted by Google.",
+          "reminders": "Mailgun recommended: one message per runner, all at the same hour — the burst Google blocks on a personal account.",
+          "announcements": "Mailgun recommended: an announcement goes to many at once, and the club's Gmail is for a few messages, person to person.",
+          "club": "The club's Gmail recommended: the message reaches the club's own mailboxes, people who know the sender, and costs nothing from Mailgun.",
+          "newsletter": "Mailgun recommended: a personal Gmail writing to many addresses gets restricted by Google."
+        }
+      }
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -11923,8 +11936,8 @@
       "cycleMore": "The calendar month, in UTC. Vercel's Usage page counts from the start of the billing cycle, which begins on another day.",
       "subscription": "The subscription itself: ${usd} so far.",
       "cpu": "Function CPU time: {hours} of the {of} CPU-hours the Hobby plan includes a month ({percent}%).",
-        "cpuNear": "Close to the allowance: {hours} of the {of} CPU-hours the Hobby plan includes a month ({percent}%). Past it, Hobby cannot use that feature for about 30 days.",
-        "cpuUnknown": "Function CPU time cannot be compared with the Hobby allowance: Vercel gave it in «{unit}», not in hours.",
+      "cpuNear": "Close to the allowance: {hours} of the {of} CPU-hours the Hobby plan includes a month ({percent}%). Past it, Hobby cannot use that feature for about 30 days.",
+      "cpuUnknown": "Function CPU time cannot be compared with the Hobby allowance: Vercel gave it in «{unit}», not in hours.",
       "linesTitle": "By service",
       "line": "{quantity} {unit} · ${usd}",
       "buildsTitle": "Builds by project",
@@ -12756,6 +12769,10 @@
       "resultsUnpublished": "The results are no longer public on the event's page.",
       "resultsPublicUnchanged": "It was already so; nothing to change.",
       "rsvpAskAudience": "The choice for the “Coming?” question was saved."
+    },
+    "via": {
+      "mailgun": "Leaves by Mailgun.",
+      "gmail": "Leaves by the club's Gmail."
     }
   },
   "Network": {
