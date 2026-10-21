@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.65-2026-10-21 -->
+<!-- PROJECT_BASELINE: BR-V3.66-2026-10-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.65-2026-10-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.66-2026-10-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27762,3 +27762,17 @@ Baseline `BR-V3.64-2026-10-21`.
 Amends §754 and §761.
 
 Baseline `BR-V3.65-2026-10-21`.
+
+## 840. A volunteer's roles under their categories, in «Modifică» and «Alt rol»
+
+**The owner, 2026-10-21**, from his phone, on the volunteer's own page (§839, the day it shipped): «On the volunteer individual page, the roles should be grouped by category, as in any other page». The public form (§774) and the «Roluri» card (§791) list an event's roles under their categories' headings; the person's block — the two box groups of «Modifică», «Ce e dispus(ă) să facă» and «Rolurile date», and the select of «Alt rol» — listed them flat, each role saying its category in parentheses, «Direcționare (Traseu)», a list of twelve lines where the other pages show three headings. Amends §761 (the boxes) and §837 (the select).
+
+**Decision.** `VolunteerPerson` groups the roles as the other pages do (`groupRolesByCategory`, the categories with roles only, the roles under none last as «Alte roluri»): in «Modifică» each of the two box groups shows one heading per category and the boxes under it, each role by its own name — the heading says the category, so the parenthesis would say it twice; «Alt rol» becomes a select with one `<optgroup>` per category, each option the role's name and how it stands. An event with no category keeps one group and no heading, and a role named alone — a chip, a button, the agreement's blank, the CSV — still says «Direcționare (Traseu)»: only the lists that have a heading drop the parenthesis. The card's «Adaugă un voluntar de mână» and the person's page draw the same component, so both changed at once.
+
+**Not changed:** the roles' order (the club's, within each category), what is posted (`roleIds`, `assignedRoleIds`, `roleId`), the service, the words.
+
+**Refused.** Grouping the «Dă-i rolul …» buttons under headings (a person ticked two or three roles; a heading over one button is noise, and each button names its category already); a heading per category on the «Roluri date» chips (the same reason).
+
+Amends §761 and §837.
+
+Baseline `BR-V3.66-2026-10-21`.
