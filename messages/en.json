@@ -156,6 +156,26 @@
               "one": "In 1 month",
               "few": "In {count} months",
               "other": "In {count} months"
+            },
+            "precise": {
+              "todayIn": "Today, in {span}",
+              "tomorrowIn": "Tomorrow, in {span}",
+              "daysAndHours": "In {days} and {hours}",
+              "minutes": {
+                "one": "1 minute",
+                "few": "{count} minutes",
+                "other": "{count} minutes"
+              },
+              "hours": {
+                "one": "1 hour",
+                "few": "{count} hours",
+                "other": "{count} hours"
+              },
+              "days": {
+                "one": "1 day",
+                "few": "{count} days",
+                "other": "{count} days"
+              }
             }
           }
         },

@@ -7,6 +7,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatTime } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
+import type { AwayWords } from "@/modules/events/domain/away-words";
 import { awayFrom } from "@/modules/events/domain/next-event-away";
 import type { PublicEvent } from "@/modules/events/repository";
 import type { WeatherReading } from "@/modules/weather/domain/forecast";
@@ -14,6 +15,7 @@ import CardWeather from "@/modules/weather/ui/CardWeather";
 import ArrowButtonLink from "@/shared/ui/ArrowButtonLink";
 import { COLOR, COLOR_DARK } from "@/theme/brand";
 import { LOOK_ACCENT_TINT, UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
+import AwayLine from "./AwayLine";
 import { buildRoutePills } from "./route-pills";
 import RoutePills from "./RoutePills";
 
@@ -32,6 +34,11 @@ export type NextEventPanelProps = {
   now: Date;
   /** The forecast at its start (§402, cached an hour), or null outside the seven days, on a failure, or for an event that shows none. */
   weather: WeatherReading | null;
+  /**
+   * Whether the countdown refines itself to the hour on the visitor's clock (§843, `AwayLine`). On for the calendar; the design
+   * page's fixed sample (`SAMPLE_NOW`) turns it off, so its words stay the sample's.
+   */
+  live?: boolean;
 };
 
 /** A fact's line: its glyph, then the words, as the event page draws its own. */
@@ -45,13 +52,13 @@ const FACT_SX = { display: "flex", alignItems: "center", gap: 1, fontSize: "0.93
  * exactly as a listing card draws them (`buildRoutePills`, §366) with the weather at the start as
  * their last (§402, §429), and «Vezi detalii» to the event's page (`ArrowButtonLink`, §708). Under the
  * day, a line says how far away it is — «Azi», «Mâine», «Peste 5 zile», «Peste 3 săptămâni», «Peste 2 luni»,
- * «Acum» once it has started (`awayFrom`, §834) — with a calendar glyph (the hourglass already means the waiting list), in the fact lines' own pattern.
+ * «Acum» once it has started (`awayFrom`, §834), refined in the browser to the hour, «Peste 4 zile și 3 ore» (`AwayLine`, §843) — with a calendar glyph (the hourglass already means the waiting list), in the fact lines' own pattern.
  *
  * The page asks for it only while the look is on, so with the setting off the calendar reads
  * nothing more and draws nothing more. A Server Component with typed props; nothing crosses into a
  * client component but strings and glyph names.
  */
-export default async function NextEventPanel({ event, locale, now, weather }: NextEventPanelProps) {
+export default async function NextEventPanel({ event, locale, now, weather, live = true }: NextEventPanelProps) {
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
   const format = await getFormatter();
@@ -62,6 +69,20 @@ export default async function NextEventPanel({ event, locale, now, weather }: Ne
     away.kind === "days" || away.kind === "weeks" || away.kind === "months"
       ? t(`calendar.look.nextEvent.away.${away.kind}.${countForm(away.count, locale)}`, { count: away.count })
       : t(`calendar.look.nextEvent.away.${away.kind}`);
+  // The countdown's words to the hour, raw, for the island (§843): the server says the day, the visitor's clock the hours.
+  const raw = (key: string) => t.raw(`calendar.look.nextEvent.away.${key}`) as never;
+  const awayWordsRaw: AwayWords = {
+    now: raw("now"),
+    todayIn: raw("precise.todayIn"),
+    tomorrowIn: raw("precise.tomorrowIn"),
+    daysAndHours: raw("precise.daysAndHours"),
+    minutes: raw("precise.minutes"),
+    hours: raw("precise.hours"),
+    days: raw("precise.days"),
+    wholeDays: raw("days"),
+    weeks: raw("weeks"),
+    months: raw("months"),
+  };
 
   return (
     <Box
@@ -75,7 +96,7 @@ export default async function NextEventPanel({ event, locale, now, weather }: Ne
       </Typography>
       <Box sx={{ ...FACT_SX, fontWeight: 600 }} data-testid="calendar-next-away" data-away={away.kind}>
         <TodayIcon aria-hidden="true" />
-        <span>{awayWords}</span>
+        <AwayLine initial={awayWords} startsAt={event.startsAt.toISOString()} timeZone={CLUB_TIME_ZONE} locale={locale} words={awayWordsRaw} live={live} />
       </Box>
       <Box
         component="span"

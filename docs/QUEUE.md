@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.69` | the calendar's countdown to the hour (§843) |
 | `BR-V3.68` | the roles and the checkpoints editors as the house's row folds (§842) |
 | `BR-V3.67` | the email's road in every confirmation dialog, switchable per press, named in the toast (§841) |
 | `BR-V3.66` | a volunteer's roles under their categories, in «Modifică» and «Alt rol» (§840) |
