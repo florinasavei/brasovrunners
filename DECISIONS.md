@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.67-2026-10-21 -->
+<!-- PROJECT_BASELINE: BR-V3.68-2026-10-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.67-2026-10-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.68-2026-10-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27790,3 +27790,22 @@ Baseline `BR-V3.66-2026-10-21`.
 **Refused.** Changing the group setting from the dialog (one press is not a policy; «Setări» → «Emailuri» stays the one place a setting moves). Starting the radios on the recommendation rather than the setting (the club's choice stands until the reader moves it). A road line on a dialog that announces no email (nothing to say). A per-press road for «Trimite acum» on the queue, whose rows already carry theirs.
 
 Baseline `BR-V3.67-2026-10-21`.
+
+## 842. The roles editor and the checkpoints editor as the house's row folds: a line in words, the boxes behind the pencil
+
+**The owner, 2026-10-21:** «I do not like the volunteers roles editor and then course points editor, they look like they are from a different app, not consistent at all».
+
+**What was wrong.** The two editors were the only lists in the event editor drawn as walls of boxes. «Roluri» showed every role as an open line of five boxes, a tick, a chip, the badge's band, «Șterge rolul» and «Mai multe», and ended each category with a blank row of the same boxes (§791): six roles were a screen and a half of inputs before anything could be read. «Puncte pe traseu» drew each saved point as a closed card of its own and «Adaugă puncte» as three full blank forms, the kilometre's rule under each (§757). Everywhere else a list a person edits — the event's to-dos (§749), the categories, the people — reads as rows of words with the verbs behind them.
+
+**Decision.** One shape for a list of things a person edits, the to-dos' (§749), now shared as `shared/ui/row-fold.ts` (`ROW_SX`, `LINE_SX`, `SUMMARY_SX`, `PENCIL_SX`, `FACTS_SX`) so every such list changes together:
+
+- **A role** is one line — its name in both languages, the «N din M» chip, the pencil — whose press opens its boxes in place (the names, «Câte persoane» with «Nelimitat», «Categoria», «Poziția», then «Mai multe» with the description and the band's colour, the band's sample now beside its colour boxes) and «Șterge rolul» last. Still ONE form and ONE «Salvează toate rolurile» (§791): a closed row's boxes post as they were.
+- **«Adaugă un rol»** replaces the blank row at the end of each category: the same boxes behind a fold, like every «Adaugă…» of the backoffice, open by itself only on a category with no role; one line under its title, the old hint behind its «?» (§511).
+- **A checkpoint** is one line — «5,2 km — Poiana Brașov», then what is there and its limit in words, the pencil — its boxes behind it, inside the same detached form (§763).
+- **«Adaugă puncte»** shows one blank point; the second and third of one sitting stand behind «Încă două puncte, în aceeași salvare». The kilometre's rule is said once, under the fold's title, not under each box.
+
+Each row fold is keyed on what its line says, so a save that changes the line draws it closed; a refusal reopens the folds around the refused box as before (`revealField`). §269's guard learns the row fold as the second kind of fold beside `Panel`'s help line, counted by its one shared summary object, so a row fold drawn by hand is still caught.
+
+**Refused.** A table with editable cells (the boxes do not fit 320 pixels, and nothing else in the backoffice edits in cells). A per-row «Salvează» for the roles (§791 chose one press for all of them, and the owner asked for it). Dropping the second and third blank checkpoint (the GPX-less club types several points in one sitting; they are one line away).
+
+Baseline `BR-V3.68-2026-10-21`.

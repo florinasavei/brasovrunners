@@ -33,11 +33,15 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
+import { FACTS_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import DurationBoxes from "./DurationBoxes";
 
 /** The glyph before «Scoate»: the delete verb's, by name from the verbs' registry (§318). */
 const RemoveGlyph = ACTION_ICONS.delete;
+
+/** The pencil at the end of a point's line: the edit verb's glyph, by name (§318). */
+const PencilIcon = ACTION_ICONS.edit;
 
 /** The glyph before «Timp limită»: the one the race's own box wears (`WhenBox`), the deadlines' clock. */
 const LimitGlyph = PANEL_GLYPHS.deadlines;
@@ -156,7 +160,6 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
         <RecallField
           name={checkpointBox(index, "km")}
           label={t("checkpoints.field.km")}
-          helperText={saved ? undefined : routeKm !== null ? t("checkpoints.field.kmHelp", { max: km(routeKm) }) : t("checkpoints.field.kmHelpNoRoute")}
           defaultValue={saved ? String(saved.km) : ""}
           size="small"
           sx={{ flex: { sm: "0 0 160px" } }}
@@ -461,27 +464,63 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
             {gpxOffer}
             <DetachedFields form={CHECKPOINTS_FORM}>
               <Stack spacing={2} data-testid="checkpoints-fields">
-                {checkpoints.map((row, index) => (
+                {/* The saved points as the house's row folds (§842, `shared/ui/row-fold.ts`): each line the point in words — the kilometre and the name,
+                    what is there, its limit — with the pencil at the end; a press on it opens the point's boxes in place. */}
+                {count > 0 && (
+                  <Stack spacing={0} component="ul" aria-label={t("checkpoints.title")} sx={{ listStyle: "none", m: 0, p: 0 }}>
+                    {checkpoints.map((row, index) => {
+                      const title = t("checkpoints.rowTitle", { km: km(row.km), name: locale === "ro" ? row.nameRo : row.nameEn });
+                      const facts = [row.kinds.map((kind) => t(`checkpoints.kinds.${kind}`)).join(", "), limitWords(row) ?? ""].filter((part) => part !== "").join(" · ");
+                      return (
+                        <Box component="li" key={row.id} sx={ROW_SX}>
+                          <Box component="details" key={[row.km, row.nameRo, row.nameEn, row.kinds.join(","), row.cutoffMinutes].join("\u0001")} data-testid="checkpoint-card">
+                            <Box component="summary" title={t("checkpoints.edit")} data-testid="checkpoint-edit-toggle" sx={SUMMARY_SX}>
+                              <Box sx={{ gridArea: "words", minWidth: 0 }}>
+                                <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }} data-testid="checkpoint-name">
+                                  {title}
+                                </Typography>
+                              </Box>
+                              <Box sx={FACTS_SX}>
+                                {facts !== "" && (
+                                  <Typography variant="body2" color="text.secondary" component="span" data-testid="checkpoint-facts">
+                                    {facts}
+                                  </Typography>
+                                )}
+                              </Box>
+                              <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
+                            </Box>
+                            <Box sx={{ pb: 1.5, pt: 0.5 }}>{rowFields(index, row)}</Box>
+                          </Box>
+                        </Box>
+                      );
+                    })}
+                  </Stack>
+                )}
+                {count < CHECKPOINTS_MAX ? (
                   <Panel
-                    key={row.id}
-                    glyph="checkpoints"
+                    glyph="add"
                     collapsible
                     level={4}
-                    title={t("checkpoints.rowTitle", { km: km(row.km), name: locale === "ro" ? row.nameRo : row.nameEn })}
-                    aside={limitWords(row) ?? undefined}
-                    data-testid="checkpoint-card"
+                    title={t("checkpoints.add.title")}
+                    // The kilometre's rule once, over the rows, rather than under each box (§842).
+                    intro={routeKm !== null ? t("checkpoints.field.kmHelp", { max: km(routeKm) }) : t("checkpoints.field.kmHelpNoRoute")}
+                    openWhen={{ primary: count === 0 }}
+                    data-testid="checkpoint-add"
                   >
-                    {rowFields(index, row)}
-                  </Panel>
-                ))}
-                {count < CHECKPOINTS_MAX ? (
-                  <Panel glyph="add" collapsible level={4} title={t("checkpoints.add.title")} openWhen={{ primary: count === 0 }} data-testid="checkpoint-add">
-                    <Stack spacing={2.5}>
-                      {Array.from({ length: Math.min(SPARE_ROWS, CHECKPOINTS_MAX - count) }, (_, spare) => (
-                        <Box key={spare} sx={{ borderTop: spare > 0 ? 1 : 0, borderColor: "divider", pt: spare > 0 ? 2 : 0 }}>
-                          {rowFields(count + spare, null)}
-                        </Box>
-                      ))}
+                    <Stack spacing={2}>
+                      {rowFields(count, null)}
+                      {/* The second and the third row of one sitting (§757's three spare rows), behind one line: the usual press adds one point. */}
+                      {CHECKPOINTS_MAX - count > 1 && (
+                        <Panel variant="help" title={t("checkpoints.add.more")} data-testid="checkpoints-more-rows">
+                          <Stack spacing={2.5} sx={{ pt: 1, pb: 1.5 }}>
+                            {Array.from({ length: Math.min(SPARE_ROWS, CHECKPOINTS_MAX - count) - 1 }, (_, spare) => (
+                              <Box key={spare} sx={{ borderTop: spare > 0 ? 1 : 0, borderColor: "divider", pt: spare > 0 ? 2 : 0 }}>
+                                {rowFields(count + 1 + spare, null)}
+                              </Box>
+                            ))}
+                          </Stack>
+                        </Panel>
+                      )}
                     </Stack>
                   </Panel>
                 ) : (

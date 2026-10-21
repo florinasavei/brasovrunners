@@ -5303,7 +5303,7 @@
       "switchOn": "Primește voluntari pe pagină",
       "rolesTitle": "Roluri",
       "rolesCount": "Roluri: {count}",
-      "rolesIntro": "Schimbă ce vrei la oricâte roluri și apasă o dată „Salvează toate rolurile”. Poziția dă ordinea din categorie; un rând gol la final adaugă un rol.",
+      "rolesIntro": "Schimbă ce vrei la oricâte roluri și apasă o dată „Salvează toate rolurile”. Poziția dă ordinea din categorie; „Adaugă un rol”, la finalul fiecărei categorii, adaugă unul.",
       "rolesNeededHelp": "Câte persoane: cel puțin 1, sau bifează „Nelimitat”. Se numără doar oamenii cărora le-ai dat rolul; când are atâția, formularul public nu-l mai oferă.",
       "rolesSave": "Salvează toate rolurile",
       "rolesSaving": "Se salvează rolurile…",
@@ -5355,7 +5355,9 @@
           "tooMany": "un eveniment are cel mult {max} de roluri",
           "stale": "altcineva a schimbat rolul între timp; reîncarcă pagina și fă din nou schimbarea",
           "gone": "rolul nu mai există (a fost șters între timp)"
-        }
+        },
+        "addTitle": "Adaugă un rol",
+        "addIntro": "Scrie numele în ambele limbi, apoi „Salvează toate rolurile”."
       },
       "move": {
         "up": "Mută mai sus",
@@ -10414,7 +10416,8 @@
       "remove": "Scoate acest punct",
       "removeHelp": "Se șterge la „Salvează punctele”.",
       "add": {
-        "title": "Adaugă puncte"
+        "title": "Adaugă puncte",
+        "more": "Încă două puncte, în aceeași salvare"
       },
       "full": "Sunt deja {max} de puncte, cât încape pe un traseu.",
       "save": "Salvează punctele",
@@ -10444,7 +10447,8 @@
         "add": "Adaugă punctele alese",
         "adding": "Se adaugă…",
         "close": "Închide previzualizarea"
-      }
+      },
+      "edit": "Modifică punctul"
     },
     "badges": {
       "backToEvent": "← Înapoi la eveniment",

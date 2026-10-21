@@ -37,8 +37,21 @@ export type RoleBoxes = {
   position?: string;
 };
 
+/**
+ * Opens a row's boxes the way a person does (§842): a saved role's line is a fold whose summary is the role in words, the blank row stands in its
+ * category's «Adaugă un rol» fold — every fold around the row, outermost first, then the row's own.
+ */
+export async function openRoleRow(row: Locator): Promise<void> {
+  const around = row.locator("xpath=ancestor::details");
+  const count = await around.count();
+  for (let index = 0; index < count; index += 1) await openFold(around.nth(index));
+  const own = row.getByTestId("volunteer-role-edit");
+  if (await own.count()) await openFold(own);
+}
+
 /** Types into the boxes of one row, the way a person does: only what is given. */
 export async function fillRoleRow(row: Locator, boxes: RoleBoxes): Promise<void> {
+  await openRoleRow(row);
   if (boxes.nameRo !== undefined) await row.getByLabel("Nume (RO)").fill(boxes.nameRo);
   if (boxes.nameEn !== undefined) await row.getByLabel("Nume (EN)").fill(boxes.nameEn);
   if (boxes.needed !== undefined) await row.getByLabel("Câte persoane", { exact: true }).fill(boxes.needed);
@@ -56,6 +69,7 @@ export async function fillRoleRow(row: Locator, boxes: RoleBoxes): Promise<void>
  * mounts when its tab is in front (§96, §363), and a fold opened under one language is open under the other (the twin folds, §363). One paragraph per line.
  */
 export async function describeRole(row: Locator, ro: readonly string[], en: readonly string[]): Promise<void> {
+  await openRoleRow(row);
   const more = row.getByTestId("volunteer-role-more");
   await openFold(more);
   for (const [tab, box, lines] of [
