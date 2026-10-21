@@ -3,13 +3,14 @@
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
+import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Tooltip from "@mui/material/Tooltip";
 import { readingTimeMs, TOOLTIP_TEXT_SX } from "@/shared/ui/tooltip-text";
 import { usePathname } from "next/navigation";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { activeAdminTabHref } from "../domain/admin-tab-match";
 import type { AdminSection } from "../domain/roles";
-import { useEffect, useRef } from "react";
+import { type ComponentType, useEffect, useRef } from "react";
 import ArticleIcon from "@mui/icons-material/Article";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
@@ -79,7 +80,7 @@ const COUNT_PILL_GLYPH = {
  * one bare word in a row of glyphs (the owner, 2026-09-22: "I am missing the icons for the
  * email"). Widening the key to `AdminSection` is what makes the next omission a build failure.
  */
-const ICONS: Record<AdminSection, typeof EventIcon> = {
+const ICONS: Record<AdminSection, ComponentType<SvgIconProps>> = {
   events: EventIcon,
   checkin: EmojiEventsIcon,
   guide: MenuBookIcon,
@@ -88,6 +89,8 @@ const ICONS: Record<AdminSection, typeof EventIcon> = {
   // The list, not the person with the tick: that is checking a runner in, a verb the desk and
   // the registration's "⋮" wear, and a tab must not look like one of its own verbs (§318).
   registrations: ListAltIcon,
+  // «Voluntari» (§839): the heart in the hand the event card's «Voluntari» box wears, asked of the registry by name (§318) — the panel table is the server's alone.
+  volunteers: ACTION_ICONS.volunteers,
   tasks: ChecklistIcon,
   legal: GavelIcon,
   // «Setări» (§516): the sliders — «Configurație» (/devs) is one of its tabs, with no gear of its own in the bar since §520.

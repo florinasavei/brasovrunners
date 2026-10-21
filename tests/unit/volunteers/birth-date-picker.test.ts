@@ -76,7 +76,7 @@ describe("off by default — the registration form's box is the box it always wa
   it("only the volunteers' two places ask for it", () => {
     expect(read("src/modules/volunteers/ui/VolunteerBox.tsx")).toContain('picker={{ label: tForm("birthDatePicker") }}');
     expect(read("src/modules/volunteers/ui/VolunteerBirthDateField.tsx")).toContain("picker={{ label: words.pickerLabel }}");
-    expect(read("src/modules/volunteers/ui/VolunteersCard.tsx")).toContain('pickerLabel: tReg("birthDatePicker")');
+    expect(read("src/modules/volunteers/ui/VolunteerPerson.tsx")).toContain('pickerLabel: tReg("birthDatePicker")');
     for (const file of [
       "src/modules/registrations/ui/registration-form.tsx",
       "src/modules/registrations/ui/StaffEventBirthDate.tsx",

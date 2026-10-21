@@ -365,6 +365,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     expect(visibleAdminSections("MODERATOR")).toEqual([
       "events",
       "registrations",
+      "volunteers",
       "checkin",
       "gallery",
       "pages",
@@ -389,6 +390,8 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // The line that carries the weight (§38): DEV helps with the platform and never sees the
     // people who registered.
     expect(sections).not.toContain("registrations");
+    // Nor the volunteers (§839): their addresses and telephone numbers are the same kind of data (§754).
+    expect(sections).not.toContain("volunteers");
     expect(sections).not.toContain("staff");
     // Nor writes to anybody: the newsletter is the club speaking, never the platform's helper (§445).
     expect(sections).not.toContain("newsletter");
@@ -400,6 +403,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     expect(visibleAdminSections("ADMIN")).toEqual([
       "events",
       "registrations",
+      "volunteers",
       "checkin",
       "gallery",
       "pages",
@@ -417,6 +421,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     expect(visibleAdminSections("SUPERADMIN")).toEqual([
       "events",
       "registrations",
+      "volunteers",
       "checkin",
       "gallery",
       "pages",
@@ -446,7 +451,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     it stays exactly these cells. A weakened invariant with nothing guarding the weakening is how
     the defect this whole block exists for got in.
   */
-  const NOT_INHERITED_BY_DEV = new Set<AdminSection>(["registrations", "newsletter", "shop"]);
+  const NOT_INHERITED_BY_DEV = new Set<AdminSection>(["registrations", "volunteers", "newsletter", "shop"]);
 
   it("never offers a higher role less than a lower one, apart from DEV, the participant list, the newsletter and the shop", () => {
     // The property, across every pair in the hierarchy. An equality test against a role name
