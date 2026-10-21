@@ -43,10 +43,13 @@ import {
   agreementStandingOf,
   agreementStillNamesRole,
   earliestVolunteerBirthDate,
+  groupRolesByCategory,
+  groupsNeedHeadings,
   guardianSharesAddress,
   guardianStandingOf,
   isVolunteerMinor,
   latestVolunteerBirthDate,
+  type RoleGroup,
   type RoleStanding,
   roleLabel,
   rolesWithCategoryWords,
@@ -159,9 +162,20 @@ async function sharedOf(context: VolunteerPersonContext) {
     assigned: person.roleIds.flatMap((id) => roleById.get(id) ?? []),
     chosen: person.choiceIds.flatMap((id) => roleById.get(id) ?? []),
   });
+  /*
+    The roles under their categories (§774, §NNN; the owner, 2026-10-21: «on the volunteer individual page, the roles should be grouped
+    by category, as in any other page»): the boxes of «Modifică» and the select of «Alt rol» list them under the category's heading,
+    each role by its own name — the heading says the category, as the public form and the «Roluri» card do. An event with no
+    category has one group and no heading, and a role named alone keeps saying «Direcționare (Traseu)».
+  */
+  const roleGroups = groupRolesByCategory(categories, roles, { withRoles: true });
+  const headed = groupsNeedHeadings(roleGroups);
+  const groupName = (group: RoleGroup<VolunteerCategory, VolunteerRole>) =>
+    group.category ? (locale === "en" ? group.category.nameEn : group.category.nameRo) : t("volunteers.otherCategory");
+  const nameOf = (role: VolunteerRole) => (locale === "en" ? role.nameEn : role.nameRo);
   const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
   const hidden = volunteerHiddenFields(context);
-  return { t, tReg, words, standingOf, labelled, labelOf, rolesOf, day, hidden };
+  return { t, tReg, words, standingOf, labelled, labelOf, roleGroups, headed, groupName, nameOf, rolesOf, day, hidden };
 }
 
 /**
@@ -172,7 +186,25 @@ async function sharedOf(context: VolunteerPersonContext) {
  */
 export async function VolunteerPersonFields({ person, context }: { person: VolunteerItem | null; context: VolunteerPersonContext }) {
   const { locale, volunteersShirts, profileDescribed, minorsOpen, listDescribed, eventDay } = context;
-  const { t, tReg, labelled, labelOf } = await sharedOf(context);
+  const { t, tReg, labelOf, roleGroups, headed, groupName, nameOf } = await sharedOf(context);
+  /** One group's boxes under its category's heading (§NNN); without categories, the boxes alone, each role named as before. */
+  const roleBoxes = (name: "roleIds" | "assignedRoleIds", ticked: (role: VolunteerRole) => boolean) =>
+    roleGroups.map((group) => {
+      const boxes = group.roles.map((role) => (
+        <CheckboxField key={role.id} name={name} value={role.id} defaultChecked={ticked(role)}>
+          {headed ? nameOf(role) : labelOf(role)}
+        </CheckboxField>
+      ));
+      if (!headed) return <Box key="all">{boxes}</Box>;
+      return (
+        <Box key={group.category?.id ?? "other"} role="group" aria-label={groupName(group)} sx={{ mt: 1 }} data-testid="volunteer-role-category">
+          <Typography variant="caption" sx={{ display: "block", fontWeight: 600, color: "text.secondary" }}>
+            {groupName(group)}
+          </Typography>
+          {boxes}
+        </Box>
+      );
+    });
   return (
     <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
       <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0 }} data-testid="volunteer-choices-field">
@@ -182,11 +214,7 @@ export async function VolunteerPersonFields({ person, context }: { person: Volun
         <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
           {t("volunteers.person.choicesHelp")}
         </Typography>
-        {labelled.map((role) => (
-          <CheckboxField key={role.id} name="roleIds" value={role.id} defaultChecked={person?.choiceIds.includes(role.id) ?? false}>
-            {labelOf(role)}
-          </CheckboxField>
-        ))}
+        {roleBoxes("roleIds", (role) => person?.choiceIds.includes(role.id) ?? false)}
       </Box>
       <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0 }} data-testid="volunteer-assigned-field">
         <Typography component="legend" variant="body2" sx={{ fontWeight: 600, p: 0 }}>
@@ -195,11 +223,7 @@ export async function VolunteerPersonFields({ person, context }: { person: Volun
         <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
           {t("volunteers.person.assignedHelp")}
         </Typography>
-        {labelled.map((role) => (
-          <CheckboxField key={role.id} name="assignedRoleIds" value={role.id} defaultChecked={person?.roleIds.includes(role.id) ?? false}>
-            {labelOf(role)}
-          </CheckboxField>
-        ))}
+        {roleBoxes("assignedRoleIds", (role) => person?.roleIds.includes(role.id) ?? false)}
       </Box>
       <RecallField
         name="name"
@@ -373,7 +397,7 @@ export async function VolunteerPersonFields({ person, context }: { person: Volun
  */
 export default async function VolunteerPerson({ person, context, as = "li" }: { person: VolunteerItem; context: VolunteerPersonContext; as?: "li" | "section" }) {
   const { locale, eventId, volunteersShirts, minorsOpen, agreementInForce, agreementNoticeDescribes, agreementDocumentIds, agreementEvent, now } = context;
-  const { t, words, standingOf, labelled, labelOf, rolesOf, day, hidden } = await sharedOf(context);
+  const { t, words, standingOf, labelled, labelOf, roleGroups, headed, groupName, nameOf, rolesOf, day, hidden } = await sharedOf(context);
   const personBoxes = await volunteerPersonBoxes(t);
   const personFields = (one: VolunteerItem | null) => <VolunteerPersonFields person={one} context={context} />;
 
@@ -568,10 +592,10 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
   };
 
   /** A role's name with how it stands, «Sosire · 1 din 1»: what the organizer sees before one press fills it. */
-  const roleStanding = (role: VolunteerRole) =>
+  const roleStanding = (role: VolunteerRole, label = labelOf(role)) =>
     role.needed === null
-      ? t("volunteers.assign.standingNoNumber", { role: labelOf(role), taken: String(standingOf.get(role.id)?.taken ?? 0) })
-      : t("volunteers.assign.standing", { role: labelOf(role), taken: String(standingOf.get(role.id)?.taken ?? 0), needed: String(role.needed) });
+      ? t("volunteers.assign.standingNoNumber", { role: label, taken: String(standingOf.get(role.id)?.taken ?? 0) })
+      : t("volunteers.assign.standing", { role: label, taken: String(standingOf.get(role.id)?.taken ?? 0), needed: String(role.needed) });
 
   /**
    * «Dă-i rolul …» (§761) and, for a person who already has one, «Dă-i și rolul …» (§837): one press per role the person
@@ -618,11 +642,23 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
               slotProps={{ select: { native: true }, inputLabel: { shrink: true }, htmlInput: { "aria-label": `${t("volunteers.assign.other")}: ${shortText(person.name)}` } }}
               sx={{ minWidth: 200 }}
             >
-              {others.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {roleStanding(role)}
-                </option>
-              ))}
+              {/* The other roles under their categories (§NNN): one group per category, each role by its own name with how it stands. */}
+              {roleGroups.map((group) => {
+                const offered = group.roles.filter((role) => others.some((other) => other.id === role.id));
+                if (offered.length === 0) return null;
+                const options = offered.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {headed ? roleStanding(role, nameOf(role)) : roleStanding(role)}
+                  </option>
+                ));
+                return headed ? (
+                  <optgroup key={group.category?.id ?? "other"} label={groupName(group)}>
+                    {options}
+                  </optgroup>
+                ) : (
+                  options
+                );
+              })}
             </TextField>
             <GlyphSubmitButton
               icon="role"
