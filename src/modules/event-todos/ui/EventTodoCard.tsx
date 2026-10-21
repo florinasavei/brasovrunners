@@ -21,6 +21,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import StatusChip from "@/shared/ui/StatusChip";
+import { LINE_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import type { StatusGlyphName } from "@/shared/ui/status-glyphs";
 import { EVENT_TODO_PRIORITIES, EVENT_TODO_TEXT_MAX, type EventTodoPriority, isTodoOverdue } from "../domain/event-todo";
 import type { EventTodoItem } from "../event-todos";
@@ -84,35 +85,6 @@ function shortText(text: string): string {
 }
 
 /** One row of a list: a hairline under it, nothing else. */
-const ROW_SX = { borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0 } } as const;
-
-/**
- * A row's line. A grid, not a flex row: on a computer the words, the small facts and the pencil sit on
- * one line; on a phone the words take the first line and the facts and the pencil the second. Never
- * `display: flex` on a `<summary>` — Chrome and Safari drop the marker, and here there is none anyway.
- */
-const LINE_SX = {
-  display: "grid",
-  gridTemplateColumns: { xs: "minmax(0, 1fr) 28px", sm: "minmax(0, 1fr) auto 28px" },
-  gridTemplateAreas: { xs: '"words words" "facts pen"', sm: '"words facts pen"' },
-  alignItems: "center",
-  columnGap: 1,
-  rowGap: 0.25,
-  minHeight: 44,
-  py: 0.5,
-} as const;
-
-/** The edit line is a `<summary>`: no marker, a hand, the whole line the target. */
-const SUMMARY_SX = {
-  ...LINE_SX,
-  cursor: "pointer",
-  listStyle: "none",
-  "&::-webkit-details-marker": { display: "none" },
-  "&::marker": { content: '""' },
-  "&:hover": { bgcolor: "action.hover" },
-} as const;
-
-/** The box that ticks: a plain submit drawn as the house's checkbox, 44 pixels square, the glyph 24. */
 const TICK_SX = { minWidth: 44, width: 44, height: 44, p: 0, borderRadius: 1, "& .MuiButton-startIcon": { m: 0 }, "& .MuiButton-startIcon > *:nth-of-type(1)": { fontSize: 24 } } as const;
 
 /**
@@ -361,7 +333,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
           <Box component="summary" title={t("eventTodos.edit")} data-testid="event-todo-edit-toggle" sx={SUMMARY_SX}>
             {wordsBlock}
             {facts(item, done)}
-            <PencilIcon aria-hidden fontSize="small" sx={{ gridArea: "pen", color: "text.secondary", justifySelf: "end" }} />
+            <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
           </Box>
           <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5, maxWidth: 640 }}>
             <ActionForm action={editEventTodoAction} scope={`todo-${item.id}`} messages={boxMessages} data-testid="event-todo-edit-form">

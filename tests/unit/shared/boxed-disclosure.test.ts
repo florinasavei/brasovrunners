@@ -150,15 +150,27 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
    */
   const UNBOXED_FOLDS: Record<string, number> = { "src/shared/ui/Panel.tsx": 1 };
 
+  /**
+   * The list row that folds open onto its boxes (§842, `shared/ui/row-fold.ts`): the to-dos', the roles', the checkpoints'
+   * rows — a line in words with the pencil, not a card, so no box around it. Counted by its summary's one shared object
+   * (`sx={SUMMARY_SX}`), so a row fold drawn by hand is still a fold too many.
+   */
+  const rowFolds = (source: string) => count(source, /sx=\{SUMMARY_SX\}/g);
+
   for (const file of folds) {
     it(`${file} draws every <details> with BOXED_DISCLOSURE_SX and none by hand`, () => {
       const source = read(file);
+      // A file of row folds only draws no card of its own: nothing to import.
+      if (count(source, new RegExp(FOLD.source, "g")) === rowFolds(source)) {
+        expect(source).toMatch(/import \{[^}]*\bSUMMARY_SX\b[^}]*\} from "@\/shared\/ui\/row-fold"/);
+        return;
+      }
       expect(source, "imports the shared object").toMatch(/import \{[^}]*\bBOXED_DISCLOSURE_SX\b[^}]*\} from "(@\/shared\/ui\/disclosure|\.\/disclosure)"/);
       // One spread per boxed fold: the count of `component="details"` equals the count of the
       // object reaching an `sx`, minus this file's own deliberately unboxed folds (above) — a
       // spread into one, or handed over whole. Comments and the import do not count, and a fold
       // styled by hand shows up here as one use too few.
-      const details = count(source, new RegExp(FOLD.source, "g")) - (UNBOXED_FOLDS[file] ?? 0);
+      const details = count(source, new RegExp(FOLD.source, "g")) - (UNBOXED_FOLDS[file] ?? 0) - rowFolds(source);
       const uses = count(source, /(?:\.\.\.|sx=\{)BOXED_DISCLOSURE_SX\b/g);
       expect(uses, `${details} boxed fold(s), ${uses} spread(s)`).toBe(details);
       // No fold writes its own summary rule any more: pointer, height and marker come from

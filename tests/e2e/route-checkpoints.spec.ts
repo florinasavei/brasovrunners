@@ -136,6 +136,8 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     // Two points: water and food at 7,5 with one hour, timing and direction at 15 with two.
     await fillRow(spare.nth(0), { km: "7,5", ro: "Apă la cabană", en: "Water at the hut", kinds: [], hours: "1", minutes: "0" });
     await spare.nth(0).getByRole("checkbox", { name: "Mâncare", exact: true }).check();
+    // The second spare row stands behind «Încă două puncte, în aceeași salvare» (§842): the usual press adds one point.
+    await openFold(card.getByTestId("checkpoints-more-rows"));
     await fillRow(spare.nth(1), { km: "15", ro: "Cronometrare", en: "Timing", kinds: ["Cronometrare", "Direcționare"], hours: "2", minutes: "0" });
     const save = card.getByRole("button", { name: "Salvează punctele" });
     expect((await save.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -296,6 +298,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
       await openEditorBox(page, "Puncte pe traseu");
       await openEditorBox(page, "Adaugă puncte");
       const rows = after.getByTestId("checkpoint-new-row");
+      await openFold(after.getByTestId("checkpoints-more-rows"));
       await fillRow(rows.nth(0), { km: "5", ro: "Prima", en: "First", kinds: [], hours: "2", minutes: "0" });
       await fillRow(rows.nth(1), { km: "9", ro: "A doua", en: "Second", kinds: [], hours: "1", minutes: "15" });
       await after.getByRole("button", { name: "Salvează punctele" }).click();

@@ -5303,7 +5303,7 @@
       "switchOn": "Take volunteers on the page",
       "rolesTitle": "Roles",
       "rolesCount": "Roles: {count}",
-      "rolesIntro": "Change what you like on any number of roles, then press “Save all roles” once. The position sets the order inside a category; an empty row at the end adds a role.",
+      "rolesIntro": "Change what you like on any number of roles, then press “Save all roles” once. The position orders a category; “Add a role”, at the end of each category, adds one.",
       "rolesNeededHelp": "People: at least 1, or tick “No limit”. Only the people you gave the role count; once it has that many, the public form stops offering it.",
       "rolesSave": "Save all roles",
       "rolesSaving": "Saving the roles…",
@@ -5355,7 +5355,9 @@
           "tooMany": "an event has at most {max} roles",
           "stale": "someone else changed the role meanwhile; reload the page and make the change again",
           "gone": "the role no longer exists (it was deleted meanwhile)"
-        }
+        },
+        "addTitle": "Add a role",
+        "addIntro": "Write both names, then press “Save all roles”."
       },
       "move": {
         "up": "Move up",
@@ -10414,7 +10416,8 @@
       "remove": "Remove this point",
       "removeHelp": "It is deleted at “Save the points”.",
       "add": {
-        "title": "Add points"
+        "title": "Add points",
+        "more": "Two more points, in the same save"
       },
       "full": "There are already {max} points, as many as fit on a route.",
       "save": "Save the points",
@@ -10444,7 +10447,8 @@
         "add": "Add the chosen points",
         "adding": "Adding…",
         "close": "Close the preview"
-      }
+      },
+      "edit": "Edit the point"
     },
     "badges": {
       "backToEvent": "← Back to the event",

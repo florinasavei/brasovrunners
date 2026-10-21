@@ -68,7 +68,12 @@ import type { VolunteerCategory, VolunteerItem, VolunteerRole } from "../volunte
 import VolunteerAccessChoice from "./VolunteerAccessChoice";
 import VolunteerPerson, { shortText, STATE_CHIP, VolunteerPersonFields, type VolunteerPersonContext, volunteerHiddenFields, volunteerPersonBoxes } from "./VolunteerPerson";
 import VolunteerInvitations from "./VolunteerInvitations";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
+import { FACTS_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
+
+/** The pencil at the end of a role's line: the edit verb's glyph, by name (§318). */
+const PencilIcon = ACTION_ICONS.edit;
 
 /** A state's chip: its word, its glyph and its tone — never the colour alone. */
 const TICK_ROW_SX = {
@@ -253,13 +258,13 @@ export default async function VolunteersCard({
   const deleteFormId = (role: VolunteerRole) => `delete-role-${role.id}`;
 
   /**
-   * One role's row in the «Roluri» card (§791; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau save de fiecare dată, ci un
-   * Save All»): a saved role, or the blank one at the end of a category — every box named by its row's key (`role-rows.ts`), all of them posted by
-   * the card's one form. The names, «Câte persoane» with «Nelimitat», «Categoria» and «Poziția» stand on one line (stacked at 320 pixels); the
-   * «N din M» chip, the band's sample and «Șterge rolul» under them; the description (one Română | English strip, §572) and the band's colour in
-   * the row's own «Mai multe», inside the same form. `index` is the role's place among those of its category, from 0: «Poziția» shows it from 1.
+   * The boxes of one role (§791; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau save de fiecare dată, ci un Save All»): a saved
+   * role's, or the blank ones of «Adaugă un rol» — every box named by its row's key (`role-rows.ts`), all of them posted by the card's one form. The
+   * names, «Câte persoane» with «Nelimitat», «Categoria» and «Poziția» on one line (stacked at 320 pixels); the description (one Română | English
+   * strip, §572) and the band's colour in «Mai multe» under them, inside the same form. `index` is the role's place among those of its category, from 0:
+   * «Poziția» shows it from 1.
    */
-  const roleRowOf = (role: VolunteerRole | null, categoryId: string | null, index: number) => {
+  const roleBoxesOf = (role: VolunteerRole | null, categoryId: string | null, index: number) => {
     const key = role ? role.id : newRoleRowKey(categoryId);
     const box = (name: RoleRowBox) => roleBox(key, name);
     const title = role ? role.nameRo : t("volunteers.role.newRow");
@@ -279,21 +284,7 @@ export default async function VolunteersCard({
     const written = { ro: role?.descriptionRoJson != null, en: role?.descriptionEnJson != null };
     const first = role ? descriptionHead(locale === "en" ? role.descriptionEn : role.descriptionRo).first : "";
     return (
-      <Box
-        component="li"
-        key={key}
-        data-testid={role ? "volunteer-role" : "volunteer-role-new"}
-        data-role-id={role?.id}
-        // The name the translate buttons say a box belongs to (`labelOfBox`): the same «Nume (EN)» is in every row.
-        data-translate-row={title}
-        sx={{ borderTop: 1, borderColor: "divider", pt: 1.5, pb: 1, "&:first-of-type": { borderTop: 0, pt: 0 } }}
-      >
-        {role === null && (
-          <Typography component="p" variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-            {t("volunteers.role.newRow")}
-            <QuietHelp text={t("volunteers.role.newRowHint")} />
-          </Typography>
-        )}
+      <Stack spacing={1.5}>
         {/* What the form was drawn with (`role-baseline.ts`): the boxes below are compared with it, never with the role as it is stored by then. */}
         {role && <input type="hidden" name={box("was")} value={encodeRoleBaseline(roleBaselineOf(role, index + 1))} />}
         {/* The row's boxes are one group, named by the role, so a reader of the screen knows whose «Nume (RO)» it is in. */}
@@ -372,26 +363,6 @@ export default async function VolunteersCard({
             placeholder={role ? undefined : t("volunteers.role.positionLast")}
           />
         </Box>
-        {role && (
-          <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1, mt: 1 }}>
-            {standingChip(role)}
-            {/* The band's colour on the volunteer badge (§764): the sample and its name in words, never the colour alone. */}
-            <RoleColourSample colour={role.colour} label={badgeRoleText(roleName(role), locale)} locale={locale} testId="volunteer-role-colour" />
-            <GlyphButton
-              type="submit"
-              form={deleteFormId(role)}
-              icon="delete"
-              color="error"
-              variant="outlined"
-              size="small"
-              sx={{ minHeight: 44, ml: "auto" }}
-              aria-label={`${t("volunteers.role.delete")}: ${labelOf(role)}`}
-              data-testid="volunteer-role-delete"
-            >
-              {t("volunteers.role.delete")}
-            </GlyphButton>
-          </Stack>
-        )}
         {/* «Mai multe»: what a role says beyond its line — the description in both languages, then the band's colour. Inside the form, so one press saves it too. */}
         <Panel variant="help" title={t("volunteers.role.more")} aside={first === "" ? undefined : shortText(first)} data-testid="volunteer-role-more">
           <Stack spacing={1.5} sx={{ pb: 1.5, maxWidth: 720 }}>
@@ -433,13 +404,70 @@ export default async function VolunteersCard({
                 })}
               />
             </Stack>
-            {/* The role's band on its volunteer badge (§764): the same two boxes as the badges' page, saved by the same rule. */}
+            {/* The role's band on its volunteer badge (§764): the sample and its name in words beside the same two boxes as the badges' page, saved by the same rule. */}
+            {role && <RoleColourSample colour={role.colour} label={badgeRoleText(roleName(role), locale)} locale={locale} testId="volunteer-role-colour" />}
             <RoleColourFields names={roleColourBoxesOf(key)} colour={role?.colour ?? null} />
           </Stack>
         </Panel>
-      </Box>
+      </Stack>
     );
   };
+
+  /**
+   * One role's row in the «Roluri» card (§842; the owner, 2026-10-21: the editor «looked like it was from a different app»): the house's row fold
+   * (`shared/ui/row-fold.ts`, the to-dos' shape) — the line reads as words, the name in both languages and the «N din M» chip with the pencil at the
+   * end, and a press anywhere on it opens the role's boxes (`roleBoxesOf`) in place, inside the one form of «Salvează toate rolurile». «Șterge rolul»
+   * stands last in the fold. The fold is keyed on the role's facts, so a save that changed them draws it closed.
+   */
+  const roleRowOf = (role: VolunteerRole, categoryId: string | null, index: number) => (
+    <Box component="li" key={role.id} data-testid="volunteer-role" data-role-id={role.id} data-translate-row={role.nameRo} sx={ROW_SX}>
+      <Box component="details" key={[role.nameRo, role.nameEn, role.needed, role.categoryId, index].join("\u0001")} data-testid="volunteer-role-edit">
+        <Box component="summary" title={t("volunteers.edit")} data-testid="volunteer-role-edit-toggle" sx={SUMMARY_SX}>
+          <Box sx={{ gridArea: "words", minWidth: 0 }}>
+            <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }} data-testid="volunteer-role-name">
+              {role.nameRo}
+            </Typography>
+            <Typography component="span" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+              {" "}
+              / {role.nameEn}
+            </Typography>
+          </Box>
+          <Box sx={FACTS_SX}>{standingChip(role)}</Box>
+          <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
+        </Box>
+        <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5 }}>
+          {roleBoxesOf(role, categoryId, index)}
+          <Box>
+            <GlyphButton
+              type="submit"
+              form={deleteFormId(role)}
+              icon="delete"
+              color="error"
+              variant="outlined"
+              size="small"
+              sx={{ minHeight: 44 }}
+              aria-label={`${t("volunteers.role.delete")}: ${labelOf(role)}`}
+              data-testid="volunteer-role-delete"
+            >
+              {t("volunteers.role.delete")}
+            </GlyphButton>
+          </Box>
+        </Stack>
+      </Box>
+    </Box>
+  );
+
+  /**
+   * «Adaugă un rol» (§842): the blank row at the end of a category, behind a fold like every «Adaugă…» of the backoffice (the to-dos', the checkpoints'),
+   * open by itself only while the category has no role. Its boxes are the same as a saved role's, posted by the same form: a name typed in them is a new role.
+   */
+  const addRoleOf = (categoryId: string | null, index: number, level: 4 | 5, empty: boolean) => (
+    <Panel glyph="add" collapsible level={level} title={t("volunteers.role.addTitle")} intro={t("volunteers.role.addIntro")} introMore={t("volunteers.role.newRowHint")} openWhen={{ primary: empty }} data-testid="volunteer-role-add-fold">
+      <Box data-testid="volunteer-role-new" data-translate-row={t("volunteers.role.newRow")}>
+        {roleBoxesOf(null, categoryId, index)}
+      </Box>
+    </Panel>
+  );
 
   const standingChip = (role: VolunteerRole) => {
     const standing = standingOf.get(role.id);
@@ -506,10 +534,15 @@ export default async function VolunteersCard({
    * The roles under no category are the last card, «Alte roluri». An event with no category has no sub-card: the rows are listed as they were.
    */
   const roleGroupOf = (group: RoleGroup<VolunteerCategory, VolunteerRole>) => {
+    const categoryId = group.category?.id ?? null;
     const rows = (
-      <Stack spacing={0} component="ul" aria-label={group.category ? categoryName(group.category) : t("volunteers.rolesTitle")} sx={{ listStyle: "none", m: 0, p: 0 }}>
-        {group.roles.map((role, index) => roleRowOf(role, group.category?.id ?? null, index))}
-        {roleRowOf(null, group.category?.id ?? null, group.roles.length)}
+      <Stack spacing={1.5}>
+        {group.roles.length > 0 && (
+          <Stack spacing={0} component="ul" aria-label={group.category ? categoryName(group.category) : t("volunteers.rolesTitle")} sx={{ listStyle: "none", m: 0, p: 0 }}>
+            {group.roles.map((role, index) => roleRowOf(role, categoryId, index))}
+          </Stack>
+        )}
+        {addRoleOf(categoryId, group.roles.length, roleHeaded ? 5 : 4, group.roles.length === 0)}
       </Stack>
     );
     if (!roleHeaded) return <Box key="all">{rows}</Box>;
