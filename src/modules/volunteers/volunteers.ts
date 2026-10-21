@@ -269,10 +269,16 @@ function roleOf(row: typeof eventVolunteerRoles.$inferSelect): VolunteerRole {
 type RoleLink = typeof eventVolunteerRoleChoices | typeof eventVolunteerRoleAssignments;
 
 /**
- * The roles each of an event's volunteers is linked to by one table — chosen (§761) or given (§837) —, volunteer → role ids
- * in the club's order (`compareRoles`): one read for the whole list.
+ * The roles a set of volunteers is linked to by one table — chosen (§761) or given (§837) —, volunteer → role ids in the
+ * club's order (`compareRoles`): one read for a whole list, by the event (the card) or by the volunteers' ids (a page of the
+ * «Voluntari» list, §839, whose rows may span events).
  */
-async function linkedRolesOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string, link: RoleLink): Promise<Map<string, string[]>> {
+async function linkedRolesOf<T extends Record<string, unknown>>(
+  db: Database<T>,
+  scope: { eventId: string } | { volunteerIds: readonly string[] },
+  link: RoleLink,
+): Promise<Map<string, string[]>> {
+  if ("volunteerIds" in scope && scope.volunteerIds.length === 0) return new Map();
   const rows = await db
     .select({
       volunteerId: link.volunteerId,
@@ -282,10 +288,70 @@ async function linkedRolesOf<T extends Record<string, unknown>>(db: Database<T>,
     })
     .from(link)
     .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, link.roleId))
-    .where(eq(eventVolunteerRoles.eventId, eventId));
+    .where("eventId" in scope ? eq(eventVolunteerRoles.eventId, scope.eventId) : inArray(link.volunteerId, [...scope.volunteerIds]));
   const byVolunteer = new Map<string, string[]>();
   for (const row of rows.sort(compareRoles)) byVolunteer.set(row.volunteerId, [...(byVolunteer.get(row.volunteerId) ?? []), row.id]);
   return byVolunteer;
+}
+
+/** A volunteer's row with the two agreement versions joined, as `listVolunteers` and the «Voluntari» list (§839) select it. */
+export type VolunteerRowJoined = { row: typeof eventVolunteers.$inferSelect; agreementVersion: number | null; guardianVersion: number | null };
+
+/** One joined row as the card and the list read it, with the roles chosen and given already looked up. */
+function volunteerItemOf(joined: VolunteerRowJoined, choiceIds: string[], roleIds: string[]): VolunteerItem {
+  const { row, agreementVersion, guardianVersion } = joined;
+  const facts = readAgreementFacts(row.agreementFacts);
+  return {
+    id: row.id,
+    eventId: row.eventId,
+    roleIds,
+    choiceIds,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    state: row.state,
+    source: row.source,
+    message: row.message,
+    note: row.note,
+    age: row.age,
+    dateOfBirth: row.dateOfBirth,
+    sex: sexShown(row.sex),
+    city: row.city,
+    volunteeredBefore: row.volunteeredBefore,
+    clubMember: row.clubMember,
+    listOptIn: row.listOptIn,
+    shirtSize: row.shirtSize === null || row.shirtSize === "NONE" ? null : row.shirtSize,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    agreementAcceptedAt: row.agreementAcceptedAt,
+    agreementMethod: row.agreementMethod,
+    agreementVersion: row.agreementAcceptedAt ? agreementVersion : null,
+    agreementRoleName: facts ? acceptedRoleNames(facts) : null,
+    agreementLocale: row.agreementAcceptedAt ? row.agreementLocale : null,
+    agreementEventDate: facts?.eventDate ?? null,
+    agreementEventLocation: facts?.eventLocation ?? null,
+    locale: row.locale,
+    agreementTokenExpiresAt: row.agreementTokenExpiresAt,
+    agreementRequestedAt: row.agreementRequestedAt,
+    guardianName: row.guardianName,
+    guardianEmail: row.guardianEmail,
+    guardianAcceptedAt: row.guardianAcceptedAt,
+    guardianMethod: row.guardianMethod,
+    guardianVersion: row.guardianAcceptedAt ? guardianVersion : null,
+    guardianTokenExpiresAt: row.guardianTokenExpiresAt,
+    guardianRequestedAt: row.guardianRequestedAt,
+  };
+}
+
+/**
+ * The items of a set of joined rows, in the order given, each with its roles chosen and given — two reads for the whole set,
+ * by the event when the rows are one event's (the card), else by the rows' ids (the «Voluntari» list, §839).
+ */
+export async function volunteerItemsOf<T extends Record<string, unknown>>(db: Database<T>, joined: readonly VolunteerRowJoined[], eventId?: string): Promise<VolunteerItem[]> {
+  const scope = eventId ? { eventId } : { volunteerIds: joined.map(({ row }) => row.id) };
+  const choices = await linkedRolesOf(db, scope, eventVolunteerRoleChoices);
+  const given = await linkedRolesOf(db, scope, eventVolunteerRoleAssignments);
+  return joined.map((one) => volunteerItemOf(one, choices.get(one.row.id) ?? [], given.get(one.row.id) ?? []));
 }
 
 /** The people counted against roles, one entry per role given (§837), with each person's state: what `standingOf` reads. */
@@ -315,51 +381,7 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
     .leftJoin(guardianDocument, eq(guardianDocument.id, eventVolunteers.guardianDocumentId))
     .where(eq(eventVolunteers.eventId, eventId))
     .orderBy(asc(eventVolunteers.createdAt), asc(eventVolunteers.id));
-  const choices = await linkedRolesOf(db, eventId, eventVolunteerRoleChoices);
-  const given = await linkedRolesOf(db, eventId, eventVolunteerRoleAssignments);
-  return rows.map(({ row, agreementVersion, guardianVersion }) => {
-    const facts = readAgreementFacts(row.agreementFacts);
-    return {
-      id: row.id,
-      eventId: row.eventId,
-      roleIds: given.get(row.id) ?? [],
-      choiceIds: choices.get(row.id) ?? [],
-      name: row.name,
-      email: row.email,
-      phone: row.phone,
-      state: row.state,
-      source: row.source,
-      message: row.message,
-      note: row.note,
-      age: row.age,
-      dateOfBirth: row.dateOfBirth,
-      sex: sexShown(row.sex),
-      city: row.city,
-      volunteeredBefore: row.volunteeredBefore,
-      clubMember: row.clubMember,
-      listOptIn: row.listOptIn,
-      shirtSize: row.shirtSize === null || row.shirtSize === "NONE" ? null : row.shirtSize,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-      agreementAcceptedAt: row.agreementAcceptedAt,
-      agreementMethod: row.agreementMethod,
-      agreementVersion: row.agreementAcceptedAt ? agreementVersion : null,
-      agreementRoleName: facts ? acceptedRoleNames(facts) : null,
-      agreementLocale: row.agreementAcceptedAt ? row.agreementLocale : null,
-      agreementEventDate: facts?.eventDate ?? null,
-      agreementEventLocation: facts?.eventLocation ?? null,
-      locale: row.locale,
-      agreementTokenExpiresAt: row.agreementTokenExpiresAt,
-      agreementRequestedAt: row.agreementRequestedAt,
-      guardianName: row.guardianName,
-      guardianEmail: row.guardianEmail,
-      guardianAcceptedAt: row.guardianAcceptedAt,
-      guardianMethod: row.guardianMethod,
-      guardianVersion: row.guardianAcceptedAt ? guardianVersion : null,
-      guardianTokenExpiresAt: row.guardianTokenExpiresAt,
-      guardianRequestedAt: row.guardianRequestedAt,
-    };
-  });
+  return volunteerItemsOf(db, rows, eventId);
 }
 
 /**

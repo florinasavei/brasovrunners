@@ -248,6 +248,9 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/shop/settings",
       "/admin/staff",
       "/admin/tasks",
+      // «Voluntari» (§839): the list across events and one person's page, written here by hand like the rest.
+      "/admin/volunteers",
+      "/admin/volunteers/[id]",
       // The club's month, its own page since §251.
       "/calendar",
       "/contact",
