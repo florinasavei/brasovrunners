@@ -83,6 +83,7 @@ import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
 import ViewAgendaIcon from "@mui/icons-material/ViewAgenda";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import IncognitoIcon from "./IncognitoIcon";
 import type { ComponentType } from "react";
@@ -261,7 +262,9 @@ export type ActionIconName =
   // «Ecusoane pentru voluntari» (§764): the name badge, on the «Voluntari» card's link to the badges' page.
   | "badges"
   // «Clasament» (§808): the podium bars, on the links to a race's results page — never the trophy, which is the desk's.
-  | "results";
+  | "results"
+  // «Voluntari» (§NNN): the tab's icon, the event card's «Voluntari» box's heart in the hand.
+  | "volunteers";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).
 
@@ -364,4 +367,6 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   sizeChart: StraightenIcon,
   badges: BadgeIcon,
   results: LeaderboardIcon,
+  // «Voluntari» (§NNN): the heart in the hand the event card's «Voluntari» box wears, so the tab and the box read as one subject.
+  volunteers: VolunteerActivismIcon,
 };
