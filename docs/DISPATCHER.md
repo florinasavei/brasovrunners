@@ -301,7 +301,7 @@ On 2026-09-29 four landings stopped on merge conflicts or a red CI, and the disp
 3. **Chains that touch the same files do not run in parallel.** Before launching, compare `git diff --name-only origin/qa...<branch>` of the running chains. The registration pages (manage, mine, declare), the CSV, workbook and export, the legal templates and the footer are hot. Serialize them, or land the first before the second implements.
 4. **A batch worktree is never cleaned with `git checkout -- .`.** That throws away the premerge's own repairs, such as the snapshot relink. The premerge commits what it changes.
 5. **A kit derived from a paired kit keeps the old gates.** Before running a landing, grep its baseline strings (`grep -oE 'BR-V2\.[0-9]+-2026-09-27'`) in both the premerge and the land script.
-6. **E2E stays in CI.** Rounds do not run Playwright: the release PR’s eight CI shards are the e2e gate, and a red one is fixed on the batch before the ship restarts. The owner declined e2e in rounds: «cred că exagerezi cu E2E». The landing runs `yarn check` on the batch before it pushes, which catches the unit and docs failures locally.
+6. **E2E stays in CI.** Rounds do not run Playwright: the release PR’s twelve CI shards are the e2e gate, and a red one is fixed on the batch before the ship restarts. The owner declined e2e in rounds: «cred că exagerezi cu E2E». The landing runs `yarn check` on the batch before it pushes, which catches the unit and docs failures locally.
 7. **A hotfix follows `docs/RUNBOOKS.md` § Hotfix:** a branch from main, only the checks that break a deploy, `--admin` into main by the owner’s authorisation, main back into qa at once, the tests in the next batch.
 
 ## The day the name went away — the lessons of 2026-10-03

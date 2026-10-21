@@ -212,19 +212,19 @@ jobs:
   # Separate job because it needs a real PostgreSQL and a browser, which `checks` must
   # not require — that one gates every commit and has to run on a bare machine.
   #
-  # **Sharded (§431), eight on every run, both projects (§504).** §209 ran the desktop project
+  # **Sharded (§431), twelve on every run, both projects (§504).** §209 ran the desktop project
   # alone on a pull request and both on a push, and §431 split that into four and eight shards.
   # Now the pull request is the one run that tests a tree — the push to `qa`, the release PR and
   # the push to `main` find it recorded and skip — so it runs the whole suite, both viewports,
-  # on eight runners: about seven minutes each, beside the four `unit` shards, so the pull request
-  # waits no longer than it did for the desktop half.
+  # on twelve runners (eight until 2026-10-20, when the longest of them, sixteen minutes, was the last
+  # job of every pull request): about seven minutes each, beside the four `unit` shards.
   #
   # §212 and §276 refused parallel specs because they share ONE database and ONE seeded event.
   # A shard is not a second worker on that database: each is its own machine with its own
   # PostgreSQL service, migrated and seeded from nothing, and inside it the specs still run one
   # at a time (`workers: 1` in CI). What two specs could interleave on before, they still cannot.
   e2e-shard:
-    name: e2e ${{ matrix.shard }}/8
+    name: e2e ${{ matrix.shard }}/12
     needs: tested-tree
     if: ${{ !cancelled() && needs.tested-tree.outputs.tested != 'true' }}
     runs-on: ubuntu-latest
@@ -235,7 +235,7 @@ jobs:
       # Every shard reports: one red shard should not hide what the others would have found.
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     services:
       postgres:
         image: postgres:17.6-alpine
@@ -252,7 +252,7 @@ jobs:
     env:
       APP_ENV: test
       DATABASE_URL: postgres://brasov_runners:local_only_not_a_secret@localhost:5432/brasov_runners
-      SHARD_TOTAL: 8
+      SHARD_TOTAL: 12
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -305,7 +305,7 @@ jobs:
       # `--shard=i/n` takes the i-th of n equal slices of the tests (`fullyParallel` makes the
       # slice per test, not per file; a `describe.serial` group stays in one slice). The union
       # of the shards is exactly the suite `yarn test:e2e` runs locally. Nothing is skipped.
-      - name: End-to-end, shard ${{ matrix.shard }} of 8, both projects
+      - name: End-to-end, shard ${{ matrix.shard }} of 12, both projects
         run: yarn test:e2e --shard=${{ matrix.shard }}/$SHARD_TOTAL
 
       - if: failure()

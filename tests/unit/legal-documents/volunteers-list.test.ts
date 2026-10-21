@@ -47,12 +47,12 @@ describe("§821 the template's sentence", () => {
 
   it("says what the page shows — the name and the role given, nothing else —, for whom, on what basis, and how it is withdrawn", () => {
     const roText = text(privacyNoticeRo);
-    expect(roText).toContain("pagina evenimentului arată numele tău și rolul pe care ți-l dau organizatorii, nimic altceva");
+    expect(roText).toContain("pagina evenimentului arată numele tău și rolul sau rolurile pe care ți le dau organizatorii, nimic altceva");
     expect(roText).toContain("după ce organizatorii te confirmă");
     expect(roText).toContain("pe voluntarii care nu au bifat și pe cei minori îi numără, fără nume");
     expect(roText).toContain("consimțământul tău, dat prin această bifă (art. 6(1)(a) GDPR), pe care îl poți retrage oricând scriindu-ne");
     const enText = text(privacyNoticeEn);
-    expect(enText).toContain("the event's page shows your name and the role the organizers give you, nothing else");
+    expect(enText).toContain("the event's page shows your name and the role or roles the organizers give you, nothing else");
     expect(enText).toContain("once the organizers confirm you");
     expect(enText).toContain("volunteers who did not tick, and minors, are counted, without names");
     expect(enText).toContain("your consent, given by this tick (art. 6(1)(a) GDPR), which you can withdraw at any time by writing to us");

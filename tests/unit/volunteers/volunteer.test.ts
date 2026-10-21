@@ -369,8 +369,8 @@ describe("§754 the privacy notice's marker {{volunteers}}", () => {
 
   it("§761: the volunteers' paragraph names the roles ticked, the role given and the short email naming it, in both languages", () => {
     for (const [body, phrases] of [
-      [privacyNoticeRo, ["rolurile pe care le-ai bifat", "rolul pe care ți-l dau organizatorii", "când organizatorii îți dau un rol, primești un e-mail scurt care îl numește"]],
-      [privacyNoticeEn, ["the roles you ticked", "the role the organizers give you", "when the organizers give you a role, you receive a short email that names it"]],
+      [privacyNoticeRo, ["rolurile pe care le-ai bifat", "rolul sau rolurile pe care ți le dau organizatorii", "când organizatorii îți dau un rol sau îți schimbă rolurile, primești un e-mail scurt care le numește"]],
+      [privacyNoticeEn, ["the roles you ticked", "the role or roles the organizers give you", "when the organizers give you a role or change your roles, you receive a short email that names them"]],
     ] as const) {
       const paragraph = body.sections.flatMap((section) => section.paragraphs).find((candidate) => candidate.includes("{{volunteers}}")) ?? "";
       for (const phrase of phrases) expect(paragraph, phrase).toContain(phrase);

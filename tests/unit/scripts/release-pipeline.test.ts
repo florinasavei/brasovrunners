@@ -5,7 +5,7 @@ import { createClock, formatDuration, waitForRun } from "../../../scripts/ship-c
 /**
  * §504 — the release pipeline tests one tree once. `docs-check.yml` records a tree that passed
  * everything and skips the heavy jobs on a run of the same tree; a pull request runs the whole
- * suite on eight shards; `yarn ship` waits on a run by its status and times its own steps.
+ * suite on twelve shards; `yarn ship` waits on a run by its status and times its own steps.
  * Since 2026-10-20 `yarn check` runs as two kinds of job — `checks` (`yarn check:static`, the build)
  * and four `unit` shards (`yarn test --shard=i/4`) — whose joint verdict is the one check `docs-check`:
  * the same command as the hook's, cut into runners, never into other commands (BR-REQ-090-02).
@@ -107,10 +107,10 @@ describe("§504 docs-check: one tree, tested once", () => {
     expect(workflow.match(/retention-days: (\d+)/g)).toEqual(["retention-days: 7", "retention-days: 1"]);
   });
 
-  it("runs the whole suite, both projects, on eight shards on every run — a pull request included", () => {
+  it("runs the whole suite, both projects, on twelve shards on every run — a pull request included", () => {
     const shards = job("e2e-shard");
-    expect(shards).toContain("shard: [1, 2, 3, 4, 5, 6, 7, 8]");
-    expect(shards).toContain("name: e2e ${{ matrix.shard }}/8");
+    expect(shards).toContain("shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]");
+    expect(shards).toContain("name: e2e ${{ matrix.shard }}/12");
     expect(shards).toContain("run: yarn test:e2e --shard=${{ matrix.shard }}/$SHARD_TOTAL");
     expect(shards).not.toContain("--project");
     expect(shards).not.toContain("github.event_name");
