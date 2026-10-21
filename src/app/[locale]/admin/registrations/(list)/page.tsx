@@ -935,7 +935,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
           {t("nav.registrations")}
         </Typography>
-        {/* `flex-start` (§NNN): the invite menu below opens downwards, and the row's other buttons must not stretch to its height. */}
+        {/* `flex-start` (§844): the invite menu below opens downwards, and the row's other buttons must not stretch to its height. */}
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "flex-start" }}>
           {/* BR-REQ-037-05: somebody asked at a run, and the club types it in for them. */}
           <GlyphButton

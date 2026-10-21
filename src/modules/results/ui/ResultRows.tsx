@@ -110,7 +110,7 @@ const CAPTION_SX = { display: { xs: "block", md: "none" }, color: "text.secondar
 
 /**
  * The captions' class: the typed runners' panel has no column header (its first cell holds four boxes the header could not name), so
- * its lines keep their captions at every width (§NNN; the consistency audit found its boxes unlabelled on a computer).
+ * its lines keep their captions at every width (§844; the consistency audit found its boxes unlabelled on a computer).
  */
 const CAPTION_CLASS = "result-caption";
 
@@ -180,7 +180,7 @@ function LineBox({
   };
   return (
     // On a phone the note takes the whole line; from the medium width it is the sixth column the header names, beside the others.
-    // `minWidth: 0` (§NNN): a grid cell otherwise keeps its box's natural width and the line runs past the card.
+    // `minWidth: 0` (§844): a grid cell otherwise keeps its box's natural width and the line runs past the card.
     <Box sx={{ minWidth: 0, ...(span ? { gridColumn: { xs: "1 / -1", md: "auto" } } : {}) }}>
       <Typography variant="caption" sx={CAPTION_SX} className={CAPTION_CLASS} aria-hidden="true">
         {caption}

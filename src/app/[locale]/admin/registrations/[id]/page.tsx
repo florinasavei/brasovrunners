@@ -382,7 +382,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     return shown;
   };
   /*
-    The change in words (§NNN; the consistency audit of 2026-10-21 found the trail printing `{"from":"Ion","to":"Ioan"}` to staff):
+    The change in words (§844; the consistency audit of 2026-10-21 found the trail printing `{"from":"Ion","to":"Ioan"}` to staff):
     a value before and after, a typed reason, a race number, a state — each a phrase of the catalogue; ids and the rest of the
     record's plumbing are not the reader's and are left out. The integer `from`/`to` of a capacity change already sit in the label.
   */
@@ -1629,7 +1629,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                     ? tr("registrations.auditActorParticipant")
                     : tr("registrations.auditActorRemoved"))}
                 {/* Metadata is the shape of the change — a name before and after, a typed reason —
-                    never a copy of what the change was about (AGENTS.md 12.12); said in words (§NNN). */}
+                    never a copy of what the change was about (AGENTS.md 12.12); said in words (§844). */}
                 {details.length > 0 && ` · ${details.join(" · ")}`}
               </Typography>
             );
