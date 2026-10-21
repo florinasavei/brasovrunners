@@ -8,14 +8,14 @@ import { decodeEmailRoadChoice, EMAIL_ROAD_COOKIE, EMAIL_ROAD_MAX_AGE_SECONDS, e
 import { encodeFlash } from "@/shared/feedback/notice";
 
 /**
- * §NNN — the road one press sends its email by: the dialog says it and lets the reader switch for
+ * §841 — the road one press sends its email by: the dialog says it and lets the reader switch for
  * that press, the cookie carries the choice to the action, the toast names it.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
 const NOW = Date.parse("2026-10-21T15:00:00.000Z");
 
-describe("§NNN the road choice cookie", () => {
+describe("§841 the road choice cookie", () => {
   it("round-trips a road and a group, and stops counting after twenty seconds", () => {
     const value = encodeEmailRoadChoice({ road: "gmail", group: "links" }, NOW);
     expect(value).toBe(`gmail.links.${NOW + EMAIL_ROAD_MAX_AGE_SECONDS * 1000}`);
@@ -35,7 +35,7 @@ describe("§NNN the road choice cookie", () => {
   });
 });
 
-describe("§NNN the row's road", () => {
+describe("§841 the row's road", () => {
   const setting = { ...DEFAULT_EMAIL_TRANSPORT, groups: { ...DEFAULT_EMAIL_TRANSPORT.groups, confirmations: "gmail" as const } };
 
   it("is the stamp when the press chose one, else the group's setting", () => {
@@ -55,7 +55,7 @@ describe("§NNN the row's road", () => {
   });
 });
 
-describe("§NNN the dialog's road line", () => {
+describe("§841 the dialog's road line", () => {
   const dialog = read("src/shared/feedback/ConfirmDialog.tsx");
 
   it("says the road under the email line, and offers the two roads only where both exist", () => {
@@ -81,7 +81,7 @@ describe("§NNN the dialog's road line", () => {
   });
 });
 
-describe("§NNN the toast names the road", () => {
+describe("§841 the toast names the road", () => {
   it("has the two sentences in both catalogues, and a reason for every group", () => {
     for (const catalogue of [ro, en]) {
       expect(typeof catalogue.Feedback.via.mailgun).toBe("string");

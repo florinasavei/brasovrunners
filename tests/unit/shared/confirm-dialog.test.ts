@@ -31,7 +31,7 @@ describe("§384 ConfirmDialog", () => {
 
   it("lets Enter confirm only a dialog that is not destructive, and stops the focused cancel from taking the key", () => {
     expect(source).toMatch(/if \(confirmOnKey\(event\.key, spec\.destructive\) !== "confirm"\) return;/);
-    // `confirm` is `onConfirm` with the email's road written first (§NNN), so Enter and the button agree.
+    // `confirm` is `onConfirm` with the email's road written first (§841), so Enter and the button agree.
     expect(source).toMatch(/event\.preventDefault\(\);\s*confirm\(\);/);
     expect(source).toContain("const confirm = withRoad(onConfirm);");
   });

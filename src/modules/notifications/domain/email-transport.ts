@@ -239,7 +239,7 @@ export function preferredTransport(
 }
 
 /**
- * The road the platform recommends for each group (§NNN) — what the setting's own help has said
+ * The road the platform recommends for each group (§841) — what the setting's own help has said
  * since §443, as one fact the confirmation dialog can mark: Mailgun for everything a participant
  * must receive on time or in numbers (a personal Gmail that bursts or bulks is what Google blocks),
  * the club's Gmail for mail to the club's own mailboxes, where the reader knows the sender.
@@ -254,7 +254,7 @@ export const RECOMMENDED_ROAD: Readonly<Record<EmailGroup, EmailTransport>> = {
 };
 
 /**
- * The road one outbox row asks for (§NNN): the road the press chose for it, stamped on the row
+ * The road one outbox row asks for (§841): the road the press chose for it, stamped on the row
  * (`email_outbox.road`) by `enqueueEmail`, else its group's setting (`preferredTransport`). A stamp
  * naming Gmail where Gmail is not configured is the group's road again — a deployment that lost
  * its account still sends. The claim (`gmailRoadCondition`) and the sender's `route` both answer

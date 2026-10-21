@@ -40,7 +40,7 @@ describe("§384 a TEST row's dialog names no participant email", () => {
   it("gates every single-row email line on the registrations list", () => {
     const list = read("src/app/[locale]/admin/registrations/(list)/page.tsx");
     expect(singleEmailCalls(list).every((call) => call.includes('row.kind === "TEST"'))).toBe(true);
-    // The road line (§NNN) rides inside the same gate: a TEST row is told of no email and of no road.
+    // The road line (§841) rides inside the same gate: a TEST row is told of no email and of no road.
     const gated = (list.match(/row\.kind === "TEST" \? \{\} : \{ email: words\.email\(1\)(, road: words\.road\("\w+"\))? \}/g) ?? []).length;
     expect(gated).toBe(5); // resend, resend to the family (§588), row-menu confirm-on-paper, give-a-place, cancel (the special list's question gates its own, in `outsideMarkConfirm`)
   });
@@ -60,7 +60,7 @@ describe("§384 a TEST row's dialog names no participant email", () => {
   it("a TEST row seated outside the places is told of no email in the dialog's body either", () => {
     // One function since §747: the registration's page and the list's «⋮» both call it.
     const helper = read("src/modules/registrations/ui/outside-mark-body.ts");
-    // The road line (§NNN) rides inside the same gate.
+    // The road line (§841) rides inside the same gate.
     expect(helper).toContain('...(seatedNow && row.kind !== "TEST" ? { email: words.emailLine, ...(words.road ? { road: words.road } : {}) } : {})');
     for (const key of ["outsideMarkBodyWaitlistedTest", "outsideMarkBodyOfferedTest"] as const) {
       expect(helper).toMatch(new RegExp(`row\\.kind === "TEST"\\s*\\?\\s*t\\("confirm\\.${key}"`));

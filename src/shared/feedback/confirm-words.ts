@@ -15,7 +15,7 @@ import type { ConfirmRoad } from "./notice";
  * "Trimite acum", which sends messages, not participants. The bulk cancel's count is the ticks
  * in the browser, so it hands `Admin.confirm.email` raw to the button (`EmailCount`) instead.
  *
- * `road(group)` (§NNN): which road the announced email takes — the group's setting (§443), read
+ * `road(group)` (§841): which road the announced email takes — the group's setting (§443), read
  * once per request however many dialogs a page words (`email-roads-request.ts`) — the road the platform recommends for the
  * group and why, and whether the reader may switch for this press (both roads configured). The
  * dialog draws it under the email line (`ConfirmDialog`), and the press carries the choice to the

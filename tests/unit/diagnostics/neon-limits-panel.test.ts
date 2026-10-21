@@ -12,7 +12,7 @@ import type { NeonLimitsReading } from "@/modules/diagnostics/domain/neon-limits
  * is a stub, because the card only hands it to the form and a test must not reach a database or
  * Neon through it.
  */
-// The dialogs' road line (§NNN) reads the club's roads once per request: no database here.
+// The dialogs' road line (§841) reads the club's roads once per request: no database here.
 vi.mock("@/shared/feedback/email-roads-request", () => ({ emailRoadsForThisRequest: async () => ({ groups: { links: "mailgun", confirmations: "mailgun", reminders: "mailgun", announcements: "mailgun", club: "gmail", newsletter: "mailgun" }, gmail: false }) }));
 vi.mock("next-intl/server", async () => {
   const { createFormatter, createTranslator } = await import("next-intl");

@@ -11,7 +11,7 @@ import ro from "../../../messages/ro.json";
  * force does not say her messages may leave by it. And the card's warning when a form's recipient is the very Gmail account that
  * sends — Gmail may keep such a message in Sent only. And the rule itself: which messages the other road may carry.
  */
-// The dialogs' road line (§NNN) reads the club's roads once per request: no database here.
+// The dialogs' road line (§841) reads the club's roads once per request: no database here.
 vi.mock("@/shared/feedback/email-roads-request", () => ({ emailRoadsForThisRequest: async () => ({ groups: { links: "mailgun", confirmations: "mailgun", reminders: "mailgun", announcements: "mailgun", club: "gmail", newsletter: "mailgun" }, gmail: false }) }));
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");

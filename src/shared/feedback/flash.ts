@@ -47,7 +47,7 @@ export async function flash(notice: FormNotice): Promise<void> {
  * the toast `event` with `offered` and `count` as its values; `{ error: "CONFLICT" }` is none.
  * The one line every `backTo` calls before `redirect()`.
  *
- * A press whose dialog named the email's road (§NNN) carries it here as `via`, and the toast ends
+ * A press whose dialog named the email's road (§841) carries it here as `via`, and the toast ends
  * «Pleacă prin Mailgun.» — the road the dialog promised, the one `enqueueEmail` stamped on the
  * row in this same request. A press with no dialog, or one that announced no email, says nothing.
  */

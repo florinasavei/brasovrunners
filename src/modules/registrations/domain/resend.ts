@@ -64,7 +64,7 @@ export function deriveAllowedResendMessageType(status: RegistrationStatus): Emai
 }
 
 /**
- * The road group of the message a resend sends for this state (§NNN, the dialog's road line): the
+ * The road group of the message a resend sends for this state (§841, the dialog's road line): the
  * links' for an address, a declaration or an offer still to act on, the confirmations' for the rest.
  */
 export function resendEmailGroup(status: RegistrationStatus): EmailGroup {

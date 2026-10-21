@@ -1,7 +1,7 @@
 import type { EmailGroup, EmailTransport } from "@/modules/notifications/domain/email-transport";
 
 /**
- * The road one press sends its email by (§NNN): what the confirmation dialog promised — «Pleacă
+ * The road one press sends its email by (§841): what the confirmation dialog promised — «Pleacă
  * prin Mailgun» — carried to the Server Action the press runs.
  *
  * The owner, 2026-10-21: «When I do any action that sends an email, I want to configure how the

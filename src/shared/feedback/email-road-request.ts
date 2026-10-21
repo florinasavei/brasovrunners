@@ -3,7 +3,7 @@ import { cache } from "react";
 import { decodeEmailRoadChoice, EMAIL_ROAD_COOKIE, type EmailRoadChoice } from "./email-road";
 
 /**
- * The road the press that made this request chose for its email (§NNN, `email-road.ts`), read
+ * The road the press that made this request chose for its email (§841, `email-road.ts`), read
  * once per request: `enqueueEmail` asks it for every row it queues, and `flashOutcome` for the
  * toast, and both must see the same answer — so the read is remembered through React's
  * per-request `cache`, and nothing here deletes the cookie: the flash does, once the toast has

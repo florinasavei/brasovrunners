@@ -8,7 +8,7 @@ import { describe, expect, it, vi } from "vitest";
  * «Cu fotografie» / «Fără fotografie», «Textele clubului» / «Textele implicite», «1 din 2 completate»
  * and the strip's picture count — drawn from the real catalogue.
  */
-// The dialogs' road line (§NNN) reads the club's roads once per request: no database here.
+// The dialogs' road line (§841) reads the club's roads once per request: no database here.
 vi.mock("@/shared/feedback/email-roads-request", () => ({ emailRoadsForThisRequest: async () => ({ groups: { links: "mailgun", confirmations: "mailgun", reminders: "mailgun", announcements: "mailgun", club: "gmail", newsletter: "mailgun" }, gmail: false }) }));
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");

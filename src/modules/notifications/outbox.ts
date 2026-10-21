@@ -171,7 +171,7 @@ export async function enqueueEmail<T extends Record<string, unknown>>(
       messageType: params.messageType,
       locale: params.locale,
       recipientEmail: params.recipientEmail,
-      // The road the press's dialog promised for this message's group (§NNN), when it chose one.
+      // The road the press's dialog promised for this message's group (§841), when it chose one.
       road: await roadChosenFor(params.messageType, isClubCopy(params.payload)),
       // The participant's own message, exactly as asked for: no club address rides on it (§320).
       payloadJson: params.payload,
@@ -197,7 +197,7 @@ export async function enqueueEmail<T extends Record<string, unknown>>(
 }
 
 /**
- * The road stamped on a row the request's press chose one for (§NNN, `shared/feedback/email-road.ts`):
+ * The road stamped on a row the request's press chose one for (§841, `shared/feedback/email-road.ts`):
  * the dialog's choice, only for rows of the group the dialog announced — a participant's resend
  * sent «prin Gmail» moves that message alone; the club's copies that ride on it keep the club's
  * road. Outside a press — a job, a public form, a test — there is no choice and the row's road is
@@ -367,7 +367,7 @@ export type OutboxRoads = {
 };
 
 /**
- * A row whose road is Gmail, as SQL: one a press stamped `gmail` (§NNN), or — with no stamp — a club
+ * A row whose road is Gmail, as SQL: one a press stamped `gmail` (§841), or — with no stamp — a club
  * copy when the club's mail goes by Gmail, or a listed type. A row stamped `mailgun` is Mailgun's
  * whatever its group's setting says (`rowTransport`).
  */

@@ -59,7 +59,7 @@ export type InviteFormWords = {
   /** «Limba pentru adresele pe care clubul nu le cunoaște: {language}.»: the language the press sends. */
   dialogLocale: string;
   dialogEmail: Counted;
-  /** Which road the invitations take, and the switch for this press (§NNN). */
+  /** Which road the invitations take, and the switch for this press (§841). */
   dialogRoad: ConfirmRoad;
   /** «Adaugă {count} locuri și trimite», counted. */
   confirmRaise: Counted;

@@ -100,7 +100,7 @@ export async function assertRoomToSendNow<T extends Record<string, unknown>>(
   const [setting, volume, chosen] = await Promise.all([readEmailTransport(db), readEmailVolumeToday(db, now), emailRoadChoice()]);
   const gmail = gmailIsConfigured();
   const roads = roadsByMessageType(setting, gmail);
-  // The road the press's dialog chose for its group (§NNN) is the road its messages take here too.
+  // The road the press's dialog chose for its group (§841) is the road its messages take here too.
   const roadOf = (type: EmailMessageType) => (gmail && chosen && emailGroupOf(type, false) === chosen.group ? chosen.road : roads[type]);
   const copyRoad = (type: EmailMessageType) => (gmail ? preferredTransport(setting, type, true) : "mailgun");
   const mailgunMessages =

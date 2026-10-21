@@ -307,7 +307,7 @@ export type ConfirmSpec = {
    */
   emailCount?: EmailCount;
   /**
-   * Which road the announced email takes (§NNN, `confirmWords().road`): the group's setting today,
+   * Which road the announced email takes (§841, `confirmWords().road`): the group's setting today,
    * the road the platform recommends for the group and why, and — where both roads exist — the
    * switch to the other one for this press alone. The dialog writes the choice into a cookie as it
    * confirms (`email-road.ts`); the action's `enqueueEmail` stamps the row with it and the toast

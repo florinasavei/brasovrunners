@@ -59,7 +59,7 @@ export async function createOutboxSender<T extends Record<string, unknown>>(
     // Noting what each road did (§778): a refusal of the service, and the first message a failing road carries again.
     sender: withRoadStatus(db, sender),
     replyTo,
-    // The road the press stamped on the row (§NNN), else the club's setting for its group (§443).
+    // The road the press stamped on the row (§841), else the club's setting for its group (§443).
     route: (row) => rowTransport(setting, row, isClubCopy(row.payloadJson), configured),
     ...(roads ? { roads } : {}),
   };

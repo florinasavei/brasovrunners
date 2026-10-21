@@ -10,7 +10,7 @@ import { EMAIL_ROAD_COOKIE, encodeEmailRoadChoice } from "@/shared/feedback/emai
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the road a press chose in its confirmation dialog reaches the row: `enqueueEmail` stamps
+ * §841 — the road a press chose in its confirmation dialog reaches the row: `enqueueEmail` stamps
  * `road` on the rows of the dialog's group and no other, the claim takes a stamped row on the
  * stamped road whatever its group's setting, and the sender's route sends it by that road.
  */
@@ -42,7 +42,7 @@ function roadSender(): EmailSender & { calls: OutgoingEmail[] } {
   };
 }
 
-describe("§NNN the road a press chose, on the row", () => {
+describe("§841 the road a press chose, on the row", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

@@ -49,7 +49,7 @@ import { type ConfirmSpec, confirmOnKey } from "./notice";
  * A resend's two answers (§540, `spec.choice`): «Trimite acum…» is the confirm button with the send
  * glyph, «Pune la coadă…» the outlined one with the scheduled-send glyph.
  *
- * **The email's road** (§NNN, `spec.road`): under the email line, which road the message takes —
+ * **The email's road** (§841, `spec.road`): under the email line, which road the message takes —
  * «Pleacă prin Mailgun.» — and, where the club's Gmail is configured too, two radios to choose the
  * road for this press alone, the recommended one marked and a sentence saying why. Either answer
  * writes the road into a twenty-second cookie just before the form is sent (`email-road.ts`), and

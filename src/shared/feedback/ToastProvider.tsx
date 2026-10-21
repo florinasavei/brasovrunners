@@ -82,7 +82,7 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
       if (t.has(base)) return t(base, values);
       return t("toast.saved");
     })();
-    // The road the press chose for its email (§NNN, `flashOutcome`): «… Pleacă prin Mailgun.»
+    // The road the press chose for its email (§841, `flashOutcome`): «… Pleacă prin Mailgun.»
     const via = values.via === "mailgun" || values.via === "gmail" ? ` ${t(`via.${values.via}`)}` : "";
     return `${said}${via}`;
   };
