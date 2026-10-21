@@ -250,7 +250,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     return (
       <Stack spacing={3} sx={{ py: { xs: 2, sm: 3 } }}>
         <Box>
-          <Typography variant="h1" sx={{ fontSize: "1.5rem" }} gutterBottom>
+          <Typography variant="h2" sx={{ fontSize: "1.25rem" }} gutterBottom>
             {t("title")}
           </Typography>
         </Box>
@@ -284,7 +284,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     return (
       <Stack spacing={3} sx={{ py: { xs: 2, sm: 3 } }}>
         <Box>
-          <Typography variant="h1" sx={{ fontSize: "1.5rem" }} gutterBottom>
+          <Typography variant="h2" sx={{ fontSize: "1.25rem" }} gutterBottom>
             {t("title")}
           </Typography>
         </Box>
@@ -653,7 +653,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   return (
     <Stack spacing={3} sx={{ py: { xs: 2, sm: 3 } }}>
       <Box>
-        <Typography variant="h1" sx={{ fontSize: "1.5rem" }} gutterBottom>
+        <Typography variant="h2" sx={{ fontSize: "1.25rem" }} gutterBottom>
           {t("title")}
         </Typography>
         <Typography variant="body2" color="text.secondary">

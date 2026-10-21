@@ -382,7 +382,7 @@ test.describe.serial("§485 pictures from the gallery", () => {
     await expect(card.getByText("Fără fotografie", { exact: true })).toHaveCount(0);
     // The crop was saved with the person: the card on the list draws it, and its editor opens on 4∶5.
     await expect(card.locator('[data-crop="set"]').first()).toBeVisible();
-    await openFold(card.locator("details").filter({ hasText: "Editează cardul" }));
+    await openFold(card.locator("details").filter({ hasText: "Modifică cardul" }));
     await expectShapes(card.getByTestId(/^team-photo-m[0-9a-f]{8}-crop$/), "4:5");
     expect((await listed(page, { q: fileName })).find((asset) => asset.id === picture.id)?.uses).toContain("team");
 

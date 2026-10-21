@@ -249,13 +249,13 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     await again.getByRole("button", { name: "Salvează punctele" }).click();
     await expect(page.getByTestId("toast-live")).toContainText("Punctele de pe traseu au fost salvate.", { timeout: 20_000 });
 
-    // A point removed: «Scoate acest punct» ticked, then saved.
+    // A point removed: «Șterge punctul» ticked, then saved.
     await page.goto(`/ro/admin/events/${race.id}`);
     await hydrated(page);
     const third = await openEditorBox(page, "Puncte pe traseu");
     const second = third.getByTestId("checkpoint-card").nth(1);
     await openFold(second);
-    await second.getByRole("checkbox", { name: /Scoate acest punct/ }).check();
+    await second.getByRole("checkbox", { name: /Șterge punctul/ }).check();
     await third.getByRole("button", { name: "Salvează punctele" }).click();
     await expect(page.getByTestId("toast-live")).toContainText("Punctele de pe traseu au fost salvate.", { timeout: 20_000 });
 

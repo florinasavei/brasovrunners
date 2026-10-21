@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.69-2026-10-22 -->
+<!-- PROJECT_BASELINE: BR-V3.70-2026-10-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.69-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.70-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27831,3 +27831,19 @@ The distance is the pure `awayPrecise(startsAt, now, timeZone)` beside §834's `
 **Refused.** Seconds (a ticking clock is noise on a calendar); hours beyond fourteen days.
 
 Baseline `BR-V3.69-2026-10-22`.
+
+## 844. The consistency audit's first wave: the trail in words, a toolbar that holds its shape, labelled result rows, one h1, one word per verb
+
+**The owner, 2026-10-21:** «More parallel agents for consistency checks», after «they look like they are from a different app». Six read-only auditors walked the backoffice in parallel (the event editor, the volunteers, the registrations, «Setări» and «Pagini», the team, members, shop, newsletter, gallery and tasks screens, and a code-wide sweep) and returned about ninety ranked findings against the house's shapes: the row fold of §749 and §844, `Panel`, `StatusChip`, help behind the «?» (§511). This first wave fixes what is plainly broken and what is one word or one line; the walls of inputs, the big per-item cards and the guards that keep them from coming back follow in their own changes.
+
+**Fixed.**
+
+- **«Ce a făcut echipa»** on a registration's page printed its change details as JSON — `{"from":"Ion","to":"Ioan"}` — to staff. It now says them in words: «„Ion” → „Ioan”», a state by its name, «motiv: …», «nr. 007»; ids and the record's plumbing are left out, and the emergency answers stay hidden unless the details are open, as before (§645).
+- **The registrations toolbar**: opening «Invită pe email» (the menu for several events) stretched «Adaugă o înscriere» and the downloads to its height. The row now aligns its buttons to the top.
+- **«Alergători neînscriși»** on the results page drew boxes with no labels on a computer (the column header belongs to the registered runners' panel; this one's first cell holds four boxes it could not name), and the cells kept their boxes' natural width, so a line ran past the card. Its captions now show at every width and every cell may shrink (`minWidth: 0`).
+- **One `h1`.** «Ce mai este de făcut» and the shop's product pages drew a second `h1` under the shell's own; they are the house's 1.25rem `h2`.
+- **One word per verb**, in both languages: «Descarcă Excel» / «Descarcă CSV» on the registrations list as on every other list (was «Exportă»); «Mai sus» / «Mai jos» for moving a volunteer category and a menu entry (was «Mută mai sus», «Sus»); «Înapoi la eveniment» on every page under an event (three had a «←», three not); «Modifică cardul» / «Modifică caseta» on «Echipa» (the house says «Modifică» for a fold opened in place, «Editează» for a link to an editor); «Scoate pagina de pe site» for every page (was «Retrage pagina» twice and «Scoate de pe site»); «Șterge punctul» and «Șterge rândul {row}» (a row removed before a save is «Șterge …» everywhere else); the club's copies' address help in the contact settings' words.
+
+**The plan that follows**, from the audit: the remaining walls of always-open inputs as row folds (the event's links, partners and programme; volunteer categories; the club's to-dos; member levels; discount codes; FAQ questions; «Spune-ne ceva»'s four forms), then each volunteer, the registration's page, one state chip for registrations, the legal texts' list, «Aspect» and «Costuri», «Echipa»'s rows, and four source-walk guards (a list item with boxes is a row fold; no hand-drawn row box; no second `h1`; the verbs above).
+
+Baseline `BR-V3.70-2026-10-22`.

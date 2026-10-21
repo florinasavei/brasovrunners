@@ -1218,9 +1218,9 @@ test.describe("§754 volunteers for a race", () => {
     await expect(categoryRows).toHaveText(["Start / Sosire", "Traseu"]);
     // The first has no contact; the arrows are drawn only where a step is possible (the first has no «up», the last no «down»).
     await expect(page.getByTestId("volunteer-category").nth(0).getByTestId("volunteer-category-contact-line")).toHaveText("Nicio persoană de contact încă.");
-    await expect(page.getByTestId("volunteer-category").nth(0).getByRole("button", { name: /Mută mai sus/ })).toHaveCount(0);
-    await expect(page.getByTestId("volunteer-category").nth(1).getByRole("button", { name: /Mută mai jos/ })).toHaveCount(0);
-    const moveUp = page.getByTestId("volunteer-category").nth(1).getByRole("button", { name: /Mută mai sus/ });
+    await expect(page.getByTestId("volunteer-category").nth(0).getByRole("button", { name: /^Mai sus/ })).toHaveCount(0);
+    await expect(page.getByTestId("volunteer-category").nth(1).getByRole("button", { name: /^Mai jos/ })).toHaveCount(0);
+    const moveUp = page.getByTestId("volunteer-category").nth(1).getByRole("button", { name: /^Mai sus/ });
     expect((await moveUp.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await moveUp.click();
     await expect(categoryRows).toHaveText(["Traseu", "Start / Sosire"], { timeout: 30_000 });
