@@ -10,6 +10,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { generateTokenSecret, hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { mirrorRolesGiven } from "../../helpers/volunteer-roles";
 
 /**
  * §754 — «Mă ofer voluntar»'s one Server Action, `submitVolunteerAction` (BR-REQ-031-01), on the real clock
@@ -233,6 +234,7 @@ describe("§754 submitVolunteerAction's redirects", () => {
       state: "REGISTERED",
       source: "STAFF",
     });
+    await mirrorRolesGiven(db);
     const url = await pressed(post());
     expect(url.searchParams.get("volunteer")).toBe("full");
     expect(url.hash).toBe("#volunteers");

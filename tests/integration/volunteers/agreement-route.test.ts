@@ -10,6 +10,7 @@ import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { mirrorRolesGiven } from "../../helpers/volunteer-roles";
 
 /**
  * §758 — the volunteer agreement's PDF route (BR-REQ-060-01, BR-REQ-053-03): «PDF contract» and «PDF de semnat»
@@ -100,6 +101,7 @@ beforeEach(async () => {
       updatedAt: NOW,
     })
     .returning();
+  await mirrorRolesGiven(db);
   volunteerId = person.id;
 });
 

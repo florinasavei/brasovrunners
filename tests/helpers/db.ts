@@ -1,6 +1,4 @@
-import { PGlite } from "@electric-sql/pglite";
 import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
-import { migrate } from "drizzle-orm/pglite/migrator";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
@@ -40,6 +38,7 @@ import { unreachableWindows } from "@/db/schema/unreachable-windows";
 import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
 import { forgetCachedAddressCap } from "@/modules/registrations/address-cap-memo";
 import { forgetCachedCalendarRsvpTo } from "@/modules/notifications/domain/calendar-rsvp";
+import { migratedPglite } from "./pglite-snapshot";
 
 const schema = {
   auditLogs,
@@ -83,10 +82,10 @@ export async function createTestDatabase(): Promise<{
   db: TestDatabase;
   close: () => Promise<void>;
 }> {
-  const client = new PGlite();
+  // Every migration already applied, loaded from the run's snapshot (`pglite-snapshot.ts`) rather than run again here.
+  const client = await migratedPglite();
   const db = drizzle(client, { schema });
 
-  await migrate(db, { migrationsFolder: "./src/db/migrations" });
   // A fresh database has no deadlines row: nothing memoized from another database may answer for it.
   forgetCachedDeadlines();
   forgetCachedAddressCap();

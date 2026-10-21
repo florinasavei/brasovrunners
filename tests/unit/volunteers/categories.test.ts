@@ -97,23 +97,23 @@ describe("§774 a role named alone", () => {
 
   it("is what the agreement's sentences name: the role given, the roles chosen and their tasks", () => {
     expect(roleNames([guidance, photo], "ro")).toBe("Direcționare (Traseu), Foto/Video");
-    const given = agreementRoleWords({ assigned: { ...guidance, descriptionRo: "Arăți drumul.", descriptionEn: "Show the way." }, chosen: [] }, "ro", true);
+    const given = agreementRoleWords({ assigned: [{ ...guidance, descriptionRo: "Arăți drumul.", descriptionEn: "Show the way." }], chosen: [] }, "ro", true);
     expect(given).toMatchObject({ role: "Direcționare (Traseu)", tasks: "Arăți drumul" });
-    const chosen = agreementRoleWords({ assigned: null, chosen: [{ ...guidance, descriptionRo: "Arăți drumul." }, photo] }, "en", true);
+    const chosen = agreementRoleWords({ assigned: [], chosen: [{ ...guidance, descriptionRo: "Arăți drumul." }, photo] }, "en", true);
     expect(chosen.choices).toBe("Guidance (Route), Photo/Video");
     expect(chosen.choiceTasks).toBe("");
-    const withTasks = agreementRoleWords({ assigned: null, chosen: [{ ...guidance, descriptionEn: "Show the way." }, photo] }, "en", true);
+    const withTasks = agreementRoleWords({ assigned: [], chosen: [{ ...guidance, descriptionEn: "Show the way." }, photo] }, "en", true);
     expect(withTasks.choiceTasks).toBe("Guidance (Route) — Show the way");
     // An earlier text with no sentence of its own for the choices puts the same names in the role's blank.
-    expect(agreementRoleWords({ assigned: null, chosen: [guidance] }, "ro", false).role).toBe("Direcționare (Traseu)");
+    expect(agreementRoleWords({ assigned: [], chosen: [guidance] }, "ro", false).role).toBe("Direcționare (Traseu)");
   });
 
   it("is compared with what an accepted agreement named, so a role moved to another category says the accepted text named another", () => {
-    const person = { assigned: { ...guidance, id: "r1" }, chosen: [{ ...guidance, id: "r1" }] };
+    const person = { assigned: [{ ...guidance, id: "r1" }], chosen: [{ ...guidance, id: "r1" }] };
     expect(agreementStillNamesRole("Direcționare (Traseu)", person, "ro")).toBe(true);
     // The role was under no category when it was accepted: the name alone no longer matches the one it has now.
     expect(agreementStillNamesRole("Direcționare", person, "ro")).toBe(false);
-    expect(agreementStillNamesRole("Direcționare", { assigned: { ...guidance, id: "r1", categoryRo: null, categoryEn: null }, chosen: [] }, "ro")).toBe(true);
+    expect(agreementStillNamesRole("Direcționare", { assigned: [{ ...guidance, id: "r1", categoryRo: null, categoryEn: null }], chosen: [] }, "ro")).toBe(true);
   });
 });
 
@@ -150,10 +150,10 @@ describe("§774 the contact person of a category", () => {
   it("is what a volunteer's message names: the category of the role given — else of the roles offered for — each person once, none for a role under no category", () => {
     const ana = { name: "Ana", phone: "+40712345678", email: null };
     const dan = { name: "Dan", phone: null, email: "dan@club.test" };
-    expect(volunteerContactsOf({ assigned: { contact: ana }, chosen: [{ contact: dan }] })).toEqual([ana]);
-    expect(volunteerContactsOf({ assigned: null, chosen: [{ contact: ana }, { contact: dan }, { contact: { ...ana } }, { contact: null }, {}] })).toEqual([ana, dan]);
-    expect(volunteerContactsOf({ assigned: { contact: null }, chosen: [{ contact: dan }] })).toEqual([]);
-    expect(volunteerContactsOf({ assigned: null, chosen: [] })).toEqual([]);
+    expect(volunteerContactsOf({ assigned: [{ contact: ana }], chosen: [{ contact: dan }] })).toEqual([ana]);
+    expect(volunteerContactsOf({ assigned: [], chosen: [{ contact: ana }, { contact: dan }, { contact: { ...ana } }, { contact: null }, {}] })).toEqual([ana, dan]);
+    expect(volunteerContactsOf({ assigned: [{ contact: null }], chosen: [{ contact: dan }] })).toEqual([]);
+    expect(volunteerContactsOf({ assigned: [], chosen: [] })).toEqual([]);
   });
 });
 

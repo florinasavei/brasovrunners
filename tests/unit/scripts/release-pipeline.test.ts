@@ -5,7 +5,10 @@ import { createClock, formatDuration, waitForRun } from "../../../scripts/ship-c
 /**
  * §504 — the release pipeline tests one tree once. `docs-check.yml` records a tree that passed
  * everything and skips the heavy jobs on a run of the same tree; a pull request runs the whole
- * suite on eight shards; `yarn ship` waits on a run by its status and times its own steps.
+ * suite on twelve shards; `yarn ship` waits on a run by its status and times its own steps.
+ * Since 2026-10-20 `yarn check` runs as two kinds of job — `checks` (`yarn check:static`, the build)
+ * and four `unit` shards (`yarn test --shard=i/4`) — whose joint verdict is the one check `docs-check`:
+ * the same command as the hook's, cut into runners, never into other commands (BR-REQ-090-02).
  *
  * GitHub cannot run here, so the workflow is held to the lines that make it safe: a skip only by a
  * job's condition (a skipped *workflow* stays "Pending" on a required check, a skipped *job*
@@ -34,8 +37,13 @@ describe("§504 docs-check: one tree, tested once", () => {
     expect(workflow).not.toMatch(/: write\b/);
   });
 
-  it("keeps the two check names ship and branch protection read", () => {
-    expect(job("docs-check")).toMatch(/run: yarn check\n/);
+  it("keeps the two check names ship and branch protection read, each the verdict of its jobs", () => {
+    // The hook's `yarn check` is `check:static` followed by `test`: CI runs exactly those two, nothing else.
+    expect(job("checks")).toMatch(/run: yarn check:static\n/);
+    expect(job("unit")).toContain("run: yarn test --shard=${{ matrix.shard }}/$SHARD_TOTAL");
+    expect(workflow.match(/run: yarn (check|test)\b[^\n]*/g)).toEqual(["run: yarn check:static", "run: yarn test --shard=${{ matrix.shard }}/$SHARD_TOTAL", "run: yarn test:concurrency", "run: yarn test:e2e --shard=${{ matrix.shard }}/$SHARD_TOTAL"]);
+    expect(job("docs-check")).toContain("needs: [tested-tree, checks, unit]");
+    expect(job("docs-check")).toContain("if: always()");
     expect(job("e2e")).toContain("needs: [tested-tree, e2e-shard]");
     expect(job("e2e")).toContain("if: always()");
     // A `name:` on either job would rename the required check.
@@ -63,10 +71,22 @@ describe("§504 docs-check: one tree, tested once", () => {
   });
 
   it("skips the heavy jobs only by their own condition, and runs them if the gate failed", () => {
-    for (const name of ["docs-check", "e2e-shard"]) {
+    for (const name of ["checks", "unit", "e2e-shard"]) {
       expect(job(name)).toContain("needs: tested-tree");
       expect(job(name)).toContain(SKIP_WHEN_TESTED);
     }
+  });
+
+  it("calls docs-check green only when the static checks and every unit shard passed, or the tree was already tested", () => {
+    expect(job("docs-check")).toContain(
+      'test "${{ needs.tested-tree.outputs.tested }}" = "true" || { test "${{ needs.checks.result }}" = "success" && test "${{ needs.unit.result }}" = "success"; }',
+    );
+    const unit = job("unit");
+    expect(unit).toContain("shard: [1, 2, 3, 4]");
+    expect(unit).toContain("name: unit ${{ matrix.shard }}/4");
+    expect(unit).toContain("fail-fast: false");
+    // PGlite runs PostgreSQL in process: no database service on these runners.
+    expect(unit).not.toContain("services:");
   });
 
   it("calls e2e green without shards only when the tree was already tested", () => {
@@ -87,10 +107,10 @@ describe("§504 docs-check: one tree, tested once", () => {
     expect(workflow.match(/retention-days: (\d+)/g)).toEqual(["retention-days: 7", "retention-days: 1"]);
   });
 
-  it("runs the whole suite, both projects, on eight shards on every run — a pull request included", () => {
+  it("runs the whole suite, both projects, on twelve shards on every run — a pull request included", () => {
     const shards = job("e2e-shard");
-    expect(shards).toContain("shard: [1, 2, 3, 4, 5, 6, 7, 8]");
-    expect(shards).toContain("name: e2e ${{ matrix.shard }}/8");
+    expect(shards).toContain("shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]");
+    expect(shards).toContain("name: e2e ${{ matrix.shard }}/12");
     expect(shards).toContain("run: yarn test:e2e --shard=${{ matrix.shard }}/$SHARD_TOTAL");
     expect(shards).not.toContain("--project");
     expect(shards).not.toContain("github.event_name");

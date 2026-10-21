@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.63-2026-10-20 -->
+<!-- PROJECT_BASELINE: BR-V3.64-2026-10-21 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.63-2026-10-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.64-2026-10-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -863,9 +863,9 @@ not `feature/update-registrations`.
 yarn check
 ```
 
-This is the same command the pre-commit hook runs and the same command CI runs, so a clean
-result locally means a clean result in CI. Once the application exists, also run
-`yarn build`.
+This is the same command the pre-commit hook runs and the same command CI runs (there in two
+halves, `yarn check:static` and `yarn test` on four shards), so a clean result locally means a
+clean result in CI. Once the application exists, also run `yarn build`.
 
 **Opening the pull request:**
 
@@ -961,7 +961,7 @@ Repository/delivery:
 - [x] `qa` default and protected — default branch; the `docs-check` status is required and
       strict on both branches.
 - [x] `main` protected — same rule, and it accepts releases from `qa` only.
-- [x] CI required — `docs-check` (`yarn check`) on both branches.
+- [x] CI required — `docs-check` (`yarn check`: the static half in `checks`, the tests in four `unit` shards) on both branches.
 - [x] Release PR process rehearsed — `qa → main` #45 (2026-09-17, the first production
       deployment) and #47 (2026-09-18): merge, the gated migration run approved, the build
       that waited for it. One lesson from #47: the build times out after twenty minutes if the
@@ -2241,9 +2241,11 @@ only ones who see the names, addresses and telephone numbers.
    (never the address or the number). **Give each person a role**: on a row under «De repartizat», «Dă-i
    rolul …» beside each role they ticked (with how that role stands, «Sosire · 0 din 1»), or «Alt rol» →
    «Dă-i rolul ales» for another role of the event; the person gets a short email naming it. A person who
-   already has a role is moved in «Modifică» → «Rolul dat» — the email follows, and a corrected address or a
-   reopened person is told the role again. On the card: «Confirmă» when you have spoken to the person, «Anulează», «Modifică» (the roles ticked,
-   the role given — «Încă niciunul» takes it back — and your own note, never shown publicly), «Șterge
+   already has a role may be given more («Dă-i și rolul …», §837 — they count in each role's «N din M»), each
+   role held is a chip with «Ia-i rolul …», and the whole set is ticked in «Modifică» → «Rolurile date» — the
+   email follows, naming every role that stands, and a corrected address or a reopened person is told the
+   roles again. On the card: «Confirmă» when you have spoken to the person, «Anulează», «Modifică» (the roles ticked,
+   the roles given — none ticked takes them all back — and your own note, never shown publicly), «Șterge
    voluntarul» (the address and the telephone number go with it). «N din M» beside each role counts only the
    people **given** that role («Înscris» and «Confirmat»); the page stops offering a role once it has them.
    A role may also have **no number** (§784): tick «Nelimitat» on its line (§791) instead of typing

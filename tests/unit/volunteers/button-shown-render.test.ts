@@ -34,6 +34,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
       "addVolunteerAction",
       "addVolunteerCategoryAction",
       "assignVolunteerAction",
+      "unassignVolunteerAction",
       "deleteVolunteerAction",
       "deleteVolunteerCategoryAction",
       "deleteVolunteerRoleAction",

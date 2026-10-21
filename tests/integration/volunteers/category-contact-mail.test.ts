@@ -185,7 +185,7 @@ describe("§774 a category's contact person in the volunteers' emails", () => {
       const added = await changeVolunteer(
         db,
         admin,
-        { kind: "add", eventId: event.id, fields: { roleIds: [atStart.id, onRoute.id], assignedRoleId: onRoute.id, name: "Maria Test", email: "maria@example.test", phone: "+40712345680", note: "" } },
+        { kind: "add", eventId: event.id, fields: { roleIds: [atStart.id, onRoute.id], assignedRoleIds: [onRoute.id], name: "Maria Test", email: "maria@example.test", phone: "+40712345680", note: "" } },
         NOW,
       );
       const [message] = await outboxOf("VOLUNTEER_ROLE_ASSIGNED");
@@ -195,9 +195,16 @@ describe("§774 a category's contact person in the volunteers' emails", () => {
       expect(rendered.text).toContain("Organizatorii ți-au dat un rol la Crosul: Direcționare (Traseu).");
       expect(rendered.text).toContain(CONTACT_RO);
       expect(rendered.text).not.toContain("Dan Ionescu");
-      // Given the start's role instead, it is that category's contact.
+      // Given the start's role beside the route's (§837): both categories' contacts, each with its category. Then the route's taken back: the start's alone.
       await changeVolunteer(db, admin, { kind: "assign", eventId: event.id, id: added.volunteer.id, roleId: atStart.id }, NOW);
-      const second = (await outboxOf("VOLUNTEER_ROLE_ASSIGNED")).find((row) => (row.payloadJson as { roleId: string }).roleId === atStart.id)!;
+      const rolesOf = (row: OutboxRow) => (row.payloadJson as { roleIds: string[] }).roleIds;
+      const both = (await outboxOf("VOLUNTEER_ROLE_ASSIGNED")).find((row) => rolesOf(row).length === 2)!;
+      const together = await render(both);
+      expect(together.text).toContain("Roluri: Direcționare (Start / Sosire), Direcționare (Traseu)");
+      expect(together.text).toContain("Dan Ionescu");
+      expect(together.text).toContain("Ana Popescu");
+      await changeVolunteer(db, admin, { kind: "unassign", eventId: event.id, id: added.volunteer.id, roleId: onRoute.id }, NOW);
+      const second = (await outboxOf("VOLUNTEER_ROLE_ASSIGNED")).find((row) => rolesOf(row).length === 1 && rolesOf(row)[0] === atStart.id)!;
       const again = await render(second);
       expect(again.text).toContain("Questions about volunteering? Dan Ionescu · +40 722 000 111");
       expect(again.text).not.toContain("Ana Popescu");
@@ -208,7 +215,7 @@ describe("§774 a category's contact person in the volunteers' emails", () => {
       await changeVolunteer(
         db,
         admin,
-        { kind: "add", eventId: event.id, fields: { roleIds: [loose.id], assignedRoleId: loose.id, name: "Maria Test", email: "maria@example.test", phone: "+40712345680", note: "" } },
+        { kind: "add", eventId: event.id, fields: { roleIds: [loose.id], assignedRoleIds: [loose.id], name: "Maria Test", email: "maria@example.test", phone: "+40712345680", note: "" } },
         NOW,
       );
       const rendered = await render((await outboxOf("VOLUNTEER_ROLE_ASSIGNED"))[0]);
@@ -235,7 +242,7 @@ describe("§774 a category's contact person in the volunteers' emails", () => {
       await changeVolunteer(
         db,
         admin,
-        { kind: "add", eventId: event.id, fields: { roleIds: [onRoute.id], assignedRoleId: onRoute.id, name: "Maria Test", email: "maria@example.test", phone: "+40712345680", note: "" } },
+        { kind: "add", eventId: event.id, fields: { roleIds: [onRoute.id], assignedRoleIds: [onRoute.id], name: "Maria Test", email: "maria@example.test", phone: "+40712345680", note: "" } },
         NOW,
       );
       const { requestVolunteerAgreement } = await import("@/modules/volunteers/agreement");
@@ -268,7 +275,7 @@ describe("§774 a category's contact person in the volunteers' emails", () => {
       await changeVolunteer(
         db,
         admin,
-        { kind: "add", eventId: event.id, fields: { roleIds: [atStart.id], assignedRoleId: atStart.id, name: "Maria Test", email: "maria@example.test", phone: "+40712345680", note: "" } },
+        { kind: "add", eventId: event.id, fields: { roleIds: [atStart.id], assignedRoleIds: [atStart.id], name: "Maria Test", email: "maria@example.test", phone: "+40712345680", note: "" } },
         NOW,
       );
       const [person] = await db.select().from(eventVolunteers);

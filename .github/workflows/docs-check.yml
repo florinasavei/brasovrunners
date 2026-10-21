@@ -92,19 +92,23 @@ jobs:
           echo "tested=false" >> "$GITHUB_OUTPUT"
           echo "no record of this tree: running everything"
 
-  # The job name is the required status check in branch protection. Do not rename it.
+  # **`yarn check`, as two kinds of job (2026-10-20).** The hook runs `yarn check` = `yarn check:static`
+  # (docs, secrets, migrations, types, lint) followed by `yarn test`. CI runs the same two commands and
+  # nothing else — the static half here, with the build and the start, and the tests below in four
+  # shards — so the two still cannot drift (BR-REQ-090-02): what is split is the runner, not the
+  # command. Before the split the one job ran the 16 000 tests on one four-core runner, about thirty
+  # minutes, and every release waited on it while the e2e shards were long done.
   #
   # `!cancelled()` rather than the default `success()`: if `tested-tree` itself failed, this job
   # must run, not be skipped — a job skipped because its need failed also reads as passed.
-  docs-check:
+  checks:
     needs: tested-tree
     if: ${{ !cancelled() && needs.tested-tree.outputs.tested != 'true' }}
     runs-on: ubuntu-latest
-    # About twelve minutes when well. A job with no ceiling waits GitHub's six hours; the V2.13
-    # night lost an hour per shard to one hung spec before anybody saw it (§531).
-    # 45, not 30: the unit suite passed 14 000 tests on 2026-10-15 and a run of BR-V3.38's PR was cancelled
-    # at the 30-minute cap with no failing test (CI's runners are ~3x slower than the 8-worker local hook).
-    timeout-minutes: 45
+    # About five minutes when well: the static checks, the build and the start. A job with no ceiling
+    # waits GitHub's six hours; the V2.13 night lost an hour per shard to one hung spec before anybody
+    # saw it (§531).
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -120,10 +124,9 @@ jobs:
       # a different dependency tree than the one committed.
       - run: yarn install --immutable
 
-      # Must stay `yarn check`: .githooks/pre-commit runs the same command, so the two
-      # cannot diverge as `check` grows past docs:check (SETUP.md §8).
-      # It needs no database: the tests run PostgreSQL in process via PGlite.
-      - run: yarn check
+      # The static half of `yarn check` (.githooks/pre-commit runs the whole): the tests are the
+      # `unit` shards below, so the two halves together are exactly the hook's command (SETUP.md §8).
+      - run: yarn check:static
 
       # The build's own cache (§276): a Turbopack build that does not start from nothing. It
       # used to carry the fonts too, while `next/font/google` downloaded them at build time and
@@ -157,22 +160,71 @@ jobs:
           done
           echo "did not serve on PORT within 30s"; exit 1
 
-  # Separate job because it needs a real PostgreSQL and a browser, which `docs-check` must
+  # **The tests, in four shards (2026-10-20).** `yarn test` is the other half of `yarn check`:
+  # 1 100 files, 16 000 tests, about 370 of the files on a PostgreSQL of their own (PGlite, migrated
+  # from one snapshot per run — `tests/helpers/pglite-snapshot.ts`). On one four-core runner the whole
+  # took about thirty minutes and was the last job standing on every pull request; `--shard=i/n`
+  # takes the i-th of n slices of the files, the union of the shards is exactly `yarn test`, and
+  # each runner's workers are capped at its cores (`vitest.config.mts`). Nothing is skipped.
+  # It needs no database service: PGlite runs PostgreSQL in process.
+  unit:
+    name: unit ${{ matrix.shard }}/4
+    needs: tested-tree
+    if: ${{ !cancelled() && needs.tested-tree.outputs.tested != 'true' }}
+    runs-on: ubuntu-latest
+    # About eight minutes a shard when well; the ceiling turns a hung worker into a red check.
+    timeout-minutes: 25
+    strategy:
+      # Every shard reports: one red shard should not hide what the others would have found.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      SHARD_TOTAL: 4
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+      - name: Unit and database tests, shard ${{ matrix.shard }} of 4
+        run: yarn test --shard=${{ matrix.shard }}/$SHARD_TOTAL
+
+  # The job name is the required status check in branch protection. Do not rename it.
+  #
+  # The verdict of `checks` and the four `unit` shards as the one check `docs-check`, the name it
+  # had when it was one job — what a reader of the pull request, `yarn ship` (`HOUSE_CHECKS`) and
+  # the branch-protection rule see does not depend on how the work is cut. `always()` so a red
+  # shard makes this red rather than skipped: a skipped check reads as passed. Green without
+  # running anything only when `tested-tree` found this tree passed.
+  docs-check:
+    needs: [tested-tree, checks, unit]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: The static checks and every test shard passed, or this tree already had
+        run: |
+          echo "tested before: ${{ needs.tested-tree.outputs.tested }}; checks: ${{ needs.checks.result }}; unit shards: ${{ needs.unit.result }}"
+          test "${{ needs.tested-tree.outputs.tested }}" = "true" || { test "${{ needs.checks.result }}" = "success" && test "${{ needs.unit.result }}" = "success"; }
+
+  # Separate job because it needs a real PostgreSQL and a browser, which `checks` must
   # not require — that one gates every commit and has to run on a bare machine.
   #
-  # **Sharded (§431), eight on every run, both projects (§504).** §209 ran the desktop project
+  # **Sharded (§431), twelve on every run, both projects (§504).** §209 ran the desktop project
   # alone on a pull request and both on a push, and §431 split that into four and eight shards.
   # Now the pull request is the one run that tests a tree — the push to `qa`, the release PR and
   # the push to `main` find it recorded and skip — so it runs the whole suite, both viewports,
-  # on eight runners: about seven minutes each, under the `docs-check` job's own twelve, so the
-  # pull request waits no longer than it did for the desktop half.
+  # on twelve runners (eight until 2026-10-20, when the longest of them, sixteen minutes, was the last
+  # job of every pull request): about seven minutes each, beside the four `unit` shards.
   #
   # §212 and §276 refused parallel specs because they share ONE database and ONE seeded event.
   # A shard is not a second worker on that database: each is its own machine with its own
   # PostgreSQL service, migrated and seeded from nothing, and inside it the specs still run one
   # at a time (`workers: 1` in CI). What two specs could interleave on before, they still cannot.
   e2e-shard:
-    name: e2e ${{ matrix.shard }}/8
+    name: e2e ${{ matrix.shard }}/12
     needs: tested-tree
     if: ${{ !cancelled() && needs.tested-tree.outputs.tested != 'true' }}
     runs-on: ubuntu-latest
@@ -183,7 +235,7 @@ jobs:
       # Every shard reports: one red shard should not hide what the others would have found.
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     services:
       postgres:
         image: postgres:17.6-alpine
@@ -200,7 +252,7 @@ jobs:
     env:
       APP_ENV: test
       DATABASE_URL: postgres://brasov_runners:local_only_not_a_secret@localhost:5432/brasov_runners
-      SHARD_TOTAL: 8
+      SHARD_TOTAL: 12
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -253,7 +305,7 @@ jobs:
       # `--shard=i/n` takes the i-th of n equal slices of the tests (`fullyParallel` makes the
       # slice per test, not per file; a `describe.serial` group stays in one slice). The union
       # of the shards is exactly the suite `yarn test:e2e` runs locally. Nothing is skipped.
-      - name: End-to-end, shard ${{ matrix.shard }} of 8, both projects
+      - name: End-to-end, shard ${{ matrix.shard }} of 12, both projects
         run: yarn test:e2e --shard=${{ matrix.shard }}/$SHARD_TOTAL
 
       - if: failure()
@@ -282,8 +334,8 @@ jobs:
           test "${{ needs.tested-tree.outputs.tested }}" = "true" || test "${{ needs.e2e-shard.result }}" = "success"
 
   # The record `tested-tree` reads (§504): a one-line artifact named after the tree, uploaded only
-  # when `yarn check`, the build and every shard — both projects, and the concurrency suite on
-  # shard 1 — passed on it. A failed upload is not a failed run: the next run of the same tree
+  # when `yarn check` (the static half and the four `unit` shards, as `docs-check` reports them),
+  # the build and every e2e shard — both projects, and the concurrency suite on shard 1 — passed on it. A failed upload is not a failed run: the next run of the same tree
   # simply tests it again.
   record-tested-tree:
     needs: [tested-tree, docs-check, e2e-shard]

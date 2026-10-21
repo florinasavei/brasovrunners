@@ -76,7 +76,7 @@ const ROLE: VolunteerRole = {
 const person = (over: Partial<VolunteerItem>): VolunteerItem => ({
   id: "55555555-5555-4555-8555-555555555555",
   eventId: EVENT,
-  roleId: null,
+  roleIds: [],
   choiceIds: [WATER],
   name: "Maria Test",
   email: "maria@example.test",
@@ -138,7 +138,7 @@ async function drawCard(over: Record<string, unknown> = {}, language: "ro" | "en
     offerClosed: null,
     roles: [ROLE],
     categories: [],
-    standings: [{ roleId: ROLE.id, needed: ROLE.needed, taken: 0, confirmed: 0, free: ROLE.needed }],
+    standings: [{ roleIds: [ROLE.id], needed: ROLE.needed, taken: 0, confirmed: 0, free: ROLE.needed }],
     volunteers: [person({})],
     agreementInForce: true,
     agreementNoticeDescribes: true,

@@ -14,6 +14,7 @@ import { countVolunteersListEvents, readPublicVolunteersList, setVolunteersListP
 import { viewPersonData } from "@/modules/registrations/person-data";
 import { changeVolunteer, listVolunteers, submitVolunteer } from "@/modules/volunteers/volunteers";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { mirrorRolesGiven } from "../../helpers/volunteer-roles";
 
 const NOW = new Date("2026-10-19T10:00:00.000Z");
 const DAY = 24 * 60 * 60_000;
@@ -316,6 +317,7 @@ describe("§821 the volunteers' public list", () => {
         { ...base, name: "Nici Confirmat", email: "nu@example.test", canonicalEmail: "nu@example.test", state: "REGISTERED", createdAt: new Date(NOW.getTime() - 2 * DAY) },
         { ...base, name: "Anulat Tot", email: "anulat@example.test", canonicalEmail: "anulat@example.test", state: "CANCELLED", createdAt: new Date(NOW.getTime() - DAY) },
       ]);
+      await mirrorRolesGiven(db);
     }
 
     it("names only the confirmed who ticked, with the role given, and counts the other confirmed — the unconfirmed and the cancelled are nobody", async () => {

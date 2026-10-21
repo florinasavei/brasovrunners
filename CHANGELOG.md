@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.64-2026-10-21
+
+- **A volunteer may be given several roles** — «Dă-i și rolul …» adds one beside those held, «Ia-i rolul …» on its chip takes one back, «Modifică» ticks «Rolurile date»; a person counts in each role's «N din M», the email names every role that stands,, the agreement, the CSV and the public list say them all, and the organizers' «Voluntar nou» email lists what the person ticked — the roles one per line, the message, the yes/no boxes, the size. Migration 0177. §837.
+- **Releases wait half as long on CI** — the test suite starts every database from one migrated snapshot per run instead of running 177 migrations per file, its workers are capped at the machine's cores, CI runs `yarn test` in four shards beside the static checks, reported as the one check `docs-check`, and the e2e suite in twelve shards instead of eight; a pull request's run takes about twelve minutes instead of thirty-six. No test was dropped. §838.
 ## BR-V3.63-2026-10-20
 
 - **The club chooses whether the event page shows «Vreau să fiu voluntar»** — a new tick in the «Voluntari» card (on by default): unticked, the event page draws no «Căutăm voluntari» and no button, while the sign-up stays open by its link, which the card shows in Romanian and English with «Copiază». Migration 0176. §835.

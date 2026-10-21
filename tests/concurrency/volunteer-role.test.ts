@@ -192,7 +192,7 @@ describe("§754 §761 BR-REQ-031-01 people offer for a role's last place at once
     for (let round = 0; round < 5; round++) {
       const email = `voluntar.${stamp}.race-${round}@example.test`;
       const [byHand] = await Promise.allSettled([
-        changeVolunteer(db, admin!, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Ana Pop", email, phone: "+40712345678", note: "" } }, NOW),
+        changeVolunteer(db, admin!, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleIds: [role.id], name: "Ana Pop", email, phone: "+40712345678", note: "" } }, NOW),
         submitVolunteer(db, event.id, { roleIds: [role.id], name: "Ana Pop", email, phone: "+40712345678", message: "", locale: "ro", consent: true, agreement: true, adult: true, renderedAt: RENDERED }, NOW),
       ]);
       if (byHand.status === "rejected") expect(byHand.reason).toMatchObject({ code: "VOLUNTEER_ALREADY_LISTED", fields: ["email"] });
@@ -236,7 +236,7 @@ describe("§754 §761 BR-REQ-031-01 people offer for a role's last place at once
         changeVolunteer(
           db,
           admin!,
-          { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Ion Pop", email: `voluntar.${stamp}.hand-${round}@example.test`, phone: "+40712345678", note: "" } },
+          { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleIds: [role.id], name: "Ion Pop", email: `voluntar.${stamp}.hand-${round}@example.test`, phone: "+40712345678", note: "" } },
           NOW,
         ),
         changeVolunteer(db, admin!, { kind: "assign", eventId: event.id, id: hand.volunteer.id, roleId: round % 2 === 0 ? role.id : other.id }, NOW),
@@ -259,14 +259,14 @@ describe("§754 §761 BR-REQ-031-01 people offer for a role's last place at once
     const person = (round: number, what: string) => ({
       // The higher id posted first and given: the order that closed the cycle.
       roleIds: [high, low],
-      assignedRoleId: high,
+      assignedRoleIds: [high],
       name: "Dan Pop",
       email: `voluntar.${stamp}.${what}-${round}@example.test`,
       phone: "+40712345678",
       note: "",
     });
     for (let round = 0; round < 25; round++) {
-      const edited = await changeVolunteer(db, admin!, { kind: "add", eventId: event.id, fields: { ...person(round, "edited"), roleIds: [low], assignedRoleId: low } }, NOW);
+      const edited = await changeVolunteer(db, admin!, { kind: "add", eventId: event.id, fields: { ...person(round, "edited"), roleIds: [low], assignedRoleIds: [low] } }, NOW);
       const results = await Promise.allSettled([
         changeVolunteer(db, admin!, { kind: "add", eventId: event.id, fields: person(round, "both") }, NOW),
         offer(event.id, [low, high], `both-a-${round}`),

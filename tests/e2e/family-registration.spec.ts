@@ -369,6 +369,10 @@ test.describe("§389 §446 a family on one address", () => {
   });
 
   test("a link from an older email that opened the form for another person says it is no longer used", async ({ page }) => {
+    // Registration open first, like every case above: on twelve shards this one can be the file's first in its shard, after a
+    // spec that left the featured event's registration closed, and the form's page is then a 404 (§312's gate).
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
     await page.goto(`${registerPath}?another=an-older-emails-link`);
     await expect(page.getByTestId("another-person-link-gone")).toBeVisible();
     // The ordinary form, the address asked twice as always.

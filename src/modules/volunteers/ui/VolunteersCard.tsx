@@ -8,6 +8,7 @@ import {
   addVolunteerAction,
   addVolunteerCategoryAction,
   assignVolunteerAction,
+  unassignVolunteerAction,
   deleteVolunteerAction,
   deleteVolunteerCategoryAction,
   deleteVolunteerRoleAction,
@@ -281,13 +282,15 @@ export default async function VolunteersCard({
   const roleGroups = groupRolesByCategory(categories, roles);
   const roleHeaded = groupsNeedHeadings(roleGroups);
   const categoryName = (category: Pick<VolunteerCategory, "nameRo" | "nameEn">) => (locale === "en" ? category.nameEn : category.nameRo);
-  /** A person's roles as the agreement names them (§761): the one given and the ones chosen, in the club's order. */
+  /** A person's roles as the agreement names them (§761): the ones given (§837) and the ones chosen, each in the club's order. */
   const rolesOf = (person: VolunteerItem) => ({
-    assigned: (person.roleId ? roleById.get(person.roleId) : undefined) ?? null,
+    assigned: person.roleIds.flatMap((id) => roleById.get(id) ?? []),
     chosen: person.choiceIds.flatMap((id) => roleById.get(id) ?? []),
   });
   // Offers nobody has given a role yet (§761): «De repartizat», above the roles; the cancelled ones wait for nothing.
-  const unassigned = volunteers.filter((volunteer) => volunteer.roleId === null);
+  const unassigned = volunteers.filter((volunteer) => volunteer.roleIds.length === 0);
+  /** The role a person's full row is listed under (§837): the first given in the club's order; their other roles say «vezi la …». */
+  const homeRoleOf = (person: VolunteerItem) => labelled.find((role) => person.roleIds.includes(role.id)) ?? null;
   const waitingForRole = unassigned.filter((volunteer) => volunteer.state !== "CANCELLED").length;
   const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
 
@@ -311,7 +314,7 @@ export default async function VolunteersCard({
   });
   const personBoxes = await refusalMessages({
     roleIds: t("volunteers.person.choices"),
-    assignedRoleId: t("volunteers.person.assigned"),
+    assignedRoleIds: t("volunteers.person.assigned"),
     name: t("volunteers.person.name"),
     email: t("volunteers.person.email"),
     phone: t("volunteers.person.phone"),
@@ -525,8 +528,9 @@ export default async function VolunteersCard({
 
   /**
    * The boxes of «Adaugă un voluntar» and every person's «Modifică»: what the person would do (§761) — one box per
-   * role, the house's `CheckboxField` posting `roleIds` once per tick — and the role given, any of the event's or
-   * none yet. The service holds the rule: at least one ticked, or a role given.
+   * role, the house's `CheckboxField` posting `roleIds` once per tick — and the roles given (§837), the same boxes
+   * posting `assignedRoleIds`: any of the event's, one or several, or none yet. The service holds the rule: at least
+   * one ticked, or a role given.
    */
   const personFields = (person: VolunteerItem | null) => (
     <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
@@ -543,22 +547,19 @@ export default async function VolunteersCard({
           </CheckboxField>
         ))}
       </Box>
-      <RecallField
-        name="assignedRoleId"
-        select
-        label={t("volunteers.person.assigned")}
-        helperText={t("volunteers.person.assignedHelp")}
-        defaultValue={person?.roleId ?? ""}
-        size="small"
-        slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-      >
-        <option value="">{t("volunteers.person.assignedNone")}</option>
+      <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0 }} data-testid="volunteer-assigned-field">
+        <Typography component="legend" variant="body2" sx={{ fontWeight: 600, p: 0 }}>
+          {t("volunteers.person.assigned")}
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+          {t("volunteers.person.assignedHelp")}
+        </Typography>
         {labelled.map((role) => (
-          <option key={role.id} value={role.id}>
+          <CheckboxField key={role.id} name="assignedRoleIds" value={role.id} defaultChecked={person?.roleIds.includes(role.id) ?? false}>
             {labelOf(role)}
-          </option>
+          </CheckboxField>
         ))}
-      </RecallField>
+      </Box>
       <RecallField
         name="name"
         label={t("volunteers.person.name")}
@@ -849,7 +850,7 @@ export default async function VolunteersCard({
             <input type="hidden" name="volunteerId" value={person.id} />
             {/* What the PDF beside it prints (§758): the service refuses the record if either changed since. */}
             <input type="hidden" name="agreementDocumentId" value={agreementDocumentIds[person.locale] ?? ""} />
-            <input type="hidden" name="agreementRoles" value={agreementRolesStamp(person.roleId, person.choiceIds)} />
+            <input type="hidden" name="agreementRoles" value={agreementRolesStamp(person.roleIds, person.choiceIds)} />
             <GlyphSubmitButton icon="declaration" label={t("volunteers.agreement.paper")} pendingLabel={t("volunteers.agreement.paper")} variant="outlined" />
           </ActionForm>
         </Stack>
@@ -925,7 +926,7 @@ export default async function VolunteersCard({
             <input type="hidden" name="volunteerId" value={person.id} />
             {/* What the PDF beside it prints (§768): the service refuses the record if either changed since. */}
             <input type="hidden" name="agreementDocumentId" value={agreementDocumentIds[person.locale] ?? ""} />
-            <input type="hidden" name="agreementRoles" value={agreementRolesStamp(person.roleId, person.choiceIds)} />
+            <input type="hidden" name="agreementRoles" value={agreementRolesStamp(person.roleIds, person.choiceIds)} />
             <GlyphSubmitButton icon="declaration" label={t("volunteers.guardian.paper")} pendingLabel={t("volunteers.guardian.paper")} variant="outlined" />
           </ActionForm>
         </Stack>
@@ -940,20 +941,23 @@ export default async function VolunteersCard({
       : t("volunteers.assign.standing", { role: labelOf(role), taken: String(standingOf.get(role.id)?.taken ?? 0), needed: String(role.needed) });
 
   /**
-   * «Dă-i rolul …» (§761), on the offers «De repartizat» only — a person given a role changes it in «Modifică» →
-   * «Rolul dat», so no press on their row moves them by mistake: one press per role the person ticked, with how it
-   * stands, and the event's other roles in the select beside them — each a plain form posting the role it wants
-   * (`assignVolunteerAction`), audited and told to the person by email. Nothing for a cancelled person: reopen them first.
+   * «Dă-i rolul …» (§761) and, for a person who already has one, «Dă-i și rolul …» (§837): one press per role the person
+   * ticked and does not hold yet, with how it stands, and the event's other roles in the select beside them — each a plain
+   * form posting the role it wants (`assignVolunteerAction`), which adds that role to the ones held, audited and told to
+   * the person by email naming them all. A role held is taken back with «Ia-i rolul …» on its chip (`givenBlock`), or in
+   * «Modifică» → «Rolurile date». Nothing for a cancelled person: reopen them first.
    */
   const assignBlock = (person: VolunteerItem) => {
-    if (person.state === "CANCELLED" || person.roleId !== null) return null;
-    const quick = rolesOf(person).chosen;
-    const others = labelled.filter((role) => !quick.some((chosen) => chosen.id === role.id));
+    if (person.state === "CANCELLED") return null;
+    const held = new Set(person.roleIds);
+    const quick = rolesOf(person).chosen.filter((role) => !held.has(role.id));
+    const others = labelled.filter((role) => !held.has(role.id) && !quick.some((chosen) => chosen.id === role.id));
     if (quick.length === 0 && others.length === 0) return null;
+    const some = held.size > 0;
     return (
       <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1, mt: 1 }} data-testid="volunteer-assign">
         {quick.map((role) => {
-          const label = t("volunteers.assign.button", { role: roleStanding(role) });
+          const label = t(some ? "volunteers.assign.alsoButton" : "volunteers.assign.button", { role: roleStanding(role) });
           return (
             <Box component="form" action={assignVolunteerAction} key={role.id} data-testid="volunteer-assign-form">
               {hidden}
@@ -989,9 +993,9 @@ export default async function VolunteersCard({
             </TextField>
             <GlyphSubmitButton
               icon="role"
-              label={t("volunteers.assign.otherSubmit")}
-              pendingLabel={t("volunteers.assign.otherSubmit")}
-              ariaLabel={`${t("volunteers.assign.otherSubmit")}: ${shortText(person.name)}`}
+              label={t(some ? "volunteers.assign.alsoOtherSubmit" : "volunteers.assign.otherSubmit")}
+              pendingLabel={t(some ? "volunteers.assign.alsoOtherSubmit" : "volunteers.assign.otherSubmit")}
+              ariaLabel={`${t(some ? "volunteers.assign.alsoOtherSubmit" : "volunteers.assign.otherSubmit")}: ${shortText(person.name)}`}
               variant="outlined"
             />
           </Box>
@@ -1000,8 +1004,63 @@ export default async function VolunteersCard({
     );
   };
 
+  /**
+   * The roles given (§837), as chips under «Roluri date:» — a word and a glyph, never colour alone — each with «Ia-i rolul …»,
+   * a plain form posting that one role (`unassignVolunteerAction`): the others stand, the person is told what stands. Drawn
+   * only for a person with a role; a cancelled person keeps the chips and loses the presses (nothing to announce to them).
+   */
+  const givenBlock = (person: VolunteerItem) => {
+    const given = rolesOf(person).assigned;
+    if (given.length === 0) return null;
+    return (
+      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.5, mt: 0.5 }} data-testid="volunteer-given">
+        <Typography component="span" variant="body2" color="text.secondary">
+          {t("volunteers.person.givenLine")}:
+        </Typography>
+        {given.map((role) => (
+          <Stack key={role.id} direction="row" sx={{ alignItems: "center", gap: 0.25 }}>
+            <StatusChip glyph="given" variant="outlined" label={labelOf(role)} testId="volunteer-given-role" />
+            {person.state !== "CANCELLED" && (
+              <Box component="form" action={unassignVolunteerAction} data-testid="volunteer-unassign-form">
+                {hidden}
+                <input type="hidden" name="volunteerId" value={person.id} />
+                <input type="hidden" name="roleId" value={role.id} />
+                <GlyphSubmitButton
+                  icon="cancel"
+                  label={t("volunteers.assign.remove", { role: labelOf(role) })}
+                  pendingLabel={t("volunteers.assign.remove", { role: labelOf(role) })}
+                  ariaLabel={`${t("volunteers.assign.remove", { role: labelOf(role) })}: ${shortText(person.name)}`}
+                  variant="text"
+                  size="small"
+                />
+              </Box>
+            )}
+          </Stack>
+        ))}
+      </Stack>
+    );
+  };
+
+  /**
+   * A person listed in full under another role (§837): one line in this role's group — the name, the state and «vezi la …»,
+   * a link to the full row — so the group names everyone it counts and the row, with its forms, stands once on the page.
+   */
+  const alsoRow = (person: VolunteerItem, home: VolunteerRole) => (
+    <Box component="li" key={person.id} data-testid="volunteer-also" data-volunteer-id={person.id} sx={{ border: 1, borderColor: "divider", borderRadius: 1, px: 1.5, py: 0.75 }}>
+      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
+        <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }}>
+          {person.name}
+        </Typography>
+        <StatusChip glyph={STATE_CHIP[person.state].glyph} color={STATE_CHIP[person.state].color} label={t(`volunteers.states.${person.state}`)} />
+        <Box component="a" href={`#volunteer-${person.id}`} sx={{ ...INLINE_TAP_TARGET }}>
+          {t("volunteers.person.seeUnder", { role: labelOf(home) })}
+        </Box>
+      </Stack>
+    </Box>
+  );
+
   const personRow = (person: VolunteerItem) => (
-    <Box component="li" key={person.id} data-testid="volunteer-row" data-volunteer-id={person.id} data-state={person.state} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
+    <Box component="li" key={person.id} id={`volunteer-${person.id}`} data-testid="volunteer-row" data-volunteer-id={person.id} data-state={person.state} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
       <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
         <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }} data-testid="volunteer-name">
           {person.name}
@@ -1130,6 +1189,8 @@ export default async function VolunteersCard({
           ))}
         </Stack>
       )}
+
+      {givenBlock(person)}
 
       {assignBlock(person)}
 
@@ -1650,7 +1711,8 @@ export default async function VolunteersCard({
               </Box>
             )}
             {labelled.map((role) => {
-              const mine = volunteers.filter((person) => person.roleId === role.id);
+              // Everyone given the role (§837): the full row under the first of their roles, one line «vezi la …» under the others.
+              const mine = volunteers.filter((person) => person.roleIds.includes(role.id));
               return (
                 <Box component="section" key={role.id} aria-label={labelOf(role)} data-testid="volunteer-group" data-role-id={role.id}>
                   <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1, mb: 1 }}>
@@ -1665,7 +1727,10 @@ export default async function VolunteersCard({
                     </Typography>
                   ) : (
                     <Stack spacing={1.5} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-                      {mine.map(personRow)}
+                      {mine.map((person) => {
+                        const home = homeRoleOf(person);
+                        return home === null || home.id === role.id ? personRow(person) : alsoRow(person, home);
+                      })}
                     </Stack>
                   )}
                 </Box>

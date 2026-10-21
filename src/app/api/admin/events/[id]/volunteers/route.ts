@@ -54,10 +54,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const roles = rolesWithCategoryWords(data.categories, data.roles);
   const roleNames = new Map(roles.map((role) => [role.id, roleLabel(role, locale)]));
   const order = new Map(roles.map((role, index) => [role.id, index]));
-  // Grouped by the role given in the club's order — the offers nobody placed yet first (§761) — then oldest first
+  // Grouped by the first role given in the club's order — the offers nobody placed yet first (§761) — then oldest first
   // (the list is already oldest first, and the sort is stable).
-  const rank = (roleId: string | null) => (roleId === null ? -1 : (order.get(roleId) ?? 0));
-  const volunteers = [...data.volunteers].sort((a, b) => rank(a.roleId) - rank(b.roleId));
+  const rank = (roleIds: readonly string[]) => (roleIds.length === 0 ? -1 : (order.get(roleIds[0]) ?? 0));
+  const volunteers = [...data.volunteers].sort((a, b) => rank(a.roleIds) - rank(b.roleIds));
   const csv = buildVolunteersCsv(
     {
       role: t("volunteers.csvColumns.role"),
@@ -82,7 +82,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       guardianConsent: t("volunteers.csvColumns.guardianConsent"),
     },
     volunteers.map((person) => ({
-      role: person.roleId === null ? "" : (roleNames.get(person.roleId) ?? ""),
+      // The roles given, joined by «, » like the choices (§837); "" while none.
+      role: person.roleIds.flatMap((id) => roleNames.get(id) ?? []).join(", "),
       choices: person.choiceIds.flatMap((id) => roleNames.get(id) ?? []).join(", "),
       name: person.name,
       email: person.email,

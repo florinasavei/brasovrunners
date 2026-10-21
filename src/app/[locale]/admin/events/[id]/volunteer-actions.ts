@@ -83,9 +83,9 @@ function phoneOf(form: FormData): string {
 }
 
 const staffFields = (form: FormData) => ({
-  // What the person would do (§761): every box ticked, one name, several values; and the role given, or "".
+  // What the person would do (§761): every box ticked, one name, several values; and the roles given (§837), the same way.
   roleIds: form.getAll("roleIds").filter((value): value is string => typeof value === "string"),
-  assignedRoleId: field(form, "assignedRoleId"),
+  assignedRoleIds: form.getAll("assignedRoleIds").filter((value): value is string => typeof value === "string"),
   name: field(form, "name"),
   email: field(form, "email"),
   phone: phoneOf(form),
@@ -456,14 +456,25 @@ export async function setVolunteerStateAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Dă-i rolul …» (§761): one press gives a volunteer one role of the event — one of those they ticked, or another from
- * the select beside them. The form posts the role it wants, never a toggle; the service checks the role is this
- * event's, refuses a cancelled person, audits the change and emails the person the role.
+ * «Dă-i rolul …» / «Dă-i și rolul …» (§761, §837): one press gives a volunteer one more role of the event — one of those
+ * they ticked, or another from the select beside them. The form posts the role it wants, never a toggle; the service
+ * checks the role is this event's, refuses a cancelled person, audits the change and emails the person the roles that stand.
  */
 export async function assignVolunteerAction(form: FormData): Promise<void> {
   try {
     const result = await runVolunteer({ kind: "assign", eventId: eventIdOf(form), id: field(form, "volunteerId"), roleId: field(form, "roleId") });
     return backToCard(form, { saved: result.changed ? "volunteerAssigned" : "volunteerUnchanged" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+}
+
+/** «Ia-i rolul …» (§837): one press takes one role given back; the person's other roles stand and are named to them again. */
+export async function unassignVolunteerAction(form: FormData): Promise<void> {
+  try {
+    const result = await runVolunteer({ kind: "unassign", eventId: eventIdOf(form), id: field(form, "volunteerId"), roleId: field(form, "roleId") });
+    return backToCard(form, { saved: result.changed ? "volunteerUnassigned" : "volunteerUnchanged" });
   } catch (error) {
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });

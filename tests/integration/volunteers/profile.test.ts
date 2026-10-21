@@ -2,12 +2,15 @@ import { createTranslator } from "next-intl";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
+import type { OutboxRow } from "@/modules/notifications/outbox";
+import { renderOutboxMessage } from "@/modules/notifications/render";
 import { readAgreementFacts } from "@/modules/volunteers/agreement";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { changeVolunteerRole, listVolunteerRoles, listVolunteers, readPublicVolunteerRoles, submitVolunteer } from "@/modules/volunteers/volunteers";
@@ -183,7 +186,7 @@ describe("§765 the organizers' entry: what the person said about themselves", (
     const role = await addRole();
     const outcome = await post(
       actions.addVolunteerAction,
-      form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", birthDate: ` ${aged(34)} `, sex: "FEMALE", city: "  Brașov ", volunteeredBefore: "on", clubMember: "on" }),
+      form({ ...PERSON, roleIds: [role.id], assignedRoleIds: [], birthDate: ` ${aged(34)} `, sex: "FEMALE", city: "  Brașov ", volunteeredBefore: "on", clubMember: "on" }),
     );
     expect(outcome).toBe("redirected");
     const [maria] = await listVolunteers(db, eventId);
@@ -195,7 +198,7 @@ describe("§765 the organizers' entry: what the person said about themselves", (
 
   it("takes a person with none of it: every box is optional here, and the ticks read as «nu»", async () => {
     const role = await addRole();
-    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "" }));
+    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleIds: [] }));
     expect((await listVolunteers(db, eventId))[0]).toMatchObject({ age: null, dateOfBirth: null, sex: null, city: null, volunteeredBefore: false, clubMember: false, shirtSize: null });
   });
 
@@ -208,7 +211,7 @@ describe("§765 the organizers' entry: what the person said about themselves", (
       [{ sex: "UNSPECIFIED" }, "sex"],
       [{ city: "x".repeat(81) }, "city"],
     ] as const) {
-      const outcome = await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", ...fields }));
+      const outcome = await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleIds: [], ...fields }));
       expect(outcome, box).toMatchObject({ error: "VALIDATION_ERROR", fields: [box] });
       expect((outcome as FormOutcome).values.name?.[0]).toBe(PERSON.name);
     }
@@ -217,14 +220,14 @@ describe("§765 the organizers' entry: what the person said about themselves", (
 
   it("changes the answers on an edit, audits only the names of the fields changed, and a press that changes nothing writes nothing", async () => {
     const role = await addRole();
-    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", birthDate: aged(34), sex: "FEMALE", city: "Brașov" }));
+    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleIds: [], birthDate: aged(34), sex: "FEMALE", city: "Brașov" }));
     const [maria] = await listVolunteers(db, eventId);
-    const same = form({ ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleId: "", birthDate: aged(34), sex: "FEMALE", city: "Brașov" });
+    const same = form({ ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleIds: [], birthDate: aged(34), sex: "FEMALE", city: "Brașov" });
     expect(await post(actions.editVolunteerAction, same)).toBe("redirected");
     expect((await trail()).filter((row) => row.action === "volunteer.edited")).toHaveLength(0);
     await post(
       actions.editVolunteerAction,
-      form({ ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleId: "", birthDate: aged(35), sex: "", city: "Râșnov", volunteeredBefore: "on" }),
+      form({ ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleIds: [], birthDate: aged(35), sex: "", city: "Râșnov", volunteeredBefore: "on" }),
     );
     expect((await listVolunteers(db, eventId))[0]).toMatchObject({ age: 35, sex: null, city: "Râșnov", volunteeredBefore: true, clubMember: false });
     const [edited] = (await trail()).filter((row) => row.action === "volunteer.edited");
@@ -234,11 +237,11 @@ describe("§765 the organizers' entry: what the person said about themselves", (
 
   it("reads the retired «Prefer să nu spun» as no answer: leaving the sex empty on a row that has it is no change", async () => {
     const role = await addRole();
-    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "" }));
+    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleIds: [] }));
     await db.update(eventVolunteers).set({ sex: "UNSPECIFIED" });
     expect((await listVolunteers(db, eventId))[0].sex).toBeNull();
     const [maria] = await listVolunteers(db, eventId);
-    await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleId: "", sex: "" }));
+    await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleIds: [], sex: "" }));
     expect((await trail()).filter((row) => row.action === "volunteer.edited")).toHaveLength(0);
   });
 });
@@ -249,24 +252,24 @@ describe("§765 the organizers' entry is gated by the notice too (the §562 / §
     const role = await addRole();
     const outcome = await post(
       actions.addVolunteerAction,
-      form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", birthDate: aged(34), sex: "FEMALE", city: "Brașov", volunteeredBefore: "on", clubMember: "on" }),
+      form({ ...PERSON, roleIds: [role.id], assignedRoleIds: [], birthDate: aged(34), sex: "FEMALE", city: "Brașov", volunteeredBefore: "on", clubMember: "on" }),
     );
     expect(outcome).toMatchObject({ error: "VALIDATION_ERROR" });
     expect([...(outcome as FormOutcome).fields].sort()).toEqual(["birthDate", "city", "clubMember", "sex", "volunteeredBefore"]);
     expect(await listVolunteers(db, eventId)).toHaveLength(0);
     // The person themselves, without a word of it, is entered as ever.
-    expect(await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "" }))).toBe("redirected");
+    expect(await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleIds: [] }))).toBe("redirected");
     expect((await listVolunteers(db, eventId))[0]).toMatchObject({ age: null, sex: null, city: null, volunteeredBefore: false, clubMember: false });
   });
 
   it("refuses an edit that sets one, and an edit that posts none leaves what the row holds as it was", async () => {
     await approveNotice(true);
     const role = await addRole();
-    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", birthDate: aged(34), sex: "FEMALE", city: "Brașov", volunteeredBefore: "on" }));
+    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleIds: [], birthDate: aged(34), sex: "FEMALE", city: "Brașov", volunteeredBefore: "on" }));
     const [maria] = await listVolunteers(db, eventId);
     // A notice that does not name them takes over (a new version without the marker).
     await approveNotice(false, 2);
-    const edit = { ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleId: "" };
+    const edit = { ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleIds: [] };
     expect(await post(actions.editVolunteerAction, form({ ...edit, birthDate: aged(40), sex: "FEMALE", city: "Brașov", volunteeredBefore: "on" }))).toMatchObject({ error: "VALIDATION_ERROR", fields: ["birthDate"] });
     // The card draws no boxes then: a post without them changes the name and nothing else.
     expect(await post(actions.editVolunteerAction, form({ ...edit, name: "Maria Nouă" }))).toBe("redirected");
@@ -305,7 +308,7 @@ describe("§765 «Oferim tricouri voluntarilor»", () => {
 
   it("keeps a size only while the event gives shirts: stored then, ignored when off, and kept — shown nowhere — when it is switched off", async () => {
     const role = await addRole();
-    const entry = { ...PERSON, roleIds: [role.id], assignedRoleId: "", shirtSize: "L" };
+    const entry = { ...PERSON, roleIds: [role.id], assignedRoleIds: [], shirtSize: "L" };
     await post(actions.addVolunteerAction, form(entry));
     expect((await listVolunteers(db, eventId))[0].shirtSize).toBeNull();
     await press(actions.switchVolunteersShirtsAction, form({ on: "1" }));
@@ -425,6 +428,20 @@ describe("§765 the public form: asked while the notice names it, §758's tick u
     expect(rows.map((row) => row.shirtSize).sort()).toEqual(["L", null]);
   });
 
+  it("tells the organizers what the person ticked (2026-10-21): the two boxes as Da/Nu, the size while the event gives shirts, the roles one per line — never the city, the date of birth or the sex", async () => {
+    await approveNotice(true);
+    const role = await addRole();
+    await press(actions.switchVolunteersShirtsAction, form({ on: "1" }));
+    await submitVolunteer(db, eventId, publicForm([role.id], { ...ANSWERS, clubMember: false }), NOW);
+    const [row] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "VOLUNTEER_CLUB_NOTICE"));
+    const message = await renderOutboxMessage({ ...(row as unknown as OutboxRow), status: "PROCESSING", lockedAt: NOW }, db, NOW);
+    expect(message.text).toContain("Roluri bifate:\n- Punct de apă\nA mai fost voluntar la alte curse: Da\nFace parte din grupul clubului: Nu\nMărimea tricoului: L");
+    expect(message.text).toContain("Roles ticked:\n- Water point\nHas volunteered at other races before: Yes\nBelongs to the club's group: No\nT-shirt size: L");
+    // The block ends with the size and the body follows: no city, date of birth, sex, address or telephone number anywhere in it.
+    expect(message.text).toContain("Mărimea tricoului: L\n\nO persoană s-a oferit voluntar");
+    expect(message.text).not.toMatch(/FEMALE|Femin|Orașul|Data nașterii|Vârst|maria@example\.test|\+40712345678/);
+  });
+
   it("refuses a date under 18 on the event's day, a missing or unreadable date, sex or city — naming each box — and keeps nothing", async () => {
     await approveNotice(true);
     const role = await addRole();
@@ -498,9 +515,9 @@ describe("§765 the CSV and the card's list carry the answers", () => {
     await press(actions.switchVolunteersShirtsAction, form({ on: "1" }));
     await post(
       actions.addVolunteerAction,
-      form({ ...PERSON, roleIds: [role.id], assignedRoleId: role.id, birthDate: aged(34), sex: "FEMALE", city: "Brașov, centru", volunteeredBefore: "on", shirtSize: "M" }),
+      form({ ...PERSON, roleIds: [role.id], assignedRoleIds: [role.id], birthDate: aged(34), sex: "FEMALE", city: "Brașov, centru", volunteeredBefore: "on", shirtSize: "M" }),
     );
-    await post(actions.addVolunteerAction, form({ ...PERSON, name: "Ion Test", email: "ion@example.test", roleIds: [role.id], assignedRoleId: role.id }));
+    await post(actions.addVolunteerAction, form({ ...PERSON, name: "Ion Test", email: "ion@example.test", roleIds: [role.id], assignedRoleIds: [role.id] }));
     const text = await (await get()).text();
     const lines = text.split("\r\n");
     // §768: the parent or guardian's three columns are appended after the T-shirt, empty for an adult.
@@ -515,7 +532,7 @@ describe("§765 the CSV and the card's list carry the answers", () => {
   it("leaves the size out while the event gives no shirt, even for a row that has one", async () => {
     const role = await addRole();
     await press(actions.switchVolunteersShirtsAction, form({ on: "1" }));
-    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: role.id, shirtSize: "M" }));
+    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleIds: [role.id], shirtSize: "M" }));
     await press(actions.switchVolunteersShirtsAction, form({}));
     expect(await (await get()).text()).not.toMatch(/,M\r?\n?$/m);
     // The row keeps it for the day the club gives T-shirts again.

@@ -915,7 +915,7 @@ async function renderRow(
     row.messageType === "VOLUNTEER_ROLE_ASSIGNED" ||
     row.messageType === "VOLUNTEER_GUARDIAN_REQUEST"
   ) {
-    const payload = row.payloadJson as { volunteerId?: unknown; roleId?: unknown } | null;
+    const payload = row.payloadJson as { volunteerId?: unknown; roleIds?: unknown } | null;
     const volunteerId = payload?.volunteerId;
     const [volunteer] =
       typeof volunteerId === "string" && isUuid(volunteerId)
@@ -925,42 +925,74 @@ async function renderRow(
               name: eventVolunteers.name,
               state: eventVolunteers.state,
               canonicalEmail: eventVolunteers.canonicalEmail,
-              roleId: eventVolunteers.roleId,
               agreementAcceptedAt: eventVolunteers.agreementAcceptedAt,
               age: eventVolunteers.age,
               guardianName: eventVolunteers.guardianName,
               guardianAcceptedAt: eventVolunteers.guardianAcceptedAt,
+              // The organizers' notice's checklist (2026-10-21): what the person wrote and ticked.
+              message: eventVolunteers.message,
+              city: eventVolunteers.city,
+              sex: eventVolunteers.sex,
+              volunteeredBefore: eventVolunteers.volunteeredBefore,
+              clubMember: eventVolunteers.clubMember,
+              shirtSize: eventVolunteers.shirtSize,
+              listOptIn: eventVolunteers.listOptIn,
             })
             .from(eventVolunteers)
             .where(eq(eventVolunteers.id, volunteerId))
             .limit(1)
         : [];
     if (!volunteer || volunteer.state === "CANCELLED") throw new OutboxMessageWithdrawn("the volunteer is gone or was cancelled");
-    // The role given (§761): only the one that stands is announced — a role changed again, or taken back, since
-    // the press withdraws the message; the newer press queued its own.
-    if (row.messageType === "VOLUNTEER_ROLE_ASSIGNED" && (volunteer.roleId === null || volunteer.roleId !== payload?.roleId)) {
-      throw new OutboxMessageWithdrawn("the volunteer's role was changed since it was given");
-    }
     const roles = await volunteerRoles(db, volunteer);
-    const described = (text: string | null) => {
-      const words = tasksWords(text ?? "");
-      return words === "" ? null : `${words}.`;
+    // The roles given (§761; several since §837): only the set that stands is announced — roles changed again, or taken
+    // back, since the press withdraw the message; the newer press queued its own naming what stands.
+    if (row.messageType === "VOLUNTEER_ROLE_ASSIGNED") {
+      const announced = Array.isArray(payload?.roleIds) ? [...payload.roleIds].map(String).sort() : [];
+      const standing = roles.assigned.map((role) => role.id).sort();
+      if (standing.length === 0 || announced.length !== standing.length || announced.some((id, index) => id !== standing[index])) {
+        throw new OutboxMessageWithdrawn("the volunteer's roles were changed since they were given");
+      }
+    }
+    /**
+     * What the roles given ask, in one language: one role, its words and a full stop; several (§837), each by name —
+     * «Direcționare (Traseu) — stai la km 5; Masă — dai numerele.» — a role with no words adding nothing; none, null.
+     */
+    const described = (locale: "ro" | "en") => {
+      const wordsOf = (role: (typeof roles.assigned)[number]) => tasksWords((locale === "en" ? role.descriptionEn : role.descriptionRo) ?? "");
+      if (roles.assigned.length === 1) {
+        const words = wordsOf(roles.assigned[0]);
+        return words === "" ? null : `${words}.`;
+      }
+      const each = roles.assigned.filter((role) => wordsOf(role) !== "").map((role) => `${roleLabel(role, locale)} — ${wordsOf(role)}`);
+      return each.length === 0 ? null : `${each.join("; ")}.`;
     };
     // The club's notice and the guardian's link greet nobody by the volunteer's name: the first is a colleague's, the second a parent's.
     data.participantName = row.messageType === "VOLUNTEER_CLUB_NOTICE" || row.messageType === "VOLUNTEER_GUARDIAN_REQUEST" ? "" : volunteer.name;
     data.volunteer = {
       name: volunteer.name,
-      // A role named alone says its category in brackets (§774): «Direcționare (Traseu)».
-      roleRo: roles.assigned ? roleLabel(roles.assigned, "ro") : null,
-      roleEn: roles.assigned ? roleLabel(roles.assigned, "en") : null,
-      roleDescriptionRo: described(roles.assigned?.descriptionRo ?? null),
-      roleDescriptionEn: described(roles.assigned?.descriptionEn ?? null),
+      // A role named alone says its category in brackets (§774): «Direcționare (Traseu)»; several roles given are joined by «, » (§837).
+      roleRo: roles.assigned.length > 0 ? roles.assigned.map((role) => roleLabel(role, "ro")).join(", ") : null,
+      roleEn: roles.assigned.length > 0 ? roles.assigned.map((role) => roleLabel(role, "en")).join(", ") : null,
+      roleCount: roles.assigned.length,
+      roleDescriptionRo: described("ro"),
+      roleDescriptionEn: described("en"),
       chosenRo: roles.chosen.map((role) => roleLabel(role, "ro")),
       chosenEn: roles.chosen.map((role) => roleLabel(role, "en")),
       // The contact person of the category of the role (or roles) concerned (§774), when the club has set one: the message's footer says it.
       contacts: volunteerContactsOf(roles),
       // «Am primit» of a volunteer under eighteen whose guardian has not accepted yet (§768) says their parent was emailed.
       guardianPending: row.messageType === "VOLUNTEER_RECEIVED" && isVolunteerMinor(volunteer.age) && volunteer.guardianName !== null && volunteer.guardianAcceptedAt === null,
+      // The organizers' notice lists what the person ticked and wrote (2026-10-21) — the profile's two boxes only when the form asked
+      // them (a row with an age, a city or a sex answered them; §765), never the address, the telephone number or those answers.
+      ...(row.messageType === "VOLUNTEER_CLUB_NOTICE"
+        ? {
+            message: volunteer.message,
+            profile: volunteer.age !== null || volunteer.city !== null || volunteer.sex !== null ? { volunteeredBefore: volunteer.volunteeredBefore, clubMember: volunteer.clubMember } : null,
+            shirtSize: volunteer.shirtSize === null || volunteer.shirtSize === "NONE" ? null : volunteer.shirtSize,
+            listOptIn: volunteer.listOptIn,
+            minor: isVolunteerMinor(volunteer.age) && volunteer.guardianName !== null,
+          }
+        : {}),
     };
     if (row.messageType === "VOLUNTEER_CLUB_NOTICE" && eventId) {
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } })}#box-volunteers`;
