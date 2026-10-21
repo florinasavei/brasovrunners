@@ -1,5 +1,6 @@
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { RegistrationStatus } from "@/db/schema/registrations";
+import { type EmailGroup, emailGroupOf } from "@/modules/notifications/domain/email-transport";
 
 /**
  * The reminder may be resent by hand while the registration is confirmed and the event is
@@ -60,4 +61,12 @@ export function deriveAllowedResendMessageType(status: RegistrationStatus): Emai
     default:
       return null;
   }
+}
+
+/**
+ * The road group of the message a resend sends for this state (§841, the dialog's road line): the
+ * links' for an address, a declaration or an offer still to act on, the confirmations' for the rest.
+ */
+export function resendEmailGroup(status: RegistrationStatus): EmailGroup {
+  return emailGroupOf(deriveAllowedResendMessageType(status) ?? "REGISTRATION_STATE_NOTICE", false);
 }

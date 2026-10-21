@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { consumeEmailRoadChoice, emailRoadChoice } from "./email-road-request";
 import { decodeFlash, encodeFlash, FLASH_COOKIE, FLASH_MAX_AGE_SECONDS, type FormNotice, noticeOf } from "./notice";
 import { isPublicToastKey, PUBLIC_INFO_TOAST_KEYS, type PublicToastKey } from "./public-toasts";
 
@@ -45,10 +46,17 @@ export async function flash(notice: FormNotice): Promise<void> {
  * The flash for a redirect's outcome, when it has one: `{ saved: "event", offered: "2" }` is
  * the toast `event` with `offered` and `count` as its values; `{ error: "CONFLICT" }` is none.
  * The one line every `backTo` calls before `redirect()`.
+ *
+ * A press whose dialog named the email's road (§841) carries it here as `via`, and the toast ends
+ * «Pleacă prin Mailgun.» — the road the dialog promised, the one `enqueueEmail` stamped on the
+ * row in this same request. A press with no dialog, or one that announced no email, says nothing.
  */
 export async function flashOutcome(outcome: Readonly<Record<string, string | number | undefined>>): Promise<void> {
   const notice = noticeOf(outcome);
-  if (notice) await flash(notice);
+  if (!notice) return;
+  const road = (await emailRoadChoice())?.road;
+  if (road) await consumeEmailRoadChoice();
+  await flash(road ? { ...notice, values: { ...notice.values, via: road } } : notice);
 }
 
 /**

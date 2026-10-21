@@ -12,7 +12,7 @@ import Typography from "@mui/material/Typography";
 import { type FormEvent, useActionState, useMemo, useRef, useState } from "react";
 import { countForm } from "@/i18n/count-form";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
-import type { ConfirmSpec } from "@/shared/feedback/notice";
+import type { ConfirmRoad, ConfirmSpec } from "@/shared/feedback/notice";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { readInviteeRows } from "../domain/invitations";
@@ -59,6 +59,8 @@ export type InviteFormWords = {
   /** «Limba pentru adresele pe care clubul nu le cunoaște: {language}.»: the language the press sends. */
   dialogLocale: string;
   dialogEmail: Counted;
+  /** Which road the invitations take, and the switch for this press (§841). */
+  dialogRoad: ConfirmRoad;
   /** «Adaugă {count} locuri și trimite», counted. */
   confirmRaise: Counted;
   confirm: string;
@@ -214,6 +216,7 @@ export default function InviteForm({
         title: words.dialogTitle,
         body,
         email: counted(words.dialogEmail, count),
+        road: words.dialogRoad,
         confirmLabel: raisedTo !== null ? counted(words.confirmRaise, raises) : words.confirm,
         cancelLabel: words.cancel,
       },

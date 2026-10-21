@@ -17,6 +17,8 @@ import type { PublicVolunteerRole, VolunteerRole } from "@/modules/volunteers/vo
 const messages = { ro, en } as const;
 let locale: "ro" | "en" = "ro";
 
+// The dialogs' road line (§841) reads the club's roads once per request: no database here.
+vi.mock("@/shared/feedback/email-roads-request", () => ({ emailRoadsForThisRequest: async () => ({ groups: { links: "mailgun", confirmations: "mailgun", reminders: "mailgun", announcements: "mailgun", club: "gmail", newsletter: "mailgun" }, gmail: false }) }));
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
   return {

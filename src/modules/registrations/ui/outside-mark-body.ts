@@ -1,4 +1,5 @@
 import type { RegistrationKind, RegistrationStatus } from "@/db/schema/registrations";
+import type { ConfirmRoad } from "@/shared/feedback/notice";
 
 type OutsideMarkKey =
   | "confirm.outsideMarkBody"
@@ -43,8 +44,8 @@ export function outsideMarkBody(
 export function outsideMarkConfirm(
   t: (key: OutsideMarkKey, values?: { name: string; message: string }) => string,
   row: { status: RegistrationStatus; kind: RegistrationKind; registeredName: string; outsideCapacity: boolean },
-  words: { cancel: string; emailLine: string },
-): { title: string; body: string; email?: string; confirmLabel: string; cancelLabel: string } {
+  words: { cancel: string; emailLine: string; road?: ConfirmRoad },
+): { title: string; body: string; email?: string; road?: ConfirmRoad; confirmLabel: string; cancelLabel: string } {
   if (row.outsideCapacity) {
     return {
       title: t("confirm.outsideUnmarkTitle"),
@@ -57,7 +58,7 @@ export function outsideMarkConfirm(
   return {
     title: t("confirm.outsideMarkTitle"),
     body: outsideMarkBody(t, row),
-    ...(seatedNow && row.kind !== "TEST" ? { email: words.emailLine } : {}),
+    ...(seatedNow && row.kind !== "TEST" ? { email: words.emailLine, ...(words.road ? { road: words.road } : {}) } : {}),
     confirmLabel: t("registrations.outside.mark"),
     cancelLabel: words.cancel,
   };

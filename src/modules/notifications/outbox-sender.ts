@@ -5,7 +5,7 @@ import type { Database } from "@/db/types";
 import { replyToInForce } from "@/modules/contact/shown-address";
 import { env } from "@/shared/config/env";
 import { isClubCopy } from "./domain/club-notices";
-import { preferredTransport } from "./domain/email-transport";
+import { rowTransport } from "./domain/email-transport";
 import { fallbackActive } from "./domain/mailgun-stop";
 import { createGmailLedger, gmailIsConfigured, readEmailTransport, recordGmailFailure } from "./email-transport";
 import { recordRoadFailure, withRoadStatus } from "./road-status";
@@ -59,7 +59,8 @@ export async function createOutboxSender<T extends Record<string, unknown>>(
     // Noting what each road did (§778): a refusal of the service, and the first message a failing road carries again.
     sender: withRoadStatus(db, sender),
     replyTo,
-    route: (row) => preferredTransport(setting, row.messageType, isClubCopy(row.payloadJson)),
+    // The road the press stamped on the row (§841), else the club's setting for its group (§443).
+    route: (row) => rowTransport(setting, row, isClubCopy(row.payloadJson), configured),
     ...(roads ? { roads } : {}),
   };
 }

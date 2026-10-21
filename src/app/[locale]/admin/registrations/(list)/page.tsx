@@ -36,7 +36,7 @@ import { registrationStatus } from "@/db/schema/registrations";
 import { journeyOf } from "@/modules/registrations/domain/journey";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
 import { formatRaceNumber, printedNumbersACancelWouldVoid, raceNumberOf, raceNumberTextOf } from "@/modules/registrations/domain/race-number";
-import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
+import { deriveAllowedResendMessageType, resendEmailGroup } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
@@ -1720,6 +1720,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     // What the last refusal says of this press, first (§671); it never blocks it.
                     body: withResendWarning(t(`confirm.resendWhat.${row.status}`, { name: row.registeredName }), resendWarning(row.emailState, locale)),
                     ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
+                    road: words.road(resendEmailGroup(row.status)),
                     confirmLabel: t("registrations.resendShort"),
                     cancelLabel: words.cancel,
                   },
@@ -1768,6 +1769,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       resendWarning(row.emailState, locale),
                     ),
                     ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
+                    road: words.road(resendEmailGroup(row.status)),
                     confirmLabel: t("registrations.resendFamily"),
                     cancelLabel: words.cancel,
                   },
@@ -1906,6 +1908,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                             ? t("registrations.confirmOnPaperBodyMinor", { guardian: row.guardianName })
                             : t("registrations.confirmOnPaperBody"),
                         ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
+                        road: words.road("confirmations"),
                         confirmLabel: t("desk.confirmOnPaper"),
                         cancelLabel: words.cancel,
                       }}
@@ -1919,7 +1922,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       action={promoteRegistrationAction}
                       hidden
                       // A thumb cannot hover a menu item: the question says the same sentence first.
-                      confirm={{ title: t("confirm.givePlaceTitle"), body: [givePlaceWhy.get(row.eventId), t("confirm.givePlaceBody", { name: row.registeredName })].filter(Boolean).join(" "), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
+                      confirm={{ title: t("confirm.givePlaceTitle"), body: [givePlaceWhy.get(row.eventId), t("confirm.givePlaceBody", { name: row.registeredName })].filter(Boolean).join(" "), ...(row.kind === "TEST" ? {} : { email: words.email(1), road: words.road("confirmations") }), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
                     >
                       {hidden}
                     </ActionForm>
@@ -1941,7 +1944,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       action={setOutsideCapacityAction}
                       hidden
                       // The registration page's dialog, word for word (§643, §648, §747): one function for both screens.
-                      confirm={outsideMarkConfirm(t, row, { cancel: words.cancel, emailLine: words.email(1) })}
+                      confirm={outsideMarkConfirm(t, row, { cancel: words.cancel, emailLine: words.email(1), road: words.road("confirmations") })}
                     >
                       {hidden}
                       <input type="hidden" name="outside" value={row.outsideCapacity ? "false" : "true"} />
@@ -1959,6 +1962,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                         // retired and the paper has to come out of the pile.
                         body: `${row.bibPrintedAt !== null && row.bibNumber !== null ? `${t("confirm.cancelRegistrationPrintedBody", { number: formatRaceNumber(row.bibNumber, row.raceNumberFormat) })} ` : ""}${t("registrations.cancelBody")}`,
                         ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
+                        road: words.road("confirmations"),
                         confirmLabel: t("registrations.cancel"),
                         cancelLabel: words.cancel,
                         destructive: true,

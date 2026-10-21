@@ -5,7 +5,8 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { readClubNotices } from "./club-notices";
 import { clubCopyRecipients, isCopiedPerMessage, participantMessageBcc } from "./domain/club-notices";
 import { roomToSendNow, SENT_NOW_FLAG } from "./domain/send-at-once";
-import { preferredTransport, roadsByMessageType } from "./domain/email-transport";
+import { emailGroupOf, preferredTransport, roadsByMessageType } from "./domain/email-transport";
+import { emailRoadChoice } from "@/shared/feedback/email-road-request";
 import { gmailIsConfigured, readEmailTransport } from "./email-transport";
 import { fallbackSwitchOn, routeWhileStopped, type StopRoute, type StopWaitReason } from "./domain/mailgun-stop";
 import { readEmailVolumeToday } from "./volume";
@@ -96,12 +97,14 @@ export async function assertRoomToSendNow<T extends Record<string, unknown>>(
   clubCopyTypes: readonly EmailMessageType[] = [],
 ): Promise<void> {
   if (messageTypes.length === 0 && clubCopyTypes.length === 0) return;
-  const [setting, volume] = await Promise.all([readEmailTransport(db), readEmailVolumeToday(db, now)]);
+  const [setting, volume, chosen] = await Promise.all([readEmailTransport(db), readEmailVolumeToday(db, now), emailRoadChoice()]);
   const gmail = gmailIsConfigured();
   const roads = roadsByMessageType(setting, gmail);
+  // The road the press's dialog chose for its group (§841) is the road its messages take here too.
+  const roadOf = (type: EmailMessageType) => (gmail && chosen && emailGroupOf(type, false) === chosen.group ? chosen.road : roads[type]);
   const copyRoad = (type: EmailMessageType) => (gmail ? preferredTransport(setting, type, true) : "mailgun");
   const mailgunMessages =
-    messageTypes.filter((type) => roads[type] === "mailgun").length + clubCopyTypes.filter((type) => copyRoad(type) === "mailgun").length;
+    messageTypes.filter((type) => roadOf(type) === "mailgun").length + clubCopyTypes.filter((type) => copyRoad(type) === "mailgun").length;
   if (mailgunMessages === 0) return;
   /*
     Mailgun said stop (§622): the claim reads the same facts. With «Gmail preia când Mailgun se oprește»
