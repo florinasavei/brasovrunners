@@ -1084,7 +1084,7 @@
         "infoKeeps": "Păstrează declarația și numărul; pe lista publică apar doar cu «Arată invitații speciali pe lista publică» bifat, în numărătoare doar cu «Numără și invitații speciali».",
         "infoNot": "Un participant obișnuit nu se pune aici."
       },
-      "export": "Exportă CSV",
+      "export": "Descarcă CSV",
       "personLink": "Toate datele unei persoane",
       "personThis": "Toate datele acestei persoane",
       "backToList": "Înapoi la înscrieri",
@@ -1560,7 +1560,7 @@
         "linkLapsed": "linkul a expirat",
         "reserved": "loc rezervat până {until}"
       },
-      "exportExcel": "Exportă Excel",
+      "exportExcel": "Descarcă Excel",
       "readOnlyNotice": "Vezi lista, exportul și numerele, dar nu le poți modifica. În ziua cursei lucrezi de la „Ziua cursei”.",
       "columnBib": "Număr de concurs (BIB)",
       "bibColumnHint": "Numărul de concurs:\n– «—»: înscrierea nu e confirmată încă; numărul vine la confirmare.\n– 12: dat la confirmare și trimis pe email.\n– 12 ✓: tipărit.",
@@ -1817,6 +1817,13 @@
       "memberBib": {
         "printed": "Număr de membru",
         "asked": "Număr de membru: cerut, neverificat — se tipărește numărul obișnuit"
+      },
+      "auditDetail": {
+        "change": "„{from}” → „{to}”",
+        "to": "acum „{to}”",
+        "reason": "motiv: {reason}",
+        "bib": "nr. {number}",
+        "empty": "gol"
       }
     },
     "events": {
@@ -5380,8 +5387,8 @@
         "addIntro": "Scrie numele în ambele limbi, apoi „Salvează toate rolurile”."
       },
       "move": {
-        "up": "Mută mai sus",
-        "down": "Mută mai jos"
+        "up": "Mai sus",
+        "down": "Mai jos"
       },
       "edit": "Modifică",
       "save": "Salvează",
@@ -5973,7 +5980,7 @@
       "untitled": "Fără titlu",
       "edit": "Editează pagina",
       "publish": "Publică",
-      "unpublish": "Scoate de pe site",
+      "unpublish": "Scoate pagina de pe site",
       "rowActions": "Acțiuni pentru {title}",
       "publishTitle": "Publici pagina?",
       "publishBody": "Pagina apare în meniu și pe site, în ambele limbi.",
@@ -6030,8 +6037,8 @@
       "intro": "Ordinea paginilor în meniul site-ului, de sus în jos. Mută-le cu «Sus» și «Jos», apoi apasă «Salvează ordinea».",
       "introMore": "O pagină care nu e publicată își păstrează locul și apare acolo când o publici. O pagină nouă apare la sfârșit, până o muți.",
       "listLabel": "Meniul site-ului, de sus în jos",
-      "up": "Sus",
-      "down": "Jos",
+      "up": "Mai sus",
+      "down": "Mai jos",
       "upNamed": "Mută „{name}” mai sus",
       "downNamed": "Mută „{name}” mai jos",
       "notYet": "nu apare încă",
@@ -6469,7 +6476,7 @@
       "download": "Descarcă toate numerele (PDF)",
       "preview": "Vezi numerele ({count})",
       "previewTitle": "Numerele de concurs — {event} ({count})",
-      "backToEvent": "← Înapoi la eveniment",
+      "backToEvent": "Înapoi la eveniment",
       "previewAlt": "Numărul {number} — {name}",
       "downloadOnePerPage": "Câte unul pe pagină",
       "helpNone": "Niciun număr încă: fiecare înscriere primește unul când e confirmată.",
@@ -6870,12 +6877,12 @@
         "declarationsTo": "Declarațiile semnate merg la",
         "declarationsToHelp": "O singură adresă — cutia de arhivă a clubului. Gol: nu se trimite nicio copie.",
         "declarationsCc": "Copie vizibilă (Cc)",
-        "declarationsCcHelp": "Adrese separate prin virgulă, spațiu sau rând nou. Toți destinatarii se văd între ei.",
+        "declarationsCcHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Toți destinatarii se văd între ei.",
         "declarationsBcc": "Copie ascunsă (Bcc)",
-        "declarationsBccHelp": "Adrese separate prin virgulă, spațiu sau rând nou. Nu apar în mesaj.",
+        "declarationsBccHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Nu apar în mesaj.",
         "bccWarning": "Declarația are numele și semnătura participantului (actul de identitate apare mascat). O copie ascunsă le trimite unei cutii pe care nimeni nu o vede: doar prin decizia clubului.",
         "confirmationsTo": "Anunță-ne când cineva confirmă",
-        "confirmationsToHelp": "Adrese separate prin virgulă, spațiu sau rând nou; fiecare primește un mesaj scurt la fiecare confirmare și consumă unul din plafonul Mailgun.",
+        "confirmationsToHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri; fiecare primește un mesaj scurt la fiecare confirmare și consumă unul din plafonul Mailgun.",
         "participantsBcc": "Copie ascunsă la emailurile către participanți (Bcc)",
         "participantsBccHelp": "Fiecare adresă primește o copie „[Copie club]” a emailurilor către participanți și consumă câte un mesaj în plus din plafonul Mailgun.",
         "participantsBccWarning": "Copia clubului nu are linkurile personale, codul QR sau atașamentele, dar are numele, evenimentul și numărul. Doar o cutie a clubului, prin decizia clubului.",
@@ -9396,7 +9403,7 @@
       "title": "Trimite un mesaj participanților",
       "event": "{event} · {date}",
       "intro": "Un email scris de tine, în română și în engleză, către cei înscriși la acest eveniment. Fiecare îl primește în limba în care s-a înscris.",
-      "backToEvent": "← Înapoi la eveniment",
+      "backToEvent": "Înapoi la eveniment",
       "compose": "Mesaj nou",
       "audience": "Cui îi trimiți",
       "audienceHelp": "Înscrierile anulate sau expirate și adresele de email neconfirmate nu primesc nimic. Numărul de lângă fiecare grup este al înscrierilor de acum.",
@@ -9662,7 +9669,7 @@
       "delete": "Șterge cardul",
       "deleteTitle": "Ștergi cardul „{name}”?",
       "deleteBody": "Cardul dispare de tot. Fotografia rămâne o săptămână în Imagini și se șterge apoi singură, dacă nu o mai folosește nimic.",
-      "edit": "Editează cardul",
+      "edit": "Modifică cardul",
       "name": "Numele",
       "nameHelp": "Cum vrea persoana să apară: prenume și nume, sau doar prenumele.",
       "roleRo": "Ce face în club (Română)",
@@ -9690,7 +9697,7 @@
       "pageDraftHelp": "Pagina nu este pe site: adresa ei răspunde „nu există”, iar meniul nu o arată. Pregătește cardurile, apoi publică pagina.",
       "noticeMissing": "Nota în vigoare nu descrie încă pagina Echipa. Aprobă întâi o notă nouă din /admin/legal, apoi publică pagina.",
       "publish": "Publică pagina",
-      "unpublish": "Retrage pagina",
+      "unpublish": "Scoate pagina de pe site",
       "publishTitle": "Publici pagina Echipa?",
       "publishBody": "Pagina intră pe site în ambele limbi deodată, la {ro} și {en}, cu toate cardurile puse pe site. Ai acordul fiecărei persoane de pe carduri?",
       "unpublishTitle": "Retragi pagina Echipa?",
@@ -9753,7 +9760,7 @@
         "deleteTitle": "Ștergi caseta „{title}”?",
         "deleteBody": "Caseta dispare de tot. Pozele din ea rămân o săptămână în Imagini și se șterg apoi singure, dacă nu le mai folosește nimic.",
         "delete": "Șterge caseta",
-        "edit": "Editează caseta",
+        "edit": "Modifică caseta",
         "titleRo": "Titlu (Română)",
         "titleEn": "Titlu (English)",
         "titleHelp": "Titlul casetei, așa cum apare pe pagină.",
@@ -9820,7 +9827,7 @@
       "pagePublishedHelp": "Pagina este pe site, în ambele limbi: {ro} și {en}. Apare în meniu cât timp are cel puțin o întrebare pe site.",
       "pageDraftHelp": "Pagina nu este pe site: adresa ei răspunde „nu există”, iar meniul nu o arată. Pregătește întrebările, apoi publică pagina.",
       "publish": "Publică pagina",
-      "unpublish": "Retrage pagina",
+      "unpublish": "Scoate pagina de pe site",
       "publishTitle": "Publici pagina «Întrebări frecvente»?",
       "publishBody": "Pagina intră pe site în ambele limbi deodată, la {ro} și {en}, cu toate întrebările puse pe site.",
       "unpublishTitle": "Retragi pagina «Întrebări frecvente»?",
@@ -10285,7 +10292,7 @@
       "typedHelp": "Câte un rând pentru fiecare: numele, cum vrei să apară în invitație, și adresa de email. Un rând gol nu contează.",
       "nameLabel": "Nume și prenume",
       "emailLabel": "Email",
-      "removeRow": "Scoate rândul {row}",
+      "removeRow": "Șterge rândul {row}",
       "removeShort": "Scoate",
       "addRow": "Adaugă încă o persoană",
       "tableCaption": "Invitațiile trimise la acest eveniment",
@@ -10433,7 +10440,7 @@
         "DIRECTION": "Direcționare",
         "REGROUP": "Regrupare"
       },
-      "remove": "Scoate acest punct",
+      "remove": "Șterge punctul",
       "removeHelp": "Se șterge la „Salvează punctele”.",
       "add": {
         "title": "Adaugă puncte",
@@ -10471,7 +10478,7 @@
       "edit": "Modifică punctul"
     },
     "badges": {
-      "backToEvent": "← Înapoi la eveniment",
+      "backToEvent": "Înapoi la eveniment",
       "title": "Ecusoane pentru voluntari — {event}",
       "intro": "Ecusoanele sunt benzi mici și lungi, fără nume tipărit: numele se scrie cu markerul. Implicit e un singur ecuson pentru toți; dacă vrei, fiecare rol are ecusonul lui, pe banda lui.",
       "defaults": {

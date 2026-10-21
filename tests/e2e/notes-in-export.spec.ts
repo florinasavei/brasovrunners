@@ -101,7 +101,7 @@ test.describe("§785 «Note interne» in the registrations export", () => {
       // The list, filtered to the one row; the button hands over the file.
       await page.goto(`/ro/admin/registrations?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.name)}`);
       await hydrated(page);
-      const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#main").getByRole("link", { name: "Exportă Excel" }).click()]);
+      const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#main").getByRole("link", { name: "Descarcă Excel" }).click()]);
       const { rows } = readSheet(readFileSync(await download.path()));
 
       const header = rows[0] as string[];

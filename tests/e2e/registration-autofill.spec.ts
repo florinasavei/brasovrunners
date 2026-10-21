@@ -159,7 +159,7 @@ test.describe("§282 a browser that fills the hidden field does not cost the clu
 
     // The export is the set on screen (§15.10): it names the scope the screen used — every
     // event — and the file holds her. `all` used to reach the query as an event id and fail.
-    const csvHref = (await page.getByRole("link", { name: "Exportă CSV" }).getAttribute("href")) as string;
+    const csvHref = (await page.getByRole("link", { name: "Descarcă CSV" }).getAttribute("href")) as string;
     expect(csvHref).toContain("eventId=all");
     const csv = await page.request.get(csvHref);
     expect(csv.status()).toBe(200);

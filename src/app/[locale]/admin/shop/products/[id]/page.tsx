@@ -77,7 +77,7 @@ export default async function AdminShopProductPage({ params, searchParams }: Pro
         <GlyphButtonLink icon="undo" href="/admin/shop" variant="text" size="small" sx={TAP_TARGET}>
           {t("members.shop.backToList")}
         </GlyphButtonLink>
-        <Typography variant="h1" sx={{ fontSize: "1.5rem", overflowWrap: "anywhere" }} data-testid="product-title">
+        <Typography variant="h2" sx={{ fontSize: "1.25rem", overflowWrap: "anywhere" }} data-testid="product-title">
           {title}
         </Typography>
         <StatusChip glyph="shop" variant="outlined" label={formatPrice(product.priceBani, product.currency, locale)} />

@@ -1084,7 +1084,7 @@
         "infoKeeps": "They keep the declaration and the number; the public list shows them only with «Show special guests on the public list» ticked, the count only with «Count the special guests too».",
         "infoNot": "An ordinary participant does not go here."
       },
-      "export": "Export CSV",
+      "export": "Download CSV",
       "personLink": "Everything held about a person",
       "personThis": "Everything held about this person",
       "backToList": "Back to registrations",
@@ -1560,7 +1560,7 @@
         "linkLapsed": "the link has expired",
         "reserved": "place reserved until {until}"
       },
-      "exportExcel": "Export to Excel",
+      "exportExcel": "Download Excel",
       "readOnlyNotice": "You can read the list, the export and the numbers, but not change them. On race day you work from “Race day”.",
       "columnBib": "Race number (BIB)",
       "bibColumnHint": "The race number:\n– «—»: not confirmed yet; the number comes with the confirmation.\n– 12: given at the confirmation and emailed.\n– 12 ✓: printed.",
@@ -1817,6 +1817,13 @@
       "memberBib": {
         "printed": "Members' number",
         "asked": "Members' number: asked, not verified — the ordinary number prints"
+      },
+      "auditDetail": {
+        "change": "“{from}” → “{to}”",
+        "to": "now “{to}”",
+        "reason": "reason: {reason}",
+        "bib": "no. {number}",
+        "empty": "empty"
       }
     },
     "events": {
@@ -5973,7 +5980,7 @@
       "untitled": "Untitled",
       "edit": "Edit the page",
       "publish": "Publish",
-      "unpublish": "Take it off the site",
+      "unpublish": "Take the page off the site",
       "rowActions": "Actions for {title}",
       "publishTitle": "Publish the page?",
       "publishBody": "The page appears in the menu and on the site, in both languages.",
@@ -6030,8 +6037,8 @@
       "intro": "The order of the pages in the site's menu, first to last. Move them with «Up» and «Down», then press «Save the order».",
       "introMore": "A page that is not published keeps its place and appears there once you publish it. A new page appears at the end until you move it.",
       "listLabel": "The site's menu, first to last",
-      "up": "Up",
-      "down": "Down",
+      "up": "Move up",
+      "down": "Move down",
       "upNamed": "Move “{name}” up",
       "downNamed": "Move “{name}” down",
       "notYet": "not shown yet",
@@ -6469,7 +6476,7 @@
       "download": "Download every number (PDF)",
       "preview": "See the bibs ({count})",
       "previewTitle": "Race numbers — {event} ({count})",
-      "backToEvent": "← Back to the event",
+      "backToEvent": "Back to the event",
       "previewAlt": "Number {number} — {name}",
       "downloadOnePerPage": "One per page",
       "helpNone": "No number yet: every registration gets one when it is confirmed.",
@@ -6870,12 +6877,12 @@
         "declarationsTo": "Signed declarations go to",
         "declarationsToHelp": "One address — the club's archive mailbox. Empty: no copy is sent.",
         "declarationsCc": "Visible copy (Cc)",
-        "declarationsCcHelp": "Addresses separated by commas, spaces or line breaks. Every recipient can see the others.",
+        "declarationsCcHelp": "Addresses separated by commas, spaces or on separate lines. Every recipient can see the others.",
         "declarationsBcc": "Hidden copy (Bcc)",
-        "declarationsBccHelp": "Addresses separated by commas, spaces or line breaks. They appear nowhere in the message.",
+        "declarationsBccHelp": "Addresses separated by commas, spaces or on separate lines. They appear nowhere in the message.",
         "bccWarning": "The declaration carries the participant's name and signature (the identity document masked). A hidden copy sends them to a mailbox nobody sees: only by the club's decision.",
         "confirmationsTo": "Tell us when somebody confirms",
-        "confirmationsToHelp": "Addresses separated by commas, spaces or line breaks; each gets a short message on every confirmation and spends one of the Mailgun allowance.",
+        "confirmationsToHelp": "Addresses separated by commas, spaces or on separate lines; each gets a short message on every confirmation and spends one of the Mailgun allowance.",
         "participantsBcc": "Hidden copy of the emails to participants (Bcc)",
         "participantsBccHelp": "Each address gets a “[Club copy]” of the emails to participants and spends one more message of the Mailgun allowance.",
         "participantsBccWarning": "The club copy has no personal links, QR code or attachments, but it has the name, the event and the race number. A club mailbox only, by the club's decision.",
@@ -9396,7 +9403,7 @@
       "title": "Send a message to participants",
       "event": "{event} · {date}",
       "intro": "An email you write, in Romanian and English, to the people registered for this event. Each receives it in the language they registered in.",
-      "backToEvent": "← Back to the event",
+      "backToEvent": "Back to the event",
       "compose": "New message",
       "audience": "Who receives it",
       "audienceHelp": "Cancelled or lapsed registrations and unconfirmed email addresses receive nothing. The number beside each group is the registrations as they are now.",
@@ -9690,7 +9697,7 @@
       "pageDraftHelp": "The page is not on the site: its address answers \"not found\" and the menu does not show it. Prepare the cards, then publish the page.",
       "noticeMissing": "The notice in force does not yet describe the team page. First approve a new notice in /admin/legal, then publish the page.",
       "publish": "Publish the page",
-      "unpublish": "Take the page down",
+      "unpublish": "Take the page off the site",
       "publishTitle": "Publish the team page?",
       "publishBody": "The page goes on the site in both languages at once, at {ro} and {en}, with every card that is on the site. Do you have the consent of every person on the cards?",
       "unpublishTitle": "Take the team page down?",
@@ -9820,7 +9827,7 @@
       "pagePublishedHelp": "The page is on the site in both languages: {ro} and {en}. It appears in the menu while it has at least one question on the site.",
       "pageDraftHelp": "The page is not on the site: its address answers \"not found\" and the menu does not show it. Prepare the questions, then publish the page.",
       "publish": "Publish the page",
-      "unpublish": "Take the page down",
+      "unpublish": "Take the page off the site",
       "publishTitle": "Publish the FAQ page?",
       "publishBody": "The page goes on the site in both languages at once, at {ro} and {en}, with every question that is on the site.",
       "unpublishTitle": "Take the FAQ page down?",
@@ -10285,7 +10292,7 @@
       "typedHelp": "One row each: the name as it should appear in the invitation, and the email address. An empty row does not count.",
       "nameLabel": "Full name",
       "emailLabel": "Email",
-      "removeRow": "Remove row {row}",
+      "removeRow": "Delete row {row}",
       "removeShort": "Remove",
       "addRow": "Add another person",
       "tableCaption": "The invitations sent for this event",
@@ -10433,7 +10440,7 @@
         "DIRECTION": "Direction",
         "REGROUP": "Regroup"
       },
-      "remove": "Remove this point",
+      "remove": "Delete the point",
       "removeHelp": "It is deleted at “Save the points”.",
       "add": {
         "title": "Add points",
@@ -10471,7 +10478,7 @@
       "edit": "Edit the point"
     },
     "badges": {
-      "backToEvent": "← Back to the event",
+      "backToEvent": "Back to the event",
       "title": "Volunteer badges — {event}",
       "intro": "Badges are small, long strips with no printed name: the name is written with a marker. By default there is one badge for every volunteer; if you want, each role can have its own, on its coloured band.",
       "defaults": {

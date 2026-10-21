@@ -108,6 +108,12 @@ const BOX_SX = {
 /** A caption above a box on a phone; from the medium width the column header says it once for every line. */
 const CAPTION_SX = { display: { xs: "block", md: "none" }, color: "text.secondary", mb: 0.25 } as const;
 
+/**
+ * The captions' class: the typed runners' panel has no column header (its first cell holds four boxes the header could not name), so
+ * its lines keep their captions at every width (§NNN; the consistency audit found its boxes unlabelled on a computer).
+ */
+const CAPTION_CLASS = "result-caption";
+
 const LINE_SX = {
   display: "grid",
   gap: 1,
@@ -174,8 +180,9 @@ function LineBox({
   };
   return (
     // On a phone the note takes the whole line; from the medium width it is the sixth column the header names, beside the others.
-    <Box sx={span ? { gridColumn: { xs: "1 / -1", md: "auto" } } : undefined}>
-      <Typography variant="caption" sx={CAPTION_SX} aria-hidden="true">
+    // `minWidth: 0` (§NNN): a grid cell otherwise keeps its box's natural width and the line runs past the card.
+    <Box sx={{ minWidth: 0, ...(span ? { gridColumn: { xs: "1 / -1", md: "auto" } } : {}) }}>
+      <Typography variant="caption" sx={CAPTION_SX} className={CAPTION_CLASS} aria-hidden="true">
         {caption}
       </Typography>
       {kind === "select" ? (
@@ -216,8 +223,8 @@ function LineBox({
  */
 function PlaceCell({ place, words, settled }: { place: PlaceView | null; words: ResultWords; settled: boolean }) {
   return (
-    <Box sx={{ gridColumn: { xs: "1 / -1", md: "auto" }, minHeight: { md: 44 }, display: "flex", alignItems: { md: "center" }, gap: 1, flexWrap: "wrap" }} data-testid="result-place">
-      <Typography variant="caption" sx={{ ...CAPTION_SX, mb: 0 }} aria-hidden="true">
+    <Box sx={{ gridColumn: { xs: "1 / -1", md: "auto" }, minWidth: 0, minHeight: { md: 44 }, display: "flex", alignItems: { md: "center" }, gap: 1, flexWrap: "wrap" }} data-testid="result-place">
+      <Typography variant="caption" sx={{ ...CAPTION_SX, mb: 0 }} className={CAPTION_CLASS} aria-hidden="true">
         {words.place}:
       </Typography>
       {place ? (
@@ -339,7 +346,7 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
   }, [added]);
   return (
     <Box ref={container} data-testid="typed-lines">
-      <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+      <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, [`& .${CAPTION_CLASS}`]: { display: "block" } }}>
         {Array.from({ length: count }, (_, index) => {
           const line = lines[index];
           const key = typedRowKey(index);
