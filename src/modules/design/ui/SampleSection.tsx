@@ -78,7 +78,7 @@ export default async function SampleSection({ locale }: { locale: Locale }) {
           <KindChips path={`/${locale}/calendar/2026-11`} kind="special" filter={{ ...NO_FILTER, surface: ["TRAIL"] }} surfaces={["ASPHALT", "TRAIL"]} />
           <CalendarLegend {...calendarLegendWords(tEvents)} />
           <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 340px))" }, alignItems: "start" }}>
-            <NextEventPanel event={race} locale={locale} now={SAMPLE_NOW} weather={SAMPLE_WEATHER} />
+            <NextEventPanel event={race} locale={locale} now={SAMPLE_NOW} weather={SAMPLE_WEATHER} live={false} />
             <SubscribeBox locale={locale} baseUrl={env.APP_BASE_URL} addressId="design-calendar-feed-address" />
           </Box>
         </Box>

@@ -156,6 +156,26 @@
               "one": "Peste o lună",
               "few": "Peste {count} luni",
               "other": "Peste {count} de luni"
+            },
+            "precise": {
+              "todayIn": "Azi, peste {span}",
+              "tomorrowIn": "Mâine, peste {span}",
+              "daysAndHours": "Peste {days} și {hours}",
+              "minutes": {
+                "one": "un minut",
+                "few": "{count} minute",
+                "other": "{count} de minute"
+              },
+              "hours": {
+                "one": "o oră",
+                "few": "{count} ore",
+                "other": "{count} de ore"
+              },
+              "days": {
+                "one": "o zi",
+                "few": "{count} zile",
+                "other": "{count} de zile"
+              }
             }
           }
         },
