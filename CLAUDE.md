@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.63-2026-10-20 -->
+<!-- PROJECT_BASELINE: BR-V3.64-2026-10-21 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V3.63-2026-10-20`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V3.64-2026-10-21`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -40,7 +40,8 @@ yarn test:clock   the suite with the real clock at +1 month, +1 year, +10 years:
                   `--concurrency` for the two-connection suite
 yarn test:e2e     Playwright, 320px mobile and desktop; needs the database running
 yarn test:e2e:dev  Playwright against `next dev`: every backoffice and public route, twice; minutes; not in CI (§370)
-yarn check        docs:check + secrets:check + migrations:check + typecheck + lint + test; CI and the pre-commit hook run this
+yarn check        check:static + test; CI and the pre-commit hook run this (CI: the static half on one runner, the tests on four shards)
+yarn check:static  docs:check + secrets:check + migrations:check + typecheck + lint — everything in `check` but the tests
 yarn docs:check   documentation consistency
 yarn secrets:check  refuse a commit carrying a provider credential — the repository is public (§98)
 yarn migrations:check  a migration expands or contracts, never both (AGENTS.md §7.6)
@@ -249,7 +250,7 @@ it is the authority, this is the summary):
     Since §741 the notice's template says that an event's route map loads with the page, and when an event has both a Strava and a Garmin Connect map only the chosen tab's loads (Strava first), the other when its tab is chosen, each provider seeing the visitor's IP address — approve the notice from the new template before relying on the maps opening by themselves, a lawyer reading that paragraph first (whether loading a provider's frame that may set cookies without a press needs the visitor's consent under Legea nr. 506/2004 art. 4(5) is the lawyer's question, not decided here).
     Since §754 the notice's template also describes the event volunteers (`{{volunteers}}`: what a sign-up keeps, why, who sees it, thirty days after the event) — approve the notice from the new template before an event's page can offer «Vreau să fiu voluntar», a lawyer reading section 5's paragraph and section 7's thirty days first; until then the form is not on any page and `/admin/tasks` carries the row `volunteersNotice` while an event ahead takes volunteers.
     Since §758 a seventh text, «Contract de voluntariat»: approve the volunteer agreement from the template (a lawyer reads it first, against Legea nr. 78/2014) — until it is in force in both languages no event page shows «Vreau să fiu voluntar» (`/admin/tasks` carries the row `volunteerAgreement`) — and, in the same sitting, a notice from the new template, whose volunteers' paragraph names the agreement's acceptance (`{{volunteerAgreement}}`; until then the form, the link and «Semnat pe hârtie» wait and `/admin/tasks` carries the row `volunteerAgreementNotice`; `SETUP.md` §44 steps 2–3). Before approving, the owner and the lawyer decide whether the club must keep a record of the agreements beyond the thirty-day deletion of the volunteers' rows, and how (a narrowed acceptance record, or an archive copy to the club like the declarations'): until then the text promises only the volunteer's copy by email and the proof kept as the notice says.
-    Since §761 a volunteer ticks every role they would do and the organizers give one: the agreement template names the roles offered for in its own sentence (`{{volunteerRoleChoices}}`, «Ce presupune fiecare rol») — approve the agreement from the new template, a lawyer reading the two new sentences first; until then a sign-up accepts «în rolul Masă, Traseu» and `/admin/tasks` carries the row `volunteerRoleChoicesAgreement`. The notice's volunteers paragraph now names the roles ticked, the role given and the short email naming it — approve the notice from the new template too.
+    Since §761 a volunteer ticks every role they would do and the organizers give one (or several, since §837): the agreement template names the roles offered for in its own sentence (`{{volunteerRoleChoices}}`, «Ce presupune fiecare rol») — approve the agreement from the new template, a lawyer reading the two new sentences first; until then a sign-up accepts «în rolul Masă, Traseu» and `/admin/tasks` carries the row `volunteerRoleChoicesAgreement`. The notice's volunteers paragraph now names the roles ticked, the role given and the short email naming it — approve the notice from the new template too.
     Since §771 the two race declarations carry five more clauses (insurance or the medical costs, the marked route and the volunteers' instructions, disqualification on objective grounds, litter, no vehicle) and the typed-name signature sentence, and the notice says an electronic signature keeps the IP address and browser — approve both on production from the new templates, the notice first, a lawyer reading the disqualification clause, the signature sentence and the notice's IP paragraph and section 10 first (`docs/RUNBOOKS.md`).
 17. **Re-grade every event's difficulty** — migration `0104` put each event in the middle step of its old band (§526). Open each
     event in `/admin/events` and choose the band and «Nivelul» (one of the band's three levels, 1–15 in order); the guide («Ghid») explains the scale.

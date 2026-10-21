@@ -295,12 +295,12 @@ export type CategoryContactOf = CategoryContact & { categoryRo?: string; categor
 type ContactRole = { contact?: CategoryContact | null; categoryRo?: string | null; categoryEn?: string | null };
 
 /**
- * The contact persons a volunteer's message names (§774): the one of the category of the role the organizers gave, else those of the
+ * The contact persons a volunteer's message names (§774): those of the categories of the roles the organizers gave, else those of the
  * categories of the roles the person offered for — each once, in the club's order, and none for a role under no category or a
  * category with no contact set. The volunteer's emails (received, role given, the guardian's request) say them in their footer.
  */
-export function volunteerContactsOf(roles: { assigned: ContactRole | null; chosen: readonly ContactRole[] }): CategoryContactOf[] {
-  const concerned = roles.assigned ? [roles.assigned] : roles.chosen;
+export function volunteerContactsOf(roles: { assigned: readonly ContactRole[]; chosen: readonly ContactRole[] }): CategoryContactOf[] {
+  const concerned = roles.assigned.length > 0 ? roles.assigned : roles.chosen;
   const seen = new Set<string>();
   const contacts: CategoryContactOf[] = [];
   for (const { contact, categoryRo, categoryEn } of concerned) {
@@ -489,25 +489,18 @@ const roleIdsField = z
   .max(VOLUNTEER_ROLES_MAX)
   .transform((ids) => [...new Set(ids)]);
 
-/** The organizers' «Rolul dat»: a role's id, or "" for nobody placed yet (null). */
-const assignedRoleField = z
-  .string()
-  .transform((value) => value.trim())
-  .pipe(z.union([z.literal(""), uuidField]))
-  .transform((value) => (value === "" ? null : value));
-
 /**
  * A person as an organizer types them: the same boxes as the public form, plus the organizers' own note — the roles
- * the person would do (`roleIds`, the ticks) and, optionally, the role the organizers give them (`assignedRoleId`,
- * which may be any of the event's, ticked or not). At least one of the two (`roleIds` named in the refusal); a
- * person entered with a role given and nothing ticked has that role as their one choice, so every row says what
- * the person offered (`choicesWithAssigned`).
+ * the person would do (`roleIds`, the ticks) and, optionally, the roles the organizers give them (`assignedRoleIds`,
+ * «Rolurile date»: one or several of the event's, ticked by the person or not, §837). At least one of the two
+ * (`roleIds` named in the refusal); a person entered with roles given and nothing ticked has those roles as their
+ * choices, so every row says what the person offered (`choicesWithAssigned`).
  */
 const volunteerStaffInputBase = (eventDay: string) =>
   z
   .object({
     roleIds: roleIdsField,
-    assignedRoleId: assignedRoleField,
+    assignedRoleIds: roleIdsField,
     name: line(VOLUNTEER_NAME_MAX),
     email: z
       .string()
@@ -531,7 +524,7 @@ const volunteerStaffInputBase = (eventDay: string) =>
     guardianEmail: guardianEmailBox,
   })
   .superRefine((value, ctx) => {
-    if (value.roleIds.length === 0 && value.assignedRoleId === null) {
+    if (value.roleIds.length === 0 && value.assignedRoleIds.length === 0) {
       ctx.addIssue({ code: "custom", path: ["roleIds"], message: "tick at least one role, or give the person a role" });
     }
   });
@@ -553,9 +546,9 @@ export function volunteerStaffInputSchemaFor(eventDay: string, keptAge: number |
 
 export type VolunteerStaffInput = z.infer<ReturnType<typeof volunteerStaffInputSchemaFor>>;
 
-/** The choices a staff entry keeps: what was ticked, or — nothing ticked — the role given, as the one choice. */
-export function choicesWithAssigned(input: Pick<VolunteerStaffInput, "roleIds" | "assignedRoleId">): string[] {
-  return input.roleIds.length > 0 ? input.roleIds : input.assignedRoleId ? [input.assignedRoleId] : [];
+/** The choices a staff entry keeps: what was ticked, or — nothing ticked — the roles given, as the choices. */
+export function choicesWithAssigned(input: Pick<VolunteerStaffInput, "roleIds" | "assignedRoleIds">): string[] {
+  return input.roleIds.length > 0 ? input.roleIds : input.assignedRoleIds;
 }
 
 /** What every public sign-up posts, whatever the notice in force says (§761, §758). */
@@ -674,8 +667,9 @@ export function refusedFields(error: z.ZodError): string[] {
 
 /**
  * One role with the people counted against it: «N din M», what is still needed, and who is already confirmed.
- * Since §761 only the people the organizers **gave** the role count (`roleId`, the assigned role): an offer that
- * merely ticked it holds nothing — the card and the public form's «mai e nevoie de N» read the same number.
+ * Since §761 only the people the organizers **gave** the role count (`roleIds`, the roles given): an offer that
+ * merely ticked it holds nothing — the card and the public form's «mai e nevoie de N» read the same number. A person
+ * given several roles (§837) counts against each of them: they do each.
  */
 export type RoleStanding = {
   roleId: string;
@@ -688,8 +682,8 @@ export type RoleStanding = {
   free: number | null;
 };
 
-export function standingOf(role: { id: string; needed: number | null }, volunteers: readonly { roleId: string | null; state: VolunteerState }[]): RoleStanding {
-  const mine = volunteers.filter((volunteer) => volunteer.roleId === role.id);
+export function standingOf(role: { id: string; needed: number | null }, volunteers: readonly { roleIds: readonly string[]; state: VolunteerState }[]): RoleStanding {
+  const mine = volunteers.filter((volunteer) => volunteer.roleIds.includes(role.id));
   const taken = mine.filter((volunteer) => countsAgainstRole(volunteer.state)).length;
   const confirmed = mine.filter((volunteer) => volunteer.state === "CONFIRMED").length;
   return { roleId: role.id, needed: role.needed, taken, confirmed, free: role.needed === null ? null : Math.max(0, role.needed - taken) };
@@ -815,7 +809,7 @@ export function canonicalDescription(value: unknown): string {
   return JSON.stringify(canonical(value ?? null));
 }
 
-/** The agreement's role blanks for one person: the role given and its tasks, or the roles chosen and what each asks. */
+/** The agreement's role blanks for one person: the roles given and their tasks, or the roles chosen and what each asks. */
 export type AgreementRoleValues = { role: string; tasks: string; choices: string; choiceTasks: string };
 
 /**
@@ -823,7 +817,8 @@ export type AgreementRoleValues = { role: string; tasks: string; choices: string
  * names and descriptions —, never a clause of the code's own: the sentences are the approved text's.
  *
  * - A role given: `{{volunteerRole}}` its name, `{{volunteerTasks}}` what it asks; the choices' fields "" (their
- *   sentences drop).
+ *   sentences drop). Several roles given (§837): their names, «Masă, Traseu», and what each asks by name, «Masă — dă
+ *   numerele; Traseu — arată drumul» — the shape the chosen roles' tasks already had, so the sentence reads the same.
  * - None given, and the text in force names `{{volunteerRoleChoices}}` (`textNamesChoices`, the platform's template
  *   since §761): `{{volunteerRoleChoices}}` the chosen roles' names, «Masă, Traseu», `{{volunteerChoiceTasks}}` what
  *   each asks, «Masă — dă numerele; Traseu — arată drumul»; the role's fields "" (their sentences drop).
@@ -834,21 +829,24 @@ export type AgreementRoleValues = { role: string; tasks: string; choices: string
  * A role with no description adds nothing to the tasks; none at all is "" and that sentence is left out.
  */
 export function agreementRoleWords(
-  roles: { assigned: RoleWords | null; chosen: readonly RoleWords[] },
+  roles: { assigned: readonly RoleWords[]; chosen: readonly RoleWords[] },
   locale: "ro" | "en",
   textNamesChoices: boolean,
 ): AgreementRoleValues {
   const name = (role: RoleWords) => roleLabel(role, locale);
   const description = (role: RoleWords) => tasksWords((locale === "en" ? role.descriptionEn : role.descriptionRo) ?? "");
-  if (roles.assigned) return { role: name(roles.assigned), tasks: description(roles.assigned), choices: "", choiceTasks: "" };
+  /** What each asks, by name: «Masă — dă numerele; Traseu — arată drumul»; a role with no description adds nothing. */
+  const eachTasks = (list: readonly RoleWords[]) =>
+    list
+      .filter((role) => description(role) !== "")
+      .map((role) => `${name(role)} — ${description(role)}`)
+      .join("; ");
+  /** The tasks' blank for the roles a sentence names: one role, its description alone; several, what each asks by name. */
+  const tasksOf = (list: readonly RoleWords[]) => (list.length === 1 ? description(list[0]) : eachTasks(list));
+  if (roles.assigned.length > 0) return { role: roleNames(roles.assigned, locale), tasks: tasksOf(roles.assigned), choices: "", choiceTasks: "" };
   const names = roleNames(roles.chosen, locale);
-  const eachTasks = roles.chosen
-    .filter((chosen) => description(chosen) !== "")
-    .map((chosen) => `${name(chosen)} — ${description(chosen)}`)
-    .join("; ");
-  if (textNamesChoices) return { role: "", tasks: "", choices: names, choiceTasks: eachTasks };
-  const tasks = roles.chosen.length === 1 ? description(roles.chosen[0]) : eachTasks;
-  return { role: names, tasks, choices: "", choiceTasks: "" };
+  if (textNamesChoices) return { role: "", tasks: "", choices: names, choiceTasks: eachTasks(roles.chosen) };
+  return { role: names, tasks: tasksOf(roles.chosen), choices: "", choiceTasks: "" };
 }
 
 /** Roles' names as the agreement and the card name them: «Masă, Traseu», in the order given. */
@@ -866,28 +864,28 @@ export function acceptedRoleNames(facts: { volunteerRole: string; volunteerRoleC
 }
 
 /**
- * Whether the roles an accepted agreement names (`acceptedRoleNames`) still describe the person: the role given, by
- * name; or — while nobody gave them a role, or the role given is one they chose — the names of their choices as
- * they stand. Otherwise the card says the accepted text named other roles (§758): the acceptance stays valid, the
- * organizers talk it over.
+ * Whether the roles an accepted agreement names (`acceptedRoleNames`) still describe the person: the roles given, by
+ * name, in the club's order; or — while nobody gave them a role, or every role given is one they chose — the names of
+ * their choices as they stand. Otherwise the card says the accepted text named other roles (§758): the acceptance stays
+ * valid, the organizers talk it over.
  */
 export function agreementStillNamesRole(
   accepted: string,
-  person: { assigned: (RoleWords & { id: string }) | null; chosen: readonly (RoleWords & { id: string })[] },
+  person: { assigned: readonly (RoleWords & { id: string })[]; chosen: readonly (RoleWords & { id: string })[] },
   locale: "ro" | "en",
 ): boolean {
-  if (person.assigned && accepted === roleNames([person.assigned], locale)) return true;
-  const assignedChosen = person.assigned === null || person.chosen.some((role) => role.id === person.assigned?.id);
+  if (person.assigned.length > 0 && accepted === roleNames(person.assigned, locale)) return true;
+  const assignedChosen = person.assigned.every((given) => person.chosen.some((role) => role.id === given.id));
   return assignedChosen && person.chosen.length > 0 && accepted === roleNames(person.chosen, locale);
 }
 
 /**
- * What a desk's printed agreement names, as one string the card posts back with «Semnat pe hârtie» (§758): the role
+ * What a desk's printed agreement names, as one string the card posts back with «Semnat pe hârtie» (§758): the roles
  * given, or the roles chosen — so the record is refused (`VOLUNTEER_AGREEMENT_REPRINT`) when either changed since
  * the sheet was printed. Ids only, order-free.
  */
-export function agreementRolesStamp(assignedRoleId: string | null, choiceIds: readonly string[]): string {
-  return assignedRoleId ? `role:${assignedRoleId}` : `choices:${[...choiceIds].sort().join(",")}`;
+export function agreementRolesStamp(assignedRoleIds: readonly string[], choiceIds: readonly string[]): string {
+  return assignedRoleIds.length > 0 ? `roles:${[...assignedRoleIds].sort().join(",")}` : `choices:${[...choiceIds].sort().join(",")}`;
 }
 
 // ---------------------------------------------------------------------------------------------

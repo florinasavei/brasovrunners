@@ -28,6 +28,7 @@ import { uploadBodyImage } from "@/modules/media/service";
 import { getStorage } from "@/modules/media/storage";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { mirrorRolesGiven } from "../../helpers/volunteer-roles";
 
 /**
  * An event as a JSON file (§751): export, import as a new draft, import over an event after its diff —
@@ -911,6 +912,7 @@ describe("an event's volunteers are not the file's — only their categories and
       source: "PUBLIC",
       message: "Am mai ajutat la cursă",
     });
+    await mirrorRolesGiven(db);
     return role;
   }
 

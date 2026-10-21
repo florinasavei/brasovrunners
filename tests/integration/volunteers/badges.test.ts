@@ -18,6 +18,7 @@ import type { FormOutcome } from "@/shared/forms/outcome";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { mirrorRolesGiven } from "../../helpers/volunteer-roles";
 
 /**
  * §764 — the volunteer badges against the real schema (migration 0150, PGlite) and through the real Server
@@ -669,6 +670,7 @@ describe("§784 «Câte ecusoane» for a role without a number", () => {
   it("starts it at the people the organizers gave the role — never the cancelled — where a numbered role starts at its number", async () => {
     const [free] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Ajutoare", nameEn: "Helpers", needed: null, position: 2 }).returning({ id: eventVolunteerRoles.id });
     await db.insert(eventVolunteers).values([person(free.id, "Ana", "CONFIRMED"), person(free.id, "Bogdan", "REGISTERED"), person(free.id, "Cora", "CANCELLED"), person(waterId, "Dan", "CONFIRMED")]);
+    await mirrorRolesGiven(db);
     const roles = await listBadgeRoles(db, eventId);
     expect(roles.map((role) => [role.nameRo, role.needed, role.assigned])).toEqual([
       ["Punct de apă", 3, 1],
@@ -701,8 +703,8 @@ describe("§783 one badge for everyone, no role — the default", () => {
   const held = async (response: Response) => /\((\d+) badges\)/.exec(Buffer.from(await response.arrayBuffer()).toString("latin1"))?.[1];
 
   /** A sign-up of the event in a state, given a role or none: the people the one badge's default counts are the confirmed ones. */
-  const volunteer = (n: number, state: "REGISTERED" | "CONFIRMED" | "CANCELLED", event = eventId, roleId: string | null = null) =>
-    db.insert(eventVolunteers).values({
+  const volunteer = async (n: number, state: "REGISTERED" | "CONFIRMED" | "CANCELLED", event = eventId, roleId: string | null = null) => {
+    await db.insert(eventVolunteers).values({
       eventId: event,
       roleId,
       name: `Voluntar ${n}`,
@@ -714,6 +716,8 @@ describe("§783 one badge for everyone, no role — the default", () => {
       state,
       source: "STAFF",
     });
+    await mirrorRolesGiven(db);
+  };
 
   it("reads an event that never chose, and a design saved before the choice, as the one badge for everyone", async () => {
     expect((await findEventForBadges(db, eventId, "ro"))!.design).toMatchObject({ mode: "single", singleColour: null });

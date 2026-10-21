@@ -47,7 +47,7 @@ esac
 
 # --- 2. The same command CI runs ------------------------------------------------------
 #
-# `yarn check` is what .github/workflows/docs-check.yml runs, so a commit cannot pass
+# `yarn check` is what .github/workflows/docs-check.yml runs (as `check:static` plus `test` in four shards), so a commit cannot pass
 # locally and fail in CI. As `check` grows to cover format, lint, typecheck and tests
 # (SETUP.md section 8), this hook grows with it and needs no edit.
 

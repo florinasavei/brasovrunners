@@ -1,3 +1,4 @@
+import { availableParallelism } from "node:os";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
@@ -35,8 +36,17 @@ export default defineConfig({
     // suite takes 58.6s at eight and 44.9s at twelve. Sixteen saves a further 1.5s for a third
     // more CPU and a third more memory — twelve is where the curve flattens, and the memory
     // ceiling is what caps it at all: twelve PGlite instances are about half a gigabyte.
+    //
+    // …and never more than the machine has (2026-10-20): twelve workers on CI's four cores, or on a cloud session's
+    // four, thrashed — every PGlite start competed for the same cores and `beforeAll` hooks ran past their thirty
+    // seconds. The cap is the core count, twelve at most.
     fileParallelism: true,
-    maxWorkers: 12,
+    maxWorkers: Math.min(12, availableParallelism()),
+    /**
+     * The migrated database is dumped once, before the workers start, and every test file loads it instead of running
+     * the migrations itself (`tests/helpers/pglite-snapshot.ts`): about three seconds saved per database-backed file.
+     */
+    globalSetup: ["./tests/helpers/pglite-global-setup.ts"],
     testTimeout: 30_000,
     /**
      * The same budget for a hook as for a test, because `beforeAll` here does strictly more

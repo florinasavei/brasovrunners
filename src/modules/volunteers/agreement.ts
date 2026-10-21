@@ -1,6 +1,6 @@
 import { and, eq, isNull, ne } from "drizzle-orm";
 import { z } from "zod";
-import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
+import { eventVolunteerCategories, eventVolunteerRoleAssignments, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
@@ -117,19 +117,16 @@ export type AgreementRole = RoleWords;
  */
 export type AgreementRoleRow = RoleWords & { id: string; contact?: CategoryContact | null };
 
-/** The roles one person's agreement names: the one the organizers gave them, or null, and the ones they chose. */
-export type AgreementRoles = { assigned: AgreementRoleRow | null; chosen: AgreementRoleRow[] };
+/** The roles one person's agreement names: the ones the organizers gave them (§837: one or several; none while nobody has) and the ones they chose. */
+export type AgreementRoles = { assigned: AgreementRoleRow[]; chosen: AgreementRoleRow[] };
 
 export { tasksWords };
 
 /**
- * One volunteer's roles as the agreement names them (§761): the role given (`event_volunteers.role_id`) and the
- * roles chosen (`event_volunteer_role_choices`), in the club's order — read in the caller's transaction.
+ * One volunteer's roles as the agreement names them (§761): the roles given (`event_volunteer_role_assignments`, §837) and
+ * the roles chosen (`event_volunteer_role_choices`), each in the club's order — read in the caller's transaction.
  */
-export async function volunteerRoles<T extends Record<string, unknown>>(
-  db: Database<T>,
-  volunteer: { id: string; roleId: string | null },
-): Promise<AgreementRoles> {
+export async function volunteerRoles<T extends Record<string, unknown>>(db: Database<T>, volunteer: { id: string }): Promise<AgreementRoles> {
   const columns = {
     id: eventVolunteerRoles.id,
     nameRo: eventVolunteerRoles.nameRo,
@@ -152,14 +149,12 @@ export async function volunteerRoles<T extends Record<string, unknown>>(
     .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteerRoleChoices.roleId))
     .leftJoin(eventVolunteerCategories, eq(eventVolunteerCategories.id, eventVolunteerRoles.categoryId))
     .where(eq(eventVolunteerRoleChoices.volunteerId, volunteer.id));
-  const [assigned] = volunteer.roleId
-    ? await db
-        .select(columns)
-        .from(eventVolunteerRoles)
-        .leftJoin(eventVolunteerCategories, eq(eventVolunteerCategories.id, eventVolunteerRoles.categoryId))
-        .where(eq(eventVolunteerRoles.id, volunteer.roleId))
-        .limit(1)
-    : [];
+  const assigned = await db
+    .select(columns)
+    .from(eventVolunteerRoleAssignments)
+    .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteerRoleAssignments.roleId))
+    .leftJoin(eventVolunteerCategories, eq(eventVolunteerCategories.id, eventVolunteerRoles.categoryId))
+    .where(eq(eventVolunteerRoleAssignments.volunteerId, volunteer.id));
   const words = (row: (typeof chosen)[number]): AgreementRoleRow => ({
     id: row.id,
     nameRo: row.nameRo,
@@ -170,7 +165,7 @@ export async function volunteerRoles<T extends Record<string, unknown>>(
     categoryEn: row.categoryEn,
     contact: categoryContactOf(row),
   });
-  return { assigned: assigned ? words(assigned) : null, chosen: chosen.sort(compareRoles).map(words) };
+  return { assigned: assigned.sort(compareRoles).map(words), chosen: chosen.sort(compareRoles).map(words) };
 }
 
 /**
@@ -188,7 +183,7 @@ export async function agreementBlanks<T extends Record<string, unknown>>(
   input: {
     eventId: string;
     name: string;
-    roles: Pick<AgreementRoles, "assigned"> & { chosen: readonly RoleWords[] };
+    roles: { assigned: readonly RoleWords[]; chosen: readonly RoleWords[] };
     locale: Locale;
     body: unknown;
     /** The parent or guardian of a volunteer under eighteen (§768): their name fills `{{volunteerGuardian}}`; none, or an adult, leaves it "" and the minors' clause out. */
@@ -254,7 +249,7 @@ export async function agreementAcceptance<T extends Record<string, unknown>>(
   input: {
     eventId: string;
     name: string;
-    roles: Pick<AgreementRoles, "assigned"> & { chosen: readonly RoleWords[] };
+    roles: { assigned: readonly RoleWords[]; chosen: readonly RoleWords[] };
     locale: Locale;
     document: { id: string; title: string; body: unknown };
     method: VolunteerAgreementMethod;
@@ -346,7 +341,6 @@ async function liveLinkRow<T extends Record<string, unknown>>(db: Database<T>, s
     .select({
       id: eventVolunteers.id,
       eventId: eventVolunteers.eventId,
-      roleId: eventVolunteers.roleId,
       name: eventVolunteers.name,
       email: eventVolunteers.email,
       locale: eventVolunteers.locale,
@@ -400,7 +394,7 @@ export async function readVolunteerAgreementLink<T extends Record<string, unknow
   const document = await findCurrentApprovedDocument(db, VOLUNTEER_AGREEMENT_KEY, locale, now);
   if (!document) return { status: "noAgreement" };
   const roles = await volunteerRoles(db, row);
-  if (!roles.assigned && roles.chosen.length === 0) return { status: "invalid" };
+  if (roles.assigned.length === 0 && roles.chosen.length === 0) return { status: "invalid" };
   const minor = isVolunteerMinor(row.age) && row.guardianName !== null;
   const blanks = await agreementBlanks(db, { eventId: row.eventId, name: row.name, roles, locale, body: document.body, guardianName: minor ? row.guardianName : null });
   const nameOf = (role: RoleWords) => roleLabel(role, locale);
@@ -409,7 +403,8 @@ export async function readVolunteerAgreementLink<T extends Record<string, unknow
     name: row.name,
     minor,
     eventTitle: blanks.facts.event,
-    roleName: roles.assigned ? nameOf(roles.assigned) : null,
+    // The roles given, «Masă, Traseu» (§837), or null while nobody gave one.
+    roleName: roles.assigned.length > 0 ? roles.assigned.map(nameOf).join(", ") : null,
     chosenRoleNames: roles.chosen.map(nameOf),
     document: { id: document.id, version: document.version, effectiveAt: document.effectiveAt, title: document.title, body: document.body },
     values: agreementMergeValues(blanks.facts),
@@ -450,7 +445,7 @@ export async function acceptVolunteerAgreementByLink<T extends Record<string, un
     const document = await findCurrentApprovedDocument(tx, VOLUNTEER_AGREEMENT_KEY, input.locale, now);
     if (!document) return { outcome: "noAgreement" };
     const roles = await volunteerRoles(tx, row);
-    if (!roles.assigned && roles.chosen.length === 0) return { outcome: "invalid" };
+    if (roles.assigned.length === 0 && roles.chosen.length === 0) return { outcome: "invalid" };
     const acceptance = await agreementAcceptance(
       tx,
       { eventId: row.eventId, name: row.name, roles, locale: input.locale, document, method: "LINK", guardianName: minor ? row.guardianName : null, trace },
@@ -592,11 +587,11 @@ export async function recordPaperVolunteerAgreement<T extends Record<string, unk
     const document = await findCurrentApprovedDocument(tx, VOLUNTEER_AGREEMENT_KEY, row.locale, now);
     if (!document) throw new DomainError("VOLUNTEER_AGREEMENT_MISSING", "no volunteer agreement is in force");
     const roles = await volunteerRoles(tx, row);
-    const stamp = agreementRolesStamp(roles.assigned?.id ?? null, roles.chosen.map((role) => role.id));
+    const stamp = agreementRolesStamp(roles.assigned.map((role) => role.id), roles.chosen.map((role) => role.id));
     if (document.id !== request.printed.documentId || stamp !== request.printed.roles) {
       throw new DomainError("VOLUNTEER_AGREEMENT_REPRINT", "the version in force or the roles changed since the sheet was printed");
     }
-    if (!roles.assigned && roles.chosen.length === 0) throw new DomainError("NOT_FOUND", "the volunteer has no role");
+    if (roles.assigned.length === 0 && roles.chosen.length === 0) throw new DomainError("NOT_FOUND", "the volunteer has no role");
     const acceptance = await agreementAcceptance(
       tx,
       {

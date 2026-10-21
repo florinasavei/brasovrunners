@@ -35,6 +35,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
     addVolunteerAction: noop,
     addVolunteerCategoryAction: noop,
     assignVolunteerAction: noop,
+    unassignVolunteerAction: noop,
     deleteVolunteerAction: noop,
     deleteVolunteerCategoryAction: noop,
     deleteVolunteerRoleAction: noop,
@@ -114,7 +115,7 @@ const PEOPLE: VolunteerItem[] = [
   {
     id: "55555555-5555-4555-8555-555555555555",
     eventId: EVENT,
-    roleId: null,
+    roleIds: [],
     choiceIds: [WATER],
     name: "Maria Test",
     email: "maria@example.test",
@@ -154,7 +155,7 @@ const PEOPLE: VolunteerItem[] = [
   {
     id: "66666666-6666-4666-8666-666666666666",
     eventId: EVENT,
-    roleId: null,
+    roleIds: [],
     choiceIds: [FINISH],
     name: "Ion Test",
     email: "ion@example.test",

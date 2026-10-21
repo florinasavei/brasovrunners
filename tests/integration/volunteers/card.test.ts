@@ -25,6 +25,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { NEW_ROW, rowBoxes } from "../../helpers/role-rows";
+import { mirrorRolesGiven } from "../../helpers/volunteer-roles";
 
 /**
  * §754 — an event's «Voluntari» card (BR-REQ-050-02, BR-REQ-060-01), through the real Server Actions:
@@ -157,7 +158,7 @@ async function addRole(fields: Record<string, string> = {}) {
 
 /** A person entered by hand who would do `roleId` and is given it — unless `fields` say otherwise (§761). */
 async function addPerson(roleId: string, fields: Record<string, string | readonly string[]> = {}) {
-  expect(await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [roleId], assignedRoleId: roleId, ...fields }))).toBe("redirected");
+  expect(await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [roleId], assignedRoleIds: [roleId], ...fields }))).toBe("redirected");
   const rows = await listVolunteers(db, eventId);
   return rows[rows.length - 1];
 }
@@ -242,7 +243,7 @@ describe("§754 an event's volunteer roles", () => {
     // Reopened (a cancelled person is given no new role), moved to another role, and the role given no longer
     // ticked by them: the role goes.
     await press(actions.setVolunteerStateAction, form({ volunteerId: maria.id, state: "REGISTERED" }));
-    expect(await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [finish.id], assignedRoleId: finish.id }))).toBe("redirected");
+    expect(await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [finish.id], assignedRoleIds: [finish.id] }))).toBe("redirected");
     expect(await pressStateful(actions.deleteVolunteerRoleAction, form({ roleId: water.id }))).not.toContain("volunteerError");
     expect((await listVolunteerRoles(db, eventId)).map((role) => role.id)).toEqual([finish.id]);
     expect(await actionsOf()).toContain("volunteer_role.deleted");
@@ -251,10 +252,10 @@ describe("§754 an event's volunteer roles", () => {
   it("§761 never removes a role somebody only ticked, given no role yet — their offer names it", async () => {
     const water = await addRole();
     const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
-    const dana = await addPerson(water.id, { roleIds: [water.id, finish.id], assignedRoleId: "" });
+    const dana = await addPerson(water.id, { roleIds: [water.id, finish.id], assignedRoleIds: [] });
     expect(await pressStateful(actions.deleteVolunteerRoleAction, form({ roleId: finish.id }))).toContain("volunteerError=VOLUNTEER_ROLE_HAS_PEOPLE");
     // Their ticks changed: the role is nobody's any more, and goes.
-    expect(await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: dana.id, roleIds: [water.id], assignedRoleId: "" }))).toBe("redirected");
+    expect(await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: dana.id, roleIds: [water.id], assignedRoleIds: [] }))).toBe("redirected");
     expect(await pressStateful(actions.deleteVolunteerRoleAction, form({ roleId: finish.id }))).not.toContain("volunteerError");
     expect((await listVolunteerRoles(db, eventId)).map((role) => role.id)).toEqual([water.id]);
   });
@@ -280,7 +281,7 @@ describe("§754 an event's volunteers, entered by hand", () => {
     const row = await addPerson(role.id, { note: "Prietena lui Dan" });
     expect(row).toMatchObject({
       eventId,
-      roleId: role.id,
+      roleIds: [role.id],
       name: "Maria Test",
       email: "maria@example.test",
       phone: "+40712345678",
@@ -293,7 +294,7 @@ describe("§754 an event's volunteers, entered by hand", () => {
     const [stored] = await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, row.id));
     expect(stored).toMatchObject({ canonicalEmail: "maria@example.test", canonicalizationVersion: 2, createdByStaffUserId: staff.ADMIN!.id, privacyNoticeVersion: null });
     const added = (await trail()).find((entry) => entry.action === "volunteer.added");
-    expect(added?.metadataJson).toMatchObject({ volunteerId: row.id, roleId: role.id });
+    expect(added?.metadataJson).toMatchObject({ volunteerId: row.id, assignedRoleIds: [role.id] });
     expect(JSON.stringify(added?.metadataJson)).not.toMatch(/Maria|maria@|\+4071|Prietena/);
   });
 
@@ -321,25 +322,25 @@ describe("§754 an event's volunteers, entered by hand", () => {
     const foreign = (await db.insert(eventVolunteerRoles).values({ eventId: otherEventId, nameRo: "A", nameEn: "A", needed: 1 }).returning())[0];
     expect(await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [foreign.id] }))).toMatchObject({ error: "VALIDATION_ERROR", fields: ["roleIds"] });
     expect(await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [own.id, foreign.id] }))).toMatchObject({ error: "VALIDATION_ERROR", fields: ["roleIds"] });
-    expect(await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [own.id], assignedRoleId: foreign.id }))).toMatchObject({ error: "VALIDATION_ERROR", fields: ["assignedRoleId"] });
+    expect(await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [own.id], assignedRoleIds: [foreign.id] }))).toMatchObject({ error: "VALIDATION_ERROR", fields: ["assignedRoleIds"] });
     expect(await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: ["nope"] }))).toMatchObject({ error: "VALIDATION_ERROR", fields: ["roleIds"] });
-    expect(await post(actions.addVolunteerAction, form({ ...PERSON, assignedRoleId: "" }))).toMatchObject({ error: "VALIDATION_ERROR", fields: ["roleIds"] });
+    expect(await post(actions.addVolunteerAction, form({ ...PERSON, assignedRoleIds: [] }))).toMatchObject({ error: "VALIDATION_ERROR", fields: ["roleIds"] });
     expect(await listVolunteers(db, eventId)).toHaveLength(0);
   });
 
   it("§761 enters a person with the roles they would do and no role given, or with a role given alone — kept as their one choice — and tells only a role given", async () => {
     const water = await addRole();
     const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
-    const ticked = await addPerson(water.id, { roleIds: [finish.id, water.id], assignedRoleId: "" });
-    expect(ticked).toMatchObject({ roleId: null, choiceIds: [water.id, finish.id] });
+    const ticked = await addPerson(water.id, { roleIds: [finish.id, water.id], assignedRoleIds: [] });
+    expect(ticked).toMatchObject({ roleIds: [], choiceIds: [water.id, finish.id] });
     const given = await addPerson(finish.id, { roleIds: [], email: "ion@example.test", name: "Ion Test" });
-    expect(given).toMatchObject({ roleId: finish.id, choiceIds: [finish.id] });
+    expect(given).toMatchObject({ roleIds: [finish.id], choiceIds: [finish.id] });
     const told = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "VOLUNTEER_ROLE_ASSIGNED"));
-    expect(told.map((row) => [row.recipientEmail, row.payloadJson])).toEqual([["ion@example.test", { eventId, volunteerId: given.id, roleId: finish.id }]]);
+    expect(told.map((row) => [row.recipientEmail, row.payloadJson])).toEqual([["ion@example.test", { eventId, volunteerId: given.id, roleIds: [finish.id] }]]);
     const added = (await trail()).filter((row) => row.action === "volunteer.added").map((row) => row.metadataJson);
     expect(added).toEqual([
-      { volunteerId: ticked.id, roleId: null, roleIds: [finish.id, water.id] },
-      { volunteerId: given.id, roleId: finish.id, roleIds: [finish.id] },
+      { volunteerId: ticked.id, assignedRoleIds: [], roleIds: [finish.id, water.id] },
+      { volunteerId: given.id, assignedRoleIds: [finish.id], roleIds: [finish.id] },
     ]);
   });
 
@@ -351,13 +352,13 @@ describe("§754 an event's volunteers, entered by hand", () => {
     expect(
       await post(
         actions.editVolunteerAction,
-        form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id, finish.id], assignedRoleId: finish.id, name: "Maria Nouă", email: "Maria.Noua@Example.test", note: "Confirmată pe telefon" }),
+        form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id, finish.id], assignedRoleIds: [finish.id], name: "Maria Nouă", email: "Maria.Noua@Example.test", note: "Confirmată pe telefon" }),
       ),
     ).toBe("redirected");
     const [changed] = (await listVolunteers(db, eventId)).filter((row) => row.id === maria.id);
-    expect(changed).toMatchObject({ roleId: finish.id, choiceIds: [water.id, finish.id], name: "Maria Nouă", email: "Maria.Noua@Example.test", note: "Confirmată pe telefon", phone: "+40712345678" });
+    expect(changed).toMatchObject({ roleIds: [finish.id], choiceIds: [water.id, finish.id], name: "Maria Nouă", email: "Maria.Noua@Example.test", note: "Confirmată pe telefon", phone: "+40712345678" });
     const [edited] = (await trail()).filter((row) => row.action === "volunteer.edited");
-    expect(edited.metadataJson).toMatchObject({ volunteerId: maria.id, fields: ["roleId", "name", "email", "note", "roleIds"] });
+    expect(edited.metadataJson).toMatchObject({ volunteerId: maria.id, fields: ["name", "email", "note", "roleIds", "assignedRoleIds"] });
     expect(JSON.stringify(edited.metadataJson)).not.toMatch(/Maria|maria|Confirmată/);
     // The role newly given is told to the person, at the address the row now holds.
     const toldMaria = async () =>
@@ -365,23 +366,23 @@ describe("§754 an event's volunteers, entered by hand", () => {
         (row) => (row.payloadJson as { volunteerId: string }).volunteerId === maria.id,
       );
     const told = await toldMaria();
-    expect(told.map((row) => [row.recipientEmail, (row.payloadJson as { roleId: string }).roleId])).toEqual([
-      ["maria@example.test", water.id],
-      ["Maria.Noua@Example.test", finish.id],
+    expect(told.map((row) => [row.recipientEmail, (row.payloadJson as { roleIds: string[] }).roleIds])).toEqual([
+      ["maria@example.test", [water.id]],
+      ["Maria.Noua@Example.test", [finish.id]],
     ]);
     // Ion's address is taken: refused, naming the box, keeping what was typed.
-    const clash = await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [finish.id], assignedRoleId: finish.id, email: ion.email }));
+    const clash = await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [finish.id], assignedRoleIds: [finish.id], email: ion.email }));
     expect(clash).toMatchObject({ error: "VOLUNTEER_ALREADY_LISTED", fields: ["email"] });
     // Saving the same address spelled differently is no clash with oneself.
     expect(
       await post(
         actions.editVolunteerAction,
-        form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id, finish.id], assignedRoleId: finish.id, name: "Maria Nouă", email: "maria.noua@example.test", note: "Confirmată pe telefon" }),
+        form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id, finish.id], assignedRoleIds: [finish.id], name: "Maria Nouă", email: "maria.noua@example.test", note: "Confirmată pe telefon" }),
       ),
     ).toBe("redirected");
     // The role taken back: «De repartizat» again, nothing told.
-    expect(await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id, finish.id], assignedRoleId: "", name: "Maria Nouă", email: "maria.noua@example.test", note: "Confirmată pe telefon" }))).toBe("redirected");
-    expect((await listVolunteers(db, eventId)).find((row) => row.id === maria.id)).toMatchObject({ roleId: null, choiceIds: [water.id, finish.id] });
+    expect(await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id, finish.id], assignedRoleIds: [], name: "Maria Nouă", email: "maria.noua@example.test", note: "Confirmată pe telefon" }))).toBe("redirected");
+    expect((await listVolunteers(db, eventId)).find((row) => row.id === maria.id)).toMatchObject({ roleIds: [], choiceIds: [water.id, finish.id] });
     expect(await toldMaria()).toHaveLength(2);
   });
 
@@ -412,7 +413,7 @@ describe("§754 an event's volunteers, entered by hand", () => {
     expect(await pressStateful(actions.deleteVolunteerAction, form({ volunteerId: maria.id }))).not.toContain("volunteerError");
     expect(await listVolunteers(db, eventId)).toHaveLength(0);
     const [deleted] = (await trail()).filter((row) => row.action === "volunteer.deleted");
-    expect(deleted.metadataJson).toMatchObject({ volunteerId: maria.id, roleId: role.id });
+    expect(deleted.metadataJson).toMatchObject({ volunteerId: maria.id, assignedRoleIds: [role.id] });
     expect(JSON.stringify(await trail())).not.toMatch(/maria@|\+4071|Maria Test/);
   });
 
@@ -422,6 +423,7 @@ describe("§754 an event's volunteers, entered by hand", () => {
       .insert(eventVolunteers)
       .values({ eventId: otherEventId, roleId: foreignRole.id, name: "Altcineva", email: "alt@example.test", canonicalEmail: "alt@example.test", canonicalizationVersion: 2, phone: "+40712345678", source: "STAFF" })
       .returning();
+    await mirrorRolesGiven(db);
     await expect(changeVolunteer(db, staff.ADMIN!, { kind: "delete", eventId, id: foreign.id }, NOW)).rejects.toMatchObject({ code: "NOT_FOUND" });
     await expect(changeVolunteer(db, staff.ADMIN!, { kind: "setState", eventId, id: foreign.id, state: "CONFIRMED" }, NOW)).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(await listVolunteers(db, otherEventId)).toHaveLength(1);
@@ -443,10 +445,10 @@ describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role
   it("gives an offer one of the roles it ticked — counted then, «N din M» — audits it and tells the person in one short email", async () => {
     const water = await addRole({ needed: "2", descriptionRo: "Dai apă la km 5.", descriptionEn: "Hand out water at km 5." });
     const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish", needed: "1" });
-    const maria = await addPerson(water.id, { roleIds: [water.id, finish.id], assignedRoleId: "" });
+    const maria = await addPerson(water.id, { roleIds: [water.id, finish.id], assignedRoleIds: [] });
     expect(volunteerStandings(await listVolunteerRoles(db, eventId), await listVolunteers(db, eventId)).map((standing) => standing.taken)).toEqual([0, 0]);
     expect(await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }))).not.toContain("volunteerError");
-    expect((await listVolunteers(db, eventId))[0]).toMatchObject({ roleId: water.id, choiceIds: [water.id, finish.id] });
+    expect((await listVolunteers(db, eventId))[0]).toMatchObject({ roleIds: [water.id], choiceIds: [water.id, finish.id] });
     // «1 din 2» on the role given; the other role the person ticked still counts nobody.
     expect(volunteerStandings(await listVolunteerRoles(db, eventId), await listVolunteers(db, eventId)).map((standing) => [standing.taken, standing.needed])).toEqual([
       [1, 2],
@@ -454,11 +456,11 @@ describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role
     ]);
     const [assigned] = (await trail()).filter((row) => row.action === "volunteer.assigned");
     expect(assigned).toMatchObject({ actorStaffUserId: staff.ADMIN!.id, entityType: "event", entityId: eventId });
-    expect(assigned.metadataJson).toEqual({ volunteerId: maria.id, roleId: water.id, from: null });
+    expect(assigned.metadataJson).toEqual({ volunteerId: maria.id, roleId: water.id, assignedRoleIds: [water.id], from: [] });
     // One email, to the person, in their language, naming the role — no token, nothing to press.
     const [message] = await told();
     expect(message).toMatchObject({ recipientEmail: "maria@example.test", locale: "ro", participantId: null, registrationId: null, requestedByStaffUserId: staff.ADMIN!.id });
-    expect(message.payloadJson).toEqual({ eventId, volunteerId: maria.id, roleId: water.id });
+    expect(message.payloadJson).toEqual({ eventId, volunteerId: maria.id, roleIds: [water.id] });
     const rendered = await render(message);
     expect(rendered.subject).toBe("Rolul tău de voluntar la Cursa / Your volunteer role at The race");
     expect(rendered.text).toContain("Rol: Punct de apă");
@@ -480,7 +482,7 @@ describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role
       descriptionRoBody: docOf("Stai la km 5.", "Dai apă de la 9:00", "Strângi gunoiul"),
       descriptionEnBody: docOf("Stand at km 5.", "Hand out water from 9:00", "Collect the rubbish"),
     });
-    const maria = await addPerson(water.id, { roleIds: [water.id], assignedRoleId: "" });
+    const maria = await addPerson(water.id, { roleIds: [water.id], assignedRoleIds: [] });
     await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }));
     const [message] = await told();
     const rendered = await render(message);
@@ -490,37 +492,58 @@ describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role
     expect(rendered.text).not.toMatch(/\n\s*Dai apă/);
   });
 
-  it("gives any role of the event — one the person never ticked too — and announces only the role that stands", async () => {
-    const water = await addRole();
+  it("§837 gives any role of the event — one the person never ticked too — beside the ones held, counts the person on each, takes one back, and announces only the roles that stand", async () => {
+    const water = await addRole({ needed: "2", descriptionRo: "Dai apă la km 5.", descriptionEn: "Hand out water at km 5." });
     const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
-    const maria = await addPerson(water.id, { roleIds: [water.id], assignedRoleId: "" });
+    const maria = await addPerson(water.id, { roleIds: [water.id], assignedRoleIds: [] });
     await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }));
     await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: finish.id }));
-    // The offer stays what the person ticked; the role given is the organizers'.
-    expect((await listVolunteers(db, eventId))[0]).toMatchObject({ roleId: finish.id, choiceIds: [water.id] });
+    // The offer stays what the person ticked; the roles given are the organizers' — both of them, in the club's order.
+    expect((await listVolunteers(db, eventId))[0]).toMatchObject({ roleIds: [water.id, finish.id], choiceIds: [water.id] });
+    // «1 din 2» and «1 din 1»: a person given two roles counts against each.
+    expect(volunteerStandings(await listVolunteerRoles(db, eventId), await listVolunteers(db, eventId)).map((standing) => standing.taken)).toEqual([1, 1]);
+    const both = [water.id, finish.id].sort();
     expect((await trail()).filter((row) => row.action === "volunteer.assigned").map((row) => row.metadataJson)).toEqual([
-      { volunteerId: maria.id, roleId: water.id, from: null },
-      { volunteerId: maria.id, roleId: finish.id, from: water.id },
+      { volunteerId: maria.id, roleId: water.id, assignedRoleIds: [water.id], from: [] },
+      { volunteerId: maria.id, roleId: finish.id, assignedRoleIds: both, from: [water.id] },
     ]);
     const [first, second] = await told();
-    // The first message would name a role changed since: withdrawn at the send; the second leaves.
-    await expect(render(first)).rejects.toThrow(/role was changed/);
-    expect((await render(second)).text).toContain("Rol: Sosire");
-    // Taken back by hand: the last message is withdrawn too.
-    await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleId: "" }));
-    await expect(render(second)).rejects.toThrow(/role was changed/);
+    // The first message would name roles changed since: withdrawn at the send; the second leaves, naming both and what each asks.
+    await expect(render(first)).rejects.toThrow(/roles were changed/);
+    expect(second.payloadJson).toEqual({ eventId, volunteerId: maria.id, roleIds: both });
+    const rendered = await render(second);
+    expect(rendered.text).toContain("Roluri: Punct de apă, Sosire");
+    expect(rendered.text).toContain("Roles: Water point, Finish");
+    expect(rendered.text).toContain("Organizatorii ți-au dat mai multe roluri la Cursa: Punct de apă, Sosire.");
+    expect(rendered.text).toContain("Ce presupune fiecare rol: Punct de apă — Dai apă la km 5.");
+    expect(rendered.text).toContain("What each role involves: Water point — Hand out water at km 5.");
+    // «Ia-i rolul …»: the one role goes, the other stands and is named again; the second message is withdrawn.
+    expect(await press(actions.unassignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }))).not.toContain("volunteerError");
+    expect((await listVolunteers(db, eventId))[0]).toMatchObject({ roleIds: [finish.id], choiceIds: [water.id] });
+    const [unassigned] = (await trail()).filter((row) => row.action === "volunteer.unassigned");
+    expect(unassigned.metadataJson).toEqual({ volunteerId: maria.id, roleId: water.id, assignedRoleIds: [finish.id], from: both });
+    await expect(render(second)).rejects.toThrow(/roles were changed/);
+    const third = (await told())[2];
+    expect(third.payloadJson).toEqual({ eventId, volunteerId: maria.id, roleIds: [finish.id] });
+    expect((await render(third)).text).toContain("Rol: Sosire");
+    // Taking a role the person does not hold changes nothing; taking the last back by hand leaves nothing to announce, and the last message is withdrawn too.
+    await press(actions.unassignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }));
+    expect(await told()).toHaveLength(3);
+    await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleIds: [] }));
+    await expect(render(third)).rejects.toThrow(/roles were changed/);
+    expect(await told()).toHaveLength(3);
   });
 
   it("refuses a role of another event or no role, a person of another event, and a cancelled person — reopen first", async () => {
     const water = await addRole();
-    const maria = await addPerson(water.id, { assignedRoleId: "" });
+    const maria = await addPerson(water.id, { assignedRoleIds: [] });
     const foreign = (await db.insert(eventVolunteerRoles).values({ eventId: otherEventId, nameRo: "A", nameEn: "A", needed: 1 }).returning())[0];
     expect(await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: foreign.id }))).toContain("volunteerError=VALIDATION_ERROR");
     expect(await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: "" }))).toContain("volunteerError=VALIDATION_ERROR");
     expect(await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }, otherEventId))).toContain("volunteerError=");
     await press(actions.setVolunteerStateAction, form({ volunteerId: maria.id, state: "CANCELLED" }));
     expect(await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }))).toContain("volunteerError=CONFLICT");
-    expect((await listVolunteers(db, eventId))[0].roleId).toBeNull();
+    expect((await listVolunteers(db, eventId))[0].roleIds).toEqual([]);
     expect(await told()).toHaveLength(0);
     // The service, called directly by a role that may not: refused before anything is read.
     await expect(changeVolunteer(db, staff.DEV!, { kind: "assign", eventId, id: maria.id, roleId: water.id }, NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
@@ -528,18 +551,18 @@ describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role
 
   it("withdraws the role's email when the person was cancelled, or their address corrected, before it left", async () => {
     const water = await addRole();
-    const maria = await addPerson(water.id, { assignedRoleId: "" });
+    const maria = await addPerson(water.id, { assignedRoleIds: [] });
     await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }));
     const [message] = await told();
-    await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleId: water.id, email: "alta@example.test" }));
+    await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleIds: [water.id], email: "alta@example.test" }));
     await expect(render(message)).rejects.toThrow(/address changed/);
     // The role kept, the address corrected: the corrected address is told the role once, and that message leaves.
     const toCorrected = (await told()).filter((row) => row.recipientEmail === "alta@example.test");
     expect(toCorrected).toHaveLength(1);
-    expect(toCorrected[0].payloadJson).toEqual({ eventId, volunteerId: maria.id, roleId: water.id });
+    expect(toCorrected[0].payloadJson).toEqual({ eventId, volunteerId: maria.id, roleIds: [water.id] });
     expect((await render(toCorrected[0])).text).toContain("Rol: Punct de apă");
     // A save that changes neither the role nor the address tells nobody again.
-    await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleId: water.id, email: "alta@example.test", note: "Sună după 18" }));
+    await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleIds: [water.id], email: "alta@example.test", note: "Sună după 18" }));
     expect(await told()).toHaveLength(2);
     await press(actions.setVolunteerStateAction, form({ volunteerId: maria.id, state: "CANCELLED" }));
     await expect(render(message)).rejects.toThrow(/cancelled/);
@@ -549,26 +572,26 @@ describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role
   it("tells a cancelled person their role again when they are reopened, and gives a cancelled person no new role by «Modifică» either", async () => {
     const water = await addRole();
     const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
-    const maria = await addPerson(water.id, { assignedRoleId: "" });
+    const maria = await addPerson(water.id, { assignedRoleIds: [] });
     await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }));
     await press(actions.setVolunteerStateAction, form({ volunteerId: maria.id, state: "CANCELLED" }));
     // «Modifică» while cancelled: a new role is refused (reopen first) — the same line «Dă-i rolul» holds.
-    const refused = await pressStateful(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleId: finish.id }));
+    const refused = await pressStateful(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleIds: [finish.id] }));
     expect(refused).toContain("volunteerError=CONFLICT");
-    expect((await listVolunteers(db, eventId))[0].roleId).toBe(water.id);
+    expect((await listVolunteers(db, eventId))[0].roleIds).toEqual([water.id]);
     // Keeping the role, or taking it back, is still an edit.
-    expect(await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleId: water.id, note: "Revine poate" }))).toBe("redirected");
+    expect(await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleIds: [water.id], note: "Revine poate" }))).toBe("redirected");
     expect(await told()).toHaveLength(1);
     // Reopened: one more message, naming the role that stands, and it leaves.
     await press(actions.setVolunteerStateAction, form({ volunteerId: maria.id, state: "REGISTERED" }));
     const messages = await told();
     expect(messages).toHaveLength(2);
     const reopened = messages.find((row) => row.idempotencyKey.includes(":reopened:"))!;
-    expect(reopened.payloadJson).toEqual({ eventId, volunteerId: maria.id, roleId: water.id });
+    expect(reopened.payloadJson).toEqual({ eventId, volunteerId: maria.id, roleIds: [water.id] });
     expect((await render(reopened)).text).toContain("Rol: Punct de apă");
     // Confirming afterwards tells nothing more; reopening a person with no role given tells nothing.
     await press(actions.setVolunteerStateAction, form({ volunteerId: maria.id, state: "CONFIRMED" }));
-    const ion = await addPerson(water.id, { assignedRoleId: "", name: "Ion Test", email: "ion@example.test" });
+    const ion = await addPerson(water.id, { assignedRoleIds: [], name: "Ion Test", email: "ion@example.test" });
     await press(actions.setVolunteerStateAction, form({ volunteerId: ion.id, state: "CANCELLED" }));
     await press(actions.setVolunteerStateAction, form({ volunteerId: ion.id, state: "REGISTERED" }));
     expect(await told()).toHaveLength(2);
@@ -720,7 +743,7 @@ describe("§754 the CSV", () => {
     const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
     await addPerson(finish.id, { name: "Ion Test", email: "ion@example.test" });
     await addPerson(water.id, { name: "=SUM(A1)", email: "maria@example.test" });
-    await addPerson(water.id, { roleIds: [finish.id, water.id], assignedRoleId: "", name: "Dana Test", email: "dana@example.test" });
+    await addPerson(water.id, { roleIds: [finish.id, water.id], assignedRoleIds: [], name: "Dana Test", email: "dana@example.test" });
     const response = await get(staff.MODERATOR!);
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/csv");
@@ -730,7 +753,7 @@ describe("§754 the CSV", () => {
     const bytes = new Uint8Array(await response.clone().arrayBuffer());
     expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
     const text = await response.text();
-    expect(text.startsWith("Rolul dat,S-a oferit pentru,Nume,Email,Telefon,Stare,Sursă,Mesaj,Notă,Data")).toBe(true);
+    expect(text.startsWith("Rolurile date,S-a oferit pentru,Nume,Email,Telefon,Stare,Sursă,Mesaj,Notă,Data")).toBe(true);
     const lines = text.split("\r\n");
     // The offer nobody placed first, with no role given and the roles chosen; then Punct de apă (the club's
     // order), then Sosire; a formula opens as text.
@@ -743,7 +766,7 @@ describe("§754 the CSV", () => {
     expect(exported.metadataJson).toEqual({ rows: 3 });
     // The English reader's words.
     const english = await (await get(staff.ADMIN!, eventId, "en")).text();
-    expect(english).toContain("Role given,Offered for,Name,Email,Telephone,State,Source,Message,Note,Date");
+    expect(english).toContain("Roles given,Offered for,Name,Email,Telephone,State,Source,Message,Note,Date");
     expect(english).toContain('"Water point, Finish"');
   });
 

@@ -1,5 +1,5 @@
 import { and, asc, count, eq } from "drizzle-orm";
-import { eventVolunteerCategories, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteerCategories, eventVolunteerRoleAssignments, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -94,7 +94,11 @@ export async function listBadgeRoles<T extends Record<string, unknown>>(db: Data
   // The people given each role (§761): what a role without a number starts its badges at (§784) — one read for the event, counted here.
   // Only when some role has no number: the people are read for nothing else (the preview asks for one role's colour and name).
   const people = rows.some((row) => row.needed === null)
-    ? await db.select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state }).from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId))
+    ? await db
+        .select({ roleId: eventVolunteerRoleAssignments.roleId, state: eventVolunteers.state })
+        .from(eventVolunteerRoleAssignments)
+        .innerJoin(eventVolunteers, eq(eventVolunteers.id, eventVolunteerRoleAssignments.volunteerId))
+        .where(eq(eventVolunteers.eventId, eventId))
     : [];
   const assigned = (roleId: string) => people.filter((person) => person.roleId === roleId && countsAgainstRole(person.state)).length;
   const roles = rows

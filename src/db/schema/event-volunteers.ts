@@ -189,10 +189,12 @@ export const eventVolunteers = pgTable(
       .notNull()
       .references(() => events.id, { onDelete: "cascade" }),
     /**
-     * The role the organizers gave the person (§754; since §761 the *assigned* role). Null for an offer nobody
-     * has placed yet — every public sign-up, which ticks the roles the person would do
-     * (`event_volunteer_role_choices`) and leaves the choice to the organizers. Only an assigned role counts
-     * against its need («N din M»). Nullable since migration `0149`: a relaxing change, expand only.
+     * The role the organizers gave the person (§754; since §761 the *assigned* role) — **kept only until a later
+     * contract release** (§837): since migration `0177` the roles given live in `event_volunteer_role_assignments`,
+     * one row per role, and nothing reads this column any more. Every write of a person's roles still mirrors the
+     * first of them here (null while none is given), so the code serving while the migration runs reads a sane
+     * value and the `RESTRICT` below stays true to the assignments; the column is dropped when no such code can be.
+     * Nullable since migration `0149`: a relaxing change, expand only.
      */
     roleId: uuid("role_id").references(() => eventVolunteerRoles.id, { onDelete: "restrict" }),
     name: text("name").notNull(),
@@ -399,6 +401,36 @@ export const eventVolunteerRoleChoices = pgTable(
     primaryKey({ columns: [t.volunteerId, t.roleId] }),
     // Who ticked a role: the service's check before a role's delete, and the cascade's own lookup.
     index("event_volunteer_role_choices_role_idx").on(t.roleId),
+  ],
+);
+
+/**
+ * The roles the organizers **gave** a volunteer (§837, amending §761; the owner, 2026-10-20: «I want to be able to assign
+ * multiple roles to a volunteer, to be more flexible»). One row per role given: a person may stand at the start as
+ * «Direcționare» and then at kilometre five at the «Punct de hidratare», and counts against each role's need («N din M»)
+ * — the choices (`event_volunteer_role_choices`) stay what the person offered, these are what the organizers decided.
+ * Any of the event's roles, ticked by the person or not; none for an offer nobody has placed yet («De repartizat»).
+ *
+ * The same shape and the same cascades as the choices, for the same reason: the rows go with the volunteer, and the
+ * reference to the role is `CASCADE` because deleting an event reaches them only through the volunteers' second-level
+ * cascade; the service refuses deleting a role anybody was given (`VOLUNTEER_ROLE_HAS_PEOPLE`). Migration `0177` made
+ * each existing volunteer's `role_id` their one assignment.
+ */
+export const eventVolunteerRoleAssignments = pgTable(
+  "event_volunteer_role_assignments",
+  {
+    volunteerId: uuid("volunteer_id")
+      .notNull()
+      .references(() => eventVolunteers.id, { onDelete: "cascade" }),
+    roleId: uuid("role_id")
+      .notNull()
+      .references(() => eventVolunteerRoles.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.volunteerId, t.roleId] }),
+    // «N din M»: the people given a role, and the service's check before a role's delete.
+    index("event_volunteer_role_assignments_role_idx").on(t.roleId),
   ],
 );
 

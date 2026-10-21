@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
-import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteerRoleAssignments, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
@@ -142,12 +142,12 @@ describe("§758 the volunteer agreement", () => {
 
   /** A person an organizer entered by hand, given the role (§761: ticked and given): no acceptance yet. */
   async function byHand(eventId: string, roleId: string, email = "ion@example.test") {
-    const result = await changeVolunteer(db, admin, { kind: "add", eventId, fields: { roleIds: [roleId], assignedRoleId: roleId, name: "Ion Popescu", email, phone: "+40712345679", note: "" } }, NOW);
+    const result = await changeVolunteer(db, admin, { kind: "add", eventId, fields: { roleIds: [roleId], assignedRoleIds: [roleId], name: "Ion Popescu", email, phone: "+40712345679", note: "" } }, NOW);
     return result.volunteer.id;
   }
 
   /** An organizer's «Salvează» on a person: the roles ticked, the role given ("" for none) and the boxes (§761). */
-  const edit = (eventId: string, id: string, fields: { roleIds: string[]; assignedRoleId: string; name: string; email: string; phone: string }) =>
+  const edit = (eventId: string, id: string, fields: { roleIds: string[]; assignedRoleIds: string[]; name: string; email: string; phone: string }) =>
     changeVolunteer(db, admin, { kind: "edit", eventId, id, fields: { ...fields, note: "" } }, NOW);
 
   const choicesOf = async (id: string) =>
@@ -159,8 +159,11 @@ describe("§758 the volunteer agreement", () => {
   async function printedFor(id: string, at = NOW) {
     const person = await row(id);
     const version = await findCurrentApprovedDocument(db, "VOLUNTEER_AGREEMENT", person.locale, at);
-    return { documentId: version?.id ?? "00000000-0000-4000-8000-000000000000", roles: agreementRolesStamp(person.roleId, await choicesOf(id)) };
+    return { documentId: version?.id ?? "00000000-0000-4000-8000-000000000000", roles: agreementRolesStamp(await givenOf(id), await choicesOf(id)) };
   }
+
+  const givenOf = async (id: string) =>
+    (await db.select({ roleId: eventVolunteerRoleAssignments.roleId }).from(eventVolunteerRoleAssignments).where(eq(eventVolunteerRoleAssignments.volunteerId, id))).map((given) => given.roleId);
 
   /** «Semnat pe hârtie» as the card posts it, the printed version and role with it. */
   const paper = async (eventId: string, id: string, at = NOW, actor: StaffUser = admin) =>
@@ -381,7 +384,7 @@ describe("§758 the volunteer agreement", () => {
       const second = (await mintVolunteerAgreementLink(db, id, "ion@example.test", NOW))!;
       expect(await accept(first.secret, NOW)).toEqual({ outcome: "invalid" });
       // The address changed: the link went to the old one, and dies.
-      await edit(event.id, id, { roleIds: [role.id], assignedRoleId: role.id, name: "Ion Popescu", email: "ion.nou@example.test", phone: "+40712345679" });
+      await edit(event.id, id, { roleIds: [role.id], assignedRoleIds: [role.id], name: "Ion Popescu", email: "ion.nou@example.test", phone: "+40712345679" });
       expect(await accept(second.secret, NOW)).toEqual({ outcome: "invalid" });
       // Cancelled: no link is minted, none is honoured.
       // A request queued to the old address mints nothing (§758): its link would reach the wrong mailbox.
@@ -500,7 +503,7 @@ describe("§758 the volunteer agreement", () => {
       const id = await byHand(event.id, role.id);
       await requestVolunteerAgreement(db, admin, { eventId: event.id, id }, NOW);
       // While the email waits (a retry, the day's allowance), the organizer corrects the address.
-      await edit(event.id, id, { roleIds: [role.id], assignedRoleId: role.id, name: "Ion Popescu", email: "ion.nou@example.test", phone: "+40712345679" });
+      await edit(event.id, id, { roleIds: [role.id], assignedRoleIds: [role.id], name: "Ion Popescu", email: "ion.nou@example.test", phone: "+40712345679" });
       const [queued] = await outboxOf("VOLUNTEER_AGREEMENT_REQUEST");
       expect(queued.recipientEmail).toBe("ion@example.test");
       await expect(render(queued, LATER)).rejects.toThrow(/address changed/i);
@@ -517,7 +520,7 @@ describe("§758 the volunteer agreement", () => {
       const { event, role } = await seedEvent();
       await submitVolunteer(db, event.id, form(role.id), NOW);
       const [person] = await db.select().from(eventVolunteers);
-      await edit(event.id, person.id, { roleIds: [role.id], assignedRoleId: "", name: "Maria Test", email: "maria.noua@example.test", phone: "+40712345678" });
+      await edit(event.id, person.id, { roleIds: [role.id], assignedRoleIds: [], name: "Maria Test", email: "maria.noua@example.test", phone: "+40712345678" });
       const [receipt] = await outboxOf("VOLUNTEER_RECEIVED");
       const message = await render(receipt);
       expect(message.attachments ?? []).toEqual([]);
@@ -564,7 +567,7 @@ describe("§758 the volunteer agreement", () => {
       // The person moved to another role since.
       const [other] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Sosire", nameEn: "Finish", needed: 2 }).returning();
       const reprinted = await printedFor(id);
-      await edit(event.id, id, { roleIds: [other.id], assignedRoleId: other.id, name: "Ion Popescu", email: "ion@example.test", phone: "+40712345679" });
+      await edit(event.id, id, { roleIds: [other.id], assignedRoleIds: [other.id], name: "Ion Popescu", email: "ion@example.test", phone: "+40712345679" });
       await expect(recordPaperVolunteerAgreement(db, admin, { eventId: event.id, id, printed: reprinted }, NOW)).rejects.toMatchObject({ code: "VOLUNTEER_AGREEMENT_REPRINT" });
       expect((await row(id)).agreementAcceptedAt).toBeNull();
       expect(await outboxOf("VOLUNTEER_AGREEMENT_ACCEPTED")).toHaveLength(0);
@@ -629,23 +632,23 @@ describe("§758 the volunteer agreement", () => {
       const listed = async () => (await listVolunteers(db, event.id)).find((candidate) => candidate.id === maria.id)!;
       await changeVolunteer(db, admin, { kind: "assign", eventId: event.id, id: maria.id, roleId: finish.id }, NOW);
       let now = await listed();
-      expect(agreementStillNamesRole(now.agreementRoleName!, { assigned: wordsOf(now.roleId!), chosen: now.choiceIds.map(wordsOf) }, "ro")).toBe(true);
+      expect(agreementStillNamesRole(now.agreementRoleName!, { assigned: now.roleIds.map(wordsOf), chosen: now.choiceIds.map(wordsOf) }, "ro")).toBe(true);
       const [desk] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Masă", nameEn: "Desk", needed: 1, position: 2 }).returning();
       roles.push((await listVolunteerRoles(db, event.id)).find((candidate) => candidate.id === desk.id)!);
       await changeVolunteer(db, admin, { kind: "assign", eventId: event.id, id: maria.id, roleId: desk.id }, NOW);
       now = await listed();
-      expect(agreementStillNamesRole(now.agreementRoleName!, { assigned: wordsOf(now.roleId!), chosen: now.choiceIds.map(wordsOf) }, "ro")).toBe(false);
+      expect(agreementStillNamesRole(now.agreementRoleName!, { assigned: now.roleIds.map(wordsOf), chosen: now.choiceIds.map(wordsOf) }, "ro")).toBe(false);
 
       // A person entered by hand with two roles ticked and none given: the link's page names both.
       const ionId = (
-        await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id, finish.id], assignedRoleId: "", name: "Ion Popescu", email: "ion@example.test", phone: "+40712345679" } }, NOW)
+        await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id, finish.id], assignedRoleIds: [], name: "Ion Popescu", email: "ion@example.test", phone: "+40712345679" } }, NOW)
       ).volunteer.id;
       const link = (await mintVolunteerAgreementLink(db, ionId, "ion@example.test", NOW))!;
       const view = await readVolunteerAgreementLink(db, link.secret, "en", NOW);
       expect(view).toMatchObject({ status: "open", roleName: null, chosenRoleNames: ["Water point", "Finish"] });
       // The desk's sheet names the same; a tick taken away between the print and the press asks for a new sheet.
       const printed = await printedFor(ionId);
-      await edit(event.id, ionId, { roleIds: [role.id], assignedRoleId: "", name: "Ion Popescu", email: "ion@example.test", phone: "+40712345679" });
+      await edit(event.id, ionId, { roleIds: [role.id], assignedRoleIds: [], name: "Ion Popescu", email: "ion@example.test", phone: "+40712345679" });
       await expect(recordPaperVolunteerAgreement(db, admin, { eventId: event.id, id: ionId, printed }, NOW)).rejects.toMatchObject({ code: "VOLUNTEER_AGREEMENT_REPRINT" });
       await paper(event.id, ionId);
       expect(readAgreementFacts((await row(ionId)).agreementFacts)).toMatchObject({ volunteerRole: "", volunteerRoleChoices: "Punct de apă" });

@@ -1,5 +1,5 @@
-import { and, asc, count, eq, gt, sql } from "drizzle-orm";
-import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { and, asc, count, eq, gt, inArray, sql } from "drizzle-orm";
+import { eventVolunteerRoleAssignments, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -14,8 +14,8 @@ import { type PublicVolunteersList, type VolunteerListRow, volunteersListView } 
  * The volunteers' public list (§821, amending §754 and §143/§396; the owner, 2026-10-19: «private vs public lists of volunteers») — the
  * reads and the one switch behind it. The rule itself is pure and lives in `domain/public-list.ts`; this file only selects the rows it
  * judges, and **selects nothing a public page could leak**: the name, the state, the tick, the notice version of the tick, the age and the guardian's name
- * (only to keep a minor off the page — they never leave `volunteersListView`), and the name of the role given — never an address, a telephone number, a city, a
- * date of birth, a message, a note, the roles ticked.
+ * (only to keep a minor off the page — they never leave `volunteersListView`), and the names of the roles given (§837: several, joined by «, ») — never an
+ * address, a telephone number, a city, a date of birth, a message, a note, the roles ticked.
  */
 
 /**
@@ -34,6 +34,7 @@ export async function readPublicVolunteersList<T extends Record<string, unknown>
   if (!event?.accepts) return { acceptsVolunteers: false, list: empty };
   const rows = await db
     .select({
+      id: eventVolunteers.id,
       state: eventVolunteers.state,
       name: eventVolunteers.name,
       listOptIn: eventVolunteers.listOptIn,
@@ -41,14 +42,30 @@ export async function readPublicVolunteersList<T extends Record<string, unknown>
       // Read only to keep a minor off the page (`publicVolunteerName`); never part of what `volunteersListView` returns.
       age: eventVolunteers.age,
       guardianName: eventVolunteers.guardianName,
-      roleNameRo: eventVolunteerRoles.nameRo,
-      roleNameEn: eventVolunteerRoles.nameEn,
     })
     .from(eventVolunteers)
-    .leftJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteers.roleId))
     // Only the confirmed are ever counted or named (`volunteersListView` asks again).
     .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.state, "CONFIRMED")))
     .orderBy(asc(eventVolunteers.createdAt), asc(eventVolunteers.id));
+  // The roles given to each of them (§837), names only, in the club's order — read for the confirmed alone.
+  const given =
+    rows.length > 0
+      ? await db
+          .select({ volunteerId: eventVolunteerRoleAssignments.volunteerId, nameRo: eventVolunteerRoles.nameRo, nameEn: eventVolunteerRoles.nameEn })
+          .from(eventVolunteerRoleAssignments)
+          .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteerRoleAssignments.roleId))
+          .where(
+            inArray(
+              eventVolunteerRoleAssignments.volunteerId,
+              rows.map((row) => row.id),
+            ),
+          )
+          .orderBy(asc(eventVolunteerRoles.position), asc(eventVolunteerRoles.createdAt), asc(eventVolunteerRoles.id))
+      : [];
+  const namesOf = (volunteerId: string, locale: "ro" | "en") => {
+    const names = given.filter((role) => role.volunteerId === volunteerId).map((role) => (locale === "en" ? role.nameEn : role.nameRo));
+    return names.length > 0 ? names.join(", ") : null;
+  };
   const view: VolunteerListRow[] = rows.map((row) => ({
     state: row.state,
     name: row.name,
@@ -56,8 +73,8 @@ export async function readPublicVolunteersList<T extends Record<string, unknown>
     listNoticeVersion: row.listNoticeVersion,
     age: row.age,
     guardianName: row.guardianName,
-    roleNameRo: row.roleNameRo,
-    roleNameEn: row.roleNameEn,
+    roleNameRo: namesOf(row.id, "ro"),
+    roleNameEn: namesOf(row.id, "en"),
   }));
   return { acceptsVolunteers: true, list: volunteersListView(view, options.firstListNoticeVersion) };
 }

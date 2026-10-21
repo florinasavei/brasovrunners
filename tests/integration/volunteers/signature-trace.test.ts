@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteerRoleAssignments, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
@@ -100,14 +100,16 @@ describe("§771 the trace of the electronic signature on the volunteer agreement
   async function printedFor(id: string) {
     const person = await row(id);
     const version = await findCurrentApprovedDocument(db, "VOLUNTEER_AGREEMENT", person.locale, NOW);
-    return { documentId: version!.id, roles: agreementRolesStamp(person.roleId, await choicesOf(id)) };
+    return { documentId: version!.id, roles: agreementRolesStamp(await givenOf(id), await choicesOf(id)) };
   }
+  const givenOf = async (id: string) =>
+    (await db.select({ roleId: eventVolunteerRoleAssignments.roleId }).from(eventVolunteerRoleAssignments).where(eq(eventVolunteerRoleAssignments.volunteerId, id))).map((given) => given.roleId);
   const handEntered = async (eventId: string, roleId: string, extra: Record<string, unknown> = {}) =>
     (
       await changeVolunteer(
         db,
         admin,
-        { kind: "add", eventId, fields: { roleIds: [roleId], assignedRoleId: roleId, name: "Ion Popescu", email: "ion@example.test", phone: "+40712345679", note: "", birthDate: aged(40), ...extra } },
+        { kind: "add", eventId, fields: { roleIds: [roleId], assignedRoleIds: [roleId], name: "Ion Popescu", email: "ion@example.test", phone: "+40712345679", note: "", birthDate: aged(40), ...extra } },
         NOW,
       )
     ).volunteer.id;
@@ -218,7 +220,7 @@ describe("§771 the trace of the electronic signature on the volunteer agreement
     await changeVolunteer(
       db,
       admin,
-      { kind: "edit", eventId: event.id, id: minor.id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345678", note: "", birthDate: aged(19) } },
+      { kind: "edit", eventId: event.id, id: minor.id, fields: { roleIds: [role.id], assignedRoleIds: [role.id], name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345678", note: "", birthDate: aged(19) } },
       LATER,
     );
     expect(await row(minor.id)).toMatchObject({

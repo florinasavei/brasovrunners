@@ -36,7 +36,7 @@ const PUBLIC = {
   city: "Brașov",
 };
 const GUARDIAN = { guardianName: "Maria Popescu", guardianEmail: "maria@example.test", guardianAware: true };
-const STAFF = { roleIds: [ID], assignedRoleId: "", name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "" };
+const STAFF = { roleIds: [ID], assignedRoleIds: [], name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "" };
 
 /** The day after a day, `YYYY-MM-DD`. */
 const nextDay = (day: string) => new Date(Date.parse(`${day}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);

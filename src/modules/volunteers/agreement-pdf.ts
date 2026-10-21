@@ -233,7 +233,6 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
       guardianIp: eventVolunteers.guardianIp,
       guardianUserAgent: eventVolunteers.guardianUserAgent,
       timezone: events.timezone,
-      roleId: eventVolunteers.roleId,
       age: eventVolunteers.age,
       guardianName: eventVolunteers.guardianName,
       guardianDocumentId: eventVolunteers.guardianDocumentId,
@@ -358,7 +357,7 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
   // back (`agreementRolesStamp`). Under eighteen the second line is the parent's or guardian's, whose name is in the minors' clause.
   const document = await findCurrentApprovedDocument(db, VOLUNTEER_AGREEMENT_KEY, row.locale, now);
   if (!document) return undefined;
-  const roles = await volunteerRoles(db, { id: volunteerId, roleId: row.roleId });
+  const roles = await volunteerRoles(db, { id: volunteerId });
   const blanks = await agreementBlanks(db, { eventId: row.eventId, name: row.name, roles, locale: row.locale, body: document.body, guardianName });
   const entry: DeclarationEntry = {
     title: document.title,

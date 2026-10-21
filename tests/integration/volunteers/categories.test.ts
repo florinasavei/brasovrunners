@@ -496,7 +496,7 @@ describe("§774 the public read: the headings, their roles and the contact perso
     await changeVolunteer(
       db,
       staff.ADMIN!,
-      { kind: "add", eventId, fields: { roleIds: [guidance.id], assignedRoleId: guidance.id, name: "Maria", email: "maria@example.test", phone: "+40712345678", note: "" } },
+      { kind: "add", eventId, fields: { roleIds: [guidance.id], assignedRoleIds: [guidance.id], name: "Maria", email: "maria@example.test", phone: "+40712345678", note: "" } },
       NOW,
     );
     const read = await readPublicVolunteerRoles(db, eventId);
@@ -518,8 +518,8 @@ describe("§774 the CSV: a role named alone says its category, the contact perso
     const onRoute = await addRole({ categoryId: route.id });
     const atStart = await addRole({ categoryId: start.id });
     const loose = await addRole({ nameRo: "Foto/Video", nameEn: "Photo/Video", categoryId: "" });
-    await changeVolunteer(db, staff.ADMIN!, { kind: "add", eventId, fields: { roleIds: [onRoute.id, loose.id], assignedRoleId: onRoute.id, name: "Ion Test", email: "ion@example.test", phone: "+40712000111", note: "" } }, NOW);
-    await changeVolunteer(db, staff.ADMIN!, { kind: "add", eventId, fields: { roleIds: [atStart.id], assignedRoleId: atStart.id, name: "Dana Test", email: "dana@example.test", phone: "+40712000222", note: "" } }, NOW);
+    await changeVolunteer(db, staff.ADMIN!, { kind: "add", eventId, fields: { roleIds: [onRoute.id, loose.id], assignedRoleIds: [onRoute.id], name: "Ion Test", email: "ion@example.test", phone: "+40712000111", note: "" } }, NOW);
+    await changeVolunteer(db, staff.ADMIN!, { kind: "add", eventId, fields: { roleIds: [atStart.id], assignedRoleIds: [atStart.id], name: "Dana Test", email: "dana@example.test", phone: "+40712000222", note: "" } }, NOW);
     const csv = await (await get(staff.MODERATOR!)).text();
     const lines = csv.replace(/^﻿/, "").split("\r\n");
     // Grouped by the role given in the category order: the start's first, then the route's.
@@ -535,7 +535,7 @@ describe("§774 the CSV: a role named alone says its category, the contact perso
 
   it("is unchanged for an event with no category: the role's name alone", async () => {
     const role = await addRole();
-    await changeVolunteer(db, staff.ADMIN!, { kind: "add", eventId, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Ion Test", email: "ion@example.test", phone: "+40712000111", note: "" } }, NOW);
+    await changeVolunteer(db, staff.ADMIN!, { kind: "add", eventId, fields: { roleIds: [role.id], assignedRoleIds: [role.id], name: "Ion Test", email: "ion@example.test", phone: "+40712000111", note: "" } }, NOW);
     const csv = await (await get(staff.ADMIN!)).text();
     expect(csv).toContain("Direcționare,Direcționare");
     expect(csv).not.toContain("Direcționare (");
@@ -546,7 +546,7 @@ describe("§774 what an event's volunteers see of a category stays with their ev
   it("lists the people under their role whatever its category, and a category delete never takes a volunteer", async () => {
     const route = await addCategory(ROUTE);
     const guidance = await addRole({ categoryId: route.id });
-    await changeVolunteer(db, staff.ADMIN!, { kind: "add", eventId, fields: { roleIds: [guidance.id], assignedRoleId: guidance.id, name: "Ion Test", email: "ion@example.test", phone: "+40712000111", note: "" } }, NOW);
+    await changeVolunteer(db, staff.ADMIN!, { kind: "add", eventId, fields: { roleIds: [guidance.id], assignedRoleIds: [guidance.id], name: "Ion Test", email: "ion@example.test", phone: "+40712000111", note: "" } }, NOW);
     expect(await pressStateful(actions.deleteVolunteerCategoryAction, form({ categoryId: route.id }))).toContain("VOLUNTEER_CATEGORY_HAS_ROLES");
     expect(await listVolunteers(db, eventId)).toHaveLength(1);
     expect(await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId))).toHaveLength(1);

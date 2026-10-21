@@ -112,7 +112,7 @@ describe("§765 the public form's date of birth, sex and city (the notice names 
     const several = volunteerPublicProfileSchema.safeParse({ ...PUBLIC, birthDate: aged(13), sex: "", city: "", roleIds: [] });
     if (!several.success) expect(refusedFields(several.error).sort()).toEqual(["birthDate", "city", "roleIds", "sex"]);
     expect(several.success).toBe(false);
-    expect(volunteerStaffInputSchema.safeParse({ roleIds: [ID], assignedRoleId: "", name: "Ana", email: "ana@example.test", phone: "+40712345678", birthDate: aged(13) }).success).toBe(false);
+    expect(volunteerStaffInputSchema.safeParse({ roleIds: [ID], assignedRoleIds: [], name: "Ana", email: "ana@example.test", phone: "+40712345678", birthDate: aged(13) }).success).toBe(false);
     expect(volunteerPublicProfileSchema.parse({ ...PUBLIC, birthDate: aged(18) }).age).toBe(18);
     expect(volunteerPublicProfileSchema.parse({ ...PUBLIC, birthDate: aged(VOLUNTEER_AGE_MAX) }).age).toBe(VOLUNTEER_AGE_MAX);
   });
@@ -188,7 +188,7 @@ describe("§765 the public form's date of birth, sex and city (the notice names 
 });
 
 describe("§765 the organizers' entry takes the same answers, all optional", () => {
-  const staff = { roleIds: [ID], assignedRoleId: "", name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "" };
+  const staff = { roleIds: [ID], assignedRoleIds: [], name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "" };
 
   it("keeps the age a row from before the date held when its date box is left empty — and only then", () => {
     // A row of sixteen with no date: saving it with the box empty is still a person of sixteen, so their guardian is still asked for.
@@ -332,7 +332,7 @@ describe("§765 «Descrierea rolului», a document per language with its plain w
     expect(tasksWords("  \n ")).toBe("");
     const words = agreementRoleWords(
       {
-        assigned: { nameRo: "Punct de apă", nameEn: "Water point", descriptionRo: "Stai la km 5.\nDai apă.", descriptionEn: "Stand at km 5.\nHand out water." },
+        assigned: [{ nameRo: "Punct de apă", nameEn: "Water point", descriptionRo: "Stai la km 5.\nDai apă.", descriptionEn: "Stand at km 5.\nHand out water." }],
         chosen: [],
       },
       "en",
