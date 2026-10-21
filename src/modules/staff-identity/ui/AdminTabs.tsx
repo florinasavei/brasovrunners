@@ -7,6 +7,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { readingTimeMs, TOOLTIP_TEXT_SX } from "@/shared/ui/tooltip-text";
 import { usePathname } from "next/navigation";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
+import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 import { activeAdminTabHref } from "../domain/admin-tab-match";
 import type { AdminSection } from "../domain/roles";
 import { useEffect, useRef } from "react";
@@ -88,6 +89,8 @@ const ICONS: Record<AdminSection, typeof EventIcon> = {
   // The list, not the person with the tick: that is checking a runner in, a verb the desk and
   // the registration's "⋮" wear, and a tab must not look like one of its own verbs (§318).
   registrations: ListAltIcon,
+  // «Voluntari» (§NNN): the heart in the hand the event card's «Voluntari» box wears, asked of its registry by name (§318), so the tab and the box read as one subject.
+  volunteers: PANEL_GLYPHS.volunteers,
   tasks: ChecklistIcon,
   legal: GavelIcon,
   // «Setări» (§516): the sliders — «Configurație» (/devs) is one of its tabs, with no gear of its own in the bar since §520.

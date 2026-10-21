@@ -10,7 +10,8 @@ import type { Locale } from "@/i18n/routing";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { getDb } from "@/db/client";
 import { registeredBadgeBreakdown, registeredBadgeHint } from "@/modules/registrations/nav-count";
-import { type AdminSection, canReadRegistrations, type StaffActor, visibleAdminSections } from "../domain/roles";
+import { type AdminSection, canManageVolunteers, canReadRegistrations, type StaffActor, visibleAdminSections } from "../domain/roles";
+import { volunteersBadgeCount } from "@/modules/volunteers/nav-count";
 import { STAFF_ROLE_LABEL } from "../domain/staff-labels";
 import AdminTabs, { type AdminTab, type CountPill } from "./AdminTabs";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -53,6 +54,8 @@ export default async function BackofficeShell({
     pages: getPathname({ locale, href: "/admin/pages" }),
     gallery: getPathname({ locale, href: "/admin/gallery" }),
     registrations: getPathname({ locale, href: "/admin/registrations" }),
+    // «Voluntari» (§NNN): the events' volunteers as one list, beside «Înscrieri».
+    volunteers: getPathname({ locale, href: "/admin/volunteers" }),
     tasks: getPathname({ locale, href: "/admin/tasks" }),
     legal: getPathname({ locale, href: "/admin/legal" }),
     // «Setări» (§516): the email page, «Termene», «Aspect», «Costuri», «Anti-robot» — a bare
@@ -119,6 +122,12 @@ export default async function BackofficeShell({
       })
     : undefined;
 
+  /*
+    How many offers wait for an answer, beside «Voluntari» (§NNN): «Înscris» on an event not yet over, memoized a minute like the
+    registrations' badge, read only for the roles that may open the list.
+  */
+  const awaitingVolunteers = canManageVolunteers(staffUser.role) ? await volunteersBadgeCount(getDb(), new Date()) : null;
+
   const tabs: AdminTab[] = visibleAdminSections(staffUser).map((section) => ({
     href: SECTION_HREF[section],
     label: t(`nav.${section}`),
@@ -130,6 +139,9 @@ export default async function BackofficeShell({
         } : {}),
     // `/devs` is «Setări»'s last tab and no section of its own (§520): the bar lights «Setări» there —
     // and on «Sistemul de design» (§692), reached from «Setări» → «Aspect».
+    ...(section === "volunteers" && awaitingVolunteers !== null && awaitingVolunteers > 0
+      ? { count: awaitingVolunteers, countHint: t("nav.volunteersHint", { count: awaitingVolunteers }) }
+      : {}),
     ...(section === "settings" ? { alsoActiveOn: [getPathname({ locale, href: "/devs" }), getPathname({ locale, href: "/admin/design" })] } : {}),
   }));
 

@@ -990,6 +990,8 @@ export function canManageClubSettings(subject: StaffSubject): boolean {
  *     events         everyone with a staff session — the backoffice's front door
  *     registrations  canReadRegistrations     `admin/registrations/page.tsx` — the verbs on it
  *                                             ask `canManageRegistrations` one by one (§289)
+ *     volunteers     canManageVolunteers      `admin/volunteers/(list)/layout.tsx` — the events'
+ *                                             volunteers as one list (§NNN); the verbs ask again
  *     checkin        canWorkTheDesk           `admin/checkin/page.tsx` — every role, on purpose
  *     gallery        canReadContent           `admin/gallery/page.tsx`
  *     pages          isEditorial              `admin/pages/page.tsx`
@@ -1032,6 +1034,7 @@ export function canManageClubSettings(subject: StaffSubject): boolean {
 export const ADMIN_SECTIONS = [
   "events",
   "registrations",
+  "volunteers",
   "checkin",
   "gallery",
   "pages",
@@ -1114,6 +1117,9 @@ export function visibleAdminSections(subject: StaffSubject): AdminSection[] {
     // Who signed up, for the roles that may read it (§289). Every verb on that screen asks
     // `canManageRegistrations` for itself, so an Organizer arrives at a list and no buttons.
     registrations: canReadRegistrations(role),
+    // «Voluntari» (§NNN): the people who help at the events, across events, for whoever may manage them — the same
+    // three roles as the registrations list (§754's card gate). Every verb on that screen asks the service again.
+    volunteers: canManageVolunteers(role),
     // The desk: a volunteer's whole backoffice (BR-REQ-037-08), and the guide that explains it.
     checkin: canWorkTheDesk(role),
     // The gallery is pictures and the standing pages are words; both are the club's content, so

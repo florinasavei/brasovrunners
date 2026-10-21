@@ -6,7 +6,8 @@ import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { routing, type Locale } from "@/i18n/routing";
 import { sexCell } from "@/modules/registrations/domain/sex";
 import { shirtSizeShown } from "@/modules/registrations/domain/kit";
-import { buildVolunteersCsv, volunteersCsvFileName } from "@/modules/volunteers/csv";
+import { buildVolunteersCsv, type VolunteerCsvRow, volunteersCsvFileName } from "@/modules/volunteers/csv";
+import { buildVolunteersWorkbook, volunteersWorkbookFileName } from "@/modules/volunteers/workbook";
 import { isVolunteerMinor, roleLabel, rolesWithCategoryWords } from "@/modules/volunteers/domain/volunteer";
 import { exportVolunteers } from "@/modules/volunteers/volunteers";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
@@ -16,7 +17,9 @@ import { isUuid } from "@/shared/ids";
 
 /**
  * «Descarcă CSV» on an event's «Voluntari» card (§754): the volunteers of one event, grouped by the role given,
- * with the roles each offered for (§761), in the reader's language (`lang`), as a UTF-8 file with a BOM.
+ * with the roles each offered for (§761), in the reader's language (`lang`), as a UTF-8 file with a BOM — or, with
+ * `format=xlsx` (§NNN; the owner: «export volunteers in excel as well»), the same rows as a spreadsheet («Descarcă Excel»,
+ * on the card and on the «Voluntari» screen), through the writer every backoffice sheet uses.
  *
  * Whoever reads the card may take it — `canManageVolunteers`, the card's own gate, asserted here again
  * (BR-REQ-060-01): the Tehnic role, a Redactor, a volunteer and a member are refused whatever the link.
@@ -36,7 +39,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
   const { id } = await context.params;
   if (!isUuid(id)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
-  const lang = new URL(request.url).searchParams.get("lang");
+  const url = new URL(request.url);
+  const lang = url.searchParams.get("lang");
+  const format = url.searchParams.get("format") === "xlsx" ? "xlsx" : "csv";
   const locale: Locale = (routing.locales as readonly string[]).includes(lang ?? "") ? (lang as Locale) : routing.defaultLocale;
   const now = new Date();
 
@@ -58,8 +63,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   // (the list is already oldest first, and the sort is stable).
   const rank = (roleIds: readonly string[]) => (roleIds.length === 0 ? -1 : (order.get(roleIds[0]) ?? 0));
   const volunteers = [...data.volunteers].sort((a, b) => rank(a.roleIds) - rank(b.roleIds));
-  const csv = buildVolunteersCsv(
-    {
+  const header = {
       role: t("volunteers.csvColumns.role"),
       choices: t("volunteers.csvColumns.choices"),
       name: t("volunteers.csvColumns.name"),
@@ -80,8 +84,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       guardianName: t("volunteers.csvColumns.guardianName"),
       guardianEmail: t("volunteers.csvColumns.guardianEmail"),
       guardianConsent: t("volunteers.csvColumns.guardianConsent"),
-    },
-    volunteers.map((person) => ({
+  };
+  const rows: VolunteerCsvRow[] = volunteers.map((person) => ({
       // The roles given, joined by «, » like the choices (§837); "" while none.
       role: person.roleIds.flatMap((id) => roleNames.get(id) ?? []).join(", "),
       choices: person.choiceIds.flatMap((id) => roleNames.get(id) ?? []).join(", "),
@@ -105,10 +109,22 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       guardianName: person.guardianName,
       guardianEmail: person.guardianEmail,
       guardianConsent: isVolunteerMinor(person.age) ? t(person.guardianAcceptedAt ? "volunteers.yes" : "volunteers.no") : "",
-    })),
-  );
+  }));
 
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: CLUB_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  if (format === "xlsx") {
+    // The sheet is named «Voluntari» in the reader's language; the file like the CSV's, by the club's date.
+    const workbook = await buildVolunteersWorkbook(header, rows, t("volunteers.title"));
+    return new NextResponse(new Uint8Array(workbook), {
+      headers: {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": contentDisposition("attachment", volunteersWorkbookFileName(day), "volunteers"),
+        "X-Robots-Tag": "noindex",
+        "Cache-Control": "private, no-store",
+      },
+    });
+  }
+  const csv = buildVolunteersCsv(header, rows);
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",

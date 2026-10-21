@@ -17,6 +17,7 @@ import {
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { escapeLike, foldedName, foldTerm } from "@/db/name-search";
 import { alias } from "drizzle-orm/pg-core";
 import { awaitingItsFirstEmail, familyEmailQueued, familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
 import { promoListed } from "./sponsor-list";
@@ -208,49 +209,6 @@ export type RegistrationSortKey = (typeof REGISTRATION_SORT_KEYS)[number];
  * Both spellings of the comma-below letters are folded: `ș`/`ț` are correct, `ş`/`ţ` are the
  * cedilla characters older Romanian keyboard layouts still produce, and a person who typed one
  * must be found by somebody typing the other.
- */
-const DIACRITICS = "ăâîșțşţĂÂÎȘȚŞŢ";
-const PLAIN = "aaiststAAISTST";
-
-/**
- * `translate` before `lower`, and never the other way round.
- *
- * `lower()` is locale-dependent and only folds ASCII under the `C` collation, which is what
- * PGlite runs — so `lower('Ștefan')` is still `Ștefan` there, `translate` then produced the
- * capital `Stefan`, and a search for `stefan` matched nothing. Folding to ASCII first leaves
- * `lower()` with only ASCII to do, which every collation agrees about.
- */
-function foldedName(column: SQL | typeof registrations.registeredName): SQL {
-  return sql`lower(translate(${column}, ${DIACRITICS}, ${PLAIN}))`;
-}
-
-/** The same fold as `foldedName`, for the term, so both sides of the comparison agree. */
-function foldTerm(term: string): string {
-  const lowered = term.toLowerCase();
-  let folded = "";
-  for (const character of lowered) {
-    const index = DIACRITICS.indexOf(character);
-    folded += index === -1 ? character : PLAIN[index].toLowerCase();
-  }
-  return folded;
-}
-
-/**
- * `%`, `_` and `\` made literal before the term becomes a `LIKE` pattern.
- *
- * Binding the parameter stops SQL injection and does nothing about this: `LIKE` reads its
- * metacharacters out of the *value*, so an organizer who types `%` was matching every
- * participant in the club rather than nobody, and `_` was matching any single character. Both
- * are things a person types by accident far more often than on purpose.
- */
-function escapeLike(term: string): string {
-  return term.replace(/[\\%_]/g, (character) => `\\${character}`);
-}
-
-/** Every filter the list and its count must agree on, in one place so they cannot drift apart. */
-/**
- * The identity document the latest declaration names (§95): what the desk checks the kit
- * against, and what the export carries for the organiser who hands kits out by ID.
  */
 const latestIdDocument = sql<string | null>`(
   SELECT ${declarationAcceptances.idDocument}
