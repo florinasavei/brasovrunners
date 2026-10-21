@@ -134,7 +134,7 @@ test.describe("BR-REQ-054-01 the older pictures get their phone sizes (§430)", 
         const answer = await press(page, 1);
         expect(answer).toEqual({ saved: "picturesLaddered", count: 1, left: 0, failed: 0 });
         // Nothing is left, so the card is gone.
-        await expect(page.getByRole("heading", { level: 1, name: "Ce mai este de făcut" })).toBeVisible();
+        await expect(page.getByRole("heading", { level: 2, name: "Ce mai este de făcut" })).toBeVisible();
         await expect(page.locator("#main").getByTestId("older-pictures")).toHaveCount(0);
       } else {
         // A database with older pictures of its own: press until this one is converted, each
