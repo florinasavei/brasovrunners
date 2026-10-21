@@ -60,7 +60,7 @@ export default async function AdminShopNewProductPage({ params, searchParams }: 
         <GlyphButtonLink icon="undo" href="/admin/shop" variant="text" size="small" sx={TAP_TARGET}>
           {t("members.shop.backToList")}
         </GlyphButtonLink>
-        <Typography variant="h1" sx={{ fontSize: "1.5rem" }}>
+        <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
           {t("members.shop.add")}
         </Typography>
       </Stack>

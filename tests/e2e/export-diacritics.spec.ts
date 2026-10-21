@@ -83,7 +83,7 @@ test.describe("BR-REQ-060-01 §779 the participants' Excel export, for an event 
       await hydrated(page);
 
       // The button on the list: the browser saves what the route answers.
-      const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#main").getByRole("link", { name: "Exportă Excel" }).click()]);
+      const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#main").getByRole("link", { name: "Descarcă Excel" }).click()]);
       expect(download.suggestedFilename()).toMatch(/^CROSUL ANIVERSAR BRAȘOV RUNNERS – EDIȚIA A II-A 2026 \d{4}-\d{2}-\d{2}\.xlsx$/);
       // A real workbook: a zip, which opens with «PK».
       expect(readFileSync(await download.path()).subarray(0, 2).toString("latin1")).toBe("PK");

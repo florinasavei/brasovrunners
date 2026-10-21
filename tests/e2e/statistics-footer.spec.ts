@@ -116,7 +116,7 @@ test.describe("§787 «Statistici» under the registrations Excel", () => {
       await signIn(page, "Dev Administrator");
       await page.goto(`/ro/admin/registrations?eventId=${seeded.eventId}`);
       await hydrated(page);
-      const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#main").getByRole("link", { name: "Exportă Excel" }).click()]);
+      const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#main").getByRole("link", { name: "Descarcă Excel" }).click()]);
       const { rows } = readSheet(readFileSync(await download.path()));
 
       // Six real registrations in the table; the footer starts after one empty row.

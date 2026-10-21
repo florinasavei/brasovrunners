@@ -381,6 +381,27 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     }
     return shown;
   };
+  /*
+    The change in words (§844; the consistency audit of 2026-10-21 found the trail printing `{"from":"Ion","to":"Ioan"}` to staff):
+    a value before and after, a typed reason, a race number, a state — each a phrase of the catalogue; ids and the rest of the
+    record's plumbing are not the reader's and are left out. The integer `from`/`to` of a capacity change already sit in the label.
+  */
+  const trailDetails = (action: string, metadata: unknown): string[] => {
+    const shown = trailMetadata(action, metadata);
+    const words = (value: unknown) => (value === null || value === undefined || value === "" ? tr("registrations.auditDetail.empty") : String(value));
+    const parts: string[] = [];
+    if (("from" in shown || "to" in shown) && auditLabelValues(metadata) === undefined) {
+      const state = (value: unknown) => registrationStatus.enumValues.find((known) => known === value);
+      const said = (value: unknown) => {
+        const known = state(value);
+        return known ? REGISTRATION_STATUS_LABEL[known] : words(value);
+      };
+      parts.push("from" in shown ? tr("registrations.auditDetail.change", { from: said(shown.from), to: said(shown.to) }) : tr("registrations.auditDetail.to", { to: said(shown.to) }));
+    }
+    if (typeof shown.reason === "string" && shown.reason.trim() !== "") parts.push(tr("registrations.auditDetail.reason", { reason: shown.reason.trim() }));
+    if (Number.isInteger(shown.bibNumber)) parts.push(tr("registrations.auditDetail.bib", { number: written(Number(shown.bibNumber)) }));
+    return parts;
+  };
 
   const canResend = deriveAllowedResendMessageType(registration.status) !== null;
   // §10.5 has no edge from PENDING_EMAIL_CONFIRMATION to CANCELLED: an unconfirmed address
@@ -1599,7 +1620,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             {tr("registrations.auditTrail")}
           </Typography>
           {staffTrail.map((entry, index) => {
-            const metadata = trailMetadata(entry.action, entry.metadataJson);
+            const details = trailDetails(entry.action, entry.metadataJson);
             return (
               <Typography key={index} variant="body2">
                 {dt(entry.createdAt)} · {trailLabel(entry.action, entry.metadataJson)} ·{" "}
@@ -1608,8 +1629,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                     ? tr("registrations.auditActorParticipant")
                     : tr("registrations.auditActorRemoved"))}
                 {/* Metadata is the shape of the change — a name before and after, a typed reason —
-                    never a copy of what the change was about (AGENTS.md 12.12). */}
-                {Object.keys(metadata).length > 0 && ` · ${JSON.stringify(metadata)}`}
+                    never a copy of what the change was about (AGENTS.md 12.12); said in words (§844). */}
+                {details.length > 0 && ` · ${details.join(" · ")}`}
               </Typography>
             );
           })}

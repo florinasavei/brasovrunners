@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.70-2026-10-22
+
+- **Small consistency fixes from the backoffice audit** — the registration's team trail says what changed in words instead of code, the registrations toolbar keeps its shape when «Invită pe email» opens, the results page's unregistered runners have labels and fit the card, every page has one main heading, and the same verb reads the same everywhere («Descarcă», «Mai sus», «Modifică», «Scoate pagina de pe site», «Șterge …»). §844.
 ## BR-V3.69-2026-10-22
 
 - **The calendar's next event says the hours too** — «Peste 4 zile și 3 ore», «Mâine, peste 14 ore», «Azi, peste 40 de minute», refreshed every minute on the visitor's own clock; the cached page still says «Peste 4 zile» until the script runs. §843.

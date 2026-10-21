@@ -121,9 +121,9 @@ test.describe("§581 «Doar cu oferte și beneficii»: the list and its export",
       await expect(main.getByTestId("registrations-filter-promo").getByRole("checkbox", { name: "Doar cu oferte și beneficii" })).toBeChecked();
 
       // The export beside the list carries the filter: the file is the rows on screen.
-      const excel = main.getByRole("link", { name: "Exportă Excel" });
+      const excel = main.getByRole("link", { name: "Descarcă Excel" });
       await expect(excel).toHaveAttribute("href", /[?&]promo=1/);
-      const csvHref = await main.getByRole("link", { name: "Exportă CSV" }).getAttribute("href");
+      const csvHref = await main.getByRole("link", { name: "Descarcă CSV" }).getAttribute("href");
       expect(csvHref).toMatch(/[?&]promo=1/);
       const response = await page.request.get(csvHref!);
       expect(response.status()).toBe(200);

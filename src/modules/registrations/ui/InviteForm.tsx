@@ -27,7 +27,7 @@ export type InviteFormWords = {
   /** «Alte persoane» and the sentence under it: whom the rows are for. */
   typedLabel: string;
   typedHelp: string;
-  /** One row's two boxes, «Nume» and «Email», and its remove button («Scoate rândul {row}»). */
+  /** One row's two boxes, «Nume» and «Email», and its remove button («Șterge rândul {row}»). */
   nameLabel: string;
   emailLabel: string;
   removeRow: string;
