@@ -3,7 +3,10 @@ import path from "node:path";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { awayFrom, type AwayFrom } from "@/modules/events/domain/next-event-away";
+import { type AwayWords, awayPreciseWords } from "@/modules/events/domain/away-words";
+import { awayFrom, type AwayFrom, awayPrecise } from "@/modules/events/domain/next-event-away";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
 import { nextWallMidnight } from "@/modules/events/domain/page-clock";
 import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { secondsUntilFirst } from "@/modules/public-cache/page-lifetime";
@@ -124,11 +127,12 @@ describe("§834 NextEventPanel — the card says it", () => {
     const race = { ...sampleRace(locale), startsAt: new Date(Date.UTC(2026, 8, 27 + days, 15, 30)) };
     return renderToStaticMarkup(await NextEventPanel({ event: race, locale, now: SAMPLE_NOW, weather: null }));
   };
-  const says = async (days: number, locale: "ro" | "en" = "ro") => /data-away="[a-z]+".*?<span>([^<]*)<\/span>/.exec(await card(days, locale))?.[1];
+  // The server's words: what the island (`AwayLine`, §843) draws first, before the visitor's clock refines them to the hour.
+  const says = async (days: number, locale: "ro" | "en" = "ro") => /data-away="[a-z]+".*?<span data-testid="calendar-next-away-words">([^<]*)<\/span>/.exec(await card(days, locale))?.[1];
 
   it("draws a line with a glyph and the step's name, near the day", async () => {
     const html = await card(1, "ro");
-    expect(html).toMatch(/data-testid="calendar-next-away" data-away="tomorrow">.*?<svg[^>]*aria-hidden="true"[^>]*data-testid="TodayIcon".*?<span>Mâine<\/span>/);
+    expect(html).toMatch(/data-testid="calendar-next-away" data-away="tomorrow">.*?<svg[^>]*aria-hidden="true"[^>]*data-testid="TodayIcon".*?<span data-testid="calendar-next-away-words">Mâine<\/span>/);
     // After the date's line, before the pill and the title.
     expect(html.indexOf("calendar-next-away")).toBeGreaterThan(html.indexOf("septembrie 2026"));
     expect(html.indexOf("calendar-next-away")).toBeLessThan(html.indexOf(`id="calendar-next-title"`));
@@ -170,10 +174,10 @@ describe("§834 NextEventPanel — the card says it", () => {
     const race = { ...sampleRace("ro"), startsAt: new Date(SAMPLE_NOW.getTime() - 30 * 60_000) };
     const html = renderToStaticMarkup(await NextEventPanel({ event: race, locale: "ro", now: SAMPLE_NOW, weather: null }));
     expect(html).toContain('data-away="now"');
-    expect(html).toContain("<span>Acum</span>");
+    expect(html).toContain('<span data-testid="calendar-next-away-words">Acum</span>');
     currentLocale = "en";
     const english = renderToStaticMarkup(await NextEventPanel({ event: { ...race, ...sampleRace("en"), startsAt: race.startsAt }, locale: "en", now: SAMPLE_NOW, weather: null }));
-    expect(english).toContain("<span>Now</span>");
+    expect(english).toContain('<span data-testid="calendar-next-away-words">Now</span>');
   });
 });
 
@@ -201,5 +205,60 @@ describe("§834 the cache — the card's words roll with the page at the club's 
   it("counts the card's days on the club's zone — the zone the page rolls at", () => {
     const card = readFileSync(path.join(ROOT, "src/modules/events/ui/NextEventPanel.tsx"), "utf8");
     expect(card).toContain("awayFrom(event.startsAt, now, CLUB_TIME_ZONE)");
+  });
+});
+
+describe("§843 the countdown to the hour — the visitor's clock refines the server's day", () => {
+  // Tuesday 2026-10-20, 09:00 in Brașov; the clocks go back at 04:00 on Sunday 2026-10-25.
+  const now = wall("2026-10-20T09:00");
+  const wordsOf = (catalogue: typeof ro): AwayWords => {
+    const away = catalogue.Events.calendar.look.nextEvent.away;
+    return { now: away.now, todayIn: away.precise.todayIn, tomorrowIn: away.precise.tomorrowIn, daysAndHours: away.precise.daysAndHours, minutes: away.precise.minutes, hours: away.precise.hours, days: away.precise.days, wholeDays: away.days, weeks: away.weeks, months: away.months };
+  };
+  const say = (start: string, locale: "ro" | "en" = "ro", at: Date = now) => awayPreciseWords(awayPrecise(wall(start), at, TZ), wordsOf(locale === "ro" ? ro : en), locale);
+
+  it("says the days and the hours left, in elapsed time — the owner's «Peste 4 zile și 3 ore»", () => {
+    expect(awayPrecise(wall("2026-10-24T12:00"), now, TZ)).toEqual({ kind: "daysHours", days: 4, hours: 3 });
+    expect(say("2026-10-24T12:00")).toBe("Peste 4 zile și 3 ore");
+    expect(say("2026-10-24T12:00", "en")).toBe("In 4 days and 3 hours");
+    // A whole number of days says the day alone, as the server does.
+    expect(say("2026-10-24T09:00")).toBe("Peste 4 zile");
+    // Romanian's forms on both counts: one, few, other.
+    expect(say("2026-10-21T10:00")).toBe("Peste o zi și o oră");
+    expect(say("2026-10-21T10:00", "en")).toBe("In 1 day and 1 hour");
+    expect(say("2026-10-22T05:00")).toBe("Peste o zi și 20 de ore");
+  });
+
+  it("counts real hours across the October clock change: Sunday 10:00 is one hour further than the wall says", () => {
+    // Saturday 09:00 to Sunday 10:00 on the wall is 26 hours: the night has a 25th hour.
+    expect(awayPrecise(wall("2026-10-25T10:00"), wall("2026-10-24T09:00"), TZ)).toEqual({ kind: "daysHours", days: 1, hours: 2 });
+  });
+
+  it("says the hours, then the minutes, on the day it falls — «Azi» or «Mâine»", () => {
+    expect(say("2026-10-20T12:30")).toBe("Azi, peste 3 ore");
+    expect(say("2026-10-20T09:40")).toBe("Azi, peste 40 de minute");
+    expect(say("2026-10-20T09:01")).toBe("Azi, peste un minut");
+    expect(say("2026-10-21T08:00")).toBe("Mâine, peste 23 de ore");
+    expect(say("2026-10-21T00:20", "ro", wall("2026-10-20T23:50"))).toBe("Mâine, peste 30 de minute");
+    expect(say("2026-10-20T12:30", "en")).toBe("Today, in 3 hours");
+    expect(say("2026-10-21T08:00", "en")).toBe("Tomorrow, in 23 hours");
+  });
+
+  it("keeps weeks and months as they were — an hour means nothing that far — and says «Acum» from the start", () => {
+    expect(say("2026-11-05T09:00")).toBe("Peste 2 săptămâni");
+    expect(say("2027-01-20T09:00")).toBe("Peste 3 luni");
+    expect(say("2026-10-20T09:00")).toBe("Acum");
+    expect(say("2026-10-20T08:00")).toBe("Acum");
+  });
+
+  it("is an island that draws the server's words first, then the visitor's clock every minute, and stops with the card", () => {
+    const island = readFileSync(path.join(ROOT, "src/modules/events/ui/AwayLine.tsx"), "utf8").replace(/\r\n/g, "\n");
+    expect(island.startsWith('"use client";')).toBe(true);
+    expect(island).toContain("const [text, setText] = useState(initial);");
+    expect(island).toContain("const TICK_MS = 60_000;");
+    expect(island).toContain("return () => window.clearInterval(timer);");
+    // The design page's fixed sample keeps the server's words.
+    expect(island).toContain("if (!live) return;");
+    expect(readFileSync(path.join(ROOT, "src/modules/design/ui/SampleSection.tsx"), "utf8")).toContain("now={SAMPLE_NOW} weather={SAMPLE_WEATHER} live={false} />");
   });
 });

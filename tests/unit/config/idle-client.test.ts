@@ -43,6 +43,8 @@ const ALLOWED_INTERVALS: Record<string, string> = {
   "src/shared/ui/NewBuildNotice.tsx": "backoffice only",
   // The YouTube player's handshake after a person opened the film: bounded tries, a postMessage, no request.
   "src/shared/ui/VideoVolumeBar.tsx": "bounded handshake after a click",
+  // The calendar card's countdown to the hour (§843): reads the visitor's own clock once a minute and writes a line of text — no request, no read.
+  "src/modules/events/ui/AwayLine.tsx": "the visitor's clock, once a minute, no request",
 };
 
 function clientFiles(dir: string): string[] {
@@ -63,6 +65,12 @@ describe("§577 no client island polls or keeps alive on a timer", () => {
       .map((path) => relative(root, path).replace(/\\/g, "/"))
       .filter((path) => !(path in ALLOWED_INTERVALS));
     expect(offenders).toEqual([]);
+  });
+
+  it("keeps the countdown's timer to the clock: no request, no router, cleared with the card (§843)", () => {
+    const source = readFileSync(join(process.cwd(), "src/modules/events/ui/AwayLine.tsx"), "utf8");
+    expect(source).not.toMatch(/\bfetch\(|useRouter|router\.refresh|EventSource|WebSocket/);
+    expect(source).toContain("return () => window.clearInterval(timer);");
   });
 
   it("keeps the new-build notice's timer behind the backoffice rule", () => {
