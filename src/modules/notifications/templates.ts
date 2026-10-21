@@ -1046,6 +1046,18 @@ export type TemplateData = {
     /** A volunteer under eighteen with a parent or guardian still to accept (§768): the «am primit» says their parent was emailed. */
     guardianPending?: boolean;
     /**
+     * What the person ticked and wrote, for the organizers' notice alone (the owner, 2026-10-21: «so I can see what each volunteer
+     * checked»): the message, the two yes/no boxes of the profile (§765) when the form asked them — null when it did not, so the
+     * notice does not say «Nu» for a question never put —, the T-shirt size when the event gives one, the public-list tick (§821)
+     * and whether the person is a minor whose parent is asked (§768). Never the address, the telephone number, the city, the date of
+     * birth or the sex: the card has those, behind the sign-in; a mailbox keeps a copy for ever.
+     */
+    message?: string | null;
+    profile?: { volunteeredBefore: boolean; clubMember: boolean } | null;
+    shirtSize?: string | null;
+    listOptIn?: boolean;
+    minor?: boolean;
+    /**
      * The contact persons of the categories of the role (or roles) concerned (§774), when the club has set them: the footer of the
      * three messages that reach a volunteer or their guardian says «Întrebări despre voluntariat? Ana · 0712 345 678 · ana@club.test».
      * The club's own business contact; never in the club's notice and never in a copy to the club.
@@ -1413,6 +1425,71 @@ function volunteerClubLine(d: TemplateData, locale: EmailLocale): string | undef
   const role = locale === "ro" ? d.volunteer.roleRo : d.volunteer.roleEn;
   const words = chosen.length > 0 ? chosen.join(", ") : (role ?? "");
   return words ? `${d.volunteer.name} — ${words}` : d.volunteer.name;
+}
+
+/** The organizers' notice's checklist (§837's follow-up, 2026-10-21), one language's words. */
+const VOLUNTEER_CHECKLIST_WORDS = {
+  ro: {
+    roles: "Roluri bifate",
+    noRoles: "niciun rol bifat",
+    message: "Mesaj",
+    before: "A mai fost voluntar la alte curse",
+    club: "Face parte din grupul clubului",
+    list: "Vrea să apară pe lista publică a voluntarilor",
+    shirt: "Mărimea tricoului",
+    minor: "Sub 18 ani: acordul părintelui sau tutorelui se cere pe e-mail",
+    yes: "Da",
+    no: "Nu",
+  },
+  en: {
+    roles: "Roles ticked",
+    noRoles: "no role ticked",
+    message: "Message",
+    before: "Has volunteered at other races before",
+    club: "Belongs to the club's group",
+    list: "Wants to appear on the public list of volunteers",
+    shirt: "T-shirt size",
+    minor: "Under 18: the parent's or guardian's consent is asked by email",
+    yes: "Yes",
+    no: "No",
+  },
+} as const;
+
+/**
+ * What the volunteer ticked and wrote, as one boxed block of the organizers' notice (the owner, 2026-10-21: «the volunteers
+ * confirmation email should be better formatted so I can see what each volunteer checked»): the roles ticked one per line, the
+ * message in the person's own words, then one line per box the form asked — «A mai fost voluntar: Da», «Din grupul clubului: Nu»,
+ * the size when the event gives shirts, the public-list tick when given, the minor's line when a parent is asked. A box the form
+ * did not ask (`profile` null: an older form, or a notice that did not describe the profile yet) is not a «Nu». The plain-text
+ * half reads one line per fact, the roles each on their own line with a dash.
+ */
+function volunteerChecklistPart(volunteer: NonNullable<TemplateData["volunteer"]>, locale: EmailLocale): EmailBodyPart {
+  const words = VOLUNTEER_CHECKLIST_WORDS[locale];
+  const roles = locale === "ro" ? volunteer.chosenRo : volunteer.chosenEn;
+  const yesNo = (on: boolean) => (on ? words.yes : words.no);
+  const facts: { label: string; value: string }[] = [
+    ...(volunteer.message ? [{ label: words.message, value: volunteer.message }] : []),
+    ...(volunteer.profile ? [{ label: words.before, value: yesNo(volunteer.profile.volunteeredBefore) }, { label: words.club, value: yesNo(volunteer.profile.clubMember) }] : []),
+    ...(volunteer.shirtSize ? [{ label: words.shirt, value: volunteer.shirtSize }] : []),
+    ...(volunteer.listOptIn ? [{ label: words.list, value: words.yes }] : []),
+  ];
+  const line = (inner: string, last: boolean) => `<p style="margin:${last ? "0" : "0 0 10px"};font-size:15px;line-height:1.5">${inner}</p>`;
+  const rolesHtml = roles.length > 0 ? `<ul style="margin:4px 0 0;padding:0 0 0 18px">${roles.map((role) => `<li>${escapeHtml(role)}</li>`).join("")}</ul>` : `<br>${escapeHtml(words.noRoles)}`;
+  const blocks = [
+    `<strong>${escapeHtml(words.roles)}</strong>${rolesHtml}`,
+    ...facts.map((fact) => `${escapeHtml(fact.label)}<br><strong>${escapeHtml(fact.value)}</strong>`),
+    ...(volunteer.minor ? [escapeHtml(words.minor)] : []),
+  ];
+  return {
+    html: `<div data-email-part="volunteer-checklist" style="margin:0 0 18px;padding:14px 16px;border:1px solid ${COLOR.line};border-radius:10px">${blocks.map((block, index) => line(block, index === blocks.length - 1)).join("")}</div>`,
+    text: [
+      `${words.roles}:`,
+      ...(roles.length > 0 ? roles.map((role) => `- ${role}`) : [`- ${words.noRoles}`]),
+      ...facts.map((fact) => `${fact.label}: ${fact.value}`),
+      ...(volunteer.minor ? [words.minor] : []),
+      "",
+    ],
+  };
 }
 
 /**
@@ -1989,7 +2066,7 @@ const T = {
         return line ? { line, links: [] } : undefined;
       },
       body: (d: TemplateData) => [
-        `O persoană s-a oferit voluntar la ${d.eventTitle ?? "eveniment"}; numele ei și rolurile pentru care s-a oferit sunt scrise mai sus.`,
+        `O persoană s-a oferit voluntar la ${d.eventTitle ?? "eveniment"}; numele ei, rolurile pentru care s-a oferit și ce a bifat sunt scrise mai sus.`,
         "Oferta are starea «Înscris» și încă niciun rol: îi dai unul, o confirmi sau o anulezi din cardul «Voluntari» al evenimentului (butonul de mai jos). Adresa și telefonul sunt acolo, nu aici.",
       ],
       action: "Deschide «Voluntari»",
@@ -2834,7 +2911,7 @@ const T = {
         return line ? { line, links: [] } : undefined;
       },
       body: (d: TemplateData) => [
-        `Someone offered to volunteer at ${d.eventTitle ?? "the event"}; their name and the roles they offered for are written above.`,
+        `Someone offered to volunteer at ${d.eventTitle ?? "the event"}; their name, the roles they offered for and what they ticked are written above.`,
         "The offer's state is «Registered» and it has no role yet: give it one, confirm or cancel it on the event's «Volunteers» card (the button below). The address and the telephone number are there, not here.",
       ],
       action: "Open «Volunteers»",
@@ -3824,6 +3901,8 @@ export function buildTemplateContent(
             ),
           ]
         : []),
+      // The organizers' notice of a volunteer (§754): what the person ticked and wrote, boxed under the name line (2026-10-21).
+      ...(messageType === "VOLUNTEER_CLUB_NOTICE" && data.volunteer ? [volunteerChecklistPart(data.volunteer, locale)] : []),
       ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familySittingShape && data.familyPersonName
         ? [
             familyFactsPart(

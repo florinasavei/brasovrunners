@@ -2,12 +2,15 @@ import { createTranslator } from "next-intl";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
+import type { OutboxRow } from "@/modules/notifications/outbox";
+import { renderOutboxMessage } from "@/modules/notifications/render";
 import { readAgreementFacts } from "@/modules/volunteers/agreement";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { changeVolunteerRole, listVolunteerRoles, listVolunteers, readPublicVolunteerRoles, submitVolunteer } from "@/modules/volunteers/volunteers";
@@ -423,6 +426,20 @@ describe("§765 the public form: asked while the notice names it, §758's tick u
     await submitVolunteer(db, eventId, publicForm([role.id], { ...ANSWERS, email: "ion@example.test", shirtSize: "" }), NOW);
     const rows = await db.select().from(eventVolunteers).orderBy(eventVolunteers.createdAt);
     expect(rows.map((row) => row.shirtSize).sort()).toEqual(["L", null]);
+  });
+
+  it("tells the organizers what the person ticked (2026-10-21): the two boxes as Da/Nu, the size while the event gives shirts, the roles one per line — never the city, the date of birth or the sex", async () => {
+    await approveNotice(true);
+    const role = await addRole();
+    await press(actions.switchVolunteersShirtsAction, form({ on: "1" }));
+    await submitVolunteer(db, eventId, publicForm([role.id], { ...ANSWERS, clubMember: false }), NOW);
+    const [row] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "VOLUNTEER_CLUB_NOTICE"));
+    const message = await renderOutboxMessage({ ...(row as unknown as OutboxRow), status: "PROCESSING", lockedAt: NOW }, db, NOW);
+    expect(message.text).toContain("Roluri bifate:\n- Punct de apă\nA mai fost voluntar la alte curse: Da\nFace parte din grupul clubului: Nu\nMărimea tricoului: L");
+    expect(message.text).toContain("Roles ticked:\n- Water point\nHas volunteered at other races before: Yes\nBelongs to the club's group: No\nT-shirt size: L");
+    // The block ends with the size and the body follows: no city, date of birth, sex, address or telephone number anywhere in it.
+    expect(message.text).toContain("Mărimea tricoului: L\n\nO persoană s-a oferit voluntar");
+    expect(message.text).not.toMatch(/FEMALE|Femin|Orașul|Data nașterii|Vârst|maria@example\.test|\+40712345678/);
   });
 
   it("refuses a date under 18 on the event's day, a missing or unreadable date, sex or city — naming each box — and keeps nothing", async () => {

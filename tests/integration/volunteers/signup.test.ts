@@ -423,7 +423,7 @@ describe("§754 the volunteers' public sign-up", () => {
     const event = await seedEvent();
     const water = await seedRole(event.id);
     const finish = await seedRole(event.id, { nameRo: "Sosire", nameEn: "Finish", position: 1 });
-    await submitVolunteer(db, event.id, form([water.id, finish.id]), NOW);
+    await submitVolunteer(db, event.id, form([water.id, finish.id], { message: "Sunt liber toată ziua." }), NOW);
     const [row] = await db.select().from(emailOutbox).where(and(eq(emailOutbox.messageType, "VOLUNTEER_CLUB_NOTICE"), eq(emailOutbox.recipientEmail, organizer.email)));
     const message = await renderOutboxMessage({ ...(row as unknown as OutboxRow), status: "PROCESSING", lockedAt: NOW }, db, NOW);
     expect(message.subject).toContain("Voluntar nou la Crosul");
@@ -431,6 +431,12 @@ describe("§754 the volunteers' public sign-up", () => {
     expect(message.text).toContain("Maria Test — Water point, Finish");
     expect(message.text).not.toContain("maria@example.test");
     expect(message.text).not.toContain("+40712345678");
+    // What the person ticked and wrote, boxed under the name line (2026-10-21): the roles one per line, the message in their words;
+    // the profile's boxes were not asked (the notice names no profile), so no «Nu» is said for them.
+    expect(message.html).toContain('data-email-part="volunteer-checklist"');
+    expect(message.text).toContain("Roluri bifate:\n- Punct de apă\n- Sosire\nMesaj: Sunt liber toată ziua.");
+    expect(message.text).toContain("Roles ticked:\n- Water point\n- Finish\nMessage: Sunt liber toată ziua.");
+    expect(message.text).not.toMatch(/A mai fost voluntar|volunteered at other races|Mărimea tricoului|T-shirt size|lista publică a voluntarilor: Da/);
     expect(message.text).toContain("Oferta are starea «Înscris» și încă niciun rol");
     expect(message.text).not.toMatch(/îngroșat|bold line/);
     expect(message.text).toContain(`${env.APP_BASE_URL}/ro/admin/events/${event.id}#box-volunteers`);

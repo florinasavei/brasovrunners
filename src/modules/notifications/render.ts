@@ -929,6 +929,14 @@ async function renderRow(
               age: eventVolunteers.age,
               guardianName: eventVolunteers.guardianName,
               guardianAcceptedAt: eventVolunteers.guardianAcceptedAt,
+              // The organizers' notice's checklist (2026-10-21): what the person wrote and ticked.
+              message: eventVolunteers.message,
+              city: eventVolunteers.city,
+              sex: eventVolunteers.sex,
+              volunteeredBefore: eventVolunteers.volunteeredBefore,
+              clubMember: eventVolunteers.clubMember,
+              shirtSize: eventVolunteers.shirtSize,
+              listOptIn: eventVolunteers.listOptIn,
             })
             .from(eventVolunteers)
             .where(eq(eventVolunteers.id, volunteerId))
@@ -974,6 +982,17 @@ async function renderRow(
       contacts: volunteerContactsOf(roles),
       // «Am primit» of a volunteer under eighteen whose guardian has not accepted yet (§768) says their parent was emailed.
       guardianPending: row.messageType === "VOLUNTEER_RECEIVED" && isVolunteerMinor(volunteer.age) && volunteer.guardianName !== null && volunteer.guardianAcceptedAt === null,
+      // The organizers' notice lists what the person ticked and wrote (2026-10-21) — the profile's two boxes only when the form asked
+      // them (a row with an age, a city or a sex answered them; §765), never the address, the telephone number or those answers.
+      ...(row.messageType === "VOLUNTEER_CLUB_NOTICE"
+        ? {
+            message: volunteer.message,
+            profile: volunteer.age !== null || volunteer.city !== null || volunteer.sex !== null ? { volunteeredBefore: volunteer.volunteeredBefore, clubMember: volunteer.clubMember } : null,
+            shirtSize: volunteer.shirtSize === null || volunteer.shirtSize === "NONE" ? null : volunteer.shirtSize,
+            listOptIn: volunteer.listOptIn,
+            minor: isVolunteerMinor(volunteer.age) && volunteer.guardianName !== null,
+          }
+        : {}),
     };
     if (row.messageType === "VOLUNTEER_CLUB_NOTICE" && eventId) {
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } })}#box-volunteers`;
