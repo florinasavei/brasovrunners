@@ -837,7 +837,8 @@ test.describe("§754 volunteers for a race", () => {
       await hydrated(page);
       await openEditorBox(page, "Adaugă un voluntar de mână");
       const add = page.getByTestId("volunteer-add");
-      await add.getByRole("checkbox", { name: "Punct de apă" }).check();
+      // «Ce e dispus(ă) să facă»: since §837 the form carries the same box once more under «Rolurile date», so the group is named.
+      await add.getByTestId("volunteer-choices-field").getByRole("checkbox", { name: "Punct de apă" }).check();
       // «Rolurile date» (§837): the same boxes as the choices, one per role.
       if (give) await add.getByTestId("volunteer-assigned-field").getByRole("checkbox", { name: "Punct de apă" }).check();
       await add.getByRole("textbox", { name: "Nume", exact: true }).fill(name);
@@ -1052,10 +1053,12 @@ test.describe("§754 volunteers for a race", () => {
         await visitor.close();
       }
 
-      // What was kept: the parent on the minor's row, the asking email queued with no secret in it.
-      const kept = await client.query(`SELECT id, age, date_of_birth::text AS date_of_birth, guardian_name, guardian_email, guardian_accepted_at, guardian_token_hash, declared_adult FROM event_volunteers WHERE event_id = $1`, [event.id]);
+      // What was kept: the parent on the minor's row, the asking email queued with no secret in it. The link's hash is written
+      // by the send, which the request drains after its own response (`notifications/drain.ts`): read here it is null or
+      // already set, by the clock — the row never carries the secret itself, which is what the next assertion proves.
+      const kept = await client.query(`SELECT id, age, date_of_birth::text AS date_of_birth, guardian_name, guardian_email, guardian_accepted_at, declared_adult FROM event_volunteers WHERE event_id = $1`, [event.id]);
       expect(kept.rows).toHaveLength(1);
-      expect(kept.rows[0]).toMatchObject({ age: 15, date_of_birth: keptBirth(15), guardian_name: "Maria Popescu", guardian_email: parent, guardian_accepted_at: null, guardian_token_hash: null, declared_adult: false });
+      expect(kept.rows[0]).toMatchObject({ age: 15, date_of_birth: keptBirth(15), guardian_name: "Maria Popescu", guardian_email: parent, guardian_accepted_at: null, declared_adult: false });
       danId = kept.rows[0].id;
       const queued = await client.query(`SELECT recipient_email FROM email_outbox WHERE message_type = 'VOLUNTEER_GUARDIAN_REQUEST' AND payload_json->>'volunteerId' = $1`, [danId]);
       expect(queued.rows).toEqual([{ recipient_email: parent }]);
@@ -1144,7 +1147,7 @@ test.describe("§754 volunteers for a race", () => {
       await hydrated(page);
       await openEditorBox(page, "Adaugă un voluntar de mână");
       const add = page.getByTestId("volunteer-add");
-      await add.getByRole("checkbox", { name: "Punct de apă" }).check();
+      await add.getByTestId("volunteer-choices-field").getByRole("checkbox", { name: "Punct de apă" }).check();
       await add.getByRole("textbox", { name: "Nume", exact: true }).fill("Radu Tânărul");
       await add.getByRole("textbox", { name: "Adresa de email", exact: true }).fill(`radu.${tag}@example.test`);
       await add.getByRole("textbox", { name: "Telefon", exact: true }).fill("0712 345 678");
