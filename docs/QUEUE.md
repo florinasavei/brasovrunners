@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.64` | a volunteer may be given several roles (§837) · the test gate in minutes: one migrated database per run, four CI shards (§838) |
 | `BR-V3.63` | the club chooses whether the event page shows «Vreau să fiu voluntar»; the sign-up stays open by its link (§835) · «Confirmă prezența» and «Cine vine» are the last thing on the event page (§836) |
 | `BR-V3.62` | the «Vii?» email's tick says what it does, with the club's days, hour and audience (§832) · «Puncte de control» is «Puncte pe traseu» everywhere a person reads it (§833) · the calendar's «Următorul eveniment» says how far away it is — «Mâine», «Peste 5 zile», «Peste 3 săptămâni» (§834) |
 | `BR-V3.61` | five tests that failed by chance under CI load or on a random id are deterministic (§829) · the members' zone opens on «Alergări»: each run with «Vin!» and who is coming, the next run first (§830) · «Cine vine» shows which runners are Brașov Runners members — declared by them or from their members' account, beside the names they show (§831) |
