@@ -6135,6 +6135,14 @@
         "wordsClub": "Textele clubului",
         "wordsPlatform": "Textele implicite"
       },
+      "rows": {
+        "step": "Pasul {number}",
+        "reason": "Motivul {number}",
+        "stepList": "Pașii",
+        "reasonList": "Motivele",
+        "edit": "Modifică",
+        "platform": "Textul implicit"
+      },
       "inLanguage": {
         "ro": "{box} (română)",
         "en": "{box} (engleză)"
@@ -9782,6 +9790,8 @@
       "listLabel": "Întrebările, în ordinea de pe pagină",
       "visible": "Pe site",
       "hidden": "Ascunsă",
+      "englishMissing": "Fără engleză",
+      "edit": "Modifică întrebarea",
       "moveUpNamed": "Mai sus: {question}",
       "moveDownNamed": "Mai jos: {question}",
       "moveUpWord": "Mai sus",
@@ -9794,9 +9804,10 @@
       "introRo": "Introducerea (română)",
       "introEn": "Introducerea (engleză)",
       "questionsHeading": "Întrebările",
-      "questionsHelp": "În ordinea de pe pagină. Săgețile mută un card și salvează pagina; o întrebare nouă se completează în ultimul card.",
+      "questionsHelp": "În ordinea de pe pagină. Apasă pe o întrebare ca să-i deschizi casetele; săgețile o mută și salvează pagina. O întrebare nouă se scrie în «Adaugă o întrebare».",
       "newHeading": "Întrebare nouă",
-      "newHelp": "Completează cardul ca să adaugi o întrebare; lăsat gol, nu se adaugă nimic.",
+      "addTitle": "Adaugă o întrebare",
+      "newHelp": "Scrie întrebarea și răspunsul în ambele limbi, apoi apasă «Salvează pagina»; lăsată goală, nu se adaugă nimic.",
       "questionRo": "Întrebarea (română)",
       "questionEn": "Întrebarea (engleză)",
       "questionHelp": "Un singur rând, cum ar pune-o un alergător. Obligatorie în ambele limbi.",

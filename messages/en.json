@@ -6135,6 +6135,14 @@
         "wordsClub": "The club's words",
         "wordsPlatform": "The default words"
       },
+      "rows": {
+        "step": "Step {number}",
+        "reason": "Reason {number}",
+        "stepList": "The steps",
+        "reasonList": "The reasons",
+        "edit": "Edit",
+        "platform": "The default words"
+      },
       "inLanguage": {
         "ro": "{box} (Romanian)",
         "en": "{box} (English)"
@@ -9782,6 +9790,8 @@
       "listLabel": "The questions, in the page's order",
       "visible": "On the site",
       "hidden": "Hidden",
+      "englishMissing": "No English",
+      "edit": "Edit the question",
       "moveUpNamed": "Move up: {question}",
       "moveDownNamed": "Move down: {question}",
       "moveUpWord": "Move up",
@@ -9794,9 +9804,10 @@
       "introRo": "The introduction (Romanian)",
       "introEn": "The introduction (English)",
       "questionsHeading": "The questions",
-      "questionsHelp": "In the page's order. The arrows move a card and save the page; a new question is filled in on the last card.",
+      "questionsHelp": "In the page's order. Press a question to open its boxes; the arrows move it and save the page. A new question is written in “Add a question”.",
       "newHeading": "New question",
-      "newHelp": "Fill in the card to add a question; left empty, nothing is added.",
+      "addTitle": "Add a question",
+      "newHelp": "Write the question and its answer in both languages, then press “Save the page”; left empty, nothing is added.",
       "questionRo": "The question (Romanian)",
       "questionEn": "The question (English)",
       "questionHelp": "One line, the way a runner would ask it. Required in both languages.",
