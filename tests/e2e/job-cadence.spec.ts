@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
+import { openDatabaseCard } from "./support/costs";
 import { signIn } from "./support/featured-event";
 
 /**
@@ -22,9 +23,11 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
     await signIn(page, "Dev Superadministrator");
     await page.goto("/ro/admin/settings/costs");
     const main = page.locator("#main");
-    const card = main.getByTestId("job-cadence");
+    // A fold inside the database's card, the interval on its line.
+    await expect(main.getByTestId("job-cadence").locator(":scope > summary")).toContainText("la nevoie");
+    const card = await openDatabaseCard(main, "job-cadence");
 
-    await expect(card.getByRole("heading", { name: "Cât de des verifică site-ul" })).toBeVisible();
+    await expect(card.getByRole("heading", { name: /^Cât de des verifică site-ul/ })).toBeVisible();
     await expect(card.getByTestId("job-cadence-in-force")).toContainText(/^Setarea în vigoare: la nevoie/);
     // What it costs the runners, and what it does not, before the choice.
     await expect(card.getByText(/pot pleca cu până la atâtea minute mai târziu/)).toBeVisible();
@@ -48,8 +51,9 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
     await expect(page.locator("#main").getByText(/Interval minim: 30 min între două rulări reale/)).toBeVisible();
 
     await page.goto("/ro/admin/settings/costs");
-    await main.getByTestId("job-cadence").getByLabel("Cel mult o dată la").selectOption("0");
-    await main.getByTestId("job-cadence").getByRole("button", { name: "Salvează intervalul" }).click();
+    const back = await openDatabaseCard(main, "job-cadence");
+    await back.getByLabel("Cel mult o dată la").selectOption("0");
+    await back.getByRole("button", { name: "Salvează intervalul" }).click();
     await confirmDialog(page);
     await expect(main.getByTestId("job-cadence-in-force")).toContainText(/^Setarea în vigoare: la nevoie/);
   });
@@ -57,7 +61,7 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
   test("an Administrator reads the card and is offered no form (§450)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/settings/costs");
-    const card = page.locator("#main").getByTestId("job-cadence");
+    const card = await openDatabaseCard(page.locator("#main"), "job-cadence");
     await expect(card.getByTestId("job-cadence-in-force")).toBeVisible();
     await expect(card.getByText(/Intervalul îl schimbă Superadministratorul/)).toBeVisible();
     await expect(card.getByRole("button", { name: "Salvează intervalul" })).toHaveCount(0);

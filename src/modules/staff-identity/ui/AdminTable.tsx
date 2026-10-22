@@ -160,6 +160,12 @@ type Props<Row> = {
    * when they belong (the first page of one event's list). Marked `data-row-kind="lead"`.
    */
   leadRows?: readonly AdminLeadRow[];
+  /**
+   * A row's address (`#…`), for a list whose verbs land back on the row they changed (§847; the shop's
+   * orders, `#order-<id>`). On the wide table's `<tr>` alone: an id names one element, and the phone's
+   * block is the same row drawn twice — below `md` the address lands on the page's alert instead.
+   */
+  rowId?: (row: Row) => string;
 };
 
 /** One row of `leadRows`: its cells by column key, its verbs, its test id. */
@@ -264,6 +270,7 @@ export default function AdminTable<Row>({
   rowActions,
   empty,
   leadRows = [],
+  rowId,
 }: Props<Row>) {
   // It becomes part of a storage key and a CSS selector, so its shape is checked, not trusted.
   if (!TABLE_ID_PATTERN.test(tableId)) throw new Error(`AdminTable: tableId "${tableId}" is not lowercase-hyphenated`);
@@ -400,9 +407,10 @@ export default function AdminTable<Row>({
             {rows.map((row, index) => (
               <TableRow
                 key={rowKey(row)}
+                id={rowId?.(row)}
                 hover
                 data-row-separator={index === rows.length - 1 ? "none" : "line"}
-                sx={index === rows.length - 1 ? LAST_ROW : ROW_SEPARATOR}
+                sx={{ ...(index === rows.length - 1 ? LAST_ROW : ROW_SEPARATOR), ...(rowId ? { scrollMarginTop: 16 } : {}) }}
               >
                 {columns.map((column) => (
                   <TableCell

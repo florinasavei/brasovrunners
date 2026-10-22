@@ -29,6 +29,7 @@ import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import type { FoldOpenWhen } from "@/shared/ui/fold";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 
@@ -46,6 +47,8 @@ type Props = {
   mayEdit: boolean;
   /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§479). */
   level?: 2 | 3;
+  /** Why the fold opens on arrival (§336): its own save (`?saved=neonLimits`, `neonLimitsSame`). */
+  openWhen?: FoldOpenWhen;
 };
 
 /**
@@ -115,7 +118,7 @@ export function moneySentence(
  * of the boundary). The limit's part is the owner's four things and nothing else (§511): the
  * label, «Fără limită / Cu limită», the number and one sentence; what else it could say is a «?».
  */
-export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit, level = 2 }: Props) {
+export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit, level = 2, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const format = await getFormatter();
@@ -133,9 +136,12 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
     const { failure } = reading;
     return (
       <Panel glyph="limits"
+        collapsible
         level={level}
         id="neon-limits"
         title={t("tasks.neonLimits.title")}
+        aside={t(failure.kind === "unconfigured" ? "tasks.neonLimits.aside.unconfigured" : "tasks.neonLimits.aside.failed")}
+        openWhen={openWhen}
         intro={t("tasks.neonLimits.intro")}
         introMore={t("tasks.neonLimits.introMore")}
         data-testid="neon-limits"
@@ -216,10 +222,14 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   ];
 
   return (
+    // A fold, the period's limit on its line («limită 100 ore-CU», «fără limită»), closed until opened or saved (§336).
     <Panel glyph="limits"
+      collapsible
       level={level}
       id="neon-limits"
       title={t("tasks.neonLimits.title")}
+      aside={model.quotaCuHours === null ? t("tasks.neonLimits.aside.none") : t("tasks.neonLimits.aside.limit", { hours: hours(model.quotaCuHours) })}
+      openWhen={openWhen}
       intro={t("tasks.neonLimits.intro")}
       introMore={t("tasks.neonLimits.introMore")}
       data-testid="neon-limits"

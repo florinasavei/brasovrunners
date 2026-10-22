@@ -82,6 +82,8 @@ export type SummaryWords = {
   kit: { shirtYes: string; shirtNo: string };
   /** The health words, the end of the closed line of «Regulamentul» and of «Participare, înscrieri și regulament» (§557, moved in §799): "Informații medicale: da" / "Informații medicale: nu". */
   health: { asked: string; notAsked: string };
+  /** «Lista de invitați speciali»'s closed line (§647), a fold of the public list's card: "Folosită" / "Nefolosită". */
+  hiddenList: { on: string; off: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string; spares: string };
   bibDesign: { parts: string; footer: string };
   /** The public list's closed line; `shownWithWaitlist` once «Lista de așteptare e publică» is on too (§628). */
@@ -487,6 +489,11 @@ export function kitSummary(words: SummaryWords, kitShirt: boolean): string {
 /** Whether the form asks the health note (§557): the one tick of the «Condiții de participare» group inside «Regulamentul» (moved in §799). */
 export function healthNoteSummary(words: SummaryWords, askHealthNote: boolean): string {
   return askHealthNote ? words.health.asked : words.health.notAsked;
+}
+
+/** Whether the event uses «Lista de invitați speciali» (§647): the closed line of its fold in the public list's card. */
+export function hiddenListSummary(words: SummaryWords, hiddenListEnabled: boolean): string {
+  return hiddenListEnabled ? words.hiddenList.on : words.hiddenList.off;
 }
 
 /** Sub-card 8.4: `De la 100 · verde · rezervă 900–949 · 42 alocate, 2 de tipărit`. */

@@ -69,11 +69,14 @@ import VolunteerAccessChoice from "./VolunteerAccessChoice";
 import VolunteerPerson, { shortText, STATE_CHIP, VolunteerPersonFields, type VolunteerPersonContext, volunteerHiddenFields, volunteerPersonBoxes } from "./VolunteerPerson";
 import VolunteerInvitations from "./VolunteerInvitations";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
-import { FACTS_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
+import { FACTS_SX, LINE_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
 
 /** The pencil at the end of a role's line: the edit verb's glyph, by name (§318). */
 const PencilIcon = ACTION_ICONS.edit;
+
+/** A line with nothing to open (a person's «vezi la …»): the words and the facts, no pencil — `TodoLine`'s reader's line. */
+const READ_LINE_SX = { ...LINE_SX, gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) auto" }, gridTemplateAreas: { xs: '"words" "facts"', sm: '"words facts"' } } as const;
 
 /** A state's chip: its word, its glyph and its tone — never the colour alone. */
 const TICK_ROW_SX = {
@@ -488,20 +491,25 @@ export default async function VolunteersCard({
   };
 
   /**
-   * A person listed in full under another role (§837): one line in this role's group — the name, the state and «vezi la …»,
-   * a link to the full row — so the group names everyone it counts and the row, with its forms, stands once on the page.
+   * A person listed in full under another role (§837): one line in this role's group, the shape of the people's rows (§842) with
+   * nothing to open — the name with «vezi la …», a link to the full row (which opens it, `#volunteer-<id>`), and the state — so the
+   * group names everyone it counts and the row, with its forms, stands once on the page.
    */
   const alsoRow = (person: VolunteerItem, home: VolunteerRole) => (
-    <Box component="li" key={person.id} data-testid="volunteer-also" data-volunteer-id={person.id} sx={{ border: 1, borderColor: "divider", borderRadius: 1, px: 1.5, py: 0.75 }}>
-      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
-        <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }}>
-          {person.name}
-        </Typography>
-        <StatusChip glyph={STATE_CHIP[person.state].glyph} color={STATE_CHIP[person.state].color} label={t(`volunteers.states.${person.state}`)} />
-        <Box component="a" href={`#volunteer-${person.id}`} sx={{ ...INLINE_TAP_TARGET }}>
-          {t("volunteers.person.seeUnder", { role: labelOf(home) })}
+    <Box component="li" key={person.id} data-testid="volunteer-also" data-volunteer-id={person.id} sx={ROW_SX}>
+      <Box sx={READ_LINE_SX}>
+        <Box sx={{ gridArea: "words", minWidth: 0 }}>
+          <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }}>
+            {person.name}
+          </Typography>{" "}
+          <Box component="a" href={`#volunteer-${person.id}`} sx={{ ...INLINE_TAP_TARGET }}>
+            {t("volunteers.person.seeUnder", { role: labelOf(home) })}
+          </Box>
         </Box>
-      </Stack>
+        <Box sx={FACTS_SX}>
+          <StatusChip glyph={STATE_CHIP[person.state].glyph} color={STATE_CHIP[person.state].color} label={t(`volunteers.states.${person.state}`)} />
+        </Box>
+      </Box>
     </Box>
   );
 
@@ -1009,7 +1017,7 @@ export default async function VolunteersCard({
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                   {waitingForRole > 0 ? t("volunteers.unassigned.intro") : t("volunteers.unassigned.empty")}
                 </Typography>
-                <Stack spacing={1.5} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+                <Stack spacing={0} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
                   {unassigned.map((person) => <VolunteerPerson key={person.id} person={person} context={personContext} />)}
                 </Stack>
               </Box>
@@ -1030,7 +1038,7 @@ export default async function VolunteersCard({
                       {t("volunteers.nobody")}
                     </Typography>
                   ) : (
-                    <Stack spacing={1.5} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+                    <Stack spacing={0} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
                       {mine.map((person) => {
                         const home = homeRoleOf(person);
                         return home === null || home.id === role.id ? <VolunteerPerson key={person.id} person={person} context={personContext} /> : alsoRow(person, home);

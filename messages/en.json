@@ -1318,9 +1318,19 @@
         "promo": "The consent to offers and benefits"
       },
       "auditTrail": "What staff did",
+      "auditTrailCount": {
+        "one": "{count} action",
+        "few": "{count} actions",
+        "other": "{count} actions"
+      },
       "partnerShares": {
         "title": "Given to partners",
-        "noRecipient": "recipient not noted"
+        "noRecipient": "recipient not noted",
+        "count": {
+          "one": "{count} list",
+          "few": "{count} lists",
+          "other": "{count} lists"
+        }
       },
       "auditActorRemoved": "account removed",
       "notes": {
@@ -3230,6 +3240,10 @@
             "asked": "Medical information: yes",
             "notAsked": "Medical information: no"
           },
+          "hiddenList": {
+            "on": "In use",
+            "off": "Not in use"
+          },
           "bibs": {
             "from": "From {number}",
             "clubColour": "the club's colour",
@@ -3470,15 +3484,11 @@
       "you": "You",
       "changeRole": "Change role",
       "revoke": "Revoke access",
-      "columnName": "Name",
-      "columnEmail": "Email",
-      "columnRole": "Role",
-      "columnStatus": "Status",
+      "edit": "Edit",
       "tableCaption": "The accounts that may sign in to the backoffice, with each one's role",
       "empty": "There is no staff account yet.",
       "changeRolePending": "Saving…",
       "revokePending": "Removing…",
-      "rowActions": "Actions for {name}",
       "resendInviteTitle": "Send the invitation again?",
       "resendInviteBody": "An email goes to {email} with the sign-in link.",
       "passwordResetTitle": "Send a password reset?",
@@ -3497,7 +3507,7 @@
         "SUPERADMIN": "plus the technical settings that can stop the service — how often the site checks, the database's limits, the anti-bot check — and naming another Superadministrator.",
         "MEMBER": "the members' area of the site, after signing in. No backoffice."
       },
-      "resendFailed": "The invitation did not go out: the identity provider has no account with this address ({reason}). Check the address in the table — if it is wrong, withdraw access and add the person again with the right one.",
+      "resendFailed": "The invitation did not go out: the identity provider has no account with this address ({reason}). Check the address in the list — if it is wrong, withdraw access and add the person again with the right one.",
       "passwordReset": "Send a password reset",
       "passwordResetPending": "Sending…",
       "passwordResetSent": "Done. They have been emailed the link for setting a new password.",
@@ -3505,15 +3515,15 @@
       "deactivateAccountPending": "Deactivating…",
       "accountDeactivated": "The sign-in account is deactivated: they can no longer sign in anywhere. The team row stays — to take their access away too, use “Withdraw access”.",
       "accountReactivated": "The sign-in account is active again.",
-      "accountMissing": "The identity provider has no account with this address, so there was nothing to change. Check the address in the table.",
+      "accountMissing": "The identity provider has no account with this address, so there was nothing to change. Check the address in the list.",
       "accountUnconfigured": "This needs the Zitadel key: Tasks → Club → “Invite the team”. Until then, from the Zitadel console.",
       "accountFailed": "The identity provider refused ({reason}).",
       "noAccount": "No sign-in account",
       "invitationRefused": "Invitation rejected: {label}",
-      "noAccountHelp": "“No sign-in account”: the person is on the list but cannot sign in. The fix: ⋮ → “Revoke access”, then “Add” again with the same address.",
+      "noAccountHelp": "“No sign-in account”: the person is on the list but cannot sign in. The fix: open their row → “Revoke access”, then “Add” again with the same address.",
       "accountsBlind": "Could not check who has an account: the Zitadel key sees only {seen} accounts, so it lacks the “Org User Manager” role. See Tasks → Club → “The invitation key”.",
       "accountsUnchecked": "Could not check who has a sign-in account — Zitadel answered: {reason}. The rows below say nothing about accounts until a check succeeds; reload the page in a few minutes.",
-      "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key (ZITADEL_MANAGEMENT_PAT) is missing. Until it is set, create the account in the Zitadel console, with exactly the address in the table.",
+      "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key (ZITADEL_MANAGEMENT_PAT) is missing. Until it is set, create the account in the Zitadel console, with exactly the address in the list.",
       "inviting": "Adding…",
       "inviteAsideSends": "the account and the invitation, in one step",
       "inviteAsideManual": "the list and the invitation; the account, in Zitadel's console",
@@ -3906,7 +3916,12 @@
         "unchanged": "The text in force already has the template's words.",
         "draftExists": "A draft is already waiting: approve it or delete it, then you can regenerate.",
         "blanks": "The draft will still have fields to fill in, written '<'…>.",
-        "empty": "No version for this filter."
+        "empty": "No version for this filter.",
+        "openRow": "Work on the text",
+        "readRow": "See the versions",
+        "chipNoneInForce": "Nothing in force",
+        "chipDraftWaiting": "Draft to approve",
+        "readInForce": "Read the text in force"
       },
       "stateLabel": {
         "inForce": "In force",
@@ -4009,7 +4024,44 @@
       },
       "resultsMissing": "The notice in force does not describe the races' results yet, so no results can be published. Approve a new notice from the template.",
       "resultsTermsMissing": "The terms in force do not describe the races' results yet, so no results can be published. Approve new terms from the template.",
-      "rsvpMissing": "The notice in force does not describe the “I'm coming!” answers yet, so the page of a ticked event does not take them. Approve a new notice from the template."
+      "rsvpMissing": "The notice in force does not describe the “I'm coming!” answers yet, so the page of a ticked event does not take them. Approve a new notice from the template.",
+      "notices": {
+        "title": "Before you approve",
+        "count": {
+          "one": "{count} feature waits for a new text",
+          "few": "{count} features wait for a new text",
+          "other": "{count} features wait for a new text"
+        },
+        "listLabel": "What is off until a new text",
+        "waitsOn": {
+          "PRIVACY_NOTICE": "Waits for the notice",
+          "TERMS": "Waits for the terms"
+        },
+        "lines": {
+          "listStates": "The public list shows only the confirmed",
+          "listSocials": "Strava and Instagram do not show on the public list",
+          "listNumbers": "The public list shows no race numbers",
+          "results": "No results can be published",
+          "rsvp": "The “I'm coming!” answers are off",
+          "resultsTerms": "No results can be published",
+          "promo": "The form does not offer the offers and benefits box",
+          "sponsor": "The list for sponsors is off",
+          "refusal": "The form does not say on what grounds the club may refuse"
+        }
+      },
+      "texts": {
+        "title": "The legal texts",
+        "count": {
+          "one": "{count} text",
+          "few": "{count} texts",
+          "other": "{count} texts"
+        }
+      },
+      "language": {
+        "ro": "Română",
+        "en": "English"
+      },
+      "tabIncomplete": "incomplete"
     },
     "tasks": {
       "title": "What is still to do",
@@ -4163,7 +4215,13 @@
         "minCuHelpMore": "The database starts at this size on the first request. A larger one costs more for every hour awake.",
         "suspendHelpMore": "“Never” keeps it on all the time: every hour of the month is billed at the minimum size ({rate} $ per CU-hour), even with no visitor at all.",
         "confirmLimit": "New limit: {hours} CU-hours.",
-        "confirmNone": "No monthly limit."
+        "confirmNone": "No monthly limit.",
+        "aside": {
+          "limit": "limit {hours} CU-hours",
+          "none": "no limit",
+          "unconfigured": "no Neon key",
+          "failed": "not read"
+        }
       },
       "filter": {
         "who": "Who",
@@ -4192,6 +4250,12 @@
       "stateLabel": {
         "due": "Renew now"
       },
+      "groups": {
+        "blocking": "Blocking registrations ({count})",
+        "broken": "Not working ({count})",
+        "open": "To do ({count})",
+        "done": "Done ({count})"
+      },
       "owner": {
         "club": "The club",
         "developer": "The developer"
@@ -4205,7 +4269,7 @@
           "how": [
             "The short way: /admin/legal → the “One step” box → check the legal name, CIF, seat and email shown → the approval button in the box.",
             "The notice, the terms and both race declarations, mountain event and road or park event, come into force with the club's facts in them.",
-            "To read first: on each text's card, “Regenerate from the template” → open the draft, read, fill in → “Save draft” → “Approve and publish”. All at once: “New version” → “Regenerate all”.",
+            "To read first: on each text's row, “Regenerate from the template” → open the draft, read, fill in → “Save draft” → “Approve and publish”. All at once: “New version” → “Regenerate all”.",
             "The long way, for a change: “New version” → pick the template → “Save draft” → PDF → “Approve and publish”. An approved text never changes; a correction is the next version.",
             "On each event, under Registration, pick the approved declaration (if not already)."
           ]
@@ -4295,7 +4359,7 @@
             "Not “Role Assignments”: that page grants roles inside a project and does not help create users.",
             "If Zitadel answered 401 or the token was revoked: on the service account → Personal Access Tokens → New, then the new token as ZITADEL_MANAGEMENT_PAT on both Vercel projects and redeploy.",
             "Check: reload this page; the row turns green when the key finds your account.",
-            "Then, on Echipa, for every colleague marked “No sign-in account”: ⋮ → “Revoke access”, then “Add” again with the same address."
+            "Then, on Echipa, for every colleague marked “No sign-in account”: open their row → “Revoke access”, then “Add” again with the same address."
           ],
           "howUnreachable": [
             "Reload the page in a few minutes: the check runs on every open, with one search in Zitadel.",
@@ -5139,7 +5203,11 @@
         "introMore": "The jobs are registration maintenance and the email outbox. With nothing to do they do not wake the database; every wake-up costs at least 5 minutes of compute.",
         "safeMore": "Every reading of the places counts the deadlines at that moment, whether or not the job has run. Your setting wins.",
         "onTheHourMore": "A day with nothing to do costs one wake of the database, at {time}. A deadline (a held place, a reminder) keeps its own time. With an interval chosen, some may be up to a quarter of an hour late.",
-        "fieldHelpMore": "A ping inside the interval answers from the cache, without the database, exactly like one with nothing to do."
+        "fieldHelpMore": "A ping inside the interval answers from the cache, without the database, exactly like one with nothing to do.",
+        "aside": {
+          "onDemand": "on demand",
+          "every": "at most every {minutes} min"
+        }
       },
       "budgetThresholds": {
         "saved": "The thresholds are saved; the month's budget is read by them from now on."
@@ -5176,7 +5244,11 @@
         },
         "introMore": "The DeepL key's character credit is given once and is not renewed monthly; the daily budget stops one afternoon from using up the credit.",
         "privacyMore": "Only the content boxes are translated, so the privacy notice does not change.",
-        "fieldHelpMore": "A whole event is 5,000–15,000 characters, taken off the DeepL credit."
+        "fieldHelpMore": "A whole event is 5,000–15,000 characters, taken off the DeepL credit.",
+        "aside": {
+          "off": "off",
+          "daily": "{count} characters a day"
+        }
       },
       "month": {
         "title": "By provider",
@@ -5299,7 +5371,18 @@
         "intro": "The plan, the month's budget, Neon's brakes and how often the site wakes the database."
       },
       "currencyNoteMore": "They are not converted into lei: none of them invoices in lei, and a rate written today would be wrong tomorrow.",
-      "servicesIntroMore": "The plan we are on, what it costs today, what we get for free, the limit we will meet first, how close we are now, what happens when we cross it, and what the next step up costs."
+      "servicesIntroMore": "The plan we are on, what it costs today, what we get for free, the limit we will meet first, how close we are now, what happens when we cross it, and what the next step up costs.",
+      "costAside": "{amount} a month",
+      "servicesAside": {
+        "one": "{count} to watch",
+        "few": "{count} to watch",
+        "other": "{count} to watch",
+        "none": "nothing to watch"
+      },
+      "serviceChip": {
+        "perMonth": "{amount} {currency}/month",
+        "perMonthEstimated": "≈ {amount} {currency}/month"
+      }
     },
     "volunteers": {
       "title": "Volunteers",
@@ -6216,6 +6299,10 @@
         "add": "Add to the strip",
         "full": "The strip holds {max} photographs, as many as it takes. Remove one to add another.",
         "saved": "The photo strip was saved."
+      },
+      "language": {
+        "ro": "Română",
+        "en": "English"
       }
     },
     "look": {
@@ -6520,6 +6607,8 @@
       "sparesFree": "Reserved for the desk: {from}–{to}, {free} of {total} still free. The reprint carries only the free ones.",
       "sparesNone": "Reserved for the desk: {from}–{to}, all given. Print more if you need them.",
       "sparesTitle": "Spare bibs for on-the-spot entries",
+      "sparesLine": "{from}–{to}, free: {free}",
+      "sparesLineNone": "None reserved",
       "sparesHelp": "Numbers printed ahead with an empty name line, for people who register at the desk; nobody online gets them. Between 1 and {max} at a time.",
       "sparesCount": "How many",
       "sparesPrint": "Print",
@@ -8775,9 +8864,9 @@
                 "«Staff» is the Administrator's and the Superadministrator's. The Superadministrator role and a Superadministrator's row are changed only by a Superadministrator.",
                 "«Staff» → «Add someone»: «Email address», «Name», «Role» (Voluntar for the desk), «Preferred language».",
                 "Press «Add» and confirm. The person gets the invitation by email and chooses a password.",
-                "It never arrived: on their row, «Resend the invitation» → «Send now, without waiting for the scheduled round».",
-                "Another role: «Change role». Left the team: «Revoke access».",
-                "The shop without the Administrator role: on the colleague's row, tick «Manages the shop» and confirm. They find «Shop» in the top bar; they never see the members' addresses."
+                "It never arrived: press their row, then «Resend the invitation» → «Send now, without waiting for the scheduled round».",
+                "On the person's row (press it to open it): another role — «Role», then «Change role»; left the team — «Revoke access», the last.",
+                "The shop without the Administrator role: press the colleague's row, tick «Manages the shop» and confirm. They find «Shop» in the top bar; they never see the members' addresses."
               ]
             },
             {
@@ -8864,7 +8953,7 @@
               "title": "The club's legal texts",
               "steps": [
                 "«Legal documents»: if the box «One step: approve the templates with the club's facts» is at the top, check the club's facts in it and press «Approve the missing texts now…»: each text not yet approved gets version 1, from its template, with the club's facts. A text already approved is not touched.",
-                "One text: on its card in «Legal documents» press «Regenerate from the template» and confirm. All at once: under «Every text at once» press «Regenerate from the templates», or on «New version» press «Regenerate all». One draft is made for each; nothing takes effect yet, and the list opens on «Drafts».",
+                "One text: open its row in «Legal documents», press «Regenerate from the template» and confirm. All at once: under «Every text at once» press «Regenerate from the templates», or on «New version» press «Regenerate all». One draft is made for each; nothing takes effect yet, and the list opens on «Drafts».",
                 "Open each draft (the «Drafts» filter shows them all), read it and fill in what is left written <…>, in Romanian and in English; «Save draft».",
                 "Back on «Legal documents»: «Approve the drafts» and confirm. The drafts ready to approve take effect together; what cannot be approved at once is written under the button, with the reason.",
                 "What is in force for each text: the card's head says «In force: version…» or «No version in force»; the filters «In force», «Replaced» and «Withdrawn» show the rest.",
@@ -9573,9 +9662,16 @@
       "confirmBody": "Topic: {topic}. Each receives it in their own language first, with the unsubscribe link. Once sent it cannot be stopped.",
       "history": "Sent",
       "historyEmpty": "Nothing sent yet.",
-      "historyMessage": "{when} · “{subject}” · {topics} · {count} recipients · {sender}",
-      "historyAlert": "{when} · automatic new-event announcement · {topics} · {count} recipients",
       "historyNoSender": "account removed",
+      "historyColumns": {
+        "when": "When",
+        "what": "What was sent",
+        "subject": "“{subject}”",
+        "alert": "automatic new-event announcement",
+        "topics": "Topics",
+        "recipients": "Recipients",
+        "sender": "Sent by"
+      },
       "withdrawTitle": "Remove an address at someone's request",
       "withdrawHelp": "When someone writes to say they no longer want the news: type their address here. We find it and delete it, with anything still waiting to be sent to it.",
       "withdrawEmail": "Email address",
@@ -10104,7 +10200,6 @@
         "filterClear": "All orders",
         "csv": "Download CSV",
         "ordersEmpty": "No orders.",
-        "ordersMore": "Showing the newest {shown} of {total}. The CSV has them all.",
         "orderNumber": "Order no. {number}",
         "status": {
           "PLACED": "Placed",

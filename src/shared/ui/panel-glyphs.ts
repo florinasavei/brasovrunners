@@ -20,8 +20,10 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import DataUsageIcon from "@mui/icons-material/DataUsage";
 import DateRangeIcon from "@mui/icons-material/DateRange";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import DrawIcon from "@mui/icons-material/Draw";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import EventIcon from "@mui/icons-material/Event";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import FeedbackIcon from "@mui/icons-material/Feedback";
@@ -45,6 +47,7 @@ import LinkIcon from "@mui/icons-material/Link";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import MailIcon from "@mui/icons-material/Mail";
+import ManageHistoryIcon from "@mui/icons-material/ManageHistory";
 import MapIcon from "@mui/icons-material/Map";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import NewspaperIcon from "@mui/icons-material/Newspaper";
@@ -65,7 +68,10 @@ import PhotoAlbumIcon from "@mui/icons-material/PhotoAlbum";
 import PlaceIcon from "@mui/icons-material/Place";
 import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import PrintIcon from "@mui/icons-material/Print";
+import PrivacyTipIcon from "@mui/icons-material/PrivacyTip";
 import PublicIcon from "@mui/icons-material/Public";
+import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
+import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import ReorderIcon from "@mui/icons-material/Reorder";
 import RouteIcon from "@mui/icons-material/Route";
 import RuleIcon from "@mui/icons-material/Rule";
@@ -95,6 +101,7 @@ import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
+import IncognitoIcon from "./IncognitoIcon";
 
 /**
  * A backoffice box's glyph, by name (§521; the owner, 2026-09-27: a glyph on every button and
@@ -123,6 +130,8 @@ export const PANEL_GLYPHS = {
   title: TitleIcon,
   description: NotesIcon,
   when: EventIcon,
+  // «Locul», the open part of «Când și unde» (the editor's two shapes, 2026-10-21): the pin the page's map draws for it.
+  place: PlaceIcon,
   timezone: AccessTimeIcon,
   address: PlaceIcon,
   course: RouteIcon,
@@ -134,6 +143,8 @@ export const PANEL_GLYPHS = {
   partners: HandshakeIcon,
   registration: HowToRegIcon,
   window: DateRangeIcon,
+  // «Alege datele una câte una» (§350), the Salvare box's fold of a series' dates: the calendar's range, as before.
+  seriesDates: DateRangeIcon,
   confirmation: TaskAltIcon,
   reminder: NotificationsActiveIcon,
   bibs: ConfirmationNumberIcon,
@@ -152,6 +163,9 @@ export const PANEL_GLYPHS = {
   bibMembers: CardMembershipIcon,
   print: PrintIcon,
   startList: GroupsIcon,
+  // «Lista de invitați speciali» (§647), a fold of «Lista publică a participanților»: the incognito the
+  // list wears everywhere (`HiddenListChip`), the house's own drawing — Material has none.
+  hiddenList: IncognitoIcon,
   promotion: ShareIcon,
   save: SaveIcon,
   // «De făcut pentru pagina evenimentului» (§749): what the page still lacks and the club's own lines.
@@ -186,6 +200,18 @@ export const PANEL_GLYPHS = {
   queue: HourglassTopIcon,
   // «Note interne» (§777): what the organizers tell each other about one registration — the sticky note.
   internalNotes: StickyNote2Icon,
+  // One registration's page (§847), its cards in the page's order: what to tell the person who asks (the voice), race
+  // day (the desk's own cup), «Lista de invitați speciali» (`hiddenList` above, the incognito its chip and its verb wear, §647), the answers
+  // the person typed (the badge), emergency and health (the kit of «Informații medicale»), what the team did (the
+  // clock of a managed history), the consent withdrawn (the privacy shield), cancel and erase (their verbs' glyphs).
+  tell: RecordVoiceOverIcon,
+  raceDay: EmojiEventsIcon,
+  answers: BadgeIcon,
+  emergency: MedicalServicesIcon,
+  auditTrail: ManageHistoryIcon,
+  consent: PrivacyTipIcon,
+  cancelRegistration: RemoveCircleIcon,
+  erase: DeleteForeverIcon,
   thanks: MailIcon,
   test: ScienceIcon,
   copy: ContentCopyIcon,

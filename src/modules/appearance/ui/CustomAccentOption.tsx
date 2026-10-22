@@ -4,9 +4,13 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { type ChangeEvent, useState } from "react";
 import { ACCENT_SHADE_KEYS, deriveAccentShades, judgeAccent } from "@/modules/appearance/domain/accent-shades";
-import { RecallRadio, useRecall } from "@/shared/forms/recall";
+import { useRecall } from "@/shared/forms/recall";
+import RadioField from "@/shared/ui/RadioField";
 import { LOOK_ACCENT } from "@/theme/brand";
 import AccentPreview, { type AccentPreviewWords } from "./AccentPreview";
+
+/** The lines under the option start where its words do: `RadioField`'s margin, its 24-pixel radio and its gap (§702). */
+const INDENT = 6;
 
 type Props = {
   /** The colour the box opens with: the typed accent in force, else the pink's. */
@@ -66,19 +70,21 @@ function CustomAccentOptionBody({ initialHex, defaultChecked, words, preview }: 
 
   return (
     <Box data-testid="site-look-accent-option-custom" sx={{ py: 0.5 }}>
-      <Box component="label" sx={{ display: "flex", flexWrap: { xs: "wrap", sm: "nowrap" }, alignItems: "center", gap: 1.25, minHeight: 44, cursor: "pointer" }}>
-        <RecallRadio name="accent" value="custom" defaultChecked={defaultChecked} style={{ width: 20, height: 20, flexShrink: 0 }} />
-        <AccentPreview shades={shades} words={preview} />
-        <Box component="span" sx={{ minWidth: 0, flexBasis: { xs: "calc(100% - 32px)", sm: "auto" } }}>
-          <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 500 }}>
-            {words.name}
-          </Typography>
-          <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
-            {words.help}
-          </Typography>
+      {/* The house's radio (§702), the same as the presets' above it. */}
+      <RadioField name="accent" value="custom" defaultChecked={defaultChecked}>
+        <Box component="span" sx={{ display: "flex", flexWrap: { xs: "wrap", sm: "nowrap" }, alignItems: "center", gap: 1.25, minWidth: 0 }}>
+          <AccentPreview shades={shades} words={preview} />
+          <Box component="span" sx={{ minWidth: 0 }}>
+            <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 500 }}>
+              {words.name}
+            </Typography>
+            <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
+              {words.help}
+            </Typography>
+          </Box>
         </Box>
-      </Box>
-      <Box sx={{ pl: "30px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, mt: 0.5 }}>
+      </RadioField>
+      <Box sx={{ pl: INDENT, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, mt: 0.5 }}>
         <Typography component="label" htmlFor={hexId} variant="body2">
           {words.hexLabel}
         </Typography>
@@ -111,17 +117,17 @@ function CustomAccentOptionBody({ initialHex, defaultChecked, words, preview }: 
         id="site-look-accent-verdict"
         variant="caption"
         role="status"
-        sx={{ display: "block", pl: "30px", mt: 0.5, color: verdict === null ? "success.main" : "error.main" }}
+        sx={{ display: "block", pl: INDENT, mt: 0.5, color: verdict === null ? "success.main" : "error.main" }}
         data-testid="site-look-accent-verdict"
       >
         {verdictText}
       </Typography>
       {verdict === null && (
-        <Typography variant="caption" color="text.secondary" sx={{ display: "block", pl: "30px", fontFamily: "monospace" }} data-testid="site-look-accent-shades">
+        <Typography variant="caption" color="text.secondary" sx={{ display: "block", pl: INDENT, fontFamily: "monospace" }} data-testid="site-look-accent-shades">
           {words.shades} {ACCENT_SHADE_KEYS.map((key) => shades.light[key]).join(" · ")} / {ACCENT_SHADE_KEYS.map((key) => shades.dark[key]).join(" · ")}
         </Typography>
       )}
-      <Typography id="site-look-accent-rule" variant="caption" color="text.secondary" sx={{ display: "block", pl: "30px" }}>
+      <Typography id="site-look-accent-rule" variant="caption" color="text.secondary" sx={{ display: "block", pl: INDENT }}>
         {words.rule}
       </Typography>
     </Box>

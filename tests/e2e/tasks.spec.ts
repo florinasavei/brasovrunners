@@ -17,7 +17,8 @@ test.describe("BR-REQ-090-05 the to-do half of the task board", () => {
     await page.goto("/ro/admin/tasks");
     // §265: the checklist is the first panel, so a bare URL still opens on it.
     const main = page.locator("#main");
-    const list = main.getByRole("list", { name: "Lista de sarcini" });
+    // The rows under their state's heading, «Gata» folded (§847): one region, «Lista de sarcini», holds them all.
+    const list = main.getByRole("region", { name: "Lista de sarcini" });
 
     // The counter, over the whole board when nothing is filtered.
     await expect(main.getByText(/^De făcut: \d+ · Gata: \d+$/)).toBeVisible();
@@ -79,7 +80,7 @@ test.describe("BR-REQ-090-05 the to-do half of the task board", () => {
     const main = page.locator("#main");
     await expect(main.getByText("Niciun rând pentru acest filtru.")).toBeVisible();
     await expect(main.getByText("De făcut: 0 · Gata: 0")).toBeVisible();
-    expect(await main.getByRole("list", { name: "Lista de sarcini" }).getByRole("listitem").count()).toBe(0);
+    expect(await main.getByRole("region", { name: "Lista de sarcini" }).getByRole("listitem").count()).toBe(0);
     expect(await main.getByText("Tot ce se vede aici este rezolvat.").count()).toBe(0);
   });
 });

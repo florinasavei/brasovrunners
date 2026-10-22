@@ -78,6 +78,22 @@ describe("§723 «Culoarea de accent» on the look's card", () => {
     for (const hex of [...Object.values(shades.light), ...Object.values(shades.dark)]) expect(html, hex).toContain(hex);
   });
 
+  it("is a fold, closed on arrival with the theme and the accent on its line, open after its own save, the form inside it", async () => {
+    // Emotion's style tags left out: the markup as the browser parses the elements.
+    const bare = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+    const closed = bare(renderToStaticMarkup(await SiteLookPanel({ locale: "ro", state: { setting: { on: true, accent: "blue" }, updatedAt: null }, mayEdit: true })));
+    expect(closed).toMatch(/^<details[^>]*data-testid="site-look"/);
+    expect(closed).not.toMatch(/^<details[^>]*open/);
+    const line = closed.match(/<summary[\s\S]*?<\/summary>/)?.[0] ?? "";
+    expect(line).toContain(`${ro.Admin.look.choices.on.name} · ${ro.Admin.look.accent.presets.blue.name}`);
+    // The form sits inside the fold, so `ActionForm` is what opens it on a refused box (§336).
+    expect(closed.indexOf('data-testid="site-look-form"')).toBeGreaterThan(closed.indexOf("</summary>"));
+    // Every choice is the house's radio (§702): a native radio inside its label.
+    for (const value of ["off", "on"]) expect(closed).toMatch(new RegExp(`data-testid="site-look-option-${value}"[^>]*><label[^>]*><input type="radio" name="look"[^>]*value="${value}"`));
+    const saved = bare(renderToStaticMarkup(await SiteLookPanel({ locale: "ro", state: { setting: { on: true }, updatedAt: null }, mayEdit: true, openWhen: { saved: true } })));
+    expect(saved).toMatch(/^<details[^>]*open/);
+  });
+
   it("shows a role that may not change it the accent in force and no form", async () => {
     const html = await draw({ on: false, accent: "orange" }, false);
     expect(html).toContain(ro.Admin.look.accent.current.replace("{accent}", ro.Admin.look.accent.presets.orange.name));

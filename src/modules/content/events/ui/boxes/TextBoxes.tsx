@@ -250,7 +250,7 @@ export async function DescriptionBox({ languages, heading }: { languages: readon
  * the box; the server refuses its change regardless (`canEditEventFields`, BR-REQ-060-01).
  *
  * **«Condiții de participare» is the last thing in it** (§557, moved in §799; the owner, 2026-10-16:
- * «cardul ăsta ar trebui mutat în ăsta»): a level-4 static `Panel` (`ConditionsGroup`) under the minimum
+ * «cardul ăsta ar trebui mutat în ăsta»): a level-4 fold (`ConditionsGroup`) under the minimum
  * age, outside the tabs, holding the «Informații medicale» tick. The closed line gains «Informații
  * medicale: da/nu» where the event registers on the site. It had a card of its own, `#box-conditions`;
  * a link to that anchor now opens this card, `#box-rules`.

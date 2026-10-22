@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.72-2026-10-22 -->
+<!-- PROJECT_BASELINE: BR-V3.73-2026-10-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.72-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.73-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27882,3 +27882,25 @@ Baseline `BR-V3.71-2026-10-22`.
 **Refused.** The CSV stays as it was: plain, one event, its columns in their order (§761) — a column added to it would move what reads it, so the every-event file is a spreadsheet only. No filter or sort follows the screen's state, role or name filters into the file: like the event's own file, it is the whole of its scope, and Excel's filter arrows do the narrowing. The registrations sheet keeps its own header; this one's frame can be lent to it if the club wants the two to match.
 
 Baseline `BR-V3.72-2026-10-22`.
+
+## 847. The consistency audit's third wave: each volunteer, «Echipa», the legal texts, «Aspect» and «Costuri», the tasks and tables, the editor's parts and the registration's page in the house's shapes
+
+**The owner, 2026-10-21:** «they look like they are from a different app, not consistent at all», «More parallel agents for consistency checks»; and on 2026-10-22, starting this wave: «PORNEȘTE ȘI NU MĂ MAI ÎNTREBA». Waves one and two (§844, §845) fixed what was broken and turned every wall of inputs into the row fold of §842. This wave reshapes the bigger screens the audit found drawn their own way. Presentation and structure only: every server action, field name, form, confirmation and permission is the one before.
+
+**Each volunteer** on the event's «Voluntari» card is a row fold: the line says the name, the state's `StatusChip`, the roles given or «De repartizat», the pencil; the person's chips, contact, verbs and «Modifică» inside, «Șterge voluntarul» last. The fold carries `#volunteer-<id>` so «vezi la …» opens it, and is keyed on what its line says, so a verb that changed the line draws it closed. The volunteer's own page draws the same block open under its header, without repeating the name and the state.
+
+**«Echipa»** (the staff list) is row folds instead of a table: name, address, the role and the facts as chips («Magazin», «Tu», «Nu s-a autentificat încă», «Fără cont de autentificare»), the pencil; the role, the level, «Gestionează magazinul», the account's verbs and «Retrage accesul» last inside, each its own confirming form. This amends §256 for this list only — no `AdminTable`, no ⋮ — and keeps what §256 was for: every verb that ends access asks first; the reader's own row, and a Superadministrator's row read by an Administrator, carry no controls, the latter saying why (§450). «Adaugă o persoană» and «Adaugă mai mulți membri» are folds after the list, open by themselves only while the reader is alone on it.
+
+**«Documente legale»** is one row per text — its name, its state in words, a `StatusChip` per state («În vigoare» / «Nimic în vigoare», «Ciornă de aprobat», «Șablon nou»), the pencil — with what the text is, «Citește textul în vigoare», «Regenerează din șablon», its versions and «Versiuni șterse» behind the line; a row opens by itself for the reasons its versions fold already had, or when a filter names it. The nine notices about features waiting on a new text are one panel, «Înainte să aprobi», a line each with the text it waits on and the full sentence behind «?». **Two languages, one way:** the legal text's form and «Pagina principală» edit RO and EN on the backoffice's one Română | English strip (`LocaleTabPanels`), as the event editor and the FAQ do; the legal tabs say «incomplet» until both title and text are written, and the legal form offers no machine translation.
+
+**«Aspect» and «Costuri»** read as lists of their settings: every card a fold, closed on arrival with the value in force on its line («Alb», «Normal», «Tema v2 · Roz», «Hobby», «la nevoie»), opened by its own save; the radios `RadioField`, the chips `StatusChip`. On «Costuri» each provider's month and each service is a row fold — glyph and name, the month's figure, a state chip, the figures inside — ending in a caret rather than a pencil, since nothing on them is edited; the month's total stays the open headline.
+
+**«Ce mai este de făcut» → «Club»** is one list grouped under a heading per state still owed («Blochează înscrierile», «Nu funcționează», «De făcut»), «Gata» folded away, each owed row opening onto where and how it is done. The newsletter's subscribers, offers and sends, and the shop's orders, are `AdminTable` like every other backoffice list, paged through the address — the orders in the database; `AdminTable` gained an optional `rowId` so a verb's redirect still lands on `#order-<id>`.
+
+**Inside the event editor's cards, one rule:** a part a person may skip is a closed `Panel` fold at the next level with its value on its closed line (help is the help line); a part the event needs is the new `Panel variant="section"` — a glyph, a heading at the next level and its boxes, no fold, no border. A required box that always holds a value (the status, the time zone, the address made from the title) does not make its part needed. Bold captions over dividers, static bordered boxes and hand-drawn folds were replaced in «Când și unde», «Regulamentul», «Lista publică a participanților», the bib print card, «Salvare» and «Recurență».
+
+**The registration's own page** reads like the rest of the backoffice: every section a `Panel` with its glyph, in the order a reader needs them — «Ce îi spui», «Ziua cursei», «Lista de invitați speciali», «Emailuri», «Note interne», «Datele înscrierii» (now also holding the guardian, the city, sex and T-shirt, the socials and the offers consent that sat under the name), «Urgențe și sănătate», «Cronologie» — the rarely read ones («Ce a făcut echipa», «Dată partenerilor», with their count) and the three verbs that end or take something away («Retrage consimțământul», «Anulează înscrierea», «Șterge definitiv», the last in the danger tone) folded. The «i» beside «Ziua cursei» and «Lista de invitați speciali» stays beside the title, as their criteria require. **One state chip:** a registration's state is one table, `REGISTRATION_STATUS_CHIP` (`registrations/ui/RegistrationStatusChip.tsx`) — tone, a glyph for each state and the backoffice's word — drawn the same by the list, the page and the race-day desk; the ended states are grey everywhere, as the volunteers' (the desk keeps its red border, struck number and void-bib line for an ended row). Who may do what, the server actions and the words are unchanged.
+
+The design ratchet shrank with the bare chips and icons these screens no longer use (icons 33 entries / 124 hits, primitives 79 / 83).
+
+Baseline `BR-V3.73-2026-10-22`.

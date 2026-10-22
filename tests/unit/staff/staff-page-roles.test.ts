@@ -68,7 +68,7 @@ const { default: StaffPage } = await import("@/app/[locale]/admin/staff/page");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
-/** Every element under `node`, depth first, through children and through the table's row verbs. */
+/** Every element under `node`, depth first, through children. */
 function elements(node: ReactNode, acc: ReactElement<Props>[] = []): ReactElement<Props>[] {
   if (Array.isArray(node)) {
     for (const child of node) elements(child as ReactNode, acc);
@@ -90,17 +90,29 @@ function member(id: string, role: StaffRole): StaffUser {
   } as unknown as StaffUser;
 }
 
-/** The page's tree, the table's element, and the row verbs as the table would draw them per member. */
+/** The tree under the first element whose `data-testid` is `testId`. */
+const under = (tree: ReactElement<Props>[], testId: string) => elements(tree.find((element) => element.props["data-testid"] === testId));
+
+/**
+ * The page's tree, the «Adaugă o persoană» form's, and each member's row fold (§842) as the page draws it — its line and,
+ * behind the pencil, its controls — with `controls` the fold's body alone (nothing for a row that has no fold).
+ */
 async function render(reader: StaffRole) {
   actor = member("reader", reader);
   team = [actor, ...STAFF_ROLES.map((role) => member(`m-${role}`, role))];
   const tree = await StaffPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) });
   const all = elements(tree);
-  const table = all.find((element) => typeof element.props.rowActions === "function");
-  if (!table) throw new Error("no AdminTable in the page");
-  const rowActions = table.props.rowActions as (row: StaffUser) => ReactNode;
-  const rows = new Map(team.map((row) => [row.id, elements(rowActions(row))]));
-  return { all, rows };
+  const rowOf = (id: string) => elements(all.find((element) => element.props["data-testid"] === "staff-row" && element.props["data-staff-id"] === id));
+  const rows = new Map(team.map((row) => [row.id, rowOf(row.id)]));
+  const controls = new Map(
+    team.map((row) => {
+      const fold = rows.get(row.id)!.find((element) => element.props["data-testid"] === "staff-row-edit");
+      // The fold's children: the line (`summary`) and the controls under it.
+      const body = fold ? (fold.props.children as ReactNode[]).filter((child) => !(isValidElement<Props>(child) && child.props["data-testid"] === "staff-row-toggle")) : [];
+      return [row.id, elements(body)];
+    }),
+  );
+  return { all, invite: under(all, "staff-invite-form"), rows, controls };
 }
 
 /** The values a select named `role` offers inside `tree`. */
@@ -109,6 +121,9 @@ function roleOptions(tree: ReactElement<Props>[]): string[][] {
     .filter((element) => element.props.name === "role" && element.props.select === true)
     .map((select) => elements(select.props.children).map((option) => String(option.props.value)));
 }
+
+/** The chips on a row's line, by test id, in order. */
+const chips = (tree: ReactElement<Props>[]) => tree.flatMap((element) => (typeof element.props.testId === "string" ? [element.props.testId] : []));
 
 const superadminLine = (tree: ReactElement<Props>[]) => tree.filter((element) => element.props["data-testid"] === "staff-superadmin-row");
 
@@ -119,7 +134,7 @@ describe("BR-REQ-060-01 the team page, read by an Administrator (§450)", () => 
   });
 
   it("offers every role but the Superadministrator in the invitation", () => {
-    const inviteSelects = roleOptions(page.all);
+    const inviteSelects = roleOptions(page.invite);
     expect(inviteSelects).toEqual([["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]]);
   });
 
@@ -130,6 +145,9 @@ describe("BR-REQ-060-01 the team page, read by an Administrator (§450)", () => 
     expect(line[0].props.children).toBe("Rolul și accesul unui Superadministrator le schimbă doar un Superadministrator.");
     expect(roleOptions(row)).toEqual([]);
     expect(row.some((element) => typeof element.props.action === "function")).toBe(false);
+    // A line, not a fold: a fold that opens onto nothing is a control that lies (§842).
+    expect(row.some((element) => element.props["data-testid"] === "staff-row-edit")).toBe(false);
+    expect(chips(row)).toEqual(["staff-role"]);
   });
 
   it.each(STAFF_ROLES.filter((role) => role !== "SUPERADMIN"))("gives the %s row a role select without the top role, and no line", (role) => {
@@ -138,8 +156,24 @@ describe("BR-REQ-060-01 the team page, read by an Administrator (§450)", () => 
     expect(roleOptions(row)).toEqual([["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]]);
   });
 
-  it("offers nothing on the reader's own row", () => {
-    expect(page.rows.get("reader")).toEqual([]);
+  it("offers nothing on the reader's own row: a line with «Tu», no fold and no form", () => {
+    const own = page.rows.get("reader")!;
+    expect(own.some((element) => element.props["data-testid"] === "staff-row-edit")).toBe(false);
+    expect(own.some((element) => typeof element.props.action === "function")).toBe(false);
+    expect(chips(own)).toEqual(["staff-role", "staff-you"]);
+  });
+
+  it.each(STAFF_ROLES.filter((role) => role !== "SUPERADMIN"))("folds the %s row's controls behind its line, «Retrage accesul» last", (role) => {
+    const controls = page.controls.get(`m-${role}`)!;
+    const forms = controls.filter((element) => typeof element.props.action === "function").map((element) => element.props["data-testid"]);
+    expect(forms[0]).toBe("staff-role-form");
+    expect(forms.at(-1)).toBe("staff-revoke-form");
+    // Signed in: the password reset, not the invitation again (§171); both account verbs and the revoke ask first (§256, §384).
+    expect(forms).toContain("staff-password-form");
+    expect(forms).not.toContain("staff-resend-form");
+    for (const form of controls.filter((element) => typeof element.props.action === "function")) expect(form.props.confirm, String(form.props["data-testid"])).toBeTruthy();
+    const destructive = controls.filter((element) => (element.props.confirm as { destructive?: boolean } | undefined)?.destructive).map((element) => element.props["data-testid"]);
+    expect(destructive).toEqual(expect.arrayContaining(["staff-deactivate-form", "staff-revoke-form"]));
   });
 });
 
@@ -150,7 +184,7 @@ describe("BR-REQ-060-01 the team page, read by a Superadministrator (§450)", ()
   });
 
   it("offers every role in the invitation", () => {
-    expect(roleOptions(page.all)).toEqual([[...STAFF_ROLES]]);
+    expect(roleOptions(page.invite)).toEqual([[...STAFF_ROLES]]);
   });
 
   it.each([...STAFF_ROLES])("gives the %s row every role and no read-only line", (role) => {
@@ -185,18 +219,16 @@ describe("BR-REQ-060-01 «Gestionează magazinul» on «Echipa» (§687)", () =>
     expect(implied(row)).toEqual([]);
   });
 
-  it("a row that holds it posts the tick off, and its role cell carries the chip «Magazin»", async () => {
+  it("a row that holds it posts the tick off, and its line carries the chip «Magazin»", async () => {
     actor = member("reader", "ADMIN");
     const holder = { ...member("m-holder", "CONTRIBUTOR"), permissions: new Set(["shop.manage"]) } as unknown as StaffUser;
-    team = [actor, holder];
-    const tree = await StaffPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) });
-    const table = elements(tree).find((element) => typeof element.props.rowActions === "function")!;
-    const row = elements((table.props.rowActions as (row: StaffUser) => ReactNode)(holder));
-    expect(hidden(row, "on")).toEqual(["0"]);
-    const roleColumn = (table.props.columns as { key: string; render: (row: StaffUser) => ReactNode }[]).find((column) => column.key === "role")!;
-    const cell = elements(roleColumn.render(holder));
-    expect(cell.filter((element) => element.props["data-testid"] === "staff-permission-shop").map((element) => element.props.label)).toEqual(["Magazin"]);
-    expect(elements(roleColumn.render(member("m-plain", "CONTRIBUTOR"))).filter((element) => element.props["data-testid"] === "staff-permission-shop")).toEqual([]);
+    team = [actor, holder, member("m-plain", "CONTRIBUTOR")];
+    const tree = elements(await StaffPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) }));
+    const rowOf = (id: string) => elements(tree.find((element) => element.props["data-staff-id"] === id));
+    const lineOf = (id: string) => elements(rowOf(id).find((element) => element.props["data-testid"] === "staff-row-toggle"));
+    expect(hidden(rowOf("m-holder"), "on")).toEqual(["0"]);
+    expect(lineOf("m-holder").filter((element) => element.props.testId === "staff-permission-shop").map((element) => element.props.label)).toEqual(["Magazin"]);
+    expect(lineOf("m-plain").filter((element) => element.props.testId === "staff-permission-shop")).toEqual([]);
   });
 
   it("an Administrator's row is drawn ticked and greyed, «inclus în rol»; a member's row has no tick", async () => {
@@ -212,7 +244,8 @@ describe("BR-REQ-060-01 «Gestionează magazinul» on «Echipa» (§687)", () =>
 
   it("nothing on the reader's own row or on a Superadministrator's row an Administrator reads", async () => {
     const page = await render("ADMIN");
-    expect(page.rows.get("reader")).toEqual([]);
+    expect(tickForm(page.rows.get("reader")!)).toEqual([]);
+    expect(implied(page.rows.get("reader")!)).toEqual([]);
     expect(tickForm(page.rows.get("m-SUPERADMIN")!)).toEqual([]);
     expect(implied(page.rows.get("m-SUPERADMIN")!)).toEqual([]);
   });
@@ -222,5 +255,32 @@ describe("BR-REQ-060-01 «Gestionează magazinul» on «Echipa» (§687)", () =>
     for (const role of ["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV"] as const) expect(tickForm(page.rows.get(`m-${role}`)!), role).toHaveLength(1);
     expect(implied(page.rows.get("m-SUPERADMIN")!)).toHaveLength(1);
     expect(tickForm(page.rows.get("m-MEMBER")!)).toEqual([]);
+  });
+});
+
+/**
+ * §842 — «Adaugă o persoană» and «Adaugă mai mulți membri» are folds after the list, like every «Adaugă…» of the backoffice:
+ * open by themselves only while there is nobody to edit — the team is the reader alone, whose own row is always on the list.
+ */
+describe("§842 the add folds on «Echipa»", () => {
+  const folds = (tree: ReactElement<Props>[]) =>
+    ["staff-invite", "staff-members"].map((testId) => (tree.find((element) => element.props["data-testid"] === testId)!.props.openWhen as { primary: boolean }).primary);
+
+  it("stay closed while the team has someone besides the reader", async () => {
+    const page = await render("ADMIN");
+    expect(folds(page.all)).toEqual([false, false]);
+  });
+
+  it("open by themselves while the reader is alone on the list", async () => {
+    actor = member("reader", "ADMIN");
+    team = [actor];
+    const tree = elements(await StaffPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) }));
+    expect(folds(tree)).toEqual([true, true]);
+  });
+
+  it("come after the list", async () => {
+    const page = await render("ADMIN");
+    const order = page.all.map((element) => element.props["data-testid"]).filter((testId) => testId === "staff-list" || testId === "staff-invite" || testId === "staff-members");
+    expect(order).toEqual(["staff-list", "staff-invite", "staff-members"]);
   });
 });

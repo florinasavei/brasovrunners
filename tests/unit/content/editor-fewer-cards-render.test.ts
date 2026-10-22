@@ -231,8 +231,8 @@ describe("§799 «Condiții de participare» inside «Regulamentul»", () => {
     // After the tabs and the minimum age: the tick is not translated text.
     expect(group).toBeGreaterThan(rules.indexOf('name="event.minAge"'));
     expect(group).toBeGreaterThan(rules.lastIndexOf('name="rules"'));
-    // A level-4 heading with the glyph before the words (a static Panel, as «Clubul pe lista publică»).
-    const section = rules.slice(rules.lastIndexOf("<section", group));
+    // A level-4 heading with the glyph before the words: a fold, an optional part (the editor's two shapes), as «Clubul pe lista publică».
+    const section = rules.slice(rules.lastIndexOf("<details", group));
     expect(section).toMatch(/<h4\b[^>]*>(?:<svg[^>]*data-testid="MedicalServicesIcon")/);
     expect(section.indexOf("Condiții de participare")).toBeGreaterThan(section.indexOf('data-testid="MedicalServicesIcon"'));
     expect(section).toContain('name="event.askHealthNote"');

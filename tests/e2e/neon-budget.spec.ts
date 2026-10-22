@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openDatabaseCard } from "./support/costs";
 import { signIn } from "./support/featured-event";
 
 /**
@@ -17,10 +18,11 @@ test.describe("§447 the month's budget", () => {
     // The thresholds' form is a platform setting, the Superadministrator's since §450.
     await signIn(page, "Dev Superadministrator");
     await page.goto("/ro/admin/settings/costs");
-    // Scoped to `#main` for the streamed-duplicate reason `tasks-cost.spec.ts` explains (§93).
-    const card = page.locator("#main").getByTestId("neon-budget");
+    // Scoped to `#main` for the streamed-duplicate reason `tasks-cost.spec.ts` explains (§93). A fold inside the
+    // database's card on Costuri, the level on its line; `/devs` keeps it an open card.
+    const card = await openDatabaseCard(page.locator("#main"), "neon-budget");
 
-    await expect(card.getByRole("heading", { name: "Bugetul lunii" })).toBeVisible();
+    await expect(card.getByRole("heading", { name: /^Bugetul lunii/ })).toBeVisible();
     await expect(card.getByTestId("neon-budget-level")).toHaveAttribute("data-level", "unknown");
     await expect(card.getByTestId("neon-budget-level")).toContainText("Neon nu a putut fi citit acum");
     await expect(card.getByTestId("neon-budget-effect")).toContainText("Ce face site-ul acum: nimic în plus");

@@ -13,6 +13,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import type { FoldOpenWhen } from "@/shared/ui/fold";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 
@@ -24,6 +25,10 @@ type Props = {
   mayEdit?: boolean;
   /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§479). */
   level?: 2 | 3;
+  /** A fold, the level on its line — Costuri's; `/devs` keeps the open card it has always read. */
+  collapsible?: boolean;
+  /** Why the fold opens on arrival (§336): its own save, or a month that asks for action. */
+  openWhen?: FoldOpenWhen;
 };
 
 /** The alert's colour per level. */
@@ -43,7 +48,7 @@ const SEVERITY: Record<NeonBudgetLevel, "success" | "info" | "warning" | "error"
  * the pro-rated line, the pace), what the platform does about it now (the governor's effects, in
  * words), and where the figure came from (which of Neon's readings, the other two beside it).
  */
-export default async function NeonBudgetPanel({ locale, reading, mayEdit = false, level: headingLevel = 2 }: Props) {
+export default async function NeonBudgetPanel({ locale, reading, mayEdit = false, level: headingLevel = 2, collapsible = false, openWhen }: Props) {
   const t = await getTranslations("Budget");
   const format = await getFormatter();
   const hours = (value: number) => format.number(value, { maximumFractionDigits: 1 });
@@ -52,7 +57,7 @@ export default async function NeonBudgetPanel({ locale, reading, mayEdit = false
   const words = mayEdit ? await confirmWords() : null;
 
   return (
-    <Panel glyph="budget" level={headingLevel} id="neon-budget" title={t("title")} intro={t("intro")} aside={t(`level.${level}`)} data-testid="neon-budget">
+    <Panel glyph="budget" collapsible={collapsible} openWhen={openWhen} level={headingLevel} id="neon-budget" title={t("title")} intro={t("intro")} aside={t(`level.${level}`)} data-testid="neon-budget">
       <Alert severity={SEVERITY[level]} sx={{ mb: 1.5 }} data-testid="neon-budget-level" data-level={level}>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {t(`level.${level}`)}

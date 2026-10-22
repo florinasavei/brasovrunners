@@ -169,14 +169,13 @@ describe("§817 «Nivel» in «Adaugă o persoană»", () => {
 
   it("is the one shared select: the single add, «Adaugă mai mulți membri» and a member's row draw MemberTierSelect, and nothing draws a level box of its own", async () => {
     const { plain, all } = await render("ADMIN");
-    // The page itself draws the shared component three times, and no box named tierId except through it.
-    expect(plain.filter((element) => element.type === MemberTierSelect)).toHaveLength(2);
-    const table = plain.find((element) => typeof element.props.rowActions === "function")!;
-    const row = elements((table.props.rowActions as (row: StaffUser) => ReactNode)(member("m-1", "MEMBER", null)), false);
+    // The page itself draws the shared component three times — the member's row fold (§842) among them — and no box named tierId except through it.
+    expect(plain.filter((element) => element.type === MemberTierSelect)).toHaveLength(3);
+    const row = elements(plain.find((element) => element.props["data-staff-id"] === "m-1")!, false);
     expect(row.filter((element) => element.type === MemberTierSelect)).toHaveLength(1);
     expect(plain.filter((element) => element.props.name === "tierId")).toEqual([]);
-    expect(all.filter((element) => element.props.name === "tierId" && element.props.select === true)).toHaveLength(2);
-    const drawn = plain.filter((element) => element.type === MemberTierSelect).map((element) => element.props["data-testid"]);
+    expect(all.filter((element) => element.props.name === "tierId" && element.props.select === true)).toHaveLength(3);
+    const drawn = plain.filter((element) => element.type === MemberTierSelect && !row.includes(element)).map((element) => element.props["data-testid"]);
     expect(drawn).toEqual(["staff-invite-tier", "staff-members-tier"]);
   });
 

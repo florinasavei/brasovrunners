@@ -97,13 +97,17 @@ async function render() {
   team = [actor, person("m-plain", "MEMBER"), person("m-held", "MEMBER", "t-old"), person("c-volunteer", "CONTRIBUTOR"), person("c-admin", "ADMIN")];
   const tree = await StaffPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) });
   const all = elements(tree);
-  const table = all.find((element) => typeof element.props.rowActions === "function")!;
-  const rowActions = table.props.rowActions as (row: StaffUser) => ReactNode;
-  const columns = table.props.columns as { key: string; render: (row: StaffUser) => ReactNode }[];
+  /** One person's row fold (§842): its line and, behind the pencil, its controls. */
+  const rowOf = (id: string) => all.find((element) => element.props["data-testid"] === "staff-row" && element.props["data-staff-id"] === id)!;
   return {
     all,
-    row: (id: string) => elements(rowActions(team.find((candidate) => candidate.id === id)!)),
-    cell: (key: string, id: string) => elements(columns.find((column) => column.key === key)!.render(team.find((candidate) => candidate.id === id)!)),
+    row: (id: string) => elements(rowOf(id)),
+    /** The row's line alone — the summary of its fold, or the whole row where nothing on it may change. */
+    line: (id: string) => {
+      const row = elements(rowOf(id));
+      const summary = row.find((element) => element.props["data-testid"] === "staff-row-toggle");
+      return summary ? elements(summary) : row;
+    },
   };
 }
 
@@ -147,9 +151,9 @@ describe("§811 «Nivel» on the team page", () => {
     expect(options(page.row("reader"))).toEqual([]);
   });
 
-  it("names a member's level in the role column — glyph and name, hidden or not — and a colleague's none", async () => {
+  it("names a member's level on the row's line — glyph and name, hidden or not — and a colleague's none", async () => {
     const page = await render();
-    const badge = (id: string) => page.cell("role", id).filter((element) => element.props.testId === "staff-member-tier");
+    const badge = (id: string) => page.line(id).filter((element) => element.props.testId === "staff-member-tier");
     expect(badge("m-plain")).toEqual([]);
     expect(badge("c-volunteer")).toEqual([]);
     const held = badge("m-held");

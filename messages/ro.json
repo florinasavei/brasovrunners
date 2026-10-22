@@ -1318,9 +1318,19 @@
         "promo": "Acordul pentru oferte și beneficii"
       },
       "auditTrail": "Ce a făcut echipa",
+      "auditTrailCount": {
+        "one": "{count} acțiune",
+        "few": "{count} acțiuni",
+        "other": "{count} de acțiuni"
+      },
       "partnerShares": {
         "title": "Dată partenerilor",
-        "noRecipient": "destinatar nenotat"
+        "noRecipient": "destinatar nenotat",
+        "count": {
+          "one": "{count} listă",
+          "few": "{count} liste",
+          "other": "{count} de liste"
+        }
       },
       "auditActorRemoved": "cont șters",
       "notes": {
@@ -3230,6 +3240,10 @@
             "asked": "Informații medicale: da",
             "notAsked": "Informații medicale: nu"
           },
+          "hiddenList": {
+            "on": "Folosită",
+            "off": "Nefolosită"
+          },
           "bibs": {
             "from": "De la {number}",
             "clubColour": "culoarea clubului",
@@ -3470,15 +3484,11 @@
       "you": "Tu",
       "changeRole": "Schimbă rolul",
       "revoke": "Retrage accesul",
-      "columnName": "Nume",
-      "columnEmail": "E-mail",
-      "columnRole": "Rol",
-      "columnStatus": "Stare",
+      "edit": "Modifică",
       "tableCaption": "Conturile care pot intra în administrare, cu rolul fiecăruia",
       "empty": "Nu există niciun cont în echipă.",
       "changeRolePending": "Se salvează…",
       "revokePending": "Se retrage…",
-      "rowActions": "Acțiuni pentru {name}",
       "resendInviteTitle": "Trimiți din nou invitația?",
       "resendInviteBody": "Pleacă un email către {email} cu linkul de intrare.",
       "passwordResetTitle": "Trimiți resetarea parolei?",
@@ -3497,7 +3507,7 @@
         "SUPERADMIN": "plus setările tehnice care pot opri serviciul — cât de des verifică site-ul, limitele bazei de date, verificarea anti-robot — și numirea altui Superadministrator.",
         "MEMBER": "zona membrilor de pe site, după autentificare. Fără backoffice."
       },
-      "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din tabel — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
+      "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din listă — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
       "passwordReset": "Trimite resetare de parolă",
       "passwordResetPending": "Se trimite…",
       "passwordResetSent": "Gata. I-am trimis pe email linkul cu care își pune o parolă nouă.",
@@ -3505,15 +3515,15 @@
       "deactivateAccountPending": "Se dezactivează…",
       "accountDeactivated": "Contul de autentificare a fost dezactivat: nu se mai poate autentifica nicăieri. Rândul din echipă rămâne — ca să-i iei și accesul, folosește „Retrage accesul”.",
       "accountReactivated": "Contul de autentificare a fost reactivat.",
-      "accountMissing": "La furnizorul de autentificare nu există niciun cont cu această adresă, deci nu era nimic de schimbat. Verifică adresa din tabel.",
+      "accountMissing": "La furnizorul de autentificare nu există niciun cont cu această adresă, deci nu era nimic de schimbat. Verifică adresa din listă.",
       "accountUnconfigured": "Nu putem face asta fără cheia Zitadel: Sarcini → Club → „Invită echipa”. Până atunci, din consola Zitadel.",
       "accountFailed": "Furnizorul de autentificare a refuzat ({reason}).",
       "noAccount": "Fără cont de autentificare",
       "invitationRefused": "Invitația respinsă: {label}",
-      "noAccountHelp": "„Fără cont de autentificare”: persoana e pe listă, dar nu se poate autentifica. Rezolvarea: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă.",
+      "noAccountHelp": "„Fără cont de autentificare”: persoana e pe listă, dar nu se poate autentifica. Rezolvarea: deschide-i rândul → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă.",
       "accountsBlind": "Nu am putut verifica cine are cont: cheia Zitadel vede doar {seen} conturi, deci nu are rolul „Org User Manager”. Vezi Sarcini → Club → „Cheia de invitații”.",
       "accountsUnchecked": "Nu am putut verifica cine are cont de autentificare — Zitadel a răspuns: {reason}. Rândurile de mai jos nu spun nimic despre conturi până la o verificare reușită; reîncarcă pagina peste câteva minute.",
-      "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT). Până o pui, creează contul din consola Zitadel, cu exact adresa din tabel.",
+      "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT). Până o pui, creează contul din consola Zitadel, cu exact adresa din listă.",
       "inviting": "Se adaugă…",
       "inviteAsideSends": "contul și invitația, într-un pas",
       "inviteAsideManual": "lista și invitația; contul, din consola Zitadel",
@@ -3906,7 +3916,12 @@
         "unchanged": "Textul în vigoare are deja cuvintele șablonului.",
         "draftExists": "O ciornă așteaptă deja: aprob-o sau șterge-o, apoi poți regenera.",
         "blanks": "În ciornă vor rămâne câmpuri de completat, de forma '<'…>.",
-        "empty": "Nicio versiune pentru acest filtru."
+        "empty": "Nicio versiune pentru acest filtru.",
+        "openRow": "Lucrează la text",
+        "readRow": "Vezi versiunile",
+        "chipNoneInForce": "Nimic în vigoare",
+        "chipDraftWaiting": "Ciornă de aprobat",
+        "readInForce": "Citește textul în vigoare"
       },
       "stateLabel": {
         "inForce": "În vigoare",
@@ -4009,7 +4024,44 @@
       },
       "resultsMissing": "Nota în vigoare nu descrie încă clasamentul curselor, deci niciun clasament nu poate fi publicat. Aprobă o notă nouă din șablon.",
       "resultsTermsMissing": "Termenii în vigoare nu descriu încă clasamentul curselor, deci niciun clasament nu poate fi publicat. Aprobă termeni noi din șablon.",
-      "rsvpMissing": "Nota în vigoare nu descrie încă răspunsurile „Vin!”, deci pagina unui eveniment bifat nu le primește. Aprobă o notă nouă din șablon."
+      "rsvpMissing": "Nota în vigoare nu descrie încă răspunsurile „Vin!”, deci pagina unui eveniment bifat nu le primește. Aprobă o notă nouă din șablon.",
+      "notices": {
+        "title": "Înainte să aprobi",
+        "count": {
+          "one": "{count} funcție așteaptă un text nou",
+          "few": "{count} funcții așteaptă un text nou",
+          "other": "{count} de funcții așteaptă un text nou"
+        },
+        "listLabel": "Ce e oprit până la un text nou",
+        "waitsOn": {
+          "PRIVACY_NOTICE": "Așteaptă nota",
+          "TERMS": "Așteaptă termenii"
+        },
+        "lines": {
+          "listStates": "Lista publică arată doar confirmații",
+          "listSocials": "Strava și Instagram nu apar pe lista publică",
+          "listNumbers": "Lista publică nu arată numerele de concurs",
+          "results": "Niciun clasament nu poate fi publicat",
+          "rsvp": "Răspunsurile „Vin!” sunt oprite",
+          "resultsTerms": "Niciun clasament nu poate fi publicat",
+          "promo": "Formularul nu oferă bifa pentru oferte și beneficii",
+          "sponsor": "Lista pentru sponsori e oprită",
+          "refusal": "Formularul nu spune pe ce motive poate refuza clubul"
+        }
+      },
+      "texts": {
+        "title": "Textele legale",
+        "count": {
+          "one": "{count} text",
+          "few": "{count} texte",
+          "other": "{count} de texte"
+        }
+      },
+      "language": {
+        "ro": "Română",
+        "en": "English"
+      },
+      "tabIncomplete": "incomplet"
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -4163,7 +4215,13 @@
         "minCuHelpMore": "De la ea pornește baza la prima cerere. Una mai mare costă mai mult la fiecare oră trează.",
         "suspendHelpMore": "„Niciodată” o ține pornită tot timpul: fiecare oră a lunii se plătește la mărimea minimă ({rate} $ pe oră-CU), chiar fără niciun vizitator.",
         "confirmLimit": "Limita nouă: {hours} ore-CU.",
-        "confirmNone": "Fără limită lunară."
+        "confirmNone": "Fără limită lunară.",
+        "aside": {
+          "limit": "limită {hours} ore-CU",
+          "none": "fără limită",
+          "unconfigured": "fără cheie Neon",
+          "failed": "necitite"
+        }
       },
       "filter": {
         "who": "Cine",
@@ -4192,6 +4250,12 @@
       "stateLabel": {
         "due": "De reînnoit acum"
       },
+      "groups": {
+        "blocking": "Blochează înscrierile ({count})",
+        "broken": "Nu funcționează ({count})",
+        "open": "De făcut ({count})",
+        "done": "Gata ({count})"
+      },
       "owner": {
         "club": "Clubul",
         "developer": "Dezvoltatorul"
@@ -4205,7 +4269,7 @@
           "how": [
             "Calea scurtă: /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → butonul de aprobare din casetă.",
             "Nota, termenii și cele două declarații de concurs, eveniment montan și eveniment pe șosea sau în parc, intră în vigoare cu datele clubului în ele.",
-            "Ca să citești întâi: pe cardul textului, „Regenerează din șablon” → citește ciorna, completează → „Salvează ciorna” → „Aprobă și publică”. Toate deodată: „Versiune nouă” → „Regenerează toate”.",
+            "Ca să citești întâi: pe rândul textului, „Regenerează din șablon” → citește ciorna, completează → „Salvează ciorna” → „Aprobă și publică”. Toate deodată: „Versiune nouă” → „Regenerează toate”.",
             "Calea lungă, pentru o modificare: „Versiune nouă” → alege șablonul → „Salvează ciorna” → PDF → „Aprobă și publică”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
             "Pe fiecare eveniment, la Înscrieri, se alege declarația aprobată (dacă nu e deja)."
           ]
@@ -4295,7 +4359,7 @@
             "Nu „Role Assignments”: acea pagină dă roluri într-un proiect și nu ajută la crearea utilizatorilor.",
             "Dacă Zitadel a răspuns 401 sau tokenul a fost revocat: pe service account → Personal Access Tokens → New, apoi noul token ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel și redeploy.",
             "Verificare: reîncarcă pagina; rândul se face verde când cheia găsește contul tău.",
-            "Apoi, pe Echipa, pentru fiecare coleg marcat „Fără cont de autentificare”: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă."
+            "Apoi, pe Echipa, pentru fiecare coleg marcat „Fără cont de autentificare”: deschide-i rândul → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă."
           ],
           "howUnreachable": [
             "Reîncarcă pagina peste câteva minute: verificarea se face la fiecare deschidere, cu o căutare în Zitadel.",
@@ -5139,7 +5203,11 @@
         "introMore": "Lucrările sunt mentenanța înscrierilor și coada de emailuri. Când nu au nimic de făcut, nu trezesc baza; fiecare trezire costă cel puțin 5 minute de calcul.",
         "safeMore": "Fiecare citire a locurilor socotește termenele în clipa aceea, cu sau fără lucrarea programată. Setarea ta are întâietate.",
         "onTheHourMore": "O zi fără nimic de făcut costă o trezire a bazei, la {time}. Un termen (o rezervare, o reamintire) își păstrează ora. Cu un interval ales, unele pot întârzia cu până la un sfert de oră.",
-        "fieldHelpMore": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut."
+        "fieldHelpMore": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut.",
+        "aside": {
+          "onDemand": "la nevoie",
+          "every": "cel mult o dată la {minutes} min"
+        }
       },
       "budgetThresholds": {
         "saved": "Pragurile au fost salvate; bugetul lunii se citește după ele de acum."
@@ -5176,7 +5244,11 @@
         },
         "introMore": "Creditul de caractere al cheii DeepL se dă o singură dată și nu se reînnoiește lunar; bugetul pe zi oprește o după-amiază să consume creditul.",
         "privacyMore": "Doar câmpurile de conținut se traduc, așa că nota de confidențialitate nu se schimbă.",
-        "fieldHelpMore": "Un eveniment întreg are între 5.000 și 15.000 de caractere, scăzute din creditul DeepL."
+        "fieldHelpMore": "Un eveniment întreg are între 5.000 și 15.000 de caractere, scăzute din creditul DeepL.",
+        "aside": {
+          "off": "oprită",
+          "daily": "{count} caractere pe zi"
+        }
       },
       "month": {
         "title": "Pe furnizori",
@@ -5299,7 +5371,18 @@
         "intro": "Planul, bugetul lunii, frânele de la Neon și cât de des trezește site-ul baza de date."
       },
       "currencyNoteMore": "Nu le transformăm în lei: niciuna nu facturează în lei, iar un curs scris azi ar fi greșit mâine.",
-      "servicesIntroMore": "Pe ce plan suntem, cât costă azi, ce primim gratuit, limita pe care o vom atinge prima, cât de aproape suntem acum, ce se întâmplă când o depășim și cât costă pasul următor."
+      "servicesIntroMore": "Pe ce plan suntem, cât costă azi, ce primim gratuit, limita pe care o vom atinge prima, cât de aproape suntem acum, ce se întâmplă când o depășim și cât costă pasul următor.",
+      "costAside": "{amount} pe lună",
+      "servicesAside": {
+        "one": "{count} de urmărit",
+        "few": "{count} de urmărit",
+        "other": "{count} de urmărit",
+        "none": "nimic de urmărit"
+      },
+      "serviceChip": {
+        "perMonth": "{amount} {currency}/lună",
+        "perMonthEstimated": "≈ {amount} {currency}/lună"
+      }
     },
     "volunteers": {
       "title": "Voluntari",
@@ -6216,6 +6299,10 @@
         "add": "Adaugă în bandă",
         "full": "Banda are {max} fotografii, cât încape. Scoate una ca să adaugi alta.",
         "saved": "Banda de fotografii a fost salvată."
+      },
+      "language": {
+        "ro": "Română",
+        "en": "English"
       }
     },
     "look": {
@@ -6520,6 +6607,8 @@
       "sparesFree": "Rezervate pentru masă: {from}–{to}, libere încă {free} din {total}. Retipărirea le pune doar pe cele libere.",
       "sparesNone": "Rezervate pentru masă: {from}–{to}, date toate. Tipărește altele dacă mai e nevoie.",
       "sparesTitle": "Numere de rezervă pentru înscrierile de la fața locului",
+      "sparesLine": "{from}–{to}, libere: {free}",
+      "sparesLineNone": "Niciunul rezervat",
       "sparesHelp": "Numere tipărite dinainte, cu rândul pentru nume gol, pentru cei care se înscriu la masă; online nu le primește nimeni. Între 1 și {max} odată.",
       "sparesCount": "Câte",
       "sparesPrint": "Tipărește",
@@ -8775,9 +8864,9 @@
                 "«Echipa» e a Administratorului și a Superadministratorului. Rolul Superadministrator și rândul unui Superadministrator le schimbă doar un Superadministrator.",
                 "«Echipa» → «Adaugă o persoană»: «Adresă de email», «Nume», «Rol» (Voluntar pentru masă), «Limbă preferată».",
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
-                "Nu a primit-o: pe rândul ei, «Retrimite invitația» → «Trimite acum, fără să aștepte trecerea programată».",
-                "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul».",
-                "Magazinul fără rolul de Administrator: pe rândul colegului, bifează «Gestionează magazinul» și confirmă. Găsește «Magazin» în bara de sus; adresele membrilor nu le vede."
+                "Nu a primit-o: apasă rândul ei, apoi «Retrimite invitația» → «Trimite acum, fără să aștepte trecerea programată».",
+                "Pe rândul persoanei (apasă-l ca să se deschidă): alt rol — «Rol», apoi «Schimbă rolul»; a plecat din echipă — «Retrage accesul», ultimul.",
+                "Magazinul fără rolul de Administrator: apasă rândul colegului, bifează «Gestionează magazinul» și confirmă. Găsește «Magazin» în bara de sus; adresele membrilor nu le vede."
               ]
             },
             {
@@ -8864,7 +8953,7 @@
               "title": "Textele legale ale clubului",
               "steps": [
                 "«Documente legale»: dacă sus e caseta «Într-un pas: aprobă șabloanele cu datele clubului», verifică datele clubului din ea și apasă «Aprobă acum textele care lipsesc…»: fiecare text încă neaprobat primește versiunea 1, din șablon, cu datele clubului. Un text deja aprobat nu e atins.",
-                "Un singur text: pe cardul lui din «Documente legale» apasă «Regenerează din șablon» și confirmă. Toate deodată: la «Toate textele deodată» apasă «Regenerează din șabloane», sau pe «Versiune nouă» apasă «Regenerează toate». Se face câte o ciornă; nimic nu intră încă în vigoare, iar lista se deschide la «Ciorne».",
+                "Un singur text: deschide-i rândul din «Documente legale», apasă «Regenerează din șablon» și confirmă. Toate deodată: la «Toate textele deodată» apasă «Regenerează din șabloane», sau pe «Versiune nouă» apasă «Regenerează toate». Se face câte o ciornă; nimic nu intră încă în vigoare, iar lista se deschide la «Ciorne».",
                 "Deschide fiecare ciornă (filtrul «Ciorne» le arată pe toate), citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
                 "Înapoi pe «Documente legale»: «Aprobă ciornele» și confirmă. Ciornele gata de aprobat intră în vigoare împreună; ce nu se poate aproba deodată e scris sub buton, cu motivul.",
                 "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",
@@ -9573,9 +9662,16 @@
       "confirmBody": "Tema: {topic}. Fiecare îl primește în limba lui întâi, cu linkul de dezabonare. După trimitere nu mai poate fi oprit.",
       "history": "Trimise",
       "historyEmpty": "Nimic trimis încă.",
-      "historyMessage": "{when} · „{subject}” · {topics} · {count} destinatari · {sender}",
-      "historyAlert": "{when} · anunț automat de eveniment nou · {topics} · {count} destinatari",
       "historyNoSender": "cont șters",
+      "historyColumns": {
+        "when": "Când",
+        "what": "Ce s-a trimis",
+        "subject": "„{subject}”",
+        "alert": "anunț automat de eveniment nou",
+        "topics": "Teme",
+        "recipients": "Destinatari",
+        "sender": "Cine a trimis"
+      },
       "withdrawTitle": "Scoate o adresă la cererea cuiva",
       "withdrawHelp": "Când cineva ne scrie că nu mai vrea noutățile: scrie adresa lui aici. O găsim și o ștergem, cu tot ce așteaptă să-i plece.",
       "withdrawEmail": "Adresa de email",
@@ -10104,7 +10200,6 @@
         "filterClear": "Toate comenzile",
         "csv": "Descarcă CSV",
         "ordersEmpty": "Nicio comandă.",
-        "ordersMore": "Se văd cele mai noi {shown} din {total}. CSV-ul le are pe toate.",
         "orderNumber": "Comanda nr. {number}",
         "status": {
           "PLACED": "Plasată",

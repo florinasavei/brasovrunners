@@ -410,6 +410,18 @@ describe("the person's page (§839)", () => {
     expect(await personPage(people.stefan, { volunteerError: "CONFLICT" })).toContain(ro.Admin.errors.CONFLICT);
   });
 
+  it("draws the block open under the page's own header (§842): no row fold, and the name and the state said once", async () => {
+    const page = await personPage(people.stefan);
+    expect(page).toMatch(/<section[^>]*data-testid="volunteer-row"/);
+    expect(page).not.toContain('data-testid="volunteer-edit"');
+    expect(page).not.toContain('data-testid="volunteer-name"');
+    expect(page.match(/data-testid="volunteer-state"/g)).toHaveLength(1);
+    expect(page.match(/<h2[^>]*>Ștefan Tănase<\/h2>/g)).toHaveLength(1);
+    // The verbs are there, open: the state's, «Modifică» and «Șterge voluntarul».
+    expect(page).toContain('data-testid="volunteer-status"');
+    expect(page).toContain(">Șterge voluntarul<");
+  });
+
   it("is a 404 for a guessed id, an unknown one, and the Tehnic role", async () => {
     await expect(personPage("not-an-id")).rejects.toThrow("NOT_FOUND");
     await expect(personPage("00000000-0000-4000-8000-000000000000")).rejects.toThrow("NOT_FOUND");

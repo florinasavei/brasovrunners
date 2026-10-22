@@ -5,6 +5,7 @@ import { capturedEmail } from "./support/captured-email";
 import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 import { chooseSex } from "./support/sex-choice";
+import { openVolunteerRow } from "./support/volunteer-person";
 import { blankRoleRow, describeRole, fillRoleRow, openRoleRow, roleGroup, roleRow, saveAllRoles } from "./support/volunteer-roles";
 
 /**
@@ -706,6 +707,9 @@ test.describe("§754 volunteers for a race", () => {
       // Nobody was given a role yet: each role still counts nobody.
       await expect(group("Sosire").getByTestId("volunteer-role-standing")).toHaveText("0 din 1");
 
+      // The row is a fold (§842): its line says the name, the state and «De repartizat»; the verbs are inside it.
+      await expect(row.getByTestId("volunteer-row-roles")).toHaveText("De repartizat");
+      await openVolunteerRow(row);
       const give = row.getByRole("button", { name: /^Dă-i rolul Sosire/ });
       // The press says how the role stands before it fills it.
       await expect(give).toContainText("Sosire · 0 din 1");
@@ -726,6 +730,9 @@ test.describe("§754 volunteers for a race", () => {
       await expect(finishGroup.getByTestId("volunteer-choice")).toHaveText(["Punct de apă", "Sosire"]);
       // Placed (§837): the role given is a chip with «Ia-i rolul», and the row offers only the roles she does not hold — «Dă-i și rolul Punct de apă».
       await expect(finishGroup.getByTestId("volunteer-given-role")).toHaveText(["Sosire"]);
+      // Her row's line names the role now; a row in a new group is drawn closed, so it is opened for its verbs.
+      await expect(finishGroup.getByTestId("volunteer-row-roles")).toHaveText("Sosire");
+      await openVolunteerRow(finishGroup.getByTestId("volunteer-row"));
       await expect(finishGroup.getByRole("button", { name: /^Ia-i rolul Sosire/ })).toHaveCount(1);
       await expect(finishGroup.getByRole("button", { name: /^Dă-i și rolul Punct de apă/ })).toHaveCount(1);
       await expect(finishGroup.getByRole("button", { name: /^Dă-i rolul/ })).toHaveCount(0);
@@ -741,6 +748,7 @@ test.describe("§754 volunteers for a race", () => {
       // A fresh load first: the address already ends in the card's anchor, so the press's own redirect is what is waited for.
       await page.goto(`/ro/admin/events/${event.id}`);
       await hydrated(page);
+      await openVolunteerRow(group("Sosire").getByTestId("volunteer-row"));
       await group("Sosire").getByRole("button", { name: /^Confirmă/ }).click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
@@ -804,7 +812,8 @@ test.describe("§754 volunteers for a race", () => {
       for (const name of ["Ion Test", "Dana Test"]) {
         await page.goto(`/ro/admin/events/${event.id}`);
         await hydrated(page);
-        await page.locator('[data-testid="volunteer-unassigned"] [data-testid="volunteer-row"]', { hasText: name }).getByRole("button", { name: /^Dă-i rolul Punct de apă/ }).click();
+        const waiting = await openVolunteerRow(page.locator('[data-testid="volunteer-unassigned"] [data-testid="volunteer-row"]', { hasText: name }));
+        await waiting.getByRole("button", { name: /^Dă-i rolul Punct de apă/ }).click();
         await page.waitForURL(/#box-volunteers$/);
         await hydrated(page);
       }
@@ -891,6 +900,7 @@ test.describe("§754 volunteers for a race", () => {
     await expect(page.getByTestId("volunteer-unassigned").getByTestId("volunteer-name")).toHaveText(["Dana Hartie"]);
 
     // «Trimite linkul contractului»: one email queued, the card says so, the row says a link was sent.
+    await openVolunteerRow(ionRow);
     const send = ionRow.getByRole("button", { name: /^Trimite linkul contractului/ });
     expect((await send.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await send.click();
@@ -954,6 +964,7 @@ test.describe("§754 volunteers for a race", () => {
     const toSign = await page.request.get(`/api/admin/events/${event.id}/volunteers/${await danaRow.getAttribute("data-volunteer-id")}/agreement`);
     expect(toSign.status()).toBe(200);
     expect(toSign.headers()["content-type"]).toBe("application/pdf");
+    await openVolunteerRow(danaRow);
     await danaRow.getByRole("button", { name: "Semnat pe hârtie", exact: true }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Semnat pe hârtie", exact: true }).click();
     await page.waitForURL(/#box-volunteers$/);
@@ -1077,6 +1088,7 @@ test.describe("§754 volunteers for a race", () => {
       await expect(row.getByTestId("volunteer-facts")).toContainText(`15 ani (${shownBirth(15)})`);
       // The row's own chips: the volunteer accepted on the form; the parent's is the one that is missing.
       await expect(row.getByTestId("volunteer-agreement-state")).toHaveText("Contract acceptat");
+      await openVolunteerRow(row);
       const confirm = row.getByRole("button", { name: /^Confirmă/ });
       expect((await confirm.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       await confirm.click();
@@ -1085,6 +1097,7 @@ test.describe("§754 volunteers for a race", () => {
       await expect(page.getByRole("alert").filter({ hasText: "Acordul părintelui lipsește" })).toBeVisible();
       await expect(row.getByTestId("volunteer-state")).toHaveText("Înscris");
       // «Trimite linkul părintelui»: one more email, a press never a secret.
+      await openVolunteerRow(row);
       await row.getByRole("button", { name: /^Trimite (din nou )?linkul părintelui/ }).click();
       // The address already ends in the card's anchor after the refusal, so the press is waited for by what it wrote: a second queued email.
       await expect
@@ -1136,6 +1149,7 @@ test.describe("§754 volunteers for a race", () => {
       await hydrated(page);
       await expect(row.getByTestId("volunteer-guardian-state")).toContainText("Acordul părintelui primit");
       await expect(row.getByTestId("volunteer-guardian")).toContainText("din linkul trimis pe email");
+      await openVolunteerRow(row);
       await row.getByRole("button", { name: /^Confirmă/ }).click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
@@ -1163,6 +1177,7 @@ test.describe("§754 volunteers for a race", () => {
       await hydrated(page);
       const radu = page.locator('[data-testid="volunteer-row"]', { hasText: "Radu Tânărul" });
       await expect(radu.getByTestId("volunteer-guardian-state")).toContainText("Acordul părintelui lipsește");
+      await openVolunteerRow(radu);
       await expect(radu.getByTestId("volunteer-guardian-no-email")).toBeVisible();
       await expect(radu.getByTestId("volunteer-guardian-send-form")).toHaveCount(0);
       // The sheet to sign: a PDF, the volunteer's line and the parent's.
@@ -1380,7 +1395,8 @@ test.describe("§754 volunteers for a race", () => {
     await hydrated(page);
     const row = page.getByTestId("volunteer-unassigned").getByTestId("volunteer-row");
     await expect(row.getByTestId("volunteer-choice")).toHaveText(["Direcționare (Traseu)"]);
-    const assign = row.getByRole("button", { name: /^Dă-i rolul Direcționare \(Traseu\)/ });
+    await openVolunteerRow(row);
+    const assign =row.getByRole("button", { name: /^Dă-i rolul Direcționare \(Traseu\)/ });
     expect((await assign.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await assign.click();
     await expect(page.getByTestId("volunteer-group").filter({ has: page.locator("h3").getByText("Direcționare (Traseu)", { exact: true }) }).getByTestId("volunteer-role-standing")).toHaveText("1 din 2", {
@@ -1484,7 +1500,8 @@ test.describe("§754 volunteers for a race", () => {
       const give = async (name: string) => {
         await page.goto(`/ro/admin/events/${event.id}`);
         await hydrated(page);
-        await page.locator('[data-testid="volunteer-unassigned"] [data-testid="volunteer-row"]', { hasText: name }).getByRole("button", { name: /^Dă-i rolul Ajutor/ }).click();
+        const waiting = await openVolunteerRow(page.locator('[data-testid="volunteer-unassigned"] [data-testid="volunteer-row"]', { hasText: name }));
+        await waiting.getByRole("button", { name: /^Dă-i rolul Ajutor/ }).click();
         await page.waitForURL(/#box-volunteers$/);
         await hydrated(page);
       };
@@ -1493,7 +1510,8 @@ test.describe("§754 volunteers for a race", () => {
       await page.goto(`/ro/admin/events/${event.id}`);
       await hydrated(page);
       // The press says how the role stands before it gives it: no «din».
-      await expect(page.locator('[data-testid="volunteer-unassigned"] [data-testid="volunteer-row"]', { hasText: "Maria Test" }).getByRole("button", { name: /^Dă-i rolul Ajutor/ })).toContainText("Ajutor · 0 · fără număr");
+      const mariaWaits = await openVolunteerRow(page.locator('[data-testid="volunteer-unassigned"] [data-testid="volunteer-row"]', { hasText: "Maria Test" }));
+      await expect(mariaWaits.getByRole("button", { name: /^Dă-i rolul Ajutor/ })).toContainText("Ajutor · 0 · fără număr");
       await give("Maria Test");
       await offer("Ion Test", emails[1], "Ajutor");
       await give("Ion Test");
@@ -1830,11 +1848,11 @@ test.describe("§754 volunteers for a race", () => {
       const rowOf = (name: string) => page.locator('[data-testid="volunteer-row"]', { hasText: name });
       await expect(rowOf("Ana Popescu").getByTestId("volunteer-on-list")).toHaveText("Vrea pe lista publică");
       await expect(rowOf("Ion Ionescu").getByTestId("volunteer-on-list")).toHaveCount(0);
-      await rowOf("Ana Popescu").getByRole("button", { name: /^Dă-i rolul Punct de apă/ }).click();
+      await (await openVolunteerRow(rowOf("Ana Popescu"))).getByRole("button", { name: /^Dă-i rolul Punct de apă/ }).click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
       for (const name of ["Ana Popescu", "Ion Ionescu"]) {
-        await rowOf(name).getByRole("button", { name: /^Confirmă/ }).click();
+        await (await openVolunteerRow(rowOf(name))).getByRole("button", { name: /^Confirmă/ }).click();
         await page.waitForURL(/#box-volunteers$/);
         await hydrated(page);
         await expect(rowOf(name)).toHaveAttribute("data-state", "CONFIRMED", { timeout: 30_000 });

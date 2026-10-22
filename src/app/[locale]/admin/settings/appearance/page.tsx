@@ -67,11 +67,15 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
         {saved === "homeStrip" && <Alert severity="success">{t("homePage.strip.saved")}</Alert>}
       </Box>
 
-      {/* The tab's cards open on arrival (§336's `primary`, §516): each is a single choice. */}
-      <SiteTintPanel locale={locale} state={state} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
-      <SiteFontSizePanel locale={locale} state={fontSize} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
-      {/* «Aspectul nou» (§708): the facelift's look on the public pages, one switch. */}
-      <SiteLookPanel locale={locale} state={look} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
+      {/*
+        The tab's cards are folds, closed on arrival with the value in force on each line (the owner,
+        2026-10-21: the backoffice «from a different app»; until then they opened as `primary`, §516):
+        the page reads as its settings and their values. A card opens by itself after its own save.
+      */}
+      <SiteTintPanel locale={locale} state={state} mayEdit={canManageClubSettings(actor.role)} openWhen={{ saved: saved === "siteTint" }} />
+      <SiteFontSizePanel locale={locale} state={fontSize} mayEdit={canManageClubSettings(actor.role)} openWhen={{ saved: saved === "siteFontSize" }} />
+      {/* «Tema» (§708): the facelift's look on the public pages, and its accent (§723). */}
+      <SiteLookPanel locale={locale} state={look} mayEdit={canManageClubSettings(actor.role)} openWhen={{ saved: saved === "siteLook" }} />
       {/* «Pagina principală» (§714): the home page at the site's root, one switch, and a fold for each part of the page. */}
       <HomePagePanel locale={locale} state={home} mayEdit={canManageClubSettings(actor.role)} pages={pages} saved={saved} openWhen={{ primary: true }} />
 

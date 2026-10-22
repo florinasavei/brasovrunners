@@ -108,6 +108,8 @@ import { paperConfirmationText } from "@/modules/registrations/ui/PaperConfirmat
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
 import MemberChip from "@/modules/registrations/ui/MemberChip";
+import RegistrationStatusChip from "@/modules/registrations/ui/RegistrationStatusChip";
+import StatusChip from "@/shared/ui/StatusChip";
 import { membershipOf } from "@/modules/registrations/domain/membership";
 import { memberCanonicalEmails } from "@/modules/registrations/member-ticks";
 import EmailStateLine from "@/modules/registrations/ui/EmailStateLine";
@@ -440,9 +442,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Link>
           {/* Unmistakable wherever a registration is listed, so a demonstration queue is never
               read as real sign-ups (`DECISIONS.md` §30). The export omits these rows entirely. */}
-          {row.kind === "TEST" && (
-            <Chip size="small" color="warning" label={t("registrations.testKind")} />
-          )}
+          {row.kind === "TEST" && <StatusChip glyph="test" color="warning" label={t("registrations.testKind")} />}
           {/* On the hidden list (§643, §647): counted in no place, for every role that reads the list. */}
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
           {/* Registered from an invitation by email (§737, amending §647): who came in that way, at a glance. */}
@@ -526,7 +526,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       label: t("registrations.columnStatus"),
       essential: true,
       sortable: true,
-      render: (row) => <Chip size="small" label={REGISTRATION_STATUS_LABEL[row.status]} />,
+      // The state as the registration's page and the desk draw it (§847): one table, the glyph before the word.
+      render: (row) => <RegistrationStatusChip status={row.status} />,
     },
     {
       // The owner's "what step each participant is in" (§145): steps done out of six and the
