@@ -136,7 +136,7 @@ describe("§842 «Prima dată»'s steps and «De ce»'s reasons as the house's r
   });
 });
 
-describe("§NNN the pairs are the backoffice's one Română | English strip", () => {
+describe("§847 the pairs are the backoffice's one Română | English strip", () => {
   it("draws every pair of boxes as tabs over two panels — the hero's, each step's and reason's, the heading's and the strip's", async () => {
     const html = await draw(DEFAULT_HOME_PAGE_SETTING);
     for (const strip of ["home-hero", "home-steps-head", "home-step-1", "home-steps-foot", "home-why-head", "home-reason-4", "home-why-foot", "home-strip-words"]) {

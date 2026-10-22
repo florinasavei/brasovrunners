@@ -100,7 +100,7 @@ type Props = Record<string, unknown> & { children?: ReactNode };
 
 /**
  * Every element under `node`, depth first — a card's `aside` too, where the registration's page puts the «i»
- * beside a card's title (`Panel`, §NNN).
+ * beside a card's title (`Panel`, §847).
  */
 function elements(node: ReactNode, acc: ReactElement<Props>[] = []): ReactElement<Props>[] {
   if (Array.isArray(node)) {
@@ -282,7 +282,7 @@ describe("§640 the registration's «Ziua cursei» box", () => {
       for (const status of ["PENDING_DECLARATION", "PENDING_EMAIL_CONFIRMATION"] as const) {
         const tree = await detailPage(await register(race.id, status));
         expect(elements(tree).filter((element) => element.type === PaperConfirmationTip), status).toHaveLength(1);
-        // Beside the card's title (§NNN: the box is a `Panel`, the «i» its `aside`).
+        // Beside the card's title (§847: the box is a `Panel`, the «i» its `aside`).
         const card = elements(tree).find((element) => element.props["data-testid"] === "race-day");
         expect((card?.props.aside as ReactElement | undefined)?.type, status).toBe(PaperConfirmationTip);
         const written = sentences(tree).join("\n");
@@ -410,7 +410,7 @@ describe("§647 the registration's «Lista ascunsă» block", () => {
     §649 — «Lista de invitați speciali»: the block says what it does. Its heading carries an «i» (the §640
     pattern) with who the list is for, what the person keeps and that an ordinary participant does not go
     there; the caption under the radios says the essentials in one line. For every role that reads it. A
-    card since §NNN: the heading is the card's title, the «i» beside it, and the radio group is named by the
+    card since §847: the heading is the card's title, the «i» beside it, and the radio group is named by the
     same words.
   */
   it("explains itself: the heading's «i» says who it is for, what they keep and what it is not; the caption says it in one line", async () => {

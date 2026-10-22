@@ -111,7 +111,7 @@ function platformKey(stem: string): string | null {
  * sections the page draws, «Prima dată», «De ce» and the quote, the strip's heading and the numbers.
  * Every box is a pair, both languages or neither; an empty one shows, as its placeholder, the
  * platform's sentence the page draws instead. The pairs are the backoffice's one Română | English
- * strip (`LocaleTabPanels`, §NNN; the event editor's and the FAQ's), never side by side: each
+ * strip (`LocaleTabPanels`, §847; the event editor's and the FAQ's), never side by side: each
  * language's boxes in its own panel, the hidden one still posted by the one form, «Tradu cardul» at
  * the end of the tab row (§514). Inside «Prima dată» and «De ce» each step and each reason is the
  * house's row fold (§842): its title in words and the pencil, its own strip behind it. One «Copiază
@@ -160,7 +160,7 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
   };
 
   /**
-   * One Română | English strip (§NNN, `LocaleTabPanels`): each language's boxes in its own panel, the
+   * One Română | English strip (§847, `LocaleTabPanels`): each language's boxes in its own panel, the
    * other panel hidden and still posted by the one form. `idPrefix` names the strip's tabs and panels.
    */
   const strip = (idPrefix: string, boxesIn: (language: Language) => ReactNode) => (
@@ -200,7 +200,7 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
   /**
    * One step of «Prima dată», or one reason of «De ce», as the house's row fold (§842, `shared/ui/row-fold.ts`): the line in words —
    * «Pasul 3 · Salută-ne», the title the page draws (the club's, else the platform's), «Textul implicit» while the club wrote neither
-   * of its boxes, the pencil — over its two pairs, a strip of their own (§NNN). The fold is keyed on the words it holds, so a save that
+   * of its boxes, the pencil — over its two pairs, a strip of their own (§847). The fold is keyed on the words it holds, so a save that
    * changed them draws it closed.
    */
   const itemRow = (kind: "step" | "reason", number: string, boxes: readonly HomeTextBox[]) => {
@@ -440,7 +440,7 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
                     </Typography>
                   )}
 
-                  {/* The hero's words, one strip (§NNN): the title and its line, then the buttons' labels, a language a tab. */}
+                  {/* The hero's words, one strip (§847): the title and its line, then the buttons' labels, a language a tab. */}
                   {strip("home-hero", (language) => (
                     <>
                       {LINES.map(({ stem, max }) => {

@@ -526,7 +526,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       label: t("registrations.columnStatus"),
       essential: true,
       sortable: true,
-      // The state as the registration's page and the desk draw it (§NNN): one table, the glyph before the word.
+      // The state as the registration's page and the desk draw it (§847): one table, the glyph before the word.
       render: (row) => <RegistrationStatusChip status={row.status} />,
     },
     {

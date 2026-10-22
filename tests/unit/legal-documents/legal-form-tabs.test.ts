@@ -3,7 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — a legal text is written in the backoffice's one Română | English strip (`LocaleTabPanels`),
+ * §847 — a legal text is written in the backoffice's one Română | English strip (`LocaleTabPanels`),
  * as the event editor and the FAQ are, never two boxes stacked: one form, both languages' boxes in
  * it — the hidden panel still posts — and each tab marked «incomplet» while its title or its text is
  * empty. Drawn from the real catalogue.
@@ -44,7 +44,7 @@ const draw = async (values?: Parameters<typeof LegalDocumentForm>[0]["values"]) 
 
 const body = (text: string) => ({ sections: [{ heading: "Secțiunea 1", paragraphs: [text] }] });
 
-describe("§NNN the legal text's two languages are one Română | English strip", () => {
+describe("§847 the legal text's two languages are one Română | English strip", () => {
   it("draws a tab per language over two panels inside the one form, the English one hidden and still there", async () => {
     const html = await draw({ key: "TERMS", ro: { title: "Termeni", body: body("Un paragraf.") }, en: { title: "Terms", body: body("A paragraph.") } });
     const form = html.slice(html.indexOf("<form"), html.lastIndexOf("</form>"));

@@ -44,7 +44,7 @@ export default async function AdminShopOrdersPage({ params, searchParams }: Prop
   const words = await confirmWords();
   const db = getDb();
   const ordersQuery = parseOrdersQuery(query);
-  // The list's page (§NNN): newest first, the repository's one order, so nothing here sorts.
+  // The list's page (§847): newest first, the repository's one order, so nothing here sorts.
   const listQuery = parseListQuery(query, { sortable: [], defaultSort: "date", defaultPerPage: 100 });
   const mayManage = canManageShop(actor);
   const [orders, productNames, ordersTotal, accounts, items, shopSettings] = await Promise.all([

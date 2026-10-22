@@ -652,7 +652,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     });
   };
   /*
-    The rows grouped by what they ask (§NNN): the red ones first, under their own heading, then what is
+    The rows grouped by what they ask (§847): the red ones first, under their own heading, then what is
     still to do, then «Gata» folded away — the order `sortTasks` already made, cut where the state changes.
   */
   const groups = PENDING_GROUPS.map((state) => ({ state, rows: shown.filter((task) => task.state === state) })).filter((group) => group.rows.length > 0);
@@ -871,7 +871,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           </Typography>
         ) : (
           /*
-            One list a reader scans (§NNN; it was a column of bordered cards, one per row): a heading per
+            One list a reader scans (§847; it was a column of bordered cards, one per row): a heading per
             state still owed, the rows under it, and «Gata» a fold of its own, closed while anything is
             owed — open when the filter leaves nothing else.
           */

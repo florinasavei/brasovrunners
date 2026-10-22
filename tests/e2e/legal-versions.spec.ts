@@ -50,7 +50,7 @@ test.describe("legal documents: a Superadministrator can create the first versio
 
     await page.locator('[name="roTitle"]').fill(`Document ${suffix}`);
     await writeBody(page, 0, "## Secțiunea 1\n\nUn paragraf de probă.");
-    // The two languages are the Română | English strip (§NNN): the English tab on top, then its boxes.
+    // The two languages are the Română | English strip (§847): the English tab on top, then its boxes.
     await page.getByTestId("legal-document-form").getByRole("tab", { name: /English/ }).click();
     await page.locator('[name="enTitle"]').fill(`Document ${suffix}`);
     await writeBody(page, 1, "## Section 1\n\nA test paragraph.");
@@ -141,7 +141,7 @@ test.describe("legal documents: the next version starts from the current one", (
     // Nothing hydrated: no editor anywhere, so what is measured is the first paint.
     await expect(page.locator(".tiptap")).toHaveCount(0);
     const reserved = await standIn.boundingBox();
-    // Under the Romanian tab's text since §NNN (the English one is the strip's other tab): the save.
+    // Under the Romanian tab's text since §847 (the English one is the strip's other tab): the save.
     const save = page.getByTestId("legal-document-form").getByRole("button", { name: "Salvează ciorna" });
     const saveBefore = await save.boundingBox();
     await page.unroute(scripts);
@@ -219,7 +219,7 @@ test.describe("legal documents: a version downloads as a PDF", () => {
  * so the list is left as it was. Desktop only: one database, and the phone renders the same rows as
  * labelled blocks.
  *
- * §539, §NNN — the list is one row per text now (a row fold), each text's versions folded under it, and one text is
+ * §539, §847 — the list is one row per text now (a row fold), each text's versions folded under it, and one text is
  * regenerated from its own row first: «Regenerează din șablon», a dialog naming the text and the
  * version it makes, a toast, and the list landing on «Ciorne», where every draft's fold is open.
  * The ticks are read on that filter, before and after, so a fold's state never changes the count.
@@ -270,7 +270,7 @@ test.describe("legal documents: every text at once", () => {
     await hydrated(page);
     const terms = page.getByTestId("legal-kind-TERMS");
     await expect(terms.getByTestId("legal-kind-state").first()).toHaveText(/^(În vigoare: versiunea \d+ din .+|Nicio versiune în vigoare)$/);
-    // Its row folds open onto its boxes (§NNN): opened the way a person does.
+    // Its row folds open onto its boxes (§847): opened the way a person does.
     await openFold(terms.getByTestId("legal-kind-fold"));
     // The card must offer the press: no terms draft waits (deleted above) and the sample terms in
     // force are not the template's words. Fail rather than pass without the per-card path.

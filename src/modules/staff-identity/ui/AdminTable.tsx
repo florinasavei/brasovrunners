@@ -161,7 +161,7 @@ type Props<Row> = {
    */
   leadRows?: readonly AdminLeadRow[];
   /**
-   * A row's address (`#…`), for a list whose verbs land back on the row they changed (§NNN; the shop's
+   * A row's address (`#…`), for a list whose verbs land back on the row they changed (§847; the shop's
    * orders, `#order-<id>`). On the wide table's `<tr>` alone: an id names one element, and the phone's
    * block is the same row drawn twice — below `md` the address lands on the page's alert instead.
    */

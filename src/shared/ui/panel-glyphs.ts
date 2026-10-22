@@ -200,7 +200,7 @@ export const PANEL_GLYPHS = {
   queue: HourglassTopIcon,
   // «Note interne» (§777): what the organizers tell each other about one registration — the sticky note.
   internalNotes: StickyNote2Icon,
-  // One registration's page (§NNN), its cards in the page's order: what to tell the person who asks (the voice), race
+  // One registration's page (§847), its cards in the page's order: what to tell the person who asks (the voice), race
   // day (the desk's own cup), «Lista de invitați speciali» (`hiddenList` above, the incognito its chip and its verb wear, §647), the answers
   // the person typed (the badge), emergency and health (the kit of «Informații medicale»), what the team did (the
   // clock of a managed history), the consent withdrawn (the privacy shield), cancel and erase (their verbs' glyphs).

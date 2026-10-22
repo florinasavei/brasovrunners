@@ -94,7 +94,7 @@ const ReadIcon = ACTION_ICONS.preview;
 const NOTICE_LINE_SX = { ...LINE_SX, gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) auto" }, gridTemplateAreas: { xs: '"words" "facts"', sm: '"words facts"' } } as const;
 
 /**
- * One of the page's notices (§NNN): a feature that stays off until a text in force describes it — its
+ * One of the page's notices (§847): a feature that stays off until a text in force describes it — its
  * testid, the one line the panel shows, the whole sentence behind its «?», and the text it waits on.
  */
 type NoticeLine = { testId: string; line: string; details: string; waitsOn: "PRIVACY_NOTICE" | "TERMS" };
@@ -119,7 +119,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * So the counts on each row are not decoration. They are the answer to "may this be changed",
  * stated on the page rather than in a document somebody has to remember.
  *
- * ## One row per text (§NNN, amending §539 and §532)
+ * ## One row per text (§847, amending §539 and §532)
  *
  * The list was one long table of every version of every text, and the owner could not see at a
  * glance which text is in force, which draft waits, or where «regenerate» lives (§539). Then it was
@@ -138,7 +138,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * links, so it works without JavaScript, and the address says what the page shows. The old
  * withdrawn fold's `?withdrawn=1` still means «Retrase».
  *
- * ## One panel of notices (§NNN)
+ * ## One panel of notices (§847)
  *
  * What stays off until a text in force describes it — the public list's stages, the results, «Vin!»
  * and the rest — was nine separate alerts above the cards. They are one `Panel` now, a line each
@@ -620,7 +620,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   });
 
   /*
-    One text's row (§NNN, the house's row fold): the line in words — the name, the state as a
+    One text's row (§847, the house's row fold): the line in words — the name, the state as a
     sentence, a chip for each state, the pencil — and, behind it, what the text is, the link to the
     text in force, «Regenerează din șablon» for this text alone, and its versions folded, newest first.
   */
@@ -817,7 +817,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   };
 
   /*
-    The notices (§NNN): each feature that stays off until a text in force describes it, in the
+    The notices (§847): each feature that stays off until a text in force describes it, in the
     order the alerts had — the notice's six, then the terms', the terms' results line beside the
     notice's. Asked only while that text is in force at all: with none, the platform's one press
     above is the thing to do, and registration is closed anyway.
@@ -890,7 +890,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         </Typography>
       </Stack>
 
-      {/* The one press (§132), a card like every other (§NNN), amber while texts are missing. */}
+      {/* The one press (§132), a card like every other (§847), amber while texts are missing. */}
       {mayCreate && missingKeys.length > 0 && (
         <Panel
           glyph="publication"
@@ -946,7 +946,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       )}
 
       {/*
-        The notices, one panel (§NNN): first what stays off until a text in force describes it, a line
+        The notices, one panel (§847): first what stays off until a text in force describes it, a line
         each with the text it waits on and the whole sentence behind its «?» (§511); then the page's
         help — the three steps in the owner's words (§398's help variant, §539) and the rule this
         section lives by, folded shut (§336: it explains, it does not warn, so nothing opens it by
@@ -999,8 +999,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         approved in one press. Two presses on purpose — nothing reaches the site from a template
         without the club reading the draft first (§46) — each behind the §384 confirm dialog that
         names the texts. What cannot be approved together is said with its reason, never hidden.
-        One text alone is its row's own «Regenerează din șablon» below (§539, §NNN). A card like every
-        other (§NNN), its words and presses as they were.
+        One text alone is its row's own «Regenerează din șablon» below (§539, §847). A card like every
+        other (§847), its words and presses as they were.
       */}
       {mayCreate && (
         <Panel glyph="copy" title={t("legal.batch.toolsTitle")} data-testid="legal-batch-tools">
@@ -1128,7 +1128,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       )}
 
       {/*
-        The texts (§NNN): one card, the filter at its head, then one row per text.
+        The texts (§847): one card, the filter at its head, then one row per text.
 
         The filter (§539, §413's shape): by state and by text, as plain links, so it works with
         JavaScript off and the address says what the page shows — a filtered page can be sent to

@@ -23,7 +23,7 @@ type Props = {
  * without JavaScript the lines are there to select. No address and no verb: every role that reads the
  * page reads it, the Organizer too (§289).
  *
- * A card like every other on the page (`Panel`, §NNN), at the level of the cards under the person's name,
+ * A card like every other on the page (`Panel`, §847), at the level of the cards under the person's name,
  * and open: it is what the page is opened for when somebody rings, so it never folds.
  */
 export default function WhatToTell({ title, help, languageNote, lang, lines, copyLabel, copiedLabel }: Props) {

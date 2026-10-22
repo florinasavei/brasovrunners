@@ -204,7 +204,7 @@ export default async function DeskRow({
             )}
             {/* A family on one address (§543), beside the parent's line: who came with this person — names only (§15.11). */}
             <FamilyChip label={t("registrations.familyChip")} members={family.map((name) => ({ name }))} testId="desk-family" />
-            {/* The state as the list and the registration's page draw it (`RegistrationStatusChip`, §NNN): one table, one word. */}
+            {/* The state as the list and the registration's page draw it (`RegistrationStatusChip`, §847): one table, one word. */}
             <RegistrationStatusChip status={row.status} />
             {row.kind === "TEST" && <StatusChip glyph="test" color="warning" label={t("registrations.testKind")} />}
             {/* The QR confirmation did not arrive and somebody must act (§663, §671): one chip, from the desk's own

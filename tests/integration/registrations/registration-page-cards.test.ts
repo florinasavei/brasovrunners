@@ -15,7 +15,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the registration's own page as cards (the owner, 2026-10-21, of the backoffice: «they look like they
+ * §847 — the registration's own page as cards (the owner, 2026-10-21, of the backoffice: «they look like they
  * are from a different app, not consistent at all»): every section a `Panel` with its glyph, in the order a reader
  * needs them, the rarely opened ones folded, each verb in its card and gated exactly as before; and one state chip
  * (`RegistrationStatusChip`) for the list, the page and the desk.
@@ -175,7 +175,7 @@ beforeEach(async () => {
   state.locale = "ro";
 });
 
-describe("§NNN the registration's page: every section a card", () => {
+describe("§847 the registration's page: every section a card", () => {
   it("in the order a reader needs them, the rare ones folded, the erase red — the Administrator's", async () => {
     const race = await createRace();
     const id = await register(race.id, "CONFIRMED");
@@ -262,7 +262,7 @@ describe("§NNN the registration's page: every section a card", () => {
   });
 });
 
-describe("§NNN one state chip for a registration", () => {
+describe("§847 one state chip for a registration", () => {
   it("names every state with a glyph from the backoffice's table and the backoffice's word", () => {
     for (const status of registrationStatus.enumValues) {
       const chip = REGISTRATION_STATUS_CHIP[status];
@@ -284,7 +284,7 @@ describe("§NNN one state chip for a registration", () => {
   });
 });
 
-describe("§NNN the page as it is drawn", () => {
+describe("§847 the page as it is drawn", () => {
   it("renders one heading per card, under the person's name, in the page's order", async () => {
     const race = await createRace();
     const id = await register(race.id, "CONFIRMED");

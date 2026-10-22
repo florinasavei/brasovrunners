@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.73-2026-10-22
+
+- **The bigger backoffice screens in the house's shapes** — each volunteer on an event's card and each person on «Echipa» is one line you open; «Documente legale» is one row per text with the notices in one card; the legal texts and the home page edit both languages on the Română | English strip; «Aspect» and «Costuri» fold to their current values; the club's tasks are grouped by what is owed; the newsletter's and the shop's lists are tables like the rest; inside the event editor, what you may skip folds and what the event needs stays open; and a registration's page is cards like every other screen, its state one chip drawn the same on the list, the page and the desk. Nothing they save changed. §847.
 ## BR-V3.72-2026-10-22
 
 - **A volunteers' Excel worth opening, and one for every event** — the volunteers' spreadsheet now has the club's blue header, a filter on every column, rows coloured by state (and recoloured when you change one), «De repartizat» spelled out, the header on every printed page, and a second sheet «Pe roluri» with what each role needs, has, still lacks and was offered; the «Voluntari» screen downloads every event's volunteers in one file with «Descarcă Excel: toate evenimentele». §846.

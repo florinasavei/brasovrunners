@@ -236,7 +236,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     // Cancel, and be told about the paper before the press.
     await page.goto(detailUrl);
     await hydrated(page);
-    // The cancel's card is folded since §NNN: opened the way a person does; the erase card has a `reason` of its own, still folded away.
+    // The cancel's card is folded since §847: opened the way a person does; the erase card has a `reason` of its own, still folded away.
     const cancelCard = page.getByTestId("cancel-registration");
     await openFold(cancelCard);
     await cancelCard.getByRole("textbox", { name: "Motivul" }).fill("nu mai vine");

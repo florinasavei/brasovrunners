@@ -58,7 +58,7 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
   const recipients = one(search.recipients);
   const query = parseSubscriberListQuery(search);
   /*
-    The tables' page and size (§NNN, `AdminTable`): one list query for the page, as on «Documente legale»
+    The tables' page and size (§847, `AdminTable`): one list query for the page, as on «Documente legale»
     — «Trimise» never reaches a second page, and «Abonați» and the offers' list each slice their own rows by
     it. Asked for in the address, both folds open on it.
   */

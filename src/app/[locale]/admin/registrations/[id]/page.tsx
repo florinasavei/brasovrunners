@@ -447,7 +447,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   bibRefusal.keptConflict = bibRefusal.kept;
 
   /*
-    The page's cards (§NNN; the owner, 2026-10-21: «they look like they are from a different app»): under the
+    The page's cards (§847; the owner, 2026-10-21: «they look like they are from a different app»): under the
     person's name and state, every section is a `Panel` — the house's card, its glyph before its title, a count
     beside it where one belongs — in the order a reader needs them: what to tell somebody who asks, the verbs of
     the messages, race day and the places, the emails and the notes, the answers and the emergency details, the
@@ -483,7 +483,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
           {registration.registeredName}
         </Typography>
-        {/* The state as the list and the desk draw it (`RegistrationStatusChip`, §NNN): one table, the glyph before the word. */}
+        {/* The state as the list and the desk draw it (`RegistrationStatusChip`, §847): one table, the glyph before the word. */}
         <RegistrationStatusChip status={registration.status} />
         {/* A printed bib nobody may wear (§311): the number stays retired, the paper comes out of the pile. */}
         {voidBib !== null && <StatusChip glyph="failed" color="error" variant="outlined" label={tr("registrations.bibVoid", { number: written(voidBib) })} testId="void-bib" />}
@@ -871,7 +871,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         that reads the page reads the state; only the Administrator changes it (`canManageRegistrations`,
         asserted again by the action and the service), and only while the registration is active — an ended
         row's mark is read, never changed. A change asks the dialog that says what it does in this row's state.
-        Named «Lista de invitați speciali» on screen since §649; a card since §NNN, its title the radio group's
+        Named «Lista de invitați speciali» on screen since §649; a card since §847, its title the radio group's
         name, the incognito its glyph and the «i» beside its title; the code's `hiddenList` / `outsideCapacity`
         names stay.
       */}
@@ -1004,7 +1004,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         anybody else (BR-REQ-060-01). The address, the consents and the declaration are named, read-only,
         with why — they stay the person's (`answers.ts`).
 
-        Above the link, the lines every reader saw under the name before the cards (§NNN), read from the row
+        Above the link, the lines every reader saw under the name before the cards (§847), read from the row
         and recording nothing: the parent, where the person lives, the sex and the T-shirt, the socials, the
         offers' consent.
       */}

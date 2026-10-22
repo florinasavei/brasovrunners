@@ -4,7 +4,7 @@ import StatusChip from "@/shared/ui/StatusChip";
 import type { StatusGlyphName } from "@/shared/ui/status-glyphs";
 
 /**
- * A registration's state as a chip (§NNN; the owner, 2026-10-21, of the backoffice: «they look like they are from a
+ * A registration's state as a chip (§847; the owner, 2026-10-21, of the backoffice: «they look like they are from a
  * different app»): one table — the tone, the glyph and the backoffice's word — read by every screen that names a
  * registration's state: the registrations list's «Stare» column, the registration's own page beside the name, and the
  * race-day desk's row (`DeskRow`). Each had drawn its own: a grey chip on two, the desk's own colours on the third, and

@@ -32,7 +32,7 @@ import SubscriberListFields from "./SubscriberListFields";
 type Props = {
   locale: Locale;
   query: SubscriberListQuery;
-  /** The table's page and its size (§NNN), from the address; the page shares it with «Participanți care au bifat…». */
+  /** The table's page and its size (§847), from the address; the page shares it with «Participanți care au bifat…». */
   listQuery: ListQuery;
   /** The address names a page or a size: the fold opens on what was asked for. */
   paged: boolean;
@@ -57,7 +57,7 @@ export const SUBSCRIBERS_ANCHOR = "newsletter-subscribers";
  * filter shapes it (`inUse`) or right after an unsubscribe (`saved`). A Server Component: the rows
  * are server HTML, and each row's form posts the subscriber's id alone; the address reaches a client
  * island only as the string of its confirm dialog's title, which the server HTML shows anyway. The
- * backoffice's own table since §NNN (`AdminTable`: a table from `md` up, a block per row below it,
+ * backoffice's own table since §847 (`AdminTable`: a table from `md` up, a block per row below it,
  * paged through the address), where a hand-made pair of layouts stood since §550; the fold opens on a
  * page or a size the address asks for, as it does on a filter.
  */

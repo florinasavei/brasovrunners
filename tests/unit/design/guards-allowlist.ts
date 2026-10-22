@@ -230,7 +230,7 @@ const BACKOFFICE_FILES: ReadonlySet<string> = new Set([
   "src/modules/registrations/ui/InviteForm.tsx",
   "src/modules/registrations/ui/QueuePanel.tsx",
   "src/modules/registrations/ui/RegistrationRowMenu.tsx",
-  // A registration's state chip (§NNN): drawn by the list, the registration's page and the desk — the staff's.
+  // A registration's state chip (§847): drawn by the list, the registration's page and the desk — the staff's.
   "src/modules/registrations/ui/RegistrationStatusChip.tsx",
 ]);
 

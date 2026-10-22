@@ -191,7 +191,7 @@ describe("§647 the glyph and the radio", () => {
     expect(counted.match(/type="radio"/g)).toHaveLength(2);
     expect(radio(counted, "counted")).toContain('checked=""');
     expect(radio(counted, "hidden")).not.toContain('checked=""');
-    // The group's name is the card's title (§NNN): the heading, its glyph and its «i» are the page's `Panel`, not a second heading here.
+    // The group's name is the card's title (§847): the heading, its glyph and its «i» are the page's `Panel`, not a second heading here.
     expect(counted).toContain('aria-label="Lista de invitați speciali"');
     expect(counted).not.toMatch(/<h\d/);
     expect(counted).toContain("Se numără între locurile evenimentului");

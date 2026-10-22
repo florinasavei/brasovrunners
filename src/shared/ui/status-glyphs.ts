@@ -99,10 +99,10 @@ export const STATUS_GLYPHS = {
   self: AccountCircleIcon,
   noAccount: NoAccountsIcon,
   // A legal text's version a newer one replaced, «Înlocuită»; and «Șablon nou», the platform's template newer than the text in force —
-  // the picture «Regenerează din șablon» wears (§NNN, /admin/legal's rows).
+  // the picture «Regenerează din șablon» wears (§847, /admin/legal's rows).
   superseded: HistoryIcon,
   newTemplate: PostAddIcon,
-  // A registration's state (§NNN, `registrations/ui/RegistrationStatusChip.tsx`): the address to confirm, the declaration to sign,
+  // A registration's state (§847, `registrations/ui/RegistrationStatusChip.tsx`): the address to confirm, the declaration to sign,
   // the waiting line, a place offered from it (the seat the «Dă-i un loc» verb wears), the deadline that passed — `done` and
   // `cancelled` above for the confirmed and the cancelled. And a demonstration row (§30), the flask the «Test» card wears.
   awaitingEmail: MarkEmailUnreadIcon,

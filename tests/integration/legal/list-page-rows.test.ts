@@ -9,7 +9,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Documente legale» as the server draws it, from a real database: one list with one row per
+ * §847 — «Documente legale» as the server draws it, from a real database: one list with one row per
  * text (the house's row fold, `shared/ui/row-fold.ts`) — the name, the state in a sentence, a
  * `StatusChip` for each state, the pencil — its boxes behind the line; the notices in one panel, the
  * page's help after them; the one press and «Toate textele odată» as cards. A row opens by itself
@@ -102,7 +102,7 @@ const lineOf = (html: string, key: string) => {
   return html.slice(html.lastIndexOf("<li", start), html.indexOf("</summary>", start) + 10);
 };
 
-describe("§NNN «Documente legale»: one row per text, one panel of notices", () => {
+describe("§847 «Documente legale»: one row per text, one panel of notices", () => {
   it("draws one row per text in the catalogue's order, each line its name, its state in words, its chips and the pencil, closed when nothing asks", async () => {
     await seedSampleLegalDocuments(new Date("2026-10-01T10:00:00.000Z"));
     const html = await render();
