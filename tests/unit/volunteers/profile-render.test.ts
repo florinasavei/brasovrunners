@@ -1115,3 +1115,100 @@ describe("§773 the date of birth on the card's entry and on the public form", (
     expect(page).toContain("<noscript>");
   });
 });
+
+describe("§842 each volunteer on the card is the house's row fold", () => {
+  /** The `<details>` tags still open at `at`: the folds around that point, outermost first. */
+  function foldsBefore(page: string, at: number): string[] {
+    const stack: string[] = [];
+    for (const match of page.slice(0, at).matchAll(/<(\/?)details\b[^>]*>/g)) {
+      if (match[1] === "/") stack.pop();
+      else stack.push(match[0]);
+    }
+    return stack;
+  }
+  const isOpen = (tag: string) => /\sopen(=""|\s|>)/.test(tag);
+  const rowsOf = (page: string) => [...page.matchAll(/<li[^>]*data-testid="volunteer-row"[\s\S]*?(?=<li[^>]*data-testid="volunteer-(?:row|also)"|<\/ul>)/g)].map((match) => match[0]);
+  const summaryOf = (row: string) => /<summary[^>]*data-testid="volunteer-edit-toggle"[\s\S]*?<\/summary>/.exec(row)?.[0] ?? "";
+
+  it("draws each person as a closed fold whose line is the name, the state, the roles given or «De repartizat», and the pencil — every verb and box inside, «Șterge voluntarul» last", async () => {
+    const given: VolunteerItem = { ...PEOPLE[1], roleIds: [FINISH], state: "CONFIRMED" };
+    const page = await drawCard({ volunteers: [PEOPLE[0], given] });
+    const rows = rowsOf(page);
+    expect(rows).toHaveLength(2);
+    for (const row of rows) {
+      const fold = /<details[^>]*data-testid="volunteer-edit"[^>]*>/.exec(row)?.[0] ?? "";
+      expect(fold).not.toBe("");
+      expect(isOpen(fold)).toBe(false);
+      // The address «vezi la …» goes to is the fold itself, so `OpenFoldFromHash` opens it.
+      expect(fold).toMatch(/id="volunteer-[0-9a-f-]{36}"/);
+      const line = summaryOf(row);
+      expect(line).toContain('title="Modifică"');
+      expect(line).toContain('data-testid="volunteer-name"');
+      expect(line).toContain('data-testid="volunteer-state"');
+      expect(line).toContain('data-testid="volunteer-row-roles"');
+      // Nothing on the line is a control: the verbs and the boxes are inside.
+      expect(line).not.toMatch(/<form|<input|<button/);
+      for (const inside of ["volunteer-status", "volunteer-email", "volunteer-phone", 'name="name"', "volunteer-agreement"]) expect(row, inside).toContain(inside);
+      // «Șterge voluntarul» after «Modifică», in the row's last form.
+      const remove = row.indexOf(">Șterge voluntarul<");
+      expect(remove).toBeGreaterThan(row.indexOf(">Modifică<"));
+      expect(row.lastIndexOf("<form")).toBe(row.lastIndexOf("<form", remove));
+    }
+    const [maria, ion] = rows;
+    expect(summaryOf(maria)).toMatch(/data-testid="volunteer-name"[^>]*>Maria Test</);
+    expect(summaryOf(maria)).toContain(">Înscris<");
+    expect(summaryOf(maria)).toMatch(/data-testid="volunteer-row-roles"[\s\S]*?>De repartizat</);
+    expect(maria).toContain('data-testid="volunteer-assign"');
+    expect(summaryOf(ion)).toContain(">Confirmat<");
+    expect(summaryOf(ion)).toMatch(/data-testid="volunteer-row-roles"[\s\S]*?>Sosire</);
+    expect(summaryOf(ion)).not.toContain("De repartizat");
+    // The roles given keep their chips and «Ia-i rolul …» inside.
+    expect(ion).toContain('data-testid="volunteer-given"');
+  });
+
+  it("keys each fold on its line, so a verb that changed the name, the state or the roles draws it closed", () => {
+    const source = readFileSync("src/modules/volunteers/ui/VolunteerPerson.tsx", "utf8");
+    expect(source).toContain('key={[person.name, person.state, ...person.roleIds].join("\\u0001")}');
+  });
+
+  it("draws a person listed under another role as one line with nothing to open, linking to the fold", async () => {
+    const both: VolunteerItem = { ...PEOPLE[0], roleIds: [WATER, FINISH] };
+    const page = await drawCard({ volunteers: [both] });
+    const also = /<li[^>]*data-testid="volunteer-also"[\s\S]*?<\/li>/.exec(page)?.[0] ?? "";
+    expect(also).not.toBe("");
+    expect(also).not.toContain("<details");
+    expect(also).toContain(`href="#volunteer-${both.id}"`);
+    expect(page).toMatch(new RegExp(`<details[^>]*id="volunteer-${both.id}"`));
+  });
+
+  it("keeps every required box of a row inside an action form, whose `invalid` handler opens the closed folds around it", async () => {
+    const { revealField } = await import("@/shared/forms/ActionFormIsland");
+    const page = await drawCard();
+    const start = page.indexOf('data-testid="volunteer-list"');
+    expect(start).toBeGreaterThan(-1);
+    const list = page.slice(start, page.indexOf('data-testid="volunteer-add"'));
+    const required = [...list.matchAll(/<input\b[^>]*\brequired\b[^>]*>/g)];
+    // The name, the address and the telephone of each of the two people.
+    expect(required).toHaveLength(6);
+    for (const match of required) {
+      const at = start + (match.index ?? 0);
+      const before = page.slice(0, at);
+      expect(before.slice(before.lastIndexOf("<form")).split(">")[0], match[0]).toContain('data-action-form=""');
+      const folds = foldsBefore(page, at);
+      // The person's own fold is among the closed ones around the box.
+      const own = folds.find((tag) => tag.includes('data-testid="volunteer-edit"')) ?? "";
+      expect(own).not.toBe("");
+      expect(isOpen(own)).toBe(false);
+      type Node = { tagName: string; open?: boolean; parentElement: Node | null };
+      let parent: Node | null = null;
+      const chain: Node[] = [];
+      for (const tag of folds) {
+        const node: Node = { tagName: "DETAILS", open: isOpen(tag), parentElement: parent };
+        chain.push(node);
+        parent = node;
+      }
+      revealField({ tagName: "INPUT", parentElement: parent, dispatchEvent: () => true } as unknown as HTMLElement);
+      expect(chain.every((fold) => fold.open)).toBe(true);
+    }
+  });
+});
