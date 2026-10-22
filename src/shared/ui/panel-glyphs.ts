@@ -43,6 +43,7 @@ import LabelIcon from "@mui/icons-material/Label";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import LinkIcon from "@mui/icons-material/Link";
 import ListAltIcon from "@mui/icons-material/ListAlt";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import MailIcon from "@mui/icons-material/Mail";
 import MapIcon from "@mui/icons-material/Map";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
@@ -220,6 +221,8 @@ export const PANEL_GLYPHS = {
   memberDefinition: CardMembershipIcon,
   // «Niveluri de membru» (§811): the levels the club names for its members, on «Membri».
   memberTiers: WorkspacePremiumIcon,
+  // «Coduri de reducere» (§552): the partners' discount codes, on «Membri» — the price tag the members' zone draws for them too.
+  memberCodes: LocalOfferIcon,
   appearance: PaletteIcon,
   // «Setări»' row of tabs (§318 as amended, 2026-10-18) names the two it has no card for: the anti-robot check, a shield, and «Configurație», the platform's own screen, a gear.
   antiBot: ShieldIcon,

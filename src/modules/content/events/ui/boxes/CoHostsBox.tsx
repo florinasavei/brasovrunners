@@ -15,6 +15,9 @@ import { type BoxProps, SettingsReadOnly, summaryWords } from "./box-kit";
  * links (its site, its event, registering with it, its socials) — shown as "Împreună cu …" on the
  * page and, when the bib's footer asks for them, on the race number.
  *
+ * Each partner is the house's row fold (§842): its line says the partner in words — the name, the
+ * links counted, a half-written description — and its boxes open under it.
+ *
  * The cards are `CoHostRowsEditor`'s own (§344): this box is their frame and nothing else, so the
  * names they post (`event.coHosts[p].name`, `event.coHosts[p].links[l].<box>`), the refusal that
  * names a partner and a link by number, and the recall after a refused save are exactly the ones
@@ -56,6 +59,7 @@ export default async function CoHostsBox({ event, mayEditSettings, locale, headi
               moveUp: t("editor.coHostRows.moveUp"),
               moveDown: t("editor.coHostRows.moveDown"),
               partnerNew: t("editor.coHostRows.partnerNew"),
+              edit: t("editor.coHostRows.edit"),
               name: t("editor.coHostRows.name"),
               about: t("editor.coHostRows.about"),
               // Each language in its own words, as every Română | English tab on this page names it.
@@ -74,7 +78,11 @@ export default async function CoHostsBox({ event, mayEditSettings, locale, headi
               link: t("editor.coHostRows.link"),
               // The card's number is the island's to fill in, so the placeholder travels as itself.
               ofPartner: t("editor.coHostRows.ofPartner", { p: "{p}" }),
+              // A partner's line says it the way the box's own line does: its count of links and the half-written description.
+              linkCount: words.links.files,
+              describedOneLanguage: words.coHosts.describedOneLanguage,
             }}
+            locale={locale}
           />
         </Stack>
       ) : (

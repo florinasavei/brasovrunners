@@ -254,6 +254,8 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // The link saved by the first test comes back in its row, and removing the row removes it
     // (criterion 19): no rows left is "no links", not "not editing the links".
     await expect(page.locator('[name="event.links[0].url"]')).toHaveValue(GPX_LINK);
+    // A saved link is a row fold, shut on its line (§842): opened the way a person does, before its bin.
+    await openFold(page.getByTestId("link-row").first());
     await page.getByRole("button", { name: "Șterge linkul 1", exact: true }).click();
     await expect(page.locator('[name="event.links[0].url"]')).toHaveCount(0);
     // The event is published now, so the save carries the live-edit acknowledgement for the

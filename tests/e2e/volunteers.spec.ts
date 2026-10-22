@@ -1216,8 +1216,13 @@ test.describe("§754 volunteers for a race", () => {
     await openEditorBox(page, "Categorii");
     const categoryRows = page.getByTestId("volunteer-category-name");
     await expect(categoryRows).toHaveText(["Start / Sosire", "Traseu"]);
+    // Each category is a row fold (§842): its line is the names, «N roluri» and the pencil; a press on it opens the boxes and the arrows.
+    const openCategory = (row: Locator) => openFold(row.getByTestId("volunteer-category-edit"));
+    await openCategory(page.getByTestId("volunteer-category").nth(0));
+    await openCategory(page.getByTestId("volunteer-category").nth(1));
     // The first has no contact; the arrows are drawn only where a step is possible (the first has no «up», the last no «down»).
     await expect(page.getByTestId("volunteer-category").nth(0).getByTestId("volunteer-category-contact-line")).toHaveText("Nicio persoană de contact încă.");
+    await expect(page.getByTestId("volunteer-category").nth(0).getByRole("button", { name: /^Mai jos/ })).toBeVisible();
     await expect(page.getByTestId("volunteer-category").nth(0).getByRole("button", { name: /^Mai sus/ })).toHaveCount(0);
     await expect(page.getByTestId("volunteer-category").nth(1).getByRole("button", { name: /^Mai jos/ })).toHaveCount(0);
     const moveUp = page.getByTestId("volunteer-category").nth(1).getByRole("button", { name: /^Mai sus/ });
@@ -1229,6 +1234,7 @@ test.describe("§754 volunteers for a race", () => {
     // «Persoana de contact»: three optional boxes with a «Salvează» of their own; the telephone is read as a Romanian number.
     await openEditorBox(page, "Categorii");
     const route = page.getByTestId("volunteer-category").nth(0);
+    await openCategory(route);
     const contact = route.getByTestId("volunteer-category-contact");
     await openFold(contact);
     await contact.getByLabel("Numele persoanei de contact").fill("Ana Popescu");
@@ -1271,7 +1277,7 @@ test.describe("§754 volunteers for a race", () => {
     // A category with roles under it is not deleted: the sentence says why, and the category stays.
     await openEditorBox(page, "Categorii");
     const routeRow = page.getByTestId("volunteer-category").nth(0);
-    await openFold(routeRow.locator("details").filter({ hasText: /^Modifică/ }));
+    await openCategory(routeRow);
     await routeRow.getByRole("button", { name: "Șterge categoria", exact: true }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Șterge categoria", exact: true }).click();
     await page.waitForURL(/volunteerError=VOLUNTEER_CATEGORY_HAS_ROLES/);

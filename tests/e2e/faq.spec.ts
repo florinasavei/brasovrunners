@@ -63,8 +63,9 @@ test.describe.serial("§525 the FAQ page", () => {
     await card.locator('[name$=".categoryEn"]').fill(`First time ${suffix}`);
     await writeAnswer(card, "En", "Water, a headlamp and the will to run.");
 
-    await card.getByTestId("faq-visible").check();
-    await page.getByRole("button", { name: "Salvează pagina" }).click();
+    // The house's tick (`CheckboxField`, §842), found by its words.
+    await card.getByRole("checkbox", { name: "Pe site" }).check();
+    await page.getByRole("button", { name: "Salvează pagina", exact: true }).click();
     await confirmDialog(page, /Pui pe site/);
     await expect(page).toHaveURL(/saved=faqPageSaved/, { timeout: 20_000 });
     await expect(page.getByTestId("faq-card").filter({ hasText: question })).toHaveCount(1);
@@ -112,8 +113,8 @@ test.describe.serial("§525 the FAQ page", () => {
 
     card = page.getByTestId("faq-card").filter({ hasText: question });
     await openFold(card);
-    await card.getByTestId("faq-remove").check();
-    await page.getByRole("button", { name: "Salvează pagina" }).click();
+    await card.getByRole("checkbox", { name: "Șterge la salvare" }).check();
+    await page.getByRole("button", { name: "Salvează pagina", exact: true }).click();
     await confirmDialog(page, /Ștergi întrebarea/);
     await expect(page).toHaveURL(/saved=faqPageSaved/, { timeout: 20_000 });
     await expect(page.getByTestId("faq-card").filter({ hasText: question })).toHaveCount(0);
