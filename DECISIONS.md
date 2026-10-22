@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.70-2026-10-22 -->
+<!-- PROJECT_BASELINE: BR-V3.71-2026-10-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.70-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.71-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27847,3 +27847,23 @@ Baseline `BR-V3.69-2026-10-22`.
 **The plan that follows**, from the audit: the remaining walls of always-open inputs as row folds (the event's links, partners and programme; volunteer categories; the club's to-dos; member levels; discount codes; FAQ questions; «Spune-ne ceva»'s four forms), then each volunteer, the registration's page, one state chip for registrations, the legal texts' list, «Aspect» and «Costuri», «Echipa»'s rows, and four source-walk guards (a list item with boxes is a row fold; no hand-drawn row box; no second `h1`; the verbs above).
 
 Baseline `BR-V3.70-2026-10-22`.
+
+## 845. The consistency audit's second wave: the remaining walls of inputs as row folds
+
+**The owner, 2026-10-21:** «I do not like the volunteers roles editor and then course points editor, they look like they are from a different app, not consistent at all», then «More parallel agents for consistency checks». §842 set the house's row fold for the roles and the checkpoints; the audit's first wave (§844) fixed what was broken or one word away. This second wave draws every remaining backoffice list that was still a wall of always-open inputs in the same shape: each saved item is one line **in words** — its name, a chip or two of facts, the pencil — that opens onto its boxes in place, the delete last; «Adaugă …» is a fold open only while the list is empty, or, inside the event's one save form, the button that appends a row already open.
+
+**The lists.**
+
+- **The event editor:** «Linkuri și fișiere» (the kind's glyph, the label and the host, «etichetă într-o singură limbă» when half written), «Parteneri» (the name, «N linkuri», «descriere într-o singură limbă») and the programme's timed rows («08:00–09:30 Ridicarea kiturilor», the day and the place). A row added in this sitting, the spare line of an empty list and a row holding a box the refusal named open by themselves; the rest come back closed on their words.
+- **Volunteers:** «Categorii» — both names, «N roluri», the pencil; inside, the names, «Poziția: 2 din 3» with ↑ / ↓, «Persoana de contact» and «Șterge categoria». A category moves one step at a time, as before: the server has no typed-position action for categories, and none was added for a presentation change.
+- **Members:** «Niveluri de membru» (the roles editor's twin, still one form and one «Salvează toate nivelurile») and «Coduri de reducere», now a `Panel` whose rows say the partner, the code, its state («Vizibil membrilor», «Ascuns», «Expirat»), its last day and who it is for (§828).
+- **«Ce mai este de făcut» → «Club»:** drawn with the event to-dos' own row (§749), now one shared `TodoLine` — the tick beside a line in words that opens onto the line's boxes; the event to-dos render byte for byte as before. The late chip says «Întârziat: …», as the event's does.
+- **«Întrebări frecvente»:** each question its number and Romanian text, «Ascunsă» or «Fără engleză» when they apply; the spare card becomes «Adaugă o întrebare»; still one form with one «Salvează pagina».
+- **«Pagina principală»:** each step of «Prima dată» and each reason of «De ce» a row named by its title, «Textul implicit» while the club wrote neither of its boxes. Their counts are fixed by the schema, so neither list has a remove or an «Adaugă …».
+- **«Spune-ne ceva»:** the four forms' lines say the form, who receives it, «Pornit» or «Oprit» and the road; still one form and one confirmed «Salvează formularele». The row whose recipient is the club's own sending Gmail opens by itself, so §778's warning is never folded away (§336's «attention» case); the row hairlines replace §716's separators.
+
+**What did not change.** Every server action, field name, form, confirmation and permission is the one before: a form with one «Salvează» stays one form, since a box in a closed `<details>` still submits. No box in a closed row is `required`, and a pattern the browser refuses inside one (an address, an hour) is opened by `ActionForm`'s `onInvalidCapture` before the browser looks for it, so a closed row never blocks a save silently; each screen's render test proves it. The design ratchet shrinks with the add buttons and bins that became `GlyphButton`s (icons 35 entries / 127 hits, primitives 84 / 88).
+
+**Refused for now:** a typed «Poziția» for categories (a new server action, not presentation); an «Adaugă …» `Panel` inside the event's form (`Panel` is server-only and the button appends several rows in one sitting). Left for the next waves: each volunteer as a row, the registration page's sections as `Panel`s, one state chip for registrations, the legal texts' list, «Aspect» and «Costuri», «Echipa»'s rows, and the source-walk guards that keep a list item with boxes from coming back unfolded.
+
+Baseline `BR-V3.71-2026-10-22`.

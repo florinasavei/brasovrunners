@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.71-2026-10-22
+
+- **Every remaining backoffice list as one line you open** — the event's links, partners and programme, the volunteer categories, the member levels and discount codes, the club's to-dos, the FAQ questions, the home page's steps and reasons and the «Spune-ne ceva» forms now read like the roles and checkpoints: each item one line in words with a pencil, its boxes inside, delete last, «Adaugă …» open only while the list is empty. Nothing they save changed. §845.
 ## BR-V3.70-2026-10-22
 
 - **Small consistency fixes from the backoffice audit** — the registration's team trail says what changed in words instead of code, the registrations toolbar keeps its shape when «Invită pe email» opens, the results page's unregistered runners have labels and fit the card, every page has one main heading, and the same verb reads the same everywhere («Descarcă», «Mai sus», «Modifică», «Scoate pagina de pe site», «Șterge …»). §844.
