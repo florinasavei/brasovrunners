@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import pg from "pg";
 import { chooseAlternative } from "./support/confirm";
 import { FEATURED, signIn } from "./support/featured-event";
+import { openFold } from "./support/fold";
 
 /**
  * §540 (amending §513, §80, §68; the owner, 2026-09-28: «cand retrimit un mail trebuie sa am optiunea
@@ -88,6 +89,8 @@ test.describe("§540 a resend may leave now, past the scheduled pass", () => {
       // The banner and the toast say it leaves now; the trail names the press.
       await expect(page.getByRole("alert").filter({ hasText: "Emailul pleacă acum, fără să aștepte trecerea programată." })).toBeVisible();
       await expect(page.getByTestId("toast-live")).toContainText("Emailul pleacă acum, fără să aștepte trecerea programată.");
+      // «Ce a făcut echipa» is a fold since the third wave (§NNN).
+      await openFold(page.getByTestId("audit-trail"));
       await expect(page.getByText(/Trimis acum, ocolind trecerea programată/)).toBeVisible();
       // The drain after the response sent it, whatever the timing says (this suite's server captures).
       await expect
