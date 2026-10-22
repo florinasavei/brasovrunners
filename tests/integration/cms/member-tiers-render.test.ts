@@ -255,12 +255,12 @@ describe("§811 where the member's level shows", () => {
       const old = await editor(true);
       expect(old).toContain(ro.Admin.members.codes.forEveryone);
       expect(ro.Admin.members.codes.forEveryone).toBe("Pentru: Toți membrii");
-      // The code's own form has «Toți membrii» ticked and no level; the add form beside it, nothing.
+      // The code's own form, first (its row; «Adaugă un cod» is the last fold, §842), has «Toți membrii» ticked and no level; the add form, nothing.
       const forms = old.split('data-testid="tier-chips"').slice(1);
       expect(forms).toHaveLength(2);
       const tickedIn = (chunk: string) => (chunk.match(/<input[^>]*name="(?:forAll|tierIds)"[^>]*>/g) ?? []).filter((box) => box.includes("checked")).map((box) => /name="(\w+)"/.exec(box)?.[1]);
-      expect(tickedIn(forms[0])).toEqual([]);
-      expect(tickedIn(forms[1])).toEqual(["forAll"]);
+      expect(tickedIn(forms[0])).toEqual(["forAll"]);
+      expect(tickedIn(forms[1])).toEqual([]);
       const { deleteMemberTier } = await import("@/modules/content/member-tiers/service");
       const { listAllMemberTiers } = await import("@/modules/content/member-tiers/repository");
       for (const tier of await listAllMemberTiers(db)) await deleteMemberTier(db, { actor: admin, tierId: tier.id, now: NOW });
@@ -279,7 +279,9 @@ describe("§811 where the member's level shows", () => {
       const created = await createDiscountCode(db, { actor: admin, fields: EVERYONE, now: NOW });
       await db.update(memberDiscountCodes).set({ tierIds: ["99999999-9999-4999-8999-999999999999"] }).where(eq(memberDiscountCodes.id, created.id));
       const html = await editor(true);
-      const line = (html.split('data-testid="code-tiers-chip"')[1] ?? "").slice(0, 300);
+      // The chip, to its own end: its glyph comes before its words (§842).
+      const chip = html.split('data-testid="code-tiers-chip"')[1] ?? "";
+      const line = chip.slice(0, chip.indexOf("</div>"));
       expect(line).toContain("niveluri negăsite: 1");
       expect(line).not.toContain(ro.Admin.members.codes.forEveryone);
       const own = html.split('data-testid="tier-chips"').slice(1)[0] ?? "";
