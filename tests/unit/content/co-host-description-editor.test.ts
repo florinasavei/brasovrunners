@@ -22,6 +22,7 @@ const LABELS: ComponentProps<typeof CoHostRowsEditor>["labels"] = {
   moveUp: "Mută mai sus partenerul",
   moveDown: "Mută mai jos partenerul",
   partnerNew: "Partener nou",
+  edit: "Modifică partenerul",
   name: "Numele partenerului",
   about: "Despre parteneriat",
   descriptionRo: "Română",
@@ -38,6 +39,8 @@ const LABELS: ComponentProps<typeof CoHostRowsEditor>["labels"] = {
   moveLinkDown: "Mută mai jos linkul",
   link: "Linkul",
   ofPartner: "al partenerului {p}",
+  linkCount: { one: "{count} link", few: "{count} linkuri", other: "{count} de linkuri" },
+  describedOneLanguage: "descriere într-o singură limbă",
 };
 
 const KIND_LABELS = {
@@ -57,7 +60,7 @@ const CONSTRAINTS = {
 };
 
 function render(initial: ComponentProps<typeof CoHostRowsEditor>["initial"], recalled?: { values: Record<string, string[]>; fields: string[] }) {
-  const editor = createElement(CoHostRowsEditor, { initial, labels: LABELS, kindLabels: KIND_LABELS, constraints: CONSTRAINTS });
+  const editor = createElement(CoHostRowsEditor, { initial, labels: LABELS, kindLabels: KIND_LABELS, constraints: CONSTRAINTS, locale: "ro" });
   if (!recalled) return renderToStaticMarkup(editor);
   return renderToStaticMarkup(
     createElement(

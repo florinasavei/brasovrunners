@@ -2410,7 +2410,9 @@
         "place": "Where",
         "add": "Add a row",
         "remove": "Remove row",
-        "empty": "No rows yet."
+        "empty": "No rows yet.",
+        "new": "New row",
+        "edit": "Edit the row"
       },
       "rulesHelp": "Optional, in both languages or neither: the race rules. Shown on the page under “Rules”; the declaration and the emails point there.",
       "checklistHelp": "Optional, in both languages or neither, at most 300 characters: “race number, water, a jacket”. It goes in the confirmation email, the reminder and the calendar entry.",
@@ -2627,6 +2629,7 @@
         "moveUp": "Move up partner",
         "moveDown": "Move down partner",
         "partnerNew": "New partner",
+        "edit": "Edit the partner",
         "name": "Partner's name",
         "about": "About the partnership",
         "descriptionHelp": "Optional, in both languages · a sentence or two: what we do together. Shown on the event's page, under the partner's name.",
@@ -2663,6 +2666,8 @@
         "moveDown": "Move down link",
         "uploadGpx": "Upload the file instead of a link",
         "row": "Link",
+        "new": "New link",
+        "edit": "Edit the link",
         "urlError": "Link {n}: the address must start with https://",
         "kindError": "Link {n}: choose the kind from the list",
         "labelRoError": "Link {n}: the Romanian label — write it in both languages or neither, at most {max} characters",
