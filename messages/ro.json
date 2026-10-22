@@ -3470,15 +3470,11 @@
       "you": "Tu",
       "changeRole": "Schimbă rolul",
       "revoke": "Retrage accesul",
-      "columnName": "Nume",
-      "columnEmail": "E-mail",
-      "columnRole": "Rol",
-      "columnStatus": "Stare",
+      "edit": "Modifică",
       "tableCaption": "Conturile care pot intra în administrare, cu rolul fiecăruia",
       "empty": "Nu există niciun cont în echipă.",
       "changeRolePending": "Se salvează…",
       "revokePending": "Se retrage…",
-      "rowActions": "Acțiuni pentru {name}",
       "resendInviteTitle": "Trimiți din nou invitația?",
       "resendInviteBody": "Pleacă un email către {email} cu linkul de intrare.",
       "passwordResetTitle": "Trimiți resetarea parolei?",
@@ -3497,7 +3493,7 @@
         "SUPERADMIN": "plus setările tehnice care pot opri serviciul — cât de des verifică site-ul, limitele bazei de date, verificarea anti-robot — și numirea altui Superadministrator.",
         "MEMBER": "zona membrilor de pe site, după autentificare. Fără backoffice."
       },
-      "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din tabel — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
+      "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din listă — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
       "passwordReset": "Trimite resetare de parolă",
       "passwordResetPending": "Se trimite…",
       "passwordResetSent": "Gata. I-am trimis pe email linkul cu care își pune o parolă nouă.",
@@ -3505,15 +3501,15 @@
       "deactivateAccountPending": "Se dezactivează…",
       "accountDeactivated": "Contul de autentificare a fost dezactivat: nu se mai poate autentifica nicăieri. Rândul din echipă rămâne — ca să-i iei și accesul, folosește „Retrage accesul”.",
       "accountReactivated": "Contul de autentificare a fost reactivat.",
-      "accountMissing": "La furnizorul de autentificare nu există niciun cont cu această adresă, deci nu era nimic de schimbat. Verifică adresa din tabel.",
+      "accountMissing": "La furnizorul de autentificare nu există niciun cont cu această adresă, deci nu era nimic de schimbat. Verifică adresa din listă.",
       "accountUnconfigured": "Nu putem face asta fără cheia Zitadel: Sarcini → Club → „Invită echipa”. Până atunci, din consola Zitadel.",
       "accountFailed": "Furnizorul de autentificare a refuzat ({reason}).",
       "noAccount": "Fără cont de autentificare",
       "invitationRefused": "Invitația respinsă: {label}",
-      "noAccountHelp": "„Fără cont de autentificare”: persoana e pe listă, dar nu se poate autentifica. Rezolvarea: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă.",
+      "noAccountHelp": "„Fără cont de autentificare”: persoana e pe listă, dar nu se poate autentifica. Rezolvarea: deschide-i rândul → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă.",
       "accountsBlind": "Nu am putut verifica cine are cont: cheia Zitadel vede doar {seen} conturi, deci nu are rolul „Org User Manager”. Vezi Sarcini → Club → „Cheia de invitații”.",
       "accountsUnchecked": "Nu am putut verifica cine are cont de autentificare — Zitadel a răspuns: {reason}. Rândurile de mai jos nu spun nimic despre conturi până la o verificare reușită; reîncarcă pagina peste câteva minute.",
-      "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT). Până o pui, creează contul din consola Zitadel, cu exact adresa din tabel.",
+      "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT). Până o pui, creează contul din consola Zitadel, cu exact adresa din listă.",
       "inviting": "Se adaugă…",
       "inviteAsideSends": "contul și invitația, într-un pas",
       "inviteAsideManual": "lista și invitația; contul, din consola Zitadel",
@@ -4295,7 +4291,7 @@
             "Nu „Role Assignments”: acea pagină dă roluri într-un proiect și nu ajută la crearea utilizatorilor.",
             "Dacă Zitadel a răspuns 401 sau tokenul a fost revocat: pe service account → Personal Access Tokens → New, apoi noul token ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel și redeploy.",
             "Verificare: reîncarcă pagina; rândul se face verde când cheia găsește contul tău.",
-            "Apoi, pe Echipa, pentru fiecare coleg marcat „Fără cont de autentificare”: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă."
+            "Apoi, pe Echipa, pentru fiecare coleg marcat „Fără cont de autentificare”: deschide-i rândul → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă."
           ],
           "howUnreachable": [
             "Reîncarcă pagina peste câteva minute: verificarea se face la fiecare deschidere, cu o căutare în Zitadel.",
@@ -8775,9 +8771,9 @@
                 "«Echipa» e a Administratorului și a Superadministratorului. Rolul Superadministrator și rândul unui Superadministrator le schimbă doar un Superadministrator.",
                 "«Echipa» → «Adaugă o persoană»: «Adresă de email», «Nume», «Rol» (Voluntar pentru masă), «Limbă preferată».",
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
-                "Nu a primit-o: pe rândul ei, «Retrimite invitația» → «Trimite acum, fără să aștepte trecerea programată».",
-                "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul».",
-                "Magazinul fără rolul de Administrator: pe rândul colegului, bifează «Gestionează magazinul» și confirmă. Găsește «Magazin» în bara de sus; adresele membrilor nu le vede."
+                "Nu a primit-o: apasă rândul ei, apoi «Retrimite invitația» → «Trimite acum, fără să aștepte trecerea programată».",
+                "Pe rândul persoanei (apasă-l ca să se deschidă): alt rol — «Rol», apoi «Schimbă rolul»; a plecat din echipă — «Retrage accesul», ultimul.",
+                "Magazinul fără rolul de Administrator: apasă rândul colegului, bifează «Gestionează magazinul» și confirmă. Găsește «Magazin» în bara de sus; adresele membrilor nu le vede."
               ]
             },
             {

@@ -1,3 +1,4 @@
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
@@ -16,6 +17,8 @@ import HistoryIcon from "@mui/icons-material/History";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import LinkIcon from "@mui/icons-material/Link";
 import LockClockIcon from "@mui/icons-material/LockClock";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import NoAccountsIcon from "@mui/icons-material/NoAccounts";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -83,6 +86,11 @@ export const STATUS_GLYPHS = {
   // A runner's race that did not end in a time (§808): did not start, dropped out. A disqualified runner wears `failed`.
   didNotStart: DoNotDisturbIcon,
   droppedOut: FlagIcon,
+  // A person's line on «Echipa» (§842): their role (the glyph «Schimbă rolul» wears), the reader's own row («Tu»), and an address
+  // on the list with no sign-in account behind it (§288).
+  role: ManageAccountsIcon,
+  self: AccountCircleIcon,
+  noAccount: NoAccountsIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;

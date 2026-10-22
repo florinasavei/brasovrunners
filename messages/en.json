@@ -3470,15 +3470,11 @@
       "you": "You",
       "changeRole": "Change role",
       "revoke": "Revoke access",
-      "columnName": "Name",
-      "columnEmail": "Email",
-      "columnRole": "Role",
-      "columnStatus": "Status",
+      "edit": "Edit",
       "tableCaption": "The accounts that may sign in to the backoffice, with each one's role",
       "empty": "There is no staff account yet.",
       "changeRolePending": "Saving…",
       "revokePending": "Removing…",
-      "rowActions": "Actions for {name}",
       "resendInviteTitle": "Send the invitation again?",
       "resendInviteBody": "An email goes to {email} with the sign-in link.",
       "passwordResetTitle": "Send a password reset?",
@@ -3497,7 +3493,7 @@
         "SUPERADMIN": "plus the technical settings that can stop the service — how often the site checks, the database's limits, the anti-bot check — and naming another Superadministrator.",
         "MEMBER": "the members' area of the site, after signing in. No backoffice."
       },
-      "resendFailed": "The invitation did not go out: the identity provider has no account with this address ({reason}). Check the address in the table — if it is wrong, withdraw access and add the person again with the right one.",
+      "resendFailed": "The invitation did not go out: the identity provider has no account with this address ({reason}). Check the address in the list — if it is wrong, withdraw access and add the person again with the right one.",
       "passwordReset": "Send a password reset",
       "passwordResetPending": "Sending…",
       "passwordResetSent": "Done. They have been emailed the link for setting a new password.",
@@ -3505,15 +3501,15 @@
       "deactivateAccountPending": "Deactivating…",
       "accountDeactivated": "The sign-in account is deactivated: they can no longer sign in anywhere. The team row stays — to take their access away too, use “Withdraw access”.",
       "accountReactivated": "The sign-in account is active again.",
-      "accountMissing": "The identity provider has no account with this address, so there was nothing to change. Check the address in the table.",
+      "accountMissing": "The identity provider has no account with this address, so there was nothing to change. Check the address in the list.",
       "accountUnconfigured": "This needs the Zitadel key: Tasks → Club → “Invite the team”. Until then, from the Zitadel console.",
       "accountFailed": "The identity provider refused ({reason}).",
       "noAccount": "No sign-in account",
       "invitationRefused": "Invitation rejected: {label}",
-      "noAccountHelp": "“No sign-in account”: the person is on the list but cannot sign in. The fix: ⋮ → “Revoke access”, then “Add” again with the same address.",
+      "noAccountHelp": "“No sign-in account”: the person is on the list but cannot sign in. The fix: open their row → “Revoke access”, then “Add” again with the same address.",
       "accountsBlind": "Could not check who has an account: the Zitadel key sees only {seen} accounts, so it lacks the “Org User Manager” role. See Tasks → Club → “The invitation key”.",
       "accountsUnchecked": "Could not check who has a sign-in account — Zitadel answered: {reason}. The rows below say nothing about accounts until a check succeeds; reload the page in a few minutes.",
-      "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key (ZITADEL_MANAGEMENT_PAT) is missing. Until it is set, create the account in the Zitadel console, with exactly the address in the table.",
+      "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key (ZITADEL_MANAGEMENT_PAT) is missing. Until it is set, create the account in the Zitadel console, with exactly the address in the list.",
       "inviting": "Adding…",
       "inviteAsideSends": "the account and the invitation, in one step",
       "inviteAsideManual": "the list and the invitation; the account, in Zitadel's console",
@@ -4295,7 +4291,7 @@
             "Not “Role Assignments”: that page grants roles inside a project and does not help create users.",
             "If Zitadel answered 401 or the token was revoked: on the service account → Personal Access Tokens → New, then the new token as ZITADEL_MANAGEMENT_PAT on both Vercel projects and redeploy.",
             "Check: reload this page; the row turns green when the key finds your account.",
-            "Then, on Echipa, for every colleague marked “No sign-in account”: ⋮ → “Revoke access”, then “Add” again with the same address."
+            "Then, on Echipa, for every colleague marked “No sign-in account”: open their row → “Revoke access”, then “Add” again with the same address."
           ],
           "howUnreachable": [
             "Reload the page in a few minutes: the check runs on every open, with one search in Zitadel.",
@@ -8775,9 +8771,9 @@
                 "«Staff» is the Administrator's and the Superadministrator's. The Superadministrator role and a Superadministrator's row are changed only by a Superadministrator.",
                 "«Staff» → «Add someone»: «Email address», «Name», «Role» (Voluntar for the desk), «Preferred language».",
                 "Press «Add» and confirm. The person gets the invitation by email and chooses a password.",
-                "It never arrived: on their row, «Resend the invitation» → «Send now, without waiting for the scheduled round».",
-                "Another role: «Change role». Left the team: «Revoke access».",
-                "The shop without the Administrator role: on the colleague's row, tick «Manages the shop» and confirm. They find «Shop» in the top bar; they never see the members' addresses."
+                "It never arrived: press their row, then «Resend the invitation» → «Send now, without waiting for the scheduled round».",
+                "On the person's row (press it to open it): another role — «Role», then «Change role»; left the team — «Revoke access», the last.",
+                "The shop without the Administrator role: press the colleague's row, tick «Manages the shop» and confirm. They find «Shop» in the top bar; they never see the members' addresses."
               ]
             },
             {

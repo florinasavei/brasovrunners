@@ -17,15 +17,22 @@ import { describe, expect, it } from "vitest";
  * - a row with **one** verb keeps it as a button that confirms — a menu for a single action is
  *   one press more for nothing;
  * - and a destructive verb always asks, wherever it lives.
+ *
+ * Amended by §842 for «Echipa»: the team is a handful of people each with several controls, and
+ * reads as the house's row folds rather than a table — the line in words, the controls behind the
+ * pencil, each one its own form that asks first. Its verbs are no longer behind a ⋮; what §256 was
+ * for — nothing that ends somebody's access fires on a single press — is asserted below.
  */
 const LISTS = {
   events: ["src", "app", "[locale]", "admin", "(list)", "page.tsx"],
   pages: ["src", "app", "[locale]", "admin", "pages", "(list)", "page.tsx"],
   albums: ["src", "app", "[locale]", "admin", "gallery", "(list)", "page.tsx"],
   pictures: ["src", "app", "[locale]", "admin", "gallery", "pictures", "page.tsx"],
-  staff: ["src", "app", "[locale]", "admin", "staff", "page.tsx"],
   registrations: ["src", "app", "[locale]", "admin", "registrations", "(list)", "page.tsx"],
 } as const;
+
+/** «Echipa» (§842): row folds, not a table; the destructive guard below still reads it. */
+const STAFF = ["src", "app", "[locale]", "admin", "staff", "page.tsx"] as const;
 
 const source = (parts: readonly string[]) => readFileSync(path.join(process.cwd(), ...parts), "utf8");
 
@@ -37,7 +44,7 @@ describe("§256 the backoffice lists are the same shape", () => {
   });
 
   it("puts a row's verbs in the shared menu wherever there is more than one", () => {
-    for (const name of ["events", "pages", "albums", "staff"] as const) {
+    for (const name of ["events", "pages", "albums"] as const) {
       expect(source(LISTS[name]), name).toContain("RowMenu");
     }
   });
@@ -58,7 +65,7 @@ describe("§256 the backoffice lists are the same shape", () => {
       `ConfirmSubmitButton` or a `RowMenu` item, both of which carry a dialog — so no list may
       name one of those verbs on a plain button.
     */
-    for (const [name, parts] of Object.entries(LISTS)) {
+    for (const [name, parts] of [...Object.entries(LISTS), ["staff", STAFF] as const]) {
       const text = source(parts);
       const plainButtons = text.split("<SubmitButton").slice(1).map((chunk) => chunk.slice(0, 400));
       for (const button of plainButtons) {
@@ -67,6 +74,19 @@ describe("§256 the backoffice lists are the same shape", () => {
         );
       }
     }
+  });
+
+  it("draws «Echipa» as row folds whose every control asks first (§842, amending §256)", () => {
+    const staff = source(STAFF);
+    expect(staff).toContain("sx={SUMMARY_SX}");
+    expect(staff).not.toContain("AdminTable");
+    expect(staff).not.toContain("RowMenu");
+    // Every one of the row's verbs is an `ActionForm` that confirms; the two that end somebody's access are destructive.
+    for (const action of ["changeStaffRoleAction", "setMemberTierAction", "setStaffPermissionAction", "resendStaffInviteAction", "sendStaffPasswordResetAction", "setStaffAccountActiveAction", "revokeStaffAction"]) {
+      expect(staff, action).toMatch(new RegExp(`<ActionForm\\s+action=\\{${action}\\}[^>]{0,120}confirm=`));
+    }
+    expect(staff).toMatch(/action=\{setStaffAccountActiveAction\}\s+confirm=\{\{[^\n]*destructive: true/);
+    expect(staff).toMatch(/action=\{revokeStaffAction\}\s+confirm=\{\{[^\n]*destructive: true/);
   });
 
   it("uses one menu component, not one per module", () => {
