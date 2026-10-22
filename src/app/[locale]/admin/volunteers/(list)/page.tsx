@@ -249,6 +249,12 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
           {t("nav.volunteers")}
         </Typography>
+        {/* Every event's people in one workbook (§NNN), while no single event is chosen: the screen's own scope, one press. */}
+        {!scopeEvent && events.length > 0 && (
+          <GlyphButton icon="spreadsheet" href={`/api/admin/volunteers/export?lang=${locale}`} variant="outlined" size="small" sx={TAP_TARGET} data-testid="volunteers-xlsx-all">
+            {t("volunteers.screen.excelAll")}
+          </GlyphButton>
+        )}
         {scopeEvent && (
           <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
             {/* The roles, the switches, the invitations and «Adaugă un voluntar de mână» stay on the event's card (§754, §761): one link to it. */}

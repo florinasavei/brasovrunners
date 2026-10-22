@@ -5525,6 +5525,20 @@
         "guardianEmail": "Email părinte sau tutore",
         "guardianConsent": "Acordul părintelui"
       },
+      "sheet": {
+        "people": "Voluntari",
+        "roles": "Pe roluri",
+        "event": "Eveniment",
+        "category": "Categorie",
+        "role": "Rol",
+        "needed": "Câți trebuie",
+        "taken": "Cu rolul dat",
+        "confirmed": "Dintre ei, confirmați",
+        "free": "Mai lipsesc",
+        "offered": "S-au oferit",
+        "noNumber": "fără număr",
+        "total": "Total"
+      },
       "badgesLink": "Ecusoane pentru voluntari",
       "switchHelp": "Bifat, se pot oferi voluntari; pagina evenimentului arată butonul cât e bifată căsuța de mai jos. Debifat, nu se șterge nimic: rolurile și oamenii rămân.",
       "access": {
@@ -5630,7 +5644,8 @@
         "emptyFiltered": "Niciun voluntar nu corespunde filtrelor. Șterge filtrele ca să-i vezi pe toți.",
         "eventCard": "Rolurile și setările evenimentului",
         "backToList": "Înapoi la voluntari",
-        "eventLine": "Voluntar la {event} · {when}"
+        "eventLine": "Voluntar la {event} · {when}",
+        "excelAll": "Descarcă Excel: toate evenimentele"
       },
       "chips": {
         "before": "A mai fost voluntar",
