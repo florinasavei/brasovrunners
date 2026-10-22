@@ -5525,6 +5525,20 @@
         "guardianEmail": "Parent or guardian email",
         "guardianConsent": "Parent's consent"
       },
+      "sheet": {
+        "people": "Volunteers",
+        "roles": "By role",
+        "event": "Event",
+        "category": "Category",
+        "role": "Role",
+        "needed": "Needed",
+        "taken": "Given the role",
+        "confirmed": "Of them, confirmed",
+        "free": "Still needed",
+        "offered": "Offered",
+        "noNumber": "no number",
+        "total": "Total"
+      },
       "badgesLink": "Volunteer badges",
       "switchHelp": "Ticked, people can volunteer; the event page shows the button while the tick below is on. Unticked, nothing is deleted: the roles and the people stay.",
       "access": {
@@ -5630,7 +5644,8 @@
         "emptyFiltered": "No volunteer matches these filters. Clear them to see all of them.",
         "eventCard": "The event's roles and settings",
         "backToList": "Back to volunteers",
-        "eventLine": "Volunteer at {event} · {when}"
+        "eventLine": "Volunteer at {event} · {when}",
+        "excelAll": "Download Excel: every event"
       },
       "chips": {
         "before": "Volunteered before",

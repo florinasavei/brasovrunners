@@ -49,18 +49,18 @@ const unescapeXml = (value: string) =>
   value.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
 
 /**
- * The first sheet as a grid of what each cell shows before formatting: a text cell's words
- * (shared or inline), a number's or a date serial's digits, and `undefined` for a cell not written.
- * `rows[0]` is the header row.
+ * A sheet — the first unless `sheet` says which, counted from 1 — as a grid of what each cell shows before formatting: a
+ * text cell's words (shared or inline), a number's or a date serial's digits, and `undefined` for a cell not written.
+ * `rows[0]` is the header row; `sheetName` is that sheet's name.
  */
-export function readSheet(buffer: Buffer): { rows: (string | undefined)[][]; sheetName: string } {
+export function readSheet(buffer: Buffer, sheet = 1): { rows: (string | undefined)[][]; sheetName: string } {
   const parts = unzip(buffer);
   const shared = [...(parts.get("xl/sharedStrings.xml") ?? "").matchAll(/<si>([\s\S]*?)<\/si>/g)].map((match) =>
     unescapeXml([...match[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((part) => part[1]).join("")),
   );
-  const sheet = parts.get("xl/worksheets/sheet1.xml") ?? "";
+  const xml = parts.get(`xl/worksheets/sheet${sheet}.xml`) ?? "";
   const rows: (string | undefined)[][] = [];
-  for (const cell of sheet.matchAll(/<c r="([A-Z]+)(\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+  for (const cell of xml.matchAll(/<c r="([A-Z]+)(\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
     const [, letters, rowNumber, attributes, inner = ""] = cell;
     const column = [...letters].reduce((sum, letter) => sum * 26 + (letter.charCodeAt(0) - 64), 0) - 1;
     const row = Number(rowNumber) - 1;
@@ -70,7 +70,7 @@ export function readSheet(buffer: Buffer): { rows: (string | undefined)[][]; she
     const shown = type === "s" && value !== undefined ? shared[Number(value)] : type === "inlineStr" ? unescapeXml(inline ?? "") : value !== undefined ? unescapeXml(value) : undefined;
     (rows[row] ??= [])[column] = shown;
   }
-  const sheetName = unescapeXml(/<sheet [^>]*name="([^"]*)"/.exec(parts.get("xl/workbook.xml") ?? "")?.[1] ?? "");
+  const sheetName = unescapeXml([...(parts.get("xl/workbook.xml") ?? "").matchAll(/<sheet [^>]*name="([^"]*)"/g)][sheet - 1]?.[1] ?? "");
   return { rows, sheetName };
 }
 

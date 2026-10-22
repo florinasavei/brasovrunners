@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.72` | the volunteers' spreadsheet, formatted, and for every event (§846) |
 | `BR-V3.71` | the consistency audit's second wave (§845) |
 | `BR-V3.70` | the consistency audit's first wave (§844) |
 | `BR-V3.69` | the calendar's countdown to the hour (§843) |

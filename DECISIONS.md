@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.71-2026-10-22 -->
+<!-- PROJECT_BASELINE: BR-V3.72-2026-10-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.71-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.72-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27867,3 +27867,18 @@ Baseline `BR-V3.70-2026-10-22`.
 **Refused for now:** a typed «Poziția» for categories (a new server action, not presentation); an «Adaugă …» `Panel` inside the event's form (`Panel` is server-only and the button appends several rows in one sitting). Left for the next waves: each volunteer as a row, the registration page's sections as `Panel`s, one state chip for registrations, the legal texts' list, «Aspect» and «Costuri», «Echipa»'s rows, and the source-walk guards that keep a list item with boxes from coming back unfolded.
 
 Baseline `BR-V3.71-2026-10-22`.
+
+## 846. The volunteers' spreadsheet laid out to be read, and every event's volunteers in one file
+
+**The owner, 2026-10-22:** «La voluntari vreau să descarc și excel formatat frumos, nu doar CSV» — and, asked where and what, «Excel pentru toate evenimentele» and «Foaie mai frumoasă». §839 gave one event's volunteers a spreadsheet, but a plain one: a bold header and widths, nothing else; and the «Voluntari» screen offered a file only once one event was chosen.
+
+**The file.** `modules/volunteers/workbook.ts` now writes two sheets.
+
+- **«Voluntari»**, the people, in the CSV's words and language: the header the club's deep blue with white words (`SHEET_FRAME` in `theme/brand.ts`, the pair of a primary button), kept on screen with the name; Excel's filter arrow on every column (`<autoFilter>`, which the writer does not draw, added with its defined name); a hairline grid; the two free texts wrap; the header repeated on every printed page; landscape. Each row takes its state's pale tint — confirmed green, registered amber, cancelled grey, `SHEET_TINT` as the registrations sheet's (§787) — by a conditional rule over its own «Stare» cell, so a state changed in the file recolours its row. A person given no role yet reads «De repartizat», in italics, as on the card; a cancelled one, who needs none, reads nothing.
+- **«Pe roluri»**, the roles, one line each in the club's order: «Categorie» (only while some role has one, «Alte roluri» for the rest, §774), «Rol», «Câți trebuie» («fără număr» for a role without one, §784), «Cu rolul dat» and «Dintre ei, confirmați» (the card's «N din M», `standingOf`), «Mai lipsesc» — amber while the role lacks people, green once it has them, «—» for a role without a number — and «S-au oferit» (who ticked it and is not cancelled). A total under each event sums what the numbered roles need and lack; the offers are not summed, since one person may offer for several roles. A report somebody hands round, so its fills are baked and it prints one page wide.
+
+**Every event's file.** «Descarcă Excel: toate evenimentele» on the «Voluntari» screen while no single event is chosen (`/api/admin/volunteers/export`): every event the screen's select offers, in its order, in one workbook, «Eveniment» first on both sheets — the title and the day, «Crosul Brașovului · 21.11.2026», so two editions are told apart. Each event's people and roles are built by the same code as its own download (`modules/volunteers/export.ts`, which the event's route now uses too), each is read through `exportVolunteers`, so each leaves the audit row its own download leaves (who, which event, how many rows, §322), and the gate is the card's (`canManageVolunteers`, BR-REQ-060-01).
+
+**Refused.** The CSV stays as it was: plain, one event, its columns in their order (§761) — a column added to it would move what reads it, so the every-event file is a spreadsheet only. No filter or sort follows the screen's state, role or name filters into the file: like the event's own file, it is the whole of its scope, and Excel's filter arrows do the narrowing. The registrations sheet keeps its own header; this one's frame can be lent to it if the club wants the two to match.
+
+Baseline `BR-V3.72-2026-10-22`.
