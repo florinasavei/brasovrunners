@@ -5248,7 +5248,8 @@
         "aside": {
           "off": "oprită",
           "daily": "{count} caractere pe zi"
-        }
+        },
+        "saved": "Bugetul de traducere a fost salvat."
       },
       "month": {
         "title": "Pe furnizori",
