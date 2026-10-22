@@ -8,12 +8,12 @@ import type { Locale } from "@/i18n/routing";
 import { DEFAULT_SITE_FONT_SIZE, SITE_FONT_SIZES, siteFontSizePixels } from "@/modules/appearance/domain/site-font-size";
 import type { SiteFontSizeState } from "@/modules/appearance/site-font-size";
 import ActionForm from "@/shared/forms/ActionForm";
-import { RecallRadio } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import Panel from "@/shared/ui/Panel";
+import RadioField from "@/shared/ui/RadioField";
 
 type Props = {
   locale: Locale;
@@ -32,6 +32,9 @@ type Props = {
  * step — each with a line of the site's text drawn at that step's size, so the choice is seen,
  * not guessed from a name — Save behind the §384 confirmation. No client island: the sample
  * sizes are fixed per step. A role that may not change it reads the choice in force.
+ *
+ * A fold, closed on arrival, the step in force on its line («Normal»), like every card of «Aspect»;
+ * it opens by itself after its own save. The radios are the house's (`RadioField`, §702).
  */
 export default async function SiteFontSizePanel({ locale, state, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
@@ -39,7 +42,7 @@ export default async function SiteFontSizePanel({ locale, state, mayEdit, openWh
   const { setting } = state;
 
   return (
-    <Panel glyph="textSize" title={t("fontSize.title")} intro={t("fontSize.intro")} introMore={t("fontSize.introMore")} id="site-font-size" data-testid="site-font-size" openWhen={openWhen}>
+    <Panel glyph="textSize" collapsible title={t("fontSize.title")} aside={t(`fontSize.sizes.${setting.size}.name`)} intro={t("fontSize.intro")} introMore={t("fontSize.introMore")} id="site-font-size" data-testid="site-font-size" openWhen={openWhen}>
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="site-font-size-current">
         {t("fontSize.current", { size: t(`fontSize.sizes.${setting.size}.name`) })}
       </Typography>
@@ -78,27 +81,23 @@ export default async function SiteFontSizePanel({ locale, state, mayEdit, openWh
                 {SITE_FONT_SIZES.map((size) => {
                   const px = siteFontSizePixels(size);
                   return (
-                    // A plain label with children, never `FormControlLabel`'s element prop (§370); 44px to a thumb.
-                    <Box
-                      key={size}
-                      component="label"
-                      sx={{ display: "flex", alignItems: "center", gap: 1.25, minHeight: 44, py: 0.5, cursor: "pointer" }}
-                      data-testid={`site-font-size-option-${size}`}
-                    >
-                      <RecallRadio name="size" value={size} defaultChecked={setting.size === size} style={{ width: 20, height: 20, flexShrink: 0 }} />
-                      <Box component="span" sx={{ minWidth: 0 }}>
-                        <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 500 }}>
-                          {t(`fontSize.sizes.${size}.name`)}
-                          {size === DEFAULT_SITE_FONT_SIZE ? ` · ${t("fontSize.default")}` : ""}
-                        </Typography>
-                        {/* The site's body text at this step, in pixels: the backoffice itself stays at the platform's size. */}
-                        <Box component="span" sx={{ display: "block", fontSize: px, lineHeight: 1.5 }} data-testid={`site-font-size-sample-${size}`}>
-                          {t("fontSize.sample")}
+                    // The house's radio (§702): a native radio in a label, 44px to a thumb; the box around it carries the option's testid.
+                    <Box key={size} data-testid={`site-font-size-option-${size}`}>
+                      <RadioField name="size" value={size} defaultChecked={setting.size === size}>
+                        <Box component="span" sx={{ display: "block", minWidth: 0, py: 0.5 }}>
+                          <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 500 }}>
+                            {t(`fontSize.sizes.${size}.name`)}
+                            {size === DEFAULT_SITE_FONT_SIZE ? ` · ${t("fontSize.default")}` : ""}
+                          </Typography>
+                          {/* The site's body text at this step, in pixels: the backoffice itself stays at the platform's size. */}
+                          <Box component="span" sx={{ display: "block", fontSize: px, lineHeight: 1.5 }} data-testid={`site-font-size-sample-${size}`}>
+                            {t("fontSize.sample")}
+                          </Box>
+                          <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                            {t(`fontSize.sizes.${size}.help`, { px })}
+                          </Typography>
                         </Box>
-                        <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                          {t(`fontSize.sizes.${size}.help`, { px })}
-                        </Typography>
-                      </Box>
+                      </RadioField>
                     </Box>
                   );
                 })}

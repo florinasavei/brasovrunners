@@ -11,13 +11,13 @@ import { LOOK_ACCENT } from "@/theme/brand";
 import AccentPreview from "./AccentPreview";
 import CustomAccentOption from "./CustomAccentOption";
 import ActionForm from "@/shared/forms/ActionForm";
-import { RecallRadio } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import Panel from "@/shared/ui/Panel";
+import RadioField from "@/shared/ui/RadioField";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 type Props = {
@@ -46,6 +46,10 @@ const CHOICES = ["off", "on"] as const;
  * each drawn in miniature by day and after dark (`AccentPreview`), and «Personalizat», the one client
  * island (`CustomAccentOption`), live as the colour is typed. One save sets both, so the club never
  * saves a look in an accent it has not seen.
+ *
+ * A fold, closed on arrival, the theme and the accent in force on its line («Tema v2 · Roz»), like
+ * every card of «Aspect»; it opens by itself after its own save. The radios are the house's
+ * (`RadioField`, §702).
  */
 export default async function SiteLookPanel({ locale, state, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
@@ -57,7 +61,7 @@ export default async function SiteLookPanel({ locale, state, mayEdit, openWhen }
   const preview = { button: t("look.accent.preview.button"), tag: t("look.accent.preview.tag") };
 
   return (
-    <Panel glyph="preview" title={t("look.title")} intro={t("look.intro")} introMore={t("look.introMore")} id="site-look" data-testid="site-look" openWhen={openWhen}>
+    <Panel glyph="preview" collapsible title={t("look.title")} aside={`${t(`look.choices.${choice}.name`)} · ${accentName}`} intro={t("look.intro")} introMore={t("look.introMore")} id="site-look" data-testid="site-look" openWhen={openWhen}>
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="site-look-current">
         {t("look.current", { look: t(`look.choices.${choice}.name`) })}
       </Typography>
@@ -97,23 +101,19 @@ export default async function SiteLookPanel({ locale, state, mayEdit, openWhen }
                   {t("look.legend")}
                 </Typography>
                 {CHOICES.map((value) => (
-                  // A plain label with children, never `FormControlLabel`'s element prop (§370); 44px to a thumb.
-                  <Box
-                    key={value}
-                    component="label"
-                    sx={{ display: "flex", alignItems: "center", gap: 1.25, minHeight: 44, py: 0.5, cursor: "pointer" }}
-                    data-testid={`site-look-option-${value}`}
-                  >
-                    <RecallRadio name="look" value={value} defaultChecked={choice === value} style={{ width: 20, height: 20, flexShrink: 0 }} />
-                    <Box component="span" sx={{ minWidth: 0 }}>
-                      <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 500 }}>
-                        {t(`look.choices.${value}.name`)}
-                        {value === "off" ? ` · ${t("look.default")}` : ""}
-                      </Typography>
-                      <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                        {t(`look.choices.${value}.help`)}
-                      </Typography>
-                    </Box>
+                  // The house's radio (§702): a native radio in a label, 44px to a thumb; the box around it carries the option's testid.
+                  <Box key={value} data-testid={`site-look-option-${value}`}>
+                    <RadioField name="look" value={value} defaultChecked={choice === value}>
+                      <Box component="span" sx={{ display: "block", minWidth: 0, py: 0.5 }}>
+                        <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 500 }}>
+                          {t(`look.choices.${value}.name`)}
+                          {value === "off" ? ` · ${t("look.default")}` : ""}
+                        </Typography>
+                        <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                          {t(`look.choices.${value}.help`)}
+                        </Typography>
+                      </Box>
+                    </RadioField>
                   </Box>
                 ))}
               </Box>
@@ -126,24 +126,22 @@ export default async function SiteLookPanel({ locale, state, mayEdit, openWhen }
                   {t("look.accent.intro")}
                 </Typography>
                 {LOOK_ACCENT_PRESETS.map((preset) => (
-                  // A plain label with children, never `FormControlLabel`'s element prop (§370); 44px to a thumb.
-                  <Box
-                    key={preset}
-                    component="label"
-                    sx={{ display: "flex", flexWrap: { xs: "wrap", sm: "nowrap" }, alignItems: "center", gap: 1.25, minHeight: 44, py: 0.5, cursor: "pointer" }}
-                    data-testid={`site-look-accent-option-${preset}`}
-                  >
-                    <RecallRadio name="accent" value={preset} defaultChecked={accent.accent === preset} style={{ width: 20, height: 20, flexShrink: 0 }} />
-                    <AccentPreview shades={LOOK_ACCENT[preset]} words={preview} />
-                    <Box component="span" sx={{ minWidth: 0, flexBasis: { xs: "calc(100% - 32px)", sm: "auto" } }}>
-                      <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 500 }}>
-                        {t(`look.accent.presets.${preset}.name`)}
-                        {preset === DEFAULT_LOOK_ACCENT ? ` · ${t("look.default")}` : ""}
-                      </Typography>
-                      <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                        {t(`look.accent.presets.${preset}.help`)}
-                      </Typography>
-                    </Box>
+                  // The house's radio (§702), the accent drawn in miniature beside its words; the box around it carries the option's testid.
+                  <Box key={preset} data-testid={`site-look-accent-option-${preset}`}>
+                    <RadioField name="accent" value={preset} defaultChecked={accent.accent === preset}>
+                      <Box component="span" sx={{ display: "flex", flexWrap: { xs: "wrap", sm: "nowrap" }, alignItems: "center", gap: 1.25, minWidth: 0, py: 0.5 }}>
+                        <AccentPreview shades={LOOK_ACCENT[preset]} words={preview} />
+                        <Box component="span" sx={{ minWidth: 0 }}>
+                          <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 500 }}>
+                            {t(`look.accent.presets.${preset}.name`)}
+                            {preset === DEFAULT_LOOK_ACCENT ? ` · ${t("look.default")}` : ""}
+                          </Typography>
+                          <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                            {t(`look.accent.presets.${preset}.help`)}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </RadioField>
                   </Box>
                 ))}
                 <CustomAccentOption

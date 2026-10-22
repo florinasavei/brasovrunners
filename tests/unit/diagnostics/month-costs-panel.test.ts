@@ -227,6 +227,26 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     expect(text(await render("ro", facts()))).not.toContain("Creditul DeepL");
   });
 
+  it("draws each provider as the house's row fold: its name, the month by its end and its state on a closed line, the figures inside", async () => {
+    const html = await render("ro", facts());
+    for (const id of ["domain", "mailgun", "vercel", "neon", "deepl", "r2"]) {
+      // The row is a list item holding one closed fold; its summary is the line in words, never a box of its own.
+      const row = html.match(new RegExp(`<li[^>]*data-testid="month-cost-${id}"[^>]*>([\\s\\S]*?)</li>`))?.[1] ?? "";
+      expect(row, id).toMatch(/^<details[^>]*>(?:<style[^>]*>[\s\S]*?<\/style>)*<summary/);
+      expect(row, id).not.toMatch(/^<details[^>]*open/);
+      const line = row.match(/<summary[\s\S]*?<\/summary>/)?.[0] ?? "";
+      expect(line, id).toMatch(/<h3[^>]*>/);
+      expect(line, id).toContain(`data-testid="month-cost-${id}-chip"`);
+      // The figures are inside the fold, under the line.
+      expect(line, id).not.toContain(`data-testid="month-cost-${id}-usage"`);
+      expect(row, id).toContain(`data-testid="month-cost-${id}-usage"`);
+    }
+    // The chip says the month's figure by its end, in the card's own words; the state beside it.
+    const neon = html.match(/<li[^>]*data-testid="month-cost-neon"[\s\S]*?<\/summary>/)?.[0] ?? "";
+    expect(text(neon)).toMatch(/~[\d,.]+ USD la final de lună/);
+    expect(text(neon)).toContain("de rezolvat");
+  });
+
   it("is a card of words only: no form, and nothing to press but its «?»", async () => {
     const html = await render("ro", facts());
     expect(html).not.toContain("<form");

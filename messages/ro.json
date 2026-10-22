@@ -4205,7 +4205,13 @@
         "minCuHelpMore": "De la ea pornește baza la prima cerere. Una mai mare costă mai mult la fiecare oră trează.",
         "suspendHelpMore": "„Niciodată” o ține pornită tot timpul: fiecare oră a lunii se plătește la mărimea minimă ({rate} $ pe oră-CU), chiar fără niciun vizitator.",
         "confirmLimit": "Limita nouă: {hours} ore-CU.",
-        "confirmNone": "Fără limită lunară."
+        "confirmNone": "Fără limită lunară.",
+        "aside": {
+          "limit": "limită {hours} ore-CU",
+          "none": "fără limită",
+          "unconfigured": "fără cheie Neon",
+          "failed": "necitite"
+        }
       },
       "filter": {
         "who": "Cine",
@@ -5187,7 +5193,11 @@
         "introMore": "Lucrările sunt mentenanța înscrierilor și coada de emailuri. Când nu au nimic de făcut, nu trezesc baza; fiecare trezire costă cel puțin 5 minute de calcul.",
         "safeMore": "Fiecare citire a locurilor socotește termenele în clipa aceea, cu sau fără lucrarea programată. Setarea ta are întâietate.",
         "onTheHourMore": "O zi fără nimic de făcut costă o trezire a bazei, la {time}. Un termen (o rezervare, o reamintire) își păstrează ora. Cu un interval ales, unele pot întârzia cu până la un sfert de oră.",
-        "fieldHelpMore": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut."
+        "fieldHelpMore": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut.",
+        "aside": {
+          "onDemand": "la nevoie",
+          "every": "cel mult o dată la {minutes} min"
+        }
       },
       "budgetThresholds": {
         "saved": "Pragurile au fost salvate; bugetul lunii se citește după ele de acum."
@@ -5224,7 +5234,11 @@
         },
         "introMore": "Creditul de caractere al cheii DeepL se dă o singură dată și nu se reînnoiește lunar; bugetul pe zi oprește o după-amiază să consume creditul.",
         "privacyMore": "Doar câmpurile de conținut se traduc, așa că nota de confidențialitate nu se schimbă.",
-        "fieldHelpMore": "Un eveniment întreg are între 5.000 și 15.000 de caractere, scăzute din creditul DeepL."
+        "fieldHelpMore": "Un eveniment întreg are între 5.000 și 15.000 de caractere, scăzute din creditul DeepL.",
+        "aside": {
+          "off": "oprită",
+          "daily": "{count} caractere pe zi"
+        }
       },
       "month": {
         "title": "Pe furnizori",
@@ -5347,7 +5361,18 @@
         "intro": "Planul, bugetul lunii, frânele de la Neon și cât de des trezește site-ul baza de date."
       },
       "currencyNoteMore": "Nu le transformăm în lei: niciuna nu facturează în lei, iar un curs scris azi ar fi greșit mâine.",
-      "servicesIntroMore": "Pe ce plan suntem, cât costă azi, ce primim gratuit, limita pe care o vom atinge prima, cât de aproape suntem acum, ce se întâmplă când o depășim și cât costă pasul următor."
+      "servicesIntroMore": "Pe ce plan suntem, cât costă azi, ce primim gratuit, limita pe care o vom atinge prima, cât de aproape suntem acum, ce se întâmplă când o depășim și cât costă pasul următor.",
+      "costAside": "{amount} pe lună",
+      "servicesAside": {
+        "one": "{count} de urmărit",
+        "few": "{count} de urmărit",
+        "other": "{count} de urmărit",
+        "none": "nimic de urmărit"
+      },
+      "serviceChip": {
+        "perMonth": "{amount} {currency}/lună",
+        "perMonthEstimated": "≈ {amount} {currency}/lună"
+      }
     },
     "volunteers": {
       "title": "Voluntari",

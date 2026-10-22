@@ -14,6 +14,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import type { FoldOpenWhen } from "@/shared/ui/fold";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 
@@ -32,6 +33,8 @@ type Props = {
   emailTiming: DeliveryTiming;
   /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§479). */
   level?: 2 | 3;
+  /** Why the fold opens on arrival (§336): its own save (`?saved=jobCadence`). */
+  openWhen?: FoldOpenWhen;
 };
 
 /**
@@ -45,7 +48,7 @@ type Props = {
  * the last real run and the next one at the latest, per job, with the last ping and whether it
  * woke the database.
  */
-export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, emailTiming, level = 2 }: Props) {
+export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, emailTiming, level = 2, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   // A platform timestamp, in the club's zone, with its weekday, inside the line after a colon
@@ -55,10 +58,14 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
   const when = (at: Date | null) => (at ? clock(at) : "—");
 
   return (
+    // A fold, the interval in force on its line («la nevoie», «cel mult o dată la 30 min»), closed until opened or saved (§336).
     <Panel glyph="jobs"
+      collapsible
       level={level}
       id="job-cadence"
       title={t("tasks.jobCadence.title")}
+      aside={cadence.minutes === 0 ? t("tasks.jobCadence.aside.onDemand") : t("tasks.jobCadence.aside.every", { minutes: cadence.minutes })}
+      openWhen={openWhen}
       intro={t("tasks.jobCadence.intro")}
       introMore={t("tasks.jobCadence.introMore")}
       data-testid="job-cadence"
