@@ -17,7 +17,7 @@ test.describe("BR-REQ-090-05 the to-do half of the task board", () => {
     await page.goto("/ro/admin/tasks");
     // §265: the checklist is the first panel, so a bare URL still opens on it.
     const main = page.locator("#main");
-    // The rows under their state's heading, «Gata» folded (§846): one region, «Lista de sarcini», holds them all.
+    // The rows under their state's heading, «Gata» folded (§NNN): one region, «Lista de sarcini», holds them all.
     const list = main.getByRole("region", { name: "Lista de sarcini" });
 
     // The counter, over the whole board when nothing is filtered.

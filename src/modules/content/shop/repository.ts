@@ -422,7 +422,7 @@ export async function countOrdersForAdmin<T extends Record<string, unknown>>(db:
 
 /**
  * The orders under the filter, newest first, with the member's address when the account still exists.
- * `offset` is the list's page (§846: «Comenzi» is the backoffice's paged table, `AdminTable`); the CSV reads from the first.
+ * `offset` is the list's page (§NNN: «Comenzi» is the backoffice's paged table, `AdminTable`); the CSV reads from the first.
  */
 export async function listOrdersForAdmin<T extends Record<string, unknown>>(db: Database<T>, query: OrdersQuery, limit = ORDERS_SHOWN_MAX, offset = 0) {
   return db

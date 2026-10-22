@@ -98,7 +98,7 @@ test.describe("§265 the configuration panels", () => {
     const main = page.locator("#main");
     await page.goto("/ro/admin/tasks");
     // No Turnstile keys on the test server, so the anti-robot row is open and carries its link — inside
-    // the row's own fold (§846): a press on the row's line opens it.
+    // the row's own fold (§NNN): a press on the row's line opens it.
     const row = main.getByTestId("task-row").filter({ has: page.getByTestId("task-target").filter({ hasText: "Setări → Anti-robot" }) }).first();
     await row.locator("summary").first().click();
     const link = row.getByTestId("task-target");

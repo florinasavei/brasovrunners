@@ -93,7 +93,7 @@ export const STATUS_GLYPHS = {
   self: AccountCircleIcon,
   noAccount: NoAccountsIcon,
   // A legal text's version a newer one replaced, «Înlocuită»; and «Șablon nou», the platform's template newer than the text in force —
-  // the picture «Regenerează din șablon» wears (§847, /admin/legal's rows).
+  // the picture «Regenerează din șablon» wears (§NNN, /admin/legal's rows).
   superseded: HistoryIcon,
   newTemplate: PostAddIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;

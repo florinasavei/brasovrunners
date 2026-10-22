@@ -23,7 +23,7 @@ describe("§336 the legal-text notice folds shut on /admin/legal and nowhere els
   const backofficeShell = read("src/modules/staff-identity/ui/BackofficeShell.tsx");
 
   it("renders the notice as a closed, addressable fold on the legal list page, after its own heading", () => {
-    // Inside the page's one panel of notices since §847, a fold of that card: level 3.
+    // Inside the page's one panel of notices since §NNN, a fold of that card: level 3.
     expect(page).toContain('<Panel glyph="legal" level={3} id="legal-versions" title={t("legalNotice.title")} collapsible>');
     expect(page.indexOf('data-testid="legal-notices"')).toBeLessThan(page.indexOf('id="legal-versions"'));
     expect(page.indexOf('{t("legal.title")}')).toBeLessThan(page.indexOf('id="legal-versions"'));
@@ -35,7 +35,7 @@ describe("§336 the legal-text notice folds shut on /admin/legal and nowhere els
     expect(noticeIndex).toBeGreaterThan(whatIsIndex);
   });
 
-  it("gathers the notices into one panel, a line each with its sentence behind the «?», and draws no alert for them (§847)", () => {
+  it("gathers the notices into one panel, a line each with its sentence behind the «?», and draws no alert for them (§NNN)", () => {
     const panel = page.slice(page.indexOf('glyph="notices"'), page.indexOf('id="legal-versions"'));
     expect(panel).toContain('data-testid="legal-notices"');
     expect(panel).toContain("<QuietHelp text={notice.details}");
@@ -47,7 +47,7 @@ describe("§336 the legal-text notice folds shut on /admin/legal and nowhere els
     expect(page).not.toMatch(/<Alert severity="info" data-testid="legal-[a-z-]+-missing"/);
   });
 
-  it("lists the texts as the house's rows: one row fold per text, a StatusChip for each state, no card per text (§847)", () => {
+  it("lists the texts as the house's rows: one row fold per text, a StatusChip for each state, no card per text (§NNN)", () => {
     expect(page).toContain("sx={SUMMARY_SX}");
     expect(page).toContain('data-testid="legal-kind-fold"');
     expect(page).toContain("{kindsShown.map(kindRow)}");

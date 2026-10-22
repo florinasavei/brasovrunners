@@ -27,7 +27,7 @@ export type LegalDocumentFormValues = {
 /**
  * One form for writing a legal document, used to create a version and to correct a draft.
  *
- * The two languages are the backoffice's one Română | English strip (`LocaleTabPanels`, §847; the
+ * The two languages are the backoffice's one Română | English strip (`LocaleTabPanels`, §NNN; the
  * event editor's and the FAQ's): one form, both panels in it, the hidden one still posted. They must
  * both exist before the version can be approved (BR-REQ-040-02 forbids falling back to the other),
  * and a form that lets somebody finish one and leave is a form that produces half a document — so

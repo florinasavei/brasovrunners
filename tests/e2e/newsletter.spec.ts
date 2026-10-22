@@ -87,7 +87,7 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     await card.getByLabel("Caută adresa").fill(email.toUpperCase());
     await card.getByRole("button", { name: "Filtrează" }).click();
     await expect(page).toHaveURL(/\/ro\/admin\/newsletter\?q=[^#]+#newsletter-subscribers$/);
-    // The backoffice's table (§846, `AdminTable`): each cell drawn in the table and in the phone's block, one of them shown.
+    // The backoffice's table (§NNN, `AdminTable`): each cell drawn in the table and in the phone's block, one of them shown.
     const table = card.getByTestId("newsletter-subscribers-table");
     await expect(table.getByTestId("newsletter-subscriber-email").filter({ visible: true })).toHaveCount(1);
     await expect(table.getByTestId("newsletter-subscriber-email").filter({ visible: true })).toHaveText(email);

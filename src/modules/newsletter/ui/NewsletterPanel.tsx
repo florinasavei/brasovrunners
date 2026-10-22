@@ -39,7 +39,7 @@ type Props = {
   locale: Locale;
   audience: NewsletterAudience;
   history: readonly NewsletterSendRow[];
-  /** The page's one list query (§846): «Trimise» never pages, but its table takes the page's size like the two below. */
+  /** The page's one list query (§NNN): «Trimise» never pages, but its table takes the page's size like the two below. */
   listQuery: ListQuery;
   volume: EmailVolumeToday;
   /** The privacy notice in force describes the newsletter: the contact page offers the pop-up (§445). */
@@ -157,7 +157,7 @@ export default async function NewsletterPanel({ locale, audience, history, listQ
           {t("newsletter.history")}
         </Typography>
         {/*
-          What was sent (§550), the backoffice's table since §846 (`AdminTable`): when, what — the subject and
+          What was sent (§550), the backoffice's table since §NNN (`AdminTable`): when, what — the subject and
           the letter's first line of words, or the automatic announcement — to which topics, how many and who.
           At most twenty rows, so never a second page.
         */}

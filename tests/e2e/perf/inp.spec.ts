@@ -533,7 +533,7 @@ test("the legal document editor: Salvează ciorna", async ({ page }) => {
     await field(page, "roTitle").fill("Termeni de probă");
     await page.locator(".tiptap").nth(0).click();
     await page.keyboard.type("## Secțiunea 1\n\nUn paragraf de probă.");
-    // The English tab of the strip on top (§847), then its boxes.
+    // The English tab of the strip on top (§NNN), then its boxes.
     await page.getByTestId("legal-document-form").getByRole("tab", { name: /English/ }).click();
     await field(page, "enTitle").fill("Sample terms");
     await page.locator(".tiptap").nth(1).click();

@@ -39,7 +39,7 @@ const OrderForIcon = ACTION_ICONS.orderFor;
  * manager's verbs on each row (`canManageShop`, §687), each asked first; and, at the top, «Adaugă o
  * comandă pentru un membru» (§690) for whoever may manage the shop. The member's address beside an
  * order only for a reader who already sees the members' addresses (§550, `showEmail`). The orders are
- * the backoffice's table since §846 (`AdminTable`, a block per row on a phone), paged through the
+ * the backoffice's table since §NNN (`AdminTable`, a block per row on a phone), paged through the
  * address like every other list; a stack of blocks before.
  */
 export default function OrdersCard({
@@ -63,7 +63,7 @@ export default function OrdersCard({
   /** Every order the filter names, counted — `orders` is one page of them. */
   total: number;
   query: OrdersQuery;
-  /** The list's page and its size (§846), from the address. */
+  /** The list's page and its size (§NNN), from the address. */
   listQuery: ListQuery;
   productNames: readonly { id: string; titleRo: string; titleEn: string }[];
   /** «Adaugă o comandă pentru un membru» (§690): the member accounts and the items it offers; empty for a reader who may not. */
@@ -298,7 +298,7 @@ function ForMemberFold({
 }
 
 /**
- * The orders' columns (§846; a block per order until then): the number, the state — with «Adăugată de
+ * The orders' columns (§NNN; a block per order until then): the number, the state — with «Adăugată de
  * club» and who cancelled it — the moment, the member, what and how many, the total and the note: the
  * CSV's own columns' words, so the table and the file read alike.
  */

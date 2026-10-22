@@ -18,7 +18,7 @@ import { PROMO_TABLE_LIMIT, type PromoConsenterList, type PromoConsenterRow } fr
 type Props = {
   locale: Locale;
   list: PromoConsenterList;
-  /** The table's page and its size (§846), from the address — the same as «Abonați»'s, the page's one list query. */
+  /** The table's page and its size (§NNN), from the address — the same as «Abonați»'s, the page's one list query. */
   listQuery: ListQuery;
   /** The address names a page or a size: the fold opens on what was asked for. */
   paged: boolean;
@@ -39,7 +39,7 @@ export const PROMO_ANCHOR = "newsletter-promo";
  * asserts the role) and hands it here. The words say the two consents apart: this is not the
  * newsletter, and the partners receive only the list for sponsors (§570) — the button under the
  * club's own, for every event, the same query and the same file as an event's registrations page.
- * The rows are the backoffice's table since §846 (`AdminTable`), paged through the address.
+ * The rows are the backoffice's table since §NNN (`AdminTable`), paged through the address.
  */
 export default async function PromoConsenters({ locale, list, listQuery, paged, sponsors = null }: Props) {
   const t = await getTranslations("Admin");
