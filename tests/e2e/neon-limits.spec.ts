@@ -32,7 +32,7 @@ test.describe("BR-REQ-090-07 the database's limits card without a key", () => {
 
     await page.goto("/ro/admin/tasks");
     const row = main
-      .getByRole("list", { name: "Lista de sarcini" })
+      .getByRole("region", { name: "Lista de sarcini" })
       .getByRole("listitem")
       .filter({ has: page.getByRole("heading", { name: "Limita lunară de calcul a bazei de date" }) });
     await expect(row).toHaveCount(1);

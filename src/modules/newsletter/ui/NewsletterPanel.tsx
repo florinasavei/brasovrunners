@@ -8,7 +8,10 @@ import type { ReactNode } from "react";
 import { previewNewsletterAction, sendNewsletterAction, withdrawNewsletterAddressAction } from "@/app/[locale]/admin/newsletter/actions";
 import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { type ListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
+import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import { bulkBudget } from "@/modules/notifications/domain/bulk";
 import type { EmailVolumeToday } from "@/modules/notifications/volume";
 import { confirmWords } from "@/shared/feedback/confirm-words";
@@ -36,6 +39,8 @@ type Props = {
   locale: Locale;
   audience: NewsletterAudience;
   history: readonly NewsletterSendRow[];
+  /** The page's one list query (§846): «Trimise» never pages, but its table takes the page's size like the two below. */
+  listQuery: ListQuery;
   volume: EmailVolumeToday;
   /** The privacy notice in force describes the newsletter: the contact page offers the pop-up (§445). */
   offered: boolean;
@@ -60,7 +65,7 @@ type Props = {
  * and says how much of it leaves today under the reserve the outbox keeps for registrations
  * (`domain/bulk.ts`) — the rest goes on the following days, never dropped (§40).
  */
-export default async function NewsletterPanel({ locale, audience, history, volume, offered, mayWithdraw, subscribers }: Props) {
+export default async function NewsletterPanel({ locale, audience, history, listQuery, volume, offered, mayWithdraw, subscribers }: Props) {
   const t = await getTranslations("Admin");
   const tn = await getTranslations("Newsletter");
   const words = await confirmWords();
@@ -86,6 +91,35 @@ export default async function NewsletterPanel({ locale, audience, history, volum
     confirmLabel: t("newsletter.send"),
     cancelLabel: words.cancel,
   }));
+
+  const historyColumns: readonly AdminColumn<NewsletterSendRow>[] = [
+    { key: "when", label: t("newsletter.historyColumns.when"), primary: true, render: (row) => when(row.at) },
+    {
+      key: "what",
+      label: t("newsletter.historyColumns.what"),
+      render: (row) =>
+        row.kind === "EVENT_ALERT" ? (
+          t("newsletter.historyColumns.alert")
+        ) : (
+          <Box component="span" sx={{ display: "block", wordBreak: "break-word" }}>
+            {t("newsletter.historyColumns.subject", { subject: row.subject ? row.subject[locale] : "—" })}
+            {/* What the letter says, its first line of words (§550), under its subject. */}
+            {row.firstLine && row.firstLine[locale] !== "" && (
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", fontStyle: "italic" }} data-testid="newsletter-history-first-line">
+                {row.firstLine[locale]}
+              </Typography>
+            )}
+          </Box>
+        ),
+    },
+    { key: "topics", label: t("newsletter.historyColumns.topics"), render: (row) => topicNames(row.topics) },
+    { key: "recipients", label: t("newsletter.historyColumns.recipients"), align: "right", render: (row) => String(row.recipients) },
+    {
+      key: "sender",
+      label: t("newsletter.historyColumns.sender"),
+      render: (row) => (row.kind === "EVENT_ALERT" ? "—" : (row.senderName ?? t("newsletter.historyNoSender"))),
+    },
+  ];
 
   return (
     <>
@@ -122,35 +156,38 @@ export default async function NewsletterPanel({ locale, audience, history, volum
         <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600, mb: 1 }}>
           {t("newsletter.history")}
         </Typography>
-        {history.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t("newsletter.historyEmpty")}
-          </Typography>
-        ) : (
-          <Box component="ul" sx={{ mt: 0, mb: 2, pl: 3 }} data-testid="newsletter-history">
-            {history.map((row, index) => (
-              <li key={`${row.at.toISOString()}-${index}`}>
-                <Typography variant="body2">
-                  {row.kind === "EVENT_ALERT"
-                    ? t("newsletter.historyAlert", { when: when(row.at), topics: topicNames(row.topics), count: String(row.recipients) })
-                    : t("newsletter.historyMessage", {
-                        when: when(row.at),
-                        subject: row.subject ? row.subject[locale] : "—",
-                        topics: topicNames(row.topics),
-                        count: String(row.recipients),
-                        sender: row.senderName ?? t("newsletter.historyNoSender"),
-                      })}
-                </Typography>
-                {/* What the letter says, its first line of words (§550), under the line that says when and to whom. */}
-                {row.kind === "MESSAGE" && row.firstLine && row.firstLine[locale] !== "" && (
-                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", wordBreak: "break-word" }} data-testid="newsletter-history-first-line">
-                    {row.firstLine[locale]}
-                  </Typography>
-                )}
-              </li>
-            ))}
-          </Box>
-        )}
+        {/*
+          What was sent (§550), the backoffice's table since §846 (`AdminTable`): when, what — the subject and
+          the letter's first line of words, or the automatic announcement — to which topics, how many and who.
+          At most twenty rows, so never a second page.
+        */}
+        <Box sx={{ mb: 2 }} data-testid="newsletter-history">
+          <AdminTable
+            caption={t("newsletter.history")}
+            tableId="newsletter-history"
+            columns={historyColumns}
+            rows={history}
+            rowKey={(row) => `${row.at.toISOString()}-${row.kind}-${row.eventId ?? ""}`}
+            basePath={getPathname({ locale, href: "/admin/newsletter" })}
+            currentParams={{}}
+            query={listQuery}
+            total={history.length}
+            labels={{
+              results: t("list.results", { count: history.length }),
+              page: t("list.page", { page: listQuery.page, pages: pageCount(history.length, listQuery.perPage) }),
+              previous: t("list.previous"),
+              next: t("list.next"),
+              perPage: t("list.perPage"),
+              actions: t("list.actions"),
+              sortBy: (column) => t("list.sortBy", { column }),
+            }}
+            empty={
+              <Typography variant="body2" color="text.secondary">
+                {t("newsletter.historyEmpty")}
+              </Typography>
+            }
+          />
+        </Box>
 
         {mayWithdraw && (
           <Box>

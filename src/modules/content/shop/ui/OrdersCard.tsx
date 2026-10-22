@@ -11,6 +11,8 @@ import StatusChip from "@/shared/ui/StatusChip";
 import type { ShopOrderStatus } from "@/db/schema/shop";
 import { clubVerbsFor, formatPrice, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, orderTotalBani, type OrderVerb } from "@/modules/content/shop/domain";
 import type { AdminOrder, OrderableItem, OrdersQuery, ZoneAccount } from "@/modules/content/shop/repository";
+import { type ListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
+import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
 import RecallField, { RecallCheckbox } from "@/shared/forms/recall";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
@@ -36,12 +38,15 @@ const OrderForIcon = ACTION_ICONS.orderFor;
  * product) whose state is the address (§527's shape); the CSV of the same filter; the shop
  * manager's verbs on each row (`canManageShop`, §687), each asked first; and, at the top, «Adaugă o
  * comandă pentru un membru» (§690) for whoever may manage the shop. The member's address beside an
- * order only for a reader who already sees the members' addresses (§550, `showEmail`).
+ * order only for a reader who already sees the members' addresses (§550, `showEmail`). The orders are
+ * the backoffice's table since §846 (`AdminTable`, a block per row on a phone), paged through the
+ * address like every other list; a stack of blocks before.
  */
 export default function OrdersCard({
   orders,
   total,
   query,
+  listQuery,
   productNames,
   accounts,
   items,
@@ -55,9 +60,11 @@ export default function OrdersCard({
   emailMembers,
 }: {
   orders: readonly AdminOrder[];
-  /** Every order the filter names, counted — `orders` stops at `ORDERS_SHOWN_MAX`. */
+  /** Every order the filter names, counted — `orders` is one page of them. */
   total: number;
   query: OrdersQuery;
+  /** The list's page and its size (§846), from the address. */
+  listQuery: ListQuery;
   productNames: readonly { id: string; titleRo: string; titleEn: string }[];
   /** «Adaugă o comandă pentru un membru» (§690): the member accounts and the items it offers; empty for a reader who may not. */
   accounts: readonly ZoneAccount[];
@@ -78,7 +85,7 @@ export default function OrdersCard({
   if (query.status) csvParams.set("orderStatus", query.status);
   if (query.productId) csvParams.set("orderProduct", query.productId);
   const csvHref = `/api/admin/shop/orders?${csvParams.toString()}`;
-  // The count is the filter's, not the rows drawn: past ORDERS_SHOWN_MAX the list says it stops, and the CSV has all.
+  // The count is the filter's, not the rows drawn: the table pages through them, and the CSV has all.
   const count = t(`members.shop.orders.${countForm(total, locale)}`, { count: total });
   return (
     <Panel glyph="registrations" title={t("members.shop.ordersHeading")} aside={count} id="shop-orders" data-testid="shop-orders">
@@ -137,22 +144,35 @@ export default function OrdersCard({
             {t("members.shop.csv")}
           </GlyphButton>
         </Box>
-        {total > orders.length && (
-          <Typography variant="body2" color="text.secondary" data-testid="orders-more">
-            {t("members.shop.ordersMore", { shown: orders.length, total })}
-          </Typography>
-        )}
-        {orders.length === 0 ? (
-          <Typography variant="body2" data-testid="orders-empty">
-            {t("members.shop.ordersEmpty")}
-          </Typography>
-        ) : (
-          <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", m: 0, p: 0 }} aria-label={t("members.shop.ordersHeading")}>
-            {orders.map((order) => (
-              <OrderRow key={order.id} order={order} query={query} locale={locale} words={t} cancel={cancel} mayManage={mayManage} showEmail={showEmail} emailMembers={emailMembers} />
-            ))}
-          </Stack>
-        )}
+        <AdminTable
+          caption={t("members.shop.ordersHeading")}
+          tableId="shop-orders"
+          columns={orderColumns({ locale, words: t, showEmail })}
+          rows={orders}
+          rowKey={(order) => order.id}
+          // A verb lands back on its row (`#order-<id>`, the actions' redirect).
+          rowId={(order) => `order-${order.id}`}
+          basePath={path}
+          // So paging keeps the filter.
+          currentParams={{ orderStatus: query.status ?? undefined, orderProduct: query.productId ?? undefined }}
+          query={listQuery}
+          total={total}
+          labels={{
+            results: t("list.results", { count: total }),
+            page: t("list.page", { page: listQuery.page, pages: pageCount(total, listQuery.perPage) }),
+            previous: t("list.previous"),
+            next: t("list.next"),
+            perPage: t("list.perPage"),
+            actions: t("list.actions"),
+            sortBy: (column) => t("list.sortBy", { column }),
+          }}
+          empty={
+            <Typography variant="body2" data-testid="orders-empty">
+              {t("members.shop.ordersEmpty")}
+            </Typography>
+          }
+          rowActions={mayManage ? (order) => <OrderVerbs order={order} query={query} locale={locale} words={t} cancel={cancel} emailMembers={emailMembers} /> : undefined}
+        />
       </Stack>
     </Panel>
   );
@@ -277,14 +297,100 @@ function ForMemberFold({
   );
 }
 
-function OrderRow({
+/**
+ * The orders' columns (§846; a block per order until then): the number, the state — with «Adăugată de
+ * club» and who cancelled it — the moment, the member, what and how many, the total and the note: the
+ * CSV's own columns' words, so the table and the file read alike.
+ */
+function orderColumns({ locale, words: t, showEmail }: { locale: Locale; words: Words; showEmail: boolean }): readonly AdminColumn<AdminOrder>[] {
+  return [
+    {
+      key: "number",
+      label: t("members.shop.columns.number"),
+      primary: true,
+      render: (order) => (
+        <Box component="span" sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
+          {t("members.shop.orderNumber", { number: order.number })}
+        </Box>
+      ),
+    },
+    {
+      key: "status",
+      label: t("members.shop.columns.status"),
+      essential: true,
+      render: (order) => (
+        <Stack spacing={0.5} sx={{ alignItems: { xs: "flex-end", md: "flex-start" } }}>
+          <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5, justifyContent: { xs: "flex-end", md: "flex-start" } }}>
+            <StatusChip
+              glyph={order.status === "CANCELLED" ? "cancelled" : order.status === "PLACED" ? "planned" : "done"}
+              color={order.status === "CANCELLED" ? "default" : order.status === "PLACED" ? "warning" : "success"}
+              label={t(`members.shop.status.${order.status}`)}
+            />
+            {/* Placed by the club in the member's name (§690): said on the row, as the CSV says it in its column. */}
+            {order.placedBy === "CLUB" && <StatusChip glyph="club" variant="outlined" label={t("members.shop.forMember.placedByClub")} testId="order-placed-by-club" />}
+          </Stack>
+          {order.status === "CANCELLED" && order.cancelledBy && (
+            <Typography component="span" variant="body2" color="text.secondary">
+              {order.cancelledBy === "MEMBER" ? t("members.shop.cancelledByMember") : t("members.shop.cancelledByClub")}
+            </Typography>
+          )}
+        </Stack>
+      ),
+    },
+    {
+      key: "date",
+      label: t("members.shop.columns.date"),
+      render: (order) => formatDay(order.createdAt, { locale, timeZone: CLUB_TIME_ZONE, withTime: true }),
+    },
+    {
+      key: "member",
+      label: t("members.shop.columns.member"),
+      render: (order) => (
+        <Box component="span" sx={{ overflowWrap: "anywhere" }}>
+          {order.memberName}
+          {showEmail && order.memberEmail ? ` · ${order.memberEmail}` : ""}
+          {!order.memberEmail ? ` · ${t("members.shop.accountGone")}` : ""}
+        </Box>
+      ),
+    },
+    {
+      key: "product",
+      label: t("members.shop.columns.product"),
+      render: (order) => (
+        <Box component="span" sx={{ overflowWrap: "anywhere" }}>
+          {`${locale === "en" ? order.productTitleEn : order.productTitleRo}${order.variantLabel ? ` — ${order.variantLabel}` : ""} × ${order.quantity}`}
+        </Box>
+      ),
+    },
+    {
+      key: "total",
+      label: t("members.shop.columns.total"),
+      align: "right",
+      render: (order) => <Box component="span" sx={{ whiteSpace: "nowrap" }}>{formatPrice(orderTotalBani(order), order.currency, locale)}</Box>,
+    },
+    {
+      key: "note",
+      label: t("members.shop.columns.note"),
+      hideBelow: "lg",
+      render: (order) =>
+        order.note ? (
+          <Box component="span" sx={{ whiteSpace: "pre-line", overflowWrap: "anywhere", color: "text.secondary" }}>
+            {order.note}
+          </Box>
+        ) : (
+          "—"
+        ),
+    },
+  ];
+}
+
+/** The shop manager's verbs on one order (`canManageShop`, §687), each asked first; none on an order with nowhere to go. */
+function OrderVerbs({
   order,
   query,
   locale,
   words: t,
   cancel,
-  mayManage,
-  showEmail,
   emailMembers,
 }: {
   order: AdminOrder;
@@ -293,74 +399,34 @@ function OrderRow({
   locale: Locale;
   words: Words;
   cancel: string;
-  mayManage: boolean;
-  showEmail: boolean;
   emailMembers: boolean;
 }) {
-  const title = locale === "en" ? order.productTitleEn : order.productTitleRo;
-  const what = `${title}${order.variantLabel ? ` — ${order.variantLabel}` : ""} × ${order.quantity}`;
-  const verbs: OrderVerb[] = mayManage ? clubVerbsFor(order.status) : [];
+  const verbs: OrderVerb[] = clubVerbsFor(order.status);
+  if (verbs.length === 0) return null;
   return (
-    <Box component="li" id={`order-${order.id}`} sx={{ borderBottom: 1, borderColor: "divider", pb: 1.5, scrollMarginTop: 16 }} data-testid="shop-order">
-      <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-        <Typography variant="subtitle2" component="p" sx={{ fontWeight: 700 }}>
-          {t("members.shop.orderNumber", { number: order.number })}
-        </Typography>
-        <StatusChip
-          glyph={order.status === "CANCELLED" ? "cancelled" : order.status === "PLACED" ? "planned" : "done"}
-          color={order.status === "CANCELLED" ? "default" : order.status === "PLACED" ? "warning" : "success"}
-          label={t(`members.shop.status.${order.status}`)}
-        />
-        {/* Placed by the club in the member's name (§690): said on the row, as the CSV says it in its column. */}
-        {order.placedBy === "CLUB" && <StatusChip glyph="club" variant="outlined" label={t("members.shop.forMember.placedByClub")} testId="order-placed-by-club" />}
-      </Stack>
-      <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
-        {order.memberName}
-        {showEmail && order.memberEmail ? ` · ${order.memberEmail}` : ""}
-        {!order.memberEmail ? ` · ${t("members.shop.accountGone")}` : ""}
-      </Typography>
-      <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
-        {what} · {formatPrice(orderTotalBani(order), order.currency, locale)}
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        {formatDay(order.createdAt, { locale, timeZone: CLUB_TIME_ZONE, withTime: true })}
-      </Typography>
-      {order.note && (
-        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-line", overflowWrap: "anywhere" }}>
-          {t("members.shop.note")}: {order.note}
-        </Typography>
-      )}
-      {order.status === "CANCELLED" && order.cancelledBy && (
-        <Typography variant="body2" color="text.secondary">
-          {order.cancelledBy === "MEMBER" ? t("members.shop.cancelledByMember") : t("members.shop.cancelledByClub")}
-        </Typography>
-      )}
-      {verbs.length > 0 && (
-        <Stack direction="row" sx={{ mt: 1, flexWrap: "wrap", gap: 1 }}>
-          {verbs.map((verb) => (
-            <ActionForm
-              key={verb}
-              action={moveShopOrderAction}
-              confirm={{
-                title: t(`members.shop.verbs.${verb}.title`, { number: order.number }),
-                body: t(verb === "pay" && !emailMembers ? "members.shop.verbs.pay.bodyNoEmail" : `members.shop.verbs.${verb}.body`),
-                confirmLabel: t(`members.shop.verbs.${verb}.label`),
-                cancelLabel: cancel,
-                destructive: verb === "cancel",
-              }}
-            >
-              <input type="hidden" name="uiLocale" value={locale} />
-              <input type="hidden" name="orderId" value={order.id} />
-              <input type="hidden" name="verb" value={verb} />
-              {query.status && <input type="hidden" name="orderStatus" value={query.status} />}
-              {query.productId && <input type="hidden" name="orderProduct" value={query.productId} />}
-              <GlyphButton icon={VERB_GLYPH[verb]} type="submit" variant="outlined" color={verb === "cancel" ? "error" : "primary"} sx={{ minHeight: 44 }}>
-                {t(`members.shop.verbs.${verb}.label`)}
-              </GlyphButton>
-            </ActionForm>
-          ))}
-        </Stack>
-      )}
-    </Box>
+    <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, justifyContent: { md: "flex-end" } }}>
+      {verbs.map((verb) => (
+        <ActionForm
+          key={verb}
+          action={moveShopOrderAction}
+          confirm={{
+            title: t(`members.shop.verbs.${verb}.title`, { number: order.number }),
+            body: t(verb === "pay" && !emailMembers ? "members.shop.verbs.pay.bodyNoEmail" : `members.shop.verbs.${verb}.body`),
+            confirmLabel: t(`members.shop.verbs.${verb}.label`),
+            cancelLabel: cancel,
+            destructive: verb === "cancel",
+          }}
+        >
+          <input type="hidden" name="uiLocale" value={locale} />
+          <input type="hidden" name="orderId" value={order.id} />
+          <input type="hidden" name="verb" value={verb} />
+          {query.status && <input type="hidden" name="orderStatus" value={query.status} />}
+          {query.productId && <input type="hidden" name="orderProduct" value={query.productId} />}
+          <GlyphButton icon={VERB_GLYPH[verb]} type="submit" variant="outlined" color={verb === "cancel" ? "error" : "primary"} sx={{ minHeight: 44 }}>
+            {t(`members.shop.verbs.${verb}.label`)}
+          </GlyphButton>
+        </ActionForm>
+      ))}
+    </Stack>
   );
 }

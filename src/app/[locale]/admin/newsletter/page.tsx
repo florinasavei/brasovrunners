@@ -19,6 +19,7 @@ import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canExportSponsorList, canManageRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -56,6 +57,13 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
   const saved = one(search.saved);
   const recipients = one(search.recipients);
   const query = parseSubscriberListQuery(search);
+  /*
+    The tables' page and size (§846, `AdminTable`): one list query for the page, as on «Documente legale»
+    — «Trimise» never reaches a second page, and «Abonați» and the offers' list each slice their own rows by
+    it. Asked for in the address, both folds open on it.
+  */
+  const listQuery = parseListQuery({ page: one(search.page), perPage: one(search.perPage) }, { sortable: [], defaultSort: "since", defaultPerPage: 100 });
+  const paged = one(search.page) !== undefined || one(search.perPage) !== undefined;
   const db = getDb();
   const now = new Date();
   // The day's allowance for the composer's "how much leaves today", and whether the notice in force
@@ -93,6 +101,7 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
         locale={locale}
         audience={audience}
         history={history}
+        listQuery={listQuery}
         volume={volume}
         offered={offered}
         mayWithdraw={mayManage}
@@ -101,12 +110,14 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
             <NewsletterSubscribers
               locale={locale}
               query={query}
+              listQuery={listQuery}
+              paged={paged}
               list={subscribers}
               mayUnsubscribe={mayManage}
               saved={saved === "newsletterUnsubscribed" || saved === "newsletterUnsubscribedGone"}
             />
             {/* The second fold (§562): a consent on a registration, not a subscription — its own list and its own CSV. */}
-            <PromoConsenters locale={locale} list={promo} sponsors={sponsors} />
+            <PromoConsenters locale={locale} list={promo} listQuery={listQuery} paged={paged} sponsors={sponsors} />
           </>
         }
       />

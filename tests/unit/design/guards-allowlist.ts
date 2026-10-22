@@ -37,7 +37,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
     { path: "src/app/[locale]/admin/pages/members/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/app/[locale]/admin/registrations/(list)/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 4 },
     { path: "src/app/[locale]/admin/registrations/[id]/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
-    { path: "src/app/[locale]/admin/tasks/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/app/[locale]/devs/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/content/events/ui/BibPictureField.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/content/events/ui/CoHostRowsEditor.tsx", reason: "the move arrows' bare IconButtons name their icon files directly (§694); the add, the bin and the row fold's pencil ask action-icons.ts by name since the row folds (§842); the arrows follow with an icon-only primitive", count: 2 },
@@ -82,7 +81,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
     { path: "src/app/[locale]/admin/registrations/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/settings/costs/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/staff/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
-    { path: "src/app/[locale]/admin/tasks/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/contact/feedback/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
     { path: "src/app/[locale]/contact/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
     { path: "src/app/[locale]/devs/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
@@ -158,8 +156,8 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
 /** Per rule, the entries and the hits (the sum of the counts): lower them in the same edit that removes an entry or a count. */
 export const PINNED = {
   colours: { entries: 13, hits: 28 },
-  icons: { entries: 35, hits: 127 },
-  primitives: { entries: 84, hits: 88 },
+  icons: { entries: 34, hits: 126 },
+  primitives: { entries: 83, hits: 87 },
   toggles: { entries: 0, hits: 0 },
 } as const;
 
