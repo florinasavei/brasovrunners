@@ -34,13 +34,11 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
     { path: "src/app/[locale]/admin/error.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/app/[locale]/admin/guide/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/app/[locale]/admin/pages/(list)/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 4 },
-    { path: "src/app/[locale]/admin/pages/members/CodesCard.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 3 },
     { path: "src/app/[locale]/admin/pages/members/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/app/[locale]/admin/registrations/(list)/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 4 },
     { path: "src/app/[locale]/admin/registrations/[id]/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/app/[locale]/admin/tasks/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/app/[locale]/devs/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
-    { path: "src/modules/club-todo/ui/ClubTodoPanel.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 5 },
     { path: "src/modules/content/events/ui/BibPictureField.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/content/events/ui/CoHostRowsEditor.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 4 },
     { path: "src/modules/content/events/ui/EventDraftPreview.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 7 },
@@ -80,7 +78,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
     { path: "src/app/[locale]/admin/pages/(list)/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/pages/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/pages/faq/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
-    { path: "src/app/[locale]/admin/pages/members/CodesCard.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/pages/members/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/registrations/(list)/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/registrations/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
@@ -100,7 +97,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
     { path: "src/app/[locale]/registrations/mine/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
     { path: "src/app/[locale]/registrations/resend/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
     { path: "src/app/[locale]/sign-in/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
-    { path: "src/modules/club-todo/ui/ClubTodoPanel.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/modules/content/events/ui/BibPictureField.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
     { path: "src/modules/content/events/ui/CoHostRowsEditor.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched; a bare MUI IconButton: the house has no icon-only primitive yet, add one before migrating", count: 2 },
     { path: "src/modules/content/events/ui/CreateAndPublishButton.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
@@ -164,8 +160,8 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
 /** Per rule, the entries and the hits (the sum of the counts): lower them in the same edit that removes an entry or a count. */
 export const PINNED = {
   colours: { entries: 13, hits: 28 },
-  icons: { entries: 38, hits: 141 },
-  primitives: { entries: 87, hits: 94 },
+  icons: { entries: 36, hits: 133 },
+  primitives: { entries: 85, hits: 92 },
   toggles: { entries: 0, hits: 0 },
 } as const;
 

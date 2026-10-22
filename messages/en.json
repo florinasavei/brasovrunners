@@ -5799,6 +5799,8 @@
       "doneBy": "Ticked by {by}, {when}",
       "tick": "Tick: {text}",
       "untick": "Untick: {text}",
+      "tickWord": "Tick",
+      "untickWord": "Untick",
       "moveUp": "Move up: {text}",
       "moveDown": "Move down: {text}",
       "moveUpWord": "Move up",
