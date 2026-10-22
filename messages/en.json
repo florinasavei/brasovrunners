@@ -5248,7 +5248,8 @@
         "aside": {
           "off": "off",
           "daily": "{count} characters a day"
-        }
+        },
+        "saved": "The translation budget is saved."
       },
       "month": {
         "title": "By provider",

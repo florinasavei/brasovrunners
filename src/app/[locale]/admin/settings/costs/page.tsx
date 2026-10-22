@@ -390,6 +390,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {query.saved === "neonPlan" && <Alert severity="success">{t("neonPlan.saved")}</Alert>}
         {query.saved === "vercelPlan" && <Alert severity="success">{t("vercelPlan.saved")}</Alert>}
+        {query.saved === "translationBudget" && <Alert severity="success">{t("translationBudget.saved")}</Alert>}
         {query.saved === "jobCadence" && <Alert severity="success">{t("jobCadence.saved")}</Alert>}
         {query.saved === "budgetThresholds" && <Alert severity="success">{t("budgetThresholds.saved")}</Alert>}
         {query.saved === "neonLimits" && <Alert severity="success">{t("neonLimits.saved")}</Alert>}

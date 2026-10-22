@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.74-2026-10-22 -->
+<!-- PROJECT_BASELINE: BR-V3.75-2026-10-22 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V3.74-2026-10-22`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V3.75-2026-10-22`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -314,6 +314,11 @@ than any training data can be trusted on. Pin exact versions in `package.json`.
   change.** Prefer nothing over a dependency, the platform over a library, and what is already
   installed over something new. Server Components by default; a client island has to earn it.
   The header and the landing page are what every visitor pays for. `AGENTS.md` §1.5.
+- **A small bug is a small fix — no rabbit holes.** The owner, 2026-10-22: «Ar trebui să poți fixa
+  astfel de bug-uri ușor, rapid și cu puțini tokens consumați… nu mai intra în rabbit-hole.» Find the
+  one place, change it, run the tests of what you touched, commit, push, PR, `ship`, one short line
+  when it is live. No audit, no agents, no new guards, no waves, no refactor beside it unless the owner
+  asks; anything wider is a one-line question first, never a start.
 - **Commit on a feature branch, push it, open the PR into `qa`; never push to `qa` or `main`.**
   The owner merges pull requests and said so on 2026-09-17 ("commit and push for me and create
   PRs"); before that the rule was to stage and hand back a message. A release is the `qa →

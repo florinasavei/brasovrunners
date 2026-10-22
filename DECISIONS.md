@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.74-2026-10-22 -->
+<!-- PROJECT_BASELINE: BR-V3.75-2026-10-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.74-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.75-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27918,3 +27918,9 @@ Baseline `BR-V3.73-2026-10-22`.
 **Words** (`admin-verbs.test.ts`, both catalogues, `Admin` and `Devs`). Moving a row is «Mai sus» / «Mai jos» («Move up» / «Move down» — the home strip's English «Up» / «Down» corrected); a download is «Descarcă …», never «Exportă Excel» («Exportă evenimentul (JSON)» stays: it makes a file for another site, the import's pair); a page leaves the site by «Scoate pagina de pe site»; a link back carries no «←» — five still do, pinned by key. The fifth guard the first wave named, long help behind the «?», is not written: what a string's length says about where it is drawn cannot be read from the catalogue alone.
 
 Baseline `BR-V3.74-2026-10-22`.
+
+## 849. «Costuri» says when the translation budget is saved
+
+Saving the daily translation budget on «Setări» → «Costuri» returned to the page with `?saved=translationBudget` and opened its card (§336), but the page had no sentence for that save, so nothing said it had worked. It now says «Bugetul de traducere a fost salvat.» in the page's notice slot, like every other save on the page. Found by the consistency audit's third wave (§847); nothing else changed.
+
+Baseline `BR-V3.75-2026-10-22`.
