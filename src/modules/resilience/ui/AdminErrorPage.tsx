@@ -26,7 +26,7 @@ export default function AdminError({ error, reset }: { error: Error & { digest?:
   const t = useTranslations("Error");
   return (
     <Box sx={{ py: { xs: 2, sm: 4 } }}>
-      <Typography variant="h1" gutterBottom>
+      <Typography variant="h2" gutterBottom>
         {t("staffTitle")}
       </Typography>
       <Alert severity="warning" sx={{ mb: 3 }} data-testid="admin-error-notice">

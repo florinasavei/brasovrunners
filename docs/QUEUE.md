@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.74` | the consistency audit's guards (§848) |
 | `BR-V3.73` | the consistency audit's third wave (§847) |
 | `BR-V3.72` | the volunteers' spreadsheet, formatted, and for every event (§846) |
 | `BR-V3.71` | the consistency audit's second wave (§845) |
