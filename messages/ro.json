@@ -1318,9 +1318,19 @@
         "promo": "Acordul pentru oferte și beneficii"
       },
       "auditTrail": "Ce a făcut echipa",
+      "auditTrailCount": {
+        "one": "{count} acțiune",
+        "few": "{count} acțiuni",
+        "other": "{count} de acțiuni"
+      },
       "partnerShares": {
         "title": "Dată partenerilor",
-        "noRecipient": "destinatar nenotat"
+        "noRecipient": "destinatar nenotat",
+        "count": {
+          "one": "{count} listă",
+          "few": "{count} liste",
+          "other": "{count} de liste"
+        }
       },
       "auditActorRemoved": "cont șters",
       "notes": {

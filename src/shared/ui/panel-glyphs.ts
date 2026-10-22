@@ -20,8 +20,10 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import DataUsageIcon from "@mui/icons-material/DataUsage";
 import DateRangeIcon from "@mui/icons-material/DateRange";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import DrawIcon from "@mui/icons-material/Draw";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import EventIcon from "@mui/icons-material/Event";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import FeedbackIcon from "@mui/icons-material/Feedback";
@@ -45,6 +47,7 @@ import LinkIcon from "@mui/icons-material/Link";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import MailIcon from "@mui/icons-material/Mail";
+import ManageHistoryIcon from "@mui/icons-material/ManageHistory";
 import MapIcon from "@mui/icons-material/Map";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import NewspaperIcon from "@mui/icons-material/Newspaper";
@@ -65,7 +68,10 @@ import PhotoAlbumIcon from "@mui/icons-material/PhotoAlbum";
 import PlaceIcon from "@mui/icons-material/Place";
 import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import PrintIcon from "@mui/icons-material/Print";
+import PrivacyTipIcon from "@mui/icons-material/PrivacyTip";
 import PublicIcon from "@mui/icons-material/Public";
+import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
+import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import ReorderIcon from "@mui/icons-material/Reorder";
 import RouteIcon from "@mui/icons-material/Route";
 import RuleIcon from "@mui/icons-material/Rule";
@@ -194,6 +200,18 @@ export const PANEL_GLYPHS = {
   queue: HourglassTopIcon,
   // «Note interne» (§777): what the organizers tell each other about one registration — the sticky note.
   internalNotes: StickyNote2Icon,
+  // One registration's page (§NNN), its cards in the page's order: what to tell the person who asks (the voice), race
+  // day (the desk's own cup), «Lista de invitați speciali» (`hiddenList` above, the incognito its chip and its verb wear, §647), the answers
+  // the person typed (the badge), emergency and health (the kit of «Informații medicale»), what the team did (the
+  // clock of a managed history), the consent withdrawn (the privacy shield), cancel and erase (their verbs' glyphs).
+  tell: RecordVoiceOverIcon,
+  raceDay: EmojiEventsIcon,
+  answers: BadgeIcon,
+  emergency: MedicalServicesIcon,
+  auditTrail: ManageHistoryIcon,
+  consent: PrivacyTipIcon,
+  cancelRegistration: RemoveCircleIcon,
+  erase: DeleteForeverIcon,
   thanks: MailIcon,
   test: ScienceIcon,
   copy: ContentCopyIcon,

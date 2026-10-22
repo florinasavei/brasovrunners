@@ -1,10 +1,6 @@
-import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
-import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import MuiLink from "@mui/material/Link";
-import Chip from "@mui/material/Chip";
-import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import CheckboxField from "@/shared/ui/CheckboxField";
@@ -55,6 +51,7 @@ import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
 import HiddenListRadio from "@/modules/registrations/ui/HiddenListRadio";
+import RegistrationStatusChip from "@/modules/registrations/ui/RegistrationStatusChip";
 import { familyOf } from "@/modules/registrations/family-marker";
 import { canKeepRegistrationNotes, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { listRegistrationNotes } from "@/modules/registrations/notes";
@@ -63,7 +60,10 @@ import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff
 import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import { isUuid } from "@/shared/ids";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import InfoTip from "@/shared/ui/InfoTip";
+import StatusChip from "@/shared/ui/StatusChip";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { env } from "@/shared/config/env";
@@ -111,6 +111,9 @@ type Props = {
 };
 
 export const dynamic = "force-dynamic";
+
+/** «Schimbă numărul»'s glyph: the race number's, asked of `action-icons.ts` by name (§318). */
+const BibIcon = ACTION_ICONS.number;
 
 /**
  * The numbers a trail row's label names (§642: «Loc suplimentar adăugat…: {from} → {to}»): `from` and
@@ -443,6 +446,14 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const bibRefusal = await refusalMessages({ bibNumber: tr("registrations.bibNumber") });
   bibRefusal.keptConflict = bibRefusal.kept;
 
+  /*
+    The page's cards (§NNN; the owner, 2026-10-21: «they look like they are from a different app»): under the
+    person's name and state, every section is a `Panel` — the house's card, its glyph before its title, a count
+    beside it where one belongs — in the order a reader needs them: what to tell somebody who asks, the verbs of
+    the messages, race day and the places, the emails and the notes, the answers and the emergency details, the
+    timeline, then what the team did and who received the data, folded, and last the three verbs that end or
+    take something away, folded too, the erase in red. Each card holds its own verbs, gated exactly as before.
+  */
   return (
     <Stack spacing={3}>
       <Typography variant="body2">
@@ -463,8 +474,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         ) : (
           saved && <Alert severity="success">{tr("saved")}</Alert>
         )}
-      {/* The action redirects with a language-neutral code (AGENTS.md 14.3); this is where it
-          becomes a sentence. */}
+        {/* The action redirects with a language-neutral code (AGENTS.md 14.3); this is where it
+            becomes a sentence. */}
         {error && <Alert severity="error">{tr(`errors.${error}`, noFreePlaceValues(error, query))}</Alert>}
       </Box>
 
@@ -472,14 +483,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
           {registration.registeredName}
         </Typography>
-        <Chip size="small" label={REGISTRATION_STATUS_LABEL[registration.status]} />
+        {/* The state as the list and the desk draw it (`RegistrationStatusChip`, §NNN): one table, the glyph before the word. */}
+        <RegistrationStatusChip status={registration.status} />
         {/* A printed bib nobody may wear (§311): the number stays retired, the paper comes out of the pile. */}
-        {voidBib !== null && (
-          <Chip size="small" color="error" variant="outlined" label={tr("registrations.bibVoid", { number: written(voidBib) })} data-testid="void-bib" />
-        )}
-        {registration.kind === "TEST" && (
-          <Chip size="small" color="warning" label={tr("registrations.testKind")} />
-        )}
+        {voidBib !== null && <StatusChip glyph="failed" color="error" variant="outlined" label={tr("registrations.bibVoid", { number: written(voidBib) })} testId="void-bib" />}
+        {registration.kind === "TEST" && <StatusChip glyph="test" color="warning" label={tr("registrations.testKind")} />}
         {/* On the hidden list (§643, §647): read by every role that reads this page. */}
         {registration.outsideCapacity && <HiddenListChip label={tr("registrations.outside.chip")} hint={tr("registrations.outside.hint")} testId="outside-chip" />}
         <FamilyChip
@@ -489,10 +497,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: member.id } } }),
           }))}
         />
-        {/* BR-REQ-037-05: a staff-entered row behaves exactly like any other, and says so. */}
-        {registration.source === "STAFF" && (
-          <Chip size="small" variant="outlined" label={tr("registrations.enteredByStaff")} />
-        )}
+        {/* BR-REQ-037-05: a staff-entered row behaves exactly like any other, and says so — the club's glyph, as a volunteer's row entered by the team. */}
+        {registration.source === "STAFF" && <StatusChip glyph="club" variant="outlined" label={tr("registrations.enteredByStaff")} />}
         {/* BR-REQ-031-06, §662: the list's chip — «verificat» from a member account's address, «declarat» from the tick alone. */}
         {membership && (
           <MemberChip membership={membership} label={tr(`registrations.member.${membership}`)} hint={tr(`registrations.member.${membership}Hint`)} />
@@ -522,54 +528,6 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {tr("registrations.invitedBy", { who: invitedBy.invitedByName ?? tr("invitations.byNobody"), when: dtInline(invitedBy.sentAt) ?? "" })}
         </Typography>
       )}
-      {registration.guardianName && (
-        <Typography variant="body2" color="text.secondary">
-          {tr("desk.guardian", { name: registration.guardianName })}
-        </Typography>
-      )}
-      {/* Where the person lives (§510): the city, then the country named in the reader's language;
-          for the club's "where do our runners come from", never shown publicly. */}
-      {(registration.city || registration.country) && (
-        <Typography variant="body2" color="text.secondary">
-          {tr("registrations.livesIn", {
-            place: [registration.city, registration.country ? countryName(registration.country, locale) : null].filter(Boolean).join(", "),
-          })}
-        </Typography>
-      )}
-      {/* The sex in words (§554), «—» for none — a paper entry left blank, or the retired «Prefer
-          să nu spun» of a row stored before it went; and the T-shirt, only for an event that gives one. */}
-      <SexAndShirtLine sex={registration.sex} tshirtSize={registration.tshirtSize} kitShirt={registration.eventKitShirt} />
-      {/* The socials the person offered (§106): links to follow back — and whether the public
-          list prints them beside the name, the runner's own tick (§500). */}
-      {(registration.stravaUrl || registration.instagramHandle) && (
-        <Typography variant="body2" color="text.secondary">
-          {registration.stravaUrl && (
-            <MuiLink href={registration.stravaUrl} target="_blank" rel="noopener noreferrer nofollow">
-              Strava
-            </MuiLink>
-          )}
-          {registration.stravaUrl && registration.instagramHandle ? " · " : ""}
-          {registration.instagramHandle && (
-            <MuiLink href={instagramProfileUrl(registration.instagramHandle)} target="_blank" rel="noopener noreferrer nofollow">
-              @{registration.instagramHandle}
-            </MuiLink>
-          )}
-          {registration.listSocials && (
-            <Box component="span" data-testid="registration-socials-on-list">
-              {` — ${tr("registrations.socialsOnList")}`}
-            </Box>
-          )}
-        </Typography>
-      )}
-
-      {/* The consent to offers and benefits (§562): yes with its moment, or no — the person's own answer. */}
-      {promoShown && (
-        <Typography variant="body2" color="text.secondary" data-testid="registration-promo">
-          {registration.promoConsent && registration.promoConsentAt
-            ? tr("registrations.promo.yes", { date: dtInline(registration.promoConsentAt) ?? "" })
-            : tr("registrations.promo.no")}
-        </Typography>
-      )}
 
       {/*
         «Ce îi spui» (§654; the owner: «oamenii mai pierd mailuri, le mai intră în SPAM»): what to tell
@@ -586,7 +544,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         copiedLabel={tr("registrations.tell.copied")}
       />
 
-      {/* Sending a participant a message is the Administrator's (§15.8, §289). */}
+      {/* Sending a participant a message is the Administrator's (§15.8, §289): the page's own verbs, above its cards, where the thumb finds them. */}
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
         {mayManage && (
           <ActionForm
@@ -649,7 +607,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         «Dă-i un loc acum» (§637): the address vouched for by the Administrator and the place given now,
         ahead of the waiting list, for a registration still waiting for its address. The person signs the
         declaration themselves, online or on paper at the desk. Its own block, beside the messages above
-        and apart from the race-day box below.
+        and apart from the race-day card below.
       */}
       {givePlaceNow && (
         <ActionForm
@@ -681,6 +639,287 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             </Typography>
           </Stack>
         </ActionForm>
+      )}
+
+      {/*
+        Race day (BR-REQ-037-07, BR-REQ-037-08). The same verbs the desk offers, on the full
+        page: confirm on a paper declaration, give a waiting-list entry a free place, type a
+        number, mark them here. The code and its QR are shown so a runner who lost the email
+        can be given it again from a screen. An open card — the page's daily work — drawn while
+        the registration has something to do on race day; an ended one has no verb here.
+      */}
+      {!isTerminalStatus(registration.status) && (
+        <Panel
+          glyph="raceDay"
+          level={3}
+          title={tr("registrations.raceDayTitle")}
+          // What the paper confirmation is for, does and sends (§640): beside the title, only where the button is.
+          aside={canConfirmNow ? <PaperConfirmationTip /> : undefined}
+          data-testid="race-day"
+        >
+          <Stack spacing={2}>
+            {canConfirmNow && (
+              <ActionForm
+                action={confirmRegistrationNowAction}
+                confirm={{
+                  title: tr("desk.confirmOnPaper"),
+                  body: registration.guardianName && minorSigns ? tr("registrations.confirmOnPaperBodyMinor", { guardian: registration.guardianName }) : tr("registrations.confirmOnPaperBody"),
+                  ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
+                  road: words.road("confirmations"),
+                  confirmLabel: tr("desk.confirmHere"),
+                  cancelLabel: words.cancel,
+                }}
+                data-testid="confirm-now-form"
+              >
+                {deskHidden}
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
+                  <GlyphButton icon="confirm" type="submit" variant="contained" color="warning" sx={{ minHeight: 44 }}>
+                    {tr("desk.confirmHere")}
+                  </GlyphButton>
+                  <Typography variant="body2" color="text.secondary">
+                    {/* When, what the person gets, what it is not; the «i» beside the title adds the place's rule (§640). */}
+                    {tr("desk.paperWhen")} {tr("desk.paperEmail")} {tr("desk.paperNot")}
+                    {/* A minor's paper is signed by the minor and the parent, and the press attests both
+                        (§330) — where the declaration in effect asks the minor to sign. */}
+                    {registration.guardianName && minorSigns && <> {tr("desk.confirmMinorNote", { guardian: registration.guardianName })}</>}
+                  </Typography>
+                </Stack>
+              </ActionForm>
+            )}
+            {registration.status === "WAITLISTED" && (
+              <ActionForm
+                action={promoteRegistrationAction}
+                confirm={{ title: tr("confirm.givePlaceTitle"), body: tr("confirm.givePlaceBody", { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1), road: words.road("confirmations") }), confirmLabel: tr("desk.givePlace"), cancelLabel: words.cancel }}
+                data-testid="promote-form"
+              >
+                {deskHidden}
+                {/* On a full race, an «i» says why the press will be refused (§592). */}
+                <GivePlaceButton eventId={registration.eventId} />
+              </ActionForm>
+            )}
+            {/*
+              «Trimite-i oferta» (§615): the ordinary offer, by the organizer's choice — the email and the
+              deadline, no confirmation. The Administrator's; offered at any moment before the start, after
+              the close too, and on a full event it adds one supplementary place (§642), as the dialog says.
+            */}
+            {registration.status === "WAITLISTED" && mayManage && offerForecast !== null && (
+              <ActionForm
+                action={offerPlaceAction}
+                confirm={{
+                  title: tr("confirm.offerPlaceTitle"),
+                  ...staffOfferQuestion((key, values) => tr(key, values), registration.registeredName, offerForecast),
+                  ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
+                  road: words.road("links"),
+                  cancelLabel: words.cancel,
+                }}
+                data-testid="offer-place-form"
+              >
+                {deskHidden}
+                {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
+                {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
+                <OfferPlaceButton />
+              </ActionForm>
+            )}
+            {registration.status === "CONFIRMED" && (
+              <>
+                {/*
+                  The number, drawn at the confirmation (§548), and the way to change it folded
+                  underneath (§232; the owner: "I wanna simplify that part with the BID changing").
+                  The answer is one line; the change is a `<details>` that opens on the rare occasion
+                  somebody wants §105's preferential number — the same idiom the list uses for its
+                  destructive verbs, no client island, opens with JavaScript off. Offered while the
+                  bib is not printed: `setBibNumberByStaff` refuses a printed one (§311), and a box
+                  that always refuses invites the press. The old number is retired, never given again.
+                */}
+                <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
+                  <Typography variant="body2" color={registration.bibNumber === null ? "text.primary" : "text.secondary"}>
+                    {registration.bibNumber === null
+                      ? tr("registrations.bibNone")
+                      : registration.bibPrintedAt !== null
+                        ? tr("registrations.bibSettledPrinted", { number: written(registration.bibNumber) })
+                        : tr("registrations.bibSettled", { number: written(registration.bibNumber) })}
+                  </Typography>
+                  {/* The members' race number (§664), beside the number: which bib the sheet prints for this row. */}
+                  {memberBib && (
+                    <Typography variant="body2" color={memberBib === "printed" ? "text.primary" : "text.secondary"} data-testid="member-bib">
+                      {tr(`registrations.memberBib.${memberBib}`)}
+                    </Typography>
+                  )}
+                  {/* Replacing a number already emailed is the Administrator's (§548); filling a gap is any desk role's. */}
+                  {registration.bibPrintedAt === null && (registration.bibNumber === null || mayManage) && (
+                    /* The box spans the card. A refused number comes back in its box with the fold open (§315). */
+                    <Box sx={{ alignSelf: "stretch" }}>
+                      <ActionForm
+                        action={setBibNumberAction}
+                        messages={bibRefusal}
+                        confirm={{ title: tr("confirm.setBibTitle"), body: tr("confirm.setBibBody"), ...(registration.kind === "TEST" ? {} : { email: words.email(1), road: words.road("confirmations") }), confirmLabel: tr("desk.saveBib"), cancelLabel: words.cancel }}
+                        scope="bib"
+                        data-testid="set-bib-form"
+                      >
+                        <RecallDetails sx={BOXED_DISCLOSURE_SX}>
+                          <Typography component="summary" variant="body2" color="primary">
+                            <BibIcon aria-hidden sx={FOLD_GLYPH_SX} />
+                            {tr("registrations.bibChange")}
+                          </Typography>
+                          <Box>
+                            {deskHidden}
+                            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                              <RecallField
+                                name="bibNumber"
+                                type="number"
+                                label={tr("registrations.bibNumber")}
+                                size="small"
+                                defaultValue=""
+                                slotProps={{ htmlInput: { min: 1, max: 99999 } }}
+                                sx={{ width: 140 }}
+                              />
+                              <GlyphButton icon="number" type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+                                {tr("desk.saveBib")}
+                              </GlyphButton>
+                            </Stack>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                              {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
+                            </Typography>
+                          </Box>
+                        </RecallDetails>
+                      </ActionForm>
+                    </Box>
+                  )}
+                  {registration.bibNumber !== null && (
+                    /*
+                      This one bib, on its own A4 page (§180). The same route the event's sheet
+                      uses, asked for a range of exactly one and the one-per-page layout — so
+                      there is one renderer, one authorization check and one design, and a
+                      volunteer who has to reprint a single number does not download two hundred.
+                    */
+                    <GlyphButton
+                      icon="print"
+                      href={`/api/admin/events/${registration.eventId}/bibs?locale=${locale}&from=${registration.bibNumber}&to=${registration.bibNumber}&layout=one`}
+                      variant="outlined"
+                      sx={{ minHeight: 44 }}
+                    >
+                      {tr("registrations.downloadBib")}
+                    </GlyphButton>
+                  )}
+                </Stack>
+                <ActionForm action={checkInAction} data-testid="checkin-form">
+                  {deskHidden}
+                  <input type="hidden" name="direction" value={registration.checkedInAt ? "undo" : "in"} />
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
+                    <GlyphButton
+                      icon={registration.checkedInAt ? "undo" : "checkIn"}
+                      type="submit"
+                      variant={registration.checkedInAt ? "outlined" : "contained"}
+                      color={registration.checkedInAt ? "inherit" : "success"}
+                      sx={{ minHeight: 44 }}
+                    >
+                      {registration.checkedInAt ? tr("desk.undoCheckIn") : tr("desk.checkIn")}
+                    </GlyphButton>
+                    <Typography variant="body2" color="text.secondary">
+                      {registration.checkedInAt
+                        ? tr("registrations.checkedIn", {
+                            time: dt(registration.checkedInAt) ?? "",
+                            who: registration.checkedInByName ?? tr("desk.bySelf"),
+                          })
+                        : tr("registrations.notCheckedIn")}
+                    </Typography>
+                  </Stack>
+                </ActionForm>
+                {registration.checkinCode && (
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
+                    {/* Hosted, not inlined — the same image the email links to, so what the
+                        screen shows is what the phone shows. */}
+                    <Box
+                      component="img"
+                      src={`${env.APP_BASE_URL}/api/registrations/qr/${registration.checkinCode}.png`}
+                      alt={tr("registrations.qrAlt", { code: registration.checkinCode })}
+                      width={160}
+                      height={160}
+                      sx={{ width: 160, height: 160, border: 1, borderColor: "divider", borderRadius: 1 }}
+                    />
+                    <Box>
+                      <Typography variant="body2">
+                        {tr("registrations.checkinCode")}:{" "}
+                        <Box component="span" sx={{ fontFamily: "monospace", fontWeight: 700, fontSize: "1.1rem" }}>
+                          {registration.checkinCode}
+                        </Box>
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        {tr("registrations.checkinCodeHelp")}
+                      </Typography>
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        <Link href={{ pathname: "/admin/checkin/[code]", params: { code: registration.checkinCode } }}>
+                          {tr("registrations.openDesk")}
+                        </Link>
+                      </Typography>
+                    </Box>
+                  </Stack>
+                )}
+              </>
+            )}
+          </Stack>
+        </Panel>
+      )}
+
+      {/*
+        «Lista ascunsă» (§643, named and redrawn by §647; the owner, 2026-10-02: «Nu îmi place deloc cum arată
+        bifa asta, trebuia să fie doar radio» and «Trebuie ca acest feature să se numească „Pune pe lista
+        ascunsă” cu o iconiță specială cu un bandit (incognito)»): whether this registration takes one of the
+        event's places, as two radios. Drawn while the event's «Folosește lista ascunsă» is on, or for a row
+        already on the list — then only «Se numără între locurile evenimentului» means anything, and the line
+        says so; the server refuses putting anybody on the list of an event whose switch is off. Every role
+        that reads the page reads the state; only the Administrator changes it (`canManageRegistrations`,
+        asserted again by the action and the service), and only while the registration is active — an ended
+        row's mark is read, never changed. A change asks the dialog that says what it does in this row's state.
+        Named «Lista de invitați speciali» on screen since §649; a card since §NNN, its title the radio group's
+        name, the incognito its glyph and the «i» beside its title; the code's `hiddenList` / `outsideCapacity`
+        names stay.
+      */}
+      {(registration.eventHiddenListEnabled || registration.outsideCapacity) && (
+        <Panel
+          glyph="hiddenList"
+          level={3}
+          title={tr("registrations.outside.title")}
+          // The «i» beside the title (§649): who the list is for, what they keep, who does not go there — outside the radio group's name.
+          aside={<InfoTip text={hiddenListInfo} />}
+          data-testid="outside-capacity"
+        >
+          <Stack spacing={0.5} sx={{ minWidth: 0, maxWidth: "100%" }}>
+            {specialListVerb(registration.status, actor.role, { onList: registration.outsideCapacity, enabled: registration.eventHiddenListEnabled }) !== null ? (
+              <ActionForm
+                action={setOutsideCapacityAction}
+                confirm={outsideMarkConfirm(tr, registration, { cancel: words.cancel, emailLine: words.email(1), road: words.road("confirmations") })}
+                data-testid="outside-capacity-form"
+              >
+                {deskHidden}
+                <input type="hidden" name="outside" value={registration.outsideCapacity ? "false" : "true"} />
+                <HiddenListRadio
+                  onList={registration.outsideCapacity}
+                  label={tr("registrations.outside.title")}
+                  countedLabel={tr("registrations.outside.optionCounted")}
+                  hiddenLabel={tr("registrations.outside.optionHidden")}
+                />
+              </ActionForm>
+            ) : (
+              <HiddenListRadio
+                onList={registration.outsideCapacity}
+                label={tr("registrations.outside.title")}
+                countedLabel={tr("registrations.outside.optionCounted")}
+                hiddenLabel={tr("registrations.outside.optionHidden")}
+                disabled
+              />
+            )}
+            {!registration.eventHiddenListEnabled && (
+              <Typography variant="body2" sx={{ overflowWrap: "anywhere" }} data-testid="hidden-list-switch-off">
+                {tr("registrations.outside.switchOff")}
+              </Typography>
+            )}
+            {/* A block, so the caption wraps at 320 pixels rather than running past the screen's edge. */}
+            <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 0, overflowWrap: "anywhere" }}>
+              {tr("registrations.outside.help")}
+            </Typography>
+          </Stack>
+        </Panel>
       )}
 
       {/*
@@ -755,14 +994,259 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       )}
 
       {/*
-        Emergency and health (§322): for the people they are for, and only when asked. Folded
-        behind a plain link rather than rendered with the page, so opening a registration to fix
-        a name does not read — and record reading — somebody's health note.
+        «Datele înscrierii» (§645; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic
+        vreau să pot modifica sau suprascrie orice dată introdusă de utilizator»): every answer the person
+        typed — §67's «Corectează numele» and the member tick folded in — behind a plain link, as the
+        emergency card is, because the phone and the emergency contact are among them and opening it is
+        recorded (`readRegistrationAnswers`). Its own card: never inside «Ziua cursei», the places or the
+        offer, since a correction moves no state, no place and no email. The Administrator corrects; the
+        Organizer reads the same answers and gets no form (§289); the action and both services refuse
+        anybody else (BR-REQ-060-01). The address, the consents and the declaration are named, read-only,
+        with why — they stay the person's (`answers.ts`).
+
+        Above the link, the lines every reader saw under the name before the cards (§NNN), read from the row
+        and recording nothing: the parent, where the person lives, the sex and the T-shirt, the socials, the
+        offers' consent.
       */}
-      <Box component="section" id="emergency" sx={{ scrollMarginTop: 16 }}>
-        <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
-          {tr("registrations.emergency.title")}
-        </Typography>
+      <Panel glyph="answers" level={3} title={tr("registrations.answers.title")} id="answers" data-testid="answers">
+        <Stack spacing={2}>
+          <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+            {registration.guardianName && (
+              <Typography variant="body2" color="text.secondary">
+                {tr("desk.guardian", { name: registration.guardianName })}
+              </Typography>
+            )}
+            {/* Where the person lives (§510): the city, then the country named in the reader's language;
+                for the club's "where do our runners come from", never shown publicly. */}
+            {(registration.city || registration.country) && (
+              <Typography variant="body2" color="text.secondary">
+                {tr("registrations.livesIn", {
+                  place: [registration.city, registration.country ? countryName(registration.country, locale) : null].filter(Boolean).join(", "),
+                })}
+              </Typography>
+            )}
+            {/* The sex in words (§554), «—» for none — a paper entry left blank, or the retired «Prefer
+                să nu spun» of a row stored before it went; and the T-shirt, only for an event that gives one. */}
+            <SexAndShirtLine sex={registration.sex} tshirtSize={registration.tshirtSize} kitShirt={registration.eventKitShirt} />
+            {/* The socials the person offered (§106): links to follow back — and whether the public
+                list prints them beside the name, the runner's own tick (§500). */}
+            {(registration.stravaUrl || registration.instagramHandle) && (
+              <Typography variant="body2" color="text.secondary">
+                {registration.stravaUrl && (
+                  <MuiLink href={registration.stravaUrl} target="_blank" rel="noopener noreferrer nofollow">
+                    Strava
+                  </MuiLink>
+                )}
+                {registration.stravaUrl && registration.instagramHandle ? " · " : ""}
+                {registration.instagramHandle && (
+                  <MuiLink href={instagramProfileUrl(registration.instagramHandle)} target="_blank" rel="noopener noreferrer nofollow">
+                    @{registration.instagramHandle}
+                  </MuiLink>
+                )}
+                {registration.listSocials && (
+                  <Box component="span" data-testid="registration-socials-on-list">
+                    {` — ${tr("registrations.socialsOnList")}`}
+                  </Box>
+                )}
+              </Typography>
+            )}
+            {/* The consent to offers and benefits (§562): yes with its moment, or no — the person's own answer. */}
+            {promoShown && (
+              <Typography variant="body2" color="text.secondary" data-testid="registration-promo">
+                {registration.promoConsent && registration.promoConsentAt
+                  ? tr("registrations.promo.yes", { date: dtInline(registration.promoConsentAt) ?? "" })
+                  : tr("registrations.promo.no")}
+              </Typography>
+            )}
+          </Stack>
+          {answers === null ? (
+            <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
+              <GlyphButton icon={mayManage ? "rename" : "preview"} href={`${detailPath}?answers=1#answers`} variant="outlined" sx={{ minHeight: 44 }} data-testid="answers-open">
+                {mayManage ? tr("registrations.answers.open") : tr("registrations.answers.openRead")}
+              </GlyphButton>
+              <Typography variant="caption" color="text.secondary">
+                {tr("registrations.answers.openHelp")}
+              </Typography>
+            </Stack>
+          ) : (
+            <Stack spacing={2}>
+              {mayManage ? (
+                <ActionForm
+                  action={editRegistrationAnswersAction}
+                  messages={answersRefusal}
+                  confirm={{
+                    title: tr("confirm.answersTitle"),
+                    body: tr("confirm.answersBody", { name: registration.registeredName, fields: "{fields}" }),
+                    changedFields: { labels: answerLabels, separator: ", " },
+                    confirmLabel: tr("registrations.answers.save"),
+                    cancelLabel: words.cancel,
+                  }}
+                  scope="answers"
+                  data-testid="answers-form"
+                >
+                  <input type="hidden" name="uiLocale" value={locale} />
+                  <input type="hidden" name="registrationId" value={registration.id} />
+                  {/* What the page rendered, beside each box: only what moved is corrected (`changedAnswersOf`). */}
+                  {Object.entries(answerValues)
+                    .filter(([field]) => !(guardianSigned && field === "guardianName"))
+                    .map(([field, value]) => (
+                      <input key={field} type="hidden" name={`was.${field}`} value={value} />
+                    ))}
+                  <Stack spacing={2}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+                      <RecallField name="firstName" label={answerLabels.firstName} defaultValue={answerValues.firstName} required={namesRequired} slotProps={{ htmlInput: { maxLength: 100 } }} />
+                      <RecallField name="lastName" label={answerLabels.lastName} defaultValue={answerValues.lastName} required={namesRequired} slotProps={{ htmlInput: { maxLength: 100 } }} />
+                      <RecallField
+                        name="displayName"
+                        label={answerLabels.displayName}
+                        defaultValue={answerValues.displayName}
+                        helperText={tr("registrations.answers.displayNameHelp")}
+                        slotProps={{ htmlInput: { maxLength: 120 } }}
+                      />
+                      <RecallField
+                        name="birthDate"
+                        type="date"
+                        label={answerLabels.birthDate}
+                        defaultValue={answerValues.birthDate}
+                        slotProps={{ inputLabel: { shrink: true } }}
+                      />
+                      <RecallField name="sex" select label={answerLabels.sex} defaultValue={answerValues.sex} slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}>
+                        <option value="">{tr("registrations.answers.none")}</option>
+                        {SEX_CHOICES.map((sex) => (
+                          <option key={sex} value={sex}>
+                            {tr(`registrations.answers.sex.${sex}`)}
+                          </option>
+                        ))}
+                      </RecallField>
+                      <RecallField
+                        name="nationality"
+                        select
+                        label={answerLabels.nationality}
+                        defaultValue={answerValues.nationality}
+                        slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                      >
+                        <option value="">{tr("registrations.answers.none")}</option>
+                        {countries.map((country) => (
+                          <option key={country.code} value={country.code}>
+                            {country.label}
+                          </option>
+                        ))}
+                      </RecallField>
+                      <RecallField name="country" select label={answerLabels.country} defaultValue={answerValues.country} required slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}>
+                        {countries.map((country) => (
+                          <option key={country.code} value={country.code}>
+                            {country.label}
+                          </option>
+                        ))}
+                      </RecallField>
+                      <RecallField name="city" label={answerLabels.city} defaultValue={answerValues.city} slotProps={{ htmlInput: { maxLength: 120 } }} />
+                      <RecallField
+                        name="phone"
+                        type="tel"
+                        label={answerLabels.phone}
+                        defaultValue={answerValues.phone}
+                        helperText={tr("registrations.answers.phoneHelp")}
+                        slotProps={{ htmlInput: { maxLength: 30 } }}
+                      />
+                      <GuardianForMinor birthDateId={fieldId("birthDate", "answers")} forceOpen={guardianOpen} minorOn={answers.answersWrittenAt.toISOString()}>
+                        <RecallField
+                          name="guardianName"
+                          label={answerLabels.guardianName}
+                          defaultValue={answerValues.guardianName}
+                          disabled={guardianSigned}
+                          fullWidth
+                          helperText={tr(guardianSigned ? "registrations.answers.guardianSignedHelp" : "registrations.answers.guardianHelp")}
+                          slotProps={{ htmlInput: { maxLength: 200 } }}
+                        />
+                      </GuardianForMinor>
+                      <RecallField name="emergencyContactName" label={answerLabels.emergencyContactName} defaultValue={answerValues.emergencyContactName} slotProps={{ htmlInput: { maxLength: 200 } }} />
+                      <RecallField
+                        name="emergencyContactPhone"
+                        type="tel"
+                        label={answerLabels.emergencyContactPhone}
+                        defaultValue={answerValues.emergencyContactPhone}
+                        helperText={tr("registrations.answers.phoneHelp")}
+                        slotProps={{ htmlInput: { maxLength: 30 } }}
+                      />
+                      <RecallField
+                        name="clubName"
+                        label={answerLabels.clubName}
+                        defaultValue={answerValues.clubName}
+                        helperText={tr("registrations.answers.clubNameHelp", { club: CLUB_NAME })}
+                        slotProps={{ htmlInput: { maxLength: 200 } }}
+                      />
+                      <RecallField name="stravaUrl" label={answerLabels.stravaUrl} defaultValue={answerValues.stravaUrl} slotProps={{ htmlInput: { maxLength: 200 } }} />
+                      <RecallField name="instagramHandle" label={answerLabels.instagramHandle} defaultValue={answerValues.instagramHandle} slotProps={{ htmlInput: { maxLength: 40 } }} />
+                      {/* The T-shirt only for an event that gives one (§554); otherwise not on the form, and not corrected. */}
+                      {registration.eventKitShirt && (
+                        <RecallField name="tshirtSize" select label={answerLabels.tshirtSize} defaultValue={answerValues.tshirtSize} slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}>
+                          <option value="NONE">{tr("registrations.answers.noShirt")}</option>
+                          {SHIRT_SIZES.map((size) => (
+                            <option key={size} value={size}>
+                              {size}
+                            </option>
+                          ))}
+                        </RecallField>
+                      )}
+                    </Box>
+                    {/* The member tick (BR-REQ-031-06): a claim the person made, corrected here like any answer. */}
+                    <CheckboxField name="clubMemberDeclared" defaultChecked={answers.clubMemberDeclared} help={tr("registrations.answers.memberHelp", { club: CLUB_NAME })}>
+                      {answerLabels.clubMemberDeclared}
+                    </CheckboxField>
+                    {/* «Vreau numărul de membru» (§664): the person's wish, corrected like the tick; kept only under it. */}
+                    {answerLabels.memberBibWanted && (
+                      <CheckboxField name="memberBibWanted" defaultChecked={answers.memberBibWanted} help={tr("registrations.answers.memberBibHelp")}>
+                        {answerLabels.memberBibWanted}
+                      </CheckboxField>
+                    )}
+                    <Box>
+                      <GlyphSubmitButton label={tr("registrations.answers.save")} pendingLabel={tr("registrations.answers.pending")} icon="save" variant="contained" />
+                    </Box>
+                  </Stack>
+                </ActionForm>
+              ) : (
+                <Stack spacing={0.5} data-testid="answers-read">
+                  {Object.entries(answerLabels).map(([field, label]) => (
+                    <Typography key={field} variant="body2">
+                      {label}: {answerShown(field) || tr("registrations.answers.none")}
+                    </Typography>
+                  ))}
+                </Stack>
+              )}
+              {/* What stays the person's, and why (`answers.ts`): one line each, the same for every reader. */}
+              <Stack spacing={0.5} data-testid="answers-locked">
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {tr("registrations.answers.lockedTitle")}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {tr("registrations.answers.lockedAddress")}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {tr("registrations.answers.lockedConsents")}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {tr("registrations.answers.lockedDeclaration")}
+                </Typography>
+              </Stack>
+              <Typography variant="caption" color="text.secondary">
+                {tr("registrations.answers.viewed")}
+              </Typography>
+              <Box>
+                <GlyphButton icon="dismiss" href={`${detailPath}#answers`} variant="text" size="small" sx={{ minHeight: 44 }}>
+                  {tr("registrations.answers.hide")}
+                </GlyphButton>
+              </Box>
+            </Stack>
+          )}
+        </Stack>
+      </Panel>
+
+      {/*
+        Emergency and health (§322): for the people they are for, and only when asked. Behind a plain
+        link rather than rendered with the page, so opening a registration to fix a name does not
+        read — and record reading — somebody's health note. An open card: the link is its fold.
+      */}
+      <Panel glyph="emergency" level={3} title={tr("registrations.emergency.title")} id="emergency">
         {emergency ? (
           <Stack spacing={1}>
             <Typography variant="body2">
@@ -776,23 +1260,23 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             </Typography>
             {/* The health line only for an event that asks the note (§557, «Informații medicale»). */}
             {emergency.eventAsksHealthNote && (
-            <Typography variant="body2" component="div">
-              {tr("registrations.emergency.health")}:{" "}
-              {emergency.healthNotes ? (
-                <>
-                  <Box component="span" sx={{ whiteSpace: "pre-wrap" }}>
-                    {emergency.healthNotes}
-                  </Box>
-                  {emergency.healthConsentAt && (
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                      {tr("registrations.emergency.healthConsented", { date: dtInline(emergency.healthConsentAt) ?? "" })}
-                    </Typography>
-                  )}
-                </>
-              ) : (
-                tr("registrations.emergency.healthNone")
-              )}
-            </Typography>
+              <Typography variant="body2" component="div">
+                {tr("registrations.emergency.health")}:{" "}
+                {emergency.healthNotes ? (
+                  <>
+                    <Box component="span" sx={{ whiteSpace: "pre-wrap" }}>
+                      {emergency.healthNotes}
+                    </Box>
+                    {emergency.healthConsentAt && (
+                      <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                        {tr("registrations.emergency.healthConsented", { date: dtInline(emergency.healthConsentAt) ?? "" })}
+                      </Typography>
+                    )}
+                  </>
+                ) : (
+                  tr("registrations.emergency.healthNone")
+                )}
+              </Typography>
             )}
             <Typography variant="caption" color="text.secondary">
               {tr("registrations.emergency.viewed")}
@@ -813,494 +1297,275 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             </Typography>
           </Stack>
         )}
-      </Box>
+      </Panel>
 
-      {/*
-        «Lista ascunsă» (§643, named and redrawn by §647; the owner, 2026-10-02: «Nu îmi place deloc cum arată
-        bifa asta, trebuia să fie doar radio» and «Trebuie ca acest feature să se numească „Pune pe lista
-        ascunsă” cu o iconiță specială cu un bandit (incognito)»): whether this registration takes one of the
-        event's places, as two radios. Drawn while the event's «Folosește lista ascunsă» is on, or for a row
-        already on the list — then only «Se numără între locurile evenimentului» means anything, and the line
-        says so; the server refuses putting anybody on the list of an event whose switch is off. Every role
-        that reads the page reads the state; only the Administrator changes it (`canManageRegistrations`,
-        asserted again by the action and the service), and only while the registration is active — an ended
-        row's mark is read, never changed. A change asks the dialog that says what it does in this row's state.
-        Named «Lista de invitați speciali» on screen since §649, with an «i» beside its heading; the code's
-        `hiddenList` / `outsideCapacity` names stay.
-      */}
-      {(registration.eventHiddenListEnabled || registration.outsideCapacity) && (
-        <Box component="section" data-testid="outside-capacity" sx={{ minWidth: 0, maxWidth: "100%" }}>
-          {specialListVerb(registration.status, actor.role, { onList: registration.outsideCapacity, enabled: registration.eventHiddenListEnabled }) !== null ? (
-            <ActionForm
-              action={setOutsideCapacityAction}
-              confirm={outsideMarkConfirm(tr, registration, { cancel: words.cancel, emailLine: words.email(1), road: words.road("confirmations") })}
-              data-testid="outside-capacity-form"
-            >
-              {deskHidden}
-              <input type="hidden" name="outside" value={registration.outsideCapacity ? "false" : "true"} />
-              <HiddenListRadio
-                onList={registration.outsideCapacity}
-                headingId="hidden-list-title"
-                heading={tr("registrations.outside.title")}
-                countedLabel={tr("registrations.outside.optionCounted")}
-                hiddenLabel={tr("registrations.outside.optionHidden")}
-                info={hiddenListInfo}
-              />
-            </ActionForm>
-          ) : (
-            <HiddenListRadio
-              onList={registration.outsideCapacity}
-              headingId="hidden-list-title"
-              heading={tr("registrations.outside.title")}
-              countedLabel={tr("registrations.outside.optionCounted")}
-              hiddenLabel={tr("registrations.outside.optionHidden")}
-              info={hiddenListInfo}
-              disabled
-            />
-          )}
-          {!registration.eventHiddenListEnabled && (
-            <Typography variant="body2" sx={{ mt: 0.5, overflowWrap: "anywhere" }} data-testid="hidden-list-switch-off">
-              {tr("registrations.outside.switchOff")}
-            </Typography>
-          )}
-          {/* A block, so the caption wraps at 320 pixels rather than running past the screen's edge. */}
-          <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 0.5, mb: 0, overflowWrap: "anywhere" }}>
-            {tr("registrations.outside.help")}
+      {/* The registration's own story, oldest first: when each step happened, the texts it was sent under, the declarations signed. Open: it answers «when did they…». */}
+      <Panel glyph="history" level={3} title={tr("registrations.timeline")} data-testid="timeline">
+        <Stack spacing={1}>
+          <Typography variant="body2">
+            {tr("registrations.submitted")}: {dt(formSentAt(registration.submittedAt, registration.cycleStartedAt))}
           </Typography>
-        </Box>
+          {/*
+            The two legal texts this cycle's form was sent under (§425), one line each and in the same
+            shape: the privacy notice every registration acknowledges, and the club's terms accepted
+            expressly on the form (§421). A staff or desk entry records no terms — the paper carries
+            them (§67) — and a row sent before the column existed has no number to show; §316's
+            window on /admin/legal is what answers for those.
+          */}
+          <Typography variant="body2" data-testid="timeline-privacy-notice">
+            {tr("registrations.privacyNoticeLine", { date: dt(registration.cycleStartedAt) ?? "", version: registration.privacyNoticeVersion })}
+          </Typography>
+          <Typography variant="body2" data-testid="timeline-terms">
+            {(() => {
+              const termsLine = termsLineKindFor(registration);
+              switch (termsLine.kind) {
+                case "accepted":
+                  return tr("registrations.termsLine", { date: dt(termsLine.acceptedAt) ?? "—", version: termsLine.version });
+                case "onPaper":
+                  return tr("registrations.termsOnPaper");
+                case "notRecorded":
+                  return tr("registrations.termsNotRecorded");
+              }
+            })()}
+          </Typography>
+          {/* Each time the form came back with the same address, right under the first (§312). */}
+          {resubmissions.map((line, index) => (
+            <Typography key={`resubmitted-${index}`} variant="body2" data-testid="timeline-resubmitted">
+              {line.text}
+              {line.actorName ? ` · ${line.actorName}` : ""}
+            </Typography>
+          ))}
+          {[
+            [
+              tr("registrations.emailConfirmed"),
+              registration.emailConfirmedAt
+                ? `${dt(registration.emailConfirmedAt)}${registration.emailConfirmedByName ? ` (${tr("registrations.emailVouched", { who: registration.emailConfirmedByName })})` : ""}`
+                : null,
+            ],
+            [tr("registrations.waitlisted"), dt(registration.waitlistedAt)],
+            [tr("registrations.offerCreated"), dt(registration.offerCreatedAt)],
+            linkLine,
+            holdLine,
+            [tr("registrations.confirmed"), dt(registration.confirmedAt)],
+            // "cancelled; bib 27 was printed" on the line itself (§311), whoever cancelled — the
+            // participant's link and the job write no audit row, so the row is the record.
+            [
+              tr("registrations.cancelled"),
+              registration.cancelledAt
+                ? `${dt(registration.cancelledAt)} (${registration.cancellationSource})${registration.status === "CANCELLED" ? voidSuffix : ""}`
+                : null,
+            ],
+            // Why the participant cancelled (§558), right under when: their answer, and the words of «Alt motiv».
+            [
+              tr("registrations.cancelReasonLabel"),
+              registration.cancelReasonKind
+                ? registration.cancelReasonKind === "OTHER" && registration.cancelReason
+                  ? tr("registrations.cancelReasonOther", {
+                      kind: tr(`registrations.cancelReasonKinds.${registration.cancelReasonKind}`),
+                      text: registration.cancelReason,
+                    })
+                  : tr(`registrations.cancelReasonKinds.${registration.cancelReasonKind}`)
+                : null,
+            ],
+            [
+              tr("registrations.expired"),
+              registration.expiredAt
+                ? `${dt(registration.expiredAt)} (${registration.expiryReason})${registration.status === "EXPIRED" ? voidSuffix : ""}`
+                : null,
+            ],
+          ]
+            .filter(([, value]) => value !== null)
+            .map(([label, value]) => (
+              <Typography key={label} variant="body2">
+                {label}: {value}
+              </Typography>
+            ))}
+          {acceptances.map((acceptance, index) => {
+            /*
+              A minor's declaration is signed by two (§330): the minor's signature and document, then
+              the parent's — each in the hand, each named. An adult's, and a minor's signed before two
+              signatures were asked, read as they always did.
+            */
+            const twoSigners = Boolean(registration.guardianName) && acceptance.minorTypedName !== null;
+            const hand = { fontFamily: "var(--font-signature), cursive", fontSize: "1.375rem" };
+            return (
+              <Box key={acceptance.id} data-testid="declaration-acceptance">
+                <Typography variant="body2">
+                  {tr("registrations.declaration")}: {dt(acceptance.acceptedAt)} —{" "}
+                  {twoSigners && (
+                    <>
+                      <Box component="span" sx={hand}>
+                        {acceptance.minorTypedName}
+                      </Box>{" "}
+                      ({tr("registrations.signedByMinor")}) ·{" "}
+                    </>
+                  )}
+                  <Box component="span" sx={hand}>
+                    {acceptance.typedName}
+                  </Box>{" "}
+                  {twoSigners && <>({tr("registrations.signedByGuardian")}) </>}
+                  (v{acceptance.declarationVersion})
+                  {twoSigners ? (
+                    <>
+                      {acceptance.minorIdDocument && ` — ${tr("desk.idDocumentMinor")}: ${acceptance.minorIdDocument}`}
+                      {acceptance.idDocument && ` — ${tr("desk.idDocumentGuardian")}: ${acceptance.idDocument}`}
+                    </>
+                  ) : (
+                    acceptance.idDocument && ` — ${tr("registrations.idDocument")}: ${acceptance.idDocument}`
+                  )}
+                  {index === 0 && (
+                    <>
+                      {" — "}
+                      <a href={`/api/admin/registrations/${registration.id}/declaration`} target="_blank" rel="noopener">
+                        {tr("registrations.declarationPdf")}
+                      </a>
+                    </>
+                  )}
+                  {acceptance.method === "PAPER" &&
+                    ` — ${tr("registrations.declarationPaper", { who: acceptance.attestedByName ?? tr("registrations.auditActorRemoved") })}`}
+                  {/* The proof of signing (§556): the signed text's fingerprint, twelve characters and the whole in a tooltip. */}
+                  {acceptance.textHash && (
+                    <>
+                      {" — "}
+                      <TextHashTip label={tr("declarationHold.textHash")} hash={acceptance.textHash} short={shortTextHash(acceptance.textHash)} />
+                    </>
+                  )}
+                </Typography>
+                {/* «Păstrează: reclamație / litigiu în curs» (§556): the line for every reader, the form for the Administrator. */}
+                <DeclarationHoldForm
+                  registrationAction={declarationHoldAction}
+                  hidden={{ uiLocale: locale, registrationId: registration.id, acceptanceId: acceptance.id }}
+                  held={
+                    acceptance.retentionHold
+                      ? { when: dtInline(acceptance.retentionHoldAt) ?? "—", who: acceptance.retentionHoldByName, reason: acceptance.retentionHoldReason ?? "" }
+                      : null
+                  }
+                  mayManage={mayManage}
+                  scope={`hold-${acceptance.id}`}
+                />
+              </Box>
+            );
+          })}
+        </Stack>
+      </Panel>
+
+      {/* What the team did on this registration (§844's words), newest first — read when somebody asks «who changed that?», so folded, the count beside the title. */}
+      {staffTrail.length > 0 && (
+        <Panel
+          glyph="auditTrail"
+          level={3}
+          collapsible
+          title={tr("registrations.auditTrail")}
+          aside={tr(`registrations.auditTrailCount.${countForm(staffTrail.length, locale)}`, { count: staffTrail.length })}
+          data-testid="audit-trail"
+        >
+          <Stack spacing={1}>
+            {staffTrail.map((entry, index) => {
+              const details = trailDetails(entry.action, entry.metadataJson);
+              return (
+                <Typography key={index} variant="body2">
+                  {dt(entry.createdAt)} · {trailLabel(entry.action, entry.metadataJson)} ·{" "}
+                  {entry.actorName ??
+                    (entry.actorStaffUserId === null
+                      ? tr("registrations.auditActorParticipant")
+                      : tr("registrations.auditActorRemoved"))}
+                  {/* Metadata is the shape of the change — a name before and after, a typed reason —
+                      never a copy of what the change was about (AGENTS.md 12.12); said in words (§844). */}
+                  {details.length > 0 && ` · ${details.join(" · ")}`}
+                </Typography>
+              );
+            })}
+          </Stack>
+        </Panel>
       )}
 
-      <Divider />
+      {/*
+        «Dată partenerilor» (§570, review finding): the lists for sponsors that held this registration,
+        from their audit rows — so a withdrawal or an access request is answered with which partner
+        received the data and when, long after the club's own copy of the file is deleted. Folded, with
+        how many lists beside the title.
+      */}
+      {partnerShares.length > 0 && (
+        <Panel
+          glyph="partners"
+          level={3}
+          collapsible
+          title={tr("registrations.partnerShares.title")}
+          aside={tr(`registrations.partnerShares.count.${countForm(partnerShares.length, locale)}`, { count: partnerShares.length })}
+          data-testid="partner-shares"
+        >
+          <Stack spacing={1}>
+            {partnerShares.map((share, index) => (
+              <Typography key={index} variant="body2">
+                {dt(share.createdAt)} · {share.recipient ?? tr("registrations.partnerShares.noRecipient")} ·{" "}
+                {share.actorName ?? tr("registrations.auditActorRemoved")}
+              </Typography>
+            ))}
+          </Stack>
+        </Panel>
+      )}
 
       {/*
-        Race day (BR-REQ-037-07, BR-REQ-037-08). The same verbs the desk offers, on the full
-        page: confirm on a paper declaration, give a waiting-list entry a free place, type a
-        number, mark them here. The code and its QR are shown so a runner who lost the email
-        can be given it again from a screen.
+        Withdraw consent (§322; `AGENTS.md` §15.11): the staff verb for the person who wrote to
+        the club instead of pressing the button on their own link. The Administrator's, like
+        every verb that changes a registration (§289) — an Organizer reads the health note above
+        and has no card here — and asserted again in the service. Only the groups the row
+        still holds are offered; the status, the place and the number do not move. Folded: a
+        written request is rare, and its reason box is required (`ActionForm` opens the fold on it).
       */}
-      <Box component="section">
-        <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", mb: 1 }}>
-          <Typography variant="h3" sx={{ fontSize: "1rem" }}>
-            {tr("registrations.raceDayTitle")}
-          </Typography>
-          {/* What the paper confirmation is for, does and sends (§640): only where the button is. */}
-          {canConfirmNow && <PaperConfirmationTip />}
-        </Stack>
-        <Stack spacing={2}>
-          {canConfirmNow && (
+      {mayManage && (
+        <Panel glyph="consent" level={3} collapsible title={tr("registrations.withdraw.title")} openWhen={{ saved: saved === "consentWithdrawn" }} data-testid="withdraw-consent">
+          {withdrawable.health || withdrawable.socials || withdrawable.results || withdrawable.promo ? (
             <ActionForm
-              action={confirmRegistrationNowAction}
-              confirm={{
-                title: tr("desk.confirmOnPaper"),
-                body: registration.guardianName && minorSigns ? tr("registrations.confirmOnPaperBodyMinor", { guardian: registration.guardianName }) : tr("registrations.confirmOnPaperBody"),
-                ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
-                road: words.road("confirmations"),
-                confirmLabel: tr("desk.confirmHere"),
-                cancelLabel: words.cancel,
-              }}
-              data-testid="confirm-now-form"
+              action={withdrawConsentAction}
+              confirm={{ title: tr("confirm.withdrawConsentTitle"), body: tr("confirm.withdrawConsentBody"), confirmLabel: tr("registrations.withdraw.action"), cancelLabel: words.cancel, destructive: true }}
+              data-testid="withdraw-consent-form"
             >
-              {deskHidden}
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
-                <GlyphButton icon="confirm" type="submit" variant="contained" color="warning" sx={{ minHeight: 44 }}>
-                  {tr("desk.confirmHere")}
-                </GlyphButton>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="registrationId" value={registration.id} />
+              <Stack spacing={1.5}>
                 <Typography variant="body2" color="text.secondary">
-                  {/* When, what the person gets, what it is not; the «i» beside the title adds the place's rule (§640). */}
-                  {tr("desk.paperWhen")} {tr("desk.paperEmail")} {tr("desk.paperNot")}
-                  {/* A minor's paper is signed by the minor and the parent, and the press attests both
-                      (§330) — where the declaration in effect asks the minor to sign. */}
-                  {registration.guardianName && minorSigns && <> {tr("desk.confirmMinorNote", { guardian: registration.guardianName })}</>}
+                  {tr("registrations.withdraw.help")}
                 </Typography>
-              </Stack>
-            </ActionForm>
-          )}
-          {registration.status === "WAITLISTED" && (
-            <ActionForm
-              action={promoteRegistrationAction}
-              confirm={{ title: tr("confirm.givePlaceTitle"), body: tr("confirm.givePlaceBody", { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1), road: words.road("confirmations") }), confirmLabel: tr("desk.givePlace"), cancelLabel: words.cancel }}
-              data-testid="promote-form"
-            >
-              {deskHidden}
-              {/* On a full race, an «i» says why the press will be refused (§592). */}
-              <GivePlaceButton eventId={registration.eventId} />
-            </ActionForm>
-          )}
-          {/*
-            «Trimite-i oferta» (§615): the ordinary offer, by the organizer's choice — the email and the
-            deadline, no confirmation. The Administrator's; offered at any moment before the start, after
-            the close too, and on a full event it adds one supplementary place (§642), as the dialog says.
-          */}
-          {registration.status === "WAITLISTED" && mayManage && offerForecast !== null && (
-            <ActionForm
-              action={offerPlaceAction}
-              confirm={{
-                title: tr("confirm.offerPlaceTitle"),
-                ...staffOfferQuestion((key, values) => tr(key, values), registration.registeredName, offerForecast),
-                ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
-                road: words.road("links"),
-                cancelLabel: words.cancel,
-              }}
-              data-testid="offer-place-form"
-            >
-              {deskHidden}
-              {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
-              {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
-              <OfferPlaceButton />
-            </ActionForm>
-          )}
-          {registration.status === "CONFIRMED" && (
-            <>
-              {/*
-                The number, drawn at the confirmation (§548), and the way to change it folded
-                underneath (§232; the owner: "I wanna simplify that part with the BID changing").
-                The answer is one line; the change is a `<details>` that opens on the rare occasion
-                somebody wants §105's preferential number — the same idiom the list uses for its
-                destructive verbs, no client island, opens with JavaScript off. Offered while the
-                bib is not printed: `setBibNumberByStaff` refuses a printed one (§311), and a box
-                that always refuses invites the press. The old number is retired, never given again.
-              */}
-              <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
-                <Typography variant="body2" color={registration.bibNumber === null ? "text.primary" : "text.secondary"}>
-                  {registration.bibNumber === null
-                    ? tr("registrations.bibNone")
-                    : registration.bibPrintedAt !== null
-                      ? tr("registrations.bibSettledPrinted", { number: written(registration.bibNumber) })
-                      : tr("registrations.bibSettled", { number: written(registration.bibNumber) })}
-                </Typography>
-                {/* The members' race number (§664), beside the number: which bib the sheet prints for this row. */}
-                {memberBib && (
-                  <Typography variant="body2" color={memberBib === "printed" ? "text.primary" : "text.secondary"} data-testid="member-bib">
-                    {tr(`registrations.memberBib.${memberBib}`)}
-                  </Typography>
-                )}
-                {/* Replacing a number already emailed is the Administrator's (§548); filling a gap is any desk role's. */}
-                {registration.bibPrintedAt === null && (registration.bibNumber === null || mayManage) && (
-                  /* The box spans the section. A refused number comes back in its box with the fold open (§315). */
-                  <Box sx={{ alignSelf: "stretch" }}>
-                    <ActionForm
-                      action={setBibNumberAction}
-                      messages={bibRefusal}
-                      confirm={{ title: tr("confirm.setBibTitle"), body: tr("confirm.setBibBody"), ...(registration.kind === "TEST" ? {} : { email: words.email(1), road: words.road("confirmations") }), confirmLabel: tr("desk.saveBib"), cancelLabel: words.cancel }}
-                      scope="bib"
-                      data-testid="set-bib-form"
-                    >
-                      <RecallDetails sx={BOXED_DISCLOSURE_SX}>
-                        <Typography component="summary" variant="body2" color="primary">
-                          <ConfirmationNumberIcon aria-hidden sx={FOLD_GLYPH_SX} />
-                          {tr("registrations.bibChange")}
-                        </Typography>
-                        <Box>
-                          {deskHidden}
-                          <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                            <RecallField
-                              name="bibNumber"
-                              type="number"
-                              label={tr("registrations.bibNumber")}
-                              size="small"
-                              defaultValue=""
-                              slotProps={{ htmlInput: { min: 1, max: 99999 } }}
-                              sx={{ width: 140 }}
-                            />
-                            <GlyphButton icon="number" type="submit" variant="outlined" sx={{ minHeight: 44 }}>
-                              {tr("desk.saveBib")}
-                            </GlyphButton>
-                          </Stack>
-                          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                            {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
-                          </Typography>
-                        </Box>
-                      </RecallDetails>
-                    </ActionForm>
-                  </Box>
-                )}
-                {registration.bibNumber !== null && (
-                  /*
-                    This one bib, on its own A4 page (§180). The same route the event's sheet
-                    uses, asked for a range of exactly one and the one-per-page layout — so
-                    there is one renderer, one authorization check and one design, and a
-                    volunteer who has to reprint a single number does not download two hundred.
-                  */
-                  <GlyphButton
-                    icon="print"
-                    href={`/api/admin/events/${registration.eventId}/bibs?locale=${locale}&from=${registration.bibNumber}&to=${registration.bibNumber}&layout=one`}
-                    variant="outlined"
-                    sx={{ minHeight: 44 }}
-                  >
-                    {tr("registrations.downloadBib")}
-                  </GlyphButton>
-                )}
-              </Stack>
-              <ActionForm
-                action={checkInAction}
-                data-testid="checkin-form"
-              >
-                {deskHidden}
-                <input type="hidden" name="direction" value={registration.checkedInAt ? "undo" : "in"} />
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
-                  <GlyphButton
-                    icon={registration.checkedInAt ? "undo" : "checkIn"}
-                    type="submit"
-                    variant={registration.checkedInAt ? "outlined" : "contained"}
-                    color={registration.checkedInAt ? "inherit" : "success"}
-                    sx={{ minHeight: 44 }}
-                  >
-                    {registration.checkedInAt ? tr("desk.undoCheckIn") : tr("desk.checkIn")}
-                  </GlyphButton>
-                  <Typography variant="body2" color="text.secondary">
-                    {registration.checkedInAt
-                      ? tr("registrations.checkedIn", {
-                          time: dt(registration.checkedInAt) ?? "",
-                          who: registration.checkedInByName ?? tr("desk.bySelf"),
-                        })
-                      : tr("registrations.notCheckedIn")}
-                  </Typography>
-                </Stack>
-              </ActionForm>
-              {registration.checkinCode && (
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
-                  {/* Hosted, not inlined — the same image the email links to, so what the
-                      screen shows is what the phone shows. */}
-                  <Box
-                    component="img"
-                    src={`${env.APP_BASE_URL}/api/registrations/qr/${registration.checkinCode}.png`}
-                    alt={tr("registrations.qrAlt", { code: registration.checkinCode })}
-                    width={160}
-                    height={160}
-                    sx={{ width: 160, height: 160, border: 1, borderColor: "divider", borderRadius: 1 }}
+                <Box>
+                  {withdrawable.health && <CheckboxField name="health">{tr("registrations.withdraw.health")}</CheckboxField>}
+                  {withdrawable.socials && <CheckboxField name="socials">{tr("registrations.withdraw.socials")}</CheckboxField>}
+                  {withdrawable.results && <CheckboxField name="results">{tr("registrations.withdraw.results")}</CheckboxField>}
+                  {withdrawable.promo && <CheckboxField name="promo">{tr("registrations.withdraw.promo")}</CheckboxField>}
+                </Box>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
+                  <RecallField
+                    name="reason"
+                    label={tr("registrations.withdraw.reason")}
+                    helperText={tr("registrations.reasonNoIdentity")}
+                    size="small"
+                    required
+                    slotProps={{ htmlInput: { maxLength: 500 } }}
+                    sx={{ flex: 1 }}
                   />
-                  <Box>
-                    <Typography variant="body2">
-                      {tr("registrations.checkinCode")}:{" "}
-                      <Box component="span" sx={{ fontFamily: "monospace", fontWeight: 700, fontSize: "1.1rem" }}>
-                        {registration.checkinCode}
-                      </Box>
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                      {tr("registrations.checkinCodeHelp")}
-                    </Typography>
-                    <Typography variant="body2" sx={{ mt: 1 }}>
-                      <Link href={{ pathname: "/admin/checkin/[code]", params: { code: registration.checkinCode } }}>
-                        {tr("registrations.openDesk")}
-                      </Link>
-                    </Typography>
-                  </Box>
+                  <GlyphButton icon="delete" type="submit" variant="outlined" color="warning" sx={{ minHeight: 44 }}>
+                    {tr("registrations.withdraw.action")}
+                  </GlyphButton>
                 </Stack>
-              )}
-            </>
-          )}
-        </Stack>
-      </Box>
-
-      <Divider />
-
-      {/*
-        «Datele înscrierii» (§645; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic
-        vreau să pot modifica sau suprascrie orice dată introdusă de utilizator»): every answer the person
-        typed — §67's «Corectează numele» and the member tick folded in — behind a plain link, as the
-        emergency section is, because the phone and the emergency contact are among them and opening it is
-        recorded (`readRegistrationAnswers`). Its own block: never inside «Ziua cursei», the places or the
-        offer, since a correction moves no state, no place and no email. The Administrator corrects; the
-        Organizer reads the same answers and gets no form (§289); the action and both services refuse
-        anybody else (BR-REQ-060-01). The address, the consents and the declaration are named, read-only,
-        with why — they stay the person's (`answers.ts`).
-      */}
-      <Box component="section" id="answers" data-testid="answers" sx={{ scrollMarginTop: 16 }}>
-        <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
-          {tr("registrations.answers.title")}
-        </Typography>
-        {answers === null ? (
-          <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
-            <GlyphButton icon={mayManage ? "rename" : "preview"} href={`${detailPath}?answers=1#answers`} variant="outlined" sx={{ minHeight: 44 }} data-testid="answers-open">
-              {mayManage ? tr("registrations.answers.open") : tr("registrations.answers.openRead")}
-            </GlyphButton>
-            <Typography variant="caption" color="text.secondary">
-              {tr("registrations.answers.openHelp")}
-            </Typography>
-          </Stack>
-        ) : (
-          <Stack spacing={2}>
-            {mayManage ? (
-              <ActionForm
-                action={editRegistrationAnswersAction}
-                messages={answersRefusal}
-                confirm={{
-                  title: tr("confirm.answersTitle"),
-                  body: tr("confirm.answersBody", { name: registration.registeredName, fields: "{fields}" }),
-                  changedFields: { labels: answerLabels, separator: ", " },
-                  confirmLabel: tr("registrations.answers.save"),
-                  cancelLabel: words.cancel,
-                }}
-                scope="answers"
-                data-testid="answers-form"
-              >
-                <input type="hidden" name="uiLocale" value={locale} />
-                <input type="hidden" name="registrationId" value={registration.id} />
-                {/* What the page rendered, beside each box: only what moved is corrected (`changedAnswersOf`). */}
-                {Object.entries(answerValues)
-                  .filter(([field]) => !(guardianSigned && field === "guardianName"))
-                  .map(([field, value]) => (
-                    <input key={field} type="hidden" name={`was.${field}`} value={value} />
-                  ))}
-                <Stack spacing={2}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
-                    <RecallField name="firstName" label={answerLabels.firstName} defaultValue={answerValues.firstName} required={namesRequired} slotProps={{ htmlInput: { maxLength: 100 } }} />
-                    <RecallField name="lastName" label={answerLabels.lastName} defaultValue={answerValues.lastName} required={namesRequired} slotProps={{ htmlInput: { maxLength: 100 } }} />
-                    <RecallField
-                      name="displayName"
-                      label={answerLabels.displayName}
-                      defaultValue={answerValues.displayName}
-                      helperText={tr("registrations.answers.displayNameHelp")}
-                      slotProps={{ htmlInput: { maxLength: 120 } }}
-                    />
-                    <RecallField
-                      name="birthDate"
-                      type="date"
-                      label={answerLabels.birthDate}
-                      defaultValue={answerValues.birthDate}
-                      slotProps={{ inputLabel: { shrink: true } }}
-                    />
-                    <RecallField name="sex" select label={answerLabels.sex} defaultValue={answerValues.sex} slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}>
-                      <option value="">{tr("registrations.answers.none")}</option>
-                      {SEX_CHOICES.map((sex) => (
-                        <option key={sex} value={sex}>
-                          {tr(`registrations.answers.sex.${sex}`)}
-                        </option>
-                      ))}
-                    </RecallField>
-                    <RecallField
-                      name="nationality"
-                      select
-                      label={answerLabels.nationality}
-                      defaultValue={answerValues.nationality}
-                      slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-                    >
-                      <option value="">{tr("registrations.answers.none")}</option>
-                      {countries.map((country) => (
-                        <option key={country.code} value={country.code}>
-                          {country.label}
-                        </option>
-                      ))}
-                    </RecallField>
-                    <RecallField name="country" select label={answerLabels.country} defaultValue={answerValues.country} required slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}>
-                      {countries.map((country) => (
-                        <option key={country.code} value={country.code}>
-                          {country.label}
-                        </option>
-                      ))}
-                    </RecallField>
-                    <RecallField name="city" label={answerLabels.city} defaultValue={answerValues.city} slotProps={{ htmlInput: { maxLength: 120 } }} />
-                    <RecallField
-                      name="phone"
-                      type="tel"
-                      label={answerLabels.phone}
-                      defaultValue={answerValues.phone}
-                      helperText={tr("registrations.answers.phoneHelp")}
-                      slotProps={{ htmlInput: { maxLength: 30 } }}
-                    />
-                    <GuardianForMinor birthDateId={fieldId("birthDate", "answers")} forceOpen={guardianOpen} minorOn={answers.answersWrittenAt.toISOString()}>
-                      <RecallField
-                        name="guardianName"
-                        label={answerLabels.guardianName}
-                        defaultValue={answerValues.guardianName}
-                        disabled={guardianSigned}
-                        fullWidth
-                        helperText={tr(guardianSigned ? "registrations.answers.guardianSignedHelp" : "registrations.answers.guardianHelp")}
-                        slotProps={{ htmlInput: { maxLength: 200 } }}
-                      />
-                    </GuardianForMinor>
-                    <RecallField name="emergencyContactName" label={answerLabels.emergencyContactName} defaultValue={answerValues.emergencyContactName} slotProps={{ htmlInput: { maxLength: 200 } }} />
-                    <RecallField
-                      name="emergencyContactPhone"
-                      type="tel"
-                      label={answerLabels.emergencyContactPhone}
-                      defaultValue={answerValues.emergencyContactPhone}
-                      helperText={tr("registrations.answers.phoneHelp")}
-                      slotProps={{ htmlInput: { maxLength: 30 } }}
-                    />
-                    <RecallField
-                      name="clubName"
-                      label={answerLabels.clubName}
-                      defaultValue={answerValues.clubName}
-                      helperText={tr("registrations.answers.clubNameHelp", { club: CLUB_NAME })}
-                      slotProps={{ htmlInput: { maxLength: 200 } }}
-                    />
-                    <RecallField name="stravaUrl" label={answerLabels.stravaUrl} defaultValue={answerValues.stravaUrl} slotProps={{ htmlInput: { maxLength: 200 } }} />
-                    <RecallField name="instagramHandle" label={answerLabels.instagramHandle} defaultValue={answerValues.instagramHandle} slotProps={{ htmlInput: { maxLength: 40 } }} />
-                    {/* The T-shirt only for an event that gives one (§554); otherwise not on the form, and not corrected. */}
-                    {registration.eventKitShirt && (
-                      <RecallField name="tshirtSize" select label={answerLabels.tshirtSize} defaultValue={answerValues.tshirtSize} slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}>
-                        <option value="NONE">{tr("registrations.answers.noShirt")}</option>
-                        {SHIRT_SIZES.map((size) => (
-                          <option key={size} value={size}>
-                            {size}
-                          </option>
-                        ))}
-                      </RecallField>
-                    )}
-                  </Box>
-                  {/* The member tick (BR-REQ-031-06): a claim the person made, corrected here like any answer. */}
-                  <CheckboxField name="clubMemberDeclared" defaultChecked={answers.clubMemberDeclared} help={tr("registrations.answers.memberHelp", { club: CLUB_NAME })}>
-                    {answerLabels.clubMemberDeclared}
-                  </CheckboxField>
-                  {/* «Vreau numărul de membru» (§664): the person's wish, corrected like the tick; kept only under it. */}
-                  {answerLabels.memberBibWanted && (
-                    <CheckboxField name="memberBibWanted" defaultChecked={answers.memberBibWanted} help={tr("registrations.answers.memberBibHelp")}>
-                      {answerLabels.memberBibWanted}
-                    </CheckboxField>
-                  )}
-                  <Box>
-                    <GlyphSubmitButton label={tr("registrations.answers.save")} pendingLabel={tr("registrations.answers.pending")} icon="save" variant="contained" />
-                  </Box>
-                </Stack>
-              </ActionForm>
-            ) : (
-              <Stack spacing={0.5} data-testid="answers-read">
-                {Object.entries(answerLabels).map(([field, label]) => (
-                  <Typography key={field} variant="body2">
-                    {label}: {answerShown(field) || tr("registrations.answers.none")}
-                  </Typography>
-                ))}
               </Stack>
-            )}
-            {/* What stays the person's, and why (`answers.ts`): one line each, the same for every reader. */}
-            <Stack spacing={0.5} data-testid="answers-locked">
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {tr("registrations.answers.lockedTitle")}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {tr("registrations.answers.lockedAddress")}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {tr("registrations.answers.lockedConsents")}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {tr("registrations.answers.lockedDeclaration")}
-              </Typography>
-            </Stack>
-            <Typography variant="caption" color="text.secondary">
-              {tr("registrations.answers.viewed")}
+            </ActionForm>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              {tr("registrations.withdraw.nothing")}
             </Typography>
-            <Box>
-              <GlyphButton icon="dismiss" href={`${detailPath}#answers`} variant="text" size="small" sx={{ minHeight: 44 }}>
-                {tr("registrations.answers.hide")}
-              </GlyphButton>
-            </Box>
-          </Stack>
-        )}
-      </Box>
+          )}
+        </Panel>
+      )}
 
       {/*
         Cancelling is what "remove this registration" means: the row is the record of what
         somebody agreed to, so nothing deletes it. The place is released inside the same locked
         transaction a participant's own cancellation uses, and is offered to the first in line or
-        kept free, by the event's waitlist_auto_offer (AGENTS.md 15.5, 15.6; §615).
+        kept free, by the event's waitlist_auto_offer (AGENTS.md 15.5, 15.6; §615). Folded, like the
+        two verbs after it: its reason box is required, and `ActionForm` opens the fold on it.
       */}
       {mayManage && canCancel && (
-        <Box component="section">
-          <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
-            {tr("registrations.cancelTitle")}
-          </Typography>
+        <Panel glyph="cancelRegistration" level={3} collapsible title={tr("registrations.cancelTitle")} data-testid="cancel-registration">
           <ActionForm
             action={cancelRegistrationAction}
             messages={refusal}
@@ -1346,61 +1611,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             {tr("registrations.cancelHelp")}
           </Typography>
-        </Box>
-      )}
-
-      {/*
-        Withdraw consent (§322; `AGENTS.md` §15.11): the staff verb for the person who wrote to
-        the club instead of pressing the button on their own link. The Administrator's, like
-        every verb that changes a registration (§289) — an Organizer reads the health note above
-        and has no control here — and asserted again in the service. Only the groups the row
-        still holds are offered; the status, the place and the number do not move.
-      */}
-      {mayManage && (
-        <Box component="section">
-          <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
-            {tr("registrations.withdraw.title")}
-          </Typography>
-          {withdrawable.health || withdrawable.socials || withdrawable.results || withdrawable.promo ? (
-            <ActionForm
-              action={withdrawConsentAction}
-              confirm={{ title: tr("confirm.withdrawConsentTitle"), body: tr("confirm.withdrawConsentBody"), confirmLabel: tr("registrations.withdraw.action"), cancelLabel: words.cancel, destructive: true }}
-              data-testid="withdraw-consent-form"
-            >
-              <input type="hidden" name="uiLocale" value={locale} />
-              <input type="hidden" name="registrationId" value={registration.id} />
-              <Stack spacing={1.5}>
-                <Typography variant="body2" color="text.secondary">
-                  {tr("registrations.withdraw.help")}
-                </Typography>
-                <Box>
-                  {withdrawable.health && <CheckboxField name="health">{tr("registrations.withdraw.health")}</CheckboxField>}
-                  {withdrawable.socials && <CheckboxField name="socials">{tr("registrations.withdraw.socials")}</CheckboxField>}
-                  {withdrawable.results && <CheckboxField name="results">{tr("registrations.withdraw.results")}</CheckboxField>}
-                  {withdrawable.promo && <CheckboxField name="promo">{tr("registrations.withdraw.promo")}</CheckboxField>}
-                </Box>
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
-                  <RecallField
-                    name="reason"
-                    label={tr("registrations.withdraw.reason")}
-                    helperText={tr("registrations.reasonNoIdentity")}
-                    size="small"
-                    required
-                    slotProps={{ htmlInput: { maxLength: 500 } }}
-                    sx={{ flex: 1 }}
-                  />
-                  <GlyphButton icon="delete" type="submit" variant="outlined" color="warning" sx={{ minHeight: 44 }}>
-                    {tr("registrations.withdraw.action")}
-                  </GlyphButton>
-                </Stack>
-              </Stack>
-            </ActionForm>
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              {tr("registrations.withdraw.nothing")}
-            </Typography>
-          )}
-        </Box>
+        </Panel>
       )}
 
       {/*
@@ -1414,12 +1625,14 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         still be cancelled — so a registration that was already cancelled or expired could never
         be erased, which is exactly the row most likely to need it. The service has always
         handled either case: it releases the place only when there is one to release.
+
+        The one card on the screen that destroys, and its border says so (`Panel`'s `danger`, the
+        red the erase panel has always had). A refusal keeps the reason and asks for the "I
+        understand" tick again (§315); the fold the person opened to press stays open, and with
+        JavaScript off the boxed fold shows its body while a refusal is inside it (`fold.ts`).
       */}
       {canManageRegistrations(actor.role) && (
-        <Box component="section">
-          {/* The shared box, red: the one fold on the screen that destroys, and its border says so.
-              A refusal keeps the reason and asks for the "I understand" tick again (§315); the
-              form holds the fold, so the fold opens with the refusal rather than hiding it. */}
+        <Panel glyph="erase" level={3} collapsible tone="danger" title={tr("registrations.deleteTitle")} data-testid="erase-registration">
           <ActionForm
             action={deleteRegistrationAction}
             messages={eraseRefusal}
@@ -1427,235 +1640,36 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             scope="erase"
             data-testid="erase-registration-form"
           >
-          <RecallDetails sx={{ ...BOXED_DISCLOSURE_SX, mt: 3, borderColor: "error.light" }}>
-            <Typography component="summary" variant="subtitle2" color="error.main">
-              <DeleteForeverIcon aria-hidden sx={FOLD_GLYPH_SX} />
-              {tr("registrations.deleteTitle")}
-            </Typography>
-              <input type="hidden" name="uiLocale" value={locale} />
-              <input type="hidden" name="registrationId" value={registration.id} />
-              <Stack spacing={2} sx={{ pb: 0.5 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {tr("registrations.deleteHelp")}
-                </Typography>
-                {/* What the erase cannot reach (§322), read before the press as well as after it. */}
-                <Typography variant="body2" color="text.secondary" data-testid="erase-leftovers-before">
-                  {tr("registrations.eraseLeftovers")}
-                </Typography>
-                {/* The one line that outlives the erasure (§322): why, never who. */}
-                <RecallField
-                  name="reason"
-                  label={tr("registrations.deleteReason")}
-                  helperText={tr("registrations.reasonNoIdentity")}
-                  required
-                  slotProps={{ htmlInput: { maxLength: 500 } }}
-                />
-                <CheckboxField name="confirm" required>
-                  {tr("registrations.deleteConfirm")}
-                </CheckboxField>
-                <Box>
-                  <GlyphButton icon="erase" type="submit" color="error" variant="contained">
-                    {tr("registrations.deleteAction")}
-                  </GlyphButton>
-                </Box>
-              </Stack>
-          </RecallDetails>
-          </ActionForm>
-        </Box>
-      )}
-
-      <Stack spacing={1}>
-        <Typography variant="h3" sx={{ fontSize: "1rem" }}>
-          {tr("registrations.timeline")}
-        </Typography>
-        <Typography variant="body2">
-          {tr("registrations.submitted")}: {dt(formSentAt(registration.submittedAt, registration.cycleStartedAt))}
-        </Typography>
-        {/*
-          The two legal texts this cycle's form was sent under (§425), one line each and in the same
-          shape: the privacy notice every registration acknowledges, and the club's terms accepted
-          expressly on the form (§421). A staff or desk entry records no terms — the paper carries
-          them (§67) — and a row sent before the column existed has no number to show; §316's
-          window on /admin/legal is what answers for those.
-        */}
-        <Typography variant="body2" data-testid="timeline-privacy-notice">
-          {tr("registrations.privacyNoticeLine", { date: dt(registration.cycleStartedAt) ?? "", version: registration.privacyNoticeVersion })}
-        </Typography>
-        <Typography variant="body2" data-testid="timeline-terms">
-          {(() => {
-            const termsLine = termsLineKindFor(registration);
-            switch (termsLine.kind) {
-              case "accepted":
-                return tr("registrations.termsLine", { date: dt(termsLine.acceptedAt) ?? "—", version: termsLine.version });
-              case "onPaper":
-                return tr("registrations.termsOnPaper");
-              case "notRecorded":
-                return tr("registrations.termsNotRecorded");
-            }
-          })()}
-        </Typography>
-        {/* Each time the form came back with the same address, right under the first (§312). */}
-        {resubmissions.map((line, index) => (
-          <Typography key={`resubmitted-${index}`} variant="body2" data-testid="timeline-resubmitted">
-            {line.text}
-            {line.actorName ? ` · ${line.actorName}` : ""}
-          </Typography>
-        ))}
-        {[
-          [
-            tr("registrations.emailConfirmed"),
-            registration.emailConfirmedAt
-              ? `${dt(registration.emailConfirmedAt)}${registration.emailConfirmedByName ? ` (${tr("registrations.emailVouched", { who: registration.emailConfirmedByName })})` : ""}`
-              : null,
-          ],
-          [tr("registrations.waitlisted"), dt(registration.waitlistedAt)],
-          [tr("registrations.offerCreated"), dt(registration.offerCreatedAt)],
-          linkLine,
-          holdLine,
-          [tr("registrations.confirmed"), dt(registration.confirmedAt)],
-          // "cancelled; bib 27 was printed" on the line itself (§311), whoever cancelled — the
-          // participant's link and the job write no audit row, so the row is the record.
-          [
-            tr("registrations.cancelled"),
-            registration.cancelledAt
-              ? `${dt(registration.cancelledAt)} (${registration.cancellationSource})${registration.status === "CANCELLED" ? voidSuffix : ""}`
-              : null,
-          ],
-          // Why the participant cancelled (§558), right under when: their answer, and the words of «Alt motiv».
-          [
-            tr("registrations.cancelReasonLabel"),
-            registration.cancelReasonKind
-              ? registration.cancelReasonKind === "OTHER" && registration.cancelReason
-                ? tr("registrations.cancelReasonOther", {
-                    kind: tr(`registrations.cancelReasonKinds.${registration.cancelReasonKind}`),
-                    text: registration.cancelReason,
-                  })
-                : tr(`registrations.cancelReasonKinds.${registration.cancelReasonKind}`)
-              : null,
-          ],
-          [
-            tr("registrations.expired"),
-            registration.expiredAt
-              ? `${dt(registration.expiredAt)} (${registration.expiryReason})${registration.status === "EXPIRED" ? voidSuffix : ""}`
-              : null,
-          ],
-        ]
-          .filter(([, value]) => value !== null)
-          .map(([label, value]) => (
-            <Typography key={label} variant="body2">
-              {label}: {value}
-            </Typography>
-          ))}
-        {acceptances.map((acceptance, index) => {
-          /*
-            A minor's declaration is signed by two (§330): the minor's signature and document, then
-            the parent's — each in the hand, each named. An adult's, and a minor's signed before two
-            signatures were asked, read as they always did.
-          */
-          const twoSigners = Boolean(registration.guardianName) && acceptance.minorTypedName !== null;
-          const hand = { fontFamily: "var(--font-signature), cursive", fontSize: "1.375rem" };
-          return (
-          <Box key={acceptance.id} data-testid="declaration-acceptance">
-          <Typography variant="body2">
-            {tr("registrations.declaration")}: {dt(acceptance.acceptedAt)} —{" "}
-            {twoSigners && (
-              <>
-                <Box component="span" sx={hand}>
-                  {acceptance.minorTypedName}
-                </Box>{" "}
-                ({tr("registrations.signedByMinor")}) ·{" "}
-              </>
-            )}
-            <Box component="span" sx={hand}>
-              {acceptance.typedName}
-            </Box>{" "}
-            {twoSigners && <>({tr("registrations.signedByGuardian")}) </>}
-            (v{acceptance.declarationVersion})
-            {twoSigners ? (
-              <>
-                {acceptance.minorIdDocument && ` — ${tr("desk.idDocumentMinor")}: ${acceptance.minorIdDocument}`}
-                {acceptance.idDocument && ` — ${tr("desk.idDocumentGuardian")}: ${acceptance.idDocument}`}
-              </>
-            ) : (
-              acceptance.idDocument && ` — ${tr("registrations.idDocument")}: ${acceptance.idDocument}`
-            )}
-            {index === 0 && (
-              <>
-                {" — "}
-                <a href={`/api/admin/registrations/${registration.id}/declaration`} target="_blank" rel="noopener">
-                  {tr("registrations.declarationPdf")}
-                </a>
-              </>
-            )}
-            {acceptance.method === "PAPER" &&
-              ` — ${tr("registrations.declarationPaper", { who: acceptance.attestedByName ?? tr("registrations.auditActorRemoved") })}`}
-            {/* The proof of signing (§556): the signed text's fingerprint, twelve characters and the whole in a tooltip. */}
-            {acceptance.textHash && (
-              <>
-                {" — "}
-                <TextHashTip label={tr("declarationHold.textHash")} hash={acceptance.textHash} short={shortTextHash(acceptance.textHash)} />
-              </>
-            )}
-          </Typography>
-          {/* «Păstrează: reclamație / litigiu în curs» (§556): the line for every reader, the form for the Administrator. */}
-          <DeclarationHoldForm
-            registrationAction={declarationHoldAction}
-            hidden={{ uiLocale: locale, registrationId: registration.id, acceptanceId: acceptance.id }}
-            held={
-              acceptance.retentionHold
-                ? { when: dtInline(acceptance.retentionHoldAt) ?? "—", who: acceptance.retentionHoldByName, reason: acceptance.retentionHoldReason ?? "" }
-                : null
-            }
-            mayManage={mayManage}
-            scope={`hold-${acceptance.id}`}
-          />
-          </Box>
-          );
-        })}
-      </Stack>
-
-      {staffTrail.length > 0 && (
-        <Stack spacing={1}>
-          <Typography variant="h3" sx={{ fontSize: "1rem" }}>
-            {tr("registrations.auditTrail")}
-          </Typography>
-          {staffTrail.map((entry, index) => {
-            const details = trailDetails(entry.action, entry.metadataJson);
-            return (
-              <Typography key={index} variant="body2">
-                {dt(entry.createdAt)} · {trailLabel(entry.action, entry.metadataJson)} ·{" "}
-                {entry.actorName ??
-                  (entry.actorStaffUserId === null
-                    ? tr("registrations.auditActorParticipant")
-                    : tr("registrations.auditActorRemoved"))}
-                {/* Metadata is the shape of the change — a name before and after, a typed reason —
-                    never a copy of what the change was about (AGENTS.md 12.12); said in words (§844). */}
-                {details.length > 0 && ` · ${details.join(" · ")}`}
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="registrationId" value={registration.id} />
+            <Stack spacing={2} sx={{ pb: 0.5 }}>
+              <Typography variant="body2" color="text.secondary">
+                {tr("registrations.deleteHelp")}
               </Typography>
-            );
-          })}
-        </Stack>
+              {/* What the erase cannot reach (§322), read before the press as well as after it. */}
+              <Typography variant="body2" color="text.secondary" data-testid="erase-leftovers-before">
+                {tr("registrations.eraseLeftovers")}
+              </Typography>
+              {/* The one line that outlives the erasure (§322): why, never who. */}
+              <RecallField
+                name="reason"
+                label={tr("registrations.deleteReason")}
+                helperText={tr("registrations.reasonNoIdentity")}
+                required
+                slotProps={{ htmlInput: { maxLength: 500 } }}
+              />
+              <CheckboxField name="confirm" required>
+                {tr("registrations.deleteConfirm")}
+              </CheckboxField>
+              <Box>
+                <GlyphButton icon="erase" type="submit" color="error" variant="contained">
+                  {tr("registrations.deleteAction")}
+                </GlyphButton>
+              </Box>
+            </Stack>
+          </ActionForm>
+        </Panel>
       )}
-
-      {/*
-        «Dată partenerilor» (§570, review finding): the lists for sponsors that held this registration,
-        from their audit rows — so a withdrawal or an access request is answered with which partner
-        received the data and when, long after the club's own copy of the file is deleted.
-      */}
-      {partnerShares.length > 0 && (
-        <Stack spacing={1} data-testid="partner-shares">
-          <Typography variant="h3" sx={{ fontSize: "1rem" }}>
-            {tr("registrations.partnerShares.title")}
-          </Typography>
-          {partnerShares.map((share, index) => (
-            <Typography key={index} variant="body2">
-              {dt(share.createdAt)} · {share.recipient ?? tr("registrations.partnerShares.noRecipient")} ·{" "}
-              {share.actorName ?? tr("registrations.auditActorRemoved")}
-            </Typography>
-          ))}
-        </Stack>
-      )}
-
     </Stack>
   );
 }

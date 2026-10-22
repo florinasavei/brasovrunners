@@ -94,10 +94,14 @@ const { default: RegistrationRowMenu } = await import("@/modules/registrations/u
 const { default: DeskPage } = await import("@/app/[locale]/admin/checkin/page");
 const { default: PaperConfirmationTip } = await import("@/modules/registrations/ui/PaperConfirmationTip");
 const { default: HiddenListRadio } = await import("@/modules/registrations/ui/HiddenListRadio");
+const { default: InfoTip } = await import("@/shared/ui/InfoTip");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
-/** Every element under `node`, depth first. */
+/**
+ * Every element under `node`, depth first — a card's `aside` too, where the registration's page puts the «i»
+ * beside a card's title (`Panel`, §NNN).
+ */
 function elements(node: ReactNode, acc: ReactElement<Props>[] = []): ReactElement<Props>[] {
   if (Array.isArray(node)) {
     for (const child of node) elements(child as ReactNode, acc);
@@ -105,6 +109,7 @@ function elements(node: ReactNode, acc: ReactElement<Props>[] = []): ReactElemen
   }
   if (!isValidElement<Props>(node)) return acc;
   acc.push(node);
+  if (isValidElement(node.props.aside)) elements(node.props.aside as ReactNode, acc);
   elements(node.props.children, acc);
   return acc;
 }
@@ -277,6 +282,9 @@ describe("§640 the registration's «Ziua cursei» box", () => {
       for (const status of ["PENDING_DECLARATION", "PENDING_EMAIL_CONFIRMATION"] as const) {
         const tree = await detailPage(await register(race.id, status));
         expect(elements(tree).filter((element) => element.type === PaperConfirmationTip), status).toHaveLength(1);
+        // Beside the card's title (§NNN: the box is a `Panel`, the «i» its `aside`).
+        const card = elements(tree).find((element) => element.props["data-testid"] === "race-day");
+        expect((card?.props.aside as ReactElement | undefined)?.type, status).toBe(PaperConfirmationTip);
         const written = sentences(tree).join("\n");
         // The caption: when, what the person gets, what it is not.
         for (const key of ["paperWhen", "paperEmail", "paperNot"] as const) expect(written, `${status} ${key}`).toContain(desk(locale, key));
@@ -401,17 +409,22 @@ describe("§647 the registration's «Lista ascunsă» block", () => {
   /*
     §649 — «Lista de invitați speciali»: the block says what it does. Its heading carries an «i» (the §640
     pattern) with who the list is for, what the person keeps and that an ordinary participant does not go
-    there; the caption under the radios says the essentials in one line. For every role that reads it.
+    there; the caption under the radios says the essentials in one line. For every role that reads it. A
+    card since §NNN: the heading is the card's title, the «i» beside it, and the radio group is named by the
+    same words.
   */
   it("explains itself: the heading's «i» says who it is for, what they keep and what it is not; the caption says it in one line", async () => {
     const eventId = await race(true);
     for (const role of ["ADMIN", "MODERATOR"] as const) {
       state.actor = await staff(role);
       const tree = await detailPage(await row("CONFIRMED", { switchOn: true, onList: false, eventId }));
+      expect(section(tree)?.props.title, role).toBe("Lista de invitați speciali");
       const [radio] = radios(tree);
-      expect(radio.props.heading, role).toBe("Lista de invitați speciali");
+      expect(radio.props.label, role).toBe("Lista de invitați speciali");
       expect(radio.props.hiddenLabel, role).toBe("Invitat special — nu ocupă un loc");
-      expect((radio.props.info as string).split("\n"), role).toEqual([
+      const info = section(tree)?.props.aside as ReactElement<Props> | undefined;
+      expect(info?.type, role).toBe(InfoTip);
+      expect((info?.props.text as string).split("\n"), role).toEqual([
         ro.Admin.registrations.outside.infoFor,
         ro.Admin.registrations.outside.infoKeeps,
         ro.Admin.registrations.outside.infoNot,

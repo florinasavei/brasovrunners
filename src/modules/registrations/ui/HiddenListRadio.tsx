@@ -1,15 +1,11 @@
 "use client";
 
-import Box from "@mui/material/Box";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
-import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { CONFIRM_CANCEL_EVENT } from "@/shared/forms/confirm-cancel";
-import { ACTION_ICONS } from "@/shared/ui/action-icons";
-import InfoTip from "@/shared/ui/InfoTip";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 
 type Choice = "counted" | "hidden";
@@ -17,11 +13,10 @@ type Choice = "counted" | "hidden";
 /**
  * «Lista ascunsă» on a registration's page (§647, amending §643; the owner, 2026-10-02: «Nu îmi place
  * deloc cum arată bifa asta, trebuia să fie doar radio»): two radios — «Se numără între locurile
- * evenimentului» and «Pe lista ascunsă» — the one the server said checked, under a heading wearing the
- * incognito glyph. On screen it is «Lista de invitați speciali» since §649 (the code keeps `hiddenList`),
- * and the heading has an «i» beside it (`info`, §640's touch-friendly pattern): what the list is for, what
- * the person keeps, and that an ordinary participant does not go there. Beside the heading, not inside
- * it, so the radio group's name stays the heading's words.
+ * evenimentului» and «Pe lista ascunsă» — the one the server said checked. On screen it is «Lista de
+ * invitați speciali» since §649 (the code keeps `hiddenList`). Since §NNN the heading, its incognito glyph
+ * and its «i» are the page's card (`Panel`) around this group, like every other card on the page; the
+ * group is named by the same words (`label`), so a screen reader hears the card's title as its name.
  *
  * A client island only for what a radio needs: a change asks the form's existing confirm. The radio
  * changes, then `requestSubmit()` puts the submit through `ActionFormIsland`, whose dialog says what
@@ -36,22 +31,17 @@ type Choice = "counted" | "hidden";
  */
 export default function HiddenListRadio({
   onList,
-  headingId,
-  heading,
+  label,
   countedLabel,
   hiddenLabel,
-  info,
   disabled = false,
 }: {
   /** What the server says: `registrations.outside_capacity`. */
   onList: boolean;
-  headingId: string;
-  /** «Lista de invitați speciali». */
-  heading: string;
+  /** The group's name, the card's title: «Lista de invitați speciali». */
+  label: string;
   countedLabel: string;
   hiddenLabel: string;
-  /** The «i» beside the heading: one line per fact, newline-separated (`InfoTip` draws them as lines). */
-  info?: string;
   disabled?: boolean;
 }) {
   const current: Choice = onList ? "hidden" : "counted";
@@ -87,7 +77,6 @@ export default function HiddenListRadio({
     group.current?.closest("form")?.requestSubmit();
   };
 
-  const Glyph = ACTION_ICONS.hiddenList;
   const option = (value: Choice, label: string) => (
     <FormControlLabel
       value={value}
@@ -101,18 +90,9 @@ export default function HiddenListRadio({
   );
 
   return (
-    <>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.25, mb: 0.5, minWidth: 0 }}>
-        <Typography id={headingId} variant="h3" sx={{ fontSize: "1rem", display: "flex", alignItems: "center", gap: 0.75, minWidth: 0, overflowWrap: "anywhere" }}>
-          <Glyph fontSize="small" aria-hidden />
-          {heading}
-        </Typography>
-        {info ? <InfoTip text={info} /> : null}
-      </Box>
-      <RadioGroup ref={group} aria-labelledby={headingId} value={asked ?? current} onChange={onChange} sx={{ minWidth: 0 }}>
-        {option("counted", countedLabel)}
-        {option("hidden", hiddenLabel)}
-      </RadioGroup>
-    </>
+    <RadioGroup ref={group} aria-label={label} value={asked ?? current} onChange={onChange} sx={{ minWidth: 0 }}>
+      {option("counted", countedLabel)}
+      {option("hidden", hiddenLabel)}
+    </RadioGroup>
   );
 }
