@@ -13,12 +13,13 @@ import OrdersCard from "@/modules/content/shop/ui/OrdersCard";
 import ShopTabs from "@/modules/content/shop/ui/ShopTabs";
 import { canManageShop, canReadShop, canSeeShopMemberAddresses } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ saved?: string; error?: string; orderStatus?: string; orderProduct?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string; orderStatus?: string; orderProduct?: string; page?: string; perPage?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -43,9 +44,11 @@ export default async function AdminShopOrdersPage({ params, searchParams }: Prop
   const words = await confirmWords();
   const db = getDb();
   const ordersQuery = parseOrdersQuery(query);
+  // The list's page (§846): newest first, the repository's one order, so nothing here sorts.
+  const listQuery = parseListQuery(query, { sortable: [], defaultSort: "date", defaultPerPage: 100 });
   const mayManage = canManageShop(actor);
   const [orders, productNames, ordersTotal, accounts, items, shopSettings] = await Promise.all([
-    listOrdersForAdmin(db, ordersQuery),
+    listOrdersForAdmin(db, ordersQuery, listQuery.limit, listQuery.offset),
     listProductNames(db),
     countOrdersForAdmin(db, ordersQuery),
     // «Adaugă o comandă pentru un membru» (§690): the member accounts and the orderable items, read only
@@ -74,6 +77,7 @@ export default async function AdminShopOrdersPage({ params, searchParams }: Prop
         orders={orders}
         total={ordersTotal}
         query={ordersQuery}
+        listQuery={listQuery}
         productNames={productNames}
         accounts={accounts}
         items={items}

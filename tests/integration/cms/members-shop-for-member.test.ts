@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
-import { createTranslator } from "next-intl";
+import { createTranslator, NextIntlClientProvider } from "next-intl";
+import { type ComponentProps, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
@@ -324,12 +325,15 @@ describe("§690 the club places an order in a member's name", () => {
 
     const t = await getTranslations("Admin");
     // «Comenzi» is its own page since §697: the orders card alone, with the list's filter in the address.
+    // The table's client islands (`AdminTable`'s column handles, §846) read the catalogue from the provider the admin layout wraps them in.
+    const intl = { locale: "ro", timeZone: "Europe/Bucharest", messages: ro } as unknown as ComponentProps<typeof NextIntlClientProvider>;
     const render = (mayManage: boolean, emailMembers = true) =>
       renderToStaticMarkup(
-        OrdersCard({
+        createElement(NextIntlClientProvider, intl, OrdersCard({
           orders: rows,
           total: rows.length,
           query: { status: null, productId: null },
+          listQuery: { page: 1, perPage: 100, sort: "date", dir: "desc", offset: 0, limit: 100 },
           productNames: [],
           accounts: [{ id: member.id, displayName: "Membru A", role: "MEMBER" as const }],
           items: [],
@@ -341,12 +345,17 @@ describe("§690 the club places an order in a member's name", () => {
           mayManage,
           showEmail: false,
           emailMembers,
-        }),
+        })),
       );
     const readOnly = render(false);
     expect(readOnly).toContain("24,68 €");
     expect(readOnly).toContain("12,34 €");
-    expect((readOnly.match(/data-testid="order-placed-by-club"/g) ?? []).length).toBe(1);
+    // One order of the two was placed by the club: its mark once in the table and once in the phone's block (§846, `AdminTable`).
+    expect((readOnly.match(/data-testid="order-placed-by-club"/g) ?? []).length).toBe(2);
+    // The table's own row address, which a verb's redirect lands on.
+    expect(readOnly).toContain(`id="order-${rows[0].id}"`);
+    // A reader gets no verb, and no actions' column.
+    expect(readOnly).not.toContain('name="verb"');
     expect(readOnly).toContain(ro.Admin.members.shop.forMember.placedByClub);
     // §704: the email tick is drawn while the shop's switch is on; off, a one-line note takes its place.
     const folded = render(true);

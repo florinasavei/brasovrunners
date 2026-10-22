@@ -4192,6 +4192,12 @@
       "stateLabel": {
         "due": "Renew now"
       },
+      "groups": {
+        "blocking": "Blocking registrations ({count})",
+        "broken": "Not working ({count})",
+        "open": "To do ({count})",
+        "done": "Done ({count})"
+      },
       "owner": {
         "club": "The club",
         "developer": "The developer"
@@ -9575,9 +9581,16 @@
       "confirmBody": "Topic: {topic}. Each receives it in their own language first, with the unsubscribe link. Once sent it cannot be stopped.",
       "history": "Sent",
       "historyEmpty": "Nothing sent yet.",
-      "historyMessage": "{when} · “{subject}” · {topics} · {count} recipients · {sender}",
-      "historyAlert": "{when} · automatic new-event announcement · {topics} · {count} recipients",
       "historyNoSender": "account removed",
+      "historyColumns": {
+        "when": "When",
+        "what": "What was sent",
+        "subject": "“{subject}”",
+        "alert": "automatic new-event announcement",
+        "topics": "Topics",
+        "recipients": "Recipients",
+        "sender": "Sent by"
+      },
       "withdrawTitle": "Remove an address at someone's request",
       "withdrawHelp": "When someone writes to say they no longer want the news: type their address here. We find it and delete it, with anything still waiting to be sent to it.",
       "withdrawEmail": "Email address",
@@ -10106,7 +10119,6 @@
         "filterClear": "All orders",
         "csv": "Download CSV",
         "ordersEmpty": "No orders.",
-        "ordersMore": "Showing the newest {shown} of {total}. The CSV has them all.",
         "orderNumber": "Order no. {number}",
         "status": {
           "PLACED": "Placed",

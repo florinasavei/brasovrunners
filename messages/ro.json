@@ -4192,6 +4192,12 @@
       "stateLabel": {
         "due": "De reînnoit acum"
       },
+      "groups": {
+        "blocking": "Blochează înscrierile ({count})",
+        "broken": "Nu funcționează ({count})",
+        "open": "De făcut ({count})",
+        "done": "Gata ({count})"
+      },
       "owner": {
         "club": "Clubul",
         "developer": "Dezvoltatorul"
@@ -9575,9 +9581,16 @@
       "confirmBody": "Tema: {topic}. Fiecare îl primește în limba lui întâi, cu linkul de dezabonare. După trimitere nu mai poate fi oprit.",
       "history": "Trimise",
       "historyEmpty": "Nimic trimis încă.",
-      "historyMessage": "{when} · „{subject}” · {topics} · {count} destinatari · {sender}",
-      "historyAlert": "{when} · anunț automat de eveniment nou · {topics} · {count} destinatari",
       "historyNoSender": "cont șters",
+      "historyColumns": {
+        "when": "Când",
+        "what": "Ce s-a trimis",
+        "subject": "„{subject}”",
+        "alert": "anunț automat de eveniment nou",
+        "topics": "Teme",
+        "recipients": "Destinatari",
+        "sender": "Cine a trimis"
+      },
       "withdrawTitle": "Scoate o adresă la cererea cuiva",
       "withdrawHelp": "Când cineva ne scrie că nu mai vrea noutățile: scrie adresa lui aici. O găsim și o ștergem, cu tot ce așteaptă să-i plece.",
       "withdrawEmail": "Adresa de email",
@@ -10106,7 +10119,6 @@
         "filterClear": "Toate comenzile",
         "csv": "Descarcă CSV",
         "ordersEmpty": "Nicio comandă.",
-        "ordersMore": "Se văd cele mai noi {shown} din {total}. CSV-ul le are pe toate.",
         "orderNumber": "Comanda nr. {number}",
         "status": {
           "PLACED": "Plasată",
