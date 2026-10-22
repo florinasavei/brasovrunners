@@ -1,0 +1,7 @@
+{
+  "branch": "ccr-018a8a0c-twtq7s",
+  "decisionsTitle": "«Costuri» says when the translation budget is saved",
+  "decisionsSection": "Saving the daily translation budget on «Setări» → «Costuri» returned to the page with `?saved=translationBudget` and opened its card (§336), but the page had no sentence for that save, so nothing said it had worked. It now says «Bugetul de traducere a fost salvat.» in the page's notice slot, like every other save on the page. Found by the consistency audit's third wave (§847); nothing else changed.",
+  "changelogLine": "- **«Costuri» confirms the translation budget's save** — «Bugetul de traducere a fost salvat.» shows after the save, like the page's other settings. §NNN.",
+  "batchLine": "the translation budget's saved notice"
+}
