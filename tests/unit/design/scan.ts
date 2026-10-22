@@ -151,3 +151,92 @@ export function holdRatchet(rule: string, found: Map<string, Hit[]>, allowed: re
     `${rule}: the entries' counts and PINNED.${rule}.hits disagree — raising or lowering a count edits both`,
   ).toBe(pinned.hits);
 }
+
+/**
+ * The backoffice, read off the import graph (§NNN): a file under the staff routes (`/admin`, `/devs`), or one whose
+ * every importer, followed up to the routes, leads only there. A public card in `modules/events/ui` is never in it; a
+ * staff-only component under `modules/` always is, wherever it lives. A file no route reaches is not in it.
+ */
+const BY_PATH = new Map(SOURCES.map((source) => [source.file, source]));
+const resolve = (from: string, specifier: string): string | undefined => {
+  let base: string;
+  if (specifier.startsWith("@/")) base = `src/${specifier.slice(2)}`;
+  else if (specifier.startsWith(".")) base = path.posix.join(path.posix.dirname(from), specifier);
+  else return undefined;
+  return [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`].find((candidate) => BY_PATH.has(candidate));
+};
+const importers = new Map<string, Set<string>>();
+for (const source of SOURCES) {
+  for (const fact of importFacts(source)) {
+    const target = resolve(source.file, fact.specifier);
+    if (target) importers.set(target, new Set([...(importers.get(target) ?? []), source.file]));
+  }
+}
+const STAFF_ROUTE = /^src\/app\/\[locale\]\/(?:admin|devs)\//;
+function routesReaching(file: string): Set<string> {
+  const seen = new Set<string>();
+  const routes = new Set<string>();
+  const stack = [file];
+  while (stack.length > 0) {
+    const next = stack.pop() as string;
+    if (seen.has(next)) continue;
+    seen.add(next);
+    if (next.startsWith("src/app/")) routes.add(next);
+    for (const importer of importers.get(next) ?? []) stack.push(importer);
+  }
+  return routes;
+}
+export const inBackoffice = (file: string): boolean => {
+  if (STAFF_ROUTE.test(file)) return true;
+  const routes = [...routesReaching(file)];
+  return routes.length > 0 && routes.every((route) => STAFF_ROUTE.test(route));
+};
+
+/** A JSX element's opening tag, its name, and one attribute's literal value (`true` when present but not a literal). */
+export type Opening = ts.JsxOpeningElement | ts.JsxSelfClosingElement;
+export const tagOf = (opening: Opening) => opening.tagName.getText();
+export function attribute(opening: Opening, name: string): string | true | undefined {
+  for (const property of opening.attributes.properties) {
+    if (!ts.isJsxAttribute(property) || property.name.getText() !== name) continue;
+    const value = property.initializer;
+    if (!value) return true;
+    if (ts.isStringLiteral(value)) return value.text;
+    if (ts.isJsxExpression(value) && value.expression && (ts.isStringLiteral(value.expression) || ts.isNoSubstitutionTemplateLiteral(value.expression))) return value.expression.text;
+    return true;
+  }
+  return undefined;
+}
+
+/**
+ * The keys an `sx` object sets, followed through spreads and same-file constants, each with its value's expression.
+ */
+export function sxKeys(source: Source, expression: ts.Expression, seen = new Set<string>()): Map<string, ts.Expression> {
+  const keys = new Map<string, ts.Expression>();
+  let node = expression;
+  while (ts.isAsExpression(node) || ts.isParenthesizedExpression(node) || ts.isSatisfiesExpression(node)) node = node.expression;
+  if (ts.isIdentifier(node) && !seen.has(node.text)) {
+    seen.add(node.text);
+    const declaration = constants(source).get(node.text);
+    return declaration ? sxKeys(source, declaration, seen) : keys;
+  }
+  if (!ts.isObjectLiteralExpression(node)) return keys;
+  for (const property of node.properties) {
+    if (ts.isSpreadAssignment(property)) for (const [key, value] of sxKeys(source, property.expression, seen)) keys.set(key, value);
+    else if (ts.isPropertyAssignment(property) && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))) keys.set(property.name.text, property.initializer);
+    else if (ts.isShorthandPropertyAssignment(property)) keys.set(property.name.text, property.name);
+  }
+  return keys;
+}
+const constantsCache = new Map<string, Map<string, ts.Expression>>();
+function constants(source: Source): Map<string, ts.Expression> {
+  const cached = constantsCache.get(source.file);
+  if (cached) return cached;
+  const found = new Map<string, ts.Expression>();
+  const visit = (node: ts.Node) => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) found.set(node.name.text, node.initializer);
+    ts.forEachChild(node, visit);
+  };
+  visit(source.tree);
+  constantsCache.set(source.file, found);
+  return found;
+}

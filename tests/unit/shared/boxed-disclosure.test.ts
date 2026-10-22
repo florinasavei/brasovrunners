@@ -36,6 +36,36 @@ const BACKOFFICE = [
   ...tsxUnder("src/modules/content/events/ui"),
   ...tsxUnder("src/modules/notifications/ui"),
   ...tsxUnder("src/modules/contact/ui"),
+  // The module directories no public route imports (§NNN: every route that reaches each file is under `/admin` or `/devs`).
+  ...tsxUnder("src/modules/appearance/ui"),
+  ...tsxUnder("src/modules/club-todo/ui"),
+  ...tsxUnder("src/modules/content/events/transfer/ui"),
+  ...tsxUnder("src/modules/content/gallery/ui"),
+  ...tsxUnder("src/modules/content/member-tiers/ui"),
+  ...tsxUnder("src/modules/content/menu/ui"),
+  ...tsxUnder("src/modules/content/pages/ui"),
+  ...tsxUnder("src/modules/deadlines/ui"),
+  ...tsxUnder("src/modules/design/ui"),
+  ...tsxUnder("src/modules/diagnostics/ui"),
+  ...tsxUnder("src/modules/event-todos/ui"),
+  ...tsxUnder("src/modules/jobs/ui"),
+  ...tsxUnder("src/modules/media/ui"),
+  ...tsxUnder("src/modules/staff-identity/ui"),
+  ...tsxUnder("src/modules/translate/ui"),
+  ...tsxUnder("src/modules/volunteers/badges/ui"),
+  // The volunteers' staff files (§754, §839, §820); the public form beside them (`VolunteerBox`…) is listed under PUBLIC.
+  "src/modules/volunteers/ui/VolunteerAccessChoice.tsx",
+  "src/modules/volunteers/ui/VolunteerAnswers.tsx",
+  "src/modules/volunteers/ui/VolunteerBirthDateField.tsx",
+  "src/modules/volunteers/ui/VolunteerInvitations.tsx",
+  "src/modules/volunteers/ui/VolunteerPerson.tsx",
+  "src/modules/volunteers/ui/VolunteersCard.tsx",
+  // The staff's files of the other mixed areas that draw a fold: the shop's editor, «Spune-ne ceva»'s settings, a held declaration.
+  "src/modules/content/shop/ui/OrdersCard.tsx",
+  "src/modules/content/shop/ui/ProductPicturesCard.tsx",
+  "src/modules/content/shop/ui/ProductSizesCard.tsx",
+  "src/modules/feedback/ui/FeedbackFormsPanel.tsx",
+  "src/modules/registrations/ui/DeclarationHoldForm.tsx",
   "src/modules/content/rich-text/ui/LazyRichTextEditor.tsx",
   "src/modules/registrations/ui/DeskRow.tsx",
   "src/shared/ui/Panel.tsx",
@@ -47,6 +77,9 @@ const PUBLIC = [
   ...tsxUnder("src/modules/events/ui"),
   "src/modules/registrations/ui/RegistrationSteps.tsx",
   "src/modules/content/rich-text/ui/RichTextVideo.tsx",
+  "src/modules/volunteers/ui/VolunteerBox.tsx",
+  "src/modules/volunteers/ui/VolunteerCategoryCard.tsx",
+  "src/modules/volunteers/ui/VolunteersList.tsx",
   "src/shared/ui/SiteFooter.tsx",
 ];
 
@@ -136,6 +169,8 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
     expect(folds.length).toBeGreaterThanOrEqual(10);
     expect(folds).toContain("src/shared/ui/Panel.tsx");
     expect(folds).toContain("src/modules/content/rich-text/ui/LazyRichTextEditor.tsx");
+    // Since §NNN the volunteers' card and the staff-only module directories are in scope too: their row folds and cards are held here.
+    expect(folds).toEqual(expect.arrayContaining(["src/modules/volunteers/ui/VolunteersCard.tsx", "src/modules/volunteers/ui/VolunteerPerson.tsx", "src/modules/diagnostics/ui/MonthCostsPanel.tsx"]));
     expect(folds).not.toContain("src/modules/content/events/ui/SeriesScope.tsx");
     expect(read("src/modules/content/events/ui/BibDesignPanel.tsx")).toContain('<Panel glyph="bibDesign" collapsible level={4}');
     // The card of messages draws no fold of its own: every card in it is `Panel`.

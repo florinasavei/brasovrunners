@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_INLINE_SX } from "./disclosure";
+import { HEADING_SX } from "./heading-scale";
 import { PANEL_GLYPHS, type PanelGlyphName } from "./panel-glyphs";
 import QuietHelp from "./QuietHelp";
 import { type FoldOpenWhen, opensByItself } from "./fold";
@@ -264,8 +265,8 @@ export default function Panel({
       } as const);
 
   const headingTag = level === 5 ? "h5" : level === 4 ? "h4" : level === 3 ? "h3" : "h2";
-  // A fold inside a panel reads a step smaller, so the card and its cards are told apart.
-  const headingSize = level === 5 ? "0.9rem" : level === 4 ? "0.95rem" : level === 3 ? "1rem" : "1.1rem";
+  // A fold inside a panel reads a step smaller, so the card and its cards are told apart (the scale, `heading-scale.ts`).
+  const headingSx = HEADING_SX[level];
 
   const Glyph = glyph ? PANEL_GLYPHS[glyph] : null;
   const heading = (
@@ -285,7 +286,7 @@ export default function Panel({
     const headingId = id ? `${id}-heading` : undefined;
     return (
       <Box component="section" id={id} aria-labelledby={headingId} data-testid={testId} sx={{ scrollMarginTop: 16, minWidth: 0 }}>
-        <Typography component={headingTag} id={headingId} variant="h2" sx={{ fontSize: headingSize }}>
+        <Typography component={headingTag} id={headingId} variant="h2" sx={headingSx}>
           {heading}
         </Typography>
         {intro && (
@@ -303,7 +304,7 @@ export default function Panel({
   if (!folds) {
     return (
       <Box component="section" id={id} data-testid={testId} sx={frame}>
-        <Typography component={headingTag} variant="h2" sx={{ fontSize: headingSize }}>
+        <Typography component={headingTag} variant="h2" sx={headingSx}>
           {heading}
         </Typography>
         {intro && (
@@ -333,7 +334,7 @@ export default function Panel({
         and Safari drop the marker when it is).
       */}
       <Box component="summary">
-        <Typography component={headingTag} variant="h2" sx={{ fontSize: headingSize, display: "inline" }}>
+        <Typography component={headingTag} variant="h2" sx={{ ...headingSx, display: "inline" }}>
           {heading}
         </Typography>
       </Box>

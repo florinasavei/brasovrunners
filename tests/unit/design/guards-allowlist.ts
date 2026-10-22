@@ -12,7 +12,7 @@ import type { Entry } from "./scan";
  * and the pages that edit them (`admin/pages/team/page.tsx`, `admin/pages/members/ShopCard.tsx`), are
  * never listed: they were fixed with a token, a registry name or a primitive, and stay so.
  */
-export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; toggles: Entry[] } = {
+export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; toggles: Entry[]; rowBoxes: Entry[]; rowFolds: Entry[]; pageHeadings: Entry[]; headingSizes: Entry[] } = {
   colours: [
     { path: "src/app/api/resting/route.ts", reason: "the resting page is static HTML outside the theme provider; its hairline is a translucent grey that reads on both modes", count: 1 },
     { path: "src/app/global-error.tsx", reason: "the last-resort error page renders without the theme provider (it replaces the root layout), so it carries its own plain colours", count: 5 },
@@ -142,7 +142,104 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
   ],
   // §766: no toggle glyph and no Material switch, ever. Empty on purpose: a setting is a tick box (`TickButton`, `CheckboxField`); this list has no entry to shrink and none to add.
   toggles: [],
+  // §NNN: no hand-drawn box around a backoffice row — the row fold draws the row (`ROW_SX`).
+  rowBoxes: [
+    { path: "src/app/[locale]/admin/gallery/[id]/page.tsx", reason: "a grid of photo tiles, not a list of rows: a tile is a framed picture", count: 1 },
+    { path: "src/app/[locale]/admin/pages/(list)/page.tsx", reason: "the standard pages as outlined cards; make them rows (`ROW_SX`) when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/pages/team/BoxesCard.tsx", reason: "«Echipa»'s boxes drawn as cards; make them row folds when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/pages/team/page.tsx", reason: "the team's people drawn as cards with their photo; make them row folds when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/devs/page.tsx", reason: "`/devs`'s operational limits, read-only facts per provider; make them rows when the file is next touched", count: 1 },
+    { path: "src/modules/appearance/ui/HomePagePanel.tsx", reason: "the home strip's pictures as framed cards with their thumbnail; make them rows when the file is next touched", count: 1 },
+    { path: "src/modules/content/menu/ui/MenuOrderList.tsx", reason: "the menu order is a drag-free ordered strip of chips, each entry a small framed token, not a row of boxes", count: 1 },
+    { path: "src/modules/content/shop/ui/ProductList.tsx", reason: "the shop's products as framed cards with their photo; make them row folds when the file is next touched", count: 1 },
+    { path: "src/modules/content/shop/ui/ProductPicturesCard.tsx", reason: "a product's pictures as framed cards with their image; make them rows when the file is next touched", count: 1 },
+    { path: "src/modules/design/ui/SampleSection.tsx", reason: "the design page's sample of a featured card: it draws the public card's frame on purpose", count: 1 },
+    { path: "src/modules/notifications/ui/OutboxQueuePanel.tsx", reason: "the outbox queue's read-only rows as framed cards; make them rows when the file is next touched", count: 1 },
+    { path: "src/modules/notifications/ui/RelayMessagesPanel.tsx", reason: "the relay's read-only rows as framed cards; make them rows when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/DeskRow.tsx", reason: "the desk's row is a card on purpose (§104): its state's red border marks an ended row at a glance", count: 1 },
+    { path: "src/modules/staff-identity/ui/AdminTable.tsx", reason: "`AdminTable`'s phone layout: each table row becomes a card below `md`, the table's own drawing (§256)", count: 2 },
+  ],
+  // §NNN: a backoffice row's boxes sit inside the row's fold (`shared/ui/row-fold.ts`, §842).
+  // §NNN: no h1 under the backoffice shell's own.
+  pageHeadings: [],
+  // §NNN: no backoffice heading sized by hand.
+  headingSizes: [
+    { path: "src/app/[locale]/admin/(list)/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/checkin/[code]/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/checkin/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/events/[id]/badges/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/events/[id]/bibs/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/events/[id]/erase/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/events/[id]/mesaje/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/events/[id]/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/events/[id]/results/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/events/[id]/urgente/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/events/import/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/events/new/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/gallery/(list)/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
+    { path: "src/app/[locale]/admin/gallery/[id]/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
+    { path: "src/app/[locale]/admin/gallery/new/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/gallery/pictures/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/guide/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/legal/(list)/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/legal/[id]/delete/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
+    { path: "src/app/[locale]/admin/legal/[id]/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 3 },
+    { path: "src/app/[locale]/admin/legal/delete/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 3 },
+    { path: "src/app/[locale]/admin/legal/new/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
+    { path: "src/app/[locale]/admin/network/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/pages/(list)/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 3 },
+    { path: "src/app/[locale]/admin/pages/[id]/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/pages/faq/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
+    { path: "src/app/[locale]/admin/pages/members/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/pages/new/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/pages/team/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/registrations/(list)/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 3 },
+    { path: "src/app/[locale]/admin/registrations/[id]/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/registrations/new/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/registrations/person/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 15 },
+    { path: "src/app/[locale]/admin/settings/costs/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/shop/products/[id]/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/shop/products/new/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/staff/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/tasks/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 8 },
+    { path: "src/app/[locale]/admin/volunteers/(list)/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/volunteers/[id]/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/devs/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 11 },
+    { path: "src/app/[locale]/devs/theme/page.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/modules/content/events/ui/EventNoticeFields.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/modules/design/ui/DesignSystem.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/modules/design/ui/section.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
+    { path: "src/modules/diagnostics/ui/DatabaseSizesPanel.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 3 },
+    { path: "src/modules/diagnostics/ui/MonthCostsPanel.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
+    { path: "src/modules/diagnostics/ui/NetworkProbes.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
+    { path: "src/modules/diagnostics/ui/VercelUsagePanel.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
+    { path: "src/modules/legal-documents/ui/LegalRetireSteps.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
+    { path: "src/modules/newsletter/ui/NewsletterPanel.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
+    { path: "src/modules/newsletter/ui/NewsletterPreview.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/modules/notifications/ui/ParticipantMessageComposer.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 3 },
+    { path: "src/modules/registrations/ui/BotCheckPanel.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/InvitationsPanel.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
+    { path: "src/modules/volunteers/ui/VolunteersCard.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§NNN); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
+  ],
+  rowFolds: [
+    { path: "src/modules/content/events/ui/CheckpointsCard.tsx", reason: "a GPX file's offered points: a pick list read once, a tick and its kilometre and name side by side to correct before adding, not an edited list", count: 1 },
+    { path: "src/modules/registrations/ui/DeskRow.tsx", reason: "the race-day desk's row is a working surface (§104): its number and verbs must be one tap away at the start line, never behind a fold", count: 1 },
+    { path: "src/modules/results/ui/ResultRows.tsx", reason: "the results' typed lines are a data-entry grid read across, one runner a line (§844 labelled them); a fold per line would hide the sheet being copied", count: 2 },
+    { path: "src/modules/volunteers/badges/ui/BadgeRoleColours.tsx", reason: "one colour pair per role in one save form, read as a table of swatches; fold each role when the file is next touched", count: 1 },
+  ],
 };
+
+/**
+ * §NNN: the backoffice's links back that still carry a «←» (`admin-verbs.test.ts`), by catalogue key, the same in both
+ * languages. The list only shrinks: drop the arrow from the words, then delete the entry and lower the test's count.
+ */
+export const BACK_ARROWS: readonly { key: string; reason: string }[] = [
+  { key: "Admin.desk.backToDesk", reason: "the desk's own back link, drawn as a plain text link with no glyph; give it the back glyph and drop the arrow" },
+  { key: "Admin.gallery.backToList", reason: "«← Toate albumele», a plain text link with no glyph; «Înapoi la albume» with the back glyph when the page is next touched" },
+  { key: "Admin.pages.backToList", reason: "«← Toate paginile», a plain text link with no glyph; «Înapoi la pagini» with the back glyph when the page is next touched" },
+  { key: "Devs.docs.back", reason: "`/devs`'s documents page links back to «Configurație» as plain text; give it the back glyph when the page is next touched" },
+  { key: "Devs.theme.back", reason: "the theme lab links back to «Configurație» as plain text; give it the back glyph when the page is next touched" },
+];
 
 /** Per rule, the entries and the hits (the sum of the counts): lower them in the same edit that removes an entry or a count. */
 export const PINNED = {
@@ -150,6 +247,10 @@ export const PINNED = {
   icons: { entries: 31, hits: 121 },
   primitives: { entries: 77, hits: 81 },
   toggles: { entries: 0, hits: 0 },
+  rowBoxes: { entries: 14, hits: 15 },
+  pageHeadings: { entries: 0, hits: 0 },
+  headingSizes: { entries: 56, hits: 111 },
+  rowFolds: { entries: 4, hits: 5 },
 } as const;
 
 /**
