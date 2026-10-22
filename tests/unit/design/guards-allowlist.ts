@@ -48,7 +48,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
     { path: "src/modules/content/events/ui/PublishCheck.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/content/events/ui/RaceStartNotSet.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/content/events/ui/SectionMap.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
-    { path: "src/modules/content/events/ui/SeriesScope.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/modules/content/menu/ui/MenuOrderList.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 9 },
     { path: "src/modules/content/pages/ui/PagesSubNav.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 5 },
     { path: "src/modules/content/rich-text/ui/ImageCropBox.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
@@ -159,6 +158,8 @@ export const PINNED = {
   colours: { entries: 13, hits: 28 },
   icons: { entries: 35, hits: 127 },
   primitives: { entries: 83, hits: 87 },
+  icons: { entries: 34, hits: 125 },
+  primitives: { entries: 84, hits: 88 },
   toggles: { entries: 0, hits: 0 },
 } as const;
 

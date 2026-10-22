@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
 import { PUBLIC_LIST_CLUBS, publicListClubOf } from "@/modules/registrations/domain/public-list-club";
@@ -7,10 +6,9 @@ import { CLUB_NAME } from "@/theme/brand";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import IncognitoIcon from "@/shared/ui/IncognitoIcon";
 import Panel from "@/shared/ui/Panel";
 import RadioField from "@/shared/ui/RadioField";
-import { startListSummary } from "../box-summaries";
+import { hiddenListSummary, startListSummary } from "../box-summaries";
 import OnlyForMode from "../OnlyForMode";
 import OnlyForType from "../OnlyForType";
 import OnlyWhenTicked from "../OnlyWhenTicked";
@@ -77,22 +75,25 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
               {/*
                 «Clubul pe lista publică» (§753; the owner, 2026-10-13: «people type stupid things there, I just want
                 to show the club's members and ignore the other clubs»): what the list's «Club» column says — the
-                club's own name for whoever typed it (the default; §756), the text as typed, or no column. A card of
-                its own under the list's switches, three native radios; the service keeps the stored mode when a
-                form carries none.
+                club's own name for whoever typed it (the default; §756), the text as typed, or no column. A fold
+                under the list's switches — it always holds a choice, so a part a person may skip (the editor's rule,
+                `EventEditorLayout`), the choice on its closed line — three native radios; the service keeps the
+                stored mode when a form carries none.
               */}
-              <Panel level={4} static glyph="startList" title={t("editor.publicListClub")} data-testid="public-list-club">
-                <Box role="radiogroup" aria-label={t("editor.publicListClub")} data-testid="public-list-club-choices">
-                  {PUBLIC_LIST_CLUBS.map((mode) => (
-                    <RadioField key={mode} name="event.publicListClub" value={mode} defaultChecked={publicListClubOf(event) === mode}>
-                      {clubChoices[mode]}
-                    </RadioField>
-                  ))}
-                </Box>
-                <BoxNote testId="public-list-club-help" more={t("editor.publicListClubHelpMore")}>
-                  {t("editor.publicListClubHelp", { club: CLUB_NAME })}
-                </BoxNote>
-              </Panel>
+              <Box sx={{ mt: 1 }}>
+                <Panel collapsible level={4} glyph="startList" title={t("editor.publicListClub")} aside={clubChoices[publicListClubOf(event)]} data-testid="public-list-club">
+                  <Box role="radiogroup" aria-label={t("editor.publicListClub")} data-testid="public-list-club-choices">
+                    {PUBLIC_LIST_CLUBS.map((mode) => (
+                      <RadioField key={mode} name="event.publicListClub" value={mode} defaultChecked={publicListClubOf(event) === mode}>
+                        {clubChoices[mode]}
+                      </RadioField>
+                    ))}
+                  </Box>
+                  <BoxNote testId="public-list-club-help" more={t("editor.publicListClubHelpMore")}>
+                    {t("editor.publicListClubHelp", { club: CLUB_NAME })}
+                  </BoxNote>
+                </Panel>
+              </Box>
               {/*
                 «Arată public numărătoarea» (§647, §668): every number on the event's public pages — the places
                 line, the card's counts, «Cine vine»'s «(N)» — on every event, whatever the hidden list's switch
@@ -129,48 +130,55 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                 registrations be put on the hidden list, and — shown only while it is ticked — the hidden list's
                 own number series and «Numără și lista ascunsă». One marker for the three, so a
                 form without the group edits none of them; the service validates them whatever this shows.
+                An optional setting, so a fold (the editor's rule, `EventEditorLayout`; a bold caption until
+                then), closed, «Folosită» or «Nefolosită» on its closed line; a refused box inside opens it.
               */}
-              <Box data-testid="hidden-list-settings" sx={{ mt: 2 }}>
-                <Typography variant="subtitle2" component="h4" sx={{ mb: 0.5, display: "flex", alignItems: "center", gap: 0.75 }}>
-                  <IncognitoIcon fontSize="small" aria-hidden />
-                  {t("editor.hiddenListTitle")}
-                </Typography>
-                <input type="hidden" name="event.hiddenList.present" value="1" />
-                <CheckboxField name="event.hiddenListEnabled" defaultChecked={event?.hiddenListEnabled ?? false}>
-                  {t("editor.hiddenListEnabled")}
-                </CheckboxField>
-                {/*
-                  «Lista de invitați speciali» (§649): the switch's sentence says what ticking shows and what
-                  unticking keeps; its «?» says who the list is for, the two settings under it, and how it
-                  differs from «Invitații» by email — one line each, each under 200 characters.
-                */}
-                <BoxNote
-                  testId="hidden-list-enabled-help"
-                  more={[t("editor.hiddenListEnabledMoreFor"), t("editor.hiddenListEnabledMoreSettings"), t("editor.hiddenListEnabledMoreEmail"), t("editor.hiddenListEnabledMoreDifference")].join("\n")}
+              <Box sx={{ mt: 2 }}>
+                <Panel
+                  collapsible
+                  level={4}
+                  glyph="hiddenList"
+                  title={t("editor.hiddenListTitle")}
+                  aside={hiddenListSummary(words, event?.hiddenListEnabled ?? false)}
+                  data-testid="hidden-list-settings"
                 >
-                  {t("editor.hiddenListEnabledHelp")}
-                </BoxNote>
-                <OnlyWhenTicked name="event.hiddenListEnabled" initiallyTicked={event?.hiddenListEnabled ?? false}>
-                  <Box data-testid="hidden-list-details" sx={{ mt: 1, pl: { xs: 1.5, sm: 3.5 }, borderLeft: 2, borderColor: "divider", minWidth: 0 }}>
-                    <RecallField
-                      name="event.hiddenListBibStart"
-                      label={t("editor.hiddenListBibStart")}
-                      helperText={t("editor.hiddenListBibStartHelp")}
-                      helpMore={t("editor.hiddenListBibStartHelpMore")}
-                      defaultValue={event?.hiddenListBibStart ?? ""}
-                      {...textFieldConstraints(eventInputConstraints("hiddenListBibStart"), { inputMode: "numeric" })}
-                      sx={{ width: { xs: "100%", sm: 320 }, my: 1 }}
-                    />
-                    <CheckboxField name="event.hiddenListCounted" defaultChecked={event?.hiddenListCounted ?? false}>
-                      {t("editor.hiddenListCounted")}
-                    </CheckboxField>
-                    <BoxNote>{t("editor.hiddenListCountedHelp")}</BoxNote>
-                    <CheckboxField name="event.hiddenListPublic" defaultChecked={event?.hiddenListPublic ?? false}>
-                      {t("editor.hiddenListPublic")}
-                    </CheckboxField>
-                    <BoxNote testId="hidden-list-public-help">{t("editor.hiddenListPublicHelp")}</BoxNote>
-                  </Box>
-                </OnlyWhenTicked>
+                  <input type="hidden" name="event.hiddenList.present" value="1" />
+                  <CheckboxField name="event.hiddenListEnabled" defaultChecked={event?.hiddenListEnabled ?? false}>
+                    {t("editor.hiddenListEnabled")}
+                  </CheckboxField>
+                  {/*
+                    «Lista de invitați speciali» (§649): the switch's sentence says what ticking shows and what
+                    unticking keeps; its «?» says who the list is for, the two settings under it, and how it
+                    differs from «Invitații» by email — one line each, each under 200 characters.
+                  */}
+                  <BoxNote
+                    testId="hidden-list-enabled-help"
+                    more={[t("editor.hiddenListEnabledMoreFor"), t("editor.hiddenListEnabledMoreSettings"), t("editor.hiddenListEnabledMoreEmail"), t("editor.hiddenListEnabledMoreDifference")].join("\n")}
+                  >
+                    {t("editor.hiddenListEnabledHelp")}
+                  </BoxNote>
+                  <OnlyWhenTicked name="event.hiddenListEnabled" initiallyTicked={event?.hiddenListEnabled ?? false}>
+                    <Box data-testid="hidden-list-details" sx={{ mt: 1, pl: { xs: 1.5, sm: 3.5 }, borderLeft: 2, borderColor: "divider", minWidth: 0 }}>
+                      <RecallField
+                        name="event.hiddenListBibStart"
+                        label={t("editor.hiddenListBibStart")}
+                        helperText={t("editor.hiddenListBibStartHelp")}
+                        helpMore={t("editor.hiddenListBibStartHelpMore")}
+                        defaultValue={event?.hiddenListBibStart ?? ""}
+                        {...textFieldConstraints(eventInputConstraints("hiddenListBibStart"), { inputMode: "numeric" })}
+                        sx={{ width: { xs: "100%", sm: 320 }, my: 1 }}
+                      />
+                      <CheckboxField name="event.hiddenListCounted" defaultChecked={event?.hiddenListCounted ?? false}>
+                        {t("editor.hiddenListCounted")}
+                      </CheckboxField>
+                      <BoxNote>{t("editor.hiddenListCountedHelp")}</BoxNote>
+                      <CheckboxField name="event.hiddenListPublic" defaultChecked={event?.hiddenListPublic ?? false}>
+                        {t("editor.hiddenListPublic")}
+                      </CheckboxField>
+                      <BoxNote testId="hidden-list-public-help">{t("editor.hiddenListPublicHelp")}</BoxNote>
+                    </Box>
+                  </OnlyWhenTicked>
+                </Panel>
               </Box>
             </Box>
           </OnlyForMode>

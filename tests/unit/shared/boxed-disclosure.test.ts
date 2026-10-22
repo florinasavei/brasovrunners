@@ -131,11 +131,12 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
     // the events list; and `Panel` itself. The email previews were a fold the page drew by hand
     // until §336 made them `Panel`s inside a `Panel` — they are counted as `Panel` now.
     // Since the editor's boxes (§350) every box and card of the event editor — the bib design
-    // among them — is a `Panel`, counted as `Panel`; the series scope's two folds are its own.
+    // among them — is a `Panel`, counted as `Panel`; since the editor's two shapes (2026-10-21) the
+    // series scope's two folds are `Panel`s too, drawn by the page around the island's ticks.
     expect(folds.length).toBeGreaterThanOrEqual(10);
     expect(folds).toContain("src/shared/ui/Panel.tsx");
     expect(folds).toContain("src/modules/content/rich-text/ui/LazyRichTextEditor.tsx");
-    expect(folds).toContain("src/modules/content/events/ui/SeriesScope.tsx");
+    expect(folds).not.toContain("src/modules/content/events/ui/SeriesScope.tsx");
     expect(read("src/modules/content/events/ui/BibDesignPanel.tsx")).toContain('<Panel glyph="bibDesign" collapsible level={4}');
     // The card of messages draws no fold of its own: every card in it is `Panel`.
     expect(read("src/modules/notifications/ui/ParticipantEmailsPanel.tsx")).not.toMatch(FOLD);

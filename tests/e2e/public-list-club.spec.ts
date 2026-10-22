@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { existsSync } from "node:fs";
 import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
-import { openEditorBox, openEventFold } from "./support/fold";
+import { openEditorBox, openEventFold, openFold } from "./support/fold";
 
 /**
  * §753 and §756 (amending §32, §143 and §396; the owner, 2026-10-13: «people type stupid things there, I just
@@ -132,6 +132,10 @@ test.describe("§753, §756 «Clubul pe lista publică»: only the club's own na
     await page.goto(`/ro/admin/events/${seeded.eventId}`);
     await hydrated(page);
     const box = await openEditorBox(page, "Lista publică a participanților");
+    // «Clubul pe lista publică» is a closed level-4 fold of the card, the choice on its closed line (the editor's two shapes).
+    const clubFold = box.getByTestId("public-list-club");
+    await expect(clubFold.locator(":scope > summary")).toContainText("Doar ");
+    await openFold(clubFold);
     const choices = box.getByTestId("public-list-club-choices");
     const onlyClub = choices.getByRole("radio", { name: /^Doar / });
     const asTyped = choices.getByRole("radio", { name: "Cum l-au scris" });
@@ -161,6 +165,7 @@ test.describe("§753, §756 «Clubul pe lista publică»: only the club's own na
     await page.goto(`/ro/admin/events/${seeded.eventId}`);
     await hydrated(page);
     const again = await openEditorBox(page, "Lista publică a participanților");
+    await openFold(again.getByTestId("public-list-club"));
     await expect(again.getByTestId("public-list-club-choices").getByRole("radio", { name: "Cum l-au scris" })).toBeChecked();
     await again.getByTestId("public-list-club-choices").getByRole("radio", { name: "Nu arăta clubul" }).check();
     await save();

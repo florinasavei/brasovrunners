@@ -137,7 +137,8 @@ describe("§649 the name, in both languages: «Lista de invitați speciali»", (
     expect(ro.Admin.registrations.outside.infoNot).toBe("Un participant obișnuit nu se pune aici.");
     const editor = read("src/modules/content/events/ui/boxes/StartListBox.tsx");
     expect(editor).toContain('t("editor.hiddenListEnabledMoreDifference")');
-    expect(editor).toContain("<IncognitoIcon");
+    // The incognito before the fold's title, by name from the panels' table (a level-4 fold since the editor's two shapes).
+    expect(editor).toContain('glyph="hiddenList"');
   });
 
   it("keeps the four editor helps under 200 characters, in both languages", () => {

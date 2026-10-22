@@ -651,11 +651,11 @@ export default async function BibDesignPanel({
               {t("editor.bibDesign.numberStubs")}
             </CheckboxField>
             {/* The small print, the club's to compose (§317), in the order it prints: the event,
-                the partners, the club's own line, the website, the mailbox. */}
-            <Box component="fieldset" sx={{ border: 0, borderTop: 1, borderColor: "divider", pt: 1.5, px: 0, pb: 0, m: 0, minWidth: 0 }} data-testid="bib-design-footer">
-              <Typography component="legend" variant="body2" sx={{ fontWeight: 600, px: 0.5 }}>
-                {t("editor.bibDesign.footer.title")}
-              </Typography>
+                the partners, the club's own line, the website, the mailbox. A group of the section's
+                fields under its `Legend`, as the profile's are — no divider of its own (the editor's
+                rule, `EventEditorLayout`: the sections are the folds, a group is a field). */}
+            <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="bib-design-footer">
+              <Legend>{t("editor.bibDesign.footer.title")}</Legend>
               <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
                 {t("editor.bibDesign.footer.intro")}
               </Typography>
