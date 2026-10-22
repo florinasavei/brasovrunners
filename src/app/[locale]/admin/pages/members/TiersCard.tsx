@@ -18,9 +18,14 @@ import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import StatusChip from "@/shared/ui/StatusChip";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
+import { FACTS_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import { deleteMemberTierAction, saveMemberTiersAction } from "./actions";
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
+
+/** The pencil at the end of a level's line: the edit verb's glyph, by name (§318). */
+const PencilIcon = ACTION_ICONS.edit;
 
 /** The id of the small form behind one level's «Șterge nivelul»: the button sits in the level's row, inside the one form, and names this one (`form=`). */
 const deleteFormId = (id: string) => `delete-tier-${id}`;
@@ -32,9 +37,11 @@ const deleteFormId = (id: string) => `delete-tier-${id}`;
  * văd nivelul de membru, scopul e ca să bifăm ce membru poate vedea ce cod de reducere») — the card says what it is for
  * under its title.
  *
- * ONE form, ONE «Salvează toate nivelurile» (§791's roles editor is the model): a row per level — its name and its
- * note for the administrators as one Română | English strip (§572), «Poziția» (the club's order, from 1), «Ascuns» —
- * and the blank row at the end that adds a level. A level that only moved over is never audited as edited. «Șterge
+ * ONE form, ONE «Salvează toate nivelurile» (§791's roles editor is the model): a row per level, the house's row fold
+ * (§842) — the line its name, how many members hold it, «Ascuns» and how many codes name it, the pencil; inside, «Poziția»
+ * (the club's order, from 1), its name and its note for the administrators as one Română | English strip (§572),
+ * «Ascuns», and «Șterge nivelul» last — and «Adaugă un nivel» after them, a fold open by itself only while the club has
+ * named none. A level that only moved over is never audited as edited. «Șterge
  * nivelul» is its own confirmed action outside the form (forms do not nest): a small hidden form beside the big one
  * that the row's button names (`form=`); refused while a member holds the level or a code is for it alone.
  * «Tradu cardul: RO → EN» translates every English box of the card whose Romanian twin has words
@@ -65,13 +72,14 @@ export default function TiersCard({
 }) {
   const count = t(`members.tiers.count.${countForm(tiers.length, locale)}`, { count: tiers.length });
 
-  /** One level's row, or the blank one at the end (`tier` null): every box named by its row's key (`tier-rows.ts`), all posted by the card's one form. */
-  const rowOf = (tier: AdminMemberTier | null, index: number) => {
+  /**
+   * One level's boxes, or the blank ones of «Adaugă un nivel» (`tier` null): every box named by its row's key (`tier-rows.ts`), all posted by the
+   * card's one form — «Poziția», the name and the note as one Română | English strip, «Ascuns».
+   */
+  const boxesOf = (tier: AdminMemberTier | null, index: number) => {
     const key = tier ? tier.tier.id : NEW_TIER_ROW_KEY;
     const box = (name: Parameters<typeof tierBox>[1]) => tierBox(key, name);
-    // The name in the Administrator's own language, as the read-only list below and the codes card draw it.
-    const shownName = tier ? (locale === "en" ? tier.tier.nameEn : tier.tier.nameRo) : "";
-    const title = tier ? shownName : t("members.tiers.newRow");
+    const title = tier ? (locale === "en" ? tier.tier.nameEn : tier.tier.nameRo) : t("members.tiers.newRow");
     // One language's name and description, for the strip's panel; the English panel carries «Tradu din română» under each box (§464).
     const languagePanel = (language: "ro" | "en") => {
       const side = language === "ro" ? "Ro" : "En";
@@ -81,7 +89,8 @@ export default function TiersCard({
             name={box(`name${side}`)}
             label={t(`members.tiers.name${side}`)}
             defaultValue={tier?.tier[`name${side}`] ?? ""}
-            // A saved level keeps both names; the blank row is a level only once a name is typed in it.
+            // A saved level keeps both names; the blank row is a level only once a name is typed in it. A required box in a closed fold is
+            // opened by the form when the browser refuses it (`ActionForm`'s `invalid` in the capture phase), so the press is never silent.
             required={tier !== null}
             size="small"
             fullWidth
@@ -104,27 +113,7 @@ export default function TiersCard({
       );
     };
     return (
-      <Box
-        component="li"
-        key={key}
-        id={tier ? `tier-${tier.tier.id}` : "tier-new"}
-        data-testid={tier ? "member-tier" : "member-tier-new"}
-        data-tier-id={tier?.tier.id}
-        // The name the translate buttons say a box belongs to (`labelOfBox`): the same «Nume (EN)» is in every row.
-        data-translate-row={title}
-        sx={{ border: 1, borderColor: "divider", borderRadius: 2, p: { xs: 1.5, sm: 2 }, scrollMarginTop: 16 }}
-      >
-        <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1, mb: 1.5 }}>
-          <Typography component="p" variant="subtitle1" sx={{ fontWeight: 700, overflowWrap: "anywhere" }}>
-            {title}
-          </Typography>
-          {tier === null && <QuietHelp text={t("members.tiers.newRowHint")} />}
-          {tier && <StatusChip glyph="club" variant="outlined" label={t(`members.tiers.members.${countForm(tier.members, locale)}`, { count: tier.members })} testId="member-tier-members" />}
-          {tier?.tier.hidden && <StatusChip glyph="hidden" label={t("members.tiers.hiddenChip")} testId="member-tier-hidden" />}
-          {tier && tier.codesForIt > 0 && (
-            <StatusChip glyph="link" variant="outlined" label={t(`members.tiers.codes.${countForm(tier.codesForIt, locale)}`, { count: tier.codesForIt })} testId="member-tier-codes" />
-          )}
-        </Stack>
+      <>
         {/* What the form was drawn with: the place the level was at, which «Poziția» is compared with — a typed number that differs is a move. */}
         {tier && <input type="hidden" name={box("was")} value={index + 1} />}
         <Stack spacing={1.5} role="group" aria-label={title}>
@@ -156,7 +145,55 @@ export default function TiersCard({
               {t("members.tiers.hidden")}
             </CheckboxField>
             <QuietHelp text={t("members.tiers.hiddenHelp")} />
-            {tier && mayManage && (
+          </Stack>
+        </Stack>
+      </>
+    );
+  };
+
+  /**
+   * One level's row (§842, `shared/ui/row-fold.ts`; the roles' shape): the line reads as words — the name in the Administrator's language and the
+   * other one muted, how many members hold it, «Ascuns», how many codes name it, the pencil — and a press anywhere on it opens the level's boxes
+   * (`boxesOf`) in place, inside the card's one form; «Șterge nivelul» stands last in the fold. The fold is keyed on the level's facts, so a save
+   * that changed them draws it closed on its new line.
+   */
+  const rowOf = (tier: AdminMemberTier, index: number) => {
+    const shownName = locale === "en" ? tier.tier.nameEn : tier.tier.nameRo;
+    const otherName = locale === "en" ? tier.tier.nameRo : tier.tier.nameEn;
+    return (
+      <Box
+        component="li"
+        key={tier.tier.id}
+        id={`tier-${tier.tier.id}`}
+        data-testid="member-tier"
+        data-tier-id={tier.tier.id}
+        // The name the translate buttons say a box belongs to (`labelOfBox`): the same «Nume (EN)» is in every row.
+        data-translate-row={shownName}
+        sx={{ ...ROW_SX, scrollMarginTop: 16 }}
+      >
+        <Box component="details" key={[tier.tier.nameRo, tier.tier.nameEn, tier.tier.hidden, index].join("\u0001")} data-testid="member-tier-edit">
+          <Box component="summary" title={t("members.tiers.edit")} data-testid="member-tier-edit-toggle" sx={SUMMARY_SX}>
+            <Box sx={{ gridArea: "words", minWidth: 0 }}>
+              <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }} data-testid="member-tier-name">
+                {shownName}
+              </Typography>
+              <Typography component="span" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+                {" "}
+                / {otherName}
+              </Typography>
+            </Box>
+            <Box sx={FACTS_SX}>
+              <StatusChip glyph="club" variant="outlined" label={t(`members.tiers.members.${countForm(tier.members, locale)}`, { count: tier.members })} testId="member-tier-members" />
+              {tier.tier.hidden && <StatusChip glyph="hidden" label={t("members.tiers.hiddenChip")} testId="member-tier-hidden" />}
+              {tier.codesForIt > 0 && (
+                <StatusChip glyph="link" variant="outlined" label={t(`members.tiers.codes.${countForm(tier.codesForIt, locale)}`, { count: tier.codesForIt })} testId="member-tier-codes" />
+              )}
+            </Box>
+            <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
+          </Box>
+          <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5 }}>
+            {boxesOf(tier, index)}
+            <Box>
               <GlyphButton
                 type="submit"
                 form={deleteFormId(tier.tier.id)}
@@ -164,18 +201,39 @@ export default function TiersCard({
                 color="error"
                 variant="outlined"
                 size="small"
-                sx={{ minHeight: 44, ml: "auto" }}
+                sx={{ minHeight: 44 }}
                 aria-label={`${t("members.tiers.delete")}: ${shownName}`}
                 data-testid="member-tier-delete"
               >
                 {t("members.tiers.delete")}
               </GlyphButton>
-            )}
+            </Box>
           </Stack>
-        </Stack>
+        </Box>
       </Box>
     );
   };
+
+  /**
+   * «Adaugă un nivel» (§842): the blank boxes after the list, behind a fold like every «Adaugă…» of the backoffice, open by itself only while the
+   * club has named no level. They are posted by the same form: a name typed in them is a new level.
+   */
+  const addRow = (
+    <Panel
+      glyph="add"
+      collapsible
+      level={3}
+      title={t("members.tiers.newRow")}
+      intro={t("members.tiers.addIntro")}
+      introMore={t("members.tiers.newRowHint")}
+      openWhen={{ primary: tiers.length === 0 }}
+      data-testid="member-tier-add-fold"
+    >
+      <Box id="tier-new" data-testid="member-tier-new" data-translate-row={t("members.tiers.newRow")} sx={{ scrollMarginTop: 16 }}>
+        {boxesOf(null, tiers.length)}
+      </Box>
+    </Panel>
+  );
 
   return (
     <Panel
@@ -206,9 +264,13 @@ export default function TiersCard({
                 </Typography>
                 <TranslateCardButton />
               </Stack>
-              <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", m: 0, p: 0 }} aria-label={t("members.tiers.listLabel")}>
-                {tiers.map((tier, index) => rowOf(tier, index))}
-                {rowOf(null, tiers.length)}
+              <Stack spacing={1.5}>
+                {tiers.length > 0 && (
+                  <Stack component="ul" spacing={0} sx={{ listStyle: "none", m: 0, p: 0 }} aria-label={t("members.tiers.listLabel")}>
+                    {tiers.map((tier, index) => rowOf(tier, index))}
+                  </Stack>
+                )}
+                {addRow}
               </Stack>
               <Box sx={{ mt: 2 }}>
                 <GlyphSubmitButton label={t("members.tiers.save")} pendingLabel={t("editor.saving")} icon="save" size="medium" />

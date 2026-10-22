@@ -2347,8 +2347,9 @@ only ones who see the names, addresses and telephone numbers.
    before.
    - **«Categorii»** — the card «Voluntari» → the fold «Categorii» → «Adaugă o categorie»: the name in Română **and** English (both or neither;
      «Copiază și tradu tot» fills the English one), for example «Start / Sosire» and «Traseu»; at most 12 on an event, a name once per event.
-     ↑ / ↓ set the order the card and the page list them in; «Modifică» renames; «Șterge categoria» asks first and is **refused with a sentence while
-     any role sits under it** — move or delete the roles first.
+     Each category is one line (its names, «2 roluri», the pencil); a press on it opens its boxes: the names with their «Salvează», «Poziția» with
+     ↑ / ↓ (the order the card and the page list them in), «Persoana de contact», and «Șterge categoria», which asks first and is **refused with a
+     sentence while any role sits under it** — move or delete the roles first.
    - **«Categoria» of a role** — each role's line (and the empty line that adds one) has a choice: one of the categories, or «Alte roluri» (no category; every
      role from before the categories is there). **The same role name may stand in two categories** («Direcționare» under «Start / Sosire» and under «Traseu»),
      never twice in one. A role is then told apart as **«Direcționare (Traseu)»** wherever it is named alone — the «Dă-i rolul …» buttons and select, the

@@ -587,117 +587,145 @@ export default async function VolunteersCard({
   );
 
   /**
-   * One category of the «Categorii» fold (§774): its two names, how many roles sit under it, the arrows, «Modifică» (the names, the delete —
-   * refused with a sentence while a role is under it) and «Persoana de contact» — three optional boxes with a «Salvează» of their own,
-   * audited by the boxes that changed, never by their words. `index` and `count` are its place among the categories.
+   * One category of the «Categorii» fold (§774), as the house's row fold (§842, `shared/ui/row-fold.ts`; the roles' shape): the line reads as
+   * words — both names, «2 roluri» (how many roles sit under it) and the pencil — and a press anywhere on it opens the category's boxes in place:
+   * its contact in words, the names with their «Salvează», «Poziția» (its place, with the arrows drawn only where a step is possible),
+   * «Persoana de contact» — three optional boxes with a «Salvează» of their own, audited by the boxes that changed, never by their words — and,
+   * last, «Șterge categoria» (refused with a sentence while a role is under it). Each is its own form, as before: the fold only gathers them.
+   * The fold is keyed on the names and the place, so a rename or a move draws it closed on its new line; a contact saved leaves it open.
+   * `index` and `count` are its place among the categories.
    */
   const categoryRow = (category: VolunteerCategory, index: number, count: number) => {
     const under = roles.filter((role) => role.categoryId === category.id).length;
     return (
-      <Box component="li" key={category.id} data-testid="volunteer-category" data-category-id={category.id} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
-        <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
-          <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }} data-testid="volunteer-category-name">
-            {category.nameRo}
-          </Typography>
-          <Typography component="span" color="text.secondary" sx={{ wordBreak: "break-word" }}>
-            / {category.nameEn}
-          </Typography>
-          <StatusChip glyph={under > 0 ? "done" : "open"} color={under > 0 ? "success" : "warning"} variant="outlined" label={t("volunteers.categories.rolesUnder", { count: String(under) })} testId="volunteer-category-roles" />
-        </Stack>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, wordBreak: "break-word" }} data-testid="volunteer-category-contact-line">
-          {category.contact
-            ? t("volunteers.categories.contactIs", { contact: contactParts(category.contact).join(" · ") })
-            : t("volunteers.categories.contactNone")}
-        </Typography>
-        <Stack spacing={1} sx={{ mt: 1 }}>
-          <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
-            {([
-              ["up", "moveUp", index > 0],
-              ["down", "moveDown", index < count - 1],
-            ] as const).map(([direction, icon, possible]) =>
-              possible ? (
-                <Box component="form" action={moveVolunteerCategoryAction} key={direction}>
-                  {hidden}
-                  <input type="hidden" name="categoryId" value={category.id} />
-                  <input type="hidden" name="direction" value={direction} />
-                  <GlyphSubmitButton
-                    icon={icon}
-                    label={t(`volunteers.move.${direction}`)}
-                    pendingLabel={t(`volunteers.move.${direction}`)}
-                    ariaLabel={`${t(`volunteers.move.${direction}`)}: ${categoryName(category)}`}
-                    variant="outlined"
-                  />
-                </Box>
-              ) : null,
-            )}
-          </Stack>
-          {/* «Persoana de contact»: empty at creation, filled in later by the club; its own form and its own «Salvează». */}
-          <Panel glyph="contacts" collapsible level={3} title={t("volunteers.category.contactTitle")} data-testid="volunteer-category-contact">
-            <ActionForm action={saveVolunteerCategoryContactAction} scope={`category-contact-${category.id}`} messages={categoryBoxes}>
+      <Box component="li" key={category.id} data-testid="volunteer-category" data-category-id={category.id} sx={ROW_SX}>
+        <Box component="details" key={[category.nameRo, category.nameEn, index].join("\u0001")} data-testid="volunteer-category-edit">
+          <Box component="summary" title={t("volunteers.edit")} data-testid="volunteer-category-edit-toggle" sx={SUMMARY_SX}>
+            <Box sx={{ gridArea: "words", minWidth: 0 }}>
+              <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }} data-testid="volunteer-category-name">
+                {category.nameRo}
+              </Typography>
+              <Typography component="span" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+                {" "}
+                / {category.nameEn}
+              </Typography>
+            </Box>
+            <Box sx={FACTS_SX}>
+              <StatusChip
+                glyph={under > 0 ? "done" : "open"}
+                color={under > 0 ? "success" : "warning"}
+                variant="outlined"
+                label={t(`volunteers.role.count.${countForm(under, locale)}`, { count: String(under) })}
+                testId="volunteer-category-roles"
+              />
+            </Box>
+            <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
+          </Box>
+          <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }} data-testid="volunteer-category-contact-line">
+              {category.contact
+                ? t("volunteers.categories.contactIs", { contact: contactParts(category.contact).join(" · ") })
+                : t("volunteers.categories.contactNone")}
+            </Typography>
+            <ActionForm action={editVolunteerCategoryAction} scope={`category-${category.id}`} messages={categoryBoxes}>
               {hidden}
               <input type="hidden" name="categoryId" value={category.id} />
-              <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {t("volunteers.category.contactHelp")}
-                  <QuietHelp text={t("volunteers.category.contactHelpMore")} />
-                </Typography>
-                <RecallField
-                  name="contactName"
-                  label={t("volunteers.category.contactName")}
-                  defaultValue={category.contactName ?? ""}
-                  size="small"
-                  slotProps={{ htmlInput: { maxLength: VOLUNTEER_NAME_MAX, autoComplete: "off" } }}
-                />
-                <RecallField
-                  name="contactPhone"
-                  type="tel"
-                  label={t("volunteers.category.contactPhone")}
-                  helperText={t("registrations.answers.phoneHelp")}
-                  defaultValue={category.contactPhone ?? ""}
-                  size="small"
-                  slotProps={{ htmlInput: { maxLength: VOLUNTEER_CONTACT_PHONE_MAX, inputMode: "tel", autoComplete: "off" } }}
-                />
-                <RecallField
-                  name="contactEmail"
-                  type="email"
-                  label={t("volunteers.category.contactEmail")}
-                  defaultValue={category.contactEmail ?? ""}
-                  size="small"
-                  slotProps={{ htmlInput: { maxLength: VOLUNTEER_CONTACT_EMAIL_MAX, autoComplete: "off" } }}
-                />
-                <Box>
-                  <GlyphSubmitButton label={t("volunteers.save")} pendingLabel={t("volunteers.saving")} icon="save" />
-                </Box>
-              </Stack>
+              {categoryNameFields(category)}
+              <Box sx={{ mt: 1.5 }}>
+                <GlyphSubmitButton label={t("volunteers.save")} pendingLabel={t("volunteers.saving")} icon="save" />
+              </Box>
             </ActionForm>
-          </Panel>
-          <Panel variant="help" title={t("volunteers.edit")}>
-            <Stack spacing={1.5} sx={{ pb: 1.5 }}>
-              <ActionForm action={editVolunteerCategoryAction} scope={`category-${category.id}`} messages={categoryBoxes}>
+            {/* «Poziția»: the category's place among the event's, from 1, and the one step up or down the club's order takes (the roles type a number
+                into one form; a category's place is its own small form, as it always was). */}
+            {count > 1 && (
+              <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1 }} data-testid="volunteer-category-position">
+                <Typography variant="body2" sx={{ mr: 0.5 }}>
+                  {t("volunteers.category.position", { position: String(index + 1), count: String(count) })}
+                </Typography>
+                {([
+                  ["up", "moveUp", index > 0],
+                  ["down", "moveDown", index < count - 1],
+                ] as const).map(([direction, icon, possible]) =>
+                  possible ? (
+                    <Box component="form" action={moveVolunteerCategoryAction} key={direction}>
+                      {hidden}
+                      <input type="hidden" name="categoryId" value={category.id} />
+                      <input type="hidden" name="direction" value={direction} />
+                      <GlyphSubmitButton
+                        icon={icon}
+                        label={t(`volunteers.move.${direction}`)}
+                        pendingLabel={t(`volunteers.move.${direction}`)}
+                        ariaLabel={`${t(`volunteers.move.${direction}`)}: ${categoryName(category)}`}
+                        variant="outlined"
+                      />
+                    </Box>
+                  ) : null,
+                )}
+              </Stack>
+            )}
+            {/* «Persoana de contact»: empty at creation, filled in later by the club; its own form and its own «Salvează». */}
+            <Panel glyph="contacts" collapsible level={4} title={t("volunteers.category.contactTitle")} data-testid="volunteer-category-contact">
+              <ActionForm action={saveVolunteerCategoryContactAction} scope={`category-contact-${category.id}`} messages={categoryBoxes}>
                 {hidden}
                 <input type="hidden" name="categoryId" value={category.id} />
-                {categoryNameFields(category)}
-                <Box sx={{ mt: 1.5 }}>
-                  <GlyphSubmitButton label={t("volunteers.save")} pendingLabel={t("volunteers.saving")} icon="save" />
-                </Box>
+                <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("volunteers.category.contactHelp")}
+                    <QuietHelp text={t("volunteers.category.contactHelpMore")} />
+                  </Typography>
+                  <RecallField
+                    name="contactName"
+                    label={t("volunteers.category.contactName")}
+                    defaultValue={category.contactName ?? ""}
+                    size="small"
+                    slotProps={{ htmlInput: { maxLength: VOLUNTEER_NAME_MAX, autoComplete: "off" } }}
+                  />
+                  <RecallField
+                    name="contactPhone"
+                    type="tel"
+                    label={t("volunteers.category.contactPhone")}
+                    helperText={t("registrations.answers.phoneHelp")}
+                    defaultValue={category.contactPhone ?? ""}
+                    size="small"
+                    slotProps={{ htmlInput: { maxLength: VOLUNTEER_CONTACT_PHONE_MAX, inputMode: "tel", autoComplete: "off" } }}
+                  />
+                  <RecallField
+                    name="contactEmail"
+                    type="email"
+                    label={t("volunteers.category.contactEmail")}
+                    defaultValue={category.contactEmail ?? ""}
+                    size="small"
+                    slotProps={{ htmlInput: { maxLength: VOLUNTEER_CONTACT_EMAIL_MAX, autoComplete: "off" } }}
+                  />
+                  <Box>
+                    <GlyphSubmitButton label={t("volunteers.save")} pendingLabel={t("volunteers.saving")} icon="save" />
+                  </Box>
+                </Stack>
               </ActionForm>
-              <ActionForm
-                action={deleteVolunteerCategoryAction}
-                confirm={{
-                  title: t("volunteers.category.deleteTitle"),
-                  body: t("volunteers.category.deleteBody", { name: categoryName(category) }),
-                  confirmLabel: t("volunteers.category.delete"),
-                  cancelLabel: words.cancel,
-                  destructive: true,
-                }}
-              >
-                {hidden}
-                <input type="hidden" name="categoryId" value={category.id} />
-                <GlyphSubmitButton label={t("volunteers.category.delete")} pendingLabel={t("volunteers.category.deleting")} icon="delete" color="error" variant="outlined" />
-              </ActionForm>
-            </Stack>
-          </Panel>
-        </Stack>
+            </Panel>
+            {/* «Șterge categoria» last, as every row's delete: it asks first, and a category with a role under it is refused with a sentence. */}
+            <ActionForm
+              action={deleteVolunteerCategoryAction}
+              confirm={{
+                title: t("volunteers.category.deleteTitle"),
+                body: t("volunteers.category.deleteBody", { name: categoryName(category) }),
+                confirmLabel: t("volunteers.category.delete"),
+                cancelLabel: words.cancel,
+                destructive: true,
+              }}
+            >
+              {hidden}
+              <input type="hidden" name="categoryId" value={category.id} />
+              <GlyphSubmitButton
+                label={t("volunteers.category.delete")}
+                pendingLabel={t("volunteers.category.deleting")}
+                icon="delete"
+                color="error"
+                variant="outlined"
+              />
+            </ActionForm>
+          </Stack>
+        </Box>
       </Box>
     );
   };
@@ -891,12 +919,13 @@ export default async function VolunteersCard({
                 {t("volunteers.categories.empty")}
               </Typography>
             ) : (
-              <Stack spacing={1.5} component="ul" aria-label={t("volunteers.categories.title")} sx={{ listStyle: "none", m: 0, p: 0 }}>
+              <Stack spacing={0} component="ul" aria-label={t("volunteers.categories.title")} sx={{ listStyle: "none", m: 0, p: 0 }}>
                 {categories.map((category, index) => categoryRow(category, index, categories.length))}
               </Stack>
             )}
+            {/* «Adaugă o categorie» (§842): a fold like every «Adaugă…» of the backoffice, open by itself only while the event has no category. */}
             {categories.length < VOLUNTEER_CATEGORIES_MAX && (
-              <Panel glyph="add" collapsible level={3} title={t("volunteers.category.addTitle")} data-testid="volunteer-category-add">
+              <Panel glyph="add" collapsible level={4} title={t("volunteers.category.addTitle")} openWhen={{ primary: categories.length === 0 }} data-testid="volunteer-category-add">
                 <ActionForm action={addVolunteerCategoryAction} scope="category-new" messages={categoryBoxes}>
                   {hidden}
                   {categoryNameFields(null)}
