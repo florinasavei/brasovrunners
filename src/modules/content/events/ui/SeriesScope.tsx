@@ -1,7 +1,5 @@
 "use client";
 
-import DateRangeIcon from "@mui/icons-material/DateRange";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import Box from "@mui/material/Box";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Link from "@mui/material/Link";
@@ -16,7 +14,6 @@ import { countForm } from "@/i18n/count-form";
 import EditionMark from "@/modules/events/ui/EditionMark";
 import type { SeriesDate } from "@/modules/events/ui/SeriesDates";
 import { fillIn } from "@/shared/forms/fill-in";
-import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
@@ -147,14 +144,16 @@ function useScope(): ScopeState {
 }
 
 /**
- * "Salvează pentru", in the Salvare box: the radios, the sentence, why only what changed travels
- * (folded), and 15.1 "Alege datele una câte una" (folded unless the ticks are hand-picked). Inside
- * the save form, so the hidden inputs travel with it.
+ * "Salvează pentru", in the Salvare box: the radios and the sentence, then `children` — the page's
+ * two folds, `Panel`s drawn on the server (the editor's rule, `EventEditorLayout`; they were folds
+ * this island drew by hand): why only what changed travels, the help line, and 15.1 "Alege datele
+ * una câte una", a level-3 fold holding `SeriesPickDates`. Inside the save form, so the hidden
+ * inputs travel with it.
  */
-export function SeriesScopeBox({ locale }: { locale: string }) {
+export function SeriesScopeBox({ locale, children }: { locale: string; children?: ReactNode }) {
   const t = useTranslations("Admin");
   const tEvent = useTranslations("Event");
-  const { dates, currentId, ticked, preset, setPreset, toggle } = useScope();
+  const { dates, currentId, ticked, preset, setPreset } = useScope();
 
   // Every date the save reaches, the current one included, in the series' order.
   const reached = dates.filter((date) => date.id === currentId || ticked.has(date.id));
@@ -204,48 +203,45 @@ export function SeriesScopeBox({ locale }: { locale: string }) {
       <Typography variant="body2" data-testid="series-scope-count" role="status">
         {sentence} {count > 1 ? t("editor.scope.countTail") : ""}
       </Typography>
-      <Box component="details" sx={BOXED_DISCLOSURE_SX}>
-        <Typography component="summary" variant="body2">
-          <HelpOutlineIcon aria-hidden sx={FOLD_GLYPH_SX} />
-          {t("editor.scope.whyTitle")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {t("editor.scope.help")}
-        </Typography>
-      </Box>
-      {/* 15.1 — the exceptions, one date at a time; open while the ticks are hand-picked. */}
-      <Box component="details" open={preset === null || undefined} sx={BOXED_DISCLOSURE_SX} data-testid="series-pick-dates">
-        <Typography component="summary" variant="body2" sx={{ fontWeight: 600 }}>
-          <DateRangeIcon aria-hidden sx={FOLD_GLYPH_SX} />
-          {t("editor.boxes.pickDates.title")}
-        </Typography>
-        <Stack>
-          {dates.map((date) => {
-            const isCurrent = date.id === currentId;
-            return (
-              <Stack key={date.id} direction="row" spacing={1} sx={{ alignItems: "center", minHeight: 44, flexWrap: "wrap" }}>
-                {isCurrent ? (
-                  <Typography variant="body2" sx={{ pl: 1.5, fontWeight: 600 }}>
-                    {date.label} · {t("editor.scope.thisOne")}
-                  </Typography>
-                ) : (
-                  <FormControlLabel
-                    control={<Checkbox checked={ticked.has(date.id)} onChange={() => toggle(date.id)} sx={CHECKBOX_TAP_TARGET} />}
-                    label={date.label}
-                    sx={date.note?.kind === "cancelled" ? { textDecoration: "line-through", color: "text.secondary" } : undefined}
-                  />
-                )}
-                {date.note && <EditionMark note={date.note} size={16} />}
-                {!isCurrent && (
-                  <Link href={date.href} variant="body2" sx={{ display: "inline-block", py: 1 }}>
-                    {t("editor.scope.openShort")}
-                  </Link>
-                )}
-              </Stack>
-            );
-          })}
-        </Stack>
-      </Box>
+      {children}
+    </Stack>
+  );
+}
+
+/**
+ * 15.1 — the exceptions, one date at a time: the ticks inside the page's «Alege datele una câte una»
+ * fold (a level-3 `Panel`, closed: a hand-picked set is ticked from inside it, so it is open while
+ * that happens). The same state as the radios above.
+ */
+export function SeriesPickDates() {
+  const t = useTranslations("Admin");
+  const { dates, currentId, ticked, toggle } = useScope();
+  return (
+    <Stack>
+      {dates.map((date) => {
+        const isCurrent = date.id === currentId;
+        return (
+          <Stack key={date.id} direction="row" spacing={1} sx={{ alignItems: "center", minHeight: 44, flexWrap: "wrap" }}>
+            {isCurrent ? (
+              <Typography variant="body2" sx={{ pl: 1.5, fontWeight: 600 }}>
+                {date.label} · {t("editor.scope.thisOne")}
+              </Typography>
+            ) : (
+              <FormControlLabel
+                control={<Checkbox checked={ticked.has(date.id)} onChange={() => toggle(date.id)} sx={CHECKBOX_TAP_TARGET} />}
+                label={date.label}
+                sx={date.note?.kind === "cancelled" ? { textDecoration: "line-through", color: "text.secondary" } : undefined}
+              />
+            )}
+            {date.note && <EditionMark note={date.note} size={16} />}
+            {!isCurrent && (
+              <Link href={date.href} variant="body2" sx={{ display: "inline-block", py: 1 }}>
+                {t("editor.scope.openShort")}
+              </Link>
+            )}
+          </Stack>
+        );
+      })}
     </Stack>
   );
 }

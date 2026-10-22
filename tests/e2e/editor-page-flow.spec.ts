@@ -1,6 +1,6 @@
 import { expect, type Page, type Request, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { editorBox, languageTab, openEditorBox } from "./support/fold";
+import { editorBox, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * §406 — the event editor mirrors the page (BR-REQ-050-01). The owner, 2026-09-25: "am nevoie de
@@ -442,6 +442,9 @@ test.describe("§557 the participation conditions group", () => {
     const rules = await openEditorBox(page, "Regulamentul");
     const conditions = rules.getByTestId("conditions-group");
     await expect(page.locator("#box-conditions")).toHaveCount(0);
+    // An optional setting, so a closed level-4 fold of the card (the editor's two shapes): opened as a person does.
+    await expect(conditions).not.toHaveAttribute("open", "");
+    await openFold(conditions);
 
     // A new event is a group run: the group says there is no form to ask it on.
     await expect(conditions.getByTestId("conditions-not-registering")).toBeVisible();

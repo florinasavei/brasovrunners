@@ -3230,6 +3230,10 @@
             "asked": "Medical information: yes",
             "notAsked": "Medical information: no"
           },
+          "hiddenList": {
+            "on": "In use",
+            "off": "Not in use"
+          },
           "bibs": {
             "from": "From {number}",
             "clubColour": "the club's colour",
@@ -6520,6 +6524,8 @@
       "sparesFree": "Reserved for the desk: {from}–{to}, {free} of {total} still free. The reprint carries only the free ones.",
       "sparesNone": "Reserved for the desk: {from}–{to}, all given. Print more if you need them.",
       "sparesTitle": "Spare bibs for on-the-spot entries",
+      "sparesLine": "{from}–{to}, free: {free}",
+      "sparesLineNone": "None reserved",
       "sparesHelp": "Numbers printed ahead with an empty name line, for people who register at the desk; nobody online gets them. Between 1 and {max} at a time.",
       "sparesCount": "How many",
       "sparesPrint": "Print",

@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, type Locator, type Page } from "@playwright/test";
-import { openEditorBox } from "./fold";
+import { openEditorBox, openFold } from "./fold";
 
 /**
  * Getting the seeded featured event into a state a registration journey can be walked against.
@@ -260,8 +260,11 @@ export async function ensureRegistrationIsOpen(page: Page) {
 
     // The form asks the health note only when the event does (§557): the seed ticks it on the sample
     // race, and this ticks it on a database seeded before the column, so the medical fold is there.
-    // «Condiții de participare» is a group inside «Regulamentul» since §799.
-    const health = (await openEditorBox(page, "Regulamentul")).locator('[name="event.askHealthNote"]');
+    // «Condiții de participare» is a group inside «Regulamentul» since §799, a closed fold of it since the
+    // editor's two shapes (an optional setting): opened before its tick is pressed.
+    const conditions = (await openEditorBox(page, "Regulamentul")).getByTestId("conditions-group");
+    await openFold(conditions);
+    const health = conditions.locator('[name="event.askHealthNote"]');
     if (!(await health.isChecked())) await health.check();
 
     // The event is published, so the one save carries the live-edit acknowledgement for the

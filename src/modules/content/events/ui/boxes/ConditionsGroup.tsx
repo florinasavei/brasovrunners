@@ -24,10 +24,11 @@ export function asksHealthNoteOnForm(event: Pick<EditableEvent, "type" | "regist
  * «Condiții de participare», the group at the foot of «Regulamentul» (§557, moved in §799; the owner,
  * 2026-10-16, pointing from the closed card to the rules card beside the minimum age: «cardul ăsta ar
  * trebui mutat în ăsta»). It was a level-3 card of its own after the declaration; it is now a level-4
- * static `Panel` — the boxed frame with a heading and no fold, as «Clubul pe lista publică» is inside
- * the public list's card — under «Vârsta minimă de participare» and outside the language tabs, because
- * what it holds is a switch, not translated text. Everything it holds, and every name it posts, is
- * what the card held: one tick — «Informații medicale».
+ * fold — an optional setting, so a part a person may skip (the editor's rule, `EventEditorLayout`;
+ * it was a static boxed frame until then), closed, «Informații medicale: da/nu» on its closed line —
+ * under «Vârsta minimă de participare» and outside the language tabs, because what it holds is a
+ * switch, not translated text. Everything it holds, and every name it posts, is what the card held:
+ * one tick — «Informații medicale».
  *
  * Ticked, the registration form asks the optional health note (BR-REQ-031-05); unticked — the
  * default, every event before the column included — the form asks nothing medical and the server
@@ -48,15 +49,16 @@ export default async function ConditionsGroup({ event, mayEditSettings }: Pick<B
   const group = {
     glyph: "conditions",
     level: 4,
-    static: true,
     title: t("editor.boxes.conditions.title"),
+    // The line says the answer only where there is a form to ask it on (§111).
+    aside: asksHealthNoteOnForm(event) ? healthNoteSummary(words, event?.askHealthNote ?? false) : undefined,
     "data-testid": "conditions-group",
   } as const;
-  // A reader sees the heading and the line only where there is a form to ask it on (§111, §542).
-  if (!mayEditSettings) return <Panel {...group} aside={asksHealthNoteOnForm(event) ? healthNoteSummary(words, event?.askHealthNote ?? false) : undefined} />;
+  // A reader sees the heading and the line, nothing to open (§542).
+  if (!mayEditSettings) return <Panel {...group} />;
   const days = durationPhrase(locale, RETENTION_PERIODS.identityAndHealthDaysAfterEvent, "days");
   return (
-    <Panel {...group}>
+    <Panel collapsible {...group}>
       <>
         <OnlyForType type={EVENT_TYPES.filter(takesRegistrations)} selectName="event.type" initialType={initialType}>
           <OnlyForMode mode="INTERNAL" initialMode={initialMode}>

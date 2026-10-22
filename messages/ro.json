@@ -3230,6 +3230,10 @@
             "asked": "Informații medicale: da",
             "notAsked": "Informații medicale: nu"
           },
+          "hiddenList": {
+            "on": "Folosită",
+            "off": "Nefolosită"
+          },
           "bibs": {
             "from": "De la {number}",
             "clubColour": "culoarea clubului",
@@ -6520,6 +6524,8 @@
       "sparesFree": "Rezervate pentru masă: {from}–{to}, libere încă {free} din {total}. Retipărirea le pune doar pe cele libere.",
       "sparesNone": "Rezervate pentru masă: {from}–{to}, date toate. Tipărește altele dacă mai e nevoie.",
       "sparesTitle": "Numere de rezervă pentru înscrierile de la fața locului",
+      "sparesLine": "{from}–{to}, libere: {free}",
+      "sparesLineNone": "Niciunul rezervat",
       "sparesHelp": "Numere tipărite dinainte, cu rândul pentru nume gol, pentru cei care se înscriu la masă; online nu le primește nimeni. Între 1 și {max} odată.",
       "sparesCount": "Câte",
       "sparesPrint": "Tipărește",

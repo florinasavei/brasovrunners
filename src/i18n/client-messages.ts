@@ -65,8 +65,8 @@ export const STAFF_CLIENT_MESSAGES = [
   // DateField and TimeField (`shared/forms/pickers`): the typed format and its refusal.
   "Admin.pickers",
   // SeriesScope, in the event editor: which dates of a series a save reaches.
+  // (The fold «Alege datele una câte una» around its ticks is the page's own `Panel`, its title the server's.)
   "Admin.editor.scope",
-  "Admin.editor.boxes.pickDates.title",
   "Event.series.count",
   // ToastProvider (`shared/feedback`): every "it worked" sentence, looked up by a `saved` code
   // at runtime, so the whole namespace — a few kilobytes, on pages only staff open (§384).

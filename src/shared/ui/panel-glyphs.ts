@@ -95,6 +95,7 @@ import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
+import IncognitoIcon from "./IncognitoIcon";
 
 /**
  * A backoffice box's glyph, by name (§521; the owner, 2026-09-27: a glyph on every button and
@@ -123,6 +124,8 @@ export const PANEL_GLYPHS = {
   title: TitleIcon,
   description: NotesIcon,
   when: EventIcon,
+  // «Locul», the open part of «Când și unde» (the editor's two shapes, 2026-10-21): the pin the page's map draws for it.
+  place: PlaceIcon,
   timezone: AccessTimeIcon,
   address: PlaceIcon,
   course: RouteIcon,
@@ -134,6 +137,8 @@ export const PANEL_GLYPHS = {
   partners: HandshakeIcon,
   registration: HowToRegIcon,
   window: DateRangeIcon,
+  // «Alege datele una câte una» (§350), the Salvare box's fold of a series' dates: the calendar's range, as before.
+  seriesDates: DateRangeIcon,
   confirmation: TaskAltIcon,
   reminder: NotificationsActiveIcon,
   bibs: ConfirmationNumberIcon,
@@ -152,6 +157,9 @@ export const PANEL_GLYPHS = {
   bibMembers: CardMembershipIcon,
   print: PrintIcon,
   startList: GroupsIcon,
+  // «Lista de invitați speciali» (§647), a fold of «Lista publică a participanților»: the incognito the
+  // list wears everywhere (`HiddenListChip`), the house's own drawing — Material has none.
+  hiddenList: IncognitoIcon,
   promotion: ShareIcon,
   save: SaveIcon,
   // «De făcut pentru pagina evenimentului» (§749): what the page still lacks and the club's own lines.

@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import pg from "pg";
 import { cancelDialog, confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
-import { openEditorBox, openEventFold } from "./support/fold";
+import { openEditorBox, openEventFold, openFold } from "./support/fold";
 
 /**
  * §647 (amending §643; the owner, 2026-10-02: «Nu îmi place deloc cum arată bifa asta, trebuia să fie
@@ -119,8 +119,11 @@ test.describe("§743 «Arată invitații speciali pe lista publică»: off by de
     await signIn(page, "Dev Administrator");
     await page.goto(`/ro/admin/events/${seeded.eventId}`);
     await hydrated(page);
+    // «Lista de invitați speciali» is a closed fold of the public list's card (the editor's two shapes): opened first.
     const box = await openEditorBox(page, "Lista publică a participanților");
-    await box.getByTestId("hidden-list-settings").getByRole("checkbox", { name: "Arată invitații speciali pe lista publică" }).check();
+    const hiddenList = box.getByTestId("hidden-list-settings");
+    await openFold(hiddenList);
+    await hiddenList.getByRole("checkbox", { name: "Arată invitații speciali pe lista publică" }).check();
     // Live (published): saving a change asks for the acknowledgement first.
     await page.getByRole("checkbox", { name: "Am înțeles că modific conținut publicat." }).check();
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
@@ -229,6 +232,10 @@ test.describe("§647 «Lista de invitați speciali» (named so since) as a radio
     await hydrated(page);
     const box = await openEditorBox(page, "Lista publică a participanților");
     const group = box.getByTestId("hidden-list-settings");
+    // A closed level-4 fold of the card (the editor's two shapes), its state on its closed line.
+    await expect(group).not.toHaveAttribute("open", "");
+    await expect(group.locator(":scope > summary")).toContainText("Nefolosită");
+    await openFold(group);
     const start = group.getByLabel("Numerele invitaților speciali încep de la");
     await expect(group.getByText("Folosește lista de invitați speciali", { exact: true })).toBeVisible();
     await expect(start).toBeHidden();

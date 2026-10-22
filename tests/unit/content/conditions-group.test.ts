@@ -10,7 +10,8 @@ import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 
 /**
  * §557, moved in §799 — «Condiții de participare» as a group inside «Regulamentul» (the owner,
- * 2026-10-16: «cardul ăsta ar trebui mutat în ăsta»): a level-4 boxed section with a glyph, holding
+ * 2026-10-16: «cardul ăsta ar trebui mutat în ăsta»): a level-4 fold with a glyph (an optional part, so
+ * a fold since the editor's two shapes, 2026-10-21; a boxed section before), holding
  * one tick — «Informații medicale» — and one sentence that names the days from the retention
  * constant, and the tick only where registration happens on the site (§111). The rules card's own
  * line and the whole editor are pinned in `editor-fewer-cards-render.test.ts`.
@@ -44,15 +45,15 @@ async function render(event: EditableEvent | null, mayEditSettings = true) {
 }
 
 describe("§799 the «Condiții de participare» group", () => {
-  it("is a boxed section, not a fold, with a level-4 heading and a glyph before the words", async () => {
+  it("is a closed level-4 fold, an optional setting, its answer on its closed line, a glyph before the words", async () => {
     const html = await render(RACE);
-    expect(html).toMatch(/^<section[^>]*data-testid="conditions-group"/);
-    expect(html).not.toContain("<details");
-    expect(html).not.toContain("<summary");
+    expect(html).toMatch(/^<details[^>]*data-testid="conditions-group"/);
+    expect(html.match(/<details[^>]*>/)?.[0]).not.toMatch(/\sopen/);
     expect(html).not.toContain('id="box-conditions"');
     const heading = /<h4\b[^>]*>(.*?)<\/h4>/.exec(html)?.[1] ?? "";
     expect(heading).toContain('data-testid="MedicalServicesIcon"');
     expect(heading.indexOf("Condiții de participare")).toBeGreaterThan(heading.indexOf("MedicalServicesIcon"));
+    expect(heading).toContain("Informații medicale: nu");
   });
 
   it("holds the unticked tick, its marker and the days on an event that does not ask the note", async () => {

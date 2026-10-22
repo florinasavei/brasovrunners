@@ -134,7 +134,8 @@ type Props = CommonProps &
          * editor's type select, and the field legend on `/admin/emails`, which also takes
          * `legendIcon="info"`. `level` and `tone` are ignored on that variant; there is no card to
          * nest or to warn about. The line always folds (`collapsible` and `static` are read only
-         * by the `card` variant): a `help` line's whole point is a caret.
+         * by the `card` variant): a `help` line's whole point is a caret. `"section"` is a part of a
+         * card the event needs, open and unframed (below).
          */
         variant?: "card";
         /** The subject's glyph before the heading, by name (`panel-glyphs.ts`). */
@@ -144,6 +145,18 @@ type Props = CommonProps &
         /** A small clickable line instead of a card (§398); see `legendIcon`. */
         variant: "help";
         glyph?: undefined;
+      }
+    | {
+        /**
+         * A part of a card that the event needs, drawn open with no frame (the rule below `Panel`'s
+         * own doc): its glyph and its heading at `level`, the type a fold at that level wears, then
+         * its intro and its boxes — no fold, no border, no wash. `collapsible`, `static`, `tone`,
+         * `openWhen` and `legendIcon` are not read; `id` lands on the `<section>`, and the heading
+         * takes `${id}-heading`, which names the section.
+         */
+        variant: "section";
+        /** The subject's glyph before the heading, by name (`panel-glyphs.ts`). */
+        glyph: PanelGlyphName;
       }
   );
 
@@ -180,6 +193,16 @@ type Props = CommonProps &
  * **The summary is never `display: flex`.** Chrome and Safari drop the disclosure marker when
  * it is, which is exactly how a fold becomes grey text; the title and the aside are inline
  * elements inside it instead.
+ *
+ * **A part inside a card is one of two shapes, never a third** (the owner, 2026-10-21, of the
+ * backoffice: «not consistent at all»; the event editor's boxes first). A part a person may skip
+ * — optional settings, advanced options — is a fold at the next `level`, closed, its value said on
+ * its closed line (`aside`), opened by `openWhen` or by a refusal inside it; help is the `help`
+ * line. A part the event needs — boxes that must be typed before it saves or publishes — is a
+ * `variant="section"` at the next level: its glyph, its heading and its boxes, no fold, no border.
+ * A part whose required box always holds a value (a select with a default, an address made from
+ * the title) is one a person may skip, and folds. No bold caption over a divider and no bordered
+ * box drawn by hand: a field's own group (radios under a `<legend>`) is a field, not a part.
  */
 export default function Panel({
   title,
@@ -256,6 +279,26 @@ export default function Panel({
       ) : null}
     </>
   );
+
+  if (variant === "section") {
+    // A part the event needs (the rule above): the heading a fold at this level wears, open, unframed.
+    const headingId = id ? `${id}-heading` : undefined;
+    return (
+      <Box component="section" id={id} aria-labelledby={headingId} data-testid={testId} sx={{ scrollMarginTop: 16, minWidth: 0 }}>
+        <Typography component={headingTag} id={headingId} variant="h2" sx={{ fontSize: headingSize }}>
+          {heading}
+        </Typography>
+        {intro && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            {intro}
+
+            {more}
+          </Typography>
+        )}
+        {children != null && children !== false && <Box sx={{ mt: 1.5 }}>{children}</Box>}
+      </Box>
+    );
+  }
 
   if (!folds) {
     return (
