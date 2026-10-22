@@ -72,7 +72,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
     { path: "src/app/[locale]/admin/events/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/gallery/(list)/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/gallery/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
-    { path: "src/app/[locale]/admin/legal/(list)/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/legal/new/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/pages/(list)/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/pages/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
@@ -159,7 +158,7 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
 export const PINNED = {
   colours: { entries: 13, hits: 28 },
   icons: { entries: 35, hits: 127 },
-  primitives: { entries: 84, hits: 88 },
+  primitives: { entries: 83, hits: 87 },
   toggles: { entries: 0, hits: 0 },
 } as const;
 

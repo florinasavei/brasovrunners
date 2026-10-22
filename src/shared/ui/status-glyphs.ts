@@ -16,6 +16,7 @@ import HistoryIcon from "@mui/icons-material/History";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import LinkIcon from "@mui/icons-material/Link";
 import LockClockIcon from "@mui/icons-material/LockClock";
+import PostAddIcon from "@mui/icons-material/PostAdd";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -83,6 +84,10 @@ export const STATUS_GLYPHS = {
   // A runner's race that did not end in a time (§808): did not start, dropped out. A disqualified runner wears `failed`.
   didNotStart: DoNotDisturbIcon,
   droppedOut: FlagIcon,
+  // A legal text's version a newer one replaced, «Înlocuită»; and «Șablon nou», the platform's template newer than the text in force —
+  // the picture «Regenerează din șablon» wears (§847, /admin/legal's rows).
+  superseded: HistoryIcon,
+  newTemplate: PostAddIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;

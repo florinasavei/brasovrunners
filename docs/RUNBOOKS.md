@@ -1066,7 +1066,7 @@ signing page offers «Semnez pentru un minor (sub 18 ani)» **only while** the d
 kind names `{{minor}}` in both languages **and** the run's own «Vârsta minimă» (the «Regulamentul» card) is under
 18. Until then nothing changes for anybody: an adult signs as before, and `/admin/tasks` carries the row «Declarațiile
 alergărilor de grup: minorul și părintele» (`groupRunMinorText`), which closes by itself the day every group-run
-text in force has the paragraph. To switch it on: `/admin/legal` → the card «Declarație pe propria răspundere (alergare
+text in force has the paragraph. To switch it on: `/admin/legal` → the row «Declarație pe propria răspundere (alergare
 de grup, asfalt)» → «Regenerează din șablon» → read the draft, fill the four facts, «Aprobă și publică»; the same
 for «teren accidentat»; then the privacy notice from its template (its group-run paragraph now says the minor's name is
 kept on the same row, and the minor's birth date is only checked). A Romanian lawyer reads the minor's paragraph first:
@@ -1093,7 +1093,7 @@ and `/admin/legal` marks the declarations and the notice «Șablon nou». Until 
 carry the new line (the IP address and the browser are kept from the first signing after this release, whatever text is
 in force), but the declaration and the notice a person read do not mention it — **approve the notice from the new template on production the same day this release
 reaches production, first in the sitting and before the declarations** (the race is live with real registrations, and the
-notice in force still says «nu și adresa IP»): `/admin/legal` → the card → «Regenerează din șablon» → read
+notice in force still says «nu și adresa IP»): `/admin/legal` → the text's row → «Regenerează din șablon» → read
 the draft, fill the four facts, «Aprobă și publică». A Romanian lawyer reads the disqualification clause, the signature
 sentence and the notice's section 10 sentence («singura adresă IP pe care o păstrăm este cea a unei semnături electronice»,
 which replaced «platforma nu stochează nicio adresă IP») first (an electronic signature «ca o semnătură olografă» is the parties' agreement, eIDAS art. 25 and Legea nr.
