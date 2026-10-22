@@ -77,9 +77,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
     { path: "src/app/[locale]/admin/pages/members/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/registrations/(list)/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/registrations/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
-    { path: "src/app/[locale]/admin/settings/costs/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
-    { path: "src/app/[locale]/admin/staff/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
-    { path: "src/app/[locale]/admin/tasks/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/contact/feedback/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
     { path: "src/app/[locale]/contact/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
     { path: "src/app/[locale]/devs/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
@@ -155,9 +152,7 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
 export const PINNED = {
   colours: { entries: 13, hits: 28 },
   icons: { entries: 33, hits: 124 },
-  primitives: { entries: 81, hits: 85 },
-  icons: { entries: 35, hits: 127 },
-  primitives: { entries: 82, hits: 86 },
+  primitives: { entries: 79, hits: 83 },
   toggles: { entries: 0, hits: 0 },
 } as const;
 
