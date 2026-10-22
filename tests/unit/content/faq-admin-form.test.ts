@@ -111,6 +111,30 @@ describe("§525 the FAQ page's one form in the backoffice", () => {
     expect(submits.slice(1).some((button) => button.includes('name="move"'))).toBe(true);
   });
 
+  it("draws each question as the house's row fold, closed, its line in words, and «Adaugă o întrebare» closed beside saved questions (§842)", async () => {
+    const markup = await renderPage();
+    const rows = [...markup.matchAll(/<details[^>]*data-testid="faq-card"[^>]*>([\s\S]*?)<\/summary>/g)];
+    expect(rows).toHaveLength(ITEMS.length);
+    rows.forEach((row, index) => {
+      expect(row[0]).not.toMatch(/<details[^>]*\sopen/);
+      expect(row[1]).toContain(`${index + 1}. Întrebarea ${index + 1}?`);
+      // Hidden from the site: «Ascunsă»; the fixture's answers read as nothing, so the English one is missing: «Fără engleză».
+      expect(row[1]).toContain(messages.Admin.faq.hidden);
+      expect(row[1]).toContain(messages.Admin.faq.englishMissing);
+    });
+    const add = markup.slice(markup.lastIndexOf("<details", markup.indexOf('id="faq-new"')), markup.indexOf("</summary>", markup.indexOf('id="faq-new"')));
+    expect(add).toContain(messages.Admin.faq.addTitle);
+    expect(add).not.toMatch(/<details[^>]*\sopen/);
+  });
+
+  it("puts no required box in a closed row: the browser could neither show nor focus it, and the press would do nothing (§842)", async () => {
+    const markup = await renderPage();
+    const start = markup.indexOf('data-testid="faq-page-form"');
+    const form = markup.slice(start, markup.indexOf("</form>", start));
+    expect(form).toContain('name="faq[0].questionRo"');
+    expect(form).not.toMatch(/<(input|textarea|select)[^>]*\srequired/);
+  });
+
   it("asks before putting the spare card's question on the site only when one is typed", async () => {
     await renderPage();
     const confirm = forms.find((form) => form.testId === "faq-page-form")?.confirm;

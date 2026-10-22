@@ -92,6 +92,50 @@ describe("§717 the home page panel's folds", () => {
   });
 });
 
+describe("§842 «Prima dată»'s steps and «De ce»'s reasons as the house's row folds", () => {
+  /** Every row of a kind: its `<details>` up to its summary's end. */
+  const rows = (html: string, kind: "step" | "reason") => [...html.matchAll(new RegExp(`<details[^>]*data-testid="home-page-${kind}"[^>]*>[\\s\\S]*?</summary>`, "g"))].map((match) => match[0]);
+
+  it("draws five steps and four reasons, closed, each line its title in words and the default's mark", async () => {
+    const html = await draw(DEFAULT_HOME_PAGE_SETTING);
+    const steps = rows(html, "step");
+    const reasons = rows(html, "reason");
+    expect(steps).toHaveLength(5);
+    expect(reasons).toHaveLength(4);
+    for (const row of [...steps, ...reasons]) {
+      expect(row).not.toMatch(/<details[^>]*\sopen/);
+      expect(row).toContain("Textul implicit");
+    }
+    expect(steps[2]).toContain("Pasul 3");
+    expect(steps[2]).toContain("Salută-ne");
+    expect(reasons[0]).toContain("Motivul 1");
+    expect(reasons[0]).toContain("Împreună");
+    // The row's boxes are inside it, and the heading's boxes stay outside every row.
+    const stepsFold = html.slice(html.indexOf('id="home-page-steps"'));
+    expect(stepsFold).toContain('name="step3TitleRo"');
+    expect(html.slice(html.indexOf('data-testid="home-page-step"'))).toContain('name="step1BodyEn"');
+    expect(html.indexOf('name="stepsTitleRo"')).toBeLessThan(html.indexOf('data-testid="home-page-step"'));
+    expect(html.indexOf('name="stepsLinkRo"')).toBeGreaterThan(html.lastIndexOf('data-testid="home-page-step"'));
+  });
+
+  it("names the club's own title on its row and drops the default's mark there", async () => {
+    const own = DEFAULT_HOME_PAGE_SETTING.steps.steps.map((step, index) => (index === 1 ? { ...step, title: { ro: "Vino la parc", en: "Come to the park" } } : step));
+    const steps = { ...DEFAULT_HOME_PAGE_SETTING.steps, steps: own };
+    const html = await draw({ ...DEFAULT_HOME_PAGE_SETTING, steps });
+    const row = rows(html, "step")[1]!;
+    expect(row).toContain("Pasul 2");
+    expect(row).toContain("Vino la parc");
+    expect(row).not.toContain("Textul implicit");
+  });
+
+  it("puts no required box in a closed row, so the save is never held back by a box nobody can see", async () => {
+    const html = await draw(DEFAULT_HOME_PAGE_SETTING);
+    const start = html.indexOf('id="home-page-steps"');
+    const end = html.indexOf('id="home-page-strip"');
+    expect(html.slice(start, end)).not.toMatch(/<(input|textarea|select)[^>]*\srequired/);
+  });
+});
+
 describe("§732 the special-events-first checkbox", () => {
   it("renders with its saved state, off by default", async () => {
     const off = await draw(DEFAULT_HOME_PAGE_SETTING);

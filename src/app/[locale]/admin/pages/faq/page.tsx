@@ -23,12 +23,17 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import type { ConfirmSpec } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
-import RecallField, { RecallCheckbox, RecallHidden } from "@/shared/forms/recall";
+import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import Panel from "@/shared/ui/Panel";
+import QuietHelp from "@/shared/ui/QuietHelp";
+import { FACTS_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
+import StatusChip from "@/shared/ui/StatusChip";
 import { CLUB_NAME } from "@/theme/brand";
 import { saveFaqPageAction, setFaqPagePublishedAction } from "./actions";
 
@@ -42,6 +47,9 @@ export const dynamic = "force-dynamic";
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 type RichLabels = ReturnType<typeof richTextEditorLabels>;
 
+/** The pencil at the end of a question's line: the edit verb's glyph, by name (§318). */
+const PencilIcon = ACTION_ICONS.edit;
+
 /** A card's two languages, as the tabs draw them. */
 const LANGUAGES = [
   { locale: "ro", suffix: "Ro", label: "langRo" },
@@ -52,14 +60,18 @@ const LANGUAGES = [
  * «Întrebări frecvente» in the backoffice (§525): the page first — DRAFT until an Administrator
  * publishes it, both languages at once, asked first (§384) — then the page's **one form** (§28):
  * «Copiază și tradu tot: RO → EN» at the top (§482), the introduction, and every question as a
- * card in the page's own order, the last card a spare for a new question, and one save.
+ * row in the page's own order, then «Adaugă o întrebare» for a new one, and one save.
  *
- * Each card is a fold (§336) holding a Română | English strip with «Tradu cardul» in its tab row
- * (§514): the question, its optional «Categorie» and the answer in the rich-text editor — words,
- * links and pictures (§72, §414), no table. Under the strip the card's arrows (the save's own
- * buttons, so a move keeps every word typed), «Pe site» for the Administrator, and «Șterge la
- * salvare». A save that puts a question on the site, takes one off or deletes one asks first,
- * naming the question (§384); a save that changes nothing outward asks nothing.
+ * Each question is the house's row fold (§842, `shared/ui/row-fold.ts`): its line is the question
+ * in words — its number and its Romanian text, «Ascunsă» while it is off the site, «Fără engleză»
+ * should a language be missing, the pencil — and a press anywhere on it opens, in place, a Română |
+ * English strip with «Tradu cardul» in its tab row (§514): the question, its optional «Categorie»
+ * and the answer in the rich-text editor — words, links and pictures (§72, §414), no table. Under
+ * the strip the arrows (the save's own buttons, so a move keeps every word typed), «Pe site» for
+ * the Administrator, and «Șterge la salvare» last. A closed row's boxes post as they were: still
+ * one form. «Adaugă o întrebare» is the same boxes behind a fold, open by itself only while there
+ * is no question. A save that puts a question on the site, takes one off or deletes one asks
+ * first, naming the question (§384); a save that changes nothing outward asks nothing.
  *
  * Read by whoever reads the club's content (§208); the form is offered only to the roles the
  * service lets write (BR-REQ-060-01), which asserts every role again.
@@ -275,32 +287,24 @@ export default async function AdminFaqPage({ params, searchParams }: Props) {
             </Panel>
 
             <Stack spacing={1} id="faq-questions" sx={{ scrollMarginTop: 16 }}>
+              {/* How the rows work stays behind the «?» (§511): the heading is the only line the list needs above it. */}
               <Typography variant="h3" sx={{ fontSize: "1.1rem", fontWeight: 700 }}>
                 {t("faq.questionsHeading")}
+                <QuietHelp text={t("faq.questionsHelp")} />
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {t("faq.questionsHelp")}
-              </Typography>
+              {items.length > 0 && (
+                <Box component="ol" sx={{ listStyle: "none", m: 0, p: 0 }} aria-label={t("faq.listLabel")}>
+                  {items.map((item, index) => (
+                    <QuestionRow key={item.id} item={item} index={index} count={items.length} title={`${index + 1}. ${questionOf(item)}`} words={t} rich={rich} mayShow={mayShow} />
+                  ))}
+                </Box>
+              )}
             </Stack>
 
-            <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", m: 0, p: 0 }} aria-label={t("faq.listLabel")}>
-              {items.map((item, index) => (
-                <Box component="li" key={item.id}>
-                  <QuestionCard
-                    item={item}
-                    index={index}
-                    count={items.length}
-                    title={`${index + 1}. ${questionOf(item)}`}
-                    words={t}
-                    rich={rich}
-                    mayShow={mayShow}
-                  />
-                </Box>
-              ))}
-              <Box component="li">
-                <QuestionCard item={null} index={items.length} count={items.length} title={t("faq.newHeading")} words={t} rich={rich} mayShow={mayShow} />
-              </Box>
-            </Stack>
+            {/* «Adaugă o întrebare» (§842): the blank boxes behind a fold, like every «Adaugă…» of the backoffice, open by itself only while there is no question. */}
+            <Panel glyph="add" collapsible level={3} title={t("faq.addTitle")} intro={t("faq.newHelp")} openWhen={{ primary: items.length === 0 }} id="faq-new" data-testid="faq-new-card">
+              <QuestionBoxes item={null} index={items.length} count={items.length} title={t("faq.newHeading")} words={t} rich={rich} mayShow={mayShow} />
+            </Panel>
 
             <Box>
               <GlyphSubmitButton label={t("faq.save")} pendingLabel={t("editor.saving")} icon="save" size="medium" />
@@ -323,34 +327,68 @@ export default async function AdminFaqPage({ params, searchParams }: Props) {
   );
 }
 
-/**
- * One question's card — or, with no `item`, the spare card a new question is written on: a fold
- * with the question's number and words on its line and whether it is on the site, a Română |
- * English strip with «Tradu cardul», and the card's own controls under it.
- */
-function QuestionCard({
-  item,
-  index,
-  count,
-  title,
-  words: t,
-  rich,
-  mayShow,
-}: {
+type QuestionProps = {
   item: AdminFaqItem | null;
   index: number;
   count: number;
+  /** «3. Ce aduc?»: what the arrows name the question by, in the reader's language. */
   title: string;
   words: Words;
   rich: RichLabels;
   mayShow: boolean;
-}) {
+};
+
+/**
+ * One saved question's row (§842): the house's row fold — the line in words (its number and its
+ * Romanian text, «Ascunsă» while it is off the site, «Fără engleză» should a language be missing,
+ * the pencil) over the question's boxes (`QuestionBoxes`). Keyed on what the line says, so a save
+ * that changed it draws the row closed; a refusal opens the folds around the box it names.
+ */
+function QuestionRow(props: QuestionProps & { item: AdminFaqItem }) {
+  const { item, index, words: t } = props;
+  // Both languages are required by the save, so this marks only a row stored before that rule, or an answer that no longer reads.
+  const englishMissing = item.questionEn === "" || item.answerEn === null;
+  return (
+    <Box component="li" sx={ROW_SX}>
+      <Box
+        component="details"
+        key={[item.questionRo, item.questionEn, item.visible, index, item.version].join("\u0001")}
+        id={`faq-${item.id}`}
+        data-testid="faq-card"
+        sx={{ scrollMarginTop: 16 }}
+      >
+        <Box component="summary" title={t("faq.edit")} data-testid="faq-card-toggle" sx={SUMMARY_SX}>
+          <Box sx={{ gridArea: "words", minWidth: 0 }}>
+            <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }} data-testid="faq-card-question">
+              {`${index + 1}. ${item.questionRo}`}
+            </Typography>
+          </Box>
+          <Box sx={FACTS_SX}>
+            {!item.visible && <StatusChip glyph="hidden" label={t("faq.hidden")} testId="faq-card-hidden" />}
+            {englishMissing && <StatusChip glyph="language" variant="outlined" color="warning" label={t("faq.englishMissing")} testId="faq-card-no-english" />}
+          </Box>
+          <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
+        </Box>
+        <Box sx={{ pb: 1.5, pt: 0.5 }}>
+          <QuestionBoxes {...props} />
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+/**
+ * One question's boxes — or, with no `item`, the blank ones a new question is written on: a
+ * Română | English strip with «Tradu cardul», then the arrows, «Pe site» and «Șterge la salvare»
+ * last. No box is `required`: a saved row's boxes sit in a closed fold, where the browser could
+ * neither show nor focus a refused one — the server says what is missing and opens its fold.
+ */
+function QuestionBoxes({ item, index, count, title, words: t, rich, mayShow }: QuestionProps) {
   const name = (box: Parameters<typeof faqBoxName>[1]) => faqBoxName(index, box);
   const mayRemove = item !== null && (!item.visible || mayShow);
-  const aside = item ? (item.visible ? t("faq.visible") : t("faq.hidden")) : t("faq.newHelp");
 
   return (
-    <Panel glyph="help" collapsible level={3} title={title} aside={aside} id={item ? `faq-${item.id}` : "faq-new"} data-testid={item ? "faq-card" : "faq-new-card"}>
+    <>
       {item && <input type="hidden" name={name("id")} value={item.id} />}
       <LocaleTabPanels
         idPrefix={`faq-q${index}`}
@@ -407,19 +445,20 @@ function QuestionCard({
           <GlyphSubmitButton icon="moveDown" name="move" value={`${index}:down`} label={t("faq.moveDownWord")} pendingLabel={t("faq.moveDownWord")} tooltip={t("faq.moveDownTip")} variant="outlined" ariaLabel={t("faq.moveDownNamed", { question: title })} />
         )}
         {mayShow && (
-          <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44, cursor: "pointer" }}>
-            <RecallCheckbox name={name("visible")} defaultChecked={item?.visible ?? false} data-testid="faq-visible" />
+          <CheckboxField name={name("visible")} defaultChecked={item?.visible ?? false}>
             {t("faq.onSite")}
-          </Box>
+          </CheckboxField>
         )}
+        {/* «Șterge la salvare» last, in the error colour: the row's one destructive choice, asked first by the save (§384). */}
         {mayRemove && (
-          <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44, cursor: "pointer", color: "error.main" }}>
-            <RecallCheckbox name={name("remove")} data-testid="faq-remove" />
-            {t("faq.remove")}
-          </Box>
+          <CheckboxField name={name("remove")}>
+            <Box component="span" sx={{ color: "error.main" }}>
+              {t("faq.remove")}
+            </Box>
+          </CheckboxField>
         )}
       </Stack>
-    </Panel>
+    </>
   );
 }
 
