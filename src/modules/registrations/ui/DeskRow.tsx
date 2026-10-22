@@ -1,7 +1,5 @@
-import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
@@ -13,17 +11,19 @@ import { bibPictureSrc } from "@/modules/registrations/domain/bib-stamp";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { formatRaceNumber, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
-import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { handsSpareAtConfirm, type SpareState } from "../domain/spare-bibs";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import StatusChip from "@/shared/ui/StatusChip";
 import DeskEmailChip from "./DeskEmailChip";
 import FamilyChip from "./FamilyChip";
 import GivePlaceButton from "./GivePlaceButton";
+import RegistrationStatusChip from "./RegistrationStatusChip";
 import { rejectedEmailWords } from "./rejected-email-words";
 import {
   checkInAction,
@@ -62,6 +62,9 @@ async function bibRefusalMessages(label: string) {
   const messages = await refusalMessages({ bibNumber: label });
   return { ...messages, keptConflict: messages.kept };
 }
+
+/** «Arată numărul»'s glyph: the race number's, asked of `action-icons.ts` by name (§318). */
+const BibIcon = ACTION_ICONS.number;
 
 export default async function DeskRow({
   row,
@@ -197,18 +200,13 @@ export default async function DeskRow({
             </Typography>
             {/* A minor: the kit goes to the parent named here (§108). */}
             {row.guardianName && (
-              <Chip size="small" variant="outlined" label={t("desk.guardian", { name: row.guardianName })} />
+              <StatusChip glyph="family" variant="outlined" label={t("desk.guardian", { name: row.guardianName })} />
             )}
             {/* A family on one address (§543), beside the parent's line: who came with this person — names only (§15.11). */}
             <FamilyChip label={t("registrations.familyChip")} members={family.map((name) => ({ name }))} testId="desk-family" />
-            <Chip
-              size="small"
-              color={
-                terminal ? "error" : row.status === "CONFIRMED" ? "success" : row.status === "WAITLISTED" ? "default" : "warning"
-              }
-              label={REGISTRATION_STATUS_LABEL[row.status]}
-            />
-            {row.kind === "TEST" && <Chip size="small" color="warning" label={t("registrations.testKind")} />}
+            {/* The state as the list and the registration's page draw it (`RegistrationStatusChip`, §847): one table, one word. */}
+            <RegistrationStatusChip status={row.status} />
+            {row.kind === "TEST" && <StatusChip glyph="test" color="warning" label={t("registrations.testKind")} />}
             {/* The QR confirmation did not arrive and somebody must act (§663, §671): one chip, from the desk's own
                 projection and words — never an address or the provider's words (§67). Every other email is the
                 registration page's to say; the desk hands the number against the name either way. */}
@@ -219,8 +217,8 @@ export default async function DeskRow({
               return desk && <DeskEmailChip label={desk.label} hint={desk.hint} />;
             })()}
             {row.checkedInAt && (
-              <Chip
-                size="small"
+              <StatusChip
+                glyph="checkedIn"
                 color="success"
                 variant="outlined"
                 label={t("desk.checkedInAt", {
@@ -251,7 +249,7 @@ export default async function DeskRow({
           {number !== null && row.kind === "REAL" && !terminal && (
             <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1 }}>
               <Typography component="summary" variant="body2" color="text.secondary">
-                <ConfirmationNumberIcon aria-hidden sx={FOLD_GLYPH_SX} />
+                <BibIcon aria-hidden sx={FOLD_GLYPH_SX} />
                 {t("desk.showBib")}
               </Typography>
               {/* The picture draws the paper's edge itself (A5 bibs, §338): no second frame round it. */}

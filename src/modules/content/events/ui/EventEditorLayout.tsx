@@ -14,6 +14,15 @@ import type { ReactNode } from "react";
  * HTML has. On the create page the whole grid sits inside the create form, because nothing else
  * posts there. `below` holds what is operations, not settings — the registrations received and
  * the copy and delete verbs — under the grid, full width.
+ *
+ * **Inside every card, a part is one of two shapes** (`Panel`'s doc says why; the owner, 2026-10-21:
+ * «not consistent at all»). A part a person may skip — optional settings, advanced options — is a
+ * `Panel collapsible` at the next level, closed unless something inside asks for action or a save
+ * refused a box in it, its value on its closed line; help is `Panel variant="help"`. A part the event
+ * needs — boxes that must be typed before it saves or publishes («Data și ora», «Locul») — is
+ * `Panel variant="section"` at the next level: a heading and its boxes, no fold, no border. A required
+ * box that always holds a value (the status, the time zone, the address made from the title) does not
+ * make its part needed. Never a bold caption over a divider, never a bordered box drawn by hand.
  */
 export default function EventEditorLayout({ side, main, below }: { side: ReactNode; main: ReactNode; below?: ReactNode }) {
   return (

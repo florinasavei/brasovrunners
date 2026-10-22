@@ -43,7 +43,7 @@ import { eventMergeValues } from "@/modules/registrations/signed-declaration";
 import { listStaffUsers } from "@/modules/staff-identity/repository";
 import { dayIn } from "@/modules/registrations/domain/age";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
-import { type ScopeDate, SeriesScopeBox, SeriesScopeProvider } from "@/modules/content/events/ui/SeriesScope";
+import { type ScopeDate, SeriesPickDates, SeriesScopeBox, SeriesScopeProvider } from "@/modules/content/events/ui/SeriesScope";
 import { editionNote, ruleSentence } from "@/modules/events/ui/series-sentence";
 import { BibPrintCard, BibPrintForms } from "@/modules/content/events/ui/boxes/BibPrint";
 import { riskMark } from "@/modules/content/events/ui/boxes/box-kit";
@@ -1030,7 +1030,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         {t("editor.repeatAdminOnly")}
                       </Typography>
                     )}
-                    <Panel glyph="help" collapsible level={3} title={t("editor.repeatHelpSummary")}>
+                    {/* Help, so the editor's help line (§398), not a card (`EventEditorLayout`). */}
+                    <Panel collapsible variant="help" title={t("editor.repeatHelpSummary")}>
                       <Typography variant="body2" color="text.secondary">
                         {t("editor.repeatHelp", { horizon: daysPhrase(locale, deadlines.seriesHorizonDays) })}
                       </Typography>
@@ -1176,7 +1177,20 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     <Panel glyph="save" static id="box-save" title={t("editor.boxes.save.title")}>
                       <Stack spacing={2}>
                         {/* A date of a series: which dates, in words, "this and the following" first. */}
-                        {inSeries && maySaveSettings && <SeriesScopeBox locale={locale} />}
+                        {inSeries && maySaveSettings && (
+                          <SeriesScopeBox locale={locale}>
+                            {/* Why only what changed travels: help, so the help line (`EventEditorLayout`'s rule). */}
+                            <Panel collapsible variant="help" title={t("editor.scope.whyTitle")}>
+                              <Typography variant="body2" color="text.secondary">
+                                {t("editor.scope.help")}
+                              </Typography>
+                            </Panel>
+                            {/* 15.1 — the exceptions, one date at a time: an option a save may skip, so a level-3 fold. */}
+                            <Panel glyph="seriesDates" collapsible level={3} title={t("editor.boxes.pickDates.title")} data-testid="series-pick-dates">
+                              <SeriesPickDates />
+                            </Panel>
+                          </SeriesScopeBox>
+                        )}
                         {/* Whether the participants hear about this save (§331), with the count. */}
                         {maySaveSettings && (
                           <EventNoticeUpdateFields

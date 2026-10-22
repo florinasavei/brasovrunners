@@ -1,6 +1,4 @@
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
@@ -20,6 +18,11 @@ import {
 import { EMAIL_PLANS } from "@/modules/notifications/domain/email-plan";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
+import { FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
+import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
+import { FACTS_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
+import StatusChip from "@/shared/ui/StatusChip";
+import { CARET_SX, MONTH_GLYPH, ROW_BODY_SX, SEVERITY_CHIP } from "./cost-rows";
 
 type Props = {
   locale: Locale;
@@ -32,14 +35,6 @@ type Props = {
   reasons: MonthCostReasons;
   /** Whether DeepL is set up here: a line of zeros means something else when the buttons are not there. */
   deeplConfigured: boolean;
-};
-
-/** The chip's colour per severity — `ServiceSeverity`'s own: grey for "nothing measures it", never green. */
-const SEVERITY_COLOR: Record<MonthCostLine["severity"], "success" | "default" | "warning" | "error"> = {
-  ok: "success",
-  unknown: "default",
-  watch: "warning",
-  act: "error",
 };
 
 /**
@@ -78,6 +73,10 @@ function Fact({ label, wide = false, testId, children }: { label: string; wide?:
  *
  * Read-only, and a Server Component: every figure comes from `monthCosts` (pure), and a line
  * whose reading failed says why rather than printing a zero (§1.2).
+ *
+ * Each provider is one of the house's row folds (§842, `cost-rows.ts`), no longer a box of its own:
+ * the line says it in words — the name, a chip with the month by its end, a chip with its state —
+ * and the figures and the sentences open under it, so the card reads as a list before it is opened.
  */
 export default async function MonthCostsPanel({ locale, lines, totals, reasons, deeplConfigured }: Props) {
   const t = await getTranslations("Admin");
@@ -256,105 +255,114 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
         aside={t("tasks.month.aside", { amount: usd(totals.projectedUsd) })}
         data-testid="month-costs"
       >
-        <Stack spacing={1.5} component="ul" aria-label={t("tasks.month.listLabel")} sx={{ listStyle: "none", m: 0, p: 0 }}>
+        <Box component="ul" aria-label={t("tasks.month.listLabel")} sx={{ listStyle: "none", m: 0, p: 0 }}>
           {lines.map((line) => {
             const ceiling = ceilingText(line);
             const credit = creditText(line);
+            const severity = SEVERITY_CHIP[line.severity];
+            const Glyph = PANEL_GLYPHS[MONTH_GLYPH[line.id]];
             return (
-              <Box
-                component="li"
-                key={line.id}
-                data-testid={`month-cost-${line.id}`}
-                data-severity={line.severity}
-                sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: { xs: 1.5, sm: 2 } }}
-              >
-                <Stack direction="row" sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-                  <Typography variant="h3" sx={{ fontSize: "1rem" }}>
-                    {name(line)}
-                  </Typography>
-                  <Chip
-                    size="small"
-                    color={SEVERITY_COLOR[line.severity]}
-                    variant={line.severity === "unknown" ? "outlined" : "filled"}
-                    label={t(`tasks.severity.${line.severity}`)}
-                  />
-                </Stack>
-                {/* Two columns at 320 px, four from `md`: a table would scroll sideways on a phone (§18.5). */}
-                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" }, gap: 1.5 }}>
-                  <Fact label={t("tasks.month.field.plan")} wide>
-                    {t("tasks.month.planLine", { plan: line.plan, billing: t(`tasks.month.billing.${line.billing}`) })}
-                  </Fact>
-                  <Fact label={t("tasks.month.field.soFar")}>
-                    <strong>{money(line.soFarUsd, line.plusVat)}</strong>
-                  </Fact>
-                  <Fact label={t("tasks.month.field.projected")}>
-                    <strong>{money(line.projectedUsd, line.plusVat)}</strong>
-                    {line.estimated && line.projectedUsd !== null && ` ${t("tasks.month.estimateWord")}`}
-                  </Fact>
-                  <Fact label={t("tasks.month.field.lastMonth")} testId={`month-cost-${line.id}-last`}>
-                    {lastMonthText(line)}
-                  </Fact>
-                  <Box sx={{ gridColumn: { xs: "1 / -1", md: ceiling !== null ? "span 2" : "1 / -1" } }}>
-                    <Fact label={t("tasks.month.field.usage")} testId={`month-cost-${line.id}-usage`}>
-                      {usageText(line)}
-                      {line.usage?.unit === "gigabytes" && <QuietHelp text={t("tasks.month.usage.gigabytesMore")} />}
-                    </Fact>
+              <Box component="li" key={line.id} data-testid={`month-cost-${line.id}`} data-severity={line.severity} sx={ROW_SX}>
+                {/* The house's row fold (§842, `cost-rows.ts`): the provider in words — its name, the month by its end, its state — and the figures inside. */}
+                <Box component="details">
+                  <Box component="summary" sx={SUMMARY_SX} data-testid={`month-cost-${line.id}-toggle`}>
+                    <Box sx={{ gridArea: "words", minWidth: 0 }}>
+                      <Typography component="h3" sx={{ fontSize: "1rem", fontWeight: 600, display: "inline" }}>
+                        <Glyph aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+                        {name(line)}
+                      </Typography>
+                    </Box>
+                    <Box sx={FACTS_SX}>
+                      <StatusChip
+                        inline
+                        glyph="orders"
+                        variant="outlined"
+                        label={line.projectedUsd === null ? t("tasks.month.notMeasured") : t("tasks.month.aside", { amount: usd(line.projectedUsd) })}
+                        testId={`month-cost-${line.id}-chip`}
+                      />
+                      <StatusChip inline glyph={severity.glyph} color={severity.color} variant={severity.variant} label={t(`tasks.severity.${line.severity}`)} />
+                    </Box>
+                    <Box component="span" aria-hidden sx={CARET_SX} />
                   </Box>
-                  {ceiling !== null && (
-                    <Fact label={t("tasks.month.field.ceiling")} testId={`month-cost-${line.id}-ceiling`}>
-                      {ceiling}
-                    </Fact>
-                  )}
-                  {/* A usage fact beside the money that is not the metered one (§479): its own fact, not a clause. */}
-                  {line.detail?.kind === "deployments" && (
-                    <Fact label={t("tasks.month.field.deployments")}>{t("tasks.month.detail.deployments", { count: format.number(line.detail.count) })}</Fact>
-                  )}
-                  {line.detail?.kind === "storageGb" && (
-                    <Fact label={t("tasks.month.field.storage")}>
-                      {t("tasks.month.detail.storageGb", { gb: format.number(line.detail.gb, { maximumFractionDigits: 2 }) })}
-                    </Fact>
-                  )}
+                  <Box sx={ROW_BODY_SX}>
+                    {/* Two columns at 320 px, four from `md`: a table would scroll sideways on a phone (§18.5). */}
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" }, gap: 1.5 }}>
+                      <Fact label={t("tasks.month.field.plan")} wide>
+                        {t("tasks.month.planLine", { plan: line.plan, billing: t(`tasks.month.billing.${line.billing}`) })}
+                      </Fact>
+                      <Fact label={t("tasks.month.field.soFar")}>
+                        <strong>{money(line.soFarUsd, line.plusVat)}</strong>
+                      </Fact>
+                      <Fact label={t("tasks.month.field.projected")}>
+                        <strong>{money(line.projectedUsd, line.plusVat)}</strong>
+                        {line.estimated && line.projectedUsd !== null && ` ${t("tasks.month.estimateWord")}`}
+                      </Fact>
+                      <Fact label={t("tasks.month.field.lastMonth")} testId={`month-cost-${line.id}-last`}>
+                        {lastMonthText(line)}
+                      </Fact>
+                      <Box sx={{ gridColumn: { xs: "1 / -1", md: ceiling !== null ? "span 2" : "1 / -1" } }}>
+                        <Fact label={t("tasks.month.field.usage")} testId={`month-cost-${line.id}-usage`}>
+                          {usageText(line)}
+                          {line.usage?.unit === "gigabytes" && <QuietHelp text={t("tasks.month.usage.gigabytesMore")} />}
+                        </Fact>
+                      </Box>
+                      {ceiling !== null && (
+                        <Fact label={t("tasks.month.field.ceiling")} testId={`month-cost-${line.id}-ceiling`}>
+                          {ceiling}
+                        </Fact>
+                      )}
+                      {/* A usage fact beside the money that is not the metered one (§479): its own fact, not a clause. */}
+                      {line.detail?.kind === "deployments" && (
+                        <Fact label={t("tasks.month.field.deployments")}>{t("tasks.month.detail.deployments", { count: format.number(line.detail.count) })}</Fact>
+                      )}
+                      {line.detail?.kind === "storageGb" && (
+                        <Fact label={t("tasks.month.field.storage")}>
+                          {t("tasks.month.detail.storageGb", { gb: format.number(line.detail.gb, { maximumFractionDigits: 2 }) })}
+                        </Fact>
+                      )}
+                    </Box>
+                    {/* The pace goes past the ceiling: the one sentence that asks for action, on its own line. */}
+                    {line.usage?.state === "over" && (
+                      <Typography variant="body2" color="warning.main" sx={{ mt: 1, fontWeight: 500 }} data-testid={`month-cost-${line.id}-over`}>
+                        {t(`tasks.month.over.${line.id}`)}
+                      </Typography>
+                    )}
+                    {/* DeepL's credit (§497): what is used and left, then its level or why it was not read — each its own line. */}
+                    {credit?.line && (
+                      <Typography variant="body2" sx={{ mt: 1 }} data-testid={`month-cost-${line.id}-credit`}>
+                        {credit.line}
+                      </Typography>
+                    )}
+                    {credit?.warning && (
+                      <Typography variant="body2" color="warning.main" sx={{ mt: 1, fontWeight: 500 }} data-testid={`month-cost-${line.id}-credit-level`}>
+                        {credit.warning}
+                      </Typography>
+                    )}
+                    {line.id === "mailgun" && reasons.current.mailgun === "typed plan" && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        {t("tasks.month.typedPlan")}
+                      </Typography>
+                    )}
+                    {/* What would start costing money, on every line that is free today (the owner: free tiers only). */}
+                    {line.billing === "free" && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid={`month-cost-${line.id}-trigger`}>
+                        {t(`tasks.month.trigger.${line.id}`, line.id === "r2" ? r2Values : triggerValues)}
+                      </Typography>
+                    )}
+                    {line.id === "deepl" && !deeplConfigured && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        {t("tasks.month.deeplOff")}
+                      </Typography>
+                    )}
+                    <Typography variant="caption" color="text.secondary" component="div" sx={{ mt: 1 }}>
+                      {t(line.id === "neon" ? "tasks.month.periodNeon" : "tasks.month.period", { span: span(line) })}
+                    </Typography>
+                  </Box>
                 </Box>
-                {/* The pace goes past the ceiling: the one sentence that asks for action, on its own line. */}
-                {line.usage?.state === "over" && (
-                  <Typography variant="body2" color="warning.main" sx={{ mt: 1, fontWeight: 500 }} data-testid={`month-cost-${line.id}-over`}>
-                    {t(`tasks.month.over.${line.id}`)}
-                  </Typography>
-                )}
-                {/* DeepL's credit (§497): what is used and left, then its level or why it was not read — each its own line. */}
-                {credit?.line && (
-                  <Typography variant="body2" sx={{ mt: 1 }} data-testid={`month-cost-${line.id}-credit`}>
-                    {credit.line}
-                  </Typography>
-                )}
-                {credit?.warning && (
-                  <Typography variant="body2" color="warning.main" sx={{ mt: 1, fontWeight: 500 }} data-testid={`month-cost-${line.id}-credit-level`}>
-                    {credit.warning}
-                  </Typography>
-                )}
-                {line.id === "mailgun" && reasons.current.mailgun === "typed plan" && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {t("tasks.month.typedPlan")}
-                  </Typography>
-                )}
-                {/* What would start costing money, on every line that is free today (the owner: free tiers only). */}
-                {line.billing === "free" && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid={`month-cost-${line.id}-trigger`}>
-                    {t(`tasks.month.trigger.${line.id}`, line.id === "r2" ? r2Values : triggerValues)}
-                  </Typography>
-                )}
-                {line.id === "deepl" && !deeplConfigured && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {t("tasks.month.deeplOff")}
-                  </Typography>
-                )}
-                <Typography variant="caption" color="text.secondary" component="div" sx={{ mt: 1 }}>
-                  {t(line.id === "neon" ? "tasks.month.periodNeon" : "tasks.month.period", { span: span(line) })}
-                </Typography>
               </Box>
             );
           })}
-        </Stack>
+        </Box>
 
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
           {t("tasks.month.others")}

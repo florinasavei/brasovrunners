@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import CopyCodeButton from "@/modules/content/member-codes/ui/CopyCodeButton";
+import Panel from "@/shared/ui/Panel";
 
 type Props = {
   title: string;
@@ -21,23 +22,20 @@ type Props = {
  * client island is the copy button, which takes the same text as a string (`CopyCodeButton`, §552) —
  * without JavaScript the lines are there to select. No address and no verb: every role that reads the
  * page reads it, the Organizer too (§289).
+ *
+ * A card like every other on the page (`Panel`, §847), at the level of the cards under the person's name,
+ * and open: it is what the page is opened for when somebody rings, so it never folds.
  */
 export default function WhatToTell({ title, help, languageNote, lang, lines, copyLabel, copiedLabel }: Props) {
   const text = lines.join(" ");
   return (
-    <Box component="section" data-testid="what-to-tell" sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2, minWidth: 0 }}>
-      <Typography variant="h3" sx={{ fontSize: "1rem", mb: 0.5 }}>
-        {title}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-        {help}
-      </Typography>
+    <Panel glyph="tell" level={3} title={title} intro={help} data-testid="what-to-tell">
       {languageNote && (
         <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 1 }} data-testid="what-to-tell-language">
           {languageNote}
         </Typography>
       )}
-      <Stack spacing={0.5} lang={lang} data-testid="what-to-tell-lines">
+      <Stack spacing={0.5} lang={lang} sx={{ minWidth: 0 }} data-testid="what-to-tell-lines">
         {lines.map((line) => (
           <Typography key={line} variant="body2">
             {line}
@@ -47,6 +45,6 @@ export default function WhatToTell({ title, help, languageNote, lang, lines, cop
       <Box sx={{ mt: 1.5 }}>
         <CopyCodeButton code={text} label={copyLabel} copiedLabel={copiedLabel} />
       </Box>
-    </Box>
+    </Panel>
   );
 }

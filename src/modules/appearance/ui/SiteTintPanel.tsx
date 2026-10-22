@@ -8,12 +8,12 @@ import type { Locale } from "@/i18n/routing";
 import { CUSTOM_SITE_TINT, DEFAULT_SITE_TINT, SITE_TINT_PRESETS } from "@/modules/appearance/domain/site-tint";
 import type { SiteTintState } from "@/modules/appearance/site-tint";
 import ActionForm from "@/shared/forms/ActionForm";
-import { RecallRadio } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import Panel from "@/shared/ui/Panel";
+import RadioField from "@/shared/ui/RadioField";
 import { CLUB_NAME, COLOR, SITE_TINT } from "@/theme/brand";
 import CustomTintOption from "./CustomTintOption";
 import TintPreview from "./TintPreview";
@@ -23,7 +23,7 @@ type Props = {
   state: SiteTintState;
   /** Administrator only (§450); the action and the service refuse anybody else. */
   mayEdit: boolean;
-  /** Why the fold opens on arrival (§336): «Setări» → «Aspect» is this card alone (§516). */
+  /** Why the fold opens on arrival (§336): its own save (`?saved=siteTint`). */
   openWhen?: FoldOpenWhen;
 };
 
@@ -33,10 +33,15 @@ type Props = {
  * `#rrggbb` and refused unless text stays readable on it and it stays light.
  *
  * The shape of «Adresa de contact afișată» (§442): a Server Component, one form, a radio per
- * choice — each with the page in miniature on that colour (`TintPreview`: the header, a card, a
- * line of text), so the choice is seen, not guessed from a name — Save behind the §384
- * confirmation. «Personalizat» is the one client island (`CustomTintOption`), live as the colour
- * is typed. A role that may not change it reads the choice in force and who changes it.
+ * choice (`RadioField`) — each with the page in miniature on that colour (`TintPreview`: the
+ * header, a card, a line of text), so the choice is seen, not guessed from a name — Save behind
+ * the §384 confirmation. «Personalizat» is the one client island (`CustomTintOption`), live as the
+ * colour is typed. A role that may not change it reads the choice in force and who changes it.
+ *
+ * A fold, closed on arrival, the colour in force on its line (the owner, 2026-10-21, of the
+ * backoffice: «they look like they are from a different app»): «Setări» → «Aspect» reads as a list
+ * of its settings, each one's value beside its name, the boxes a press away. It opens by itself
+ * after its own save.
  */
 export default async function SiteTintPanel({ locale, state, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
@@ -47,7 +52,7 @@ export default async function SiteTintPanel({ locale, state, mayEdit, openWhen }
   const preview = { header: CLUB_NAME, card: t("appearance.preview.card"), text: t("appearance.preview.text") };
 
   return (
-    <Panel glyph="appearance" title={t("appearance.title")} intro={t("appearance.intro")} id="site-tint" data-testid="site-tint" openWhen={openWhen}>
+    <Panel glyph="appearance" collapsible title={t("appearance.title")} aside={current} intro={t("appearance.intro")} id="site-tint" data-testid="site-tint" openWhen={openWhen}>
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="site-tint-current">
         {t("appearance.current", { tint: current })}
       </Typography>
@@ -84,24 +89,22 @@ export default async function SiteTintPanel({ locale, state, mayEdit, openWhen }
                   {t("appearance.legend")}
                 </Typography>
                 {SITE_TINT_PRESETS.map((tint) => (
-                  // A plain label with children, never `FormControlLabel`'s element prop (§370); 44px to a thumb.
-                  <Box
-                    key={tint}
-                    component="label"
-                    sx={{ display: "flex", alignItems: "center", gap: 1.25, minHeight: 44, py: 0.5, cursor: "pointer" }}
-                    data-testid={`site-tint-option-${tint}`}
-                  >
-                    <RecallRadio name="tint" value={tint} defaultChecked={setting.tint === tint} style={{ width: 20, height: 20, flexShrink: 0 }} />
-                    <TintPreview page={SITE_TINT[tint]} words={preview} />
-                    <Box component="span" sx={{ minWidth: 0 }}>
-                      <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 500 }}>
-                        {t(`appearance.tints.${tint}.name`)}
-                        {tint === DEFAULT_SITE_TINT ? ` · ${t("appearance.default")}` : ""}
-                      </Typography>
-                      <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                        {t(`appearance.tints.${tint}.help`)}
-                      </Typography>
-                    </Box>
+                  // The house's radio (§702): a native radio in a label, 44px to a thumb; the box around it carries the option's testid.
+                  <Box key={tint} data-testid={`site-tint-option-${tint}`}>
+                    <RadioField name="tint" value={tint} defaultChecked={setting.tint === tint}>
+                      <Box component="span" sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0, py: 0.5 }}>
+                        <TintPreview page={SITE_TINT[tint]} words={preview} />
+                        <Box component="span" sx={{ minWidth: 0 }}>
+                          <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 500 }}>
+                            {t(`appearance.tints.${tint}.name`)}
+                            {tint === DEFAULT_SITE_TINT ? ` · ${t("appearance.default")}` : ""}
+                          </Typography>
+                          <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                            {t(`appearance.tints.${tint}.help`)}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </RadioField>
                   </Box>
                 ))}
                 <CustomTintOption

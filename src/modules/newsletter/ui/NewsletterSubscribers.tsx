@@ -1,18 +1,14 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
 import { unsubscribeSubscriberAction } from "@/app/[locale]/admin/newsletter/actions";
 import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { type ListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
+import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -36,6 +32,10 @@ import SubscriberListFields from "./SubscriberListFields";
 type Props = {
   locale: Locale;
   query: SubscriberListQuery;
+  /** The table's page and its size (§847), from the address; the page shares it with «Participanți care au bifat…». */
+  listQuery: ListQuery;
+  /** The address names a page or a size: the fold opens on what was asked for. */
+  paged: boolean;
   list: NewsletterSubscriberList;
   /** The Administrator's and the Superadministrator's: «Dezabonează» on each row. */
   mayUnsubscribe: boolean;
@@ -47,47 +47,6 @@ type Props = {
 export const SUBSCRIBERS_ANCHOR = "newsletter-subscribers";
 
 /**
- * One table, two layouts by CSS alone (§550): a table from `md` up, and below it every row a block
- * — the address as its headline, each other cell a line with its column's name before it
- * (`data-label`), the button under them — so each row renders its «Dezabonează» form once, not
- * once per layout.
- */
-const TABLE = { display: { xs: "block", md: "table" } } as const;
-const HEAD = { display: { xs: "none", md: "table-header-group" } } as const;
-const BODY = { display: { xs: "flex", md: "table-row-group" }, flexDirection: "column", gap: 1.5 } as const;
-/** A visible line between two rows (§453), none under the last; the theme's divider in both schemes. */
-const ROW = (last: boolean) =>
-  ({
-    display: { xs: "block", md: "table-row" },
-    border: { xs: 1, md: 0 },
-    borderColor: "divider",
-    borderRadius: { xs: 1, md: 0 },
-    p: { xs: 2, md: 0 },
-    "& > td": {
-      display: { xs: "flex", md: "table-cell" },
-      justifyContent: "space-between",
-      alignItems: "baseline",
-      gap: 1,
-      textAlign: { xs: "right", md: "left" },
-      px: { xs: 0, md: 2 },
-      py: { xs: 0.25, md: 1.25 },
-      verticalAlign: "top",
-      borderBottom: { xs: 0, md: last ? 0 : 1 },
-      borderColor: "divider",
-      "&::before": {
-        content: { xs: "attr(data-label)", md: "none" },
-        color: "text.secondary",
-        fontSize: "0.875rem",
-        flexShrink: 0,
-      },
-    },
-    "& > td[data-cell='email']": { display: { xs: "block", md: "table-cell" }, fontWeight: { xs: 700, md: 400 }, fontSize: { xs: "1rem", md: "inherit" }, mb: { xs: 1, md: 0 } },
-    "& > td[data-cell='actions']": { display: { xs: "block", md: "table-cell" }, mt: { xs: 1.5, md: 0 }, textAlign: { xs: "left", md: "right" } },
-    "& > td[data-cell='email']::before, & > td[data-cell='actions']::before": { content: "none" },
-  }) as const;
-const HEAD_RULE = { borderBottom: 2, borderColor: "text.secondary", fontWeight: 700, whiteSpace: "nowrap" } as const;
-
-/**
  * «Abonați» / "Subscribers" on `/admin/newsletter` (§550, amending §445; the owner, 2026-09-28
  * 22:48: «în newsletter vreau să și văd abonații și mailurile lor»): every subscriber, newest first
  * — the address as typed, the language, the topics in the pop-up's words, the state with what its
@@ -97,11 +56,12 @@ const HEAD_RULE = { borderBottom: 2, borderColor: "text.secondary", fontWeight: 
  * A fold, closed by default (§336), whose closed line says the counts; it opens by itself while a
  * filter shapes it (`inUse`) or right after an unsubscribe (`saved`). A Server Component: the rows
  * are server HTML, and each row's form posts the subscriber's id alone; the address reaches a client
- * island only as the string of its confirm dialog's title, which the server HTML shows anyway. A
- * table from `md` up and one block per row below it, switched by CSS on the same elements (no column
- * is lost at 320 pixels, nothing scrolls sideways, and one form per row, not one per layout).
+ * island only as the string of its confirm dialog's title, which the server HTML shows anyway. The
+ * backoffice's own table since §847 (`AdminTable`: a table from `md` up, a block per row below it,
+ * paged through the address), where a hand-made pair of layouts stood since §550; the fold opens on a
+ * page or a size the address asks for, as it does on a filter.
  */
-export default async function NewsletterSubscribers({ locale, query, list, mayUnsubscribe, saved }: Props) {
+export default async function NewsletterSubscribers({ locale, query, listQuery, paged, list, mayUnsubscribe, saved }: Props) {
   const t = await getTranslations("Admin");
   const tn = await getTranslations("Newsletter");
   const words = await confirmWords();
@@ -126,10 +86,11 @@ export default async function NewsletterSubscribers({ locale, query, list, mayUn
     return null;
   };
 
-  const columns: { key: string; label: string; render: (row: NewsletterSubscriberRow) => ReactNode }[] = [
+  const columns: readonly AdminColumn<NewsletterSubscriberRow>[] = [
     {
       key: "email",
       label: t("newsletter.subscribers.columns.email"),
+      primary: true,
       render: (row) => (
         <Box component="span" sx={{ wordBreak: "break-all", fontWeight: 500 }} data-testid="newsletter-subscriber-email">
           {row.email}
@@ -141,6 +102,7 @@ export default async function NewsletterSubscribers({ locale, query, list, mayUn
     {
       key: "state",
       label: t("newsletter.subscribers.columns.state"),
+      essential: true,
       render: (row) => {
         const link = linkWords(row.link);
         return (
@@ -161,7 +123,7 @@ export default async function NewsletterSubscribers({ locale, query, list, mayUn
     { key: "confirmedOn", label: t("newsletter.subscribers.columns.confirmedOn"), render: (row) => (row.confirmedAt ? day(row.confirmedAt) : "—") },
   ];
 
-  // Once per row: the table and the phone's block are the same elements under different CSS.
+  // The Administrator's verb on a row, in the table's own column and the phone's block (`AdminTable`).
   const unsubscribe = (row: NewsletterSubscriberRow) =>
     mayUnsubscribe ? (
       <ActionForm
@@ -197,7 +159,7 @@ export default async function NewsletterSubscribers({ locale, query, list, mayUn
     <Panel
       glyph="contacts"
       collapsible
-      openWhen={{ inUse, saved }}
+      openWhen={{ inUse: inUse || paged, saved }}
       title={t("newsletter.subscribers.title")}
       intro={t("newsletter.subscribers.intro")}
       aside={counts}
@@ -260,47 +222,35 @@ export default async function NewsletterSubscribers({ locale, query, list, mayUn
           </Typography>
         )}
 
-        {list.rows.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" data-testid="newsletter-subscribers-empty">
-            {t(inUse ? "newsletter.subscribers.noMatch" : "newsletter.subscribers.empty")}
-          </Typography>
-        ) : (
-          <>
-            <Box sx={{ border: { md: 1 }, borderColor: "divider", borderRadius: { md: 1 }, overflow: { md: "hidden" } }}>
-              <Table size="small" aria-label={t("newsletter.subscribers.title")} sx={TABLE} data-testid="newsletter-subscribers-table">
-                <TableHead sx={HEAD}>
-                  <TableRow sx={{ bgcolor: "action.hover" }}>
-                    {columns.map((column) => (
-                      <TableCell key={column.key} sx={HEAD_RULE}>
-                        {column.label}
-                      </TableCell>
-                    ))}
-                    {mayUnsubscribe && (
-                      <TableCell align="right" sx={HEAD_RULE}>
-                        {t("newsletter.subscribers.columns.actions")}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                </TableHead>
-                <TableBody sx={BODY}>
-                  {list.rows.map((row, index) => {
-                    const last = index === list.rows.length - 1;
-                    return (
-                      <TableRow key={row.id} hover data-testid="newsletter-subscriber-row" data-row-separator={last ? "none" : "line"} sx={ROW(last)}>
-                        {columns.map((column) => (
-                          <TableCell key={column.key} data-cell={column.key} data-label={column.label}>
-                            {column.render(row)}
-                          </TableCell>
-                        ))}
-                        {mayUnsubscribe && <TableCell data-cell="actions">{unsubscribe(row)}</TableCell>}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </Box>
-          </>
-        )}
+        <Box data-testid="newsletter-subscribers-table">
+          <AdminTable
+            caption={t("newsletter.subscribers.title")}
+            tableId="newsletter-subscribers"
+            columns={columns}
+            rows={list.rows.slice(listQuery.offset, listQuery.offset + listQuery.limit)}
+            rowKey={(row) => row.id}
+            basePath={path}
+            // So paging keeps the search, the topic and the state.
+            currentParams={Object.fromEntries(listParams)}
+            query={listQuery}
+            total={list.rows.length}
+            labels={{
+              results: t("list.results", { count: list.rows.length }),
+              page: t("list.page", { page: listQuery.page, pages: pageCount(list.rows.length, listQuery.perPage) }),
+              previous: t("list.previous"),
+              next: t("list.next"),
+              perPage: t("list.perPage"),
+              actions: t("newsletter.subscribers.columns.actions"),
+              sortBy: (column) => t("list.sortBy", { column }),
+            }}
+            empty={
+              <Typography variant="body2" color="text.secondary" data-testid="newsletter-subscribers-empty">
+                {t(inUse ? "newsletter.subscribers.noMatch" : "newsletter.subscribers.empty")}
+              </Typography>
+            }
+            rowActions={mayUnsubscribe ? unsubscribe : undefined}
+          />
+        </Box>
       </Stack>
     </Panel>
   );

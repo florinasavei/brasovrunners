@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openDatabaseCard } from "./support/costs";
 import { signIn } from "./support/featured-event";
 
 /**
@@ -18,9 +19,11 @@ test.describe("BR-REQ-090-07 the database's limits card without a key", () => {
     await page.goto("/ro/admin/settings/costs");
     // Scoped to `#main` for the streamed-duplicate reason `tasks-cost.spec.ts` explains (§93).
     const main = page.locator("#main");
-    const card = main.getByTestId("neon-limits");
+    // A fold inside the database's card, «fără cheie Neon» on its line while it is closed.
+    await expect(main.getByTestId("neon-limits").locator(":scope > summary")).toContainText("fără cheie Neon");
+    const card = await openDatabaseCard(main, "neon-limits");
 
-    await expect(card.getByRole("heading", { name: "Limitele bazei de date" })).toBeVisible();
+    await expect(card.getByRole("heading", { name: /^Limitele bazei de date/ })).toBeVisible();
     await expect(card.getByTestId("neon-limits-unconfigured")).toContainText("Lipsește NEON_API_KEY, NEON_PROJECT_ID pe acest mediu");
     // No file name or §-number on the screen (§511): where the variables go is the «?» beside it.
     await expect(card.getByTestId("neon-limits-unconfigured")).not.toContainText("SETUP.md");
@@ -32,7 +35,7 @@ test.describe("BR-REQ-090-07 the database's limits card without a key", () => {
 
     await page.goto("/ro/admin/tasks");
     const row = main
-      .getByRole("list", { name: "Lista de sarcini" })
+      .getByRole("region", { name: "Lista de sarcini" })
       .getByRole("listitem")
       .filter({ has: page.getByRole("heading", { name: "Limita lunară de calcul a bazei de date" }) });
     await expect(row).toHaveCount(1);

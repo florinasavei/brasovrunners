@@ -87,10 +87,11 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     await card.getByLabel("Caută adresa").fill(email.toUpperCase());
     await card.getByRole("button", { name: "Filtrează" }).click();
     await expect(page).toHaveURL(/\/ro\/admin\/newsletter\?q=[^#]+#newsletter-subscribers$/);
+    // The backoffice's table (§847, `AdminTable`): each cell drawn in the table and in the phone's block, one of them shown.
     const table = card.getByTestId("newsletter-subscribers-table");
-    await expect(table.getByTestId("newsletter-subscriber-row")).toHaveCount(1);
-    await expect(table.getByTestId("newsletter-subscriber-email")).toHaveText(email);
-    await expect(table.getByTestId("newsletter-subscriber-state")).toContainText("Confirmat");
+    await expect(table.getByTestId("newsletter-subscriber-email").filter({ visible: true })).toHaveCount(1);
+    await expect(table.getByTestId("newsletter-subscriber-email").filter({ visible: true })).toHaveText(email);
+    await expect(table.getByTestId("newsletter-subscriber-state").filter({ visible: true })).toContainText("Confirmat");
     await expect(card.getByTestId("newsletter-subscribers-counts")).toContainText("1 abonat confirmat, 0 în așteptare");
 
     // The CSV of the same filter, named with the date, with its BOM and the table's columns.
@@ -139,8 +140,8 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     // The seeded address through the list's own search: the fold opens by itself on a filter.
     await page.goto(`/ro/admin/newsletter?q=${encodeURIComponent(email)}#newsletter-subscribers`);
     const table = page.locator("#main").getByTestId("newsletter-subscribers-table");
-    await expect(table.getByTestId("newsletter-subscriber-row")).toHaveCount(1);
-    await expect(table.getByTestId("newsletter-subscriber-email")).toHaveText(email);
+    await expect(table.getByTestId("newsletter-subscriber-email").filter({ visible: true })).toHaveCount(1);
+    await expect(table.getByTestId("newsletter-subscriber-email").filter({ visible: true })).toHaveText(email);
     await expect(table.getByTestId("newsletter-subscriber-unsubscribe")).toHaveCount(0);
     await expect(table.getByRole("button", { name: "Dezabonează" })).toHaveCount(0);
   });

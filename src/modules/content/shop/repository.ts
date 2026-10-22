@@ -404,7 +404,7 @@ export function ordersFilterParams(params: Record<string, string | string[] | un
   return keep;
 }
 
-/** The most orders the card draws; the CSV has every one under the filter. */
+/** The most orders one read returns unless told otherwise; the list asks for one page, the CSV for its own ceiling. */
 export const ORDERS_SHOWN_MAX = 500;
 
 function ordersWhere(query: OrdersQuery): SQL | undefined {
@@ -420,8 +420,11 @@ export async function countOrdersForAdmin<T extends Record<string, unknown>>(db:
   return Number(row?.n ?? 0);
 }
 
-/** The orders under the filter, newest first, with the member's address when the account still exists. */
-export async function listOrdersForAdmin<T extends Record<string, unknown>>(db: Database<T>, query: OrdersQuery, limit = ORDERS_SHOWN_MAX) {
+/**
+ * The orders under the filter, newest first, with the member's address when the account still exists.
+ * `offset` is the list's page (§847: «Comenzi» is the backoffice's paged table, `AdminTable`); the CSV reads from the first.
+ */
+export async function listOrdersForAdmin<T extends Record<string, unknown>>(db: Database<T>, query: OrdersQuery, limit = ORDERS_SHOWN_MAX, offset = 0) {
   return db
     .select({
       id: shopOrders.id,
@@ -449,7 +452,8 @@ export async function listOrdersForAdmin<T extends Record<string, unknown>>(db: 
     .leftJoin(staffUsers, eq(staffUsers.id, shopOrders.memberStaffUserId))
     .where(ordersWhere(query))
     .orderBy(desc(shopOrders.createdAt), desc(shopOrders.number))
-    .limit(limit);
+    .limit(limit)
+    .offset(offset);
 }
 
 export type AdminOrder = Awaited<ReturnType<typeof listOrdersForAdmin>>[number];

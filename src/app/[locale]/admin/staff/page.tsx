@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -8,6 +7,9 @@ import Typography from "@mui/material/Typography";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import Panel from "@/shared/ui/Panel";
+import StatusChip from "@/shared/ui/StatusChip";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
+import { FACTS_SX, LINE_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import { staffInviteConstraints } from "@/modules/staff-identity/constraints";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -15,15 +17,11 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { assignableRoles, canGrantPermission, canHoldMemberTier, canManageMember, canManageStaff, holdsGrant, impliesPermission } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { listStaff } from "@/modules/staff-identity/service";
-import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
-import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
-import RowMenu from "@/shared/ui/RowMenu";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
@@ -56,6 +54,12 @@ import type { MemberAccountLine } from "@/modules/staff-identity/member-accounts
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** The glyph drawn here as a component, by name from the verbs' registry (§318): a Server Component may render one, never pass one. */
+const PencilIcon = ACTION_ICONS.edit;
+
+/** A line nobody here may change: the words and the facts, no pencil — nothing on it is a control. */
+const READ_LINE_SX = { ...LINE_SX, gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) auto" }, gridTemplateAreas: { xs: '"words" "facts"', sm: '"words facts"' } } as const;
+
 type Props = {
   params: Promise<{ locale: string }>;
   searchParams: Promise<Record<string, string | undefined>>;
@@ -76,6 +80,9 @@ export const dynamic = "force-dynamic";
  * and AGENTS.md §1.2 forbids inventing a message the club has not approved. The row is the
  * invitation: it is the allowlist, and the first sign-in from that address binds the identity
  * provider's subject to it.
+ *
+ * The team is a list of row folds (§842, amending §256): one line per person, the controls behind
+ * the pencil; «Adaugă o persoană» and «Adaugă mai mulți membri» are folds after it.
  */
 export default async function StaffPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -133,81 +140,245 @@ export default async function StaffPage({ params, searchParams }: Props) {
     return member ? [{ ...line, email: member.email }] : [];
   });
 
-  const query = parseListQuery(current, {
-    // `listStaff` returns the club's whole team — a handful of accounts, in its own order.
-    // Nothing here needs sorting or paging, and the shared table is used anyway so the five
-    // lists look and behave like one console.
-    sortable: [],
-    defaultSort: "name",
-    defaultPerPage: 100,
-  });
+  /*
+    The two «Adaugă…» folds open by themselves only while there is nobody to edit (§842): the list
+    is never empty to the person reading it — their own row is on it — so «the list is empty» is
+    «the team is the reader alone».
+  */
+  const alone = staff.every((member) => member.id === actor.id);
 
-  const columns: readonly AdminColumn<StaffRow>[] = [
-    {
-      key: "name",
-      label: t("staff.columnName"),
-      primary: true,
-      render: (member) => (
-        <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
-          <span>{member.displayName}</span>
-          {member.id === actor.id && (
-            <Chip size="small" color="primary" variant="outlined" label={t("staff.you")} />
-          )}
-          {/* In the name cell, not the status column: that one hides below `lg`, and this is
-              the fact the row exists to carry until it stops being true (§288). */}
-          {hasNoAccount(accounts, member.email) && (
-            <Chip size="small" color="warning" label={t("staff.noAccount")} data-testid="staff-no-account" />
-          )}
-          {/* The invitation email was refused (§671): until the person signs in, the row says why it did not reach them. */}
-          {(() => {
-            const cause = member.firstSignedInAt === null ? invitationRefusals.get(member.email.trim().toLowerCase()) : undefined;
-            return (
-              cause && (
-                <Chip size="small" color="error" variant="outlined" label={t("staff.invitationRefused", { label: causeLabel(cause, locale) })} data-testid="staff-invitation-refused" />
-              )
-            );
-          })()}
-        </Stack>
-      ),
-    },
-    {
-      key: "email",
-      label: t("staff.columnEmail"),
-      render: (member) => (
-        <Box component="span" sx={{ wordBreak: "break-all" }}>
+  /**
+   * One person of the team as the house's row fold (§842, `shared/ui/row-fold.ts`; amends §256,
+   * which kept the role select and a ⋮ on a table row): the line says who in words — the name and
+   * the address — then the facts as chips (the role, a club member's level, «Magazin», «Tu», «Nu
+   * s-a autentificat încă», no sign-in account, a refused invitation) and the pencil. A press on the
+   * line opens the controls in place: the role, the level, «Gestionează magazinul», the invitation
+   * again or the password, switching the account off, and «Retrage accesul» last. Each control is
+   * its own form and asks before it acts (§256, §384); the fold only gathers them.
+   *
+   * Two rows have no control, so no pencil and no fold (a fold that opens onto nothing is a control
+   * that lies): the reader's own — changing your own role or removing your own access is refused by
+   * the service, and the usual way a club ends up locked out is somebody tidying up their own
+   * account — and a Superadministrator's, read by an Administrator (§450), whose line says whose it
+   * is: a row with no controls and no reason reads as a broken page.
+   *
+   * The fold is keyed on what its line says, so a new role, level or shop draws it closed on its
+   * new line.
+   */
+  const staffRowOf = (member: StaffRow) => {
+    const own = member.id === actor.id;
+    const locked = !own && !canManageMember(actor.role, member.role);
+    const shop = holdsGrant(member, "shop.manage");
+    const level = canHoldMemberTier(member.role) ? tierOf(member.memberTierId) : undefined;
+    // The invitation email was refused (§671): until the person signs in, the row says why it did not reach them.
+    const refusedFor = member.firstSignedInAt === null ? invitationRefusals.get(member.email.trim().toLowerCase()) : undefined;
+    const ids = (
+      <>
+        <input type="hidden" name="uiLocale" value={locale} />
+        <input type="hidden" name="staffUserId" value={member.id} />
+      </>
+    );
+    const address = (
+      <>
+        <input type="hidden" name="uiLocale" value={locale} />
+        <input type="hidden" name="email" value={member.email} />
+      </>
+    );
+
+    /** The line's words: the name, then the address the person signs in with. */
+    const who = (
+      <Box sx={{ gridArea: "words", minWidth: 0 }}>
+        <Typography component="span" sx={{ fontWeight: 600, overflowWrap: "anywhere" }} data-testid="staff-name">
+          {member.displayName}
+        </Typography>
+        <Typography component="span" color="text.secondary" sx={{ wordBreak: "break-all" }} data-testid="staff-email">
+          {" · "}
           {member.email}
+        </Typography>
+        {locked && (
+          <Typography variant="body2" color="text.secondary" sx={{ display: "block" }} data-testid="staff-superadmin-row">
+            {t("staff.superadminRow")}
+          </Typography>
+        )}
+      </Box>
+    );
+
+    /** The line's facts — on the line, never in a column that hides on a phone: the account's mark is what the row carries until it stops being true (§288). */
+    const facts = (
+      <Box sx={FACTS_SX}>
+        <StatusChip glyph="role" label={STAFF_ROLE_LABEL[member.role]} testId="staff-role" />
+        {/* A club member's level (§811): its glyph and name, beside the role — a label, not a permission. */}
+        {level && <TierBadge tier={level} testId="staff-member-tier" />}
+        {/* «Gestionează magazinul» given on top of the role (§687) — only where it means something. */}
+        {shop && <StatusChip glyph="shop" color="secondary" variant="outlined" label={t("staff.permissions.chipShop")} testId="staff-permission-shop" />}
+        {own && <StatusChip glyph="self" color="primary" variant="outlined" label={t("staff.you")} testId="staff-you" />}
+        {member.firstSignedInAt === null && <StatusChip glyph="planned" variant="outlined" label={t("staff.pending")} testId="staff-pending" />}
+        {hasNoAccount(accounts, member.email) && <StatusChip glyph="noAccount" color="warning" label={t("staff.noAccount")} testId="staff-no-account" />}
+        {refusedFor && (
+          <StatusChip glyph="failed" color="error" variant="outlined" label={t("staff.invitationRefused", { label: causeLabel(refusedFor, locale) })} testId="staff-invitation-refused" />
+        )}
+      </Box>
+    );
+
+    if (own || locked) {
+      return (
+        <Box component="li" key={member.id} id={`staff-${member.id}`} data-testid="staff-row" data-staff-id={member.id} sx={{ ...ROW_SX, scrollMarginTop: 16 }}>
+          <Box sx={READ_LINE_SX}>
+            {who}
+            {facts}
+          </Box>
         </Box>
-      ),
-    },
-    {
-      key: "role",
-      label: t("staff.columnRole"),
-      render: (member) => (
-        <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
-          <Chip size="small" label={STAFF_ROLE_LABEL[member.role]} />
-          {/* A club member's level (§811): its glyph and name, beside the role — a label, not a permission. */}
-          {(() => {
-            const level = canHoldMemberTier(member.role) ? tierOf(member.memberTierId) : undefined;
-            return level && <TierBadge tier={level} testId="staff-member-tier" />;
-          })()}
-          {/* «Gestionează magazinul» given on top of the role (§687) — only where it means something. */}
-          {holdsGrant(member, "shop.manage") && (
-            <Chip size="small" variant="outlined" color="secondary" label={t("staff.permissions.chipShop")} data-testid="staff-permission-shop" />
-          )}
-        </Stack>
-      ),
-    },
-    {
-      key: "status",
-      label: t("staff.columnStatus"),
-      essential: true,
-      hideBelow: "lg",
-      render: (member) =>
-        member.firstSignedInAt === null ? (
-          <Chip size="small" variant="outlined" label={t("staff.pending")} />
-        ) : null,
-    },
-  ];
+      );
+    }
+
+    return (
+      <Box component="li" key={member.id} id={`staff-${member.id}`} data-testid="staff-row" data-staff-id={member.id} sx={{ ...ROW_SX, scrollMarginTop: 16 }}>
+        <Box component="details" key={[member.role, member.memberTierId ?? "", shop ? "shop" : ""].join("\u0001")} data-testid="staff-row-edit">
+          <Box component="summary" title={t("staff.edit")} data-testid="staff-row-toggle" sx={SUMMARY_SX}>
+            {who}
+            {facts}
+            <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
+          </Box>
+          <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5 }}>
+            {/* The role is a value rather than a verb (§256): its select and its own «Schimbă rolul», first. */}
+            <ActionForm
+              action={changeStaffRoleAction}
+              confirm={{ title: t("confirm.changeRoleTitle"), body: t("confirm.changeRoleBody", { name: member.displayName }), confirmLabel: t("staff.changeRole"), cancelLabel: words.cancel }}
+              data-testid="staff-role-form"
+            >
+              {ids}
+              <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+                <TextField name="role" label={t("staff.role")} defaultValue={member.role} select size="small" sx={{ minWidth: 150 }}>
+                  {offered.map((role) => (
+                    <MenuItem key={role} value={role}>
+                      {STAFF_ROLE_LABEL[role]}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <GlyphSubmitButton label={t("staff.changeRole")} pendingLabel={t("staff.changeRolePending")} icon="role" variant="outlined" />
+              </Stack>
+            </ActionForm>
+
+            {/*
+              «Nivel» (§811): a club member's level, given or cleared on the row — the visible levels and the one the member
+              holds, and «—» for none. Only a member's row: a colleague is no member and holds no level. A press that asks first
+              and then toasts, like the row's other verbs. A label and its benefits: it opens and refuses nothing.
+            */}
+            {canHoldMemberTier(member.role) && tiers.length > 0 && (
+              <ActionForm
+                action={setMemberTierAction}
+                messages={tierBoxes}
+                confirm={{ title: t("confirm.memberTierTitle"), body: t("confirm.memberTierBody", { name: member.displayName }), confirmLabel: t("staff.memberTierSave"), cancelLabel: words.cancel }}
+                data-testid="staff-member-tier-form"
+              >
+                {ids}
+                <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+                  <MemberTierSelect
+                    tiers={tiers}
+                    noneLabel={t("staff.memberTierNone")}
+                    hiddenOption={hiddenTierLabel}
+                    keepId={member.memberTierId}
+                    // One box per row, so each carries its own id (the refusal summary's link is for a form that is alone).
+                    id={`member-tier-${member.id}`}
+                    label={t("staff.memberTier")}
+                    defaultValue={member.memberTierId ?? ""}
+                    size="small"
+                    sx={{ minWidth: 150 }}
+                  />
+                  <GlyphSubmitButton label={t("staff.memberTierSave")} pendingLabel={t("staff.memberTierSaving")} icon="save" variant="outlined" />
+                </Stack>
+              </ActionForm>
+            )}
+
+            {/*
+              «Gestionează magazinul» (§687): a permission on top of the role, after the role. A press that asks first and then
+              toasts, like the row's other verbs — a `TickButton` (§766), drawn ticked or empty — offered only where the service
+              would accept it (`canGrantPermission`): never a club member's row; an Administrator's or a Superadministrator's has
+              it by rank, drawn ticked and greyed, «inclus în rol».
+            */}
+            {canGrantPermission(actor, member.role, "shop.manage") ? (
+              <ActionForm
+                action={setStaffPermissionAction}
+                confirm={
+                  shop
+                    ? { title: t("staff.permissions.revokeTitle"), body: t("staff.permissions.revokeBody", { name: member.displayName }), confirmLabel: t("staff.permissions.revoke"), cancelLabel: words.cancel, destructive: true }
+                    : { title: t("staff.permissions.grantTitle"), body: t("staff.permissions.grantBody", { name: member.displayName }), confirmLabel: t("staff.permissions.grant"), cancelLabel: words.cancel }
+                }
+                data-testid="staff-permission-shop-form"
+              >
+                {ids}
+                <input type="hidden" name="permission" value="shop.manage" />
+                <input type="hidden" name="on" value={shop ? "0" : "1"} />
+                <TickButton checked={shop}>{t("staff.permissions.shopManage")}</TickButton>
+              </ActionForm>
+            ) : impliesPermission(member.role, "shop.manage") ? (
+              <Box>
+                <GlyphButton icon="tickOn" variant="text" disabled sx={{ minHeight: 44 }} data-testid="staff-permission-shop-implied">
+                  {t("staff.permissions.shopManage")} · {t("staff.permissions.implied")}
+                </GlyphButton>
+              </Box>
+            ) : null}
+
+            {/*
+              The account's verbs, each asking before it acts (§256, §384): two of them end somebody's access.
+
+              The invitation again while they have not signed in (§123), offered whether or not the key is set: without it the
+              answer names the key, which is better than a control that is not there. The password reset only once they *have*
+              signed in — before that the invitation is the right email and it sets the first password anyway (§171). Zitadel
+              sends both and owns the code; nothing here touches a password.
+
+              Switching the account off and «Retrage accesul» are different verbs, which is why both exist (§171): the first
+              happens at the provider and outlives the row; the second removes the allowlist row, which is what stops the
+              backoffice letting somebody in — the row's end, so last, apart from the verbs that keep the person.
+            */}
+            <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+              {member.firstSignedInAt === null ? (
+                <ActionForm
+                  action={resendStaffInviteAction}
+                  confirm={withSendNowChoice(
+                    { title: t("staff.resendInviteTitle"), body: t("staff.resendInviteBody", { email: member.email }), confirmLabel: t("staff.resendInvite"), cancelLabel: words.cancel },
+                    sendNow,
+                  )}
+                  data-testid="staff-resend-form"
+                >
+                  {address}
+                  {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
+                  <GlyphSubmitButton label={t("staff.resendInvite")} pendingLabel={t("staff.resendInvitePending")} icon="resend" variant="outlined" />
+                </ActionForm>
+              ) : (
+                <ActionForm
+                  action={sendStaffPasswordResetAction}
+                  confirm={{ title: t("staff.passwordResetTitle"), body: t("staff.passwordResetBody", { email: member.email }), confirmLabel: t("staff.passwordReset"), cancelLabel: words.cancel }}
+                  data-testid="staff-password-form"
+                >
+                  {address}
+                  <GlyphSubmitButton label={t("staff.passwordReset")} pendingLabel={t("staff.passwordResetPending")} icon="resend" variant="outlined" />
+                </ActionForm>
+              )}
+              <ActionForm
+                action={setStaffAccountActiveAction}
+                confirm={{ title: t("staff.deactivateAccountTitle"), body: t("staff.deactivateAccountBody", { name: member.displayName }), confirmLabel: t("staff.deactivateAccount"), cancelLabel: words.cancel, destructive: true }}
+                data-testid="staff-deactivate-form"
+              >
+                {address}
+                <input type="hidden" name="active" value="0" />
+                <GlyphSubmitButton label={t("staff.deactivateAccount")} pendingLabel={t("staff.deactivateAccountPending")} icon="revoke" variant="outlined" color="warning" />
+              </ActionForm>
+            </Stack>
+
+            <ActionForm
+              action={revokeStaffAction}
+              confirm={{ title: t("staff.revokeTitle"), body: t("staff.revokeBody", { name: member.displayName }), confirmLabel: t("staff.revoke"), cancelLabel: words.cancel, destructive: true }}
+              data-testid="staff-revoke-form"
+            >
+              {ids}
+              <GlyphSubmitButton label={t("staff.revoke")} pendingLabel={t("staff.revokePending")} icon="delete" variant="outlined" color="error" />
+            </ActionForm>
+          </Stack>
+        </Box>
+      </Box>
+    );
+  };
 
   return (
     <Stack spacing={4}>
@@ -266,12 +437,48 @@ export default async function StaffPage({ params, searchParams }: Props) {
       </Box>
 
       {/*
-        Adding a colleague is a nine-field form and a rare act — twice a season — above the list
-        that is read every time. It is a panel of its own (§269), and since §336 it starts closed
-        like every backoffice fold: its heading is a real `h2` in the summary, which a screen
-        reader finds while the fold is shut. A refused add keeps the fold the person opened
-        (§315); a successful one is shown in the list below and in the banner, so it does not
-        reopen an empty form.
+        The accounts could not be checked, and why, in the provider's words (§288). Never a
+        guess in either direction: no row below says "no account" after this, and none is
+        presumed to have one. A missing key is not repeated here — the warning in «Adaugă o
+        persoană» says it.
+      */}
+      {accounts.kind === "blind" && (
+        <Alert severity="warning" data-testid="staff-accounts-blind">
+          {t("staff.accountsBlind", { seen: accounts.seen })}
+        </Alert>
+      )}
+      {(accounts.kind === "refused" || accounts.kind === "unreachable") && (
+        <Alert severity="warning" data-testid="staff-accounts-unchecked">
+          {t("staff.accountsUnchecked", { reason: accounts.reason })}
+        </Alert>
+      )}
+
+      {/* The team, one row fold per person (§842), in `listStaff`'s order — a handful of accounts, nothing to sort or page. */}
+      <Stack spacing={1}>
+        {staff.length === 0 ? (
+          <Typography variant="body1">{t("staff.empty")}</Typography>
+        ) : (
+          <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }} aria-label={t("staff.tableCaption")} data-testid="staff-list">
+            {staff.map((member) => staffRowOf(member))}
+          </Box>
+        )}
+
+        {/* What the mark means and what to do about it, once, under the list: a mark with no
+            remedy beside it is a worry, not a fact (§288). */}
+        {staff.some((member) => hasNoAccount(accounts, member.email)) && (
+          <Typography variant="body2" color="text.secondary" data-testid="staff-no-account-help">
+            {t("staff.noAccountHelp")}
+          </Typography>
+        )}
+      </Stack>
+
+      {/*
+        Adding a colleague is a nine-field form and a rare act — twice a season — so it is a fold
+        after the list that is read every time, like every «Adaugă…» of the backoffice (§842): open
+        by itself only while the team is the reader alone. Its heading is a real `h2` in the
+        summary, which a screen reader finds while the fold is shut (§336). A refused add keeps the
+        fold the person opened (§315); a successful one is shown in the list above and in the
+        banner, so it does not reopen an empty form.
       */}
       <Panel glyph="invite"
         title={t("staff.inviteTitle")}
@@ -279,6 +486,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
         // folds start closed): the account too when the Zitadel key can make it (§123).
         aside={invitesSend ? t("staff.inviteAsideSends") : t("staff.inviteAsideManual")}
         collapsible
+        openWhen={{ primary: alone }}
         id="staff-invite"
         data-testid="staff-invite"
       >
@@ -384,9 +592,10 @@ export default async function StaffPage({ params, searchParams }: Props) {
         «Adaugă mai mulți membri» (§524): the club's members, one per row, all as «Membru» — a list
         pasted from the club's own records rather than nine fields per person. The whole list or
         nobody (§457): a row that is not an address, or an address already on the team, adds no one
-        and names the rows. A fold of its own, closed like every fold (§336).
+        and names the rows. A fold of its own, after the list, open by itself only while the team is
+        the reader alone (§842).
       */}
-      <Panel glyph="members" title={t("staff.membersTitle")} aside={t("staff.membersAside")} collapsible id="staff-members" data-testid="staff-members">
+      <Panel glyph="members" title={t("staff.membersTitle")} aside={t("staff.membersAside")} collapsible openWhen={{ primary: alone }} id="staff-members" data-testid="staff-members">
         <ActionForm
           action={inviteMembersAction}
           // Its own boxes' ids, apart from «Adaugă o persoană»'s namesakes (the language, the level).
@@ -436,253 +645,6 @@ export default async function StaffPage({ params, searchParams }: Props) {
           </Stack>
         </ActionForm>
       </Panel>
-
-      {/*
-        The accounts could not be checked, and why, in the provider's words (§288). Never a
-        guess in either direction: no row below says "no account" after this, and none is
-        presumed to have one. A missing key is not repeated here — the warning above says it.
-      */}
-      {accounts.kind === "blind" && (
-        <Alert severity="warning" data-testid="staff-accounts-blind">
-          {t("staff.accountsBlind", { seen: accounts.seen })}
-        </Alert>
-      )}
-      {(accounts.kind === "refused" || accounts.kind === "unreachable") && (
-        <Alert severity="warning" data-testid="staff-accounts-unchecked">
-          {t("staff.accountsUnchecked", { reason: accounts.reason })}
-        </Alert>
-      )}
-
-      <AdminTable
-        caption={t("staff.tableCaption")}
-        tableId="staff"
-        columns={columns}
-        rows={staff}
-        rowKey={(member) => member.id}
-        basePath={getPathname({ locale, href: "/admin/staff" })}
-        currentParams={{}}
-        query={query}
-        total={staff.length}
-        labels={{
-          results: t("list.results", { count: staff.length }),
-          page: t("list.page", { page: query.page, pages: pageCount(staff.length, query.perPage) }),
-          previous: t("list.previous"),
-          next: t("list.next"),
-          perPage: t("list.perPage"),
-          actions: t("list.actions"),
-          sortBy: (column) => t("list.sortBy", { column }),
-        }}
-        empty={<Typography variant="body1">{t("staff.empty")}</Typography>}
-        rowActions={(member) =>
-          /* Neither control is offered for the acting Administrator: changing your own role or
-             removing your own access is refused by the service, and the usual way a club ends
-             up locked out is somebody tidying up their own account. */
-          member.id === actor.id ? null : !canManageMember(actor.role, member.role) ? (
-            /* A Superadministrator's row, read by an Administrator (§450): no verb, and a line that
-               says whose it is — a row with no controls and no reason reads as a broken page. */
-            <Typography variant="body2" color="text.secondary" data-testid="staff-superadmin-row">
-              {t("staff.superadminRow")}
-            </Typography>
-          ) : (
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={1}
-              sx={{ justifyContent: "flex-end", alignItems: { sm: "center" }, gap: 1 }}
-            >
-              <ActionForm
-                action={changeStaffRoleAction}
-                confirm={{ title: t("confirm.changeRoleTitle"), body: t("confirm.changeRoleBody", { name: member.displayName }), confirmLabel: t("staff.changeRole"), cancelLabel: words.cancel }}
-              >
-                <input type="hidden" name="uiLocale" value={locale} />
-                <input type="hidden" name="staffUserId" value={member.id} />
-                <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-                  <TextField
-                    name="role"
-                    label={t("staff.role")}
-                    defaultValue={member.role}
-                    select
-                    size="small"
-                    sx={{ minWidth: 150 }}
-                  >
-                    {offered.map((role) => (
-                      <MenuItem key={role} value={role}>
-                        {STAFF_ROLE_LABEL[role]}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  <GlyphSubmitButton
-                    label={t("staff.changeRole")}
-                    pendingLabel={t("staff.changeRolePending")}
-                    icon="role"
-                    variant="outlined"
-                  />
-                </Stack>
-              </ActionForm>
-
-              {/*
-                «Nivel» (§811): a club member's level, given or cleared on the row — the visible levels and the one the member
-                holds, and «—» for none. Only a member's row: a colleague is no member and holds no level. A press that asks first
-                and then toasts, like the row's other verbs. A label and its benefits: it opens and refuses nothing.
-              */}
-              {canHoldMemberTier(member.role) && tiers.length > 0 && (
-                <ActionForm
-                  action={setMemberTierAction}
-                  messages={tierBoxes}
-                  confirm={{ title: t("confirm.memberTierTitle"), body: t("confirm.memberTierBody", { name: member.displayName }), confirmLabel: t("staff.memberTierSave"), cancelLabel: words.cancel }}
-                  data-testid="staff-member-tier-form"
-                >
-                  <input type="hidden" name="uiLocale" value={locale} />
-                  <input type="hidden" name="staffUserId" value={member.id} />
-                  <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-                    <MemberTierSelect
-                      tiers={tiers}
-                      noneLabel={t("staff.memberTierNone")}
-                      hiddenOption={hiddenTierLabel}
-                      keepId={member.memberTierId}
-                      // One box per row, so each carries its own id (the refusal summary's link is for a form that is alone).
-                      id={`member-tier-${member.id}`}
-                      label={t("staff.memberTier")}
-                      defaultValue={member.memberTierId ?? ""}
-                      size="small"
-                      sx={{ minWidth: 150 }}
-                    />
-                    <GlyphSubmitButton label={t("staff.memberTierSave")} pendingLabel={t("staff.memberTierSaving")} icon="save" variant="outlined" />
-                  </Stack>
-                </ActionForm>
-              )}
-
-              {/*
-                «Gestionează magazinul» (§687): a permission on top of the role, after the role
-                select. A press that asks first and then toasts, like the row's other verbs — a
-                `TickButton` (§766), drawn ticked or empty — offered only where the service would accept it
-                (`canGrantPermission`): never a club member's row; an Administrator's or a
-                Superadministrator's has it by rank, drawn ticked and greyed, «inclus în rol».
-              */}
-              {canGrantPermission(actor, member.role, "shop.manage") ? (
-                <ActionForm
-                  action={setStaffPermissionAction}
-                  confirm={
-                    holdsGrant(member, "shop.manage")
-                      ? { title: t("staff.permissions.revokeTitle"), body: t("staff.permissions.revokeBody", { name: member.displayName }), confirmLabel: t("staff.permissions.revoke"), cancelLabel: words.cancel, destructive: true }
-                      : { title: t("staff.permissions.grantTitle"), body: t("staff.permissions.grantBody", { name: member.displayName }), confirmLabel: t("staff.permissions.grant"), cancelLabel: words.cancel }
-                  }
-                  data-testid="staff-permission-shop-form"
-                >
-                  <input type="hidden" name="uiLocale" value={locale} />
-                  <input type="hidden" name="staffUserId" value={member.id} />
-                  <input type="hidden" name="permission" value="shop.manage" />
-                  <input type="hidden" name="on" value={holdsGrant(member, "shop.manage") ? "0" : "1"} />
-                  <TickButton checked={holdsGrant(member, "shop.manage")}>{t("staff.permissions.shopManage")}</TickButton>
-                </ActionForm>
-              ) : impliesPermission(member.role, "shop.manage") ? (
-                <GlyphButton icon="tickOn" variant="text" disabled sx={{ minHeight: 44 }} data-testid="staff-permission-shop-implied">
-                  {t("staff.permissions.shopManage")} · {t("staff.permissions.implied")}
-                </GlyphButton>
-              ) : null}
-
-              {/*
-                The four verbs, in the same ⋮ every other list uses (§256), each asking before
-                it acts — four bare buttons in a row asked nothing, and two of them end
-                somebody's access. On a phone the row was five stacked forms tall.
-
-                The invitation again while they have not signed in (§123), offered whether or
-                not the key is set: without it the answer names the key, which is better than a
-                control that is not there. The password reset only once they *have* signed in —
-                before that the invitation is the right email and it sets the first password
-                anyway (§171). Zitadel sends both and owns the code; nothing here touches a
-                password.
-
-                The last two are different verbs, which is why both exist (§171): "retrage
-                accesul" removes the allowlist row, which is what stops the backoffice letting
-                somebody in, while switching the account off happens at the provider and
-                outlives the row.
-              */}
-              {/* Each verb's form asks its own question (§384); the menu only submits it. */}
-              <ActionForm
-                id={`invite-${member.id}`}
-                action={resendStaffInviteAction}
-                hidden
-                confirm={withSendNowChoice(
-                  { title: t("staff.resendInviteTitle"), body: t("staff.resendInviteBody", { email: member.email }), confirmLabel: t("staff.resendInvite"), cancelLabel: words.cancel },
-                  sendNow,
-                )}
-              >
-                <input type="hidden" name="uiLocale" value={locale} />
-                <input type="hidden" name="email" value={member.email} />
-                {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
-              </ActionForm>
-              <ActionForm
-                id={`password-${member.id}`}
-                action={sendStaffPasswordResetAction}
-                hidden
-                confirm={{ title: t("staff.passwordResetTitle"), body: t("staff.passwordResetBody", { email: member.email }), confirmLabel: t("staff.passwordReset"), cancelLabel: words.cancel }}
-              >
-                <input type="hidden" name="uiLocale" value={locale} />
-                <input type="hidden" name="email" value={member.email} />
-              </ActionForm>
-              <ActionForm
-                id={`deactivate-${member.id}`}
-                action={setStaffAccountActiveAction}
-                hidden
-                confirm={{ title: t("staff.deactivateAccountTitle"), body: t("staff.deactivateAccountBody", { name: member.displayName }), confirmLabel: t("staff.deactivateAccount"), cancelLabel: words.cancel, destructive: true }}
-              >
-                <input type="hidden" name="uiLocale" value={locale} />
-                <input type="hidden" name="email" value={member.email} />
-                <input type="hidden" name="active" value="0" />
-              </ActionForm>
-              <ActionForm
-                id={`revoke-${member.id}`}
-                action={revokeStaffAction}
-                hidden
-                confirm={{ title: t("staff.revokeTitle"), body: t("staff.revokeBody", { name: member.displayName }), confirmLabel: t("staff.revoke"), cancelLabel: words.cancel, destructive: true }}
-              >
-                <input type="hidden" name="uiLocale" value={locale} />
-                <input type="hidden" name="staffUserId" value={member.id} />
-              </ActionForm>
-              <RowMenu
-                ariaLabel={t("staff.rowActions", { name: member.displayName })}
-                items={[
-                  member.firstSignedInAt
-                    ? {
-                        kind: "submit" as const,
-                        label: t("staff.passwordReset"),
-                        icon: "resend" as const,
-                        formId: `password-${member.id}`,
-                      }
-                    : {
-                        kind: "submit" as const,
-                        label: t("staff.resendInvite"),
-                        icon: "resend" as const,
-                        formId: `invite-${member.id}`,
-                      },
-                  {
-                    kind: "submit" as const,
-                    label: t("staff.deactivateAccount"),
-                    icon: "revoke" as const,
-                    formId: `deactivate-${member.id}`,
-                    color: "warning" as const,
-                  },
-                  {
-                    kind: "submit" as const,
-                    label: t("staff.revoke"),
-                    icon: "delete" as const,
-                    formId: `revoke-${member.id}`,
-                    color: "error" as const,
-                  },
-                ]}
-              />
-            </Stack>
-          )
-        }
-      />
-
-      {/* What the mark means and what to do about it, once, under the list: a mark with no
-          remedy beside it is a worry, not a fact (§288). */}
-      {staff.some((member) => hasNoAccount(accounts, member.email)) && (
-        <Typography variant="body2" color="text.secondary" data-testid="staff-no-account-help">
-          {t("staff.noAccountHelp")}
-        </Typography>
-      )}
     </Stack>
   );
 }

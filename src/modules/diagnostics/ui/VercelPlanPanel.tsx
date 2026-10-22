@@ -13,6 +13,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import type { FoldOpenWhen } from "@/shared/ui/fold";
 import Panel from "@/shared/ui/Panel";
 
 type Props = {
@@ -24,6 +25,8 @@ type Props = {
    * `updateVercelPlan` refuses anybody else.
    */
   mayEdit: boolean;
+  /** Why the fold opens on arrival (§336): its own save (`?saved=vercelPlan`). */
+  openWhen?: FoldOpenWhen;
 };
 
 /**
@@ -37,7 +40,7 @@ type Props = {
  * Unlike Neon's, nothing reads Vercel's own answer first: the plan is told here, and the «?» says
  * so. The price lives in `domain/vercel-plan.ts` and reaches every sentence through a placeholder.
  */
-export default async function VercelPlanPanel({ locale, plan, mayEdit }: Props) {
+export default async function VercelPlanPanel({ locale, plan, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const format = await getFormatter();
@@ -45,11 +48,15 @@ export default async function VercelPlanPanel({ locale, plan, mayEdit }: Props) 
   const seats = t(`tasks.vercelPlan.seats.${countForm(plan.seats, locale)}`, { count: plan.seats });
 
   return (
+    // A fold, the plan in force on its line («Hobby», «Pro · 2 locuri»), closed until opened or saved (§336).
     <Panel
       glyph="plan"
+      collapsible
       level={2}
       id="vercel-plan"
       title={t("tasks.vercelPlan.title")}
+      aside={plan.plan === "PRO" ? `${VERCEL_PLANS.PRO.name} · ${seats}` : VERCEL_PLANS.HOBBY.name}
+      openWhen={openWhen}
       intro={t("tasks.vercelPlan.intro")}
       introMore={t("tasks.vercelPlan.introMore")}
       data-testid="vercel-plan"

@@ -390,7 +390,7 @@ describe("§661 columns that can be hidden", () => {
       ["src", "app", "[locale]", "admin", "(list)", "page.tsx"],
       ["src", "app", "[locale]", "admin", "pages", "(list)", "page.tsx"],
       ["src", "app", "[locale]", "admin", "gallery", "(list)", "page.tsx"],
-      ["src", "app", "[locale]", "admin", "staff", "page.tsx"],
+      // «Echipa» is row folds since §842, not a table: its state is a chip on the line, never a column to hide.
       ["src", "app", "[locale]", "admin", "registrations", "(list)", "page.tsx"],
       ["src", "app", "[locale]", "admin", "legal", "(list)", "page.tsx"],
     ]) {
@@ -428,7 +428,7 @@ describe("§650 every list names its table", () => {
     pages: ["src", "app", "[locale]", "admin", "pages", "(list)", "page.tsx"],
     albums: ["src", "app", "[locale]", "admin", "gallery", "(list)", "page.tsx"],
     pictures: ["src", "app", "[locale]", "admin", "gallery", "pictures", "page.tsx"],
-    staff: ["src", "app", "[locale]", "admin", "staff", "page.tsx"],
+    // «Echipa» left the tables for row folds (§842): it has no widths to keep.
     registrations: ["src", "app", "[locale]", "admin", "registrations", "(list)", "page.tsx"],
     legal: ["src", "app", "[locale]", "admin", "legal", "(list)", "page.tsx"],
   };
@@ -440,7 +440,7 @@ describe("§650 every list names its table", () => {
       return (id?.[1] ?? id?.[2]) as string;
     });
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids).toEqual(["events", "pages", "albums-", "pictures", "staff", "registrations", "legal-"]);
+    expect(ids).toEqual(["events", "pages", "albums-", "pictures", "registrations", "legal-"]);
   });
 });
 

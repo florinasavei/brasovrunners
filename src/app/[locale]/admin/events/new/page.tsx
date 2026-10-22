@@ -207,7 +207,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
                   <RepeatToggle name="repeat.on" label={t("editor.repeatOn")}>
                     <RepeatFields prefix="repeat." draftSource />
                   </RepeatToggle>
-                  <Panel glyph="help" collapsible level={3} title={t("editor.repeatHelpSummary")}>
+                  {/* Help, so the editor's help line (§398), not a card (`EventEditorLayout`). */}
+                  <Panel collapsible variant="help" title={t("editor.repeatHelpSummary")}>
                     <Typography variant="body2" color="text.secondary">
                       {t("editor.repeatHelp", { horizon })}
                     </Typography>

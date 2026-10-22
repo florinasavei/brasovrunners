@@ -1,7 +1,5 @@
-import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -112,7 +110,11 @@ import { clubMailboxesToFix } from "@/modules/notifications/domain/club-mailbox-
 import { readDeliveryEvidence } from "@/modules/notifications/delivery-evidence";
 import { countNeedingEmailActionByEvent } from "@/modules/registrations/email-state";
 import TasksSubNav from "@/modules/diagnostics/ui/TasksSubNav";
-import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import ChipLink from "@/shared/ui/ChipLink";
+import Panel from "@/shared/ui/Panel";
+import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
+import { FACTS_SX, LINE_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
+import StatusChip from "@/shared/ui/StatusChip";
 import { CLUB_NAME } from "@/theme/brand";
 
 type Props = {
@@ -153,6 +155,15 @@ export const maxDuration = 60;
  * A query parameter, not three routes: each panel needs the same session and the same reading of
  * the system (`describeTasks`), so three routes would be three copies of this page's head.
  */
+
+/** A row's fold wears the «?» of help (§521), by name from the panels' registry: it opens onto how, never onto boxes to edit. */
+const HowIcon = PANEL_GLYPHS.help;
+
+/** A line with nothing to open (`TodoLine`'s reader's line): the words and the facts, no glyph column. */
+const READ_LINE_SX = { ...LINE_SX, gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) auto" }, gridTemplateAreas: { xs: '"words" "facts"', sm: '"words facts"' } } as const;
+
+/** The groups of rows still owed, in the order `sortTasks` puts them: each under its own heading. */
+const PENDING_GROUPS = ["blocking", "broken", "open"] as const satisfies readonly TaskState[];
 
 /** The colour is the whole message for somebody scanning: red stops a registration today. */
 const STATE_COLOR: Record<TaskState, "error" | "warning" | "success"> = {
@@ -640,10 +651,109 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       },
     });
   };
-  const chipLook = (active: boolean) => ({
-    color: active ? ("primary" as const) : ("default" as const),
-    variant: active ? ("filled" as const) : ("outlined" as const),
-  });
+  /*
+    The rows grouped by what they ask (§847): the red ones first, under their own heading, then what is
+    still to do, then «Gata» folded away — the order `sortTasks` already made, cut where the state changes.
+  */
+  const groups = PENDING_GROUPS.map((state) => ({ state, rows: shown.filter((task) => task.state === state) })).filter((group) => group.rows.length > 0);
+  const doneRows = shown.filter((task) => task.state === "done");
+
+  /** The sentence that says the row's state, from the catalogue: its own `text` key, or `todo`/`done`. */
+  const sentenceOf = (task: (typeof shown)[number]) => {
+    const sentence = task.text ?? (task.state === "done" ? "done" : "todo");
+    // A row said by a count (§671) reads its form, never an ICU plural; its own values beside the page's.
+    const key = task.count !== undefined && task.state !== "done" ? `${sentence}.${countForm(task.count, locale)}` : sentence;
+    return t(`items.${task.id}.${key}`, { ...howValues, ...task.values, ...(task.count !== undefined ? { count: task.count } : {}) });
+  };
+
+  /*
+    One task, the house's row (`row-fold.ts`, §842): the line in words — the title and the sentence that
+    says its state — and its facts on the right: the state's chip, then who it waits on and what sort of
+    work it is, the same words the filters use. A row still owed is the `<summary>` of its own fold, which
+    opens in place onto where it is done (the backoffice screen, a race's registrations) and how, step by
+    step with this deployment's values filled in ("things should be self-explanatory in the admin
+    console" — the owner, 2026-09-17); its picture is the «?» of help, not the pencil, since nothing in it
+    is edited. A row that is done is the line alone. The row's address (`#task-…`) is the fold itself, so
+    `OpenFoldFromHash` opens it for the editors' grey «Copiază și tradu tot» (§482).
+  */
+  const taskRow = (task: (typeof shown)[number]) => {
+    const owed = task.state !== "done";
+    const registrationsLink = task.registrationsOf && (
+      <Box
+        component="a"
+        href={getPathname({ locale, href: { pathname: "/admin/registrations", query: { eventId: task.registrationsOf.eventId, bounced: "1" } } })}
+        data-testid="task-registrations"
+        sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontSize: "0.875rem", fontWeight: 500 }}
+      >
+        {t(`items.${task.id}.link`, { event: task.registrationsOf.title })}
+      </Box>
+    );
+    const words = (
+      <Box sx={{ gridArea: "words", minWidth: 0 }}>
+        <Typography component="h4" variant="body2" sx={{ fontWeight: 600 }}>
+          {t(`items.${task.id}.title`)}
+        </Typography>
+        {/* The row's own sentence for its state when `todo`/`done` cannot say it — a key that is set and does not work is neither (§288). */}
+        <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", wordBreak: "break-word" }}>
+          {sentenceOf(task)}
+          {task.detail && ` — ${task.detail}`}
+        </Typography>
+        {!owed && registrationsLink}
+      </Box>
+    );
+    const facts = (
+      <Box sx={FACTS_SX}>
+        <StatusChip
+          inline
+          glyph={task.state === "blocking" ? "priorityUrgent" : task.state === "broken" ? "failed" : task.state === "open" ? "planned" : "done"}
+          color={STATE_COLOR[task.state]}
+          label={task.label ? t(`stateLabel.${task.label}`) : t(`state.${task.state}`)}
+        />
+        {/* Who it is waiting on — the difference between a list somebody acts on and a list they scroll past — and what sort of work it is. */}
+        <Typography component="span" variant="caption" color="text.secondary">
+          <span>{t(`owner.${task.owner}`)}</span>
+          {" · "}
+          <span>{t(`kind.${task.kind}`)}</span>
+        </Typography>
+      </Box>
+    );
+    return (
+      <Box component="li" key={task.key ?? task.id} data-testid="task-row" data-state={task.state} sx={ROW_SX}>
+        <Box component={owed ? "details" : "div"} id={`task-${task.key ?? task.id}`} sx={owed ? { scrollMarginTop: 16 } : { ...READ_LINE_SX, scrollMarginTop: 16 }}>
+          {owed ? (
+            <>
+              <Box component="summary" title={t("howTitle")} sx={SUMMARY_SX}>
+                {words}
+                {facts}
+                <HowIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
+              </Box>
+              <Stack spacing={0.5} sx={{ pb: 1.5, pt: 0.5, alignItems: "flex-start" }}>
+                {/* Where it is done, when that is a screen of this backoffice (§516). */}
+                <TaskTargetLink locale={locale} role={actor.role} target={TASK_TARGETS[task.id]} />
+                {/* A race's registrations, filtered to the emails that ask somebody to act (§671): 44 pixels, as every row link. */}
+                {registrationsLink}
+                <Typography component="h5" variant="body2" sx={{ fontWeight: 500, pt: 0.5 }}>
+                  {t("howTitle")}
+                </Typography>
+                <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
+                  {(t.raw(`items.${task.id}.${task.steps ?? "how"}`) as string[]).map((step, index) => (
+                    <Typography component="li" variant="body2" key={index} sx={{ wordBreak: "break-word" }}>
+                      {fill(step)}
+                    </Typography>
+                  ))}
+                </Box>
+              </Stack>
+            </>
+          ) : (
+            <>
+              {words}
+              {facts}
+            </>
+          )}
+        </Box>
+      </Box>
+    );
+  };
 
   // Only what is still undecided: a settled question rendered "answered" for ever is a line to
   // scroll past, and the section disappears entirely when nothing is open. It reads one fact since
@@ -689,23 +799,20 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {/* A thing owed once (§430): the pictures from before §414 get their phone sizes. Gone at zero. */}
         {olderPictures > 0 && canManageClubSettings(actor.role) && <OlderPicturesPanel locale={locale} left={olderPictures} lastFailed={lastPressFailed} />}
 
-        {/* Who and what kind — two rows of links, no client code, each keeping the other's
-            choice (§150). The link is 44 px tall; the chip inside it is small. */}
+        {/* Who and what kind — two rows of chip links (§150), each keeping the other's choice. The link is 44 px tall; the chip inside it is small. */}
         <Stack spacing={0.5}>
           <Stack component="nav" aria-label={t("filter.who")} direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 0.5 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
               {t("filter.who")}:
             </Typography>
             {[undefined, ...TASK_OWNERS].map((candidate) => (
-              <Box
+              <ChipLink
                 key={candidate ?? "all"}
-                component="a"
                 href={filterHref({ owner: candidate })}
-                aria-current={candidate === filter.owner ? "page" : undefined}
-                sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none" }}
-              >
-                <Chip size="small" label={candidate ? t(`owner.${candidate}`) : t("filter.all")} {...chipLook(candidate === filter.owner)} />
-              </Box>
+                label={candidate ? t(`owner.${candidate}`) : t("filter.all")}
+                active={candidate === filter.owner}
+                current={candidate === filter.owner ? "page" : undefined}
+              />
             ))}
           </Stack>
           <Stack component="nav" aria-label={t("filter.kind")} direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 0.5 }}>
@@ -713,15 +820,13 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
               {t("filter.kind")}:
             </Typography>
             {[undefined, ...TASK_KINDS].map((candidate) => (
-              <Box
+              <ChipLink
                 key={candidate ?? "all"}
-                component="a"
                 href={filterHref({ kind: candidate })}
-                aria-current={candidate === filter.kind ? "page" : undefined}
-                sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none" }}
-              >
-                <Chip size="small" label={candidate ? t(`kind.${candidate}`) : t("filter.all")} {...chipLook(candidate === filter.kind)} />
-              </Box>
+                label={candidate ? t(`kind.${candidate}`) : t("filter.all")}
+                active={candidate === filter.kind}
+                current={candidate === filter.kind ? "page" : undefined}
+              />
             ))}
           </Stack>
         </Stack>
@@ -760,82 +865,36 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           </Alert>
         )}
 
-        {shown.length === 0 && (
+        {shown.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
             {t("noneMatch")}
           </Typography>
+        ) : (
+          /*
+            One list a reader scans (§847; it was a column of bordered cards, one per row): a heading per
+            state still owed, the rows under it, and «Gata» a fold of its own, closed while anything is
+            owed — open when the filter leaves nothing else.
+          */
+          <Stack component="section" spacing={2} aria-label={t("listLabel")} data-testid="task-list">
+            {groups.map((group) => (
+              <Box key={group.state}>
+                <Typography id={`tasks-group-${group.state}`} variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
+                  {t(`groups.${group.state}`, { count: group.rows.length })}
+                </Typography>
+                <Box component="ul" aria-labelledby={`tasks-group-${group.state}`} sx={{ listStyle: "none", m: 0, p: 0 }}>
+                  {group.rows.map(taskRow)}
+                </Box>
+              </Box>
+            ))}
+            {doneRows.length > 0 && (
+              <Panel glyph="confirmation" collapsible level={3} title={t("groups.done", { count: doneRows.length })} openWhen={{ inUse: counts.pending === 0 }} data-testid="tasks-done">
+                <Box component="ul" aria-label={t("groups.done", { count: doneRows.length })} sx={{ listStyle: "none", m: 0, p: 0 }}>
+                  {doneRows.map(taskRow)}
+                </Box>
+              </Panel>
+            )}
+          </Stack>
         )}
-
-        <Stack spacing={2} component="ul" aria-label={t("listLabel")} sx={{ listStyle: "none", m: 0, p: 0 }}>
-          {shown.map((task) => (
-            <Box
-              component="li"
-              key={task.key ?? task.id}
-              // An address for the row: the editors' grey «Copiază și tradu tot» links `#task-translation` (§482).
-              id={`task-${task.key ?? task.id}`}
-              sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2, scrollMarginTop: 16 }}
-            >
-              <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
-                <Chip size="small" color={STATE_COLOR[task.state]} label={task.label ? t(`stateLabel.${task.label}`) : t(`state.${task.state}`)}
-                />
-                {/* Who it is waiting on, because that is the difference between a list somebody
-                    acts on and a list they scroll past. */}
-                <Chip size="small" variant="outlined" label={t(`owner.${task.owner}`)} />
-                {/* And what sort of work it is — the same word the filter above uses. */}
-                <Chip size="small" variant="outlined" label={t(`kind.${task.kind}`)} />
-              </Stack>
-              <Typography variant="h2" sx={{ fontSize: "1rem", mb: 0.5 }}>
-                {t(`items.${task.id}.title`)}
-              </Typography>
-              {/* The row's own sentence for its state when `todo`/`done` cannot say it — a key
-                  that is set and does not work is neither (§288). */}
-              <Typography variant="body2" color="text.secondary">
-                {(() => {
-                  const sentence = task.text ?? (task.state === "done" ? "done" : "todo");
-                  // A row said by a count (§671) reads its form, never an ICU plural; its own values beside the page's.
-                  const key = task.count !== undefined && task.state !== "done" ? `${sentence}.${countForm(task.count, locale)}` : sentence;
-                  return t(`items.${task.id}.${key}`, { ...howValues, ...task.values, ...(task.count !== undefined ? { count: task.count } : {}) });
-                })()}
-                {task.detail && ` — ${task.detail}`}
-              </Typography>
-              {/* Where it is done, when that is a screen of this backoffice (§516): gone once the row is. */}
-              {task.state !== "done" && <TaskTargetLink locale={locale} role={actor.role} target={TASK_TARGETS[task.id]} />}
-              {/* A race's registrations, filtered to the emails that ask somebody to act (§671): 44 pixels, as every row link. */}
-              {task.registrationsOf && (
-                <Box
-                  component="a"
-                  href={getPathname({ locale, href: { pathname: "/admin/registrations", query: { eventId: task.registrationsOf.eventId, bounced: "1" } } })}
-                  data-testid="task-registrations"
-                  sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontSize: "0.875rem", fontWeight: 500 }}
-                >
-                  {t(`items.${task.id}.link`, { event: task.registrationsOf.title })}
-                </Box>
-              )}
-              {/*
-                How to do it, on the page, with this deployment's own values filled in — so the
-                answer to "what do I click" is under the task and not in a runbook ("things
-                should be self-explanatory in the admin console" — the owner, 2026-09-17). A
-                native <details>, closed: the list stays scannable, and no client code. Hidden
-                once the task is done; the steps are for doing it, not for reading about it.
-              */}
-              {task.state !== "done" && (
-                <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1.5 }}>
-                  <Box component="summary" sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
-                    <HelpOutlineIcon aria-hidden sx={FOLD_GLYPH_SX} />
-                    {t("howTitle")}
-                  </Box>
-                  <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
-                    {(t.raw(`items.${task.id}.${task.steps ?? "how"}`) as string[]).map((step, index) => (
-                      <Typography component="li" variant="body2" key={index} sx={{ wordBreak: "break-word" }}>
-                        {fill(step)}
-                      </Typography>
-                    ))}
-                  </Box>
-                </Box>
-              )}
-            </Box>
-          ))}
-        </Stack>
         </>
       )}
 
@@ -843,36 +902,37 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         <>
         {/*
           A fact is something to read; a decision is a question with somebody's name on it. Only
-          the open ones — a question that has been answered is a fact, and lives above.
+          the open ones — a question that has been answered is a fact, and lives above. The same row
+          as the tasks', a line with nothing to open.
         */}
         {decisions.length > 0 && (
           <Box component="section">
             <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
               {t("decisionsTitle")}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
               {t("decisionsIntro")}
             </Typography>
-            <Stack spacing={2} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+            <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
               {decisions.map((decision) => (
-                <Box
-                  component="li"
-                  key={decision.id}
-                  sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
-                >
-                  <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
-                    <Chip size="small" color="warning" label={t("decisionState.open")} />
-                    <Chip size="small" variant="outlined" label={t(`owner.${decision.owner}`)} />
-                  </Stack>
-                  <Typography variant="h3" sx={{ fontSize: "1rem", mb: 0.5 }}>
-                    {t(`decisions.${decision.id}.question`)}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {t(`decisions.${decision.id}.open`)}
-                  </Typography>
+                <Box component="li" key={decision.id} sx={{ ...ROW_SX, ...READ_LINE_SX }}>
+                  <Box sx={{ gridArea: "words", minWidth: 0 }}>
+                    <Typography component="h3" variant="body2" sx={{ fontWeight: 600 }}>
+                      {t(`decisions.${decision.id}.question`)}
+                    </Typography>
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block" }}>
+                      {t(`decisions.${decision.id}.open`)}
+                    </Typography>
+                  </Box>
+                  <Box sx={FACTS_SX}>
+                    <StatusChip inline glyph="open" color="warning" label={t("decisionState.open")} />
+                    <Typography component="span" variant="caption" color="text.secondary">
+                      {t(`owner.${decision.owner}`)}
+                    </Typography>
+                  </Box>
                 </Box>
               ))}
-            </Stack>
+            </Box>
           </Box>
         )}
         </>

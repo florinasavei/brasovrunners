@@ -278,7 +278,8 @@ describe("§521 the cards' glyph table", () => {
 
   it("imports one file per glyph, never the barrel", () => {
     expect(table).not.toMatch(/from "@mui\/icons-material"/);
-    const imports = [...table.matchAll(/^import \w+ from "@mui\/icons-material\/\w+";/gm)];
+    // Material's, one file each — and the house's own drawings beside the table (`./IncognitoIcon`), one file each too.
+    const imports = [...table.matchAll(/^import \w+ from "(?:@mui\/icons-material\/\w+|\.\/\w+Icon)";/gm)];
     expect(imports.length).toBe(new Set(Object.values(PANEL_GLYPHS)).size);
   });
 

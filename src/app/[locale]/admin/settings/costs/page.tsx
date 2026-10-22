@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -35,15 +34,15 @@ import {
   ROMANIAN_VAT_PERCENT,
   type ServiceId,
   type ServiceRow,
-  type ServiceSeverity,
 } from "@/modules/diagnostics/platform-plans";
 import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { readNeonConsumption, readNeonLimits, readNeonPreviousPeriod } from "@/modules/diagnostics/neon";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
-import { describeNeonBlock, effectiveNeonPlan } from "@/modules/diagnostics/domain/neon-plan";
+import { describeNeonBlock, effectiveNeonPlan, NEON_PLANS } from "@/modules/diagnostics/domain/neon-plan";
 import { domainRenewal } from "@/modules/diagnostics/domain/domain-renewal";
 import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
 import { readMonthCosts } from "@/modules/diagnostics/month-costs-read";
+import { CARET_SX, ROW_BODY_SX, SERVICE_GLYPH, SEVERITY_CHIP } from "@/modules/diagnostics/ui/cost-rows";
 import MonthCostsPanel from "@/modules/diagnostics/ui/MonthCostsPanel";
 import NeonBudgetPanel from "@/modules/diagnostics/ui/NeonBudgetPanel";
 import NeonLimitsPanel from "@/modules/diagnostics/ui/NeonLimitsPanel";
@@ -55,6 +54,10 @@ import { VERCEL_PLANS } from "@/modules/diagnostics/domain/vercel-plan";
 import { readVercelMonthForCosts, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
+import { FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
+import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
+import { FACTS_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
+import StatusChip from "@/shared/ui/StatusChip";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { describeJob } from "@/modules/jobs/overview";
 import type { JobName } from "@/modules/jobs/schedule";
@@ -86,14 +89,6 @@ export const dynamic = "force-dynamic";
  */
 export const maxDuration = 60;
 
-/** `unknown` is grey rather than green: a ceiling nothing measures must not read as headroom. */
-const SERVICE_COLOR: Record<ServiceSeverity, "success" | "default" | "warning" | "error"> = {
-  ok: "success",
-  unknown: "default",
-  watch: "warning",
-  act: "error",
-};
-
 /** One labelled fact inside a service row. Two columns on a phone, four from `md`. */
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -123,6 +118,11 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
  * The Administrator's and the Superadministrator's (`canManageRegistrations`, as the panel always
  * was); each card keeps its own `mayEdit` and each action asserts its own predicate (§450).
  * Every price is quoted from `docs/PLATFORM.md` with the date it was checked (`AGENTS.md` §1.2).
+ *
+ * The month's total is the page's answer and stays open at the top; every card under it is a fold,
+ * closed on arrival with its value on its line, and the two lists — the providers' month and the
+ * services one by one — are the house's row folds (`diagnostics/ui/cost-rows.ts`), so the page reads
+ * as a list of facts before anything is opened.
  */
 export default async function AdminCostsPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -134,9 +134,13 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
 
   const query = await searchParams;
   const t = await getTranslations("Admin.tasks");
+  // The month's budget level, in the words «Bugetul lunii» uses (`Budget.level.*`): the database card's line beside the plan.
+  const tAll = await getTranslations();
   const format = await getFormatter();
   // The refusal codes (`?error=FORBIDDEN|VALIDATION_ERROR`) are `Admin.errors.*`, shared by every backoffice page.
   const tErrors = await getTranslations("Admin.errors");
+  // A save inside the database card opens it, and the card that saved (§336).
+  const databaseSaved = ["neonPlan", "budgetThresholds", "neonLimits", "neonLimitsSame", "jobCadence"].includes(String(query.saved));
 
   const db = getDb();
   const now = new Date();
@@ -304,6 +308,18 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
     if (cost.billed === "monthly") return t(cost.plusVat ? "costToday.billedMonthlyPlusVat" : "costToday.billedMonthly", values);
     return t(cost.plusVat ? "costToday.billedYearlyPlusVat" : "costToday.billedYearly", values);
   };
+  // A row's chip on its closed line (§842): the month's figure alone — «gratuit», «nimic încă», «≈ 3,10 USD/lună» — the
+  // billing and the year in «Cost azi» inside it.
+  const serviceChipText = (row: ServiceRow): string => {
+    const cost = row.costToday;
+    if (cost.kind === "free") return t("costToday.free");
+    if (cost.kind === "notTaken") return t("costToday.notTaken");
+    const month = perMonth(cost);
+    if (month === null) return t("costTable.unmeasured");
+    return t(cost.kind === "usage" ? "serviceChip.perMonthEstimated" : "serviceChip.perMonth", { amount: money(month), currency: cost.currency });
+  };
+  // How many services ask to be watched or acted on: the services card's line.
+  const servicesToWatch = services.filter((row) => row.severity === "watch" || row.severity === "act").length;
   // The seats as a counted phrase («1 loc», «2 locuri»): the Vercel row's sentences and the verdict's name for it.
   const seatsPhrase = (count: number) => t(`vercelPlan.seats.${countForm(count, locale)}`, { count });
   // The verdict that names what is paid (§610): each paying row's short name with its plan, in the locale's list.
@@ -398,22 +414,43 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
         The database's configuration in one card (§479): the plan, the month's budget, the brakes
         and the jobs' interval, in the order a change is reasoned about — which plan, where the
         month stands, what Neon will allow, how often the platform wakes it — every door unchanged:
-        each card keeps its own `mayEdit` and each action asserts it. A section rather than a fold:
-        the forms inside must never sit in a shut box. The ids are the addresses «Sarcini»'s rows
-        link to (§336, §516).
+        each card keeps its own `mayEdit` and each action asserts it. A fold of folds since the
+        backoffice's consistency pass (the owner, 2026-10-21: «from a different app»), each line
+        carrying its value — the plan and the budget's level on the card, the plan, the level, the
+        limit and the interval on its four — and opened by its own save. A form in a shut box is no
+        longer a silent Save: `ActionForm` opens the folds around a box the browser refuses. The ids
+        are the addresses «Sarcini»'s rows link to (§336, §516); `OpenFoldFromHash` opens the folds
+        around them.
       */}
-      <Panel glyph="database" id="database-config" title={t("database.title")} intro={t("database.intro")} data-testid="database-config">
+      <Panel
+        glyph="database"
+        collapsible
+        id="database-config"
+        title={t("database.title")}
+        aside={`${NEON_PLANS[neonInForce.plan].name} · ${tAll(`Budget.level.${budget.level}`)}`}
+        intro={t("database.intro")}
+        openWhen={{ saved: databaseSaved }}
+        data-testid="database-config"
+      >
         <Stack spacing={2}>
           {/*
             Which Neon plan the account is on (§280's follow-up, §326), above the figures that
             follow it, so a plan set wrong shows here before it shows on the invoice. A club
             setting (`canManageClubSettings`, the Administrator's).
           */}
-          <NeonPlanPanel level={3} locale={locale} plan={neonPlan} source={neonInForce.source} block={neonBlock} mayEdit={canManageClubSettings(actor.role)} />
+          <NeonPlanPanel
+            level={3}
+            locale={locale}
+            plan={neonPlan}
+            source={neonInForce.source}
+            block={neonBlock}
+            mayEdit={canManageClubSettings(actor.role)}
+            openWhen={{ saved: query.saved === "neonPlan" }}
+          />
 
           {/* The month's budget and what the platform is doing about it (§447), above the brakes it is read against.
               Its thresholds are a platform setting since §450, the Superadministrator's like the brakes. */}
-          <NeonBudgetPanel level={3} locale={locale} reading={budget} mayEdit={canManagePlatform(actor.role)} />
+          <NeonBudgetPanel level={3} collapsible locale={locale} reading={budget} mayEdit={canManagePlatform(actor.role)} openWhen={{ saved: query.saved === "budgetThresholds" }} />
 
           {/*
             The database's brakes (§335): the compute's size ceiling and the period's CU-hour
@@ -426,6 +463,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
             reading={neonLimits.ok ? { ok: true, limits: neonLimits.snapshot.limits } : { ok: false, failure: neonLimits.failure }}
             appEnv={env.APP_ENV}
             mayEdit={canManagePlatform(actor.role)}
+            openWhen={{ saved: query.saved === "neonLimits" || query.saved === "neonLimitsSame" }}
           />
 
           {/* How often the platform may wake the database for its scheduled work (§334) — the
@@ -438,12 +476,13 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
             jobs={jobOverviews}
             mayEdit={canManagePlatform(actor.role)}
             emailTiming={deliveryTiming.timing}
+            openWhen={{ saved: query.saved === "jobCadence" }}
           />
         </Stack>
       </Panel>
 
       {/* Which Vercel plan the club is on (§610), after the database's and before «Cât costă», which prices it. */}
-      <VercelPlanPanel locale={locale} plan={vercelPlan} mayEdit={canManageClubSettings(actor.role)} />
+      <VercelPlanPanel locale={locale} plan={vercelPlan} mayEdit={canManageClubSettings(actor.role)} openWhen={{ saved: query.saved === "vercelPlan" }} />
 
       {/* «Tradu din română»'s daily allowance (§464): what DeepL Free may spend a day, and today's spend. */}
       <TranslationBudgetPanel
@@ -453,18 +492,23 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
         configured={isTranslationConfigured(env)}
         credit={deeplCredit}
         mayEdit={canManageClubSettings(actor.role)}
+        openWhen={{ saved: query.saved === "translationBudget" }}
       />
 
       {/*
         The money, and the answer before the table that justifies it: what the club pays today,
         then the next thing to cost anything. Two sentences and two numbers, because the
         complaint this replaced was that a treasurer had to assemble them from four sections.
+        A fold like every card of the tab, the month's figure on its line.
       */}
-      <Box component="section">
-        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-          {t("costTitle")}
-        </Typography>
-
+      <Panel
+        glyph="costs"
+        collapsible
+        id="cost-breakdown"
+        title={t("costTitle")}
+        aside={paidToday.length === 0 ? t("costToday.free") : t("costAside", { amount: totalsText(paidMonthly) })}
+        data-testid="cost-breakdown"
+      >
         {/* Green while nothing is paid monthly; blue for a plan the club chose to pay by the hour; amber for a limit met. */}
         <Alert
           severity={verdict === "freeExceptDomain" ? "success" : verdict === "paysForUsage" || verdict === "paysForPlans" ? "info" : "warning"}
@@ -539,7 +583,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
           {t("currencyNote", { vat: ROMANIAN_VAT_PERCENT })}
           <QuietHelp text={t("currencyNoteMore")} />
         </Typography>
-      </Box>
+      </Panel>
 
       {/*
         A researched price is a fact with an expiry, so the page says how old these are instead
@@ -558,89 +602,104 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
         right now, what happens when it is crossed, and what the next plan costs — including the
         way back down, which used to be a section of its own and belongs here.
       */}
-      <Box component="section">
-        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-          {t("servicesTitle")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("servicesIntro")}
-          <QuietHelp text={t("servicesIntroMore")} />
-        </Typography>
-
-        <Stack spacing={2} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-          {services.map((row) => (
-            <Box component="li" key={row.id} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}>
-              <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-                <Typography variant="h3" sx={{ fontSize: "1rem" }}>
-                  {t(`services.${row.id}.name`)}
-                </Typography>
-                <Chip
-                  size="small"
-                  color={SERVICE_COLOR[row.severity]}
-                  variant={row.severity === "unknown" ? "outlined" : "filled"}
-                  label={t(`severity.${row.severity}`)}
-                />
-              </Stack>
-
-              {/* Two columns at 320px, four from `md`. A table would scroll sideways on a
-                  phone, which §18.5 refuses. */}
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" },
-                  gap: 1.5,
-                  mb: 1.5,
-                }}
-              >
-                <Fact label={t("field.planToday")}>{row.planToday ?? t("planNone")}</Fact>
-                <Fact label={t("field.costToday")}>
-                  <strong>{costTodayText(row)}</strong>
-                </Fact>
-                <Fact label={t("field.howClose")}>
-                  {(() => {
-                    const close = howClose(row);
-                    return (
-                      <>
+      <Panel
+        glyph="app"
+        collapsible
+        id="services"
+        title={t("servicesTitle")}
+        aside={
+          servicesToWatch === 0
+            ? t("servicesAside.none")
+            : t(`servicesAside.${countForm(servicesToWatch, locale)}`, { count: servicesToWatch })
+        }
+        intro={t("servicesIntro")}
+        introMore={t("servicesIntroMore")}
+        openWhen={{ attention: services.some((row) => row.severity === "act") }}
+        data-testid="services"
+      >
+        {/*
+          Each service is one of the house's row folds (§842, `cost-rows.ts`): the line says it in
+          words — the name, a chip with its price per month (or «gratuit»), a chip with its state —
+          and what the free plan gives, the ceiling, how close, what crossing it does and the next
+          plan open under it. Read here and changed nowhere, so the line ends in a caret, not a pencil.
+        */}
+        <Box component="ul" aria-label={t("servicesTitle")} sx={{ listStyle: "none", m: 0, p: 0 }}>
+          {services.map((row) => {
+            const severity = SEVERITY_CHIP[row.severity];
+            const close = howClose(row);
+            const Glyph = PANEL_GLYPHS[SERVICE_GLYPH[row.id]];
+            return (
+              <Box component="li" key={row.id} data-testid={`service-${row.id}`} data-severity={row.severity} sx={ROW_SX}>
+                <Box component="details">
+                  <Box component="summary" sx={SUMMARY_SX} data-testid={`service-${row.id}-toggle`}>
+                    <Box sx={{ gridArea: "words", minWidth: 0 }}>
+                      <Typography component="h3" sx={{ fontSize: "1rem", fontWeight: 600, display: "inline" }}>
+                        <Glyph aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+                        {t(`services.${row.id}.name`)}
+                      </Typography>
+                    </Box>
+                    <Box sx={FACTS_SX}>
+                      <StatusChip inline glyph="orders" variant="outlined" label={serviceChipText(row)} testId={`service-${row.id}-chip`} />
+                      <StatusChip inline glyph={severity.glyph} color={severity.color} variant={severity.variant} label={t(`severity.${row.severity}`)} />
+                    </Box>
+                    <Box component="span" aria-hidden sx={CARET_SX} />
+                  </Box>
+                  <Box sx={ROW_BODY_SX}>
+                    {/* Two columns at 320px, four from `md`. A table would scroll sideways on a
+                        phone, which §18.5 refuses. */}
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" },
+                        gap: 1.5,
+                        mb: 1.5,
+                      }}
+                    >
+                      <Fact label={t("field.planToday")}>{row.planToday ?? t("planNone")}</Fact>
+                      <Fact label={t("field.costToday")}>
+                        <strong>{costTodayText(row)}</strong>
+                      </Fact>
+                      <Fact label={t("field.howClose")}>
                         {close.text}
                         {close.more && <QuietHelp text={close.more} />}
-                      </>
-                    );
-                  })()}
-                </Fact>
-                <Fact label={t("field.nextPlan")}>{row.nextPlan ? `${row.nextPlan} — ${row.nextCost}` : t("nextPlanNone")}</Fact>
+                      </Fact>
+                      <Fact label={t("field.nextPlan")}>{row.nextPlan ? `${row.nextPlan} — ${row.nextCost}` : t("nextPlanNone")}</Fact>
+                    </Box>
+
+                    {/* One sentence a line (§511): what is free, the ceiling, what crossing it does — the
+                        row's history, exceptions and arithmetic behind the «?» on the first line. */}
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      {wording(row, "freeGives")}
+                      <QuietHelp text={wording(row, "more")} />
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      <strong>{wording(row, "ceiling")}</strong>
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      {wording(row, "whenCrossed")}
+                    </Typography>
+
+                    {/* A temporary upgrade nobody reverses is the expensive failure, and no dashboard
+                        will remind the club to come back down. It belongs on the service. */}
+                    {row.bump && (
+                      <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+                        <StatusChip glyph={row.bump === "temporary" ? "planned" : "done"} variant="outlined" color={row.bump === "temporary" ? "primary" : "default"} label={t(`bump.${row.bump}`)} />
+                        <Typography variant="body2" color="text.secondary">
+                          {wording(row, "bumpBack")}
+                        </Typography>
+                      </Stack>
+                    )}
+
+                    <Typography variant="caption" color="text.secondary" component="div" sx={{ mt: 1 }}>
+                      {t("checkedOn", { checked: formatCalendarDay(row.checkedOn, { locale, style: "short", position: "inline" }) })}
+                    </Typography>
+                  </Box>
+                </Box>
               </Box>
-
-              {/* One sentence a line (§511): what is free, the ceiling, what crossing it does — the
-                  row's history, exceptions and arithmetic behind the «?» on the first line. */}
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                {wording(row, "freeGives")}
-                <QuietHelp text={wording(row, "more")} />
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                <strong>{wording(row, "ceiling")}</strong>
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                {wording(row, "whenCrossed")}
-              </Typography>
-
-              {/* A temporary upgrade nobody reverses is the expensive failure, and no dashboard
-                  will remind the club to come back down. It belongs on the service. */}
-              {row.bump && (
-                <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap", gap: 1 }}>
-                  <Chip size="small" variant="outlined" color={row.bump === "temporary" ? "info" : "default"} label={t(`bump.${row.bump}`)} />
-                  <Typography variant="body2" color="text.secondary">
-                    {wording(row, "bumpBack")}
-                  </Typography>
-                </Stack>
-              )}
-
-              <Typography variant="caption" color="text.secondary" component="div" sx={{ mt: 1 }}>
-                {t("checkedOn", { checked: formatCalendarDay(row.checkedOn, { locale, style: "short", position: "inline" }) })}
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
-      </Box>
+            );
+          })}
+        </Box>
+      </Panel>
     </Stack>
   );
 }

@@ -1,20 +1,22 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
-import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { bodyToText } from "../domain/body-text";
 import LegalBodyEditor from "./LegalBodyEditor";
 import TokenLegend from "./TokenLegend";
 import type { LegalDocumentBody } from "../domain/content-hash";
 import { LEGAL_DOCUMENT_KEYS } from "../domain/keys";
+
+/** The two languages, in the strip's order: Română first, as every editor's tabs. */
+const LANGUAGES = ["ro", "en"] as const;
 
 export type LegalDocumentFormValues = {
   key: LegalDocumentKey;
@@ -25,9 +27,12 @@ export type LegalDocumentFormValues = {
 /**
  * One form for writing a legal document, used to create a version and to correct a draft.
  *
- * Both languages on one screen rather than a tab each: they must both exist before the version
- * can be approved (BR-REQ-040-02 forbids falling back to the other), and a form that lets
- * somebody finish one and leave is a form that produces half a document.
+ * The two languages are the backoffice's one Română | English strip (`LocaleTabPanels`, §847; the
+ * event editor's and the FAQ's): one form, both panels in it, the hidden one still posted. They must
+ * both exist before the version can be approved (BR-REQ-040-02 forbids falling back to the other),
+ * and a form that lets somebody finish one and leave is a form that produces half a document — so
+ * each tab says «incomplet» while its title or its text is empty, re-read as it is typed, and a box
+ * the browser or the action refuses brings its language's tab forward (`ActionForm` → `REVEAL_EVENT`).
  *
  * The body is written in `LegalBodyEditor` — what the club sees is what the page and the signed
  * PDF will show (§279) — and it posts the same plain text the textarea posted, under the same
@@ -104,47 +109,52 @@ export default async function LegalDocumentForm({
             legend that appears only after the choice is a legend nobody sees in time. */}
         <TokenLegend body={values ? bodyToText(values.ro.body) : undefined} />
 
-        {(["ro", "en"] as const).map((locale) => (
-          <Paper key={locale} variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
-            <Typography variant="overline" color="text.secondary">
-              {locale.toUpperCase()}
-            </Typography>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <RecallField
-                name={`${locale}Title`}
-                label={t("titleField")}
-                required
-                defaultValue={values?.[locale].title ?? ""}
-              />
-              {/* The declaration's merge fields (§95): named here, filled in per person and event. */}
-              <LegalBodyEditor
-                name={`${locale}Body`}
-                label={t("bodyField")}
-                accessibleSuffix={locale.toUpperCase()}
-                help={`${t("bodyHelp")} ${t("tokensHelp")}`}
-                initialText={values ? bodyToText(values[locale].body) : ""}
-                labels={{
-                  heading: t("editor.heading"),
-                  paragraph: t("editor.paragraph"),
-                  paragraphShort: t("editor.paragraphShort"),
-                  link: t("editor.link"),
-                  linkUrl: t("editor.linkUrl"),
-                  linkApply: t("editor.linkApply"),
-                  linkRemove: t("editor.linkRemove"),
-                  linkCancel: t("editor.linkCancel"),
-                  image: t("editor.image"),
-                  imageUrl: t("editor.imageUrl"),
-                  imageAlt: t("editor.imageAlt"),
-                  imageApply: t("editor.imageApply"),
-                  imageCancel: t("editor.imageCancel"),
-                  imageInvalid: t("editor.imageInvalid"),
-                  undo: t("editor.undo"),
-                  redo: t("editor.redo"),
-                }}
-              />
-            </Stack>
-          </Paper>
-        ))}
+        <LocaleTabPanels
+          idPrefix="legal-text"
+          watch={{ names: ["{locale}Title", "{locale}Body"], rule: "required" }}
+          markLabel={t("tabIncomplete")}
+          panels={LANGUAGES.map((language) => ({
+            locale: language,
+            label: t(`language.${language}`),
+            incompleteLabel: values?.[language].title && bodyToText(values[language].body) ? undefined : t("tabIncomplete"),
+            content: (
+              <Stack spacing={2}>
+                <RecallField
+                  name={`${language}Title`}
+                  label={t("titleField")}
+                  required
+                  defaultValue={values?.[language].title ?? ""}
+                />
+                {/* The declaration's merge fields (§95): named here, filled in per person and event. */}
+                <LegalBodyEditor
+                  name={`${language}Body`}
+                  label={t("bodyField")}
+                  accessibleSuffix={language.toUpperCase()}
+                  help={`${t("bodyHelp")} ${t("tokensHelp")}`}
+                  initialText={values ? bodyToText(values[language].body) : ""}
+                  labels={{
+                    heading: t("editor.heading"),
+                    paragraph: t("editor.paragraph"),
+                    paragraphShort: t("editor.paragraphShort"),
+                    link: t("editor.link"),
+                    linkUrl: t("editor.linkUrl"),
+                    linkApply: t("editor.linkApply"),
+                    linkRemove: t("editor.linkRemove"),
+                    linkCancel: t("editor.linkCancel"),
+                    image: t("editor.image"),
+                    imageUrl: t("editor.imageUrl"),
+                    imageAlt: t("editor.imageAlt"),
+                    imageApply: t("editor.imageApply"),
+                    imageCancel: t("editor.imageCancel"),
+                    imageInvalid: t("editor.imageInvalid"),
+                    undo: t("editor.undo"),
+                    redo: t("editor.redo"),
+                  }}
+                />
+              </Stack>
+            ),
+          }))}
+        />
 
         <Box>
           <GlyphSubmitButton

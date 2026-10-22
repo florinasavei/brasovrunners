@@ -4,15 +4,11 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
-import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import TipSpan from "@/shared/ui/TipSpan";
-
-/** The range heading's glyph (§759): the printer, the verb the range belongs to. */
-const RangeGlyph = ACTION_ICONS.print;
 
 /** The two small forms the card's controls belong to, by id (`form="…"`). */
 export const BIB_ASSIGN_FORM = "bib-assign";
@@ -55,59 +51,69 @@ export type SpareCard = {
  * that reserves the numbers under the event's lock and comes back with the sheet's link for exactly
  * that range; the reprint of the free ones already reserved is the sheet's own GET. The Organizer
  * reads the section and downloads the sheet; only an Administrator reserves (§289).
+ *
+ * Not every race prints spares, so it is a part a person may skip: a level-5 fold of the print card
+ * (the editor's rule, `EventEditorLayout`; a caption over a divider until then), closed, the band and
+ * how many are free on its closed line.
  */
 async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; mayReserve: boolean }) {
   const t = await getTranslations("Admin");
   const { band } = spares;
   return (
-    <Stack spacing={1} data-testid="bib-spares" sx={{ pt: 1, borderTop: 1, borderColor: "divider" }}>
-      <Typography variant="subtitle2" component="h5">
-        {t("bibs.sparesTitle")}
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        {t("bibs.sparesHelp", { max: spares.perPrint })}
-      </Typography>
-      {band && (
-        <Typography variant="body2" data-testid="bib-spares-state">
-          {spares.free > 0
-            ? t("bibs.sparesFree", { from: band.from, to: band.to, free: spares.free, total: band.to - band.from + 1 })
-            : t("bibs.sparesNone", { from: band.from, to: band.to })}
+    <Panel
+      glyph="bibs"
+      collapsible
+      level={5}
+      title={t("bibs.sparesTitle")}
+      aside={band ? t("bibs.sparesLine", { from: band.from, to: band.to, free: spares.free }) : t("bibs.sparesLineNone")}
+      data-testid="bib-spares"
+    >
+      <Stack spacing={1}>
+        <Typography variant="body2" color="text.secondary">
+          {t("bibs.sparesHelp", { max: spares.perPrint })}
         </Typography>
-      )}
-      <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-        {mayReserve && spares.nextFrom !== null ? (
-          <>
-            <TextField
-              name="count"
-              type="number"
-              label={t("bibs.sparesCount")}
-              size="small"
-              defaultValue={Math.min(10, spares.perPrint)}
-              required
-              slotProps={{ htmlInput: { min: 1, max: spares.perPrint, step: 1, inputMode: "numeric", form: BIB_SPARES_FORM } }}
-              sx={{ width: 110 }}
-            />
-            <GlyphButton icon="print" type="submit" form={BIB_SPARES_FORM} variant="outlined" size="small" sx={{ minHeight: 44 }}>
-              {t("bibs.sparesPrint")}
+        {band && (
+          <Typography variant="body2" data-testid="bib-spares-state">
+            {spares.free > 0
+              ? t("bibs.sparesFree", { from: band.from, to: band.to, free: spares.free, total: band.to - band.from + 1 })
+              : t("bibs.sparesNone", { from: band.from, to: band.to })}
+          </Typography>
+        )}
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+          {mayReserve && spares.nextFrom !== null ? (
+            <>
+              <TextField
+                name="count"
+                type="number"
+                label={t("bibs.sparesCount")}
+                size="small"
+                defaultValue={Math.min(10, spares.perPrint)}
+                required
+                slotProps={{ htmlInput: { min: 1, max: spares.perPrint, step: 1, inputMode: "numeric", form: BIB_SPARES_FORM } }}
+                sx={{ width: 110 }}
+              />
+              <GlyphButton icon="print" type="submit" form={BIB_SPARES_FORM} variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                {t("bibs.sparesPrint")}
+              </GlyphButton>
+              <Typography variant="body2" color="text.secondary">
+                {t("bibs.sparesNext", { from: spares.nextFrom })}
+              </Typography>
+            </>
+          ) : (
+            !mayReserve && (
+              <Typography variant="body2" color="text.secondary">
+                {t("bibs.sparesReadOnly")}
+              </Typography>
+            )
+          )}
+          {band && spares.free > 0 && (
+            <GlyphButton icon="pdf" type="submit" form={BIB_DOWNLOAD_FORM} name="spares" value="1" variant="text" size="small" sx={{ minHeight: 44 }}>
+              {t("bibs.downloadSpares")}
             </GlyphButton>
-            <Typography variant="body2" color="text.secondary">
-              {t("bibs.sparesNext", { from: spares.nextFrom })}
-            </Typography>
-          </>
-        ) : (
-          !mayReserve && (
-            <Typography variant="body2" color="text.secondary">
-              {t("bibs.sparesReadOnly")}
-            </Typography>
-          )
-        )}
-        {band && spares.free > 0 && (
-          <GlyphButton icon="pdf" type="submit" form={BIB_DOWNLOAD_FORM} name="spares" value="1" variant="text" size="small" sx={{ minHeight: 44 }}>
-            {t("bibs.downloadSpares")}
-          </GlyphButton>
-        )}
+          )}
+        </Stack>
       </Stack>
-    </Stack>
+    </Panel>
   );
 }
 
@@ -166,18 +172,13 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
         {/*
           «Tipărește numerele (PDF)» (§759): «De la» and «Până la» belong to the PDF, not to
           the allocation — under a heading that names the print, never «doar» over a button that says «toate»,
-          the range in its help, beside the download buttons, a divider above them. The
+          the range in its help, beside the download buttons. The print is what the card is for, so it is
+          an open part — a level-5 `Panel variant="section"`, its heading and its boxes, no fold and no
+          border (the editor's rule, `EventEditorLayout`; a caption over a divider until then). The
           form wiring is the sheet's own GET (`BIB_DOWNLOAD_FORM`), unchanged.
         */}
         {total > 0 && (
-          <Box sx={{ borderTop: 1, borderColor: "divider", pt: 1.5 }} data-testid="bib-print-range">
-            <Typography variant="subtitle2" component="h5" sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.5 }}>
-              <RangeGlyph aria-hidden fontSize="small" sx={{ color: "text.secondary" }} />
-              {t("bibs.rangeTitle")}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-              {t("bibs.rangeHelp")}
-            </Typography>
+          <Panel variant="section" glyph="print" level={5} title={t("bibs.rangeTitle")} intro={t("bibs.rangeHelp")} data-testid="bib-print-range">
             <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
               <TextField
                 name="from"
@@ -203,7 +204,7 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
                 {t("bibs.downloadOnePerPage")}
               </GlyphButton>
             </Stack>
-          </Box>
+          </Panel>
         )}
         {spares && <SpareBibsSection spares={spares} mayReserve={mayAssign} />}
         {/* Every bib as it will print, on its own page (§94): drawn on request. */}
