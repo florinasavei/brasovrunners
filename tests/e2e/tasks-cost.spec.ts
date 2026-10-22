@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openCostsCard } from "./support/costs";
 import { signIn } from "./support/featured-event";
 
 /**
@@ -36,7 +37,10 @@ test.describe("BR-REQ-090-05 the club's money, «Setări» → «Costuri» (§51
     await expect(total).toBeVisible();
     await expect(main.getByTestId("month-costs-domain-year")).toContainText("Domeniul .com:");
     await expect(main.locator('details[data-testid="month-costs"]')).not.toHaveAttribute("open", /.*/);
-    await expect(main.getByRole("heading", { name: "Cât costă" })).toBeVisible();
+    await expect(main.getByRole("heading", { name: /^Cât costă/ })).toBeVisible();
+    // Every card under the total is a fold, closed on arrival with its value on its line; «Cât costă» opened as a treasurer does.
+    await expect(main.locator('details[data-testid="cost-breakdown"]')).not.toHaveAttribute("open", /.*/);
+    await openCostsCard(main, "cost-breakdown");
     // The verdict and the number, before the table that justifies them — per month and per year (§610).
     await expect(main.getByTestId("cost-today")).toHaveText(
       /^Astăzi clubul (nu plătește nimic|plătește (circa )?.+ pe lună, adică .+ pe an\.)/,
@@ -55,8 +59,12 @@ test.describe("BR-REQ-090-05 the club's money, «Setări» → «Costuri» (§51
     const vercelPlan = main.getByTestId("vercel-plan");
     await expect(vercelPlan.getByTestId("vercel-plan-in-force")).toHaveText(/^Vercel: (Hobby, gratuit|Pro, .+ USD pe lună \+ TVA)\.$/);
     await expect(vercelPlan.getByTestId("vercel-plan-form")).toHaveCount(1);
-    // A row per service, each carrying its own ceiling and how close this deployment is to it.
-    await expect(main.getByRole("heading", { name: "Mailgun (trimiterea e-mailurilor)" })).toBeVisible();
+    // A row per service, each carrying its own ceiling and how close this deployment is to it: the house's row
+    // fold (§842), the name and its chips on the line, the ceiling inside.
+    const services = await openCostsCard(main, "services");
+    await expect(services.getByRole("heading", { name: "Mailgun (trimiterea e-mailurilor)" })).toBeVisible();
+    await services.getByTestId("service-mailgun-toggle").press("Enter");
+    await expect(services.getByTestId("service-mailgun").getByText(/Plan azi/)).toBeVisible();
     // A price with no age is a claim, so the page states how old these are.
     await expect(main.getByText(/Prețurile au fost verificate /)).toBeVisible();
 

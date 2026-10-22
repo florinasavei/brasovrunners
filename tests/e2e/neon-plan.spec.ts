@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
+import { openCostsCard, openDatabaseCard } from "./support/costs";
 import { signIn } from "./support/featured-event";
 
 /**
@@ -32,10 +33,12 @@ test.describe("BR-REQ-090-07 the Neon plan on «Setări» → «Costuri» and /d
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/settings/costs");
     const main = page.locator("#main");
-    const panel = main.getByTestId("neon-plan");
+    // A fold inside the database's card, both closed on arrival with the plan on their lines.
+    await expect(main.getByTestId("database-config").locator(":scope > summary")).toContainText("Free");
+    const panel = await openDatabaseCard(main, "neon-plan");
 
     // The default: Free, with its ceilings — no key in CI, so the sentence without the hours.
-    await expect(panel.getByRole("heading", { name: "Planul Neon (baza de date)" })).toBeVisible();
+    await expect(panel.getByRole("heading", { name: /^Planul Neon \(baza de date\)/ })).toBeVisible();
     await expect(panel.getByTestId("neon-plan-in-force")).toContainText(/^Planul: Free/);
     // No key in CI, so the setting stands in for Neon's answer, and the panel says so (§326).
     await expect(panel.getByTestId("neon-plan-source")).toContainText("se folosește planul ales mai jos");
@@ -49,11 +52,15 @@ test.describe("BR-REQ-090-07 the Neon plan on «Setări» → «Costuri» and /d
     await expect(main.getByText("Planul Neon a fost salvat", { exact: false })).toBeVisible();
     await expect(panel.getByTestId("neon-plan-in-force")).toContainText(/^Planul: Launch/);
     await expect(panel.getByText(/Notă: Launch din 22 septembrie/)).toBeVisible();
+    // The saved card opened by itself with the card around it (§336), the plan on both lines.
+    await expect(panel.locator(":scope > summary")).toContainText("Launch");
     // The cost table's row follows: Launch, by usage, no next plan — and the verdict stops saying "free".
-    const neonRow = main.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Neon (baza de date)" }) });
+    const services = await openCostsCard(main, "services");
+    const neonRow = services.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Neon (baza de date)" }) });
     await expect(neonRow).toContainText("Launch");
     await expect(neonRow).toContainText(/la consum/);
     await expect(neonRow).toContainText("nu are pas următor");
+    await openCostsCard(main, "cost-breakdown");
     await expect(main.getByText(/Aproape: se plătesc domeniul și baza de date/)).toBeVisible();
 
     // Tehnic reads `/devs` and cannot open the costs panel: the Launch sentence, no ceiling, no
@@ -84,7 +91,8 @@ test.describe("BR-REQ-090-07 the Neon plan on «Setări» → «Costuri» and /d
     await expect(adminBlock.getByRole("link", { name: /Limitele bazei de date/ })).toHaveAttribute("href", /\/admin\/settings\/costs#neon-limits$/);
     await adminBlock.getByRole("link", { name: /Schimbă planul/ }).click();
     await expect(page).toHaveURL(/\/admin\/settings\/costs#neon-plan$/);
-    const again = page.locator("#main").getByTestId("neon-plan");
+    // The address names the card: the folds around it open by themselves (`OpenFoldFromHash`); opening is idempotent.
+    const again = await openDatabaseCard(page.locator("#main"), "neon-plan");
     await again.getByLabel("Planul de rezervă, când Neon nu răspunde").selectOption("FREE");
     await again.getByLabel("Notă (de ce, până când)").fill("");
     await again.getByRole("button", { name: "Salvează planul Neon" }).click();

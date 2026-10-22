@@ -10,6 +10,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import type { FoldOpenWhen } from "@/shared/ui/fold";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import type { TranslationBudgetState } from "../budget";
@@ -26,6 +27,8 @@ type Props = {
   /** DeepL's credit from its own meter (§497): given once, so used and left, with its level. */
   credit: CreditReading;
   mayEdit: boolean;
+  /** Why the fold opens on arrival (§336): its own save (`?saved=translationBudget`), or a credit spent or low. */
+  openWhen?: FoldOpenWhen;
 };
 
 const CREDIT_COLOR = { ok: "text.secondary", watch: "warning.main", low: "error.main", spent: "error.main" } as const;
@@ -37,16 +40,20 @@ const CREDIT_COLOR = { ok: "text.secondary", watch: "warning.main", low: "error.
  * question first (§384). It says what is spent today, what is used and left of the key's one-time DeepL credit (§497, DeepL's own figure), and that
  * only the club's own texts are ever sent.
  */
-export default async function TranslationBudgetPanel({ locale, state, usedToday, configured, credit, mayEdit }: Props) {
+export default async function TranslationBudgetPanel({ locale, state, usedToday, configured, credit, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const number = (value: number) => value.toLocaleString(locale === "ro" ? "ro-RO" : "en-GB");
   const clock = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
 
   return (
+    // A fold, the day's allowance on its line («5.000 caractere pe zi», «oprită»), closed until opened or saved (§336).
     <Panel glyph="translation"
+      collapsible
       id="translation-budget"
       title={t("tasks.translationBudget.title")}
+      aside={state.budget.dailyCharacters === 0 ? t("tasks.translationBudget.aside.off") : t("tasks.translationBudget.aside.daily", { count: number(state.budget.dailyCharacters) })}
+      openWhen={openWhen}
       intro={t("tasks.translationBudget.intro")}
       introMore={t("tasks.translationBudget.introMore")}
       data-testid="translation-budget"

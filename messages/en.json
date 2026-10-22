@@ -4163,7 +4163,13 @@
         "minCuHelpMore": "The database starts at this size on the first request. A larger one costs more for every hour awake.",
         "suspendHelpMore": "“Never” keeps it on all the time: every hour of the month is billed at the minimum size ({rate} $ per CU-hour), even with no visitor at all.",
         "confirmLimit": "New limit: {hours} CU-hours.",
-        "confirmNone": "No monthly limit."
+        "confirmNone": "No monthly limit.",
+        "aside": {
+          "limit": "limit {hours} CU-hours",
+          "none": "no limit",
+          "unconfigured": "no Neon key",
+          "failed": "not read"
+        }
       },
       "filter": {
         "who": "Who",
@@ -5139,7 +5145,11 @@
         "introMore": "The jobs are registration maintenance and the email outbox. With nothing to do they do not wake the database; every wake-up costs at least 5 minutes of compute.",
         "safeMore": "Every reading of the places counts the deadlines at that moment, whether or not the job has run. Your setting wins.",
         "onTheHourMore": "A day with nothing to do costs one wake of the database, at {time}. A deadline (a held place, a reminder) keeps its own time. With an interval chosen, some may be up to a quarter of an hour late.",
-        "fieldHelpMore": "A ping inside the interval answers from the cache, without the database, exactly like one with nothing to do."
+        "fieldHelpMore": "A ping inside the interval answers from the cache, without the database, exactly like one with nothing to do.",
+        "aside": {
+          "onDemand": "on demand",
+          "every": "at most every {minutes} min"
+        }
       },
       "budgetThresholds": {
         "saved": "The thresholds are saved; the month's budget is read by them from now on."
@@ -5176,7 +5186,11 @@
         },
         "introMore": "The DeepL key's character credit is given once and is not renewed monthly; the daily budget stops one afternoon from using up the credit.",
         "privacyMore": "Only the content boxes are translated, so the privacy notice does not change.",
-        "fieldHelpMore": "A whole event is 5,000–15,000 characters, taken off the DeepL credit."
+        "fieldHelpMore": "A whole event is 5,000–15,000 characters, taken off the DeepL credit.",
+        "aside": {
+          "off": "off",
+          "daily": "{count} characters a day"
+        }
       },
       "month": {
         "title": "By provider",
@@ -5299,7 +5313,18 @@
         "intro": "The plan, the month's budget, Neon's brakes and how often the site wakes the database."
       },
       "currencyNoteMore": "They are not converted into lei: none of them invoices in lei, and a rate written today would be wrong tomorrow.",
-      "servicesIntroMore": "The plan we are on, what it costs today, what we get for free, the limit we will meet first, how close we are now, what happens when we cross it, and what the next step up costs."
+      "servicesIntroMore": "The plan we are on, what it costs today, what we get for free, the limit we will meet first, how close we are now, what happens when we cross it, and what the next step up costs.",
+      "costAside": "{amount} a month",
+      "servicesAside": {
+        "one": "{count} to watch",
+        "few": "{count} to watch",
+        "other": "{count} to watch",
+        "none": "nothing to watch"
+      },
+      "serviceChip": {
+        "perMonth": "{amount} {currency}/month",
+        "perMonthEstimated": "≈ {amount} {currency}/month"
+      }
     },
     "volunteers": {
       "title": "Volunteers",

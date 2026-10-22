@@ -11,6 +11,7 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import type { FoldOpenWhen } from "@/shared/ui/fold";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -33,6 +34,8 @@ type Props = {
   mayEdit: boolean;
   /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§479). */
   level?: 2 | 3;
+  /** Why the fold opens on arrival (§336): its own save (`?saved=neonPlan`). */
+  openWhen?: FoldOpenWhen;
 };
 
 /**
@@ -53,7 +56,7 @@ type Props = {
  * Like its twin on `/admin/emails`, a refusal comes back as the form's state with the plan and
  * the note as they were chosen (`DECISIONS.md` §315), rather than a redirect that dropped the note.
  */
-export default async function NeonPlanPanel({ locale, plan, source, block, mayEdit, level = 2 }: Props) {
+export default async function NeonPlanPanel({ locale, plan, source, block, mayEdit, level = 2, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const format = await getFormatter();
@@ -61,7 +64,8 @@ export default async function NeonPlanPanel({ locale, plan, source, block, mayEd
   const rate = (value: number) => format.number(value, { maximumFractionDigits: 3 });
 
   return (
-    <Panel glyph="plan" level={level} id="neon-plan" title={t("tasks.neonPlan.title")} intro={t("tasks.neonPlan.intro")} introMore={t("tasks.neonPlan.introMore")} data-testid="neon-plan">
+    // A fold, the plan in force on its line (Free, Launch), closed until opened or saved (§336).
+    <Panel glyph="plan" collapsible level={level} id="neon-plan" title={t("tasks.neonPlan.title")} aside={NEON_PLANS[block.plan].name} openWhen={openWhen} intro={t("tasks.neonPlan.intro")} introMore={t("tasks.neonPlan.introMore")} data-testid="neon-plan">
       {/* The plan in force, and what this month looks like on it — the figures a wrong answer would expose. */}
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="neon-plan-in-force">
         {block.plan === "LAUNCH"

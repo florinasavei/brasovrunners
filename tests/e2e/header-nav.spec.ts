@@ -111,7 +111,7 @@ async function setLook(browser: Browser, choice: "on" | "off"): Promise<void> {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/settings/appearance");
     const panel = page.locator("#main").getByTestId("site-look");
-    // The tab's cards are plain sections today (a `<section>` has no summary to press); a fold is opened.
+    // The tab's cards are folds, closed on arrival with their value on their line since the backoffice's consistency pass; a section would have no summary to press.
     if (await panel.evaluate((element) => element.tagName === "DETAILS")) await openFold(panel);
     await panel.getByTestId(`site-look-option-${choice}`).click();
     await panel.getByRole("button", { name: "Salvează tema" }).click();
