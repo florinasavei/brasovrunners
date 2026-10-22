@@ -32,6 +32,8 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import StatusChip from "@/shared/ui/StatusChip";
 import type { StatusGlyphName } from "@/shared/ui/status-glyphs";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
+import { FACTS_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
 import {
   VOLUNTEER_CITY_MAX,
@@ -93,6 +95,9 @@ export type VolunteerPersonContext = {
   /** The admin path a verb returns to, when not the card: the person's own page (§839). */
   returnTo?: string;
 };
+
+/** The pencil at the end of a person's line: the edit verb's glyph, by name (§318). */
+const PencilIcon = ACTION_ICONS.edit;
 
 export const STATE_CHIP: Record<VolunteerState, { glyph: StatusGlyphName; color: "warning" | "success" | "default" }> = {
   REGISTERED: { glyph: "open", color: "warning" },
@@ -393,7 +398,8 @@ export async function VolunteerPersonFields({ person, context }: { person: Volun
 }
 
 /**
- * One person's full block: `as` is the element it is drawn as — a list item in the card's groups, a section on the person's own page.
+ * One person's full block: `as` is where it is drawn — a row fold in the card's groups (`li`: the name, the state and the roles
+ * given on its line, the block inside), or the block open on the person's own page (`section`), whose header says the name and the state.
  */
 export default async function VolunteerPerson({ person, context, as = "li" }: { person: VolunteerItem; context: VolunteerPersonContext; as?: "li" | "section" }) {
   const { locale, eventId, volunteersShirts, minorsOpen, agreementInForce, agreementNoticeDescribes, agreementDocumentIds, agreementEvent, now } = context;
@@ -710,13 +716,14 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
     );
   };
 
-  return (
-    <Box component={as} id={`volunteer-${person.id}`} data-testid="volunteer-row" data-volunteer-id={person.id} data-state={person.state} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
-      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
-        <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }} data-testid="volunteer-name">
-          {person.name}
-        </Typography>
-        <StatusChip glyph={STATE_CHIP[person.state].glyph} color={STATE_CHIP[person.state].color} label={t(`volunteers.states.${person.state}`)} testId="volunteer-state" />
+  /*
+    The block itself, the same in both places: the chips of where the person came from and how the agreements stand, what they
+    said about themselves, the contact, then the verbs — the roles, the agreements, the state — «Modifică», and «Șterge voluntarul»
+    last. Drawn inside the card's row fold; drawn open on the person's own page, under the header that already names them (§839).
+  */
+  const body = (
+    <>
+      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.75 }} data-testid="volunteer-status">
         <StatusChip glyph={person.source === "PUBLIC" ? "link" : "club"} variant="outlined" label={t(`volunteers.sources.${person.source}`)} />
         {/* The volunteer agreement (§758): accepted, a link waiting, or «contract neacceptat încă» — in words, never by colour alone.
             A cancelled person who never accepted is asked nothing: no chip to act on. */}
@@ -866,23 +873,65 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
                 <GlyphSubmitButton label={t("volunteers.save")} pendingLabel={t("volunteers.saving")} icon="save" />
               </Box>
             </ActionForm>
-            <ActionForm
-              action={deleteVolunteerAction}
-              confirm={{
-                title: t("volunteers.deleteTitle"),
-                body: t("volunteers.deleteBody", { name: shortText(person.name) }),
-                confirmLabel: t("volunteers.delete"),
-                cancelLabel: words.cancel,
-                destructive: true,
-              }}
-            >
-              {hidden}
-              <input type="hidden" name="volunteerId" value={person.id} />
-              <GlyphSubmitButton label={t("volunteers.delete")} pendingLabel={t("volunteers.deleting")} icon="delete" color="error" variant="outlined" />
-            </ActionForm>
           </Stack>
         </Panel>
+        {/* «Șterge voluntarul» last, as every row's delete (§842): it asks first. */}
+        <ActionForm
+          action={deleteVolunteerAction}
+          confirm={{
+            title: t("volunteers.deleteTitle"),
+            body: t("volunteers.deleteBody", { name: shortText(person.name) }),
+            confirmLabel: t("volunteers.delete"),
+            cancelLabel: words.cancel,
+            destructive: true,
+          }}
+        >
+          {hidden}
+          <input type="hidden" name="volunteerId" value={person.id} />
+          <GlyphSubmitButton label={t("volunteers.delete")} pendingLabel={t("volunteers.deleting")} icon="delete" color="error" variant="outlined" />
+        </ActionForm>
       </Stack>
+    </>
+  );
+
+  if (as === "section") {
+    // The person's own page (§839): its header already says the name and the state, so the block is drawn open, under it, without them.
+    return (
+      <Box component="section" id={`volunteer-${person.id}`} aria-label={person.name} data-testid="volunteer-row" data-volunteer-id={person.id} data-state={person.state}>
+        {body}
+      </Box>
+    );
+  }
+
+  /*
+    The card's row (§842, `shared/ui/row-fold.ts`; the owner, 2026-10-21: «they look like they are from a different app»): the house's
+    row fold, the roles' and the checkpoints' shape — the line in words, the name, the state and the roles given (or «De repartizat»),
+    the pencil at the end, and a press anywhere on it opens the person's block in place. The address `#volunteer-<id>` names the fold
+    itself, so «vezi la …» and a link from elsewhere land on it open (`OpenFoldFromHash`). The fold is keyed on what the line says, so a
+    verb that changed it — «Confirmă», a role given — draws it closed on its new line; one that did not leaves it as it was.
+  */
+  const given = rolesOf(person).assigned;
+  return (
+    <Box component="li" data-testid="volunteer-row" data-volunteer-id={person.id} data-state={person.state} sx={ROW_SX}>
+      <Box component="details" id={`volunteer-${person.id}`} key={[person.name, person.state, ...person.roleIds].join("\u0001")} data-testid="volunteer-edit">
+        <Box component="summary" title={t("volunteers.edit")} data-testid="volunteer-edit-toggle" sx={SUMMARY_SX}>
+          <Box sx={{ gridArea: "words", minWidth: 0 }}>
+            <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }} data-testid="volunteer-name">
+              {person.name}
+            </Typography>
+          </Box>
+          <Box sx={FACTS_SX}>
+            <StatusChip glyph={STATE_CHIP[person.state].glyph} color={STATE_CHIP[person.state].color} label={t(`volunteers.states.${person.state}`)} testId="volunteer-state" />
+            {given.length > 0 ? (
+              <StatusChip glyph="given" variant="outlined" label={given.map(labelOf).join(", ")} testId="volunteer-row-roles" />
+            ) : person.state !== "CANCELLED" ? (
+              <StatusChip glyph="open" color="warning" variant="outlined" label={t("volunteers.unassigned.title")} testId="volunteer-row-roles" />
+            ) : null}
+          </Box>
+          <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
+        </Box>
+        <Box sx={{ pb: 1.5, pt: 0.5 }}>{body}</Box>
+      </Box>
     </Box>
   );
 }
