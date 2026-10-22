@@ -259,6 +259,18 @@ export const SHEET_TINT = {
 } as const;
 
 /**
+ * The frame of a report sheet (§846; the owner, 2026-10-22, of the volunteers' file: «excel formatat frumos»): the header
+ * row the club's deep blue with white words — the same pair as a primary button (`brand.blueInk` under `surface`, far past
+ * AA) — and a hairline grid in the paper's own line colour a step darker, so a printed page still reads as a table. Apart
+ * from `SHEET_TINT` on purpose: those are the conditional fills the registrations sheet's tests hold to its rules one by one.
+ */
+export const SHEET_FRAME = {
+  header: "#0b2fb8",
+  headerInk: "#ffffff",
+  grid: "#cfccc2",
+} as const;
+
+/**
  * The new look's accent presets (§723, amending §708; the owner, 2026-10-11: «this should be a
  * configuration in the theme»): «Setări» → «Aspect» → «Aspectul nou» → «Culoarea de accent». Each is
  * the four shades the look wears — `accent` (the mark, a rule, a large word), `accentInk` (the words:
