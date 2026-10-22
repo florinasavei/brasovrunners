@@ -184,7 +184,8 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
 
   it("keeps the deliberate colours: erase is red and the batch cancel amber, on the same box", () => {
     const detail = read("src/app/[locale]/admin/registrations/[id]/page.tsx");
-    expect(detail).toMatch(/\.\.\.BOXED_DISCLOSURE_SX,[^}]*borderColor: "error\.light"/);
+    // The erase is the page's red card since §NNN: `Panel`'s `danger`, which draws the shared box with the red border.
+    expect(detail).toMatch(/<Panel glyph="erase" level=\{3\} collapsible tone="danger"/);
     const list = read("src/app/[locale]/admin/registrations/(list)/page.tsx");
     expect(list).toMatch(/\.\.\.BOXED_DISCLOSURE_SX,[^}]*borderColor: "warning\.light"/);
   });

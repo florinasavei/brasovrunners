@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import pg from "pg";
 import { FEATURED, hydrated, signIn } from "./support/featured-event";
+import { openFold } from "./support/fold";
 
 /**
  * BR-REQ-031-05, BR-REQ-060-01 — the data-handling pass (§322), walked in a browser.
@@ -117,6 +118,8 @@ test.describe("BR-REQ-031-05 the emergency details, for the people they are for 
     await signIn(page, "Dev Administrator");
     await page.goto(`/ro/admin/registrations/${runner.registrationId}`);
     await expect(page.getByRole("heading", { name: "Retrage consimțământul" })).toBeVisible();
+    // A folded card since §NNN: opened the way a person does.
+    await openFold(page.getByTestId("withdraw-consent"));
     await page.getByRole("checkbox", { name: "Nota medicală și acordul pentru ea" }).check();
     await page.locator('form:has([name="health"]) [name="reason"]').fill("cerere scrisă");
     await page.getByRole("button", { name: "Retrage", exact: true }).click();

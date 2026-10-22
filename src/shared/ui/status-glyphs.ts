@@ -5,24 +5,30 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
+import DrawIcon from "@mui/icons-material/Draw";
 import ErrorOutlinedIcon from "@mui/icons-material/ErrorOutlined";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
+import EventSeatIcon from "@mui/icons-material/EventSeat";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import FlagIcon from "@mui/icons-material/Flag";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HelpIcon from "@mui/icons-material/Help";
 import HistoryIcon from "@mui/icons-material/History";
+import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import LinkIcon from "@mui/icons-material/Link";
 import LockClockIcon from "@mui/icons-material/LockClock";
+import MarkEmailUnreadIcon from "@mui/icons-material/MarkEmailUnread";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import RemoveIcon from "@mui/icons-material/Remove";
 import ScheduleIcon from "@mui/icons-material/Schedule";
+import ScienceIcon from "@mui/icons-material/Science";
 import StarIcon from "@mui/icons-material/Star";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import TimerOffIcon from "@mui/icons-material/TimerOff";
 import TranslateIcon from "@mui/icons-material/Translate";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -83,6 +89,17 @@ export const STATUS_GLYPHS = {
   // A runner's race that did not end in a time (§808): did not start, dropped out. A disqualified runner wears `failed`.
   didNotStart: DoNotDisturbIcon,
   droppedOut: FlagIcon,
+  // A registration's state (§NNN, `registrations/ui/RegistrationStatusChip.tsx`): the address to confirm, the declaration to sign,
+  // the waiting line, a place offered from it (the seat the «Dă-i un loc» verb wears), the deadline that passed — `done` and
+  // `cancelled` above for the confirmed and the cancelled. And a demonstration row (§30), the flask the «Test» card wears.
+  awaitingEmail: MarkEmailUnreadIcon,
+  awaitingSignature: DrawIcon,
+  waitlisted: HourglassTopIcon,
+  placeOffered: EventSeatIcon,
+  expired: TimerOffIcon,
+  test: ScienceIcon,
+  // «Prezent la …» on the desk's row: the person-with-tick the «Marchează prezent» verb wears.
+  checkedIn: HowToRegIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;

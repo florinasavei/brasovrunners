@@ -1318,9 +1318,19 @@
         "promo": "The consent to offers and benefits"
       },
       "auditTrail": "What staff did",
+      "auditTrailCount": {
+        "one": "{count} action",
+        "few": "{count} actions",
+        "other": "{count} actions"
+      },
       "partnerShares": {
         "title": "Given to partners",
-        "noRecipient": "recipient not noted"
+        "noRecipient": "recipient not noted",
+        "count": {
+          "one": "{count} list",
+          "few": "{count} lists",
+          "other": "{count} lists"
+        }
       },
       "auditActorRemoved": "account removed",
       "notes": {

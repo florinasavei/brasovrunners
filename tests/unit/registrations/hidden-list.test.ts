@@ -184,25 +184,30 @@ describe("§647 the glyph and the radio", () => {
     expect(chip).toContain("MuiChip-colorSecondary");
   });
 
-  it("is two radios, the server's state checked, under a heading with the glyph and its «i»; the Organizer's are disabled", () => {
-    const info = [ro.Admin.registrations.outside.infoFor, ro.Admin.registrations.outside.infoKeeps, ro.Admin.registrations.outside.infoNot].join("\n");
-    const props = { headingId: "hidden-list-title", heading: ro.Admin.registrations.outside.title, countedLabel: ro.Admin.registrations.outside.optionCounted, hiddenLabel: ro.Admin.registrations.outside.optionHidden, info };
+  it("is two radios, the server's state checked, named by the card's title; the Organizer's are disabled", () => {
+    const props = { label: ro.Admin.registrations.outside.title, countedLabel: ro.Admin.registrations.outside.optionCounted, hiddenLabel: ro.Admin.registrations.outside.optionHidden };
     const counted = renderToStaticMarkup(createElement(HiddenListRadio, { ...props, onList: false }));
     expect(counted.match(/type="radio"/g)).toHaveLength(2);
     expect(radio(counted, "counted")).toContain('checked=""');
     expect(radio(counted, "hidden")).not.toContain('checked=""');
-    expect(counted).toContain('aria-labelledby="hidden-list-title"');
+    // The group's name is the card's title (§NNN): the heading, its glyph and its «i» are the page's `Panel`, not a second heading here.
+    expect(counted).toContain('aria-label="Lista de invitați speciali"');
+    expect(counted).not.toMatch(/<h\d/);
     expect(counted).toContain("Se numără între locurile evenimentului");
-    expect(counted).toContain('viewBox="0 0 24 24"');
     expect(counted).not.toMatch(/<input[^>]*disabled=""/);
-    // The «i» is a button beside the heading, not inside it: the radio group's name stays the heading's words.
-    expect(counted).toMatch(/<h3[^>]*id="hidden-list-title"[^>]*>(?:(?!<\/h3>)[\s\S])*Lista de invitați speciali<\/h3>/);
-    expect(counted).toMatch(/<button[^>]*aria-label="Pentru organizatori, voluntari, pacemakeri și sportivi invitați/);
-    expect(counted).toContain("Un participant obișnuit nu se pune aici.");
 
     const hidden = renderToStaticMarkup(createElement(HiddenListRadio, { ...props, onList: true, disabled: true }));
     expect(radio(hidden, "hidden")).toContain('checked=""');
     expect(hidden.match(/<input[^>]*disabled=""/g)).toHaveLength(2);
+  });
+
+  it("is a card on the registration's page: the incognito its glyph, the title the group's name, the «i» beside the title", () => {
+    const page = read("src/app/[locale]/admin/registrations/[id]/page.tsx");
+    expect(page).toMatch(/<Panel\s+glyph="hiddenList"\s+level=\{3\}\s+title=\{tr\("registrations\.outside\.title"\)\}[\s\S]{0,200}?aside=\{<InfoTip text=\{hiddenListInfo\} \/>\}/);
+    expect(page).toContain('label={tr("registrations.outside.title")}');
+    expect(read("src/shared/ui/panel-glyphs.ts")).toContain("hiddenList: IncognitoIcon,");
+    // The «i»'s three lines, each a fact.
+    expect([ro.Admin.registrations.outside.infoFor, ro.Admin.registrations.outside.infoKeeps, ro.Admin.registrations.outside.infoNot].join("\n")).toContain("Un participant obișnuit nu se pune aici.");
   });
 
   it("asks the form's confirm on a change and listens for its «Anulează»", () => {

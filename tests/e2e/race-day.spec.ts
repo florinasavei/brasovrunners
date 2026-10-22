@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { CLUB_TIME_ZONE, formatDay } from "../../src/i18n/dates";
 import { FEATURED, ensureRegistrationIsOpen, hydrated, signIn } from "./support/featured-event";
+import { openFold } from "./support/fold";
 
 /**
  * BR-REQ-037-07, BR-REQ-037-08 — race morning, end to end, as a volunteer would live it.
@@ -235,9 +236,11 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     // Cancel, and be told about the paper before the press.
     await page.goto(detailUrl);
     await hydrated(page);
-    // The cancel's reason; the erase panel has a `reason` of its own, folded away.
-    await page.getByRole("textbox", { name: "Motivul" }).fill("nu mai vine");
-    await page.getByRole("button", { name: "Anulează înscrierea" }).click();
+    // The cancel's card is folded since §NNN: opened the way a person does; the erase card has a `reason` of its own, still folded away.
+    const cancelCard = page.getByTestId("cancel-registration");
+    await openFold(cancelCard);
+    await cancelCard.getByRole("textbox", { name: "Motivul" }).fill("nu mai vine");
+    await cancelCard.getByRole("button", { name: "Anulează înscrierea" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toContainText(`Numărul ${bib} e deja tipărit`);
     await confirmDialog(page);
