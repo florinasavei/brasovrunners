@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.75-2026-10-22
+
+- **«Costuri» confirms the translation budget's save** — «Bugetul de traducere a fost salvat.» shows after the save, like the page's other settings. §849.
 ## BR-V3.74-2026-10-22
 
 - **Guards that keep the backoffice consistent** — tests now refuse a list row with its boxes standing open, a row drawn as its own card, a second page heading, a heading sized by hand, and a verb in other words than the house's («Mai sus», «Descarcă», «Înapoi la …» without an arrow); what is there today is listed, to shrink. The admin error page's title is a sub-heading under the page's own, and the home strip's English buttons say «Move up» / «Move down». §848.
