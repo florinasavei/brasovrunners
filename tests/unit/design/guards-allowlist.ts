@@ -158,10 +158,8 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
 /** Per rule, the entries and the hits (the sum of the counts): lower them in the same edit that removes an entry or a count. */
 export const PINNED = {
   colours: { entries: 13, hits: 28 },
-  icons: { entries: 36, hits: 133 },
-  primitives: { entries: 85, hits: 92 },
-  icons: { entries: 37, hits: 135 },
-  primitives: { entries: 86, hits: 90 },
+  icons: { entries: 35, hits: 127 },
+  primitives: { entries: 84, hits: 88 },
   toggles: { entries: 0, hits: 0 },
 } as const;
 

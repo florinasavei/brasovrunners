@@ -122,6 +122,7 @@ test.describe("BR-REQ-090-05 «Club» first, and «De făcut» beside it", () =>
     await expect(teamLink).toHaveAttribute("href", "/ro/admin/pages/team");
     await expect(teamLink.locator("svg")).toHaveCount(1);
     expect((await teamLink.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await openFold(faq.getByTestId("club-todo-edit"));
     await expect(faq.getByRole("link", { name: "Deschide pagina Întrebări frecvente" })).toHaveAttribute("href", "/ro/admin/pages/faq");
 
     await page.goto("/en/admin/tasks?panel=todo&for=Administrator");
