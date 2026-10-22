@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.73-2026-10-22 -->
+<!-- PROJECT_BASELINE: BR-V3.74-2026-10-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.73-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.74-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27904,3 +27904,17 @@ Baseline `BR-V3.72-2026-10-22`.
 The design ratchet shrank with the bare chips and icons these screens no longer use (icons 33 entries / 124 hits, primitives 79 / 83).
 
 Baseline `BR-V3.73-2026-10-22`.
+
+## 848. The consistency audit's fourth wave: guards that keep the backoffice in its shapes
+
+**The owner, 2026-10-21:** «they look like they are from a different app, not consistent at all»; 2026-10-22: «PORNEȘTE ȘI NU MĂ MAI ÎNTREBA». Waves one to three (§844, §845, §847) drew the backoffice in one set of shapes. This wave adds the source-level guards the first wave promised, so a new screen cannot grow the old shapes back. Each is a test over `src/` or the catalogues, on the design ratchet of §694 (`tests/unit/design/guards-allowlist.ts`: today's offenders listed with a reason and a count, the list only shrinking).
+
+**The backoffice, read off the imports.** `scan.ts`'s `inBackoffice`: a file under `/admin` or `/devs`, or one whose every importer leads only there — so a staff component under `modules/` is in scope wherever it lives and a public card never is. `boxed-disclosure.test.ts` (§269) now covers the staff-only module directories this finds and the volunteers' staff files, which it did not before.
+
+**Rows** (`row-shapes.test.ts`). `rowFolds`: a backoffice list row with two or more boxes standing in it outside a fold is a wall of inputs — the boxes go inside the row's fold (§842); a row of verb buttons, or with one box, passes. Four files are listed: the race-day desk's row and the results' typed lines, which are working surfaces on purpose, a GPX file's offered points and the badge colours. `rowBoxes`: no border with a radius drawn around a row, nor an outlined `Paper` or `Card` as the row — the row fold's hairline draws it; fourteen files are listed (photo tiles, `AdminTable`'s phone cards, the desk, and lists still drawn as cards, to move as each is next touched).
+
+**Headings** (`heading-scale.test.ts`). `pageHeadings`: no `h1` under the shell's own — the admin error page drew one, and is an `h2` now; the list is empty. `headingSizes`: no `fontSize` or `fontWeight` written on a heading by hand. The scale has one name now, `shared/ui/heading-scale.ts`'s `HEADING_SX` — a screen's title 1.25rem, then 1.1, 1, 0.95, 0.9rem by level — which `Panel` wears; the 111 headings sized by hand before it, in 56 files, are pinned to move onto it.
+
+**Words** (`admin-verbs.test.ts`, both catalogues, `Admin` and `Devs`). Moving a row is «Mai sus» / «Mai jos» («Move up» / «Move down» — the home strip's English «Up» / «Down» corrected); a download is «Descarcă …», never «Exportă Excel» («Exportă evenimentul (JSON)» stays: it makes a file for another site, the import's pair); a page leaves the site by «Scoate pagina de pe site»; a link back carries no «←» — five still do, pinned by key. The fifth guard the first wave named, long help behind the «?», is not written: what a string's length says about where it is drawn cannot be read from the catalogue alone.
+
+Baseline `BR-V3.74-2026-10-22`.
