@@ -5,7 +5,7 @@ import { BACK_ARROWS } from "./guards-allowlist";
 import { ROOT } from "./scan";
 
 /**
- * §NNN (the consistency audit's fourth wave) — the backoffice says one word per verb, as §844 settled it, in both
+ * §848 (the consistency audit's fourth wave) — the backoffice says one word per verb, as §844 settled it, in both
  * catalogues. Read over every value of the backoffice's namespaces (`Admin`, `Devs`):
  *
  * 1. Moving a row is «Mai sus» / «Mai jos» («Move up» / «Move down») — never «Sus», «Mută mai sus», «Urcă», an arrow.
@@ -52,7 +52,7 @@ function offences(locale: "ro" | "en", catalogue: Catalogue) {
   return { found, arrows };
 }
 
-describe("§NNN the backoffice's verbs are one word each", () => {
+describe("§848 the backoffice's verbs are one word each", () => {
   for (const locale of ["ro", "en"] as const) {
     const catalogue = read(locale);
 

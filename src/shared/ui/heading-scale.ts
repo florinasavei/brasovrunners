@@ -1,5 +1,5 @@
 /**
- * The backoffice's heading scale (§NNN): the one place a staff screen's heading gets its size. The theme's `h2`…`h6` are
+ * The backoffice's heading scale (§848): the one place a staff screen's heading gets its size. The theme's `h2`…`h6` are
  * the public site's scale, too large for a dense working screen, so a backoffice heading wears the theme's `h2` look at
  * the size of its level here — a screen's title, then a card at level 2, a fold inside it a step smaller, so a card and its cards are told
  * apart (`Panel`, §350). `tests/unit/design/heading-scale.test.ts` refuses a size written on a heading by hand.

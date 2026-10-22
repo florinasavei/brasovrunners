@@ -4,7 +4,7 @@ import { ALLOWED, PINNED } from "./guards-allowlist";
 import { attribute, byFile, holdRatchet, type Hit, inBackoffice, type Opening, type Source, SOURCES, sxKeys, tagOf } from "./scan";
 
 /**
- * §NNN (the consistency audit's fourth wave; the owner, 2026-10-21: «they look like they are from a different app, not
+ * §848 (the consistency audit's fourth wave; the owner, 2026-10-21: «they look like they are from a different app, not
  * consistent at all») — the backoffice's lists keep the one shape waves two and three gave them (§842, §845, §847): a
  * list of editable things is a `<ul>` of row folds (`shared/ui/row-fold.ts`): a line in words with its chips and the
  * pencil, the boxes inside the fold, delete last. Two guards hold it, on the same ratchet as the other design guards
@@ -115,7 +115,7 @@ const rowBoxHits = (source: Source): Hit[] => rowBoxesOf(source);
 const BACKOFFICE_SOURCES = SOURCES.filter((source) => source.file.endsWith(".tsx") && inBackoffice(source.file));
 const sample = (text: string): Source => ({ file: "src/app/[locale]/admin/x.tsx", text, tree: ts.createSourceFile("x.tsx", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX) });
 
-describe("§NNN a backoffice list is row folds", () => {
+describe("§848 a backoffice list is row folds", () => {
   it("knows the backoffice: the staff routes and the modules only they reach, never a public card", () => {
     const files = BACKOFFICE_SOURCES.map((source) => source.file);
     expect(files.length).toBeGreaterThan(150);

@@ -4,7 +4,7 @@ import { ALLOWED, PINNED } from "./guards-allowlist";
 import { attribute, byFile, holdRatchet, type Hit, inBackoffice, type Opening, type Source, SOURCES, sxKeys, tagOf } from "./scan";
 
 /**
- * §NNN (the consistency audit's fourth wave; §844 removed the two stray `h1`s it found) — one heading scale in the
+ * §848 (the consistency audit's fourth wave; §844 removed the two stray `h1`s it found) — one heading scale in the
  * backoffice. Two guards, on the design ratchet (`guards-allowlist.ts`, §694):
  *
  * 1. `pageHeadings` — no `h1` in a backoffice page or component: the shell (`BackofficeShell`) draws the page's one
@@ -65,7 +65,7 @@ function headingSizeHits(source: Source): Hit[] {
 const BACKOFFICE_SOURCES = SOURCES.filter((source) => source.file.endsWith(".tsx") && inBackoffice(source.file) && !SHELL.has(source.file));
 const sample = (text: string): Source => ({ file: "src/app/[locale]/admin/x.tsx", text, tree: ts.createSourceFile("x.tsx", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX) });
 
-describe("§NNN one heading scale in the backoffice", () => {
+describe("§848 one heading scale in the backoffice", () => {
   it("knows the shell draws the one h1", () => {
     for (const file of SHELL) expect(SOURCES.find((source) => source.file === file)?.text, file).toMatch(/variant="h1"/);
     expect(BACKOFFICE_SOURCES.length).toBeGreaterThan(150);

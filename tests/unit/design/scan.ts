@@ -153,7 +153,7 @@ export function holdRatchet(rule: string, found: Map<string, Hit[]>, allowed: re
 }
 
 /**
- * The backoffice, read off the import graph (§NNN): a file under the staff routes (`/admin`, `/devs`), or one whose
+ * The backoffice, read off the import graph (§848): a file under the staff routes (`/admin`, `/devs`), or one whose
  * every importer, followed up to the routes, leads only there. A public card in `modules/events/ui` is never in it; a
  * staff-only component under `modules/` always is, wherever it lives. A file no route reaches is not in it.
  */

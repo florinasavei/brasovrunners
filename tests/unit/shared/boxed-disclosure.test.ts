@@ -36,7 +36,7 @@ const BACKOFFICE = [
   ...tsxUnder("src/modules/content/events/ui"),
   ...tsxUnder("src/modules/notifications/ui"),
   ...tsxUnder("src/modules/contact/ui"),
-  // The module directories no public route imports (§NNN: every route that reaches each file is under `/admin` or `/devs`).
+  // The module directories no public route imports (§848: every route that reaches each file is under `/admin` or `/devs`).
   ...tsxUnder("src/modules/appearance/ui"),
   ...tsxUnder("src/modules/club-todo/ui"),
   ...tsxUnder("src/modules/content/events/transfer/ui"),
@@ -169,7 +169,7 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
     expect(folds.length).toBeGreaterThanOrEqual(10);
     expect(folds).toContain("src/shared/ui/Panel.tsx");
     expect(folds).toContain("src/modules/content/rich-text/ui/LazyRichTextEditor.tsx");
-    // Since §NNN the volunteers' card and the staff-only module directories are in scope too: their row folds and cards are held here.
+    // Since §848 the volunteers' card and the staff-only module directories are in scope too: their row folds and cards are held here.
     expect(folds).toEqual(expect.arrayContaining(["src/modules/volunteers/ui/VolunteersCard.tsx", "src/modules/volunteers/ui/VolunteerPerson.tsx", "src/modules/diagnostics/ui/MonthCostsPanel.tsx"]));
     expect(folds).not.toContain("src/modules/content/events/ui/SeriesScope.tsx");
     expect(read("src/modules/content/events/ui/BibDesignPanel.tsx")).toContain('<Panel glyph="bibDesign" collapsible level={4}');
