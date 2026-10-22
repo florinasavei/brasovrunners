@@ -5662,7 +5662,6 @@
         "count": "Categories: {count}",
         "intro": "A category groups roles under one heading, on this card and on the volunteers' page, for example “Route”. The same role can stand in several categories. The order here is the page's order.",
         "empty": "No categories yet. The roles are listed without headings. Add the first one below: for example “Route”.",
-        "rolesUnder": "Roles: {count}",
         "contactIs": "Contact person: {contact}",
         "contactNone": "No contact person yet."
       },
@@ -5676,6 +5675,7 @@
         "deleting": "Deleting…",
         "deleteTitle": "Delete this category?",
         "deleteBody": "The category “{name}” is removed. A category with roles under it cannot be deleted: move or delete its roles first.",
+        "position": "Position: {position} of {count}",
         "contactTitle": "Contact person",
         "contactHelp": "Optional and empty at first: fill it in when you know it. It shows on the volunteers' page and in the emails to volunteers. Name only a person who agreed to appear on a public page.",
         "contactHelpMore": "The telephone also goes on the badges of the category's roles when the design has no number of its own. The contact goes into the event's file, not the CSV.",
@@ -9893,7 +9893,8 @@
         "intro": "A level decides which discount codes a member sees; members do not see their level.",
         "introMore": "The level is your own label: only administrators see it. Give it to each member on “Team”, then choose on each code who it is for. It changes nothing a person may do on the site.",
         "empty": "You have no level yet. Until then, a member sees only the discount codes that are for everyone.",
-        "rowsIntro": "Write a level in the empty row at the end and press “Save all levels”. The order is the one in “Position”.",
+        "rowsIntro": "Change what you like on any number of levels, then press “Save all levels” once. The order is the one in “Position”; “Add a level”, at the end, adds one.",
+        "addIntro": "Write both names, then press “Save all levels”.",
         "listLabel": "The member levels, in the club's order",
         "newRow": "Add a level",
         "newRowHint": "Write the name in Romanian and in English. An empty row does nothing.",
@@ -9925,6 +9926,7 @@
         },
         "save": "Save all levels",
         "delete": "Delete the level",
+        "edit": "Edit",
         "deleteTitle": "Delete the level {name}?",
         "deleteBody": "The level is gone for good. It can be deleted only when no member has it and no code is for it alone.",
         "adminOnly": "An administrator changes the levels."

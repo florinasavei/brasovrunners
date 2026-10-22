@@ -5662,7 +5662,6 @@
         "count": "Categorii: {count}",
         "intro": "O categorie grupează rolurile sub un titlu, pe card și pe pagina voluntarilor, de exemplu „Traseu”. Același rol poate sta în mai multe categorii. Ordinea de aici e ordinea de pe pagină.",
         "empty": "Nicio categorie încă. Rolurile se arată într-o listă, fără titluri. Adaugă prima mai jos: de exemplu „Traseu”.",
-        "rolesUnder": "Roluri: {count}",
         "contactIs": "Persoana de contact: {contact}",
         "contactNone": "Nicio persoană de contact încă."
       },
@@ -5676,6 +5675,7 @@
         "deleting": "Se șterge…",
         "deleteTitle": "Ștergi această categorie?",
         "deleteBody": "Categoria „{name}” se șterge. O categorie cu roluri în ea nu se poate șterge: mută sau șterge întâi rolurile.",
+        "position": "Poziția: {position} din {count}",
         "contactTitle": "Persoana de contact",
         "contactHelp": "Opțională, goală la început. Apare pe pagina voluntarilor și în subsolul emailurilor către voluntari. Trece doar o persoană care a fost de acord să apară pe o pagină publică.",
         "contactHelpMore": "Telefonul apare și pe ecusoanele rolurilor categoriei, când designul nu are alt număr. Contactul intră în fișierul evenimentului, nu în CSV.",
@@ -9893,7 +9893,8 @@
         "intro": "Un nivel decide ce coduri de reducere vede membrul; membrii nu-și văd nivelul.",
         "introMore": "Nivelul e eticheta ta: îl văd doar administratorii. Îl dai fiecărui membru în „Echipa”, apoi alegi la fiecare cod pentru cine e. Nu schimbă ce poate face cineva pe site.",
         "empty": "Nu ai încă niciun nivel. Până atunci, un membru vede doar codurile de reducere pentru toți.",
-        "rowsIntro": "Scrie un nivel în rândul gol de la sfârșit și apasă „Salvează toate nivelurile”. Ordinea e cea din „Poziția”.",
+        "rowsIntro": "Schimbă ce vrei la oricâte niveluri și apasă o dată „Salvează toate nivelurile”. Ordinea e cea din „Poziția”; „Adaugă un nivel”, la final, adaugă unul.",
+        "addIntro": "Scrie numele în ambele limbi, apoi „Salvează toate nivelurile”.",
         "listLabel": "Nivelurile de membru, în ordinea clubului",
         "newRow": "Adaugă un nivel",
         "newRowHint": "Scrie numele în română și în engleză. Un rând gol nu face nimic.",
@@ -9925,6 +9926,7 @@
         },
         "save": "Salvează toate nivelurile",
         "delete": "Șterge nivelul",
+        "edit": "Modifică",
         "deleteTitle": "Ștergi nivelul {name}?",
         "deleteBody": "Nivelul dispare de tot. Se poate șterge doar dacă niciun membru nu îl are și niciun cod nu e doar pentru el.",
         "adminOnly": "Nivelurile le schimbă un administrator."

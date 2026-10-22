@@ -239,3 +239,89 @@ describe("§811 the «Niveluri de membru» card on «Membri»", () => {
     }
   });
 });
+
+/** Every `<details …>` opening tag before `at` and not yet closed, outermost first: the folds an element sits inside. */
+function foldsBefore(page: string, at: number): string[] {
+  const stack: string[] = [];
+  for (const match of page.slice(0, at).matchAll(/<(\/?)details\b[^>]*>/g)) {
+    if (match[1] === "/") stack.pop();
+    else stack.push(match[0]);
+  }
+  return stack;
+}
+const isOpen = (tag: string) => /\sopen(=""|\s|>)/.test(tag);
+
+describe("§842 each level is the house's row fold", () => {
+  it("draws each level as a list row whose closed line is the level in words — both names, its members, «Ascuns», its codes, the pencil — and its boxes inside", async () => {
+    const page = await draw();
+    const rows = [...page.matchAll(/<li[^>]*data-testid="member-tier"[\s\S]*?<\/li>/g)].map((match) => match[0]);
+    expect(rows).toHaveLength(2);
+    expect(page).toMatch(/<ul[^>]*aria-label="Nivelurile de membru, în ordinea clubului"/);
+    for (const row of rows) {
+      const fold = /<details[^>]*data-testid="member-tier-edit"[^>]*>/.exec(row)?.[0] ?? "";
+      expect(fold).not.toBe("");
+      expect(isOpen(fold)).toBe(false);
+      const summary = /<summary[^>]*data-testid="member-tier-edit-toggle"[^>]*>([\s\S]*?)<\/summary>/.exec(row)?.[1] ?? "";
+      // The line in words, the pencil last — and no box on it.
+      expect(summary).toContain('data-testid="member-tier-name"');
+      expect(summary).toContain('data-testid="member-tier-members"');
+      expect(summary).toContain('data-testid="EditIcon"');
+      expect(summary).not.toContain("<input");
+      // The boxes and «Șterge nivelul» are in the fold, the delete after the last box.
+      const body = row.slice(row.indexOf("</summary>"));
+      expect(body).toContain('.position"');
+      expect(body).toContain('.hidden"');
+      expect(body.indexOf('data-testid="member-tier-delete"')).toBeGreaterThan(body.lastIndexOf("<input"));
+    }
+    const founder = rows[1].slice(0, rows[1].indexOf("</summary>"));
+    expect(founder).toContain("Fondator");
+    expect(founder).toContain("/ Founder");
+    expect(founder).toContain("1 membru");
+    expect(founder).toContain('data-testid="member-tier-hidden"');
+    expect(founder).toContain("3 coduri");
+    // In English the Administrator's language names the level first.
+    const english = await draw({}, "en");
+    expect(english).toMatch(/data-testid="member-tier-name"[^>]*>Founder<[\s\S]*?\/ Fondator/);
+  });
+
+  it("puts «Adaugă un nivel» in a fold of its own after the list, closed while the club has levels and open while it has none", async () => {
+    const page = await draw();
+    const add = /<details[^>]*data-testid="member-tier-add-fold"[^>]*>/.exec(page)?.[0] ?? "";
+    expect(add).not.toBe("");
+    expect(isOpen(add)).toBe(false);
+    expect(foldsBefore(page, page.indexOf('data-testid="member-tier-new"')).at(-1)).toBe(add);
+    expect(page.indexOf('data-testid="member-tier-add-fold"')).toBeGreaterThan(page.lastIndexOf('data-testid="member-tier"'));
+    expect(page).toContain(ro.Admin.members.tiers.addIntro);
+    const empty = await draw({ tiers: [] });
+    expect(isOpen(/<details[^>]*data-testid="member-tier-add-fold"[^>]*>/.exec(empty)?.[0] ?? "")).toBe(true);
+    // No empty list is drawn before it.
+    expect(empty).not.toContain('aria-label="Nivelurile de membru, în ordinea clubului"');
+  });
+
+  it("keeps every required name inside the card's one action form, whose `invalid` handler opens the closed folds around it, so a press is never silent", async () => {
+    const { revealField } = await import("@/shared/forms/ActionFormIsland");
+    const page = await draw();
+    const required = [...page.matchAll(/<input\b[^>]*\brequired\b[^>]*>/g)];
+    expect(required.length).toBe(4);
+    for (const match of required) {
+      const before = page.slice(0, match.index);
+      // The form around it is the house's ActionForm — the one with `onInvalidCapture` (`data-action-form`).
+      expect(before.slice(before.lastIndexOf("<form")), match[0]).toMatch(/^<form[^>]*data-testid="member-tiers-form"/);
+      expect(before.slice(before.lastIndexOf("<form")).split(">")[0]).toContain('data-action-form=""');
+      // Inside the card's fold and its row's closed fold — which `revealField` opens, every one of them.
+      const folds = foldsBefore(page, match.index);
+      expect(folds.length).toBeGreaterThanOrEqual(2);
+      expect(isOpen(folds.at(-1) ?? "")).toBe(false);
+      type Node = { tagName: string; open?: boolean; parentElement: Node | null };
+      let parent: Node | null = null;
+      const chain: Node[] = [];
+      for (let depth = 0; depth < folds.length; depth += 1) {
+        const node: Node = { tagName: "DETAILS", open: false, parentElement: parent };
+        chain.push(node);
+        parent = node;
+      }
+      revealField({ tagName: "INPUT", parentElement: parent, dispatchEvent: () => true } as unknown as HTMLElement);
+      expect(chain.every((fold) => fold.open)).toBe(true);
+    }
+  });
+});
