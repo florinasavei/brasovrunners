@@ -2410,7 +2410,9 @@
         "place": "Unde",
         "add": "Adaugă un rând",
         "remove": "Șterge rândul",
-        "empty": "Niciun rând încă."
+        "empty": "Niciun rând încă.",
+        "new": "Rând nou",
+        "edit": "Modifică rândul"
       },
       "rulesHelp": "Opțional, în ambele limbi sau în niciuna: regulile cursei. Apar pe pagină la „Regulament”, iar declarația și emailurile trimit acolo.",
       "checklistHelp": "Opțional, în ambele limbi sau în niciuna, cel mult 300 de caractere: „număr de concurs, apă, jachetă”. Apare în emailul de confirmare, în reminder și în intrarea din calendar.",
@@ -2627,6 +2629,7 @@
         "moveUp": "Mută mai sus partenerul",
         "moveDown": "Mută mai jos partenerul",
         "partnerNew": "Partener nou",
+        "edit": "Modifică partenerul",
         "name": "Numele partenerului",
         "about": "Despre parteneriat",
         "descriptionHelp": "Opțional, în ambele limbi · o propoziție-două: ce facem împreună. Apare pe pagina evenimentului, sub numele partenerului.",
@@ -2663,6 +2666,8 @@
         "moveDown": "Mută mai jos linkul",
         "uploadGpx": "Încarcă fișierul în loc de link",
         "row": "Linkul",
+        "new": "Link nou",
+        "edit": "Modifică linkul",
         "urlError": "Linkul {n}: adresa trebuie să înceapă cu https://",
         "kindError": "Linkul {n}: alege tipul din listă",
         "labelRoError": "Linkul {n}: eticheta în română — scrie-o în ambele limbi sau în niciuna, cel mult {max} de caractere",

@@ -23,7 +23,8 @@ import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
  * Links — and, since §718, one uploaded file: the route's GPX, above the rows, which a «Traseul (GPX)»
  * row also offers as «Încarcă fișierul în loc de link» (the owner looked for it on that row). Nothing
  * else is uploaded here (`AGENTS.md` §17). The rows keep their Romanian and English labels side by
- * side in the row, never in tabs: a label belongs to its one row.
+ * side in the row, never in tabs: a label belongs to its one row. Each row is the house's row fold
+ * (§842): its line says the link in words, its boxes open under it (`LinkRowsEditor`).
  *
  * For a role that may only read the settings, the card is its heading and its line and nothing to
  * open: the type's box says that the settings are not theirs (§358).
@@ -78,6 +79,7 @@ export default async function LinksBox({ event, mayEditSettings, locale, heading
         <LinkRowsEditor
           initial={linkRows}
           kindLabels={kindLabels}
+          locale={locale}
           constraints={{
             url: htmlConstraints(eventLinkRowSchema.shape.url),
             label: htmlConstraints(eventLinkRowSchema.shape.labelRo),
@@ -93,6 +95,10 @@ export default async function LinksBox({ event, mayEditSettings, locale, heading
             moveDown: t("editor.linkRows.moveDown"),
             row: t("editor.linkRows.row"),
             uploadGpx: storage ? t("editor.linkRows.uploadGpx") : "",
+            new: t("editor.linkRows.new"),
+            edit: t("editor.linkRows.edit"),
+            // The box's own line says it the same way (§354): one phrase for the half-written label.
+            labelOneLanguage: words.links.labelOneLanguage,
           }}
         />
       </Stack>
