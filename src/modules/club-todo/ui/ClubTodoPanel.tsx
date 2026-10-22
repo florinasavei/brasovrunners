@@ -1,11 +1,5 @@
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import TaskAltIcon from "@mui/icons-material/TaskAlt";
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
@@ -33,9 +27,13 @@ import ActionForm from "@/shared/forms/ActionForm";
 import DateField from "@/shared/forms/pickers/DateField";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import ChipLink from "@/shared/ui/ChipLink";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
-import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import Panel from "@/shared/ui/Panel";
+import StatusChip from "@/shared/ui/StatusChip";
+import TodoLine from "@/shared/ui/TodoLine";
+import { FACTS_SX } from "@/shared/ui/row-fold";
 
 type Props = {
   locale: Locale;
@@ -66,9 +64,12 @@ function shortText(text: string): string {
  * `changeClubTodo` — the role is decided there, never by which buttons this draws (BR-REQ-060-01).
  *
  * The open lines first, in the club's order; the done ones inside a closed fold «Arată terminate»,
- * struck through, with who ticked them and when. «Adaugă un rând» is a closed fold above the
- * list, and every line keeps its own «Modifică» fold — the words, «pentru cine», the day, and
- * «Șterge», which asks first (§384). Folds start closed (§336).
+ * struck through, with who ticked them and when. «Adaugă un rând» is a fold above the list, open
+ * by itself only while the list is empty. Every line is the event to-dos' row (`TodoLine`, §749,
+ * §842): the tick, then the line in words — the text, «Pentru …» and the day as chips, the pencil —
+ * which opens in place onto the line's door to its editor (§538), ↑ and ↓, the three boxes and
+ * «Șterge», last, which asks first (§384). A reader's line is the words and the chips alone. Folds
+ * start closed (§336).
  */
 export default async function ClubTodoPanel({ locale, items, mayEdit, owner, today, error }: Props) {
   const t = await getTranslations("Admin");
@@ -131,149 +132,120 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
     const view = clubTodoDefaultView(item, locale);
     const text = view?.text ?? item.text;
     const label = shortText(text);
-    return (
-      <Box
-        component="li"
-        key={item.id}
-        data-testid="club-todo-item"
-        data-item-id={item.id}
-        sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}
-      >
-        {/* Below `sm` the move buttons (a glyph and words, about 110 px each) drop to a row under the text rather than squeeze it at 320 px. */}
-        <Stack direction="row" sx={{ alignItems: "flex-start", flexWrap: { xs: "wrap", sm: "nowrap" }, gap: 1 }}>
-          {mayEdit ? (
-            <Box component="form" action={setClubTodoDoneAction} sx={{ flexShrink: 0 }}>
-              {context}
-              <input type="hidden" name="itemId" value={item.id} />
-              <input type="hidden" name="done" value={item.done ? "0" : "1"} />
-              {/* One button, 44 pixels, the box it draws the state: a tick is one press on a phone. */}
-              <Box
-                component="button"
-                type="submit"
-                aria-label={t(item.done ? "clubTodo.untick" : "clubTodo.tick", { text: label })}
-                sx={{
-                  width: 44,
-                  height: 44,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: 0,
-                  borderRadius: 1,
-                  bgcolor: "transparent",
-                  color: item.done ? "success.main" : "primary.main",
-                  cursor: "pointer",
-                  "&:hover": { bgcolor: "action.hover" },
-                  "&:focus-visible": { outline: 2, outlineStyle: "solid", outlineColor: "primary.main", outlineOffset: -2 },
-                }}
-              >
-                {item.done ? <CheckBoxIcon aria-hidden /> : <CheckBoxOutlineBlankIcon aria-hidden />}
-              </Box>
-            </Box>
-          ) : (
-            <Box sx={{ width: 44, height: 44, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "text.secondary" }}>
-              {item.done ? <CheckBoxIcon aria-hidden /> : <CheckBoxOutlineBlankIcon aria-hidden />}
-            </Box>
-          )}
-
-          <Box sx={{ flex: { xs: "1 1 calc(100% - 52px)", sm: 1 }, minWidth: 0, pt: 1.25 }}>
-            <Typography
-              variant="body2"
-              sx={{
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                ...(item.done ? { textDecoration: "line-through", color: "text.secondary" } : {}),
-              }}
-            >
-              {text}
-            </Typography>
-            {view && !item.done && (
-              <Box sx={{ mt: 0.75 }}>
-                <GlyphButtonLink href={view.href} icon="edit" variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="club-todo-link">
-                  {view.link}
-                </GlyphButtonLink>
-              </Box>
-            )}
-            {(item.owner || item.due || item.done) && (
-              <Stack direction="row" sx={{ mt: 0.75, flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
-                {item.owner && <Chip size="small" variant="outlined" label={t("clubTodo.owner", { owner: item.owner })} />}
-                {item.due && (
-                  <Chip
-                    size="small"
-                    variant={overdue ? "filled" : "outlined"}
-                    color={overdue ? "error" : "default"}
-                    label={t(overdue ? "clubTodo.overdue" : "clubTodo.due", {
-                      day: formatCalendarDay(item.due, { locale, style: "short", position: "inline" }),
-                    })}
-                  />
-                )}
-                {item.done && item.doneAt && (
-                  <Typography variant="caption" color="text.secondary">
-                    {t("clubTodo.doneBy", {
-                      by: item.by ?? "—",
-                      when: formatDay(new Date(item.doneAt), { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
-                    })}
-                  </Typography>
-                )}
-              </Stack>
-            )}
-          </Box>
-
-          {/* ↑ and ↓ among the open lines shown: none at an end, rather than an arrow that does nothing (the pages list's rule). */}
-          {mayEdit && !item.done && siblings.length > 1 && (
-            <Stack direction={{ xs: "row", sm: "column" }} sx={{ flexShrink: 0, gap: 0.5, flexBasis: { xs: "100%", sm: "auto" }, pl: { xs: "52px", sm: 0 } }}>
-              {index > 0 && (
-                <Box component="form" action={moveClubTodoAction}>
-                  {context}
-                  <input type="hidden" name="itemId" value={item.id} />
-                  <input type="hidden" name="direction" value="up" />
-                  <GlyphSubmitButton icon="moveUp" label={t("clubTodo.moveUpWord")} pendingLabel={t("clubTodo.moveUpWord")} tooltip={t("clubTodo.moveUpTip")} variant="outlined" ariaLabel={t("clubTodo.moveUp", { text: label })} />
-                </Box>
-              )}
-              {index < siblings.length - 1 && (
-                <Box component="form" action={moveClubTodoAction}>
-                  {context}
-                  <input type="hidden" name="itemId" value={item.id} />
-                  <input type="hidden" name="direction" value="down" />
-                  <GlyphSubmitButton icon="moveDown" label={t("clubTodo.moveDownWord")} pendingLabel={t("clubTodo.moveDownWord")} tooltip={t("clubTodo.moveDownTip")} variant="outlined" ariaLabel={t("clubTodo.moveDown", { text: label })} />
-                </Box>
-              )}
-            </Stack>
-          )}
-        </Stack>
-
-        {mayEdit && (
-          <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1 }}>
-            <Box component="summary" sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
-              <EditIcon aria-hidden sx={FOLD_GLYPH_SX} />
-              {t("clubTodo.edit")}
-            </Box>
-            <Stack spacing={1.5} sx={{ pb: 1.5 }}>
-              <ActionForm action={editClubTodoAction} scope={`todo-${item.id}`}>
-                {context}
-                <input type="hidden" name="itemId" value={item.id} />
-                {fields(item)}
-                <Box sx={{ mt: 1.5 }}>
-                  <GlyphSubmitButton label={t("clubTodo.save")} pendingLabel={t("clubTodo.saving")} icon="save" />
-                </Box>
-              </ActionForm>
-              <ActionForm
-                action={deleteClubTodoAction}
-                confirm={{
-                  title: t("clubTodo.deleteTitle"),
-                  body: t("clubTodo.deleteBody", { text: label }),
-                  confirmLabel: t("clubTodo.delete"),
-                  cancelLabel: words.cancel,
-                  destructive: true,
-                }}
-              >
-                {context}
-                <input type="hidden" name="itemId" value={item.id} />
-                <GlyphSubmitButton label={t("clubTodo.delete")} pendingLabel={t("clubTodo.deleting")} icon="delete" color="error" variant="outlined" />
-              </ActionForm>
-            </Stack>
-          </Box>
+    // The door to the editor the line names: inside the fold for a person who may write the list — never inside the line's
+    // `<summary>`, which is itself the control — and under the words for a reader, whose line has no fold.
+    const door = view && !item.done && (
+      <Box sx={mayEdit ? undefined : { mt: 0.75 }}>
+        <GlyphButtonLink href={view.href} icon="edit" variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="club-todo-link">
+          {view.link}
+        </GlyphButtonLink>
+      </Box>
+    );
+    const wordsBlock = (
+      <Box sx={{ gridArea: "words", minWidth: 0 }}>
+        <Typography
+          variant="body2"
+          component="span"
+          data-testid="club-todo-text"
+          sx={{ display: "block", whiteSpace: "pre-wrap", wordBreak: "break-word", ...(item.done ? { textDecoration: "line-through", color: "text.secondary" } : {}) }}
+        >
+          {text}
+        </Typography>
+        {item.done && item.doneAt && (
+          <Typography variant="caption" color="text.secondary">
+            {t("clubTodo.doneBy", {
+              by: item.by ?? "—",
+              when: formatDay(new Date(item.doneAt), { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
+            })}
+          </Typography>
+        )}
+        {!mayEdit && door}
+      </Box>
+    );
+    // The small facts on the right of the line, the event to-dos' chips (§749): for whom, by when.
+    const facts = (
+      <Box sx={FACTS_SX}>
+        {item.owner && <StatusChip glyph="club" variant="outlined" label={t("clubTodo.owner", { owner: item.owner })} testId="club-todo-owner" />}
+        {item.due && (
+          <StatusChip
+            glyph="planned"
+            variant={overdue ? "filled" : "outlined"}
+            color={overdue ? "error" : "default"}
+            label={t(overdue ? "clubTodo.overdue" : "clubTodo.due", { day: formatCalendarDay(item.due, { locale, style: "short", position: "inline" }) })}
+            testId={overdue ? "club-todo-overdue" : "club-todo-due"}
+          />
         )}
       </Box>
+    );
+    return (
+      <TodoLine
+        key={item.id}
+        testIdPrefix="club-todo"
+        itemId={item.id}
+        done={item.done}
+        words={wordsBlock}
+        facts={facts}
+        edit={
+          mayEdit
+            ? {
+                tickAction: setClubTodoDoneAction,
+                hidden: context,
+                tickLabel: t(item.done ? "clubTodo.untick" : "clubTodo.tick", { text: label }),
+                tickTitle: t(item.done ? "clubTodo.untickWord" : "clubTodo.tickWord"),
+                foldKey: [item.text, item.owner, item.due].join("\u0001"),
+                foldTitle: t("clubTodo.edit"),
+                body: (
+                  <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5 }}>
+                    {door}
+                    {/* ↑ and ↓ among the open lines shown: none at an end, rather than an arrow that does nothing (the pages list's rule). */}
+                    {!item.done && siblings.length > 1 && (
+                      <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
+                        {index > 0 && (
+                          <Box component="form" action={moveClubTodoAction}>
+                            {context}
+                            <input type="hidden" name="itemId" value={item.id} />
+                            <input type="hidden" name="direction" value="up" />
+                            <GlyphSubmitButton icon="moveUp" label={t("clubTodo.moveUpWord")} pendingLabel={t("clubTodo.moveUpWord")} tooltip={t("clubTodo.moveUpTip")} variant="outlined" ariaLabel={t("clubTodo.moveUp", { text: label })} />
+                          </Box>
+                        )}
+                        {index < siblings.length - 1 && (
+                          <Box component="form" action={moveClubTodoAction}>
+                            {context}
+                            <input type="hidden" name="itemId" value={item.id} />
+                            <input type="hidden" name="direction" value="down" />
+                            <GlyphSubmitButton icon="moveDown" label={t("clubTodo.moveDownWord")} pendingLabel={t("clubTodo.moveDownWord")} tooltip={t("clubTodo.moveDownTip")} variant="outlined" ariaLabel={t("clubTodo.moveDown", { text: label })} />
+                          </Box>
+                        )}
+                      </Stack>
+                    )}
+                    <ActionForm action={editClubTodoAction} scope={`todo-${item.id}`}>
+                      {context}
+                      <input type="hidden" name="itemId" value={item.id} />
+                      {fields(item)}
+                      <Box sx={{ mt: 1.5 }}>
+                        <GlyphSubmitButton label={t("clubTodo.save")} pendingLabel={t("clubTodo.saving")} icon="save" />
+                      </Box>
+                    </ActionForm>
+                    <ActionForm
+                      action={deleteClubTodoAction}
+                      confirm={{
+                        title: t("clubTodo.deleteTitle"),
+                        body: t("clubTodo.deleteBody", { text: label }),
+                        confirmLabel: t("clubTodo.delete"),
+                        cancelLabel: words.cancel,
+                        destructive: true,
+                      }}
+                    >
+                      {context}
+                      <input type="hidden" name="itemId" value={item.id} />
+                      <GlyphSubmitButton label={t("clubTodo.delete")} pendingLabel={t("clubTodo.deleting")} icon="delete" color="error" variant="outlined" />
+                    </ActionForm>
+                  </Stack>
+                ),
+              }
+            : undefined
+        }
+      />
     );
   };
 
@@ -289,7 +261,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
         {t("clubTodo.counts", { open: open.length, done: done.length })}
       </Typography>
 
-      {/* «Pentru cine»: the names on the list, each a link 44 px tall (the «Club» panel's chips, §150). */}
+      {/* «Pentru cine»: the names on the list, each a chip link 44 px tall — the event to-dos' «Toate / Ale mele» (§749). */}
       {owners.length > 0 && (
         <Stack component="nav" aria-label={t("clubTodo.filterLabel")} direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 0.5 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
@@ -297,32 +269,14 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
           </Typography>
           {[undefined, ...owners].map((candidate) => {
             const current = candidate === owner;
-            return (
-              <Box
-                key={candidate ?? "all"}
-                component="a"
-                href={hrefFor(candidate)}
-                aria-current={current ? "page" : undefined}
-                sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none" }}
-              >
-                <Chip
-                  size="small"
-                  label={candidate ?? t("clubTodo.filterAll")}
-                  color={current ? "primary" : "default"}
-                  variant={current ? "filled" : "outlined"}
-                />
-              </Box>
-            );
+            return <ChipLink key={candidate ?? "all"} href={hrefFor(candidate)} label={candidate ?? t("clubTodo.filterAll")} active={current} current={current ? "page" : undefined} />;
           })}
         </Stack>
       )}
 
+      {/* «Adaugă un rând»: the blank boxes in a fold of their own, like every «Adaugă…» of the backoffice (§842) — open by itself only while the list is empty. */}
       {mayEdit && (
-        <Box component="details" sx={BOXED_DISCLOSURE_SX} data-testid="club-todo-add">
-          <Box component="summary" sx={{ fontWeight: 500 }}>
-            <AddIcon aria-hidden sx={FOLD_GLYPH_SX} />
-            {t("clubTodo.add.title")}
-          </Box>
+        <Panel glyph="add" collapsible level={3} title={t("clubTodo.add.title")} openWhen={{ primary: items.length === 0 }} data-testid="club-todo-add">
           <Box sx={{ pb: 1.5 }}>
             <ActionForm
               action={addClubTodoAction}
@@ -340,7 +294,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
               </Box>
             </ActionForm>
           </Box>
-        </Box>
+        </Panel>
       )}
 
       {open.length === 0 ? (
@@ -348,21 +302,17 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
           {owner ? t("clubTodo.emptyFor", { owner }) : t("clubTodo.empty")}
         </Typography>
       ) : (
-        <Stack spacing={1.5} component="ul" aria-label={t("clubTodo.listLabel")} sx={{ listStyle: "none", m: 0, p: 0 }}>
+        <Box component="ul" aria-label={t("clubTodo.listLabel")} sx={{ listStyle: "none", m: 0, p: 0 }}>
           {open.map((item, index) => row(item, index, open))}
-        </Stack>
+        </Box>
       )}
 
       {done.length > 0 && (
-        <Box component="details" sx={BOXED_DISCLOSURE_SX} data-testid="club-todo-done">
-          <Box component="summary" sx={{ fontWeight: 500 }}>
-            <TaskAltIcon aria-hidden sx={FOLD_GLYPH_SX} />
-            {t("clubTodo.doneTitle", { count: done.length })}
-          </Box>
-          <Stack spacing={1.5} component="ul" sx={{ listStyle: "none", m: 0, p: 0, pb: 1.5 }}>
+        <Panel glyph="confirmation" collapsible level={3} title={t("clubTodo.doneTitle", { count: done.length })} data-testid="club-todo-done">
+          <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
             {done.map((item, index) => row(item, index, done))}
-          </Stack>
-        </Box>
+          </Box>
+        </Panel>
       )}
 
       {mayEdit && (

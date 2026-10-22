@@ -68,8 +68,8 @@ test.describe("BR-REQ-090-05 «Club» first, and «De făcut» beside it", () =>
     const item = list.getByTestId("club-todo-item").filter({ hasText: text });
     await expect(item.getByText(`Pentru ${owner}`)).toBeVisible();
 
-    // The tick: one press, 44 pixels, and the filter survives it.
-    const tick = item.getByRole("button", { name: `Bifează: ${text}` });
+    // The tick: one press, 44 pixels, and the filter survives it. A real tick box (§842): the event to-dos' row.
+    const tick = item.getByRole("checkbox", { name: `Bifează: ${text}` });
     const box = await tick.boundingBox();
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
     expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
@@ -84,17 +84,17 @@ test.describe("BR-REQ-090-05 «Club» first, and «De făcut» beside it", () =>
     await openFold(done);
     const doneItem = done.getByTestId("club-todo-item").filter({ hasText: text });
     await expect(doneItem.getByText(/^Bifat de Dev Administrator, /)).toBeVisible();
-    // The line's own words — the paragraph, not the same words in its «Modifică» box.
-    const decoration = await doneItem.locator("p", { hasText: text }).evaluate((element) => getComputedStyle(element).textDecorationLine);
+    // The line's own words — on its line, not the same words in its «Modifică» box.
+    const decoration = await doneItem.getByTestId("club-todo-text").evaluate((element) => getComputedStyle(element).textDecorationLine);
     expect(decoration).toContain("line-through");
 
-    await doneItem.getByRole("button", { name: `Debifează: ${text}` }).click();
+    await doneItem.getByRole("checkbox", { name: `Debifează: ${text}` }).click();
     await expect(page).toHaveURL(/saved=clubTodoReopened/, { timeout: SAVED });
     const again = list.getByTestId("club-todo-item").filter({ hasText: text });
     await expect(again).toBeVisible();
 
-    // Deleting asks first, and the line is gone for everybody.
-    const edit = again.locator("details");
+    // Deleting asks first, and the line is gone for everybody. «Șterge» is the last thing in the line's fold.
+    const edit = again.getByTestId("club-todo-edit");
     await openFold(edit);
     await edit.getByRole("button", { name: "Șterge", exact: true }).click();
     await confirmDialog(page, "Ștergi rândul?");
@@ -116,14 +116,18 @@ test.describe("BR-REQ-090-05 «Club» first, and «De făcut» beside it", () =>
     await expect(faq).toContainText(/Scrie pagina Întrebări frecvente: Pagini → Întrebări frecvente → /);
     // §438's own team-page line, which the new one replaces, is not beside it.
     await expect(main.locator('[data-item-id="start-admin-11"]')).toHaveCount(0);
+    // The door to the editor is inside the line's fold (§842): a link is never inside the line's own summary.
     const teamLink = team.getByRole("link", { name: "Deschide pagina Echipa" });
+    await openFold(team.getByTestId("club-todo-edit"));
     await expect(teamLink).toHaveAttribute("href", "/ro/admin/pages/team");
     await expect(teamLink.locator("svg")).toHaveCount(1);
     expect((await teamLink.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await openFold(faq.getByTestId("club-todo-edit"));
     await expect(faq.getByRole("link", { name: "Deschide pagina Întrebări frecvente" })).toHaveAttribute("href", "/ro/admin/pages/faq");
 
     await page.goto("/en/admin/tasks?panel=todo&for=Administrator");
     await expect(main.locator('[data-item-id="start-admin-team-page"]')).toContainText(/Write the team page: Pages → The team → /);
+    await openFold(main.locator('[data-item-id="start-admin-faq-page"]').getByTestId("club-todo-edit"));
     await expect(main.locator('[data-item-id="start-admin-faq-page"]').getByRole("link", { name: "Open the FAQ page" })).toHaveAttribute(
       "href",
       "/en/admin/pages/faq",
@@ -150,14 +154,14 @@ test.describe("BR-REQ-060-01 who writes the club's checklist", () => {
     await expect(page).toHaveURL(/saved=clubTodoAdded/, { timeout: SAVED });
 
     const item = main.getByRole("list", { name: "Lista clubului" }).getByTestId("club-todo-item").filter({ hasText: text });
-    await item.getByRole("button", { name: `Bifează: ${text}` }).click();
+    await item.getByRole("checkbox", { name: `Bifează: ${text}` }).click();
     await expect(page).toHaveURL(/saved=clubTodoDone/, { timeout: SAVED });
     const done = main.getByTestId("club-todo-done");
     await openFold(done);
     const doneItem = done.getByTestId("club-todo-item").filter({ hasText: text });
     await expect(doneItem.getByText(/^Bifat de Dev Moderator, /)).toBeVisible();
 
-    await openFold(doneItem.locator("details"));
+    await openFold(doneItem.getByTestId("club-todo-edit"));
     await doneItem.getByRole("button", { name: "Șterge", exact: true }).click();
     await confirmDialog(page, "Ștergi rândul?");
     await expect(page).toHaveURL(/saved=clubTodoDeleted/, { timeout: SAVED });
@@ -170,7 +174,7 @@ test.describe("BR-REQ-060-01 who writes the club's checklist", () => {
     await expect(main.getByTestId("club-todo-counts")).toBeVisible();
     await expect(main.getByText(/^Poți citi lista; o scriu Organizatorul/)).toBeVisible();
     await expect(main.getByTestId("club-todo-item").first()).toBeVisible();
-    await expect(main.getByRole("button", { name: /^Bifează: / })).toHaveCount(0);
+    await expect(main.getByRole("checkbox", { name: /^Bifează: / })).toHaveCount(0);
     await expect(main.getByTestId("club-todo-add")).toHaveCount(0);
     await expect(main.getByText("Modifică", { exact: true })).toHaveCount(0);
   });

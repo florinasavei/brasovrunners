@@ -1,11 +1,9 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { Fragment } from "react";
 import { updateFeedbackFormsAction } from "@/app/[locale]/admin/pages/contact/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
@@ -21,6 +19,9 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
+import StatusChip from "@/shared/ui/StatusChip";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
+import { FACTS_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import RoadChoice, { roadWords } from "./RoadChoice";
 import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
 
@@ -40,6 +41,9 @@ type Props = {
   openWhen?: FoldOpenWhen;
 };
 
+/** The pencil at the end of a form's line: the edit verb's glyph, by name (§318). */
+const PencilIcon = ACTION_ICONS.edit;
+
 /** Where the steps of each road are: the row of «Sarcini» that carries them (`contactForm`: the club's Gmail, `liveEmail`: Mailgun). */
 const STEPS_ROW: Readonly<Record<FeedbackVia, string>> = { gmail: "task-contactForm", mailgun: "task-liveEmail" };
 
@@ -54,6 +58,10 @@ const STEPS_ROW: Readonly<Record<FeedbackVia, string>> = { gmail: "task-contactF
  * Gmail or Mailgun, Mailgun «recomandat» (§782, one line of why under the four pairs) — whose default, for a form with no saved road, is Mailgun where it transmits (`defaultViaFor`). A road this deployment lacks is greyed
  * with a sentence and a link to the steps in «Sarcini»; it stays checked when it is what was saved, so
  * the card shows what the form does, and a save leaves it as it was (`keepUnpostedVia`).
+ *
+ * Since §842's second wave each form is one of the house's row folds (`shared/ui/row-fold.ts`): the line
+ * says the form in words — glyph, name, who receives it, «Pornit» or «Oprit», the road — and the pencil
+ * opens its boxes; the four rows stay one form with its one confirmed «Salvează formularele».
  */
 export default async function FeedbackFormsPanel({ locale, state, noticeDescribes, mayEdit, roads, safetyGmailDescribed, gmailAccount = null, openWhen }: Props) {
   const t = await getTranslations("Admin");
@@ -130,104 +138,145 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
           >
             <input type="hidden" name="uiLocale" value={locale} />
             <Stack spacing={2} sx={{ maxWidth: 520 }}>
-              {FEEDBACK_BRANCHES.map((branch, index) => {
-                const Glyph = FEEDBACK_BRANCH_GLYPH[branch];
-                return (
-                  <Fragment key={branch}>
-                    {/* A separator between the four forms (§716). */}
-                    {index > 0 && <Divider data-testid="feedback-branch-divider" />}
-                    <Box component="fieldset" sx={{ border: 0, m: 0, p: 0 }} data-testid={`feedback-branch-${branch}`}>
-                      <Typography component="legend" variant="subtitle2" sx={{ p: 0 }}>
-                        <Glyph aria-hidden="true" fontSize="small" sx={{ verticalAlign: "middle", mr: 1 }} />
-                        {label(branch)}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                        {t(`emails.feedbackForms.help.${branch}`)}
-                      </Typography>
-                      <CheckboxField name={`${branch}On`} defaultChecked={state[branch].on}>
-                        {t("emails.feedbackForms.switch")}
-                      </CheckboxField>
-                      <Stack spacing={1.5} sx={{ mt: 1 }}>
-                        <RecallField
-                          name={`${branch}To`}
-                          type="email"
-                          label={t("emails.feedbackForms.to")}
-                          defaultValue={state[branch].to ?? ""}
-                          size="small"
-                          helperText={branch === "safety" ? t("emails.feedbackForms.toHelpSafety") : t("emails.feedbackForms.toHelp")}
-                          slotProps={{ htmlInput: { maxLength: 320, autoComplete: "off", spellCheck: false } }}
-                        />
-                        {state[branch].via === "gmail" && sendsToItself(state[branch].to, gmailAccount) && (
-                          <Typography variant="caption" color="warning.main" sx={{ display: "block" }} data-testid={`feedback-self-${branch}`}>
-                            {t("emails.feedbackForms.selfRecipient")}
-                          </Typography>
-                        )}
-                        {branch === "safety" && (
-                          <RecallField
-                            name="safetyName"
-                            label={t("emails.feedbackForms.safetyName")}
-                            defaultValue={state.safety.name ?? ""}
-                            size="small"
-                            helperText={t("emails.feedbackForms.safetyNameHelp")}
-                            slotProps={{ htmlInput: { maxLength: SAFETY_NAME_MAX, autoComplete: "off" } }}
-                          />
-                        )}
-                      </Stack>
-                      {/* «Prin ce trimitem» (§772, §782): the radio pair both cards share (`RoadChoice`), never a toggle; the default is the form's own. */}
-                      <RoadChoice
-                        name={`${branch}Via`}
-                        testId={`feedback-via-${branch}`}
-                        current={state[branch].via}
-                        words={roadWordsOfCard}
-                        blocked={{ gmail: blocked(branch, "gmail"), mailgun: blocked(branch, "mailgun") }}
-                        tasksPath={tasksPath}
-                        legalPath={legalPath}
-                        gmailCopyCaption={branch !== "safety"}
+              {/* The four forms as the house's row folds (§842, `shared/ui/row-fold.ts`): each line is the form in words — its glyph and name
+                  (§716), who receives it — with «Pornit» or «Oprit» and the road beside it, and the pencil at the end; a press on it opens the
+                  form's boxes in place, still inside the one form of «Salvează formularele» (a closed row's boxes are posted all the same). A box
+                  the browser refuses inside a closed row (an address typed wrong, then folded away) is opened by `ActionForm` before the browser
+                  looks for something to focus (`onInvalidCapture`, §350); no box here is `required`. */}
+              <Stack spacing={0} component="ul" aria-label={t("emails.feedbackForms.title")} sx={{ listStyle: "none", m: 0, p: 0 }}>
+                {FEEDBACK_BRANCHES.map((branch) => {
+                  const Glyph = FEEDBACK_BRANCH_GLYPH[branch];
+                  const saved = state[branch];
+                  // The recipient is the very Gmail account that sends (§778): something to act on, so the row opens by itself (§336's attention).
+                  const sendsToSelf = saved.via === "gmail" && sendsToItself(saved.to, gmailAccount);
+                  return (
+                    <Box component="li" key={branch} sx={ROW_SX} data-testid="feedback-branch-row">
+                      <Box
+                        component="details"
+                        // Keyed on what the row holds, so a save that changed it draws the row closed (the roles' rows, §842).
+                        key={[saved.on, saved.to, saved.via, branch === "safety" ? `${state.safety.name}|${state.safety.fallbackToGmail}` : ""].join("\u0001")}
+                        open={sendsToSelf || undefined}
+                        data-testid={`feedback-branch-edit-${branch}`}
                       >
-                        {branch === "safety" && (
-                          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} data-testid="feedback-via-safety-note">
-                            {t("emails.feedbackForms.via.safetyNote")}
-                          </Typography>
-                        )}
-                        {/* «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (§778): a real tick, off by default, with the readers' note.
-                            Drawn only while Girl Zone leaves by Mailgun: where the club chose Gmail for her the tick means nothing (Mailgun
-                            takes over from Gmail with no tick), so what is saved only travels, in a hidden field. */}
-                        {branch === "safety" && state.safety.via !== "mailgun" && state.safety.fallbackToGmail && <input type="hidden" name="safetyFallbackToGmail" value="on" />}
-                        {branch === "safety" && state.safety.via === "mailgun" && (
-                          <Box sx={{ mt: 1 }} data-testid="feedback-fallback">
-                            <CheckboxField
-                              name="safetyFallbackToGmail"
-                              defaultChecked={state.safety.fallbackToGmail}
-                              disabled={fallbackBlocked !== null}
-                              help={t("emails.feedbackForms.via.fallbackHelp")}
-                              helpTestId="feedback-fallback-help"
-                            >
-                              {t("emails.feedbackForms.via.fallback")}
-                            </CheckboxField>
-                            {fallbackBlocked !== null && state.safety.fallbackToGmail && <input type="hidden" name="safetyFallbackToGmail" value="on" />}
-                            {fallbackBlocked === "notice" && (
-                              <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6 }} data-testid="feedback-fallback-notice">
-                                {t("emails.feedbackForms.via.fallbackNotice")}{" "}
-                                <MuiLink href={legalPath} sx={INLINE_TAP_TARGET}>
-                                  {t("emails.feedbackForms.via.noticeSteps")}
-                                </MuiLink>
-                              </Typography>
-                            )}
-                            {fallbackBlocked === "missing" && (
-                              <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6 }} data-testid="feedback-fallback-missing">
-                                {t("emails.feedbackForms.via.gmailMissing")}{" "}
-                                <MuiLink href={`${tasksPath}#${STEPS_ROW.gmail}`} sx={INLINE_TAP_TARGET}>
-                                  {t("emails.feedbackForms.via.steps")}
-                                </MuiLink>
+                        <Box component="summary" title={t("emails.feedbackForms.edit")} data-testid={`feedback-branch-toggle-${branch}`} sx={SUMMARY_SX}>
+                          <Box sx={{ gridArea: "words", minWidth: 0 }}>
+                            <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }} data-testid="feedback-branch-name">
+                              <Glyph aria-hidden="true" fontSize="small" sx={{ verticalAlign: "middle", mr: 1 }} />
+                              {label(branch)}
+                            </Typography>
+                            {saved.to && (
+                              <Typography component="span" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+                                {" "}
+                                · {saved.to}
                               </Typography>
                             )}
                           </Box>
-                        )}
-                      </RoadChoice>
+                          <Box sx={FACTS_SX}>
+                            <StatusChip
+                              inline
+                              glyph={saved.on ? "visible" : "hidden"}
+                              color={saved.on ? "success" : "default"}
+                              variant="outlined"
+                              label={saved.on ? t("emails.feedbackForms.rowOn") : t("emails.feedbackForms.rowOff")}
+                              testId={`feedback-branch-state-${branch}`}
+                            />
+                            <Typography variant="body2" color="text.secondary" component="span" data-testid={`feedback-branch-road-${branch}`}>
+                              {t(`emails.feedbackForms.via.state${saved.via === "gmail" ? "Gmail" : "Mailgun"}`)}
+                            </Typography>
+                          </Box>
+                          <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
+                        </Box>
+                        {/* The form's boxes, one group named by the form, so a reader of the screen knows whose «Cine primește» it is. */}
+                        <Box component="fieldset" aria-label={label(branch)} sx={{ border: 0, m: 0, p: 0, pt: 0.5, pb: 1.5, minWidth: 0 }} data-testid={`feedback-branch-${branch}`}>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                            {t(`emails.feedbackForms.help.${branch}`)}
+                          </Typography>
+                          <CheckboxField name={`${branch}On`} defaultChecked={state[branch].on}>
+                            {t("emails.feedbackForms.switch")}
+                          </CheckboxField>
+                          <Stack spacing={1.5} sx={{ mt: 1 }}>
+                            <RecallField
+                              name={`${branch}To`}
+                              type="email"
+                              label={t("emails.feedbackForms.to")}
+                              defaultValue={state[branch].to ?? ""}
+                              size="small"
+                              helperText={branch === "safety" ? t("emails.feedbackForms.toHelpSafety") : t("emails.feedbackForms.toHelp")}
+                              slotProps={{ htmlInput: { maxLength: 320, autoComplete: "off", spellCheck: false } }}
+                            />
+                            {sendsToSelf && (
+                              <Typography variant="caption" color="warning.main" sx={{ display: "block" }} data-testid={`feedback-self-${branch}`}>
+                                {t("emails.feedbackForms.selfRecipient")}
+                              </Typography>
+                            )}
+                            {branch === "safety" && (
+                              <RecallField
+                                name="safetyName"
+                                label={t("emails.feedbackForms.safetyName")}
+                                defaultValue={state.safety.name ?? ""}
+                                size="small"
+                                helperText={t("emails.feedbackForms.safetyNameHelp")}
+                                slotProps={{ htmlInput: { maxLength: SAFETY_NAME_MAX, autoComplete: "off" } }}
+                              />
+                            )}
+                          </Stack>
+                          {/* «Prin ce trimitem» (§772, §782): the radio pair both cards share (`RoadChoice`), never a toggle; the default is the form's own. */}
+                          <RoadChoice
+                            name={`${branch}Via`}
+                            testId={`feedback-via-${branch}`}
+                            current={state[branch].via}
+                            words={roadWordsOfCard}
+                            blocked={{ gmail: blocked(branch, "gmail"), mailgun: blocked(branch, "mailgun") }}
+                            tasksPath={tasksPath}
+                            legalPath={legalPath}
+                            gmailCopyCaption={branch !== "safety"}
+                          >
+                            {branch === "safety" && (
+                              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} data-testid="feedback-via-safety-note">
+                                {t("emails.feedbackForms.via.safetyNote")}
+                              </Typography>
+                            )}
+                            {/* «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (§778): a real tick, off by default, with the readers' note.
+                                Drawn only while Girl Zone leaves by Mailgun: where the club chose Gmail for her the tick means nothing (Mailgun
+                                takes over from Gmail with no tick), so what is saved only travels, in a hidden field. */}
+                            {branch === "safety" && state.safety.via !== "mailgun" && state.safety.fallbackToGmail && <input type="hidden" name="safetyFallbackToGmail" value="on" />}
+                            {branch === "safety" && state.safety.via === "mailgun" && (
+                              <Box sx={{ mt: 1 }} data-testid="feedback-fallback">
+                                <CheckboxField
+                                  name="safetyFallbackToGmail"
+                                  defaultChecked={state.safety.fallbackToGmail}
+                                  disabled={fallbackBlocked !== null}
+                                  help={t("emails.feedbackForms.via.fallbackHelp")}
+                                  helpTestId="feedback-fallback-help"
+                                >
+                                  {t("emails.feedbackForms.via.fallback")}
+                                </CheckboxField>
+                                {fallbackBlocked !== null && state.safety.fallbackToGmail && <input type="hidden" name="safetyFallbackToGmail" value="on" />}
+                                {fallbackBlocked === "notice" && (
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6 }} data-testid="feedback-fallback-notice">
+                                    {t("emails.feedbackForms.via.fallbackNotice")}{" "}
+                                    <MuiLink href={legalPath} sx={INLINE_TAP_TARGET}>
+                                      {t("emails.feedbackForms.via.noticeSteps")}
+                                    </MuiLink>
+                                  </Typography>
+                                )}
+                                {fallbackBlocked === "missing" && (
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6 }} data-testid="feedback-fallback-missing">
+                                    {t("emails.feedbackForms.via.gmailMissing")}{" "}
+                                    <MuiLink href={`${tasksPath}#${STEPS_ROW.gmail}`} sx={INLINE_TAP_TARGET}>
+                                      {t("emails.feedbackForms.via.steps")}
+                                    </MuiLink>
+                                  </Typography>
+                                )}
+                              </Box>
+                            )}
+                          </RoadChoice>
+                        </Box>
+                      </Box>
                     </Box>
-                  </Fragment>
-                );
-              })}
+                  );
+                })}
+              </Stack>
               {/* Why Mailgun is the recommended road, once for the card (§782), under the four pairs. */}
               <Typography variant="body2" color="text.secondary" data-testid="feedback-via-why">
                 {t("emails.feedbackForms.via.why")}

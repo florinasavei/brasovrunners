@@ -17,11 +17,11 @@ import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import ChipLink from "@/shared/ui/ChipLink";
-import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import StatusChip from "@/shared/ui/StatusChip";
-import { LINE_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
+import TodoLine from "@/shared/ui/TodoLine";
+import { LINE_SX, ROW_SX } from "@/shared/ui/row-fold";
 import type { StatusGlyphName } from "@/shared/ui/status-glyphs";
 import { EVENT_TODO_PRIORITIES, EVENT_TODO_TEXT_MAX, type EventTodoPriority, isTodoOverdue } from "../domain/event-todo";
 import type { EventTodoItem } from "../event-todos";
@@ -39,9 +39,8 @@ const PRIORITY_CHIP: Record<EventTodoPriority, { glyph: StatusGlyphName; color: 
   LOW: { glyph: "priorityLow", color: "primary" },
 };
 
-/** The glyphs drawn here as components, by name from the verbs' registry (§318): a Server Component may render one, never pass one. */
+/** The glyph drawn here as a component, by name from the verbs' registry (§318): a Server Component may render one, never pass one. */
 const GoToIcon = ACTION_ICONS.goTo;
-const PencilIcon = ACTION_ICONS.edit;
 
 type Props = {
   locale: Locale;
@@ -83,9 +82,6 @@ function shortText(text: string): string {
   const flat = text.replace(/\s+/g, " ").trim();
   return flat.length > 80 ? `${flat.slice(0, 79)}…` : flat;
 }
-
-/** One row of a list: a hairline under it, nothing else. */
-const TICK_SX = { minWidth: 44, width: 44, height: 44, p: 0, borderRadius: 1, "& .MuiButton-startIcon": { m: 0 }, "& .MuiButton-startIcon > *:nth-of-type(1)": { fontSize: 24 } } as const;
 
 /**
  * «De făcut pentru pagina evenimentului» (§749, drawn as a plain list by §752): one card in the event
@@ -293,95 +289,75 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
       </Box>
     );
 
-    if (!mayEdit) {
-      return (
-        <Box component="li" key={row.key} id={rowId(row.key)} data-testid="event-todo-item" data-item-id={item.id} sx={ROW_SX}>
-          <Box sx={{ ...LINE_SX, gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) auto" }, gridTemplateAreas: { xs: '"words" "facts"', sm: '"words facts"' } }}>
-            {wordsBlock}
-            {facts(item, done)}
-          </Box>
-        </Box>
-      );
-    }
-
     return (
-      <Box component="li" key={row.key} id={rowId(row.key)} data-testid="event-todo-item" data-item-id={item.id} sx={{ ...ROW_SX, display: "flex", alignItems: "flex-start", gap: 0.5 }}>
-        {/* The tick posts the state it wants, not a toggle: a form, so it works with scripts off. */}
-        <Box component="form" action={setEventTodoDoneAction} sx={{ flex: "none" }} data-testid="event-todo-tick-form">
-          {hidden}
-          <input type="hidden" name="itemId" value={item.id} />
-          <input type="hidden" name="done" value={done ? "0" : "1"} />
-          <GlyphButton
-            type="submit"
-            icon={done ? "tickOn" : "tickOff"}
-            role="checkbox"
-            aria-checked={done}
-            aria-label={t(done ? "eventTodos.untick" : "eventTodos.tick", { text: label })}
-            title={t(done ? "eventTodos.untickWord" : "eventTodos.tickWord")}
-            color={done ? "success" : "inherit"}
-            sx={TICK_SX}
-          />
-        </Box>
-        {/* The row's line is the summary of its edit form: a press anywhere on it, or on the pencil, opens it in place.
-            Keyed on the words, so a save that changed them draws the fold closed. */}
-        <Box
-          component="details"
-          key={[item.text, item.priority, item.assigneeStaffUserId, item.dueOn].join("\u0001")}
-          data-testid="event-todo-edit"
-          sx={{ flex: 1, minWidth: 0 }}
-        >
-          <Box component="summary" title={t("eventTodos.edit")} data-testid="event-todo-edit-toggle" sx={SUMMARY_SX}>
-            {wordsBlock}
-            {facts(item, done)}
-            <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
-          </Box>
-          <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5, maxWidth: 640 }}>
-            <ActionForm action={editEventTodoAction} scope={`todo-${item.id}`} messages={boxMessages} data-testid="event-todo-edit-form">
-              {hidden}
-              <input type="hidden" name="itemId" value={item.id} />
-              <Stack spacing={1.5}>
-                <RecallField
-                  name="text"
-                  label={t("eventTodos.field.text")}
-                  helperText={t("eventTodos.field.textHelp", { max: String(EVENT_TODO_TEXT_MAX) })}
-                  defaultValue={item.text}
-                  required
-                  size="small"
-                  slotProps={{ htmlInput: { maxLength: EVENT_TODO_TEXT_MAX } }}
-                />
-                <RecallField
-                  name="priority"
-                  select
-                  label={t("eventTodos.field.priority")}
-                  defaultValue={item.priority}
-                  size="small"
-                  slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-                >
-                  {priorityOptions}
-                </RecallField>
-                {whoAndWhen(item)}
-              </Stack>
-              <Box sx={{ mt: 1.5 }}>
-                <GlyphSubmitButton label={t("eventTodos.save")} pendingLabel={t("eventTodos.saving")} icon="save" />
-              </Box>
-            </ActionForm>
-            <ActionForm
-              action={deleteEventTodoAction}
-              confirm={{
-                title: t("eventTodos.deleteTitle"),
-                body: t("eventTodos.deleteBody", { text: label }),
-                confirmLabel: t("eventTodos.delete"),
-                cancelLabel: words.cancel,
-                destructive: true,
-              }}
-            >
-              {hidden}
-              <input type="hidden" name="itemId" value={item.id} />
-              <GlyphSubmitButton label={t("eventTodos.delete")} pendingLabel={t("eventTodos.deleting")} icon="delete" color="error" variant="outlined" />
-            </ActionForm>
-          </Stack>
-        </Box>
-      </Box>
+      <TodoLine
+        key={row.key}
+        id={rowId(row.key)}
+        testIdPrefix="event-todo"
+        itemId={item.id}
+        done={done}
+        words={wordsBlock}
+        facts={facts(item, done)}
+        edit={
+          mayEdit
+            ? {
+                tickAction: setEventTodoDoneAction,
+                hidden,
+                tickLabel: t(done ? "eventTodos.untick" : "eventTodos.tick", { text: label }),
+                tickTitle: t(done ? "eventTodos.untickWord" : "eventTodos.tickWord"),
+                foldKey: [item.text, item.priority, item.assigneeStaffUserId, item.dueOn].join("\u0001"),
+                foldTitle: t("eventTodos.edit"),
+                body: (
+                  <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5, maxWidth: 640 }}>
+                    <ActionForm action={editEventTodoAction} scope={`todo-${item.id}`} messages={boxMessages} data-testid="event-todo-edit-form">
+                      {hidden}
+                      <input type="hidden" name="itemId" value={item.id} />
+                      <Stack spacing={1.5}>
+                        <RecallField
+                          name="text"
+                          label={t("eventTodos.field.text")}
+                          helperText={t("eventTodos.field.textHelp", { max: String(EVENT_TODO_TEXT_MAX) })}
+                          defaultValue={item.text}
+                          required
+                          size="small"
+                          slotProps={{ htmlInput: { maxLength: EVENT_TODO_TEXT_MAX } }}
+                        />
+                        <RecallField
+                          name="priority"
+                          select
+                          label={t("eventTodos.field.priority")}
+                          defaultValue={item.priority}
+                          size="small"
+                          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                        >
+                          {priorityOptions}
+                        </RecallField>
+                        {whoAndWhen(item)}
+                      </Stack>
+                      <Box sx={{ mt: 1.5 }}>
+                        <GlyphSubmitButton label={t("eventTodos.save")} pendingLabel={t("eventTodos.saving")} icon="save" />
+                      </Box>
+                    </ActionForm>
+                    <ActionForm
+                      action={deleteEventTodoAction}
+                      confirm={{
+                        title: t("eventTodos.deleteTitle"),
+                        body: t("eventTodos.deleteBody", { text: label }),
+                        confirmLabel: t("eventTodos.delete"),
+                        cancelLabel: words.cancel,
+                        destructive: true,
+                      }}
+                    >
+                      {hidden}
+                      <input type="hidden" name="itemId" value={item.id} />
+                      <GlyphSubmitButton label={t("eventTodos.delete")} pendingLabel={t("eventTodos.deleting")} icon="delete" color="error" variant="outlined" />
+                    </ActionForm>
+                  </Stack>
+                ),
+              }
+            : undefined
+        }
+      />
     );
   };
 

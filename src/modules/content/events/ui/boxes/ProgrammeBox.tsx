@@ -1,6 +1,6 @@
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { EVENT_TYPES, hasProgramme } from "@/modules/events/domain/event-type";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { startBoxValues } from "@/modules/events/domain/provisional-start";
@@ -32,6 +32,8 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   const locale = languages[0]?.translation.locale ?? "ro";
+  // The language the editor is read in: which of a row's two «Ce» its line shows first (§842).
+  const uiLocale = await getLocale();
   const initialType = event?.type ?? "GROUP_RUN";
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
   // The programme's rows as wall-clock boxes in the event's zone (§117).
@@ -87,6 +89,7 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
                 initial={scheduleRows}
                 startDateName="event.startsAtDate"
                 startDate={startDate}
+                locale={uiLocale}
                 labels={{
                   date: t("editor.programmeRows.date"),
                   time: t("editor.programmeRows.time"),
@@ -98,6 +101,8 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
                   remove: t("editor.programmeRows.remove"),
                   empty: t("editor.programmeRows.empty"),
                   row: t("editor.programmeRows.row"),
+                  new: t("editor.programmeRows.new"),
+                  edit: t("editor.programmeRows.edit"),
                 }}
               />
             </Stack>

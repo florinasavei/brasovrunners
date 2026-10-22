@@ -526,3 +526,95 @@ describe("§784 a role without a number", () => {
     expect(english).not.toMatch(/more people needed|1 more person/);
   });
 });
+
+/** Every `<details …>` opening tag before `at` and not yet closed, outermost first: the folds an element sits inside. */
+function foldsBefore(page: string, at: number): string[] {
+  const stack: string[] = [];
+  for (const match of page.slice(0, at).matchAll(/<(\/?)details\b[^>]*>/g)) {
+    if (match[1] === "/") stack.pop();
+    else stack.push(match[0]);
+  }
+  return stack;
+}
+const isOpen = (tag: string) => /\sopen(=""|\s|>)/.test(tag);
+/** The «Categorii» fold's own markup, up to the «Roluri» card. */
+const categoriesOf = (page: string) => /data-testid="volunteer-categories"[\s\S]*?data-testid="volunteer-roles"/.exec(page)?.[0] ?? "";
+
+describe("§842 each category is the house's row fold", () => {
+  it("draws each category as a list row whose closed line is both names, «N roluri» and the pencil — and every box and button inside, «Șterge categoria» last", async () => {
+    const categories = categoriesOf(await drawCard());
+    const rows = [...categories.matchAll(/<li[^>]*data-testid="volunteer-category"[\s\S]*?(?=<li[^>]*data-testid="volunteer-category"|<\/ul>)/g)].map((match) => match[0]);
+    expect(rows).toHaveLength(3);
+    const counts: string[] = [];
+    for (const row of rows) {
+      const fold = /<details[^>]*data-testid="volunteer-category-edit"[^>]*>/.exec(row)?.[0] ?? "";
+      expect(fold).not.toBe("");
+      expect(isOpen(fold)).toBe(false);
+      const summary = /<summary[^>]*data-testid="volunteer-category-edit-toggle"[^>]*>([\s\S]*?)<\/summary>/.exec(row)?.[1] ?? "";
+      expect(summary).toContain('data-testid="volunteer-category-name"');
+      expect(summary).toContain('data-testid="EditIcon"');
+      expect(summary).not.toContain("<input");
+      expect(summary).not.toContain("<button");
+      counts.push(/data-testid="volunteer-category-roles"[\s\S]*?<span[^>]*>([^<]*)<\/span>/.exec(summary)?.[1] ?? "");
+      // Inside: the contact in words, the names, the place, the contact's boxes, and the delete after all of them.
+      const body = row.slice(row.indexOf("</summary>"));
+      expect(body).toContain('data-testid="volunteer-category-contact-line"');
+      expect(body).toContain('name="nameRo"');
+      expect(body).toContain('data-testid="volunteer-category-position"');
+      expect(body).toContain('name="contactEmail"');
+      expect(body.indexOf("Șterge categoria")).toBeGreaterThan(body.indexOf('name="contactEmail"'));
+    }
+    expect(counts).toEqual(["1 rol", "2 roluri", "0 roluri"]);
+    expect(rows[0]).toContain("Poziția: 1 din 3");
+    expect(rows[2]).toContain("Poziția: 3 din 3");
+    // The old «Modifică» fold inside the row is gone: the row itself is the fold the pencil opens.
+    expect(categories).not.toContain(">Modifică<");
+    expect(categories).toContain('title="Modifică"');
+    const english = categoriesOf(await drawCard({}, "en"));
+    expect(english).toContain("Position: 2 of 3");
+    expect(english).toContain("2 roles");
+  });
+
+  it("draws no «Poziția» line for a lone category, which has nowhere to move", async () => {
+    const categories = categoriesOf(await drawCard({ categories: [ROUTE] }));
+    expect(categories).not.toContain('data-testid="volunteer-category-position"');
+    expect(categories).not.toContain('name="direction"');
+  });
+
+  it("puts «Adaugă o categorie» in a fold after the list, closed while the event has categories and open while it has none", async () => {
+    const categories = categoriesOf(await drawCard());
+    const add = /<details[^>]*data-testid="volunteer-category-add"[^>]*>/.exec(categories)?.[0] ?? "";
+    expect(add).not.toBe("");
+    expect(isOpen(add)).toBe(false);
+    expect(categories.indexOf('data-testid="volunteer-category-add"')).toBeGreaterThan(categories.lastIndexOf('data-testid="volunteer-category"'));
+    const none = categoriesOf(await drawCard({ categories: [], roles: ROLES.map((one) => ({ ...one, categoryId: null })) }));
+    expect(isOpen(/<details[^>]*data-testid="volunteer-category-add"[^>]*>/.exec(none)?.[0] ?? "")).toBe(true);
+  });
+
+  it("keeps every required name inside an action form, whose `invalid` handler opens the closed folds around it, so a press is never silent", async () => {
+    const { revealField } = await import("@/shared/forms/ActionFormIsland");
+    const page = await drawCard();
+    const start = page.indexOf('data-testid="volunteer-categories"');
+    const categories = categoriesOf(page);
+    const required = [...categories.matchAll(/<input\b[^>]*\brequired\b[^>]*>/g)];
+    // Both names of three categories, and both of «Adaugă o categorie».
+    expect(required).toHaveLength(8);
+    for (const match of required) {
+      const at = start + (match.index ?? 0);
+      const before = page.slice(0, at);
+      expect(before.slice(before.lastIndexOf("<form")).split(">")[0], match[0]).toContain('data-action-form=""');
+      const folds = foldsBefore(page, at);
+      expect(isOpen(folds.at(-1) ?? "")).toBe(false);
+      type Node = { tagName: string; open?: boolean; parentElement: Node | null };
+      let parent: Node | null = null;
+      const chain: Node[] = [];
+      for (let depth = 0; depth < folds.length; depth += 1) {
+        const node: Node = { tagName: "DETAILS", open: false, parentElement: parent };
+        chain.push(node);
+        parent = node;
+      }
+      revealField({ tagName: "INPUT", parentElement: parent, dispatchEvent: () => true } as unknown as HTMLElement);
+      expect(chain.every((fold) => fold.open)).toBe(true);
+    }
+  });
+});

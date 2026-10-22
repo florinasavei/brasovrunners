@@ -1,9 +1,10 @@
 import { existsSync } from "node:fs";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import pg from "pg";
 import { computeContentHash } from "../../src/modules/legal-documents/domain/content-hash";
 import { confirmDialog } from "./support/confirm";
 import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
+import { openFold } from "./support/fold";
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §676 — «Spune-ne ceva», the anonymous wizard, through the browser at
@@ -144,6 +145,11 @@ type Roads = Partial<Record<Branch, "gmail" | "mailgun">>;
 /** What the card's radios open on where Mailgun transmits (§782, amending §676): Mailgun for each of the four, the seed's and the finally block's roads. */
 const DEFAULT_ROADS: Required<Roads> = { howItWent: "mailgun", suggestion: "mailgun", complaint: "mailgun", safety: "mailgun" };
 
+/** Opens the four forms' rows the way a person does (§842): each form is a row fold whose line says it in words, its boxes inside. */
+async function openFeedbackRows(form: Locator): Promise<void> {
+  for (const branch of ["howItWent", "suggestion", "complaint", "safety"] as const) await openFold(form.getByTestId(`feedback-branch-edit-${branch}`));
+}
+
 /** The four switches as the Administrator sets them on «Pagini» → «Contact» → «Spune-ne ceva», and, where `roads` says, «Prin ce trimitem». */
 async function setBranches(page: Page, on: Branches, roads: Roads = {}): Promise<void> {
   await page.goto("/ro/admin/pages/contact");
@@ -151,6 +157,7 @@ async function setBranches(page: Page, on: Branches, roads: Roads = {}): Promise
   const panel = page.getByTestId("feedback-forms");
   if ((await panel.getAttribute("open")) === null) await panel.locator(":scope > summary").press("Enter");
   const form = panel.getByTestId("feedback-forms-form");
+  await openFeedbackRows(form);
   for (const branch of ["howItWent", "suggestion", "complaint", "safety"] as const) {
     const box = form.locator(`input[name="${branch}On"]`);
     await box.setChecked(on[branch] === true);
@@ -179,6 +186,7 @@ async function checkRoadRadios(page: Page): Promise<void> {
   const panel = page.getByTestId("feedback-forms");
   if ((await panel.getAttribute("open")) === null) await panel.locator(":scope > summary").press("Enter");
   const form = panel.getByTestId("feedback-forms-form");
+  await openFeedbackRows(form);
   for (const branch of ["howItWent", "suggestion", "complaint", "safety"] as const) {
     const group = form.getByTestId(`feedback-via-${branch}`);
     await expect(group).toContainText("Prin ce trimitem");

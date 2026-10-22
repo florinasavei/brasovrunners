@@ -342,12 +342,13 @@ describe("§448 the create page's status is the editor's select", () => {
 });
 
 describe("§406 a refusal opens the folds it names", () => {
-  it("opens «Traseul» for a refused route link, «Linkuri și fișiere» for a link, the first box and its status card for the status", async () => {
+  it("opens «Traseul» for a refused route link, «Linkuri și fișiere» and the link's own row for a link, the first box and its status card for the status", async () => {
     const drawn = await boxes(EVENT);
+    // A saved link is a row fold of its own inside the box since §842 (the `null`: a row fold carries no id).
     for (const [key, field, ids] of [
       ["course", "field-event.routeUrl", ["box-course"]],
-      ["links", "field-event.links[0].url", ["box-links"]],
-      ["links", "field-event.links[0].labelEn", ["box-links"]],
+      ["links", "field-event.links[0].url", ["box-links", null]],
+      ["links", "field-event.links[0].labelEn", ["box-links", null]],
       ["links", "field-event.stravaEventUrl", ["box-links"]],
       ["kind", "field-event.eventStatus", ["box-kind", "box-status"]],
     ] as const) {

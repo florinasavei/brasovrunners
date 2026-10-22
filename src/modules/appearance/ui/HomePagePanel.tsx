@@ -37,8 +37,16 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import Panel from "@/shared/ui/Panel";
+import { FACTS_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+
+/** The pencil at the end of a step's or a reason's line: the edit verb's glyph, by name (§318). */
+const PencilIcon = ACTION_ICONS.edit;
+
+/** A step's or a reason's box: «step3Title», «why2Body» — its kind and its number. */
+const ITEM_BOX = /^(step|why)(\d)(Title|Body)$/;
 
 /** A club page «Cum funcționează» may open: its id, its Romanian title and whether it is on the site. */
 export type HomePageChoice = { id: string; title: string; published: boolean };
@@ -99,7 +107,9 @@ function platformKey(stem: string): string | null {
  * with its quality, «Din galerie», the crop box at 16∶9 — its two lines and its three buttons), which
  * sections the page draws, «Prima dată», «De ce» and the quote, the strip's heading and the numbers.
  * Every box is a pair, both languages or neither; an empty one shows, as its placeholder, the
- * platform's sentence the page draws instead. One «Copiază și tradu tot» over the form (§464, §482).
+ * platform's sentence the page draws instead. Inside «Prima dată» and «De ce» each step and each
+ * reason is the house's row fold (§842): its title in words and the pencil, its two pairs behind
+ * it. One «Copiază și tradu tot» over the form (§464, §482).
  *
  * The strip's pictures are chosen in a fold of their own after the form, one small form each — add,
  * ↑ / ↓, take out — as a product's pictures are (§697): a form cannot sit inside another, and a slow
@@ -164,6 +174,68 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
         </Stack>
       );
     });
+
+  /**
+   * One step of «Prima dată», or one reason of «De ce», as the house's row fold (§842, `shared/ui/row-fold.ts`): the line in words —
+   * «Pasul 3 · Salută-ne», the title the page draws (the club's, else the platform's), «Textul implicit» while the club wrote neither
+   * of its boxes, the pencil — over its two pairs. The fold is keyed on the words it holds, so a save that changed them draws it closed.
+   */
+  const itemRow = (kind: "step" | "reason", number: string, boxes: readonly HomeTextBox[]) => {
+    const titleBox = boxes.find((box) => box.stem.endsWith("Title"));
+    const titleKey = titleBox ? platformKey(titleBox.stem) : null;
+    const title = (titleBox ? valueAt(titleBox, locale) : "") || (titleKey ? platform[locale](titleKey) : "");
+    const club = boxes.some((box) => valueAt(box, "ro") !== "");
+    return (
+      <Box component="li" key={number} sx={ROW_SX}>
+        <Box component="details" key={boxes.map((box) => `${valueAt(box, "ro")}\u0001${valueAt(box, "en")}`).join("\u0001")} data-testid={`home-page-${kind}`} data-number={number}>
+          <Box component="summary" title={t("homePage.rows.edit")} sx={SUMMARY_SX}>
+            <Box sx={{ gridArea: "words", minWidth: 0 }}>
+              <Typography component="span" sx={{ fontWeight: 600 }}>
+                {t(`homePage.rows.${kind}`, { number })}
+              </Typography>
+              <Typography component="span" sx={{ wordBreak: "break-word" }}>{` · ${title}`}</Typography>
+            </Box>
+            <Box sx={FACTS_SX}>
+              {!club && (
+                <Typography component="span" variant="caption" color="text.secondary">
+                  {t("homePage.rows.platform")}
+                </Typography>
+              )}
+            </Box>
+            <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
+          </Box>
+          <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5 }}>
+            {pairs(boxes)}
+          </Stack>
+        </Box>
+      </Box>
+    );
+  };
+
+  /**
+   * A fold's pairs with its steps (or its reasons) as rows (`itemRow`): the boxes before the first step and after the last stay open,
+   * as they were — the heading, the sentence, the button's words, the quote. Still the one form: a closed row's boxes post as they were,
+   * and none of them is `required`, so a closed row never holds the press back where nobody can see why.
+   */
+  const withRows = (boxes: readonly HomeTextBox[], kind: "step" | "reason") => {
+    const numbered = boxes.map((box) => ITEM_BOX.exec(box.stem)?.[2] ?? null);
+    const first = numbered.findIndex((number) => number !== null);
+    const last = numbered.length - 1 - [...numbered].reverse().findIndex((number) => number !== null);
+    const rows = new Map<string, HomeTextBox[]>();
+    boxes.forEach((box, index) => {
+      const number = numbered[index];
+      if (number !== null) rows.set(number, [...(rows.get(number) ?? []), box]);
+    });
+    return (
+      <>
+        {pairs(boxes.slice(0, first))}
+        <Box component="ol" aria-label={t(`homePage.rows.${kind}List`)} sx={{ listStyle: "none", m: 0, p: 0 }}>
+          {[...rows].map(([number, own]) => itemRow(kind, number, own))}
+        </Box>
+        {pairs(boxes.slice(last + 1))}
+      </>
+    );
+  };
 
   /** «Textele clubului» when the club wrote any box of the fold, else «Textele implicite». */
   const wordsAside = (boxes: readonly HomeTextBox[]) =>
@@ -420,13 +492,13 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
 
               <Panel glyph="help" collapsible level={3} title={t("homePage.folds.steps")} aside={wordsAside(STEPS_BOXES)} intro={t("homePage.folds.stepsIntro")} id="home-page-steps" data-testid="home-page-steps">
                 <Stack spacing={1.5}>
-                  {pairs(STEPS_BOXES)}
+                  {withRows(STEPS_BOXES, "step")}
                   {pageSelect(STEPS_PAGE_FIELD, setting.steps.targetPageId, t("homePage.stepsPageHelp"))}
                 </Stack>
               </Panel>
 
               <Panel glyph="description" collapsible level={3} title={t("homePage.folds.why")} aside={wordsAside(WHY_BOXES)} intro={t("homePage.folds.whyIntro")} id="home-page-why" data-testid="home-page-why">
-                <Stack spacing={1.5}>{pairs(WHY_BOXES)}</Stack>
+                <Stack spacing={1.5}>{withRows(WHY_BOXES, "reason")}</Stack>
               </Panel>
 
               <Panel glyph="pictures" collapsible level={3} title={t("homePage.folds.strip")} aside={pictureCount} intro={t("homePage.folds.stripIntro")} id="home-page-strip" data-testid="home-page-strip">
