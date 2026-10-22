@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
@@ -7,8 +8,9 @@ import ro from "../../../messages/ro.json";
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §716 — the backoffice card that switches «Spune-ne ceva»'s four forms
- * on and off: each form's glyph before its legend (as on the public contact page, §696), and a
- * separator between the four forms — three of them, and nothing before the save button.
+ * on and off: each form's glyph before its name (as on the public contact page, §696). Since §842's
+ * second wave each form is one of the house's row folds (`shared/ui/row-fold.ts`) — the line in words,
+ * the boxes in the fold — and the rows' hairlines replace §716's three separators.
  *
  * §772 (the owner, 2026-10-14: «aici trebuie să setăm prin ce trimitem mail (Mailgun sau Gmail)») — and
  * under each form «Prin ce trimitem»: two native radios, never a toggle, the form's own default checked,
@@ -59,27 +61,85 @@ function viaGroup(out: string, branch: string): string {
 
 const radios = (group: string) => [...group.matchAll(/<input[^>]*type="radio"[^>]*>/g)].map(([tag]) => tag);
 
-describe("the backoffice card of the four forms", () => {
-  it("draws a separator between the four forms — three — and none before the save button", async () => {
+/** One form's row: its `<details>`, from its opening tag to the next row's (or the end of the list). */
+function row(out: string, branch: string): { tag: string; summary: string; body: string } {
+  const from = out.indexOf(`data-testid="feedback-branch-edit-${branch}"`);
+  expect(from, branch).toBeGreaterThan(-1);
+  const open = out.lastIndexOf("<details", from);
+  const close = out.indexOf("</details>", from);
+  const whole = out.slice(open, close);
+  const summaryEnd = whole.indexOf("</summary>");
+  return { tag: whole.slice(0, whole.indexOf(">") + 1), summary: whole.slice(whole.indexOf("<summary"), summaryEnd), body: whole.slice(summaryEnd) };
+}
+
+describe("the backoffice card of the four forms (§842: the house's row folds)", () => {
+  it("lists the four forms as rows of one list, inside the one form, with the save button after the last — no separators of their own", async () => {
     const out = await html();
     expect(FEEDBACK_BRANCHES).toHaveLength(4);
-    expect(out.match(/data-testid="feedback-branch-divider"/g)).toHaveLength(3);
-    // Each divider sits between two forms, so the last form and the save button have none between them.
+    expect(out.match(/data-testid="feedback-branch-row"/g)).toHaveLength(4);
+    expect(out.match(/<details[^>]*data-testid="feedback-branch-edit-/g)).toHaveLength(4);
+    expect(out).not.toContain("feedback-branch-divider");
+    // One `<ul>` holds the four rows, inside the one `<form>`, the save button after the last row.
+    const list = out.search(new RegExp(`<ul[^>]*aria-label="${ro.Admin.emails.feedbackForms.title}"`));
+    expect(list).toBeGreaterThan(out.indexOf("<form"));
+    expect(out.indexOf('data-testid="feedback-branch-row"')).toBeGreaterThan(list);
+    expect(out.match(/<form/g)).toHaveLength(1);
     const lastForm = out.lastIndexOf('data-testid="feedback-branch-safety"');
-    const lastDivider = out.lastIndexOf('data-testid="feedback-branch-divider"');
-    expect(lastDivider).toBeLessThan(lastForm);
     expect(out.indexOf('data-testid="save"')).toBeGreaterThan(lastForm);
   });
 
-  it("draws each form's glyph, hidden from a screen reader, before its legend", async () => {
+  it("says each form in words on its line — the glyph hidden from a screen reader, the name, who receives it, «Pornit» or «Oprit», the road — and the pencil", async () => {
     const out = await html();
-    // The four forms' own legends: the road's group has a legend of its own, a plain sentence (§772).
-    const legends = [...out.matchAll(/<legend(?![^>]*data-via-legend)[^>]*>([\s\S]*?)<\/legend>/g)].map(([, inner]) => inner);
-    expect(legends).toHaveLength(4);
-    for (const inner of legends) {
-      expect(inner).toMatch(/^<svg[^>]*aria-hidden="true"/);
-      expect(inner.match(/<svg/g)).toHaveLength(1);
+    const words = ro.Admin.emails.feedbackForms;
+    for (const branch of FEEDBACK_BRANCHES) {
+      const { summary } = row(out, branch);
+      expect(summary, branch).toContain(`title="${words.edit}"`);
+      const name = /data-testid="feedback-branch-name">([\s\S]*?)<\/span>/.exec(summary)?.[1] ?? "";
+      expect(name, branch).toMatch(/^<svg[^>]*aria-hidden="true"/);
+      expect(name, branch).toContain(words.branches[branch]);
+      expect(summary, branch).toContain(`data-testid="feedback-branch-state-${branch}"`);
+      expect(summary, branch).toContain(state[branch].on ? `>${words.rowOn}<` : `>${words.rowOff}<`);
+      expect(summary, branch).toContain(`>${state[branch].via === "gmail" ? words.via.stateGmail : words.via.stateMailgun}<`);
+      // The fact column, then the pencil last: three `<svg>` in all — the form's glyph, the chip's, the pencil.
+      expect(summary.match(/<svg/g), branch).toHaveLength(3);
+      expect(summary, branch).not.toMatch(/<input/);
     }
+    expect(row(out, "howItWent").summary).toContain("a@example.org");
+    expect(row(out, "suggestion").summary).not.toContain(" · ");
+    for (const catalogue of [ro, en]) for (const key of ["rowOn", "rowOff", "edit"] as const) expect(catalogue.Admin.emails.feedbackForms[key].length, key).toBeGreaterThan(0);
+    expect([ro.Admin.emails.feedbackForms.rowOn, ro.Admin.emails.feedbackForms.rowOff]).toEqual(["Pornit", "Oprit"]);
+  });
+
+  it("holds each form's boxes in its fold — closed on arrival, none of them `required`, a box the browser refuses opened by the form (§350)", async () => {
+    const out = await html();
+    for (const branch of FEEDBACK_BRANCHES) {
+      const { tag, body } = row(out, branch);
+      expect(tag, branch).not.toMatch(/\sopen(=|\s|>)/);
+      expect(body, branch).toContain(`name="${branch}Via"`);
+      expect(body, branch).toContain(`data-testid="feedback-branch-${branch}"`);
+      expect(body, branch).toContain(ro.Admin.emails.feedbackForms.help[branch]);
+    }
+    // A closed fold's `required` box would block the press where nobody can see it: there is none.
+    expect(out).not.toMatch(/\srequired(=|\s|\/|>)/);
+    // The boxes drawn by `RecallField` are mocked away here: the card's source passes `required` to none of them.
+    expect(readFileSync("src/modules/feedback/ui/FeedbackFormsPanel.tsx", "utf8")).not.toMatch(/\srequired(=|\s*\n|\s*\/?>)/);
+    // An address typed wrong and folded away: the real `ActionForm` answers the browser's `invalid` with `revealField`,
+    // which opens every fold around the box before the browser looks for something to focus.
+    const { revealField } = await import("@/shared/forms/ActionFormIsland");
+    const details = { tagName: "DETAILS", open: false, parentElement: null };
+    const fieldset = { tagName: "FIELDSET", parentElement: details };
+    const box = { tagName: "INPUT", parentElement: fieldset, dispatchEvent: () => true };
+    revealField(box as unknown as HTMLElement);
+    expect(details.open).toBe(true);
+  });
+
+  it("opens by itself the row whose recipient is the very Gmail account that sends (§778): the warning inside is something to act on", async () => {
+    const own = { ...state, complaint: { on: true, to: "club@gmail.com", via: "gmail" } } as typeof state;
+    const element = await FeedbackFormsPanel({ locale: "ro", state: own, noticeDescribes: true, mayEdit: true, roads: BOTH, safetyGmailDescribed: true, gmailAccount: "club@gmail.com" });
+    const out = renderToStaticMarkup(element).replace(/<style[\s\S]*?<\/style>/g, "");
+    expect(row(out, "complaint").tag).toMatch(/\sopen(=|\s|>)/);
+    expect(row(out, "complaint").body).toContain('data-testid="feedback-self-complaint"');
+    for (const branch of ["howItWent", "suggestion", "safety"]) expect(row(out, branch).tag, branch).not.toMatch(/\sopen(=|\s|>)/);
   });
 });
 

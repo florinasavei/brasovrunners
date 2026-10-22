@@ -226,6 +226,8 @@ const PUBLIC_PREFIXES = [
   "src/modules/content/rich-text/ui/RichTextVideo.tsx",
 ];
 const BACKOFFICE_FILES: ReadonlySet<string> = new Set([
+  // «Spune-ne ceva»'s settings on «Pagini» → «Contact» (§676, rows since §842): the staff's; the public wizard beside it stays public.
+  "src/modules/feedback/ui/FeedbackFormsPanel.tsx",
   "src/modules/newsletter/ui/NewsletterPreview.tsx",
   "src/modules/newsletter/ui/SubscriberListFields.tsx",
   // The event editor's «Voluntari» card (§754): the staff's; the public form beside it, `VolunteerBox`, stays public.
