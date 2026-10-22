@@ -14,7 +14,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
- * «Descarcă Excel: toate evenimentele» on the «Voluntari» screen (§NNN; the owner, 2026-10-22: «La voluntari vreau să descarc
+ * «Descarcă Excel: toate evenimentele» on the «Voluntari» screen (§846; the owner, 2026-10-22: «La voluntari vreau să descarc
  * și excel formatat frumos, nu doar CSV»): every event the screen's select offers — the ones that take volunteers or have
  * any, in the select's order — in one workbook, «Eveniment» before every row and every role, each event's people and roles
  * built exactly as its own download builds them (`modules/volunteers/export.ts`). A spreadsheet only: the CSV is one event's,

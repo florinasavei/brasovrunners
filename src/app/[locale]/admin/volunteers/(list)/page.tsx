@@ -249,7 +249,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
           {t("nav.volunteers")}
         </Typography>
-        {/* Every event's people in one workbook (§NNN), while no single event is chosen: the screen's own scope, one press. */}
+        {/* Every event's people in one workbook (§846), while no single event is chosen: the screen's own scope, one press. */}
         {!scopeEvent && events.length > 0 && (
           <GlyphButton icon="spreadsheet" href={`/api/admin/volunteers/export?lang=${locale}`} variant="outlined" size="small" sx={TAP_TARGET} data-testid="volunteers-xlsx-all">
             {t("volunteers.screen.excelAll")}

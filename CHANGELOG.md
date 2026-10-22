@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.72-2026-10-22
+
+- **A volunteers' Excel worth opening, and one for every event** — the volunteers' spreadsheet now has the club's blue header, a filter on every column, rows coloured by state (and recoloured when you change one), «De repartizat» spelled out, the header on every printed page, and a second sheet «Pe roluri» with what each role needs, has, still lacks and was offered; the «Voluntari» screen downloads every event's volunteers in one file with «Descarcă Excel: toate evenimentele». §846.
 ## BR-V3.71-2026-10-22
 
 - **Every remaining backoffice list as one line you open** — the event's links, partners and programme, the volunteer categories, the member levels and discount codes, the club's to-dos, the FAQ questions, the home page's steps and reasons and the «Spune-ne ceva» forms now read like the roles and checkpoints: each item one line in words with a pencil, its boxes inside, delete last, «Adaugă …» open only while the list is empty. Nothing they save changed. §845.

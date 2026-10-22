@@ -14,7 +14,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { readSheet, unzip } from "../../helpers/xlsx";
 
 /**
- * §NNN — the volunteers' spreadsheet «formatat frumos», and «Descarcă Excel: toate evenimentele» on the «Voluntari» screen
+ * §846 — the volunteers' spreadsheet «formatat frumos», and «Descarcă Excel: toate evenimentele» on the «Voluntari» screen
  * (the owner, 2026-10-22: «La voluntari vreau să descarc și excel formatat frumos, nu doar CSV»). The file is read as bytes
  * (`helpers/xlsx.ts`), never through a library's own round trip: the header in the club's blue with white words, a filter on
  * every column, the row tinted by its «Stare» through a rule over its own cell, «De repartizat» spelled out, and a second
@@ -125,7 +125,7 @@ const oneEvent = (query: string) => eventFile(new Request(`http://localhost/api/
 const allEvents = (query: string) => everyEventFile(new Request(`http://localhost/api/admin/volunteers/export?${query}`));
 const bytes = async (response: Response) => Buffer.from(await response.arrayBuffer());
 
-describe("the volunteers' spreadsheet, «formatat frumos» (§NNN)", () => {
+describe("the volunteers' spreadsheet, «formatat frumos» (§846)", () => {
   it("frames the people: the club's blue header with white words, a filter on every column, «De repartizat», a tint per state", async () => {
     const buffer = await bytes(await oneEvent("format=xlsx&lang=ro"));
     if (process.env.VOLUNTEERS_XLSX_SAMPLE) writeFileSync(process.env.VOLUNTEERS_XLSX_SAMPLE, buffer);
@@ -204,7 +204,7 @@ describe("the volunteers' spreadsheet, «formatat frumos» (§NNN)", () => {
   });
 });
 
-describe("«Descarcă Excel: toate evenimentele» (§NNN)", () => {
+describe("«Descarcă Excel: toate evenimentele» (§846)", () => {
   it("puts every event the screen offers in one workbook, «Eveniment» first, named for every event", async () => {
     const response = await allEvents("lang=ro");
     expect(response.status).toBe(200);

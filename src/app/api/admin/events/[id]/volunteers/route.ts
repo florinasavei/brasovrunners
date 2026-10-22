@@ -18,7 +18,7 @@ import { isUuid } from "@/shared/ids";
  * with the roles each offered for (§761), in the reader's language (`lang`), as a UTF-8 file with a BOM — or, with
  * `format=xlsx` (§839; the owner: «export volunteers in excel as well»), the same rows as a spreadsheet («Descarcă Excel»,
  * on the card and on the «Voluntari» screen), laid out to be read and printed and with its roles on a sheet of their own
- * (§NNN, `modules/volunteers/workbook.ts`). The rows are built once, for both files and for the every-event download
+ * (§846, `modules/volunteers/workbook.ts`). The rows are built once, for both files and for the every-event download
  * (`modules/volunteers/export.ts`).
  *
  * Whoever reads the card may take it — `canManageVolunteers`, the card's own gate, asserted here again

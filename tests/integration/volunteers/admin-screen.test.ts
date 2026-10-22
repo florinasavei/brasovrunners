@@ -341,7 +341,7 @@ describe("the list page (§839)", () => {
     expect(new Set(returnTos(page))).toEqual(new Set(["/ro/admin/volunteers"]));
     expect(page).toContain(`href="/ro/admin/events/${raceId}#box-volunteers"`);
     expect(page).toContain(`href="/api/admin/events/${raceId}/volunteers?lang=ro"`);
-    // One event chosen: its own file, not every event's (§NNN).
+    // One event chosen: its own file, not every event's (§846).
     expect(page).not.toContain('data-testid="volunteers-xlsx-all"');
     expect(page).toContain(`href="/ro/admin/volunteers/${people.ana}"`);
     // The strip: everyone, each state, and «De repartizat», as links.
@@ -355,7 +355,7 @@ describe("the list page (§839)", () => {
     expect(all).toContain("Bogdan Vasile");
     expect(all).toContain("Alergarea");
     expect(all).not.toContain(`href="/api/admin/events/${raceId}/volunteers`);
-    // Every event: one workbook of them all, «Descarcă Excel: toate evenimentele» (§NNN).
+    // Every event: one workbook of them all, «Descarcă Excel: toate evenimentele» (§846).
     expect(all).toContain('href="/api/admin/volunteers/export?lang=ro"');
     expect(all).toContain("Descarcă Excel: toate evenimentele");
     const searched = await listPage({ q: "stefan" });

@@ -9,7 +9,7 @@ import type { VolunteerRoleSheetRow } from "./export";
 
 /**
  * «Descarcă Excel» for the volunteers (§839; the owner, 2026-10-21: «I wanna be able to export volunteers in excel as well»;
- * and §NNN, 2026-10-22: «La voluntari vreau să descarc și excel formatat frumos, nu doar CSV»): one event's people from its
+ * and §846, 2026-10-22: «La voluntari vreau să descarc și excel formatat frumos, nu doar CSV»): one event's people from its
  * card, or every event's from the «Voluntari» screen, as a workbook laid out to be read and printed, not only parsed.
  *
  * **«Voluntari»**, the people: the CSV's rows (`csv.ts`) in the same words and language, the columns a reader looks for first
@@ -172,7 +172,7 @@ function rolesSheet(events: readonly VolunteerSheetEvent[], words: VolunteerShee
 }
 
 /**
- * What the writer does not draw (§NNN). On «Voluntari»: Excel's filter arrows on the header (`<autoFilter>`, right after
+ * What the writer does not draw (§846). On «Voluntari»: Excel's filter arrows on the header (`<autoFilter>`, right after
  * `<sheetData>` where the sheet's schema wants it, before the conditional formatting), and the header row repeated on every
  * printed page — the two defined names Excel keeps for them. On «Pe roluri»: printed one page wide, its seven columns being
  * a report somebody hands round. The sheet's name is quoted as a formula quotes it, and escaped for the XML around it.

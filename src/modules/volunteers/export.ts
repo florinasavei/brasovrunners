@@ -13,7 +13,7 @@ export type VolunteerExportData = Awaited<ReturnType<typeof exportVolunteers>>;
 type Words = (key: string) => string;
 
 /**
- * One role as «Pe roluri» counts it (§NNN): its category and name in the reader's language, how many it needs, how many were
+ * One role as «Pe roluri» counts it (§846): its category and name in the reader's language, how many it needs, how many were
  * given it and how many of those confirmed, how many more it needs, and how many offered for it — the card's «N din M»
  * (`standingOf`), one line per role, in the club's order.
  */
