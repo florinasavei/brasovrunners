@@ -3906,7 +3906,12 @@
         "unchanged": "The text in force already has the template's words.",
         "draftExists": "A draft is already waiting: approve it or delete it, then you can regenerate.",
         "blanks": "The draft will still have fields to fill in, written '<'…>.",
-        "empty": "No version for this filter."
+        "empty": "No version for this filter.",
+        "openRow": "Work on the text",
+        "readRow": "See the versions",
+        "chipNoneInForce": "Nothing in force",
+        "chipDraftWaiting": "Draft to approve",
+        "readInForce": "Read the text in force"
       },
       "stateLabel": {
         "inForce": "In force",
@@ -4009,7 +4014,44 @@
       },
       "resultsMissing": "The notice in force does not describe the races' results yet, so no results can be published. Approve a new notice from the template.",
       "resultsTermsMissing": "The terms in force do not describe the races' results yet, so no results can be published. Approve new terms from the template.",
-      "rsvpMissing": "The notice in force does not describe the “I'm coming!” answers yet, so the page of a ticked event does not take them. Approve a new notice from the template."
+      "rsvpMissing": "The notice in force does not describe the “I'm coming!” answers yet, so the page of a ticked event does not take them. Approve a new notice from the template.",
+      "notices": {
+        "title": "Before you approve",
+        "count": {
+          "one": "{count} feature waits for a new text",
+          "few": "{count} features wait for a new text",
+          "other": "{count} features wait for a new text"
+        },
+        "listLabel": "What is off until a new text",
+        "waitsOn": {
+          "PRIVACY_NOTICE": "Waits for the notice",
+          "TERMS": "Waits for the terms"
+        },
+        "lines": {
+          "listStates": "The public list shows only the confirmed",
+          "listSocials": "Strava and Instagram do not show on the public list",
+          "listNumbers": "The public list shows no race numbers",
+          "results": "No results can be published",
+          "rsvp": "The “I'm coming!” answers are off",
+          "resultsTerms": "No results can be published",
+          "promo": "The form does not offer the offers and benefits box",
+          "sponsor": "The list for sponsors is off",
+          "refusal": "The form does not say on what grounds the club may refuse"
+        }
+      },
+      "texts": {
+        "title": "The legal texts",
+        "count": {
+          "one": "{count} text",
+          "few": "{count} texts",
+          "other": "{count} texts"
+        }
+      },
+      "language": {
+        "ro": "Română",
+        "en": "English"
+      },
+      "tabIncomplete": "incomplete"
     },
     "tasks": {
       "title": "What is still to do",
@@ -4211,7 +4253,7 @@
           "how": [
             "The short way: /admin/legal → the “One step” box → check the legal name, CIF, seat and email shown → the approval button in the box.",
             "The notice, the terms and both race declarations, mountain event and road or park event, come into force with the club's facts in them.",
-            "To read first: on each text's card, “Regenerate from the template” → open the draft, read, fill in → “Save draft” → “Approve and publish”. All at once: “New version” → “Regenerate all”.",
+            "To read first: on each text's row, “Regenerate from the template” → open the draft, read, fill in → “Save draft” → “Approve and publish”. All at once: “New version” → “Regenerate all”.",
             "The long way, for a change: “New version” → pick the template → “Save draft” → PDF → “Approve and publish”. An approved text never changes; a correction is the next version.",
             "On each event, under Registration, pick the approved declaration (if not already)."
           ]
@@ -6222,6 +6264,10 @@
         "add": "Add to the strip",
         "full": "The strip holds {max} photographs, as many as it takes. Remove one to add another.",
         "saved": "The photo strip was saved."
+      },
+      "language": {
+        "ro": "Română",
+        "en": "English"
       }
     },
     "look": {
@@ -8872,7 +8918,7 @@
               "title": "The club's legal texts",
               "steps": [
                 "«Legal documents»: if the box «One step: approve the templates with the club's facts» is at the top, check the club's facts in it and press «Approve the missing texts now…»: each text not yet approved gets version 1, from its template, with the club's facts. A text already approved is not touched.",
-                "One text: on its card in «Legal documents» press «Regenerate from the template» and confirm. All at once: under «Every text at once» press «Regenerate from the templates», or on «New version» press «Regenerate all». One draft is made for each; nothing takes effect yet, and the list opens on «Drafts».",
+                "One text: open its row in «Legal documents», press «Regenerate from the template» and confirm. All at once: under «Every text at once» press «Regenerate from the templates», or on «New version» press «Regenerate all». One draft is made for each; nothing takes effect yet, and the list opens on «Drafts».",
                 "Open each draft (the «Drafts» filter shows them all), read it and fill in what is left written <…>, in Romanian and in English; «Save draft».",
                 "Back on «Legal documents»: «Approve the drafts» and confirm. The drafts ready to approve take effect together; what cannot be approved at once is written under the button, with the reason.",
                 "What is in force for each text: the card's head says «In force: version…» or «No version in force»; the filters «In force», «Replaced» and «Withdrawn» show the rest.",

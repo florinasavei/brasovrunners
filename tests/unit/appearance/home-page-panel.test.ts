@@ -136,6 +136,33 @@ describe("§842 «Prima dată»'s steps and «De ce»'s reasons as the house's r
   });
 });
 
+describe("§847 the pairs are the backoffice's one Română | English strip", () => {
+  it("draws every pair of boxes as tabs over two panels — the hero's, each step's and reason's, the heading's and the strip's", async () => {
+    const html = await draw(DEFAULT_HOME_PAGE_SETTING);
+    for (const strip of ["home-hero", "home-steps-head", "home-step-1", "home-steps-foot", "home-why-head", "home-reason-4", "home-why-foot", "home-strip-words"]) {
+      expect(html, strip).toContain(`id="${strip}-tab-ro"`);
+      expect(html, strip).toContain(`id="${strip}-tab-en"`);
+      expect(html, strip).toMatch(new RegExp(`<div[^>]*id="${strip}-panel-en"[^>]*hidden`));
+    }
+  });
+
+  it("puts each language's boxes in its own panel, the hidden one still in the one form", async () => {
+    const html = await draw(DEFAULT_HOME_PAGE_SETTING);
+    const panel = (id: string) => {
+      const start = html.indexOf(`id="${id}"`);
+      return html.slice(start, html.indexOf('role="tabpanel"', start + 1));
+    };
+    expect(panel("home-hero-panel-ro")).toContain('name="headlineRo"');
+    expect(panel("home-hero-panel-ro")).not.toContain('name="headlineEn"');
+    expect(panel("home-hero-panel-en")).toContain('name="buttonHowEn"');
+    expect(panel("home-step-3-panel-en")).toContain('name="step3TitleEn"');
+    // The page «Cum funcționează» opens is one in both languages: under the strip, in no tab.
+    expect(html.indexOf('name="buttonHowPageId"')).toBeGreaterThan(html.indexOf('name="buttonHowEn"'));
+    const form = html.slice(html.indexOf('data-testid="home-page-form"'), html.indexOf("</form>", html.indexOf('data-testid="home-page-form"')));
+    for (const name of ["headlineRo", "headlineEn", "sublineEn", "buttonJoinEn", "stepsTitleEn", "why1BodyEn", "quoteEn", "stripTitleEn"]) expect(form, name).toContain(`name="${name}"`);
+  });
+});
+
 describe("§732 the special-events-first checkbox", () => {
   it("renders with its saved state, off by default", async () => {
     const off = await draw(DEFAULT_HOME_PAGE_SETTING);

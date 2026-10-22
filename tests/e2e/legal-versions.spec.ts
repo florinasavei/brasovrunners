@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import pg from "pg";
 import { cancelDialog, confirmDialog } from "./support/confirm";
+import { openFold } from "./support/fold";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -49,6 +50,8 @@ test.describe("legal documents: a Superadministrator can create the first versio
 
     await page.locator('[name="roTitle"]').fill(`Document ${suffix}`);
     await writeBody(page, 0, "## Secțiunea 1\n\nUn paragraf de probă.");
+    // The two languages are the Română | English strip (§847): the English tab on top, then its boxes.
+    await page.getByTestId("legal-document-form").getByRole("tab", { name: /English/ }).click();
     await page.locator('[name="enTitle"]').fill(`Document ${suffix}`);
     await writeBody(page, 1, "## Section 1\n\nA test paragraph.");
     await page.getByRole("button", { name: "Salvează ciorna" }).click();
@@ -122,7 +125,7 @@ test.describe("legal documents: the next version starts from the current one", (
    * 280 would still move the English half by nearly all of that; the text drawn in the stand-in
    * measured the same to the pixel.
    */
-  test("the Romanian text takes the room it needs before the editor mounts, so the English half does not move", async ({ page }) => {
+  test("the Romanian text takes the room it needs before the editor mounts, so what is under it does not move", async ({ page }) => {
     await signIn(page, "Dev Superadministrator");
     await page.goto("/ro/admin/legal?state=inForce");
     await page.locator('a[href*="/admin/legal/"]:not([href$="/new"]):not([href*="template="]):visible').first().click();
@@ -138,7 +141,9 @@ test.describe("legal documents: the next version starts from the current one", (
     // Nothing hydrated: no editor anywhere, so what is measured is the first paint.
     await expect(page.locator(".tiptap")).toHaveCount(0);
     const reserved = await standIn.boundingBox();
-    const englishBefore = await page.locator('[name="enTitle"]').boundingBox();
+    // Under the Romanian tab's text since §847 (the English one is the strip's other tab): the save.
+    const save = page.getByTestId("legal-document-form").getByRole("button", { name: "Salvează ciorna" });
+    const saveBefore = await save.boundingBox();
     await page.unroute(scripts);
 
     await page.goto(address);
@@ -146,12 +151,12 @@ test.describe("legal documents: the next version starts from the current one", (
     await expect(writingArea).toBeVisible();
     await expect(page.getByTestId("legal-body-reserved")).toHaveCount(0);
     const mounted = await writingArea.boundingBox();
-    const englishAfter = await page.locator('[name="enTitle"]').boundingBox();
+    const saveAfter = await save.boundingBox();
 
     // Hundreds of pixels of text, and the stand-in within a few of the editor that replaced it.
     expect(mounted!.height).toBeGreaterThan(400);
     expect(Math.abs(mounted!.height - reserved!.height)).toBeLessThanOrEqual(4);
-    expect(Math.abs(englishAfter!.y - englishBefore!.y)).toBeLessThanOrEqual(4);
+    expect(Math.abs(saveAfter!.y - saveBefore!.y)).toBeLessThanOrEqual(4);
   });
 });
 
@@ -214,8 +219,8 @@ test.describe("legal documents: a version downloads as a PDF", () => {
  * so the list is left as it was. Desktop only: one database, and the phone renders the same rows as
  * labelled blocks.
  *
- * §539 — the list is one card per text now, each text's versions folded under it, and one text is
- * regenerated from its own card first: «Regenerează din șablon», a dialog naming the text and the
+ * §539, §847 — the list is one row per text now (a row fold), each text's versions folded under it, and one text is
+ * regenerated from its own row first: «Regenerează din șablon», a dialog naming the text and the
  * version it makes, a toast, and the list landing on «Ciorne», where every draft's fold is open.
  * The ticks are read on that filter, before and after, so a fold's state never changes the count.
  */
@@ -265,6 +270,8 @@ test.describe("legal documents: every text at once", () => {
     await hydrated(page);
     const terms = page.getByTestId("legal-kind-TERMS");
     await expect(terms.getByTestId("legal-kind-state").first()).toHaveText(/^(În vigoare: versiunea \d+ din .+|Nicio versiune în vigoare)$/);
+    // Its row folds open onto its boxes (§847): opened the way a person does.
+    await openFold(terms.getByTestId("legal-kind-fold"));
     // The card must offer the press: no terms draft waits (deleted above) and the sample terms in
     // force are not the template's words. Fail rather than pass without the per-card path.
     await expect(terms.getByTestId("legal-kind-regenerate-none")).toHaveCount(0);
@@ -279,6 +286,7 @@ test.describe("legal documents: every text at once", () => {
     await expect(page).toHaveURL(/\/admin\/legal\?state=drafts/);
     await hydrated(page);
     await expect(page.getByTestId("legal-kind-TERMS")).toContainText(/O ciornă așteaptă aprobarea: versiunea \d+/);
+    await expect(page.getByTestId("legal-kind-TERMS").getByTestId("legal-kind-fold")).toHaveAttribute("open", "");
     await expect(page.getByTestId("legal-versions-TERMS")).toHaveAttribute("open", "");
 
     // Regenerate the rest: the dialog names the texts, nothing is in force, the toast counts the drafts.
@@ -339,14 +347,14 @@ test.describe("legal documents: every text at once", () => {
  * address, without a script; «Versiune nouă» shows the templates in three labelled rows, each with
  * its text's state under it, and «Regenerează toate» (or the sentence saying nothing is due).
  */
-test.describe("legal documents: one card per text, filtered, and the templates' page", () => {
+test.describe("legal documents: one row per text, filtered, and the templates' page", () => {
   test("says each text's state, filters by state and text, and groups the templates", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/legal");
     // Scoped to the page's own content: on a phone the shell may hold a second copy while it streams.
     const main = page.locator("#main");
 
-    // The page's three steps, and one card per text in the catalogue's order.
+    // The page's three steps, and one row per text in the catalogue's order.
     await expect(main.getByTestId("legal-steps")).toContainText("1. Regenerează (ciornă din șablon)");
     const keys = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL", "VOLUNTEER_AGREEMENT"];
     for (const key of keys) {

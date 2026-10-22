@@ -19,6 +19,7 @@ import LinkIcon from "@mui/icons-material/Link";
 import LockClockIcon from "@mui/icons-material/LockClock";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import NoAccountsIcon from "@mui/icons-material/NoAccounts";
+import PostAddIcon from "@mui/icons-material/PostAdd";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -91,6 +92,10 @@ export const STATUS_GLYPHS = {
   role: ManageAccountsIcon,
   self: AccountCircleIcon,
   noAccount: NoAccountsIcon,
+  // A legal text's version a newer one replaced, «Înlocuită»; and «Șablon nou», the platform's template newer than the text in force —
+  // the picture «Regenerează din șablon» wears (§847, /admin/legal's rows).
+  superseded: HistoryIcon,
+  newTemplate: PostAddIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;

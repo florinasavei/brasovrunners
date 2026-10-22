@@ -3906,7 +3906,12 @@
         "unchanged": "Textul în vigoare are deja cuvintele șablonului.",
         "draftExists": "O ciornă așteaptă deja: aprob-o sau șterge-o, apoi poți regenera.",
         "blanks": "În ciornă vor rămâne câmpuri de completat, de forma '<'…>.",
-        "empty": "Nicio versiune pentru acest filtru."
+        "empty": "Nicio versiune pentru acest filtru.",
+        "openRow": "Lucrează la text",
+        "readRow": "Vezi versiunile",
+        "chipNoneInForce": "Nimic în vigoare",
+        "chipDraftWaiting": "Ciornă de aprobat",
+        "readInForce": "Citește textul în vigoare"
       },
       "stateLabel": {
         "inForce": "În vigoare",
@@ -4009,7 +4014,44 @@
       },
       "resultsMissing": "Nota în vigoare nu descrie încă clasamentul curselor, deci niciun clasament nu poate fi publicat. Aprobă o notă nouă din șablon.",
       "resultsTermsMissing": "Termenii în vigoare nu descriu încă clasamentul curselor, deci niciun clasament nu poate fi publicat. Aprobă termeni noi din șablon.",
-      "rsvpMissing": "Nota în vigoare nu descrie încă răspunsurile „Vin!”, deci pagina unui eveniment bifat nu le primește. Aprobă o notă nouă din șablon."
+      "rsvpMissing": "Nota în vigoare nu descrie încă răspunsurile „Vin!”, deci pagina unui eveniment bifat nu le primește. Aprobă o notă nouă din șablon.",
+      "notices": {
+        "title": "Înainte să aprobi",
+        "count": {
+          "one": "{count} funcție așteaptă un text nou",
+          "few": "{count} funcții așteaptă un text nou",
+          "other": "{count} de funcții așteaptă un text nou"
+        },
+        "listLabel": "Ce e oprit până la un text nou",
+        "waitsOn": {
+          "PRIVACY_NOTICE": "Așteaptă nota",
+          "TERMS": "Așteaptă termenii"
+        },
+        "lines": {
+          "listStates": "Lista publică arată doar confirmații",
+          "listSocials": "Strava și Instagram nu apar pe lista publică",
+          "listNumbers": "Lista publică nu arată numerele de concurs",
+          "results": "Niciun clasament nu poate fi publicat",
+          "rsvp": "Răspunsurile „Vin!” sunt oprite",
+          "resultsTerms": "Niciun clasament nu poate fi publicat",
+          "promo": "Formularul nu oferă bifa pentru oferte și beneficii",
+          "sponsor": "Lista pentru sponsori e oprită",
+          "refusal": "Formularul nu spune pe ce motive poate refuza clubul"
+        }
+      },
+      "texts": {
+        "title": "Textele legale",
+        "count": {
+          "one": "{count} text",
+          "few": "{count} texte",
+          "other": "{count} de texte"
+        }
+      },
+      "language": {
+        "ro": "Română",
+        "en": "English"
+      },
+      "tabIncomplete": "incomplet"
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -4211,7 +4253,7 @@
           "how": [
             "Calea scurtă: /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → butonul de aprobare din casetă.",
             "Nota, termenii și cele două declarații de concurs, eveniment montan și eveniment pe șosea sau în parc, intră în vigoare cu datele clubului în ele.",
-            "Ca să citești întâi: pe cardul textului, „Regenerează din șablon” → citește ciorna, completează → „Salvează ciorna” → „Aprobă și publică”. Toate deodată: „Versiune nouă” → „Regenerează toate”.",
+            "Ca să citești întâi: pe rândul textului, „Regenerează din șablon” → citește ciorna, completează → „Salvează ciorna” → „Aprobă și publică”. Toate deodată: „Versiune nouă” → „Regenerează toate”.",
             "Calea lungă, pentru o modificare: „Versiune nouă” → alege șablonul → „Salvează ciorna” → PDF → „Aprobă și publică”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
             "Pe fiecare eveniment, la Înscrieri, se alege declarația aprobată (dacă nu e deja)."
           ]
@@ -6222,6 +6264,10 @@
         "add": "Adaugă în bandă",
         "full": "Banda are {max} fotografii, cât încape. Scoate una ca să adaugi alta.",
         "saved": "Banda de fotografii a fost salvată."
+      },
+      "language": {
+        "ro": "Română",
+        "en": "English"
       }
     },
     "look": {
@@ -8872,7 +8918,7 @@
               "title": "Textele legale ale clubului",
               "steps": [
                 "«Documente legale»: dacă sus e caseta «Într-un pas: aprobă șabloanele cu datele clubului», verifică datele clubului din ea și apasă «Aprobă acum textele care lipsesc…»: fiecare text încă neaprobat primește versiunea 1, din șablon, cu datele clubului. Un text deja aprobat nu e atins.",
-                "Un singur text: pe cardul lui din «Documente legale» apasă «Regenerează din șablon» și confirmă. Toate deodată: la «Toate textele deodată» apasă «Regenerează din șabloane», sau pe «Versiune nouă» apasă «Regenerează toate». Se face câte o ciornă; nimic nu intră încă în vigoare, iar lista se deschide la «Ciorne».",
+                "Un singur text: deschide-i rândul din «Documente legale», apasă «Regenerează din șablon» și confirmă. Toate deodată: la «Toate textele deodată» apasă «Regenerează din șabloane», sau pe «Versiune nouă» apasă «Regenerează toate». Se face câte o ciornă; nimic nu intră încă în vigoare, iar lista se deschide la «Ciorne».",
                 "Deschide fiecare ciornă (filtrul «Ciorne» le arată pe toate), citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
                 "Înapoi pe «Documente legale»: «Aprobă ciornele» și confirmă. Ciornele gata de aprobat intră în vigoare împreună; ce nu se poate aproba deodată e scris sub buton, cu motivul.",
                 "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",

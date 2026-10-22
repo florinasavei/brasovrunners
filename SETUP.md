@@ -1488,7 +1488,7 @@ Gmail carries the caption «Prin Gmail rămâne o copie în „Trimise”.» A f
 radio is greyed on the card with a link to the steps in «Sarcini» (the rows «Formularul de contact» for
 Gmail and «Email către participanți reali» for Mailgun). On each deployment (QA has its own):
 
-1. `/admin/legal` → the «GDPR» card → «Regenerează din șablon» → approve the notice: its section 5
+1. `/admin/legal` → the «GDPR» row → «Regenerează din șablon» → approve the notice: its section 5
    describes the forms. Until a notice naming them is in force in both languages, nothing shows on
    `/contact` whatever the switches say, and `/admin/tasks` carries the row «formularele „Spune-ne ceva”».
    The same paragraph now also names the named mode (§678): every form opens with «Anonim» / «Cu nume
@@ -2045,7 +2045,7 @@ colleague who runs the shop (step 6) — marks the order paid.
 (the orders) and **«Setări»** (how to pay and who hears of an order). A product is a page of its own,
 with its cards in the order you fill them.
 
-1. **Approve the privacy notice that names the shop.** `/admin/legal` → the «GDPR» card →
+1. **Approve the privacy notice that names the shop.** `/admin/legal` → the «GDPR» row →
    «Regenerează din șablon» → confirm. Section 5 gains the shop's paragraph (what an order keeps,
    why, for how long, that payment is outside the site). A lawyer should read it first, above all
    how long the orders are kept as accounting records. Open the draft, fill in what is left,

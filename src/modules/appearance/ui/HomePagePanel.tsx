@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
 import {
   addStripPictureAction,
   moveStripPictureAction,
@@ -38,6 +39,7 @@ import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
+import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import Panel from "@/shared/ui/Panel";
 import { FACTS_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -71,7 +73,8 @@ const CHOICES = ["off", "on"] as const;
 const HERO_SHAPE = "16:9" as const;
 
 const LANGUAGES = ["ro", "en"] as const;
-const suffix = (language: (typeof LANGUAGES)[number]) => (language === "ro" ? "Ro" : "En");
+type Language = (typeof LANGUAGES)[number];
+const suffix = (language: Language) => (language === "ro" ? "Ro" : "En");
 
 /** The hero's two pairs of boxes, each in both languages or neither (§352). */
 const LINES = [
@@ -107,9 +110,12 @@ function platformKey(stem: string): string | null {
  * with its quality, «Din galerie», the crop box at 16∶9 — its two lines and its three buttons), which
  * sections the page draws, «Prima dată», «De ce» and the quote, the strip's heading and the numbers.
  * Every box is a pair, both languages or neither; an empty one shows, as its placeholder, the
- * platform's sentence the page draws instead. Inside «Prima dată» and «De ce» each step and each
- * reason is the house's row fold (§842): its title in words and the pencil, its two pairs behind
- * it. One «Copiază și tradu tot» over the form (§464, §482).
+ * platform's sentence the page draws instead. The pairs are the backoffice's one Română | English
+ * strip (`LocaleTabPanels`, §847; the event editor's and the FAQ's), never side by side: each
+ * language's boxes in its own panel, the hidden one still posted by the one form, «Tradu cardul» at
+ * the end of the tab row (§514). Inside «Prima dată» and «De ce» each step and each reason is the
+ * house's row fold (§842): its title in words and the pencil, its own strip behind it. One «Copiază
+ * și tradu tot» over the form (§464, §482).
  *
  * The strip's pictures are chosen in a fold of their own after the form, one small form each — add,
  * ↑ / ↓, take out — as a product's pictures are (§697): a form cannot sit inside another, and a slow
@@ -134,7 +140,7 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
   const stripLabels = { ...base, legend: t("homePage.strip.addLegend"), help: t("homePage.strip.addHelp") };
 
   /** A box's label in one language: «Prima dată: pasul 3 (engleză)». */
-  const boxLabel = (stem: string, language: (typeof LANGUAGES)[number]) => {
+  const boxLabel = (stem: string, language: Language) => {
     const step = /^step(\d)(Title|Body)$/.exec(stem);
     const why = /^why(\d)(Title|Body)$/.exec(stem);
     const box = step
@@ -146,39 +152,56 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
   };
 
   /** The value a box holds now: the club's words in that language, or empty for the platform's. */
-  const valueAt = (box: HomeTextBox, language: (typeof LANGUAGES)[number]) => {
+  const valueAt = (box: HomeTextBox, language: Language) => {
     const section = box.stem.startsWith("step") ? setting.steps : box.stem.startsWith("strip") ? setting.strip : setting.why;
     let node: unknown = section;
     for (const segment of box.path) node = (node as Record<string | number, unknown> | null | undefined)?.[segment];
     return (node as Record<string, string> | null | undefined)?.[language] ?? "";
   };
 
-  /** The pairs of one fold, a row each: Romanian beside English from `sm`, stacked on a phone. */
-  const pairs = (boxes: readonly HomeTextBox[]) =>
+  /**
+   * One Română | English strip (§847, `LocaleTabPanels`): each language's boxes in its own panel, the
+   * other panel hidden and still posted by the one form. `idPrefix` names the strip's tabs and panels.
+   */
+  const strip = (idPrefix: string, boxesIn: (language: Language) => ReactNode) => (
+    <LocaleTabPanels
+      idPrefix={idPrefix}
+      // «Tradu cardul: RO → EN» in the tab row (§514): the card's English boxes from their Romanian twins.
+      translateCard
+      panels={LANGUAGES.map((language) => ({
+        locale: language,
+        label: t(`homePage.language.${language}`),
+        content: <Stack spacing={1.5}>{boxesIn(language)}</Stack>,
+      }))}
+    />
+  );
+
+  /** One language's boxes of a fold, one under another. */
+  const boxesOf = (boxes: readonly HomeTextBox[], language: Language) =>
     boxes.map((box) => {
       const key = platformKey(box.stem);
       return (
-        <Stack key={box.stem} direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-          {LANGUAGES.map((language) => (
-            <RecallField
-              key={language}
-              name={`${box.stem}${suffix(language)}`}
-              label={boxLabel(box.stem, language)}
-              fullWidth
-              multiline={box.max >= 120}
-              defaultValue={valueAt(box, language)}
-              placeholder={key ? platform[language](key) : undefined}
-              slotProps={{ htmlInput: { maxLength: box.max, lang: language }, inputLabel: { shrink: true } }}
-            />
-          ))}
-        </Stack>
+        <RecallField
+          key={box.stem}
+          name={`${box.stem}${suffix(language)}`}
+          label={boxLabel(box.stem, language)}
+          fullWidth
+          multiline={box.max >= 120}
+          defaultValue={valueAt(box, language)}
+          placeholder={key ? platform[language](key) : undefined}
+          slotProps={{ htmlInput: { maxLength: box.max, lang: language }, inputLabel: { shrink: true } }}
+        />
       );
     });
+
+  /** The pairs of one fold as one strip: the Romanian boxes on one tab, the English on the other. Nothing when the fold has none here. */
+  const pairs = (idPrefix: string, boxes: readonly HomeTextBox[]) => (boxes.length === 0 ? null : strip(idPrefix, (language) => boxesOf(boxes, language)));
 
   /**
    * One step of «Prima dată», or one reason of «De ce», as the house's row fold (§842, `shared/ui/row-fold.ts`): the line in words —
    * «Pasul 3 · Salută-ne», the title the page draws (the club's, else the platform's), «Textul implicit» while the club wrote neither
-   * of its boxes, the pencil — over its two pairs. The fold is keyed on the words it holds, so a save that changed them draws it closed.
+   * of its boxes, the pencil — over its two pairs, a strip of their own (§847). The fold is keyed on the words it holds, so a save that
+   * changed them draws it closed.
    */
   const itemRow = (kind: "step" | "reason", number: string, boxes: readonly HomeTextBox[]) => {
     const titleBox = boxes.find((box) => box.stem.endsWith("Title"));
@@ -204,9 +227,7 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
             </Box>
             <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
           </Box>
-          <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5 }}>
-            {pairs(boxes)}
-          </Stack>
+          <Box sx={{ pb: 1.5, pt: 0.5 }}>{pairs(`home-${kind}-${number}`, boxes)}</Box>
         </Box>
       </Box>
     );
@@ -217,7 +238,7 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
    * as they were — the heading, the sentence, the button's words, the quote. Still the one form: a closed row's boxes post as they were,
    * and none of them is `required`, so a closed row never holds the press back where nobody can see why.
    */
-  const withRows = (boxes: readonly HomeTextBox[], kind: "step" | "reason") => {
+  const withRows = (boxes: readonly HomeTextBox[], kind: "step" | "reason", idPrefix: string) => {
     const numbered = boxes.map((box) => ITEM_BOX.exec(box.stem)?.[2] ?? null);
     const first = numbered.findIndex((number) => number !== null);
     const last = numbered.length - 1 - [...numbered].reverse().findIndex((number) => number !== null);
@@ -228,11 +249,11 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
     });
     return (
       <>
-        {pairs(boxes.slice(0, first))}
+        {pairs(`${idPrefix}-head`, boxes.slice(0, first))}
         <Box component="ol" aria-label={t(`homePage.rows.${kind}List`)} sx={{ listStyle: "none", m: 0, p: 0 }}>
           {[...rows].map(([number, own]) => itemRow(kind, number, own))}
         </Box>
-        {pairs(boxes.slice(last + 1))}
+        {pairs(`${idPrefix}-foot`, boxes.slice(last + 1))}
       </>
     );
   };
@@ -419,17 +440,17 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
                     </Typography>
                   )}
 
-                  {LINES.map(({ stem, max }) => (
-                    <Box key={stem} component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
-                      <Typography component="legend" variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                        {t(`homePage.${stem}Legend`)}
-                      </Typography>
-                      <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-                        {LANGUAGES.map((language) => {
-                          const name = `${stem}${suffix(language)}`;
-                          return (
+                  {/* The hero's words, one strip (§847): the title and its line, then the buttons' labels, a language a tab. */}
+                  {strip("home-hero", (language) => (
+                    <>
+                      {LINES.map(({ stem, max }) => {
+                        const name = `${stem}${suffix(language)}`;
+                        return (
+                          <Box key={stem} component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
+                            <Typography component="legend" variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                              {t(`homePage.${stem}Legend`)}
+                            </Typography>
                             <RecallField
-                              key={name}
                               name={name}
                               label={t(`homePage.${name}`)}
                               fullWidth
@@ -438,23 +459,18 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
                               helperText={t(`homePage.${stem}Help`)}
                               slotProps={{ htmlInput: { maxLength: max, lang: language } }}
                             />
-                          );
-                        })}
-                      </Stack>
-                    </Box>
-                  ))}
-
-                  <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
-                    <Typography component="legend" variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                      {t("homePage.buttonsLegend")}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-                      {t("homePage.buttonsHelp")}
-                    </Typography>
-                    <Stack spacing={1.5}>
-                      {BUTTONS.map(({ stem, key }) => (
-                        <Stack key={stem} direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-                          {LANGUAGES.map((language) => {
+                          </Box>
+                        );
+                      })}
+                      <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
+                        <Typography component="legend" variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                          {t("homePage.buttonsLegend")}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+                          {t("homePage.buttonsHelp")}
+                        </Typography>
+                        <Stack spacing={1.5}>
+                          {BUTTONS.map(({ stem, key }) => {
                             const name = `${stem}${suffix(language)}`;
                             return (
                               <RecallField
@@ -467,42 +483,35 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
                               />
                             );
                           })}
+                          <RecallField
+                            name={`buttonHow${suffix(language)}`}
+                            label={t(`homePage.buttonHow${suffix(language)}`)}
+                            fullWidth
+                            defaultValue={setting.buttons.how?.label?.[language] ?? ""}
+                            slotProps={{ htmlInput: { maxLength: HOME_BUTTON_MAX, lang: language } }}
+                          />
                         </Stack>
-                      ))}
-                      {pageSelect("buttonHowPageId", setting.buttons.how?.pageId ?? null, t("homePage.buttonHowHelp"))}
-                      <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-                        {LANGUAGES.map((language) => {
-                          const name = `buttonHow${suffix(language)}`;
-                          return (
-                            <RecallField
-                              key={name}
-                              name={name}
-                              label={t(`homePage.${name}`)}
-                              fullWidth
-                              defaultValue={setting.buttons.how?.label?.[language] ?? ""}
-                              slotProps={{ htmlInput: { maxLength: HOME_BUTTON_MAX, lang: language } }}
-                            />
-                          );
-                        })}
-                      </Stack>
-                    </Stack>
-                  </Box>
+                      </Box>
+                    </>
+                  ))}
+                  {/* The page «Cum funcționează» opens is the same in both languages: under the strip, never in a tab. */}
+                  {pageSelect("buttonHowPageId", setting.buttons.how?.pageId ?? null, t("homePage.buttonHowHelp"))}
                 </Stack>
               </Panel>
 
               <Panel glyph="help" collapsible level={3} title={t("homePage.folds.steps")} aside={wordsAside(STEPS_BOXES)} intro={t("homePage.folds.stepsIntro")} id="home-page-steps" data-testid="home-page-steps">
                 <Stack spacing={1.5}>
-                  {withRows(STEPS_BOXES, "step")}
+                  {withRows(STEPS_BOXES, "step", "home-steps")}
                   {pageSelect(STEPS_PAGE_FIELD, setting.steps.targetPageId, t("homePage.stepsPageHelp"))}
                 </Stack>
               </Panel>
 
               <Panel glyph="description" collapsible level={3} title={t("homePage.folds.why")} aside={wordsAside(WHY_BOXES)} intro={t("homePage.folds.whyIntro")} id="home-page-why" data-testid="home-page-why">
-                <Stack spacing={1.5}>{withRows(WHY_BOXES, "reason")}</Stack>
+                <Stack spacing={1.5}>{withRows(WHY_BOXES, "reason", "home-why")}</Stack>
               </Panel>
 
               <Panel glyph="pictures" collapsible level={3} title={t("homePage.folds.strip")} aside={pictureCount} intro={t("homePage.folds.stripIntro")} id="home-page-strip" data-testid="home-page-strip">
-                <Stack spacing={1.5}>{pairs(STRIP_BOXES)}</Stack>
+                <Stack spacing={1.5}>{pairs("home-strip-words", STRIP_BOXES)}</Stack>
               </Panel>
 
               <Panel
