@@ -8509,6 +8509,27 @@
               ]
             },
             {
+              "title": "The race's results: how to register the finishers",
+              "steps": [
+                "At the race, somebody writes down, for every runner crossing the line, the race number and the time since the start — with a stopwatch, a phone or a timing app. The site has no finish button yet: the times are entered afterwards, from your sheet or file.",
+                "Open the race in «Events» → the card «Registrations» → «Results» (or from the registrations list with the race chosen). It works on a phone too, right at the finish table.",
+                "Under «Registered runners» there is a line for every registered runner with a number. Write the time in «Time» (h:mm:ss or mm:ss); «Status» stays on «From the time (Finished / Did not start)» — a time means «Finished». For who did not finish choose «Dropped out», «Did not start» or «Disqualified», with no time. «Chip time» and «Note» are optional.",
+                "Have the times in a file? Open «Import from CSV», paste the text (number, time on each line; with chip time and status if you have them) or choose the file and press «Import from CSV». The lines fill the boxes; nothing is saved yet.",
+                "A number no registration holds goes under «Runners who did not register»: write the name and, for a category, the sex and the date of birth. Tick «Agreed to appear by name in the results» only if the person told you so. «Add a runner who did not register» makes an empty line.",
+                "Press «Save all the results» once, for the whole page. The places — overall, by sex and by category — are counted by the site; equal times share a place. An emptied line is a deleted result. You can correct and save again at any time.",
+                "«Download the results (CSV)» is the file with the names, for you. Publishing on the event's page is the Administrator's."
+              ]
+            },
+            {
+              "title": "The age categories and the awards",
+              "steps": [
+                "The categories are the sex and an age group on race day. With nothing chosen, the race uses the standard groups: under 18, 18-29, 30-39, 40-49, 50-59, 60+.",
+                "Want other groups? On «Results», under «Age categories», write in «Ages the groups start at» the starting ages, separated by commas — “18, 35, 45, 55” gives under 18, 18-34, 35-44, 45-54 and 55+ — and press «Save the categories». The line under the box shows the groups as the site will say them. Empty means the standard groups.",
+                "Do this before the race, or before the Administrator publishes the results: the category places of the results already saved are recounted at once, and the event's page and the CSV follow.",
+                "Under «Awards» you see the podium from the saved results: the first three places for women and for men, then the first three in every category, with the number, the name and the time. The awards are given from here; equal times share a step."
+              ]
+            },
+            {
               "title": "What the Administrator does, not you",
               "steps": [
                 "Creating, changing, publishing, duplicating and cancelling events, and telling the participants about a change.",
@@ -8875,6 +8896,14 @@
                 "«Staff» → «Add someone», «Role» «Membru», or «Add several members» for a list. Press «Add» and confirm; the member gets the invitation by email.",
                 "The words: «Pages» → «Standard pages» → «Members». «Members' benefits» is the public page with the sign-in button; «The members' area» is what a member sees after signing in. Both in Romanian and English.",
                 "Put the page on the site: «Publish the page» (the Administrator only)."
+              ]
+            },
+            {
+              "title": "Publish the results on the event's page",
+              "steps": [
+                "The results appear on the site only once you publish them, only after the race has started and only if the privacy notice and the terms in force describe the results — «Legal documents» says whether new texts must be approved; «Tasks» has the row.",
+                "On «Results», under «On the event's page», tick «The results are public on the event's page» and press «Save». The page shows the place, the number, the time and the category; a name only for who ticked the list at registration or a runner who did not register and agreed — everyone else is “Participant #number”.",
+                "The results stay on the page as long as the public participant list, from the end of the race («Settings» → «Deadlines»). Untick at any time; the results stay saved."
               ]
             }
           ]

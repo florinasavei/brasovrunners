@@ -8509,6 +8509,27 @@
               ]
             },
             {
+              "title": "Clasamentul cursei: cum înregistrezi sosiții",
+              "steps": [
+                "La cursă, cineva notează pentru fiecare alergător care trece linia numărul de concurs și timpul de la start — cu un cronometru, un telefon sau o aplicație de cronometrare. Site-ul nu are încă un buton de sosire: timpii se scriu după, din foaia sau fișierul tău.",
+                "Deschide cursa în «Alergări» → cardul «Înscrieri» → «Clasament» (sau din lista de înscrieri, cu cursa aleasă). Merge și de pe telefon, chiar la masa de sosire.",
+                "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss); «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale.",
+                "Ai timpii într-un fișier? Deschide «Importă din CSV», lipește textul (număr, timp pe fiecare rând; cu timp cip și stare dacă ai) sau alege fișierul și apasă «Importă din CSV». Rândurile intră în căsuțe; nimic nu se salvează încă.",
+                "Un număr pe care nu-l are nicio înscriere ajunge la «Alergători neînscriși»: scrie-i numele și, pentru categorie, sexul și data nașterii. Bifează «A acceptat să apară cu numele în clasament» doar dacă persoana ți-a spus-o. «Adaugă un alergător neînscris» face un rând gol.",
+                "Apasă «Salvează tot clasamentul» o dată, pentru toată pagina. Locurile — în total, la sex și la categorie — se calculează singure; timpii egali împart locul. Un rând golit e un rezultat șters. Poți corecta și salva din nou oricând.",
+                "«Descarcă clasamentul (CSV)» e fișierul cu numele, pentru voi. Publicarea pe pagina evenimentului o face Administratorul."
+              ]
+            },
+            {
+              "title": "Categoriile de vârstă și premiile",
+              "steps": [
+                "Categoriile sunt sexul și o grupă de vârstă din ziua cursei. Fără nimic ales, cursa folosește grupele standard: sub 18, 18-29, 30-39, 40-49, 50-59, 60+.",
+                "Vrei alte grupe? Pe «Clasament», la «Categorii de vârstă», scrie în «Vârstele de la care încep grupele» vârstele de început, separate prin virgulă — „18, 35, 45, 55” dă sub 18, 18-34, 35-44, 45-54 și 55+ — și apasă «Salvează categoriile». Rândul de sub căsuță arată grupele cum le va spune site-ul. Gol înseamnă grupele standard.",
+                "Fă asta înainte de cursă, sau înainte ca Administratorul să publice clasamentul: locurile la categorie ale rezultatelor deja salvate se recalculează pe loc, iar pagina evenimentului și CSV-ul le preiau.",
+                "La «Premii» vezi podiumul din rezultatele salvate: primele trei locuri la feminin și la masculin, apoi primele trei din fiecare categorie, cu numărul, numele și timpul. De aici se dau premiile; timpii egali stau pe aceeași treaptă."
+              ]
+            },
+            {
               "title": "Ce face Administratorul, nu tu",
               "steps": [
                 "Creează, schimbă, publică, duplică și anulează evenimentele și anunță participanții despre o schimbare.",
@@ -8875,6 +8896,14 @@
                 "«Echipa» → «Adaugă o persoană», cu «Rol» «Membru», sau «Adaugă mai mulți membri» pentru o listă. Apasă «Adaugă» și confirmă; membrul primește invitația pe email.",
                 "Textele: «Pagini» → «Pagini standard» → «Membri». «Beneficiile membrilor» e pagina publică, cu butonul de autentificare; «Zona membrilor» e ce vede membrul după autentificare. Ambele în română și în engleză.",
                 "Pune pagina pe site: «Publică pagina» (doar Administratorul)."
+              ]
+            },
+            {
+              "title": "Publică clasamentul pe pagina evenimentului",
+              "steps": [
+                "Clasamentul apare pe site doar după ce îl publici, doar după ce a început cursa și doar dacă nota de confidențialitate și termenii în vigoare descriu clasamentul — «Documente legale» spune dacă trebuie aprobate texte noi; «Sarcini» are rândul.",
+                "Pe «Clasament», la «Pe pagina evenimentului», bifează «Clasamentul e public pe pagina evenimentului» și apasă «Salvează». Pagina arată locul, numărul, timpul și categoria; numele doar la cine a bifat lista la înscriere sau la alergătorul neînscris care a acceptat — ceilalți apar ca „Participant #număr”.",
+                "Clasamentul stă pe pagină cât lista publică a participanților, de la sfârșitul cursei («Setări» → «Termene»). Debifezi oricând; rezultatele rămân salvate."
               ]
             }
           ]
