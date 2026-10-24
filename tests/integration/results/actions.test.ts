@@ -42,7 +42,7 @@ vi.mock("next-intl/server", async () => {
   };
 });
 
-const { saveEventResultsAction, deleteEventResultAction, setResultsPublishedAction } = await import("@/app/[locale]/admin/events/[id]/results/actions");
+const { saveEventResultsAction, deleteEventResultAction, setResultAgeBandsAction, setResultsPublishedAction } = await import("@/app/[locale]/admin/events/[id]/results/actions");
 const { readEventResults } = await import("@/modules/results/results");
 
 let db: TestDatabase;
@@ -302,5 +302,47 @@ describe("§808 «Adaugă un alergător neînscris» and the toast of a save tha
     const [, value] = state.cookies.at(-1) as [string, string];
     expect(decodeURIComponent(value)).toContain('"resultsRecalculated"');
     expect(decodeURIComponent(value)).not.toContain('"resultsSaved"');
+  });
+});
+
+describe("§NNN «Salvează categoriile»", () => {
+  const bandsOf = async () => (await db.select({ bands: events.resultAgeBands }).from(events).where(eq(events.id, raceId)))[0].bands;
+
+  it("saves the ages typed, sorted, ranks the stored rows again and goes back to the page with the toast's word", async () => {
+    expect(await post(saveEventResultsAction, form({ "r[101].time": "50:00", "r[102].time": "45:00" }))).toBe("redirected");
+    state.cookies.length = 0;
+    expect(await post(setResultAgeBandsAction, form({ ageBands: "45, 18" }))).toBe("redirected");
+    expect(await bandsOf()).toEqual([18, 45]);
+    expect((await stored()).map((row) => [row.bibNumber, row.categoryKey, row.positionCategory])).toEqual([
+      [101, "FEMALE:from18", 2],
+      [102, "FEMALE:from18", 1],
+    ]);
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsCategoriesSaved");
+    expect(state.redirected.at(-1)).toMatch(/\/results$/);
+
+    // The same again says so quietly; an empty box goes back to the platform's bands.
+    state.cookies.length = 0;
+    expect(await post(setResultAgeBandsAction, form({ ageBands: "18,45" }))).toBe("redirected");
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsCategoriesUnchanged");
+    expect(await post(setResultAgeBandsAction, form({ ageBands: "" }))).toBe("redirected");
+    expect(await bandsOf()).toBeNull();
+    expect((await stored()).map((row) => row.categoryKey)).toEqual(["FEMALE:from30", "FEMALE:from40"]);
+  });
+
+  it("refuses a box it cannot read in place, naming the problem, the box keeping what was typed, and saves nothing", async () => {
+    const result = outcome(await post(setResultAgeBandsAction, form({ ageBands: "18, abc" })));
+    expect(result.error).toBe("RESULTS_AGE_BANDS");
+    expect(result.fields).toEqual(["ageBands"]);
+    expect(result.errorValues?.problem).toBe("scrie doar vârste, numere întregi, separate prin virgulă");
+    expect(result.values.ageBands).toEqual(["18, abc"]);
+    expect(outcome(await post(setResultAgeBandsAction, form({ ageBands: "18, 18" }))).errorValues?.problem).toBe("aceeași vârstă apare de două ori");
+    expect(await bandsOf()).toBeNull();
+  });
+
+  it("is refused for a role that may not enter results", async () => {
+    state.actor = staff.DEV;
+    expect(await post(setResultAgeBandsAction, form({ ageBands: "18, 40" }))).toBe("redirected");
+    expect(state.redirected.at(-1)).toContain("resultsError=FORBIDDEN");
+    expect(await bandsOf()).toBeNull();
   });
 });

@@ -16,6 +16,7 @@ import { type SexChoice, sexShown } from "@/modules/registrations/domain/sex";
 import { canEnterResults, canPublishResults } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
+import { ageBandStartsOf, DEFAULT_AGE_BAND_STARTS, isValidAgeBandStarts, sameAgeBandStarts } from "./domain/age-bands";
 import { eventTakesResults } from "./domain/event-type";
 import { type FingerprintedResult, resultsFingerprint } from "./domain/fingerprint";
 import { parseResultsCsv } from "./domain/import-csv";
@@ -44,7 +45,8 @@ import { type PostedResultRow, resultBox } from "./rows";
  * §791's pattern), and a form drawn before another session saved is refused with CONFLICT (`resultsFingerprint`).
  *
  * **Rankings are computed on save and stored** (`domain/ranking.ts`): overall among the finishers by gun time, by sex, and by
- * category — the sex and the age band on the event's day, `statistics.ts`' own bands (§787). Ties share a position and the next
+ * category — the sex and the age band on the event's day: the platform's bands (`statistics.ts`', §787) or the race's own
+ * (`events.result_age_bands`, §NNN, set on «Clasament» and re-ranking the stored rows). Ties share a position and the next
  * skips. **The page and the public read re-rank from the live answers** (a corrected sex, a moved race day, an erased registration), the
  * stored positions being what the last save, or an erasure, wrote — a cache, rewritten on the next save. One audit row per result created, changed or deleted (`event_result.*`: the number, the state, the times and the names of the
  * boxes that changed, never a name), and the public cache is told once.
@@ -100,6 +102,8 @@ type EventFacts = {
   hiddenListPublic: boolean;
   /** How the event writes its race numbers (§735): «Participant #007» on the backoffice's «Pe site» line as on the page. */
   raceNumberFormat: RaceNumberFormat;
+  /** The ages the race's categories start at (§NNN): its own, or the platform's when it chose none (`ageBandStartsOf`). */
+  resultAgeBands: readonly number[];
 };
 
 function assertMayEnter(actor: Actor): void {
@@ -124,13 +128,14 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
       hiddenListEnabled: events.hiddenListEnabled,
       hiddenListPublic: events.hiddenListPublic,
       raceNumberFormat: RACE_NUMBER_FORMAT,
+      resultAgeBands: events.resultAgeBands,
     })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
   const [event] = await (lock ? query.for("no key update") : query);
   if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
-  return event;
+  return { ...event, resultAgeBands: ageBandStartsOf(event.resultAgeBands) };
 }
 
 /** The registrations of the event that hold a race number — any state, never a test row — by that number and by registration. */
@@ -220,7 +225,7 @@ function rankingOf(
   event: EventFacts,
 ): Map<number, Ranked> {
   const rankable: Rankable[] = rows.map((row) => ({ bibNumber: row.bibNumber, status: row.status, gunTimeMs: row.gunTimeMs, ...answersOf(row, runners, event) }));
-  return rankResults(rankable);
+  return rankResults(rankable, event.resultAgeBands);
 }
 
 /** The rankings of the event's stored rows read from the live answers — what every page and file shows, whatever the last save stored — by stored number. */
@@ -273,6 +278,9 @@ export type EventResultsView = {
   fingerprint: string;
   /** How many results of each state are stored, for the page's summary. */
   counts: Record<ResultStatus, number>;
+  /** The ages the race's categories start at (§NNN) — `event.resultAgeBands`, named for the page — and whether the race chose them itself. */
+  ageBandStarts: readonly number[];
+  ageBandsCustom: boolean;
 };
 
 /** A stored row as the page and the file show it: its own times and note, **the positions and the category read from the live answers** (`rankingOf`). */
@@ -373,7 +381,7 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
 
   const counts: Record<ResultStatus, number> = { FINISHED: 0, DNF: 0, DNS: 0, DSQ: 0 };
   for (const row of stored) counts[row.status] += 1;
-  return { event, registered, typed, fingerprint: fingerprintOf(stored), counts };
+  return { event, registered, typed, fingerprint: fingerprintOf(stored), counts, ageBandStarts: event.resultAgeBands, ageBandsCustom: !sameAgeBandStarts(event.resultAgeBands, DEFAULT_AGE_BAND_STARTS) };
 }
 
 // ---- Saving ---------------------------------------------------------------------------------------------
@@ -675,6 +683,40 @@ export async function setResultsPublished<T extends Record<string, unknown>>(db:
   return outcome;
 }
 
+/**
+ * «Categorii de vârstă» (§NNN): the ages the race's categories start at, saved by whoever enters results (FORBIDDEN otherwise), on a race
+ * only (`RESULTS_NOT_OPEN`). `null` is the platform's bands — the column forgets the choice. The stored results are **ranked again in the
+ * same transaction** (`writeRanking`), so the places by category never describe bands the race no longer has; one audit row names the
+ * list and how many rows moved, never a runner. A list the column may not hold is refused (`RESULTS_AGE_BANDS`); a save that changes
+ * nothing writes and records nothing.
+ */
+export async function setResultAgeBands<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string, starts: readonly number[] | null, now: Date): Promise<{ changed: boolean; rewritten: number }> {
+  assertMayEnter(actor);
+  assertIds(eventId);
+  if (starts !== null && !isValidAgeBandStarts(starts)) throw new DomainError("RESULTS_AGE_BANDS", "the age bands cannot be stored", ["ageBands"]);
+  const outcome = await db.transaction(async (tx) => {
+    const event = await loadEvent(tx, eventId, true);
+    if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race has result categories");
+    const next = starts ?? DEFAULT_AGE_BAND_STARTS;
+    if (sameAgeBandStarts(event.resultAgeBands, next)) return { changed: false, rewritten: 0 };
+    await tx.update(events).set({ resultAgeBands: starts === null ? null : [...starts] }).where(eq(events.id, event.id));
+    const stored = await loadStored(tx, eventId, true);
+    const runners = await loadRegisteredRunners(tx, eventId);
+    const rewritten = stored.length === 0 ? 0 : await writeRanking(tx, { ...event, resultAgeBands: next }, runners, stored);
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event_results.categories_changed",
+      entityType: "event",
+      entityId: event.id,
+      metadata: { ageBands: starts === null ? null : [...starts], rewritten },
+      now,
+    });
+    return { changed: true, rewritten };
+  });
+  if (outcome.changed) revalidatePublicContent("events", "places");
+  return outcome;
+}
+
 // ---- Importing -------------------------------------------------------------------------------------------
 
 /** One row of a CSV, matched: the number, what the file says of it and whether a registration holds that number. */
@@ -796,6 +838,8 @@ export type PublicEventResults = {
   publishedAt: Date | null;
   /** When they close by themselves: the public list's period after the event (§421). */
   closesAt: Date;
+  /** The ages the race's categories start at (§NNN), so the page says each category's band in words. */
+  ageBandStarts: readonly number[];
 };
 
 /**
@@ -822,7 +866,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
   },
 ): Promise<PublicEventResults | null> {
   if (!isUuid(eventId) || !options.noticeDescribes || !options.termsDescribe) return null;
-  const [event] = await db
+  const [found] = await db
     .select({
       id: events.id,
       type: events.type,
@@ -834,11 +878,13 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       hiddenListEnabled: events.hiddenListEnabled,
       hiddenListPublic: events.hiddenListPublic,
       raceNumberFormat: RACE_NUMBER_FORMAT,
+      resultAgeBands: events.resultAgeBands,
     })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  if (!event || !event.resultsPublished || !eventTakesResults(event.type)) return null;
+  if (!found || !found.resultsPublished || !eventTakesResults(found.type)) return null;
+  const event: EventFacts = { ...found, resultAgeBands: ageBandStartsOf(found.resultAgeBands) };
   if (options.now.getTime() < event.startsAt.getTime()) return null;
   if (!publicListStillOpen(event, options.now, options.deadlines)) return null;
 
@@ -894,7 +940,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       sex: registered ? sexShown(row.registeredSex) : sexShown(row.typedSex),
     };
   });
-  return { rows: sheetOrder(shown), publishedAt: event.resultsPublishedAt, closesAt: publicListClosesAt(event, options.deadlines) };
+  return { rows: sheetOrder(shown), publishedAt: event.resultsPublishedAt, closesAt: publicListClosesAt(event, options.deadlines), ageBandStarts: event.resultAgeBands };
 }
 
 /** How many results an event has stored, for the editor's summary line and the tasks' rows. */

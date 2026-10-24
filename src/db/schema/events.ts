@@ -326,6 +326,16 @@ export const events = pgTable(
     resultsPublished: boolean("results_published").notNull().default(false),
     resultsPublishedAt: timestamp("results_published_at", { withTimezone: true }),
 
+    /**
+     * «Categorii de vârstă» (§NNN): the ages at which the race's result categories start, youngest first — `[18, 35, 45, 55]`
+     * for «sub 18», «18-34», «35-44», «45-54», «55+» — read through `results/domain/age-bands.ts#ageBandStartsOf`. Null is the
+     * platform's bands (the club's statistics', §787), which every race had before this column: a race that chose none ranks
+     * as before. A category is a sex and a band, so the list gives twice as many. Set on «Clasament» by whoever enters
+     * results; a change ranks the stored results again in the same transaction. Not carried by a duplicate, a repeat or the
+     * JSON file: the next race decides its own categories, as it decides its results.
+     */
+    resultAgeBands: jsonb("result_age_bands"),
+
     // No `video_url` / `video_poster_url` here any more (§481, §491): a film is a `youtube` node in
     // the description (§266), carrying its own stored poster (§403); migration 0092 moved every
     // stored film there. BR-V2.10 stopped declaring the two columns and `events_video_url_is_https`;

@@ -8,7 +8,8 @@ import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { ResultsCsvError } from "@/modules/results/domain/import-csv";
 import { mergeImportedRows } from "@/modules/results/import-merge";
-import { deleteEventResult, importResultsCsv, ResultRowError, saveEventResults, setResultsPublished } from "@/modules/results/results";
+import { parseAgeBandStarts } from "@/modules/results/domain/age-bands";
+import { deleteEventResult, importResultsCsv, ResultRowError, saveEventResults, setResultAgeBands, setResultsPublished } from "@/modules/results/results";
 import { EXTRA_ROWS, postedResultRows } from "@/modules/results/rows";
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "@/modules/results/domain/ranking";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -191,4 +192,30 @@ export async function setResultsPublishedAction(_previous: FormOutcome | null, f
     return backToPage(form, { error: error.code });
   }
   return backToPage(form, { saved: !changed ? "resultsPublicUnchanged" : on ? "resultsPublished" : "resultsUnpublished" });
+}
+
+/**
+ * «Categorii de vârstă» (§NNN): one box of ages and one «Salvează categoriile», saved on its own — a change ranks the stored results
+ * again, which is not a save of the rows. A box that cannot be read is refused in place (`RESULTS_AGE_BANDS`, the sentence naming
+ * what is wrong, the box keeping what was typed); an empty box is the platform's bands. The toast says the places were counted again.
+ */
+export async function setResultAgeBandsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const parsed = parseAgeBandStarts(field(form, "ageBands"));
+  if (!parsed.ok) {
+    const t = await getTranslations({ locale: localeOf(form), namespace: "Admin" });
+    return {
+      ...refused(new DomainError("RESULTS_AGE_BANDS", "the age bands cannot be read", ["ageBands"]), form),
+      errorValues: { problem: t(`results.categories.problems.${parsed.problem}`) },
+    };
+  }
+  let changed: boolean;
+  try {
+    const actor = await requireStaff();
+    changed = (await setResultAgeBands(getDb(), actor, eventIdOf(form), parsed.starts, new Date())).changed;
+  } catch (error) {
+    if (isDomainError(error) && (error.code === "RESULTS_NOT_OPEN" || error.code === "RESULTS_AGE_BANDS")) return refused(error, form);
+    if (!isDomainError(error)) throw error;
+    return backToPage(form, { error: error.code });
+  }
+  return backToPage(form, { saved: changed ? "resultsCategoriesSaved" : "resultsCategoriesUnchanged" });
 }

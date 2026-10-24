@@ -1,4 +1,5 @@
 import { YES_CELL } from "./domain/club-runner";
+import { bandKeyOf, bandLabelOf, categoryKeyOf as categoryKeyUnder, DEFAULT_AGE_BAND_STARTS } from "@/modules/results/domain/age-bands";
 import { sexCell, sexOfCell, type SexChoice } from "./domain/sex";
 import { columnLetters, ROW_TINTS, statusesOfTint, TINT_FILL, type RowTint } from "./sheet-colours";
 
@@ -38,24 +39,18 @@ import { columnLetters, ROW_TINTS, statusesOfTint, TINT_FILL, type RowTint } fro
  * legend of the row colours (`sheet-colours.ts`).
  */
 
-/** The age bands, youngest first: the label's key in the catalogue and the age each starts at. */
-export const STATISTICS_AGE_BANDS = [
-  { key: "under18", from: 0 },
-  { key: "from18", from: 18 },
-  { key: "from30", from: 30 },
-  { key: "from40", from: 40 },
-  { key: "from50", from: 50 },
-  { key: "from60", from: 60 },
-] as const;
+/**
+ * The age bands of the club's statistics, youngest first: the key a category stores and the age each starts at — the platform's
+ * bands (`results/domain/age-bands.ts#DEFAULT_AGE_BAND_STARTS`). The Excel counts every event under these; a race may rank its
+ * results under bands of its own (§NNN), and its results page says those.
+ */
+export const STATISTICS_AGE_BANDS = [{ key: `under${DEFAULT_AGE_BAND_STARTS[0]}`, from: 0 }, ...DEFAULT_AGE_BAND_STARTS.map((start) => ({ key: `from${start}`, from: start }))] as readonly { key: string; from: number }[];
 
-export type StatisticsBandKey = (typeof STATISTICS_AGE_BANDS)[number]["key"];
+export type StatisticsBandKey = string;
 
-/** The band an age falls in, or null for none (no birth date). */
+/** The band an age falls in under the platform's bands, or null for none (no birth date). */
 export function ageBandOf(age: number | null | undefined): StatisticsBandKey | null {
-  if (typeof age !== "number" || !Number.isFinite(age) || age < 0) return null;
-  let found: StatisticsBandKey = STATISTICS_AGE_BANDS[0].key;
-  for (const band of STATISTICS_AGE_BANDS) if (age >= band.from) found = band.key;
-  return found;
+  return bandKeyOf(age, DEFAULT_AGE_BAND_STARTS);
 }
 
 /** What the footer reads from a row of the file: its state, whose it is, its category's two answers, its event. */
@@ -144,14 +139,17 @@ export function statisticsWordsFrom(t: (key: string, values?: Record<string, str
     category: t("category", { sex: "{sex}", band: "{band}" }),
     noCategory: t("noCategory"),
     sex: { FEMALE: t("sexFemale"), MALE: t("sexMale") },
-    bands: {
-      under18: t("bandUnder18"),
-      from18: t("bandFrom18"),
-      from30: t("bandFrom30"),
-      from40: t("bandFrom40"),
-      from50: t("bandFrom50"),
-      from60: t("bandFrom60"),
-    },
+    // The three band sentences with their placeholders kept, filled per band (`bandLabelOf`): «sub 18 ani», «18-29 ani», «60+ ani».
+    bands: Object.fromEntries(
+      STATISTICS_AGE_BANDS.map((band) => [
+        band.key,
+        bandLabelOf(band.key, DEFAULT_AGE_BAND_STARTS, {
+          under: t("bandUnder", { age: "{age}" }),
+          between: t("bandBetween", { from: "{from}", to: "{to}" }),
+          open: t("bandOpen", { from: "{from}" }),
+        }),
+      ]),
+    ),
     // note7 (the tick's own line, §796) and note6 sit before note5 on purpose: the note on the formulas stays last, above the colours' legend.
     notes: [t("note1"), t("note2", withClub), t("note3", withClub), t("note4"), t("note7", withClub), t("note6"), t("note5")],
     legend: {
@@ -243,8 +241,7 @@ const CATEGORY_ORDER: readonly CategoryKey[] = [
  * race results rank by it (§808), so the two can never disagree about who is in which band.
  */
 export function categoryKeyOf(sex: SexChoice | null | undefined, age: number | null | undefined): `${SexChoice}:${StatisticsBandKey}` | null {
-  const band = ageBandOf(age);
-  return sex && band ? `${sex}:${band}` : null;
+  return categoryKeyUnder(sex, age, DEFAULT_AGE_BAND_STARTS) as `${SexChoice}:${StatisticsBandKey}` | null;
 }
 
 function categoryOf(row: StatisticsRow): CategoryKey {

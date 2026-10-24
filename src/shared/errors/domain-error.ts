@@ -66,6 +66,8 @@ export type DomainErrorCode =
   | "RESULTS_NOT_STARTED"
   // Results entered, imported or published for an event that is not a race (§808): the page says so, and so does the save.
   | "RESULTS_NOT_OPEN"
+  // The «Categorii de vârstă» box of a race's results cannot be read (§NNN): the sentence names what is wrong; nothing was saved.
+  | "RESULTS_AGE_BANDS"
   // A member tier deleted while members hold it (§811): give them another level first. The action adds how many.
   | "MEMBER_TIER_HAS_MEMBERS"
   // A member tier deleted while a discount code is for that tier alone (§811): an empty limit means every member, so the code would open to all.

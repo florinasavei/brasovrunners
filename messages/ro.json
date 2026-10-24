@@ -1390,12 +1390,6 @@
         "noCategory": "Fără categorie",
         "sexFemale": "Feminin",
         "sexMale": "Masculin",
-        "bandUnder18": "sub 18 ani",
-        "bandFrom18": "18-29 ani",
-        "bandFrom30": "30-39 ani",
-        "bandFrom40": "40-49 ani",
-        "bandFrom50": "50-59 ani",
-        "bandFrom60": "60+ ani",
         "note1": "Activi sunt cei confirmați: au declarația semnată; cei care ocupă un loc sunt la «Confirmați care ocupă un loc».",
         "note2": "La «{club}» se numără membrii din «Echipa», cei care au bifat că sunt membri și cei care au scris clubul în formular.",
         "note7": "«Au bifat că sunt membri {club}» numără doar bifa din formular, fără conturile de membru și clubul scris de mână.",
@@ -1410,7 +1404,10 @@
         "legendEnded": "Gri, anulat sau expirat",
         "legendMember": "Albastru: a bifat că e membru {club} — coloanele «Club member», «Member tick (declared)», «Club runner» și «Member bib»",
         "legendClubRunner": "Lila: alergător al clubului fără bifă — cont de membru sau clubul scris în formular",
-        "legendGuest": "Piersică, cursiv: invitat special — nu ocupă un loc"
+        "legendGuest": "Piersică, cursiv: invitat special — nu ocupă un loc",
+        "bandUnder": "sub {age} ani",
+        "bandBetween": "{from}-{to} ani",
+        "bandOpen": "{from}+ ani"
       },
       "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {
@@ -2280,7 +2277,8 @@
       "VINVITE_NOT_INVITED_ONLY": "Invitațiile se trimit doar cât „Cine se poate oferi” e „Doar cu invitație de la club”.",
       "VINVITE_EVENT_CLOSED": "Nu se pot trimite invitații acum: formularul de voluntari nu e deschis. Motivul e scris mai sus.",
       "VINVITE_NOT_OPEN": "Invitația nu mai e deschisă: a fost folosită sau retrasă, ori evenimentul s-a terminat sau a fost anulat.",
-      "VINVITE_NOT_FOUND": "Invitația nu mai există."
+      "VINVITE_NOT_FOUND": "Invitația nu mai există.",
+      "RESULTS_AGE_BANDS": "Categoriile de vârstă nu s-au salvat: {problem}."
     },
     "editor": {
       "draftPreview": {
@@ -10922,6 +10920,34 @@
         "status": "starea nu e cunoscută",
         "needsTime": "un alergător sosit are nevoie de timp",
         "timeWithStatus": "abandon, neprezentat și descalificat se scriu fără timp"
+      },
+      "categories": {
+        "title": "Categorii de vârstă",
+        "aside": "{count} categorii",
+        "intro": "Categoriile cursei sunt sexul și o grupă de vârstă, la ziua cursei. Scrie vârstele de la care începe fiecare grupă; schimbarea recalculează locurile la categorie ale rezultatelor salvate.",
+        "more": "„18, 35, 45, 55” înseamnă sub 18, 18-34, 35-44, 45-54 și 55+, la feminin și la masculin. Lasă gol pentru categoriile standard (18, 30, 40, 50, 60), cele din statistici.",
+        "label": "Vârstele de la care încep grupele",
+        "placeholder": "18, 30, 40, 50, 60",
+        "preview": "Categoriile cursei",
+        "stateDefault": "categoriile standard",
+        "stateCustom": "categorii proprii",
+        "save": "Salvează categoriile",
+        "saving": "Se salvează…",
+        "problems": {
+          "notNumbers": "scrie doar vârste, numere întregi, separate prin virgulă",
+          "range": "o vârstă trebuie să fie între 1 și 99",
+          "order": "aceeași vârstă apare de două ori",
+          "tooMany": "sunt prea multe grupe (cel mult 12)"
+        }
+      },
+      "awards": {
+        "title": "Premii",
+        "aside": "primele {places} locuri",
+        "intro": "Podiumul la sex și la fiecare categorie, din rezultatele salvate, în ordinea premierii. Timpii egali stau pe aceeași treaptă.",
+        "overallFemale": "General feminin",
+        "overallMale": "General masculin",
+        "place": "Locul {position}",
+        "empty": "Niciun sosit cu loc încă. Premiile apar după ce salvezi timpii."
       }
     }
   },
@@ -12933,7 +12959,9 @@
       "resultsPublished": "Clasamentul e acum public pe pagina evenimentului.",
       "resultsUnpublished": "Clasamentul nu mai e public pe pagina evenimentului.",
       "resultsPublicUnchanged": "Era deja așa; nimic de schimbat.",
-      "rsvpAskAudience": "Alegerea pentru întrebarea „Vii?” a fost salvată."
+      "rsvpAskAudience": "Alegerea pentru întrebarea „Vii?” a fost salvată.",
+      "resultsCategoriesSaved": "Am salvat categoriile de vârstă; locurile la categorie s-au recalculat.",
+      "resultsCategoriesUnchanged": "Categoriile erau deja așa; nimic de schimbat."
     },
     "via": {
       "mailgun": "Pleacă prin Mailgun.",

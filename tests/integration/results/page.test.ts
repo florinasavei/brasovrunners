@@ -38,6 +38,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/results/actions", () => ({
   saveEventResultsAction: async () => null,
   deleteEventResultAction: async () => null,
   setResultsPublishedAction: async () => null,
+  setResultAgeBandsAction: async () => null,
 }));
 vi.mock("next-intl/server", () => ({
   setRequestLocale: () => {},
@@ -51,7 +52,7 @@ vi.mock("next-intl/server", () => ({
 }));
 
 const { default: ResultsPage } = await import("@/app/[locale]/admin/events/[id]/results/page");
-const { saveEventResults } = await import("@/modules/results/results");
+const { saveEventResults, setResultAgeBands } = await import("@/modules/results/results");
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -471,5 +472,51 @@ describe("§810 the agreement tick on the typed lines", () => {
     expect(isChecked(checkbox(before, "n[0].agreed"))).toBe(true);
     await approvePrivacyNotice(db, { results: true });
     expect(isChecked(checkbox(await render(), "n[0].agreed"))).toBe(true);
+  });
+});
+
+describe("§NNN «Categorii de vârstă» and «Premii» on the page", () => {
+  it("draws the box empty under the platform's bands, with the bands in words, and filled with the race's own once chosen — the places then read under them", async () => {
+    await runners();
+    let html = await render();
+    expect(html).toContain('data-testid="results-categories"');
+    expect(inputValue(html, "ageBands")).toBe("");
+    let words = text(html);
+    expect(words).toContain("categoriile standard");
+    expect(words).toContain("Categoriile cursei: sub 18 ani · 18-29 ani · 30-39 ani · 40-49 ani · 50-59 ani · 60+ ani");
+    expect(words).toContain("12 categorii");
+
+    await setResultAgeBands(db, staff.ADMIN!, raceId, [18, 45], AFTER_THE_RACE);
+    html = await render();
+    expect(inputValue(html, "ageBands")).toBe("18, 45");
+    words = text(html);
+    expect(words).toContain("categorii proprii");
+    expect(words).toContain("Categoriile cursei: sub 18 ani · 18-44 ani · 45+ ani");
+    expect(words).toContain("6 categorii");
+    // Ana (30) and Bia (41) share «18-44» now: Bia first in it, Ana second.
+    expect(words).toContain("la categorie (Feminin, 18-44 ani): 2");
+    expect(words).not.toContain("40-49 ani");
+  });
+
+  it("lists the podium by sex and by category from the saved results, women first, with the number, the name and the time", async () => {
+    await runners();
+    const html = await render();
+    expect(html).toContain('data-testid="results-awards"');
+    const groups = [...strip(html).matchAll(/<dt[^>]*>([^<]*)<\/dt>/g)].map((match) => match[1]);
+    expect(groups).toEqual(["General feminin", "Feminin, 30-39 ani", "Feminin, 40-49 ani", "General masculin", "Masculin, 40-49 ani"]);
+    const words = text(html);
+    // Bia (45:00) is the first woman, Ana (50:00) the second; Ion, typed by hand, is the first man.
+    expect(words).toContain("Locul 1 · #102 Bia Marin · 0:45:00");
+    expect(words).toContain("Locul 2 · #101 Ana Popescu · 0:50:00");
+    expect(words).toContain("Locul 1 · #900 Ion Vasile · 0:42:00");
+    // Dan has no result yet: not on any podium.
+    expect(words).not.toContain("#103 Dan");
+  });
+
+  it("says nobody has placed on a race with no result, in English too", async () => {
+    const words = text(await render(raceId, "en"));
+    expect(words).toContain("Age categories");
+    expect(words).toContain("Nobody placed yet.");
+    expect(words).toContain("The race's categories: under 18 · 18-29 · 30-39 · 40-49 · 50-59 · 60+");
   });
 });

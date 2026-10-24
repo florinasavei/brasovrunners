@@ -25,9 +25,15 @@ describe("§808 categoryLabelOf — the Excel footer's words", () => {
       for (const read of [statistics("ro"), statistics("en")]) {
         const label = categoryLabelOf(`MALE:${band.key}`, read);
         expect(label, band.key).not.toContain("undefined");
+        expect(label, band.key).not.toMatch(/\{(age|from|to)\}/);
         expect(label.length, band.key).toBeGreaterThan(6);
       }
     }
+  });
+
+  it("says the band's end from the race's own list (§NNN): «30-44 ani» where the next band starts at 45", () => {
+    expect(categoryLabelOf("FEMALE:from30", statistics("ro"), [18, 30, 45])).toBe("Feminin, 30-44 ani");
+    expect(categoryLabelOf("MALE:from45", statistics("en"), [18, 30, 45])).toBe("Male, 45+");
   });
 
   it("is empty for a runner with no category, and the key itself for one this version does not know", () => {

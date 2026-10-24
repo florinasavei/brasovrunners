@@ -145,8 +145,8 @@ The areas, and where their code lives:
 `/devs` (under «Setări» → «Configurație») shows the configuration, Neon's month, Vercel's
 deployments and the outbox.
 
-Not built: articles and what M2–M4 name (multi-distance races, results, runner profiles); a
-custom domain for the bucket. `SETUP.md` is the numbered procedures with their values;
+Not built: articles and what M2–M4 name (multi-distance races, runner profiles; results exist
+since §808); a custom domain for the bucket. `SETUP.md` is the numbered procedures with their values;
 `docs/VIBECODING.md` is the short way in.
 
 **Two settings that cost an afternoon between them:** the Zitadel application needs

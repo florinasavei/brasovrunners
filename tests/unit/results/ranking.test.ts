@@ -78,6 +78,12 @@ describe("§808 rankResults — by category, the statistics' own bands", () => {
     }
   });
 
+  it("ranks under the race's own bands when it chose some (§NNN): the key says where the band starts", () => {
+    const ranked = rankResults([runner(1, 40, "FEMALE", 36), runner(2, 41, "FEMALE", 44), runner(3, 42, "FEMALE", 45)], [18, 35, 45]);
+    expect([1, 2, 3].map((bib) => ranked.get(bib)?.categoryKey)).toEqual(["FEMALE:from35", "FEMALE:from35", "FEMALE:from45"]);
+    expect([1, 2, 3].map((bib) => ranked.get(bib)?.positionCategory)).toEqual([1, 2, 1]);
+  });
+
   it("gives no category to a runner with no age, but keeps the position by sex", () => {
     const ranked = rankResults([runner(1, 40, "FEMALE", null), runner(2, 41, "FEMALE", 35)]);
     expect(ranked.get(1)).toMatchObject({ positionOverall: 1, positionSex: 1, positionCategory: null, categoryKey: null });

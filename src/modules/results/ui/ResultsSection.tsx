@@ -64,8 +64,8 @@ async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
 
   const locale = await getLocale();
   const t = await getTranslations("Event");
-  // The category words are the club's statistics' (§787): the same «Feminin, 30-39 ani» in the Excel, the CSV and here.
-  const categoryLabel = await categoryLabeller(locale);
+  // The category words are the club's statistics' (§787), under the race's own bands (§NNN): the same «Feminin, 30-39 ani» in the Excel, the CSV and here.
+  const categoryLabel = await categoryLabeller(locale, results.ageBandStarts);
 
   const { rows } = results;
   const categories = categoriesPresent(rows.map((row) => row.categoryKey)).map((key) => ({ key, label: categoryLabel(key), glyph: categoryGlyphOf(key) }));

@@ -2998,6 +2998,7 @@ function blankEventRow(now: Date): EditableEvent {
     rsvpAskEnabled: true,
     resultsPublished: false,
     resultsPublishedAt: null,
+    resultAgeBands: null,
     repeatRule: null,
     repeatOf: null,
     scheduleItems: null,
