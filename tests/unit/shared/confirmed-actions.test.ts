@@ -237,10 +237,10 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
 export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   previewEventDraftAction: "writes nothing and tells nobody: it draws the unsaved event's card and page (§579)",
   saveEventResultsAction: "an editorial save of a race's results, undone by saving the old times again; it tells nobody, and on a ranking already public it edits the page like a save of a published page — making it public and a row's delete ask",
-  // «Categorii de vârstă» (§NNN): a setting of the race's results, undone by typing the old ages again; it tells nobody and re-ranks what the next save would re-rank anyway.
+  // «Categorii de vârstă» (§850): a setting of the race's results, undone by typing the old ages again; it tells nobody and re-ranks what the next save would re-rank anyway.
   setResultAgeBandsAction: "an editorial save of the race's age groups, undone by saving the old ages (or an empty box) again; it tells nobody, deletes nothing and only ranks the saved results again",
-  // «Sosire» (§NNN): a finish line cannot ask before every runner; the stamped time is one line of the results, corrected or deleted on «Clasament».
-  // «Premii» (§NNN): a setting of the card alone, undone by saving the old values again; nothing of the results moves.
+  // «Sosire» (§850): a finish line cannot ask before every runner; the stamped time is one line of the results, corrected or deleted on «Clasament».
+  // «Premii» (§850): a setting of the card alone, undone by saving the old values again; nothing of the results moves.
   setResultAwardsAction: "an editorial save of how many places the podium lists and whether the categories are listed, undone by saving the old values again; it tells nobody and moves no result",
   recordFinishAction: "one finisher's time stamped at the line, the same editorial save as a line of «Salvează tot clasamentul» — undone on «Clasament»; it tells nobody and deletes nothing",
   // «Ecusoane pentru voluntari» (§764): the club's own look of a printed strip, seen in the preview before the save.

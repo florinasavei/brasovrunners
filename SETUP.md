@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.75-2026-10-22 -->
+<!-- PROJECT_BASELINE: BR-V3.76-2026-10-25 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.75-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.76-2026-10-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2511,7 +2511,7 @@ enter them; **only the Administrator and the Superadministrator make them public
    copy the sweep cannot reach, so delete it within the same period. «Toate datele unei persoane» lists a person's results and its file carries them.
    The Excel of the registrations is unchanged.
 
-7. **«Categorii de vârstă» and «Premii» (§NNN).** A category is the sex and an age group on the race's day. Every race starts with the
+7. **«Categorii de vârstă» and «Premii» (§850).** A category is the sex and an age group on the race's day. Every race starts with the
    platform's groups — the statistics' (§787): sub 18, 18-29, 30-39, 40-49, 50-59, 60+ — and the card **«Categorii de vârstă»** on «Clasament»
    lets the race choose its own: write the ages each group **starts** at, separated by commas («18, 35, 45, 55» gives sub 18, 18-34, 35-44,
    45-54 and 55+, for women and for men), then «Salvează categoriile». The line under the box shows the groups as the site will say them.
@@ -2525,7 +2525,7 @@ enter them; **only the Administrator and the Superadministrator make them public
    **before** you publish the ranking, or say on the page that they changed: a runner's place in the category can move. The Excel of the
    registrations keeps the platform's groups in its «Statistici», whatever a race chose.
 
-8. **«Sosire» — the finish line on a phone (§NNN).** «Clasament» → «Sosire». The page shows the gun («Startul») and a clock since
+8. **«Sosire» — the finish line on a phone (§850).** «Clasament» → «Sosire». The page shows the gun («Startul») and a clock since
    it. As each runner crosses, type the race number and press «Sosit»: the site stamps the time since the gun — the race's own start
    when you stated one in «Când și unde», else the event's start — to the second, as the runner's «Sosit», and the page comes back
    with the box empty, a sentence naming who and what time, and «Ultimii sosiți», the latest press first. Refused in place, the number

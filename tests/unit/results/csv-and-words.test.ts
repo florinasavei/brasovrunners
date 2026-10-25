@@ -31,7 +31,7 @@ describe("§808 categoryLabelOf — the Excel footer's words", () => {
     }
   });
 
-  it("says the band's end from the race's own list (§NNN): «30-44 ani» where the next band starts at 45", () => {
+  it("says the band's end from the race's own list (§850): «30-44 ani» where the next band starts at 45", () => {
     expect(categoryLabelOf("FEMALE:from30", statistics("ro"), [18, 30, 45])).toBe("Feminin, 30-44 ani");
     expect(categoryLabelOf("MALE:from45", statistics("en"), [18, 30, 45])).toBe("Male, 45+");
   });

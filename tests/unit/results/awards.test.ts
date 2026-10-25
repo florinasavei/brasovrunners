@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { AWARD_PLACES, type Awardable, awardsOf, DEFAULT_AWARD_RULES, isValidAwardPlaces } from "@/modules/results/domain/awards";
 
 /**
- * §NNN, BR-REQ-050-02 — «Premii»: the podium by sex and in every category, read from the ranking's own positions, in the order the
+ * §850, BR-REQ-050-02 — «Premii»: the podium by sex and in every category, read from the ranking's own positions, in the order the
  * awards are given; a tie shares a step; a group with nobody placed is left out.
  */
 const row = (bibNumber: number, sex: Awardable["sex"], positionSex: number | null, positionCategory: number | null, categoryKey: string | null, name: string | null = `Runner ${bibNumber}`): Awardable => ({
@@ -15,7 +15,7 @@ const row = (bibNumber: number, sex: Awardable["sex"], positionSex: number | nul
   categoryKey,
 });
 
-describe("§NNN awardsOf", () => {
+describe("§850 awardsOf", () => {
   it("awards three places and the categories unless the race says otherwise, one to ten places", () => {
     expect(AWARD_PLACES).toBe(3);
     expect(DEFAULT_AWARD_RULES).toEqual({ places: 3, categories: true });

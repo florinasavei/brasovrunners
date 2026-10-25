@@ -558,9 +558,9 @@ export type AuditAction =
   | "event_results.published"
   | "event_results.unpublished"
   | "event_results.exported"
-  /** «Categorii de vârstă» saved on «Clasament» (§NNN), entity `event`: the ages the bands start at (null for the platform's) and how many stored rows were ranked again. */
+  /** «Categorii de vârstă» saved on «Clasament» (§850), entity `event`: the ages the bands start at (null for the platform's) and how many stored rows were ranked again. */
   | "event_results.categories_changed"
-  /** «Premii» saved on «Clasament» (§NNN), entity `event`: how many places each podium awards and whether the categories are awarded. */
+  /** «Premii» saved on «Clasament» (§850), entity `event`: how many places each podium awards and whether the categories are awarded. */
   | "event_results.awards_changed"
   /**
    * The volunteer agreement (§758), entity `event`: an organizer's «Trimite linkul contractului» (requested),

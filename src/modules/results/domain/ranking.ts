@@ -71,7 +71,7 @@ function byTime(rows: readonly Rankable[]): Rankable[] {
  * finishers of the same sex, by category among the finishers of the same sex and band. A runner who did not finish
  * (`DNF`, `DNS`, `DSQ`) has no position at all; a finisher without a sex has no position by sex and none by
  * category, one without a birth date has an overall and a sex position and no category — the Excel's footer says
- * «Fără categorie» for the same rows (§787), and nothing is guessed. The bands are the race's own (`starts`, §NNN), the
+ * «Fără categorie» for the same rows (§787), and nothing is guessed. The bands are the race's own (`starts`, §850), the
  * platform's when it chose none.
  */
 export function rankResults(rows: readonly Rankable[], starts: readonly number[] = DEFAULT_AGE_BAND_STARTS): Map<number, Ranked> {

@@ -47,7 +47,7 @@ import { type PostedResultRow, resultBox } from "./rows";
  *
  * **Rankings are computed on save and stored** (`domain/ranking.ts`): overall among the finishers by gun time, by sex, and by
  * category — the sex and the age band on the event's day: the platform's bands (`statistics.ts`', §787) or the race's own
- * (`events.result_age_bands`, §NNN, set on «Clasament» and re-ranking the stored rows). Ties share a position and the next
+ * (`events.result_age_bands`, §850, set on «Clasament» and re-ranking the stored rows). Ties share a position and the next
  * skips. **The page and the public read re-rank from the live answers** (a corrected sex, a moved race day, an erased registration), the
  * stored positions being what the last save, or an erasure, wrote — a cache, rewritten on the next save. One audit row per result created, changed or deleted (`event_result.*`: the number, the state, the times and the names of the
  * boxes that changed, never a name), and the public cache is told once.
@@ -105,9 +105,9 @@ type EventFacts = {
   hiddenListPublic: boolean;
   /** How the event writes its race numbers (§735): «Participant #007» on the backoffice's «Pe site» line as on the page. */
   raceNumberFormat: RaceNumberFormat;
-  /** The ages the race's categories start at (§NNN): its own, or the platform's when it chose none (`ageBandStartsOf`). */
+  /** The ages the race's categories start at (§850): its own, or the platform's when it chose none (`ageBandStartsOf`). */
   resultAgeBands: readonly number[];
-  /** «Premii» (§NNN): how many places each podium awards, and whether the categories are awarded beside the overall podium by sex. */
+  /** «Premii» (§850): how many places each podium awards, and whether the categories are awarded beside the overall podium by sex. */
   awardPlaces: number;
   awardCategories: boolean;
 };
@@ -287,7 +287,7 @@ export type EventResultsView = {
   fingerprint: string;
   /** How many results of each state are stored, for the page's summary. */
   counts: Record<ResultStatus, number>;
-  /** The ages the race's categories start at (§NNN) — `event.resultAgeBands`, named for the page — and whether the race chose them itself. */
+  /** The ages the race's categories start at (§850) — `event.resultAgeBands`, named for the page — and whether the race chose them itself. */
   ageBandStarts: readonly number[];
   ageBandsCustom: boolean;
 };
@@ -662,7 +662,7 @@ export async function rerankEventResults<T extends Record<string, unknown>>(db: 
 }
 
 /**
- * «Premii» (§NNN): how many places each podium awards (one to ten) and whether the categories are awarded beside the overall podium by
+ * «Premii» (§850): how many places each podium awards (one to ten) and whether the categories are awarded beside the overall podium by
  * sex — the owner's «for this contest we just award top 5 men and top 5 women». Saved by whoever enters results (FORBIDDEN otherwise), a
  * race only (`RESULTS_NOT_OPEN`), a count outside the column's range refused (VALIDATION_ERROR on `awardPlaces`); one audit row with the
  * two values. Nothing of the results moves: the card reads the rules, the ranking knows nothing of them.
@@ -709,7 +709,7 @@ export function gunOf(event: Pick<EventFacts, "startsAt" | "raceStartsAt">): Dat
 }
 
 /**
- * «Sosire» (§NNN): one race number typed as the runner crosses the line, and the site stamps the time since the gun — `now` minus
+ * «Sosire» (§850): one race number typed as the runner crosses the line, and the site stamps the time since the gun — `now` minus
  * `raceStartsAt ?? startsAt`, to the millisecond — as that runner's «Sosit». The same rules as a line of «Clasament»: whoever enters results
  * (FORBIDDEN otherwise), a race only (`RESULTS_NOT_OPEN`), after the gun (`RESULT_FINISH_NOT_STARTED`), a number a **confirmed** registration
  * holds (`RESULT_BIB_UNKNOWN` otherwise, carrying the stamped time so the volunteer writes it down and the runner is typed on «Clasament»
@@ -790,7 +790,7 @@ export type FinishPageView = {
   withNumber: number;
 };
 
-/** The «Sosire» page's data (§NNN), for whoever may enter results: the event, the latest finishers and the two counts. */
+/** The «Sosire» page's data (§850), for whoever may enter results: the event, the latest finishers and the two counts. */
 export async function readFinishPage<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string, limit: number): Promise<FinishPageView> {
   assertMayEnter(actor);
   assertIds(eventId);
@@ -843,7 +843,7 @@ export async function setResultsPublished<T extends Record<string, unknown>>(db:
 }
 
 /**
- * «Categorii de vârstă» (§NNN): the ages the race's categories start at, saved by whoever enters results (FORBIDDEN otherwise), on a race
+ * «Categorii de vârstă» (§850): the ages the race's categories start at, saved by whoever enters results (FORBIDDEN otherwise), on a race
  * only (`RESULTS_NOT_OPEN`). `null` is the platform's bands — the column forgets the choice. The stored results are **ranked again in the
  * same transaction** (`writeRanking`), so the places by category never describe bands the race no longer has; one audit row names the
  * list and how many rows moved, never a runner. A list the column may not hold is refused (`RESULTS_AGE_BANDS`); a save that changes
@@ -997,7 +997,7 @@ export type PublicEventResults = {
   publishedAt: Date | null;
   /** When they close by themselves: the public list's period after the event (§421). */
   closesAt: Date;
-  /** The ages the race's categories start at (§NNN), so the page says each category's band in words. */
+  /** The ages the race's categories start at (§850), so the page says each category's band in words. */
   ageBandStarts: readonly number[];
 };
 

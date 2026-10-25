@@ -197,7 +197,7 @@ export async function setResultsPublishedAction(_previous: FormOutcome | null, f
 }
 
 /**
- * «Categorii de vârstă» (§NNN): one box of ages and one «Salvează categoriile», saved on its own — a change ranks the stored results
+ * «Categorii de vârstă» (§850): one box of ages and one «Salvează categoriile», saved on its own — a change ranks the stored results
  * again, which is not a save of the rows. A box that cannot be read is refused in place (`RESULTS_AGE_BANDS`, the sentence naming
  * what is wrong, the box keeping what was typed); an empty box is the platform's bands. The toast says the places were counted again.
  */
@@ -223,7 +223,7 @@ export async function setResultAgeBandsAction(_previous: FormOutcome | null, for
 }
 
 /**
- * «Sosire» (§NNN): the finish line's one press — the number typed as the runner crosses, the time since the gun stamped by the service
+ * «Sosire» (§850): the finish line's one press — the number typed as the runner crosses, the time since the gun stamped by the service
  * (`recordFinish`). It works with scripts off: the page comes back with `?ok=<number>` and says who and what time, the box empty for the next
  * runner. A number no confirmed registration holds, or one already finished, is refused in place with the time in the sentence, the box keeping
  * the number — the volunteer writes the time down and «Clasament» takes the rest later. A press before the gun is refused the same way.
@@ -255,7 +255,7 @@ async function backToFinish(form: FormData, outcome: { ok?: string; error?: stri
 }
 
 /**
- * «Premii» (§NNN): how many places each podium awards and whether the categories are awarded too — one box, one tick, one «Salvează
+ * «Premii» (§850): how many places each podium awards and whether the categories are awarded too — one box, one tick, one «Salvează
  * premiile», saved on its own. A count that is not one to ten is refused in place on its box; the toast says it was saved.
  */
 export async function setResultAwardsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

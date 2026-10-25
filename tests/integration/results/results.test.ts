@@ -720,7 +720,7 @@ describe("§808 the places follow the live answers, and an erasure leaves nothin
   });
 });
 
-describe("§NNN «Categorii de vârstă»: the race's own bands", () => {
+describe("§850 «Categorii de vârstă»: the race's own bands", () => {
   const bands = (starts: number[] | null, actor: StaffUser = staff.ADMIN!) => setResultAgeBands(db, actor, raceId, starts, clock());
 
   it("ranks under the platform's bands until the race chooses its own, then again under those, in the same transaction, audited without a name", async () => {
@@ -801,7 +801,7 @@ describe("§NNN «Categorii de vârstă»: the race's own bands", () => {
   });
 });
 
-describe("§NNN «Premii»: how many places, and whether the categories", () => {
+describe("§850 «Premii»: how many places, and whether the categories", () => {
   const rules = (places: number, categories: boolean, actor: StaffUser = staff.ADMIN!) => setResultAwards(db, actor, raceId, { places, categories }, clock());
   const current = async () => (await db.select({ places: events.awardPlaces, categories: events.awardCategories }).from(events).where(eq(events.id, raceId)))[0];
 

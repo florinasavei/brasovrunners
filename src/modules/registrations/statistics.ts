@@ -42,7 +42,7 @@ import { columnLetters, ROW_TINTS, statusesOfTint, TINT_FILL, type RowTint } fro
 /**
  * The age bands of the club's statistics, youngest first: the key a category stores and the age each starts at — the platform's
  * bands (`results/domain/age-bands.ts#DEFAULT_AGE_BAND_STARTS`). The Excel counts every event under these; a race may rank its
- * results under bands of its own (§NNN), and its results page says those.
+ * results under bands of its own (§850), and its results page says those.
  */
 export const STATISTICS_AGE_BANDS = [{ key: `under${DEFAULT_AGE_BAND_STARTS[0]}`, from: 0 }, ...DEFAULT_AGE_BAND_STARTS.map((start) => ({ key: `from${start}`, from: start }))] as readonly { key: string; from: number }[];
 

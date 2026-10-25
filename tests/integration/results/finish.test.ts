@@ -14,7 +14,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — «Sosire», the finish line (BR-REQ-050-02, BR-REQ-060-01): `recordFinish` stamps the time since the gun on a confirmed runner's
+ * §850 — «Sosire», the finish line (BR-REQ-050-02, BR-REQ-060-01): `recordFinish` stamps the time since the gun on a confirmed runner's
  * number, re-ranks, audits without a name and refuses what «Clasament» must handle (an unknown number with the time to write down, a
  * number already finished, a press before the gun, a group run, a role that may not); and the page as the server draws it, in both
  * languages — the clock, the box, the sentence after a press, «Ultimii sosiți» latest first.
@@ -92,7 +92,7 @@ async function render(id = raceId, locale: "ro" | "en" = language, search: { ok?
 }
 const text = (html: string) => html.replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/\s+/g, " ");
 
-describe("§NNN recordFinish — the time since the gun, stamped", () => {
+describe("§850 recordFinish — the time since the gun, stamped", () => {
   it("writes «Sosit» with the time since the gun, ranks, audits the number and the times and never a name, and tells the public cache", async () => {
     const first = await finish(102, at(45, 12));
     expect(first).toEqual({ bibNumber: 102, name: "Bia Marin", gunTimeMs: 45 * 60_000 + 12_000, positionOverall: 1 });
@@ -174,7 +174,7 @@ describe("§NNN recordFinish — the time since the gun, stamped", () => {
   });
 });
 
-describe("§NNN the «Sosire» page", () => {
+describe("§850 the «Sosire» page", () => {
   it("draws the gun, the clock since it, the number box and «Sosit», and says nobody has finished", async () => {
     const html = await render();
     expect(html).toContain('data-testid="finish-title"');

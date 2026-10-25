@@ -45,7 +45,7 @@ const RECENT = 15;
 const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND"] as const;
 
 /**
- * «Sosire» (§NNN; the owner, 2026-10-24: «how do we register the runners when they finish?»): the finish line's page, under «Clasament».
+ * «Sosire» (§850; the owner, 2026-10-24: «how do we register the runners when they finish?»): the finish line's page, under «Clasament».
  * One box and one button — the race number typed as the runner crosses, «Sosit» pressed, the time since the gun stamped by the service
  * (`recordFinish`) — then the page again with the box empty for the next runner and one sentence saying who and what time. Under it the
  * clock since the gun, ticking (`FinishClock`, the page's one island), and «Ultimii sosiți», the latest recorded first, so a volunteer sees

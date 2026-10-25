@@ -66,9 +66,9 @@ export type DomainErrorCode =
   | "RESULTS_NOT_STARTED"
   // Results entered, imported or published for an event that is not a race (§808): the page says so, and so does the save.
   | "RESULTS_NOT_OPEN"
-  // The «Categorii de vârstă» box of a race's results cannot be read (§NNN): the sentence names what is wrong; nothing was saved.
+  // The «Categorii de vârstă» box of a race's results cannot be read (§850): the sentence names what is wrong; nothing was saved.
   | "RESULTS_AGE_BANDS"
-  // «Sosire» (§NNN): the number typed at the line belongs to no confirmed registration; the sentence carries the stamped time to write down.
+  // «Sosire» (§850): the number typed at the line belongs to no confirmed registration; the sentence carries the stamped time to write down.
   | "RESULT_BIB_UNKNOWN"
   // «Sosire»: the number already has a «Sosit» time; a correction is «Clasament»'s.
   | "RESULT_ALREADY_FINISHED"

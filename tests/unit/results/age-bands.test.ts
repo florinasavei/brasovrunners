@@ -21,12 +21,12 @@ import { rankResults } from "@/modules/results/domain/ranking";
 import { categoriesPresent } from "@/modules/results/ui/results-filter";
 
 /**
- * §NNN, BR-REQ-050-02 — a race's own age categories: the ages the bands start at, how the box that sets them is read, which band an
+ * §850, BR-REQ-050-02 — a race's own age categories: the ages the bands start at, how the box that sets them is read, which band an
  * age falls in, what each band is called in both languages, and that the ranking, the words and the filter's order all follow the list.
  */
 const statistics = (locale: "ro" | "en") => (key: string) => (locale === "ro" ? ro : en).Admin.registrations.statistics[key as "category"] as string;
 
-describe("§NNN the platform's bands are the statistics' (§787)", () => {
+describe("§850 the platform's bands are the statistics' (§787)", () => {
   it("are the ordinary ones of a road race, and a list the column does not hold reads as them", () => {
     expect(DEFAULT_AGE_BAND_STARTS).toEqual([18, 30, 40, 50, 60]);
     expect(ageBandStartsOf(null)).toEqual(DEFAULT_AGE_BAND_STARTS);
@@ -50,7 +50,7 @@ describe("§NNN the platform's bands are the statistics' (§787)", () => {
   });
 });
 
-describe("§NNN the «Categorii de vârstă» box", () => {
+describe("§850 the «Categorii de vârstă» box", () => {
   it("reads ages separated by a comma, a semicolon, a space or a new line, in any order, and sorts them", () => {
     expect(parseAgeBandStarts("18, 35, 45, 55")).toEqual({ ok: true, starts: [18, 35, 45, 55] });
     expect(parseAgeBandStarts("55;18 45\n35")).toEqual({ ok: true, starts: [18, 35, 45, 55] });
@@ -79,7 +79,7 @@ describe("§NNN the «Categorii de vârstă» box", () => {
   });
 });
 
-describe("§NNN which band an age is in", () => {
+describe("§850 which band an age is in", () => {
   it("is «under» the first start below it, else the last start reached — the key says where the band begins", () => {
     const starts = [18, 35, 45, 55];
     expect([10, 17, 18, 34, 35, 44, 45, 54, 55, 80].map((age) => bandKeyOf(age, starts))).toEqual(["under18", "under18", "from18", "from18", "from35", "from35", "from45", "from45", "from55", "from55"]);
@@ -108,7 +108,7 @@ describe("§NNN which band an age is in", () => {
   });
 });
 
-describe("§NNN a band in words, in both languages", () => {
+describe("§850 a band in words, in both languages", () => {
   it("says the band's ages from the race's list: the same key reads differently under different bands", () => {
     const ro_ = bandWordsFrom(statistics("ro"));
     const en_ = bandWordsFrom(statistics("en"));
@@ -130,7 +130,7 @@ describe("§NNN a band in words, in both languages", () => {
   });
 });
 
-describe("§NNN the ranking and the filter follow the race's bands", () => {
+describe("§850 the ranking and the filter follow the race's bands", () => {
   const runner = (bibNumber: number, gunMinutes: number, sex: "FEMALE" | "MALE", ageOnRaceDay: number) => ({ bibNumber, status: "FINISHED" as const, gunTimeMs: gunMinutes * 60_000, sex, ageOnRaceDay });
 
   it("puts two women of 36 and 44 in one category under «18, 35, 45» and in two under the platform's bands", () => {

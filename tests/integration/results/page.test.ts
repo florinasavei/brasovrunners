@@ -476,7 +476,7 @@ describe("§810 the agreement tick on the typed lines", () => {
   });
 });
 
-describe("§NNN «Categorii de vârstă» and «Premii» on the page", () => {
+describe("§850 «Categorii de vârstă» and «Premii» on the page", () => {
   it("draws the box empty under the platform's bands, with the bands in words, and filled with the race's own once chosen — the places then read under them", async () => {
     await runners();
     let html = await render();
@@ -522,7 +522,7 @@ describe("§NNN «Categorii de vârstă» and «Premii» on the page", () => {
   });
 });
 
-describe("§NNN «Premii» follows the race's rules", () => {
+describe("§850 «Premii» follows the race's rules", () => {
   it("draws the places box and the categories tick from the event, and lists the overall podium alone when the categories are off", async () => {
     await runners();
     let html = await render();

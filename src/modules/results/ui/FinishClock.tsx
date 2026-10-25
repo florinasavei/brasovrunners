@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { formatResultTime } from "../domain/result-time";
 
 /**
- * «De la start: 0:45:12» (§NNN): the time since the gun, ticking every second on the finish line's page, so the volunteer sees
+ * «De la start: 0:45:12» (§850): the time since the gun, ticking every second on the finish line's page, so the volunteer sees
  * the clock the next press will stamp. The one island of the page: a clock cannot be a Server Component. The server draws the
  * same sentence with its own `now`, so the page says the time with no script and the island only keeps it moving; the first paint
  * may differ by the request's seconds, hence `suppressHydrationWarning`. The press itself stamps the server's clock, never this one.

@@ -158,7 +158,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     noPlace: t("results.noPlace"),
     noPlaceSettled: t("results.noPlaceSettled"),
   };
-  // The category in the Excel footer's own words (§787), under the race's own bands (§NNN): the template «{sex}, {band}» read raw, filled by the label.
+  // The category in the Excel footer's own words (§787), under the race's own bands (§850): the template «{sex}, {band}» read raw, filled by the label.
   const statisticsWord = (statisticsKey: string) => t.raw(`registrations.statistics.${statisticsKey}`) as string;
   const categoryLabel = (key: string | null) => categoryLabelOf(key, statisticsWord, view.ageBandStarts);
   const bandLabel = (band: string) => bandLabelOf(band, view.ageBandStarts, bandWordsFrom(statisticsWord));
@@ -223,7 +223,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const categoriesBoxes = await refusalMessages({ ageBands: t("results.categories.label") });
   const awardsBoxes = await refusalMessages({ awardPlaces: t("results.awards.placesLabel"), awardCategories: t("results.awards.categoriesLabel") });
 
-  // «Premii» (§NNN): the podium by sex — and by category when the race awards them — from the rows the page already holds, the ranking's own positions.
+  // «Premii» (§850): the podium by sex — and by category when the race awards them — from the rows the page already holds, the ranking's own positions.
   const awardRules = { places: event.awardPlaces, categories: event.awardCategories };
   const awards = awardsOf(
     [...view.registered, ...view.typed].flatMap((runner) =>
@@ -342,7 +342,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         <input type="hidden" name="eventId" value={id} />
       </ActionForm>
 
-      {/* «Categorii de vârstă» (§NNN): the ages the race's categories start at, a form of its own — a change ranks the stored rows again, not a save of them. */}
+      {/* «Categorii de vârstă» (§850): the ages the race's categories start at, a form of its own — a change ranks the stored rows again, not a save of them. */}
       <Panel glyph="filters" level={3} title={t("results.categories.title")} aside={t("results.categories.aside", { count: String(bands.length * 2) })} id="box-results-categories" data-testid="results-categories">
         <ActionForm action={setResultAgeBandsAction} scope="categories" messages={categoriesBoxes} data-testid="results-categories-form">
           <input type="hidden" name="uiLocale" value={locale} />
@@ -372,13 +372,13 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         </ActionForm>
       </Panel>
 
-      {/* «Premii» (§NNN): who stands on the podium, by sex and by category, read from the saved results — the list the awards are given from. */}
+      {/* «Premii» (§850): who stands on the podium, by sex and by category, read from the saved results — the list the awards are given from. */}
       <Panel glyph="badges" collapsible level={3} title={t("results.awards.title")} aside={t(event.awardCategories ? "results.awards.aside" : "results.awards.asideOverall", { places: String(event.awardPlaces) })} id="box-results-awards" openWhen={{ inUse: awards.length > 0 }} data-testid="results-awards">
         <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">
             {t("results.awards.intro")}
           </Typography>
-          {/* The race's own rules (§NNN): how many places, and whether the categories are awarded — a form of its own, nothing of the results moves. */}
+          {/* The race's own rules (§850): how many places, and whether the categories are awarded — a form of its own, nothing of the results moves. */}
           <ActionForm action={setResultAwardsAction} scope="awards" messages={awardsBoxes} data-testid="results-awards-form">
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="eventId" value={id} />
@@ -477,7 +477,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       </Panel>
 
       <Box>
-        {/* «Sosire» (§NNN): the finish line's page — a number typed as the runner crosses, the time since the gun stamped. */}
+        {/* «Sosire» (§850): the finish line's page — a number typed as the runner crosses, the time since the gun stamped. */}
         <GlyphButton icon="checkIn" href={getPathname({ locale, href: { pathname: "/admin/events/[id]/results/sosire", params: { id } } })} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="results-finish-link">
           {t("results.finish.link")}
         </GlyphButton>

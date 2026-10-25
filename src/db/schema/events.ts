@@ -327,7 +327,7 @@ export const events = pgTable(
     resultsPublishedAt: timestamp("results_published_at", { withTimezone: true }),
 
     /**
-     * «Categorii de vârstă» (§NNN): the ages at which the race's result categories start, youngest first — `[18, 35, 45, 55]`
+     * «Categorii de vârstă» (§850): the ages at which the race's result categories start, youngest first — `[18, 35, 45, 55]`
      * for «sub 18», «18-34», «35-44», «45-54», «55+» — read through `results/domain/age-bands.ts#ageBandStartsOf`. Null is the
      * platform's bands (the club's statistics', §787), which every race had before this column: a race that chose none ranks
      * as before. A category is a sex and a band, so the list gives twice as many. Set on «Clasament» by whoever enters
@@ -337,7 +337,7 @@ export const events = pgTable(
     resultAgeBands: jsonb("result_age_bands"),
 
     /**
-     * «Premii» (§NNN): how many places each podium awards (1–10, three by default — the podium) and whether the categories are
+     * «Premii» (§850): how many places each podium awards (1–10, three by default — the podium) and whether the categories are
      * awarded at all beside the overall podium by sex (on by default; a race that awards «top 5 men and top 5 women» turns it off).
      * Read by «Clasament»'s «Premii» card alone — the public page shows every place as before. Set on «Clasament» by whoever enters
      * results, audited. Not carried by a duplicate, a repeat or the JSON file, like the age bands.
@@ -1006,7 +1006,7 @@ export const events = pgTable(
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
     // «Vremea» (§666): one of the three; the domain's `WEATHER_MODES` says the same in words.
     check("events_weather_mode_known", sql`${t.weatherMode} IN ('forecast', 'custom', 'off')`),
-    // «Premii» (§NNN): one to ten places a podium awards.
+    // «Premii» (§850): one to ten places a podium awards.
     check("events_award_places_range", sql`${t.awardPlaces} >= 1 AND ${t.awardPlaces} <= 10`),
     // The club's scale of fifteen (§526): five bands of three steps.
     check("events_difficulty_level_in_scale", sql`${t.difficultyLevel} IS NULL OR ${t.difficultyLevel} BETWEEN 1 AND 15`),

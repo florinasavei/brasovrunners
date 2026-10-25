@@ -13,7 +13,7 @@ export type ResultsFilterState = { category: string | null; bib: string };
 /** What a row says of itself for the filter: the `data-category` and `data-bib` the section writes. */
 export type ResultsFilterRow = { category: string | null; bib: number };
 
-/** The sexes in the order the club's statistics list them; the bands by the age each starts at (`bandStartOf`, §NNN), whatever the race chose. */
+/** The sexes in the order the club's statistics list them; the bands by the age each starts at (`bandStartOf`, §850), whatever the race chose. */
 const SEX_ORDER = ["FEMALE", "MALE"];
 
 /**

@@ -54,7 +54,7 @@ type DetectorCtor = new (options: { formats: string[] }) => Detector;
  * `hrefTemplate` is the localized path with `__CODE__` where the code goes; the server built
  * it with `getPathname`, so this island never assembles a route.
  */
-/** Where the phone remembers which of its cameras the desk chose (§NNN): a per-viewer convenience, never read by the server. */
+/** Where the phone remembers which of its cameras the desk chose (§850): a per-viewer convenience, never read by the server. */
 const CAMERA_KEY = "desk.camera";
 
 function rememberedCamera(): string | null {

@@ -1,7 +1,7 @@
 import type { SexChoice } from "@/modules/registrations/domain/sex";
 
 /**
- * A race's age categories (§NNN): the ages at which each band **starts**, youngest first — `[18, 30, 40, 50, 60]` says
+ * A race's age categories (§850): the ages at which each band **starts**, youngest first — `[18, 30, 40, 50, 60]` says
  * «sub 18», «18-29», «30-39», «40-49», «50-59», «60+». A category is a sex and a band (§808), so the club decides one list
  * of ages per race and gets twice as many categories. The list is the race's own (`events.result_age_bands`); null there
  * means the platform's bands — the club's statistics' (§787), so a race that never chose any ranks as every race did.

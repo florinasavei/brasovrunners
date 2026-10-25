@@ -2,7 +2,7 @@ import type { SexChoice } from "@/modules/registrations/domain/sex";
 import { bandStartOf, splitCategoryKey } from "./age-bands";
 
 /**
- * «Premii» (§NNN): who stands on the podium, read from a race's ranked results — the first places by sex and the first places in every
+ * «Premii» (§850): who stands on the podium, read from a race's ranked results — the first places by sex and the first places in every
  * category, so the organizers hand out the awards from one list instead of reading the whole sheet. Pure: the page asks it with the rows
  * it already has, and a test asks the same function.
  */
@@ -12,7 +12,7 @@ export const AWARD_PLACES = 3;
 export const AWARD_PLACES_MIN = 1;
 export const AWARD_PLACES_MAX = 10;
 
-/** What the race decided about its awards (§NNN): how many places, and whether the categories are awarded beside the overall podium by sex. */
+/** What the race decided about its awards (§850): how many places, and whether the categories are awarded beside the overall podium by sex. */
 export type AwardRules = { places: number; categories: boolean };
 export const DEFAULT_AWARD_RULES: AwardRules = { places: AWARD_PLACES, categories: true };
 

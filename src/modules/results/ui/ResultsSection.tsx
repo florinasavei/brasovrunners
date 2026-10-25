@@ -64,7 +64,7 @@ async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
 
   const locale = await getLocale();
   const t = await getTranslations("Event");
-  // The category words are the club's statistics' (§787), under the race's own bands (§NNN): the same «Feminin, 30-39 ani» in the Excel, the CSV and here.
+  // The category words are the club's statistics' (§787), under the race's own bands (§850): the same «Feminin, 30-39 ani» in the Excel, the CSV and here.
   const categoryLabel = await categoryLabeller(locale, results.ageBandStarts);
 
   const { rows } = results;

@@ -4,7 +4,7 @@ import { type BandWords, bandLabelOf, DEFAULT_AGE_BAND_STARTS, splitCategoryKey 
  * A stored category (`FEMALE:from30`) in words (§808): «Feminin, 30-39 ani» — the Excel's own footer's words (§787,
  * `Admin.registrations.statistics`: `sexFemale`, `sexMale`, the three band sentences, joined by `category`), so a race's
  * category reads the same on the results page, in the CSV and in the club's statistics. The band's end comes from the race's
- * own list of starts (§NNN): the key says only where the band begins.
+ * own list of starts (§850): the key says only where the band begins.
  *
  * `read` answers a key of that namespace (`getTranslations({ namespace: "Admin.registrations.statistics" })`). A row with no category
  * — no sex or no birth date — is the empty string, never a guess; a key a later version stored and this one does not know is the key

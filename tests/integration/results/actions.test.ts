@@ -306,7 +306,7 @@ describe("§808 «Adaugă un alergător neînscris» and the toast of a save tha
   });
 });
 
-describe("§NNN «Salvează categoriile»", () => {
+describe("§850 «Salvează categoriile»", () => {
   const bandsOf = async () => (await db.select({ bands: events.resultAgeBands }).from(events).where(eq(events.id, raceId)))[0].bands;
 
   it("saves the ages typed, sorted, ranks the stored rows again and goes back to the page with the toast's word", async () => {
@@ -348,7 +348,7 @@ describe("§NNN «Salvează categoriile»", () => {
   });
 });
 
-describe("§NNN «Sosire»: one number, one press", () => {
+describe("§850 «Sosire»: one number, one press", () => {
   // The actions read the real clock, so the finish line's race started an hour ago; `raceId` (June) is a day past the gun and refused.
   let liveId: string;
   const live = (fields: Record<string, string>) => {
@@ -403,7 +403,7 @@ describe("§NNN «Sosire»: one number, one press", () => {
   });
 });
 
-describe("§NNN «Salvează premiile»", () => {
+describe("§850 «Salvează premiile»", () => {
   const current = async () => (await db.select({ places: events.awardPlaces, categories: events.awardCategories }).from(events).where(eq(events.id, raceId)))[0];
 
   it("saves the places and the tick and goes back to the page with the toast's word; an unticked box is «no categories»", async () => {
