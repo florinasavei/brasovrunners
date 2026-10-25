@@ -6743,7 +6743,7 @@
       "search": "Nume, număr sau cod",
       "find": "Caută",
       "scan": "Scanează",
-      "scanHint": "Ține codul QR în cadru. Se deschide singur când e citit.",
+      "scanHint": "Ține codul QR în cadru. Se deschide singur când e citit. Imaginea rămâne neclară? Apasă «Altă cameră».",
       "scanUnreadable": "Codul citit nu este un cod de participant.",
       "searchHelp": "Scrie o parte din nume, numărul de concurs sau codul de pe email. Fără nimic: toată lumea de la evenimentul ales.",
       "counts": {
@@ -6803,7 +6803,9 @@
       "handedBibFastTrackOnly": "Doar pentru cine e confirmat aici, la masă (bifa de mai sus).",
       "nextSpare": "Rezerva următoare: {number}",
       "sparesOut": "Numerele de rezervă s-au terminat: scrie numărul pe care i-l dai, sau lasă gol și site-ul alege singur unul.",
-      "offerPlace": "Trimite-i oferta"
+      "offerPlace": "Trimite-i oferta",
+      "scanSwitch": "Altă cameră",
+      "scanCamera": "Camera {n} din {total}"
     },
     "emails": {
       "title": "Emailurile trimise participanților",

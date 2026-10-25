@@ -6743,7 +6743,7 @@
       "search": "Name, number or code",
       "find": "Search",
       "scan": "Scan",
-      "scanHint": "Hold the QR code in the frame. It opens by itself once read.",
+      "scanHint": "Hold the QR code in the frame. It opens by itself once read. Picture still blurred? Press «Another camera».",
       "scanUnreadable": "What was read is not a participant code.",
       "searchHelp": "Type part of a name, the race number, or the code from the email. Leave it empty for everybody at the chosen event.",
       "counts": {
@@ -6803,7 +6803,9 @@
       "handedBibFastTrackOnly": "Only for someone confirmed here, at the desk (the tick above).",
       "nextSpare": "Next spare: {number}",
       "sparesOut": "The spare numbers have run out: type the number you hand them, or leave it empty and the site picks one.",
-      "offerPlace": "Send them the offer"
+      "offerPlace": "Send them the offer",
+      "scanSwitch": "Another camera",
+      "scanCamera": "Camera {n} of {total}"
     },
     "emails": {
       "title": "The emails participants receive",
