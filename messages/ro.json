@@ -2278,7 +2278,11 @@
       "VINVITE_EVENT_CLOSED": "Nu se pot trimite invitații acum: formularul de voluntari nu e deschis. Motivul e scris mai sus.",
       "VINVITE_NOT_OPEN": "Invitația nu mai e deschisă: a fost folosită sau retrasă, ori evenimentul s-a terminat sau a fost anulat.",
       "VINVITE_NOT_FOUND": "Invitația nu mai există.",
-      "RESULTS_AGE_BANDS": "Categoriile de vârstă nu s-au salvat: {problem}."
+      "RESULTS_AGE_BANDS": "Categoriile de vârstă nu s-au salvat: {problem}.",
+      "RESULT_BIB_UNKNOWN": "Numărul {bib} nu are o înscriere confirmată. Timpul lui: {time} — notează-l și scrie-l la «Clasament», la „Alergători neînscriși”.",
+      "RESULT_ALREADY_FINISHED": "Numărul {bib} e deja sosit, la {time}. O corectură se face la «Clasament».",
+      "RESULT_FINISH_NOT_STARTED": "Cursa nu a început încă: o sosire nu poate fi înainte de start.",
+      "RESULT_FINISH_CLOSED": "Startul a fost cu mai mult de o zi în urmă: timpii se scriu la «Clasament»."
     },
     "editor": {
       "draftPreview": {
@@ -8511,8 +8515,8 @@
             {
               "title": "Clasamentul cursei: cum înregistrezi sosiții",
               "steps": [
-                "La cursă, cineva notează pentru fiecare alergător care trece linia numărul de concurs și timpul de la start — cu un cronometru, un telefon sau o aplicație de cronometrare. Site-ul nu are încă un buton de sosire: timpii se scriu după, din foaia sau fișierul tău.",
-                "Deschide cursa în «Alergări» → cardul «Înscrieri» → «Clasament» (sau din lista de înscrieri, cu cursa aleasă). Merge și de pe telefon, chiar la masa de sosire.",
+                "La linia de sosire deschide «Sosire» (din «Clasament», sau «Alergări» → cursa → «Înscrieri» → «Clasament» → «Sosire»), pe telefon. Pagina arată ceasul de la start. Când un alergător trece linia, scrie numărul lui de concurs și apasă «Sosit»: site-ul îi pune timpul de la start, iar «Ultimii sosiți» arată ce ai înregistrat. Nu e nevoie de cronometru.",
+                "Un număr fără înscriere confirmată e refuzat, cu timpul lui în propoziție: notează-l pe hârtie și scrie-l după cursă la «Clasament», la «Alergători neînscriși». Cineva trecut din greșeală la abandon devine sosit când îi scrii numărul. Dacă preferi cronometrul sau o aplicație, notează numărul și timpul fiecăruia și scrie-i după, la «Clasament» — pașii următori.",
                 "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss); «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale.",
                 "Ai timpii într-un fișier? Deschide «Importă din CSV», lipește textul (număr, timp pe fiecare rând; cu timp cip și stare dacă ai) sau alege fișierul și apasă «Importă din CSV». Rândurile intră în căsuțe; nimic nu se salvează încă.",
                 "Un număr pe care nu-l are nicio înscriere ajunge la «Alergători neînscriși»: scrie-i numele și, pentru categorie, sexul și data nașterii. Bifează «A acceptat să apară cu numele în clasament» doar dacă persoana ți-a spus-o. «Adaugă un alergător neînscris» face un rând gol.",
@@ -10977,6 +10981,28 @@
         "overallMale": "General masculin",
         "place": "Locul {position}",
         "empty": "Niciun sosit cu loc încă. Premiile apar după ce salvezi timpii."
+      },
+      "finish": {
+        "title": "Sosire: {event}",
+        "link": "Sosire",
+        "backToResults": "Înapoi la clasament",
+        "intro": "Scrie numărul de concurs când alergătorul trece linia și apasă «Sosit»: site-ul îi pune timpul de la start. Corecturile se fac la «Clasament».",
+        "more": "Un număr fără înscriere confirmată e refuzat cu timpul în propoziție: notează-l și scrie-l la «Clasament». Cineva trecut din greșeală la abandon devine sosit.",
+        "gun": "Startul: {time}",
+        "elapsed": "De la start: {time}",
+        "notStarted": "Cursa nu a început încă. Sosirile se înregistrează după start.",
+        "bibLabel": "Numărul de concurs",
+        "record": "Sosit",
+        "recording": "Se înregistrează…",
+        "recorded": "Sosit: #{bib} {name} · {time} · locul {position}",
+        "recordedNameless": "Sosit: #{bib} · {time} · locul {position}",
+        "recent": {
+          "title": "Ultimii sosiți",
+          "aside": "{finished} sosiți din {withNumber} cu număr",
+          "empty": "Nimeni nu a sosit încă.",
+          "line": "#{bib} {name} · {time} · locul {position}",
+          "lineNameless": "#{bib} · {time} · locul {position}"
+        }
       }
     }
   },

@@ -2278,7 +2278,11 @@
       "VINVITE_EVENT_CLOSED": "Invitations cannot be sent now: the volunteers' form is not open. The reason is written above.",
       "VINVITE_NOT_OPEN": "The invitation is no longer open: it was used or withdrawn, or the event is over or was called off.",
       "VINVITE_NOT_FOUND": "The invitation no longer exists.",
-      "RESULTS_AGE_BANDS": "The age categories were not saved: {problem}."
+      "RESULTS_AGE_BANDS": "The age categories were not saved: {problem}.",
+      "RESULT_BIB_UNKNOWN": "Number {bib} has no confirmed registration. Its time: {time} — write it down and enter it under «Results», under “Runners who did not register”.",
+      "RESULT_ALREADY_FINISHED": "Number {bib} has already finished, at {time}. A correction is made under «Results».",
+      "RESULT_FINISH_NOT_STARTED": "The race has not started yet: a finish cannot be before the start.",
+      "RESULT_FINISH_CLOSED": "The start was more than a day ago: the times are entered under «Results»."
     },
     "editor": {
       "draftPreview": {
@@ -8511,8 +8515,8 @@
             {
               "title": "The race's results: how to register the finishers",
               "steps": [
-                "At the race, somebody writes down, for every runner crossing the line, the race number and the time since the start — with a stopwatch, a phone or a timing app. The site has no finish button yet: the times are entered afterwards, from your sheet or file.",
-                "Open the race in «Events» → the card «Registrations» → «Results» (or from the registrations list with the race chosen). It works on a phone too, right at the finish table.",
+                "At the finish line open «Finish» (from «Results», or «Events» → the race → «Registrations» → «Results» → «Finish»), on a phone. The page shows the clock since the start. When a runner crosses the line, type their race number and press «Finished»: the site stamps the time since the start, and «Latest finishers» shows what you recorded. No stopwatch needed.",
+                "A number with no confirmed registration is refused, with its time in the sentence: write it on paper and enter it after the race under «Results», under «Runners who did not register». Somebody marked dropped out by mistake becomes finished when you type their number. If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
                 "Under «Registered runners» there is a line for every registered runner with a number. Write the time in «Time» (h:mm:ss or mm:ss); «Status» stays on «From the time (Finished / Did not start)» — a time means «Finished». For who did not finish choose «Dropped out», «Did not start» or «Disqualified», with no time. «Chip time» and «Note» are optional.",
                 "Have the times in a file? Open «Import from CSV», paste the text (number, time on each line; with chip time and status if you have them) or choose the file and press «Import from CSV». The lines fill the boxes; nothing is saved yet.",
                 "A number no registration holds goes under «Runners who did not register»: write the name and, for a category, the sex and the date of birth. Tick «Agreed to appear by name in the results» only if the person told you so. «Add a runner who did not register» makes an empty line.",
@@ -10977,6 +10981,28 @@
         "overallMale": "Overall, men",
         "place": "Place {position}",
         "empty": "Nobody placed yet. The awards appear once you save the times."
+      },
+      "finish": {
+        "title": "Finish: {event}",
+        "link": "Finish",
+        "backToResults": "Back to the results",
+        "intro": "Type the race number as the runner crosses the line and press «Finished»: the site stamps the time since the start. Corrections are made under «Results».",
+        "more": "A number with no confirmed registration is refused with the time in the sentence: write it down and enter it under «Results». Somebody marked dropped out by mistake becomes finished.",
+        "gun": "Start: {time}",
+        "elapsed": "Since the start: {time}",
+        "notStarted": "The race has not started yet. Finishes are recorded after the start.",
+        "bibLabel": "Race number",
+        "record": "Finished",
+        "recording": "Recording…",
+        "recorded": "Finished: #{bib} {name} · {time} · place {position}",
+        "recordedNameless": "Finished: #{bib} · {time} · place {position}",
+        "recent": {
+          "title": "Latest finishers",
+          "aside": "{finished} finished of {withNumber} with a number",
+          "empty": "Nobody has finished yet.",
+          "line": "#{bib} {name} · {time} · place {position}",
+          "lineNameless": "#{bib} · {time} · place {position}"
+        }
       }
     }
   },

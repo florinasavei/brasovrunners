@@ -68,6 +68,14 @@ export type DomainErrorCode =
   | "RESULTS_NOT_OPEN"
   // The «Categorii de vârstă» box of a race's results cannot be read (§NNN): the sentence names what is wrong; nothing was saved.
   | "RESULTS_AGE_BANDS"
+  // «Sosire» (§NNN): the number typed at the line belongs to no confirmed registration; the sentence carries the stamped time to write down.
+  | "RESULT_BIB_UNKNOWN"
+  // «Sosire»: the number already has a «Sosit» time; a correction is «Clasament»'s.
+  | "RESULT_ALREADY_FINISHED"
+  // «Sosire» pressed before the gun: a finish cannot be before the start.
+  | "RESULT_FINISH_NOT_STARTED"
+  // «Sosire» pressed more than a day after the gun: the results are written on «Clasament» by then.
+  | "RESULT_FINISH_CLOSED"
   // A member tier deleted while members hold it (§811): give them another level first. The action adds how many.
   | "MEMBER_TIER_HAS_MEMBERS"
   // A member tier deleted while a discount code is for that tier alone (§811): an empty limit means every member, so the code would open to all.

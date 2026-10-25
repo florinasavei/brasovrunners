@@ -244,6 +244,8 @@ export const routing = defineRouting({
      * spelling in both locales, like `mesaje` and `urgente`: a backoffice address, read by the club.
      */
     "/admin/events/[id]/results": "/admin/events/[id]/results",
+    /** «Sosire» (§NNN): the finish line's page under «Clasament» — a number typed, a time stamped. One spelling in both locales, like `mesaje`. */
+    "/admin/events/[id]/results/sosire": "/admin/events/[id]/results/sosire",
     "/admin/staff": "/admin/staff",
     "/admin/registrations": "/admin/registrations",
     "/admin/tasks": "/admin/tasks",

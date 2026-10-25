@@ -2523,6 +2523,16 @@ enter them; **only the Administrator and the Superadministrator make them public
    **before** you publish the ranking, or say on the page that they changed: a runner's place in the category can move. The Excel of the
    registrations keeps the platform's groups in its «Statistici», whatever a race chose.
 
+8. **«Sosire» — the finish line on a phone (§NNN).** «Clasament» → «Sosire». The page shows the gun («Startul») and a clock since
+   it. As each runner crosses, type the race number and press «Sosit»: the site stamps the time since the gun — the race's own start
+   when you stated one in «Când și unde», else the event's start — to the second, as the runner's «Sosit», and the page comes back
+   with the box empty, a sentence naming who and what time, and «Ultimii sosiți», the latest press first. Refused in place, the number
+   kept in the box: a number no confirmed registration holds (the sentence carries the time — write it down, type the runner later under
+   «Alergători neînscriși»), a number already finished (corrections are «Clasament»'s), a press before the gun or more than a day after
+   it. A runner marked «Abandon» or «Neprezentat» by mistake becomes «Sosit» when their number is typed. The Organizer and the
+   Administrator may use it; a published ranking shows each finisher at once. The paper sheet and the CSV import (steps 2–3) remain the
+   backup.
+
 
 ## 46. Răspunsurile „Vin!” — let people say they are coming to a turn-up event, and show how many
 

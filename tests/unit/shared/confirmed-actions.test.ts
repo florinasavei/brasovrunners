@@ -239,6 +239,8 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   saveEventResultsAction: "an editorial save of a race's results, undone by saving the old times again; it tells nobody, and on a ranking already public it edits the page like a save of a published page — making it public and a row's delete ask",
   // «Categorii de vârstă» (§NNN): a setting of the race's results, undone by typing the old ages again; it tells nobody and re-ranks what the next save would re-rank anyway.
   setResultAgeBandsAction: "an editorial save of the race's age groups, undone by saving the old ages (or an empty box) again; it tells nobody, deletes nothing and only ranks the saved results again",
+  // «Sosire» (§NNN): a finish line cannot ask before every runner; the stamped time is one line of the results, corrected or deleted on «Clasament».
+  recordFinishAction: "one finisher's time stamped at the line, the same editorial save as a line of «Salvează tot clasamentul» — undone on «Clasament»; it tells nobody and deletes nothing",
   // «Ecusoane pentru voluntari» (§764): the club's own look of a printed strip, seen in the preview before the save.
   saveBadgeDesignAction: "an editorial save of the badges' look, undone by saving the old one; it tells nobody and prints nothing",
   saveBadgeRoleColoursAction: "an editorial save of the roles' band colours, undone by choosing again; it tells nobody",

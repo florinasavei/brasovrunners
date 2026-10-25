@@ -453,6 +453,12 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       </Panel>
 
       <Box>
+        {/* «Sosire» (§NNN): the finish line's page — a number typed as the runner crosses, the time since the gun stamped. */}
+        <GlyphButton icon="checkIn" href={getPathname({ locale, href: { pathname: "/admin/events/[id]/results/sosire", params: { id } } })} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="results-finish-link">
+          {t("results.finish.link")}
+        </GlyphButton>
+      </Box>
+      <Box>
         <GlyphButton icon="download" href={downloadHref} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="results-export">
           {t("results.export")}
         </GlyphButton>

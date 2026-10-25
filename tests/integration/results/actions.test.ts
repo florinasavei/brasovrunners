@@ -7,6 +7,7 @@ import { events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import type { FormOutcome } from "@/shared/forms/outcome";
+import { formatResultTime } from "@/modules/results/domain/result-time";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
@@ -42,7 +43,7 @@ vi.mock("next-intl/server", async () => {
   };
 });
 
-const { saveEventResultsAction, deleteEventResultAction, setResultAgeBandsAction, setResultsPublishedAction } = await import("@/app/[locale]/admin/events/[id]/results/actions");
+const { saveEventResultsAction, deleteEventResultAction, recordFinishAction, setResultAgeBandsAction, setResultsPublishedAction } = await import("@/app/[locale]/admin/events/[id]/results/actions");
 const { readEventResults } = await import("@/modules/results/results");
 
 let db: TestDatabase;
@@ -344,5 +345,60 @@ describe("§NNN «Salvează categoriile»", () => {
     expect(await post(setResultAgeBandsAction, form({ ageBands: "18, 40" }))).toBe("redirected");
     expect(state.redirected.at(-1)).toContain("resultsError=FORBIDDEN");
     expect(await bandsOf()).toBeNull();
+  });
+});
+
+describe("§NNN «Sosire»: one number, one press", () => {
+  // The actions read the real clock, so the finish line's race started an hour ago; `raceId` (June) is a day past the gun and refused.
+  let liveId: string;
+  const live = (fields: Record<string, string>) => {
+    const data = form(fields);
+    data.set("eventId", liveId);
+    return data;
+  };
+  const liveRows = () => db.select().from(eventResults).where(eq(eventResults.eventId, liveId)).orderBy(eventResults.bibNumber);
+  beforeEach(async () => {
+    liveId = (await createRace(db, { startsAt: new Date(Date.now() - 3_600_000) })).id;
+    await registerRunner(db, liveId, { name: "Ana Popescu", bibNumber: 101, sex: "FEMALE", birthDate: "1996-05-01" });
+    await registerRunner(db, liveId, { name: "Bia Marin", bibNumber: 102, sex: "FEMALE", birthDate: "1985-03-10" });
+  });
+
+  it("stamps the time since the gun as the runner's «Sosit» and goes back to the finish page with the number", async () => {
+    expect(await post(recordFinishAction, live({ bib: " 102 " }))).toBe("redirected");
+    expect(state.redirected.at(-1)).toMatch(/\/results\/sosire\?ok=102$/);
+    const [row] = await liveRows();
+    expect(row).toMatchObject({ bibNumber: 102, status: "FINISHED", positionOverall: 1 });
+    // The gun was an hour ago and the clock is real: the stamped time is about an hour, to the second, not a typed value.
+    expect(row.gunTimeMs).toBeGreaterThanOrEqual(3_600_000);
+    expect(row.gunTimeMs).toBeLessThan(3_700_000);
+    expect(row.gunTimeMs! % 1000).toBe(0);
+    // A day after its gun, the June race's line is closed: the time is «Clasament»'s to type.
+    expect(outcome(await post(recordFinishAction, form({ bib: "101" }))).error).toBe("RESULT_FINISH_CLOSED");
+  });
+
+  it("refuses in place a number no confirmed registration holds, with the stamped time in the sentence and the number kept in the box", async () => {
+    const result = outcome(await post(recordFinishAction, live({ bib: "900" })));
+    expect(result.error).toBe("RESULT_BIB_UNKNOWN");
+    expect(result.fields).toEqual(["bib"]);
+    expect(result.errorValues?.bib).toBe("900");
+    expect(result.errorValues?.time).toMatch(/^1:0\d:\d\d$/);
+    expect(result.values.bib).toEqual(["900"]);
+    expect(await liveRows()).toHaveLength(0);
+  });
+
+  it("refuses a second press for the same number with the time already stored, and a box that is not a number", async () => {
+    expect(await post(recordFinishAction, live({ bib: "101" }))).toBe("redirected");
+    const again = outcome(await post(recordFinishAction, live({ bib: "101" })));
+    expect(again.error).toBe("RESULT_ALREADY_FINISHED");
+    expect(again.errorValues?.time).toBe(formatResultTime((await liveRows())[0].gunTimeMs));
+    expect(outcome(await post(recordFinishAction, live({ bib: "abc" }))).error).toBe("VALIDATION_ERROR");
+    expect(outcome(await post(recordFinishAction, live({ bib: "" }))).fields).toEqual(["bib"]);
+  });
+
+  it("is refused for a role that may not enter results", async () => {
+    state.actor = staff.DEV;
+    expect(await post(recordFinishAction, live({ bib: "101" }))).toBe("redirected");
+    expect(state.redirected.at(-1)).toContain("sosire?finishError=FORBIDDEN");
+    expect(await liveRows()).toHaveLength(0);
   });
 });

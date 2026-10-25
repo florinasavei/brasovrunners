@@ -850,8 +850,8 @@ while the name is gone (the outage grace).
 
 ## Race results: registering the finishers
 
-How a race's finishers get into «Clasament» and onto the event page (`DECISIONS.md` §808–§810 and the
-age categories and podium of this release; the owner's procedure is `SETUP.md` §45; the colleagues'
+How a race's finishers get into «Clasament» and onto the event page (`DECISIONS.md` §808–§810, and the
+age categories, the podium and the finish line «Sosire» of this release; the owner's procedure is `SETUP.md` §45; the colleagues'
 version is the backoffice «Ghid», sections Organizator and Administrator). Only a **race** has
 results; a group run has none.
 
@@ -861,7 +861,7 @@ Related requirements: `BR-REQ-050-02`, `BR-REQ-039-01`, `BR-REQ-060-01`.
 
 | Step | Who |
 | --- | --- |
-| Notes each finisher's race number and time at the line | A timekeeper (any volunteer) |
+| Types each finisher's race number on «Sosire» as they cross (or notes number and time on paper) | Organizer or Administrator at the line (any volunteer for the paper sheet) |
 | Sets the race's age categories | Organizer or Administrator |
 | Enters or imports the times, saves the ranking | Organizer or Administrator |
 | Reads the podium and hands out the awards | Organizers |
@@ -875,14 +875,27 @@ Related requirements: `BR-REQ-050-02`, `BR-REQ-039-01`, `BR-REQ-060-01`.
    and for men. A later change recounts the saved results' category places, so decide before publishing.
 2. **Make sure every runner has a race number** (the desk gives them at check-in, `SETUP.md` §39; the printed
    sheet lists them). A result is a row per race number: no number, no row.
-3. **Plan the timing.** The site has no finish-line mode yet: at the line somebody records «number, time since the
-   gun» on paper, a phone or a timing app that exports CSV. Two timekeepers for a race of more than a hundred.
+3. **Plan the timing.** One phone at the line on «Sosire» (below) is enough for a club race; a second phone, or a
+   paper sheet of «number, time since the gun», as the backup for a race of more than a hundred.
 
-### At the finish
+### At the finish: «Sosire»
 
-Record every runner crossing the line: the race number and the time. Note who dropped out («Abandon»), who never
-started («Neprezentat») and any disqualification («Descalificat») with the reason for the note box. Nothing has to
-be typed into the site while the race runs; the page works on a phone if you prefer to type as they arrive.
+Open «Clasament» → **«Sosire»** on a phone at the line (`/admin/events/<id>/results/sosire`; Organizer or
+Administrator). The page shows the gun and a clock since it. As each runner crosses, type the race number and press
+**«Sosit»**: the site stamps the time since the gun (`race_starts_at`, else the event's start), to the second, as that
+runner's «Sosit», re-ranks, and the page comes back with the box empty, one sentence («Sosit: #102 Bia Marin · 0:45:12 ·
+locul 1») and «Ultimii sosiți», the latest press first. No stopwatch is needed and nothing has to be typed again later.
+
+What the line refuses, in place, with the number kept in the box: a number no **confirmed** registration holds (the
+sentence carries the stamped time — write it on paper, the runner is typed on «Clasament» later under «Alergători
+neînscriși»); a number already finished (the stored time in the sentence — a correction is «Clasament»'s); a press before
+the gun, and one more than a day after it (the times are typed by then). A runner saved as «Abandon», «Neprezentat» or
+«Descalificat» by mistake who crosses the line becomes «Sosit» at the stamped time, the note kept. Two phones may work the
+same line: each press is its own transaction on the event's row.
+
+The fallback is the old way: somebody records «number, time since the gun» on paper, a phone or a timing app that
+exports CSV, and the times are entered or imported after the race (next section). Note who dropped out, who never
+started and any disqualification with the reason for the note box either way.
 
 ### After the race: enter and save
 
