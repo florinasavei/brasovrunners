@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.76-2026-10-25 -->
+<!-- PROJECT_BASELINE: BR-V3.77-2026-10-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.76-2026-10-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.77-2026-10-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27946,3 +27946,11 @@ Baseline `BR-V3.75-2026-10-22`.
 **And the desk's scanner (the owner, 2026-10-25, from a QA rehearsal: «It works but the camera does not focus»).** `QrScanButton` asked the phone for any back camera and nothing more; on some Android phones that is a lens that holds one distance, so a code held close stayed a blur and was never read. The island now asks for a 1280×720 stream and, where the track says it can, continuous autofocus (`focusMode: "continuous"` through `applyConstraints`); where it cannot, nothing changes and the camera app stays the way, as the page already says. No library, as before (§318's rule: the browser's own `BarcodeDetector`). **And the camera itself (the owner, the same day: «I wanna be able to use the better camera»):** a phone with several back lenses gives the browser one of them, often the wide lens that cannot focus close. Once the first stream is open the dialog lists the phone's cameras (`enumerateDevices`, whose ids and labels come only with the permission) and, when there is more than one, offers «Altă cameră» with «Camera 2 din 3» beside it: a press restarts the stream on the next camera by its id, and the choice is kept in that browser's `localStorage` (`desk.camera`, a per-viewer convenience, never read by the server); an id that no longer exists falls back to the back camera and is forgotten. Refused: naming the lenses («wide», «macro»): the browser's labels are the maker's and mean nothing to a volunteer; a count is enough to try each once.
 
 Baseline `BR-V3.76-2026-10-25`.
+
+## 851. The guide, SETUP and the runbook name the card «Clasament» sits in
+
+**The owner, 2026-10-25, from QA, with a screenshot of the editor's «Participare, înscrieri și regulament» folds:** «Nu găsesc clasamentul, la ce secțiune e?» — and, told «the card «Înscrieri»», «Cred că nu îți e clar ce secțiuni avem». The guide's task, SETUP.md §45 and the runbook all sent the reader to «the card «Înscrieri»», a card the editor does not have: the button «Clasament» is in **«Înscrierile primite»**, the card at the end of the editor beside «Vezi înscrierile acestui eveniment» and «Mesaj participanților», and only for a race that is published or has started (`resultsDoorOpen`, §816).
+
+**Decision.** The three texts name the card by its title, say where it is (the end of the page, not the registration folds) and when the button shows; the guide's task opens with that step. The guide's word check (BR-REQ-060-01 criterion 38) holds every quoted label to the screen's own in both languages, which is what caught the English card's and button's names. No code moved: the card and the condition are §808's and §816's.
+
+Baseline `BR-V3.77-2026-10-25`.

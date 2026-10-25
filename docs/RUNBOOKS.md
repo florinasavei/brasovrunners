@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.76-2026-10-25`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.77-2026-10-25`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -869,7 +869,7 @@ Related requirements: `BR-REQ-050-02`, `BR-REQ-039-01`, `BR-REQ-060-01`.
 
 ### Before the race
 
-1. **Decide the categories.** Open the race → «Înscrieri» → «Clasament» → «Categorii de vârstă». Leave the
+1. **Decide the categories.** Open the race in its editor → the card «Înscrierile primite» at the end of the page → «Clasament» → «Categorii de vârstă» (the button shows for a published race, or one that has started). Leave the
    box empty for the standard groups (sub 18, 18-29, 30-39, 40-49, 50-59, 60+), or write the ages each group
    starts at, comma-separated — «18, 35, 45, 55» — and «Salvează categoriile». Each group is awarded for women
    and for men. A later change recounts the saved results' category places, so decide before publishing.

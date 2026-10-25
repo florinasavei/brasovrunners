@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.76-2026-10-25 -->
+<!-- PROJECT_BASELINE: BR-V3.77-2026-10-25 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.76-2026-10-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.77-2026-10-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2456,7 +2456,7 @@ enter them; **only the Administrator and the Superadministrator make them public
    Until a notice **and** terms naming `{{results}}` are in force in **both** languages, ticking «Clasamentul e public pe pagina
    evenimentului» is refused with a sentence and a link here, and `/admin/tasks` shows the rows «Nota de confidențialitate: clasamentul
    curselor» and «Termenii: clasamentul curselor». Entering, importing and ranking work meanwhile.
-2. **After the race, open «Clasament» — or before it.** The race's editor → the card «Înscrieri» → «Clasament», or the registrations list with the race
+2. **After the race, open «Clasament» — or before it.** The race's editor → the card «Înscrierile primite» at the end of the page (not «Participare, înscrieri și regulament») → «Clasament», or the registrations list with the race
    chosen (both links are drawn for a published race and for one that has started, before the start too; the page then says the race has not begun
    and lets you write from now on; a typed address works for any race). The page has a line for every
    registered runner who holds a race number — the checked-in first, then by number — with four boxes: **«Timp»** (`h:mm:ss`, `mm:ss` or
