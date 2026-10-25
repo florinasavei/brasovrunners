@@ -39,6 +39,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/results/actions", () => ({
   deleteEventResultAction: async () => null,
   setResultsPublishedAction: async () => null,
   setResultAgeBandsAction: async () => null,
+  setResultAwardsAction: async () => null,
 }));
 vi.mock("next-intl/server", () => ({
   setRequestLocale: () => {},
@@ -52,7 +53,7 @@ vi.mock("next-intl/server", () => ({
 }));
 
 const { default: ResultsPage } = await import("@/app/[locale]/admin/events/[id]/results/page");
-const { saveEventResults, setResultAgeBands } = await import("@/modules/results/results");
+const { saveEventResults, setResultAgeBands, setResultAwards } = await import("@/modules/results/results");
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -518,5 +519,24 @@ describe("§NNN «Categorii de vârstă» and «Premii» on the page", () => {
     expect(words).toContain("Age categories");
     expect(words).toContain("Nobody placed yet.");
     expect(words).toContain("The race's categories: under 18 · 18-29 · 30-39 · 40-49 · 50-59 · 60+");
+  });
+});
+
+describe("§NNN «Premii» follows the race's rules", () => {
+  it("draws the places box and the categories tick from the event, and lists the overall podium alone when the categories are off", async () => {
+    await runners();
+    let html = await render();
+    expect(inputValue(html, "awardPlaces")).toBe("3");
+    expect(html).toMatch(/name="awardCategories"[^>]*checked|checked[^>]*name="awardCategories"/);
+    expect(text(html)).toContain("primele 3 locuri, la sex și la categorie");
+
+    await setResultAgeBands(db, staff.ADMIN!, raceId, null, AFTER_THE_RACE);
+    await setResultAwards(db, staff.ADMIN!, raceId, { places: 5, categories: false }, AFTER_THE_RACE);
+    html = await render();
+    expect(inputValue(html, "awardPlaces")).toBe("5");
+    expect(html).not.toMatch(/name="awardCategories"[^>]*checked|checked[^>]*name="awardCategories"/);
+    const groups = [...strip(html).matchAll(/<dt[^>]*>([^<]*)<\/dt>/g)].map((match) => match[1]);
+    expect(groups).toEqual(["General feminin", "General masculin"]);
+    expect(text(html)).toContain("primele 5 locuri la feminin și la masculin");
   });
 });

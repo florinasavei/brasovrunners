@@ -8530,7 +8530,7 @@
                 "The categories are the sex and an age group on race day. With nothing chosen, the race uses the standard groups: under 18, 18-29, 30-39, 40-49, 50-59, 60+.",
                 "Want other groups? On «Results», under «Age categories», write in «Ages the groups start at» the starting ages, separated by commas — “18, 35, 45, 55” gives under 18, 18-34, 35-44, 45-54 and 55+ — and press «Save the categories». The line under the box shows the groups as the site will say them. Empty means the standard groups.",
                 "Do this before the race, or before the Administrator publishes the results: the category places of the results already saved are recounted at once, and the event's page and the CSV follow.",
-                "Under «Awards» you see the podium from the saved results: the first three places for women and for men, then the first three in every category, with the number, the name and the time. The awards are given from here; equal times share a step."
+                "Under «Awards» you see the podium from the saved results: the first places for women and for men, then — if you award the categories too — the first in every category, with the number, the name and the time. Write under «How many places you award» how many you give (1 to 10), tick or untick «You award every category too» and press «Save the awards». For “top 5 women and top 5 men”: 5, unticked."
               ]
             },
             {
@@ -10975,12 +10975,18 @@
       },
       "awards": {
         "title": "Awards",
-        "aside": "the first {places} places",
-        "intro": "The podium by sex and in every category, from the saved results, in the order the awards are given. Equal times share a step.",
+        "aside": "the first {places} places, by sex and by category",
+        "intro": "The podium from the saved results, in the order the awards are given. Choose how many places you award and whether you award the categories too. Equal times share a step.",
         "overallFemale": "Overall, women",
         "overallMale": "Overall, men",
         "place": "Place {position}",
-        "empty": "Nobody placed yet. The awards appear once you save the times."
+        "empty": "Nobody placed yet. The awards appear once you save the times.",
+        "asideOverall": "the first {places} places for women and for men",
+        "placesLabel": "How many places you award",
+        "categoriesLabel": "You award every category too",
+        "categoriesHelp": "Unticked, the list holds only the first places for women and for men.",
+        "save": "Save the awards",
+        "saving": "Saving…"
       },
       "finish": {
         "title": "Finish: {event}",
@@ -13016,7 +13022,9 @@
       "resultsPublicUnchanged": "It was already so; nothing to change.",
       "rsvpAskAudience": "The choice for the “Coming?” question was saved.",
       "resultsCategoriesSaved": "The age categories are saved; the category places were recounted.",
-      "resultsCategoriesUnchanged": "The categories were already so; nothing to change."
+      "resultsCategoriesUnchanged": "The categories were already so; nothing to change.",
+      "resultsAwardsSaved": "The awards are saved.",
+      "resultsAwardsUnchanged": "The awards were already so; nothing to change."
     },
     "via": {
       "mailgun": "Leaves by Mailgun.",

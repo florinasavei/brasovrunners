@@ -2518,8 +2518,10 @@ enter them; **only the Administrator and the Superadministrator make them public
    Saving ranks the results already saved again under the new groups, in the same transaction, and the public page, the CSV and the
    filter's chips follow; an empty box goes back to the platform's groups. Whoever enters results may set them (the Organizer too); a
    change is in the trail with the ages, never a runner. The card **«Premii»** reads the saved results and lists the podium — the first
-   three places overall for women and for men, then the first three in every category, youngest group first, ties on the same step, each
-   with the number, the name as the backoffice sees it and the time — so the awards are handed out from one list. Set the groups
+   places overall for women and for men, then — when the race awards them — the first in every category, youngest group first, ties on the
+   same step, each with the number, the name as the backoffice sees it and the time — so the awards are handed out from one list. The card's
+   own boxes say how many places (1–10, three by default) and whether the categories are awarded: «top 5 men and top 5 women» is 5 with
+   «Premiezi și fiecare categorie» unticked, then «Salvează premiile». Set the groups
    **before** you publish the ranking, or say on the page that they changed: a runner's place in the category can move. The Excel of the
    registrations keeps the platform's groups in its «Statistici», whatever a race chose.
 

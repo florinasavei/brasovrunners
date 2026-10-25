@@ -2999,6 +2999,8 @@ function blankEventRow(now: Date): EditableEvent {
     resultsPublished: false,
     resultsPublishedAt: null,
     resultAgeBands: null,
+    awardPlaces: 3,
+    awardCategories: true,
     repeatRule: null,
     repeatOf: null,
     scheduleItems: null,

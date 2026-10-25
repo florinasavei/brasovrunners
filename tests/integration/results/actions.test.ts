@@ -43,7 +43,7 @@ vi.mock("next-intl/server", async () => {
   };
 });
 
-const { saveEventResultsAction, deleteEventResultAction, recordFinishAction, setResultAgeBandsAction, setResultsPublishedAction } = await import("@/app/[locale]/admin/events/[id]/results/actions");
+const { saveEventResultsAction, deleteEventResultAction, recordFinishAction, setResultAgeBandsAction, setResultAwardsAction, setResultsPublishedAction } = await import("@/app/[locale]/admin/events/[id]/results/actions");
 const { readEventResults } = await import("@/modules/results/results");
 
 let db: TestDatabase;
@@ -400,5 +400,30 @@ describe("§NNN «Sosire»: one number, one press", () => {
     expect(await post(recordFinishAction, live({ bib: "101" }))).toBe("redirected");
     expect(state.redirected.at(-1)).toContain("sosire?finishError=FORBIDDEN");
     expect(await liveRows()).toHaveLength(0);
+  });
+});
+
+describe("§NNN «Salvează premiile»", () => {
+  const current = async () => (await db.select({ places: events.awardPlaces, categories: events.awardCategories }).from(events).where(eq(events.id, raceId)))[0];
+
+  it("saves the places and the tick and goes back to the page with the toast's word; an unticked box is «no categories»", async () => {
+    expect(await post(setResultAwardsAction, form({ awardPlaces: "5" }))).toBe("redirected");
+    expect(await current()).toEqual({ places: 5, categories: false });
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsAwardsSaved");
+    state.cookies.length = 0;
+    expect(await post(setResultAwardsAction, form({ awardPlaces: "5", awardCategories: "on" }))).toBe("redirected");
+    expect(await current()).toEqual({ places: 5, categories: true });
+    expect(await post(setResultAwardsAction, form({ awardPlaces: "5", awardCategories: "on" }))).toBe("redirected");
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsAwardsUnchanged");
+  });
+
+  it("refuses a count that is not one to ten in place, the box keeping what was typed", async () => {
+    for (const typed of ["0", "11", "abc", ""]) {
+      const result = outcome(await post(setResultAwardsAction, form({ awardPlaces: typed, awardCategories: "on" })));
+      expect(result.error, typed).toBe("VALIDATION_ERROR");
+      expect(result.fields, typed).toEqual(["awardPlaces"]);
+      expect(result.values.awardPlaces, typed).toEqual([typed]);
+    }
+    expect(await current()).toEqual({ places: 3, categories: true });
   });
 });

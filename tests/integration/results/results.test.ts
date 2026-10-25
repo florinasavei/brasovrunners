@@ -8,7 +8,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { deleteRegistrationByStaff } from "@/modules/registrations/admin-service";
 import { findFirstResultsNoticeVersion } from "@/modules/legal-documents/repository";
-import { importResultsCsv, ResultRowError, deleteEventResult, exportEventResults, readEventResults, readPublicEventResults, rerankEventResults, saveEventResults, setResultAgeBands, setResultsPublished } from "@/modules/results/results";
+import { importResultsCsv, ResultRowError, deleteEventResult, exportEventResults, readEventResults, readPublicEventResults, rerankEventResults, saveEventResults, setResultAgeBands, setResultAwards, setResultsPublished } from "@/modules/results/results";
 import type { PostedResultRow } from "@/modules/results/rows";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -798,5 +798,29 @@ describe("§NNN «Categorii de vârstă»: the race's own bands", () => {
       [102, "FEMALE:from18", 1],
       [101, "FEMALE:from18", 2],
     ]);
+  });
+});
+
+describe("§NNN «Premii»: how many places, and whether the categories", () => {
+  const rules = (places: number, categories: boolean, actor: StaffUser = staff.ADMIN!) => setResultAwards(db, actor, raceId, { places, categories }, clock());
+  const current = async () => (await db.select({ places: events.awardPlaces, categories: events.awardCategories }).from(events).where(eq(events.id, raceId)))[0];
+
+  it("starts at three places with the categories, saves the race's own rules audited, and says when nothing changed", async () => {
+    expect(await current()).toEqual({ places: 3, categories: true });
+    expect((await readEventResults(db, staff.ADMIN!, raceId)).event).toMatchObject({ awardPlaces: 3, awardCategories: true });
+    expect(await rules(5, false)).toEqual({ changed: true });
+    expect(await current()).toEqual({ places: 5, categories: false });
+    expect((await trail()).filter((row) => row.action === "event_results.awards_changed").map((row) => row.metadataJson)).toEqual([{ places: 5, categories: false }]);
+    expect(await rules(5, false)).toEqual({ changed: false });
+    expect((await trail()).filter((row) => row.action === "event_results.awards_changed")).toHaveLength(1);
+    expect(await rules(5, false, staff.MODERATOR)).toEqual({ changed: false });
+  });
+
+  it("refuses a count outside one to ten, a role that may not, and an event that is not a race", async () => {
+    for (const places of [0, 11, 2.5]) await expect(rules(places, true), String(places)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["awardPlaces"] });
+    for (const role of ["DEV", "CONTRIBUTOR", "COPYWRITER", "MEMBER"] as const) await expect(rules(5, true, staff[role]), role).rejects.toMatchObject({ code: "FORBIDDEN" });
+    const run = await createRace(db, { type: "GROUP_RUN" });
+    await expect(setResultAwards(db, staff.ADMIN!, run.id, { places: 5, categories: true }, clock())).rejects.toMatchObject({ code: "RESULTS_NOT_OPEN" });
+    expect(await current()).toEqual({ places: 3, categories: true });
   });
 });

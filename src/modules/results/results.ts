@@ -17,6 +17,7 @@ import { canEnterResults, canPublishResults } from "@/modules/staff-identity/dom
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { ageBandStartsOf, DEFAULT_AGE_BAND_STARTS, isValidAgeBandStarts, sameAgeBandStarts } from "./domain/age-bands";
+import { type AwardRules, isValidAwardPlaces } from "./domain/awards";
 import { eventTakesResults } from "./domain/event-type";
 import { type FingerprintedResult, resultsFingerprint } from "./domain/fingerprint";
 import { parseResultsCsv } from "./domain/import-csv";
@@ -106,6 +107,9 @@ type EventFacts = {
   raceNumberFormat: RaceNumberFormat;
   /** The ages the race's categories start at (§NNN): its own, or the platform's when it chose none (`ageBandStartsOf`). */
   resultAgeBands: readonly number[];
+  /** «Premii» (§NNN): how many places each podium awards, and whether the categories are awarded beside the overall podium by sex. */
+  awardPlaces: number;
+  awardCategories: boolean;
 };
 
 function assertMayEnter(actor: Actor): void {
@@ -132,6 +136,8 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
       hiddenListPublic: events.hiddenListPublic,
       raceNumberFormat: RACE_NUMBER_FORMAT,
       resultAgeBands: events.resultAgeBands,
+      awardPlaces: events.awardPlaces,
+      awardCategories: events.awardCategories,
     })
     .from(events)
     .where(eq(events.id, eventId))
@@ -655,6 +661,27 @@ export async function rerankEventResults<T extends Record<string, unknown>>(db: 
   return writeRanking(db, event, runners, stored);
 }
 
+/**
+ * «Premii» (§NNN): how many places each podium awards (one to ten) and whether the categories are awarded beside the overall podium by
+ * sex — the owner's «for this contest we just award top 5 men and top 5 women». Saved by whoever enters results (FORBIDDEN otherwise), a
+ * race only (`RESULTS_NOT_OPEN`), a count outside the column's range refused (VALIDATION_ERROR on `awardPlaces`); one audit row with the
+ * two values. Nothing of the results moves: the card reads the rules, the ranking knows nothing of them.
+ */
+export async function setResultAwards<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string, rules: AwardRules, now: Date): Promise<{ changed: boolean }> {
+  assertMayEnter(actor);
+  assertIds(eventId);
+  if (!isValidAwardPlaces(rules.places)) throw new DomainError("VALIDATION_ERROR", "the places awarded must be one to ten", ["awardPlaces"]);
+  const outcome = await db.transaction(async (tx) => {
+    const event = await loadEvent(tx, eventId, true);
+    if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race has awards");
+    if (event.awardPlaces === rules.places && event.awardCategories === rules.categories) return { changed: false };
+    await tx.update(events).set({ awardPlaces: rules.places, awardCategories: rules.categories }).where(eq(events.id, event.id));
+    await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: "event_results.awards_changed", entityType: "event", entityId: event.id, metadata: { places: rules.places, categories: rules.categories }, now });
+    return { changed: true };
+  });
+  return outcome;
+}
+
 // ---- The finish line --------------------------------------------------------------------------------------
 
 /** A finish refused with what the volunteer at the line needs: the number and the time the gun says, so a refused number is still written down. */
@@ -1012,6 +1039,8 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       hiddenListPublic: events.hiddenListPublic,
       raceNumberFormat: RACE_NUMBER_FORMAT,
       resultAgeBands: events.resultAgeBands,
+      awardPlaces: events.awardPlaces,
+      awardCategories: events.awardCategories,
     })
     .from(events)
     .where(eq(events.id, eventId))

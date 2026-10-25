@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AWARD_PLACES, type Awardable, awardsOf } from "@/modules/results/domain/awards";
+import { AWARD_PLACES, type Awardable, awardsOf, DEFAULT_AWARD_RULES, isValidAwardPlaces } from "@/modules/results/domain/awards";
 
 /**
  * §NNN, BR-REQ-050-02 — «Premii»: the podium by sex and in every category, read from the ranking's own positions, in the order the
@@ -16,8 +16,19 @@ const row = (bibNumber: number, sex: Awardable["sex"], positionSex: number | nul
 });
 
 describe("§NNN awardsOf", () => {
-  it("awards three places", () => {
+  it("awards three places and the categories unless the race says otherwise, one to ten places", () => {
     expect(AWARD_PLACES).toBe(3);
+    expect(DEFAULT_AWARD_RULES).toEqual({ places: 3, categories: true });
+    expect([0, 1, 10, 11, 2.5].map(isValidAwardPlaces)).toEqual([false, true, true, false, false]);
+  });
+
+  it("lists the overall podium alone, five deep, for a race that awards «top 5 women and top 5 men»", () => {
+    const rows = [1, 2, 3, 4, 5, 6].map((bib) => row(bib, "FEMALE", bib, bib, bib <= 3 ? "FEMALE:from30" : "FEMALE:from40"));
+    rows.push(row(7, "MALE", 1, 1, "MALE:from30"));
+    const groups = awardsOf(rows, { places: 5, categories: false });
+    expect(groups.map((group) => (group.kind === "sex" ? `sex:${group.sex}` : group.key))).toEqual(["sex:FEMALE", "sex:MALE"]);
+    expect(groups[0].rows.map((r) => r.position)).toEqual([1, 2, 3, 4, 5]);
+    expect(awardsOf(rows, { places: 5, categories: true }).map((group) => (group.kind === "sex" ? `sex:${group.sex}` : group.key))).toEqual(["sex:FEMALE", "FEMALE:from30", "FEMALE:from40", "sex:MALE", "MALE:from30"]);
   });
 
   it("lists women then men, each sex's overall podium first and then its categories, youngest band first", () => {
@@ -41,8 +52,8 @@ describe("§NNN awardsOf", () => {
     expect(groups[0]).toMatchObject({ kind: "sex", sex: "MALE" });
     expect(groups[0].rows.map((r) => [r.position, r.bibNumber])).toEqual([[1, 1], [2, 2], [2, 3]]);
     expect(groups[1]).toMatchObject({ kind: "category", key: "MALE:from30" });
-    expect(awardsOf([], 3)).toEqual([]);
-    expect(awardsOf([row(1, "MALE", 1, 1, "MALE:from30"), row(2, "MALE", 2, 2, "MALE:from30")], 1)[0].rows).toHaveLength(1);
+    expect(awardsOf([], { places: 3, categories: true })).toEqual([]);
+    expect(awardsOf([row(1, "MALE", 1, 1, "MALE:from30"), row(2, "MALE", 2, 2, "MALE:from30")], { places: 1, categories: true })[0].rows).toHaveLength(1);
   });
 
   it("keeps a nameless runner (an erased registration) on the podium by number, and a runner with no category only in the sex's podium", () => {

@@ -8530,7 +8530,7 @@
                 "Categoriile sunt sexul și o grupă de vârstă din ziua cursei. Fără nimic ales, cursa folosește grupele standard: sub 18, 18-29, 30-39, 40-49, 50-59, 60+.",
                 "Vrei alte grupe? Pe «Clasament», la «Categorii de vârstă», scrie în «Vârstele de la care încep grupele» vârstele de început, separate prin virgulă — „18, 35, 45, 55” dă sub 18, 18-34, 35-44, 45-54 și 55+ — și apasă «Salvează categoriile». Rândul de sub căsuță arată grupele cum le va spune site-ul. Gol înseamnă grupele standard.",
                 "Fă asta înainte de cursă, sau înainte ca Administratorul să publice clasamentul: locurile la categorie ale rezultatelor deja salvate se recalculează pe loc, iar pagina evenimentului și CSV-ul le preiau.",
-                "La «Premii» vezi podiumul din rezultatele salvate: primele trei locuri la feminin și la masculin, apoi primele trei din fiecare categorie, cu numărul, numele și timpul. De aici se dau premiile; timpii egali stau pe aceeași treaptă."
+                "La «Premii» vezi podiumul din rezultatele salvate: primele locuri la feminin și la masculin, apoi — dacă premiezi și categoriile — primele din fiecare categorie, cu numărul, numele și timpul. Scrie la «Câte locuri premiezi» câte dai (de la 1 la 10), bifează sau debifează «Premiezi și fiecare categorie» și apasă «Salvează premiile». Pentru „top 5 la feminin și la masculin”: 5, debifat."
               ]
             },
             {
@@ -10975,12 +10975,18 @@
       },
       "awards": {
         "title": "Premii",
-        "aside": "primele {places} locuri",
-        "intro": "Podiumul la sex și la fiecare categorie, din rezultatele salvate, în ordinea premierii. Timpii egali stau pe aceeași treaptă.",
+        "aside": "primele {places} locuri, la sex și la categorie",
+        "intro": "Podiumul din rezultatele salvate, în ordinea premierii. Alege câte locuri premiezi și dacă premiezi și categoriile. Timpii egali stau pe aceeași treaptă.",
         "overallFemale": "General feminin",
         "overallMale": "General masculin",
         "place": "Locul {position}",
-        "empty": "Niciun sosit cu loc încă. Premiile apar după ce salvezi timpii."
+        "empty": "Niciun sosit cu loc încă. Premiile apar după ce salvezi timpii.",
+        "asideOverall": "primele {places} locuri la feminin și la masculin",
+        "placesLabel": "Câte locuri premiezi",
+        "categoriesLabel": "Premiezi și fiecare categorie",
+        "categoriesHelp": "Debifat, lista are doar primele locuri la feminin și la masculin.",
+        "save": "Salvează premiile",
+        "saving": "Se salvează…"
       },
       "finish": {
         "title": "Sosire: {event}",
@@ -13016,7 +13022,9 @@
       "resultsPublicUnchanged": "Era deja așa; nimic de schimbat.",
       "rsvpAskAudience": "Alegerea pentru întrebarea „Vii?” a fost salvată.",
       "resultsCategoriesSaved": "Am salvat categoriile de vârstă; locurile la categorie s-au recalculat.",
-      "resultsCategoriesUnchanged": "Categoriile erau deja așa; nimic de schimbat."
+      "resultsCategoriesUnchanged": "Categoriile erau deja așa; nimic de schimbat.",
+      "resultsAwardsSaved": "Am salvat premiile.",
+      "resultsAwardsUnchanged": "Premiile erau deja așa; nimic de schimbat."
     },
     "via": {
       "mailgun": "Pleacă prin Mailgun.",

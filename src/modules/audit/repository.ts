@@ -560,6 +560,8 @@ export type AuditAction =
   | "event_results.exported"
   /** «Categorii de vârstă» saved on «Clasament» (§NNN), entity `event`: the ages the bands start at (null for the platform's) and how many stored rows were ranked again. */
   | "event_results.categories_changed"
+  /** «Premii» saved on «Clasament» (§NNN), entity `event`: how many places each podium awards and whether the categories are awarded. */
+  | "event_results.awards_changed"
   /**
    * The volunteer agreement (§758), entity `event`: an organizer's «Trimite linkul contractului» (requested),
    * the person's acceptance from the link (accepted, no actor) and a paper acceptance recorded at the desk

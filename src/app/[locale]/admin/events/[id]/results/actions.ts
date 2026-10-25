@@ -10,7 +10,8 @@ import { ResultsCsvError } from "@/modules/results/domain/import-csv";
 import { mergeImportedRows } from "@/modules/results/import-merge";
 import { parseAgeBandStarts } from "@/modules/results/domain/age-bands";
 import { formatResultTime } from "@/modules/results/domain/result-time";
-import { deleteEventResult, FinishError, importResultsCsv, recordFinish, ResultRowError, saveEventResults, setResultAgeBands, setResultsPublished } from "@/modules/results/results";
+import { AWARD_PLACES_MAX, AWARD_PLACES_MIN } from "@/modules/results/domain/awards";
+import { deleteEventResult, FinishError, importResultsCsv, recordFinish, ResultRowError, saveEventResults, setResultAgeBands, setResultAwards, setResultsPublished } from "@/modules/results/results";
 import { EXTRA_ROWS, postedResultRows } from "@/modules/results/rows";
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "@/modules/results/domain/ranking";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -251,4 +252,25 @@ async function backToFinish(form: FormData, outcome: { ok?: string; error?: stri
   const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/results/sosire", params: { id } } });
   revalidatePath(path);
   redirect(`${path}${outcome.ok ? `?ok=${encodeURIComponent(outcome.ok)}` : outcome.error ? `?finishError=${encodeURIComponent(outcome.error)}` : ""}`);
+}
+
+/**
+ * «Premii» (§NNN): how many places each podium awards and whether the categories are awarded too — one box, one tick, one «Salvează
+ * premiile», saved on its own. A count that is not one to ten is refused in place on its box; the toast says it was saved.
+ */
+export async function setResultAwardsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const typed = field(form, "awardPlaces").trim();
+  const places = /^\d{1,2}$/.test(typed) ? Number(typed) : Number.NaN;
+  const categories = field(form, "awardCategories") === "on";
+  let changed: boolean;
+  try {
+    if (!Number.isInteger(places) || places < AWARD_PLACES_MIN || places > AWARD_PLACES_MAX) throw new DomainError("VALIDATION_ERROR", "the places awarded must be one to ten", ["awardPlaces"]);
+    const actor = await requireStaff();
+    changed = (await setResultAwards(getDb(), actor, eventIdOf(form), { places, categories }, new Date())).changed;
+  } catch (error) {
+    if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "RESULTS_NOT_OPEN")) return refused(error, form);
+    if (!isDomainError(error)) throw error;
+    return backToPage(form, { error: error.code });
+  }
+  return backToPage(form, { saved: changed ? "resultsAwardsSaved" : "resultsAwardsUnchanged" });
 }

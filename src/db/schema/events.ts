@@ -336,6 +336,15 @@ export const events = pgTable(
      */
     resultAgeBands: jsonb("result_age_bands"),
 
+    /**
+     * «Premii» (§NNN): how many places each podium awards (1–10, three by default — the podium) and whether the categories are
+     * awarded at all beside the overall podium by sex (on by default; a race that awards «top 5 men and top 5 women» turns it off).
+     * Read by «Clasament»'s «Premii» card alone — the public page shows every place as before. Set on «Clasament» by whoever enters
+     * results, audited. Not carried by a duplicate, a repeat or the JSON file, like the age bands.
+     */
+    awardPlaces: integer("award_places").notNull().default(3),
+    awardCategories: boolean("award_categories").notNull().default(true),
+
     // No `video_url` / `video_poster_url` here any more (§481, §491): a film is a `youtube` node in
     // the description (§266), carrying its own stored poster (§403); migration 0092 moved every
     // stored film there. BR-V2.10 stopped declaring the two columns and `events_video_url_is_https`;
@@ -997,6 +1006,8 @@ export const events = pgTable(
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
     // «Vremea» (§666): one of the three; the domain's `WEATHER_MODES` says the same in words.
     check("events_weather_mode_known", sql`${t.weatherMode} IN ('forecast', 'custom', 'off')`),
+    // «Premii» (§NNN): one to ten places a podium awards.
+    check("events_award_places_range", sql`${t.awardPlaces} >= 1 AND ${t.awardPlaces} <= 10`),
     // The club's scale of fifteen (§526): five bands of three steps.
     check("events_difficulty_level_in_scale", sql`${t.difficultyLevel} IS NULL OR ${t.difficultyLevel} BETWEEN 1 AND 15`),
     // «Coordonate» (§416): both or neither, each in its range — a pair the forecast can ask for. The

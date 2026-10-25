@@ -916,9 +916,11 @@ started and any disqualification with the reason for the note box either way.
 
 ### The awards
 
-«Premii» on the same page lists, from the saved results, the first three places for women, for men and in each
-category, youngest group first, with number, name and time. Ties stand on the same step. Give the awards from this
-list; correct a time and save, and the podium follows.
+«Premii» on the same page lists, from the saved results, the first places for women and for men and — when the race
+awards them — in each category, youngest group first, with number, name and time. Ties stand on the same step. The
+card's own form says how many places (1–10, three by default) and whether the categories are awarded: for «top 5 men
+and top 5 women» write 5 and untick «Premiezi și fiecare categorie», then «Salvează premiile». Give the awards from
+this list; correct a time and save, and the podium follows. The public page is unchanged by these rules.
 
 ### Publish
 

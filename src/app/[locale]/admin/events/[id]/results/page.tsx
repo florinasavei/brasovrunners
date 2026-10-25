@@ -13,7 +13,7 @@ import { findEventTitle } from "@/modules/content/events/repository";
 import { noticeDescribesResults, termsDescribeResults } from "@/modules/legal-documents/repository";
 import { bandWordsFrom, categoryLabelOf } from "@/modules/results/category-words";
 import { bandKeysOf, bandLabelOf, formatAgeBandStarts } from "@/modules/results/domain/age-bands";
-import { AWARD_PLACES, awardsOf } from "@/modules/results/domain/awards";
+import { awardsOf } from "@/modules/results/domain/awards";
 import { formatResultTime } from "@/modules/results/domain/result-time";
 import { RESULT_STATUSES } from "@/modules/results/domain/ranking";
 import { anonymousResultLabel } from "@/modules/results/domain/public-name";
@@ -45,7 +45,7 @@ import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import StatusChip from "@/shared/ui/StatusChip";
 import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
-import { deleteEventResultAction, saveEventResultsAction, setResultAgeBandsAction, setResultsPublishedAction } from "./actions";
+import { deleteEventResultAction, saveEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultsPublishedAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -221,14 +221,17 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const boxes = await refusalMessages(labels);
   const publishBoxes = await refusalMessages({ published: t("results.publish.label") });
   const categoriesBoxes = await refusalMessages({ ageBands: t("results.categories.label") });
+  const awardsBoxes = await refusalMessages({ awardPlaces: t("results.awards.placesLabel"), awardCategories: t("results.awards.categoriesLabel") });
 
-  // «Premii» (§NNN): the podium by sex and by category from the rows the page already holds, the ranking's own positions.
+  // «Premii» (§NNN): the podium by sex — and by category when the race awards them — from the rows the page already holds, the ranking's own positions.
+  const awardRules = { places: event.awardPlaces, categories: event.awardCategories };
   const awards = awardsOf(
     [...view.registered, ...view.typed].flatMap((runner) =>
       runner.result
         ? [{ bibNumber: runner.bibNumber, name: runner.name, sex: runner.sex, gunTimeMs: runner.result.gunTimeMs, positionSex: runner.result.positionSex, positionCategory: runner.result.positionCategory, categoryKey: runner.result.categoryKey }]
         : [],
     ),
+    awardRules,
   );
   const bands = bandKeysOf(view.ageBandStarts);
   const confirm = await confirmWords();
@@ -370,11 +373,32 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       </Panel>
 
       {/* «Premii» (§NNN): who stands on the podium, by sex and by category, read from the saved results — the list the awards are given from. */}
-      <Panel glyph="badges" collapsible level={3} title={t("results.awards.title")} aside={t("results.awards.aside", { places: String(AWARD_PLACES) })} id="box-results-awards" openWhen={{ inUse: awards.length > 0 }} data-testid="results-awards">
+      <Panel glyph="badges" collapsible level={3} title={t("results.awards.title")} aside={t(event.awardCategories ? "results.awards.aside" : "results.awards.asideOverall", { places: String(event.awardPlaces) })} id="box-results-awards" openWhen={{ inUse: awards.length > 0 }} data-testid="results-awards">
         <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">
             {t("results.awards.intro")}
           </Typography>
+          {/* The race's own rules (§NNN): how many places, and whether the categories are awarded — a form of its own, nothing of the results moves. */}
+          <ActionForm action={setResultAwardsAction} scope="awards" messages={awardsBoxes} data-testid="results-awards-form">
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="eventId" value={id} />
+            <Stack direction="row" sx={{ gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
+              <RecallField
+                name="awardPlaces"
+                label={t("results.awards.placesLabel")}
+                defaultValue={String(event.awardPlaces)}
+                size="small"
+                sx={{ width: 150 }}
+                slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", autoComplete: "off", "data-testid": "results-award-places" } }}
+              />
+              <CheckboxField name="awardCategories" defaultChecked={event.awardCategories} help={t("results.awards.categoriesHelp")}>
+                {t("results.awards.categoriesLabel")}
+              </CheckboxField>
+              <Box>
+                <GlyphSubmitButton icon="save" variant="outlined" label={t("results.awards.save")} pendingLabel={t("results.awards.saving")} />
+              </Box>
+            </Stack>
+          </ActionForm>
           {awards.length === 0 ? (
             <Typography variant="body2" data-testid="results-awards-empty">
               {t("results.awards.empty")}
