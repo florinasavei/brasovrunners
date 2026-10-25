@@ -16,6 +16,30 @@ const ScanGlyph = ACTION_ICONS.scan;
 const DismissIcon = ACTION_ICONS.dismiss;
 
 type Detector = { detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>> };
+
+/** The focus controls Chrome on Android exposes on a camera track; absent elsewhere, and typed by nobody yet. */
+type FocusCapabilities = { focusMode?: string[]; focusDistance?: { min: number; max: number } };
+type FocusConstraints = { focusMode?: string; focusDistance?: number };
+
+/**
+ * Ask the camera to keep focusing (the owner, 2026-10-25, a phone held at a watch: «It works but the camera does not focus»). The
+ * default stream on some Android phones comes from a lens that holds one distance, so a QR code held close stays a blur and is never
+ * read. Where the track says it can, continuous autofocus is asked for; where it cannot, nothing changes and the camera app stays
+ * the way, as the page already says. A refusal is swallowed: focus is a courtesy, the frame is read either way.
+ */
+async function keepFocusing(stream: MediaStream): Promise<void> {
+  const [track] = stream.getVideoTracks();
+  if (!track || typeof track.getCapabilities !== "function" || typeof track.applyConstraints !== "function") return;
+  const capabilities = track.getCapabilities() as FocusCapabilities;
+  const wanted: FocusConstraints = {};
+  if (capabilities.focusMode?.includes("continuous")) wanted.focusMode = "continuous";
+  if (Object.keys(wanted).length === 0) return;
+  try {
+    await track.applyConstraints({ advanced: [wanted as MediaTrackConstraintSet] });
+  } catch {
+    // The camera keeps its own focus: the stream is still shown and read.
+  }
+}
 type DetectorCtor = new (options: { formats: string[] }) => Detector;
 
 /**
@@ -62,7 +86,9 @@ export default function QrScanButton({
 
     (async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        // A sharper stream than the default, which on some phones is a low-resolution feed that never reads a code on a screen.
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } });
+        await keepFocusing(stream);
         const video = videoRef.current;
         if (!video) return;
         video.srcObject = stream;
