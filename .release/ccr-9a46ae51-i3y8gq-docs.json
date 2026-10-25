@@ -1,0 +1,7 @@
+{
+  "branch": "ccr-9a46ae51-i3y8gq-docs",
+  "decisionsTitle": "The guide, SETUP and the runbook name the card «Clasament» sits in",
+  "decisionsSection": "**The owner, 2026-10-25, from QA, with a screenshot of the editor's «Participare, înscrieri și regulament» folds:** «Nu găsesc clasamentul, la ce secțiune e?» — and, told «the card «Înscrieri»», «Cred că nu îți e clar ce secțiuni avem». The guide's task, SETUP.md §45 and the runbook all sent the reader to «the card «Înscrieri»», a card the editor does not have: the button «Clasament» is in **«Înscrierile primite»**, the card at the end of the editor beside «Vezi înscrierile acestui eveniment» and «Mesaj participanților», and only for a race that is published or has started (`resultsDoorOpen`, §816).\n\n**Decision.** The three texts name the card by its title, say where it is (the end of the page, not the registration folds) and when the button shows; the guide's task opens with that step. The guide's word check (BR-REQ-060-01 criterion 38) holds every quoted label to the screen's own in both languages, which is what caught the English card's and button's names. No code moved: the card and the condition are §808's and §816's.",
+  "changelogLine": "- **The guide says where «Clasament» is** — in the editor's card «Înscrierile primite», at the end of the page, for a published race; SETUP.md §45 and the runbook say the same. §NNN.",
+  "batchLine": "the guide names the card «Clasament» sits in"
+}
