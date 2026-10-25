@@ -45,6 +45,8 @@ const ALLOWED_INTERVALS: Record<string, string> = {
   "src/shared/ui/VideoVolumeBar.tsx": "bounded handshake after a click",
   // The calendar card's countdown to the hour (§843): reads the visitor's own clock once a minute and writes a line of text — no request, no read.
   "src/modules/events/ui/AwayLine.tsx": "the visitor's clock, once a minute, no request",
+  // The finish line's clock since the gun (§850): the volunteer's own clock once a second on one backoffice page, a line of text — no request, no read; the press stamps the server's clock.
+  "src/modules/results/ui/FinishClock.tsx": "the volunteer's clock, once a second, no request",
 };
 
 function clientFiles(dir: string): string[] {

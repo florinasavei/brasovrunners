@@ -1390,12 +1390,6 @@
         "noCategory": "No category",
         "sexFemale": "Female",
         "sexMale": "Male",
-        "bandUnder18": "under 18",
-        "bandFrom18": "18-29",
-        "bandFrom30": "30-39",
-        "bandFrom40": "40-49",
-        "bandFrom50": "50-59",
-        "bandFrom60": "60+",
         "note1": "Active means confirmed: the person has signed the declaration; those who take a place are under «Confirmed who take a place».",
         "note2": "«{club}» counts the members on «Echipa», the people who ticked that they are members and the people who typed the club on the form.",
         "note7": "«Ticked as members of {club}» counts the tick on the form alone, without the member accounts and the club typed by hand.",
@@ -1410,7 +1404,10 @@
         "legendEnded": "Grey, cancelled or expired",
         "legendMember": "Blue: ticked that they are a member of {club} — the columns «Club member», «Member tick (declared)», «Club runner» and «Member bib»",
         "legendClubRunner": "Lavender: a club runner without the tick — a member account or the club typed in the form",
-        "legendGuest": "Peach, italic: a special guest — takes no place"
+        "legendGuest": "Peach, italic: a special guest — takes no place",
+        "bandUnder": "under {age}",
+        "bandBetween": "{from}-{to}",
+        "bandOpen": "{from}+"
       },
       "auditActorParticipant": "the participant, from their own link",
       "audit": {
@@ -2280,7 +2277,12 @@
       "VINVITE_NOT_INVITED_ONLY": "Invitations are sent only while “Who can offer” is “Only by invitation from the club”.",
       "VINVITE_EVENT_CLOSED": "Invitations cannot be sent now: the volunteers' form is not open. The reason is written above.",
       "VINVITE_NOT_OPEN": "The invitation is no longer open: it was used or withdrawn, or the event is over or was called off.",
-      "VINVITE_NOT_FOUND": "The invitation no longer exists."
+      "VINVITE_NOT_FOUND": "The invitation no longer exists.",
+      "RESULTS_AGE_BANDS": "The age categories were not saved: {problem}.",
+      "RESULT_BIB_UNKNOWN": "Number {bib} has no confirmed registration. Its time: {time} — write it down and enter it under «Results», under “Runners who did not register”.",
+      "RESULT_ALREADY_FINISHED": "Number {bib} has already finished, at {time}. A correction is made under «Results».",
+      "RESULT_FINISH_NOT_STARTED": "The race has not started yet: a finish cannot be before the start.",
+      "RESULT_FINISH_CLOSED": "The start was more than a day ago: the times are entered under «Results»."
     },
     "editor": {
       "draftPreview": {
@@ -6741,7 +6743,7 @@
       "search": "Name, number or code",
       "find": "Search",
       "scan": "Scan",
-      "scanHint": "Hold the QR code in the frame. It opens by itself once read.",
+      "scanHint": "Hold the QR code in the frame. It opens by itself once read. Picture still blurred? Press «Another camera».",
       "scanUnreadable": "What was read is not a participant code.",
       "searchHelp": "Type part of a name, the race number, or the code from the email. Leave it empty for everybody at the chosen event.",
       "counts": {
@@ -6801,7 +6803,9 @@
       "handedBibFastTrackOnly": "Only for someone confirmed here, at the desk (the tick above).",
       "nextSpare": "Next spare: {number}",
       "sparesOut": "The spare numbers have run out: type the number you hand them, or leave it empty and the site picks one.",
-      "offerPlace": "Send them the offer"
+      "offerPlace": "Send them the offer",
+      "scanSwitch": "Another camera",
+      "scanCamera": "Camera {n} of {total}"
     },
     "emails": {
       "title": "The emails participants receive",
@@ -8511,6 +8515,27 @@
               ]
             },
             {
+              "title": "The race's results: how to register the finishers",
+              "steps": [
+                "At the finish line open «Finish» (from «Results», or «Events» → the race → «Registrations» → «Results» → «Finish»), on a phone. The page shows the clock since the start. When a runner crosses the line, type their race number and press «Finished»: the site stamps the time since the start, and «Latest finishers» shows what you recorded. No stopwatch needed.",
+                "A number with no confirmed registration is refused, with its time in the sentence: write it on paper and enter it after the race under «Results», under «Runners who did not register». Somebody marked dropped out by mistake becomes finished when you type their number. If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
+                "Under «Registered runners» there is a line for every registered runner with a number. Write the time in «Time» (h:mm:ss or mm:ss); «Status» stays on «From the time (Finished / Did not start)» — a time means «Finished». For who did not finish choose «Dropped out», «Did not start» or «Disqualified», with no time. «Chip time» and «Note» are optional.",
+                "Have the times in a file? Open «Import from CSV», paste the text (number, time on each line; with chip time and status if you have them) or choose the file and press «Import from CSV». The lines fill the boxes; nothing is saved yet.",
+                "A number no registration holds goes under «Runners who did not register»: write the name and, for a category, the sex and the date of birth. Tick «Agreed to appear by name in the results» only if the person told you so. «Add a runner who did not register» makes an empty line.",
+                "Press «Save all the results» once, for the whole page. The places — overall, by sex and by category — are counted by the site; equal times share a place. An emptied line is a deleted result. You can correct and save again at any time.",
+                "«Download the results (CSV)» is the file with the names, for you. Publishing on the event's page is the Administrator's."
+              ]
+            },
+            {
+              "title": "The age categories and the awards",
+              "steps": [
+                "The categories are the sex and an age group on race day. With nothing chosen, the race uses the standard groups: under 18, 18-29, 30-39, 40-49, 50-59, 60+.",
+                "Want other groups? On «Results», under «Age categories», write in «Ages the groups start at» the starting ages, separated by commas — “18, 35, 45, 55” gives under 18, 18-34, 35-44, 45-54 and 55+ — and press «Save the categories». The line under the box shows the groups as the site will say them. Empty means the standard groups.",
+                "Do this before the race, or before the Administrator publishes the results: the category places of the results already saved are recounted at once, and the event's page and the CSV follow.",
+                "Under «Awards» you see the podium from the saved results: the first places for women and for men, then — if you award the categories too — the first in every category, with the number, the name and the time. Write under «How many places you award» how many you give (1 to 10), tick or untick «You award every category too» and press «Save the awards». For “top 5 women and top 5 men”: 5, unticked."
+              ]
+            },
+            {
               "title": "What the Administrator does, not you",
               "steps": [
                 "Creating, changing, publishing, duplicating and cancelling events, and telling the participants about a change.",
@@ -8877,6 +8902,14 @@
                 "«Staff» → «Add someone», «Role» «Membru», or «Add several members» for a list. Press «Add» and confirm; the member gets the invitation by email.",
                 "The words: «Pages» → «Standard pages» → «Members». «Members' benefits» is the public page with the sign-in button; «The members' area» is what a member sees after signing in. Both in Romanian and English.",
                 "Put the page on the site: «Publish the page» (the Administrator only)."
+              ]
+            },
+            {
+              "title": "Publish the results on the event's page",
+              "steps": [
+                "The results appear on the site only once you publish them, only after the race has started and only if the privacy notice and the terms in force describe the results — «Legal documents» says whether new texts must be approved; «Tasks» has the row.",
+                "On «Results», under «On the event's page», tick «The results are public on the event's page» and press «Save». The page shows the place, the number, the time and the category; a name only for who ticked the list at registration or a runner who did not register and agreed — everyone else is “Participant #number”.",
+                "The results stay on the page as long as the public participant list, from the end of the race («Settings» → «Deadlines»). Untick at any time; the results stay saved."
               ]
             }
           ]
@@ -10922,6 +10955,62 @@
         "status": "the status is not known",
         "needsTime": "a runner who finished needs a time",
         "timeWithStatus": "dropped out, did not start and disqualified are written without a time"
+      },
+      "categories": {
+        "title": "Age categories",
+        "aside": "{count} categories",
+        "intro": "A race's categories are the sex and an age group on race day. Write the ages each group starts at; a change recounts the saved results' category places.",
+        "more": "“18, 35, 45, 55” means under 18, 18-34, 35-44, 45-54 and 55+, for women and for men. Leave empty for the standard categories (18, 30, 40, 50, 60), the statistics' ones.",
+        "label": "Ages the groups start at",
+        "placeholder": "18, 30, 40, 50, 60",
+        "preview": "The race's categories",
+        "stateDefault": "the standard categories",
+        "stateCustom": "the race's own categories",
+        "save": "Save the categories",
+        "saving": "Saving…",
+        "problems": {
+          "notNumbers": "write ages only, whole numbers separated by commas",
+          "range": "an age must be between 1 and 99",
+          "order": "the same age appears twice",
+          "tooMany": "too many groups (at most 12)"
+        }
+      },
+      "awards": {
+        "title": "Awards",
+        "aside": "the first {places} places, by sex and by category",
+        "intro": "The podium from the saved results, in the order the awards are given. Choose how many places you award and whether you award the categories too. Equal times share a step.",
+        "overallFemale": "Overall, women",
+        "overallMale": "Overall, men",
+        "place": "Place {position}",
+        "empty": "Nobody placed yet. The awards appear once you save the times.",
+        "asideOverall": "the first {places} places for women and for men",
+        "placesLabel": "How many places you award",
+        "categoriesLabel": "You award every category too",
+        "categoriesHelp": "Unticked, the list holds only the first places for women and for men.",
+        "save": "Save the awards",
+        "saving": "Saving…"
+      },
+      "finish": {
+        "title": "Finish: {event}",
+        "link": "Finish",
+        "backToResults": "Back to the results",
+        "intro": "Type the race number as the runner crosses the line and press «Finished»: the site stamps the time since the start. Corrections are made under «Results».",
+        "more": "A number with no confirmed registration is refused with the time in the sentence: write it down and enter it under «Results». Somebody marked dropped out by mistake becomes finished.",
+        "gun": "Start: {time}",
+        "elapsed": "Since the start: {time}",
+        "notStarted": "The race has not started yet. Finishes are recorded after the start.",
+        "bibLabel": "Race number",
+        "record": "Finished",
+        "recording": "Recording…",
+        "recorded": "Finished: #{bib} {name} · {time} · place {position}",
+        "recordedNameless": "Finished: #{bib} · {time} · place {position}",
+        "recent": {
+          "title": "Latest finishers",
+          "aside": "{finished} finished of {withNumber} with a number",
+          "empty": "Nobody has finished yet.",
+          "line": "#{bib} {name} · {time} · place {position}",
+          "lineNameless": "#{bib} · {time} · place {position}"
+        }
       }
     }
   },
@@ -12933,7 +13022,11 @@
       "resultsPublished": "The results are now public on the event's page.",
       "resultsUnpublished": "The results are no longer public on the event's page.",
       "resultsPublicUnchanged": "It was already so; nothing to change.",
-      "rsvpAskAudience": "The choice for the “Coming?” question was saved."
+      "rsvpAskAudience": "The choice for the “Coming?” question was saved.",
+      "resultsCategoriesSaved": "The age categories are saved; the category places were recounted.",
+      "resultsCategoriesUnchanged": "The categories were already so; nothing to change.",
+      "resultsAwardsSaved": "The awards are saved.",
+      "resultsAwardsUnchanged": "The awards were already so; nothing to change."
     },
     "via": {
       "mailgun": "Leaves by Mailgun.",

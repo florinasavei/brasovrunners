@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.75-2026-10-22`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.76-2026-10-25`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -847,6 +847,96 @@ while the name is gone (the outage grace).
 
 
 ---
+
+## Race results: registering the finishers
+
+How a race's finishers get into «Clasament» and onto the event page (`DECISIONS.md` §808–§810, and the
+age categories, the podium and the finish line «Sosire» of this release; the owner's procedure is `SETUP.md` §45; the colleagues'
+version is the backoffice «Ghid», sections Organizator and Administrator). Only a **race** has
+results; a group run has none.
+
+Related requirements: `BR-REQ-050-02`, `BR-REQ-039-01`, `BR-REQ-060-01`.
+
+### Who does what
+
+| Step | Who |
+| --- | --- |
+| Types each finisher's race number on «Sosire» as they cross (or notes number and time on paper) | Organizer or Administrator at the line (any volunteer for the paper sheet) |
+| Sets the race's age categories | Organizer or Administrator |
+| Enters or imports the times, saves the ranking | Organizer or Administrator |
+| Reads the podium and hands out the awards | Organizers |
+| Publishes the ranking on the event page | Administrator |
+
+### Before the race
+
+1. **Decide the categories.** Open the race → «Înscrieri» → «Clasament» → «Categorii de vârstă». Leave the
+   box empty for the standard groups (sub 18, 18-29, 30-39, 40-49, 50-59, 60+), or write the ages each group
+   starts at, comma-separated — «18, 35, 45, 55» — and «Salvează categoriile». Each group is awarded for women
+   and for men. A later change recounts the saved results' category places, so decide before publishing.
+2. **Make sure every runner has a race number** (the desk gives them at check-in, `SETUP.md` §39; the printed
+   sheet lists them). A result is a row per race number: no number, no row.
+3. **Plan the timing.** One phone at the line on «Sosire» (below) is enough for a club race; a second phone, or a
+   paper sheet of «number, time since the gun», as the backup for a race of more than a hundred.
+
+### At the finish: «Sosire»
+
+Open «Clasament» → **«Sosire»** on a phone at the line (`/admin/events/<id>/results/sosire`; Organizer or
+Administrator). The page shows the gun and a clock since it. As each runner crosses, type the race number and press
+**«Sosit»**: the site stamps the time since the gun (`race_starts_at`, else the event's start), to the second, as that
+runner's «Sosit», re-ranks, and the page comes back with the box empty, one sentence («Sosit: #102 Bia Marin · 0:45:12 ·
+locul 1») and «Ultimii sosiți», the latest press first. No stopwatch is needed and nothing has to be typed again later.
+
+What the line refuses, in place, with the number kept in the box: a number no **confirmed** registration holds (the
+sentence carries the stamped time — write it on paper, the runner is typed on «Clasament» later under «Alergători
+neînscriși»); a number already finished (the stored time in the sentence — a correction is «Clasament»'s); a press before
+the gun, and one more than a day after it (the times are typed by then). A runner saved as «Abandon», «Neprezentat» or
+«Descalificat» by mistake who crosses the line becomes «Sosit» at the stamped time, the note kept. Two phones may work the
+same line: each press is its own transaction on the event's row.
+
+The fallback is the old way: somebody records «number, time since the gun» on paper, a phone or a timing app that
+exports CSV, and the times are entered or imported after the race (next section). Note who dropped out, who never
+started and any disqualification with the reason for the note box either way.
+
+### After the race: enter and save
+
+1. Open «Clasament». Under «Alergători înscriși» every registered runner with a number has a line.
+2. **Type** the times in «Timp» (`h:mm:ss`, `mm:ss` or `mm:ss.t`). A time alone means «Sosit». For the others pick
+   the state in «Stare», without a time. «Timp cip» and «Notă» are optional.
+3. **Or import**: «Importă din CSV» — paste or choose a file of `number, time[, chip time][, status]`, with or without
+   a header, comma, semicolon or tab separated. The rows fill the boxes; nothing is saved yet. A bad line refuses
+   the whole file, naming the line.
+4. A number no registration holds lands under «Alergători neînscriși»: write the name and, for a category, the sex
+   and the birth date. Tick «A acceptat să apară cu numele în clasament» only when the person said so (for a minor,
+   the parent); the record keeps who ticked and when.
+5. Press **«Salvează tot clasamentul»** once. Everything is saved in one go or, if a line is wrong, nothing — the
+   sentence names the runner and the box. The places overall, by sex and by category are computed on every save;
+   ties share a place and the next is skipped. An emptied line is a deleted result. A page opened before a
+   colleague saved is refused rather than written over theirs: reload and save again.
+6. «Descarcă clasamentul (CSV)» is the staff file with the names; the download is in the trail.
+
+### The awards
+
+«Premii» on the same page lists, from the saved results, the first places for women and for men and — when the race
+awards them — in each category, youngest group first, with number, name and time. Ties stand on the same step. The
+card's own form says how many places (1–10, three by default) and whether the categories are awarded: for «top 5 men
+and top 5 women» write 5 and untick «Premiezi și fiecare categorie», then «Salvează premiile». Give the awards from
+this list; correct a time and save, and the podium follows. The public page is unchanged by these rules.
+
+### Publish
+
+An Administrator ticks «Clasamentul e public pe pagina evenimentului» and «Salvează». Refused before the race has
+started and while the privacy notice or the terms in force do not describe the results (`/admin/legal`;
+`/admin/tasks` carries the rows). On the page: place, number, time, category and the date it leaves; a name only for
+a registered runner who ticked «Vreau să apar pe lista de participanți & rezultate» under a notice that described
+the results, or a typed runner the staff recorded as agreeing; everyone else «Participant #număr». The ranking
+leaves the page with the public list's period («Setări» → «Termene»). Untick at any time; the rows stay.
+
+### Afterwards
+
+A corrected answer on a registration (sex, birth date) or an erased registration moves the places at once; an
+erased runner's row stays nameless on its number with its overall place, its category cleared. Three years after
+the race the retention sweep deletes the results with the registrations; delete the downloaded CSV within the same
+period. «Toate datele unei persoane» lists a person's results.
 
 ## Google Calendar will not add the calendar again
 

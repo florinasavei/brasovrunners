@@ -8,7 +8,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { deleteRegistrationByStaff } from "@/modules/registrations/admin-service";
 import { findFirstResultsNoticeVersion } from "@/modules/legal-documents/repository";
-import { importResultsCsv, ResultRowError, deleteEventResult, exportEventResults, readEventResults, readPublicEventResults, rerankEventResults, saveEventResults, setResultsPublished } from "@/modules/results/results";
+import { importResultsCsv, ResultRowError, deleteEventResult, exportEventResults, readEventResults, readPublicEventResults, rerankEventResults, saveEventResults, setResultAgeBands, setResultAwards, setResultsPublished } from "@/modules/results/results";
 import type { PostedResultRow } from "@/modules/results/rows";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -717,5 +717,110 @@ describe("§808 the places follow the live answers, and an erasure leaves nothin
     await db.delete(registrations).where(eq(registrations.id, bia.id));
     expect(await rerankEventResults(db, raceId)).toBe(2);
     expect(await rerankEventResults(db, raceId)).toBe(0);
+  });
+});
+
+describe("§850 «Categorii de vârstă»: the race's own bands", () => {
+  const bands = (starts: number[] | null, actor: StaffUser = staff.ADMIN!) => setResultAgeBands(db, actor, raceId, starts, clock());
+
+  it("ranks under the platform's bands until the race chooses its own, then again under those, in the same transaction, audited without a name", async () => {
+    await field();
+    // Ana is 30 and Bia 41 on the race's day: two categories under the platform's bands.
+    await save([line(101, { time: "50:00" }), line(102, { time: "45:00" })]);
+    expect((await byBib(101))?.categoryKey).toBe("FEMALE:from30");
+    expect((await byBib(102))?.categoryKey).toBe("FEMALE:from40");
+    let view = await readEventResults(db, staff.ADMIN!, raceId);
+    expect(view.ageBandStarts).toEqual([18, 30, 40, 50, 60]);
+    expect(view.ageBandsCustom).toBe(false);
+
+    revalidate.mockClear();
+    expect(await bands([18, 45])).toEqual({ changed: true, rewritten: 2 });
+    // One band from 18 to 44: the two women share it now, Bia first.
+    expect((await byBib(101))).toMatchObject({ categoryKey: "FEMALE:from18", positionCategory: 2 });
+    expect((await byBib(102))).toMatchObject({ categoryKey: "FEMALE:from18", positionCategory: 1 });
+    view = await readEventResults(db, staff.ADMIN!, raceId);
+    expect(view.ageBandStarts).toEqual([18, 45]);
+    expect(view.ageBandsCustom).toBe(true);
+    expect(view.registered.find((runner) => runner.bibNumber === 101)?.result).toMatchObject({ categoryKey: "FEMALE:from18", positionCategory: 2 });
+    expect(revalidate).toHaveBeenCalledTimes(1);
+
+    const [audit] = (await trail()).filter((row) => row.action === "event_results.categories_changed");
+    expect(audit.actorStaffUserId).toBe(staff.ADMIN!.id);
+    expect(audit.metadataJson).toEqual({ ageBands: [18, 45], rewritten: 2 });
+    expect(JSON.stringify(audit.metadataJson)).not.toContain("Popescu");
+
+    // The same list again changes nothing and writes nothing.
+    revalidate.mockClear();
+    expect(await bands([18, 45])).toEqual({ changed: false, rewritten: 0 });
+    expect(revalidate).not.toHaveBeenCalled();
+    expect((await trail()).filter((row) => row.action === "event_results.categories_changed")).toHaveLength(1);
+
+    // Back to the platform's: the column forgets the choice (null, not a copy of the default), and the places are counted again.
+    expect(await bands(null)).toEqual({ changed: true, rewritten: 2 });
+    expect((await db.select({ bands: events.resultAgeBands }).from(events).where(eq(events.id, raceId)))[0].bands).toBeNull();
+    expect((await byBib(102))).toMatchObject({ categoryKey: "FEMALE:from40", positionCategory: 1 });
+    expect((await trail()).filter((row) => row.action === "event_results.categories_changed").at(-1)?.metadataJson).toEqual({ ageBands: null, rewritten: 2 });
+  });
+
+  it("works with no result saved yet, and a race that chose bands ranks a later save under them", async () => {
+    await field();
+    expect(await bands([18, 35, 45])).toEqual({ changed: true, rewritten: 0 });
+    await save([line(101, { time: "50:00" }), line(102, { time: "45:00" })]);
+    expect((await byBib(101))?.categoryKey).toBe("FEMALE:from18");
+    expect((await byBib(102))?.categoryKey).toBe("FEMALE:from35");
+  });
+
+  it("is open to whoever enters results and refused to everyone else, and refused on an event that is not a race or a list the column may not hold", async () => {
+    await field();
+    await expect(bands([18, 40], staff.MODERATOR)).resolves.toEqual({ changed: true, rewritten: 0 });
+    for (const role of ["DEV", "CONTRIBUTOR", "COPYWRITER", "MEMBER"] as const) {
+      await expect(bands([18, 50], staff[role]), role).rejects.toMatchObject({ code: "FORBIDDEN" });
+    }
+    await expect(bands([40, 18])).rejects.toMatchObject({ code: "RESULTS_AGE_BANDS" });
+    await expect(bands([])).rejects.toMatchObject({ code: "RESULTS_AGE_BANDS" });
+    await expect(bands([0])).rejects.toMatchObject({ code: "RESULTS_AGE_BANDS" });
+    const run = await createRace(db, { type: "GROUP_RUN" });
+    await expect(setResultAgeBands(db, staff.ADMIN!, run.id, [18, 40], clock())).rejects.toMatchObject({ code: "RESULTS_NOT_OPEN" });
+    await expect(setResultAgeBands(db, staff.ADMIN!, "not-an-id", [18, 40], clock())).rejects.toMatchObject({ code: "NOT_FOUND" });
+    // The Organizer's save stands; the refused ones wrote nothing.
+    expect((await db.select({ bands: events.resultAgeBands }).from(events).where(eq(events.id, raceId)))[0].bands).toEqual([18, 40]);
+  });
+
+  it("gives the public read the race's bands, so the page says each category in the race's own words", async () => {
+    await field();
+    await approveResultsTexts(db);
+    await save([line(101, { time: "50:00" }), line(102, { time: "45:00" })]);
+    await bands([18, 45]);
+    await setResultsPublished(db, staff.ADMIN!, raceId, true, clock());
+    const result = await readPublicEventResults(db, raceId, { now: clock(), deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: await findFirstResultsNoticeVersion(db) });
+    expect(result?.ageBandStarts).toEqual([18, 45]);
+    expect(result?.rows.map((row) => [row.bibNumber, row.categoryKey, row.positionCategory])).toEqual([
+      [102, "FEMALE:from18", 1],
+      [101, "FEMALE:from18", 2],
+    ]);
+  });
+});
+
+describe("§850 «Premii»: how many places, and whether the categories", () => {
+  const rules = (places: number, categories: boolean, actor: StaffUser = staff.ADMIN!) => setResultAwards(db, actor, raceId, { places, categories }, clock());
+  const current = async () => (await db.select({ places: events.awardPlaces, categories: events.awardCategories }).from(events).where(eq(events.id, raceId)))[0];
+
+  it("starts at three places with the categories, saves the race's own rules audited, and says when nothing changed", async () => {
+    expect(await current()).toEqual({ places: 3, categories: true });
+    expect((await readEventResults(db, staff.ADMIN!, raceId)).event).toMatchObject({ awardPlaces: 3, awardCategories: true });
+    expect(await rules(5, false)).toEqual({ changed: true });
+    expect(await current()).toEqual({ places: 5, categories: false });
+    expect((await trail()).filter((row) => row.action === "event_results.awards_changed").map((row) => row.metadataJson)).toEqual([{ places: 5, categories: false }]);
+    expect(await rules(5, false)).toEqual({ changed: false });
+    expect((await trail()).filter((row) => row.action === "event_results.awards_changed")).toHaveLength(1);
+    expect(await rules(5, false, staff.MODERATOR)).toEqual({ changed: false });
+  });
+
+  it("refuses a count outside one to ten, a role that may not, and an event that is not a race", async () => {
+    for (const places of [0, 11, 2.5]) await expect(rules(places, true), String(places)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["awardPlaces"] });
+    for (const role of ["DEV", "CONTRIBUTOR", "COPYWRITER", "MEMBER"] as const) await expect(rules(5, true, staff[role]), role).rejects.toMatchObject({ code: "FORBIDDEN" });
+    const run = await createRace(db, { type: "GROUP_RUN" });
+    await expect(setResultAwards(db, staff.ADMIN!, run.id, { places: 5, categories: true }, clock())).rejects.toMatchObject({ code: "RESULTS_NOT_OPEN" });
+    expect(await current()).toEqual({ places: 3, categories: true });
   });
 });

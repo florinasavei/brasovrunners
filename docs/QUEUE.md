@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.76` | a race's own age categories and the podium on «Clasament», and the finish line «Sosire» (§850) |
 | `BR-V3.75` | the translation budget's saved notice (§849) |
 | `BR-V3.74` | the consistency audit's guards (§848) |
 | `BR-V3.73` | the consistency audit's third wave (§847) |

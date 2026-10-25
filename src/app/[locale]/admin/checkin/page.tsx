@@ -167,6 +167,8 @@ export default async function DeskPage({ params, searchParams }: Props) {
                 closeLabel={t("confirm.cancel")}
                 hint={t("desk.scanHint")}
                 unreadableHint={t("desk.scanUnreadable")}
+                switchLabel={t("desk.scanSwitch")}
+                cameraLabel={t("desk.scanCamera", { n: "{n}", total: "{total}" })}
               />
             </Stack>
             <Typography variant="body2" color="text.secondary">

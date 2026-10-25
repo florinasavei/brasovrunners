@@ -1390,12 +1390,6 @@
         "noCategory": "Fără categorie",
         "sexFemale": "Feminin",
         "sexMale": "Masculin",
-        "bandUnder18": "sub 18 ani",
-        "bandFrom18": "18-29 ani",
-        "bandFrom30": "30-39 ani",
-        "bandFrom40": "40-49 ani",
-        "bandFrom50": "50-59 ani",
-        "bandFrom60": "60+ ani",
         "note1": "Activi sunt cei confirmați: au declarația semnată; cei care ocupă un loc sunt la «Confirmați care ocupă un loc».",
         "note2": "La «{club}» se numără membrii din «Echipa», cei care au bifat că sunt membri și cei care au scris clubul în formular.",
         "note7": "«Au bifat că sunt membri {club}» numără doar bifa din formular, fără conturile de membru și clubul scris de mână.",
@@ -1410,7 +1404,10 @@
         "legendEnded": "Gri, anulat sau expirat",
         "legendMember": "Albastru: a bifat că e membru {club} — coloanele «Club member», «Member tick (declared)», «Club runner» și «Member bib»",
         "legendClubRunner": "Lila: alergător al clubului fără bifă — cont de membru sau clubul scris în formular",
-        "legendGuest": "Piersică, cursiv: invitat special — nu ocupă un loc"
+        "legendGuest": "Piersică, cursiv: invitat special — nu ocupă un loc",
+        "bandUnder": "sub {age} ani",
+        "bandBetween": "{from}-{to} ani",
+        "bandOpen": "{from}+ ani"
       },
       "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {
@@ -2280,7 +2277,12 @@
       "VINVITE_NOT_INVITED_ONLY": "Invitațiile se trimit doar cât „Cine se poate oferi” e „Doar cu invitație de la club”.",
       "VINVITE_EVENT_CLOSED": "Nu se pot trimite invitații acum: formularul de voluntari nu e deschis. Motivul e scris mai sus.",
       "VINVITE_NOT_OPEN": "Invitația nu mai e deschisă: a fost folosită sau retrasă, ori evenimentul s-a terminat sau a fost anulat.",
-      "VINVITE_NOT_FOUND": "Invitația nu mai există."
+      "VINVITE_NOT_FOUND": "Invitația nu mai există.",
+      "RESULTS_AGE_BANDS": "Categoriile de vârstă nu s-au salvat: {problem}.",
+      "RESULT_BIB_UNKNOWN": "Numărul {bib} nu are o înscriere confirmată. Timpul lui: {time} — notează-l și scrie-l la «Clasament», la „Alergători neînscriși”.",
+      "RESULT_ALREADY_FINISHED": "Numărul {bib} e deja sosit, la {time}. O corectură se face la «Clasament».",
+      "RESULT_FINISH_NOT_STARTED": "Cursa nu a început încă: o sosire nu poate fi înainte de start.",
+      "RESULT_FINISH_CLOSED": "Startul a fost cu mai mult de o zi în urmă: timpii se scriu la «Clasament»."
     },
     "editor": {
       "draftPreview": {
@@ -6741,7 +6743,7 @@
       "search": "Nume, număr sau cod",
       "find": "Caută",
       "scan": "Scanează",
-      "scanHint": "Ține codul QR în cadru. Se deschide singur când e citit.",
+      "scanHint": "Ține codul QR în cadru. Se deschide singur când e citit. Imaginea rămâne neclară? Apasă «Altă cameră».",
       "scanUnreadable": "Codul citit nu este un cod de participant.",
       "searchHelp": "Scrie o parte din nume, numărul de concurs sau codul de pe email. Fără nimic: toată lumea de la evenimentul ales.",
       "counts": {
@@ -6801,7 +6803,9 @@
       "handedBibFastTrackOnly": "Doar pentru cine e confirmat aici, la masă (bifa de mai sus).",
       "nextSpare": "Rezerva următoare: {number}",
       "sparesOut": "Numerele de rezervă s-au terminat: scrie numărul pe care i-l dai, sau lasă gol și site-ul alege singur unul.",
-      "offerPlace": "Trimite-i oferta"
+      "offerPlace": "Trimite-i oferta",
+      "scanSwitch": "Altă cameră",
+      "scanCamera": "Camera {n} din {total}"
     },
     "emails": {
       "title": "Emailurile trimise participanților",
@@ -8511,6 +8515,27 @@
               ]
             },
             {
+              "title": "Clasamentul cursei: cum înregistrezi sosiții",
+              "steps": [
+                "La linia de sosire deschide «Sosire» (din «Clasament», sau «Alergări» → cursa → «Înscrieri» → «Clasament» → «Sosire»), pe telefon. Pagina arată ceasul de la start. Când un alergător trece linia, scrie numărul lui de concurs și apasă «Sosit»: site-ul îi pune timpul de la start, iar «Ultimii sosiți» arată ce ai înregistrat. Nu e nevoie de cronometru.",
+                "Un număr fără înscriere confirmată e refuzat, cu timpul lui în propoziție: notează-l pe hârtie și scrie-l după cursă la «Clasament», la «Alergători neînscriși». Cineva trecut din greșeală la abandon devine sosit când îi scrii numărul. Dacă preferi cronometrul sau o aplicație, notează numărul și timpul fiecăruia și scrie-i după, la «Clasament» — pașii următori.",
+                "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss); «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale.",
+                "Ai timpii într-un fișier? Deschide «Importă din CSV», lipește textul (număr, timp pe fiecare rând; cu timp cip și stare dacă ai) sau alege fișierul și apasă «Importă din CSV». Rândurile intră în căsuțe; nimic nu se salvează încă.",
+                "Un număr pe care nu-l are nicio înscriere ajunge la «Alergători neînscriși»: scrie-i numele și, pentru categorie, sexul și data nașterii. Bifează «A acceptat să apară cu numele în clasament» doar dacă persoana ți-a spus-o. «Adaugă un alergător neînscris» face un rând gol.",
+                "Apasă «Salvează tot clasamentul» o dată, pentru toată pagina. Locurile — în total, la sex și la categorie — se calculează singure; timpii egali împart locul. Un rând golit e un rezultat șters. Poți corecta și salva din nou oricând.",
+                "«Descarcă clasamentul (CSV)» e fișierul cu numele, pentru voi. Publicarea pe pagina evenimentului o face Administratorul."
+              ]
+            },
+            {
+              "title": "Categoriile de vârstă și premiile",
+              "steps": [
+                "Categoriile sunt sexul și o grupă de vârstă din ziua cursei. Fără nimic ales, cursa folosește grupele standard: sub 18, 18-29, 30-39, 40-49, 50-59, 60+.",
+                "Vrei alte grupe? Pe «Clasament», la «Categorii de vârstă», scrie în «Vârstele de la care încep grupele» vârstele de început, separate prin virgulă — „18, 35, 45, 55” dă sub 18, 18-34, 35-44, 45-54 și 55+ — și apasă «Salvează categoriile». Rândul de sub căsuță arată grupele cum le va spune site-ul. Gol înseamnă grupele standard.",
+                "Fă asta înainte de cursă, sau înainte ca Administratorul să publice clasamentul: locurile la categorie ale rezultatelor deja salvate se recalculează pe loc, iar pagina evenimentului și CSV-ul le preiau.",
+                "La «Premii» vezi podiumul din rezultatele salvate: primele locuri la feminin și la masculin, apoi — dacă premiezi și categoriile — primele din fiecare categorie, cu numărul, numele și timpul. Scrie la «Câte locuri premiezi» câte dai (de la 1 la 10), bifează sau debifează «Premiezi și fiecare categorie» și apasă «Salvează premiile». Pentru „top 5 la feminin și la masculin”: 5, debifat."
+              ]
+            },
+            {
               "title": "Ce face Administratorul, nu tu",
               "steps": [
                 "Creează, schimbă, publică, duplică și anulează evenimentele și anunță participanții despre o schimbare.",
@@ -8877,6 +8902,14 @@
                 "«Echipa» → «Adaugă o persoană», cu «Rol» «Membru», sau «Adaugă mai mulți membri» pentru o listă. Apasă «Adaugă» și confirmă; membrul primește invitația pe email.",
                 "Textele: «Pagini» → «Pagini standard» → «Membri». «Beneficiile membrilor» e pagina publică, cu butonul de autentificare; «Zona membrilor» e ce vede membrul după autentificare. Ambele în română și în engleză.",
                 "Pune pagina pe site: «Publică pagina» (doar Administratorul)."
+              ]
+            },
+            {
+              "title": "Publică clasamentul pe pagina evenimentului",
+              "steps": [
+                "Clasamentul apare pe site doar după ce îl publici, doar după ce a început cursa și doar dacă nota de confidențialitate și termenii în vigoare descriu clasamentul — «Documente legale» spune dacă trebuie aprobate texte noi; «Sarcini» are rândul.",
+                "Pe «Clasament», la «Pe pagina evenimentului», bifează «Clasamentul e public pe pagina evenimentului» și apasă «Salvează». Pagina arată locul, numărul, timpul și categoria; numele doar la cine a bifat lista la înscriere sau la alergătorul neînscris care a acceptat — ceilalți apar ca „Participant #număr”.",
+                "Clasamentul stă pe pagină cât lista publică a participanților, de la sfârșitul cursei («Setări» → «Termene»). Debifezi oricând; rezultatele rămân salvate."
               ]
             }
           ]
@@ -10922,6 +10955,62 @@
         "status": "starea nu e cunoscută",
         "needsTime": "un alergător sosit are nevoie de timp",
         "timeWithStatus": "abandon, neprezentat și descalificat se scriu fără timp"
+      },
+      "categories": {
+        "title": "Categorii de vârstă",
+        "aside": "{count} categorii",
+        "intro": "Categoriile cursei sunt sexul și o grupă de vârstă, la ziua cursei. Scrie vârstele de la care începe fiecare grupă; schimbarea recalculează locurile la categorie ale rezultatelor salvate.",
+        "more": "„18, 35, 45, 55” înseamnă sub 18, 18-34, 35-44, 45-54 și 55+, la feminin și la masculin. Lasă gol pentru categoriile standard (18, 30, 40, 50, 60), cele din statistici.",
+        "label": "Vârstele de la care încep grupele",
+        "placeholder": "18, 30, 40, 50, 60",
+        "preview": "Categoriile cursei",
+        "stateDefault": "categoriile standard",
+        "stateCustom": "categorii proprii",
+        "save": "Salvează categoriile",
+        "saving": "Se salvează…",
+        "problems": {
+          "notNumbers": "scrie doar vârste, numere întregi, separate prin virgulă",
+          "range": "o vârstă trebuie să fie între 1 și 99",
+          "order": "aceeași vârstă apare de două ori",
+          "tooMany": "sunt prea multe grupe (cel mult 12)"
+        }
+      },
+      "awards": {
+        "title": "Premii",
+        "aside": "primele {places} locuri, la sex și la categorie",
+        "intro": "Podiumul din rezultatele salvate, în ordinea premierii. Alege câte locuri premiezi și dacă premiezi și categoriile. Timpii egali stau pe aceeași treaptă.",
+        "overallFemale": "General feminin",
+        "overallMale": "General masculin",
+        "place": "Locul {position}",
+        "empty": "Niciun sosit cu loc încă. Premiile apar după ce salvezi timpii.",
+        "asideOverall": "primele {places} locuri la feminin și la masculin",
+        "placesLabel": "Câte locuri premiezi",
+        "categoriesLabel": "Premiezi și fiecare categorie",
+        "categoriesHelp": "Debifat, lista are doar primele locuri la feminin și la masculin.",
+        "save": "Salvează premiile",
+        "saving": "Se salvează…"
+      },
+      "finish": {
+        "title": "Sosire: {event}",
+        "link": "Sosire",
+        "backToResults": "Înapoi la clasament",
+        "intro": "Scrie numărul de concurs când alergătorul trece linia și apasă «Sosit»: site-ul îi pune timpul de la start. Corecturile se fac la «Clasament».",
+        "more": "Un număr fără înscriere confirmată e refuzat cu timpul în propoziție: notează-l și scrie-l la «Clasament». Cineva trecut din greșeală la abandon devine sosit.",
+        "gun": "Startul: {time}",
+        "elapsed": "De la start: {time}",
+        "notStarted": "Cursa nu a început încă. Sosirile se înregistrează după start.",
+        "bibLabel": "Numărul de concurs",
+        "record": "Sosit",
+        "recording": "Se înregistrează…",
+        "recorded": "Sosit: #{bib} {name} · {time} · locul {position}",
+        "recordedNameless": "Sosit: #{bib} · {time} · locul {position}",
+        "recent": {
+          "title": "Ultimii sosiți",
+          "aside": "{finished} sosiți din {withNumber} cu număr",
+          "empty": "Nimeni nu a sosit încă.",
+          "line": "#{bib} {name} · {time} · locul {position}",
+          "lineNameless": "#{bib} · {time} · locul {position}"
+        }
       }
     }
   },
@@ -12933,7 +13022,11 @@
       "resultsPublished": "Clasamentul e acum public pe pagina evenimentului.",
       "resultsUnpublished": "Clasamentul nu mai e public pe pagina evenimentului.",
       "resultsPublicUnchanged": "Era deja așa; nimic de schimbat.",
-      "rsvpAskAudience": "Alegerea pentru întrebarea „Vii?” a fost salvată."
+      "rsvpAskAudience": "Alegerea pentru întrebarea „Vii?” a fost salvată.",
+      "resultsCategoriesSaved": "Am salvat categoriile de vârstă; locurile la categorie s-au recalculat.",
+      "resultsCategoriesUnchanged": "Categoriile erau deja așa; nimic de schimbat.",
+      "resultsAwardsSaved": "Am salvat premiile.",
+      "resultsAwardsUnchanged": "Premiile erau deja așa; nimic de schimbat."
     },
     "via": {
       "mailgun": "Pleacă prin Mailgun.",

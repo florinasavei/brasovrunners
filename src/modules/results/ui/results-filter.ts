@@ -1,3 +1,5 @@
+import { bandStartOf } from "../domain/age-bands";
+
 /**
  * What the «Clasament» section's small filter decides (§809, race results part 2), pure so a unit test holds it without a browser.
  *
@@ -11,9 +13,8 @@ export type ResultsFilterState = { category: string | null; bib: string };
 /** What a row says of itself for the filter: the `data-category` and `data-bib` the section writes. */
 export type ResultsFilterRow = { category: string | null; bib: number };
 
-/** The age bands, youngest first, and the sexes in the order the club's statistics list them (`STATISTICS_AGE_BANDS`). */
+/** The sexes in the order the club's statistics list them; the bands by the age each starts at (`bandStartOf`, §850), whatever the race chose. */
 const SEX_ORDER = ["FEMALE", "MALE"];
-const BAND_ORDER = ["under18", "from18", "from30", "from40", "from50", "from60"];
 
 /**
  * The categories present, in the order the club's own statistics read them — women then men, youngest band first — each once.
@@ -24,8 +25,8 @@ export function categoriesPresent(keys: readonly (string | null)[]): string[] {
   const rank = (key: string) => {
     const [sex = "", band = ""] = key.split(":");
     const sexAt = SEX_ORDER.indexOf(sex);
-    const bandAt = BAND_ORDER.indexOf(band);
-    return sexAt < 0 || bandAt < 0 ? Number.MAX_SAFE_INTEGER : sexAt * BAND_ORDER.length + bandAt;
+    const bandAt = bandStartOf(band);
+    return sexAt < 0 || bandAt === Number.MAX_SAFE_INTEGER ? Number.MAX_SAFE_INTEGER : sexAt * 1000 + bandAt + 1;
   };
   return present.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 }
