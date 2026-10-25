@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "result_age_bands" jsonb;

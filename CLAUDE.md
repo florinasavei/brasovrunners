@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.75-2026-10-22 -->
+<!-- PROJECT_BASELINE: BR-V3.76-2026-10-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V3.75-2026-10-22`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V3.76-2026-10-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -145,8 +145,8 @@ The areas, and where their code lives:
 `/devs` (under «Setări» → «Configurație») shows the configuration, Neon's month, Vercel's
 deployments and the outbox.
 
-Not built: articles and what M2–M4 name (multi-distance races, results, runner profiles); a
-custom domain for the bucket. `SETUP.md` is the numbered procedures with their values;
+Not built: articles and what M2–M4 name (multi-distance races, runner profiles; results exist
+since §808); a custom domain for the bucket. `SETUP.md` is the numbered procedures with their values;
 `docs/VIBECODING.md` is the short way in.
 
 **Two settings that cost an afternoon between them:** the Zitadel application needs

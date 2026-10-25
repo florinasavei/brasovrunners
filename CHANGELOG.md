@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.76-2026-10-25
+
+- **A race chooses its own age categories, «Clasament» shows the podium, and «Sosire» stamps the finishers** — «Categorii de vârstă» on the results page takes the ages each group starts at («18, 35, 45, 55»), ranks the saved results again under them and says them on the event page, in the CSV and in the filter; «Premii» lists the podium for women, for men and in every category, as deep as the race awards (1–10, three by default) and with the categories or without them; and the new page «Sosire» under «Clasament» takes a race number as the runner crosses the line and stamps the time since the gun as their «Sosit», on a phone, no stopwatch; and the desk's «Scanează» asks the phone's camera to keep focusing, so a QR code held close is read, and «Altă cameră» moves to the phone's next lens and remembers it. §850.
 ## BR-V3.75-2026-10-22
 
 - **«Costuri» confirms the translation budget's save** — «Bugetul de traducere a fost salvat.» shows after the save, like the page's other settings. §849.

@@ -11,7 +11,9 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventTitle } from "@/modules/content/events/repository";
 import { noticeDescribesResults, termsDescribeResults } from "@/modules/legal-documents/repository";
-import { categoryLabelOf } from "@/modules/results/category-words";
+import { bandWordsFrom, categoryLabelOf } from "@/modules/results/category-words";
+import { bandKeysOf, bandLabelOf, formatAgeBandStarts } from "@/modules/results/domain/age-bands";
+import { awardsOf } from "@/modules/results/domain/awards";
 import { formatResultTime } from "@/modules/results/domain/result-time";
 import { RESULT_STATUSES } from "@/modules/results/domain/ranking";
 import { anonymousResultLabel } from "@/modules/results/domain/public-name";
@@ -43,7 +45,7 @@ import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import StatusChip from "@/shared/ui/StatusChip";
 import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
-import { deleteEventResultAction, saveEventResultsAction, setResultsPublishedAction } from "./actions";
+import { deleteEventResultAction, saveEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultsPublishedAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -156,8 +158,10 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     noPlace: t("results.noPlace"),
     noPlaceSettled: t("results.noPlaceSettled"),
   };
-  // The category in the Excel footer's own words (§787): the template «{sex}, {band}» read raw, filled by the label.
-  const categoryLabel = (key: string | null) => categoryLabelOf(key, (statisticsKey) => t.raw(`registrations.statistics.${statisticsKey}`) as string);
+  // The category in the Excel footer's own words (§787), under the race's own bands (§850): the template «{sex}, {band}» read raw, filled by the label.
+  const statisticsWord = (statisticsKey: string) => t.raw(`registrations.statistics.${statisticsKey}`) as string;
+  const categoryLabel = (key: string | null) => categoryLabelOf(key, statisticsWord, view.ageBandStarts);
+  const bandLabel = (band: string) => bandLabelOf(band, view.ageBandStarts, bandWordsFrom(statisticsWord));
 
   const placeOf = (runner: ResultRunner): PlaceView | null => {
     const result = runner.result;
@@ -216,6 +220,20 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   labels["n[].agreed"] = words.agreed;
   const boxes = await refusalMessages(labels);
   const publishBoxes = await refusalMessages({ published: t("results.publish.label") });
+  const categoriesBoxes = await refusalMessages({ ageBands: t("results.categories.label") });
+  const awardsBoxes = await refusalMessages({ awardPlaces: t("results.awards.placesLabel"), awardCategories: t("results.awards.categoriesLabel") });
+
+  // «Premii» (§850): the podium by sex — and by category when the race awards them — from the rows the page already holds, the ranking's own positions.
+  const awardRules = { places: event.awardPlaces, categories: event.awardCategories };
+  const awards = awardsOf(
+    [...view.registered, ...view.typed].flatMap((runner) =>
+      runner.result
+        ? [{ bibNumber: runner.bibNumber, name: runner.name, sex: runner.sex, gunTimeMs: runner.result.gunTimeMs, positionSex: runner.result.positionSex, positionCategory: runner.result.positionCategory, categoryKey: runner.result.categoryKey }]
+        : [],
+    ),
+    awardRules,
+  );
+  const bands = bandKeysOf(view.ageBandStarts);
   const confirm = await confirmWords();
 
   const total = view.counts.FINISHED + view.counts.DNF + view.counts.DNS + view.counts.DSQ;
@@ -324,6 +342,87 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         <input type="hidden" name="eventId" value={id} />
       </ActionForm>
 
+      {/* «Categorii de vârstă» (§850): the ages the race's categories start at, a form of its own — a change ranks the stored rows again, not a save of them. */}
+      <Panel glyph="filters" level={3} title={t("results.categories.title")} aside={t("results.categories.aside", { count: String(bands.length * 2) })} id="box-results-categories" data-testid="results-categories">
+        <ActionForm action={setResultAgeBandsAction} scope="categories" messages={categoriesBoxes} data-testid="results-categories-form">
+          <input type="hidden" name="uiLocale" value={locale} />
+          <input type="hidden" name="eventId" value={id} />
+          <Stack spacing={1.5}>
+            <Typography variant="body2" color="text.secondary">
+              {t("results.categories.intro")}
+              <QuietHelp text={t("results.categories.more")} />
+            </Typography>
+            <RecallField
+              name="ageBands"
+              label={t("results.categories.label")}
+              defaultValue={view.ageBandsCustom ? formatAgeBandStarts(view.ageBandStarts) : ""}
+              placeholder={t("results.categories.placeholder")}
+              helperText={view.ageBandsCustom ? t("results.categories.stateCustom") : t("results.categories.stateDefault")}
+              fullWidth
+              size="small"
+              slotProps={{ htmlInput: { inputMode: "numeric", autoComplete: "off", "data-testid": "results-age-bands" } }}
+            />
+            <Typography variant="body2" data-testid="results-categories-preview">
+              {t("results.categories.preview")}: {bands.map((band) => bandLabel(band)).join(" · ")}
+            </Typography>
+            <Box>
+              <GlyphSubmitButton icon="save" variant="outlined" label={t("results.categories.save")} pendingLabel={t("results.categories.saving")} />
+            </Box>
+          </Stack>
+        </ActionForm>
+      </Panel>
+
+      {/* «Premii» (§850): who stands on the podium, by sex and by category, read from the saved results — the list the awards are given from. */}
+      <Panel glyph="badges" collapsible level={3} title={t("results.awards.title")} aside={t(event.awardCategories ? "results.awards.aside" : "results.awards.asideOverall", { places: String(event.awardPlaces) })} id="box-results-awards" openWhen={{ inUse: awards.length > 0 }} data-testid="results-awards">
+        <Stack spacing={1.5}>
+          <Typography variant="body2" color="text.secondary">
+            {t("results.awards.intro")}
+          </Typography>
+          {/* The race's own rules (§850): how many places, and whether the categories are awarded — a form of its own, nothing of the results moves. */}
+          <ActionForm action={setResultAwardsAction} scope="awards" messages={awardsBoxes} data-testid="results-awards-form">
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="eventId" value={id} />
+            <Stack direction="row" sx={{ gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
+              <RecallField
+                name="awardPlaces"
+                label={t("results.awards.placesLabel")}
+                defaultValue={String(event.awardPlaces)}
+                size="small"
+                sx={{ width: 150 }}
+                slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", autoComplete: "off", "data-testid": "results-award-places" } }}
+              />
+              <CheckboxField name="awardCategories" defaultChecked={event.awardCategories} help={t("results.awards.categoriesHelp")}>
+                {t("results.awards.categoriesLabel")}
+              </CheckboxField>
+              <Box>
+                <GlyphSubmitButton icon="save" variant="outlined" label={t("results.awards.save")} pendingLabel={t("results.awards.saving")} />
+              </Box>
+            </Stack>
+          </ActionForm>
+          {awards.length === 0 ? (
+            <Typography variant="body2" data-testid="results-awards-empty">
+              {t("results.awards.empty")}
+            </Typography>
+          ) : (
+            <Box component="dl" sx={{ m: 0, display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
+              {awards.map((group) => (
+                <Box key={group.kind === "sex" ? `sex-${group.sex}` : group.key} data-testid="results-award-group">
+                  <Typography component="dt" variant="subtitle2">
+                    {group.kind === "sex" ? t(group.sex === "FEMALE" ? "results.awards.overallFemale" : "results.awards.overallMale") : categoryLabel(group.key)}
+                  </Typography>
+                  {group.rows.map((row) => (
+                    <Typography component="dd" variant="body2" key={row.bibNumber} sx={{ m: 0 }} data-testid="results-award-row">
+                      {t("results.awards.place", { position: String(row.position) })} · #{row.bibNumber}
+                      {row.name ? ` ${row.name}` : ""} · {formatResultTime(row.gunTimeMs)}
+                    </Typography>
+                  ))}
+                </Box>
+              ))}
+            </Box>
+          )}
+        </Stack>
+      </Panel>
+
       <Panel glyph="publication" level={3} title={t("results.publish.title")} aside={event.resultsPublished ? t("results.publish.stateOn") : t("results.publish.stateOff")} id="box-results-publish" data-testid="results-publish">
         <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">
@@ -377,6 +476,12 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         </Stack>
       </Panel>
 
+      <Box>
+        {/* «Sosire» (§850): the finish line's page — a number typed as the runner crosses, the time since the gun stamped. */}
+        <GlyphButton icon="checkIn" href={getPathname({ locale, href: { pathname: "/admin/events/[id]/results/sosire", params: { id } } })} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="results-finish-link">
+          {t("results.finish.link")}
+        </GlyphButton>
+      </Box>
       <Box>
         <GlyphButton icon="download" href={downloadHref} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="results-export">
           {t("results.export")}

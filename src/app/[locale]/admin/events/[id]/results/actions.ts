@@ -8,7 +8,10 @@ import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { ResultsCsvError } from "@/modules/results/domain/import-csv";
 import { mergeImportedRows } from "@/modules/results/import-merge";
-import { deleteEventResult, importResultsCsv, ResultRowError, saveEventResults, setResultsPublished } from "@/modules/results/results";
+import { parseAgeBandStarts } from "@/modules/results/domain/age-bands";
+import { formatResultTime } from "@/modules/results/domain/result-time";
+import { AWARD_PLACES_MAX, AWARD_PLACES_MIN } from "@/modules/results/domain/awards";
+import { deleteEventResult, FinishError, importResultsCsv, recordFinish, ResultRowError, saveEventResults, setResultAgeBands, setResultAwards, setResultsPublished } from "@/modules/results/results";
 import { EXTRA_ROWS, postedResultRows } from "@/modules/results/rows";
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "@/modules/results/domain/ranking";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -191,4 +194,83 @@ export async function setResultsPublishedAction(_previous: FormOutcome | null, f
     return backToPage(form, { error: error.code });
   }
   return backToPage(form, { saved: !changed ? "resultsPublicUnchanged" : on ? "resultsPublished" : "resultsUnpublished" });
+}
+
+/**
+ * «Categorii de vârstă» (§850): one box of ages and one «Salvează categoriile», saved on its own — a change ranks the stored results
+ * again, which is not a save of the rows. A box that cannot be read is refused in place (`RESULTS_AGE_BANDS`, the sentence naming
+ * what is wrong, the box keeping what was typed); an empty box is the platform's bands. The toast says the places were counted again.
+ */
+export async function setResultAgeBandsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const parsed = parseAgeBandStarts(field(form, "ageBands"));
+  if (!parsed.ok) {
+    const t = await getTranslations({ locale: localeOf(form), namespace: "Admin" });
+    return {
+      ...refused(new DomainError("RESULTS_AGE_BANDS", "the age bands cannot be read", ["ageBands"]), form),
+      errorValues: { problem: t(`results.categories.problems.${parsed.problem}`) },
+    };
+  }
+  let changed: boolean;
+  try {
+    const actor = await requireStaff();
+    changed = (await setResultAgeBands(getDb(), actor, eventIdOf(form), parsed.starts, new Date())).changed;
+  } catch (error) {
+    if (isDomainError(error) && (error.code === "RESULTS_NOT_OPEN" || error.code === "RESULTS_AGE_BANDS")) return refused(error, form);
+    if (!isDomainError(error)) throw error;
+    return backToPage(form, { error: error.code });
+  }
+  return backToPage(form, { saved: changed ? "resultsCategoriesSaved" : "resultsCategoriesUnchanged" });
+}
+
+/**
+ * «Sosire» (§850): the finish line's one press — the number typed as the runner crosses, the time since the gun stamped by the service
+ * (`recordFinish`). It works with scripts off: the page comes back with `?ok=<number>` and says who and what time, the box empty for the next
+ * runner. A number no confirmed registration holds, or one already finished, is refused in place with the time in the sentence, the box keeping
+ * the number — the volunteer writes the time down and «Clasament» takes the rest later. A press before the gun is refused the same way.
+ */
+export async function recordFinishAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const typed = field(form, "bib").trim();
+  const bibNumber = /^\d{1,6}$/.test(typed) ? Number(typed) : Number.NaN;
+  let recorded;
+  try {
+    if (!Number.isInteger(bibNumber) || bibNumber <= 0) throw new DomainError("VALIDATION_ERROR", "the race number is not a whole number", ["bib"]);
+    const actor = await requireStaff();
+    recorded = await recordFinish(getDb(), actor, { eventId: eventIdOf(form), bibNumber }, new Date());
+  } catch (error) {
+    if (error instanceof FinishError) return { ...refused(error, form), errorValues: { bib: String(error.bibNumber), time: formatResultTime(error.gunTimeMs) } };
+    if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "RESULT_FINISH_NOT_STARTED" || error.code === "RESULT_FINISH_CLOSED" || error.code === "RESULTS_NOT_OPEN")) return refused(error, form);
+    if (!isDomainError(error)) throw error;
+    return backToFinish(form, { error: error.code });
+  }
+  return backToFinish(form, { ok: String(recorded.bibNumber) });
+}
+
+/** Back to «Sosire», with the number just recorded (`?ok=`) for the page's sentence, or a code for its banner. Numbers only, never a name. */
+async function backToFinish(form: FormData, outcome: { ok?: string; error?: string }): Promise<never> {
+  const locale = localeOf(form);
+  const id = eventIdOf(form);
+  const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/results/sosire", params: { id } } });
+  revalidatePath(path);
+  redirect(`${path}${outcome.ok ? `?ok=${encodeURIComponent(outcome.ok)}` : outcome.error ? `?finishError=${encodeURIComponent(outcome.error)}` : ""}`);
+}
+
+/**
+ * «Premii» (§850): how many places each podium awards and whether the categories are awarded too — one box, one tick, one «Salvează
+ * premiile», saved on its own. A count that is not one to ten is refused in place on its box; the toast says it was saved.
+ */
+export async function setResultAwardsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const typed = field(form, "awardPlaces").trim();
+  const places = /^\d{1,2}$/.test(typed) ? Number(typed) : Number.NaN;
+  const categories = field(form, "awardCategories") === "on";
+  let changed: boolean;
+  try {
+    if (!Number.isInteger(places) || places < AWARD_PLACES_MIN || places > AWARD_PLACES_MAX) throw new DomainError("VALIDATION_ERROR", "the places awarded must be one to ten", ["awardPlaces"]);
+    const actor = await requireStaff();
+    changed = (await setResultAwards(getDb(), actor, eventIdOf(form), { places, categories }, new Date())).changed;
+  } catch (error) {
+    if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "RESULTS_NOT_OPEN")) return refused(error, form);
+    if (!isDomainError(error)) throw error;
+    return backToPage(form, { error: error.code });
+  }
+  return backToPage(form, { saved: changed ? "resultsAwardsSaved" : "resultsAwardsUnchanged" });
 }

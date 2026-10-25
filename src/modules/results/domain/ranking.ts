@@ -1,5 +1,7 @@
-import { categoryKeyOf } from "@/modules/registrations/statistics";
 import type { SexChoice } from "@/modules/registrations/domain/sex";
+import { categoryKeyOf, DEFAULT_AGE_BAND_STARTS } from "./age-bands";
+
+export { splitCategoryKey } from "./age-bands";
 
 /**
  * Race results, part 1 (§808): what a result is and how a list of them is ranked.
@@ -69,9 +71,10 @@ function byTime(rows: readonly Rankable[]): Rankable[] {
  * finishers of the same sex, by category among the finishers of the same sex and band. A runner who did not finish
  * (`DNF`, `DNS`, `DSQ`) has no position at all; a finisher without a sex has no position by sex and none by
  * category, one without a birth date has an overall and a sex position and no category — the Excel's footer says
- * «Fără categorie» for the same rows (§787), and nothing is guessed.
+ * «Fără categorie» for the same rows (§787), and nothing is guessed. The bands are the race's own (`starts`, §850), the
+ * platform's when it chose none.
  */
-export function rankResults(rows: readonly Rankable[]): Map<number, Ranked> {
+export function rankResults(rows: readonly Rankable[], starts: readonly number[] = DEFAULT_AGE_BAND_STARTS): Map<number, Ranked> {
   const finishers = byTime(rows);
   const overall = positionsOf(finishers);
 
@@ -89,7 +92,7 @@ export function rankResults(rows: readonly Rankable[]): Map<number, Ranked> {
     return positions;
   };
   const bySex = groupsBy((row) => row.sex);
-  const byCategory = groupsBy((row) => categoryKeyOf(row.sex, row.ageOnRaceDay));
+  const byCategory = groupsBy((row) => categoryKeyOf(row.sex, row.ageOnRaceDay, starts));
 
   const ranked = new Map<number, Ranked>();
   for (const row of rows) {
@@ -99,15 +102,9 @@ export function rankResults(rows: readonly Rankable[]): Map<number, Ranked> {
       positionSex: finished ? (bySex.get(row.bibNumber) ?? null) : null,
       positionCategory: finished ? (byCategory.get(row.bibNumber) ?? null) : null,
       // The category is what the runner is, finished or not: a DNF still belongs to «F, 30-39» in the club's own tally.
-      categoryKey: categoryKeyOf(row.sex, row.ageOnRaceDay),
+      categoryKey: categoryKeyOf(row.sex, row.ageOnRaceDay, starts),
     });
   }
   return ranked;
 }
 
-/** The two halves of a stored category key, or null for a key that is not one (a row stored by another version). */
-export function splitCategoryKey(key: string | null | undefined): { sex: SexChoice; band: string } | null {
-  if (!key) return null;
-  const [sex, band] = key.split(":");
-  return (sex === "FEMALE" || sex === "MALE") && band ? { sex, band } : null;
-}

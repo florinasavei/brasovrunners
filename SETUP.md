@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.75-2026-10-22 -->
+<!-- PROJECT_BASELINE: BR-V3.76-2026-10-25 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.75-2026-10-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.76-2026-10-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2510,6 +2510,30 @@ enter them; **only the Administrator and the Superadministrator make them public
    (a registration held for a dispute keeps its result until the hold is cleared), as section 7 of the notice says; the results file you download is a
    copy the sweep cannot reach, so delete it within the same period. «Toate datele unei persoane» lists a person's results and its file carries them.
    The Excel of the registrations is unchanged.
+
+7. **«Categorii de vârstă» and «Premii» (§850).** A category is the sex and an age group on the race's day. Every race starts with the
+   platform's groups — the statistics' (§787): sub 18, 18-29, 30-39, 40-49, 50-59, 60+ — and the card **«Categorii de vârstă»** on «Clasament»
+   lets the race choose its own: write the ages each group **starts** at, separated by commas («18, 35, 45, 55» gives sub 18, 18-34, 35-44,
+   45-54 and 55+, for women and for men), then «Salvează categoriile». The line under the box shows the groups as the site will say them.
+   Saving ranks the results already saved again under the new groups, in the same transaction, and the public page, the CSV and the
+   filter's chips follow; an empty box goes back to the platform's groups. Whoever enters results may set them (the Organizer too); a
+   change is in the trail with the ages, never a runner. The card **«Premii»** reads the saved results and lists the podium — the first
+   places overall for women and for men, then — when the race awards them — the first in every category, youngest group first, ties on the
+   same step, each with the number, the name as the backoffice sees it and the time — so the awards are handed out from one list. The card's
+   own boxes say how many places (1–10, three by default) and whether the categories are awarded: «top 5 men and top 5 women» is 5 with
+   «Premiezi și fiecare categorie» unticked, then «Salvează premiile». Set the groups
+   **before** you publish the ranking, or say on the page that they changed: a runner's place in the category can move. The Excel of the
+   registrations keeps the platform's groups in its «Statistici», whatever a race chose.
+
+8. **«Sosire» — the finish line on a phone (§850).** «Clasament» → «Sosire». The page shows the gun («Startul») and a clock since
+   it. As each runner crosses, type the race number and press «Sosit»: the site stamps the time since the gun — the race's own start
+   when you stated one in «Când și unde», else the event's start — to the second, as the runner's «Sosit», and the page comes back
+   with the box empty, a sentence naming who and what time, and «Ultimii sosiți», the latest press first. Refused in place, the number
+   kept in the box: a number no confirmed registration holds (the sentence carries the time — write it down, type the runner later under
+   «Alergători neînscriși»), a number already finished (corrections are «Clasament»'s), a press before the gun or more than a day after
+   it. A runner marked «Abandon» or «Neprezentat» by mistake becomes «Sosit» when their number is typed. The Organizer and the
+   Administrator may use it; a published ranking shows each finisher at once. The paper sheet and the CSV import (steps 2–3) remain the
+   backup.
 
 
 ## 46. Răspunsurile „Vin!” — let people say they are coming to a turn-up event, and show how many

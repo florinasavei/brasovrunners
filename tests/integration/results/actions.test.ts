@@ -7,6 +7,7 @@ import { events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import type { FormOutcome } from "@/shared/forms/outcome";
+import { formatResultTime } from "@/modules/results/domain/result-time";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
@@ -42,7 +43,7 @@ vi.mock("next-intl/server", async () => {
   };
 });
 
-const { saveEventResultsAction, deleteEventResultAction, setResultsPublishedAction } = await import("@/app/[locale]/admin/events/[id]/results/actions");
+const { saveEventResultsAction, deleteEventResultAction, recordFinishAction, setResultAgeBandsAction, setResultAwardsAction, setResultsPublishedAction } = await import("@/app/[locale]/admin/events/[id]/results/actions");
 const { readEventResults } = await import("@/modules/results/results");
 
 let db: TestDatabase;
@@ -302,5 +303,127 @@ describe("§808 «Adaugă un alergător neînscris» and the toast of a save tha
     const [, value] = state.cookies.at(-1) as [string, string];
     expect(decodeURIComponent(value)).toContain('"resultsRecalculated"');
     expect(decodeURIComponent(value)).not.toContain('"resultsSaved"');
+  });
+});
+
+describe("§850 «Salvează categoriile»", () => {
+  const bandsOf = async () => (await db.select({ bands: events.resultAgeBands }).from(events).where(eq(events.id, raceId)))[0].bands;
+
+  it("saves the ages typed, sorted, ranks the stored rows again and goes back to the page with the toast's word", async () => {
+    expect(await post(saveEventResultsAction, form({ "r[101].time": "50:00", "r[102].time": "45:00" }))).toBe("redirected");
+    state.cookies.length = 0;
+    expect(await post(setResultAgeBandsAction, form({ ageBands: "45, 18" }))).toBe("redirected");
+    expect(await bandsOf()).toEqual([18, 45]);
+    expect((await stored()).map((row) => [row.bibNumber, row.categoryKey, row.positionCategory])).toEqual([
+      [101, "FEMALE:from18", 2],
+      [102, "FEMALE:from18", 1],
+    ]);
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsCategoriesSaved");
+    expect(state.redirected.at(-1)).toMatch(/\/results$/);
+
+    // The same again says so quietly; an empty box goes back to the platform's bands.
+    state.cookies.length = 0;
+    expect(await post(setResultAgeBandsAction, form({ ageBands: "18,45" }))).toBe("redirected");
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsCategoriesUnchanged");
+    expect(await post(setResultAgeBandsAction, form({ ageBands: "" }))).toBe("redirected");
+    expect(await bandsOf()).toBeNull();
+    expect((await stored()).map((row) => row.categoryKey)).toEqual(["FEMALE:from30", "FEMALE:from40"]);
+  });
+
+  it("refuses a box it cannot read in place, naming the problem, the box keeping what was typed, and saves nothing", async () => {
+    const result = outcome(await post(setResultAgeBandsAction, form({ ageBands: "18, abc" })));
+    expect(result.error).toBe("RESULTS_AGE_BANDS");
+    expect(result.fields).toEqual(["ageBands"]);
+    expect(result.errorValues?.problem).toBe("scrie doar vârste, numere întregi, separate prin virgulă");
+    expect(result.values.ageBands).toEqual(["18, abc"]);
+    expect(outcome(await post(setResultAgeBandsAction, form({ ageBands: "18, 18" }))).errorValues?.problem).toBe("aceeași vârstă apare de două ori");
+    expect(await bandsOf()).toBeNull();
+  });
+
+  it("is refused for a role that may not enter results", async () => {
+    state.actor = staff.DEV;
+    expect(await post(setResultAgeBandsAction, form({ ageBands: "18, 40" }))).toBe("redirected");
+    expect(state.redirected.at(-1)).toContain("resultsError=FORBIDDEN");
+    expect(await bandsOf()).toBeNull();
+  });
+});
+
+describe("§850 «Sosire»: one number, one press", () => {
+  // The actions read the real clock, so the finish line's race started an hour ago; `raceId` (June) is a day past the gun and refused.
+  let liveId: string;
+  const live = (fields: Record<string, string>) => {
+    const data = form(fields);
+    data.set("eventId", liveId);
+    return data;
+  };
+  const liveRows = () => db.select().from(eventResults).where(eq(eventResults.eventId, liveId)).orderBy(eventResults.bibNumber);
+  beforeEach(async () => {
+    liveId = (await createRace(db, { startsAt: new Date(Date.now() - 3_600_000) })).id;
+    await registerRunner(db, liveId, { name: "Ana Popescu", bibNumber: 101, sex: "FEMALE", birthDate: "1996-05-01" });
+    await registerRunner(db, liveId, { name: "Bia Marin", bibNumber: 102, sex: "FEMALE", birthDate: "1985-03-10" });
+  });
+
+  it("stamps the time since the gun as the runner's «Sosit» and goes back to the finish page with the number", async () => {
+    expect(await post(recordFinishAction, live({ bib: " 102 " }))).toBe("redirected");
+    expect(state.redirected.at(-1)).toMatch(/\/results\/sosire\?ok=102$/);
+    const [row] = await liveRows();
+    expect(row).toMatchObject({ bibNumber: 102, status: "FINISHED", positionOverall: 1 });
+    // The gun was an hour ago and the clock is real: the stamped time is about an hour, to the second, not a typed value.
+    expect(row.gunTimeMs).toBeGreaterThanOrEqual(3_600_000);
+    expect(row.gunTimeMs).toBeLessThan(3_700_000);
+    expect(row.gunTimeMs! % 1000).toBe(0);
+    // A day after its gun, the June race's line is closed: the time is «Clasament»'s to type.
+    expect(outcome(await post(recordFinishAction, form({ bib: "101" }))).error).toBe("RESULT_FINISH_CLOSED");
+  });
+
+  it("refuses in place a number no confirmed registration holds, with the stamped time in the sentence and the number kept in the box", async () => {
+    const result = outcome(await post(recordFinishAction, live({ bib: "900" })));
+    expect(result.error).toBe("RESULT_BIB_UNKNOWN");
+    expect(result.fields).toEqual(["bib"]);
+    expect(result.errorValues?.bib).toBe("900");
+    expect(result.errorValues?.time).toMatch(/^1:0\d:\d\d$/);
+    expect(result.values.bib).toEqual(["900"]);
+    expect(await liveRows()).toHaveLength(0);
+  });
+
+  it("refuses a second press for the same number with the time already stored, and a box that is not a number", async () => {
+    expect(await post(recordFinishAction, live({ bib: "101" }))).toBe("redirected");
+    const again = outcome(await post(recordFinishAction, live({ bib: "101" })));
+    expect(again.error).toBe("RESULT_ALREADY_FINISHED");
+    expect(again.errorValues?.time).toBe(formatResultTime((await liveRows())[0].gunTimeMs));
+    expect(outcome(await post(recordFinishAction, live({ bib: "abc" }))).error).toBe("VALIDATION_ERROR");
+    expect(outcome(await post(recordFinishAction, live({ bib: "" }))).fields).toEqual(["bib"]);
+  });
+
+  it("is refused for a role that may not enter results", async () => {
+    state.actor = staff.DEV;
+    expect(await post(recordFinishAction, live({ bib: "101" }))).toBe("redirected");
+    expect(state.redirected.at(-1)).toContain("sosire?finishError=FORBIDDEN");
+    expect(await liveRows()).toHaveLength(0);
+  });
+});
+
+describe("§850 «Salvează premiile»", () => {
+  const current = async () => (await db.select({ places: events.awardPlaces, categories: events.awardCategories }).from(events).where(eq(events.id, raceId)))[0];
+
+  it("saves the places and the tick and goes back to the page with the toast's word; an unticked box is «no categories»", async () => {
+    expect(await post(setResultAwardsAction, form({ awardPlaces: "5" }))).toBe("redirected");
+    expect(await current()).toEqual({ places: 5, categories: false });
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsAwardsSaved");
+    state.cookies.length = 0;
+    expect(await post(setResultAwardsAction, form({ awardPlaces: "5", awardCategories: "on" }))).toBe("redirected");
+    expect(await current()).toEqual({ places: 5, categories: true });
+    expect(await post(setResultAwardsAction, form({ awardPlaces: "5", awardCategories: "on" }))).toBe("redirected");
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsAwardsUnchanged");
+  });
+
+  it("refuses a count that is not one to ten in place, the box keeping what was typed", async () => {
+    for (const typed of ["0", "11", "abc", ""]) {
+      const result = outcome(await post(setResultAwardsAction, form({ awardPlaces: typed, awardCategories: "on" })));
+      expect(result.error, typed).toBe("VALIDATION_ERROR");
+      expect(result.fields, typed).toEqual(["awardPlaces"]);
+      expect(result.values.awardPlaces, typed).toEqual([typed]);
+    }
+    expect(await current()).toEqual({ places: 3, categories: true });
   });
 });

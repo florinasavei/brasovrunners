@@ -69,7 +69,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       // The reader's own word for the sex, as the «Categorie» beside it speaks (§787), not the Excel's machine word.
       sex: row.sex === "FEMALE" ? t("registrations.statistics.sexFemale") : row.sex === "MALE" ? t("registrations.statistics.sexMale") : "",
       // The footer's own words (§787): `category` is the template «{sex}, {band}», read raw so its placeholders are filled by the label, not the formatter.
-      category: categoryLabelOf(row.categoryKey, (key) => t.raw(`registrations.statistics.${key}`) as string),
+      category: categoryLabelOf(row.categoryKey, (key) => t.raw(`registrations.statistics.${key}`) as string, data.event.resultAgeBands),
       status: t(`results.status.${row.status}`),
       time: formatResultTime(row.gunTimeMs),
       chip: formatResultTime(row.chipTimeMs),
