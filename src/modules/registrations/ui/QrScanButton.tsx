@@ -54,24 +54,48 @@ type DetectorCtor = new (options: { formats: string[] }) => Detector;
  * `hrefTemplate` is the localized path with `__CODE__` where the code goes; the server built
  * it with `getPathname`, so this island never assembles a route.
  */
-/** Where the phone remembers which of its cameras the desk chose (§850): a per-viewer convenience, never read by the server. */
+/**
+ * Where the phone remembers which of its cameras the desk chose (§850): a per-viewer convenience, never read by the server.
+ * Remembered by **label and position, not by id alone** (the owner, 2026-10-26: «I need to remember the last camera used»): on
+ * Android Chrome a camera's `deviceId` is stable only once the permission is kept for good; under «allow this time» it changes with
+ * every visit, so an id alone matched nothing the next day and the default lens came back. A label («camera2 2, facing back») and
+ * the camera's place in the list hold still, so the remembered camera is found again after the first stream opens.
+ */
 const CAMERA_KEY = "desk.camera";
 
-function rememberedCamera(): string | null {
+type RememberedCamera = { id: string; label: string; index: number };
+
+function rememberedCamera(): RememberedCamera | null {
   try {
-    return window.localStorage.getItem(CAMERA_KEY);
+    const raw = window.localStorage.getItem(CAMERA_KEY);
+    if (!raw) return null;
+    // An older memory held the id alone: it is tried once by id and rewritten with the label on the next press.
+    if (!raw.startsWith("{")) return { id: raw, label: "", index: -1 };
+    const parsed = JSON.parse(raw) as Partial<RememberedCamera>;
+    return typeof parsed.id === "string" ? { id: parsed.id, label: typeof parsed.label === "string" ? parsed.label : "", index: typeof parsed.index === "number" ? parsed.index : -1 } : null;
   } catch {
     return null;
   }
 }
 
-function rememberCamera(deviceId: string | null): void {
+function rememberCamera(camera: RememberedCamera | null): void {
   try {
-    if (deviceId === null) window.localStorage.removeItem(CAMERA_KEY);
-    else window.localStorage.setItem(CAMERA_KEY, deviceId);
+    if (camera === null) window.localStorage.removeItem(CAMERA_KEY);
+    else window.localStorage.setItem(CAMERA_KEY, JSON.stringify(camera));
   } catch {
     // A private window or blocked storage: the choice lasts the dialog, which is enough for one scan.
   }
+}
+
+/** The remembered camera among the phone's, by id first, then by label, then by position; null when none matches. */
+function findRemembered(cameras: readonly MediaDeviceInfo[], remembered: RememberedCamera | null): MediaDeviceInfo | null {
+  if (!remembered) return null;
+  return (
+    cameras.find((device) => device.deviceId === remembered.id) ??
+    (remembered.label ? cameras.find((device) => device.label === remembered.label) : undefined) ??
+    (remembered.index >= 0 ? cameras[remembered.index] : undefined) ??
+    null
+  );
 }
 
 export default function QrScanButton({
@@ -126,25 +150,35 @@ export default function QrScanButton({
         // A sharper stream than the default, which on some phones is a low-resolution feed that never reads a code on a screen;
         // the chosen camera by its id when the phone remembers one, else any back camera.
         const size = { width: { ideal: 1280 }, height: { ideal: 720 } };
-        const wanted = cameraId ?? rememberedCamera();
+        const remembered = cameraId ? null : rememberedCamera();
+        const wanted = cameraId ?? remembered?.id ?? null;
         try {
           stream = await navigator.mediaDevices.getUserMedia({ video: wanted ? { deviceId: { exact: wanted }, ...size } : { facingMode: "environment", ...size } });
         } catch (error) {
-          // A remembered camera that is gone (another phone's id, a changed browser): the memory dropped, the back camera asked for again.
+          // An id that is gone (a new session's ids, another phone): the back camera is asked for; the memory's label finds the lens below.
           if (!wanted) throw error;
-          rememberCamera(null);
+          if (cameraId) rememberCamera(null);
           setCameraId(null);
           setAttempt((count) => count + 1);
           return;
         }
         await keepFocusing(stream);
         const [track] = stream.getVideoTracks();
-        setCurrentId(track?.getSettings?.().deviceId ?? wanted);
+        const openedId = track?.getSettings?.().deviceId ?? wanted;
+        setCurrentId(openedId);
+        let list: MediaDeviceInfo[] = [];
         try {
-          const devices = await navigator.mediaDevices.enumerateDevices();
-          setCameras(devices.filter((device) => device.kind === "videoinput"));
+          list = (await navigator.mediaDevices.enumerateDevices()).filter((device) => device.kind === "videoinput");
+          setCameras(list);
         } catch {
           // No list: the one camera the browser gave is used, as before.
+        }
+        // The remembered lens found by label or position under today's ids: move to it once, and refresh the memory with the new id.
+        const match = cameraId ? null : findRemembered(list, remembered);
+        if (match && match.deviceId !== openedId) {
+          rememberCamera({ id: match.deviceId, label: match.label, index: list.indexOf(match) });
+          setCameraId(match.deviceId);
+          return;
         }
         const video = videoRef.current;
         if (!video) return;
@@ -187,7 +221,7 @@ export default function QrScanButton({
   const nextCamera = () => {
     if (cameras.length < 2) return;
     const next = cameras[(currentIndex + 1) % cameras.length];
-    rememberCamera(next.deviceId);
+    rememberCamera({ id: next.deviceId, label: next.label, index: (currentIndex + 1) % cameras.length });
     setProblem(null);
     setCameraId(next.deviceId);
   };
