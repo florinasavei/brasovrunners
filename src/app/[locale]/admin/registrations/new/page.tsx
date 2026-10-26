@@ -37,14 +37,15 @@ import { routing } from "@/i18n/routing";
 import { noticeDescribesListStates, noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
 import { listEventsAcceptingRegistrations } from "@/modules/registrations/admin-repository";
 import { listStateWords } from "@/modules/registrations/list-state-words";
-import { canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
+import { canKeepRegistrationNotes, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
+import { findReserveEntry } from "@/modules/registrations/reserve-list";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { CLUB_NAME } from "@/theme/brand";
 import { createRegistrationAction } from "../actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ eventId?: string; error?: string; back?: string }>;
+  searchParams: Promise<{ eventId?: string; error?: string; back?: string; reserve?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -71,14 +72,21 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   const actor = await requireStaff();
   if (!canWorkTheDesk(actor.role)) notFound();
 
-  const { eventId, error, back } = await searchParams;
+  const { eventId, error, back, reserve } = await searchParams;
   const fromDesk = back === "desk";
   const t = await getTranslations("Admin");
   const rt = await getTranslations("Registration");
   const words = await confirmWords();
   const events = await listEventsAcceptingRegistrations(getDb(), locale);
+  /*
+    «Trece pe lista oficială» (§NNN): the line of the internal list this entry is made from — its name and
+    address in the boxes, its id posted so the action carries the note over and removes the line. Only for
+    a role that keeps that list, and only while its event takes entries here.
+  */
+  const reserveEntry = reserve && canKeepRegistrationNotes(actor.role) ? await findReserveEntry(getDb(), actor, reserve) : undefined;
+  const reserveOpen = reserveEntry !== undefined && events.some((event) => event.id === reserveEntry.eventId);
   // The event the form opens on: the one the desk or the list came from, when it takes entries.
-  const selectedEventId = events.find((event) => event.id === eventId)?.id ?? events[0]?.id ?? "";
+  const selectedEventId = events.find((event) => event.id === (reserveOpen ? reserveEntry.eventId : eventId))?.id ?? events[0]?.id ?? "";
   // The birth date's bounds (§321, §324): each event's own day, for the fourteen-on-race-day
   // `max` the island computes once an event is chosen, and today and 120 years ago from here, as
   // on the public form, so the server's render and the browser's agree.
@@ -131,6 +139,11 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
       </Box>
 
       <Alert severity="info">{t("registrations.newExplanation")}</Alert>
+      {reserveEntry && (
+        <Alert severity={reserveOpen ? "info" : "warning"} data-testid="registration-new-reserve">
+          {t(reserveOpen ? "reserve.fromList" : "reserve.fromListClosed", { name: `${reserveEntry.firstName} ${reserveEntry.lastName}` })}
+        </Alert>
+      )}
 
       {events.length === 0 ? (
         <Alert severity="warning">{t("registrations.noEventsAcceptingRegistrations")}</Alert>
@@ -162,6 +175,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
         >
           <input type="hidden" name="uiLocale" value={locale} />
           {fromDesk && <input type="hidden" name="back" value="desk" />}
+          {reserveOpen && <input type="hidden" name="reserveEntryId" value={reserveEntry.id} />}
 
           {/* The event and the birth date know about each other (§324): the date box's upper
               bound is the latest birth date still fourteen on the chosen event's day (§321). */}
@@ -177,8 +191,8 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               }))}
             />
 
-            <RecallField name="firstName" label={rt("firstName")} {...textFieldConstraints(staffRegistrationConstraints("firstName"))} />
-          <RecallField name="lastName" label={rt("lastName")} {...textFieldConstraints(staffRegistrationConstraints("lastName"))} />
+            <RecallField name="firstName" label={rt("firstName")} defaultValue={reserveOpen ? reserveEntry.firstName : undefined} {...textFieldConstraints(staffRegistrationConstraints("firstName"))} />
+          <RecallField name="lastName" label={rt("lastName")} defaultValue={reserveOpen ? reserveEntry.lastName : undefined} {...textFieldConstraints(staffRegistrationConstraints("lastName"))} />
 
           {/*
             BR-REQ-031-04 criterion 5. Everything below the name is optional here and
@@ -244,6 +258,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             <RecallField
               name="email"
               label={t("registrations.participantEmail")}
+              defaultValue={reserveOpen ? (reserveEntry.email ?? undefined) : undefined}
               helperText={t("registrations.participantEmailHelp")}
               {...textFieldConstraints(staffRegistrationConstraints("email"))}
             />

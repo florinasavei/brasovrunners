@@ -11013,6 +11013,33 @@
           "lineNameless": "#{bib} · {time} · place {position}"
         }
       }
+    },
+    "reserve": {
+      "title": "Internal waiting list",
+      "intro": "People who asked for a place, say through the contact form. They are not registered: no place, not in the queue, no email. Only you see them.",
+      "none": "nobody",
+      "count": {
+        "one": "{count} person",
+        "few": "{count} people",
+        "other": "{count} people"
+      },
+      "empty": "Nobody on the internal list.",
+      "by": "Added by {name}, {date}",
+      "note": "Internal note",
+      "noteHelp": "For the organizers only; it moves onto the registration with the person. Never write health data.",
+      "saveNote": "Save note",
+      "official": "Move to the official list",
+      "delete": "Delete",
+      "deleteTitle": "Delete this person from the internal list?",
+      "deleteBody": "{name} leaves the internal list, note and all. Nothing is sent to them.",
+      "addTitle": "Add to the internal list",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email (optional)",
+      "emailHelp": "The address they wrote from. Nothing is sent to it until you move them to the official list.",
+      "add": "Add",
+      "fromList": "Moving from the internal list: {name}. The note moves onto the registration and the line leaves the internal list. From here it is an ordinary registration, with its email.",
+      "fromListClosed": "{name} is on the internal list of an event that takes no registrations now; the form is not filled."
     }
   },
   "NotFound": {
@@ -13027,7 +13054,10 @@
       "resultsCategoriesSaved": "The age categories are saved; the category places were recounted.",
       "resultsCategoriesUnchanged": "The categories were already so; nothing to change.",
       "resultsAwardsSaved": "The awards are saved.",
-      "resultsAwardsUnchanged": "The awards were already so; nothing to change."
+      "resultsAwardsUnchanged": "The awards were already so; nothing to change.",
+      "reserveAdded": "The person is on the internal list. Nothing was sent to them.",
+      "reserveNoteSaved": "The note was saved.",
+      "reserveDeleted": "The person was removed from the internal list."
     },
     "via": {
       "mailgun": "Leaves by Mailgun.",

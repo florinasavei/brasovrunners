@@ -11013,6 +11013,33 @@
           "lineNameless": "#{bib} · {time} · locul {position}"
         }
       }
+    },
+    "reserve": {
+      "title": "Lista internă de așteptare",
+      "intro": "Cine a cerut un loc, de exemplu pe formularul de contact. Nu e înscris: nu ocupă loc, nu e în coadă și nu primește niciun email. Îl vedeți doar voi.",
+      "none": "nimeni",
+      "count": {
+        "one": "{count} persoană",
+        "few": "{count} persoane",
+        "other": "{count} de persoane"
+      },
+      "empty": "Nimeni pe lista internă.",
+      "by": "Adăugat de {name}, {date}",
+      "note": "Notă internă",
+      "noteHelp": "Doar pentru organizatori; trece pe înscriere odată cu persoana. Nu scrieți date despre sănătate.",
+      "saveNote": "Salvează nota",
+      "official": "Trece pe lista oficială",
+      "delete": "Șterge",
+      "deleteTitle": "Ștergi persoana de pe lista internă?",
+      "deleteBody": "{name} dispare de pe lista internă, cu tot cu notă. Persoanei nu i se trimite nimic.",
+      "addTitle": "Adaugă pe lista internă",
+      "firstName": "Prenume",
+      "lastName": "Nume",
+      "email": "Email (opțional)",
+      "emailHelp": "Adresa de pe care v-a scris. Nu i se trimite nimic până nu o treceți pe lista oficială.",
+      "add": "Adaugă",
+      "fromList": "Treci de pe lista internă: {name}. Nota trece pe înscriere și linia dispare de pe lista internă. De aici e o înscriere obișnuită, cu emailul ei.",
+      "fromListClosed": "{name} e pe lista internă a unui eveniment care nu primește înscrieri acum; formularul nu e completat."
     }
   },
   "NotFound": {
@@ -13027,7 +13054,10 @@
       "resultsCategoriesSaved": "Am salvat categoriile de vârstă; locurile la categorie s-au recalculat.",
       "resultsCategoriesUnchanged": "Categoriile erau deja așa; nimic de schimbat.",
       "resultsAwardsSaved": "Am salvat premiile.",
-      "resultsAwardsUnchanged": "Premiile erau deja așa; nimic de schimbat."
+      "resultsAwardsUnchanged": "Premiile erau deja așa; nimic de schimbat.",
+      "reserveAdded": "Persoana e pe lista internă. Nu i s-a trimis nimic.",
+      "reserveNoteSaved": "Nota a fost salvată.",
+      "reserveDeleted": "Persoana a fost ștearsă de pe lista internă."
     },
     "via": {
       "mailgun": "Pleacă prin Mailgun.",

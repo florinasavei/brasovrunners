@@ -557,7 +557,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   actor: Pick<StaffUser, "id" | "role">,
   input: CreateRegistrationByStaffInput,
   now: Date,
-): Promise<void> {
+): Promise<{ registrationId: string | null }> {
   assertDesk(actor);
 
   if (!input.relayedByParticipantRequest) {
@@ -678,6 +678,8 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
       throw error;
     }
   }
+  // The row this entry wrote, for «Trece pe lista oficială» (§NNN), which carries the line's note onto it.
+  return { registrationId: created?.id ?? null };
 }
 
 /**
