@@ -19,7 +19,7 @@ laptop — no video kept.
 
 ## Software
 
-**ContaCam** — reads the DJI feed and detects motion. Its motion-triggered recording mode can save
+**ContaCam** — **purchased by the club for $10.** Reads the DJI feed and detects motion. Its motion-triggered recording mode can save
 a JPEG snapshot when a recording starts; we want the stills only, not the recordings.
 The DJI feed first flickered: the cause was a faulty USB cable, and a new cable fixed it.
 
@@ -41,6 +41,7 @@ to be worked out.
 ## The decisions
 
 - A simple, reliable setup with as little new spending as possible.
+  Spent so far: $10, the ContaCam purchase.
 - The hardware and software the club already has, wherever possible.
 - Automatic still photos first; video is not the goal.
 - Photos saved directly to the laptop.
