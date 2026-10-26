@@ -139,11 +139,15 @@ async function settledChecks(pr, { tolerate } = {}) {
   const skip = process.env.SHIP_SKIP_WORKFLOW || "";
   const fields = skip ? "name,state,bucket,workflow" : "name,state,bucket";
   const read = () => withoutWorkflow(JSON.parse(ghMayFail("pr", "checks", pr, "--json", fields) || "[]"), skip);
+  // The checks GitHub requires on the base must have registered before a reading can settle (§NNN): right after the landing push
+  // the CI workflow takes a minute to appear, and a reading of Vercel's status alone is green and means nothing.
+  const expected = (requiredContexts(pr, "qa") ?? []).filter((name) => name !== skip);
   const waited = await waitForSettledChecks(read, {
     sleep,
     every: 30,
     polls: 180,
     maxEmpty: 20,
+    expected,
     onPending: (pending, i) => {
       if (i % 4 === 0) console.log(`  waiting on ${pending.length} check(s): ${pending.join(", ")}`);
     },
