@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.78-2026-10-26
+
+- **The desk's scanner finds the chosen camera again** — it remembers the lens by its label and position as well as its id, so «Altă cameră» holds across visits on phones whose camera ids change. §852.
 ## BR-V3.77-2026-10-25
 
 - **The guide says where «Clasament» is** — in the editor's card «Înscrierile primite», at the end of the page, for a published race; SETUP.md §45 and the runbook say the same. §851.
