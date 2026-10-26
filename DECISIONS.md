@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.78-2026-10-26 -->
+<!-- PROJECT_BASELINE: BR-V3.79-2026-10-26 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.78-2026-10-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.79-2026-10-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27964,3 +27964,13 @@ Baseline `BR-V3.77-2026-10-25`.
 **Refused.** Asking the volunteer to keep the camera permission permanently: a setting on every phone is one more thing to forget on race day; the label costs nothing.
 
 Baseline `BR-V3.78-2026-10-26`.
+
+## 853. Ship waits for the required checks to register before judging them
+
+**Two releases in a row (2026-10-25 21:57 and 2026-10-26 06:45):** the release workflow pushed the landing commit, and a minute later `yarn ship` read the pull request's checks, saw the only three that existed — Vercel's status and the bootstrap job, green — judged the PR green on two identical readings (§426's rule) and ran `gh pr merge`, which GitHub refused: «the base branch policy prohibits the merge». The CI workflow on the landing commit had not registered yet; it started a minute later and was green. Each time the label was added again once CI was done, and the second run went through.
+
+**Decision.** `waitForSettledChecks` takes `expected`, the names of the checks GitHub requires on the base (`requiredContexts(pr, "qa")`, the same read §703's merge gate makes), and treats a reading as pending while any of them is absent, naming it «(not registered yet)» among the pending; a reading with no check at all keeps the no-checks cap. The two identical readings still decide; they just cannot be taken before the required checks exist. Nothing else moves: the ninety-minute timeout, the tolerated reds and the merge gate are as they were.
+
+**Refused.** A fixed wait after the landing push: GitHub's delay varies, and a minute would have been too short on the second night. Reading the CI workflow's run instead of the PR's checks: the branch policy is what refuses the merge, so its own list of required names is the right thing to wait for.
+
+Baseline `BR-V3.79-2026-10-26`.

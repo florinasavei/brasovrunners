@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V3.78-2026-10-26 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V3.79-2026-10-26 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline: one release at a time;
  *   2. waits for the batch PR's checks to settle (§426), stops unless green, merges it into `qa`
@@ -139,11 +139,15 @@ async function settledChecks(pr, { tolerate } = {}) {
   const skip = process.env.SHIP_SKIP_WORKFLOW || "";
   const fields = skip ? "name,state,bucket,workflow" : "name,state,bucket";
   const read = () => withoutWorkflow(JSON.parse(ghMayFail("pr", "checks", pr, "--json", fields) || "[]"), skip);
+  // The checks GitHub requires on the base must have registered before a reading can settle (§853): right after the landing push
+  // the CI workflow takes a minute to appear, and a reading of Vercel's status alone is green and means nothing.
+  const expected = (requiredContexts(pr, "qa") ?? []).filter((name) => name !== skip);
   const waited = await waitForSettledChecks(read, {
     sleep,
     every: 30,
     polls: 180,
     maxEmpty: 20,
+    expected,
     onPending: (pending, i) => {
       if (i % 4 === 0) console.log(`  waiting on ${pending.length} check(s): ${pending.join(", ")}`);
     },
