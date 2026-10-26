@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.77-2026-10-25 -->
+<!-- PROJECT_BASELINE: BR-V3.78-2026-10-26 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.77-2026-10-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.78-2026-10-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27954,3 +27954,13 @@ Baseline `BR-V3.76-2026-10-25`.
 **Decision.** The three texts name the card by its title, say where it is (the end of the page, not the registration folds) and when the button shows; the guide's task opens with that step. The guide's word check (BR-REQ-060-01 criterion 38) holds every quoted label to the screen's own in both languages, which is what caught the English card's and button's names. No code moved: the card and the condition are §808's and §816's.
 
 Baseline `BR-V3.77-2026-10-25`.
+
+## 852. The desk's scanner remembers the camera by its label, not by an id that changes
+
+**The owner, 2026-10-26, after the rehearsal on his phone:** «scanning works ok now, I can switch camera but I need to remember the last camera used.» §850 kept the chosen camera's `deviceId` in the browser's storage; on Android Chrome that id is stable only once the camera permission is kept for good — under «allow this time» the browser mints new ids on every visit, the stored one matched nothing, the exact request failed and the scanner fell back to the default lens, forgetting the choice.
+
+**Decision.** The memory holds the camera's **label and position** beside its id (`{ id, label, index }`). The dialog still asks for the remembered id first (the fast path when it is still valid); when that fails it opens the default camera, lists the phone's cameras — ids and labels come only with an open stream — finds the remembered one by id, else by label («camera2 2, facing back» holds still), else by its position in the list, and moves to it once, rewriting the memory with the day's id. A press on «Altă cameră» records all three. A memory from the earlier release (an id alone) is read once and rewritten on the next press. Nothing of this reaches the server.
+
+**Refused.** Asking the volunteer to keep the camera permission permanently: a setting on every phone is one more thing to forget on race day; the label costs nothing.
+
+Baseline `BR-V3.78-2026-10-26`.
