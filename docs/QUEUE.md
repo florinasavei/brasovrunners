@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.78` | the desk's scanner remembers the camera by its label (§852) |
 | `BR-V3.77` | the guide names the card «Clasament» sits in (§851) |
 | `BR-V3.76` | a race's own age categories and the podium on «Clasament», and the finish line «Sosire» (§850) |
 | `BR-V3.75` | the translation budget's saved notice (§849) |
