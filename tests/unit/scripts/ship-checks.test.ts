@@ -90,6 +90,24 @@ describe("§426 ship: waiting until the checks settle", () => {
     expect(stuck.slept).toHaveLength(4);
   });
 
+  it("waits for a required check that has not registered yet, even while every present check is green (§853)", async () => {
+    // A minute after the landing push: Vercel's status and the bootstrap job, both green, the CI workflow not yet started.
+    const early = [pass("Vercel – qa"), pass("tested-tree")];
+    const s = script([early, early, [...early, pending("checks"), pending("e2e")], [...early, pass("checks"), pass("e2e")], [...early, pass("checks"), pass("e2e")]]);
+    const seen: string[][] = [];
+    const waited = await waitForSettledChecks(s.read, { sleep: s.sleep, expected: ["checks", "e2e"], onPending: (names: string[]) => seen.push(names) });
+    expect(waited.status).toBe("settled");
+    expect((waited as { checks: Check[] }).checks.map((c) => c.name)).toEqual(["Vercel – qa", "tested-tree", "checks", "e2e"]);
+    expect(seen[0]).toEqual(["checks (not registered yet)", "e2e (not registered yet)"]);
+    expect(s.reads()).toBe(5);
+    // Without the expectation the first two green readings settle at once — the race this guards.
+    const naive = script([early, early]);
+    expect((await waitForSettledChecks(naive.read, { sleep: naive.sleep })).status).toBe("settled");
+    // No check at all stays «none» (the no-checks cap), expectation or not.
+    const none = script([[]]);
+    expect(await waitForSettledChecks(none.read, { sleep: none.sleep, maxEmpty: 2, expected: ["checks"] })).toEqual({ status: "no-checks" });
+  });
+
   it("says which checks it is waiting on", async () => {
     const seen: string[][] = [];
     const s = script([[pending("e2e")], [pass("e2e")], [pass("e2e")]]);

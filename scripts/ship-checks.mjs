@@ -65,22 +65,31 @@ function fingerprint(checks) {
 /**
  * Reads the checks until they settle: none pending and the same checks in the same buckets on two
  * readings `every` seconds apart, so a late-registering check is not missed. `maxEmpty` caps the
- * readings in a row with no check at all.
+ * readings in a row with no check at all. `expected` names checks that must be present before a
+ * reading can settle (§853: a minute after the landing push GitHub had registered only Vercel's
+ * status and one bootstrap job, both green, and the merge was refused by the branch policy the
+ * missing checks guard; the names GitHub requires are read once and waited for by name).
  *
  * Returns { status: "settled", checks } | { status: "no-checks" } | { status: "timeout", pending }.
  *
  * @param {() => Array<{ name: string, state?: string, bucket?: string }>} read
  * @param {{ sleep: (seconds: number) => Promise<unknown>, every?: number, polls?: number, maxEmpty?: number,
- *           onPending?: (pending: string[], reading: number) => void }} options
+ *           expected?: string[], onPending?: (pending: string[], reading: number) => void }} options
  */
-export async function waitForSettledChecks(read, { sleep, every = 30, polls = 180, maxEmpty = 20, onPending }) {
+export async function waitForSettledChecks(read, { sleep, every = 30, polls = 180, maxEmpty = 20, expected = [], onPending }) {
   let previous = null;
   let last = [];
   let empty = 0;
   let pending = [];
   for (let i = 0; i < polls; i++) {
     const checks = read();
-    const { verdict, pending: stillPending } = judgeChecks(checks);
+    let { verdict, pending: stillPending } = judgeChecks(checks);
+    // A required check that has not registered yet is pending, whatever the others say: the merge would be refused without it.
+    const missing = expected.filter((name) => !checks.some((c) => c.name === name));
+    if (missing.length && verdict !== "none") {
+      verdict = "pending";
+      stillPending = [...new Set([...stillPending, ...missing.map((name) => `${name} (not registered yet)`)])];
+    }
     if (verdict === "none") {
       previous = null;
       if (++empty >= maxEmpty) return { status: "no-checks" };
