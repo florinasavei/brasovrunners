@@ -90,7 +90,7 @@ describe("§426 ship: waiting until the checks settle", () => {
     expect(stuck.slept).toHaveLength(4);
   });
 
-  it("waits for a required check that has not registered yet, even while every present check is green (§NNN)", async () => {
+  it("waits for a required check that has not registered yet, even while every present check is green (§853)", async () => {
     // A minute after the landing push: Vercel's status and the bootstrap job, both green, the CI workflow not yet started.
     const early = [pass("Vercel – qa"), pass("tested-tree")];
     const s = script([early, early, [...early, pending("checks"), pending("e2e")], [...early, pass("checks"), pass("e2e")], [...early, pass("checks"), pass("e2e")]]);

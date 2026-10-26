@@ -66,7 +66,7 @@ function fingerprint(checks) {
  * Reads the checks until they settle: none pending and the same checks in the same buckets on two
  * readings `every` seconds apart, so a late-registering check is not missed. `maxEmpty` caps the
  * readings in a row with no check at all. `expected` names checks that must be present before a
- * reading can settle (§NNN: a minute after the landing push GitHub had registered only Vercel's
+ * reading can settle (§853: a minute after the landing push GitHub had registered only Vercel's
  * status and one bootstrap job, both green, and the merge was refused by the branch policy the
  * missing checks guard; the names GitHub requires are read once and waited for by name).
  *

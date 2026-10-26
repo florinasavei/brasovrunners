@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.79-2026-10-26
+
+- **`yarn ship` no longer merges before CI has registered** — after the landing push it waits for the checks GitHub requires to appear, named «(not registered yet)», instead of judging a green reading of Vercel's status alone and being refused by the branch policy. §853.
 ## BR-V3.78-2026-10-26
 
 - **The desk's scanner finds the chosen camera again** — it remembers the lens by its label and position as well as its id, so «Altă cameră» holds across visits on phones whose camera ids change. §852.
