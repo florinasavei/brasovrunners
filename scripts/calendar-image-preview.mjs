@@ -1,12 +1,14 @@
-// yarn calendar:preview [--month june|busy|sparse|fortnight|empty|all] [--theme poster|club|light|dark|season|all]
+// yarn calendar:preview [--month june|busy|sparse|fortnight|empty|all] [--theme poster|club|light|dark|season|all] [--week none|all|<n>]
 //
 // «Salvează ca imagine» (§855) drawn without a server or a database: the page's own drawing code is bundled,
 // served beside `public/` (the logo, the poster's fonts) and the site's fonts, and every month asked is written
 // in every theme asked («Afiș» alone unless told), each in its three layouts and four formats, to
-// dist/calendar-preview/<month>/<theme>-<layout>-<format>.png. For changing the picture: draw, look at the
-// files, change, draw again. The months are scripts/calendar-image-preview/*.json — June 2026 as the club's
-// own poster had it, a busy six-week August in English, a November with two dates, a September with a series on
-// two weekdays, a fortnightly one, a 69-character title and three dates on one day, and an empty October.
+// dist/calendar-preview/<month>/<theme>-<layout>-<format>.png — and, with --week, the month's weeks («Perioada»
+// → «Săptămâna»: all of them, or the n-th, 1 first; a month with fewer draws none) in every format, as
+// <theme>-week<n>-<format>.png beside them. For changing the picture: draw, look at the files, change, draw again. The months are
+// scripts/calendar-image-preview/*.json — June 2026 as the club's own poster had it, a busy six-week August in
+// English, a November with two dates, a September with a series on two weekdays, a fortnightly one, a
+// 69-character title and three dates on one day, and an empty October.
 import { createRequire } from "node:module";
 import fs from "node:fs";
 import http from "node:http";
@@ -23,6 +25,11 @@ const months = fs.readdirSync(here).filter((file) => file.endsWith(".json")).map
 const monthArg = option("month", "all");
 const chosen = monthArg === "all" ? months : monthArg.split(",");
 const themes = option("theme", "poster");
+const weeks = option("week", "none");
+if (!/^(none|all|[1-9]\d*)$/.test(weeks)) {
+  console.error(`--week takes none, all or a week's number (1 first), not «${weeks}»`);
+  process.exit(1);
+}
 const out = path.join(root, "dist/calendar-preview");
 
 const require = createRequire(path.join(root, "package.json"));
@@ -74,7 +81,7 @@ try {
   await page.goto(`http://127.0.0.1:${server.address().port}/index.html`);
   for (const month of chosen) {
     const data = JSON.parse(fs.readFileSync(path.join(here, `${month}.json`), "utf8"));
-    const images = await page.evaluate(([d, t]) => window.renderPreview(d, t), [data, themes]);
+    const images = await page.evaluate(([d, t, w]) => window.renderPreview(d, t, w), [data, themes, weeks]);
     fs.mkdirSync(path.join(out, month), { recursive: true });
     for (const [name, url] of Object.entries(images)) fs.writeFileSync(path.join(out, month, `${name}.png`), Buffer.from(url.split(",")[1], "base64"));
     console.log(`${month}: ${Object.keys(images).length} pictures in ${path.relative(root, path.join(out, month))}`);

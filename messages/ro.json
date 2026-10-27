@@ -219,6 +219,12 @@
           "cells": "Legenda în celule",
           "formats": "Legenda dedesubt"
         },
+        "period": "Perioada",
+        "periods": {
+          "month": "Luna",
+          "week": "Săptămâna"
+        },
+        "week": "Săptămâna",
         "legend": "Arată evenimentele recurente și speciale",
         "download": "Descarcă PNG",
         "share": "Distribuie",

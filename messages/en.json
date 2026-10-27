@@ -219,6 +219,12 @@
           "cells": "Key in the empty days",
           "formats": "Key below"
         },
+        "period": "Period",
+        "periods": {
+          "month": "Month",
+          "week": "Week"
+        },
+        "week": "Week",
         "legend": "Show the recurring and special events",
         "download": "Download PNG",
         "share": "Share",
