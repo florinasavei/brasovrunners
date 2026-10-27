@@ -1,4 +1,4 @@
-import { CALENDAR_IMAGE_THEMES, type CalendarImagePaletteName } from "@/theme/brand";
+import { CALENDAR_IMAGE_THEMES, type CalendarImagePaletteName, LOGO } from "@/theme/brand";
 import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
 import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
 import { SPECIAL_PATH, TYPE_PATHS } from "./calendar-image-glyphs";
@@ -32,8 +32,18 @@ export type CalendarImageOptions = {
   legend: boolean;
 };
 
-/** The two faces the page loaded: the body's, and the club kit's for the name (CSS font-family lists). */
-export type CalendarImageFonts = { body: string; display: string };
+/** The faces the page offers, as CSS font-family lists: the body's, the club kit's, and the hand-written one «Afiș» says «Evenimente» in. */
+export type CalendarImageFonts = { body: string; display: string; script: string };
+
+/**
+ * The club's real logo (the white lockup, `LOGO.lockup.onDark`, served by the site itself so the canvas
+ * stays exportable), loaded by the dialog; null until it has loaded or when it cannot, and the band then
+ * draws the mountains and the name instead.
+ */
+export type CalendarImageAssets = { logo: CanvasImageSource | null };
+
+/** The lockup's own proportions, width over height. */
+const LOGO_RATIO = LOGO.lockup.width / LOGO.lockup.height;
 
 type Ctx = Pick<CanvasRenderingContext2D, "measureText">;
 
@@ -90,9 +100,15 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 
 type Box = { x: number; y: number; w: number; h: number };
 
-export function drawCalendarImage(ctx: CanvasRenderingContext2D, data: CalendarImageData, options: CalendarImageOptions, fonts: CalendarImageFonts): void {
+export function drawCalendarImage(
+  ctx: CanvasRenderingContext2D,
+  data: CalendarImageData,
+  options: CalendarImageOptions,
+  fonts: CalendarImageFonts,
+  assets: CalendarImageAssets = { logo: null },
+): void {
   if (options.theme === "poster") {
-    drawPoster(ctx, data, options, fonts);
+    drawPoster(ctx, data, options, fonts, assets);
     return;
   }
   const { width: W, height: H } = CALENDAR_IMAGE_RATIOS[options.ratio];
@@ -112,30 +128,46 @@ export function drawCalendarImage(ctx: CanvasRenderingContext2D, data: CalendarI
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, W, H);
 
-  // The band: the mountains, the club's name in the kit's face, «Evenimente · octombrie 2026».
+  // The band: the club's real logo, then «Evenimente» and «octombrie 2026» beside it. Without the logo
+  // (not loaded yet, or refused), the mountains and the club's name in the kit's face stand in for it.
   const story = options.ratio === "story";
   const bandH = (story ? 220 : 170) * unit;
   roundRect(ctx, pad, pad, W - 2 * pad, bandH, 28 * unit);
   ctx.fillStyle = palette.band;
   ctx.fill();
-  const markW = 150 * unit;
-  const markH = (markW * MOUNTAIN_MARK_VIEWBOX.height) / MOUNTAIN_MARK_VIEWBOX.width;
-  ctx.save();
-  ctx.translate(pad + 32 * unit, pad + (bandH - markH) / 2);
-  ctx.scale(markW / MOUNTAIN_MARK_VIEWBOX.width, markH / MOUNTAIN_MARK_VIEWBOX.height);
-  ctx.fillStyle = palette.bandInk;
-  ctx.globalAlpha = 0.55;
-  ctx.fill(new Path2D(FAR));
-  ctx.globalAlpha = 1;
-  ctx.fill(new Path2D(NEAR));
-  ctx.restore();
-  const textX = pad + 32 * unit + markW + 28 * unit;
+  let textX: number;
+  if (assets.logo) {
+    const logoH = bandH - 44 * unit;
+    ctx.drawImage(assets.logo, pad + 28 * unit, pad + 22 * unit, logoH * LOGO_RATIO, logoH);
+    textX = pad + 28 * unit + logoH * LOGO_RATIO + 36 * unit;
+  } else {
+    const markW = 150 * unit;
+    const markH = (markW * MOUNTAIN_MARK_VIEWBOX.height) / MOUNTAIN_MARK_VIEWBOX.width;
+    ctx.save();
+    ctx.translate(pad + 32 * unit, pad + (bandH - markH) / 2);
+    ctx.scale(markW / MOUNTAIN_MARK_VIEWBOX.width, markH / MOUNTAIN_MARK_VIEWBOX.height);
+    ctx.fillStyle = palette.bandInk;
+    ctx.globalAlpha = 0.55;
+    ctx.fill(new Path2D(FAR));
+    ctx.globalAlpha = 1;
+    ctx.fill(new Path2D(NEAR));
+    ctx.restore();
+    textX = pad + 32 * unit + markW + 28 * unit;
+  }
   const textW = W - pad - 32 * unit - textX;
   ctx.fillStyle = palette.bandInk;
-  ctx.font = `italic 900 ${px(story ? 62 : 52)}px ${fonts.display}`;
-  ctx.fillText(fitText(ctx, data.clubName.toUpperCase(), textW), textX, pad + bandH / 2 - 4 * unit);
-  ctx.font = body(story ? 44 : 38, 700);
-  ctx.fillText(fitText(ctx, `${data.words.heading} · ${data.words.monthTitle}`, textW), textX, pad + bandH / 2 + 46 * unit);
+  if (assets.logo) {
+    // The logo says the club's name: the band's words are the month's.
+    ctx.font = `400 ${px(story ? 64 : 54)}px ${fonts.script}`;
+    ctx.fillText(fitText(ctx, data.words.heading, textW), textX, pad + bandH / 2 - 4 * unit);
+    ctx.font = body(story ? 48 : 42, 900);
+    ctx.fillText(fitText(ctx, data.words.monthTitle.toLocaleUpperCase("ro-RO"), textW), textX, pad + bandH / 2 + 48 * unit);
+  } else {
+    ctx.font = `italic 900 ${px(story ? 62 : 52)}px ${fonts.display}`;
+    ctx.fillText(fitText(ctx, data.clubName.toUpperCase(), textW), textX, pad + bandH / 2 - 4 * unit);
+    ctx.font = body(story ? 44 : 38, 700);
+    ctx.fillText(fitText(ctx, `${data.words.heading} · ${data.words.monthTitle}`, textW), textX, pad + bandH / 2 + 46 * unit);
+  }
 
   // The foot: «Urmărește-ne · <the site>» on the band's colour, so it reads on every background.
   const footH = 56 * unit;
@@ -319,14 +351,13 @@ function drawGlyph(ctx: CanvasRenderingContext2D, path: string, x: number, y: nu
  * events with their glyphs under the grid (beside it on 16:9); and «URMĂREȘTE-NE!» with the club's networks
  * and its tags on a blue band at the foot.
  */
-function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, options: CalendarImageOptions, fonts: CalendarImageFonts): void {
+function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, options: CalendarImageOptions, fonts: CalendarImageFonts, assets: CalendarImageAssets): void {
   const { width: W, height: H } = CALENDAR_IMAGE_RATIOS[options.ratio];
   const palette = CALENDAR_IMAGE_THEMES.poster;
   const unit = Math.min(W, H) / 1080;
   const pad = 36 * unit;
   const px = (size: number) => Math.round(size * unit);
   const body = (size: number, weight = 400) => `${weight} ${px(size)}px ${fonts.body}`;
-  const kit = (size: number) => `italic 900 ${px(size)}px ${fonts.display}`;
   const toneOf = (tone: CalendarTone) => palette[tone];
   const upper = (text: string) => text.toLocaleUpperCase("ro-RO");
   ctx.textBaseline = "alphabetic";
@@ -334,32 +365,61 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
   ctx.fillStyle = palette.background[0];
   ctx.fillRect(0, 0, W, H);
 
-  // The band, centred: the mountains, the club's name, «Evenimente» and the month, large.
+  // The band, centred, as the poster's: the club's real logo (or, until it loads, the mountains over
+  // «BRAȘOV RUNNERS», spaced), then «Evenimente» in the hand-written face and the month, large, its year
+  // beside it in a lighter weight.
   const story = options.ratio === "story";
-  const bandH = (story ? 300 : 236) * unit;
+  const bandH = (story ? 360 : 290) * unit;
   roundRect(ctx, pad, pad, W - 2 * pad, bandH, 24 * unit);
   ctx.fillStyle = palette.band;
   ctx.fill();
-  const markW = 120 * unit;
-  const markH = (markW * MOUNTAIN_MARK_VIEWBOX.height) / MOUNTAIN_MARK_VIEWBOX.width;
-  ctx.save();
-  ctx.translate(W / 2 - markW / 2, pad + 18 * unit);
-  ctx.scale(markW / MOUNTAIN_MARK_VIEWBOX.width, markH / MOUNTAIN_MARK_VIEWBOX.height);
   ctx.fillStyle = palette.bandInk;
-  ctx.globalAlpha = 0.55;
-  ctx.fill(new Path2D(FAR));
-  ctx.globalAlpha = 1;
-  ctx.fill(new Path2D(NEAR));
-  ctx.restore();
+  let nameY: number;
+  if (assets.logo) {
+    const logoH = (story ? 128 : 106) * unit;
+    const logoY = pad + (story ? 22 : 18) * unit;
+    ctx.drawImage(assets.logo, W / 2 - (logoH * LOGO_RATIO) / 2, logoY, logoH * LOGO_RATIO, logoH);
+    nameY = logoY + logoH;
+  } else {
+    const markW = (story ? 120 : 104) * unit;
+    const markH = (markW * MOUNTAIN_MARK_VIEWBOX.height) / MOUNTAIN_MARK_VIEWBOX.width;
+    const markY = pad + (story ? 26 : 20) * unit;
+    ctx.save();
+    ctx.translate(W / 2 - markW / 2, markY);
+    ctx.scale(markW / MOUNTAIN_MARK_VIEWBOX.width, markH / MOUNTAIN_MARK_VIEWBOX.height);
+    ctx.globalAlpha = 0.55;
+    ctx.fill(new Path2D(FAR));
+    ctx.globalAlpha = 1;
+    ctx.fill(new Path2D(NEAR));
+    ctx.restore();
+    ctx.textAlign = "center";
+    ctx.font = body(story ? 24 : 20, 700);
+    ctx.letterSpacing = `${px(story ? 9 : 7)}px`;
+    nameY = markY + markH + (story ? 34 : 28) * unit;
+    ctx.fillText(fitText(ctx, upper(data.clubName), W - 4 * pad), W / 2, nameY);
+    ctx.letterSpacing = "0px";
+  }
   ctx.textAlign = "center";
-  ctx.fillStyle = palette.bandInk;
-  ctx.font = kit(story ? 50 : 40);
-  ctx.fillText(fitText(ctx, upper(data.clubName), W - 4 * pad), W / 2, pad + 18 * unit + markH + 44 * unit);
-  ctx.font = kit(story ? 64 : 52);
-  ctx.fillText(fitText(ctx, data.words.heading, W - 4 * pad), W / 2, pad + bandH - (story ? 92 : 74) * unit);
-  ctx.font = kit(story ? 72 : 58);
-  ctx.fillText(fitText(ctx, `${upper(data.words.monthName)} ${data.month.year}`, W - 4 * pad), W / 2, pad + bandH - 20 * unit);
+  ctx.font = `400 ${px(story ? 78 : 64)}px ${fonts.script}`;
+  const headingY = nameY + (story ? 78 : 64) * unit;
+  ctx.fillText(fitText(ctx, data.words.heading, W - 4 * pad), W / 2, headingY);
+  // The month in capitals and the year after it, smaller and lighter, the pair centred together.
+  const monthText = upper(data.words.monthName);
+  const yearText = ` ${data.month.year}`;
+  const monthFont = body(story ? 74 : 60, 900);
+  const yearFont = body(story ? 44 : 36, 500);
+  ctx.font = monthFont;
+  const monthW = ctx.measureText(monthText).width;
+  ctx.font = yearFont;
+  const yearW = ctx.measureText(yearText).width;
+  const monthY = pad + bandH - (story ? 30 : 24) * unit;
   ctx.textAlign = "left";
+  ctx.font = monthFont;
+  ctx.fillText(monthText, W / 2 - (monthW + yearW) / 2, monthY);
+  ctx.font = yearFont;
+  ctx.globalAlpha = 0.8;
+  ctx.fillText(yearText, W / 2 - (monthW + yearW) / 2 + monthW, monthY);
+  ctx.globalAlpha = 1;
 
   // The foot: «URMĂREȘTE-NE!», each network the club has with its name, then the tags.
   const footH = 64 * unit;
@@ -367,19 +427,24 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
   roundRect(ctx, pad, footY, W - 2 * pad, footH, 18 * unit);
   ctx.fillStyle = palette.band;
   ctx.fill();
-  const footItems: { text: string; mark?: keyof typeof SOCIAL_MARKS; weight: number }[] = [
+  // Each network beside the club's name while the band holds it; past that, the marks alone — four
+  // networks with the name four times overflowed a 1080-pixel band and cut the call and the tags.
+  const withNames: { text: string; mark?: keyof typeof SOCIAL_MARKS; weight: number }[] = [
     { text: upper(data.words.follow) + "!", weight: 900 },
     ...data.socials.map((network) => ({ text: data.clubName, mark: network, weight: 700 })),
     { text: data.words.hashtags, weight: 600 },
   ];
+  const marksOnly = withNames.map((item) => (item.mark ? { ...item, text: "" } : item));
   const markSize = 28 * unit;
-  let footSize = 24;
-  const widthOf = (size: number) => {
+  const room = W - 2 * pad - 40 * unit;
+  const widthOf = (items: typeof withNames, size: number) => {
     ctx.font = body(size, 700);
-    return footItems.reduce((sum, item) => sum + ctx.measureText(item.text).width + (item.mark ? markSize + 10 * unit : 0), 0) + (footItems.length - 1) * 30 * unit;
+    return items.reduce((sum, item) => sum + (item.text ? ctx.measureText(item.text).width : 0) + (item.mark ? markSize + (item.text ? 10 * unit : 0) : 0), 0) + (items.length - 1) * 30 * unit;
   };
-  while (footSize > 14 && widthOf(footSize) > W - 2 * pad - 40 * unit) footSize -= 1;
-  let footX = (W - widthOf(footSize)) / 2;
+  const footItems = widthOf(withNames, 20) <= room ? withNames : marksOnly;
+  let footSize = 24;
+  while (footSize > 14 && widthOf(footItems, footSize) > room) footSize -= 1;
+  let footX = (W - widthOf(footItems, footSize)) / 2;
   for (const item of footItems) {
     if (item.mark) {
       ctx.save();
@@ -388,12 +453,12 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
       ctx.fillStyle = palette.bandInk;
       ctx.fill(new Path2D(SOCIAL_MARKS[item.mark].path));
       ctx.restore();
-      footX += markSize + 10 * unit;
+      footX += markSize + (item.text ? 10 * unit : 0);
     }
     ctx.font = body(footSize, item.weight);
     ctx.fillStyle = palette.bandInk;
-    ctx.fillText(item.text, footX, footY + footH / 2 + footSize * 0.36 * unit);
-    footX += ctx.measureText(item.text).width + 30 * unit;
+    if (item.text) ctx.fillText(item.text, footX, footY + footH / 2 + footSize * 0.36 * unit);
+    footX += (item.text ? ctx.measureText(item.text).width : 0) + 30 * unit;
   }
 
   // The legends: what repeats, then what stands alone, each under its own coloured title.

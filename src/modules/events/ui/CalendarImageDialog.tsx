@@ -24,6 +24,7 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import PressButton from "@/shared/ui/PressButton";
+import { LOGO } from "@/theme/brand";
 import type { CalendarImageData } from "../domain/calendar-image";
 import {
   CALENDAR_IMAGE_RATIOS,
@@ -60,7 +61,8 @@ function pageFonts() {
   const style = getComputedStyle(document.body);
   const body = style.fontFamily || "sans-serif";
   const display = style.getPropertyValue("--font-facon").trim() || body;
-  return { body, display };
+  const script = style.getPropertyValue("--font-signature").trim() || body;
+  return { body, display, script };
 }
 
 /**
@@ -86,25 +88,58 @@ export default function CalendarImageDialog({
     return typeof navigator.canShare === "function" && navigator.canShare({ files: [probe] });
   });
   const canvas = useRef<HTMLCanvasElement | null>(null);
+  // The club's real logo, the white lockup the site serves itself (so the canvas stays exportable); null
+  // until it has loaded, and the picture is drawn again when it has.
+  const [logo, setLogo] = useState<HTMLImageElement | null>(null);
   const { width, height } = CALENDAR_IMAGE_RATIOS[options.ratio];
-  const fileName = `${data.clubName.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-")}-${data.month.year}-${String(data.month.month).padStart(2, "0")}.png`;
+  // «brasov-runners-2026-10.png»: the diacritics' marks dropped before anything else is, or «ș» splits the word.
+  const fileName = `${data.clubName.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").replace(/[^a-z0-9]+/g, "-")}-${data.month.year}-${String(data.month.month).padStart(2, "0")}.png`;
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     // The web fonts first, or the first picture is drawn in a fallback face.
-    void document.fonts.ready.then(() => {
+    // The hand-written face is not preloaded by the page (it is used nowhere else on it): asked for here, once.
+    const fonts = pageFonts();
+    void Promise.all([document.fonts.load(`400 64px ${fonts.script}`), document.fonts.load(`italic 900 52px ${fonts.display}`)]).catch(() => undefined).then(() => document.fonts.ready).then(() => {
       const element = canvas.current;
       const ctx = element?.getContext("2d");
       if (cancelled || !element || !ctx) return;
-      drawCalendarImage(ctx, data, options, pageFonts());
+      drawCalendarImage(ctx, data, options, fonts, { logo });
     });
     return () => {
       cancelled = true;
     };
-  }, [open, data, options, width, height]);
+  }, [open, data, options, width, height, logo]);
 
-  const blob = () => new Promise<Blob | null>((resolve) => canvas.current?.toBlob(resolve, "image/png") ?? resolve(null));
+  useEffect(() => {
+    if (!open || logo) return;
+    let cancelled = false;
+    const image = new Image();
+    image.src = LOGO.lockup.onDark;
+    // A logo that cannot load leaves the drawn mountains in its place: nothing to say.
+    void image
+      .decode()
+      .then(() => {
+        if (!cancelled) setLogo(image);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [open, logo]);
+
+  // `toBlob` answers through its callback and returns nothing: a `??` after it resolved null at once,
+  // so «Descarcă PNG» and «Distribuie» did nothing (the owner, 2026-10-27).
+  const blob = () =>
+    new Promise<Blob | null>((resolve) => {
+      const element = canvas.current;
+      if (!element) {
+        resolve(null);
+        return;
+      }
+      element.toBlob(resolve, "image/png");
+    });
 
   async function download() {
     const file = await blob();
@@ -113,7 +148,10 @@ export default function CalendarImageDialog({
     const link = document.createElement("a");
     link.href = url;
     link.download = fileName;
+    // In the document while it is pressed: an anchor outside it is not followed by every browser.
+    document.body.append(link);
     link.click();
+    link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 

@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.83` | the calendar picture downloads and carries the club's real logo (§857) |
 | `BR-V3.82` | the calendar picture drawn as the club's own poster («Afiș») (§856) |
 | `BR-V3.81` | the month's calendar saved as a picture, drawn in the browser (§855) |
 | `BR-V3.80` | an internal waiting list per event, told nothing, moved to the official list by hand (§854) |
