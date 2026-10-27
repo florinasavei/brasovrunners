@@ -23,7 +23,7 @@ import { useId } from "react";
  * `display: none` on a phone: a gradient inside a hidden SVG paints nothing, so the footer's
  * Instagram, pointing at the header's, was an empty square below `md`.
  */
-const MARKS = {
+export const SOCIAL_MARKS = {
   facebook: {
     color: "#1877F2",
     path: "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z",
@@ -44,10 +44,10 @@ const MARKS = {
   },
 } as const;
 
-export type SocialNetwork = keyof typeof MARKS;
+export type SocialNetwork = keyof typeof SOCIAL_MARKS;
 
 export default function SocialIcon({ network, size = 22 }: { network: SocialNetwork; size?: number }) {
-  const mark = MARKS[network];
+  const mark = SOCIAL_MARKS[network];
   const gradient = "gradient" in mark ? mark.gradient : null;
   // React's ids carry characters a `url(#…)` reference would have to escape; the letters and digits are unique enough.
   const gradientId = `social-mark-${network}-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;

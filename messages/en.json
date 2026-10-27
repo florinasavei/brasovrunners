@@ -200,6 +200,7 @@
         "title": "The month's calendar as a picture",
         "theme": "Theme",
         "themes": {
+          "poster": "Poster",
           "club": "The club",
           "light": "Light",
           "dark": "Dark",
@@ -222,7 +223,9 @@
         "specialTitle": "Special events",
         "cancelled": "Cancelled",
         "follow": "Follow us",
-        "more": "+{count} more"
+        "more": "+{count} more",
+        "at": "at {time}",
+        "hashtags": "#NoOneLeftBehind #brasovrunners"
       }
     },
     "raceWeek": {

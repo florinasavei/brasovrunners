@@ -606,6 +606,23 @@ export const CALENDAR_IMAGE_THEMES = {
     special: [COLOR_DARK.kindSpecial, COLOR_DARK.kindSpecialInk],
     other: ["#2a2d3a", "#eceae4"],
   },
+  /**
+   * «Afiș» (§855): the club's hand-made monthly poster, as the owner handed it over — a white sheet, the
+   * logo's blue band, the weekdays on a pale blue row, a special date's cell in pale pink or pale yellow.
+   */
+  poster: {
+    background: [COLOR.surface, COLOR.surface],
+    band: COLOR.blue,
+    bandInk: COLOR.surface,
+    cell: COLOR.surface,
+    cellInk: COLOR.blueInk,
+    cellMuted: "#e9eeff",
+    line: "#c7d2ff",
+    title: COLOR.blue,
+    weekly: [COLOR.surface, COLOR.blue],
+    special: [COLOR.accentTint, COLOR.accent],
+    other: ["#fff4d6", COLOR.orange],
+  },
   winter: { ...CLUB_PALETTE, background: ["#3f6fb5", "#9cc3e6"], band: "#1e3f73", title: "#1e3f73" },
   spring: { ...CLUB_PALETTE, background: ["#3f8f4f", "#a6d4a0"], band: "#22552d", title: "#22552d" },
   summer: { ...CLUB_PALETTE, background: ["#0b8fa8", "#f2c14e"], band: "#075e6f", title: "#075e6f" },

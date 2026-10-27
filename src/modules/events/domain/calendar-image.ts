@@ -1,5 +1,7 @@
 import type { YearMonth } from "./calendar";
 import type { CalendarTone } from "./calendar-kind";
+import type { EventType } from "./event-type";
+import type { SocialNetwork } from "@/shared/ui/SocialIcon";
 
 /**
  * «Salvează ca imagine» (§855; the owner, 2026-10-27: «people want to export the calendar as a picture so
@@ -21,6 +23,8 @@ export type CalendarImageEntry = {
   time: string | null;
   title: string;
   tone: CalendarTone;
+  /** The type's glyph on «Afiș» (§855). */
+  type: EventType;
   special: boolean;
   cancelled: boolean;
 };
@@ -30,6 +34,14 @@ export type CalendarImageWords = {
   heading: string;
   monthTitle: string;
   weekdays: string[];
+  /** «Luni» … «Duminică», the poster's column heads. */
+  weekdaysLong: string[];
+  /** The month alone, «octombrie», the poster's large word. */
+  monthName: string;
+  /** «ora {time}» under a date's title on the poster. */
+  at: string;
+  /** The club's tags at the poster's foot. */
+  hashtags: string;
   recurringTitle: string;
   specialTitle: string;
   cancelled: string;
@@ -41,9 +53,11 @@ export type CalendarImageData = {
   month: YearMonth;
   entries: CalendarImageEntry[];
   /** A title that repeats in the month, with its rhythm: «În fiecare luni, la 18:30». */
-  recurring: { title: string; sentence: string; tone: CalendarTone }[];
+  recurring: { title: string; sentence: string; tone: CalendarTone; type: EventType }[];
   /** A date that stands alone in the month: its day and title. */
-  specials: { day: number; title: string; tone: CalendarTone }[];
+  specials: { day: number; title: string; tone: CalendarTone; type: EventType }[];
+  /** The club's profiles the site links (`clubSocialLinks`), drawn at the poster's foot with the club's name. */
+  socials: SocialNetwork[];
   words: CalendarImageWords;
   /** Where to find the club, the site's own host (`APP_BASE_URL`). */
   host: string;
