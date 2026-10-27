@@ -100,7 +100,7 @@ export default function CalendarImageDialog({
     let cancelled = false;
     // The web fonts first, or the first picture is drawn in a fallback face.
     const fonts = calendarImageFonts();
-    void loadCalendarImageFonts(fonts).then(() => {
+    void loadCalendarImageFonts().then(() => {
       const element = canvas.current;
       const ctx = element?.getContext("2d");
       if (cancelled || !element || !ctx) return;

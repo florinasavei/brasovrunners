@@ -559,13 +559,15 @@ export const WORDMARK_SIZE = "1rem";
  * is four palettes, one per season, chosen by the month drawn.
  *
  * The layouts read the slots in pairs, which `tests/unit/theme/brand.test.ts` holds at 4.5:1 on every
- * palette: `bandInk` on `band` (the band, the foot, a series' strip, the weekly chips) and on `special[1]`
- * and `other[1]` (the legend's «Evenimente speciale» pill, a series' strip of that kind); `band` on `cell`
- * (a series' outlined strip, its hour); `title` on `cellMuted` (the weekdays, the legend's notes) and on
- * `cell` and the two tinted days (the hours); `cellInk` on `cell`, on `cellMuted` and on `special[0]` and
- * `other[0]` (the numbers and the titles); `special[1]` and `other[1]` on `cell` and on their own tints
- * («Anulat», the glyphs, the agenda's day numbers); each series' ink on its fill, and each series' fill as
- * the words of its cancelled chip on `cell`. `line` is only seen, not read: a hairline on `cell`.
+ * palette: `bandInk` on `band` (the band, the foot, a series' strip, the weekly chips), on `special[1]`
+ * and `other[1]` (the legend's «Evenimente speciale» pill, a series' strip of that kind) and on `cellInk`
+ * (a third series' strip on one weekday); `band` on `cell` (a series' outlined strip, its hour) and on
+ * `weekly[0]` (the agenda's day number on a weekly date's card); `title` on `cellMuted` (the weekdays, the
+ * legend's notes) and on `cell` and the two tinted days (the hours); `cellInk` on `cell`, on `cellMuted`
+ * and on `special[0]`, `other[0]` and `weekly[0]` (the numbers and the titles); `special[1]` and `other[1]`
+ * on `cell` and on their own tints («Anulat», the glyphs, the agenda's day numbers) and `weekly[1]` on its
+ * own (the glyph on a weekly date's card); each series' ink on its fill, and each series' fill as the
+ * words of its cancelled chip on `cell`. `line` is only seen, not read: a hairline on `cell`.
  */
 export type CalendarImagePalette = {
   background: readonly [string, string];
@@ -606,21 +608,24 @@ const SERIES_ON_WHITE: CalendarImagePalette["series"] = [
 const PALE_BLUE_ROW = "#e9eeff";
 const PALE_BLUE_LINE = "#c7d2ff";
 
+/** «Întunecat»'s day cell: a blue-grey a step above its page, and a weekly date's bare card on it. */
+const DARK_CELL = "#1b1e2b";
+
 /**
- * The club's colours on a white cell, which «Sezon» draws on each season's page: the band and the hours a
- * deep blue, the weekday row and the hairlines a neutral grey that sits on any page, a special day the
- * site's pale green and a social one its warm grey.
+ * The club's colours on a white cell, which «Sezon» draws on each season's page: the hours a deep blue, the
+ * weekday row and the hairlines a neutral grey that sits on any page, a special day the site's pale green
+ * and a social one its warm grey, a weekly date's own card bare, as «Afiș» has it. The band is each theme's
+ * own, so none is held here.
  */
-const CLUB_PALETTE: CalendarImagePalette = {
+const CLUB_PALETTE: Omit<CalendarImagePalette, "band"> = {
   background: [COLOR.blue, COLOR.blueInk],
-  band: COLOR.blueInk,
   bandInk: COLOR.surface,
   cell: COLOR.surface,
   cellInk: COLOR.ink,
   cellMuted: COLOR.line,
   line: COLOR.line,
   title: COLOR.blueInk,
-  weekly: [COLOR.accentTint, COLOR.accentInk],
+  weekly: [COLOR.surface, COLOR.blue],
   special: [COLOR.kindSpecial, COLOR.kindSpecialInk],
   other: [COLOR.kindOther, COLOR.ink],
   series: SERIES_ON_WHITE,
@@ -649,18 +654,19 @@ export const CALENDAR_IMAGE_THEMES = {
    * light fill does both (6.4:1 on the cell, 7.3:1 under the dark words). The same holds for the specials'
    * green and the socials' orange — pills under the dark words, words on the cell — and for the four series:
    * light fills under the dark words, each at least 9:1 on the cell. A special day is a deep green, a
-   * social one a warm brown: dark enough for the light words, far enough in hue from the blue-grey cell.
+   * social one a warm brown: dark enough for the light words, far enough in hue from the blue-grey cell. A
+   * weekly date's own card is the bare cell under the band's blue, as «Afiș» has it bare under its blue.
    */
   dark: {
     background: ["#0e1018", "#171a26"],
     band: COLOR_DARK.blue,
     bandInk: COLOR_DARK.paper,
-    cell: "#1b1e2b",
+    cell: DARK_CELL,
     cellInk: "#eceae4",
     cellMuted: "#2c3043",
     line: "#343a52",
     title: COLOR_DARK.blueInk,
-    weekly: [COLOR_DARK.accentTint, COLOR_DARK.accentInk],
+    weekly: [DARK_CELL, COLOR_DARK.blue],
     special: ["#1f4a2c", COLOR_DARK.kindSpecialInk],
     other: ["#3a2f1e", COLOR.orange],
     series: [
@@ -694,7 +700,7 @@ export const CALENDAR_IMAGE_THEMES = {
   winter: { ...CLUB_PALETTE, background: ["#3f6fb5", "#9cc3e6"], band: "#1e3f73", title: "#1e3f73" },
   spring: { ...CLUB_PALETTE, background: ["#3f8f4f", "#a6d4a0"], band: "#22552d", title: "#22552d" },
   summer: { ...CLUB_PALETTE, background: ["#0b8fa8", "#f2c14e"], band: "#075e6f", title: "#075e6f" },
-  autumn: { ...CLUB_PALETTE, background: ["#b4511d", COLOR.orange], band: "#6e2f10", title: "#6e2f10" },
+  autumn: { ...CLUB_PALETTE, background: [BURNT_ORANGE, COLOR.orange], band: "#6e2f10", title: "#6e2f10" },
 } as const satisfies Record<string, CalendarImagePalette>;
 
 export type CalendarImagePaletteName = keyof typeof CALENDAR_IMAGE_THEMES;

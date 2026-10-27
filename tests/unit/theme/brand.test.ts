@@ -414,6 +414,11 @@ describe("BR-REQ-070-02 the calendar picture's palettes are readable in every la
     ["a social date's glyphs and its outlined chip on a cell", (p) => p.other[1], (p) => p.cell],
     ["a special date's glyphs and the agenda's day number on the special tint", (p) => p.special[1], (p) => p.special[0]],
     ["a social date's glyphs and the agenda's day number on the social tint", (p) => p.other[1], (p) => p.other[0]],
+    ["the band's words on a third series' strip of one weekday, the cell's ink", (p) => p.bandInk, (p) => p.cellInk],
+    ["the band's colour as the agenda's day number on a weekly date's card", (p) => p.band, (p) => p.weekly[0]],
+    ["the hours on a weekly date's card", (p) => p.title, (p) => p.weekly[0]],
+    ["the numbers and the titles on a weekly date's card", (p) => p.cellInk, (p) => p.weekly[0]],
+    ["a weekly date's glyphs on its card", (p) => p.weekly[1], (p) => p.weekly[0]],
   ];
 
   for (const [name, palette] of Object.entries(CALENDAR_IMAGE_THEMES)) {

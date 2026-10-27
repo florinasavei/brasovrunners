@@ -14,7 +14,7 @@ declare global {
 
 window.renderPreview = async (data, themes) => {
   const fonts = calendarImageFonts();
-  await loadCalendarImageFonts(fonts);
+  await loadCalendarImageFonts();
   const logo = new Image();
   logo.src = LOGO.lockup.onDark;
   await logo.decode();

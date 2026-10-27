@@ -308,7 +308,7 @@ export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarIma
   // ---- The marks: a series' date as its glyph and its hour on a pill of the series' look.
   const laneLook = (lane: PosterLane) => {
     const base = lane.tone === "special" ? palette.special[1] : lane.tone === "other" ? palette.other[1] : palette.band;
-    const onBase = lane.tone === "other" ? palette.cellInk : palette.bandInk;
+    const onBase = palette.bandInk;
     const looks = [
       { fill: base, ink: onBase, stroke: null },
       { fill: palette.cell, ink: base, stroke: base },
