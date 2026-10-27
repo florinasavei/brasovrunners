@@ -64,6 +64,7 @@ export async function calendarImageProps(
       recurringTitle: t("recurringTitle"),
       specialTitle: t("specialTitle"),
       cancelled: t("cancelled"),
+      tba: t("tba"),
       follow: t("follow"),
       more: t.raw("more") as string,
       emptyMonth: t("emptyMonth"),

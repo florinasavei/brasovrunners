@@ -6,7 +6,7 @@ import type { CalendarImageData, CalendarImageEntry } from "@/modules/events/dom
 import { type CalendarImageFormat, calendarImageRows } from "@/modules/events/domain/calendar-image-rows";
 import { distanceWords } from "@/modules/events/domain/distance";
 import { elevationWords } from "@/modules/events/domain/elevation";
-import { detailWords, eventGlyphs, fitText, glyphsWidth, wrapText } from "@/modules/events/ui/calendar-image-canvas";
+import { detailWords, eventGlyphs, fitText, glyphsWidth, wrapBalanced, wrapText } from "@/modules/events/ui/calendar-image-canvas";
 import { SPECIAL_PATH, SURFACE_PATHS, TYPE_PATHS } from "@/modules/events/ui/calendar-image-glyphs";
 import { CALENDAR_IMAGE_RATIOS } from "@/modules/events/ui/calendar-image-canvas";
 import { CALENDAR_IMAGE_LAYOUT_CHOICES, CALENDAR_IMAGE_THEME_CHOICES, type CalendarImageAssets, type CalendarImageOptions, drawCalendarImage, paletteFor } from "@/modules/events/ui/calendar-image-draw";
@@ -164,6 +164,84 @@ describe("a title kept whole", () => {
   it("says a word wider than the line does not fit, or splits it with «-» when asked", () => {
     expect(wrapWhole(ctx, "Reconnaissance run", 80)).toBeNull();
     expect(wrapWhole(ctx, "Reconnaissance run", 80, true)).toEqual(["Reconna-", "issance", "run"]);
+  });
+});
+
+describe("the one wrap the layouts share (the audit of 2026-10-27, D23 and D40)", () => {
+  const fitsAll = (lines: string[], width: number) => lines.every((line) => ctx.measureText(line).width <= width);
+
+  it("breaks at spaces like the greedy wraps when the lines end balanced, a dash staying with the word before it", () => {
+    expect(wrapBalanced(ctx, "Happy Monday with Brașov Runners", 130)).toEqual(["Happy Monday", "with Brașov", "Runners"]);
+    expect(wrapBalanced(ctx, "Trail Marathon — briefing", 160)).toEqual(["Trail Marathon\u00a0—", "briefing"]);
+    expect(wrapBalanced(ctx, "", 100)).toEqual([]);
+    expect(wrapBalanced(ctx, "  ", 100)).toEqual([]);
+  });
+
+  it("never leaves one short word alone on the last line when the line before can give it one", () => {
+    const title = "CROSUL BRAȘOV RUNNERS — EDIȚIA A III-A";
+    // Greedy, the ordinal stands alone; balanced, the line before gives it «EDIȚIA A».
+    expect(breakLines(ctx, title, 330).at(-1)).toBe("III-A");
+    expect(wrapBalanced(ctx, title, 330)).toEqual(["CROSUL BRAȘOV RUNNERS\u00a0—", "EDIȚIA A III-A"]);
+    expect(wrapBalanced(ctx, title, 300)).toEqual(["CROSUL BRAȘOV RUNNERS\u00a0—", "EDIȚIA A III-A"]);
+    expect(wrapBalanced(ctx, "Girls only shake out run", 200)).toEqual(["Girls only shake", "out run"]);
+    for (let width = 70; width <= 240; width += 10) {
+      const lines = wrapBalanced(ctx, "Girls only shake out run", width);
+      expect(fitsAll(lines, width), `${width}: ${lines.join(" / ")}`).toBe(true);
+      // «run» ends a line alone only when the line before is one word and cannot give «out».
+      if (lines.at(-1) === "run") expect(lines.at(-2), `${width}: ${lines.join(" / ")}`).toBe("out");
+    }
+    // The orphan does not change ends: «ab» alone on the first line is no better than «op» alone on the last.
+    expect(wrapBalanced(ctx, "ab cdefghijklmn op", 150)).toEqual(["ab cdefghijklmn", "op"]);
+  });
+
+  it("moves words down only while the last line stays narrower than the ratio asked, and the moved line fits", () => {
+    expect(wrapBalanced(ctx, "Girls only shake out run", 160)).toEqual(["Girls only shake", "out run"]);
+    expect(wrapBalanced(ctx, "Girls only shake out run", 160, { minLastRatio: 0.6 })).toEqual(["Girls only", "shake out run"]);
+    // «Brașov Runners» would be wider than the line: «Runners» stays, however short.
+    expect(wrapBalanced(ctx, "Happy Monday with Brașov Runners", 130, { minLastRatio: 0.9 })).toEqual(["Happy Monday", "with Brașov", "Runners"]);
+  });
+
+  it("hyphenates a word wider than the line after a vowel, three letters at least on each side, when asked", () => {
+    const pieces = wrapBalanced(ctx, "RECONNAISSANCE", 100, { hyphenate: true });
+    expect(pieces).toEqual(["RECONNAI-", "SSANCE"]);
+    expect(fitsAll(pieces, 100)).toBe(true);
+    expect(pieces[0]).toMatch(/^.{3,}[AEIOUY]-$/);
+    expect(pieces[1].length).toBeGreaterThanOrEqual(3);
+    expect(wrapBalanced(ctx, "ULTRAMARATONIȘTII", 120, { hyphenate: true })).toEqual(["ULTRAMARATO-", "NIȘTII"]);
+    // A 17-letter word on a narrow line takes two hyphens, each break after a vowel.
+    expect(wrapBalanced(ctx, "ULTRAMARATONIȘTII", 70, { hyphenate: true })).toEqual(["ULTRA-", "MARATO-", "NIȘTII"]);
+    // The Romanian vowels count, in capitals too; «Ș» does not.
+    expect(wrapBalanced(ctx, "ALERGĂTORII", 80, { hyphenate: true })).toEqual(["ALERGĂ-", "TORII"]);
+    expect(wrapBalanced(ctx, "RECUNOAȘTEREA", 100, { hyphenate: true })).toEqual(["RECUNOA-", "ȘTEREA"]);
+    // The rest of the title joins the word's last piece.
+    expect(wrapBalanced(ctx, "Course reconnaissance run", 100, { hyphenate: true })).toEqual(["Course", "reconnai-", "ssance run"]);
+    // The dash glued behind a word is not the word: «Marathon» fits bare, so it is not split for its dash and
+    // stands one dash wider than the line; split, the dash goes on the last piece, never on a line of its own.
+    expect(wrapBalanced(ctx, "Trail Marathon — briefing", 90, { hyphenate: true })).toEqual(["Trail", "Marathon\u00a0—", "briefing"]);
+    expect(wrapBalanced(ctx, "Trail Marathon — briefing", 60, { hyphenate: true })).toEqual(["Trail", "Mara-", "thon\u00a0—", "brie-", "fing"]);
+    for (let width = 60; width <= 120; width += 10) {
+      const lines = wrapBalanced(ctx, "CROSUL BRAȘOV RUNNERS — EDIȚIA A III-A", width, { hyphenate: true });
+      for (const line of lines) {
+        expect(line, `${width}: ${lines.join(" / ")}`).not.toMatch(/^[\u00a0 ]?[—–-]/);
+        // Three letters at least before a glued dash: «ERS —», never «RS —».
+        if (line.endsWith("\u00a0—")) expect(line, `${width}: ${lines.join(" / ")}`).toMatch(/^[^\s-]{3,}\u00a0—$/);
+      }
+    }
+  });
+
+  it("breaks at a hyphen the word already has first, adding none, and starts no piece with one", () => {
+    expect(wrapBalanced(ctx, "SHAKE-OUT", 60, { hyphenate: true })).toEqual(["SHAKE-", "OUT"]);
+    expect(wrapBalanced(ctx, "TÂMPA-BRAȘOV-POIANA", 80, { hyphenate: true })).toEqual(["TÂMPA-", "BRAȘOV-", "POIANA"]);
+  });
+
+  it("falls back to the widest prefix with three letters each side when no break after a vowel fits, and leaves a word too short to split", () => {
+    expect(wrapBalanced(ctx, "BRRRRRRRRRRR", 80, { hyphenate: true })).toEqual(["BRRRRRR-", "RRRRR"]);
+    expect(wrapBalanced(ctx, "ABCDE", 30, { hyphenate: true })).toEqual(["ABCDE"]);
+  });
+
+  it("leaves a word wider than the line alone on its own line without `hyphenate`, never cut with «…»", () => {
+    expect(wrapBalanced(ctx, "a reconnaissance b", 60)).toEqual(["a", "reconnaissance", "b"]);
+    expect(wrapBalanced(ctx, "RECONNAISSANCE", 100)).toEqual(["RECONNAISSANCE"]);
   });
 });
 
@@ -339,6 +417,7 @@ describe("the themes are palettes of the layouts", () => {
       recurringTitle: "Evenimente recurente",
       specialTitle: "Evenimente speciale",
       cancelled: "Anulat",
+      tba: "ora se anunță",
       follow: "Urmărește-ne",
       more: "+{count} altele",
       emptyMonth: "Nicio alergare luna aceasta",

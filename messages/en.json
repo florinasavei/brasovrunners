@@ -236,6 +236,7 @@
         "recurringTitle": "Recurring events",
         "specialTitle": "Special events",
         "cancelled": "Cancelled",
+        "tba": "time to be announced",
         "follow": "Follow us",
         "more": "+{count} more",
         "emptyMonth": "No runs this month",

@@ -61,6 +61,8 @@ export type CalendarImageWords = {
   recurringTitle: string;
   specialTitle: string;
   cancelled: string;
+  /** «ora se anunță» where a date's hour goes while `time` is null — lower case, short, like `at`. */
+  tba: string;
   follow: string;
   more: string;
   /** «Nicio alergare luna aceasta»: what the frame says in the body of a month with no date (`calendar-image-frame.ts`). */
