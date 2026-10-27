@@ -1,9 +1,9 @@
 import type { CalendarImagePalette } from "@/theme/brand";
 import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
 import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
-import { type Box, CALENDAR_IMAGE_RATIOS, drawGlyphs, eventGlyphs, fillSpaced, fitText, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
+import { type Box, CALENDAR_IMAGE_RATIOS, drawGlyphs, eventGlyphs, fillSpaced, fitText, glyphsWidth, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
 import type { CalendarImageAssets, CalendarImageFonts, CalendarImageOptions } from "./calendar-image-draw";
-import { wrapWhole } from "./calendar-image-poster-heads";
+import { weekdayColumn, wrapWhole } from "./calendar-image-poster-heads";
 import { monthGrid, type YearMonth } from "../domain/calendar";
 import type { CalendarImageData, CalendarImageEntry } from "../domain/calendar-image";
 
@@ -62,9 +62,14 @@ export function initialWeek(data: Pick<CalendarImageData, "month" | "entries">, 
 
 const clamp = (value: number, low: number, high: number) => Math.max(low, Math.min(high, value));
 
-/** The titles' sizes on a 1080-wide picture: as large as the room allows, never under 18. */
+/**
+ * The titles' sizes on a 1080-wide picture: as large as the room allows, never under 18. A word wider than its
+ * card is split with «-» only under 26 — whole while the brief's range holds, in two pieces before the title
+ * drops to the floor.
+ */
 const TITLE_MAX = 40;
 const TITLE_MIN = 18;
+const TITLE_HYPHENATE = 26;
 
 /** A date on its card: its title's lines at the size chosen, and the card's height. */
 type Card = { entry: CalendarImageEntry; lines: string[]; h: number };
@@ -80,7 +85,7 @@ export function drawCalendarImageWeek(ctx: CanvasRenderingContext2D, data: Calen
   const face = (size: number, weight: number) => `${weight} ${px(size)}px ${fonts.poster}`;
   const upper = (text: string) => text.toLocaleUpperCase("ro-RO");
   const week = weekOf(data.month, options.week ?? 0);
-  const weekdayOf = (day: number) => (new Date(Date.UTC(data.month.year, data.month.month - 1, day)).getUTCDay() + 6) % 7;
+  const weekdayOf = (day: number) => weekdayColumn(data.month, day);
   const datesOf = (day: number) => data.entries.filter((entry) => entry.day === day);
   /** A special date's card pale pink, a social one's cream, as the poster marks them; a series' date stays plain. */
   const tintOf = (entry: CalendarImageEntry): "special" | "other" | null => (entry.tone === "other" ? "other" : entry.tone === "special" || entry.special ? "special" : null);
@@ -207,21 +212,35 @@ export function drawCalendarImageWeek(ctx: CanvasRenderingContext2D, data: Calen
   const cardPadOf = (size: number) => size * 0.55 * unit;
   const cardGapOf = (size: number) => size * 0.35 * unit;
   const textWidthOf = (cardW: number, size: number) => cardW - 2 * cardPadOf(size) * 1.2;
+  const cardOf = (entry: CalendarImageEntry, lines: string[], size: number): Card => ({ entry, lines, h: 2 * cardPadOf(size) + hourLineOf(size) + lines.length * titleLineOf(size) });
+  /** Whether the hour — or «ANULAT», which English makes long — stands whole after the glyphs on its line. */
+  const hourFits = (entry: CalendarImageEntry, cardW: number, size: number) => {
+    const hour = hourOf(entry);
+    if (!hour) return true;
+    const hourSize = hourSizeOf(size);
+    ctx.font = face(hourSize, entry.cancelled ? 700 : 500);
+    return ctx.measureText(hour).width <= textWidthOf(cardW, size) - glyphsWidth(eventGlyphs(entry.type, entry.surface).length, hourSize * 1.25 * unit) - 8 * unit;
+  };
   /**
    * A day's dates as cards `cardW` wide at `size`, the titles whole — null when a word alone is wider than a
-   * card, except at the smallest size, where it is split with «-». With `maxLines`, the titles are cut instead.
+   * card, except under `TITLE_HYPHENATE`, where it is split with «-», or when the hour's line would be cut.
    */
-  function cardsAt(entries: CalendarImageEntry[], cardW: number, size: number, maxLines = 0): Card[] | null {
-    ctx.font = face(size, 700);
+  function cardsWhole(entries: CalendarImageEntry[], cardW: number, size: number): Card[] | null {
     const cards: Card[] = [];
     for (const entry of entries) {
-      const title = upper(entry.title);
-      const lines = maxLines > 0 ? wrapText(ctx, title, textWidthOf(cardW, size), maxLines) : wrapWhole(ctx, title, textWidthOf(cardW, size), size === TITLE_MIN);
+      if (!hourFits(entry, cardW, size)) return null;
+      ctx.font = face(size, 700);
+      const lines = wrapWhole(ctx, upper(entry.title), textWidthOf(cardW, size), size < TITLE_HYPHENATE);
       if (!lines) return null;
-      cards.push({ entry, lines, h: 2 * cardPadOf(size) + hourLineOf(size) + lines.length * titleLineOf(size) });
+      cards.push(cardOf(entry, lines, size));
     }
     return cards;
   }
+  /** The same at the smallest size, each title cut to `maxLines` with «…»: what remains when nothing whole fits. */
+  const cardsCut = (entries: CalendarImageEntry[], cardW: number, maxLines: number): Card[] => {
+    ctx.font = face(TITLE_MIN, 700);
+    return entries.map((entry) => cardOf(entry, wrapText(ctx, upper(entry.title), textWidthOf(cardW, TITLE_MIN), maxLines), TITLE_MIN));
+  };
   const stackOf = (cards: Card[], size: number) => cards.reduce((sum, card) => sum + card.h, 0) + Math.max(0, cards.length - 1) * cardGapOf(size);
   function drawCard(card: Card, x: number, y: number, w: number, size: number) {
     const { entry } = card;
@@ -300,23 +319,27 @@ export function drawCalendarImageWeek(ctx: CanvasRenderingContext2D, data: Calen
     ctx.lineTo(x2, y2);
     ctx.stroke();
   };
-  /** The largest title size at which `fits` holds, else the smallest with the longest titles cut a line at a time. */
-  function largest<T>(at: (size: number, maxLines: number) => T | null, fits: (plan: T, size: number) => boolean, max: number): { plan: T; size: number } | null {
+  /**
+   * The largest title size at which `fits` holds with the titles whole, else the smallest with the titles cut a
+   * line at a time — down to one line each, which is drawn whether it fits or not: a day of many dates comes to
+   * that, and the overflow test says where.
+   */
+  function largest<T>(whole: (size: number) => T | null, cut: (maxLines: number) => T, fits: (plan: T, size: number) => boolean, max: number): { plan: T; size: number } {
     for (let size = max; size >= TITLE_MIN; size -= 1) {
-      const plan = at(size, 0);
+      const plan = whole(size);
       if (plan && fits(plan, size)) return { plan, size };
     }
-    for (let maxLines = 8; maxLines >= 1; maxLines -= 1) {
-      const plan = at(TITLE_MIN, maxLines);
-      if (plan && (fits(plan, TITLE_MIN) || maxLines === 1)) return { plan, size: TITLE_MIN };
+    for (let maxLines = 8; maxLines >= 2; maxLines -= 1) {
+      const plan = cut(maxLines);
+      if (fits(plan, TITLE_MIN)) return { plan, size: TITLE_MIN };
     }
-    return null;
+    return { plan: cut(1), size: TITLE_MIN };
   }
 
   if (W > H) {
     // 16:9: a column per day, the weekday and the number at its head on the muted row, the dates stacked under.
-    const columns = week.days.length;
-    const cellW = (panel.w - 2 * inset) / columns;
+    const count = week.days.length;
+    const cellW = (panel.w - 2 * inset) / count;
     const cw = cellW / unit;
     let labelSize = clamp(cw * 0.085, 14, 22);
     ctx.font = face(labelSize, 800);
@@ -328,26 +351,22 @@ export function drawCalendarImageWeek(ctx: CanvasRenderingContext2D, data: Calen
     const cardW = cellW - 2 * cardInset;
     const stacksTop = panel.y + inset + headH + 8 * unit;
     const room = panel.y + panel.h - inset - stacksTop;
-    const stacksAt = (size: number, maxLines: number): Card[][] | null => {
-      const stacks: Card[][] = [];
-      for (const day of week.days) {
-        const cards = cardsAt(datesOf(day), cardW, size, maxLines);
-        if (!cards) return null;
-        stacks.push(cards);
-      }
-      return stacks;
-    };
-    const fitted = largest(stacksAt, (stacks, size) => Math.max(...stacks.map((stack) => stackOf(stack, size))) <= room, Math.floor(clamp(cw * 0.14, TITLE_MIN, TITLE_MAX)));
-    const stacks = fitted?.plan ?? week.days.map(() => []);
-    const size = fitted?.size ?? TITLE_MIN;
+    // Each column at the largest size its own dates allow in the same room: one long word on Saturday must not
+    // shrink Tuesday's two-word title to the floor beside 70 % of empty column.
+    const max = Math.floor(clamp(cw * 0.14, TITLE_MIN, TITLE_MAX));
+    const columns = week.days.map((day) => {
+      const entries = datesOf(day);
+      return largest((size) => cardsWhole(entries, cardW, size), (maxLines) => cardsCut(entries, cardW, maxLines), (cards, size) => stackOf(cards, size) <= room, max);
+    });
     ctx.fillStyle = palette.cellMuted;
     ctx.fillRect(panel.x, panel.y, panel.w, inset + headH);
     let lowest = stacksTop;
     week.days.forEach((day, column) => {
+      const { plan: cards, size } = columns[column];
       const x = panel.x + inset + column * cellW;
       const middle = x + cellW / 2;
       // A day with nothing: its head alone, muted.
-      ctx.globalAlpha = stacks[column].length > 0 ? 1 : 0.45;
+      ctx.globalAlpha = cards.length > 0 ? 1 : 0.6;
       ctx.textAlign = "center";
       ctx.font = face(labelSize, 800);
       ctx.fillStyle = palette.title;
@@ -358,7 +377,7 @@ export function drawCalendarImageWeek(ctx: CanvasRenderingContext2D, data: Calen
       ctx.textAlign = "left";
       ctx.globalAlpha = 1;
       let y = stacksTop;
-      for (const card of stacks[column]) {
+      for (const card of cards) {
         drawCard(card, x + cardInset, y, cardW, size);
         y += card.h + cardGapOf(size);
       }
@@ -366,7 +385,7 @@ export function drawCalendarImageWeek(ctx: CanvasRenderingContext2D, data: Calen
     });
     // The columns stand on the mountains: their lines end where the skyline begins.
     const skyline = drawMountains({ x: panel.x + inset, y: lowest + gap, w: panel.w - 2 * inset, h: panel.y + panel.h - inset - lowest - gap });
-    for (let column = 1; column < columns; column += 1) hairline(panel.x + inset + column * cellW, panel.y + inset, panel.x + inset + column * cellW, skyline ?? panel.y + panel.h - inset);
+    for (let column = 1; column < count; column += 1) hairline(panel.x + inset + column * cellW, panel.y + inset, panel.x + inset + column * cellW, skyline ?? panel.y + panel.h - inset);
   } else {
     // Portrait, square and story: a row per day. At the left the weekday over the number; at the right the
     // cards. The rows share the height by their content — a day with nothing stays slim and muted.
@@ -383,20 +402,23 @@ export function drawCalendarImageWeek(ctx: CanvasRenderingContext2D, data: Calen
     const leftBlock = labelSize * 0.72 * unit + 8 * unit + numSize * 0.72 * unit;
     const room = panel.h - 2 * inset;
     type Row = { day: number; cards: Card[]; need: number; h: number };
-    const rowsAt = (size: number, maxLines: number): Row[] | null => {
+    const rowOf = (day: number, cards: Card[], size: number): Row => {
+      const need = cards.length === 0 ? slimH : Math.max(stackOf(cards, size), leftBlock) + 2 * rowPad;
+      return { day, cards, need, h: need };
+    };
+    const rowsWhole = (size: number): Row[] | null => {
       const rows: Row[] = [];
       for (const day of week.days) {
-        const cards = cardsAt(datesOf(day), cardsW, size, maxLines);
+        const cards = cardsWhole(datesOf(day), cardsW, size);
         if (!cards) return null;
-        const need = cards.length === 0 ? slimH : Math.max(stackOf(cards, size), leftBlock) + 2 * rowPad;
-        rows.push({ day, cards, need, h: need });
+        rows.push(rowOf(day, cards, size));
       }
       return rows;
     };
+    const rowsCut = (maxLines: number): Row[] => week.days.map((day) => rowOf(day, cardsCut(datesOf(day), cardsW, maxLines), TITLE_MIN));
     const totalOf = (rows: Row[]) => rows.reduce((sum, row) => sum + row.h, 0);
-    const fitted = largest(rowsAt, (rows) => totalOf(rows) <= room, TITLE_MAX);
-    const rows = fitted?.plan ?? [];
-    const size = fitted?.size ?? TITLE_MIN;
+    // One size for the whole agenda: the rows are the panel's width, so a long word costs them little.
+    const { plan: rows, size } = largest(rowsWhole, rowsCut, (plan) => totalOf(plan) <= room, TITLE_MAX);
     // What is left goes to the rows with content, each by its need and at most half as much again, so the
     // week never looks like a form; past that the room stays low, for the mountains.
     const content = rows.filter((row) => row.cards.length > 0);
@@ -412,7 +434,7 @@ export function drawCalendarImageWeek(ctx: CanvasRenderingContext2D, data: Calen
         // Slim and muted: the number small at the left, the weekday beside it, on one line.
         const smallNum = numSize * 0.5;
         const baseline = y + row.h / 2 + smallNum * 0.36 * unit;
-        ctx.globalAlpha = 0.45;
+        ctx.globalAlpha = 0.6;
         ctx.font = face(smallNum, 800);
         ctx.fillStyle = palette.cellInk;
         ctx.fillText(String(row.day), left, baseline);

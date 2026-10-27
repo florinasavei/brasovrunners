@@ -4,8 +4,8 @@
 // served beside `public/` (the logo, the poster's fonts) and the site's fonts, and every month asked is written
 // in every theme asked («Afiș» alone unless told), each in its three layouts and four formats, to
 // dist/calendar-preview/<month>/<theme>-<layout>-<format>.png — and, with --week, the month's weeks («Perioada»
-// → «Săptămâna»: all of them, or the n-th, 1 first) in every format, as <theme>-week<n>-<format>.png beside
-// them. For changing the picture: draw, look at the files, change, draw again. The months are
+// → «Săptămâna»: all of them, or the n-th, 1 first; a month with fewer draws none) in every format, as
+// <theme>-week<n>-<format>.png beside them. For changing the picture: draw, look at the files, change, draw again. The months are
 // scripts/calendar-image-preview/*.json — June 2026 as the club's own poster had it, a busy six-week August in
 // English, a November with two dates, a September with a series on two weekdays, a fortnightly one, a
 // 69-character title and three dates on one day, and an empty October.
@@ -26,6 +26,10 @@ const monthArg = option("month", "all");
 const chosen = monthArg === "all" ? months : monthArg.split(",");
 const themes = option("theme", "poster");
 const weeks = option("week", "none");
+if (!/^(none|all|[1-9]\d*)$/.test(weeks)) {
+  console.error(`--week takes none, all or a week's number (1 first), not «${weeks}»`);
+  process.exit(1);
+}
 const out = path.join(root, "dist/calendar-preview");
 
 const require = createRequire(path.join(root, "package.json"));

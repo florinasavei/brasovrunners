@@ -213,7 +213,7 @@ export default function CalendarImageDialog({
                 {(Object.keys(PERIOD_ICON) as (keyof typeof PERIOD_ICON)[]).map((period) => {
                   const PeriodIcon = PERIOD_ICON[period];
                   return (
-                    <ToggleButton key={period} value={period} sx={CHOICE_SX} data-testid={`calendar-image-period-${period}`}>
+                    <ToggleButton key={period} value={period} sx={CHOICE_SX}>
                       <PeriodIcon aria-hidden="true" sx={{ fontSize: 18 }} />
                       {words.periods[period]}
                     </ToggleButton>

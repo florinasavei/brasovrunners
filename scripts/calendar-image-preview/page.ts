@@ -1,9 +1,9 @@
 // `yarn calendar:preview`'s page: the dialog's own fonts and drawing, every theme asked in every layout and
 // every format, as data URLs — and, when asked, the month's weeks («Perioada» → «Săptămâna») in every format.
-import { monthGrid } from "@/modules/events/domain/calendar";
 import { CALENDAR_IMAGE_RATIOS } from "@/modules/events/ui/calendar-image-canvas";
 import { CALENDAR_IMAGE_LAYOUT_CHOICES, CALENDAR_IMAGE_THEME_CHOICES, drawCalendarImage, type CalendarImageOptions, type CalendarImageTheme } from "@/modules/events/ui/calendar-image-draw";
 import { calendarImageFonts, loadCalendarImageFonts } from "@/modules/events/ui/calendar-image-fonts";
+import { weeksOf } from "@/modules/events/ui/calendar-image-week";
 import type { CalendarImageData } from "@/modules/events/domain/calendar-image";
 import { LOGO } from "@/theme/brand";
 
@@ -20,8 +20,9 @@ window.renderPreview = async (data, themes, weeks) => {
   logo.src = LOGO.lockup.onDark;
   await logo.decode();
   const chosen = themes === "all" ? CALENDAR_IMAGE_THEME_CHOICES : (themes.split(",") as CalendarImageTheme[]);
-  // `--week none|all|<n>`: no week, every week of the month, or the n-th (1 first).
-  const weekIndexes = weeks === "all" ? monthGrid(data.month).map((_, index) => index) : weeks === "none" ? [] : [Number(weeks) - 1];
+  // `--week none|all|<n>`: no week, every week of the month, or the n-th (1 first) — none from a month with fewer.
+  const count = weeksOf(data.month).length;
+  const weekIndexes = weeks === "all" ? weeksOf(data.month).map((week) => week.index) : weeks === "none" ? [] : [Number(weeks) - 1].filter((index) => index < count);
   const images: Record<string, string> = {};
   const draw = (name: string, options: CalendarImageOptions) => {
     const { width, height } = CALENDAR_IMAGE_RATIOS[options.ratio];

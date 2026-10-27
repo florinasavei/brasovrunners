@@ -81,6 +81,28 @@ describe("the stub canvas", () => {
   });
 });
 
+describe("a week on 16:9", () => {
+  it("gives each column the size its own dates allow: a 17-letter word on Saturday leaves Tuesday's title large", () => {
+    // The fortnight's second week: «Intervale pe pistă» twice, and on Saturday the 69-character title whose
+    // «ultramaratoniștii» no 249 px card holds whole above the floor. One size for the week put every card at 18.
+    const fortnight = months.find((month) => month.name === "fortnight");
+    if (!fortnight) throw new Error("fortnight.json is missing");
+    const { ctx, records } = stubCanvas();
+    drawCalendarImage(ctx, fortnight.data, { theme: "poster", ratio: "landscape", layout: "heads", week: 1, legend: true }, fonts, { logo: null });
+    // The stub wraps «INTERVALE / PE PISTĂ»: the first line of each of the two cards, and the long word's first piece.
+    const sizeOf = (text: string) => records.texts.filter((record) => record.text.startsWith(text)).map((record) => record.size);
+    const intervals = sizeOf("INTERVALE");
+    const ultra = records.texts.filter((record) => record.text.startsWith("ULTRAMARA"));
+    expect(intervals).toHaveLength(2);
+    expect(ultra).toHaveLength(1);
+    expect(Math.min(...intervals)).toBeGreaterThanOrEqual(26);
+    // The long word is split with «-» rather than shrinking its own column to the floor.
+    expect(ultra[0].text.endsWith("-")).toBe(true);
+    expect(ultra[0].size).toBeGreaterThan(18);
+    expect(ultra[0].size).toBeLessThan(Math.min(...intervals));
+  });
+});
+
 for (const month of months) {
   describe(`${month.name}: ${month.data.words.monthTitle}`, () => {
     /** The month in each layout, and each of its weeks: the layout's name, or the week's days. */
