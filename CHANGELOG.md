@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.83-2026-10-27
+
+- **The calendar picture downloads, and carries the club's real logo** — «Descarcă PNG» and «Distribuie» did nothing; now they save or share the picture; the band shows the club's own logo over «Evenimente» and the month. §857.
 ## BR-V3.82-2026-10-27
 
 - **«Afiș», the calendar picture's default style** — the club's own monthly poster: the blue band with the mountains and the month, each date's glyph, title in capitals and hour, special days in pink or yellow, the legends with glyphs and «Urmărește-ne!» with the club's networks. §856.
