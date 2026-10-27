@@ -427,19 +427,24 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
   roundRect(ctx, pad, footY, W - 2 * pad, footH, 18 * unit);
   ctx.fillStyle = palette.band;
   ctx.fill();
-  const footItems: { text: string; mark?: keyof typeof SOCIAL_MARKS; weight: number }[] = [
+  // Each network beside the club's name while the band holds it; past that, the marks alone — four
+  // networks with the name four times overflowed a 1080-pixel band and cut the call and the tags.
+  const withNames: { text: string; mark?: keyof typeof SOCIAL_MARKS; weight: number }[] = [
     { text: upper(data.words.follow) + "!", weight: 900 },
     ...data.socials.map((network) => ({ text: data.clubName, mark: network, weight: 700 })),
     { text: data.words.hashtags, weight: 600 },
   ];
+  const marksOnly = withNames.map((item) => (item.mark ? { ...item, text: "" } : item));
   const markSize = 28 * unit;
-  let footSize = 24;
-  const widthOf = (size: number) => {
+  const room = W - 2 * pad - 40 * unit;
+  const widthOf = (items: typeof withNames, size: number) => {
     ctx.font = body(size, 700);
-    return footItems.reduce((sum, item) => sum + ctx.measureText(item.text).width + (item.mark ? markSize + 10 * unit : 0), 0) + (footItems.length - 1) * 30 * unit;
+    return items.reduce((sum, item) => sum + (item.text ? ctx.measureText(item.text).width : 0) + (item.mark ? markSize + (item.text ? 10 * unit : 0) : 0), 0) + (items.length - 1) * 30 * unit;
   };
-  while (footSize > 14 && widthOf(footSize) > W - 2 * pad - 40 * unit) footSize -= 1;
-  let footX = (W - widthOf(footSize)) / 2;
+  const footItems = widthOf(withNames, 20) <= room ? withNames : marksOnly;
+  let footSize = 24;
+  while (footSize > 14 && widthOf(footItems, footSize) > room) footSize -= 1;
+  let footX = (W - widthOf(footItems, footSize)) / 2;
   for (const item of footItems) {
     if (item.mark) {
       ctx.save();
@@ -448,12 +453,12 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
       ctx.fillStyle = palette.bandInk;
       ctx.fill(new Path2D(SOCIAL_MARKS[item.mark].path));
       ctx.restore();
-      footX += markSize + 10 * unit;
+      footX += markSize + (item.text ? 10 * unit : 0);
     }
     ctx.font = body(footSize, item.weight);
     ctx.fillStyle = palette.bandInk;
-    ctx.fillText(item.text, footX, footY + footH / 2 + footSize * 0.36 * unit);
-    footX += ctx.measureText(item.text).width + 30 * unit;
+    if (item.text) ctx.fillText(item.text, footX, footY + footH / 2 + footSize * 0.36 * unit);
+    footX += (item.text ? ctx.measureText(item.text).width : 0) + 30 * unit;
   }
 
   // The legends: what repeats, then what stands alone, each under its own coloured title.
