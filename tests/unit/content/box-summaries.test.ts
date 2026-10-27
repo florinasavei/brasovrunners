@@ -149,6 +149,11 @@ describe("§350 each box's summary, empty and filled", () => {
   it("Locul: the place, its other names, the map — or to be announced", () => {
     const place = { locationName: "Parcul Titulescu", locationAddress: null, locationToBeAnnounced: false, mapUrl: "https://maps.example.test" };
     expect(placeSummary(words, place, [language("ro"), language("en", { locationName: "Titulescu Park" })])).toBe("Parcul Titulescu (EN: Titulescu Park) · hartă");
+    // «Locul, pe scurt» (migration `0181`): the Romanian word, between the names and the map.
+    expect(placeSummary(words, place, [language("ro", { locationShort: " Parc " }), language("en", { locationName: "Titulescu Park", locationShort: "Park" })])).toBe(
+      "Parcul Titulescu (EN: Titulescu Park) · pe scurt: Parc · hartă",
+    );
+    expect(placeSummary(wordsEn, { ...place, mapUrl: null }, [language("ro", { locationShort: "Parc" })])).toBe("Parcul Titulescu · in short: Parc");
     expect(placeSummary(words, { ...place, locationToBeAnnounced: true }, [])).toBe("Se anunță mai târziu");
     expect(placeSummary(words, { ...place, locationName: null, mapUrl: null }, [])).toBe(words.place.none);
   });

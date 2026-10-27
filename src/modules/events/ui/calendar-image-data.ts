@@ -25,8 +25,8 @@ export async function calendarImageProps(
   const t = await getTranslations("Events.calendar.image");
   const format = await getFormatter();
   // The hour in the club's zone, and the route's words as the page's pills say them: «8 km», «≈ 350 m D+».
-  const words: CalendarImageFormat = { time: (event) => formatTime(event.startsAt, { locale, timeZone: event.timezone }), ...(await routeWordFormat()) };
-  const { entries, series, singles } = calendarImageRows(month, events, words);
+  const formatters: CalendarImageFormat = { time: (event) => formatTime(event.startsAt, { locale, timeZone: event.timezone }), ...(await routeWordFormat()) };
+  const { entries, series, singles } = calendarImageRows(month, events, formatters);
   const recurring = await Promise.all(
     series.map(async (members) => ({
       title: members[0].title ?? "",
@@ -34,7 +34,7 @@ export async function calendarImageProps(
       tone: calendarTone(members[0]),
       type: members[0].type,
       surface: members[0].surface ?? null,
-      ...calendarImageDetails(members[0], words),
+      ...calendarImageDetails(members[0], formatters),
     })),
   );
   const specials = singles.map((event) => ({
@@ -43,7 +43,7 @@ export async function calendarImageProps(
     tone: calendarTone(event),
     type: event.type,
     surface: event.surface ?? null,
-    ...calendarImageDetails(event, words),
+    ...calendarImageDetails(event, formatters),
   }));
   const data: CalendarImageData = {
     month,

@@ -15,7 +15,7 @@
    "surface": "TRAIL",
    "place": "Poiana",
    "distance": "≈ 20 km",
-   "elevation": "≈ 600 m D+"
+   "elevation": "≈ 600 m climb"
   },
   {
    "day": 3,
@@ -41,7 +41,7 @@
    "surface": "TRAIL",
    "place": "Tâmpa",
    "distance": "6 km",
-   "elevation": "≈ 350 m D+"
+   "elevation": "≈ 350 m climb"
   },
   {
    "day": 8,
@@ -54,7 +54,7 @@
    "surface": "TRAIL",
    "place": "Poiana",
    "distance": "≈ 20 km",
-   "elevation": "≈ 600 m D+"
+   "elevation": "≈ 600 m climb"
   },
   {
    "day": 8,
@@ -67,7 +67,7 @@
    "surface": "TRAIL",
    "place": "Poiana Brașov",
    "distance": "≈ 12 km",
-   "elevation": "≈ 700 m D+"
+   "elevation": "≈ 700 m climb"
   },
   {
    "day": 10,
@@ -93,7 +93,7 @@
    "surface": "TRAIL",
    "place": "Tâmpa",
    "distance": "6 km",
-   "elevation": "≈ 350 m D+"
+   "elevation": "≈ 350 m climb"
   },
   {
    "day": 15,
@@ -106,7 +106,7 @@
    "surface": "TRAIL",
    "place": "Poiana",
    "distance": "≈ 20 km",
-   "elevation": "≈ 600 m D+"
+   "elevation": "≈ 600 m climb"
   },
   {
    "day": 15,
@@ -119,7 +119,7 @@
    "surface": "TRAIL",
    "place": "Tâmpa",
    "distance": "6 km",
-   "elevation": "≈ 350 m D+"
+   "elevation": "≈ 350 m climb"
   },
   {
    "day": 17,
@@ -145,7 +145,7 @@
    "surface": "TRAIL",
    "place": "Tâmpa",
    "distance": "6 km",
-   "elevation": "≈ 350 m D+"
+   "elevation": "≈ 350 m climb"
   },
   {
    "day": 22,
@@ -158,7 +158,7 @@
    "surface": "TRAIL",
    "place": "Poiana",
    "distance": "≈ 20 km",
-   "elevation": "≈ 600 m D+"
+   "elevation": "≈ 600 m climb"
   },
   {
    "day": 22,
@@ -210,7 +210,7 @@
    "surface": "TRAIL",
    "place": "Tâmpa",
    "distance": "6 km",
-   "elevation": "≈ 350 m D+"
+   "elevation": "≈ 350 m climb"
   },
   {
    "day": 29,
@@ -223,7 +223,7 @@
    "surface": "ASPHALT",
    "place": "Parc",
    "distance": "21.1 km",
-   "elevation": "≈ 150 m D+"
+   "elevation": "≈ 150 m climb"
   },
   {
    "day": 29,
@@ -236,7 +236,7 @@
    "surface": "TRAIL",
    "place": "Poiana",
    "distance": "≈ 20 km",
-   "elevation": "≈ 600 m D+"
+   "elevation": "≈ 600 m climb"
   },
   {
    "day": 31,
@@ -271,7 +271,7 @@
    "surface": "TRAIL",
    "place": "Tâmpa",
    "distance": "6 km",
-   "elevation": "≈ 350 m D+"
+   "elevation": "≈ 350 m climb"
   },
   {
    "title": "Saturday long run in Poiana Brașov",
@@ -281,7 +281,7 @@
    "surface": "TRAIL",
    "place": "Poiana",
    "distance": "≈ 20 km",
-   "elevation": "≈ 600 m D+"
+   "elevation": "≈ 600 m climb"
   }
  ],
  "specials": [
@@ -293,7 +293,7 @@
    "surface": "TRAIL",
    "place": "Poiana Brașov",
    "distance": "≈ 12 km",
-   "elevation": "≈ 700 m D+"
+   "elevation": "≈ 700 m climb"
   },
   {
    "day": 15,
@@ -303,7 +303,7 @@
    "surface": "TRAIL",
    "place": "Tâmpa",
    "distance": "6 km",
-   "elevation": "≈ 350 m D+"
+   "elevation": "≈ 350 m climb"
   },
   {
    "day": 22,
@@ -333,7 +333,7 @@
    "surface": "ASPHALT",
    "place": "Parc",
    "distance": "21.1 km",
-   "elevation": "≈ 150 m D+"
+   "elevation": "≈ 150 m climb"
   }
  ],
  "socials": [

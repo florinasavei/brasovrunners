@@ -26,6 +26,7 @@ describe("§464 the boxes that may be translated", () => {
       "translations.en.discountNote",
       "translations.en.description",
       "event.locationNameEn",
+      "event.locationShortEn",
       "event.coHosts[0].descriptionEn",
       "event.coHosts[2].links[3].labelEn",
       "event.links[11].labelEn",
@@ -107,6 +108,7 @@ describe("§464 the boxes that may be translated", () => {
     expect(romanianTwinCandidates("bodyEnBody")).toEqual(["bodyRoBody"]);
     // The meeting place's Romanian box has no suffix (§362).
     expect(romanianTwinCandidates("event.locationNameEn")).toContain("event.locationName");
+    expect(romanianTwinCandidates("event.locationShortEn")).toContain("event.locationShort");
   });
 
   it("allows the club's line of an invitation to volunteer in English (§820), next to its Romanian twin", () => {

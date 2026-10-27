@@ -3231,7 +3231,8 @@
             "tba": "Se anunță mai târziu",
             "map": "hartă",
             "none": "Punctul de întâlnire lipsește",
-            "inLanguage": "{language}: {name}"
+            "inLanguage": "{language}: {name}",
+            "short": "pe scurt: {name}"
           },
           "programme": {
             "moments": {

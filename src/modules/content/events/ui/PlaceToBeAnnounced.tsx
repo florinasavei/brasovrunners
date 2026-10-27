@@ -313,7 +313,11 @@ function Island({ initial, labels, names, shorts, children }: Props & { initial:
             </Typography>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>{nameBox(RO_SHORT, labels.ro, shorts.ro, undefined, undefined, labels.short)}</Box>
-              <Box sx={{ flex: 1, minWidth: 0 }}>{nameBox(EN_SHORT, labels.en, shorts.en, undefined, undefined, labels.short)}</Box>
+              <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+                {nameBox(EN_SHORT, labels.en, shorts.en, undefined, undefined, labels.short)}
+                {/* «Tradu din română» (§464) for the short word too, «Parc» → «Park»; the pair is found by its spelling (`domain/fields.ts`). */}
+                <TranslateFieldButton en={EN_SHORT} />
+              </Stack>
             </Stack>
             <Typography id="place-short-help" variant="caption" color="text.secondary" component="p" sx={{ mt: 0.5, px: 1.75 }}>
               {labels.shortHelp}

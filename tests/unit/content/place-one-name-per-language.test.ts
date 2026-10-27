@@ -144,10 +144,12 @@ describe("«Locul, pe scurt» (migration 0181): the schema, a word or two per la
     expect(neither.data).toMatchObject({ locationShort: null, locationShortEn: null });
   });
 
-  it("refuses one language alone, naming the empty box (§352) — switch or no switch", () => {
+  it("refuses one language alone, naming the empty box (§352) — unless the place is to be announced, when the boxes are hidden with the names", () => {
     expect(refusedPaths({ ...BASE, locationShort: "Parc", locationShortEn: "" })).toEqual(["locationShortEn"]);
     expect(refusedPaths({ ...BASE, locationShort: "", locationShortEn: "Park" })).toEqual(["locationShort"]);
-    expect(refusedPaths({ ...BASE, locationToBeAnnounced: true, locationName: "", locationNameEn: "", locationShort: "Parc", locationShortEn: "" })).toEqual(["locationShortEn"]);
+    // The tick on: nothing in the hidden boxes is published, and the rule waits for the tick to clear, as `placeRule` does.
+    expect(refusedPaths({ ...BASE, locationToBeAnnounced: true, locationName: "", locationNameEn: "", locationShort: "Parc", locationShortEn: "" })).toEqual([]);
+    expect(refusedPaths({ ...BASE, locationToBeAnnounced: false, locationShort: "Parc", locationShortEn: "" })).toEqual(["locationShortEn"]);
   });
 
   it("does not refuse a caller that posts neither box: it is not editing the short place", () => {

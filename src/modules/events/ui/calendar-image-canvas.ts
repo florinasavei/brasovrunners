@@ -120,6 +120,9 @@ export function drawGlyphs(ctx: CanvasRenderingContext2D, paths: readonly string
  * The words a layout writes after a date's hour — «Detalii» (the owner, 2026-10-27): the short place, then the
  * distance, then the climb, each only when the dialog has it on and the date has it. `["Tâmpa", "6 km",
  * "≈ 350 m D+"]`, or nothing at all; how they are set is each layout's.
+ *
+ * `details` is spelt inline rather than as `CalendarImageOptions["details"]`: `calendar-image-draw.ts`, which
+ * declares the options, imports this module, and the reverse import would be a cycle.
  */
 export function detailWords(entry: CalendarImageDetails, details: { place: boolean; distance: boolean; elevation: boolean }): string[] {
   return [details.place && entry.place, details.distance && entry.distance, details.elevation && entry.elevation].filter(

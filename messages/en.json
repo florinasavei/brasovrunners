@@ -3231,7 +3231,8 @@
             "tba": "To be announced",
             "map": "map",
             "none": "The meeting point is missing",
-            "inLanguage": "{language}: {name}"
+            "inLanguage": "{language}: {name}",
+            "short": "in short: {name}"
           },
           "programme": {
             "moments": {

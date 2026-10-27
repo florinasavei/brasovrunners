@@ -348,9 +348,15 @@ export const LOCATION_SHORT_MAX = 30;
  * refused on the blank one, so the summary links to the language still owed. A caller that posts
  * neither box is not editing it and is never refused; one that posts one box alone is held to the
  * rule like any pair, because a short place in one language alone would draw a Romanian word on the
- * English picture — the thing §352 exists to prevent.
+ * English picture — the thing §352 exists to prevent. Not while the place is to be announced, as
+ * `placeRule` above: the two boxes are hidden with the names then, and the public read withholds
+ * the word with the rest of the place; clearing the tick posts both boxes again, checked as they stand.
  */
-function shortPlaceRule(fields: { locationShort?: string | null; locationShortEn?: string | null }, ctx: z.RefinementCtx): void {
+function shortPlaceRule(
+  fields: { locationShort?: string | null; locationShortEn?: string | null; locationToBeAnnounced: boolean },
+  ctx: z.RefinementCtx,
+): void {
+  if (fields.locationToBeAnnounced) return;
   if (fields.locationShort === undefined && fields.locationShortEn === undefined) return;
   refuseOneLanguage(ctx, { ro: fields.locationShort, en: fields.locationShortEn }, { ro: ["locationShort"], en: ["locationShortEn"] }, "the short place");
 }
