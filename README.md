@@ -119,7 +119,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/sync-flags.mjs`](./scripts/sync-flags.mjs) | `yarn flags:sync`: copies the country flags from `flag-icons` into `public/flags/`. Runs on install and as the first half of `yarn build`; the output is generated and git-ignored |
 | [`scripts/setup.mjs`](./scripts/setup.mjs) | `yarn setup`: points git at `.githooks` so `yarn check` runs before every commit, and adds the `git gone` alias |
 | [`scripts/cloud-setup.sh`](./scripts/cloud-setup.sh) | Run by the `SessionStart` hook in `.claude/settings.json` in a Claude Code cloud session only (`CLAUDE_CODE_REMOTE=true`): installs the dependencies, starts a local PostgreSQL with the throwaway `brasov_runners` role and database, writes a local-values `.env.local` when there is none, migrates and seeds. Idempotent; `--force` runs it on any Linux machine (`docs/DEVELOPMENT.md` § Coding from the phone, `DECISIONS.md` §501) |
-| [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `yarn check` and blocks the commit on failure; the same command CI runs |
+| [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `yarn check:static` and the tests of the staged files (`vitest related`), and blocks the commit on failure; CI runs the whole `yarn check` |
 | [`.githooks/pre-push`](./.githooks/pre-push) | Refuses a push to `qa` or `main`; those branches move through pull requests only |
 | [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md) | How to run this locally: prerequisites, first run, every command, and what will catch you out |
 | [`docs/VIBECODING.md`](./docs/VIBECODING.md) | The one page before asking an AI to change anything: the loop, where things live, adding a field end to end, the rules that bite |
@@ -600,8 +600,8 @@ yarn dev
 ```
 
 `yarn setup` is the one step that is already live today: it points git at
-[`.githooks`](./.githooks/pre-commit), so `yarn check` runs before every commit and a
-change cannot pass locally but fail in CI. Run it once per clone. The step-by-step
+[`.githooks`](./.githooks/pre-commit), so the static checks and the tests of what changed run before every commit,
+and CI runs the whole `yarn check` before a merge. Run it once per clone. The step-by-step
 contributor walkthrough is [`SETUP.md`](./SETUP.md) § Contributing.
 
 The repository should expose stable commands:
@@ -653,7 +653,7 @@ scripts/
   cloud-setup.sh        prepares a Claude Code cloud session, local values only
 
 .githooks/
-  pre-commit            runs yarn check and blocks a failing commit
+  pre-commit            runs check:static + the staged files' tests, blocks a failing commit
 
 src/
   app/
