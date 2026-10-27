@@ -547,3 +547,69 @@ export const PROSE_MEASURE = "60rem";
  * so it fits every width it is drawn at; no clamp is needed once a phone never draws it.
  */
 export const WORDMARK_SIZE = "1rem";
+
+/**
+ * «Salvează ca imagine» (§NNN): the palettes the calendar picture is drawn in, in the browser, on a
+ * `<canvas>`. Each names the page behind the month (`background`, two stops top to bottom), the band
+ * that carries the club's name (`band`, `bandInk`), a day's cell (`cell`, `cellInk`, `cellMuted` for the
+ * neighbouring months' days), the hairlines (`line`) and the three kinds of date — the weekly runs, the
+ * special editions and the rest (`weekly`, `special`, `other`, each a fill and its ink). «Sezon» is four
+ * palettes, one per season, chosen by the month drawn.
+ */
+type CalendarImagePalette = {
+  background: readonly [string, string];
+  band: string;
+  bandInk: string;
+  cell: string;
+  cellInk: string;
+  cellMuted: string;
+  line: string;
+  /** The legends' headings, on a cell. */
+  title: string;
+  weekly: readonly [string, string];
+  special: readonly [string, string];
+  other: readonly [string, string];
+};
+
+const CLUB_PALETTE: CalendarImagePalette = {
+  background: [COLOR.blue, COLOR.blueInk],
+  band: COLOR.blueInk,
+  bandInk: COLOR.surface,
+  cell: COLOR.surface,
+  cellInk: COLOR.ink,
+  cellMuted: COLOR.line,
+  line: COLOR.line,
+  title: COLOR.blueInk,
+  weekly: [COLOR.accentTint, COLOR.accentInk],
+  special: [COLOR.kindSpecial, COLOR.kindSpecialInk],
+  other: [COLOR.kindOther, COLOR.ink],
+};
+
+export const CALENDAR_IMAGE_THEMES = {
+  club: CLUB_PALETTE,
+  light: {
+    ...CLUB_PALETTE,
+    background: [COLOR.paper, COLOR.paper],
+    band: COLOR.blue,
+    line: COLOR.line,
+  },
+  dark: {
+    background: ["#0e1018", "#171a26"],
+    band: "#1f2336",
+    bandInk: COLOR_DARK.blue,
+    cell: "#1b1e2b",
+    cellInk: "#eceae4",
+    cellMuted: "#2c3043",
+    line: "#2c3043",
+    title: COLOR_DARK.blue,
+    weekly: [COLOR_DARK.accentTint, COLOR_DARK.accentInk],
+    special: [COLOR_DARK.kindSpecial, COLOR_DARK.kindSpecialInk],
+    other: ["#2a2d3a", "#eceae4"],
+  },
+  winter: { ...CLUB_PALETTE, background: ["#3f6fb5", "#9cc3e6"], band: "#1e3f73", title: "#1e3f73" },
+  spring: { ...CLUB_PALETTE, background: ["#3f8f4f", "#a6d4a0"], band: "#22552d", title: "#22552d" },
+  summer: { ...CLUB_PALETTE, background: ["#0b8fa8", "#f2c14e"], band: "#075e6f", title: "#075e6f" },
+  autumn: { ...CLUB_PALETTE, background: ["#b4511d", COLOR.orange], band: "#6e2f10", title: "#6e2f10" },
+} as const satisfies Record<string, CalendarImagePalette>;
+
+export type CalendarImagePaletteName = keyof typeof CALENDAR_IMAGE_THEMES;

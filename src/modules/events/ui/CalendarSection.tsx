@@ -15,6 +15,8 @@ import CalendarLegend, { calendarLegendWords } from "@/modules/events/ui/Calenda
 import CalendarIntroFold, { calendarFeedLinks, feedAddressHints } from "@/modules/events/ui/CalendarIntroFold";
 import CalendarSwipe from "@/modules/events/ui/CalendarSwipe";
 import EventCalendar, { type CalendarLayout, type CalendarView } from "@/modules/events/ui/EventCalendar";
+import CalendarImageButton from "@/modules/events/ui/CalendarImageButton";
+import { calendarImageProps } from "@/modules/events/ui/calendar-image-data";
 import InfoTip from "@/shared/ui/InfoTip";
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { env } from "@/shared/config/env";
@@ -81,6 +83,7 @@ export default async function CalendarSection({
   // The same two doors the page head's «?» carries on a phone (§487), built in one place.
   const links = calendarFeedLinks(env.APP_BASE_URL, locale);
   const steps = calendarStepHrefs({ view, layout, query, locale, now });
+  const image = view.kind === "month" ? await calendarImageProps(locale, view.month, events, env.APP_BASE_URL) : null;
 
   return (
     // Under «Aspectul nou» a phone gives this gap and the filter slot's back to the first week, under the chips row (phase 4, §569).
@@ -106,6 +109,12 @@ export default async function CalendarSection({
         </Box>
         {/* What the three colours mean, under «Aspectul nou» only (phase 4): a word beside every colour. */}
         <CalendarLegend {...calendarLegendWords(t)} />
+        {/* «Salvează ca imagine» (§NNN): a month only, drawn in the browser from the rows already on the page. */}
+        {image && (
+          <Box sx={{ mt: 1.5, display: "flex", justifyContent: "flex-end" }}>
+            <CalendarImageButton data={image.data} words={image.words} />
+          </Box>
+        )}
       </Box>
 
       {/* "Add to your calendar" (§107, §139): three doors (the owner: "this subscription to
