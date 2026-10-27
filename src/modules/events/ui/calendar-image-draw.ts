@@ -32,8 +32,12 @@ export type CalendarImageOptions = {
   legend: boolean;
 };
 
-/** The faces the page offers, as CSS font-family lists: the body's, the club kit's, and the hand-written one «Afiș» says «Evenimente» in. */
-export type CalendarImageFonts = { body: string; display: string; script: string };
+/**
+ * The faces the picture is drawn in, as CSS font-family lists: the body's, the club kit's and the hand-written
+ * one the other styles say «Evenimente» in, all three the page's own; and `poster`, the geometric sans «Afiș»
+ * is set in from its band to its foot (Poppins, which the dialog loads for itself).
+ */
+export type CalendarImageFonts = { body: string; display: string; script: string; poster: string };
 
 /**
  * The club's real logo (the white lockup, `LOGO.lockup.onDark`, served by the site itself so the canvas
@@ -332,6 +336,26 @@ export function drawCalendarImage(
   }
 }
 
+/**
+ * `text` in spaced capitals, centred on `x`: letter by letter, `tracking` apart (less when `maxWidth` is
+ * short), because the canvas's own `letterSpacing` is missing from Safari before 18 and, where it exists,
+ * counts a space after the last letter too. Kerning does not matter at this spacing.
+ */
+function fillSpaced(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, tracking: number, maxWidth: number) {
+  const letters = [...text.normalize("NFC")];
+  const widths = letters.map((letter) => ctx.measureText(letter).width);
+  const inked = widths.reduce((sum, width) => sum + width, 0);
+  const gap = letters.length > 1 ? Math.max(0, Math.min(tracking, (maxWidth - inked) / (letters.length - 1))) : 0;
+  let left = x - (inked + gap * (letters.length - 1)) / 2;
+  const align = ctx.textAlign;
+  ctx.textAlign = "left";
+  letters.forEach((letter, index) => {
+    ctx.fillText(letter, left, y);
+    left += widths[index] + gap;
+  });
+  ctx.textAlign = align;
+}
+
 /** A 24-unit glyph path, drawn `size` wide with its top-left at (x, y). */
 function drawGlyph(ctx: CanvasRenderingContext2D, path: string, x: number, y: number, size: number, color: string) {
   ctx.save();
@@ -357,7 +381,11 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
   const unit = Math.min(W, H) / 1080;
   const pad = 36 * unit;
   const px = (size: number) => Math.round(size * unit);
-  const body = (size: number, weight = 400) => `${weight} ${px(size)}px ${fonts.body}`;
+  // One geometric family throughout, as a club's race poster is set (the owner, 2026-10-27, of the
+  // hand-written «Evenimente» over Roboto: «the font is pretty ugly»): italic Black for the month,
+  // ExtraBold for the labels and the day numbers, Bold for the titles, Medium for «EVENIMENTE», the
+  // hours and the notes.
+  const face = (size: number, weight: number) => `${weight} ${px(size)}px ${fonts.poster}`;
   const toneOf = (tone: CalendarTone) => palette[tone];
   const upper = (text: string) => text.toLocaleUpperCase("ro-RO");
   ctx.textBaseline = "alphabetic";
@@ -366,20 +394,18 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
   ctx.fillRect(0, 0, W, H);
 
   // The band, centred, as the poster's: the club's real logo (or, until it loads, the mountains over
-  // «BRAȘOV RUNNERS», spaced), then «Evenimente» in the hand-written face and the month, large, its year
-  // beside it in a lighter weight.
+  // «BRAȘOV RUNNERS», spaced), then «EVENIMENTE» in spaced capitals and the month in italic Black, large,
+  // its year beside it in a lighter weight.
   const story = options.ratio === "story";
   const bandH = (story ? 360 : 290) * unit;
   roundRect(ctx, pad, pad, W - 2 * pad, bandH, 24 * unit);
   ctx.fillStyle = palette.band;
   ctx.fill();
   ctx.fillStyle = palette.bandInk;
-  let nameY: number;
   if (assets.logo) {
     const logoH = (story ? 128 : 106) * unit;
     const logoY = pad + (story ? 22 : 18) * unit;
     ctx.drawImage(assets.logo, W / 2 - (logoH * LOGO_RATIO) / 2, logoY, logoH * LOGO_RATIO, logoH);
-    nameY = logoY + logoH;
   } else {
     const markW = (story ? 120 : 104) * unit;
     const markH = (markW * MOUNTAIN_MARK_VIEWBOX.height) / MOUNTAIN_MARK_VIEWBOX.width;
@@ -392,34 +418,36 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
     ctx.globalAlpha = 1;
     ctx.fill(new Path2D(NEAR));
     ctx.restore();
-    ctx.textAlign = "center";
-    ctx.font = body(story ? 24 : 20, 700);
-    ctx.letterSpacing = `${px(story ? 9 : 7)}px`;
-    nameY = markY + markH + (story ? 34 : 28) * unit;
-    ctx.fillText(fitText(ctx, upper(data.clubName), W - 4 * pad), W / 2, nameY);
-    ctx.letterSpacing = "0px";
+    ctx.font = face(story ? 24 : 20, 500);
+    fillSpaced(ctx, upper(data.clubName), W / 2, markY + markH + (story ? 34 : 28) * unit, px(story ? 9 : 7), W - 4 * pad);
   }
-  ctx.textAlign = "center";
-  ctx.font = `400 ${px(story ? 78 : 64)}px ${fonts.script}`;
-  const headingY = nameY + (story ? 78 : 64) * unit;
-  ctx.fillText(fitText(ctx, data.words.heading, W - 4 * pad), W / 2, headingY);
-  // The month in capitals and the year after it, smaller and lighter, the pair centred together.
+  // The month in italic Black, the year after it smaller in Medium, the pair centred together and made
+  // smaller only when a long month («SEPTEMBRIE 2026» on a story) would not fit the band.
   const monthText = upper(data.words.monthName);
   const yearText = ` ${data.month.year}`;
-  const monthFont = body(story ? 74 : 60, 900);
-  const yearFont = body(story ? 44 : 36, 500);
-  ctx.font = monthFont;
-  const monthW = ctx.measureText(monthText).width;
-  ctx.font = yearFont;
-  const yearW = ctx.measureText(yearText).width;
+  const monthPair = (scale: number) => {
+    const monthFont = `italic ${face((story ? 108 : 86) * scale, 900)}`;
+    const yearFont = `italic ${face((story ? 60 : 48) * scale, 500)}`;
+    ctx.font = monthFont;
+    const monthW = ctx.measureText(monthText).width;
+    ctx.font = yearFont;
+    return { monthFont, yearFont, monthW, width: monthW + ctx.measureText(yearText).width };
+  };
+  const roomW = W - 4 * pad;
+  let month = monthPair(1);
+  if (month.width > roomW) month = monthPair((0.98 * roomW) / month.width);
   const monthY = pad + bandH - (story ? 30 : 24) * unit;
+  const monthX = W / 2 - month.width / 2;
   ctx.textAlign = "left";
-  ctx.font = monthFont;
-  ctx.fillText(monthText, W / 2 - (monthW + yearW) / 2, monthY);
-  ctx.font = yearFont;
+  ctx.font = month.monthFont;
+  ctx.fillText(monthText, monthX, monthY);
+  ctx.font = month.yearFont;
   ctx.globalAlpha = 0.8;
-  ctx.fillText(yearText, W / 2 - (monthW + yearW) / 2 + monthW, monthY);
+  ctx.fillText(yearText, monthX + month.monthW, monthY);
   ctx.globalAlpha = 1;
+  // «EVENIMENTE» over it in spaced Medium capitals, an echo of the logo's spaced «BRASOV RUNNERS».
+  ctx.font = face(story ? 32 : 27, 500);
+  fillSpaced(ctx, upper(data.words.heading), W / 2, monthY - (story ? 122 : 96) * unit, px(story ? 12 : 10), roomW);
 
   // The foot: «URMĂREȘTE-NE!», each network the club has with its name, then the tags.
   const footH = 64 * unit;
@@ -430,17 +458,20 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
   // Each network beside the club's name while the band holds it; past that, the marks alone — four
   // networks with the name four times overflowed a 1080-pixel band and cut the call and the tags.
   const withNames: { text: string; mark?: keyof typeof SOCIAL_MARKS; weight: number }[] = [
-    { text: upper(data.words.follow) + "!", weight: 900 },
-    ...data.socials.map((network) => ({ text: data.clubName, mark: network, weight: 700 })),
-    { text: data.words.hashtags, weight: 600 },
+    { text: upper(data.words.follow) + "!", weight: 800 },
+    ...data.socials.map((network) => ({ text: data.clubName, mark: network, weight: 500 })),
+    { text: data.words.hashtags, weight: 500 },
   ];
   const marksOnly = withNames.map((item) => (item.mark ? { ...item, text: "" } : item));
   const markSize = 28 * unit;
   const room = W - 2 * pad - 40 * unit;
-  const widthOf = (items: typeof withNames, size: number) => {
-    ctx.font = body(size, 700);
-    return items.reduce((sum, item) => sum + (item.text ? ctx.measureText(item.text).width : 0) + (item.mark ? markSize + (item.text ? 10 * unit : 0) : 0), 0) + (items.length - 1) * 30 * unit;
-  };
+  // Each word measured in the weight it is drawn in.
+  const widthOf = (items: typeof withNames, size: number) =>
+    items.reduce((sum, item) => {
+      ctx.font = face(size, item.weight);
+      return sum + (item.text ? ctx.measureText(item.text).width : 0) + (item.mark ? markSize + (item.text ? 10 * unit : 0) : 0);
+    }, 0) +
+    (items.length - 1) * 30 * unit;
   const footItems = widthOf(withNames, 20) <= room ? withNames : marksOnly;
   let footSize = 24;
   while (footSize > 14 && widthOf(footItems, footSize) > room) footSize -= 1;
@@ -455,7 +486,7 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
       ctx.restore();
       footX += markSize + (item.text ? 10 * unit : 0);
     }
-    ctx.font = body(footSize, item.weight);
+    ctx.font = face(footSize, item.weight);
     ctx.fillStyle = palette.bandInk;
     if (item.text) ctx.fillText(item.text, footX, footY + footH / 2 + footSize * 0.36 * unit);
     footX += (item.text ? ctx.measureText(item.text).width : 0) + 30 * unit;
@@ -488,7 +519,7 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
       const x = box.x + 16 * unit + index * colW;
       let y = box.y + 14 * unit;
       for (const section of column) {
-        ctx.font = body(24, 900);
+        ctx.font = face(22, 800);
         const label = fitText(ctx, upper(section.title), colW - 40 * unit);
         roundRect(ctx, x, y, ctx.measureText(label).width + 32 * unit, 40 * unit, 20 * unit);
         ctx.fillStyle = section.fill;
@@ -507,9 +538,9 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
           const textX = x + 56 * unit;
           const textW = colW - 16 * unit - 64 * unit;
           ctx.fillStyle = palette.cellInk;
-          ctx.font = body(20, 900);
+          ctx.font = face(19, 700);
           ctx.fillText(fitText(ctx, upper(row.title), textW), textX, y + 28 * unit);
-          ctx.font = body(18, 600);
+          ctx.font = face(17, 500);
           ctx.fillStyle = palette.title;
           ctx.fillText(fitText(ctx, row.note, textW), textX, y + 52 * unit);
           y += rowH;
@@ -532,7 +563,7 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
   ctx.fillStyle = palette.cellMuted;
   ctx.fillRect(grid.x, grid.y, grid.w, headH);
   ctx.textAlign = "center";
-  ctx.font = body(Math.min(24, (cellW / unit) * 0.16), 900);
+  ctx.font = face(Math.min(21, (cellW / unit) * 0.14), 800);
   ctx.fillStyle = palette.title;
   data.words.weekdaysLong.forEach((name, index) => {
     ctx.fillText(fitText(ctx, upper(name), cellW - 8 * unit), grid.x + index * cellW + cellW / 2, grid.y + 34 * unit);
@@ -544,7 +575,7 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
   // A title that repeats in the month is the poster's plain white day, blue glyph; the rest are marked.
   const repeating = new Set(data.recurring.map((row) => row.title));
   const markOf = (entry: CalendarImageEntry): CalendarTone => (repeating.has(entry.title) ? "weekly" : entry.tone === "weekly" ? "special" : entry.tone);
-  const size = Math.max(13, Math.min(20, (cellW / unit) * 0.11));
+  const size = Math.max(13, Math.min(20, (cellW / unit) * 0.105));
   const lineH = size * 1.15 * unit;
   const glyph = Math.max(20, Math.min(40, (cellH / unit) * 0.22)) * unit;
   let trailing: Box | null = null;
@@ -564,20 +595,21 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
         return;
       }
       ctx.fillStyle = palette.cellInk;
-      ctx.font = body(Math.min(30, (cellH / unit) * 0.2), 900);
+      ctx.font = face(Math.min(28, (cellH / unit) * 0.2), 800);
       ctx.fillText(String(day.day), x + 10 * unit, y + Math.min(34, (cellH / unit) * 0.24) * unit);
       if (entries.length === 0) return;
       // Each date centred: its glyph, its title in capitals, «ora 19:30»; fewer lines as more dates share the day.
       const top = y + Math.min(40, (cellH / unit) * 0.28) * unit;
       const room = y + cellH - top - 6 * unit;
       const each = room / entries.length;
-      const textW = cellW - 14 * unit;
+      // The geometric capitals run wider than Roboto's: the title takes all but 6 units a side.
+      const textW = cellW - 12 * unit;
       entries.forEach((entry, index) => {
         let cy = top + index * each;
         const bottom = top + (index + 1) * each;
         const [, ink] = toneOf(markOf(entry));
         const timeLine = entry.cancelled ? data.words.cancelled : entry.time ? data.words.at.replace("{time}", entry.time) : "";
-        ctx.font = body(size, 900);
+        ctx.font = face(size, 700);
         const lines = wrapText(ctx, upper(entry.title), textW, 3);
         // The glyph, the title on up to three lines, the hour — the glyph goes before the words do.
         const need = (withGlyph: boolean, count: number) => (withGlyph ? glyph + 4 * unit : 0) + count * lineH + (timeLine ? lineH : 0);
@@ -590,14 +622,14 @@ function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, opti
         }
         ctx.textAlign = "center";
         ctx.fillStyle = palette.cellInk;
-        ctx.font = body(size, 900);
+        ctx.font = face(size, 700);
         for (const line of count < lines.length ? wrapText(ctx, upper(entry.title), textW, count) : lines) {
           cy += lineH;
           ctx.fillText(line, x + cellW / 2, cy - 3 * unit);
         }
         if (timeLine && cy + lineH <= bottom + 2 * unit) {
           cy += lineH * 0.95;
-          ctx.font = body(size * 0.85, 600);
+          ctx.font = face(size * 0.85, 500);
           ctx.fillStyle = palette.title;
           ctx.fillText(fitText(ctx, timeLine, textW), x + cellW / 2, cy - 3 * unit);
         }
