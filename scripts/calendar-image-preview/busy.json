@@ -11,7 +11,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 3,
@@ -20,7 +21,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "ASPHALT"
   },
   {
    "day": 5,
@@ -29,7 +31,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 8,
@@ -38,7 +41,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 8,
@@ -47,7 +51,8 @@
    "tone": "special",
    "type": "GROUP_RUN",
    "special": true,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 10,
@@ -56,7 +61,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "ASPHALT"
   },
   {
    "day": 12,
@@ -65,7 +71,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 15,
@@ -74,7 +81,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 15,
@@ -83,7 +91,8 @@
    "tone": "special",
    "type": "GROUP_RUN",
    "special": true,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 17,
@@ -92,7 +101,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "ASPHALT"
   },
   {
    "day": 19,
@@ -101,7 +111,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": true
+   "cancelled": true,
+   "surface": "TRAIL"
   },
   {
    "day": 22,
@@ -110,7 +121,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 22,
@@ -119,7 +131,8 @@
    "tone": "other",
    "type": "GEAR_TEST",
    "special": true,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 22,
@@ -128,7 +141,8 @@
    "tone": "special",
    "type": "GROUP_RUN",
    "special": true,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "ASPHALT"
   },
   {
    "day": 24,
@@ -137,7 +151,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "ASPHALT"
   },
   {
    "day": 26,
@@ -146,7 +161,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 29,
@@ -155,7 +171,8 @@
    "tone": "special",
    "type": "RACE",
    "special": true,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "ASPHALT"
   },
   {
    "day": 29,
@@ -164,7 +181,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 31,
@@ -173,7 +191,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "ASPHALT"
   }
  ],
  "recurring": [
@@ -181,19 +200,22 @@
    "title": "Happy Monday with Brașov Runners",
    "sentence": "Every Monday at 19:30",
    "tone": "weekly",
-   "type": "GROUP_RUN"
+   "type": "GROUP_RUN",
+   "surface": "ASPHALT"
   },
   {
    "title": "Running up that hilly Tâmpa with Brașov Runners",
    "sentence": "Every Wednesday at 19:00",
    "tone": "weekly",
-   "type": "GROUP_RUN"
+   "type": "GROUP_RUN",
+   "surface": "TRAIL"
   },
   {
    "title": "Saturday long run in Poiana Brașov",
    "sentence": "Every Saturday at 08:00",
    "tone": "weekly",
-   "type": "GROUP_RUN"
+   "type": "GROUP_RUN",
+   "surface": "TRAIL"
   }
  ],
  "specials": [
@@ -201,31 +223,36 @@
    "day": 8,
    "title": "Brașov Trail Marathon — volunteer briefing and course reconnaissance",
    "tone": "special",
-   "type": "GROUP_RUN"
+   "type": "GROUP_RUN",
+   "surface": "TRAIL"
   },
   {
    "day": 15,
    "title": "Night run on Tâmpa with headlamps",
    "tone": "special",
-   "type": "GROUP_RUN"
+   "type": "GROUP_RUN",
+   "surface": "TRAIL"
   },
   {
    "day": 22,
    "title": "Dynafit shoe testing x Coffee social event",
    "tone": "other",
-   "type": "GEAR_TEST"
+   "type": "GEAR_TEST",
+   "surface": "TRAIL"
   },
   {
    "day": 22,
    "title": "Girls only shake out run",
    "tone": "special",
-   "type": "GROUP_RUN"
+   "type": "GROUP_RUN",
+   "surface": "ASPHALT"
   },
   {
    "day": 29,
    "title": "Brașov Runners Half Marathon 2026",
    "tone": "special",
-   "type": "RACE"
+   "type": "RACE",
+   "surface": "ASPHALT"
   }
  ],
  "socials": [

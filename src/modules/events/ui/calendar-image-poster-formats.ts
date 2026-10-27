@@ -1,7 +1,7 @@
 import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
 import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
 import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
-import { type Box, CALENDAR_IMAGE_RATIOS, type CalendarImageRatio, type Ctx, drawGlyph, fitText, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
+import { type Box, CALENDAR_IMAGE_RATIOS, type CalendarImageRatio, type Ctx, drawGlyph, drawGlyphs, eventGlyphs, fitText, glyphsWidth, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
 import type { CalendarImageAssets, CalendarImageFonts, CalendarImageOptions } from "./calendar-image-draw";
 import { SPECIAL_PATH, TYPE_PATHS } from "./calendar-image-glyphs";
 import { monthGrid } from "../domain/calendar";
@@ -60,7 +60,7 @@ function fillTracked(ctx: CanvasRenderingContext2D, text: string, left: number, 
 type PosterDate = CalendarImageEntry & { series: number | null; mark: CalendarTone; titled: boolean };
 
 /** A date's chip: its glyph and its hour (or «Anulat»), solid blue for a weekly date, outlined for the rest. */
-type Pill = { glyph: string | null; text: string; mark: CalendarTone; cancelled: boolean };
+type Pill = { glyphs: string[]; text: string; mark: CalendarTone; cancelled: boolean };
 
 /** A horizontal slice of a cell or of the agenda, `h` tall with the room under it, drawn across `w` from (x, y). */
 type Row = { h: number; draw: (x: number, y: number, w: number) => void };
@@ -159,11 +159,11 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
   // ── Chips ──
   const pillOf = (date: PosterDate, glyph: boolean): Pill => {
     const text = date.cancelled ? data.words.cancelled : (date.time ?? "");
-    return { glyph: glyph || !text ? (date.series === null && date.special ? SPECIAL_PATH : TYPE_PATHS[date.type]) : null, text, mark: date.mark, cancelled: date.cancelled };
+    return { glyphs: glyph || !text ? eventGlyphs(date.type, date.surface, date.series === null && date.special ? SPECIAL_PATH : TYPE_PATHS[date.type]) : [], text, mark: date.mark, cancelled: date.cancelled };
   };
   const pillH = (p: number) => p * 1.6;
   const pillW = (pill: Pill, p: number) => {
-    const glyph = pill.glyph ? p * 1.1 : 0;
+    const glyph = glyphsWidth(pill.glyphs.length, p * 1.1);
     const text = pill.text ? measure(pill.text, face(p, 700)) : 0;
     return p * 1.2 + glyph + (glyph && text ? p * 0.3 : 0) + text;
   };
@@ -180,10 +180,7 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
       ctx.stroke();
     }
     let left = x + p * 0.6;
-    if (pill.glyph) {
-      drawGlyph(ctx, pill.glyph, left, y + (h - p * 1.1) / 2, p * 1.1, solid ? palette.bandInk : ink);
-      left += p * 1.1 + (pill.text ? p * 0.3 : 0);
-    }
+    if (pill.glyphs.length > 0) left += drawGlyphs(ctx, pill.glyphs, left, y + (h - p * 1.1) / 2, p * 1.1, solid ? palette.bandInk : ink) + (pill.text ? p * 0.3 : 0);
     if (pill.text) {
       ctx.font = face(p, 700);
       ctx.fillStyle = solid ? palette.bandInk : pill.cancelled ? ink : palette.cellInk;
@@ -218,15 +215,15 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
       },
     }));
   };
-  const textRow = (text: string, font: string, size: number, color: string, lead: number, glyph?: { path: string; color: string }): Row => ({
+  const textRow = (text: string, font: string, size: number, color: string, lead: number, glyph?: { paths: string[]; color: string }): Row => ({
     h: size * lead,
     draw: (x, y, w) => {
       ctx.font = font;
-      const glyphW = glyph ? size * 1.05 + size * 0.3 : 0;
+      const glyphW = glyph ? glyphsWidth(glyph.paths.length, size * 1.05) + size * 0.3 : 0;
       const textW = text ? ctx.measureText(text).width : 0;
       let left = x + (w - glyphW - textW + (glyph && !text ? size * 0.3 : 0)) / 2;
       if (glyph) {
-        drawGlyph(ctx, glyph.path, left, y + (size * lead - size * 1.05) / 2, size * 1.05, glyph.color);
+        drawGlyphs(ctx, glyph.paths, left, y + (size * lead - size * 1.05) / 2, size * 1.05, glyph.color);
         left += glyphW;
       }
       ctx.fillStyle = color;
@@ -238,6 +235,7 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
   // ── A day ──
   /** A date's own title in a day, centred in capitals, then its glyph and «ora 18:00»; null when a word is wider than the day. */
   const glyphOf = (date: PosterDate) => (date.series === null && date.special ? SPECIAL_PATH : TYPE_PATHS[date.type]);
+  const glyphsOf = (date: PosterDate) => eventGlyphs(date.type, date.surface, glyphOf(date));
   const titleRows = (date: PosterDate, s: number, width: number, inlineGlyph = true): Row[] | null => {
     const font = face(s, 700);
     const { lines, fits } = wrap(upper(date.title), font, width);
@@ -246,7 +244,7 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
     const m = Math.max(minText, s * 0.88);
     const meta = metaOf(date);
     if (meta && measure(meta, face(m, 500)) + m * 1.35 > width) return null;
-    if (meta || inlineGlyph) rows.push(textRow(meta, face(m, date.cancelled ? 700 : 500), m, inkOf(date.mark), 1.4, inlineGlyph ? { path: glyphOf(date), color: inkOf(date.mark) } : undefined));
+    if (meta || inlineGlyph) rows.push(textRow(meta, face(m, date.cancelled ? 700 : 500), m, inkOf(date.mark), 1.4, inlineGlyph ? { paths: glyphsOf(date), color: inkOf(date.mark) } : undefined));
     return rows;
   };
   /** A day's one date of its own, with room to spare: its glyph large above its title, as the poster draws it. */
@@ -255,7 +253,8 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
     if (!plain) return rows;
     const g = Math.min(height - sum(plain) - s * 0.5, width * 0.34, s * 3.2);
     if (g < s * 1.7) return rows;
-    return [{ h: g + s * 0.45, draw: (x, y, w) => drawGlyph(ctx, glyphOf(date), x + (w - g) / 2, y + s * 0.15, g, inkOf(date.mark)) }, ...plain];
+    const glyphs = glyphsOf(date);
+    return [{ h: g + s * 0.45, draw: (x, y, w) => drawGlyphs(ctx, glyphs, x + (w - glyphsWidth(glyphs.length, g)) / 2, y + s * 0.15, g, inkOf(date.mark)) }, ...plain];
   };
   /**
    * What a day holds in `width` × `height`: the chips of its weekly dates and the titles of the rest, as large
@@ -472,7 +471,7 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
     if (seriesRows.length > 0 && shown.series > 0) {
       blocks.push(head(data.words.recurringTitle, palette.band));
       const p = Math.max(minText, a * 0.84);
-      const pills: Pill[] = seriesRows.map((row) => ({ glyph: TYPE_PATHS[row.type], text: row.hour ?? "", mark: "weekly", cancelled: false }));
+      const pills: Pill[] = seriesRows.map((row) => ({ glyphs: eventGlyphs(row.type, row.surface), text: row.hour ?? "", mark: "weekly", cancelled: false }));
       const chipW = Math.max(...pills.map((pill) => pillW(pill, p)));
       const indent = chipW + a * 0.65;
       const textW = cw - indent;
@@ -525,7 +524,7 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
         if ((!title.fits && a > minText + 1e-6) || textW < cw * 0.45) return null;
         const meta = metaOf(date);
         const metaFont = face(m, date.cancelled ? 700 : 500);
-        const metaW = m * 1.4 + (meta ? measure(meta, metaFont) : 0);
+        const metaW = glyphsWidth(glyphsOf(date).length, m * 1.05) + m * 0.35 + (meta ? measure(meta, metaFont) : 0);
         // Dense: the glyph and the hour after the title's last line when they fit there.
         const lastW = Math.min(textW, measure(title.lines[title.lines.length - 1], titleFont));
         const inline = dense && lastW + a * 0.6 + metaW <= textW;
@@ -566,11 +565,11 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
             title.lines.forEach((line, at) => ctx.fillText(fitText(ctx, line, textW), x + indent, textTop + at * lineH + a * 0.92));
             const metaX = inline ? x + indent + lastW + a * 0.6 : x + indent;
             const metaY = inline ? textTop + (title.lines.length - 1) * lineH + (lineH - metaH) / 2 : textTop + title.lines.length * lineH;
-            drawGlyph(ctx, glyphOf(date), metaX, metaY + (metaH - m * 1.05) / 2, m * 1.05, ink);
+            const glyphW = drawGlyphs(ctx, glyphsOf(date), metaX, metaY + (metaH - m * 1.05) / 2, m * 1.05, ink);
             if (meta) {
               ctx.font = metaFont;
               ctx.fillStyle = date.cancelled ? ink : palette.title;
-              ctx.fillText(meta, metaX + m * 1.4, metaY + metaH / 2 + m * 0.36);
+              ctx.fillText(meta, metaX + glyphW + m * 0.35, metaY + metaH / 2 + m * 0.36);
             }
           },
         });

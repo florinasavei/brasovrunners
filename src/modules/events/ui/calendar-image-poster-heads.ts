@@ -1,12 +1,11 @@
 import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
 import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
 import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
-import { type Box, CALENDAR_IMAGE_RATIOS, type Ctx, drawGlyph, fillSpaced, fitText, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
+import { type Box, CALENDAR_IMAGE_RATIOS, type Ctx, drawGlyphs, eventGlyphs, fillSpaced, fitText, glyphsWidth, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
 import type { CalendarImageAssets, CalendarImageFonts, CalendarImageOptions } from "./calendar-image-draw";
-import { TYPE_PATHS } from "./calendar-image-glyphs";
 import { monthGrid, type YearMonth } from "../domain/calendar";
 import type { CalendarTone } from "../domain/calendar-kind";
-import type { EventType } from "../domain/event-type";
+import type { EventSurface, EventType } from "../domain/event-type";
 import type { CalendarImageData, CalendarImageEntry } from "../domain/calendar-image";
 
 /**
@@ -57,6 +56,7 @@ export function wrapWhole(ctx: Ctx, text: string, width: number, hyphenate = fal
 export type PosterLane = {
   title: string;
   type: EventType;
+  surface: EventSurface | null;
   tone: CalendarTone;
   /** «În fiecare marți și joi, la 18:30» — the legend's line for a series no head can hold. */
   sentence: string;
@@ -109,7 +109,7 @@ export function posterPlan(data: CalendarImageData): PosterPlan {
     const ordinary = data.entries.filter((entry) => !entry.special && laneKey(entry.type, entry.title) === key);
     if (ordinary.length === 0 || byKey.has(key)) continue;
     const columns = new Set(ordinary.map((entry) => weekdayColumn(data.month, entry.day)));
-    const lane: PosterLane = { title: row.title, type: row.type, tone: row.tone, sentence: row.sentence, column: columns.size === 1 ? [...columns][0] : null, time: commonHour(ordinary), variant: 0 };
+    const lane: PosterLane = { title: row.title, type: row.type, surface: row.surface, tone: row.tone, sentence: row.sentence, column: columns.size === 1 ? [...columns][0] : null, time: commonHour(ordinary), variant: 0 };
     lanes.push(lane);
     byKey.set(key, lane);
     touched.set(lane, columns);
@@ -317,13 +317,14 @@ export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarIma
   const pillSize = (mark: Mark, size: number, withGlyph = true) => {
     const text = markText(mark.entry);
     ctx.font = face(size, 700);
-    const glyph = mark.entry.cancelled || !withGlyph ? 0 : size * 1.15 * unit;
+    const glyph = mark.entry.cancelled || !withGlyph ? 0 : glyphsWidth(eventGlyphs(mark.lane.type, mark.lane.surface).length, size * 1.15 * unit);
     const textW = text ? ctx.measureText(text).width : 0;
     return { w: size * 1.1 * unit + glyph + (glyph && textW ? size * 0.3 * unit : 0) + textW, h: size * 1.75 * unit };
   };
   function drawPill(pill: PillPlan) {
     const look = pill.entry.cancelled ? { fill: palette.cellMuted, ink: palette.title, stroke: null } : laneLook(pill.lane);
-    if (pill.above) drawGlyph(ctx, TYPE_PATHS[pill.lane.type], pill.x + (pill.w - pill.above) / 2, pill.y - (pill.h > 0 ? 6 * unit : 0) - pill.above, pill.above, look.stroke ?? look.fill);
+    const glyphs = eventGlyphs(pill.lane.type, pill.lane.surface);
+    if (pill.above) drawGlyphs(ctx, glyphs, pill.x + (pill.w - glyphsWidth(glyphs.length, pill.above)) / 2, pill.y - (pill.h > 0 ? 6 * unit : 0) - pill.above, pill.above, look.stroke ?? look.fill);
     if (pill.h === 0) return;
     roundRect(ctx, pill.x, pill.y, pill.w, pill.h, pill.h / 2);
     ctx.fillStyle = look.fill;
@@ -336,8 +337,7 @@ export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarIma
     let x = pill.x + pill.size * 0.55 * unit;
     if (!pill.entry.cancelled && !pill.above) {
       const glyph = pill.size * 1.15 * unit;
-      drawGlyph(ctx, TYPE_PATHS[pill.lane.type], x, pill.y + (pill.h - glyph) / 2, glyph, look.ink);
-      x += glyph + pill.size * 0.3 * unit;
+      x += drawGlyphs(ctx, glyphs, x, pill.y + (pill.h - glyph) / 2, glyph, look.ink) + pill.size * 0.3 * unit;
     }
     const text = markText(pill.entry);
     if (text) {
@@ -357,7 +357,7 @@ export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarIma
   const chipWidth = (entry: CalendarImageEntry, size: number) => {
     ctx.font = face(size, 700);
     const text = chipText(entry);
-    return size * unit + (text ? 3 * unit + ctx.measureText(text).width : 0);
+    return glyphsWidth(eventGlyphs(entry.type, entry.surface).length, size * unit) + (text ? 3 * unit + ctx.measureText(text).width : 0);
   };
   /** The chips in lines of `width`, as many as fit `height`; the rest are «+2 altele». */
   function chipLines(dates: CalendarImageEntry[], width: number, size: number) {
@@ -520,10 +520,10 @@ export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarIma
         let x = items.inline ? items.box.x : middle - width / 2;
         for (const entry of chips) {
           const ink = entry.cancelled ? palette.special[1] : inkOf(entry);
-          drawGlyph(ctx, TYPE_PATHS[entry.type], x, y + (chipLine - size * unit) / 2, size * unit, ink);
+          const glyphW = drawGlyphs(ctx, eventGlyphs(entry.type, entry.surface), x, y + (chipLine - size * unit) / 2, size * unit, ink);
           ctx.font = face(size, 700);
           ctx.fillStyle = entry.cancelled ? palette.special[1] : palette.title;
-          ctx.fillText(chipText(entry), x + size * unit + 3 * unit, y + chipLine / 2 + size * 0.36 * unit);
+          ctx.fillText(chipText(entry), x + glyphW + 3 * unit, y + chipLine / 2 + size * 0.36 * unit);
           x += chipWidth(entry, size) + 8 * unit;
           if (items.inline) {
             ctx.fillStyle = palette.cellInk;
@@ -545,7 +545,8 @@ export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarIma
     let y = items.box.y + Math.max(0, (items.box.h - content) / 2);
     if (items.glyph) {
       const entry = items.blocks[0].entry;
-      drawGlyph(ctx, TYPE_PATHS[entry.type], middle - items.glyph / 2, y, items.glyph, inkOf(entry));
+      const glyphs = eventGlyphs(entry.type, entry.surface);
+      drawGlyphs(ctx, glyphs, middle - glyphsWidth(glyphs.length, items.glyph) / 2, y, items.glyph, inkOf(entry));
       y += items.glyph + 6 * unit;
     }
     ctx.textAlign = "center";
@@ -762,8 +763,7 @@ export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarIma
         let noteX = textX;
         if (item.kind === "date") {
           const glyph = hourSize * 1.1 * unit;
-          drawGlyph(ctx, TYPE_PATHS[item.entry.type], noteX, lineY - hourSize * 0.3 * unit - glyph * 0.8, glyph, inkOf(item.entry));
-          noteX += glyph + 6 * unit;
+          noteX += drawGlyphs(ctx, eventGlyphs(item.entry.type, item.entry.surface), noteX, lineY - hourSize * 0.3 * unit - glyph * 0.8, glyph, inkOf(item.entry)) + 6 * unit;
         }
         ctx.font = face(hourSize, 500);
         ctx.fillStyle = item.kind === "date" && item.entry.cancelled ? palette.special[1] : palette.title;
@@ -884,11 +884,13 @@ export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarIma
         ctx.font = face(hourSize, 500);
         const hour = data.words.at.replace("{time}", strip.lane.time);
         const glyph = hourSize * 1.15 * unit;
-        const width = glyph + 6 * unit + ctx.measureText(hour).width;
+        const glyphs = eventGlyphs(strip.lane.type, strip.lane.surface);
+        const glyphW = glyphsWidth(glyphs.length, glyph);
+        const width = glyphW + 6 * unit + ctx.measureText(hour).width;
         const left = x + (w - Math.min(width, w - 8 * unit)) / 2;
-        drawGlyph(ctx, TYPE_PATHS[strip.lane.type], left, lineY - hourSize * 0.36 * unit - glyph * 0.62, glyph, look.ink);
+        drawGlyphs(ctx, glyphs, left, lineY - hourSize * 0.36 * unit - glyph * 0.62, glyph, look.ink);
         ctx.textAlign = "left";
-        ctx.fillText(fitText(ctx, hour, w - glyph - 14 * unit), left + glyph + 6 * unit, lineY - hourSize * 0.3 * unit);
+        ctx.fillText(fitText(ctx, hour, w - glyphW - 14 * unit), left + glyphW + 6 * unit, lineY - hourSize * 0.3 * unit);
         ctx.textAlign = "center";
       }
       y += strip.h + 6 * unit;

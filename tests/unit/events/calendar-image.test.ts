@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
 import type { CalendarImageData, CalendarImageEntry } from "@/modules/events/domain/calendar-image";
 import { calendarImageRows } from "@/modules/events/domain/calendar-image-rows";
-import { fitText, wrapText } from "@/modules/events/ui/calendar-image-canvas";
+import { eventGlyphs, fitText, glyphsWidth, wrapText } from "@/modules/events/ui/calendar-image-canvas";
+import { SPECIAL_PATH, SURFACE_PATHS, TYPE_PATHS } from "@/modules/events/ui/calendar-image-glyphs";
 import { paletteFor } from "@/modules/events/ui/calendar-image-draw";
 import { breakLines } from "@/modules/events/ui/calendar-image-poster-cells";
 import { wrapWords } from "@/modules/events/ui/calendar-image-poster-formats";
@@ -110,11 +111,12 @@ describe("«Afiș»: each series under its weekday", () => {
     title,
     tone: "weekly",
     type: "GROUP_RUN",
+    surface: null,
     special: false,
     cancelled: false,
     ...overrides,
   });
-  const recurring = (title: string, type: CalendarImageEntry["type"] = "GROUP_RUN") => ({ title, sentence: `${title}, every week`, tone: "weekly" as const, type });
+  const recurring = (title: string, type: CalendarImageEntry["type"] = "GROUP_RUN") => ({ title, sentence: `${title}, every week`, tone: "weekly" as const, type, surface: null });
   // June 2026: the 1st is a Monday.
   const data = (entries: CalendarImageEntry[], rows: ReturnType<typeof recurring>[]) => ({ month: { year: 2026, month: 6 }, entries, recurring: rows }) as unknown as CalendarImageData;
 
@@ -182,5 +184,19 @@ describe("«Sezonul lunii»", () => {
   it("draws each month in its season's palette", () => {
     expect([1, 3, 6, 9, 12].map((month) => paletteFor("season", month))).toEqual(["winter", "spring", "summer", "autumn", "winter"]);
     expect(paletteFor("dark", 6)).toBe("dark");
+  });
+});
+
+describe("«Afiș»: an event's glyphs, as the app's chips show them (§NNN)", () => {
+  it("draws the type's glyph, then the ground's when it has one", () => {
+    expect(eventGlyphs("GROUP_RUN", null)).toEqual([TYPE_PATHS.GROUP_RUN]);
+    expect(eventGlyphs("GROUP_RUN", "TRAIL")).toEqual([TYPE_PATHS.GROUP_RUN, SURFACE_PATHS.TRAIL]);
+    expect(eventGlyphs("RACE", "ASPHALT", SPECIAL_PATH)).toEqual([SPECIAL_PATH, SURFACE_PATHS.ASPHALT]);
+  });
+
+  it("measures glyphs side by side, a fifth of one apart", () => {
+    expect(glyphsWidth(0, 10)).toBe(0);
+    expect(glyphsWidth(1, 10)).toBeCloseTo(10);
+    expect(glyphsWidth(2, 10)).toBeCloseTo(22);
   });
 });

@@ -1,7 +1,7 @@
 import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
 import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
 import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
-import { type Box, CALENDAR_IMAGE_RATIOS, type Ctx, drawGlyph, fillSpaced, fitText, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
+import { type Box, CALENDAR_IMAGE_RATIOS, type Ctx, drawGlyphs, eventGlyphs, fillSpaced, fitText, glyphsWidth, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
 import type { CalendarImageAssets, CalendarImageFonts, CalendarImageOptions } from "./calendar-image-draw";
 import { SPECIAL_PATH, TYPE_PATHS } from "./calendar-image-glyphs";
 import { monthGrid } from "../domain/calendar";
@@ -215,16 +215,16 @@ export function drawPosterCells(ctx: CanvasRenderingContext2D, data: CalendarIma
   const hourOf = (entry: CalendarImageEntry) => (entry.cancelled ? data.words.cancelled : entry.time ? data.words.at.replace("{time}", entry.time) : "");
 
   /** A series' date: its glyph and its hour («Anulat» when cancelled, nothing when not yet set). */
-  type Chip = { series: number; text: string; glyph: string; cancelled: boolean; special: boolean };
+  type Chip = { series: number; text: string; glyphs: string[]; cancelled: boolean; special: boolean };
   const chipOf = (entry: CalendarImageEntry, series: number): Chip => ({
     series,
     text: entry.cancelled ? data.words.cancelled : (entry.time ?? ""),
-    glyph: entry.special ? SPECIAL_PATH : TYPE_PATHS[entry.type],
+    glyphs: eventGlyphs(entry.type, entry.surface, entry.special ? SPECIAL_PATH : TYPE_PATHS[entry.type]),
     cancelled: entry.cancelled,
     special: entry.special,
   });
   const chipText = (h: number) => Math.max(MIN, h * 0.5);
-  const chipW = (chip: Chip, h: number) => h * 0.3 + h * 0.6 + (chip.text ? h * 0.18 + measure(chip.text, face(chipText(h), 700)) : 0) + h * 0.32;
+  const chipW = (chip: Chip, h: number) => h * 0.3 + glyphsWidth(chip.glyphs.length, h * 0.6) + (chip.text ? h * 0.18 + measure(chip.text, face(chipText(h), 700)) : 0) + h * 0.32;
   const drawChip = (chip: Chip, x: number, y: number, h: number) => {
     const [fill, ink] = seriesColours[chip.series];
     roundRect(ctx, x, y, chipW(chip, h), h, h / 2);
@@ -241,12 +241,12 @@ export function drawPosterCells(ctx: CanvasRenderingContext2D, data: CalendarIma
     }
     const color = chip.cancelled ? fill : ink;
     const g = h * 0.6;
-    drawGlyph(ctx, chip.glyph, x + h * 0.3, y + (h - g) / 2, g, color);
+    const glyphW = drawGlyphs(ctx, chip.glyphs, x + h * 0.3, y + (h - g) / 2, g, color);
     if (!chip.text) return;
     ctx.font = face(chipText(h), 700);
     ctx.fillStyle = color;
     ctx.textAlign = "left";
-    ctx.fillText(chip.text, x + h * 0.3 + g + h * 0.18, y + h / 2 + chipText(h) * 0.36);
+    ctx.fillText(chip.text, x + h * 0.3 + glyphW + h * 0.18, y + h / 2 + chipText(h) * 0.36);
   };
 
   /** A date that stands alone: its title in capitals, its hour line. */
@@ -462,7 +462,9 @@ export function drawPosterCells(ctx: CanvasRenderingContext2D, data: CalendarIma
       }
       let ly = cy + plan.cardPad;
       if (item.glyph) {
-        drawGlyph(ctx, item.item.entry.special ? SPECIAL_PATH : TYPE_PATHS[item.item.entry.type], cx - item.glyph / 2, ly, item.glyph, ink);
+        const { entry } = item.item;
+        const glyphs = eventGlyphs(entry.type, entry.surface, entry.special ? SPECIAL_PATH : TYPE_PATHS[entry.type]);
+        drawGlyphs(ctx, glyphs, cx - glyphsWidth(glyphs.length, item.glyph) / 2, ly, item.glyph, ink);
         ly += item.glyph + 4 * u;
       }
       ctx.font = face(item.size, 700);
@@ -515,7 +517,7 @@ export function drawPosterCells(ctx: CanvasRenderingContext2D, data: CalendarIma
           rows: chipSeries.map((row, index) => {
             const members = data.entries.filter((entry) => keyOf(entry.type, entry.title) === keyOf(row.type, row.title));
             const time = members.find((entry) => !entry.cancelled && entry.time)?.time ?? "";
-            return { chip: { series: index, text: time, glyph: TYPE_PATHS[row.type], cancelled: false, special: false }, name: upper(row.title), note: row.sentence, tone: null };
+            return { chip: { series: index, text: time, glyphs: eventGlyphs(row.type, row.surface), cancelled: false, special: false }, name: upper(row.title), note: row.sentence, tone: null };
           }),
         }
       : null;

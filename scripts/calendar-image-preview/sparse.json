@@ -11,7 +11,8 @@
    "tone": "other",
    "type": "GEAR_TEST",
    "special": true,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 21,
@@ -20,7 +21,8 @@
    "tone": "special",
    "type": "RACE",
    "special": true,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "MIXED"
   }
  ],
  "recurring": [],
@@ -29,13 +31,15 @@
    "day": 7,
    "title": "Dynafit shoe testing x Coffee social event",
    "tone": "other",
-   "type": "GEAR_TEST"
+   "type": "GEAR_TEST",
+   "surface": "TRAIL"
   },
   {
    "day": 21,
    "title": "Crosul Brașov Runners — ediția a III-a",
    "tone": "special",
-   "type": "RACE"
+   "type": "RACE",
+   "surface": "MIXED"
   }
  ],
  "socials": [

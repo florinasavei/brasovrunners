@@ -30,6 +30,7 @@ export async function calendarImageProps(
       sentence: await recurrenceSentence(members, members[0].timezone ?? CLUB_TIME_ZONE, locale),
       tone: calendarTone(members[0]),
       type: members[0].type,
+      surface: members[0].surface ?? null,
     })),
   );
   const specials = singles.map((event) => ({
@@ -37,6 +38,7 @@ export async function calendarImageProps(
     title: event.title ?? "",
     tone: calendarTone(event),
     type: event.type,
+    surface: event.surface ?? null,
   }));
   const data: CalendarImageData = {
     month,

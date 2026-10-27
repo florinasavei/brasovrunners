@@ -1,6 +1,6 @@
 import type { YearMonth } from "./calendar";
 import type { CalendarTone } from "./calendar-kind";
-import type { EventType } from "./event-type";
+import type { EventSurface, EventType } from "./event-type";
 import type { SocialNetwork } from "@/shared/ui/SocialIcon";
 
 /**
@@ -25,6 +25,8 @@ export type CalendarImageEntry = {
   tone: CalendarTone;
   /** The type's glyph on «Afiș» (§855). */
   type: EventType;
+  /** The ground's glyph beside it — road, mountain, the fork — as the app's chips show it; null when not set. */
+  surface: EventSurface | null;
   special: boolean;
   cancelled: boolean;
 };
@@ -53,9 +55,9 @@ export type CalendarImageData = {
   month: YearMonth;
   entries: CalendarImageEntry[];
   /** A title that repeats in the month, with its rhythm: «În fiecare luni, la 18:30». */
-  recurring: { title: string; sentence: string; tone: CalendarTone; type: EventType }[];
+  recurring: { title: string; sentence: string; tone: CalendarTone; type: EventType; surface: EventSurface | null }[];
   /** A date that stands alone in the month: its day and title. */
-  specials: { day: number; title: string; tone: CalendarTone; type: EventType }[];
+  specials: { day: number; title: string; tone: CalendarTone; type: EventType; surface: EventSurface | null }[];
   /** The club's profiles the site links (`clubSocialLinks`), drawn at the poster's foot with the club's name. */
   socials: SocialNetwork[];
   words: CalendarImageWords;

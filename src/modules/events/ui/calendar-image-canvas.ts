@@ -1,4 +1,6 @@
 import { LOGO } from "@/theme/brand";
+import type { EventSurface, EventType } from "../domain/event-type";
+import { SURFACE_PATHS, TYPE_PATHS } from "./calendar-image-glyphs";
 
 /**
  * What every drawing of «Salvează ca imagine» (§855) shares — the picture's shapes and the canvas's small
@@ -92,4 +94,23 @@ export function drawGlyph(ctx: CanvasRenderingContext2D, path: string, x: number
   ctx.fillStyle = color;
   ctx.fill(new Path2D(path));
   ctx.restore();
+}
+
+/**
+ * An event's glyphs, as the app's chips show them (§NNN): its type's — or `typePath` where a layout marks it
+ * otherwise — then its ground's when it has one: the road, the mountain, the fork.
+ */
+export function eventGlyphs(type: EventType, surface: EventSurface | null, typePath = TYPE_PATHS[type]): string[] {
+  return surface ? [typePath, SURFACE_PATHS[surface]] : [typePath];
+}
+
+/** How wide `count` glyphs of `size` are side by side, a fifth of one apart. */
+export function glyphsWidth(count: number, size: number): number {
+  return count > 0 ? size * (count * 1.2 - 0.2) : 0;
+}
+
+/** Glyphs side by side from `x`; the width they took. */
+export function drawGlyphs(ctx: CanvasRenderingContext2D, paths: readonly string[], x: number, y: number, size: number, color: string): number {
+  paths.forEach((path, index) => drawGlyph(ctx, path, x + index * size * 1.2, y, size, color));
+  return glyphsWidth(paths.length, size);
 }

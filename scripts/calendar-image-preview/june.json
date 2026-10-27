@@ -11,7 +11,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "ASPHALT"
   },
   {
    "day": 3,
@@ -20,7 +21,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 5,
@@ -29,7 +31,8 @@
    "tone": "special",
    "type": "GROUP_RUN",
    "special": true,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "ASPHALT"
   },
   {
    "day": 7,
@@ -38,7 +41,8 @@
    "tone": "other",
    "type": "GEAR_TEST",
    "special": true,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 8,
@@ -47,7 +51,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "ASPHALT"
   },
   {
    "day": 10,
@@ -56,7 +61,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 15,
@@ -65,7 +71,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "ASPHALT"
   },
   {
    "day": 17,
@@ -74,7 +81,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 22,
@@ -83,7 +91,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "ASPHALT"
   },
   {
    "day": 24,
@@ -92,7 +101,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "TRAIL"
   },
   {
    "day": 29,
@@ -101,7 +111,8 @@
    "tone": "weekly",
    "type": "GROUP_RUN",
    "special": false,
-   "cancelled": false
+   "cancelled": false,
+   "surface": "ASPHALT"
   }
  ],
  "recurring": [
@@ -109,13 +120,15 @@
    "title": "Happy Monday with Brașov Runners",
    "sentence": "În fiecare luni, la 19:30",
    "tone": "weekly",
-   "type": "GROUP_RUN"
+   "type": "GROUP_RUN",
+   "surface": "ASPHALT"
   },
   {
    "title": "Running up that hilly Tâmpa with Brașov Runners",
    "sentence": "În fiecare miercuri, la 19:00",
    "tone": "weekly",
-   "type": "GROUP_RUN"
+   "type": "GROUP_RUN",
+   "surface": "TRAIL"
   }
  ],
  "specials": [
@@ -123,13 +136,15 @@
    "day": 5,
    "title": "Girls only shake out run",
    "tone": "special",
-   "type": "GROUP_RUN"
+   "type": "GROUP_RUN",
+   "surface": "ASPHALT"
   },
   {
    "day": 7,
    "title": "Dynafit shoe testing x Coffee social event",
    "tone": "other",
-   "type": "GEAR_TEST"
+   "type": "GEAR_TEST",
+   "surface": "TRAIL"
   }
  ],
  "socials": [
