@@ -234,6 +234,7 @@
         "recurringTitle": "Recurring events",
         "specialTitle": "Special events",
         "cancelled": "Cancelled",
+        "tba": "time to be announced",
         "follow": "Follow us",
         "more": "+{count} more",
         "at": "at {time}",
