@@ -1,0 +1,269 @@
+{
+ "month": {
+  "year": 2026,
+  "month": 8
+ },
+ "entries": [
+  {
+   "day": 1,
+   "time": "08:00",
+   "title": "Saturday long run in Poiana Brașov",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 3,
+   "time": "19:30",
+   "title": "Happy Monday with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 5,
+   "time": "19:00",
+   "title": "Running up that hilly Tâmpa with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 8,
+   "time": "08:00",
+   "title": "Saturday long run in Poiana Brașov",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 8,
+   "time": "09:00",
+   "title": "Brașov Trail Marathon — volunteer briefing and course reconnaissance",
+   "tone": "special",
+   "type": "GROUP_RUN",
+   "special": true,
+   "cancelled": false
+  },
+  {
+   "day": 10,
+   "time": "19:30",
+   "title": "Happy Monday with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 12,
+   "time": "19:00",
+   "title": "Running up that hilly Tâmpa with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 15,
+   "time": "08:00",
+   "title": "Saturday long run in Poiana Brașov",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 15,
+   "time": null,
+   "title": "Night run on Tâmpa with headlamps",
+   "tone": "special",
+   "type": "GROUP_RUN",
+   "special": true,
+   "cancelled": false
+  },
+  {
+   "day": 17,
+   "time": "19:30",
+   "title": "Happy Monday with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 19,
+   "time": "19:00",
+   "title": "Running up that hilly Tâmpa with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": true
+  },
+  {
+   "day": 22,
+   "time": "08:00",
+   "title": "Saturday long run in Poiana Brașov",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 22,
+   "time": "10:00",
+   "title": "Dynafit shoe testing x Coffee social event",
+   "tone": "other",
+   "type": "GEAR_TEST",
+   "special": true,
+   "cancelled": false
+  },
+  {
+   "day": 22,
+   "time": "18:00",
+   "title": "Girls only shake out run",
+   "tone": "special",
+   "type": "GROUP_RUN",
+   "special": true,
+   "cancelled": false
+  },
+  {
+   "day": 24,
+   "time": "19:30",
+   "title": "Happy Monday with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 26,
+   "time": "19:00",
+   "title": "Running up that hilly Tâmpa with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 29,
+   "time": "07:30",
+   "title": "Brașov Runners Half Marathon 2026",
+   "tone": "special",
+   "type": "RACE",
+   "special": true,
+   "cancelled": false
+  },
+  {
+   "day": 29,
+   "time": "08:00",
+   "title": "Saturday long run in Poiana Brașov",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 31,
+   "time": "19:30",
+   "title": "Happy Monday with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  }
+ ],
+ "recurring": [
+  {
+   "title": "Happy Monday with Brașov Runners",
+   "sentence": "Every Monday at 19:30",
+   "tone": "weekly",
+   "type": "GROUP_RUN"
+  },
+  {
+   "title": "Running up that hilly Tâmpa with Brașov Runners",
+   "sentence": "Every Wednesday at 19:00",
+   "tone": "weekly",
+   "type": "GROUP_RUN"
+  },
+  {
+   "title": "Saturday long run in Poiana Brașov",
+   "sentence": "Every Saturday at 08:00",
+   "tone": "weekly",
+   "type": "GROUP_RUN"
+  }
+ ],
+ "specials": [
+  {
+   "day": 8,
+   "title": "Brașov Trail Marathon — volunteer briefing and course reconnaissance",
+   "tone": "special",
+   "type": "GROUP_RUN"
+  },
+  {
+   "day": 15,
+   "title": "Night run on Tâmpa with headlamps",
+   "tone": "special",
+   "type": "GROUP_RUN"
+  },
+  {
+   "day": 22,
+   "title": "Dynafit shoe testing x Coffee social event",
+   "tone": "other",
+   "type": "GEAR_TEST"
+  },
+  {
+   "day": 22,
+   "title": "Girls only shake out run",
+   "tone": "special",
+   "type": "GROUP_RUN"
+  },
+  {
+   "day": 29,
+   "title": "Brașov Runners Half Marathon 2026",
+   "tone": "special",
+   "type": "RACE"
+  }
+ ],
+ "socials": [
+  "facebook",
+  "instagram",
+  "strava",
+  "youtube"
+ ],
+ "host": "localhost:3000",
+ "clubName": "Brașov Runners",
+ "words": {
+  "heading": "Events",
+  "monthTitle": "August 2026",
+  "monthName": "August",
+  "weekdays": [
+   "Mon",
+   "Tue",
+   "Wed",
+   "Thu",
+   "Fri",
+   "Sat",
+   "Sun"
+  ],
+  "weekdaysLong": [
+   "Monday",
+   "Tuesday",
+   "Wednesday",
+   "Thursday",
+   "Friday",
+   "Saturday",
+   "Sunday"
+  ],
+  "recurringTitle": "Recurring events",
+  "specialTitle": "Special events",
+  "cancelled": "Cancelled",
+  "follow": "Follow us",
+  "more": "+{count} more",
+  "at": "at {time}",
+  "hashtags": "#NoOneLeftBehind #brasovrunners"
+ }
+}

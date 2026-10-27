@@ -1,0 +1,173 @@
+{
+ "month": {
+  "year": 2026,
+  "month": 6
+ },
+ "entries": [
+  {
+   "day": 1,
+   "time": "19:30",
+   "title": "Happy Monday with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 3,
+   "time": "19:00",
+   "title": "Running up that hilly Tâmpa with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 5,
+   "time": "18:00",
+   "title": "Girls only shake out run",
+   "tone": "special",
+   "type": "GROUP_RUN",
+   "special": true,
+   "cancelled": false
+  },
+  {
+   "day": 7,
+   "time": "10:00",
+   "title": "Dynafit shoe testing x Coffee social event",
+   "tone": "other",
+   "type": "GEAR_TEST",
+   "special": true,
+   "cancelled": false
+  },
+  {
+   "day": 8,
+   "time": "19:30",
+   "title": "Happy Monday with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 10,
+   "time": "19:00",
+   "title": "Running up that hilly Tâmpa with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 15,
+   "time": "19:30",
+   "title": "Happy Monday with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 17,
+   "time": "19:00",
+   "title": "Running up that hilly Tâmpa with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 22,
+   "time": "19:30",
+   "title": "Happy Monday with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 24,
+   "time": "19:00",
+   "title": "Running up that hilly Tâmpa with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  },
+  {
+   "day": 29,
+   "time": "19:30",
+   "title": "Happy Monday with Brașov Runners",
+   "tone": "weekly",
+   "type": "GROUP_RUN",
+   "special": false,
+   "cancelled": false
+  }
+ ],
+ "recurring": [
+  {
+   "title": "Happy Monday with Brașov Runners",
+   "sentence": "În fiecare luni, la 19:30",
+   "tone": "weekly",
+   "type": "GROUP_RUN"
+  },
+  {
+   "title": "Running up that hilly Tâmpa with Brașov Runners",
+   "sentence": "În fiecare miercuri, la 19:00",
+   "tone": "weekly",
+   "type": "GROUP_RUN"
+  }
+ ],
+ "specials": [
+  {
+   "day": 5,
+   "title": "Girls only shake out run",
+   "tone": "special",
+   "type": "GROUP_RUN"
+  },
+  {
+   "day": 7,
+   "title": "Dynafit shoe testing x Coffee social event",
+   "tone": "other",
+   "type": "GEAR_TEST"
+  }
+ ],
+ "socials": [
+  "facebook",
+  "instagram",
+  "strava",
+  "youtube"
+ ],
+ "host": "localhost:3000",
+ "clubName": "Brașov Runners",
+ "words": {
+  "heading": "Evenimente",
+  "monthTitle": "iunie 2026",
+  "monthName": "iunie",
+  "weekdays": [
+   "lun.",
+   "mar.",
+   "mie.",
+   "joi",
+   "vin.",
+   "sâm.",
+   "dum."
+  ],
+  "weekdaysLong": [
+   "luni",
+   "marți",
+   "miercuri",
+   "joi",
+   "vineri",
+   "sâmbătă",
+   "duminică"
+  ],
+  "recurringTitle": "Evenimente recurente",
+  "specialTitle": "Evenimente speciale",
+  "cancelled": "Anulat",
+  "follow": "Urmărește-ne",
+  "more": "+{count} altele",
+  "at": "ora {time}",
+  "hashtags": "#NoOneLeftBehind #brasovrunners"
+ }
+}
