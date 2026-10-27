@@ -22,6 +22,7 @@ export function calendarImageRows(
     time: event.timeToBeAnnounced ? null : time(event),
     title: event.title ?? "",
     tone: calendarTone(event),
+    type: event.type,
     special: event.isSpecial,
     cancelled: event.eventStatus === "CANCELLED",
   }));
