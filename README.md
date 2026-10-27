@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.83-2026-10-27 -->
+<!-- PROJECT_BASELINE: BR-V3.84-2026-10-27 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V3.83-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.84-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 > **Write code once, run forever, always vibe.**
 
@@ -114,6 +114,8 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/secrets-check.mjs`](./scripts/secrets-check.mjs) | Refuses a commit carrying a provider credential — the repository is public; runs in `yarn check` and CI (`DECISIONS.md` §98) — and, where `.env.local` holds them, the club's legal name, CIF or seat (§565) |
 | [`scripts/club-facts-values.mjs`](./scripts/club-facts-values.mjs) | The club's legal facts as this machine knows them (the environment, then `.env.local`), for `secrets:check` and the no-literal test that refuse them in any tracked file; prints no value (`DECISIONS.md` §132, §565) |
 | [`scripts/release.mjs`](./scripts/release.mjs) | `yarn release`: versioned folder, archive, and standalone versioned copies under `dist/` |
+| [`scripts/calendar-image-preview.mjs`](./scripts/calendar-image-preview.mjs) | `yarn calendar:preview` — «Salvează ca imagine» drawn without a server or a database, with the dialog's own fonts and drawing ([`page.ts`](./scripts/calendar-image-preview/page.ts)), every format, into `dist/calendar-preview/` |
+| [`scripts/calendar-image-preview/june.json`](./scripts/calendar-image-preview/june.json), [`busy.json`](./scripts/calendar-image-preview/busy.json), [`sparse.json`](./scripts/calendar-image-preview/sparse.json) | The months `yarn calendar:preview` draws: June 2026 as the club's own poster had it, a busy six-week August in English, a November with two dates |
 | [`scripts/db-reset-local.mjs`](./scripts/db-reset-local.mjs) | `yarn db:reset:local`: drops both schemas, migrates and seeds; refuses any non-local database |
 | [`scripts/dev.mjs`](./scripts/dev.mjs) | `yarn dev`: starts on port 47821, or the next free one, and keeps `APP_BASE_URL` matching |
 | [`scripts/sync-flags.mjs`](./scripts/sync-flags.mjs) | `yarn flags:sync`: copies the country flags from `flag-icons` into `public/flags/`. Runs on install and as the first half of `yarn build`; the output is generated and git-ignored |

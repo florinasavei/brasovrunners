@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.84` | the calendar picture reorganised, three layouts and the app's type and ground icons (§858) |
 | `BR-V3.83` | the calendar picture downloads and carries the club's real logo (§857) |
 | `BR-V3.82` | the calendar picture drawn as the club's own poster («Afiș») (§856) |
 | `BR-V3.81` | the month's calendar saved as a picture, drawn in the browser (§855) |

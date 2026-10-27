@@ -1,4 +1,4 @@
-import type { EventType } from "../domain/event-type";
+import type { EventSurface, EventType } from "../domain/event-type";
 
 /**
  * The event types' glyphs as SVG path data on a 24-unit box, for «Afiș» (§855), which draws them on a
@@ -28,3 +28,17 @@ export const TYPE_PATHS: Record<EventType, string> = {
 /** AutoAwesome — the sparkle a special edition wears in the calendar (§168). */
 export const SPECIAL_PATH =
   "m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25z";
+
+/**
+ * The grounds' glyphs, as the app's chips wear them (`glyphs.ts`, `SURFACE_GLYPH`): Terrain for trail and
+ * AltRoute for mixed from `@mui/icons-material` (Apache-2.0), and the road `RoadIcon.tsx` draws for asphalt —
+ * its strokes written here as filled shapes, since the canvas fills every glyph.
+ */
+export const SURFACE_PATHS: Record<EventSurface, string> = {
+  ASPHALT: "M2.55 20.7 8.05 3.2l1.9.6-5.5 17.5zM19.55 21.3 14.05 3.8l1.9-.6 5.5 17.5zM11 4.5h2v3h-2zm0 6h2v3h-2zm0 6h2v4h-2z",
+  // Terrain
+  TRAIL: "m14 6-3.75 5 2.85 3.8-1.6 1.2C9.81 13.75 7 10 7 10l-6 8h22z",
+  // AltRoute
+  MIXED:
+    "m9.78 11.16-1.42 1.42c-.68-.69-1.34-1.58-1.79-2.94l1.94-.49c.32.89.77 1.5 1.27 2.01M11 6 7 2 3 6h3.02c.02.81.08 1.54.19 2.17l1.94-.49C8.08 7.2 8.03 6.63 8.02 6zm10 0-4-4-4 4h2.99c-.1 3.68-1.28 4.75-2.54 5.88-.5.44-1.01.92-1.45 1.55-.34-.49-.73-.88-1.13-1.24L9.46 13.6c.93.85 1.54 1.54 1.54 3.4v5h2v-5c0-2.02.71-2.66 1.79-3.63 1.38-1.24 3.08-2.78 3.2-7.37z",
+};

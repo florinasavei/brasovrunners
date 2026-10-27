@@ -213,6 +213,12 @@
           "story": "Story 9:16",
           "landscape": "Facebook 16:9"
         },
+        "layout": "Layout",
+        "layouts": {
+          "heads": "Series in the heads",
+          "cells": "Key in the empty days",
+          "formats": "Key below"
+        },
         "legend": "Show the recurring and special events",
         "download": "Download PNG",
         "share": "Share",

@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.84-2026-10-27
+
+- **The calendar picture, reorganised** — «Afiș» is set in a cleaner face, its band takes half the room, a weekly run is written once instead of in every cell, special dates keep their whole title, «Așezare» offers three layouts, and every date shows its type and ground icons (road, trail) as in the app. §858.
 ## BR-V3.83-2026-10-27
 
 - **The calendar picture downloads, and carries the club's real logo** — «Descarcă PNG» and «Distribuie» did nothing; now they save or share the picture; the band shows the club's own logo over «Evenimente» and the month. §857.

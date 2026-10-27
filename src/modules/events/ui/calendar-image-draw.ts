@@ -1,7 +1,9 @@
-import { CALENDAR_IMAGE_THEMES, type CalendarImagePaletteName, LOGO } from "@/theme/brand";
+import { CALENDAR_IMAGE_THEMES, type CalendarImagePaletteName } from "@/theme/brand";
 import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
-import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
-import { SPECIAL_PATH, TYPE_PATHS } from "./calendar-image-glyphs";
+import { type Box, CALENDAR_IMAGE_RATIOS, type CalendarImageRatio, fitText, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
+import { drawPosterCells } from "./calendar-image-poster-cells";
+import { drawPosterFormats } from "./calendar-image-poster-formats";
+import { drawPosterHeads } from "./calendar-image-poster-heads";
 import { monthGrid } from "../domain/calendar";
 import type { CalendarTone } from "../domain/calendar-kind";
 import { type CalendarImageData, type CalendarImageEntry, LEGEND_MAX } from "../domain/calendar-image";
@@ -12,28 +14,36 @@ import { type CalendarImageData, type CalendarImageEntry, LEGEND_MAX } from "../
  * draw the same picture, and nothing here touches the page.
  */
 
-/** The picture's shapes, by where it is posted: an Instagram post, a square, a story, a Facebook post. */
-export const CALENDAR_IMAGE_RATIOS = {
-  portrait: { width: 1080, height: 1350 },
-  square: { width: 1080, height: 1080 },
-  story: { width: 1080, height: 1920 },
-  landscape: { width: 1920, height: 1080 },
-} as const;
-export type CalendarImageRatio = keyof typeof CALENDAR_IMAGE_RATIOS;
-
 /** «Afiș» (the club's own poster, the default), «Clubul», «Luminos», «Întunecat», «Sezonul lunii». */
 export const CALENDAR_IMAGE_THEME_CHOICES = ["poster", "club", "light", "dark", "season"] as const;
 export type CalendarImageTheme = (typeof CALENDAR_IMAGE_THEME_CHOICES)[number];
 
+/**
+ * How «Afiș» sets the month out (the owner, 2026-10-27: «But I want settings for those layouts»): `heads`,
+ * each weekly series written once under its weekday's head; `cells`, each series' dates as chips in its own
+ * colour and the key in the empty days; `formats`, chips in the grid and the key below it (beside it on 16:9).
+ */
+export const CALENDAR_IMAGE_LAYOUT_CHOICES = ["heads", "cells", "formats"] as const;
+export type CalendarImageLayout = (typeof CALENDAR_IMAGE_LAYOUT_CHOICES)[number];
+
 export type CalendarImageOptions = {
   theme: CalendarImageTheme;
   ratio: CalendarImageRatio;
-  /** «Evenimente recurente» and «Evenimente speciale» beside or under the grid. */
+  /** «Așezare»: which of «Afiș»'s layouts draws the month; the other themes have one. */
+  layout: CalendarImageLayout;
+  /**
+   * «Evenimente recurente» and «Evenimente speciale» beside or under the grid. On «Afiș» in `heads` the series
+   * are in the column heads either way; this lists the special dates, and a series no head can hold.
+   */
   legend: boolean;
 };
 
-/** The faces the page offers, as CSS font-family lists: the body's, the club kit's, and the hand-written one «Afiș» says «Evenimente» in. */
-export type CalendarImageFonts = { body: string; display: string; script: string };
+/**
+ * The faces the picture is drawn in, as CSS font-family lists: the body's, the club kit's and the hand-written
+ * one the other styles say «Evenimente» in, all three the page's own; and `poster`, the geometric sans «Afiș»
+ * is set in from its band to its foot (Poppins, which the dialog loads for itself).
+ */
+export type CalendarImageFonts = { body: string; display: string; script: string; poster: string };
 
 /**
  * The club's real logo (the white lockup, `LOGO.lockup.onDark`, served by the site itself so the canvas
@@ -41,11 +51,6 @@ export type CalendarImageFonts = { body: string; display: string; script: string
  * draws the mountains and the name instead.
  */
 export type CalendarImageAssets = { logo: CanvasImageSource | null };
-
-/** The lockup's own proportions, width over height. */
-const LOGO_RATIO = LOGO.lockup.width / LOGO.lockup.height;
-
-type Ctx = Pick<CanvasRenderingContext2D, "measureText">;
 
 /** The palette a theme draws in: «Sezon» by the month's season. */
 export function paletteFor(theme: CalendarImageTheme, month: number): CalendarImagePaletteName {
@@ -56,50 +61,6 @@ export function paletteFor(theme: CalendarImageTheme, month: number): CalendarIm
   return "autumn";
 }
 
-/** The longest start of `text` that fits `width` at the context's font, with «…» when cut. */
-export function fitText(ctx: Ctx, text: string, width: number): string {
-  if (ctx.measureText(text).width <= width) return text;
-  const chars = [...text];
-  let low = 0;
-  let high = chars.length;
-  while (low < high) {
-    const mid = Math.ceil((low + high) / 2);
-    if (ctx.measureText(`${chars.slice(0, mid).join("").trimEnd()}…`).width <= width) low = mid;
-    else high = mid - 1;
-  }
-  return low === 0 ? "" : `${chars.slice(0, low).join("").trimEnd()}…`;
-}
-
-/** `text` broken at spaces into at most `maxLines` lines of `width`, the last cut with «…» when it does not end. */
-export function wrapText(ctx: Ctx, text: string, width: number, maxLines: number): string[] {
-  const words = text.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let current = "";
-  for (let index = 0; index < words.length; index += 1) {
-    const candidate = current ? `${current} ${words[index]}` : words[index];
-    if (ctx.measureText(candidate).width <= width || !current) {
-      current = candidate;
-      continue;
-    }
-    // The last line allowed takes every word left, and «…» says where it was cut.
-    if (lines.length === maxLines - 1) {
-      current = [current, ...words.slice(index)].join(" ");
-      break;
-    }
-    lines.push(current);
-    current = words[index];
-  }
-  if (current) lines.push(current);
-  return lines.map((line) => fitText(ctx, line, width));
-}
-
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  ctx.beginPath();
-  ctx.roundRect(x, y, w, h, Math.max(0, Math.min(r, h / 2, w / 2)));
-}
-
-type Box = { x: number; y: number; w: number; h: number };
-
 export function drawCalendarImage(
   ctx: CanvasRenderingContext2D,
   data: CalendarImageData,
@@ -108,8 +69,17 @@ export function drawCalendarImage(
   assets: CalendarImageAssets = { logo: null },
 ): void {
   if (options.theme === "poster") {
-    drawPoster(ctx, data, options, fonts, assets);
-    return;
+    switch (options.layout) {
+      case "cells":
+        drawPosterCells(ctx, data, options, fonts, assets);
+        return;
+      case "formats":
+        drawPosterFormats(ctx, data, options, fonts, assets);
+        return;
+      default:
+        drawPosterHeads(ctx, data, options, fonts, assets);
+        return;
+    }
   }
   const { width: W, height: H } = CALENDAR_IMAGE_RATIOS[options.ratio];
   const palette = CALENDAR_IMAGE_THEMES[paletteFor(options.theme, data.month.month)];
@@ -330,312 +300,4 @@ export function drawCalendarImage(
       ctx.fillText(fitText(ctx, data.words.more.replace("{count}", String(entries.length - drawn)), textW), box.x + 6 * unit, y + lineH * 0.85);
     }
   }
-}
-
-/** A 24-unit glyph path, drawn `size` wide with its top-left at (x, y). */
-function drawGlyph(ctx: CanvasRenderingContext2D, path: string, x: number, y: number, size: number, color: string) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(size / 24, size / 24);
-  ctx.fillStyle = color;
-  ctx.fill(new Path2D(path));
-  ctx.restore();
-}
-
-/**
- * «Afiș» (§855; the owner, 2026-10-27: «vreau să semene cu ce mi-a dat Amalia») — the club's hand-made
- * monthly poster, without its photographs: the logo's blue band, centred, with the mountains, the club's
- * name and «Evenimente OCTOMBRIE»; the weekdays in full on a pale blue row; each date its type's glyph, its
- * title in capitals and «ora 19:30», centred in its day, a special edition's cell pale pink and a social
- * one's pale yellow; the mountains across the empty days after the month; the recurring and the special
- * events with their glyphs under the grid (beside it on 16:9); and «URMĂREȘTE-NE!» with the club's networks
- * and its tags on a blue band at the foot.
- */
-function drawPoster(ctx: CanvasRenderingContext2D, data: CalendarImageData, options: CalendarImageOptions, fonts: CalendarImageFonts, assets: CalendarImageAssets): void {
-  const { width: W, height: H } = CALENDAR_IMAGE_RATIOS[options.ratio];
-  const palette = CALENDAR_IMAGE_THEMES.poster;
-  const unit = Math.min(W, H) / 1080;
-  const pad = 36 * unit;
-  const px = (size: number) => Math.round(size * unit);
-  const body = (size: number, weight = 400) => `${weight} ${px(size)}px ${fonts.body}`;
-  const toneOf = (tone: CalendarTone) => palette[tone];
-  const upper = (text: string) => text.toLocaleUpperCase("ro-RO");
-  ctx.textBaseline = "alphabetic";
-  ctx.textAlign = "left";
-  ctx.fillStyle = palette.background[0];
-  ctx.fillRect(0, 0, W, H);
-
-  // The band, centred, as the poster's: the club's real logo (or, until it loads, the mountains over
-  // «BRAȘOV RUNNERS», spaced), then «Evenimente» in the hand-written face and the month, large, its year
-  // beside it in a lighter weight.
-  const story = options.ratio === "story";
-  const bandH = (story ? 360 : 290) * unit;
-  roundRect(ctx, pad, pad, W - 2 * pad, bandH, 24 * unit);
-  ctx.fillStyle = palette.band;
-  ctx.fill();
-  ctx.fillStyle = palette.bandInk;
-  let nameY: number;
-  if (assets.logo) {
-    const logoH = (story ? 128 : 106) * unit;
-    const logoY = pad + (story ? 22 : 18) * unit;
-    ctx.drawImage(assets.logo, W / 2 - (logoH * LOGO_RATIO) / 2, logoY, logoH * LOGO_RATIO, logoH);
-    nameY = logoY + logoH;
-  } else {
-    const markW = (story ? 120 : 104) * unit;
-    const markH = (markW * MOUNTAIN_MARK_VIEWBOX.height) / MOUNTAIN_MARK_VIEWBOX.width;
-    const markY = pad + (story ? 26 : 20) * unit;
-    ctx.save();
-    ctx.translate(W / 2 - markW / 2, markY);
-    ctx.scale(markW / MOUNTAIN_MARK_VIEWBOX.width, markH / MOUNTAIN_MARK_VIEWBOX.height);
-    ctx.globalAlpha = 0.55;
-    ctx.fill(new Path2D(FAR));
-    ctx.globalAlpha = 1;
-    ctx.fill(new Path2D(NEAR));
-    ctx.restore();
-    ctx.textAlign = "center";
-    ctx.font = body(story ? 24 : 20, 700);
-    ctx.letterSpacing = `${px(story ? 9 : 7)}px`;
-    nameY = markY + markH + (story ? 34 : 28) * unit;
-    ctx.fillText(fitText(ctx, upper(data.clubName), W - 4 * pad), W / 2, nameY);
-    ctx.letterSpacing = "0px";
-  }
-  ctx.textAlign = "center";
-  ctx.font = `400 ${px(story ? 78 : 64)}px ${fonts.script}`;
-  const headingY = nameY + (story ? 78 : 64) * unit;
-  ctx.fillText(fitText(ctx, data.words.heading, W - 4 * pad), W / 2, headingY);
-  // The month in capitals and the year after it, smaller and lighter, the pair centred together.
-  const monthText = upper(data.words.monthName);
-  const yearText = ` ${data.month.year}`;
-  const monthFont = body(story ? 74 : 60, 900);
-  const yearFont = body(story ? 44 : 36, 500);
-  ctx.font = monthFont;
-  const monthW = ctx.measureText(monthText).width;
-  ctx.font = yearFont;
-  const yearW = ctx.measureText(yearText).width;
-  const monthY = pad + bandH - (story ? 30 : 24) * unit;
-  ctx.textAlign = "left";
-  ctx.font = monthFont;
-  ctx.fillText(monthText, W / 2 - (monthW + yearW) / 2, monthY);
-  ctx.font = yearFont;
-  ctx.globalAlpha = 0.8;
-  ctx.fillText(yearText, W / 2 - (monthW + yearW) / 2 + monthW, monthY);
-  ctx.globalAlpha = 1;
-
-  // The foot: «URMĂREȘTE-NE!», each network the club has with its name, then the tags.
-  const footH = 64 * unit;
-  const footY = H - pad - footH;
-  roundRect(ctx, pad, footY, W - 2 * pad, footH, 18 * unit);
-  ctx.fillStyle = palette.band;
-  ctx.fill();
-  // Each network beside the club's name while the band holds it; past that, the marks alone — four
-  // networks with the name four times overflowed a 1080-pixel band and cut the call and the tags.
-  const withNames: { text: string; mark?: keyof typeof SOCIAL_MARKS; weight: number }[] = [
-    { text: upper(data.words.follow) + "!", weight: 900 },
-    ...data.socials.map((network) => ({ text: data.clubName, mark: network, weight: 700 })),
-    { text: data.words.hashtags, weight: 600 },
-  ];
-  const marksOnly = withNames.map((item) => (item.mark ? { ...item, text: "" } : item));
-  const markSize = 28 * unit;
-  const room = W - 2 * pad - 40 * unit;
-  const widthOf = (items: typeof withNames, size: number) => {
-    ctx.font = body(size, 700);
-    return items.reduce((sum, item) => sum + (item.text ? ctx.measureText(item.text).width : 0) + (item.mark ? markSize + (item.text ? 10 * unit : 0) : 0), 0) + (items.length - 1) * 30 * unit;
-  };
-  const footItems = widthOf(withNames, 20) <= room ? withNames : marksOnly;
-  let footSize = 24;
-  while (footSize > 14 && widthOf(footItems, footSize) > room) footSize -= 1;
-  let footX = (W - widthOf(footItems, footSize)) / 2;
-  for (const item of footItems) {
-    if (item.mark) {
-      ctx.save();
-      ctx.translate(footX, footY + (footH - markSize) / 2);
-      ctx.scale(markSize / 24, markSize / 24);
-      ctx.fillStyle = palette.bandInk;
-      ctx.fill(new Path2D(SOCIAL_MARKS[item.mark].path));
-      ctx.restore();
-      footX += markSize + (item.text ? 10 * unit : 0);
-    }
-    ctx.font = body(footSize, item.weight);
-    ctx.fillStyle = palette.bandInk;
-    if (item.text) ctx.fillText(item.text, footX, footY + footH / 2 + footSize * 0.36 * unit);
-    footX += (item.text ? ctx.measureText(item.text).width : 0) + 30 * unit;
-  }
-
-  // The legends: what repeats, then what stands alone, each under its own coloured title.
-  const content: Box = { x: pad, y: pad + bandH + 20 * unit, w: W - 2 * pad, h: footY - 20 * unit - (pad + bandH + 20 * unit) };
-  const sections = [
-    { title: data.words.recurringTitle, fill: palette.band, rows: data.recurring.slice(0, LEGEND_MAX).map((row) => ({ type: row.type, tone: "weekly" as CalendarTone, title: row.title, note: row.sentence })) },
-    { title: data.words.specialTitle, fill: palette.special[1], rows: data.specials.slice(0, LEGEND_MAX).map((row) => ({ type: row.type, tone: (row.tone === "weekly" ? "special" : row.tone) as CalendarTone, title: row.title, note: `${row.day} ${upper(data.words.monthName)}` })) },
-  ].filter((section) => section.rows.length > 0);
-  const legend = options.legend && sections.length > 0;
-  const beside = legend && options.ratio === "landscape";
-  const rowH = 64 * unit;
-  const titleH = 52 * unit;
-  let grid = content;
-  if (legend) {
-    const box: Box = beside
-      ? { x: content.x + content.w * 0.7 + 20 * unit, y: content.y, w: content.w * 0.3 - 20 * unit, h: content.h }
-      : { x: content.x, y: 0, w: content.w, h: titleH + Math.max(...sections.map((section) => section.rows.length)) * rowH + 24 * unit };
-    if (!beside) box.y = content.y + content.h - box.h;
-    grid = beside ? { ...content, w: content.w * 0.7 } : { ...content, h: content.h - box.h - 20 * unit };
-    roundRect(ctx, box.x, box.y, box.w, box.h, 18 * unit);
-    ctx.strokeStyle = palette.line;
-    ctx.lineWidth = 3 * unit;
-    ctx.stroke();
-    const columns = beside ? [sections] : sections.map((section) => [section]);
-    const colW = (box.w - 32 * unit) / columns.length;
-    columns.forEach((column, index) => {
-      const x = box.x + 16 * unit + index * colW;
-      let y = box.y + 14 * unit;
-      for (const section of column) {
-        ctx.font = body(24, 900);
-        const label = fitText(ctx, upper(section.title), colW - 40 * unit);
-        roundRect(ctx, x, y, ctx.measureText(label).width + 32 * unit, 40 * unit, 20 * unit);
-        ctx.fillStyle = section.fill;
-        ctx.fill();
-        ctx.fillStyle = palette.bandInk;
-        ctx.fillText(label, x + 16 * unit, y + 29 * unit);
-        y += titleH;
-        for (const row of section.rows) {
-          const [fill, ink] = toneOf(row.tone);
-          if (fill !== palette.cell) {
-            roundRect(ctx, x, y + 4 * unit, colW - 16 * unit, rowH - 8 * unit, 12 * unit);
-            ctx.fillStyle = fill;
-            ctx.fill();
-          }
-          drawGlyph(ctx, TYPE_PATHS[row.type], x + 10 * unit, y + (rowH - 34 * unit) / 2, 34 * unit, ink);
-          const textX = x + 56 * unit;
-          const textW = colW - 16 * unit - 64 * unit;
-          ctx.fillStyle = palette.cellInk;
-          ctx.font = body(20, 900);
-          ctx.fillText(fitText(ctx, upper(row.title), textW), textX, y + 28 * unit);
-          ctx.font = body(18, 600);
-          ctx.fillStyle = palette.title;
-          ctx.fillText(fitText(ctx, row.note, textW), textX, y + 52 * unit);
-          y += rowH;
-        }
-        y += 14 * unit;
-      }
-    });
-  }
-
-  // The grid: the weekdays in full on a pale blue row, then the weeks, Monday first.
-  const weeks = monthGrid(data.month);
-  const headH = 50 * unit;
-  const cellW = grid.w / 7;
-  const cellH = (grid.h - headH) / weeks.length;
-  roundRect(ctx, grid.x, grid.y, grid.w, grid.h, 18 * unit);
-  ctx.fillStyle = palette.cell;
-  ctx.fill();
-  ctx.save();
-  ctx.clip();
-  ctx.fillStyle = palette.cellMuted;
-  ctx.fillRect(grid.x, grid.y, grid.w, headH);
-  ctx.textAlign = "center";
-  ctx.font = body(Math.min(24, (cellW / unit) * 0.16), 900);
-  ctx.fillStyle = palette.title;
-  data.words.weekdaysLong.forEach((name, index) => {
-    ctx.fillText(fitText(ctx, upper(name), cellW - 8 * unit), grid.x + index * cellW + cellW / 2, grid.y + 34 * unit);
-  });
-  ctx.textAlign = "left";
-
-  const byDay = new Map<number, CalendarImageEntry[]>();
-  for (const entry of data.entries) byDay.set(entry.day, [...(byDay.get(entry.day) ?? []), entry]);
-  // A title that repeats in the month is the poster's plain white day, blue glyph; the rest are marked.
-  const repeating = new Set(data.recurring.map((row) => row.title));
-  const markOf = (entry: CalendarImageEntry): CalendarTone => (repeating.has(entry.title) ? "weekly" : entry.tone === "weekly" ? "special" : entry.tone);
-  const size = Math.max(13, Math.min(20, (cellW / unit) * 0.11));
-  const lineH = size * 1.15 * unit;
-  const glyph = Math.max(20, Math.min(40, (cellH / unit) * 0.22)) * unit;
-  let trailing: Box | null = null;
-  weeks.forEach((week, row) => {
-    week.forEach((day, column) => {
-      const x = grid.x + column * cellW;
-      const y = grid.y + headH + row * cellH;
-      const entries = day.inMonth ? (byDay.get(day.day) ?? []) : [];
-      // A special edition's day pale pink, a social one's pale yellow, as the poster marks them.
-      const marked = entries.find((entry) => markOf(entry) !== "weekly");
-      if (marked) {
-        ctx.fillStyle = toneOf(markOf(marked))[0];
-        ctx.fillRect(x, y, cellW, cellH);
-      }
-      if (!day.inMonth) {
-        if (row === weeks.length - 1 && !trailing) trailing = { x, y, w: grid.x + grid.w - x, h: cellH };
-        return;
-      }
-      ctx.fillStyle = palette.cellInk;
-      ctx.font = body(Math.min(30, (cellH / unit) * 0.2), 900);
-      ctx.fillText(String(day.day), x + 10 * unit, y + Math.min(34, (cellH / unit) * 0.24) * unit);
-      if (entries.length === 0) return;
-      // Each date centred: its glyph, its title in capitals, «ora 19:30»; fewer lines as more dates share the day.
-      const top = y + Math.min(40, (cellH / unit) * 0.28) * unit;
-      const room = y + cellH - top - 6 * unit;
-      const each = room / entries.length;
-      const textW = cellW - 14 * unit;
-      entries.forEach((entry, index) => {
-        let cy = top + index * each;
-        const bottom = top + (index + 1) * each;
-        const [, ink] = toneOf(markOf(entry));
-        const timeLine = entry.cancelled ? data.words.cancelled : entry.time ? data.words.at.replace("{time}", entry.time) : "";
-        ctx.font = body(size, 900);
-        const lines = wrapText(ctx, upper(entry.title), textW, 3);
-        // The glyph, the title on up to three lines, the hour — the glyph goes before the words do.
-        const need = (withGlyph: boolean, count: number) => (withGlyph ? glyph + 4 * unit : 0) + count * lineH + (timeLine ? lineH : 0);
-        const showGlyph = need(true, Math.min(2, lines.length)) <= each;
-        let count = lines.length;
-        while (count > 1 && need(showGlyph, count) > each) count -= 1;
-        if (showGlyph) {
-          drawGlyph(ctx, entry.special ? SPECIAL_PATH : TYPE_PATHS[entry.type], x + (cellW - glyph) / 2, cy, glyph, ink);
-          cy += glyph + 4 * unit;
-        }
-        ctx.textAlign = "center";
-        ctx.fillStyle = palette.cellInk;
-        ctx.font = body(size, 900);
-        for (const line of count < lines.length ? wrapText(ctx, upper(entry.title), textW, count) : lines) {
-          cy += lineH;
-          ctx.fillText(line, x + cellW / 2, cy - 3 * unit);
-        }
-        if (timeLine && cy + lineH <= bottom + 2 * unit) {
-          cy += lineH * 0.95;
-          ctx.font = body(size * 0.85, 600);
-          ctx.fillStyle = palette.title;
-          ctx.fillText(fitText(ctx, timeLine, textW), x + cellW / 2, cy - 3 * unit);
-        }
-        ctx.textAlign = "left";
-      });
-    });
-  });
-
-  // The mountains across the empty days after the month, as the poster draws them.
-  const tail = trailing as Box | null;
-  if (tail && tail.w > cellW * 0.9) {
-    const h = Math.min(tail.h * 0.8, (tail.w * MOUNTAIN_MARK_VIEWBOX.height) / MOUNTAIN_MARK_VIEWBOX.width);
-    ctx.save();
-    ctx.translate(tail.x, tail.y + tail.h - h);
-    ctx.scale(tail.w / MOUNTAIN_MARK_VIEWBOX.width, h / MOUNTAIN_MARK_VIEWBOX.height);
-    ctx.fillStyle = palette.line;
-    ctx.globalAlpha = 0.6;
-    ctx.fill(new Path2D(FAR));
-    ctx.globalAlpha = 0.9;
-    ctx.fill(new Path2D(NEAR));
-    ctx.restore();
-  }
-
-  // The grid's lines over the cells.
-  ctx.strokeStyle = palette.line;
-  ctx.lineWidth = 2 * unit;
-  ctx.beginPath();
-  for (let column = 1; column < 7; column += 1) {
-    ctx.moveTo(grid.x + column * cellW, grid.y + headH);
-    ctx.lineTo(grid.x + column * cellW, grid.y + grid.h);
-  }
-  for (let row = 0; row < weeks.length; row += 1) {
-    ctx.moveTo(grid.x, grid.y + headH + row * cellH);
-    ctx.lineTo(grid.x + grid.w, grid.y + headH + row * cellH);
-  }
-  ctx.stroke();
-  ctx.restore();
-  roundRect(ctx, grid.x, grid.y, grid.w, grid.h, 18 * unit);
-  ctx.lineWidth = 3 * unit;
-  ctx.stroke();
 }
