@@ -1,0 +1,23 @@
+{
+  "month": { "year": 2026, "month": 10 },
+  "entries": [],
+  "recurring": [],
+  "specials": [],
+  "socials": ["facebook", "instagram", "strava", "youtube"],
+  "host": "localhost:3000",
+  "clubName": "Brașov Runners",
+  "words": {
+    "heading": "Evenimente",
+    "monthTitle": "octombrie 2026",
+    "monthName": "octombrie",
+    "weekdays": ["lun.", "mar.", "mie.", "joi", "vin.", "sâm.", "dum."],
+    "weekdaysLong": ["luni", "marți", "miercuri", "joi", "vineri", "sâmbătă", "duminică"],
+    "recurringTitle": "Evenimente recurente",
+    "specialTitle": "Evenimente speciale",
+    "cancelled": "Anulat",
+    "follow": "Urmărește-ne",
+    "more": "+{count} altele",
+    "at": "ora {time}",
+    "hashtags": "#NoOneLeftBehind #brasovrunners"
+  }
+}
