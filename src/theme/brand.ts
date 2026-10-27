@@ -569,6 +569,12 @@ type CalendarImagePalette = {
   weekly: readonly [string, string];
   special: readonly [string, string];
   other: readonly [string, string];
+  /**
+   * «Afiș» alone: each weekly series' own colour, in the order the month's legend lists them — a series'
+   * dates are chips of that colour in their days, and the legend's chip of the same colour names it. A
+   * fill under its ink, each pair at least 4.5:1.
+   */
+  series?: readonly (readonly [string, string])[];
 };
 
 const CLUB_PALETTE: CalendarImagePalette = {
@@ -622,6 +628,13 @@ export const CALENDAR_IMAGE_THEMES = {
     weekly: [COLOR.surface, COLOR.blue],
     special: [COLOR.accentTint, COLOR.accent],
     other: ["#fff4d6", COLOR.orange],
+    // The club's blue first, then a teal, a violet and a burnt orange: none the specials' pink or cream.
+    series: [
+      [COLOR.blue, COLOR.surface],
+      ["#00796b", COLOR.surface],
+      ["#6b2fc2", COLOR.surface],
+      ["#b4511d", COLOR.surface],
+    ],
   },
   winter: { ...CLUB_PALETTE, background: ["#3f6fb5", "#9cc3e6"], band: "#1e3f73", title: "#1e3f73" },
   spring: { ...CLUB_PALETTE, background: ["#3f8f4f", "#a6d4a0"], band: "#22552d", title: "#22552d" },

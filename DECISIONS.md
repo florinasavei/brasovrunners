@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.83-2026-10-27 -->
+<!-- PROJECT_BASELINE: BR-V3.84-2026-10-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.83-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.84-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28020,3 +28020,17 @@ Baseline `BR-V3.82-2026-10-27`.
 **The band.** Three lines in the kit's slashed face (the club's name, «Evenimente», the month) read as noise at a post's size. Every theme now draws the club's real logo — the white lockup the site already serves (`LOGO.lockup.onDark`, `public/brand/logo-white.svg`), so the canvas stays exportable — loaded by the dialog once; «Afiș» centres it over «Evenimente» in the site's hand-written face (`--font-signature`, asked for by the dialog, since the page does not preload it) and the month in heavy capitals with its year smaller beside it; the other themes put the logo at the band's left and «Evenimente» and «OCTOMBRIE 2026» beside it. Until the logo has loaded, or if it cannot, the drawn mountains and the club's name stand in for it.
 
 Baseline `BR-V3.83-2026-10-27`.
+
+## 858. «Afiș» set in Poppins, in three layouts to choose from («Așezare»), with the app's glyphs for type and ground
+
+**The owner, 2026-10-27,** of «Afiș» (§856, §857): «the font is pretty ugly»; «I need to organize it better and use the space more efficiently»; of three layouts drawn for the same three months, «seriile în cap»; then «but I want settings for those layouts»; and «I want icons for event type as in the app: asphalt, trail».
+
+**The face.** The poster is set in one geometric sans, Poppins (SIL OFL 1.1, `public/fonts/calendar/`, from fontsource): the month in italic Black with its year in italic Medium, «EVENIMENTE» in spaced Medium capitals echoing the logo's lettering, titles in Bold, hours in Medium. The dialog fetches its five faces (Latin and Latin Extended, 68 KB) when it first opens, so no other page pays for them (`calendar-image-fonts.ts`). The other four styles draw as before.
+
+**«Așezare».** On «Afiș» the dialog offers three layouts, each in its own module (`calendar-image-poster-*.ts`, the shared canvas helpers in `calendar-image-canvas.ts`); every one has a band of one line — the logo left, «EVENIMENTE» and the month right — about half the old height, and none repeats a weekly series' title in its cells. «Seriile în cap» (the default, the owner's choice): a weekly series is written once, in full, as a strip under its weekday's head, with its hour; each of its dates shows its glyphs and hour, or «Anulat»; a special date keeps its whole title on its tint; the specials' legend sits in the empty days before the 1st or after the last day. «Legenda în celule»: each series' dates are chips in the series' own colour, and the key is drawn inside the empty days of the first or last week. «Legenda dedesubt»: chips in the cells, and a key with every series and special date under the grid, or beside it on 16:9 — the closest to the club's hand-made poster.
+
+**The glyphs.** Every date and series shows the same glyphs as the app's chips (`glyphs.ts`): its type's (the runner, the chequered flag, the hiker, the cup, the flask, the group) and, beside it, its ground's when set — the road for asphalt, the mountain for trail, the fork for mixed (`SURFACE_PATHS`; the road's strokes written as filled shapes). The picture's data carries each date's `surface` for it.
+
+**Seeing it.** `yarn calendar:preview` draws the picture without a server or a database from three months in `scripts/calendar-image-preview/` (June 2026 as the club's own poster had it, a busy six-week August in English, a November with two dates), every theme, layout and format, into `dist/calendar-preview/`, with the dialog's own fonts and drawing.
+
+Baseline `BR-V3.84-2026-10-27`.

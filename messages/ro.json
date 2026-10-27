@@ -213,6 +213,12 @@
           "story": "Story 9:16",
           "landscape": "Facebook 16:9"
         },
+        "layout": "Așezare",
+        "layouts": {
+          "heads": "Seriile în cap",
+          "cells": "Legenda în celule",
+          "formats": "Legenda dedesubt"
+        },
         "legend": "Arată evenimentele recurente și speciale",
         "download": "Descarcă PNG",
         "share": "Distribuie",

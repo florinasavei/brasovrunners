@@ -1,0 +1,83 @@
+{
+ "month": {
+  "year": 2026,
+  "month": 11
+ },
+ "entries": [
+  {
+   "day": 7,
+   "time": "10:00",
+   "title": "Dynafit shoe testing x Coffee social event",
+   "tone": "other",
+   "type": "GEAR_TEST",
+   "special": true,
+   "cancelled": false,
+   "surface": "TRAIL"
+  },
+  {
+   "day": 21,
+   "time": "09:00",
+   "title": "Crosul Brașov Runners — ediția a III-a",
+   "tone": "special",
+   "type": "RACE",
+   "special": true,
+   "cancelled": false,
+   "surface": "MIXED"
+  }
+ ],
+ "recurring": [],
+ "specials": [
+  {
+   "day": 7,
+   "title": "Dynafit shoe testing x Coffee social event",
+   "tone": "other",
+   "type": "GEAR_TEST",
+   "surface": "TRAIL"
+  },
+  {
+   "day": 21,
+   "title": "Crosul Brașov Runners — ediția a III-a",
+   "tone": "special",
+   "type": "RACE",
+   "surface": "MIXED"
+  }
+ ],
+ "socials": [
+  "facebook",
+  "instagram",
+  "strava",
+  "youtube"
+ ],
+ "host": "localhost:3000",
+ "clubName": "Brașov Runners",
+ "words": {
+  "heading": "Evenimente",
+  "monthTitle": "noiembrie 2026",
+  "monthName": "noiembrie",
+  "weekdays": [
+   "lun.",
+   "mar.",
+   "mie.",
+   "joi",
+   "vin.",
+   "sâm.",
+   "dum."
+  ],
+  "weekdaysLong": [
+   "luni",
+   "marți",
+   "miercuri",
+   "joi",
+   "vineri",
+   "sâmbătă",
+   "duminică"
+  ],
+  "recurringTitle": "Evenimente recurente",
+  "specialTitle": "Evenimente speciale",
+  "cancelled": "Anulat",
+  "follow": "Urmărește-ne",
+  "more": "+{count} altele",
+  "at": "ora {time}",
+  "hashtags": "#NoOneLeftBehind #brasovrunners"
+ }
+}
