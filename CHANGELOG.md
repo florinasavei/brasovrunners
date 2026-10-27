@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.81-2026-10-27
+
+- **«Salvează ca imagine» under the month's calendar** — the month as a picture to post: four themes (the club, light, dark, the month's season), four formats (Instagram 4:5, square, story 9:16, Facebook 16:9), the recurring and special events listed or not, then download or share — drawn in the visitor's browser, at no server cost. §855.
 ## BR-V3.80-2026-10-27
 
 - **«Lista internă de așteptare» on an event's registrations list** — the organizers write down people who asked for a place (say through the contact form), with an internal note; nobody is registered, counted or emailed, until «Trece pe lista oficială» opens the ordinary staff entry prefilled and the note follows the registration. §854.

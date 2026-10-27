@@ -5,7 +5,7 @@ import type { CalendarTone } from "../domain/calendar-kind";
 import { type CalendarImageData, type CalendarImageEntry, LEGEND_MAX } from "../domain/calendar-image";
 
 /**
- * «Salvează ca imagine» (§NNN): the month drawn on a `<canvas>`, in the visitor's browser. No server, no
+ * «Salvează ca imagine» (§855): the month drawn on a `<canvas>`, in the visitor's browser. No server, no
  * function, no library — the 2D context the browser already has. Pure: the same data, options and fonts
  * draw the same picture, and nothing here touches the page.
  */

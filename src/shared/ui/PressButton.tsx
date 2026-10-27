@@ -6,7 +6,7 @@ import type { ComponentType } from "react";
 
 /**
  * A button that does something in the page — opens a dialog, downloads what the browser drew — for a client
- * island on a public page (§NNN). The house's other buttons go somewhere (`ButtonLink`) or send a form
+ * island on a public page (§855). The house's other buttons go somewhere (`ButtonLink`) or send a form
  * (`SubmitButton`); this one runs its `onClick`. It always wears its glyph before the words (§498), handed
  * in as the icon component itself — one file per glyph, never the barrel (§90) — and is a 44-pixel target.
  */

@@ -549,7 +549,7 @@ export const PROSE_MEASURE = "60rem";
 export const WORDMARK_SIZE = "1rem";
 
 /**
- * «Salvează ca imagine» (§NNN): the palettes the calendar picture is drawn in, in the browser, on a
+ * «Salvează ca imagine» (§855): the palettes the calendar picture is drawn in, in the browser, on a
  * `<canvas>`. Each names the page behind the month (`background`, two stops top to bottom), the band
  * that carries the club's name (`band`, `bandInk`), a day's cell (`cell`, `cellInk`, `cellMuted` for the
  * neighbouring months' days), the hairlines (`line`) and the three kinds of date — the weekly runs, the

@@ -109,7 +109,7 @@ export default async function CalendarSection({
         </Box>
         {/* What the three colours mean, under «Aspectul nou» only (phase 4): a word beside every colour. */}
         <CalendarLegend {...calendarLegendWords(t)} />
-        {/* «Salvează ca imagine» (§NNN): a month only, drawn in the browser from the rows already on the page. */}
+        {/* «Salvează ca imagine» (§855): a month only, drawn in the browser from the rows already on the page. */}
         {image && (
           <Box sx={{ mt: 1.5, display: "flex", justifyContent: "flex-end" }}>
             <CalendarImageButton data={image.data} words={image.words} />

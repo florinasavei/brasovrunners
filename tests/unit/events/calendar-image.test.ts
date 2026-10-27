@@ -4,7 +4,7 @@ import { calendarImageRows } from "@/modules/events/domain/calendar-image-rows";
 import { fitText, paletteFor, wrapText } from "@/modules/events/ui/calendar-image-draw";
 
 /**
- * «Salvează ca imagine» (§NNN; the owner, 2026-10-27): the month as a picture, drawn in the browser. The pure
+ * «Salvează ca imagine» (§855; the owner, 2026-10-27): the month as a picture, drawn in the browser. The pure
  * halves: which day each date falls on and what repeats, and the words cut to the room a cell gives them.
  */
 

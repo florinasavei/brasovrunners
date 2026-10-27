@@ -11,7 +11,7 @@ import type { CalendarImageDialogWords } from "./CalendarImageDialog";
 import { recurrenceSentence } from "./series-sentence";
 
 /**
- * The calendar picture's data and its dialog's words (§NNN), made on the server from the month the page
+ * The calendar picture's data and its dialog's words (§855), made on the server from the month the page
  * already read — no read of its own — and handed to `CalendarImageButton`, which draws in the browser.
  */
 export async function calendarImageProps(

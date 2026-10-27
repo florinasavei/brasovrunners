@@ -2,7 +2,7 @@ import type { YearMonth } from "./calendar";
 import type { CalendarTone } from "./calendar-kind";
 
 /**
- * «Salvează ca imagine» (§NNN; the owner, 2026-10-27: «people want to export the calendar as a picture so
+ * «Salvează ca imagine» (§855; the owner, 2026-10-27: «people want to export the calendar as a picture so
  * they can share to social media … with themes and settings such as aspect ratio … super efficient so it
  * does not consume a lot of Vercel credits»).
  *

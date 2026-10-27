@@ -63,7 +63,7 @@ function pageFonts() {
 }
 
 /**
- * The picture's options and its preview (§NNN): the theme, the shape and the legends; «Descarcă PNG», and
+ * The picture's options and its preview (§855): the theme, the shape and the legends; «Descarcă PNG», and
  * «Distribuie» where the browser can hand a file to an app (a phone, mostly). Every change redraws the one
  * canvas at the picture's full size; the preview is that canvas, scaled down by CSS.
  */
