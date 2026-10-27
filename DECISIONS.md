@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.81-2026-10-27 -->
+<!-- PROJECT_BASELINE: BR-V3.82-2026-10-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.81-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.82-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28002,3 +28002,11 @@ Baseline `BR-V3.80-2026-10-27`.
 **A new primitive.** `shared/ui/PressButton` is the house's button that runs its `onClick` on a public page — `ButtonLink` goes somewhere, `SubmitButton` sends a form — always with its glyph (§498).
 
 Baseline `BR-V3.81-2026-10-27`.
+
+## 856. «Afiș»: the calendar picture drawn as the club's own monthly poster, its default style
+
+**The owner, 2026-10-27,** of «Salvează ca imagine» (§855): «vreau să aleg cum să arate poza, vreau să semene cu ce mi-a dat Amalia» — the club's hand-made monthly poster — and, asked about its photographs, «nu, doar layoutul».
+
+**Decision.** A fifth theme, «Afiș», first in the dialog and chosen when it opens: a white sheet; the logo's blue band, centred, with the mountains, the club's name in the kit's face and «Evenimente <LUNA> <an>»; the weekdays in full on a pale blue row; in each day, each date centred — its type's glyph (the calendar's own Material glyphs, their paths in `calendar-image-glyphs.ts`; the sparkle for a special edition), its title in capitals and «ora 19:30» — the glyph dropped before a title line when the cell is short; a title that repeats in the month on white with a blue glyph, any other date's day pale pink (an edition apart, a race, a run) or pale yellow (coffee, gear test); the mountains across the empty days after the month; «EVENIMENTE RECURENTE» and «EVENIMENTE SPECIALE» on coloured pills with each row's glyph, rhythm or date; and «URMĂREȘTE-NE!» on a blue band with each network the club links (`clubSocialLinks`) beside the club's name, and «#NoOneLeftBehind #brasovrunners». No photographs: the poster's pictures would need the bucket to answer the browser's cross-origin read, or the canvas could not be saved.
+
+Baseline `BR-V3.82-2026-10-27`.
