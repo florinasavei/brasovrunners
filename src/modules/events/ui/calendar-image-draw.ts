@@ -38,6 +38,12 @@ export type CalendarImageOptions = {
    * the column heads either way; this lists the special dates, and a series no head can hold.
    */
   legend: boolean;
+  /**
+   * «Detalii» (the owner, 2026-10-27: «show short location as well like "Tampa", "Parc" and also elevation»):
+   * which of a date's details a layout writes after the hour — the short place, the distance, the climb — each
+   * only when the date has it (`calendar-image-canvas.ts#detailWords`). All three on by default.
+   */
+  details: { place: boolean; distance: boolean; elevation: boolean };
 };
 
 /**

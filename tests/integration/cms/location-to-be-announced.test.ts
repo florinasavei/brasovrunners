@@ -43,6 +43,8 @@ const SECRET_NAME = "Sala Sporturilor Dumitru Popescu";
 const SECRET_EN_NAME = "Dumitru Popescu Sports Hall";
 const SECRET_MAP = "https://maps.example/sala-secreta";
 const SECRET_ROW_PLACE = "Intrarea B a sălii";
+const SECRET_SHORT = "Sala Dumitru";
+const SECRET_SHORT_EN = "Dumitru Hall";
 const SENTENCE_RO = "Locația se anunță în curând";
 const SENTENCE_EN = "Location to be announced soon";
 
@@ -85,13 +87,16 @@ const TYPED_EVENT_HALF = {
   locationName: SECRET_NAME,
   // The English box of "Punct de întâlnire" (§362), typed and hidden like the Romanian one.
   locationNameEn: SECRET_EN_NAME,
+  // «Locul, pe scurt» (migration `0181`), both languages, hidden with the names.
+  locationShort: SECRET_SHORT,
+  locationShortEn: SECRET_SHORT_EN,
   mapUrl: SECRET_MAP,
   scheduleRows: [{ date: "2026-11-21", time: "08:00", endTime: "", ro: "Ridicarea kitului", en: "Kit pickup", place: SECRET_ROW_PLACE }],
 };
 const TYPED_NOT_ANNOUNCED = { ...TYPED_EVENT_HALF, translations: TRANSLATIONS };
 
 /** Whether any of the typed place's words appear anywhere in a rendering. */
-const leaks = (text: string) => [SECRET_NAME, SECRET_EN_NAME, SECRET_MAP, SECRET_ROW_PLACE, "sala-secreta"].filter((word) => text.includes(word));
+const leaks = (text: string) => [SECRET_NAME, SECRET_EN_NAME, SECRET_MAP, SECRET_ROW_PLACE, SECRET_SHORT, SECRET_SHORT_EN, "sala-secreta"].filter((word) => text.includes(word));
 
 describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", () => {
   let db: TestDatabase;
@@ -179,7 +184,7 @@ describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", () => {
           ...(await listUpcomingEvents(db, locale, NOW)),
         ];
         for (const row of rows) {
-          expect(row).toMatchObject({ locationName: null, locationAddress: null, mapUrl: null, locationToBeAnnounced: true });
+          expect(row).toMatchObject({ locationName: null, locationShort: null, locationAddress: null, mapUrl: null, locationToBeAnnounced: true });
           // The programme's row stays, time and label; only its place is gone.
           const [item] = readScheduleItems(row?.scheduleItems);
           expect(item).toMatchObject({ label: { ro: "Ridicarea kitului", en: "Kit pickup" }, place: null });

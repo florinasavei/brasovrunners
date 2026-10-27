@@ -1,8 +1,12 @@
+import { createTranslator } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
+import ro from "../../../messages/ro.json";
 import type { PublicEvent } from "@/modules/events/repository";
 import type { CalendarImageData, CalendarImageEntry } from "@/modules/events/domain/calendar-image";
-import { calendarImageRows } from "@/modules/events/domain/calendar-image-rows";
-import { eventGlyphs, fitText, glyphsWidth, wrapText } from "@/modules/events/ui/calendar-image-canvas";
+import { type CalendarImageFormat, calendarImageRows } from "@/modules/events/domain/calendar-image-rows";
+import { distanceWords } from "@/modules/events/domain/distance";
+import { elevationWords } from "@/modules/events/domain/elevation";
+import { detailWords, eventGlyphs, fitText, glyphsWidth, wrapText } from "@/modules/events/ui/calendar-image-canvas";
 import { SPECIAL_PATH, SURFACE_PATHS, TYPE_PATHS } from "@/modules/events/ui/calendar-image-glyphs";
 import { CALENDAR_IMAGE_LAYOUT_CHOICES, CALENDAR_IMAGE_THEME_CHOICES, drawCalendarImage, paletteFor } from "@/modules/events/ui/calendar-image-draw";
 import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
@@ -27,9 +31,16 @@ function event(startsAt: string, title: string, overrides: Partial<PublicEvent> 
     isSpecial: false,
     eventStatus: "SCHEDULED",
     timeToBeAnnounced: false,
+    locationShort: null,
     ...overrides,
   } as PublicEvent;
 }
+
+/** The hour alone, no route words: what the rows tests need. */
+const hourOnly: CalendarImageFormat = { time: () => "18:30", distance: () => null, elevation: () => null };
+/** A date with no details to draw, and the dialog with every detail on. */
+const NO_DETAILS = { place: null, distance: null, elevation: null };
+const ALL_DETAILS = { place: true, distance: true, elevation: true };
 
 describe("the month's rows", () => {
   const rows = calendarImageRows(
@@ -42,7 +53,7 @@ describe("the month's rows", () => {
       event("2026-06-30T23:30:00Z", "Night run"),
       event("2026-07-02T15:00:00Z", "July"),
     ],
-    () => "18:30",
+    hourOnly,
   );
 
   it("puts each date on its day in the club's zone, soonest first, and leaves out the other months", () => {
@@ -59,8 +70,55 @@ describe("the month's rows", () => {
   });
 
   it("says no hour for a date whose hour is to be announced, and marks a cancelled one", () => {
-    const [entry] = calendarImageRows({ year: 2026, month: 6 }, [event("2026-06-03T09:00:00Z", "Tură", { timeToBeAnnounced: true, eventStatus: "CANCELLED" })], () => "12:00").entries;
+    const [entry] = calendarImageRows({ year: 2026, month: 6 }, [event("2026-06-03T09:00:00Z", "Tură", { timeToBeAnnounced: true, eventStatus: "CANCELLED" })], hourOnly).entries;
     expect(entry).toMatchObject({ time: null, cancelled: true });
+  });
+});
+
+describe("a date's details (the owner, 2026-10-27: «short location … and also elevation»)", () => {
+  // The site's own words for the route, in Romanian, as the page's pills and the picture's data say them.
+  const translator = createTranslator({ locale: "ro", messages: ro, namespace: "Event" });
+  const t = (key: string, values?: Record<string, string | number>) => translator(key as never, values as never);
+  const format: CalendarImageFormat = {
+    time: () => "19:00",
+    distance: (row) => distanceWords(row, t, (km) => new Intl.NumberFormat("ro", { maximumFractionDigits: 1 }).format(km))?.short ?? null,
+    elevation: (row) => elevationWords(row, t, (value) => new Intl.NumberFormat("ro").format(value))?.short ?? null,
+  };
+  const june = { year: 2026, month: 6 };
+
+  it("copies the short place as the public read gives it, null when the event has none", () => {
+    const [tampa, none] = calendarImageRows(june, [event("2026-06-03T16:00:00Z", "Tură", { locationShort: "Tâmpa" }), event("2026-06-05T16:00:00Z", "Shake out")], hourOnly).entries;
+    expect(tampa.place).toBe("Tâmpa");
+    expect(none.place).toBeNull();
+  });
+
+  it("says the distance and the climb in the pills' short words, «≈» when estimated, and nothing when the event states none", () => {
+    const rows = calendarImageRows(
+      june,
+      [
+        event("2026-06-01T16:30:00Z", "Happy Monday", { distanceMeters: 8000, distanceEstimated: false, elevationGainMeters: null, elevationGainEstimated: false }),
+        event("2026-06-03T16:00:00Z", "Tură", { locationShort: "Tâmpa", distanceMeters: 6000, distanceEstimated: false, elevationGainMeters: 350, elevationGainEstimated: true }),
+        event("2026-06-21T06:00:00Z", "Crosul", { locationShort: "Parc", distanceMeters: 10500, distanceEstimated: true, elevationGainMeters: 150, elevationGainEstimated: true }),
+        event("2026-06-26T06:00:00Z", "Ședință"),
+      ],
+      format,
+    ).entries;
+    expect(rows.map((row) => [row.place, row.distance, row.elevation])).toEqual([
+      [null, "8 km", null],
+      ["Tâmpa", "6 km", "≈ 350 m D+"],
+      ["Parc", "≈ 10,5 km", "≈ 150 m D+"],
+      [null, null, null],
+    ]);
+  });
+
+  it("lists the words to draw after the hour — the place, the distance, the climb — only those switched on and present", () => {
+    const entry = { place: "Tâmpa", distance: "6 km", elevation: "≈ 350 m D+" };
+    const all = { place: true, distance: true, elevation: true };
+    expect(detailWords(entry, all)).toEqual(["Tâmpa", "6 km", "≈ 350 m D+"]);
+    expect(detailWords(entry, { place: false, distance: true, elevation: false })).toEqual(["6 km"]);
+    expect(detailWords({ place: null, distance: "8 km", elevation: null }, all)).toEqual(["8 km"]);
+    expect(detailWords({ place: "", distance: null, elevation: null }, all)).toEqual([]);
+    expect(detailWords(entry, { place: false, distance: false, elevation: false })).toEqual([]);
   });
 });
 
@@ -115,9 +173,10 @@ describe("«Afiș»: each series under its weekday", () => {
     surface: null,
     special: false,
     cancelled: false,
+    ...NO_DETAILS,
     ...overrides,
   });
-  const recurring = (title: string, type: CalendarImageEntry["type"] = "GROUP_RUN") => ({ title, sentence: `${title}, every week`, tone: "weekly" as const, type, surface: null });
+  const recurring = (title: string, type: CalendarImageEntry["type"] = "GROUP_RUN") => ({ title, sentence: `${title}, every week`, tone: "weekly" as const, type, surface: null, ...NO_DETAILS });
   // June 2026: the 1st is a Monday.
   const data = (entries: CalendarImageEntry[], rows: ReturnType<typeof recurring>[]) => ({ month: { year: 2026, month: 6 }, entries, recurring: rows }) as unknown as CalendarImageData;
 
@@ -209,14 +268,14 @@ describe("the themes are palettes of the layouts", () => {
     });
     return { ctx, stops, texts };
   }
-  const entry = (day: number, title: string, overrides: Partial<CalendarImageEntry> = {}): CalendarImageEntry => ({ day, time: "19:30", title, tone: "weekly", type: "GROUP_RUN", surface: "ASPHALT", special: false, cancelled: false, ...overrides });
+  const entry = (day: number, title: string, overrides: Partial<CalendarImageEntry> = {}): CalendarImageEntry => ({ day, time: "19:30", title, tone: "weekly", type: "GROUP_RUN", surface: "ASPHALT", special: false, cancelled: false, place: "Parc", distance: "8 km", elevation: null, ...overrides });
   const data: CalendarImageData = {
     month: { year: 2026, month: 6 },
-    entries: [entry(1, "Happy Monday"), entry(8, "Happy Monday"), entry(5, "Girls only shake out run", { tone: "special", special: true, time: "18:00" }), entry(7, "Coffee social", { tone: "other", type: "COFFEE", surface: null, time: "10:00" })],
-    recurring: [{ title: "Happy Monday", sentence: "În fiecare luni, la 19:30", tone: "weekly", type: "GROUP_RUN", surface: "ASPHALT" }],
+    entries: [entry(1, "Happy Monday"), entry(8, "Happy Monday"), entry(5, "Girls only shake out run", { tone: "special", special: true, time: "18:00" }), entry(7, "Coffee social", { tone: "other", type: "COFFEE", surface: null, time: "10:00", ...NO_DETAILS })],
+    recurring: [{ title: "Happy Monday", sentence: "În fiecare luni, la 19:30", tone: "weekly", type: "GROUP_RUN", surface: "ASPHALT", place: "Parc", distance: "8 km", elevation: null }],
     specials: [
-      { day: 5, title: "Girls only shake out run", tone: "special", type: "GROUP_RUN", surface: "ASPHALT" },
-      { day: 7, title: "Coffee social", tone: "other", type: "COFFEE", surface: null },
+      { day: 5, title: "Girls only shake out run", tone: "special", type: "GROUP_RUN", surface: "ASPHALT", place: "Parc", distance: "5 km", elevation: null },
+      { day: 7, title: "Coffee social", tone: "other", type: "COFFEE", surface: null, ...NO_DETAILS },
     ],
     socials: ["instagram"],
     host: "example.test",
@@ -245,7 +304,7 @@ describe("the themes are palettes of the layouts", () => {
       for (const theme of CALENDAR_IMAGE_THEME_CHOICES) {
         for (const layout of CALENDAR_IMAGE_LAYOUT_CHOICES) {
           const { ctx, stops, texts } = stubContext();
-          drawCalendarImage(ctx, data, { theme, ratio: "portrait", layout, legend: true }, fonts);
+          drawCalendarImage(ctx, data, { theme, ratio: "portrait", layout, legend: true, details: ALL_DETAILS }, fonts);
           expect(stops.slice(0, 2), `${theme} in ${layout}`).toEqual([...CALENDAR_IMAGE_THEMES[paletteFor(theme, 6)].background]);
           expect(texts, `${theme} in ${layout}`).toContain("IUNIE");
         }

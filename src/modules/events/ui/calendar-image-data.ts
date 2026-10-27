@@ -4,10 +4,11 @@ import type { Locale } from "@/i18n/routing";
 import { CLUB_NAME } from "@/theme/brand";
 import { calendarTone } from "../domain/calendar-kind";
 import type { CalendarImageData } from "../domain/calendar-image";
-import { calendarImageRows } from "../domain/calendar-image-rows";
+import { type CalendarImageFormat, calendarImageDetails, calendarImageRows } from "../domain/calendar-image-rows";
 import { dayKey, type YearMonth } from "../domain/calendar";
 import type { PublicEvent } from "../repository";
 import type { CalendarImageDialogWords } from "./CalendarImageDialog";
+import { routeWordFormat } from "./calendar-image-words";
 import { recurrenceSentence } from "./series-sentence";
 import { clubSocialLinks } from "@/shared/ui/club-socials";
 
@@ -23,7 +24,9 @@ export async function calendarImageProps(
 ): Promise<{ data: CalendarImageData; words: CalendarImageDialogWords }> {
   const t = await getTranslations("Events.calendar.image");
   const format = await getFormatter();
-  const { entries, series, singles } = calendarImageRows(month, events, (event) => formatTime(event.startsAt, { locale, timeZone: event.timezone }));
+  // The hour in the club's zone, and the route's words as the page's pills say them: «8 km», «≈ 350 m D+».
+  const words: CalendarImageFormat = { time: (event) => formatTime(event.startsAt, { locale, timeZone: event.timezone }), ...(await routeWordFormat()) };
+  const { entries, series, singles } = calendarImageRows(month, events, words);
   const recurring = await Promise.all(
     series.map(async (members) => ({
       title: members[0].title ?? "",
@@ -31,6 +34,7 @@ export async function calendarImageProps(
       tone: calendarTone(members[0]),
       type: members[0].type,
       surface: members[0].surface ?? null,
+      ...calendarImageDetails(members[0], words),
     })),
   );
   const specials = singles.map((event) => ({
@@ -39,6 +43,7 @@ export async function calendarImageProps(
     tone: calendarTone(event),
     type: event.type,
     surface: event.surface ?? null,
+    ...calendarImageDetails(event, words),
   }));
   const data: CalendarImageData = {
     month,
@@ -63,7 +68,7 @@ export async function calendarImageProps(
       more: t.raw("more") as string,
     },
   };
-  const words: CalendarImageDialogWords = {
+  const dialogWords: CalendarImageDialogWords = {
     open: t("open"),
     title: t("title"),
     theme: t("theme"),
@@ -77,6 +82,10 @@ export async function calendarImageProps(
     share: t("share"),
     close: t("close"),
     preview: t("preview"),
+    details: t("details"),
+    detailsPlace: t("detailsPlace"),
+    detailsDistance: t("detailsDistance"),
+    detailsElevation: t("detailsElevation"),
   };
-  return { data, words };
+  return { data, words: dialogWords };
 }

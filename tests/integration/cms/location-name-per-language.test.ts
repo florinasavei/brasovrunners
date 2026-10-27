@@ -381,6 +381,73 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
     });
   });
 
+  describe("«Locul, pe scurt» (migration 0181): a word or two per language, beside the name", () => {
+    const shortsOf = async (id: string) => Object.fromEntries((await listTranslationsForEvent(db, id)).map((row) => [row.locale, row.locationShort]));
+
+    it("stores each language's word on its row with the names, under the event's version, and the public read gives each page its own", async () => {
+      const created = await create({ locationShort: " Parc ", locationShortEn: "Park" });
+      expect(await shortsOf(created.id)).toEqual({ ro: "Parc", en: "Park" });
+      await publish(created.id);
+      expect((await findPublishedEventBySlug(db, "ro", "crosul"))?.locationShort).toBe("Parc");
+      expect((await findPublishedEventBySlug(db, "en", "the-cross"))?.locationShort).toBe("Park");
+
+      const before = await listTranslationsForEvent(db, created.id);
+      const eventVersion = (await rowOf(created.id)).version;
+      await saveSettingsOnly(created.id, { locationShort: "Tâmpa", locationShortEn: "Tâmpa" });
+      const after = await listTranslationsForEvent(db, created.id);
+      expect(await shortsOf(created.id)).toEqual({ ro: "Tâmpa", en: "Tâmpa" });
+      expect(after.map((row) => row.version)).toEqual(before.map((row) => row.version));
+      expect((await rowOf(created.id)).version).toBe(eventVersion + 1);
+    });
+
+    it("is none until typed, and a bare save of an older event changes nothing", async () => {
+      const created = await create();
+      expect(await shortsOf(created.id)).toEqual({ ro: null, en: null });
+      await saveSettingsOnly(created.id, { locationName: "Stadionul Tineretului", locationNameEn: "Youth Stadium" });
+      expect(await shortsOf(created.id)).toEqual({ ro: null, en: null });
+      // Typed, then cleared on both sides: none again.
+      await saveSettingsOnly(created.id, { locationShort: "Parc", locationShortEn: "Park" });
+      await saveSettingsOnly(created.id, { locationShort: "", locationShortEn: "" });
+      expect(await shortsOf(created.id)).toEqual({ ro: null, en: null });
+    });
+
+    it("refuses one language alone, naming the empty box (§352), and keeps what was stored", async () => {
+      const created = await create({ locationShort: "Parc", locationShortEn: "Park" });
+      expect(await refusalOf(saveSettingsOnly(created.id, { locationShort: "Tâmpa", locationShortEn: "" }))).toEqual({ code: "VALIDATION_ERROR", fields: ["locationShortEn"] });
+      expect(await refusalOf(create({ locationShort: "", locationShortEn: "Park" }))).toEqual({ code: "VALIDATION_ERROR", fields: ["locationShort"] });
+      expect(await shortsOf(created.id)).toEqual({ ro: "Parc", en: "Park" });
+    });
+
+    it("is withheld from every public read while the place is to be announced, and kept for later", async () => {
+      const created = await create({ locationShort: "Parc", locationShortEn: "Park" });
+      await publish(created.id);
+      await saveSettingsOnly(created.id, { locationToBeAnnounced: true, locationName: "", locationNameEn: "" });
+      expect(await shortsOf(created.id)).toEqual({ ro: "Parc", en: "Park" });
+      expect((await findPublishedEventBySlug(db, "ro", "crosul"))?.locationShort).toBeNull();
+      expect((await findPublishedEventBySlug(db, "en", "the-cross"))?.locationShort).toBeNull();
+    });
+
+    it("travels with a copy, and a save for all dates carries a changed word to every date", async () => {
+      const created = await create({ type: "GROUP_RUN", startsAtWallTime: "2026-10-11T08:00", locationShort: "Parc", locationShortEn: "Park" });
+      await repeatEvent(db, { actor: admin, eventId: created.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-11-01", publish: false }, now: NOW });
+      const dates = await db.select().from(events).where(eq(events.repeatOf, created.id)).orderBy(asc(events.startsAt));
+      expect(dates.length).toBeGreaterThan(1);
+      for (const date of dates) expect(await shortsOf(date.id)).toEqual({ ro: "Parc", en: "Park" });
+
+      const result = await saveSettingsOnly(created.id, { type: "GROUP_RUN", startsAtWallTime: "2026-10-11T08:00", locationShort: "Parc", locationShortEn: "Tractorul" }, "all");
+      expect(result.appliedTo).toBe(dates.length);
+      for (const date of dates) {
+        expect(await shortsOf(date.id)).toEqual({ ro: "Parc", en: "Tractorul" });
+        expect((await rowOf(date.id)).version).toBe(2);
+      }
+      // A save for all dates that changes nothing of the short place leaves a date's own word alone.
+      const [first] = dates;
+      await saveSettingsOnly(first.id, { type: "GROUP_RUN", startsAtWallTime: "2026-10-18T08:00", locationShort: "Poiana", locationShortEn: "Poiana" });
+      await saveSettingsOnly(created.id, { type: "GROUP_RUN", startsAtWallTime: "2026-10-11T08:00", locationShort: "Parc", locationShortEn: "Tractorul", distanceMeters: "8000" }, "all");
+      expect(await shortsOf(first.id)).toEqual({ ro: "Poiana", en: "Poiana" });
+    });
+  });
+
   describe("a series (§130, §350)", () => {
     /** A group run every Sunday, 11 Oct to 8 Nov, made the way the editor makes it. */
     async function series() {

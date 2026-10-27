@@ -1,4 +1,5 @@
 import { LOGO } from "@/theme/brand";
+import type { CalendarImageDetails } from "../domain/calendar-image";
 import type { EventSurface, EventType } from "../domain/event-type";
 import { SURFACE_PATHS, TYPE_PATHS } from "./calendar-image-glyphs";
 
@@ -113,4 +114,15 @@ export function glyphsWidth(count: number, size: number): number {
 export function drawGlyphs(ctx: CanvasRenderingContext2D, paths: readonly string[], x: number, y: number, size: number, color: string): number {
   paths.forEach((path, index) => drawGlyph(ctx, path, x + index * size * 1.2, y, size, color));
   return glyphsWidth(paths.length, size);
+}
+
+/**
+ * The words a layout writes after a date's hour — «Detalii» (the owner, 2026-10-27): the short place, then the
+ * distance, then the climb, each only when the dialog has it on and the date has it. `["Tâmpa", "6 km",
+ * "≈ 350 m D+"]`, or nothing at all; how they are set is each layout's.
+ */
+export function detailWords(entry: CalendarImageDetails, details: { place: boolean; distance: boolean; elevation: boolean }): string[] {
+  return [details.place && entry.place, details.distance && entry.distance, details.elevation && entry.elevation].filter(
+    (word): word is string => typeof word === "string" && word !== "",
+  );
 }

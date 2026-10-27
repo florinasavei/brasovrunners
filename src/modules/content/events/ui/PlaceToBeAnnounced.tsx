@@ -23,6 +23,9 @@ const TICK_NAME = "event.locationToBeAnnounced";
 /** The two boxes of "Punct de întâlnire" (§362), by the names `eventFieldsFrom` reads. */
 const RO_NAME = "event.locationName";
 const EN_NAME = "event.locationNameEn";
+/** The two boxes of «Locul, pe scurt» (migration `0181`), under the names, by the names `eventFieldsFrom` reads. */
+const RO_SHORT = "event.locationShort";
+const EN_SHORT = "event.locationShortEn";
 /** Nothing to listen to: whether the island runs is settled once it has hydrated. */
 const noChanges = () => () => {};
 
@@ -51,8 +54,13 @@ type Props = {
      * a catalogue template, `{place}` filled here with what the English box still says.
      */
     englishLeftBehind: string;
+    /** «Locul, pe scurt»: the one heading over its two boxes, and the line under them. */
+    short: string;
+    shortHelp: string;
   };
   names: { ro: NameBox; en: NameBox };
+  /** «Locul, pe scurt» (migration `0181`), one box per language under the names: a word or two for the month's picture. */
+  shorts: { ro: NameBox; en: NameBox };
   /** The map link's box, rendered by the server form as it always was, under the names. */
   children: ReactNode;
 };
@@ -128,7 +136,7 @@ export default function PlaceToBeAnnounced(props: Props) {
   return <Island key={recall.generation} {...props} initial={initial} />;
 }
 
-function Island({ initial, labels, names, children }: Props & { initial: boolean }) {
+function Island({ initial, labels, names, shorts, children }: Props & { initial: boolean }) {
   const recall = useRecall();
   const [later, setLater] = useState(initial);
   // What each box holds now, for the copy button's state; the boxes themselves stay uncontrolled
@@ -188,8 +196,9 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
     name: string,
     language: string,
     value: NameBox,
-    onChange: (text: string, box: HTMLInputElement | HTMLTextAreaElement) => void,
+    onChange?: (text: string, box: HTMLInputElement | HTMLTextAreaElement) => void,
     inputRef?: typeof enBox,
+    heading = labels.meetingPoint,
   ) => {
     const required = later ? undefined : value.box.required;
     return (
@@ -198,7 +207,7 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
         label={
           <>
             <Box component="span" sx={UNSEEN}>
-              {`${labels.meetingPoint} (`}
+              {`${heading} (`}
             </Box>
             {language}
             <Box component="span" sx={UNSEEN}>
@@ -208,7 +217,7 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
         }
         defaultValue={value.defaultValue}
         fullWidth
-        onChange={(event) => onChange(event.target.value, event.target)}
+        onChange={onChange && ((event) => onChange(event.target.value, event.target))}
         inputRef={inputRef}
         {...value.box}
         required={required}
@@ -290,6 +299,24 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
             </Stack>
             <Typography id="place-names-help" variant="caption" color="text.secondary" component="p" sx={{ mt: 0.5, px: 1.75 }}>
               {later ? `${labels.unpublished} ${labels.locationHelp}` : labels.locationHelp}
+            </Typography>
+          </Box>
+
+          {/* «Locul, pe scurt» (migration `0181`; the owner, 2026-10-27, of the month's picture: «show short
+              location as well like "Tampa", "Parc"»): a word or two per language, right under the names, for
+              the calendar picture (§855) where the full name has no room. Optional, both or neither (§352):
+              the schema refuses one side alone, naming the empty box. Hidden and kept with the names while the
+              place is to be announced, and withheld from the public with them. */}
+          <Box component="fieldset" aria-describedby="place-short-help" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="place-short">
+            <Typography component="legend" variant="subtitle2" sx={{ p: 0, mb: 1.5 }}>
+              {labels.short}
+            </Typography>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>{nameBox(RO_SHORT, labels.ro, shorts.ro, undefined, undefined, labels.short)}</Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>{nameBox(EN_SHORT, labels.en, shorts.en, undefined, undefined, labels.short)}</Box>
+            </Stack>
+            <Typography id="place-short-help" variant="caption" color="text.secondary" component="p" sx={{ mt: 0.5, px: 1.75 }}>
+              {labels.shortHelp}
             </Typography>
           </Box>
 

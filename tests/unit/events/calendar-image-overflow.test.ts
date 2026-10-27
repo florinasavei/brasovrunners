@@ -88,7 +88,7 @@ for (const month of months) {
             const { width, height } = CALENDAR_IMAGE_RATIOS[ratio];
             const failures = assets.flatMap(([state, asset]) => {
               const { ctx, records } = stubCanvas();
-              drawCalendarImage(ctx, month.data, { theme, ratio, layout, legend: true }, fonts, asset);
+              drawCalendarImage(ctx, month.data, { theme, ratio, layout, legend: true, details: { place: true, distance: true, elevation: true } }, fonts, asset);
               return overflowsOf(records, width, height).map((failure) => `${state}: ${failure}`);
             });
             expect(failures.length, [`${month.name} · ${theme} · ${layout} · ${ratio}: ${failures.length} overflow(s)`, ...failures].join("\n  ")).toBe(0);

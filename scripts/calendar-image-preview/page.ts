@@ -30,7 +30,8 @@ window.renderPreview = async (data, themes) => {
         canvas.height = height;
         const ctx = canvas.getContext("2d");
         if (!ctx) continue;
-        drawCalendarImage(ctx, data, { theme, ratio, layout, legend: true }, fonts, { logo });
+        // Every detail on, so a layout that writes them is seen with the most it has to fit.
+        drawCalendarImage(ctx, data, { theme, ratio, layout, legend: true, details: { place: true, distance: true, elevation: true } }, fonts, { logo });
         images[`${theme}-${layout}-${ratio}`] = canvas.toDataURL("image/png");
       }
     }

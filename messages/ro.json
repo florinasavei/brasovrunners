@@ -231,7 +231,11 @@
         "follow": "Urmărește-ne",
         "more": "+{count} altele",
         "at": "ora {time}",
-        "hashtags": "#NoOneLeftBehind #brasovrunners"
+        "hashtags": "#NoOneLeftBehind #brasovrunners",
+        "details": "Detalii",
+        "detailsPlace": "Locul",
+        "detailsDistance": "Distanța",
+        "detailsElevation": "Diferența de nivel"
       }
     },
     "raceWeek": {
@@ -2379,6 +2383,7 @@
         "noteHelp": "Scurt, cel mult 200 de caractere, de ex. „Pe creastă e polei, veniți cu colțari.”"
       },
       "locationHelp": "Locul, cum i-ai spune unui prieten, în română și în engleză. Dacă numele e același, apasă „Același nume și în engleză”.",
+      "locationShortHelp": "Un cuvânt sau două, pentru afișul lunii: „Parc”, „Poiana”. În ambele limbi sau în niciuna.",
       "locationCopyToEnglish": "Același nume și în engleză",
       "locationEnglishLeftBehind": "În engleză scrie tot „{place}”. Dacă s-a mutat locul, schimbă-l și aici.",
       "placeToBeAnnounced": "Locația se anunță mai târziu",
@@ -2428,6 +2433,7 @@
         "slug": "Adresa paginii",
         "excerpt": "Rezumat — apare pe pagină, pe cardul din listă și în distribuiri",
         "locationName": "Punct de întâlnire",
+        "locationShort": "Locul, pe scurt",
         "locationAddress": "Adresă",
         "seoTitle": "Titlu pentru motoarele de căutare",
         "seoDescription": "Descriere pentru motoarele de căutare",

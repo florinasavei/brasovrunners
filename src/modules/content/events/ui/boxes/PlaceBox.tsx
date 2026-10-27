@@ -84,10 +84,17 @@ export default async function PlaceFields({ event, mayEditSettings, languages }:
           copyToEnglish: t("editor.locationCopyToEnglish"),
           // A template: the island fills `{place}` with what the English box still says.
           englishLeftBehind: t.raw("editor.locationEnglishLeftBehind") as string,
+          short: t("editor.fields.locationShort"),
+          shortHelp: t("editor.locationShortHelp"),
         }}
         names={{
           ro: { defaultValue: placeNameInBox(event, languages, "ro"), box: textFieldConstraints(eventInputConstraints("locationName")) },
           en: { defaultValue: placeNameInBox(event, languages, "en"), box: textFieldConstraints(eventInputConstraints("locationNameEn")) },
+        }}
+        // «Locul, pe scurt» (migration `0181`): each language's own word, or "" — nothing is borrowed across languages.
+        shorts={{
+          ro: { defaultValue: placeShortInBox(languages, "ro"), box: textFieldConstraints(eventInputConstraints("locationShort")) },
+          en: { defaultValue: placeShortInBox(languages, "en"), box: textFieldConstraints(eventInputConstraints("locationShortEn")) },
         }}
       >
         {/* Where to meet, as one pasted link (§61). */}
@@ -171,4 +178,9 @@ async function weatherParts(event: BoxProps["event"], languages: readonly Langua
 export function placeNameInBox(event: BoxProps["event"], languages: readonly LanguageEntry[], locale: "ro" | "en"): string {
   const own = languages.find((entry) => entry.translation.locale === locale)?.translation.locationName;
   return event ? placeInBox(event, own) : "";
+}
+
+/** What one language's «Locul, pe scurt» box opens with (migration `0181`): that language's own word, or "". */
+export function placeShortInBox(languages: readonly LanguageEntry[], locale: "ro" | "en"): string {
+  return languages.find((entry) => entry.translation.locale === locale)?.translation.locationShort ?? "";
 }

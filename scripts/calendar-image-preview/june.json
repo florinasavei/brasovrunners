@@ -12,7 +12,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "8 km",
+   "elevation": null
   },
   {
    "day": 3,
@@ -22,7 +25,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": "6 km",
+   "elevation": "≈ 350 m D+"
   },
   {
    "day": 5,
@@ -32,7 +38,10 @@
    "type": "GROUP_RUN",
    "special": true,
    "cancelled": false,
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "5 km",
+   "elevation": null
   },
   {
    "day": 7,
@@ -42,7 +51,10 @@
    "type": "GEAR_TEST",
    "special": true,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": null,
+   "elevation": null
   },
   {
    "day": 8,
@@ -52,7 +64,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "8 km",
+   "elevation": null
   },
   {
    "day": 10,
@@ -62,7 +77,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": "6 km",
+   "elevation": "≈ 350 m D+"
   },
   {
    "day": 15,
@@ -72,7 +90,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "8 km",
+   "elevation": null
   },
   {
    "day": 17,
@@ -82,7 +103,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": "6 km",
+   "elevation": "≈ 350 m D+"
   },
   {
    "day": 22,
@@ -92,7 +116,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "8 km",
+   "elevation": null
   },
   {
    "day": 24,
@@ -102,7 +129,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": "6 km",
+   "elevation": "≈ 350 m D+"
   },
   {
    "day": 29,
@@ -112,7 +142,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "8 km",
+   "elevation": null
   }
  ],
  "recurring": [
@@ -121,14 +154,20 @@
    "sentence": "În fiecare luni, la 19:30",
    "tone": "weekly",
    "type": "GROUP_RUN",
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "8 km",
+   "elevation": null
   },
   {
    "title": "Running up that hilly Tâmpa with Brașov Runners",
    "sentence": "În fiecare miercuri, la 19:00",
    "tone": "weekly",
    "type": "GROUP_RUN",
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": "6 km",
+   "elevation": "≈ 350 m D+"
   }
  ],
  "specials": [
@@ -137,14 +176,20 @@
    "title": "Girls only shake out run",
    "tone": "special",
    "type": "GROUP_RUN",
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "5 km",
+   "elevation": null
   },
   {
    "day": 7,
    "title": "Dynafit shoe testing x Coffee social event",
    "tone": "other",
    "type": "GEAR_TEST",
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": null,
+   "elevation": null
   }
  ],
  "socials": [

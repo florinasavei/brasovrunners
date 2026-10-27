@@ -54,6 +54,11 @@ export type CalendarImageDialogWords = {
   share: string;
   close: string;
   preview: string;
+  /** «Detalii» and its three ticks: the short place, the distance, the climb. */
+  details: string;
+  detailsPlace: string;
+  detailsDistance: string;
+  detailsElevation: string;
 };
 
 const RATIOS = Object.keys(CALENDAR_IMAGE_RATIOS) as CalendarImageRatio[];
@@ -64,6 +69,9 @@ const RATIO_ICON = { portrait: CropPortraitIcon, square: CropSquareIcon, story: 
 /** The layouts: the series in the weekday columns, chips in the cells, the key in a panel below. */
 const LAYOUT_ICON = { heads: ViewWeekIcon, cells: GridViewIcon, formats: ViewAgendaIcon } as const;
 const CHOICE_SX = { minHeight: 44, gap: 0.5, textTransform: "none" } as const;
+/** «Detalii»'s three ticks, in the order the words are drawn (`detailWords`), each named by its catalogue word. */
+const DETAIL_CHOICES = ["place", "distance", "elevation"] as const;
+const DETAIL_WORD = { place: "detailsPlace", distance: "detailsDistance", elevation: "detailsElevation" } as const;
 
 /**
  * The picture's options and its preview (§855): the theme, the shape, the layout and the legends;
@@ -81,7 +89,7 @@ export default function CalendarImageDialog({
   data: CalendarImageData;
   words: CalendarImageDialogWords;
 }) {
-  const [options, setOptions] = useState<CalendarImageOptions>({ theme: "poster", ratio: "portrait", layout: "heads", legend: true });
+  const [options, setOptions] = useState<CalendarImageOptions>({ theme: "poster", ratio: "portrait", layout: "heads", legend: true, details: { place: true, distance: true, elevation: true } });
   // Whether the browser can hand a PNG to an app (a phone, mostly). The dialog mounts only after the press, in the browser.
   const [canShare] = useState(() => {
     const probe = new File([new Blob()], "probe.png", { type: "image/png" });
@@ -253,6 +261,28 @@ export default function CalendarImageDialog({
               control={<Checkbox checked={options.legend} onChange={(event) => setOptions((current) => ({ ...current, legend: event.target.checked }))} />}
               label={words.legend}
             />
+            {/* «Detalii» (the owner, 2026-10-27): which of a date's details the layouts write after its hour — the
+                short place («Locul, pe scurt», migration `0181`), the distance, the climb. All on to begin with. */}
+            <div role="group" aria-labelledby="calendar-image-details">
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }} id="calendar-image-details">
+                {words.details}
+              </Typography>
+              <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 1 }}>
+                {DETAIL_CHOICES.map((detail) => (
+                  <FormControlLabel
+                    key={detail}
+                    control={
+                      <Checkbox
+                        checked={options.details[detail]}
+                        onChange={(event) => setOptions((current) => ({ ...current, details: { ...current.details, [detail]: event.target.checked } }))}
+                        data-testid={`calendar-image-detail-${detail}`}
+                      />
+                    }
+                    label={words[DETAIL_WORD[detail]]}
+                  />
+                ))}
+              </Stack>
+            </div>
           </Stack>
         </Stack>
       </DialogContent>
