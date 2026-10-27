@@ -194,6 +194,35 @@
           "hintPhone": "Pe Android, aplicația Google Calendar nu adaugă un calendar după adresă: folosește calendar.google.com în browser, „Din URL”.",
           "hintOutlook": "Aplicația Outlook de pe telefon nu adaugă un calendar după adresă. Abonează-te o dată în browser, pe outlook.com (sau pe Microsoft 365, la un cont de serviciu sau de școală): apoi apare și în aplicație. Dacă fereastra nu se deschide, în Outlook pe web adaugă un calendar, alege abonarea de pe web și lipește adresa de mai sus."
         }
+      },
+      "image": {
+        "open": "Salvează ca imagine",
+        "title": "Calendarul lunii ca imagine",
+        "theme": "Tema",
+        "themes": {
+          "club": "Clubul",
+          "light": "Luminos",
+          "dark": "Întunecat",
+          "season": "Sezonul lunii"
+        },
+        "ratio": "Format",
+        "ratios": {
+          "portrait": "Instagram 4:5",
+          "square": "Pătrat 1:1",
+          "story": "Story 9:16",
+          "landscape": "Facebook 16:9"
+        },
+        "legend": "Arată evenimentele recurente și speciale",
+        "download": "Descarcă PNG",
+        "share": "Distribuie",
+        "close": "Închide",
+        "preview": "Previzualizarea imaginii",
+        "heading": "Evenimente",
+        "recurringTitle": "Evenimente recurente",
+        "specialTitle": "Evenimente speciale",
+        "cancelled": "Anulat",
+        "follow": "Urmărește-ne",
+        "more": "+{count} altele"
       }
     },
     "raceWeek": {

@@ -194,6 +194,35 @@
           "hintPhone": "On Android, the Google Calendar app cannot add a calendar by its address: use calendar.google.com in a browser, “From URL”.",
           "hintOutlook": "The Outlook phone app cannot add a calendar by its address. Subscribe once in a browser, on outlook.com (or on Microsoft 365 for a work or school account): it then shows in the app too. If the window does not open, in Outlook on the web add a calendar, choose “Subscribe from web” and paste the address above."
         }
+      },
+      "image": {
+        "open": "Save as picture",
+        "title": "The month's calendar as a picture",
+        "theme": "Theme",
+        "themes": {
+          "club": "The club",
+          "light": "Light",
+          "dark": "Dark",
+          "season": "The month's season"
+        },
+        "ratio": "Format",
+        "ratios": {
+          "portrait": "Instagram 4:5",
+          "square": "Square 1:1",
+          "story": "Story 9:16",
+          "landscape": "Facebook 16:9"
+        },
+        "legend": "Show the recurring and special events",
+        "download": "Download PNG",
+        "share": "Share",
+        "close": "Close",
+        "preview": "Preview of the picture",
+        "heading": "Events",
+        "recurringTitle": "Recurring events",
+        "specialTitle": "Special events",
+        "cancelled": "Cancelled",
+        "follow": "Follow us",
+        "more": "+{count} more"
       }
     },
     "raceWeek": {
