@@ -115,7 +115,9 @@ yarn flags:sync          re-copy the country flags into public/flags/ (runs on i
 yarn db:reset:local      drop both schemas, migrate and seed from nothing
 yarn release             versioned archive and share copies under dist/
 yarn calendar:preview    «Salvează ca imagine» drawn without a server: three sample months (scripts/calendar-image-preview/),
-                         every format, to dist/calendar-preview/; --month june|busy|sparse, --theme poster,club|all
+                         every format, to dist/calendar-preview/; --month june|busy|sparse, --theme poster,club|all.
+                         The same months are drawn on a stub canvas by tests/unit/events/calendar-image-overflow.test.ts,
+                         which fails on any text across its box's edge, over another text, or off the picture
 ```
 
 `yarn check` is the single gate, and CI runs it (its two halves on five runners) on every pull request. The pre-commit
