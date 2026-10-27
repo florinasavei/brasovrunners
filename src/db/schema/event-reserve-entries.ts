@@ -11,7 +11,7 @@ export const RESERVE_EMAIL_MAX = 254;
 export const RESERVE_NOTE_MAX = REGISTRATION_NOTE_MAX;
 
 /**
- * «Lista internă de așteptare» (§NNN; the owner, 2026-10-26: «aș vrea să pot pune manual oameni pe lista
+ * «Lista internă de așteptare» (§854; the owner, 2026-10-26: «aș vrea să pot pune manual oameni pe lista
  * de așteptare, dar fără să le zic sau să le trimit vreun email … după vreau să-i pot pune și pe lista
  * oficială, practic ei au cerut prin formularul de contact … și e important să putem lăsa note interne»).
  *

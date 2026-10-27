@@ -678,7 +678,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
       throw error;
     }
   }
-  // The row this entry wrote, for «Trece pe lista oficială» (§NNN), which carries the line's note onto it.
+  // The row this entry wrote, for «Trece pe lista oficială» (§854), which carries the line's note onto it.
   return { registrationId: created?.id ?? null };
 }
 

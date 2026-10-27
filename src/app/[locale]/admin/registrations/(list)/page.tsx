@@ -1330,7 +1330,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       )}
 
       {/*
-        «Lista internă de așteptare» (§NNN): people who asked to be kept in mind for this event, told nothing,
+        «Lista internă de așteptare» (§854): people who asked to be kept in mind for this event, told nothing,
         for the roles that keep internal notes. Only on a list about one event: a line is about one.
       */}
       {filters.eventId && canKeepRegistrationNotes(actor.role) && (

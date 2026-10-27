@@ -156,7 +156,7 @@ describe("§708 the header while «Tema v2» is on", () => {
     for (const link of links) expect(link).toMatch(/data-network="(instagram|facebook|strava|youtube)"/);
   });
 
-  it("§722 draws «Urmărește-ne» with Instagram, Facebook, Strava and YouTube (§NNN), in that order, after the nav — the row's last item", async () => {
+  it("§722 draws «Urmărește-ne» with Instagram, Facebook, Strava and YouTube (§854), in that order, after the nav — the row's last item", async () => {
     state.look = { on: true };
     const on = await header();
     const navEnd = on.indexOf("</nav>");

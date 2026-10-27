@@ -15,7 +15,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Lista internă de așteptare» (§NNN; BR-REQ-037-05, BR-REQ-060-01) — the owner, 2026-10-26: people who asked
+ * «Lista internă de așteptare» (§854; BR-REQ-037-05, BR-REQ-060-01) — the owner, 2026-10-26: people who asked
  * through the contact form, put on a waiting list by hand without being told or emailed, with internal notes,
  * and moved to the official list later. Read from a real database (PGlite, the same migrations as Neon).
  */

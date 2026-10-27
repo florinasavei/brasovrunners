@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.80-2026-10-27
+
+- **«Lista internă de așteptare» on an event's registrations list** — the organizers write down people who asked for a place (say through the contact form), with an internal note; nobody is registered, counted or emailed, until «Trece pe lista oficială» opens the ordinary staff entry prefilled and the note follows the registration. §854.
 ## BR-V3.79-2026-10-26
 
 - **`yarn ship` no longer merges before CI has registered** — after the landing push it waits for the checks GitHub requires to appear, named «(not registered yet)», instead of judging a green reading of Vercel's status alone and being refused by the branch policy. §853.

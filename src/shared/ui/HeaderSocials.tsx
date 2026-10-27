@@ -8,7 +8,7 @@ import type { SocialNetwork } from "./SocialIcon";
 
 /**
  * The header's order of the club's profiles (§722): the owner's, «Insta, Facebook, Strava» — not the
- * footer's, which keeps its own — and YouTube after Strava (§NNN; the owner, 2026-10-27: «pune-l și pe
+ * footer's, which keeps its own — and YouTube after Strava (§854; the owner, 2026-10-27: «pune-l și pe
  * asta în header și footer după Strava»). A network the environment leaves unset is simply not drawn.
  */
 export const HEADER_SOCIAL_ORDER: readonly SocialNetwork[] = ["instagram", "facebook", "strava", "youtube"];

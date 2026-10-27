@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.80` | an internal waiting list per event, told nothing, moved to the official list by hand (§854) |
 | `BR-V3.79` | ship waits for the required checks to register (§853) |
 | `BR-V3.78` | the desk's scanner remembers the camera by its label (§852) |
 | `BR-V3.77` | the guide names the card «Clasament» sits in (§851) |

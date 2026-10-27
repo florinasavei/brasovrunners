@@ -226,7 +226,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's one doo
       ["Facebook", at('aria-label="Facebook"')],
       ["Instagram", at('aria-label="Instagram"')],
       ["Strava", at('aria-label="Strava"')],
-      // The club's channel, after Strava (§NNN).
+      // The club's channel, after Strava (§854).
       ["YouTube", at('aria-label="YouTube"')],
       ["the languages", at('aria-label="Limbă"')],
     ];

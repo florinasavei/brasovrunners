@@ -11,7 +11,7 @@ import { flash } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
- * The three presses of «Lista internă de așteptare» (§NNN) on an event's registrations list: «Adaugă»,
+ * The three presses of «Lista internă de așteptare» (§854) on an event's registrations list: «Adaugă»,
  * «Salvează nota» and «Șterge». The coarse gate here (`canKeepRegistrationNotes`) and the service's own
  * (BR-REQ-060-01). A refusal keeps what was typed (§315); a success returns to the panel, open. Nothing
  * typed goes in the URL or the flash, and nothing is ever sent to the person.

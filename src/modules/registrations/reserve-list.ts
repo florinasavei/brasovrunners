@@ -11,7 +11,7 @@ import { isUuid } from "@/shared/ids";
 import { addRegistrationNote } from "./notes";
 
 /**
- * «Lista internă de așteptare» (§NNN): the people who asked — usually through the contact form — to be kept
+ * «Lista internă de așteptare» (§854): the people who asked — usually through the contact form — to be kept
  * in mind for one event, written down by the organizers and told nothing. Not a registration: nothing here
  * holds a place, stands in the queue, sends an email or reaches a count; the allocator never reads it.
  * «Trece pe lista oficială» opens the ordinary staff entry prefilled (`createRegistrationByStaff`), and
