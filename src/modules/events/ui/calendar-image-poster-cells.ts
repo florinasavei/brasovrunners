@@ -1,4 +1,4 @@
-import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
+import type { CalendarImagePalette } from "@/theme/brand";
 import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
 import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
 import { type Box, CALENDAR_IMAGE_RATIOS, type Ctx, drawGlyphs, eventGlyphs, fillSpaced, fitText, glyphsWidth, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
@@ -71,9 +71,8 @@ function drawRidge(ctx: CanvasRenderingContext2D, box: Box, color: string, far: 
  *   else uses (or under a story's tall grid), every special date, so a quiet month still says what is coming;
  * - «URMĂREȘTE-NE!» with the club's networks and its tags on the blue foot.
  */
-export function drawPosterCells(ctx: CanvasRenderingContext2D, data: CalendarImageData, options: CalendarImageOptions, fonts: CalendarImageFonts, assets: CalendarImageAssets): void {
+export function drawPosterCells(ctx: CanvasRenderingContext2D, data: CalendarImageData, options: CalendarImageOptions, fonts: CalendarImageFonts, assets: CalendarImageAssets, palette: CalendarImagePalette): void {
   const { width: W, height: H } = CALENDAR_IMAGE_RATIOS[options.ratio];
-  const palette = CALENDAR_IMAGE_THEMES.poster;
   const u = Math.min(W, H) / 1080;
   /** The smallest words the poster draws: what a phone still reads in a feed. */
   const MIN = 14 * u;
@@ -91,7 +90,11 @@ export function drawPosterCells(ctx: CanvasRenderingContext2D, data: CalendarIma
   };
   ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
-  ctx.fillStyle = palette.background[0];
+  // The page: the palette's two stops, top to bottom (one colour on «Afiș»).
+  const page = ctx.createLinearGradient(0, 0, 0, H);
+  page.addColorStop(0, palette.background[0]);
+  page.addColorStop(1, palette.background[1]);
+  ctx.fillStyle = page;
   ctx.fillRect(0, 0, W, H);
 
   // ── The band: the logo on the left; «EVENIMENTE» over the month and its year, on the right.

@@ -5,7 +5,21 @@ import { describe, expect, it } from "vitest";
 import messages from "@/../messages/ro.json";
 import en from "@/../messages/en.json";
 import { contrastRatio, MAX_CARD_STEP, relativeLuminance } from "@/modules/appearance/domain/tint-contrast";
-import { CLUB_NAME, COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, LOOK_ACCENT, SITE_TINT, SURFACE_GRADIENT, TEAM_CANVAS, WORDMARK } from "@/theme/brand";
+import {
+  CALENDAR_IMAGE_THEMES,
+  type CalendarImagePalette,
+  CLUB_NAME,
+  COLOR,
+  COLOR_DARK,
+  FONT,
+  GRADIENT,
+  LOGO,
+  LOOK_ACCENT,
+  SITE_TINT,
+  SURFACE_GRADIENT,
+  TEAM_CANVAS,
+  WORDMARK,
+} from "@/theme/brand";
 import {
   ACCENT_PAIRS,
   accentPairsOf,
@@ -372,6 +386,60 @@ describe("BR-REQ-070-02 every site background preset is readable", () => {
     expect(SITE_TINT.faintBlue).toBe(overWhite(0.04));
     expect(SITE_TINT.lightBlue).toBe(overWhite(0.08));
   });
+});
+
+/**
+ * BR-REQ-070-02 criterion 4, for «Salvează ca imagine» (§855): the themes are palettes of the three layouts,
+ * so every palette has to carry the pairs the layouts draw — the words on the band and on the legend's pill,
+ * the band's colour as words on a cell, the hours and the weekdays, the numbers and the titles on a day
+ * whatever its tint, each series' words on its chip and its colour as the words of a cancelled chip. One
+ * list, read against every palette, «Sezon»'s four included, so a colour changed in `brand.ts` fails here
+ * rather than on somebody's feed. The hairline is only seen, so it has a visibility floor, not a text ratio.
+ */
+describe("BR-REQ-070-02 the calendar picture's palettes are readable in every layout", () => {
+  const PAIRS: ReadonlyArray<[string, (palette: CalendarImagePalette) => string, (palette: CalendarImagePalette) => string]> = [
+    ["the band's words on the band, the foot, a series' strip and the weekly chips", (p) => p.bandInk, (p) => p.band],
+    ["the «Evenimente speciale» pill's words on its fill", (p) => p.bandInk, (p) => p.special[1]],
+    ["the band's words on a social series' strip", (p) => p.bandInk, (p) => p.other[1]],
+    ["the band's colour as words on a cell (a series' outlined strip, a weekly date's hour)", (p) => p.band, (p) => p.cell],
+    ["the weekdays and the legend's notes on the muted row and panels", (p) => p.title, (p) => p.cellMuted],
+    ["the hours on a cell", (p) => p.title, (p) => p.cell],
+    ["the hours on a special day", (p) => p.title, (p) => p.special[0]],
+    ["the hours on a social day", (p) => p.title, (p) => p.other[0]],
+    ["the numbers and the titles on a cell", (p) => p.cellInk, (p) => p.cell],
+    ["the numbers and the titles on a special day", (p) => p.cellInk, (p) => p.special[0]],
+    ["the numbers and the titles on a social day", (p) => p.cellInk, (p) => p.other[0]],
+    ["the legend's names on the muted panels", (p) => p.cellInk, (p) => p.cellMuted],
+    ["«Anulat», a special date's glyphs and its outlined chip on a cell", (p) => p.special[1], (p) => p.cell],
+    ["a social date's glyphs and its outlined chip on a cell", (p) => p.other[1], (p) => p.cell],
+    ["a special date's glyphs and the agenda's day number on the special tint", (p) => p.special[1], (p) => p.special[0]],
+    ["a social date's glyphs and the agenda's day number on the social tint", (p) => p.other[1], (p) => p.other[0]],
+  ];
+
+  for (const [name, palette] of Object.entries(CALENDAR_IMAGE_THEMES)) {
+    describe(`the «${name}» palette`, () => {
+      for (const [label, foreground, background] of PAIRS) {
+        it(`clears AA for ${label}`, () => {
+          expect(contrastRatio(foreground(palette), background(palette))).toBeGreaterThanOrEqual(4.5);
+        });
+      }
+
+      it("has four series, each readable on its chip and as the words of its cancelled chip on a cell", () => {
+        expect(palette.series).toHaveLength(4);
+        for (const [fill, ink] of palette.series) {
+          expect(contrastRatio(ink, fill)).toBeGreaterThanOrEqual(4.5);
+          expect(contrastRatio(fill, palette.cell)).toBeGreaterThanOrEqual(4.5);
+        }
+      });
+
+      it("keeps the grid's hairline visible on a cell, and every colour in six-digit hex", () => {
+        // The site's own hairline on a card (`COLOR.line` on `COLOR.surface`) is 1.32:1; the poster's pale blue 1.49:1.
+        expect(contrastRatio(palette.line, palette.cell)).toBeGreaterThanOrEqual(1.25);
+        const colours = [...palette.background, palette.band, palette.bandInk, palette.cell, palette.cellInk, palette.cellMuted, palette.line, palette.title, ...palette.weekly, ...palette.special, ...palette.other, ...palette.series.flat()];
+        for (const colour of colours) expect(colour).toMatch(/^#[0-9a-f]{6}$/);
+      });
+    });
+  }
 });
 
 describe("the brand assets the theme points at exist", () => {

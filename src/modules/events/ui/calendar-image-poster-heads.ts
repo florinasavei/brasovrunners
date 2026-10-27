@@ -1,4 +1,4 @@
-import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
+import type { CalendarImagePalette } from "@/theme/brand";
 import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
 import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
 import { type Box, CALENDAR_IMAGE_RATIOS, type Ctx, drawGlyphs, eventGlyphs, fillSpaced, fitText, glyphsWidth, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
@@ -178,9 +178,8 @@ type Placed = { item: LegendItem; x: number; y: number; w: number; h: number; li
  * its tags on a blue band at the foot. Every size follows the picture's or the day's, so the four formats,
  * five- and six-week months, and a month of two dates or of three a day are one drawing.
  */
-export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarImageData, options: CalendarImageOptions, fonts: CalendarImageFonts, assets: CalendarImageAssets): void {
+export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarImageData, options: CalendarImageOptions, fonts: CalendarImageFonts, assets: CalendarImageAssets, palette: CalendarImagePalette): void {
   const { width: W, height: H } = CALENDAR_IMAGE_RATIOS[options.ratio];
-  const palette = CALENDAR_IMAGE_THEMES.poster;
   const unit = Math.min(W, H) / 1080;
   const pad = 32 * unit;
   const gap = 14 * unit;
@@ -197,7 +196,11 @@ export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarIma
   const inkOf = (entry: CalendarImageEntry) => (tintOf(entry) ? palette[tintOf(entry) ?? "special"][1] : palette.title);
   ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
-  ctx.fillStyle = palette.background[0];
+  // The page: the palette's two stops, top to bottom (one colour on «Afiș»).
+  const page = ctx.createLinearGradient(0, 0, 0, H);
+  page.addColorStop(0, palette.background[0]);
+  page.addColorStop(1, palette.background[1]);
+  ctx.fillStyle = page;
   ctx.fillRect(0, 0, W, H);
 
   // The band, one line: the club's real logo at the left (or, until it loads, the mountains over the
@@ -941,6 +944,9 @@ export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarIma
   if (legend?.strip) {
     const strip = legend.strip;
     roundRect(ctx, strip.x, strip.y, strip.w, strip.h, 18 * unit);
+    // A cell's colour under the words, so a palette whose page is not the cell's colour keeps them readable.
+    ctx.fillStyle = palette.cell;
+    ctx.fill();
     ctx.strokeStyle = palette.line;
     ctx.lineWidth = 3 * unit;
     ctx.stroke();

@@ -1,11 +1,12 @@
-// yarn calendar:preview [--month june|busy|sparse|all] [--theme poster|club|light|dark|season|all]
+// yarn calendar:preview [--month june|busy|sparse|fortnight|empty|all] [--theme poster|club|light|dark|season|all]
 //
 // «Salvează ca imagine» (§855) drawn without a server or a database: the page's own drawing code is bundled,
-// served beside `public/` (the logo, the poster's fonts) and the site's fonts, and every month, theme and format
-// asked is written to dist/calendar-preview/<month>/<theme>-<format>.png («Afiș» once per layout,
-// poster-<layout>-<format>.png). For changing the picture: draw, look
-// at the files, change, draw again. The months are scripts/calendar-image-preview/*.json — June 2026 as the
-// club's own poster had it, a busy six-week August in English, a November with two dates.
+// served beside `public/` (the logo, the poster's fonts) and the site's fonts, and every month asked is written
+// in every theme asked («Afiș» alone unless told), each in its three layouts and four formats, to
+// dist/calendar-preview/<month>/<theme>-<layout>-<format>.png. For changing the picture: draw, look at the
+// files, change, draw again. The months are scripts/calendar-image-preview/*.json — June 2026 as the club's
+// own poster had it, a busy six-week August in English, a November with two dates, a September with a series on
+// two weekdays, a fortnightly one, a 69-character title and three dates on one day, and an empty October.
 import { createRequire } from "node:module";
 import fs from "node:fs";
 import http from "node:http";

@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
 import type { CalendarImageData, CalendarImageEntry } from "@/modules/events/domain/calendar-image";
 import { calendarImageRows } from "@/modules/events/domain/calendar-image-rows";
 import { eventGlyphs, fitText, glyphsWidth, wrapText } from "@/modules/events/ui/calendar-image-canvas";
 import { SPECIAL_PATH, SURFACE_PATHS, TYPE_PATHS } from "@/modules/events/ui/calendar-image-glyphs";
-import { paletteFor } from "@/modules/events/ui/calendar-image-draw";
+import { CALENDAR_IMAGE_LAYOUT_CHOICES, CALENDAR_IMAGE_THEME_CHOICES, drawCalendarImage, paletteFor } from "@/modules/events/ui/calendar-image-draw";
+import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
 import { breakLines } from "@/modules/events/ui/calendar-image-poster-cells";
 import { wrapWords } from "@/modules/events/ui/calendar-image-poster-formats";
 import { posterPlan, weekdayColumn, wrapWhole } from "@/modules/events/ui/calendar-image-poster-heads";
@@ -184,6 +185,74 @@ describe("«Sezonul lunii»", () => {
   it("draws each month in its season's palette", () => {
     expect([1, 3, 6, 9, 12].map((month) => paletteFor("season", month))).toEqual(["winter", "spring", "summer", "autumn", "winter"]);
     expect(paletteFor("dark", 6)).toBe("dark");
+  });
+});
+
+describe("the themes are palettes of the layouts", () => {
+  /** A context that measures nine units a character, remembers the page's gradient and the words, and draws nothing. */
+  function stubContext() {
+    const stops: string[] = [];
+    const texts: string[] = [];
+    const state: Record<string | symbol, unknown> = {};
+    const nothing = () => undefined;
+    const ctx = new Proxy({} as CanvasRenderingContext2D, {
+      get: (_, key) => {
+        if (key === "measureText") return (text: string) => ({ width: [...text].length * 9 });
+        if (key === "fillText") return (text: string) => void texts.push(text);
+        if (key === "createLinearGradient") return () => ({ addColorStop: (_offset: number, colour: string) => void stops.push(colour) });
+        return key in state ? state[key] : nothing;
+      },
+      set: (_, key, value) => {
+        state[key] = value;
+        return true;
+      },
+    });
+    return { ctx, stops, texts };
+  }
+  const entry = (day: number, title: string, overrides: Partial<CalendarImageEntry> = {}): CalendarImageEntry => ({ day, time: "19:30", title, tone: "weekly", type: "GROUP_RUN", surface: "ASPHALT", special: false, cancelled: false, ...overrides });
+  const data: CalendarImageData = {
+    month: { year: 2026, month: 6 },
+    entries: [entry(1, "Happy Monday"), entry(8, "Happy Monday"), entry(5, "Girls only shake out run", { tone: "special", special: true, time: "18:00" }), entry(7, "Coffee social", { tone: "other", type: "COFFEE", surface: null, time: "10:00" })],
+    recurring: [{ title: "Happy Monday", sentence: "În fiecare luni, la 19:30", tone: "weekly", type: "GROUP_RUN", surface: "ASPHALT" }],
+    specials: [
+      { day: 5, title: "Girls only shake out run", tone: "special", type: "GROUP_RUN", surface: "ASPHALT" },
+      { day: 7, title: "Coffee social", tone: "other", type: "COFFEE", surface: null },
+    ],
+    socials: ["instagram"],
+    host: "example.test",
+    clubName: "Brașov Runners",
+    words: {
+      heading: "Evenimente",
+      monthTitle: "iunie 2026",
+      monthName: "iunie",
+      weekdays: ["lun.", "mar.", "mie.", "joi", "vin.", "sâm.", "dum."],
+      weekdaysLong: ["luni", "marți", "miercuri", "joi", "vineri", "sâmbătă", "duminică"],
+      at: "ora {time}",
+      hashtags: "#brasovrunners",
+      recurringTitle: "Evenimente recurente",
+      specialTitle: "Evenimente speciale",
+      cancelled: "Anulat",
+      follow: "Urmărește-ne",
+      more: "+{count} altele",
+    },
+  };
+  const fonts = { body: "sans-serif", display: "sans-serif", script: "cursive", poster: "Poppins" };
+
+  it("draws every theme in every layout, on the page the theme's palette names", () => {
+    // The layouts draw the mountains and the glyphs as paths, which Node does not have.
+    vi.stubGlobal("Path2D", class {});
+    try {
+      for (const theme of CALENDAR_IMAGE_THEME_CHOICES) {
+        for (const layout of CALENDAR_IMAGE_LAYOUT_CHOICES) {
+          const { ctx, stops, texts } = stubContext();
+          drawCalendarImage(ctx, data, { theme, ratio: "portrait", layout, legend: true }, fonts);
+          expect(stops.slice(0, 2), `${theme} in ${layout}`).toEqual([...CALENDAR_IMAGE_THEMES[paletteFor(theme, 6)].background]);
+          expect(texts, `${theme} in ${layout}`).toContain("IUNIE");
+        }
+      }
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

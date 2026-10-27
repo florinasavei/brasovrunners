@@ -114,8 +114,9 @@ yarn db:seed             reset and reseed sample events
 yarn flags:sync          re-copy the country flags into public/flags/ (runs on install)
 yarn db:reset:local      drop both schemas, migrate and seed from nothing
 yarn release             versioned archive and share copies under dist/
-yarn calendar:preview    «Salvează ca imagine» drawn without a server: three sample months (scripts/calendar-image-preview/),
-                         every format, to dist/calendar-preview/; --month june|busy|sparse, --theme poster,club|all
+yarn calendar:preview    «Salvează ca imagine» drawn without a server: five sample months (scripts/calendar-image-preview/),
+                         every theme asked in its three layouts and four formats, to dist/calendar-preview/<month>/<theme>-<layout>-<format>.png;
+                         --month june|busy|sparse|fortnight|empty|all, --theme poster|club,dark|all («Afiș» alone by default)
 ```
 
 `yarn check` is the single gate, and CI runs it (its two halves on five runners) on every pull request. The pre-commit

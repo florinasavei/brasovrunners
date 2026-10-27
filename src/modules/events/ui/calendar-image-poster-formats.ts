@@ -1,4 +1,4 @@
-import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
+import type { CalendarImagePalette } from "@/theme/brand";
 import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
 import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
 import { type Box, CALENDAR_IMAGE_RATIOS, type CalendarImageRatio, type Ctx, drawGlyph, drawGlyphs, eventGlyphs, fitText, glyphsWidth, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
@@ -106,9 +106,8 @@ const POSTER_SHAPES: Record<CalendarImageRatio, { soft: number; hard: number; ag
  * Words are at least 14 pixels on a 1080-wide picture (read at a phone's width), more on 16:9; a title is
  * wrapped, then made smaller, never cut while it can fit.
  */
-export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarImageData, options: CalendarImageOptions, fonts: CalendarImageFonts, assets: CalendarImageAssets): void {
+export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarImageData, options: CalendarImageOptions, fonts: CalendarImageFonts, assets: CalendarImageAssets, palette: CalendarImagePalette): void {
   const { width: W, height: H } = CALENDAR_IMAGE_RATIOS[options.ratio];
-  const palette = CALENDAR_IMAGE_THEMES.poster;
   const shape = POSTER_SHAPES[options.ratio];
   const wide = options.ratio === "landscape";
   // Lengths follow the short side; words follow the width, since the picture is read at a phone's width —
@@ -133,7 +132,11 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
   const inkOf = (mark: CalendarTone) => (mark === "weekly" ? palette.band : palette[mark][1]);
   ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
-  ctx.fillStyle = palette.background[0];
+  // The page: the palette's two stops, top to bottom (one colour on «Afiș»).
+  const page = ctx.createLinearGradient(0, 0, 0, H);
+  page.addColorStop(0, palette.background[0]);
+  page.addColorStop(1, palette.background[1]);
+  ctx.fillStyle = page;
   ctx.fillRect(0, 0, W, H);
 
   // The dates: a weekly one is known by its series (the same type and title, as `groupSeries` tells them).
@@ -669,6 +672,9 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
   const drawAgenda = (agenda: Agenda, box: Box, frame = true) => {
     if (frame) {
       roundRect(ctx, box.x, box.y, box.w, box.h, 18 * v);
+      // A cell's colour under the words, so a palette whose page is not the cell's colour keeps them readable.
+      ctx.fillStyle = palette.cell;
+      ctx.fill();
       ctx.strokeStyle = palette.line;
       ctx.lineWidth = 3 * v;
       ctx.stroke();
