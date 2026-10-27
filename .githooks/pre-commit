@@ -1,8 +1,8 @@
 #!/bin/sh
 # Brasov Runners pre-commit hook.
 #
-# Two guards, in this order: the branch, then `yarn check`. The branch comes first
-# because it costs nothing and the other one costs a minute.
+# Two guards, in this order: the branch, then the fast checks. The branch comes first
+# because it costs nothing.
 #
 # Installed by `yarn setup`, which sets core.hooksPath to .githooks.
 # Emergency bypass: git commit --no-verify. Fix before pushing; CI still blocks the merge.
@@ -45,15 +45,29 @@ case "$branch" in
 		;;
 esac
 
-# --- 2. The same command CI runs ------------------------------------------------------
+# --- 2. The fast half of `yarn check`, and the tests of what is staged ------------------
 #
-# `yarn check` is what .github/workflows/docs-check.yml runs (as `check:static` plus `test` in four shards), so a commit cannot pass
-# locally and fail in CI. As `check` grows to cover format, lint, typecheck and tests
-# (SETUP.md section 8), this hook grows with it and needs no edit.
+# The owner, 2026-10-27: «rulezi cam multe teste la fiecare commit, e cam stupid sincer». The whole
+# suite (16 000+ tests, about ten minutes) ran on every commit, a one-line document included. Now:
+# `check:static` (docs, secrets, migrations, types, lint — everything but the tests), then only the
+# tests that import a staged file (`vitest related`). The whole suite still runs in CI on every pull
+# request (.github/workflows/docs-check.yml, four shards) and blocks the merge; `yarn check` runs it
+# all locally on demand.
 
-if ! yarn check; then
+if ! yarn check:static; then
 	echo ""
-	echo "pre-commit: 'yarn check' failed, so the commit was blocked."
+	echo "pre-commit: 'yarn check:static' failed, so the commit was blocked."
 	echo "Fix the problems above, or bypass with --no-verify and fix before pushing."
 	exit 1
+fi
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR -- 'src/*' 'tests/*' 'messages/*' | grep -E '\.(ts|tsx|json)$' || true)
+if [ -n "$staged" ]; then
+	# shellcheck disable=SC2086 # one argument per staged path; paths here carry no spaces
+	if ! yarn vitest related --run --passWithNoTests $staged; then
+		echo ""
+		echo "pre-commit: the tests of the staged files failed, so the commit was blocked."
+		echo "Fix the problems above, or bypass with --no-verify and fix before pushing."
+		exit 1
+	fi
 fi

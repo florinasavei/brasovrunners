@@ -25,7 +25,7 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
     { path: "src/modules/events/share-card-design.ts", reason: "the share card is drawn to an image (Satori) with no theme provider; it computes rgba() from the brand hex it is given", count: 1 },
     { path: "src/modules/media/video-poster.ts", reason: "the test stub's poster frame, a flat fill that is never shown to a visitor", count: 1 },
     { path: "src/modules/newsletter/ui/NewsletterSignup.tsx", reason: "the native dialog's ::backdrop scrim, which MUI's theme does not reach", count: 1 },
-    { path: "src/shared/ui/SocialIcon.tsx", reason: "the social networks' own brand colours (Facebook, Strava, Instagram gradient): theirs, not the club's palette", count: 5 },
+    { path: "src/shared/ui/SocialIcon.tsx", reason: "the social networks' own brand colours (Facebook, Strava, YouTube, Instagram gradient): theirs, not the club's palette", count: 6 },
     { path: "src/shared/ui/VideoFacade.tsx", reason: "the play button's dark scrim over the video poster, the same over any picture", count: 1 },
   ],
   icons: [
@@ -243,7 +243,7 @@ export const BACK_ARROWS: readonly { key: string; reason: string }[] = [
 
 /** Per rule, the entries and the hits (the sum of the counts): lower them in the same edit that removes an entry or a count. */
 export const PINNED = {
-  colours: { entries: 13, hits: 28 },
+  colours: { entries: 13, hits: 29 },
   icons: { entries: 31, hits: 121 },
   primitives: { entries: 77, hits: 81 },
   toggles: { entries: 0, hits: 0 },

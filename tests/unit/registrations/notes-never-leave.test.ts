@@ -32,6 +32,8 @@ const READERS = new Set(
     "src/app/[locale]/admin/registrations/(list)/page.tsx",
     // The registrations export's «Note interne» column (§785), asked only for a role that may keep notes.
     "src/app/api/admin/registrations/export/route.ts",
+    // «Trece pe lista oficială» (§854): writes the internal list's note onto the new registration, reads none.
+    "src/modules/registrations/reserve-list.ts",
   ].map((file) => path.join(ROOT, file)),
 );
 

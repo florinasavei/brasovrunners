@@ -67,6 +67,9 @@ import { invitationState, inviteTarget } from "@/modules/registrations/domain/in
 import { listEventInvitations, listOpenInvitationCountsByEvent } from "@/modules/registrations/invitation-repository";
 import Panel from "@/shared/ui/Panel";
 import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
+import ReserveListPanel from "@/modules/registrations/ui/ReserveListPanel";
+import { listReserveEntries } from "@/modules/registrations/reserve-list";
+import { addReserveEntryAction, deleteReserveEntryAction, saveReserveNoteAction } from "../reserve-actions";
 import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -1323,6 +1326,23 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           resendAction={resendInvitationAction}
           withdrawAction={withdrawInvitationAction}
           now={new Date()}
+        />
+      )}
+
+      {/*
+        «Lista internă de așteptare» (§854): people who asked to be kept in mind for this event, told nothing,
+        for the roles that keep internal notes. Only on a list about one event: a line is about one.
+      */}
+      {filters.eventId && canKeepRegistrationNotes(actor.role) && (
+        <ReserveListPanel
+          locale={locale}
+          eventId={filters.eventId}
+          entries={await listReserveEntries(db, actor, filters.eventId)}
+          officialHref={(entryId) => `${getPathname({ locale, href: "/admin/registrations/new" })}?${new URLSearchParams({ eventId: filters.eventId ?? "", reserve: entryId }).toString()}`}
+          addAction={addReserveEntryAction}
+          saveNoteAction={saveReserveNoteAction}
+          deleteAction={deleteReserveEntryAction}
+          opened={saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveDeleted"}
         />
       )}
 

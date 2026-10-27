@@ -52,6 +52,7 @@ vi.mock("@/shared/config/env", async (importOriginal) => {
       CLUB_FACEBOOK_URL: "https://facebook.com/brasovrunners",
       CLUB_INSTAGRAM_URL: "https://instagram.com/brasovrunners",
       CLUB_STRAVA_URL: "https://strava.com/clubs/brasovrunners",
+      CLUB_YOUTUBE_URL: "https://youtube.com/@brasovrunners",
       // The club's mailbox, so the panel's "Scrie-ne: <address>" line renders (§385).
       EMAIL_REPLY_TO: "contact@example.org",
       // The club's legal facts (§565), made up, so the fold's identity line renders (the hotfix, #293).
@@ -225,6 +226,8 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's one doo
       ["Facebook", at('aria-label="Facebook"')],
       ["Instagram", at('aria-label="Instagram"')],
       ["Strava", at('aria-label="Strava"')],
+      // The club's channel, after Strava (§854).
+      ["YouTube", at('aria-label="YouTube"')],
       ["the languages", at('aria-label="Limbă"')],
     ];
     for (let i = 1; i < sequence.length; i++) {

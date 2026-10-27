@@ -36,7 +36,8 @@ import { PLACES_TAKEN_KEYS, confirmedCapacityOf, noFreePlaceOutcome, supplementa
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { settleReserveEntry } from "@/modules/registrations/reserve-list";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
@@ -314,11 +315,12 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
   const eventId = text(form, "eventId");
 
   let outcome: { error?: string; saved?: string };
+  let reserveEventId: string | null = null;
   try {
     // Every role: a walk-in on race morning is entered by the volunteer at the table
     // (BR-REQ-037-07). The service asserts the same.
     const actor = await requireStaff();
-    await createRegistrationByStaff(
+    const created = await createRegistrationByStaff(
       getDb(),
       actor,
       {
@@ -367,6 +369,16 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
       },
       new Date(),
     );
+    /*
+      «Trece pe lista oficială» (§854): the line of the internal list this entry was opened from — its note
+      onto the new registration, the line removed. Only for a role that keeps the list; the registration
+      stands whatever happens here, so a line already gone is no refusal.
+    */
+    const reserveEntryId = text(form, "reserveEntryId");
+    if (reserveEntryId && created.registrationId && canKeepRegistrationNotes(actor.role)) {
+      await settleReserveEntry(getDb(), actor, reserveEntryId, created.registrationId, new Date());
+      reserveEventId = eventId;
+    }
     outcome = { saved: "registrationCreated" };
   } catch (error) {
     /*
@@ -421,7 +433,8 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
   if (fromDesk) {
     return backTo(getPathname({ locale, href: "/admin/checkin" }), outcome, { eventId });
   }
-  return backTo(getPathname({ locale, href: "/admin/registrations" }), outcome);
+  // From the internal list (§854): back to that event's list, where the new row and what is left of the list are.
+  return backTo(getPathname({ locale, href: "/admin/registrations" }), outcome, reserveEventId ? { eventId: reserveEventId } : {});
 }
 
 /**

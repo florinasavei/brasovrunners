@@ -38,6 +38,7 @@ export default async function SeriesCard({
   now,
   weather = null,
   titleAs = "h2",
+  past = false,
 }: {
   /** Soonest first; at least two. */
   members: readonly PublicEvent[];
@@ -47,10 +48,17 @@ export default async function SeriesCard({
   weather?: WeatherReading | null;
   /** The title's heading level: `h2` on the listing; a page that puts its own `h2` over the cards passes `h3`. */
   titleAs?: "h2" | "h3";
+  /**
+   * A series whose dates have all happened, in «Alergări trecute»: the card shows the **last** date
+   * («Ultima:») and the fold says «Datele», not the next date and «Următoarele date» — which named the
+   * first recon of the series as the next one, two weeks after it (the owner, 2026-10-27).
+   */
+  past?: boolean;
 }) {
   const t = await getTranslations("Event");
   const locale = (await getLocale()) as Locale;
-  const next = members[0];
+  // The date whose facts the card shows: the soonest ahead, or — in the past — the latest held.
+  const next = past ? members[members.length - 1] : members[0];
   const sentence = await recurrenceSentence(members, next.timezone, locale);
   // The chip says how often, not how many (`rhythmLabel`); every date is shown in the fold — "2
   // more in the calendar" meant nothing to the owner.
@@ -120,7 +128,7 @@ export default async function SeriesCard({
           {/* The next date's weather at its start (§416) is the last pill of its route's row, the
               hour's chance of rain after a drop, in the primary colour when rain is likely (§429,
               §677). */}
-          <EventFacts event={next} now={now} variant="compact" whenLead={t("series.nextLabel")} cardWeather={weather} />
+          <EventFacts event={next} now={now} variant="compact" whenLead={t(past ? "series.lastLabel" : "series.nextLabel")} cardWeather={weather} />
         </Box>
 
         {/* Every coming date, each a link to its own page — folded (§154; the owner: "these
@@ -131,7 +139,7 @@ export default async function SeriesCard({
         <Box component="details" sx={CARD_FOLD_SX}>
           <Typography component="summary" variant="body2" color="text.secondary">
             <DateRangeIcon aria-hidden sx={FOLD_GLYPH_SX} />
-            {t("series.allDatesCount", { count: members.length })}
+            {t(past ? "series.pastDatesCount" : "series.allDatesCount", { count: members.length })}
           </Typography>
           <Box sx={{ pt: 0.5 }}>
             <SeriesDates dates={dates} />

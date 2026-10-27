@@ -65,6 +65,7 @@ const suiteServer = {
     CLUB_FACEBOOK_URL: process.env.CLUB_FACEBOOK_URL || "https://www.facebook.com/e2e-club",
     CLUB_INSTAGRAM_URL: process.env.CLUB_INSTAGRAM_URL || "https://www.instagram.com/e2e-club",
     CLUB_STRAVA_URL: process.env.CLUB_STRAVA_URL || "https://www.strava.com/clubs/e2e-club",
+    CLUB_YOUTUBE_URL: process.env.CLUB_YOUTUBE_URL || "https://www.youtube.com/@e2e-club",
     /**
      * A developer's own `.env.local` legitimately carries a real `NEON_API_KEY` and
      * `NEON_PROJECT_ID` — this same file backs `yarn build && yarn start` above — but the

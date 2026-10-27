@@ -487,6 +487,15 @@ export type AuditAction =
   | "event_todo.reopened"
   | "event_todo.deleted"
   /**
+   * «Lista internă de așteptare» (§854), entity `event`: a person written down, their note saved, the line
+   * deleted, or moved to the official list (`registrationId` the registration it became). The metadata is
+   * the line's id only — never a name, an address or the note's words.
+   */
+  | "event_reserve.added"
+  | "event_reserve.note_saved"
+  | "event_reserve.deleted"
+  | "event_reserve.moved"
+  /**
    * An event's volunteers (§754), entity `event`: the switch «Primește voluntari», a role added, changed,
    * moved or removed (the club's own words), and a volunteer entered, changed, confirmed, cancelled,
    * deleted or signed up on the page (`volunteer.signed_up`, no actor). The metadata holds ids, the roles'

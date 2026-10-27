@@ -257,6 +257,7 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Site.followOn.facebook",
           "Site.followOn.instagram",
           "Site.followOn.strava",
+          "Site.followOn.youtube",
           // The calendar's subscribe box under «Tema v2» (the facelift's phase 4): «Adaugă calendarul {club} …».
           "Events.calendar.look.subscribe.intro",
           // «Clubul pe lista publică» (§753): the editor's help and the first mode, «Doar {club}».

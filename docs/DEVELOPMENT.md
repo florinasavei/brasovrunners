@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.79-2026-10-26 -->
+<!-- PROJECT_BASELINE: BR-V3.80-2026-10-27 -->
 
 # Running this locally
 
-**Baseline `BR-V3.79-2026-10-26`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V3.80-2026-10-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -86,7 +86,7 @@ validation, while an absent one is allowed. Come back here when you have a Neon 
 yarn dev                 dev server on http://localhost:47821 (next free port if taken)
 yarn build               production build
 yarn start               production server; honours PORT
-yarn check               check:static + tests — the pre-commit gate
+yarn check               check:static + tests — the CI gate (the hook runs check:static + the staged files' tests)
 yarn check:static        docs:check + secrets:check + migrations:check + typecheck + lint — the half CI runs on one runner (the tests go to four shards)
 yarn test                all tests
 yarn test:unit           pure-rule tests only
@@ -116,8 +116,9 @@ yarn db:reset:local      drop both schemas, migrate and seed from nothing
 yarn release             versioned archive and share copies under dist/
 ```
 
-`yarn check` is the single gate. The pre-commit hook runs it and CI runs it (its two halves on five runners), so they cannot
-drift. When a step is added to CI that a developer can run locally, it belongs inside `check`.
+`yarn check` is the single gate, and CI runs it (its two halves on five runners) on every pull request. The pre-commit
+hook runs its static half and only the tests that import a staged file (`vitest related`) — the owner, 2026-10-27: ten
+minutes of tests on every commit was too much; the whole suite still blocks the merge. When a step is added to CI that a developer can run locally, it belongs inside `check`.
 
 **A hook forgets git's own environment first (§553).** git exports `GIT_DIR` and `GIT_INDEX_FILE`
 into a hook, so everything `yarn check` starts inherits them: on 2026-09-28 a test's throwaway

@@ -202,12 +202,13 @@ test.describe("§708 the header under «Tema v2»", () => {
         cursor: getComputedStyle(element).cursor,
       }));
       expect(labelFacts).toEqual({ inTarget: false, tabIndex: -1, cursor: "default" });
-      expect(await socials.locator("a").evaluateAll((links) => links.map((link) => link.getAttribute("data-network")))).toEqual(["instagram", "facebook", "strava"]);
+      expect(await socials.locator("a").evaluateAll((links) => links.map((link) => link.getAttribute("data-network")))).toEqual(["instagram", "facebook", "strava", "youtube"]);
       // Each mark says whose profile it is and where, in the page's language (`Site.followOn`, §722), never the network alone.
       expect(await socials.locator("a").evaluateAll((links) => links.map((link) => link.getAttribute("aria-label")))).toEqual([
         `${CLUB_NAME} pe Instagram`,
         `${CLUB_NAME} pe Facebook`,
         `${CLUB_NAME} pe Strava`,
+        `${CLUB_NAME} pe YouTube`,
       ]);
       for (const link of await socials.locator("a").all()) {
         const box = await link.boundingBox();
@@ -229,6 +230,7 @@ test.describe("§708 the header under «Tema v2»", () => {
         process.env.CLUB_INSTAGRAM_URL || "https://www.instagram.com/e2e-club",
         process.env.CLUB_FACEBOOK_URL || "https://www.facebook.com/e2e-club",
         process.env.CLUB_STRAVA_URL || "https://www.strava.com/clubs/e2e-club",
+        process.env.CLUB_YOUTUBE_URL || "https://www.youtube.com/@e2e-club",
       ]);
       await expectFooterLanguages(page, 1280);
 

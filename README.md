@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.79-2026-10-26 -->
+<!-- PROJECT_BASELINE: BR-V3.80-2026-10-27 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V3.79-2026-10-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.80-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 > **Write code once, run forever, always vibe.**
 
@@ -119,7 +119,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/sync-flags.mjs`](./scripts/sync-flags.mjs) | `yarn flags:sync`: copies the country flags from `flag-icons` into `public/flags/`. Runs on install and as the first half of `yarn build`; the output is generated and git-ignored |
 | [`scripts/setup.mjs`](./scripts/setup.mjs) | `yarn setup`: points git at `.githooks` so `yarn check` runs before every commit, and adds the `git gone` alias |
 | [`scripts/cloud-setup.sh`](./scripts/cloud-setup.sh) | Run by the `SessionStart` hook in `.claude/settings.json` in a Claude Code cloud session only (`CLAUDE_CODE_REMOTE=true`): installs the dependencies, starts a local PostgreSQL with the throwaway `brasov_runners` role and database, writes a local-values `.env.local` when there is none, migrates and seeds. Idempotent; `--force` runs it on any Linux machine (`docs/DEVELOPMENT.md` § Coding from the phone, `DECISIONS.md` §501) |
-| [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `yarn check` and blocks the commit on failure; the same command CI runs |
+| [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `yarn check:static` and the tests of the staged files (`vitest related`), and blocks the commit on failure; CI runs the whole `yarn check` |
 | [`.githooks/pre-push`](./.githooks/pre-push) | Refuses a push to `qa` or `main`; those branches move through pull requests only |
 | [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md) | How to run this locally: prerequisites, first run, every command, and what will catch you out |
 | [`docs/VIBECODING.md`](./docs/VIBECODING.md) | The one page before asking an AI to change anything: the loop, where things live, adding a field end to end, the rules that bite |
@@ -130,6 +130,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`docs/QUEUE.md`](./docs/QUEUE.md) | The work queue: what the owner asked for, what is being built, what waits on the owner, and what shipped in which baseline — updated with every batch. A list, not authority: the decisions are in `DECISIONS.md` The release plan — what V2.13, V2.14, V2.15 and V2.16 carry — is at its top; the backoffice shows the same page on the Tasks screen, under its Application tab. |
 | [`docs/DISPATCHER.md`](./docs/DISPATCHER.md) | How one orchestrating session runs the queue through subagents: the prompt to start it, the loop, which Claude model each kind of task gets, the usage bands, the machine's limits, and a card per kind of work. Its workflows are `.claude/workflows/br-chain.js` and `br-fix-round.js` (`DECISIONS.md` §368) |
 | [`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) | Three runbooks: [repository bootstrap](./docs/RUNBOOKS.md#repository-bootstrap) for the first push, [domain binding](./docs/RUNBOOKS.md#domain-binding) at the end of M1, [legal document version](./docs/RUNBOOKS.md#legal-document-version) whenever approved wording changes, [race results: registering the finishers](./docs/RUNBOOKS.md#race-results-registering-the-finishers) for race day and after |
+| [`docs/FINISH-PHOTOS.md`](./docs/FINISH-PHOTOS.md) | Race-day finish-line photos (2026-10-26): the DJI Action 4 watches, ContaCam detects motion, digiCamControl fires the Nikon D3500 and saves stills to the laptop — the hardware, the decisions and the steps still to test. Equipment, not platform code |
 | [`docs/history/ORIGINAL_PLAN_2026-08.md`](./docs/history/ORIGINAL_PLAN_2026-08.md) | Original planning input, retained for traceability. **Not authoritative.** It predates Material UI, staff-only auth, passwordless participants, waiting lists, the `qa`/`main` flow, and every hosting decision since. |
 | [`.github/workflows/docs-check.yml`](./.github/workflows/docs-check.yml) | Runs `docs:check` on every pull request and on `qa`/`main`; read-only permissions |
 | [`.github/workflows/release.yml`](./.github/workflows/release.yml) | A release from GitHub alone: the label `ship` on a pull request into `qa`, or a run by hand with its number (and `dry_run` to rehearse), merges `qa` in by rule, lands the branch's `.release/` entries, pushes the landing and runs `yarn ship` with the `SHIP_TOKEN` secret; every step's outcome on the run's summary page. Setup in `SETUP.md` § 41, use in `docs/RUNBOOKS.md` § Release from the phone (`DECISIONS.md` §535) |
@@ -599,8 +600,8 @@ yarn dev
 ```
 
 `yarn setup` is the one step that is already live today: it points git at
-[`.githooks`](./.githooks/pre-commit), so `yarn check` runs before every commit and a
-change cannot pass locally but fail in CI. Run it once per clone. The step-by-step
+[`.githooks`](./.githooks/pre-commit), so the static checks and the tests of what changed run before every commit,
+and CI runs the whole `yarn check` before a merge. Run it once per clone. The step-by-step
 contributor walkthrough is [`SETUP.md`](./SETUP.md) § Contributing.
 
 The repository should expose stable commands:
@@ -652,7 +653,7 @@ scripts/
   cloud-setup.sh        prepares a Claude Code cloud session, local values only
 
 .githooks/
-  pre-commit            runs yarn check and blocks a failing commit
+  pre-commit            runs check:static + the staged files' tests, blocks a failing commit
 
 src/
   app/

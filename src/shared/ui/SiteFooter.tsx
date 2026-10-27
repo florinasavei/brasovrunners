@@ -23,6 +23,9 @@ import LocaleSwitcher from "./LocaleSwitcher";
 import SocialIcon from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
 
+/** The narrowest phone whose bar holds a fourth social mark beside the summary, uncut in both languages (§854): 390px cut the English summary by a pixel. */
+const FOURTH_MARK_FROM = 400;
+
 /**
  * The footer: one thin row on every width, with everything on it.
  *
@@ -41,7 +44,7 @@ import ThemeModeToggle from "./ThemeModeToggle";
  * - the "Despre club" fold's summary, with its words — the one label on the row;
  * - the privacy notice as the word "GDPR", whose tooltip and accessible name are the notice's
  *   name, the same page it always linked to (§378 from `sm`, §385 on a phone);
- * - Facebook, Instagram, Strava;
+ * - Facebook, Instagram, Strava, YouTube;
  * - on a phone, a one-pixel rule, then RO and EN as flags only, the current one ringed and
  *   `aria-current` (`LocaleSwitcher`).
  *
@@ -538,6 +541,9 @@ export default async function SiteFooter() {
                   flexShrink: 0,
                   borderRadius: 1,
                   "&:hover": { bgcolor: "action.hover" },
+                  // The fourth mark (§854) does not fit the phone's one row below 400px: there the
+                  // summary's words would be cut (§372, §378). From 400px the row holds all four.
+                  ...(entry.network === "youtube" ? { [`@media (max-width: ${FOURTH_MARK_FROM - 0.05}px)`]: { display: "none" } } : {}),
                 }}
               >
                 <SocialIcon network={entry.network} size={20} />
