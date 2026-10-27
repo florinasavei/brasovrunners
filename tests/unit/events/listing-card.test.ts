@@ -790,3 +790,25 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     expect(withoutStyles(await repeated())).not.toContain('data-testid="card-weather"');
   });
 });
+
+describe("a series in «Alergări trecute» shows its last date, not a next one (the owner, 2026-10-27)", () => {
+  it("leads with the last date held, says «Ultima:» and folds «Datele», never «Următoarea» or «Următoarele date»", async () => {
+    const after = new Date("2026-10-20T09:00:00.000Z");
+    const past = withoutStyles(await markup(createElement(SeriesCard, { members: series(), index: 0, now: after, past: true })));
+    const lead = text(facts(past));
+    expect(lead).toContain("Ultima:");
+    expect(lead).toContain("12 oct.");
+    expect(lead).not.toContain("Următoarea");
+    expect(past).toContain("Datele (3)");
+    expect(past).not.toContain("Următoarele date");
+    // The title and the door lead to the last date's page; the first date is only its chip in the fold.
+    expect(anchors(past).filter((anchor) => anchor.href?.endsWith("happy-monday-2")).length).toBeGreaterThanOrEqual(3);
+    expect(anchors(past).filter((anchor) => anchor.href?.endsWith("happy-monday-0"))).toHaveLength(1);
+  });
+
+  it("keeps the next date and its words on the listing of what is ahead", async () => {
+    const ahead = text(facts(withoutStyles(await repeated())));
+    expect(ahead).toContain("Următoarea:");
+    expect(ahead).toContain("28 sept.");
+  });
+});

@@ -529,7 +529,9 @@
       "repeats": "Repeats {sentence}",
       "recurring": "Recurring event",
       "nextLabel": "Next:",
+      "lastLabel": "Last:",
       "allDatesCount": "Upcoming dates ({count})",
+      "pastDatesCount": "The dates ({count})",
       "fullDescription": "Full event description"
     },
     "route": "Route",

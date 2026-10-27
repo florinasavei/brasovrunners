@@ -529,7 +529,9 @@
       "repeats": "Se repetă {sentence}",
       "recurring": "Eveniment recurent",
       "nextLabel": "Următoarea:",
+      "lastLabel": "Ultima:",
       "allDatesCount": "Următoarele date ({count})",
+      "pastDatesCount": "Datele ({count})",
       "fullDescription": "Descrierea completă a evenimentului"
     },
     "route": "Traseu",
