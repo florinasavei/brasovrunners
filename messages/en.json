@@ -25,7 +25,8 @@
     "followOn": {
       "instagram": "{club} on Instagram",
       "facebook": "{club} on Facebook",
-      "strava": "{club} on Strava"
+      "strava": "{club} on Strava",
+      "youtube": "{club} on YouTube"
     },
     "nav": {
       "label": "Main navigation",
@@ -11057,6 +11058,7 @@
       "facebook": "Facebook",
       "instagram": "Instagram",
       "strava": "Strava",
+      "youtube": "YouTube",
       "contact": "Write to us:",
       "or": "or"
     },

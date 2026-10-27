@@ -25,7 +25,8 @@
     "followOn": {
       "instagram": "{club} pe Instagram",
       "facebook": "{club} pe Facebook",
-      "strava": "{club} pe Strava"
+      "strava": "{club} pe Strava",
+      "youtube": "{club} pe YouTube"
     },
     "nav": {
       "label": "Navigare principală",
@@ -11057,6 +11058,7 @@
       "facebook": "Facebook",
       "instagram": "Instagram",
       "strava": "Strava",
+      "youtube": "YouTube",
       "contact": "Scrie-ne:",
       "or": "sau"
     },

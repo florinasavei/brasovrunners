@@ -37,7 +37,7 @@ export function clubId(): string {
  * (§342). The `@id` above stays the base: it is an identifier, not an address anybody fetches.
  */
 export function sportsOrganizationJsonLd(name: string, url: string) {
-  const sameAs = [env.CLUB_FACEBOOK_URL, env.CLUB_INSTAGRAM_URL, env.CLUB_STRAVA_URL].filter(
+  const sameAs = [env.CLUB_FACEBOOK_URL, env.CLUB_INSTAGRAM_URL, env.CLUB_STRAVA_URL, env.CLUB_YOUTUBE_URL].filter(
     (url): url is string => Boolean(url),
   );
 

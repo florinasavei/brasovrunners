@@ -206,6 +206,8 @@ export const envSchema = z
     CLUB_FACEBOOK_URL: z.url().optional(),
     CLUB_INSTAGRAM_URL: z.url().optional(),
     CLUB_STRAVA_URL: z.url().optional(),
+    /** The club's YouTube channel (§NNN): after Strava in the header and the footer, and in `sameAs`. */
+    CLUB_YOUTUBE_URL: z.url().optional(),
 
     /**
      * Where the club runs, "latitude,longitude" in decimal degrees (§394): the place whose sunset

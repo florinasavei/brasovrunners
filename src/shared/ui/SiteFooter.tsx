@@ -41,7 +41,7 @@ import ThemeModeToggle from "./ThemeModeToggle";
  * - the "Despre club" fold's summary, with its words — the one label on the row;
  * - the privacy notice as the word "GDPR", whose tooltip and accessible name are the notice's
  *   name, the same page it always linked to (§378 from `sm`, §385 on a phone);
- * - Facebook, Instagram, Strava;
+ * - Facebook, Instagram, Strava, YouTube;
  * - on a phone, a one-pixel rule, then RO and EN as flags only, the current one ringed and
  *   `aria-current` (`LocaleSwitcher`).
  *

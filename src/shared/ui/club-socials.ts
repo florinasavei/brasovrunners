@@ -7,7 +7,7 @@ export type ClubSocialLink = { network: SocialNetwork; href: string; label: stri
 /**
  * The club's own profiles elsewhere, in the order the footer draws them — the one list the bar's
  * marks and the identity block's middle column both read (§565: reuse, never a second list). From
- * the environment (`CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL`, `CLUB_STRAVA_URL`, `env.ts`); an
+ * the environment (`CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL`, `CLUB_STRAVA_URL`, `CLUB_YOUTUBE_URL`, `env.ts`); an
  * unset one is left out, and none set is an empty list.
  */
 export async function clubSocialLinks(): Promise<ClubSocialLink[]> {
@@ -16,6 +16,8 @@ export async function clubSocialLinks(): Promise<ClubSocialLink[]> {
     { network: "facebook", href: env.CLUB_FACEBOOK_URL, label: footer("about.facebook") },
     { network: "instagram", href: env.CLUB_INSTAGRAM_URL, label: footer("about.instagram") },
     { network: "strava", href: env.CLUB_STRAVA_URL, label: footer("about.strava") },
+    // The club's YouTube channel (§NNN), after Strava.
+    { network: "youtube", href: env.CLUB_YOUTUBE_URL, label: footer("about.youtube") },
   ];
   return entries.filter((entry): entry is ClubSocialLink => Boolean(entry.href));
 }
