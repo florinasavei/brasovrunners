@@ -187,6 +187,8 @@ describe("the one wrap the layouts share (the audit of 2026-10-27, D23 and D40)"
       // «run» ends a line alone only when the line before is one word and cannot give «out».
       if (lines.at(-1) === "run") expect(lines.at(-2), `${width}: ${lines.join(" / ")}`).toBe("out");
     }
+    // The orphan does not change ends: «ab» alone on the first line is no better than «op» alone on the last.
+    expect(wrapBalanced(ctx, "ab cdefghijklmn op", 150)).toEqual(["ab cdefghijklmn", "op"]);
   });
 
   it("moves words down only while the last line stays narrower than the ratio asked, and the moved line fits", () => {
@@ -210,6 +212,23 @@ describe("the one wrap the layouts share (the audit of 2026-10-27, D23 and D40)"
     expect(wrapBalanced(ctx, "RECUNOAȘTEREA", 100, { hyphenate: true })).toEqual(["RECUNOA-", "ȘTEREA"]);
     // The rest of the title joins the word's last piece.
     expect(wrapBalanced(ctx, "Course reconnaissance run", 100, { hyphenate: true })).toEqual(["Course", "reconnai-", "ssance run"]);
+    // The dash glued behind a word is not the word: «Marathon» fits bare, so it is not split for its dash and
+    // stands one dash wider than the line; split, the dash goes on the last piece, never on a line of its own.
+    expect(wrapBalanced(ctx, "Trail Marathon — briefing", 90, { hyphenate: true })).toEqual(["Trail", "Marathon\u00a0—", "briefing"]);
+    expect(wrapBalanced(ctx, "Trail Marathon — briefing", 60, { hyphenate: true })).toEqual(["Trail", "Mara-", "thon\u00a0—", "brie-", "fing"]);
+    for (let width = 60; width <= 120; width += 10) {
+      const lines = wrapBalanced(ctx, "CROSUL BRAȘOV RUNNERS — EDIȚIA A III-A", width, { hyphenate: true });
+      for (const line of lines) {
+        expect(line, `${width}: ${lines.join(" / ")}`).not.toMatch(/^[\u00a0 ]?[—–-]/);
+        // Three letters at least before a glued dash: «ERS —», never «RS —».
+        if (line.endsWith("\u00a0—")) expect(line, `${width}: ${lines.join(" / ")}`).toMatch(/^[^\s-]{3,}\u00a0—$/);
+      }
+    }
+  });
+
+  it("breaks at a hyphen the word already has first, adding none, and starts no piece with one", () => {
+    expect(wrapBalanced(ctx, "SHAKE-OUT", 60, { hyphenate: true })).toEqual(["SHAKE-", "OUT"]);
+    expect(wrapBalanced(ctx, "TÂMPA-BRAȘOV-POIANA", 80, { hyphenate: true })).toEqual(["TÂMPA-", "BRAȘOV-", "POIANA"]);
   });
 
   it("falls back to the widest prefix with three letters each side when no break after a vowel fits, and leaves a word too short to split", () => {
