@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
 import type { CalendarImageData, CalendarImageEntry } from "@/modules/events/domain/calendar-image";
 import { calendarImageRows } from "@/modules/events/domain/calendar-image-rows";
-import { fitText, paletteFor, posterPlan, weekdayColumn, wrapText, wrapWhole } from "@/modules/events/ui/calendar-image-draw";
+import { fitText, wrapText } from "@/modules/events/ui/calendar-image-canvas";
+import { paletteFor } from "@/modules/events/ui/calendar-image-draw";
+import { breakLines } from "@/modules/events/ui/calendar-image-poster-cells";
+import { wrapWords } from "@/modules/events/ui/calendar-image-poster-formats";
+import { posterPlan, weekdayColumn, wrapWhole } from "@/modules/events/ui/calendar-image-poster-heads";
 
 /**
  * «Salvează ca imagine» (§855; the owner, 2026-10-27): the month as a picture, drawn in the browser. The pure
@@ -68,6 +72,22 @@ describe("the words in a cell", () => {
     expect(wrapText(ctx, "Happy Monday with Brașov Runners", 130, 3)).toEqual(["Happy Monday", "with Brașov", "Runners"]);
     expect(wrapText(ctx, "Happy Monday with Brașov Runners", 130, 2)).toEqual(["Happy Monday", "with Brașov…"]);
     expect(wrapText(ctx, "Happy Monday with Brașov Runners", 130, 1)).toEqual(["Happy Monday…"]);
+  });
+
+  it("on «Afiș», breaks a title on as many lines as it takes, and says when one word alone is wider than the line", () => {
+    expect(wrapWords(ctx, "Happy Monday with Brașov Runners", 130)).toEqual({ lines: ["Happy Monday", "with Brașov", "Runners"], fits: true });
+    expect(wrapWords(ctx, "Course reconnaissance", 100)).toEqual({ lines: ["Course", "reconnaissance"], fits: false });
+    expect(wrapWords(ctx, "  ", 100)).toEqual({ lines: [], fits: true });
+  });
+});
+
+describe("a title on «Afiș», whole", () => {
+  it("breaks at spaces without cutting, a lone dash staying with the word before it", () => {
+    expect(breakLines(ctx, "Crosul Brașov Runners — ediția a III-a", 100)).toEqual(["Crosul", "Brașov", "Runners —", "ediția a", "III-a"]);
+  });
+
+  it("leaves a word wider than the line alone on its own, for the caller to see it does not fit", () => {
+    expect(breakLines(ctx, "a reconnaissance b", 60)).toEqual(["a", "reconnaissance", "b"]);
   });
 });
 

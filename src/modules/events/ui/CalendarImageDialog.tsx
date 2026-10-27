@@ -10,6 +10,9 @@ import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import ParkIcon from "@mui/icons-material/Park";
 import StayCurrentPortraitIcon from "@mui/icons-material/StayCurrentPortrait";
+import GridViewIcon from "@mui/icons-material/GridView";
+import ViewAgendaIcon from "@mui/icons-material/ViewAgenda";
+import ViewWeekIcon from "@mui/icons-material/ViewWeek";
 import DownloadIcon from "@mui/icons-material/Download";
 import ShareIcon from "@mui/icons-material/Share";
 import Checkbox from "@mui/material/Checkbox";
@@ -27,11 +30,12 @@ import PressButton from "@/shared/ui/PressButton";
 import { LOGO } from "@/theme/brand";
 import type { CalendarImageData } from "../domain/calendar-image";
 import { calendarImageFonts, loadCalendarImageFonts } from "./calendar-image-fonts";
+import { CALENDAR_IMAGE_RATIOS, type CalendarImageRatio } from "./calendar-image-canvas";
 import {
-  CALENDAR_IMAGE_RATIOS,
+  CALENDAR_IMAGE_LAYOUT_CHOICES,
   CALENDAR_IMAGE_THEME_CHOICES,
+  type CalendarImageLayout,
   type CalendarImageOptions,
-  type CalendarImageRatio,
   type CalendarImageTheme,
   drawCalendarImage,
 } from "./calendar-image-draw";
@@ -43,6 +47,8 @@ export type CalendarImageDialogWords = {
   themes: Record<CalendarImageTheme, string>;
   ratio: string;
   ratios: Record<CalendarImageRatio, string>;
+  layout: string;
+  layouts: Record<CalendarImageLayout, string>;
   legend: string;
   download: string;
   share: string;
@@ -55,12 +61,14 @@ const RATIOS = Object.keys(CALENDAR_IMAGE_RATIOS) as CalendarImageRatio[];
 /** Each choice wears its glyph before its word (§498): a poster's megaphone, the club's runner, the sun, the moon, a tree for the season; the shapes by their frame. */
 const THEME_ICON = { poster: CampaignIcon, club: DirectionsRunIcon, light: LightModeIcon, dark: DarkModeIcon, season: ParkIcon } as const;
 const RATIO_ICON = { portrait: CropPortraitIcon, square: CropSquareIcon, story: StayCurrentPortraitIcon, landscape: CropLandscapeIcon } as const;
+/** «Afiș»'s layouts: the series in the weekday columns, chips in the cells, the key in a panel below. */
+const LAYOUT_ICON = { heads: ViewWeekIcon, cells: GridViewIcon, formats: ViewAgendaIcon } as const;
 const CHOICE_SX = { minHeight: 44, gap: 0.5, textTransform: "none" } as const;
 
 /**
- * The picture's options and its preview (§855): the theme, the shape and the legends; «Descarcă PNG», and
- * «Distribuie» where the browser can hand a file to an app (a phone, mostly). Every change redraws the one
- * canvas at the picture's full size; the preview is that canvas, scaled down by CSS.
+ * The picture's options and its preview (§855): the theme, the shape, «Afiș»'s layout and the legends;
+ * «Descarcă PNG», and «Distribuie» where the browser can hand a file to an app (a phone, mostly). Every change
+ * redraws the one canvas at the picture's full size; the preview is that canvas, scaled down by CSS.
  */
 export default function CalendarImageDialog({
   open,
@@ -73,7 +81,7 @@ export default function CalendarImageDialog({
   data: CalendarImageData;
   words: CalendarImageDialogWords;
 }) {
-  const [options, setOptions] = useState<CalendarImageOptions>({ theme: "poster", ratio: "portrait", legend: true });
+  const [options, setOptions] = useState<CalendarImageOptions>({ theme: "poster", ratio: "portrait", layout: "heads", legend: true });
   // Whether the browser can hand a PNG to an app (a phone, mostly). The dialog mounts only after the press, in the browser.
   const [canShare] = useState(() => {
     const probe = new File([new Blob()], "probe.png", { type: "image/png" });
@@ -217,6 +225,31 @@ export default function CalendarImageDialog({
                 })}
               </ToggleButtonGroup>
             </div>
+            {options.theme === "poster" && (
+              <div>
+                <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }} id="calendar-image-layout">
+                  {words.layout}
+                </Typography>
+                <ToggleButtonGroup
+                  exclusive
+                  size="small"
+                  value={options.layout}
+                  onChange={(_, layout: CalendarImageLayout | null) => layout && setOptions((current) => ({ ...current, layout }))}
+                  aria-labelledby="calendar-image-layout"
+                  sx={{ flexWrap: "wrap" }}
+                >
+                  {CALENDAR_IMAGE_LAYOUT_CHOICES.map((layout) => {
+                    const LayoutIcon = LAYOUT_ICON[layout];
+                    return (
+                      <ToggleButton key={layout} value={layout} sx={CHOICE_SX}>
+                        <LayoutIcon aria-hidden="true" sx={{ fontSize: 18 }} />
+                        {words.layouts[layout]}
+                      </ToggleButton>
+                    );
+                  })}
+                </ToggleButtonGroup>
+              </div>
+            )}
             <FormControlLabel
               control={<Checkbox checked={options.legend} onChange={(event) => setOptions((current) => ({ ...current, legend: event.target.checked }))} />}
               label={words.legend}

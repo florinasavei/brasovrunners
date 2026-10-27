@@ -68,6 +68,8 @@ export async function calendarImageProps(
     themes: { poster: t("themes.poster"), club: t("themes.club"), light: t("themes.light"), dark: t("themes.dark"), season: t("themes.season") },
     ratio: t("ratio"),
     ratios: { portrait: t("ratios.portrait"), square: t("ratios.square"), story: t("ratios.story"), landscape: t("ratios.landscape") },
+    layout: t("layout"),
+    layouts: { heads: t("layouts.heads"), cells: t("layouts.cells"), formats: t("layouts.formats") },
     legend: t("legend"),
     download: t("download"),
     share: t("share"),
