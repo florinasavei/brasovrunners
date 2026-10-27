@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.82-2026-10-27 -->
+<!-- PROJECT_BASELINE: BR-V3.83-2026-10-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.82-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.83-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28010,3 +28010,13 @@ Baseline `BR-V3.81-2026-10-27`.
 **Decision.** A fifth theme, «Afiș», first in the dialog and chosen when it opens: a white sheet; the logo's blue band, centred, with the mountains, the club's name in the kit's face and «Evenimente <LUNA> <an>»; the weekdays in full on a pale blue row; in each day, each date centred — its type's glyph (the calendar's own Material glyphs, their paths in `calendar-image-glyphs.ts`; the sparkle for a special edition), its title in capitals and «ora 19:30» — the glyph dropped before a title line when the cell is short; a title that repeats in the month on white with a blue glyph, any other date's day pale pink (an edition apart, a race, a run) or pale yellow (coffee, gear test); the mountains across the empty days after the month; «EVENIMENTE RECURENTE» and «EVENIMENTE SPECIALE» on coloured pills with each row's glyph, rhythm or date; and «URMĂREȘTE-NE!» on a blue band with each network the club links (`clubSocialLinks`) beside the club's name, and «#NoOneLeftBehind #brasovrunners». No photographs: the poster's pictures would need the bucket to answer the browser's cross-origin read, or the canvas could not be saved.
 
 Baseline `BR-V3.82-2026-10-27`.
+
+## 857. The calendar picture: the club's real logo in its band, and «Descarcă PNG» that downloads
+
+**The owner, 2026-10-27,** of «Afiș» (§856): «I kind of hate the header», «și butonul Descarcă PNG nu merge», «vreau să arăt logo-ul real».
+
+**«Descarcă PNG» and «Distribuie» did nothing.** `canvas.toBlob` answers through its callback and returns nothing, and the dialog wrote `canvas.current?.toBlob(resolve) ?? resolve(null)`: the `??` ran at once, the promise resolved with no file, and both buttons returned before doing anything. The blob is now taken from the callback alone; the download's anchor is put in the document while it is pressed; the file is «brasov-runners-2026-10.png» (the diacritics' marks dropped first — «ș» used to split the name into «bras-ov»).
+
+**The band.** Three lines in the kit's slashed face (the club's name, «Evenimente», the month) read as noise at a post's size. Every theme now draws the club's real logo — the white lockup the site already serves (`LOGO.lockup.onDark`, `public/brand/logo-white.svg`), so the canvas stays exportable — loaded by the dialog once; «Afiș» centres it over «Evenimente» in the site's hand-written face (`--font-signature`, asked for by the dialog, since the page does not preload it) and the month in heavy capitals with its year smaller beside it; the other themes put the logo at the band's left and «Evenimente» and «OCTOMBRIE 2026» beside it. Until the logo has loaded, or if it cannot, the drawn mountains and the club's name stand in for it.
+
+Baseline `BR-V3.83-2026-10-27`.
