@@ -1,5 +1,6 @@
 "use client";
 
+import CampaignIcon from "@mui/icons-material/Campaign";
 import CloseIcon from "@mui/icons-material/Close";
 import CropLandscapeIcon from "@mui/icons-material/CropLandscape";
 import CropPortraitIcon from "@mui/icons-material/CropPortrait";
@@ -49,8 +50,8 @@ export type CalendarImageDialogWords = {
 
 const RATIOS = Object.keys(CALENDAR_IMAGE_RATIOS) as CalendarImageRatio[];
 
-/** Each choice wears its glyph before its word (§498): the club's runner, the sun, the moon, a tree for the season; the shapes by their frame. */
-const THEME_ICON = { club: DirectionsRunIcon, light: LightModeIcon, dark: DarkModeIcon, season: ParkIcon } as const;
+/** Each choice wears its glyph before its word (§498): a poster's megaphone, the club's runner, the sun, the moon, a tree for the season; the shapes by their frame. */
+const THEME_ICON = { poster: CampaignIcon, club: DirectionsRunIcon, light: LightModeIcon, dark: DarkModeIcon, season: ParkIcon } as const;
 const RATIO_ICON = { portrait: CropPortraitIcon, square: CropSquareIcon, story: StayCurrentPortraitIcon, landscape: CropLandscapeIcon } as const;
 const CHOICE_SX = { minHeight: 44, gap: 0.5, textTransform: "none" } as const;
 
@@ -78,7 +79,7 @@ export default function CalendarImageDialog({
   data: CalendarImageData;
   words: CalendarImageDialogWords;
 }) {
-  const [options, setOptions] = useState<CalendarImageOptions>({ theme: "club", ratio: "portrait", legend: true });
+  const [options, setOptions] = useState<CalendarImageOptions>({ theme: "poster", ratio: "portrait", legend: true });
   // Whether the browser can hand a PNG to an app (a phone, mostly). The dialog mounts only after the press, in the browser.
   const [canShare] = useState(() => {
     const probe = new File([new Blob()], "probe.png", { type: "image/png" });

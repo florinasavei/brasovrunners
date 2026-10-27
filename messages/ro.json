@@ -200,6 +200,7 @@
         "title": "Calendarul lunii ca imagine",
         "theme": "Tema",
         "themes": {
+          "poster": "Afiș",
           "club": "Clubul",
           "light": "Luminos",
           "dark": "Întunecat",
@@ -222,7 +223,9 @@
         "specialTitle": "Evenimente speciale",
         "cancelled": "Anulat",
         "follow": "Urmărește-ne",
-        "more": "+{count} altele"
+        "more": "+{count} altele",
+        "at": "ora {time}",
+        "hashtags": "#NoOneLeftBehind #brasovrunners"
       }
     },
     "raceWeek": {
