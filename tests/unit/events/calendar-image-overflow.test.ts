@@ -3,13 +3,15 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { CalendarImageData } from "@/modules/events/domain/calendar-image";
 import { CALENDAR_IMAGE_RATIOS, type CalendarImageRatio } from "@/modules/events/ui/calendar-image-canvas";
-import { CALENDAR_IMAGE_LAYOUT_CHOICES, CALENDAR_IMAGE_THEME_CHOICES, type CalendarImageAssets, type CalendarImageFonts, drawCalendarImage } from "@/modules/events/ui/calendar-image-draw";
+import { CALENDAR_IMAGE_LAYOUT_CHOICES, CALENDAR_IMAGE_THEME_CHOICES, type CalendarImageAssets, type CalendarImageFonts, type CalendarImageOptions, drawCalendarImage } from "@/modules/events/ui/calendar-image-draw";
+import { weekLabel, weeksOf } from "@/modules/events/ui/calendar-image-week";
 import { overflowsOf, stubCanvas } from "./calendar-image-stub-canvas";
 
 /**
  * «Salvează ca imagine» (§855): no text overflows its box or meets another, in every sample month of
- * `yarn calendar:preview`, every theme, every layout of «Afiș» and every format — drawn on the stub canvas
- * of `calendar-image-stub-canvas.ts`, whose `measureText` the layouts fit their words with, so what it records
+ * `yarn calendar:preview`, every theme, every layout of «Afiș» and every format — and every week of each
+ * month («Perioada» → «Săptămâna») in every theme and format — drawn on the stub canvas of
+ * `calendar-image-stub-canvas.ts`, whose `measureText` the layouts fit their words with, so what it records
  * is what they meant to draw. A failure names the picture, the text, where it stands and what it crosses; a
  * text drawn then covered is still a defect, and the mountains and the glyphs are shapes, not text.
  */
@@ -81,17 +83,22 @@ describe("the stub canvas", () => {
 
 for (const month of months) {
   describe(`${month.name}: ${month.data.words.monthTitle}`, () => {
+    /** The month in each layout, and each of its weeks: the layout's name, or the week's days. */
+    const pictures: { name: string; options: Omit<CalendarImageOptions, "theme" | "ratio"> }[] = [
+      ...CALENDAR_IMAGE_LAYOUT_CHOICES.map((layout) => ({ name: layout, options: { layout, week: null, legend: true } })),
+      ...weeksOf(month.data.month).map((week) => ({ name: weekLabel(week, month.data.words.monthName), options: { layout: "heads" as const, week: week.index, legend: true } })),
+    ];
     for (const theme of CALENDAR_IMAGE_THEME_CHOICES) {
-      for (const layout of CALENDAR_IMAGE_LAYOUT_CHOICES) {
+      for (const picture of pictures) {
         for (const ratio of ratios) {
-          it(`${theme} · ${layout} · ${ratio}: no text leaves its box or meets another`, () => {
+          it(`${theme} · ${picture.name} · ${ratio}: no text leaves its box or meets another`, () => {
             const { width, height } = CALENDAR_IMAGE_RATIOS[ratio];
             const failures = assets.flatMap(([state, asset]) => {
               const { ctx, records } = stubCanvas();
-              drawCalendarImage(ctx, month.data, { theme, ratio, layout, legend: true }, fonts, asset);
+              drawCalendarImage(ctx, month.data, { theme, ratio, ...picture.options }, fonts, asset);
               return overflowsOf(records, width, height).map((failure) => `${state}: ${failure}`);
             });
-            expect(failures.length, [`${month.name} · ${theme} · ${layout} · ${ratio}: ${failures.length} overflow(s)`, ...failures].join("\n  ")).toBe(0);
+            expect(failures.length, [`${month.name} · ${theme} · ${picture.name} · ${ratio}: ${failures.length} overflow(s)`, ...failures].join("\n  ")).toBe(0);
           });
         }
       }

@@ -9,6 +9,7 @@ import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
 import { breakLines } from "@/modules/events/ui/calendar-image-poster-cells";
 import { wrapWords } from "@/modules/events/ui/calendar-image-poster-formats";
 import { posterPlan, weekdayColumn, wrapWhole } from "@/modules/events/ui/calendar-image-poster-heads";
+import { initialWeek, weekLabel, weekOf, weeksOf, weekSlug } from "@/modules/events/ui/calendar-image-week";
 
 /**
  * «Salvează ca imagine» (§855; the owner, 2026-10-27): the month as a picture, drawn in the browser. The pure
@@ -181,6 +182,50 @@ describe("«Afiș»: each series under its weekday", () => {
   });
 });
 
+describe("«Perioada» → «Săptămâna»: a week of the month, kept to this month's days", () => {
+  const days = (month: number) => weeksOf({ year: 2026, month }).map((week) => week.days);
+
+  it("cuts June 2026 (a Monday start) into five weeks, the last of two days", () => {
+    expect(days(6)).toEqual([
+      [1, 2, 3, 4, 5, 6, 7],
+      [8, 9, 10, 11, 12, 13, 14],
+      [15, 16, 17, 18, 19, 20, 21],
+      [22, 23, 24, 25, 26, 27, 28],
+      [29, 30],
+    ]);
+  });
+
+  it("gives August 2026 six weeks, the first a weekend and the last a Monday, and November six, the first a Sunday alone", () => {
+    expect(days(8)).toEqual([[1, 2], [3, 4, 5, 6, 7, 8, 9], [10, 11, 12, 13, 14, 15, 16], [17, 18, 19, 20, 21, 22, 23], [24, 25, 26, 27, 28, 29, 30], [31]]);
+    expect(days(11)).toEqual([[1], [2, 3, 4, 5, 6, 7, 8], [9, 10, 11, 12, 13, 14, 15], [16, 17, 18, 19, 20, 21, 22], [23, 24, 25, 26, 27, 28, 29], [30]]);
+  });
+
+  it("names the week by its days in the month, with an en dash, and a lone day alone", () => {
+    expect(weekLabel(weekOf({ year: 2026, month: 6 }, 0), "iunie")).toBe("1–7 iunie");
+    expect(weekLabel(weekOf({ year: 2026, month: 6 }, 4), "iunie")).toBe("29–30 iunie");
+    expect(weekLabel(weekOf({ year: 2026, month: 11 }, 0), "noiembrie")).toBe("1 noiembrie");
+    expect(weekLabel(weekOf({ year: 2026, month: 8 }, 1), "August")).toBe("3–9 August");
+  });
+
+  it("keeps an index past the month's weeks on the last one, and under them on the first", () => {
+    expect(weekOf({ year: 2026, month: 6 }, 9).from).toBe(29);
+    expect(weekOf({ year: 2026, month: 6 }, -1).from).toBe(1);
+  });
+
+  it("puts the week's range in the file name", () => {
+    expect(weekSlug({ year: 2026, month: 6 }, weekOf({ year: 2026, month: 6 }, 0))).toBe("2026-06-01-07");
+    expect(weekSlug({ year: 2026, month: 11 }, weekOf({ year: 2026, month: 11 }, 0))).toBe("2026-11-01-01");
+  });
+
+  it("offers today's week when today is in the month, else the first week with a date, else the first", () => {
+    const data = { month: { year: 2026, month: 6 }, entries: [{ day: 17 }, { day: 24 }] as CalendarImageData["entries"] };
+    expect(initialWeek(data, new Date(2026, 5, 30, 9))).toBe(4);
+    expect(initialWeek(data, new Date(2026, 5, 1, 9))).toBe(0);
+    expect(initialWeek(data, new Date(2026, 9, 27, 9))).toBe(2);
+    expect(initialWeek({ ...data, entries: [] }, new Date(2026, 9, 27, 9))).toBe(0);
+  });
+});
+
 describe("«Sezonul lunii»", () => {
   it("draws each month in its season's palette", () => {
     expect([1, 3, 6, 9, 12].map((month) => paletteFor("season", month))).toEqual(["winter", "spring", "summer", "autumn", "winter"]);
@@ -245,7 +290,7 @@ describe("the themes are palettes of the layouts", () => {
       for (const theme of CALENDAR_IMAGE_THEME_CHOICES) {
         for (const layout of CALENDAR_IMAGE_LAYOUT_CHOICES) {
           const { ctx, stops, texts } = stubContext();
-          drawCalendarImage(ctx, data, { theme, ratio: "portrait", layout, legend: true }, fonts);
+          drawCalendarImage(ctx, data, { theme, ratio: "portrait", layout, week: null, legend: true }, fonts);
           expect(stops.slice(0, 2), `${theme} in ${layout}`).toEqual([...CALENDAR_IMAGE_THEMES[paletteFor(theme, 6)].background]);
           expect(texts, `${theme} in ${layout}`).toContain("IUNIE");
         }

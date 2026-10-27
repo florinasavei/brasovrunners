@@ -3,6 +3,7 @@ import type { CalendarImageRatio } from "./calendar-image-canvas";
 import { drawPosterCells } from "./calendar-image-poster-cells";
 import { drawPosterFormats } from "./calendar-image-poster-formats";
 import { drawPosterHeads } from "./calendar-image-poster-heads";
+import { drawCalendarImageWeek } from "./calendar-image-week";
 import type { CalendarImageData } from "../domain/calendar-image";
 
 /**
@@ -34,6 +35,11 @@ export type CalendarImageOptions = {
   /** «Așezare»: which layout draws the month, whatever the theme. */
   layout: CalendarImageLayout;
   /**
+   * «Perioada»: null draws the month; a number draws that week of it — the index of a row of `monthGrid`,
+   * Monday first — as an agenda (`calendar-image-week.ts`), in every theme and format, whatever the layout.
+   */
+  week: number | null;
+  /**
    * «Evenimente recurente» and «Evenimente speciale» beside or under the grid. In `heads` the series are in
    * the column heads either way; this lists the special dates, and a series no head can hold.
    */
@@ -63,7 +69,7 @@ export function paletteFor(theme: CalendarImageTheme, month: number): CalendarIm
   return "autumn";
 }
 
-/** The layout chosen, in the theme's palette. */
+/** The layout chosen, in the theme's palette — or, for a week, the agenda. */
 export function drawCalendarImage(
   ctx: CanvasRenderingContext2D,
   data: CalendarImageData,
@@ -72,6 +78,10 @@ export function drawCalendarImage(
   assets: CalendarImageAssets = { logo: null },
 ): void {
   const palette = CALENDAR_IMAGE_THEMES[paletteFor(options.theme, data.month.month)];
+  if (options.week !== null) {
+    drawCalendarImageWeek(ctx, data, options, fonts, assets, palette);
+    return;
+  }
   switch (options.layout) {
     case "cells":
       drawPosterCells(ctx, data, options, fonts, assets, palette);
