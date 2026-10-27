@@ -370,7 +370,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
       new Date(),
     );
     /*
-      «Trece pe lista oficială» (§NNN): the line of the internal list this entry was opened from — its note
+      «Trece pe lista oficială» (§854): the line of the internal list this entry was opened from — its note
       onto the new registration, the line removed. Only for a role that keeps the list; the registration
       stands whatever happens here, so a line already gone is no refusal.
     */
@@ -433,7 +433,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
   if (fromDesk) {
     return backTo(getPathname({ locale, href: "/admin/checkin" }), outcome, { eventId });
   }
-  // From the internal list (§NNN): back to that event's list, where the new row and what is left of the list are.
+  // From the internal list (§854): back to that event's list, where the new row and what is left of the list are.
   return backTo(getPathname({ locale, href: "/admin/registrations" }), outcome, reserveEventId ? { eventId: reserveEventId } : {});
 }
 

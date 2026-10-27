@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.79-2026-10-26 -->
+<!-- PROJECT_BASELINE: BR-V3.80-2026-10-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.79-2026-10-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.80-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1764,6 +1764,7 @@ registration — and it lists registrations and never changes an address.
 13. Given a staff entry that creates or restarts a registration, when the desk's fast track confirms it, then it confirms the row the service reports it wrote, found by id and never by re-reading the address. The public form's answer carries no registration id and stays the same for everybody (2026-09-25, `DECISIONS.md` §420).
 14. Given an address with active registrations at an event, when staff enter a person whose name (by the runner's key) differs from every active one — twins with the same birth date included — then a registration of their own is created under the same participant, within the club's limit per address; the same runner again is refused with the address box and `STAFF_ALREADY_ON_ADDRESS`, an address at the limit with `STAFF_ADDRESS_AT_CAP`, and nothing is written; a desk fast track confirms only the row the entry wrote (2026-09-27, `DECISIONS.md` §493). Verification: integration `registrations/staff-crud.test.ts`, `registrations/lifecycle-audit.test.ts`; unit `registrations/family.test.ts`.
 15. §425's export criterion, extended: the CSV and the xlsx end with «Declaration version» and «Declaration signed» — the registration's latest declaration acceptance, blank while none exists — after the terms columns, and the xlsx writes every timestamp on the club's clock.
+16. Given a person written on an event's internal waiting list, when an Organizer or above adds, edits or deletes the line, then no registration, participant or email exists for them and the allocator counts nothing; when «Trece pe lista oficială» enters them through the ordinary staff entry, the line's note becomes the new registration's internal note and the line is removed — never onto a registration of another event (2026-10-27, `DECISIONS.md` §854).
 
 **Verification:** integration `registrations/staff-crud.test.ts`
 

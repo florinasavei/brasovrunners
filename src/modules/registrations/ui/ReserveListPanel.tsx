@@ -15,7 +15,7 @@ import Panel from "@/shared/ui/Panel";
 import type { ReserveEntryRow } from "../reserve-list";
 
 /**
- * «Lista internă de așteptare» (§NNN) on one event's registrations list, for the Organizer and above: the
+ * «Lista internă de așteptare» (§854) on one event's registrations list, for the Organizer and above: the
  * people who asked to be kept in mind, told nothing and emailed nothing. Each line: the name, the address
  * when the club has it, the internal note (edited in place), «Trece pe lista oficială» — the ordinary staff
  * entry, prefilled; the note follows the registration — and «Șterge». Below, «Adaugă pe lista internă».

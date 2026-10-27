@@ -16,7 +16,7 @@ export async function clubSocialLinks(): Promise<ClubSocialLink[]> {
     { network: "facebook", href: env.CLUB_FACEBOOK_URL, label: footer("about.facebook") },
     { network: "instagram", href: env.CLUB_INSTAGRAM_URL, label: footer("about.instagram") },
     { network: "strava", href: env.CLUB_STRAVA_URL, label: footer("about.strava") },
-    // The club's YouTube channel (§NNN), after Strava.
+    // The club's YouTube channel (§854), after Strava.
     { network: "youtube", href: env.CLUB_YOUTUBE_URL, label: footer("about.youtube") },
   ];
   return entries.filter((entry): entry is ClubSocialLink => Boolean(entry.href));

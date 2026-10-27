@@ -487,7 +487,7 @@ export type AuditAction =
   | "event_todo.reopened"
   | "event_todo.deleted"
   /**
-   * «Lista internă de așteptare» (§NNN), entity `event`: a person written down, their note saved, the line
+   * «Lista internă de așteptare» (§854), entity `event`: a person written down, their note saved, the line
    * deleted, or moved to the official list (`registrationId` the registration it became). The metadata is
    * the line's id only — never a name, an address or the note's words.
    */

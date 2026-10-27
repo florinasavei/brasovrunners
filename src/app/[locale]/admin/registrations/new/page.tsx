@@ -79,7 +79,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   const words = await confirmWords();
   const events = await listEventsAcceptingRegistrations(getDb(), locale);
   /*
-    «Trece pe lista oficială» (§NNN): the line of the internal list this entry is made from — its name and
+    «Trece pe lista oficială» (§854): the line of the internal list this entry is made from — its name and
     address in the boxes, its id posted so the action carries the note over and removes the line. Only for
     a role that keeps that list, and only while its event takes entries here.
   */
