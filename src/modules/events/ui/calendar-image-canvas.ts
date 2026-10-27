@@ -97,7 +97,7 @@ export function drawGlyph(ctx: CanvasRenderingContext2D, path: string, x: number
 }
 
 /**
- * An event's glyphs, as the app's chips show them (§NNN): its type's — or `typePath` where a layout marks it
+ * An event's glyphs, as the app's chips show them (§858): its type's — or `typePath` where a layout marks it
  * otherwise — then its ground's when it has one: the road, the mountain, the fork.
  */
 export function eventGlyphs(type: EventType, surface: EventSurface | null, typePath = TYPE_PATHS[type]): string[] {

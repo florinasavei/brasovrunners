@@ -187,7 +187,7 @@ describe("«Sezonul lunii»", () => {
   });
 });
 
-describe("«Afiș»: an event's glyphs, as the app's chips show them (§NNN)", () => {
+describe("«Afiș»: an event's glyphs, as the app's chips show them (§858)", () => {
   it("draws the type's glyph, then the ground's when it has one", () => {
     expect(eventGlyphs("GROUP_RUN", null)).toEqual([TYPE_PATHS.GROUP_RUN]);
     expect(eventGlyphs("GROUP_RUN", "TRAIL")).toEqual([TYPE_PATHS.GROUP_RUN, SURFACE_PATHS.TRAIL]);
