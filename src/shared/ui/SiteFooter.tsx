@@ -23,6 +23,9 @@ import LocaleSwitcher from "./LocaleSwitcher";
 import SocialIcon from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
 
+/** The narrowest phone whose bar holds a fourth social mark beside the summary, uncut in both languages (§NNN): 390px cut the English summary by a pixel. */
+const FOURTH_MARK_FROM = 400;
+
 /**
  * The footer: one thin row on every width, with everything on it.
  *
@@ -538,6 +541,9 @@ export default async function SiteFooter() {
                   flexShrink: 0,
                   borderRadius: 1,
                   "&:hover": { bgcolor: "action.hover" },
+                  // The fourth mark (§NNN) does not fit the phone's one row below 400px: there the
+                  // summary's words would be cut (§372, §378). From 400px the row holds all four.
+                  ...(entry.network === "youtube" ? { [`@media (max-width: ${FOURTH_MARK_FROM - 0.05}px)`]: { display: "none" } } : {}),
                 }}
               >
                 <SocialIcon network={entry.network} size={20} />
