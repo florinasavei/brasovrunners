@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.79-2026-10-26 -->
+<!-- PROJECT_BASELINE: BR-V3.80-2026-10-27 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V3.79-2026-10-26`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V3.80-2026-10-27`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -40,7 +40,7 @@ yarn test:clock   the suite with the real clock at +1 month, +1 year, +10 years:
                   `--concurrency` for the two-connection suite
 yarn test:e2e     Playwright, 320px mobile and desktop; needs the database running
 yarn test:e2e:dev  Playwright against `next dev`: every backoffice and public route, twice; minutes; not in CI (§370)
-yarn check        check:static + test; CI and the pre-commit hook run this (CI: the static half on one runner, the tests on four shards)
+yarn check        check:static + test; CI runs this (the static half on one runner, the tests on four shards); the pre-commit hook runs check:static and the tests of the staged files
 yarn check:static  docs:check + secrets:check + migrations:check + typecheck + lint — everything in `check` but the tests
 yarn docs:check   documentation consistency
 yarn secrets:check  refuse a commit carrying a provider credential — the repository is public (§98)

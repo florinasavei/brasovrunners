@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.79-2026-10-26 -->
+<!-- PROJECT_BASELINE: BR-V3.80-2026-10-27 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V3.79-2026-10-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.80-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -827,6 +827,7 @@ PRODUCTION_SITE_URL
 CLUB_FACEBOOK_URL
 CLUB_INSTAGRAM_URL
 CLUB_STRAVA_URL
+CLUB_YOUTUBE_URL
 Auth.js values required by the installed provider
 EMAIL_DELIVERY_MODE
 EMAIL_ALLOWLIST
@@ -875,7 +876,7 @@ Rules:
 - `PRODUCTION_SITE_URL` is the club's real site, which the "this is not the real site" banner
   links to (§7.5). It cannot derive from `APP_BASE_URL`, which is deliberately *this*
   environment's host. Set it in qa; unset elsewhere, the banner simply ends its sentence;
-- `CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL` and `CLUB_STRAVA_URL` are the club's own profiles,
+- `CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL`, `CLUB_STRAVA_URL` and `CLUB_YOUTUBE_URL` are the club's own profiles,
   shown in the footer and emitted as the `sameAs` of the `SportsOrganization` structured data
   (BR-REQ-052-02). All optional, and **omitted entirely when unset** rather than emitted empty:
   an empty `sameAs` is a claim that the club has no profiles, and a guessed one misinforms a

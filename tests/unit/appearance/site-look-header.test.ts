@@ -42,6 +42,7 @@ vi.mock("@/shared/ui/club-socials", () => ({
     { network: "facebook", href: "https://facebook.example/club", label: "Facebook" },
     { network: "instagram", href: "https://instagram.example/club", label: "Instagram" },
     { network: "strava", href: "https://strava.example/club", label: "Strava" },
+    { network: "youtube", href: "https://youtube.example/club", label: "YouTube" },
   ],
 }));
 // The client islands: stubs that keep what the header hands them visible in the markup.
@@ -152,10 +153,10 @@ describe("§708 the header while «Tema v2» is on", () => {
     // Every link of the group is a mark of a network: the words are not one of them.
     const links = [...socials.slice(0, socials.indexOf("</nav>")).matchAll(/<a [^>]*>/g)].map((match) => match[0]);
     expect(links).toHaveLength(HEADER_SOCIAL_ORDER.length);
-    for (const link of links) expect(link).toMatch(/data-network="(instagram|facebook|strava)"/);
+    for (const link of links) expect(link).toMatch(/data-network="(instagram|facebook|strava|youtube)"/);
   });
 
-  it("§722 draws «Urmărește-ne» with Instagram, Facebook and Strava, in that order, after the nav — the row's last item", async () => {
+  it("§722 draws «Urmărește-ne» with Instagram, Facebook, Strava and YouTube (§854), in that order, after the nav — the row's last item", async () => {
     state.look = { on: true };
     const on = await header();
     const navEnd = on.indexOf("</nav>");
@@ -166,7 +167,7 @@ describe("§708 the header while «Tema v2» is on", () => {
     expect(tag).toContain('aria-label="followUs"');
     expect(on).toContain('data-testid="header-socials-label">followUs</span>');
     const group = on.slice(socials);
-    const order = ["instagram", "facebook", "strava"].map((network) => group.indexOf(`data-network="${network}"`));
+    const order = ["instagram", "facebook", "strava", "youtube"].map((network) => group.indexOf(`data-network="${network}"`));
     for (const at of order) expect(at).toBeGreaterThan(-1);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
     // Each mark says whose profile it is and where (`Site.followOn`, the club's name from `CLUB_NAME`), never the network alone.
@@ -188,7 +189,7 @@ describe("§708 the header while «Tema v2» is on", () => {
     const ro = createTranslator({ locale: "ro", messages: (await import("../../../messages/ro.json")).default, namespace: "Site" });
     const en = createTranslator({ locale: "en", messages: (await import("../../../messages/en.json")).default, namespace: "Site" });
     for (const network of HEADER_SOCIAL_ORDER) {
-      const name = network[0].toUpperCase() + network.slice(1);
+      const name = network === "youtube" ? "YouTube" : network[0].toUpperCase() + network.slice(1);
       expect(ro(`followOn.${network}`, { club: CLUB_NAME })).toBe(`${CLUB_NAME} pe ${name}`);
       expect(en(`followOn.${network}`, { club: CLUB_NAME })).toBe(`${CLUB_NAME} on ${name}`);
     }

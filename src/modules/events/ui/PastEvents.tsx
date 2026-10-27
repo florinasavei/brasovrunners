@@ -149,7 +149,7 @@ export default async function PastEvents({
         <Box component="ul" sx={CARD_GRID_SX}>
           {cards.map((series, index) =>
             series.members.length > 1 ? (
-              <SeriesCard key={series.key} members={series.members} index={index} now={now} />
+              <SeriesCard key={series.key} members={series.members} index={index} now={now} past />
             ) : (
               <EventCard key={series.key} event={series.members[0]} index={index} now={now} seriesDates={seriesOf(series.members[0])} resultsChip={withResults?.has(series.members[0].id) ?? false} />
             ),
