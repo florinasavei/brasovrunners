@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.80-2026-10-27 -->
+<!-- PROJECT_BASELINE: BR-V3.81-2026-10-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.80-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.81-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27988,3 +27988,17 @@ Baseline `BR-V3.79-2026-10-26`.
 **Personal data.** The trail (`event_reserve.added`, `note_saved`, `deleted`, `moved`, entity `event`) names who, when and the line's id — never a name, an address or the note's words. The lines go with their event (`ON DELETE CASCADE`); there is no separate retention sweep. Whether the privacy notice must name this list (people who wrote to the club, kept for an event they asked about) is the owner's and the lawyer's question, not decided here; the contact form's own paragraph is where it would go.
 
 Baseline `BR-V3.80-2026-10-27`.
+
+## 855. «Salvează ca imagine»: the month's calendar as a picture to post, drawn in the visitor's browser
+
+**The owner, 2026-10-27:** «People want to export the calendar as a picture so they can share to social media, they should also have some themes and styles, this was done in the past (manually). But now I should have a public "save as picture" for the month view, with different themes and settings such as aspect ratio, etc, this should be super efficient so it does not consume a lot of Vercel credits.» The example was the club's hand-made June poster: the club's band, the month's grid with each date's hour and title, and two lists under it, «Evenimente recurente» and «Evenimente speciale».
+
+**Decision.** Under the month (grid or list; never the year), «Salvează ca imagine» opens a dialog with a live preview, the theme — «Clubul», «Luminos», «Întunecat», «Sezonul lunii» (winter, spring, summer, autumn by the month drawn) — the format — Instagram 4:5 (1080×1350), square 1:1 (1080×1080), story 9:16 (1080×1920), Facebook 16:9 (1920×1080) — and «Arată evenimentele recurente și speciale»; then «Descarcă PNG», and «Distribuie» where the browser can hand a file to an app (`navigator.canShare`, a phone mostly).
+
+**Zero server cost.** The picture is drawn on a `<canvas>` in the visitor's browser (`calendar-image-draw.ts`), from data the month page already carries: the page builds it on the server from the rows it has read anyway (`calendar-image-data.ts`, no read of its own), and it rides in the page the public cache holds. No route, no function, no image service, no library. The dialog and the drawing load only on the first press (`React.lazy`), so a visitor who never presses downloads nothing more; the island imports nothing of the server's (§489) — the shared shapes are `domain/calendar-image.ts`, the server's grouping `domain/calendar-image-rows.ts`.
+
+**What is drawn.** The club's mountains and its name in the kit's face (Facón), «Evenimente · <luna anul>»; the weekdays and the weeks, Monday first, each date on its day in the club's zone with its hour (or «Anulat») over its title, the title broken over three, two or one lines as the cell allows, then hour and title on one line, then «+N altele»; under the grid (beside it on 16:9) a title that repeats in the month with its rhythm («În fiecare luni, la 18:30», `recurrenceSentence`) and the dates that stand alone, four rows each at most; at the foot «Urmărește-ne · <the site's host>», from `APP_BASE_URL`. The three kinds of date wear the calendar's tones. The palettes are `CALENDAR_IMAGE_THEMES` in `theme/brand.ts`.
+
+**A new primitive.** `shared/ui/PressButton` is the house's button that runs its `onClick` on a public page — `ButtonLink` goes somewhere, `SubmitButton` sends a form — always with its glyph (§498).
+
+Baseline `BR-V3.81-2026-10-27`.

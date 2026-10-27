@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.80-2026-10-27 -->
+<!-- PROJECT_BASELINE: BR-V3.81-2026-10-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.80-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.81-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -448,6 +448,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 240. Given the home page with an upcoming event the page offers «Vii?» to and at least one confirmed answer, when its run cards render, then the card of that date alone wears the «N vin» chip, a repeating run's card never does, and the notice flag and the counts are read once for the page, never per card — and not at all while no event ahead is ticked (2026-10-19, `DECISIONS.md` §822).
 241. Amends criterion 211: the members' zone shows its tabs in the order «Alergări», «Coduri de reducere», «Magazin», each part at its own address, and «Alergări» is the zone's own address (`/zona-membri`), where the sign-in, the members' page and the backoffice's bounce arrive; the codes are at `/zona-membri/coduri`, and the old `/zona-membri/alergari` is a permanent redirect to the zone that keeps only `?vin=` (2026-10-19, `DECISIONS.md` §830).
 242. Given the calendar with «Tema v2» on and a next event, then the card under the date carries a line with a glyph saying how far away it is in calendar days on the club's clock: «Acum» once it has started, «Azi» the same day, «Mâine», «Peste 2» to «Peste 13 zile», «Peste 2» to «Peste 8 săptămâni» from fourteen days, «Peste 2 luni» from sixty days (in English «Now», «Today», «Tomorrow», «In 5 days», «In 3 weeks», «In 2 months», Romanian's three plural forms by `countForm`); the clocks changing on the last Sunday of October moves no step, and the static page is held to the club's midnight and to the event's start so the words roll with the page at the club's midnight and at the event's start. Proven by `tests/unit/events/next-event-away.test.ts` (2026-10-19, `DECISIONS.md` §834).
+243. Given a month in the calendar, when a visitor presses «Salvează ca imagine», then the month is drawn in their browser as a PNG in the chosen theme and format — each date on its day in the club's zone, with its hour and title, the recurring and special events listed when asked — and downloaded or shared, with no request to the server beyond the page itself (2026-10-27, `DECISIONS.md` §855).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 

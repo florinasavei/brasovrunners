@@ -18,8 +18,8 @@
 export const MOUNTAIN_MARK_VIEWBOX = { width: 120, height: 48 } as const;
 
 /** The far ridge, then the near one. */
-const FAR = "M6 48 38 17l12 10 23-22 18 18 12-6 17 12v19Z";
-const NEAR = "M0 48 22 26l8 6 18-20 12 14 8-6 18 18 8-6 26 16Z";
+export const FAR = "M6 48 38 17l12 10 23-22 18 18 12-6 17 12v19Z";
+export const NEAR = "M0 48 22 26l8 6 18-20 12 14 8-6 18 18 8-6 26 16Z";
 
 type Props = {
   /** The drawn width in pixels; the height follows the 5:2 box. */
