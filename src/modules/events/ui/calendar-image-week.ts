@@ -1,7 +1,7 @@
 import type { CalendarImagePalette } from "@/theme/brand";
 import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
-import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
-import { type Box, CALENDAR_IMAGE_RATIOS, drawGlyphs, eventGlyphs, fillSpaced, fitText, glyphsWidth, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
+import { type Box, CALENDAR_IMAGE_RATIOS, drawGlyphs, eventGlyphs, fitText, glyphsWidth, roundRect, wrapText } from "./calendar-image-canvas";
+import { drawFrame } from "./calendar-image-frame";
 import type { CalendarImageAssets, CalendarImageFonts, CalendarImageOptions } from "./calendar-image-draw";
 import { weekdayColumn, wrapWhole } from "./calendar-image-poster-heads";
 import { monthGrid, type YearMonth } from "../domain/calendar";
@@ -77,7 +77,6 @@ type Card = { entry: CalendarImageEntry; lines: string[]; h: number };
 export function drawCalendarImageWeek(ctx: CanvasRenderingContext2D, data: CalendarImageData, options: CalendarImageOptions, fonts: CalendarImageFonts, assets: CalendarImageAssets, palette: CalendarImagePalette): void {
   const { width: W, height: H } = CALENDAR_IMAGE_RATIOS[options.ratio];
   const unit = Math.min(W, H) / 1080;
-  const pad = 32 * unit;
   const gap = 14 * unit;
   const px = (size: number) => Math.round(size * unit);
   // The poster's one geometric family: italic Black for the range, ExtraBold for the weekdays and the
@@ -90,120 +89,13 @@ export function drawCalendarImageWeek(ctx: CanvasRenderingContext2D, data: Calen
   /** A special date's card pale pink, a social one's cream, as the poster marks them; a series' date stays plain. */
   const tintOf = (entry: CalendarImageEntry): "special" | "other" | null => (entry.tone === "other" ? "other" : entry.tone === "special" || entry.special ? "special" : null);
   const hourOf = (entry: CalendarImageEntry) => (entry.cancelled ? upper(data.words.cancelled) : entry.time ? data.words.at.replace("{time}", entry.time) : "");
-  ctx.textBaseline = "alphabetic";
-  ctx.textAlign = "left";
-  // The page: the palette's two stops, top to bottom (one colour on «Afiș»).
-  const page = ctx.createLinearGradient(0, 0, 0, H);
-  page.addColorStop(0, palette.background[0]);
-  page.addColorStop(1, palette.background[1]);
-  ctx.fillStyle = page;
-  ctx.fillRect(0, 0, W, H);
-
-  // Instagram's own bars cover a story's top 250 and bottom 340 pixels, and the profile grid's crop of a 4:5
-  // post loses about 67 at each end: the band and the foot keep inside them.
-  const safeTop = options.ratio === "story" ? 250 * unit : options.ratio === "portrait" ? 67 * unit : pad;
-  const safeBottom = options.ratio === "story" ? 340 * unit : options.ratio === "portrait" ? 67 * unit : pad;
-
-  // The band, one line: the club's real logo at the left (or, until it loads, the mountains over the
-  // spaced name), and at the right «EVENIMENTE» in spaced capitals over the range in italic Black, its
-  // year beside it lighter.
-  const bandH = clamp(H * 0.105, 118 * unit, 180 * unit);
-  const bandY = safeTop;
-  roundRect(ctx, pad, bandY, W - 2 * pad, bandH, 24 * unit);
-  ctx.fillStyle = palette.band;
-  ctx.fill();
-  ctx.fillStyle = palette.bandInk;
-  const bandInset = bandH * 0.15;
-  const logoH = bandH - 2 * bandInset;
-  const logoW = logoH * LOGO_RATIO;
-  const logoX = pad + bandInset * 1.6;
-  if (assets.logo) {
-    ctx.drawImage(assets.logo, logoX, bandY + bandInset, logoW, logoH);
-  } else {
-    const nameSize = (logoH / unit) * 0.17;
-    const markH = logoH - nameSize * 1.7 * unit;
-    const markW = (markH * MOUNTAIN_MARK_VIEWBOX.width) / MOUNTAIN_MARK_VIEWBOX.height;
-    ctx.save();
-    ctx.translate(logoX + (logoW - markW) / 2, bandY + bandInset);
-    ctx.scale(markW / MOUNTAIN_MARK_VIEWBOX.width, markH / MOUNTAIN_MARK_VIEWBOX.height);
-    ctx.globalAlpha = 0.55;
-    ctx.fill(new Path2D(FAR));
-    ctx.globalAlpha = 1;
-    ctx.fill(new Path2D(NEAR));
-    ctx.restore();
-    ctx.font = face(nameSize, 500);
-    fillSpaced(ctx, upper(data.clubName), logoX + logoW / 2, bandY + bandH - bandInset, px(nameSize * 0.35), logoW);
-  }
-  const bandRight = W - pad - bandInset * 1.8;
-  const bandRoom = bandRight - (logoX + logoW + bandInset * 2);
-  const rangeText = upper(weekLabel(week, data.words.monthName));
-  const yearText = ` ${data.month.year}`;
-  const rangePair = (size: number) => {
-    ctx.font = `italic ${face(size, 900)}`;
-    const rangeW = ctx.measureText(rangeText).width;
-    ctx.font = `italic ${face(size * 0.56, 500)}`;
-    return { size, rangeW, width: rangeW + ctx.measureText(yearText).width };
-  };
-  let range = rangePair((bandH / unit) * 0.52);
-  if (range.width > bandRoom) range = rangePair((range.size * bandRoom) / range.width);
-  const kickerSize = Math.max(14, range.size * 0.29);
-  const capK = kickerSize * 0.7 * unit;
-  const capR = range.size * 0.7 * unit;
-  const between = kickerSize * 0.6 * unit;
-  const blockTop = bandY + (bandH - capK - between - capR) / 2;
-  const rangeY = blockTop + capK + between + capR;
-  ctx.font = `italic ${face(range.size, 900)}`;
-  ctx.fillText(rangeText, bandRight - range.width, rangeY);
-  ctx.font = `italic ${face(range.size * 0.56, 500)}`;
-  ctx.globalAlpha = 0.8;
-  ctx.fillText(yearText, bandRight - range.width + range.rangeW, rangeY);
-  ctx.globalAlpha = 1;
-  ctx.font = face(kickerSize, 500);
-  const kicker = upper(data.words.heading);
-  const tracking = px(kickerSize * 0.42);
-  const kickerW = [...kicker].reduce((sum, letter) => sum + ctx.measureText(letter).width, 0) + tracking * ([...kicker].length - 1);
-  fillSpaced(ctx, kicker, bandRight - Math.min(kickerW, bandRoom) / 2, blockTop + capK, tracking, bandRoom);
-
-  // The foot: «URMĂREȘTE-NE!», each network the club has with its name, then the tags.
-  const footH = 64 * unit;
-  const footY = H - safeBottom - footH;
-  roundRect(ctx, pad, footY, W - 2 * pad, footH, 18 * unit);
-  ctx.fillStyle = palette.band;
-  ctx.fill();
-  // Each network beside the club's name while the band holds it; past that, the marks alone.
-  const withNames: { text: string; mark?: keyof typeof SOCIAL_MARKS; weight: number }[] = [
-    { text: upper(data.words.follow) + "!", weight: 800 },
-    ...data.socials.map((network) => ({ text: data.clubName, mark: network, weight: 500 })),
-    { text: data.words.hashtags, weight: 500 },
-  ];
-  const marksOnly = withNames.map((item) => (item.mark ? { ...item, text: "" } : item));
-  const markSize = 28 * unit;
-  const room = W - 2 * pad - 40 * unit;
-  const widthOf = (items: typeof withNames, size: number) =>
-    items.reduce((sum, item) => {
-      ctx.font = face(size, item.weight);
-      return sum + (item.text ? ctx.measureText(item.text).width : 0) + (item.mark ? markSize + (item.text ? 10 * unit : 0) : 0);
-    }, 0) +
-    (items.length - 1) * 30 * unit;
-  const footItems = widthOf(withNames, 20) <= room ? withNames : marksOnly;
-  let footSize = 24;
-  while (footSize > 14 && widthOf(footItems, footSize) > room) footSize -= 1;
-  let footX = (W - widthOf(footItems, footSize)) / 2;
-  for (const item of footItems) {
-    if (item.mark) {
-      ctx.save();
-      ctx.translate(footX, footY + (footH - markSize) / 2);
-      ctx.scale(markSize / 24, markSize / 24);
-      ctx.fillStyle = palette.bandInk;
-      ctx.fill(new Path2D(SOCIAL_MARKS[item.mark].path));
-      ctx.restore();
-      footX += markSize + (item.text ? 10 * unit : 0);
-    }
-    ctx.font = face(footSize, item.weight);
-    ctx.fillStyle = palette.bandInk;
-    if (item.text) ctx.fillText(item.text, footX, footY + footH / 2 + footSize * 0.36 * unit);
-    footX += (item.text ? ctx.measureText(item.text).width : 0) + 30 * unit;
-  }
+  // The page, the band and the foot are the frame's (`calendar-image-frame.ts`): the week's range as the big
+  // word, and its empty line when none of its days has a date; what is left is the body's.
+  const panel = drawFrame(ctx, data, options, fonts, assets, palette, {
+    word: weekLabel(week, data.words.monthName),
+    empty: week.days.some((day) => datesOf(day).length > 0) ? null : data.words.emptyWeek,
+  });
+  if (!panel) return;
 
   // ---- The cards: a date's glyphs and hour on one line, its whole title in capitals under them.
   const hourSizeOf = (size: number) => clamp(size * 0.7, 15, 24);
@@ -304,7 +196,6 @@ export function drawCalendarImageWeek(ctx: CanvasRenderingContext2D, data: Calen
   }
 
   // ---- The body: the panel between the band and the foot, the week inside it.
-  const panel: Box = { x: pad, y: bandY + bandH + gap, w: W - 2 * pad, h: footY - gap - (bandY + bandH + gap) };
   const inset = 14 * unit;
   roundRect(ctx, panel.x, panel.y, panel.w, panel.h, 18 * unit);
   ctx.fillStyle = palette.cell;

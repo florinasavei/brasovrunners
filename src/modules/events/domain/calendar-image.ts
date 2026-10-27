@@ -63,6 +63,10 @@ export type CalendarImageWords = {
   cancelled: string;
   follow: string;
   more: string;
+  /** «Nicio alergare luna aceasta»: what the frame says in the body of a month with no date (`calendar-image-frame.ts`). */
+  emptyMonth: string;
+  /** «Nicio alergare săptămâna aceasta»: the same for a week with none. */
+  emptyWeek: string;
 };
 
 export type CalendarImageData = {

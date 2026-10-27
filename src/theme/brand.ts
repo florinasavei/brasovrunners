@@ -611,6 +611,13 @@ const PALE_BLUE_LINE = "#c7d2ff";
 /** «Întunecat»'s day cell: a blue-grey a step above its page, and a weekly date's bare card on it. */
 const DARK_CELL = "#1b1e2b";
 
+/** «Monocrom»'s sheet and ink: pure white and near-black, as a printer and a black-and-white feed want them. */
+const MONO_SHEET = "#ffffff";
+const MONO_INK = "#111111";
+
+/** «Cald»'s day cell: a warm white a step above its cream page. */
+const WARM_CELL = "#fffdf8";
+
 /**
  * The club's colours on a white cell, which «Sezon» draws on each season's page: the hours a deep blue, the
  * weekday row and the hairlines a neutral grey that sits on any page, a special day the site's pale green
@@ -701,6 +708,56 @@ export const CALENDAR_IMAGE_THEMES = {
   spring: { ...CLUB_PALETTE, background: ["#3f8f4f", "#a6d4a0"], band: "#22552d", title: "#22552d" },
   summer: { ...CLUB_PALETTE, background: ["#0b8fa8", "#f2c14e"], band: "#075e6f", title: "#075e6f" },
   autumn: { ...CLUB_PALETTE, background: [BURNT_ORANGE, COLOR.orange], band: "#6e2f10", title: "#6e2f10" },
+  /**
+   * «Monocrom» (the owner, 2026-10-27: «I need more styles and configs»): a white sheet, an ink-black band
+   * and foot, grey tints and four grey series by lightness alone — for the club's printer and a
+   * black-and-white feed. The lightest series grey is the classic 4.5:1 one on white; the two tints are
+   * told apart by their depth, a special day the darker, and the series by lightness alone — fine for a
+   * colour-blind reader, less so for a faint print, which is why they step from ink to a mid grey, never paler.
+   */
+  mono: {
+    background: [MONO_SHEET, MONO_SHEET],
+    band: MONO_INK,
+    bandInk: MONO_SHEET,
+    cell: MONO_SHEET,
+    cellInk: MONO_INK,
+    cellMuted: "#ededed",
+    line: "#d0d0d0",
+    title: "#3d3d3d",
+    weekly: [MONO_SHEET, MONO_INK],
+    special: ["#dedede", "#1f1f1f"],
+    other: ["#f1f1f1", "#555555"],
+    series: [
+      [MONO_INK, MONO_SHEET],
+      ["#3a3a3a", MONO_SHEET],
+      ["#5c5c5c", MONO_SHEET],
+      ["#757575", MONO_SHEET],
+    ],
+  },
+  /**
+   * «Cald»: a cream sheet, the burnt orange for the band and the hours' deep burnt brown, the poster's tints
+   * warmed — a peach special day, a straw social one — and the series the orange, a pine green, a plum and
+   * a coffee brown, white words on each.
+   */
+  warm: {
+    background: ["#fbf3e6", "#f5e6d0"],
+    band: BURNT_ORANGE,
+    bandInk: COLOR.surface,
+    cell: WARM_CELL,
+    cellInk: "#3b2314",
+    cellMuted: "#f6e7d2",
+    line: "#e9d3b8",
+    title: "#8a3a12",
+    weekly: [WARM_CELL, BURNT_ORANGE],
+    special: ["#fde3d3", "#8f2a1b"],
+    other: ["#f8ecc4", "#5d4a1f"],
+    series: [
+      [BURNT_ORANGE, COLOR.surface],
+      ["#2f6f5e", COLOR.surface],
+      ["#7a3b8f", COLOR.surface],
+      ["#5a4634", COLOR.surface],
+    ],
+  },
 } as const satisfies Record<string, CalendarImagePalette>;
 
 export type CalendarImagePaletteName = keyof typeof CALENDAR_IMAGE_THEMES;

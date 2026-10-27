@@ -8,12 +8,15 @@ import { distanceWords } from "@/modules/events/domain/distance";
 import { elevationWords } from "@/modules/events/domain/elevation";
 import { detailWords, eventGlyphs, fitText, glyphsWidth, wrapText } from "@/modules/events/ui/calendar-image-canvas";
 import { SPECIAL_PATH, SURFACE_PATHS, TYPE_PATHS } from "@/modules/events/ui/calendar-image-glyphs";
-import { CALENDAR_IMAGE_LAYOUT_CHOICES, CALENDAR_IMAGE_THEME_CHOICES, drawCalendarImage, paletteFor } from "@/modules/events/ui/calendar-image-draw";
+import { CALENDAR_IMAGE_RATIOS } from "@/modules/events/ui/calendar-image-canvas";
+import { CALENDAR_IMAGE_LAYOUT_CHOICES, CALENDAR_IMAGE_THEME_CHOICES, type CalendarImageAssets, type CalendarImageOptions, drawCalendarImage, paletteFor } from "@/modules/events/ui/calendar-image-draw";
 import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
 import { breakLines } from "@/modules/events/ui/calendar-image-poster-cells";
 import { wrapWords } from "@/modules/events/ui/calendar-image-poster-formats";
 import { posterPlan, weekdayColumn, wrapWhole } from "@/modules/events/ui/calendar-image-poster-heads";
+import { COVERED, drawFrame } from "@/modules/events/ui/calendar-image-frame";
 import { initialWeek, weekLabel, weekOf, weeksOf, weekSlug } from "@/modules/events/ui/calendar-image-week";
+import { stubCanvas } from "./calendar-image-stub-canvas";
 
 /**
  * «Salvează ca imagine» (§855; the owner, 2026-10-27): the month as a picture, drawn in the browser. The pure
@@ -338,6 +341,8 @@ describe("the themes are palettes of the layouts", () => {
       cancelled: "Anulat",
       follow: "Urmărește-ne",
       more: "+{count} altele",
+      emptyMonth: "Nicio alergare luna aceasta",
+      emptyWeek: "Nicio alergare săptămâna aceasta",
     },
   };
   const fonts = { body: "sans-serif", display: "sans-serif", script: "cursive", poster: "Poppins" };
@@ -357,6 +362,136 @@ describe("the themes are palettes of the layouts", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe("the frame every picture shares (the owner's audit: D01, D20, D24, D25, D43, D18)", () => {
+  const fonts = { body: "sans-serif", display: "sans-serif", script: "cursive", poster: "Poppins" };
+  const words: CalendarImageData["words"] = {
+    heading: "Evenimente",
+    monthTitle: "iunie 2026",
+    monthName: "iunie",
+    weekdays: ["lun.", "mar.", "mie.", "joi", "vin.", "sâm.", "dum."],
+    weekdaysLong: ["luni", "marți", "miercuri", "joi", "vineri", "sâmbătă", "duminică"],
+    at: "ora {time}",
+    hashtags: "#NoOneLeftBehind #brasovrunners",
+    recurringTitle: "Evenimente recurente",
+    specialTitle: "Evenimente speciale",
+    cancelled: "Anulat",
+    follow: "Urmărește-ne",
+    more: "+{count} altele",
+    emptyMonth: "Nicio alergare luna aceasta",
+    emptyWeek: "Nicio alergare săptămâna aceasta",
+  };
+  const entry: CalendarImageEntry = { day: 1, time: "19:30", title: "Happy Monday", tone: "weekly", type: "GROUP_RUN", surface: "ASPHALT", special: false, cancelled: false, ...NO_DETAILS };
+  const june: CalendarImageData = { month: { year: 2026, month: 6 }, entries: [entry], recurring: [], specials: [], socials: ["facebook", "instagram", "strava", "youtube"], host: "example.test", clubName: "Brașov Runners", words };
+  const options = (ratio: CalendarImageOptions["ratio"]): CalendarImageOptions => ({ theme: "poster", ratio, layout: "heads", week: null, legend: true, details: ALL_DETAILS });
+  const logo: CalendarImageAssets = { logo: {} as CanvasImageSource };
+  const palette = CALENDAR_IMAGE_THEMES.poster;
+  /** The frame alone on the stub: its texts, its boxes (the band's and the foot's fills, the logo), and the body it hands back. */
+  function frame(data: CalendarImageData, ratio: CalendarImageOptions["ratio"], assets = logo) {
+    const { ctx, records } = stubCanvas();
+    const body = drawFrame(ctx, data, options(ratio), fonts, assets, palette);
+    return { body, texts: records.texts, boxes: records.boxes };
+  }
+
+  it("keeps a story's words out of Instagram's bars — below 250 and above H − 340 — while the band's and the foot's fills run to the edges", () => {
+    const { body, texts, boxes } = frame(june, "story");
+    const H = CALENDAR_IMAGE_RATIOS.story.height;
+    for (const text of texts) {
+      expect(text.top, text.text).toBeGreaterThanOrEqual(COVERED.story.top);
+      expect(text.bottom, text.text).toBeLessThanOrEqual(H - COVERED.story.bottom);
+    }
+    const image = boxes.find((box) => box.how === "image");
+    expect(image?.top).toBeGreaterThanOrEqual(COVERED.story.top);
+    const fills = boxes.filter((box) => box.how === "fillRect" && box.left === 0 && box.right === CALENDAR_IMAGE_RATIOS.story.width);
+    // The page, the band to the top edge, the foot to the bottom edge.
+    expect(fills.some((box) => box.top === 0 && box.bottom > COVERED.story.top && box.bottom < H / 2)).toBe(true);
+    expect(fills.some((box) => box.bottom === H && box.top < H - COVERED.story.bottom && box.top > H / 2)).toBe(true);
+    expect(body).not.toBeNull();
+    expect(body?.y).toBeGreaterThan(COVERED.story.top);
+    expect((body?.y ?? 0) + (body?.h ?? 0)).toBeLessThan(H - COVERED.story.bottom);
+  });
+
+  it("keeps a 4:5 post's words and the logo's peaks inside the centre 3:4 the profile grid shows: the top and bottom 67 carry fills alone", () => {
+    for (const assets of [logo, { logo: null }]) {
+      const { texts, boxes } = frame(june, "portrait", assets);
+      const H = CALENDAR_IMAGE_RATIOS.portrait.height;
+      for (const text of texts) {
+        expect(text.top, text.text).toBeGreaterThanOrEqual(COVERED.portrait.top);
+        expect(text.bottom, text.text).toBeLessThanOrEqual(H - COVERED.portrait.bottom);
+      }
+      for (const box of boxes.filter((candidate) => candidate.how === "image")) {
+        expect(box.top).toBeGreaterThanOrEqual(COVERED.portrait.top);
+        expect(box.bottom).toBeLessThanOrEqual(H - COVERED.portrait.bottom);
+      }
+      expect(boxes.some((box) => box.how === "fillRect" && box.top === 0 && box.bottom > COVERED.portrait.top && box.bottom < H / 2)).toBe(true);
+      expect(boxes.some((box) => box.how === "fillRect" && box.bottom === H && box.top < H - COVERED.portrait.bottom && box.top > H / 2)).toBe(true);
+    }
+  });
+
+  it("writes the club's name at most once — in the logo's place until it loads, never after each network's mark — and «EVENIMENTE» no smaller than 18 px", () => {
+    const names = (texts: { text: string }[]) => texts.filter((text) => /RUNNERS/.test(text.text)).length;
+    expect(names(frame(june, "portrait").texts)).toBe(0);
+    expect(names(frame(june, "portrait", { logo: null }).texts)).toBeLessThanOrEqual(1);
+    for (const ratio of ["portrait", "square", "story", "landscape"] as const) {
+      const { texts } = frame(june, ratio);
+      const kicker = texts.find((text) => text.text === "EVENIMENTE");
+      expect(kicker?.size, ratio).toBeGreaterThanOrEqual(18);
+      expect(texts.map((text) => text.text)).toContain("IUNIE");
+      expect(texts.map((text) => text.text)).toContain("URMĂREȘTE-NE!");
+    }
+  });
+
+  it("is the same frame for every layout and the week: the band's words stand where they stand, whatever draws the body", () => {
+    vi.stubGlobal("Path2D", class {});
+    try {
+      for (const ratio of ["portrait", "story"] as const) {
+        const kickers = [
+          ...CALENDAR_IMAGE_LAYOUT_CHOICES.map((layout) => ({ ...options(ratio), layout })),
+          { ...options(ratio), week: 0 },
+        ].map((picture) => {
+          const { ctx, records } = stubCanvas();
+          drawCalendarImage(ctx, june, picture, fonts, logo);
+          const kicker = records.texts.find((text) => text.text === "EVENIMENTE");
+          const call = records.texts.find((text) => text.text === "URMĂREȘTE-NE!");
+          return [kicker?.left, kicker?.top, call?.left, call?.top];
+        });
+        expect(new Set(kickers.map((at) => at.join(","))).size, ratio).toBe(1);
+      }
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("says in words that an empty month, or an empty week, has no run, and hands the layout no body to draw in", () => {
+    const empty = { ...june, entries: [] };
+    const { body, texts } = frame(empty, "portrait");
+    expect(body).toBeNull();
+    expect(texts.map((text) => text.text)).toContain("Nicio alergare luna aceasta");
+    vi.stubGlobal("Path2D", class {});
+    try {
+      // The week of 29–30 June has no date: the week's line, under the week's own range.
+      const { ctx, records } = stubCanvas();
+      drawCalendarImage(ctx, june, { ...options("square"), week: 4 }, fonts, logo);
+      expect(records.texts.map((text) => text.text)).toContain("Nicio alergare săptămâna aceasta");
+      expect(records.texts.map((text) => text.text)).toContain("29–30 IUNIE");
+      // The first week has the date: the body is drawn, the line is not.
+      const first = stubCanvas();
+      drawCalendarImage(first.ctx, june, { ...options("square"), week: 0 }, fonts, logo);
+      expect(first.records.texts.map((text) => text.text)).not.toContain("Nicio alergare săptămâna aceasta");
+      expect(first.records.texts.map((text) => text.text)).toContain("HAPPY MONDAY");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("offers «Monocrom» and «Cald» after the season, each its own palette", () => {
+    expect(CALENDAR_IMAGE_THEME_CHOICES.slice(-2)).toEqual(["mono", "warm"]);
+    expect(paletteFor("mono", 6)).toBe("mono");
+    expect(paletteFor("warm", 1)).toBe("warm");
+    expect(CALENDAR_IMAGE_THEMES.mono.background).toEqual(["#ffffff", "#ffffff"]);
+    expect(CALENDAR_IMAGE_THEMES.warm.band).not.toBe(CALENDAR_IMAGE_THEMES.poster.band);
   });
 });
 

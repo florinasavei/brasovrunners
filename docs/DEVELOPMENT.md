@@ -116,7 +116,7 @@ yarn db:reset:local      drop both schemas, migrate and seed from nothing
 yarn release             versioned archive and share copies under dist/
 yarn calendar:preview    «Salvează ca imagine» drawn without a server: five sample months (scripts/calendar-image-preview/),
                          every theme asked in its three layouts and four formats, to dist/calendar-preview/<month>/<theme>-<layout>-<format>.png;
-                         --month june|busy|sparse|fortnight|empty|all, --theme poster|club,dark|all («Afiș» alone by default);
+                         --month june|busy|sparse|fortnight|empty|all, --theme poster|club|light|dark|season|mono|warm|all, several with a comma («Afiș» alone by default);
                          --week none|all|<n> adds the month's weeks («Perioada» → «Săptămâna»: all, or the n-th, 1 first) in every
                          format, as <theme>-week<n>-<format>.png beside the month's pictures (none by default).
                          The same months, and every week of each, are drawn on a stub canvas by tests/unit/events/calendar-image-overflow.test.ts,

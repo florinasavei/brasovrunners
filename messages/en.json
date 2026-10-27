@@ -204,7 +204,9 @@
           "club": "The club",
           "light": "Light",
           "dark": "Dark",
-          "season": "The month's season"
+          "season": "The month's season",
+          "mono": "Monochrome",
+          "warm": "Warm"
         },
         "ratio": "Format",
         "ratios": {
@@ -236,6 +238,8 @@
         "cancelled": "Cancelled",
         "follow": "Follow us",
         "more": "+{count} more",
+        "emptyMonth": "No runs this month",
+        "emptyWeek": "No runs this week",
         "at": "at {time}",
         "hashtags": "#NoOneLeftBehind #brasovrunners",
         "details": "Details",

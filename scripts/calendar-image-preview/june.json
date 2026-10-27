@@ -228,6 +228,8 @@
   "follow": "Urmărește-ne",
   "more": "+{count} altele",
   "at": "ora {time}",
-  "hashtags": "#NoOneLeftBehind #brasovrunners"
+  "hashtags": "#NoOneLeftBehind #brasovrunners",
+  "emptyMonth": "Nicio alergare luna aceasta",
+  "emptyWeek": "Nicio alergare săptămâna aceasta"
  }
 }

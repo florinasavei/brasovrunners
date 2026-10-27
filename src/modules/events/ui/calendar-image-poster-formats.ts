@@ -1,7 +1,7 @@
 import type { CalendarImagePalette } from "@/theme/brand";
 import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
-import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
-import { type Box, CALENDAR_IMAGE_RATIOS, type CalendarImageRatio, type Ctx, drawGlyph, drawGlyphs, eventGlyphs, fitText, glyphsWidth, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
+import { type Box, CALENDAR_IMAGE_RATIOS, type CalendarImageRatio, type Ctx, drawGlyphs, eventGlyphs, fitText, glyphsWidth, roundRect, wrapText } from "./calendar-image-canvas";
+import { drawFrame } from "./calendar-image-frame";
 import type { CalendarImageAssets, CalendarImageFonts, CalendarImageOptions } from "./calendar-image-draw";
 import { SPECIAL_PATH, TYPE_PATHS } from "./calendar-image-glyphs";
 import { monthGrid } from "../domain/calendar";
@@ -32,25 +32,6 @@ export function wrapWords(ctx: Ctx, text: string, width: number): { lines: strin
   }
   if (current) lines.push(current);
   return { lines, fits };
-}
-
-/**
- * The width of `text` in spaced capitals, `tracking` between letters: drawn letter by letter, because the
- * canvas's own `letterSpacing` is missing from Safari before 18 and, where it exists, counts a space after
- * the last letter too. Kerning does not matter at this spacing.
- */
-function trackedWidth(ctx: CanvasRenderingContext2D, text: string, tracking: number): number {
-  const letters = [...text.normalize("NFC")];
-  return letters.reduce((sum, letter) => sum + ctx.measureText(letter).width, 0) + tracking * Math.max(0, letters.length - 1);
-}
-
-/** `text` in spaced capitals from `left`. */
-function fillTracked(ctx: CanvasRenderingContext2D, text: string, left: number, y: number, tracking: number) {
-  let x = left;
-  for (const letter of text.normalize("NFC")) {
-    ctx.fillText(letter, x, y);
-    x += ctx.measureText(letter).width + tracking;
-  }
 }
 
 /**
@@ -89,8 +70,8 @@ const POSTER_SHAPES: Record<CalendarImageRatio, { soft: number; hard: number; ag
  * better and use the space more efficiently») — the club's hand-made monthly poster, composed for each shape
  * rather than one layout stretched to four:
  *
- * - the band is one compact line: the club's real logo, a rule, «EVENIMENTE» spaced over the month in
- *   italic Black;
+ * - the band and the foot are the frame's (`calendar-image-frame.ts`): the same full-width band above the
+ *   body and the same «URMĂREȘTE-NE!» under it in every layout and the week, the body between them;
  * - the grid says *when*: each weekly date is a blue chip with its type's glyph and its hour, never its
  *   series' title again; a date of its own tints its day (pink, pale yellow) and carries its whole title in
  *   capitals when the day holds it, else an outlined chip;
@@ -98,7 +79,7 @@ const POSTER_SHAPES: Record<CalendarImageRatio, { soft: number; hard: number; ag
  *   and «EVENIMENTE SPECIALE» every date of its own with its day, weekday, full title and hour, in one or
  *   two columns, its words as large as the room allows;
  * - 4:5 and 1:1 put the agenda under the grid in two columns, 9:16 too as one list with larger words, 16:9
- *   beside it under the band; on 4:5 and 1:1 a month whose first or last week leaves three days or more
+ *   beside the grid in a column of its own; on 4:5 and 1:1 a month whose first or last week leaves three days or more
  *   empty sets the agenda in them when it fits there whole, and the grid fills the picture; when the
  *   agenda cannot hold every date, those the grid already names in full step out of it before any is left
  *   to «+2 altele»; «URMĂREȘTE-NE!» and the club's networks close every one.
@@ -116,7 +97,6 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
   const u = wide ? W / 1280 : W / 1080;
   const minText = 14 * u;
   const step = 0.5 * u;
-  const pad = 32 * v;
   const gap = 18 * v;
   const face = (size: number, weight: number, italic = false) => `${italic ? "italic " : ""}${weight} ${Math.round(size * 10) / 10}px ${fonts.poster}`;
   const upper = (text: string) => text.toLocaleUpperCase("ro-RO");
@@ -130,14 +110,9 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
   };
   const sum = (items: { h: number }[]) => items.reduce((total, item) => total + item.h, 0);
   const inkOf = (mark: CalendarTone) => (mark === "weekly" ? palette.band : palette[mark][1]);
-  ctx.textBaseline = "alphabetic";
-  ctx.textAlign = "left";
-  // The page: the palette's two stops, top to bottom (one colour on «Afiș»).
-  const page = ctx.createLinearGradient(0, 0, 0, H);
-  page.addColorStop(0, palette.background[0]);
-  page.addColorStop(1, palette.background[1]);
-  ctx.fillStyle = page;
-  ctx.fillRect(0, 0, W, H);
+  // The page, the band and the foot are the frame's (`calendar-image-frame.ts`); what is left is the body's.
+  const body = drawFrame(ctx, data, options, fonts, assets, palette);
+  if (!body) return;
 
   // The dates: a weekly one is known by its series (the same type and title, as `groupSeries` tells them).
   const seriesKey = (type: string, title: string) => `${type}\n${title.trim().toLowerCase().replace(/\s+/g, " ")}`;
@@ -325,108 +300,6 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
     }
     return [];
   };
-
-  // ── The band ──
-  const drawBand = (box: Box) => {
-    roundRect(ctx, box.x, box.y, box.w, box.h, Math.min(24 * v, box.h * 0.2));
-    ctx.fillStyle = palette.band;
-    ctx.fill();
-    const monthText = upper(data.words.monthName);
-    const yearText = String(data.month.year);
-    const heading = upper(data.words.heading);
-    const measureGroup = (scale: number) => {
-      const logoH = box.h * 0.62 * scale;
-      const ms = box.h * 0.4 * scale;
-      const ys = ms * 0.52;
-      const hs = Math.max(minText, box.h * 0.12 * scale);
-      const tracking = hs * 0.42;
-      ctx.font = face(hs, 500);
-      const headingW = trackedWidth(ctx, heading, tracking);
-      const monthW = measure(monthText, face(ms, 900, true));
-      const yearW = measure(yearText, face(ys, 500, true));
-      const rule = box.h * 0.17 * scale;
-      const textW = Math.max(headingW, monthW + ms * 0.22 + yearW);
-      return { logoH, logoW: logoH * LOGO_RATIO, ms, ys, hs, tracking, monthW, rule, textW, width: logoH * LOGO_RATIO + 2 * rule + textW };
-    };
-    const room = box.w - box.h * 0.36;
-    let group = measureGroup(1);
-    if (group.width > room) group = measureGroup(room / group.width);
-    const left = box.x + (box.w - group.width) / 2;
-    const middle = box.y + box.h / 2;
-    if (assets.logo) {
-      ctx.drawImage(assets.logo, left, middle - group.logoH / 2, group.logoW, group.logoH);
-    } else {
-      // Until the logo loads: the mountains over the club's name, spaced, in the logo's place.
-      const markH = (group.logoW * MOUNTAIN_MARK_VIEWBOX.height) / MOUNTAIN_MARK_VIEWBOX.width;
-      ctx.save();
-      ctx.translate(left, middle - group.logoH / 2);
-      ctx.scale(group.logoW / MOUNTAIN_MARK_VIEWBOX.width, markH / MOUNTAIN_MARK_VIEWBOX.height);
-      ctx.fillStyle = palette.bandInk;
-      ctx.globalAlpha = 0.55;
-      ctx.fill(new Path2D(FAR));
-      ctx.globalAlpha = 1;
-      ctx.fill(new Path2D(NEAR));
-      ctx.restore();
-      const nameSize = group.logoH * 0.16;
-      ctx.font = face(nameSize, 500);
-      ctx.fillStyle = palette.bandInk;
-      const name = upper(data.clubName);
-      const tracking = Math.max(0, (group.logoW - ctx.measureText(name).width) / Math.max(1, [...name].length - 1));
-      fillTracked(ctx, name, left, middle + group.logoH / 2 - nameSize * 0.1, Math.min(tracking, nameSize * 0.6));
-    }
-    // The rule between the logo and the words.
-    const ruleX = left + group.logoW + group.rule;
-    ctx.fillStyle = palette.bandInk;
-    ctx.globalAlpha = 0.45;
-    ctx.fillRect(ruleX - v, middle - box.h * 0.27, 2 * v, box.h * 0.54);
-    ctx.globalAlpha = 1;
-    // «EVENIMENTE» spaced over «IUNIE 2026», the pair centred on the band's middle.
-    const textX = ruleX + group.rule;
-    const blockH = group.hs * 0.72 + group.ms * 0.2 + group.ms * 0.74;
-    const top = middle - blockH / 2;
-    ctx.font = face(group.hs, 500);
-    fillTracked(ctx, heading, textX, top + group.hs * 0.72, group.tracking);
-    const monthY = top + blockH;
-    ctx.font = face(group.ms, 900, true);
-    ctx.fillText(monthText, textX, monthY);
-    ctx.font = face(group.ys, 500, true);
-    ctx.globalAlpha = 0.82;
-    ctx.fillText(yearText, textX + group.monthW + group.ms * 0.22, monthY);
-    ctx.globalAlpha = 1;
-  };
-
-  // ── The foot: «URMĂREȘTE-NE!», each network the club has (with its name while the band holds it), the tags ──
-  const footH = 60 * v * (wide ? 1.12 : 1);
-  const footY = H - pad - footH;
-  {
-    roundRect(ctx, pad, footY, W - 2 * pad, footH, Math.min(18 * v, footH / 2));
-    ctx.fillStyle = palette.band;
-    ctx.fill();
-    const withNames: { text: string; mark?: keyof typeof SOCIAL_MARKS; weight: number }[] = [
-      { text: upper(data.words.follow) + "!", weight: 800 },
-      ...data.socials.map((network) => ({ text: data.clubName, mark: network, weight: 500 })),
-      { text: data.words.hashtags, weight: 500 },
-    ];
-    const marksOnly = withNames.map((item) => (item.mark ? { ...item, text: "" } : item));
-    const room = W - 2 * pad - 40 * v;
-    const widthOf = (items: typeof withNames, size: number) =>
-      items.reduce((total, item) => total + (item.text ? measure(item.text, face(size, item.weight)) : 0) + (item.mark ? size * 1.2 + (item.text ? size * 0.45 : 0) : 0), 0) + (items.length - 1) * size * 1.25;
-    const footMax = Math.min(22 * u, footH * 0.4);
-    const items = widthOf(withNames, footMax * 0.9) <= room ? withNames : marksOnly;
-    let size = footMax;
-    while (size > minText && widthOf(items, size) > room) size -= step;
-    let x = (W - widthOf(items, size)) / 2;
-    for (const item of items) {
-      if (item.mark) {
-        drawGlyph(ctx, SOCIAL_MARKS[item.mark].path, x, footY + (footH - size * 1.2) / 2, size * 1.2, palette.bandInk);
-        x += size * 1.2 + (item.text ? size * 0.45 : 0);
-      }
-      ctx.font = face(size, item.weight);
-      ctx.fillStyle = palette.bandInk;
-      if (item.text) ctx.fillText(item.text, x, footY + footH / 2 + size * 0.36);
-      x += (item.text ? ctx.measureText(item.text).width : 0) + size * 1.25;
-    }
-  }
 
   // ── The agenda ──
   /**
@@ -840,24 +713,18 @@ export function drawPosterFormats(ctx: CanvasRenderingContext2D, data: CalendarI
   };
 
   // ── The composition ──
-  const bandH = Math.min(W, H) * 0.12 + Math.max(0, H - W) * 0.04;
   if (wide && keyed && (seriesRows.length > 0 || singles.length > 0)) {
-    // 16:9: the grid down the left, its full height; the band and the agenda in the column beside it.
-    const content: Box = { x: pad, y: pad, w: W - 2 * pad, h: footY - gap - pad };
+    // 16:9: the grid down the left, its full height; the agenda in the column beside it.
+    const content = body;
     const gridW = content.w * 0.62;
-    const side: Box = { x: content.x + gridW + gap, y: content.y, w: content.w - gridW - gap, h: content.h };
+    const box: Box = { x: content.x + gridW + gap, y: content.y, w: content.w - gridW - gap, h: content.h };
     const grid: Box = { x: content.x, y: content.y, w: gridW, h: content.h };
     drawGrid(grid);
-    const band: Box = { x: side.x, y: side.y, w: side.w, h: Math.min(bandH * 1.12, side.w * 0.24) };
-    drawBand(band);
-    const box: Box = { x: side.x, y: band.y + band.h + gap, w: side.w, h: side.h - band.h - gap };
     const agenda = layoutAgenda(box.w, box.h, agendaCap, false, titledIn(grid));
     if (agenda) drawAgenda(agenda, box);
     return;
   }
-  const band: Box = { x: pad, y: pad, w: W - 2 * pad, h: bandH };
-  drawBand(band);
-  const content: Box = { x: pad, y: band.y + band.h + gap, w: W - 2 * pad, h: footY - gap - (band.y + band.h + gap) };
+  const content = body;
   const cellW = content.w / 7;
   const headH = headHOf(cellW);
   const gridOf = (k: number) => headH + weeks.length * cellW * k;

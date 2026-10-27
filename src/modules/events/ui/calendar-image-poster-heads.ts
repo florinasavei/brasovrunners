@@ -1,7 +1,7 @@
 import type { CalendarImagePalette } from "@/theme/brand";
 import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
-import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
-import { type Box, CALENDAR_IMAGE_RATIOS, type Ctx, drawGlyphs, eventGlyphs, fillSpaced, fitText, glyphsWidth, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
+import { type Box, CALENDAR_IMAGE_RATIOS, type Ctx, drawGlyphs, eventGlyphs, fitText, glyphsWidth, roundRect, wrapText } from "./calendar-image-canvas";
+import { drawFrame } from "./calendar-image-frame";
 import type { CalendarImageAssets, CalendarImageFonts, CalendarImageOptions } from "./calendar-image-draw";
 import { monthGrid, type YearMonth } from "../domain/calendar";
 import type { CalendarTone } from "../domain/calendar-kind";
@@ -181,7 +181,6 @@ type Placed = { item: LegendItem; x: number; y: number; w: number; h: number; li
 export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarImageData, options: CalendarImageOptions, fonts: CalendarImageFonts, assets: CalendarImageAssets, palette: CalendarImagePalette): void {
   const { width: W, height: H } = CALENDAR_IMAGE_RATIOS[options.ratio];
   const unit = Math.min(W, H) / 1080;
-  const pad = 32 * unit;
   const gap = 14 * unit;
   const px = (size: number) => Math.round(size * unit);
   // One geometric family throughout (the owner, 2026-10-27, of the hand-written «Evenimente» over Roboto:
@@ -194,116 +193,9 @@ export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarIma
   /** A special date's day pale pink, a social one's pale yellow, as the poster marks them; a lone run stays white. */
   const tintOf = (entry: CalendarImageEntry): "special" | "other" | null => (entry.tone === "other" ? "other" : entry.tone === "special" || entry.special ? "special" : null);
   const inkOf = (entry: CalendarImageEntry) => (tintOf(entry) ? palette[tintOf(entry) ?? "special"][1] : palette.title);
-  ctx.textBaseline = "alphabetic";
-  ctx.textAlign = "left";
-  // The page: the palette's two stops, top to bottom (one colour on «Afiș»).
-  const page = ctx.createLinearGradient(0, 0, 0, H);
-  page.addColorStop(0, palette.background[0]);
-  page.addColorStop(1, palette.background[1]);
-  ctx.fillStyle = page;
-  ctx.fillRect(0, 0, W, H);
-
-  // The band, one line: the club's real logo at the left (or, until it loads, the mountains over the
-  // spaced name), and at the right «EVENIMENTE» in spaced capitals over the month in italic Black, its year
-  // beside it lighter.
-  const bandH = clamp(H * 0.105, 118 * unit, 180 * unit);
-  roundRect(ctx, pad, pad, W - 2 * pad, bandH, 24 * unit);
-  ctx.fillStyle = palette.band;
-  ctx.fill();
-  ctx.fillStyle = palette.bandInk;
-  const bandInset = bandH * 0.15;
-  const logoH = bandH - 2 * bandInset;
-  const logoW = logoH * LOGO_RATIO;
-  const logoX = pad + bandInset * 1.6;
-  if (assets.logo) {
-    ctx.drawImage(assets.logo, logoX, pad + bandInset, logoW, logoH);
-  } else {
-    const nameSize = (logoH / unit) * 0.17;
-    const markH = logoH - nameSize * 1.7 * unit;
-    const markW = (markH * MOUNTAIN_MARK_VIEWBOX.width) / MOUNTAIN_MARK_VIEWBOX.height;
-    ctx.save();
-    ctx.translate(logoX + (logoW - markW) / 2, pad + bandInset);
-    ctx.scale(markW / MOUNTAIN_MARK_VIEWBOX.width, markH / MOUNTAIN_MARK_VIEWBOX.height);
-    ctx.globalAlpha = 0.55;
-    ctx.fill(new Path2D(FAR));
-    ctx.globalAlpha = 1;
-    ctx.fill(new Path2D(NEAR));
-    ctx.restore();
-    ctx.font = face(nameSize, 500);
-    fillSpaced(ctx, upper(data.clubName), logoX + logoW / 2, pad + bandH - bandInset, px(nameSize * 0.35), logoW);
-  }
-  const bandRight = W - pad - bandInset * 1.8;
-  const bandRoom = bandRight - (logoX + logoW + bandInset * 2);
-  const monthText = upper(data.words.monthName);
-  const yearText = ` ${data.month.year}`;
-  const monthPair = (size: number) => {
-    ctx.font = `italic ${face(size, 900)}`;
-    const monthW = ctx.measureText(monthText).width;
-    ctx.font = `italic ${face(size * 0.56, 500)}`;
-    return { size, monthW, width: monthW + ctx.measureText(yearText).width };
-  };
-  let month = monthPair((bandH / unit) * 0.52);
-  if (month.width > bandRoom) month = monthPair((month.size * bandRoom) / month.width);
-  const kickerSize = Math.max(14, month.size * 0.29);
-  const capK = kickerSize * 0.7 * unit;
-  const capM = month.size * 0.7 * unit;
-  const between = kickerSize * 0.6 * unit;
-  const blockTop = pad + (bandH - capK - between - capM) / 2;
-  const monthY = blockTop + capK + between + capM;
-  ctx.font = `italic ${face(month.size, 900)}`;
-  ctx.fillText(monthText, bandRight - month.width, monthY);
-  ctx.font = `italic ${face(month.size * 0.56, 500)}`;
-  ctx.globalAlpha = 0.8;
-  ctx.fillText(yearText, bandRight - month.width + month.monthW, monthY);
-  ctx.globalAlpha = 1;
-  ctx.font = face(kickerSize, 500);
-  const kicker = upper(data.words.heading);
-  const tracking = px(kickerSize * 0.42);
-  const kickerW = [...kicker].reduce((sum, letter) => sum + ctx.measureText(letter).width, 0) + tracking * ([...kicker].length - 1);
-  fillSpaced(ctx, kicker, bandRight - Math.min(kickerW, bandRoom) / 2, blockTop + capK, tracking, bandRoom);
-
-  // The foot: «URMĂREȘTE-NE!», each network the club has with its name, then the tags.
-  const footH = 64 * unit;
-  const footY = H - pad - footH;
-  roundRect(ctx, pad, footY, W - 2 * pad, footH, 18 * unit);
-  ctx.fillStyle = palette.band;
-  ctx.fill();
-  // Each network beside the club's name while the band holds it; past that, the marks alone — four
-  // networks with the name four times overflowed a 1080-pixel band and cut the call and the tags.
-  const withNames: { text: string; mark?: keyof typeof SOCIAL_MARKS; weight: number }[] = [
-    { text: upper(data.words.follow) + "!", weight: 800 },
-    ...data.socials.map((network) => ({ text: data.clubName, mark: network, weight: 500 })),
-    { text: data.words.hashtags, weight: 500 },
-  ];
-  const marksOnly = withNames.map((item) => (item.mark ? { ...item, text: "" } : item));
-  const markSize = 28 * unit;
-  const room = W - 2 * pad - 40 * unit;
-  // Each word measured in the weight it is drawn in.
-  const widthOf = (items: typeof withNames, size: number) =>
-    items.reduce((sum, item) => {
-      ctx.font = face(size, item.weight);
-      return sum + (item.text ? ctx.measureText(item.text).width : 0) + (item.mark ? markSize + (item.text ? 10 * unit : 0) : 0);
-    }, 0) +
-    (items.length - 1) * 30 * unit;
-  const footItems = widthOf(withNames, 20) <= room ? withNames : marksOnly;
-  let footSize = 24;
-  while (footSize > 14 && widthOf(footItems, footSize) > room) footSize -= 1;
-  let footX = (W - widthOf(footItems, footSize)) / 2;
-  for (const item of footItems) {
-    if (item.mark) {
-      ctx.save();
-      ctx.translate(footX, footY + (footH - markSize) / 2);
-      ctx.scale(markSize / 24, markSize / 24);
-      ctx.fillStyle = palette.bandInk;
-      ctx.fill(new Path2D(SOCIAL_MARKS[item.mark].path));
-      ctx.restore();
-      footX += markSize + (item.text ? 10 * unit : 0);
-    }
-    ctx.font = face(footSize, item.weight);
-    ctx.fillStyle = palette.bandInk;
-    if (item.text) ctx.fillText(item.text, footX, footY + footH / 2 + footSize * 0.36 * unit);
-    footX += (item.text ? ctx.measureText(item.text).width : 0) + 30 * unit;
-  }
+  // The page, the band and the foot are the frame's (`calendar-image-frame.ts`); what is left is the body's.
+  const area = drawFrame(ctx, data, options, fonts, assets, palette);
+  if (!area) return;
 
   // ---- The marks: a series' date as its glyph and its hour on a pill of the series' look.
   const laneLook = (lane: PosterLane) => {
@@ -775,7 +667,6 @@ export function drawPosterHeads(ctx: CanvasRenderingContext2D, data: CalendarIma
     }
   }
 
-  const area: Box = { x: pad, y: pad + bandH + gap, w: W - 2 * pad, h: footY - gap - (pad + bandH + gap) };
   const irregular = plan.lanes.filter((lane) => lane.column === null);
   const allDates = [...plan.dates.values()].flat();
   const itemsFor = (dates: CalendarImageEntry[]): LegendItem[] => [

@@ -66,13 +66,15 @@ export async function calendarImageProps(
       cancelled: t("cancelled"),
       follow: t("follow"),
       more: t.raw("more") as string,
+      emptyMonth: t("emptyMonth"),
+      emptyWeek: t("emptyWeek"),
     },
   };
   const dialogWords: CalendarImageDialogWords = {
     open: t("open"),
     title: t("title"),
     theme: t("theme"),
-    themes: { poster: t("themes.poster"), club: t("themes.club"), light: t("themes.light"), dark: t("themes.dark"), season: t("themes.season") },
+    themes: { poster: t("themes.poster"), club: t("themes.club"), light: t("themes.light"), dark: t("themes.dark"), season: t("themes.season"), mono: t("themes.mono"), warm: t("themes.warm") },
     ratio: t("ratio"),
     ratios: { portrait: t("ratios.portrait"), square: t("ratios.square"), story: t("ratios.story"), landscape: t("ratios.landscape") },
     layout: t("layout"),

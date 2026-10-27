@@ -1,7 +1,7 @@
 import type { CalendarImagePalette } from "@/theme/brand";
 import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
-import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
-import { type Box, CALENDAR_IMAGE_RATIOS, type Ctx, drawGlyphs, eventGlyphs, fillSpaced, fitText, glyphsWidth, LOGO_RATIO, roundRect, wrapText } from "./calendar-image-canvas";
+import { type Box, CALENDAR_IMAGE_RATIOS, type Ctx, drawGlyphs, eventGlyphs, fitText, glyphsWidth, roundRect, wrapText } from "./calendar-image-canvas";
+import { drawFrame } from "./calendar-image-frame";
 import type { CalendarImageAssets, CalendarImageFonts, CalendarImageOptions } from "./calendar-image-draw";
 import { SPECIAL_PATH, TYPE_PATHS } from "./calendar-image-glyphs";
 import { monthGrid } from "../domain/calendar";
@@ -76,7 +76,6 @@ export function drawPosterCells(ctx: CanvasRenderingContext2D, data: CalendarIma
   const u = Math.min(W, H) / 1080;
   /** The smallest words the poster draws: what a phone still reads in a feed. */
   const MIN = 14 * u;
-  const pad = 32 * u;
   const gap = 16 * u;
   const story = options.ratio === "story";
   // One geometric family throughout: italic Black for the month, ExtraBold for the labels and the day
@@ -88,120 +87,9 @@ export function drawPosterCells(ctx: CanvasRenderingContext2D, data: CalendarIma
     ctx.font = font;
     return ctx.measureText(text).width;
   };
-  ctx.textBaseline = "alphabetic";
-  ctx.textAlign = "left";
-  // The page: the palette's two stops, top to bottom (one colour on «Afiș»).
-  const page = ctx.createLinearGradient(0, 0, 0, H);
-  page.addColorStop(0, palette.background[0]);
-  page.addColorStop(1, palette.background[1]);
-  ctx.fillStyle = page;
-  ctx.fillRect(0, 0, W, H);
-
-  // ── The band: the logo on the left; «EVENIMENTE» over the month and its year, on the right.
-  const bandH = clamp(H * 0.115, 128 * u, 230 * u);
-  // A story keeps its band and its foot a little in from the edges Instagram covers with its own bars.
-  const bandY = story ? 64 * u : pad;
-  roundRect(ctx, pad, bandY, W - 2 * pad, bandH, 24 * u);
-  ctx.fillStyle = palette.band;
-  ctx.fill();
-  ctx.fillStyle = palette.bandInk;
-  const inset = bandH * 0.16;
-  let wordsLeft: number;
-  if (assets.logo) {
-    const logoH = Math.min(bandH - 2 * inset, (0.34 * (W - 2 * pad)) / LOGO_RATIO);
-    ctx.drawImage(assets.logo, pad + inset, bandY + (bandH - logoH) / 2, logoH * LOGO_RATIO, logoH);
-    wordsLeft = pad + inset + logoH * LOGO_RATIO + inset * 1.5;
-  } else {
-    // Until the logo loads: the mountains over «BRAȘOV RUNNERS», spaced.
-    const markH = (bandH - 2 * inset) * 0.62;
-    const markW = (markH * MOUNTAIN_MARK_VIEWBOX.width) / MOUNTAIN_MARK_VIEWBOX.height;
-    const nameSize = Math.max(MIN, bandH * 0.1);
-    ctx.font = face(nameSize, 500);
-    const tracking = nameSize * 0.3;
-    const name = upper(data.clubName);
-    const nameW = [...name].reduce((sum, letter) => sum + ctx.measureText(letter).width, 0) + tracking * ([...name].length - 1);
-    const blockW = Math.max(markW, nameW);
-    const top = bandY + (bandH - markH - nameSize * 1.6) / 2;
-    ctx.save();
-    ctx.translate(pad + inset + (blockW - markW) / 2, top);
-    ctx.scale(markW / MOUNTAIN_MARK_VIEWBOX.width, markH / MOUNTAIN_MARK_VIEWBOX.height);
-    ctx.globalAlpha = 0.55;
-    ctx.fill(new Path2D(FAR));
-    ctx.globalAlpha = 1;
-    ctx.fill(new Path2D(NEAR));
-    ctx.restore();
-    fillSpaced(ctx, name, pad + inset + blockW / 2, top + markH + nameSize * 1.4, tracking, blockW);
-    wordsLeft = pad + inset + blockW + inset * 1.5;
-  }
-  {
-    const right = W - pad - inset;
-    const room = right - wordsLeft;
-    const monthText = upper(data.words.monthName);
-    const yearText = ` ${data.month.year}`;
-    const pairWidth = (size: number) => measure(monthText, face(size, 900, true)) + measure(yearText, face(size * 0.52, 500, true));
-    let monthSize = bandH * 0.5;
-    if (pairWidth(monthSize) > room) monthSize *= room / pairWidth(monthSize);
-    const kicker = clamp(bandH * 0.14, MIN, 30 * u);
-    // Cap heights: Poppins' capitals stand about 0.7 of the size.
-    const blockH = kicker * 0.7 + kicker * 0.8 + monthSize * 0.7;
-    const top = bandY + (bandH - blockH) / 2;
-    ctx.fillStyle = palette.bandInk;
-    ctx.font = face(kicker, 500);
-    const kickerText = upper(data.words.heading);
-    const tracking = kicker * 0.42;
-    const kickerW = [...kickerText].reduce((sum, letter) => sum + ctx.measureText(letter).width, 0) + tracking * ([...kickerText].length - 1);
-    fillSpaced(ctx, kickerText, right - Math.min(kickerW, room) / 2, top + kicker * 0.7, tracking, room);
-    const pairW = pairWidth(monthSize);
-    const monthW = measure(monthText, face(monthSize, 900, true));
-    const monthY = top + blockH;
-    ctx.font = face(monthSize, 900, true);
-    ctx.fillText(monthText, right - pairW, monthY);
-    ctx.font = face(monthSize * 0.52, 500, true);
-    ctx.globalAlpha = 0.8;
-    ctx.fillText(yearText, right - pairW + monthW, monthY);
-    ctx.globalAlpha = 1;
-  }
-
-  // ── The foot: «URMĂREȘTE-NE!», each network the club has with its name, then the tags.
-  const footH = clamp(H * 0.05, 56 * u, 84 * u);
-  const footY = H - (story ? 72 * u : pad) - footH;
-  roundRect(ctx, pad, footY, W - 2 * pad, footH, 18 * u);
-  ctx.fillStyle = palette.band;
-  ctx.fill();
-  {
-    // Each network beside the club's name while the band holds it; past that, the marks alone.
-    const withNames: { text: string; mark?: keyof typeof SOCIAL_MARKS; weight: number }[] = [
-      { text: upper(data.words.follow) + "!", weight: 800 },
-      ...data.socials.map((network) => ({ text: data.clubName, mark: network, weight: 500 })),
-      { text: data.words.hashtags, weight: 500 },
-    ];
-    const marksOnly = withNames.map((item) => (item.mark ? { ...item, text: "" } : item));
-    const markSize = footH * 0.44;
-    const room = W - 2 * pad - 40 * u;
-    const spacing = footH * 0.47;
-    const widthOf = (items: typeof withNames, size: number) =>
-      items.reduce((sum, item) => sum + (item.text ? measure(item.text, face(size, item.weight)) : 0) + (item.mark ? markSize + (item.text ? 10 * u : 0) : 0), 0) +
-      (items.length - 1) * spacing;
-    let footSize = footH * 0.38;
-    const footItems = widthOf(withNames, footSize * 0.85) <= room ? withNames : marksOnly;
-    while (footSize > MIN && widthOf(footItems, footSize) > room) footSize -= 0.5 * u;
-    let footX = (W - widthOf(footItems, footSize)) / 2;
-    for (const item of footItems) {
-      if (item.mark) {
-        ctx.save();
-        ctx.translate(footX, footY + (footH - markSize) / 2);
-        ctx.scale(markSize / 24, markSize / 24);
-        ctx.fillStyle = palette.bandInk;
-        ctx.fill(new Path2D(SOCIAL_MARKS[item.mark].path));
-        ctx.restore();
-        footX += markSize + (item.text ? 10 * u : 0);
-      }
-      ctx.font = face(footSize, item.weight);
-      ctx.fillStyle = palette.bandInk;
-      if (item.text) ctx.fillText(item.text, footX, footY + footH / 2 + footSize * 0.36);
-      footX += (item.text ? ctx.measureText(item.text).width : 0) + spacing;
-    }
-  }
+  // The page, the band and the foot are the frame's (`calendar-image-frame.ts`); what is left is the body's.
+  const content = drawFrame(ctx, data, options, fonts, assets, palette);
+  if (!content) return;
 
   // ── What the days say. A weekly series (one the legend names, up to its colours) is a chip; the rest
   // stand alone with their titles. A title that repeats is the poster's plain white day; the rest are marked.
@@ -717,7 +605,6 @@ export function drawPosterCells(ctx: CanvasRenderingContext2D, data: CalendarIma
   // ── Where everything goes. The legend goes inside the grid, into the runs of empty days before the 1st and
   // after the last; a week whose run holds more than its share of height grows to hold it, and the other
   // weeks share what is left. Only what no run can hold takes a strip under the grid.
-  const content: Box = { x: pad, y: bandY + bandH + gap, w: W - 2 * pad, h: footY - gap - (bandY + bandH + gap) };
   const cellW = content.w / 7;
   const headH = clamp(cellW * 0.26, 34 * u, 44 * u);
   const leadCount = weeks[0].findIndex((day) => day.inMonth);

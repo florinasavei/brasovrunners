@@ -372,6 +372,8 @@
   "follow": "Follow us",
   "more": "+{count} more",
   "at": "at {time}",
-  "hashtags": "#NoOneLeftBehind #brasovrunners"
+  "hashtags": "#NoOneLeftBehind #brasovrunners",
+  "emptyMonth": "No runs this month",
+  "emptyWeek": "No runs this week"
  }
 }

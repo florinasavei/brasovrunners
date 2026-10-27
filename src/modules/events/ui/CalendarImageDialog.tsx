@@ -3,6 +3,7 @@
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import CloseIcon from "@mui/icons-material/Close";
+import ContrastIcon from "@mui/icons-material/Contrast";
 import CropLandscapeIcon from "@mui/icons-material/CropLandscape";
 import CropPortraitIcon from "@mui/icons-material/CropPortrait";
 import CropSquareIcon from "@mui/icons-material/CropSquare";
@@ -15,6 +16,7 @@ import StayCurrentPortraitIcon from "@mui/icons-material/StayCurrentPortrait";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewAgendaIcon from "@mui/icons-material/ViewAgenda";
 import ViewWeekIcon from "@mui/icons-material/ViewWeek";
+import WhatshotIcon from "@mui/icons-material/Whatshot";
 import DownloadIcon from "@mui/icons-material/Download";
 import ShareIcon from "@mui/icons-material/Share";
 import Checkbox from "@mui/material/Checkbox";
@@ -72,8 +74,8 @@ export type CalendarImageDialogWords = {
 
 const RATIOS = Object.keys(CALENDAR_IMAGE_RATIOS) as CalendarImageRatio[];
 
-/** Each choice wears its glyph before its word (§498): a poster's megaphone, the club's runner, the sun, the moon, a tree for the season; the shapes by their frame. */
-const THEME_ICON = { poster: CampaignIcon, club: DirectionsRunIcon, light: LightModeIcon, dark: DarkModeIcon, season: ParkIcon } as const;
+/** Each choice wears its glyph before its word (§498): a poster's megaphone, the club's runner, the sun, the moon, a tree for the season, a half-filled circle for the monochrome, a warm sun; the shapes by their frame. */
+const THEME_ICON = { poster: CampaignIcon, club: DirectionsRunIcon, light: LightModeIcon, dark: DarkModeIcon, season: ParkIcon, mono: ContrastIcon, warm: WhatshotIcon } as const;
 const RATIO_ICON = { portrait: CropPortraitIcon, square: CropSquareIcon, story: StayCurrentPortraitIcon, landscape: CropLandscapeIcon } as const;
 /** The layouts: the series in the weekday columns, chips in the cells, the key in a panel below. */
 const LAYOUT_ICON = { heads: ViewWeekIcon, cells: GridViewIcon, formats: ViewAgendaIcon } as const;

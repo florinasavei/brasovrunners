@@ -17,8 +17,12 @@ import type { CalendarImageData } from "../domain/calendar-image";
  * a layout reaches every theme.
  */
 
-/** «Afiș» (the club's own poster, the default), «Clubul», «Luminos», «Întunecat», «Sezonul lunii». */
-export const CALENDAR_IMAGE_THEME_CHOICES = ["poster", "club", "light", "dark", "season"] as const;
+/**
+ * «Afiș» (the club's own poster, the default), «Clubul», «Luminos», «Întunecat», «Sezonul lunii», then
+ * «Monocrom» (a white sheet and ink, for printing and a black-and-white feed) and «Cald» (a cream sheet, a
+ * burnt-orange band) — the owner, 2026-10-27: «I need more styles and configs».
+ */
+export const CALENDAR_IMAGE_THEME_CHOICES = ["poster", "club", "light", "dark", "season", "mono", "warm"] as const;
 export type CalendarImageTheme = (typeof CALENDAR_IMAGE_THEME_CHOICES)[number];
 
 /**

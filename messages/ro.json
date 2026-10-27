@@ -204,7 +204,9 @@
           "club": "Clubul",
           "light": "Luminos",
           "dark": "Întunecat",
-          "season": "Sezonul lunii"
+          "season": "Sezonul lunii",
+          "mono": "Monocrom",
+          "warm": "Cald"
         },
         "ratio": "Format",
         "ratios": {
@@ -236,6 +238,8 @@
         "cancelled": "Anulat",
         "follow": "Urmărește-ne",
         "more": "+{count} altele",
+        "emptyMonth": "Nicio alergare luna aceasta",
+        "emptyWeek": "Nicio alergare săptămâna aceasta",
         "at": "ora {time}",
         "hashtags": "#NoOneLeftBehind #brasovrunners",
         "details": "Detalii",

@@ -1,4 +1,4 @@
-// yarn calendar:preview [--month june|busy|sparse|fortnight|empty|all] [--theme poster|club|light|dark|season|all] [--week none|all|<n>]
+// yarn calendar:preview [--month june|busy|sparse|fortnight|empty|all] [--theme poster|club|light|dark|season|mono|warm|all] [--week none|all|<n>]
 //
 // «Salvează ca imagine» (§855) drawn without a server or a database: the page's own drawing code is bundled,
 // served beside `public/` (the logo, the poster's fonts) and the site's fonts, and every month asked is written
