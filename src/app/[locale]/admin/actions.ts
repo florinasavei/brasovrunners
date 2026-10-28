@@ -314,6 +314,10 @@ function eventFieldsFrom(form: FormData) {
     // without the box reads as "not editing the English name" rather than as a blank one.
     locationName: value("locationName"),
     locationNameEn: form.has("event.locationNameEn") ? value("locationNameEn") : undefined,
+    // «Locul, pe scurt» (migration `0181`), one box per language under the names, by the same rule:
+    // only when the form carried it, so a form without the box leaves the stored word alone.
+    locationShort: form.has("event.locationShort") ? value("locationShort") : undefined,
+    locationShortEn: form.has("event.locationShortEn") ? value("locationShortEn") : undefined,
     // No box for it any more (the Locul box); the field is folded into the meeting point.
     locationAddress: null,
     // "Locația se anunță mai târziu" (§328): a switch, so an absent value is "announced" —

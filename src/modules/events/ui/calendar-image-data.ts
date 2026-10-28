@@ -4,10 +4,11 @@ import type { Locale } from "@/i18n/routing";
 import { CLUB_NAME } from "@/theme/brand";
 import { calendarTone } from "../domain/calendar-kind";
 import type { CalendarImageData } from "../domain/calendar-image";
-import { calendarImageRows } from "../domain/calendar-image-rows";
+import { type CalendarImageFormat, calendarImageDetails, calendarImageRows } from "../domain/calendar-image-rows";
 import { dayKey, type YearMonth } from "../domain/calendar";
 import type { PublicEvent } from "../repository";
 import type { CalendarImageDialogWords } from "./CalendarImageDialog";
+import { routeWordFormat } from "./calendar-image-words";
 import { recurrenceSentence } from "./series-sentence";
 import { clubSocialLinks } from "@/shared/ui/club-socials";
 
@@ -23,7 +24,9 @@ export async function calendarImageProps(
 ): Promise<{ data: CalendarImageData; words: CalendarImageDialogWords }> {
   const t = await getTranslations("Events.calendar.image");
   const format = await getFormatter();
-  const { entries, series, singles } = calendarImageRows(month, events, (event) => formatTime(event.startsAt, { locale, timeZone: event.timezone }));
+  // The hour in the club's zone, and the route's words as the page's pills say them: «8 km», «≈ 350 m D+».
+  const formatters: CalendarImageFormat = { time: (event) => formatTime(event.startsAt, { locale, timeZone: event.timezone }), ...(await routeWordFormat()) };
+  const { entries, series, singles } = calendarImageRows(month, events, formatters);
   const recurring = await Promise.all(
     series.map(async (members) => ({
       title: members[0].title ?? "",
@@ -31,6 +34,7 @@ export async function calendarImageProps(
       tone: calendarTone(members[0]),
       type: members[0].type,
       surface: members[0].surface ?? null,
+      ...calendarImageDetails(members[0], formatters),
     })),
   );
   const specials = singles.map((event) => ({
@@ -39,6 +43,7 @@ export async function calendarImageProps(
     tone: calendarTone(event),
     type: event.type,
     surface: event.surface ?? null,
+    ...calendarImageDetails(event, formatters),
   }));
   const data: CalendarImageData = {
     month,
@@ -59,24 +64,34 @@ export async function calendarImageProps(
       recurringTitle: t("recurringTitle"),
       specialTitle: t("specialTitle"),
       cancelled: t("cancelled"),
+      tba: t("tba"),
       follow: t("follow"),
       more: t.raw("more") as string,
+      emptyMonth: t("emptyMonth"),
+      emptyWeek: t("emptyWeek"),
     },
   };
-  const words: CalendarImageDialogWords = {
+  const dialogWords: CalendarImageDialogWords = {
     open: t("open"),
     title: t("title"),
     theme: t("theme"),
-    themes: { poster: t("themes.poster"), club: t("themes.club"), light: t("themes.light"), dark: t("themes.dark"), season: t("themes.season") },
+    themes: { poster: t("themes.poster"), club: t("themes.club"), light: t("themes.light"), dark: t("themes.dark"), season: t("themes.season"), mono: t("themes.mono"), warm: t("themes.warm") },
     ratio: t("ratio"),
     ratios: { portrait: t("ratios.portrait"), square: t("ratios.square"), story: t("ratios.story"), landscape: t("ratios.landscape") },
     layout: t("layout"),
     layouts: { heads: t("layouts.heads"), cells: t("layouts.cells"), formats: t("layouts.formats") },
+    period: t("period"),
+    periods: { month: t("periods.month"), week: t("periods.week") },
+    week: t("week"),
     legend: t("legend"),
     download: t("download"),
     share: t("share"),
     close: t("close"),
     preview: t("preview"),
+    details: t("details"),
+    detailsPlace: t("detailsPlace"),
+    detailsDistance: t("detailsDistance"),
+    detailsElevation: t("detailsElevation"),
   };
-  return { data, words };
+  return { data, words: dialogWords };
 }

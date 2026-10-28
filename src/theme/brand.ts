@@ -550,13 +550,26 @@ export const WORDMARK_SIZE = "1rem";
 
 /**
  * «Salvează ca imagine» (§855): the palettes the calendar picture is drawn in, in the browser, on a
- * `<canvas>`. Each names the page behind the month (`background`, two stops top to bottom), the band
- * that carries the club's name (`band`, `bandInk`), a day's cell (`cell`, `cellInk`, `cellMuted` for the
- * neighbouring months' days), the hairlines (`line`) and the three kinds of date — the weekly runs, the
- * special editions and the rest (`weekly`, `special`, `other`, each a fill and its ink). «Sezon» is four
- * palettes, one per season, chosen by the month drawn.
+ * `<canvas>`. The picture is one of three layouts (`calendar-image-poster-*.ts`); the theme the visitor
+ * picks is only the palette the layout is handed. Each names the page behind the month (`background`, two
+ * stops top to bottom), the band that carries the club's name and the foot (`band`, `bandInk`), a day's
+ * cell (`cell`, `cellInk`), the weekday heads' row and the legend's panels (`cellMuted`), the grid's
+ * hairlines (`line`), the hours and the legend's notes (`title`), and the three kinds of date — the weekly
+ * runs, the special editions and the rest (`weekly`, `special`, `other`, each a fill and its ink). «Sezon»
+ * is four palettes, one per season, chosen by the month drawn.
+ *
+ * The layouts read the slots in pairs, which `tests/unit/theme/brand.test.ts` holds at 4.5:1 on every
+ * palette: `bandInk` on `band` (the band, the foot, a series' strip, the weekly chips), on `special[1]`
+ * and `other[1]` (the legend's «Evenimente speciale» pill, a series' strip of that kind) and on `cellInk`
+ * (a third series' strip on one weekday); `band` on `cell` (a series' outlined strip, its hour) and on
+ * `weekly[0]` (the agenda's day number on a weekly date's card); `title` on `cellMuted` (the weekdays, the
+ * legend's notes) and on `cell` and the two tinted days (the hours); `cellInk` on `cell`, on `cellMuted`
+ * and on `special[0]`, `other[0]` and `weekly[0]` (the numbers and the titles); `special[1]` and `other[1]`
+ * on `cell` and on their own tints («Anulat», the glyphs, the agenda's day numbers) and `weekly[1]` on its
+ * own (the glyph on a weekly date's card); each series' ink on its fill, and each series' fill as the
+ * words of its cancelled chip on `cell`. `line` is only seen, not read: a hairline on `cell`.
  */
-type CalendarImagePalette = {
+export type CalendarImagePalette = {
   background: readonly [string, string];
   band: string;
   bandInk: string;
@@ -564,57 +577,118 @@ type CalendarImagePalette = {
   cellInk: string;
   cellMuted: string;
   line: string;
-  /** The legends' headings, on a cell. */
+  /** The hours, the legend's notes and the weekday heads. */
   title: string;
   weekly: readonly [string, string];
   special: readonly [string, string];
   other: readonly [string, string];
   /**
-   * «Afiș» alone: each weekly series' own colour, in the order the month's legend lists them — a series'
-   * dates are chips of that colour in their days, and the legend's chip of the same colour names it. A
-   * fill under its ink, each pair at least 4.5:1.
+   * Each weekly series' own colour, in the order the month's legend lists them — a series' dates are chips
+   * of that colour in their days, and the legend's chip of the same colour names it. A fill under its ink,
+   * each pair at least 4.5:1; the fill alone writes «Anulat» on a cancelled chip, so it reads on `cell` too.
    */
-  series?: readonly (readonly [string, string])[];
+  series: readonly (readonly [string, string])[];
 };
 
-const CLUB_PALETTE: CalendarImagePalette = {
+/** A burnt orange: white on it 5.1:1, and itself 4.7:1 on the poster's cream day and 5.1:1 on a white cell. */
+const BURNT_ORANGE = "#b4511d";
+
+/**
+ * The series' colours on a white cell: the club's blue first, then a teal, a violet and the burnt orange,
+ * white words on each — none the specials' pink or cream, so a special date is told from a series at a glance.
+ */
+const SERIES_ON_WHITE: CalendarImagePalette["series"] = [
+  [COLOR.blue, COLOR.surface],
+  ["#00796b", COLOR.surface],
+  ["#6b2fc2", COLOR.surface],
+  [BURNT_ORANGE, COLOR.surface],
+];
+
+/** The poster's weekday row and its hairlines: the club's blue, very pale — the blue themes' too. */
+const PALE_BLUE_ROW = "#e9eeff";
+const PALE_BLUE_LINE = "#c7d2ff";
+
+/** «Întunecat»'s day cell: a blue-grey a step above its page, and a weekly date's bare card on it. */
+const DARK_CELL = "#1b1e2b";
+
+/** «Monocrom»'s sheet and ink: pure white and near-black, as a printer and a black-and-white feed want them. */
+const MONO_SHEET = "#ffffff";
+const MONO_INK = "#111111";
+
+/** «Cald»'s day cell: a warm white a step above its cream page. */
+const WARM_CELL = "#fffdf8";
+
+/**
+ * The club's colours on a white cell, which «Sezon» draws on each season's page: the hours a deep blue, the
+ * weekday row and the hairlines a neutral grey that sits on any page, a special day the site's pale green
+ * and a social one its warm grey, a weekly date's own card bare, as «Afiș» has it. The band is each theme's
+ * own, so none is held here.
+ */
+const CLUB_PALETTE: Omit<CalendarImagePalette, "band"> = {
   background: [COLOR.blue, COLOR.blueInk],
-  band: COLOR.blueInk,
   bandInk: COLOR.surface,
   cell: COLOR.surface,
   cellInk: COLOR.ink,
   cellMuted: COLOR.line,
   line: COLOR.line,
   title: COLOR.blueInk,
-  weekly: [COLOR.accentTint, COLOR.accentInk],
+  weekly: [COLOR.surface, COLOR.blue],
   special: [COLOR.kindSpecial, COLOR.kindSpecialInk],
   other: [COLOR.kindOther, COLOR.ink],
+  series: SERIES_ON_WHITE,
 };
 
 export const CALENDAR_IMAGE_THEMES = {
-  club: CLUB_PALETTE,
+  /**
+   * «Clubul»: the club's blue page, from the logo's blue to its ink blue. The band, the foot and the hours
+   * are the kit's navy (`GRADIENT.deep`) rather than the ink blue, which the page's lower half is — a foot
+   * the colour of the page under it was no band at all; the row and the hairlines the poster's pale blue,
+   * which the grey fought.
+   */
+  club: { ...CLUB_PALETTE, band: GRADIENT.deep, title: GRADIENT.deep, cellMuted: PALE_BLUE_ROW, line: PALE_BLUE_LINE },
+  /** «Luminos»: the site's paper under the club's colours, the logo's blue for the band. */
   light: {
     ...CLUB_PALETTE,
     background: [COLOR.paper, COLOR.paper],
     band: COLOR.blue,
-    line: COLOR.line,
+    cellMuted: PALE_BLUE_ROW,
+    line: PALE_BLUE_LINE,
   },
+  /**
+   * «Întunecat»: the dark page and dark cells, the words light. The band is the dark scheme's blue with the
+   * page's dark under its words rather than a navy under light ones, because the layouts write the band's
+   * colour on a cell too (a series' strip, its hour) and fill the weekly chips with it: on a dark cell only a
+   * light fill does both (6.4:1 on the cell, 7.3:1 under the dark words). The same holds for the specials'
+   * green and the socials' orange — pills under the dark words, words on the cell — and for the four series:
+   * light fills under the dark words, each at least 9:1 on the cell. A special day is a deep green, a
+   * social one a warm brown: dark enough for the light words, far enough in hue from the blue-grey cell. A
+   * weekly date's own card is the bare cell under the band's blue, as «Afiș» has it bare under its blue.
+   */
   dark: {
     background: ["#0e1018", "#171a26"],
-    band: "#1f2336",
-    bandInk: COLOR_DARK.blue,
-    cell: "#1b1e2b",
+    band: COLOR_DARK.blue,
+    bandInk: COLOR_DARK.paper,
+    cell: DARK_CELL,
     cellInk: "#eceae4",
     cellMuted: "#2c3043",
-    line: "#2c3043",
-    title: COLOR_DARK.blue,
-    weekly: [COLOR_DARK.accentTint, COLOR_DARK.accentInk],
-    special: [COLOR_DARK.kindSpecial, COLOR_DARK.kindSpecialInk],
-    other: ["#2a2d3a", "#eceae4"],
+    line: "#343a52",
+    title: COLOR_DARK.blueInk,
+    weekly: [DARK_CELL, COLOR_DARK.blue],
+    special: ["#1f4a2c", COLOR_DARK.kindSpecialInk],
+    other: ["#3a2f1e", COLOR.orange],
+    series: [
+      [COLOR_DARK.blue, COLOR_DARK.paper],
+      ["#4fd1c5", COLOR_DARK.paper],
+      ["#c4a7ff", COLOR_DARK.paper],
+      ["#ffb067", COLOR_DARK.paper],
+    ],
   },
   /**
    * «Afiș» (§855): the club's hand-made monthly poster, as the owner handed it over — a white sheet, the
    * logo's blue band, the weekdays on a pale blue row, a special date's cell in pale pink or pale yellow.
+   * The pink that writes on the pink day is the site's deeper one (`accentInk`: the hot pink was 4.27:1 on
+   * its tint), and the cream day's is the burnt orange (the site's orange was 2.51:1 on the cream and
+   * 2.64:1 on a white cell, where the agenda's day numbers and the glyphs wear it).
    */
   poster: {
     background: [COLOR.surface, COLOR.surface],
@@ -622,24 +696,68 @@ export const CALENDAR_IMAGE_THEMES = {
     bandInk: COLOR.surface,
     cell: COLOR.surface,
     cellInk: COLOR.blueInk,
-    cellMuted: "#e9eeff",
-    line: "#c7d2ff",
+    cellMuted: PALE_BLUE_ROW,
+    line: PALE_BLUE_LINE,
     title: COLOR.blue,
     weekly: [COLOR.surface, COLOR.blue],
-    special: [COLOR.accentTint, COLOR.accent],
-    other: ["#fff4d6", COLOR.orange],
-    // The club's blue first, then a teal, a violet and a burnt orange: none the specials' pink or cream.
-    series: [
-      [COLOR.blue, COLOR.surface],
-      ["#00796b", COLOR.surface],
-      ["#6b2fc2", COLOR.surface],
-      ["#b4511d", COLOR.surface],
-    ],
+    special: [COLOR.accentTint, COLOR.accentInk],
+    other: ["#fff4d6", BURNT_ORANGE],
+    series: SERIES_ON_WHITE,
   },
   winter: { ...CLUB_PALETTE, background: ["#3f6fb5", "#9cc3e6"], band: "#1e3f73", title: "#1e3f73" },
   spring: { ...CLUB_PALETTE, background: ["#3f8f4f", "#a6d4a0"], band: "#22552d", title: "#22552d" },
   summer: { ...CLUB_PALETTE, background: ["#0b8fa8", "#f2c14e"], band: "#075e6f", title: "#075e6f" },
-  autumn: { ...CLUB_PALETTE, background: ["#b4511d", COLOR.orange], band: "#6e2f10", title: "#6e2f10" },
+  autumn: { ...CLUB_PALETTE, background: [BURNT_ORANGE, COLOR.orange], band: "#6e2f10", title: "#6e2f10" },
+  /**
+   * «Monocrom» (the owner, 2026-10-27: «I need more styles and configs»): a white sheet, an ink-black band
+   * and foot, grey tints and four grey series by lightness alone — for the club's printer and a
+   * black-and-white feed. The lightest series grey is the classic 4.5:1 one on white; the two tints are
+   * told apart by their depth, a special day the darker, and the series by lightness alone — fine for a
+   * colour-blind reader, less so for a faint print, which is why they step from ink to a mid grey, never paler.
+   */
+  mono: {
+    background: [MONO_SHEET, MONO_SHEET],
+    band: MONO_INK,
+    bandInk: MONO_SHEET,
+    cell: MONO_SHEET,
+    cellInk: MONO_INK,
+    cellMuted: "#ededed",
+    line: "#d0d0d0",
+    title: "#3d3d3d",
+    weekly: [MONO_SHEET, MONO_INK],
+    special: ["#dedede", "#1f1f1f"],
+    other: ["#f1f1f1", "#555555"],
+    series: [
+      [MONO_INK, MONO_SHEET],
+      ["#3a3a3a", MONO_SHEET],
+      ["#5c5c5c", MONO_SHEET],
+      ["#757575", MONO_SHEET],
+    ],
+  },
+  /**
+   * «Cald»: a cream sheet, the burnt orange for the band and the hours' deep burnt brown, the poster's tints
+   * warmed — a peach special day, a straw social one — and the series the orange, a pine green, a plum and
+   * a coffee brown, white words on each.
+   */
+  warm: {
+    background: ["#fbf3e6", "#f5e6d0"],
+    band: BURNT_ORANGE,
+    bandInk: COLOR.surface,
+    cell: WARM_CELL,
+    cellInk: "#3b2314",
+    cellMuted: "#f6e7d2",
+    line: "#e9d3b8",
+    title: "#8a3a12",
+    weekly: [WARM_CELL, BURNT_ORANGE],
+    special: ["#fde3d3", "#8f2a1b"],
+    other: ["#f8ecc4", "#5d4a1f"],
+    series: [
+      [BURNT_ORANGE, COLOR.surface],
+      ["#2f6f5e", COLOR.surface],
+      ["#7a3b8f", COLOR.surface],
+      ["#5a4634", COLOR.surface],
+    ],
+  },
 } as const satisfies Record<string, CalendarImagePalette>;
 
 export type CalendarImagePaletteName = keyof typeof CALENDAR_IMAGE_THEMES;

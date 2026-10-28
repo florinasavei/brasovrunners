@@ -78,21 +78,23 @@ const hrefs = (html: string, marker: string) => [...html.matchAll(new RegExp(`${
 const hrefOf = (html: string, marker: string) => hrefs(html, marker)[0];
 
 describe("a period's path (§574)", () => {
-  it("spells a month, a month as a list and a year", () => {
+  it("spells a month, a month as a list, a year and a year's every date", () => {
     expect(calendarSegments(month(10), "grid")).toEqual(["2026-10"]);
     expect(calendarSegments(month(10), "list")).toEqual(["2026-10", "list"]);
-    // A year has no layout: it is always its agenda.
-    expect(calendarSegments({ kind: "year", year: 2027 }, "list")).toEqual(["2027"]);
+    expect(calendarSegments({ kind: "year", year: 2027 }, "grid")).toEqual(["2027"]);
+    // «Toate datele»: every date of the year.
+    expect(calendarSegments({ kind: "year", year: 2027 }, "list")).toEqual(["2027", "list"]);
   });
 
   it("reads the month the path names — the one a direct link to October shows", () => {
     expect(readCalendarSegments(["2026-10"], NOW, TZ)).toEqual({ view: month(10), layout: "grid" });
     expect(readCalendarSegments(["2026-10", "list"], NOW, TZ)).toEqual({ view: month(10), layout: "list" });
     expect(readCalendarSegments(["2027"], NOW, TZ)).toEqual({ view: { kind: "year", year: 2027 }, layout: "grid" });
+    expect(readCalendarSegments(["2027", "list"], NOW, TZ)).toEqual({ view: { kind: "year", year: 2027 }, layout: "list" });
   });
 
   it("reads nothing else: a 404, not this month under another month's address", () => {
-    for (const segments of [[], ["2026-13"], ["2026-1"], ["october"], ["2026-10", "grid"], ["2026", "list"], ["2026-10", "list", "x"], ["2029-01"], ["2023"]]) {
+    for (const segments of [[], ["2026-13"], ["2026-1"], ["october"], ["2026-10", "grid"], ["2026", "grid"], ["2026", "list", "x"], ["2023", "list"], ["2026-10", "list", "x"], ["2029-01"], ["2023"]]) {
       expect(readCalendarSegments(segments, NOW, TZ), segments.join("/")).toBeNull();
     }
     // Two years either way, as the selects offer.

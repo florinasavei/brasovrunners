@@ -72,6 +72,8 @@ export const RICH_TEXT_FIELDS: ReadonlySet<string> = new Set(["excerptBody", "bo
 const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   new RegExp(`^translations\\.en\\.(${TRANSLATION_FIELDS.join("|")})$`),
   /^event\.locationNameEn$/,
+  // «Locul, pe scurt» (migration `0181`): the English word under the English name, «Parc» → «Park».
+  /^event\.locationShortEn$/,
   /^event\.coHosts\[\d{1,2}\]\.descriptionEn$/,
   /^event\.coHosts\[\d{1,2}\]\.links\[\d{1,2}\]\.labelEn$/,
   /^event\.links\[\d{1,2}\]\.labelEn$/,

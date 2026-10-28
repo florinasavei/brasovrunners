@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.84-2026-10-27 -->
+<!-- PROJECT_BASELINE: BR-V3.86-2026-10-28 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.84-2026-10-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.86-2026-10-28`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28034,3 +28034,35 @@ Baseline `BR-V3.83-2026-10-27`.
 **Seeing it.** `yarn calendar:preview` draws the picture without a server or a database from three months in `scripts/calendar-image-preview/` (June 2026 as the club's own poster had it, a busy six-week August in English, a November with two dates), every theme, layout and format, into `dist/calendar-preview/`, with the dialog's own fonts and drawing.
 
 Baseline `BR-V3.84-2026-10-27`.
+
+## 859. The calendar picture made to post: one frame, every style in the three layouts, a week of its own, the details after each hour, and a readable floor
+
+**The owner, 2026-10-27,** of «Salvează ca imagine» (§855–§858): «Make the month calendar picture excellent. People share it on Instagram (feed 4:5 and story 9:16), Facebook (16:9) and WhatsApp (square). Today it is good but not yet great.» Asked whether «Clubul», «Luminos», «Întunecat» and «Sezonul lunii» should become palettes of «Afiș»'s three layouts or keep their own drawing: «palettes of the poster layouts». Then, mid-way: «I also need a weeks view»; and, of the month picture, «this is pretty cool, but I want some more configs, to show short location as well like "Tampa", "Parc" and also elevation, I need more styles and configs on this calendar thing».
+
+**The audit.** Every render of five sample months (June as the club's poster had it, a busy six-week August in English, a November with two dates, a September with a series on two weekdays, a fortnightly series and a 69-character title, an empty October) in every layout and format was read by eighteen judges through four lenses — legibility at a phone's 400 px, use of space, fidelity to the club's poster, robustness — and each defect was put to two verifiers against the pixels. Forty-one held: among them an empty pale band under every weekday head as tall as the tallest series strip, a series' name set five lines deep at 18 px as the smallest text on the sheet, special titles cut to «…» with free lines beside them, a key listing only the titles a day had cut (the month's race left out), an agenda at 14 px under a grid of 82-px rows, the story's month and socials under Instagram's own bars, an empty month drawn as a bare ruled grid. One did not: Instagram's profile grid shows a 4:5 post as a 3:4 tile by trimming its sides, not its rows, so nothing of a 4:5 is lost there.
+
+**One frame.** The page, the band and the foot are drawn once (`calendar-image-frame.ts`) for every layout and the week, with one set of sizes per format: on a story the band's words sit below the top 250 px and the foot's above the bottom 340 px that Instagram covers, the two fills running to the edges; on 4:5, 1:1 and 16:9 they sit inside the 32-px margin. The foot names each network by its mark once, no longer «Brașov Runners» after each. A month or a week with no date says so in one line over the mountains: «Nicio alergare luna aceasta».
+
+**The styles are palettes.** Every style draws through the three layouts — «Așezare» for all of them — and the old one-layout drawing is gone; «Monocrom» (for printing and a black-and-white feed) and «Cald» join them. Every palette holds 4.5:1 on each pair the layouts rely on, pinned by `tests/unit/theme/brand.test.ts`; «Afiș»'s pink and orange inks went one step deeper for it.
+
+**«Perioada»: a week.** «Luna» or «Săptămâna», and then one of the month's weeks: a row per day on 4:5, 1:1 and 9:16 — the day, then each date with its glyphs, hour and whole title on its tint — and seven columns on 16:9. A week that runs into the next month shows this month's days, named so («29–30 iunie»), because the page carries no other month's dates. The file is named for the range.
+
+**«Detalii» and «Locul, pe scurt».** After each hour a date may show its short place, its distance and its climb («ora 19:00 · Tâmpa · 6 km · ≈ 350 m D+»), each behind its own tick, dropped from the end when a cell is short and never at a title's expense. The short place is a word or two the organizer types in the event editor under the place's name, in Romanian and English, both or neither; it is withheld while the place is to be announced (§328), like the rest of the place. A date whose hour is not set says «ora se anunță».
+
+**The layouts.** «Seriile în cap»: a weekday's head is only as tall as its own series, a series' title is set at 20 px or more and widens over free neighbouring heads, a series on two weekdays has a strip in both, and one that skips weeks says its rhythm. «Legenda în celule»: titles and chips are sized by the cell's height as well as its width, and the key lists every special date. «Legenda dedesubt»: the weeks are budgeted so the grid stays readable and the agenda sits in the empty days when they hold it. In all three: a special date's type glyph as in the app, titles wrapped balanced and hyphenated after a vowel rather than cut, a cut ending at a word, the race never hidden behind «+N».
+
+**The floor, and the guard.** No word under 17 px on a 1080-wide picture (an hour or a detail 16, a day's number 18; 21 on 16:9), because a feed shows it about 400 px wide. `tests/unit/events/calendar-image-overflow.test.ts` draws every sample month in every style, layout, format and week on a stub canvas and fails on a text across its box's edge, over another text, off the picture or under the floor; `yarn calendar:preview` draws the same in a browser, without a server.
+
+**Refused.** A hyphenation dictionary (a dependency for a rule of thumb that reads well enough); a short place cut out of the long one by rule («Tâmpa» is not a rule's output, so the organizer types it); equal weeks at any cost (a week takes the height its dates need, a quiet week less); the 67 px a 4:5 had kept clear for a crop that never cuts rows. Still zero server cost: the picture is drawn in the visitor's browser from the month the cached page already carries, and the dialog's chunk imports nothing of the server's.
+
+Baseline `BR-V3.85-2026-10-28`.
+
+## 860. The year in two ways: «Pe scurt», each weekly series one line a month, or «Toate datele»
+
+**The owner, 2026-10-28,** of the calendar's year (§116): «arată super ciudat». A month of four Mondays and four Wednesdays was eight rows, a month with one race two, and the boxes stood in rows of a grid, so a short month left a hole beside a long one. Offered two fixes (only the layout, or the year as the club's schedule), the owner answered «Ce să aleg? Pune configs și butoane»: both, behind two pills.
+
+**«Pe scurt»** (`/calendar/2026`, the year's default): in each month a weekly series is one line — its weekdays, its hour when every date shares one, its title and how many dates («lun. · 19:00 Alergarea de luni · 4 date») — linking to its next date that month, or its last once all are gone; every special date stays whole, on its day. **«Toate datele»** (`/calendar/2026/list`): every date of every month, as the year was. The two pills stand where a month has «Calendar» and «Listă», after the same rule, and the year's path takes the same `list` segment a month does (§574); an old `?year=…&view=list` still means the year as it did.
+
+**Both** pack the month boxes in columns (two from `sm`, three from `lg`) instead of a grid's rows, so no month leaves a gap; the months run down each column in order.
+
+Baseline `BR-V3.86-2026-10-28`.

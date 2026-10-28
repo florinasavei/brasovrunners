@@ -1,0 +1,52 @@
+{
+  "month": { "year": 2026, "month": 9 },
+  "entries": [
+    { "day": 1, "time": "18:30", "title": "Intervale pe pistă", "tone": "weekly", "type": "GROUP_RUN", "surface": "ASPHALT", "special": false, "cancelled": false, "place": "Olimpia", "distance": null, "elevation": null },
+    { "day": 3, "time": "18:30", "title": "Intervale pe pistă", "tone": "weekly", "type": "GROUP_RUN", "surface": "ASPHALT", "special": false, "cancelled": false, "place": "Olimpia", "distance": null, "elevation": null },
+    { "day": 6, "time": "08:00", "title": "Alergare lungă de duminică", "tone": "weekly", "type": "GROUP_RUN", "surface": "TRAIL", "special": false, "cancelled": false, "place": "Poiana", "distance": "≈ 18 km", "elevation": "≈ 500 m D+" },
+    { "day": 8, "time": "18:30", "title": "Intervale pe pistă", "tone": "weekly", "type": "GROUP_RUN", "surface": "ASPHALT", "special": false, "cancelled": false, "place": "Olimpia", "distance": null, "elevation": null },
+    { "day": 10, "time": "18:30", "title": "Intervale pe pistă", "tone": "weekly", "type": "GROUP_RUN", "surface": "ASPHALT", "special": false, "cancelled": false, "place": "Olimpia", "distance": null, "elevation": null },
+    { "day": 12, "time": "09:00", "title": "Recunoașterea traseului pentru ultramaratoniștii clubului nostru 2026", "tone": "special", "type": "GROUP_RUN", "surface": "TRAIL", "special": true, "cancelled": false, "place": "Zărnești", "distance": "≈ 32 km", "elevation": "≈ 1.800 m D+" },
+    { "day": 15, "time": "18:30", "title": "Intervale pe pistă", "tone": "weekly", "type": "GROUP_RUN", "surface": "ASPHALT", "special": false, "cancelled": false, "place": "Olimpia", "distance": null, "elevation": null },
+    { "day": 17, "time": "18:30", "title": "Intervale pe pistă", "tone": "weekly", "type": "GROUP_RUN", "surface": "ASPHALT", "special": false, "cancelled": true, "place": "Olimpia", "distance": null, "elevation": null },
+    { "day": 20, "time": "08:00", "title": "Alergare lungă de duminică", "tone": "weekly", "type": "GROUP_RUN", "surface": "TRAIL", "special": false, "cancelled": false, "place": "Poiana", "distance": "≈ 18 km", "elevation": "≈ 500 m D+" },
+    { "day": 22, "time": "18:30", "title": "Intervale pe pistă", "tone": "weekly", "type": "GROUP_RUN", "surface": "ASPHALT", "special": false, "cancelled": false, "place": "Olimpia", "distance": null, "elevation": null },
+    { "day": 24, "time": "18:30", "title": "Intervale pe pistă", "tone": "weekly", "type": "GROUP_RUN", "surface": "ASPHALT", "special": false, "cancelled": false, "place": "Olimpia", "distance": null, "elevation": null },
+    { "day": 26, "time": "09:00", "title": "Cafea și alergare ușoară", "tone": "other", "type": "COFFEE", "surface": "ASPHALT", "special": true, "cancelled": false, "place": "Centru", "distance": "5 km", "elevation": null },
+    { "day": 26, "time": "10:30", "title": "Test de echipament Hoka", "tone": "other", "type": "GEAR_TEST", "surface": "TRAIL", "special": true, "cancelled": false, "place": "Tâmpa", "distance": null, "elevation": null },
+    { "day": 26, "time": "20:00", "title": "Brașov Night Run", "tone": "special", "type": "GROUP_RUN", "surface": "ASPHALT", "special": true, "cancelled": false, "place": "Centru", "distance": "10 km", "elevation": "≈ 100 m D+" },
+    { "day": 29, "time": "18:30", "title": "Intervale pe pistă", "tone": "weekly", "type": "GROUP_RUN", "surface": "ASPHALT", "special": false, "cancelled": false, "place": "Olimpia", "distance": null, "elevation": null },
+    { "day": 29, "time": "20:00", "title": "Ședința voluntarilor", "tone": "other", "type": "MEETUP", "surface": null, "special": true, "cancelled": false, "place": null, "distance": null, "elevation": null }
+  ],
+  "recurring": [
+    { "title": "Intervale pe pistă", "sentence": "În fiecare marți și joi, la 18:30", "tone": "weekly", "type": "GROUP_RUN", "surface": "ASPHALT", "place": "Olimpia", "distance": null, "elevation": null },
+    { "title": "Alergare lungă de duminică", "sentence": "O dată la două săptămâni, duminica, la 08:00", "tone": "weekly", "type": "GROUP_RUN", "surface": "TRAIL", "place": "Poiana", "distance": "≈ 18 km", "elevation": "≈ 500 m D+" }
+  ],
+  "specials": [
+    { "day": 12, "title": "Recunoașterea traseului pentru ultramaratoniștii clubului nostru 2026", "tone": "special", "type": "GROUP_RUN", "surface": "TRAIL", "place": "Zărnești", "distance": "≈ 32 km", "elevation": "≈ 1.800 m D+" },
+    { "day": 26, "title": "Cafea și alergare ușoară", "tone": "other", "type": "COFFEE", "surface": "ASPHALT", "place": "Centru", "distance": "5 km", "elevation": null },
+    { "day": 26, "title": "Test de echipament Hoka", "tone": "other", "type": "GEAR_TEST", "surface": "TRAIL", "place": "Tâmpa", "distance": null, "elevation": null },
+    { "day": 26, "title": "Brașov Night Run", "tone": "special", "type": "GROUP_RUN", "surface": "ASPHALT", "place": "Centru", "distance": "10 km", "elevation": "≈ 100 m D+" },
+    { "day": 29, "title": "Ședința voluntarilor", "tone": "other", "type": "MEETUP", "surface": null, "place": null, "distance": null, "elevation": null }
+  ],
+  "socials": ["facebook", "instagram", "strava", "youtube"],
+  "host": "localhost:3000",
+  "clubName": "Brașov Runners",
+  "words": {
+    "heading": "Evenimente",
+    "monthTitle": "septembrie 2026",
+    "monthName": "septembrie",
+    "weekdays": ["lun.", "mar.", "mie.", "joi", "vin.", "sâm.", "dum."],
+    "weekdaysLong": ["luni", "marți", "miercuri", "joi", "vineri", "sâmbătă", "duminică"],
+    "recurringTitle": "Evenimente recurente",
+    "specialTitle": "Evenimente speciale",
+    "cancelled": "Anulat",
+    "tba": "ora se anunță",
+    "follow": "Urmărește-ne",
+    "more": "+{count} altele",
+    "at": "ora {time}",
+    "hashtags": "#NoOneLeftBehind #brasovrunners",
+    "emptyMonth": "Nicio alergare luna aceasta",
+    "emptyWeek": "Nicio alergare săptămâna aceasta"
+  }
+}

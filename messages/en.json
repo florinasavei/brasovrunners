@@ -94,6 +94,9 @@
       "viewYear": "Year",
       "layoutGrid": "Calendar",
       "layoutList": "List",
+      "yearSummary": "Summary",
+      "yearAll": "Every date",
+      "yearSeriesDates": "{count, plural, one {# date} other {# dates}}",
       "pickMonth": "Month",
       "pickYear": "Year",
       "yearEmpty": "Nothing scheduled this year.",
@@ -204,7 +207,9 @@
           "club": "The club",
           "light": "Light",
           "dark": "Dark",
-          "season": "The month's season"
+          "season": "The month's season",
+          "mono": "Monochrome",
+          "warm": "Warm"
         },
         "ratio": "Format",
         "ratios": {
@@ -219,6 +224,12 @@
           "cells": "Key in the empty days",
           "formats": "Key below"
         },
+        "period": "Period",
+        "periods": {
+          "month": "Month",
+          "week": "Week"
+        },
+        "week": "Week",
         "legend": "Show the recurring and special events",
         "download": "Download PNG",
         "share": "Share",
@@ -228,10 +239,17 @@
         "recurringTitle": "Recurring events",
         "specialTitle": "Special events",
         "cancelled": "Cancelled",
+        "tba": "time to be announced",
         "follow": "Follow us",
         "more": "+{count} more",
+        "emptyMonth": "No runs this month",
+        "emptyWeek": "No runs this week",
         "at": "at {time}",
-        "hashtags": "#NoOneLeftBehind #brasovrunners"
+        "hashtags": "#NoOneLeftBehind #brasovrunners",
+        "details": "Details",
+        "detailsPlace": "Place",
+        "detailsDistance": "Distance",
+        "detailsElevation": "Elevation gain"
       }
     },
     "raceWeek": {
@@ -2379,6 +2397,7 @@
         "noteHelp": "Short, at most 200 characters, e.g. “The ridge is icy, bring microspikes.”"
       },
       "locationHelp": "The place, as you would tell a friend, in Romanian and in English. If the name is the same, press “Same name in English”.",
+      "locationShortHelp": "A word or two, for the month's poster: “Park”, “Poiana”. In both languages or neither.",
       "locationCopyToEnglish": "Same name in English",
       "locationEnglishLeftBehind": "The English box still says “{place}”. If the place has moved, change it here too.",
       "placeToBeAnnounced": "Location to be announced",
@@ -2428,6 +2447,7 @@
         "slug": "Page address",
         "excerpt": "Summary — shown on the page, on the listing card and in shares",
         "locationName": "Meeting point",
+        "locationShort": "Place, in short",
         "locationAddress": "Address",
         "seoTitle": "Search engine title",
         "seoDescription": "Search engine description",
@@ -3225,7 +3245,8 @@
             "tba": "To be announced",
             "map": "map",
             "none": "The meeting point is missing",
-            "inLanguage": "{language}: {name}"
+            "inLanguage": "{language}: {name}",
+            "short": "in short: {name}"
           },
           "programme": {
             "moments": {

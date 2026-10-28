@@ -69,6 +69,7 @@ export type TranslationDraft = Pick<
   | "routeDescriptionJson"
   | "checklist"
   | "locationName"
+  | "locationShort"
   | "seoTitle"
   | "seoDescription"
   | "discountNote"
@@ -90,6 +91,7 @@ export function blankTranslation(locale: Locale): TranslationDraft {
     routeDescriptionJson: null,
     checklist: null,
     locationName: null,
+    locationShort: null,
     seoTitle: null,
     seoDescription: null,
     discountNote: null,

@@ -49,11 +49,12 @@ export function calendarImageFonts(): CalendarImageFonts {
 }
 
 /**
- * Every face the picture draws with, loaded: the poster's, and the hand-written one and the club kit's, which
- * the page does not preload (they are used nowhere else on it). A face that fails leaves its fallback.
+ * The faces the picture draws with, loaded: the poster's own. The body's is the page's and is there already;
+ * the kit's and the hand-written one are named but drawn by no layout today, so nothing is fetched for them.
+ * A face that fails leaves its fallback.
  */
-export function loadCalendarImageFonts(fonts: CalendarImageFonts): Promise<unknown> {
-  return Promise.all([loadPosterFaces(), document.fonts.load(`400 64px ${fonts.script}`), document.fonts.load(`italic 900 52px ${fonts.display}`)])
+export function loadCalendarImageFonts(): Promise<unknown> {
+  return loadPosterFaces()
     .catch(() => undefined)
     .then(() => document.fonts.ready);
 }

@@ -12,7 +12,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Poiana",
+   "distance": "≈ 20 km",
+   "elevation": "≈ 600 m climb"
   },
   {
    "day": 3,
@@ -22,7 +25,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "8 km",
+   "elevation": null
   },
   {
    "day": 5,
@@ -32,7 +38,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": "6 km",
+   "elevation": "≈ 350 m climb"
   },
   {
    "day": 8,
@@ -42,7 +51,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Poiana",
+   "distance": "≈ 20 km",
+   "elevation": "≈ 600 m climb"
   },
   {
    "day": 8,
@@ -52,7 +64,10 @@
    "type": "GROUP_RUN",
    "special": true,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Poiana Brașov",
+   "distance": "≈ 12 km",
+   "elevation": "≈ 700 m climb"
   },
   {
    "day": 10,
@@ -62,7 +77,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "8 km",
+   "elevation": null
   },
   {
    "day": 12,
@@ -72,7 +90,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": "6 km",
+   "elevation": "≈ 350 m climb"
   },
   {
    "day": 15,
@@ -82,7 +103,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Poiana",
+   "distance": "≈ 20 km",
+   "elevation": "≈ 600 m climb"
   },
   {
    "day": 15,
@@ -92,7 +116,10 @@
    "type": "GROUP_RUN",
    "special": true,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": "6 km",
+   "elevation": "≈ 350 m climb"
   },
   {
    "day": 17,
@@ -102,7 +129,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "8 km",
+   "elevation": null
   },
   {
    "day": 19,
@@ -112,7 +142,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": true,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": "6 km",
+   "elevation": "≈ 350 m climb"
   },
   {
    "day": 22,
@@ -122,7 +155,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Poiana",
+   "distance": "≈ 20 km",
+   "elevation": "≈ 600 m climb"
   },
   {
    "day": 22,
@@ -132,7 +168,10 @@
    "type": "GEAR_TEST",
    "special": true,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": null,
+   "elevation": null
   },
   {
    "day": 22,
@@ -142,7 +181,10 @@
    "type": "GROUP_RUN",
    "special": true,
    "cancelled": false,
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "5 km",
+   "elevation": null
   },
   {
    "day": 24,
@@ -152,7 +194,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "8 km",
+   "elevation": null
   },
   {
    "day": 26,
@@ -162,7 +207,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": "6 km",
+   "elevation": "≈ 350 m climb"
   },
   {
    "day": 29,
@@ -172,7 +220,10 @@
    "type": "RACE",
    "special": true,
    "cancelled": false,
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "21.1 km",
+   "elevation": "≈ 150 m climb"
   },
   {
    "day": 29,
@@ -182,7 +233,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Poiana",
+   "distance": "≈ 20 km",
+   "elevation": "≈ 600 m climb"
   },
   {
    "day": 31,
@@ -192,7 +246,10 @@
    "type": "GROUP_RUN",
    "special": false,
    "cancelled": false,
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "8 km",
+   "elevation": null
   }
  ],
  "recurring": [
@@ -201,21 +258,30 @@
    "sentence": "Every Monday at 19:30",
    "tone": "weekly",
    "type": "GROUP_RUN",
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "8 km",
+   "elevation": null
   },
   {
    "title": "Running up that hilly Tâmpa with Brașov Runners",
    "sentence": "Every Wednesday at 19:00",
    "tone": "weekly",
    "type": "GROUP_RUN",
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": "6 km",
+   "elevation": "≈ 350 m climb"
   },
   {
    "title": "Saturday long run in Poiana Brașov",
    "sentence": "Every Saturday at 08:00",
    "tone": "weekly",
    "type": "GROUP_RUN",
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Poiana",
+   "distance": "≈ 20 km",
+   "elevation": "≈ 600 m climb"
   }
  ],
  "specials": [
@@ -224,35 +290,50 @@
    "title": "Brașov Trail Marathon — volunteer briefing and course reconnaissance",
    "tone": "special",
    "type": "GROUP_RUN",
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Poiana Brașov",
+   "distance": "≈ 12 km",
+   "elevation": "≈ 700 m climb"
   },
   {
    "day": 15,
    "title": "Night run on Tâmpa with headlamps",
    "tone": "special",
    "type": "GROUP_RUN",
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": "6 km",
+   "elevation": "≈ 350 m climb"
   },
   {
    "day": 22,
    "title": "Dynafit shoe testing x Coffee social event",
    "tone": "other",
    "type": "GEAR_TEST",
-   "surface": "TRAIL"
+   "surface": "TRAIL",
+   "place": "Tâmpa",
+   "distance": null,
+   "elevation": null
   },
   {
    "day": 22,
    "title": "Girls only shake out run",
    "tone": "special",
    "type": "GROUP_RUN",
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "5 km",
+   "elevation": null
   },
   {
    "day": 29,
    "title": "Brașov Runners Half Marathon 2026",
    "tone": "special",
    "type": "RACE",
-   "surface": "ASPHALT"
+   "surface": "ASPHALT",
+   "place": "Parc",
+   "distance": "21.1 km",
+   "elevation": "≈ 150 m climb"
   }
  ],
  "socials": [
@@ -288,9 +369,12 @@
   "recurringTitle": "Recurring events",
   "specialTitle": "Special events",
   "cancelled": "Cancelled",
+  "tba": "time to be announced",
   "follow": "Follow us",
   "more": "+{count} more",
   "at": "at {time}",
-  "hashtags": "#NoOneLeftBehind #brasovrunners"
+  "hashtags": "#NoOneLeftBehind #brasovrunners",
+  "emptyMonth": "No runs this month",
+  "emptyWeek": "No runs this week"
  }
 }

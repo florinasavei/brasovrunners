@@ -53,7 +53,7 @@ export type SummaryWords = {
   titleSummary: { untitled: string };
   when: { none: string; tba: string; timeTba: string; raceStart: string; raceStartNotSet: string; duration: string };
   timezone: { home: string };
-  place: { tba: string; map: string; none: string; inLanguage: string };
+  place: { tba: string; map: string; none: string; inLanguage: string; short: string };
   programme: { moments: CountWords; range: string; groupRun: string; none: string; checklist: string };
   registration: {
     groupRun: string;
@@ -154,6 +154,8 @@ export type SummaryTranslation = {
   routeDescriptionJson?: unknown;
   checklist: string | null;
   locationName: string | null;
+  /** «Locul, pe scurt» (migration `0181`), when the caller has it — the editor's rows do. */
+  locationShort?: string | null;
   /** The two search-engine overrides (box 14), when the caller has them — the editor always does. */
   seoTitle?: string | null;
   seoDescription?: string | null;
@@ -300,7 +302,10 @@ export function timezoneSummary(words: SummaryWords, zone: string): string {
 type PlaceEvent = Pick<EditableEvent, "locationName" | "locationAddress" | "locationToBeAnnounced" | "mapUrl">;
 
 /**
- * Box 5: `Parcul Titulescu (EN: Titulescu Park) · hartă`, or `Se anunță mai târziu`.
+ * Box 5: `Parcul Titulescu (EN: Titulescu Park) · pe scurt: Parc · hartă`, or `Se anunță mai târziu`.
+ *
+ * «Locul, pe scurt» (migration `0181`) as its Romanian word, when one is set — both languages or
+ * neither, so the one word says the pair is there.
  *
  * The Romanian name first — the event's own meeting point — and another language's only when it
  * says something else (§362): "Stadionul Tineretului" twice over would be the redundancy the box
@@ -318,7 +323,12 @@ export function placeSummary(words: SummaryWords, event: PlaceEvent | null, tran
     .map((translation) => ({ locale: translation.locale, place: inLanguage(translation.locale) }))
     .filter((other) => other.place !== "" && other.place !== name)
     .map((other) => fillIn(words.place.inLanguage, { language: code(other.locale), name: other.place }));
-  return join(words, [others.length > 0 ? `${name} (${others.join(", ")})` : name, event.mapUrl ? words.place.map : null]);
+  const short = translations.find((translation) => translation.locale === "ro")?.locationShort?.trim() ?? "";
+  return join(words, [
+    others.length > 0 ? `${name} (${others.join(", ")})` : name,
+    short === "" ? null : fillIn(words.place.short, { name: short }),
+    event.mapUrl ? words.place.map : null,
+  ]);
 }
 
 type ProgrammeEvent = Pick<EditableEvent, "scheduleItems" | "timezone">;

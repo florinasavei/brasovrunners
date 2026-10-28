@@ -56,6 +56,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     // "Punct de întâlnire", once per language (§362): the refusal names the empty one's language.
     "event.locationName": inWhenWhere(`${t("editor.fields.locationName")} (${tSite("languageName.ro")})`),
     "event.locationNameEn": inWhenWhere(`${t("editor.fields.locationName")} (${tSite("languageName.en")})`),
+    // «Locul, pe scurt» (migration `0181`), the same two boxes under the names.
+    "event.locationShort": inWhenWhere(`${t("editor.fields.locationShort")} (${tSite("languageName.ro")})`),
+    "event.locationShortEn": inWhenWhere(`${t("editor.fields.locationShort")} (${tSite("languageName.en")})`),
     "event.locationToBeAnnounced": inWhenWhere(t("editor.placeToBeAnnounced")),
     "event.mapUrl": inWhenWhere(t("editor.mapUrl")),
     "event.coordinates": inWhenWhere(t("editor.coordinates")),

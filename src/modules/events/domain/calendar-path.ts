@@ -23,7 +23,12 @@ import { currentMonth, monthParam, parseMonth, parseYear, type YearMonth, YEARS_
 /** What the calendar shows: one month or one year (§116). `EventCalendar`'s `CalendarView` is this type. */
 export type CalendarPeriod = { kind: "month"; month: YearMonth } | { kind: "year"; year: number };
 
-/** The month as a grid or as a list (§137). `EventCalendar`'s `CalendarLayout` is this type. */
+/**
+ * The month as a grid or as a list (§137). `EventCalendar`'s `CalendarLayout` is this type. A year
+ * reads the same two words its own way: «Pe scurt» (`grid`, `/calendar/2026`) is the year as the
+ * club's schedule, every special date whole and each weekly series one line a month; «Toate datele»
+ * (`list`, `/calendar/2026/list`) is every date of every month.
+ */
 export type CalendarLayoutName = "grid" | "list";
 
 /** The last path segment of a month shown as a list. The same word in both languages, like `/calendar`. */
@@ -35,15 +40,15 @@ export const LEGACY_PERIOD_KEYS = ["month", "year", "view"] as const;
 const MONTH_SEGMENT = /^(\d{4})-(0[1-9]|1[0-2])$/;
 const YEAR_SEGMENT = /^\d{4}$/;
 
-/** The path segments after `/calendar` for a period and a layout. A year has no layout: it is always its agenda. */
+/** The path segments after `/calendar` for a period and a layout: the period, then `list` for the list (a month's agenda, a year's every date). */
 export function calendarSegments(view: CalendarPeriod, layout: CalendarLayoutName): string[] {
-  if (view.kind === "year") return [String(view.year)];
-  return layout === "list" ? [monthParam(view.month), LIST_SEGMENT] : [monthParam(view.month)];
+  const period = view.kind === "year" ? String(view.year) : monthParam(view.month);
+  return layout === "list" ? [period, LIST_SEGMENT] : [period];
 }
 
 /**
  * The period and layout a path's segments name, or null for anything else — a malformed segment,
- * a year with a layout, a third segment, or a period more than `YEARS_EITHER_WAY` years from now
+ * a second segment other than `list`, a third segment, or a period more than `YEARS_EITHER_WAY` years from now
  * (the same bound the selects and the old `?month=` had). The page answers null with a 404.
  */
 export function readCalendarSegments(
@@ -62,8 +67,10 @@ export function readCalendarSegments(
     if (second === undefined) return { view: { kind: "month", month: ym }, layout: "grid" };
     return second === LIST_SEGMENT ? { view: { kind: "month", month: ym }, layout: "list" } : null;
   }
-  if (YEAR_SEGMENT.test(first) && second === undefined && near(Number(first))) return { view: { kind: "year", year: Number(first) }, layout: "grid" };
-  return null;
+  if (!YEAR_SEGMENT.test(first) || !near(Number(first))) return null;
+  const year: CalendarPeriod = { kind: "year", year: Number(first) };
+  if (second === undefined) return { view: year, layout: "grid" };
+  return second === LIST_SEGMENT ? { view: year, layout: "list" } : null;
 }
 
 /** The kept query (the filters; a group ticked twice is an array) as a search string, without the "?". */
@@ -122,7 +129,8 @@ export function legacyCalendarAddress(basePath: string, search: URLSearchParams,
   const month = parseMonth(asked ?? undefined, now, timeZone);
   const namedMonth = asked !== null && MONTH_SEGMENT.test(asked) && monthParam(month) === asked;
   const view: CalendarPeriod = year ? { kind: "year", year } : { kind: "month", month };
-  const layout: CalendarLayoutName = search.get("view") === "list" ? "list" : "grid";
+  // A year ignored `?view=` before the year had a list, and an old address keeps its meaning.
+  const layout: CalendarLayoutName = !year && search.get("view") === "list" ? "list" : "grid";
   const query: Record<string, string[]> = {};
   for (const [name, value] of search) {
     if ((LEGACY_PERIOD_KEYS as readonly string[]).includes(name) || name === "_rsc") continue;

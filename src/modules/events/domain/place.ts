@@ -32,6 +32,16 @@ export type PlaceNameLocale = keyof typeof PLACE_NAME_FIELD;
 export type PlaceNameField = (typeof PLACE_NAME_FIELD)[PlaceNameLocale];
 
 /**
+ * «Locul, pe scurt» (migration `0181`): the field of the event's form that carries each language's
+ * short place — a word or two for the month's picture (§855) — and the name the form posts it under
+ * (`event.<field>`). Asked right under the place's name, stored on the language's row beside it
+ * (`event_translations.location_short`), optional, both languages or neither (§352).
+ */
+export const PLACE_SHORT_FIELD = { ro: "locationShort", en: "locationShortEn" } as const;
+
+export type PlaceShortField = (typeof PLACE_SHORT_FIELD)[PlaceNameLocale];
+
+/**
  * The place's name as one language's page shows it: the language's own when it has one, else the
  * event's — never the other language's (BR-REQ-040-02). The same rule as the public reads'
  * `COALESCE(NULLIF(btrim(translation), ''), event)` (`events/repository.ts`), for the code that has
