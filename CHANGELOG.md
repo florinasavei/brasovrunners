@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.85-2026-10-28
+
+- **The calendar picture, made to post** — every style now draws in the three layouts, and «Monocrom» and «Cald» join them; a single week can be saved («Perioada»); each date can show its short place, distance and climb («Locul, pe scurt» in the event editor); the story keeps its words clear of Instagram's bars; titles stay whole and readable on a phone, every special date is named, and an empty month says so. §859.
 ## BR-V3.84-2026-10-27
 
 - **The calendar picture, reorganised** — «Afiș» is set in a cleaner face, its band takes half the room, a weekly run is written once instead of in every cell, special dates keep their whole title, «Așezare» offers three layouts, and every date shows its type and ground icons (road, trail) as in the app. §858.
