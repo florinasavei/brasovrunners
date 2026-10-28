@@ -122,7 +122,8 @@ yarn calendar:preview    «Salvează ca imagine» drawn without a server: five s
                          The same months, and every week of each, are drawn on a stub canvas by tests/unit/events/calendar-image-overflow.test.ts,
                          which fails on any text across its box's edge, over another text, or off the picture — and, in the
                          three layouts and the week, on any text under the floor a phone's feed still reads: 17 px on a 1080-wide
-                         picture, 16 for an hour or a detail line, 18 for a day number, 21 for anything on 16:9
+                         picture, 16 for an hour or a detail line, 18 for a day number, 21 for anything on 16:9; «Legenda dedesubt»
+                         is drawn also without the legend and without the details, and fails on a month's race missing from the picture
 ```
 
 `yarn check` is the single gate, and CI runs it (its two halves on five runners) on every pull request. The pre-commit

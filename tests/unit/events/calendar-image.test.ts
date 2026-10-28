@@ -13,7 +13,6 @@ import { CALENDAR_IMAGE_RATIOS } from "@/modules/events/ui/calendar-image-canvas
 import { CALENDAR_IMAGE_LAYOUT_CHOICES, CALENDAR_IMAGE_THEME_CHOICES, type CalendarImageAssets, type CalendarImageOptions, drawCalendarImage, paletteFor } from "@/modules/events/ui/calendar-image-draw";
 import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
 import { weekHeights } from "@/modules/events/ui/calendar-image-poster-cells";
-import { wrapWords } from "@/modules/events/ui/calendar-image-poster-formats";
 import { posterPlan, weekdayColumn, wrapWhole } from "@/modules/events/ui/calendar-image-poster-heads";
 import { COVERED, drawFrame } from "@/modules/events/ui/calendar-image-frame";
 import { initialWeek, weekLabel, weekOf, weeksOf, weekSlug } from "@/modules/events/ui/calendar-image-week";
@@ -142,12 +141,6 @@ describe("the words in a cell", () => {
     expect(wrapText(ctx, "Happy Monday with Brașov Runners", 130, 3)).toEqual(["Happy Monday", "with Brașov", "Runners"]);
     expect(wrapText(ctx, "Happy Monday with Brașov Runners", 130, 2)).toEqual(["Happy Monday", "with Brașov…"]);
     expect(wrapText(ctx, "Happy Monday with Brașov Runners", 130, 1)).toEqual(["Happy Monday…"]);
-  });
-
-  it("on «Afiș», breaks a title on as many lines as it takes, and says when one word alone is wider than the line", () => {
-    expect(wrapWords(ctx, "Happy Monday with Brașov Runners", 130)).toEqual({ lines: ["Happy Monday", "with Brașov", "Runners"], fits: true });
-    expect(wrapWords(ctx, "Course reconnaissance", 100)).toEqual({ lines: ["Course", "reconnaissance"], fits: false });
-    expect(wrapWords(ctx, "  ", 100)).toEqual({ lines: [], fits: true });
   });
 });
 

@@ -7,7 +7,7 @@ import { CALENDAR_IMAGE_LAYOUT_CHOICES, CALENDAR_IMAGE_THEME_CHOICES, type Calen
 import { drawFrame } from "@/modules/events/ui/calendar-image-frame";
 import { weekLabel, weeksOf } from "@/modules/events/ui/calendar-image-week";
 import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
-import { overflowsOf, stubCanvas } from "./calendar-image-stub-canvas";
+import { type Extent, overflowsOf, stubCanvas, type TextRecord } from "./calendar-image-stub-canvas";
 
 /**
  * «Salvează ca imagine» (§855): no text overflows its box or meets another, in every sample month of
@@ -163,12 +163,96 @@ describe("«Legenda în celule»: the readable floor (the audit's D17, D31)", ()
   }
 });
 
+describe("«Legenda dedesubt»: no word under the readable floor, and the race always on the picture (the owner's audit, D17 and D31)", () => {
+  // A feed shows the picture about 400 pixels wide: on a 1080-wide one a title, a chip or a key line is 17
+  // pixels at the least, an hour or a detail line 16, a day's number 18; on 16:9 nothing is under 21. The
+  // frame's words are the frame's, drawn first: counted on a stub of their own and left out. With the
+  // «Legendă» unticked nothing else names a date, so a month's race is never hidden behind «+N altele»: its
+  // hour (its chip, or the line under its title) is on the picture, every date of its own is named by its
+  // title, and a day counts in «+N» only its weekly dates, folded to give a special its lines.
+  const all = { place: true, distance: true, elevation: true };
+  const none = { place: false, distance: false, elevation: false };
+  for (const month of months) {
+    for (const ratio of ratios) {
+      for (const [legend, details] of [
+        [true, all],
+        [false, all],
+        [true, none],
+        [false, none],
+      ] as const) {
+        it(`${month.name} · ${ratio} · ${legend ? "with" : "without"} the legend · ${details === all ? "every" : "no"} detail`, () => {
+          const options: CalendarImageOptions = { theme: "poster", ratio, layout: "formats", week: null, legend, details };
+          const frame = stubCanvas();
+          drawFrame(frame.ctx, month.data, options, fonts, { logo: null }, CALENDAR_IMAGE_THEMES.poster);
+          const { ctx, records } = stubCanvas();
+          drawCalendarImage(ctx, month.data, options, fonts, { logo: null });
+          // A bold word where an hour goes — «Anulat» on a cancelled date's line — is an hour line too.
+          const hourWords = [month.data.words.cancelled, month.data.words.tba];
+          const floorOf = (text: TextRecord) => {
+            if (ratio === "landscape") return 21;
+            const weight = Number(/^(\d00) /.exec(text.font)?.[1] ?? 400);
+            if (/^\d{1,2}$/.test(text.text) && weight >= 800) return 18;
+            return weight >= 700 && !hourWords.includes(text.text) ? 17 : 16;
+          };
+          const texts = records.texts.slice(frame.records.texts.length);
+          const under = texts.filter((text) => text.size < floorOf(text) - 0.05);
+          expect(under.map((text) => `«${text.text}» at ${Math.round(text.size * 10) / 10}px, under ${floorOf(text)}`)).toEqual([]);
+          if (!legend) {
+            // Nothing else names a date of its own: its title stands in its own day — its lines from the first,
+            // read in order, the whole title or up to one ending in «…» — each line read for one date alone, so
+            // a weekly title's «BRAȘOV» elsewhere names no special. A weekly date's title, or its chip, gives way
+            // first (the owner's hierarchy).
+            const letters = (text: string) => text.toLocaleUpperCase("ro-RO").replace(/[^\p{L}\p{N}]/gu, "");
+            const inside = (box: Extent, text: Extent) => box.left <= text.left + 0.5 && box.right >= text.right - 0.5 && box.top <= text.top + 0.5 && box.bottom >= text.bottom - 0.5;
+            const read = new Set<TextRecord>();
+            const unnamed = month.data.specials.filter((special) => {
+              // The day: the tint its number stands on, the smallest box filled under it.
+              const number = texts.find((text) => text.text === String(special.day) && /^800 /.test(text.font));
+              const area = (box: Extent) => (box.right - box.left) * (box.bottom - box.top);
+              const cell = number && records.boxes.filter((box) => box.how === "fillRect" && box.order < number.order && inside(box, number)).sort((one, other) => area(one) - area(other))[0];
+              if (!cell) return true;
+              const lines = texts.filter((text) => text.order > cell.order && inside(cell, text) && !read.has(text));
+              const title = letters(special.title);
+              for (let start = 0; start < lines.length; start += 1) {
+                let words = "";
+                for (let end = start; end < lines.length; end += 1) {
+                  words += letters(lines[end].text);
+                  if (words === "" || !title.startsWith(words)) break;
+                  if (words === title || lines[end].text.endsWith("…")) {
+                    for (const used of lines.slice(start, end + 1)) read.add(used);
+                    return false;
+                  }
+                }
+              }
+              return true;
+            });
+            expect(unnamed.map((special) => `the ${special.day}: «${special.title}» is not named in its day`)).toEqual([]);
+          }
+          const counted = new RegExp(`^${month.data.words.more.replace(/[+]/g, "\\+").replace("{count}", "(\\d+)")}$`);
+          const folded = texts.reduce((total, text) => total + Number(counted.exec(text.text)?.[1] ?? 0), 0);
+          if (!legend) expect(folded, "«+N» counts weekly dates alone").toBeLessThanOrEqual(month.data.entries.length - month.data.specials.length);
+          const races = month.data.entries.filter((entry) => entry.type === "RACE" && entry.time);
+          if (races.length === 0) return;
+          if (legend) expect(texts.filter((text) => counted.test(text.text)).map((text) => text.text)).toEqual([]);
+          for (const race of races) expect(texts.some((text) => text.text.includes(race.time ?? "")), `${race.title}'s hour is on the picture`).toBe(true);
+        });
+      }
+    }
+  }
+});
+
 for (const month of months) {
   describe(`${month.name}: ${month.data.words.monthTitle}`, () => {
-    /** The month in each layout, and each of its weeks: the layout's name, or the week's days. */
-    const pictures: { name: string; options: Omit<CalendarImageOptions, "theme" | "ratio" | "details"> }[] = [
-      ...CALENDAR_IMAGE_LAYOUT_CHOICES.map((layout) => ({ name: layout, options: { layout, week: null, legend: true } })),
-      ...weeksOf(month.data.month).map((week) => ({ name: weekLabel(week, month.data.words.monthName), options: { layout: "heads" as const, week: week.index, legend: true } })),
+    /**
+     * The month in each layout, and each of its weeks: the layout's name, or the week's days — and «Legenda
+     * dedesubt» with the «Legendă» unticked and with no detail, which compose its weeks otherwise.
+     */
+    const all = { place: true, distance: true, elevation: true };
+    const pictures: { name: string; options: Omit<CalendarImageOptions, "theme" | "ratio"> }[] = [
+      ...CALENDAR_IMAGE_LAYOUT_CHOICES.map((layout) => ({ name: layout, options: { layout, week: null, legend: true, details: all } })),
+      { name: "formats without the legend", options: { layout: "formats", week: null, legend: false, details: all } },
+      { name: "formats without the details", options: { layout: "formats", week: null, legend: true, details: { place: false, distance: false, elevation: false } } },
+      ...weeksOf(month.data.month).map((week) => ({ name: weekLabel(week, month.data.words.monthName), options: { layout: "heads" as const, week: week.index, legend: true, details: all } })),
     ];
     for (const theme of CALENDAR_IMAGE_THEME_CHOICES) {
       for (const picture of pictures) {
@@ -177,7 +261,7 @@ for (const month of months) {
             const { width, height } = CALENDAR_IMAGE_RATIOS[ratio];
             const failures = assets.flatMap(([state, asset]) => {
               const { ctx, records } = stubCanvas();
-              drawCalendarImage(ctx, month.data, { theme, ratio, ...picture.options, details: { place: true, distance: true, elevation: true } }, fonts, asset);
+              drawCalendarImage(ctx, month.data, { theme, ratio, ...picture.options }, fonts, asset);
               // The week's floor: nothing under 17 px on a 1080-wide picture, and no title — Bold, the weight
               // the week gives its titles alone — under 18.
               const small = picture.options.week === null ? [] : records.texts.filter((text) => text.size < 17 || (/^700 /.test(text.font) && text.size < 18));
