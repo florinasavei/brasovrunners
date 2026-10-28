@@ -225,15 +225,18 @@ export default async function CalendarHeader({
             or year" and "grid or list" are two questions, and four pills in a row read as one
             set of four answers. The two pairs share a row on a phone too now (§487), so the rule
             stays on every width. */}
-        {view.kind === "month" && (
-          <Box aria-hidden="true" sx={{ width: "1px", alignSelf: "stretch", minHeight: 20, bgcolor: "divider", mx: 0.5, [UNDER_LOOK]: { bgcolor: "transparent", mx: 0 } }} />
-        )}
-        {view.kind === "month" && (
-          <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.layoutGrid")} / ${t("calendar.layoutList")}`} sx={SEGMENTED_SX}>
-            <ChipLink href={href(view, "grid")} label={t("calendar.layoutGrid")} active={layout === "grid"} current={layout === "grid" ? "page" : undefined} />
-            <ChipLink href={href(view, "list")} label={t("calendar.layoutList")} active={layout === "list"} current={layout === "list" ? "page" : undefined} />
-          </Stack>
-        )}
+        <Box aria-hidden="true" sx={{ width: "1px", alignSelf: "stretch", minHeight: 20, bgcolor: "divider", mx: 0.5, [UNDER_LOOK]: { bgcolor: "transparent", mx: 0 } }} />
+        {/* A year asks the same question its own way: «Pe scurt», the club's schedule (each weekly
+            series one line a month, every special date whole), or «Toate datele», every date. */}
+        {(() => {
+          const [grid, list] = view.kind === "month" ? [t("calendar.layoutGrid"), t("calendar.layoutList")] : [t("calendar.yearSummary"), t("calendar.yearAll")];
+          return (
+            <Stack direction="row" spacing={0.5} role="group" aria-label={`${grid} / ${list}`} sx={SEGMENTED_SX}>
+              <ChipLink href={href(view, "grid")} label={grid} active={layout === "grid"} current={layout === "grid" ? "page" : undefined} />
+              <ChipLink href={href(view, "list")} label={list} active={layout === "list"} current={layout === "list" ? "page" : undefined} />
+            </Stack>
+          );
+        })()}
         </Box>
       </Stack>
     </Stack>

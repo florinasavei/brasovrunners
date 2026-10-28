@@ -1,0 +1,14 @@
+{
+  "branch": "claude/stoic-ramanujan-0zrz7v",
+  "decisionsTitle": "The year in two ways: «Pe scurt», each weekly series one line a month, or «Toate datele»",
+  "decisionsSection": "**The owner, 2026-10-28,** of the calendar's year (§116): «arată super ciudat». A month of four Mondays and four Wednesdays was eight rows, a month with one race two, and the boxes stood in rows of a grid, so a short month left a hole beside a long one. Offered two fixes (only the layout, or the year as the club's schedule), the owner answered «Ce să aleg? Pune configs și butoane»: both, behind two pills.\n\n**«Pe scurt»** (`/calendar/2026`, the year's default): in each month a weekly series is one line — its weekdays, its hour when every date shares one, its title and how many dates («lun. · 19:00 Alergarea de luni · 4 date») — linking to its next date that month, or its last once all are gone; every special date stays whole, on its day. **«Toate datele»** (`/calendar/2026/list`): every date of every month, as the year was. The two pills stand where a month has «Calendar» and «Listă», after the same rule, and the year's path takes the same `list` segment a month does (§574); an old `?year=…&view=list` still means the year as it did.\n\n**Both** pack the month boxes in columns (two from `sm`, three from `lg`) instead of a grid's rows, so no month leaves a gap; the months run down each column in order.",
+  "changelogLine": "- **The calendar's year, in two ways** — «Pe scurt» shows each weekly series as one line a month and every special date whole; «Toate datele» shows every date; the months now stack without gaps. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-020-01",
+      "text": "Given the calendar's year, when it renders, then two pills offer «Pe scurt» (`/calendar/YYYY`) and «Toate datele» (`/calendar/YYYY/list`): the first shows each month's weekly series as one line — its weekdays, its hour when every date shares one, its title and its number of dates — linking to its next date, and every other date whole on its day; the second shows every date; in both the month boxes stand in columns without gaps (2026-10-28, `DECISIONS.md` §NNN)."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "the calendar's year in two ways: «Pe scurt» and «Toate datele»"
+}
