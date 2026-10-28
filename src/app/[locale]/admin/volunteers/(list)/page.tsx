@@ -7,11 +7,12 @@ import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { setVolunteerStateAction } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
+import { addVolunteerAction, setVolunteerStateAction } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
 import { getDb } from "@/db/client";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { findEventForRegistrationById } from "@/modules/events/repository";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { buildListHref, pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
@@ -31,7 +32,9 @@ import {
   type VolunteerSortKey,
 } from "@/modules/volunteers/admin-list";
 import { VOLUNTEER_STATES, type VolunteerState } from "@/modules/volunteers/domain/volunteer";
-import { shortText, STATE_CHIP, volunteerHiddenFields } from "@/modules/volunteers/ui/VolunteerPerson";
+import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
+import { shortText, STATE_CHIP, VolunteerPersonFields, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
+import ActionForm from "@/shared/forms/ActionForm";
 import { isUuid } from "@/shared/ids";
 import ChipLink from "@/shared/ui/ChipLink";
 import GlyphButton from "@/shared/ui/GlyphButton";
@@ -62,8 +65,10 @@ function isVolunteerState(value: string | undefined): value is VolunteerState {
  * The scope is the registrations list's (§178, §312): the featured event unless one is chosen, every event while a
  * name is searched and none chosen, «Toate evenimentele» one press away. The summary's pills are filters (§626).
  * A row's name opens the person's own page, where the whole block of the card stands — the contact, the roles
- * given and offered, the agreement, the guardian, «Modifică». The roles, the switches and the add-by-hand form
- * stay on the event's card, one link away: they belong to the event, not to a list across events.
+ * given and offered, the agreement, the guardian, «Modifică». The roles and the switches stay on the event's card,
+ * one link away: they belong to the event, not to a list across events. «Adaugă un voluntar de mână» stands here too
+ * while one event is in scope (§862; the owner, 2026-10-28: «as vrea sa pot adauga manual un voluntar si de aici»):
+ * the card's own form, for that event, coming back to this list.
  */
 export default async function AdminVolunteersPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -132,6 +137,9 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const hasFilters = Boolean(eventId || stateFilter || roleFilter || q);
   const autoScopedToFeatured = !hasFilters && eventFilter.eventId !== undefined;
   const scopeEvent = events.find((event) => event.id === filters.eventId) ?? null;
+  // «Adaugă un voluntar de mână» for the event in scope (§862): the context a person's page reads, coming back to this page of the list.
+  const scopeEventRow = scopeEvent ? await findEventForRegistrationById(db, scopeEvent.id) : undefined;
+  const [addContext, personBoxes] = scopeEventRow ? await Promise.all([volunteerPersonContextOf(db, scopeEventRow, locale, new Date(), returnTo), volunteerPersonBoxes(t)]) : [null, null];
   // The action's language-neutral code (AGENTS.md §14.3) becomes a sentence here; an unknown code says nothing.
   const errorCode = volunteerError && /^[A-Z_]{1,48}$/.test(volunteerError) && t.has(`errors.${volunteerError}`) ? volunteerError : null;
 
@@ -257,7 +265,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
         )}
         {scopeEvent && (
           <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
-            {/* The roles, the switches, the invitations and «Adaugă un voluntar de mână» stay on the event's card (§754, §761): one link to it. */}
+            {/* The roles, the switches and the invitations stay on the event's card (§754, §761): one link to it. */}
             <GlyphButton icon="role" href={eventCardHref(scopeEvent.id)} variant="outlined" size="small" sx={TAP_TARGET} data-testid="volunteers-event-card">
               {t("volunteers.screen.eventCard")}
             </GlyphButton>
@@ -295,6 +303,19 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           </Typography>
         )}
       </Panel>
+
+      {/* A person the club enters by hand (§862): the event card's own form, for the event in scope, while it has a role to offer — as on the card. */}
+      {scopeEvent && addContext && personBoxes && addContext.roles.length > 0 && (
+        <Panel glyph="add" collapsible title={t("volunteers.person.addTitle")} aside={t("volunteers.screen.summaryScopeEvent", { event: scopeEvent.title ?? scopeEvent.id })} id="volunteers-add" data-testid="volunteers-add">
+          <ActionForm action={addVolunteerAction} scope="volunteer-new" messages={personBoxes}>
+            {volunteerHiddenFields(addContext)}
+            <VolunteerPersonFields person={null} context={addContext} />
+            <Box sx={{ mt: 1.5 }}>
+              <GlyphSubmitButton label={t("volunteers.person.add")} pendingLabel={t("volunteers.person.adding")} icon="addPerson" />
+            </Box>
+          </ActionForm>
+        </Panel>
+      )}
 
       {/* A plain GET form: a filter is an address an organizer can bookmark, and it works with JavaScript off. */}
       <Panel

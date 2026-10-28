@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.86-2026-10-28 -->
+<!-- PROJECT_BASELINE: BR-V3.87-2026-10-28 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.86-2026-10-28`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.87-2026-10-28`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1464,6 +1464,7 @@ registration — and it lists registrations and never changes an address.
 23. Given `/admin/volunteers`, then the events' volunteers are one sorted, searched, server-paginated list (`AdminTable`) for the roles `canManageVolunteers` names, a 404 for every other role by the page and by the `(list)` layout above the loading boundary; its scope is the registrations list's — the featured event unless one is chosen, every event while a name is searched and none chosen, «Toate evenimentele» on `all` —; it filters by state, by a role given of the chosen event or «De repartizat» (`role=none`), and by a name folded of its diacritics; its strip counts the scope by state and how many wait for a role, blind to the state and the role, each pill a link setting or clearing that filter; each row names the roles given and offered, the event and the date of the offer, and carries the card's state verbs; with one event chosen the page links the event's card and its CSV; `/admin/volunteers/[id]` draws `VolunteerPerson` — the card's block — for one person, a 404 for a guessed or unknown id; a verb pressed on either page comes back to it (`returnTo`, accepted only as a path of this screen), a refusal's code in `?volunteerError=`; the tab «Voluntari» counts the «Înscris» offers on the events not yet over, memoized a minute (2026-10-21, `DECISIONS.md` §839).
 24. Given `/api/admin/events/[id]/volunteers?format=xlsx`, then the event's volunteers come as a spreadsheet through `writeSheet`: the CSV's columns and words in `lang`, one row per volunteer in the CSV's order, the roles given and offered joined by «, », the sign-up's moment on the club's clock, the sheet «Voluntari», the file `voluntari-<date>.xlsx`, the card's gate and audit row; without `format` the CSV is unchanged; «Descarcă Excel» stands before «Descarcă CSV» on the event's card and on the «Voluntari» screen (2026-10-21, `DECISIONS.md` §839).
 25. Given an event with volunteer categories, then the person's «Modifică» form lists the boxes of «Ce e dispus(ă) să facă» and «Rolurile date» under one heading per category (the club's order, «Alte roluri» last), each role by its own name, and «Alt rol» offers its roles in one `<optgroup>` per category; an event with no category lists them as before, and a role named alone still says «Direcționare (Traseu)» (2026-10-21, `DECISIONS.md` §840).
+26. Given `/admin/volunteers` with one event in scope that has a role, then the fold «Adaugă un voluntar de mână» is the event card's form for that event (`addVolunteerAction`, the card's boxes), posting this page of the list as `returnTo`; a person added there is the event's, typed by an organizer (`STAFF`), and the action comes back to that page; with every event in scope there is no such fold (2026-10-28, `DECISIONS.md` §862).
 
 **Verification:** integration `waitlist/join.test.ts`; e2e `waitlist.spec.ts`
 
