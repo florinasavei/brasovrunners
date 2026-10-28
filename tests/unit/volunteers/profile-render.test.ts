@@ -1188,8 +1188,9 @@ describe("§842 each volunteer on the card is the house's row fold", () => {
     expect(start).toBeGreaterThan(-1);
     const list = page.slice(start, page.indexOf('data-testid="volunteer-add"'));
     const required = [...list.matchAll(/<input\b[^>]*\brequired\b[^>]*>/g)];
-    // The name, the address and the telephone of each of the two people.
-    expect(required).toHaveLength(6);
+    // The name of each of the two people, and the address and the telephone of Maria, who typed them on the public form — Ion, whom the
+    // club typed, may go without either (§NNN).
+    expect(required).toHaveLength(4);
     for (const match of required) {
       const at = start + (match.index ?? 0);
       const before = page.slice(0, at);
@@ -1210,5 +1211,80 @@ describe("§842 each volunteer on the card is the house's row fold", () => {
       revealField({ tagName: "INPUT", parentElement: parent, dispatchEvent: () => true } as unknown as HTMLElement);
       expect(chain.every((fold) => fold.open)).toBe(true);
     }
+  });
+});
+
+describe("§NNN a person the club typed with no address or no telephone number, on the event's card", () => {
+  const NAME_ONLY: VolunteerItem = { ...PEOPLE[1], id: "77777777-7777-4777-8777-777777777777", name: "Doar Nume", email: null, phone: null };
+  const MINOR_NAME_ONLY: VolunteerItem = {
+    ...NAME_ONLY,
+    id: "88888888-8888-4888-8888-888888888888",
+    name: "Minor Doar Nume",
+    age: 15,
+    dateOfBirth: aged(15),
+    guardianName: "Elena Părinte",
+    guardianEmail: "elena@example.test",
+  };
+  const PHONE_ONLY: VolunteerItem = { ...NAME_ONLY, id: "99999999-9999-4999-8999-999999999999", name: "Doar Telefon", phone: "+40712345678" };
+  /** One person's row of the card, from its opening tag to the next row (or the list's end). */
+  const rowOf = (page: string, id: string) => {
+    const at = page.lastIndexOf("<li", page.indexOf(`data-volunteer-id="${id}"`));
+    return /<li[^>]*data-testid="volunteer-row"[\s\S]*?(?=<li[^>]*data-testid="volunteer-(?:row|also)"|<\/ul>)/.exec(page.slice(at))?.[0] ?? "";
+  };
+
+  it("draws no `mailto:` or `tel:` to nothing and never «null», says once that the person is on the list only, and keeps the paper", async () => {
+    const page = await drawCard({ volunteers: [NAME_ONLY, PHONE_ONLY] });
+    const row = rowOf(page, NAME_ONLY.id);
+    expect(row).toContain("Doar Nume");
+    expect(row).not.toContain('data-testid="volunteer-email"');
+    expect(row).not.toContain('data-testid="volunteer-phone"');
+    expect(row).toContain('data-testid="volunteer-no-email"');
+    expect(row).toContain(ro.Admin.volunteers.person.noEmail);
+    expect(row).not.toMatch(/mailto:|tel:|>\s*null\s*</);
+    // The agreement: no link to send — one line says why where its button would be — and the paper stays.
+    expect(row).toContain('data-testid="volunteer-agreement-no-email"');
+    expect(row).toContain(ro.Admin.volunteers.agreement.noEmail);
+    expect(row).toContain(ro.Admin.volunteers.agreement.helpPaper);
+    expect(row).not.toContain('data-testid="volunteer-agreement-send-form"');
+    expect(row).toContain('data-testid="volunteer-agreement-pdf"');
+    // A telephone and no address: the telephone is a link a thumb can press, and there is no `mailto:`.
+    const phoneRow = rowOf(page, PHONE_ONLY.id);
+    expect(phoneRow).toContain('href="tel:+40712345678"');
+    expect(phoneRow).not.toContain("mailto:");
+    expect(phoneRow).toContain('data-testid="volunteer-no-email"');
+  });
+
+  it("draws no parent's link for a minor with no address of their own, saying why, while the paper stays — in both languages", async () => {
+    for (const language of ["ro", "en"] as const) {
+      const page = await drawCard({ volunteers: [MINOR_NAME_ONLY], minorsOpen: true }, language);
+      const row = rowOf(page, MINOR_NAME_ONLY.id);
+      expect(row).toContain('data-testid="volunteer-guardian-volunteer-no-email"');
+      // React writes an apostrophe as `&#x27;`.
+      expect(row).toContain(messages[language].Admin.volunteers.guardian.volunteerNoEmail.replaceAll("'", "&#x27;"));
+      expect(row).not.toContain('data-testid="volunteer-guardian-send-form"');
+      expect(row).toContain('data-testid="volunteer-guardian-pdf-to-sign"');
+      // The parent's own address stays a link the organizer may write to by hand.
+      expect(row).toContain('href="mailto:elena@example.test"');
+    }
+  });
+
+  it("asks the address and the telephone as optional in «Adaugă un voluntar de mână», saying what an empty address means, in both languages", async () => {
+    for (const language of ["ro", "en"] as const) {
+      const page = await drawCard({}, language);
+      const add = /data-testid="volunteer-add"[\s\S]*?<\/form>/.exec(page)?.[0] ?? "";
+      expect(add).not.toBe("");
+      expect(tagOf(add, "input", "email")).not.toMatch(/\brequired\b/);
+      expect(tagOf(add, "input", "phone")).not.toMatch(/\brequired\b/);
+      expect(tagOf(add, "input", "name")).toMatch(/\brequired\b/);
+      expect(add).toContain(messages[language].Admin.volunteers.person.emailHelp);
+      expect(add).toContain(messages[language].Admin.volunteers.person.phoneHelp);
+    }
+  });
+
+  it("asks «Semnat pe hârtie» without promising a copy by email for a row with no address", () => {
+    const source = readFileSync("src/modules/volunteers/ui/VolunteerPerson.tsx", "utf8");
+    expect(source).toContain('t(noAddress ? "volunteers.agreement.paperBodyNoEmail" : "volunteers.agreement.paperBody"');
+    expect(ro.Admin.volunteers.agreement.paperBodyNoEmail).not.toContain("primește o copie pe email");
+    expect(en.Admin.volunteers.agreement.paperBodyNoEmail).not.toContain("gets a copy by email");
   });
 });

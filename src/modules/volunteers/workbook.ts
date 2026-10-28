@@ -94,6 +94,7 @@ function peopleColumns(header: VolunteerCsvHeader, words: VolunteerSheetWords, w
       cell: (row) => (row.role === "" && row.state !== words.cancelled ? { ...text(words.unassigned), fontStyle: "italic" } : text(row.role)),
     },
     { header: header.choices, width: 28, wrap: true, cell: (row) => text(row.choices) },
+    // A person the club typed without an address or a telephone number (§NNN): the cell is empty (`text` writes "" for null).
     { header: header.email, width: 30, cell: (row) => text(row.email) },
     { header: header.phone, width: 15, cell: (row) => text(row.phone) },
     { header: header.source, width: 22, cell: (row) => text(row.source) },

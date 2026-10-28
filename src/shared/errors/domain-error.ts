@@ -52,6 +52,9 @@ export type DomainErrorCode =
   | "VOLUNTEER_GUARDIAN_ACCEPTED"
   // «Trimite linkul părintelui» for a volunteer with no guardian address (§768): the consent is taken on paper.
   | "VOLUNTEER_GUARDIAN_NO_EMAIL"
+  // A verb that only sends an email — the agreement's link, the parent's link — for a volunteer the club entered with no address (§NNN):
+  // the card draws neither for such a row, so only a forged or stale post reaches it; the agreements are signed on paper.
+  | "VOLUNTEER_NO_EMAIL"
   // The guardian's link or paper record while the privacy notice and the agreement in force do not both describe minors (§768).
   | "VOLUNTEER_MINORS_CLOSED"
   // One row of the race's results refused (§808): the sentence names the runner, the boxes name what to correct, and nothing of the save was written.

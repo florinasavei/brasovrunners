@@ -61,10 +61,10 @@ export const VOLUNTEER_ADULT_AGE = 18;
 /**
  * Whether the guardian's address is the volunteer's own mailbox, through the canonicalizer (§10.4): a person of fourteen with no
  * mailbox of their own may use their parent's (§389: a family on one address), so it is no refusal — the card marks it, and the
- * organizer's confirm, the human check, sees it. False when either address is missing or cannot be read.
+ * organizer's confirm, the human check, sees it. False when either address is missing (a name-only row, §NNN) or cannot be read.
  */
-export function guardianSharesAddress(volunteerEmail: string, guardianEmail: string | null): boolean {
-  if (!guardianEmail) return false;
+export function guardianSharesAddress(volunteerEmail: string | null, guardianEmail: string | null): boolean {
+  if (!volunteerEmail || !guardianEmail) return false;
   try {
     return canonicalizeEmail(volunteerEmail).canonicalEmail === canonicalizeEmail(guardianEmail).canonicalEmail;
   } catch {
@@ -490,25 +490,38 @@ const roleIdsField = z
   .transform((ids) => [...new Set(ids)]);
 
 /**
+ * The address and the telephone number as the organizers' entry posts them (§NNN, amending §754; the owner, 2026-10-28: «as vrea sa
+ * pot adaug si fara adresa de mail si telefon, doar sa fie asa pe lista»). For a row the club types, each is optional on its own: an
+ * empty box is none (null), anything typed must be an address, or a number a phone can dial. For a row the person typed on the
+ * public form (`required`), both stay required on «Modifică», as the form asked them — the public form's own schema is untouched.
+ * Either way the result is `string | null`, so the service reads one shape.
+ */
+function staffContactBoxes(required: boolean) {
+  const typed = z.string().optional().default("").transform((value) => value.trim());
+  const address = z.string().max(320).refine((value) => isValidEmail(value));
+  /** E.164, read from what the organizer typed by the registrations' own parser (`typedPhone`, in the action). */
+  const dialled = z.string().regex(E164_PHONE);
+  return {
+    email: typed.pipe(required ? address : z.union([z.literal(""), address])).transform((value) => (value === "" ? null : value)),
+    phone: typed.pipe(required ? dialled : z.union([z.literal(""), dialled])).transform((value) => (value === "" ? null : value)),
+  };
+}
+
+/**
  * A person as an organizer types them: the same boxes as the public form, plus the organizers' own note — the roles
  * the person would do (`roleIds`, the ticks) and, optionally, the roles the organizers give them (`assignedRoleIds`,
  * «Rolurile date»: one or several of the event's, ticked by the person or not, §837). At least one of the two
  * (`roleIds` named in the refusal); a person entered with roles given and nothing ticked has those roles as their
- * choices, so every row says what the person offered (`choicesWithAssigned`).
+ * choices, so every row says what the person offered (`choicesWithAssigned`). The address and the telephone number
+ * are optional for the club's own rows (`staffContactBoxes`, §NNN).
  */
-const volunteerStaffInputBase = (eventDay: string) =>
+const volunteerStaffInputBase = (eventDay: string, contactRequired: boolean) =>
   z
   .object({
     roleIds: roleIdsField,
     assignedRoleIds: roleIdsField,
     name: line(VOLUNTEER_NAME_MAX),
-    email: z
-      .string()
-      .trim()
-      .max(320)
-      .refine((value) => isValidEmail(value)),
-    /** E.164, read from what the organizer typed by the registrations' own parser (`typedPhone`, in the action). */
-    phone: z.string().regex(E164_PHONE),
+    ...staffContactBoxes(contactRequired),
     note: optionalLine(VOLUNTEER_NOTE_MAX),
     /** What the person told the organizers (§765): every box optional here, a date that gives an age below the minimum on the event's day refused (§773). */
     birthDate: optionalBirthDate(eventDay),
@@ -534,10 +547,12 @@ const volunteerStaffInputBase = (eventDay: string) =>
  * dropped), and the **age** derived from the date of birth on `eventDay` — `volunteerEventDay`, the event's own day — beside it.
  * `keptAge` is what a row from before the date held: an empty date box on it keeps that age, so saving a phone number of a person
  * of sixteen never turns them into an adult with no guardian; `null` for a new entry and for a row that has a date.
+ * `contactRequired` is a «Modifică» of a row the person typed on the public form (`PUBLIC`): its address and telephone number stay
+ * required; a row the club typed may go without either (§NNN).
  */
-export function volunteerStaffInputSchemaFor(eventDay: string, keptAge: number | null = null) {
+export function volunteerStaffInputSchemaFor(eventDay: string, keptAge: number | null = null, options: { contactRequired?: boolean } = {}) {
   const basis: AgeBasis = { eventDay, kept: keptAge };
-  return refuseGuardianBoxes(volunteerStaffInputBase(eventDay), "optional", basis).transform((value) => {
+  return refuseGuardianBoxes(volunteerStaffInputBase(eventDay, options.contactRequired === true), "optional", basis).transform((value) => {
     // An age under eighteen needs its guardian; any other age keeps none. The two boxes are read here and leave the result.
     const { guardianName, guardianEmail, ...rest } = value;
     return { ...rest, age: ageOfBox(value.birthDate, eventDay, keptAge), guardian: guardianOf({ birthDate: value.birthDate, guardianName, guardianEmail }, "optional", basis) };

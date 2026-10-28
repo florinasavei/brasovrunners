@@ -192,6 +192,12 @@ async function sharedOf(context: VolunteerPersonContext) {
 export async function VolunteerPersonFields({ person, context }: { person: VolunteerItem | null; context: VolunteerPersonContext }) {
   const { locale, volunteersShirts, profileDescribed, minorsOpen, listDescribed, eventDay } = context;
   const { t, tReg, labelOf, roleGroups, headed, groupName, nameOf } = await sharedOf(context);
+  /*
+    The address and the telephone number (§NNN; the owner, 2026-10-28: «as vrea sa pot adaug si fara adresa de mail si telefon, doar sa
+    fie asa pe lista»): each optional for a row the club types — the boxes say so, and what an empty address means — and required, as the
+    public form asked them, on a row the person typed there. The service holds the same rule (`volunteerStaffInputSchemaFor`).
+  */
+  const contactRequired = person?.source === "PUBLIC";
   /** One group's boxes under its category's heading (§840); without categories, the boxes alone, each role named as before. */
   const roleBoxes = (name: "roleIds" | "assignedRoleIds", ticked: (role: VolunteerRole) => boolean) =>
     roleGroups.map((group) => {
@@ -242,8 +248,9 @@ export async function VolunteerPersonFields({ person, context }: { person: Volun
         name="email"
         type="email"
         label={t("volunteers.person.email")}
+        helperText={contactRequired ? undefined : t("volunteers.person.emailHelp")}
         defaultValue={person?.email ?? ""}
-        required
+        required={contactRequired}
         size="small"
         slotProps={{ htmlInput: { maxLength: 320 } }}
       />
@@ -251,9 +258,9 @@ export async function VolunteerPersonFields({ person, context }: { person: Volun
         name="phone"
         type="tel"
         label={t("volunteers.person.phone")}
-        helperText={t("registrations.answers.phoneHelp")}
+        helperText={contactRequired ? t("registrations.answers.phoneHelp") : t("volunteers.person.phoneHelp")}
         defaultValue={person?.phone ?? ""}
-        required
+        required={contactRequired}
         size="small"
         slotProps={{ htmlInput: { maxLength: 40, inputMode: "tel" } }}
       />
@@ -481,10 +488,12 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
     }
     const sent = agreementStandingOf(person, now) === "linkSent" || person.agreementRequestedAt !== null;
     const sendLabel = sent ? t("volunteers.agreement.resend") : t("volunteers.agreement.send");
+    // A row with no address (§NNN) is sent nothing: no link — one line says why where its button would be — and no copy after the paper.
+    const noAddress = person.email === null;
     return (
       <Stack spacing={1} sx={{ mt: 0.5 }} data-testid="volunteer-agreement">
         <Typography variant="body2" color="text.secondary">
-          {t("volunteers.agreement.help")}
+          {t(noAddress ? "volunteers.agreement.helpPaper" : "volunteers.agreement.help")}
         </Typography>
         {person.agreementRequestedAt && (
           <Typography variant="caption" color="text.secondary">
@@ -492,11 +501,17 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
           </Typography>
         )}
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
-          <Box component="form" action={requestVolunteerAgreementAction} data-testid="volunteer-agreement-send-form">
-            {hidden}
-            <input type="hidden" name="volunteerId" value={person.id} />
-            <GlyphSubmitButton icon={sent ? "resend" : "send"} label={sendLabel} pendingLabel={sendLabel} ariaLabel={`${sendLabel}: ${shortText(person.name)}`} variant="outlined" />
-          </Box>
+          {noAddress ? (
+            <Typography variant="body2" color="text.secondary" sx={{ alignSelf: "center" }} data-testid="volunteer-agreement-no-email">
+              {t("volunteers.agreement.noEmail")}
+            </Typography>
+          ) : (
+            <Box component="form" action={requestVolunteerAgreementAction} data-testid="volunteer-agreement-send-form">
+              {hidden}
+              <input type="hidden" name="volunteerId" value={person.id} />
+              <GlyphSubmitButton icon={sent ? "resend" : "send"} label={sendLabel} pendingLabel={sendLabel} ariaLabel={`${sendLabel}: ${shortText(person.name)}`} variant="outlined" />
+            </Box>
+          )}
           <GlyphButton icon="print" href={pdfHref} variant="outlined" sx={{ minHeight: 44 }} data-testid="volunteer-agreement-pdf">
             {t("volunteers.agreement.pdfToSign")}
           </GlyphButton>
@@ -504,7 +519,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
             action={recordPaperVolunteerAgreementAction}
             confirm={{
               title: t("volunteers.agreement.paperTitle", { name: shortText(person.name) }),
-              body: t("volunteers.agreement.paperBody", { name: shortText(person.name) }),
+              body: t(noAddress ? "volunteers.agreement.paperBodyNoEmail" : "volunteers.agreement.paperBody", { name: shortText(person.name) }),
               confirmLabel: t("volunteers.agreement.paper"),
               cancelLabel: words.cancel,
             }}
@@ -562,7 +577,12 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
           </Typography>
         )}
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
-          {person.guardianEmail !== null ? (
+          {person.email === null ? (
+            // A volunteer the club typed with no address (§NNN) is sent nothing, the parent's link included: one line says why, the paper stays.
+            <Typography variant="body2" color="text.secondary" sx={{ alignSelf: "center" }} data-testid="volunteer-guardian-volunteer-no-email">
+              {t("volunteers.guardian.volunteerNoEmail")}
+            </Typography>
+          ) : person.guardianEmail !== null ? (
             <Box component="form" action={requestVolunteerGuardianAction} data-testid="volunteer-guardian-send-form">
               {hidden}
               <input type="hidden" name="volunteerId" value={person.id} />
@@ -807,15 +827,27 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
           <StatusChip glyph="family" variant="outlined" label={t("volunteers.guardian.sameAddress")} testId="volunteer-guardian-same-address" />
         </Box>
       )}
-      {/* The address and the telephone number: drawn here and nowhere else, as links a thumb can press. */}
-      <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2, mt: 0.5 }}>
-        <Box component="a" href={`mailto:${person.email}`} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, wordBreak: "break-all" }} data-testid="volunteer-email">
-          {person.email}
-        </Box>
-        <Box component="a" href={`tel:${person.phone}`} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }} data-testid="volunteer-phone">
-          {formatPhone(person.phone)}
-        </Box>
-      </Stack>
+      {/* The address and the telephone number: drawn here and nowhere else, as links a thumb can press — each only when the row has it
+          (§NNN): no `mailto:` or `tel:` to nothing. A row the club typed with no address says once that the person is on the list only. */}
+      {(person.email !== null || person.phone !== null) && (
+        <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2, mt: 0.5 }}>
+          {person.email !== null && (
+            <Box component="a" href={`mailto:${person.email}`} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, wordBreak: "break-all" }} data-testid="volunteer-email">
+              {person.email}
+            </Box>
+          )}
+          {person.phone !== null && (
+            <Box component="a" href={`tel:${person.phone}`} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }} data-testid="volunteer-phone">
+              {formatPhone(person.phone)}
+            </Box>
+          )}
+        </Stack>
+      )}
+      {person.email === null && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="volunteer-no-email">
+          {t("volunteers.person.noEmail")}
+        </Typography>
+      )}
       {person.message && (
         <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
           <Box component="span" sx={{ fontWeight: 600 }}>

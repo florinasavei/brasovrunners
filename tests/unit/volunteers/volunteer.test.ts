@@ -16,6 +16,7 @@ import {
   choicesWithAssigned,
   compareRoles,
   countsAgainstRole,
+  guardianSharesAddress,
   openChoices,
   VOLUNTEER_ROLES_MAX,
   refusedFields,
@@ -190,11 +191,74 @@ describe("§754 the telephone number an organizer types — the registrations' o
   });
 
   it("refuses on the telephone box what cannot be dialled", () => {
-    for (const typed of ["", "abc", "+", "12"]) {
+    for (const typed of ["abc", "+", "12"]) {
       const verdict = staffWith(typed);
       expect(verdict.success, typed).toBe(false);
       if (!verdict.success) expect(refusedFields(verdict.error), typed).toEqual(["phone"]);
     }
+  });
+
+  it("§NNN takes an empty telephone box as none on the club's own row, and keeps it required on a row the person typed and on the public form", () => {
+    expect(typedPhone("")).toBe("");
+    const none = staffWith("");
+    expect(none.success).toBe(true);
+    if (none.success) expect(none.data.phone).toBeNull();
+    // «Modifică» of a row the person typed on the public form: the box stays required, as the form asked it.
+    const kept = volunteerStaffInputSchemaFor("2026-11-21", null, { contactRequired: true }).safeParse({ ...staff, phone: "" });
+    expect(kept.success).toBe(false);
+    if (!kept.success) expect(refusedFields(kept.error)).toEqual(["phone"]);
+    // The public form's own schema is unchanged.
+    const pub = volunteerPublicInputSchema.safeParse({ roleIds: [ID], name: "Ana", email: "ana@example.test", phone: "", message: "", locale: "ro", consent: true, agreement: true, adult: true });
+    expect(pub.success).toBe(false);
+    if (!pub.success) expect(refusedFields(pub.error)).toEqual(["phone"]);
+  });
+});
+
+describe("§NNN a person the club types with no address, no telephone number, or neither", () => {
+  it("takes each box empty on its own as none, and both empty together: the person is on the list only", () => {
+    expect(volunteerStaffInputSchema.parse({ ...staff, email: "" })).toMatchObject({ email: null, phone: "+40712345678" });
+    expect(volunteerStaffInputSchema.parse({ ...staff, email: "   " })).toMatchObject({ email: null });
+    expect(volunteerStaffInputSchema.parse({ ...staff, phone: "" })).toMatchObject({ email: "ana@example.test", phone: null });
+    expect(volunteerStaffInputSchema.parse({ ...staff, email: "", phone: "" })).toMatchObject({ name: "Ana Test", email: null, phone: null });
+    // A form that does not post the boxes at all is the same as empty ones.
+    const { email: _email, phone: _phone, ...nameOnly } = staff;
+    void _email;
+    void _phone;
+    expect(volunteerStaffInputSchema.parse(nameOnly)).toMatchObject({ email: null, phone: null });
+  });
+
+  it("still refuses what is typed and is no address or no number, naming the box", () => {
+    for (const [field, value] of [
+      ["email", "not-an-address"],
+      ["phone", "0712345678"],
+    ] as const) {
+      const verdict = volunteerStaffInputSchema.safeParse({ ...staff, email: "", phone: "", [field]: value });
+      expect(verdict.success, field).toBe(false);
+      if (!verdict.success) expect(refusedFields(verdict.error), field).toEqual([field]);
+    }
+  });
+
+  it("keeps both required on «Modifică» of a row the person typed on the public form, naming each box in one pass", () => {
+    const publicRow = volunteerStaffInputSchemaFor("2026-11-21", null, { contactRequired: true });
+    expect(publicRow.parse(staff)).toMatchObject({ email: "ana@example.test", phone: "+40712345678" });
+    const verdict = publicRow.safeParse({ ...staff, name: " ", email: "", phone: "" });
+    expect(verdict.success).toBe(false);
+    if (!verdict.success) expect(refusedFields(verdict.error).sort()).toEqual(["email", "name", "phone"]);
+  });
+
+  it("leaves the public form's address and telephone required", () => {
+    const pub = { roleIds: [ID], name: "Ana", email: "ana@example.test", phone: "+40712345678", message: "", locale: "ro", consent: true, agreement: true, adult: true };
+    expect(volunteerPublicInputSchema.safeParse(pub).success).toBe(true);
+    for (const field of ["email", "phone"] as const) {
+      const verdict = volunteerPublicInputSchema.safeParse({ ...pub, [field]: "" });
+      expect(verdict.success, field).toBe(false);
+      if (!verdict.success) expect(refusedFields(verdict.error), field).toEqual([field]);
+    }
+  });
+
+  it("says no guardian shares the address of a person who has none", () => {
+    expect(guardianSharesAddress(null, "parinte@example.test")).toBe(false);
+    expect(guardianSharesAddress("ana@example.test", "Ana@Example.test")).toBe(true);
   });
 });
 
@@ -509,6 +573,37 @@ describe("§754 the CSV", () => {
     ]);
     // An adult: the three guardian columns are empty — never «null».
     expect(csv.split("\r\n")[1].endsWith("2026-10-13T10:00:00.000Z,,,,,Nu,Nu,,,,")).toBe(true);
+  });
+
+  it("§NNN writes empty address and telephone cells for a person the club typed without them, and no column moves", () => {
+    const csv = buildVolunteersCsv(header, [
+      {
+        role: "Punct de apă",
+        choices: "Punct de apă",
+        name: "Doar Nume",
+        email: null,
+        phone: null,
+        state: "Înscris",
+        source: "Adăugat de organizator",
+        message: null,
+        note: null,
+        signedUpAt: new Date("2026-10-13T10:00:00.000Z"),
+        age: null,
+        dateOfBirth: null,
+        sex: "",
+        city: null,
+        volunteeredBefore: "Nu",
+        clubMember: "Nu",
+        shirtSize: "",
+        guardianName: null,
+        guardianEmail: null,
+        guardianConsent: "",
+      },
+    ]);
+    const [, row] = csv.split("\r\n");
+    expect(row.startsWith("Punct de apă,Punct de apă,Doar Nume,,,Înscris,Adăugat de organizator,")).toBe(true);
+    expect(row).not.toContain("null");
+    expect(row.split(",")).toHaveLength(csv.split("\r\n")[0].split(",").length);
   });
 });
 

@@ -173,6 +173,13 @@ export const eventVolunteerRoles = pgTable(
  * whoever typed it and whatever the role — so a repeated public sign-up finds the row and says the same
  * «am primit» a new one gets (the same answer, BR-REQ-031-01 criterion 3).
  *
+ * **A name on the list only** (§NNN, amending §754; the owner, 2026-10-28: «as vrea sa pot adaug si fara
+ * adresa de mail si telefon, doar sa fie asa pe lista»): a row the club types (`STAFF`) may have no address,
+ * no telephone number, or neither. Such a row gets no email of any kind and its agreements are signed on
+ * paper; the uniqueness above holds only for rows with an address (PostgreSQL's `UNIQUE` never compares two
+ * NULLs, so two name-only rows of the same name both stand). The public form always asks both, and the
+ * table says so too: a `PUBLIC` row has an address and a telephone number (`event_volunteers_public_contact`).
+ *
  * `message` is what the person wrote on the public form (at most 300 characters); `note` is the
  * organizers' own line and never leaves the backoffice. `privacy_notice_version` is the notice in force
  * when a person signed up on the page: the consent's record (GDPR art. 7(1)), null for a row the club
@@ -198,12 +205,16 @@ export const eventVolunteers = pgTable(
      */
     roleId: uuid("role_id").references(() => eventVolunteerRoles.id, { onDelete: "restrict" }),
     name: text("name").notNull(),
-    /** The address as typed, minus whitespace: where the one message goes. */
-    email: text("email").notNull(),
-    /** The identity the UNIQUE constraint below is on (`canonicalizeEmail`, §10.4). */
-    canonicalEmail: text("canonical_email").notNull(),
-    canonicalizationVersion: integer("canonicalization_version").notNull(),
-    phone: text("phone").notNull(),
+    /**
+     * The address as typed, minus whitespace: where the one message goes. Null for a row the club typed without one (§NNN): on the
+     * list only, never emailed. Nullable since migration `0182`: a relaxing change, expand only.
+     */
+    email: text("email"),
+    /** The identity the UNIQUE constraint below is on (`canonicalizeEmail`, §10.4); null with the address, and only with it (the CHECK below). */
+    canonicalEmail: text("canonical_email"),
+    canonicalizationVersion: integer("canonicalization_version"),
+    /** E.164; null for a row the club typed without one (§NNN). */
+    phone: text("phone"),
     locale: locale("locale").notNull().default("ro"),
     state: eventVolunteerState("state").notNull().default("REGISTERED"),
     source: eventVolunteerSource("source").notNull(),
@@ -333,6 +344,13 @@ export const eventVolunteers = pgTable(
   },
   (t) => [
     unique("event_volunteers_event_canonical_email_unique").on(t.eventId, t.canonicalEmail),
+    // An address is the one typed, its identity and the canonicalizer's version together, or none of the three (§NNN).
+    check(
+      "event_volunteers_address_whole",
+      sql`(${t.email} IS NULL) = (${t.canonicalEmail} IS NULL) AND (${t.email} IS NULL) = (${t.canonicalizationVersion} IS NULL)`,
+    ),
+    // Only a row the club typed may lack an address or a telephone number: the public form asks both (§NNN).
+    check("event_volunteers_public_contact", sql`${t.source} = 'STAFF' OR (${t.email} IS NOT NULL AND ${t.phone} IS NOT NULL)`),
     // «N din M»: the people counted against a role.
     index("event_volunteers_role_idx").on(t.roleId),
     // The retention sweep and the person lookup.

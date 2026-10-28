@@ -25,7 +25,7 @@ import {
   volunteerMinorsOpen,
 } from "@/modules/legal-documents/repository";
 import { enqueueEmail } from "@/modules/notifications/outbox";
-import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { type CanonicalEmail, canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
@@ -156,8 +156,12 @@ export type VolunteerItem = {
   /** The roles the person said they would do, in the club's order (§761): their chips on the card. */
   choiceIds: string[];
   name: string;
-  email: string;
-  phone: string;
+  /**
+   * The address and the telephone number, each null for a row the club typed without it (§NNN): a row with no address is on the
+   * list only — no email of any kind, its agreements on paper. A `PUBLIC` row always has both (the table's CHECK).
+   */
+  email: string | null;
+  phone: string | null;
   state: VolunteerState;
   source: "STAFF" | "PUBLIC";
   message: string | null;
@@ -1501,7 +1505,11 @@ export type VolunteerRequest =
   | { kind: "unassign"; eventId: string; id: string; roleId: unknown }
   | { kind: "delete"; eventId: string; id: string };
 
-export type VolunteerResult = { changed: boolean; volunteer: { id: string } };
+/**
+ * What a press did: whether it changed anything, and the person it was about — with whether the row holds an address (§NNN), so the
+ * action's toast never says «persoana primește un email» about a person who receives none.
+ */
+export type VolunteerResult = { changed: boolean; volunteer: { id: string; hasAddress: boolean } };
 
 /** The ticked roles as a form posts them: every value of `roleIds` (one box, or several), strings only. */
 function postedIds(value: unknown): string[] {
@@ -1509,8 +1517,13 @@ function postedIds(value: unknown): string[] {
   return typeof value === "string" && value !== "" ? [value] : [];
 }
 
-function staffInputOf(fields: Record<string, unknown>, eventDay: string, keptAge: number | null) {
-  const parsed = volunteerStaffInputSchemaFor(eventDay, keptAge).safeParse({
+/**
+ * The organizers' boxes, read (`volunteerStaffInputSchemaFor`). `contactRequired` is a «Modifică» of a row the person typed on the public
+ * form: its address and telephone number stay required. Otherwise either may be empty (§NNN), and `identity` — the address through the
+ * canonicalizer — is null for a row with no address: it is on the list only, never emailed, and meets no address's uniqueness.
+ */
+function staffInputOf(fields: Record<string, unknown>, eventDay: string, keptAge: number | null, contactRequired: boolean) {
+  const parsed = volunteerStaffInputSchemaFor(eventDay, keptAge, { contactRequired }).safeParse({
     ...postedStrings(fields, STAFF_FIELDS),
     roleIds: postedIds(fields.roleIds),
     // «Rolurile date» (§837): every box ticked, none for a person still to place.
@@ -1523,11 +1536,13 @@ function staffInputOf(fields: Record<string, unknown>, eventDay: string, keptAge
   if (!parsed.success) {
     throw new DomainError("VALIDATION_ERROR", parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "), refusedFields(parsed.error));
   }
-  let identity;
-  try {
-    identity = canonicalizeEmail(parsed.data.email);
-  } catch {
-    throw new DomainError("VALIDATION_ERROR", "the address is not valid", ["email"]);
+  let identity: CanonicalEmail | null = null;
+  if (parsed.data.email !== null) {
+    try {
+      identity = canonicalizeEmail(parsed.data.email);
+    } catch {
+      throw new DomainError("VALIDATION_ERROR", "the address is not valid", ["email"]);
+    }
   }
   return { ...parsed.data, choiceIds: choicesWithAssigned(parsed.data), identity };
 }
@@ -1616,17 +1631,19 @@ function sameIds(a: readonly string[], b: readonly string[]): boolean {
  * while no role stands; withdrawn at the send when the roles were changed again or the person cancelled meanwhile
  * (`render.ts`), so only the roles that stand are ever announced — all of them, in one message, whichever press changed
  * them. Each change is its own message: the moment and why it is sent are in the key — `given`, `readdressed` (the roles
- * kept, the address corrected) or `reopened` (a cancelled person back with roles).
+ * kept, the address corrected — or typed into a row that had none) or `reopened` (a cancelled person back with roles).
+ * Never to a row with no address (§NNN): nothing is queued at all — no outbox row, not even a withdrawn one; the person is
+ * on the list only and the organizers tell them themselves.
  */
 async function queueRoleAssigned<T extends Record<string, unknown>>(
   tx: Transaction<T>,
-  volunteer: { id: string; eventId: string; email: string; locale: Locale; state: VolunteerState },
+  volunteer: { id: string; eventId: string; email: string | null; locale: Locale; state: VolunteerState },
   roleIds: readonly string[],
   actorId: string,
   now: Date,
   why: "given" | "readdressed" | "reopened" = "given",
 ): Promise<void> {
-  if (volunteer.state === "CANCELLED" || roleIds.length === 0) return;
+  if (volunteer.email === null || volunteer.state === "CANCELLED" || roleIds.length === 0) return;
   const sorted = [...roleIds].sort();
   await enqueueEmail(tx, {
     participantId: null,
@@ -1646,7 +1663,10 @@ async function queueRoleAssigned<T extends Record<string, unknown>>(
  * (the name, the address, the telephone number, the roles they would do, the roles given, the organizers' note),
  * give them a role («Dă-i rolul …», §761; one more, «Dă-i și rolul …», §837) or take one back («Ia-i rolul …»),
  * confirm or cancel, delete. The address goes through the canonicalizer and is unique per event
- * (`VOLUNTEER_ALREADY_LISTED`, naming the box); every role ticked or given must be this event's (VALIDATION_ERROR
+ * (`VOLUNTEER_ALREADY_LISTED`, naming the box) — and, for a row the club types, it and the telephone number are each
+ * optional (§NNN): a row with no address is on the list only, meets no address's uniqueness (two such rows of one name
+ * both stand) and is sent no email by any verb here; an address typed into it later meets the uniqueness then, and a
+ * row the person typed on the public form keeps both on «Modifică»; every role ticked or given must be this event's (VALIDATION_ERROR
  * naming `roleIds`, `assignedRoleIds` or `roleId`); a person who is not there, or is on another event, is NOT_FOUND;
  * a cancelled person is given no role (CONFLICT: reopen first). A role may be given to more people than it asked (the
  * card then reads «3 din 2»), and a person may be given several roles, counting against each. A press that changes
@@ -1665,19 +1685,23 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
   let input: ReturnType<typeof staffInputOf> | null = null;
   // What an empty date box means on a row from before the date existed (§773): the age it holds, kept — see `volunteerStaffInputSchemaFor`.
   let keptAge: number | null = null;
+  // A row the person typed on the public form keeps its address and its telephone number (§NNN): read with the age, before the parse,
+  // so a «Modifică» that empties either is refused on its box in the same pass as every other box. The source never changes.
+  let contactRequired = false;
   if (request.kind === "add" || request.kind === "edit") {
     // The person's age is the date's on the event's day: the gun's, else the event's (`volunteerEventDay`).
     const eventDay = await eventDayOf(db, request.eventId, now);
     if (request.kind === "edit") {
       const [held] = await db
-        .select({ age: eventVolunteers.age, dateOfBirth: eventVolunteers.dateOfBirth })
+        .select({ age: eventVolunteers.age, dateOfBirth: eventVolunteers.dateOfBirth, source: eventVolunteers.source })
         .from(eventVolunteers)
         .where(and(eq(eventVolunteers.id, request.id), eq(eventVolunteers.eventId, request.eventId)))
         .limit(1);
       keptAge = held && held.dateOfBirth === null ? held.age : null;
+      contactRequired = held?.source === "PUBLIC";
     }
     try {
-      input = staffInputOf(request.fields, eventDay, keptAge);
+      input = staffInputOf(request.fields, eventDay, keptAge, contactRequired);
     } catch (error) {
       throw (await minorsClosedRefusal(db, request, error, eventDay, now)) ?? error;
     }
@@ -1766,7 +1790,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     if (request.kind === "add" && input) {
       await assertEventRoles(input.roleIds, "roleIds");
       await assertEventRoles(input.assignedRoleIds, "assignedRoleIds");
-      if (await holderOf(input.identity.canonicalEmail)) throw alreadyListed();
+      // One row per address (§754); a row with none is no address's (§NNN): two people of one name entered without one both stand.
+      if (input.identity && (await holderOf(input.identity.canonicalEmail))) throw alreadyListed();
       if (!profileDescribed) refuseUnnamedProfile(input, null, event.shirts);
       // The organizers record the person's own tick only under a notice that describes the list: a post that carries it otherwise is a forged or stale one.
       if (input.listOptIn && !listDescribed) throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not describe the public list yet", ["listOptIn"]);
@@ -1782,9 +1807,10 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           // The mirror of the first role given (§837), until the column's contract release.
           roleId: input.assignedRoleIds[0] ?? null,
           name: input.name,
-          email: input.identity.deliveryEmail,
-          canonicalEmail: input.identity.canonicalEmail,
-          canonicalizationVersion: input.identity.canonicalizationVersion,
+          // The address, its identity and the canonicalizer's version together, or none of them (§NNN, the table's CHECK).
+          email: input.identity?.deliveryEmail ?? null,
+          canonicalEmail: input.identity?.canonicalEmail ?? null,
+          canonicalizationVersion: input.identity?.canonicalizationVersion ?? null,
           phone: input.phone,
           state: "REGISTERED",
           source: "STAFF",
@@ -1809,15 +1835,17 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           updatedAt: now,
         })
         // A public sign-up of the same address may commit between the check above and this insert: the
-        // constraint decides, and the organizer hears the same sentence, never a database error.
+        // constraint decides, and the organizer hears the same sentence, never a database error. A row with
+        // no address never conflicts: PostgreSQL's UNIQUE compares no two NULLs.
         .onConflictDoNothing({ target: [eventVolunteers.eventId, eventVolunteers.canonicalEmail] })
         .returning({ id: eventVolunteers.id, eventId: eventVolunteers.eventId, email: eventVolunteers.email, locale: eventVolunteers.locale, state: eventVolunteers.state });
       if (!row) throw alreadyListed();
       await writeChoices(row.id, input.choiceIds);
       if (input.assignedRoleIds.length > 0) await writeLinks(eventVolunteerRoleAssignments, row.id, input.assignedRoleIds);
       await audit("volunteer.added", { volunteerId: row.id, assignedRoleIds: input.assignedRoleIds, roleIds: input.choiceIds, ...(input.listOptIn ? { listOptIn: true } : {}) });
+      // Nothing for a row with no address (§NNN): `queueRoleAssigned` queues no row at all.
       await queueRoleAssigned(tx, row, input.assignedRoleIds, actor.id, now);
-      return { changed: true, volunteer: { id: row.id } };
+      return { changed: true, volunteer: { id: row.id, hasAddress: row.email !== null } };
     }
 
     const [current] = await tx
@@ -1827,7 +1855,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       .for("update")
       .limit(1);
     if (!current) throw new DomainError("NOT_FOUND", "the volunteer is not there");
-    const summary = { id: current.id };
+    const summary = { id: current.id, hasAddress: current.email !== null };
     // The roles the person holds now (§837): what every verb below compares with, audits and announces.
     const heldRoleIds = await assignedTo(current.id);
 
@@ -1835,12 +1863,15 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       // The club's invitation to that person for this event (§820): deleting a person leaves no address of theirs behind. Found by the address
       // as it stands and by the sign-up it became (`volunteer_id`), so an address a colleague corrected since (`STAFF_FIELDS`) does not leave the
       // originally invited one behind. Before the volunteer goes, while `volunteer_id` still points at it (the foreign key then sets it null).
+      // A row with no address (§NNN) is found by the sign-up alone.
       await tx
         .delete(eventVolunteerInvitations)
         .where(
           and(
             eq(eventVolunteerInvitations.eventId, current.eventId),
-            or(eq(eventVolunteerInvitations.canonicalEmail, current.canonicalEmail), eq(eventVolunteerInvitations.volunteerId, current.id)),
+            current.canonicalEmail === null
+              ? eq(eventVolunteerInvitations.volunteerId, current.id)
+              : or(eq(eventVolunteerInvitations.canonicalEmail, current.canonicalEmail), eq(eventVolunteerInvitations.volunteerId, current.id)),
           ),
         );
       // The person's choices go with them (CASCADE).
@@ -1898,8 +1929,18 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     if (current.state === "CANCELLED" && input.assignedRoleIds.some((roleId) => !heldRoleIds.includes(roleId))) {
       throw new DomainError("CONFLICT", "a cancelled volunteer is given no role: reopen them first");
     }
-    if (input.identity.canonicalEmail !== current.canonicalEmail) {
-      const holder = await holderOf(input.identity.canonicalEmail);
+    // A row the person typed keeps both (§NNN): asked by the parse already, from the source read before it; the source never changes,
+    // so this is the same rule once more on the locked row, never a second opinion.
+    if (current.source === "PUBLIC" && (input.identity === null || input.phone === null)) {
+      throw new DomainError("VALIDATION_ERROR", "a row the person typed keeps its address and its telephone number", [
+        ...(input.identity === null ? ["email"] : []),
+        ...(input.phone === null ? ["phone"] : []),
+      ]);
+    }
+    // An address typed into a row — a new one, or into a row that had none (§NNN) — meets the event's uniqueness; clearing one meets nothing.
+    const nextCanonical = input.identity?.canonicalEmail ?? null;
+    if (nextCanonical !== null && nextCanonical !== current.canonicalEmail) {
+      const holder = await holderOf(nextCanonical);
       if (holder && holder.id !== current.id) throw alreadyListed();
     }
     if (!profileDescribed) refuseUnnamedProfile(input, current, event.shirts);
@@ -1946,7 +1987,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     const { age: nextAge, ...nextAnswers } = profile;
     const next = {
       name: input.name,
-      email: input.identity.deliveryEmail,
+      email: input.identity?.deliveryEmail ?? null,
       phone: input.phone,
       note: input.note,
       listOptIn: listNext,
@@ -2031,9 +2072,10 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           // A tick newly recorded takes the notice in force; one kept keeps its own; one cleared keeps none.
           listOptInNoticeVersion: !listNext ? null : listNotice ? listNotice.version : current.listOptInNoticeVersion,
           ...guardianSet,
-          canonicalEmail: input.identity.canonicalEmail,
-          canonicalizationVersion: input.identity.canonicalizationVersion,
-          // A changed address kills a live agreement link (§758, §12.8): it went to the old one.
+          // The three together, or none (§NNN, the table's CHECK).
+          canonicalEmail: nextCanonical,
+          canonicalizationVersion: input.identity?.canonicalizationVersion ?? null,
+          // A changed address kills a live agreement link (§758, §12.8): it went to the old one — and so does a cleared one (§NNN).
           ...(changedFields.includes("email") ? { agreementTokenHash: null, agreementTokenExpiresAt: null } : {}),
           updatedAt: now,
         })
@@ -2049,11 +2091,13 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     await audit("volunteer.edited", { volunteerId: current.id, fields: changedFields, assignedRoleIds: input.assignedRoleIds });
     // Roles newly given or changed are told to the person, at the address the row now holds — and so are roles kept
     // when the address was corrected: the earlier email went to the old address (or is withdrawn at the send for it).
-    const addressCorrected = input.identity.canonicalEmail !== current.canonicalEmail;
+    // An address typed into a row that had none (§NNN) is a correction too: the person hears the roles they hold. A row
+    // left with no address hears nothing — `queueRoleAssigned` queues no row for it.
+    const addressCorrected = nextCanonical !== current.canonicalEmail;
     if (rolesGivenChanged || addressCorrected) {
       await queueRoleAssigned(tx, { ...current, email: next.email }, input.assignedRoleIds, actor.id, now, rolesGivenChanged ? "given" : "readdressed");
     }
-    return { changed: true, volunteer: summary };
+    return { changed: true, volunteer: { id: current.id, hasAddress: next.email !== null } };
   });
   if (result.changed) revalidatePublicContent("places");
   return result;

@@ -367,7 +367,10 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                       {show(offer.createdAt)} · {offer.eventTitle ?? offer.eventId} ·{" "}
                       {/* The role given, or «De repartizat» (§761), then the roles the person offered for. */}
                       {(locale === "en" ? offer.roleNameEn : offer.roleNameRo) ?? t("volunteers.unassigned.title")} ·{" "}
-                      {t("volunteers.person.choicesLine", { roles: (locale === "en" ? offer.chosenRolesEn : offer.chosenRolesRo).join(", ") || "—" })} · {t(`volunteers.states.${offer.state}`)} · {t(`volunteers.sources.${offer.source}`)} · {offer.name} · {offer.deliveryEmail} · {offer.phone}
+                      {t("volunteers.person.choicesLine", { roles: (locale === "en" ? offer.chosenRolesEn : offer.chosenRolesRo).join(", ") || "—" })} · {t(`volunteers.states.${offer.state}`)} · {t(`volunteers.sources.${offer.source}`)} · {offer.name}
+                      {/* The address and the telephone number as stored; one the club typed without is simply absent (§NNN). */}
+                      {offer.deliveryEmail ? ` · ${offer.deliveryEmail}` : ""}
+                      {offer.phone ? ` · ${offer.phone}` : ""}
                       {offer.message ? ` · ${offer.message}` : ""}
                       {offer.note ? ` · ${offer.note}` : ""}
                       {/* What the person said about themselves (§765): every column of the row, art. 15 GDPR. */}
