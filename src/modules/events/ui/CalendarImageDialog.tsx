@@ -34,7 +34,7 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import PressButton from "@/shared/ui/PressButton";
 import { LOGO } from "@/theme/brand";
-import type { CalendarImageData } from "../domain/calendar-image";
+import { type CalendarImageData, periodHasPlace } from "../domain/calendar-image";
 import { calendarImageFonts, loadCalendarImageFonts } from "./calendar-image-fonts";
 import { CALENDAR_IMAGE_RATIOS, type CalendarImageRatio } from "./calendar-image-canvas";
 import {
@@ -70,6 +70,8 @@ export type CalendarImageDialogWords = {
   detailsPlace: string;
   detailsDistance: string;
   detailsElevation: string;
+  /** Under «Locul» while no date of the period has a short place: the tick would draw nothing. */
+  detailsPlaceNone: string;
 };
 
 const RATIOS = Object.keys(CALENDAR_IMAGE_RATIOS) as CalendarImageRatio[];
@@ -117,6 +119,8 @@ export default function CalendarImageDialog({
   // The month's weeks, by their days in this month; the one chosen, or null for the month.
   const weeks = weeksOf(data.month);
   const week = options.week === null ? null : weeks[Math.min(options.week, weeks.length - 1)];
+  // «Locul» draws only a short place the organizer typed (§859); while no date of the period has one, its tick is off and says why (§863).
+  const noPlace = !periodHasPlace(data.entries, week ? week.days : null);
   // «brasov-runners-2026-10.png» — «brasov-runners-2026-10-05-11.png» for a week: the diacritics' marks
   // dropped before anything else is, or «ș» splits the word.
   const period = week ? weekSlug(data.month, week) : `${data.month.year}-${String(data.month.month).padStart(2, "0")}`;
@@ -350,7 +354,8 @@ export default function CalendarImageDialog({
                     key={detail}
                     control={
                       <Checkbox
-                        checked={options.details[detail]}
+                        checked={detail === "place" && noPlace ? false : options.details[detail]}
+                        disabled={detail === "place" && noPlace}
                         onChange={(event) => setOptions((current) => ({ ...current, details: { ...current.details, [detail]: event.target.checked } }))}
                         data-testid={`calendar-image-detail-${detail}`}
                       />
@@ -359,6 +364,11 @@ export default function CalendarImageDialog({
                   />
                 ))}
               </Stack>
+              {noPlace && (
+                <Typography variant="caption" color="text.secondary" component="p" data-testid="calendar-image-place-none">
+                  {words.detailsPlaceNone}
+                </Typography>
+              )}
             </div>
           </Stack>
         </Stack>
