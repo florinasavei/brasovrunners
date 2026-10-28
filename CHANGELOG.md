@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.88-2026-10-28
+
+- **«Locul» says why it draws nothing** — on «Calendarul lunii ca imagine» the tick is greyed, with one line, while no date of the period has «Locul, pe scurt». §863.
 ## BR-V3.87-2026-10-28
 
 - **A larger «Calendarul lunii ca imagine»** — the dialog opens wider and its preview is larger; the picture itself is unchanged. §861.
