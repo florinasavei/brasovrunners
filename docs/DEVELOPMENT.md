@@ -120,7 +120,8 @@ yarn calendar:preview    «Salvează ca imagine» drawn without a server: five s
                          --week none|all|<n> adds the month's weeks («Perioada» → «Săptămâna»: all, or the n-th, 1 first) in every
                          format, as <theme>-week<n>-<format>.png beside the month's pictures (none by default).
                          The same months, and every week of each, are drawn on a stub canvas by tests/unit/events/calendar-image-overflow.test.ts,
-                         which fails on any text across its box's edge, over another text, or off the picture
+                         which fails on any text across its box's edge, over another text, or off the picture — and, in «Seriile în cap»,
+                         on any word under the floor a phone's feed still reads (17 px at 1080 wide, an hour or a detail 16, a day's number 18; 21 on 16:9)
 ```
 
 `yarn check` is the single gate, and CI runs it (its two halves on five runners) on every pull request. The pre-commit

@@ -4,7 +4,9 @@ import { describe, expect, it } from "vitest";
 import type { CalendarImageData } from "@/modules/events/domain/calendar-image";
 import { CALENDAR_IMAGE_RATIOS, type CalendarImageRatio } from "@/modules/events/ui/calendar-image-canvas";
 import { CALENDAR_IMAGE_LAYOUT_CHOICES, CALENDAR_IMAGE_THEME_CHOICES, type CalendarImageAssets, type CalendarImageFonts, type CalendarImageOptions, drawCalendarImage } from "@/modules/events/ui/calendar-image-draw";
+import { drawFrame } from "@/modules/events/ui/calendar-image-frame";
 import { weekLabel, weeksOf } from "@/modules/events/ui/calendar-image-week";
+import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
 import { overflowsOf, stubCanvas } from "./calendar-image-stub-canvas";
 
 /**
@@ -101,6 +103,33 @@ describe("a week on 16:9", () => {
     expect(ultra[0].size).toBeGreaterThan(18);
     expect(ultra[0].size).toBeLessThan(Math.min(...intervals));
   });
+});
+
+describe("«Seriile în cap»: the floor a phone's feed still reads (the owner's audit, D17/D31)", () => {
+  // A feed shows the picture about 400 px wide, so 14 px at 1080 is 5 px there. On a 1080-wide picture no word
+  // of the layout under 17 px — an hour, a detail or a rhythm (an hour's digits, «Anulat», «ora se anunță»,
+  // or the Medium face) under 16 — and no day's number under 18; on 16:9 nothing under 21. The band and the
+  // foot are the frame's, and left out.
+  const details = { place: true, distance: true, elevation: true };
+  for (const month of months) {
+    for (const ratio of ratios) {
+      it(`${month.name} · ${ratio}`, () => {
+        const options: CalendarImageOptions = { theme: "poster", ratio, layout: "heads", week: null, legend: true, details };
+        const body = drawFrame(stubCanvas().ctx, month.data, options, fonts, { logo: null }, CALENDAR_IMAGE_THEMES.poster);
+        if (!body) return;
+        const { ctx, records } = stubCanvas();
+        drawCalendarImage(ctx, month.data, options, fonts, { logo: null });
+        const { words } = month.data;
+        const hourish = (text: string, font: string) => /^500 /.test(font) || /\d{1,2}:\d{2}/.test(text) || text === words.cancelled.toLocaleUpperCase("ro-RO") || text === words.tba;
+        const floorOf = (text: string, font: string) => (ratio === "landscape" ? 21 : /^\d{1,2}$/.test(text) ? 18 : hourish(text, font) ? 16 : 17);
+        const inside = records.texts.filter((text) => text.top >= body.y && text.bottom <= body.y + body.h);
+        // The weekdays' seven heads at least: the check has words to look at.
+        expect(inside.length).toBeGreaterThanOrEqual(7);
+        const small = inside.filter((text) => text.size < floorOf(text.text, text.font));
+        expect(small.map((text) => `«${text.text}» at ${text.size} px`)).toEqual([]);
+      });
+    }
+  }
 });
 
 for (const month of months) {

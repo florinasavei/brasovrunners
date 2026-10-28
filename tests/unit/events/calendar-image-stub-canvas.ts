@@ -29,6 +29,8 @@ export type TextRecord = Extent & {
 };
 export type BoxRecord = Extent & { kind: "box"; how: "roundRect" | "rect" | "fillRect" | "image"; filled: boolean; stroked: boolean; order: number };
 export type SegmentRecord = { kind: "segment"; x1: number; y1: number; x2: number; y2: number; order: number };
+/** A `Path2D` filled (a glyph, the mountains): its path and where a 24-unit glyph's square landed. Not text, and no box. */
+export type ShapeRecord = Extent & { kind: "shape"; d: string; order: number };
 
 /** The width of one character in ems. */
 function charEm(char: string): number {
@@ -77,6 +79,7 @@ export class StubContext {
   readonly texts: TextRecord[] = [];
   readonly boxes: BoxRecord[] = [];
   readonly segments: SegmentRecord[] = [];
+  readonly shapes: ShapeRecord[] = [];
   private order = 0;
   private stack: State[] = [];
   private state: State = { m: [1, 0, 0, 1, 0, 0], font: "10px sans-serif", fillStyle: "#000", strokeStyle: "#000", textAlign: "start", textBaseline: "alphabetic", lineWidth: 1, globalAlpha: 1 };
@@ -201,9 +204,13 @@ export class StubContext {
     this.addBox("rect", x, y, w, h).stroked = true;
   }
   clearRect() {}
-  /** With a `Path2D` (a glyph, the mountains) nothing is recorded: those are shapes, not text, and have no box. */
+  /** With a `Path2D` (a glyph, the mountains) a shape is recorded: not text and no box, so no overflow check sees it. */
   fill(path?: unknown) {
-    if (typeof path === "object") return;
+    if (typeof path === "object") {
+      const d = (path as { d?: string } | null)?.d;
+      if (d !== undefined) this.shapes.push({ kind: "shape", d, order: this.order++, ...this.extent(0, 0, 24, 24) });
+      return;
+    }
     for (const box of this.path.boxes) box.filled = true;
   }
   stroke(path?: unknown) {

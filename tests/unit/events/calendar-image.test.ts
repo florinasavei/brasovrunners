@@ -17,6 +17,10 @@ import { posterPlan, weekdayColumn, wrapWhole } from "@/modules/events/ui/calend
 import { COVERED, drawFrame } from "@/modules/events/ui/calendar-image-frame";
 import { initialWeek, weekLabel, weekOf, weeksOf, weekSlug } from "@/modules/events/ui/calendar-image-week";
 import { stubCanvas } from "./calendar-image-stub-canvas";
+import busy from "../../../scripts/calendar-image-preview/busy.json";
+import fortnight from "../../../scripts/calendar-image-preview/fortnight.json";
+import june from "../../../scripts/calendar-image-preview/june.json";
+import sparse from "../../../scripts/calendar-image-preview/sparse.json";
 
 /**
  * «Salvează ca imagine» (§855; the owner, 2026-10-27): the month as a picture, drawn in the browser. The pure
@@ -281,15 +285,15 @@ describe("«Afiș»: each series under its weekday", () => {
         [recurring("Happy Monday"), recurring("Hill run")],
       ),
     );
-    expect(plan.lanes.map((lane) => [lane.title, lane.column, lane.time, lane.variant])).toEqual([
-      ["Happy Monday", 0, "19:30", 0],
-      ["Hill run", 2, "19:00", 0],
+    expect(plan.lanes.map((lane) => [lane.title, lane.columns, lane.inHeads, lane.time, lane.variant])).toEqual([
+      ["Happy Monday", [0], true, "19:30", 0],
+      ["Hill run", [2], true, "19:00", 0],
     ]);
     expect([...plan.marks.keys()]).toEqual([1, 3, 8, 10, 15, 17]);
     expect([...plan.dates.values()].flat().map((date) => date.title)).toEqual(["Girls only"]);
   });
 
-  it("stacks two series of one weekday, the earlier first, and gives a series on two weekdays a look of its own", () => {
+  it("stacks two series of one weekday, the earlier first, and puts a series on two weekdays in both heads in a look of its own (D09)", () => {
     const plan = posterPlan(
       data(
         [
@@ -303,10 +307,32 @@ describe("«Afiș»: each series under its weekday", () => {
         [recurring("Track"), recurring("Tempo"), recurring("Intervals")],
       ),
     );
-    expect(plan.lanes.map((lane) => [lane.title, lane.column, lane.variant])).toEqual([
-      ["Track", 1, 1],
-      ["Tempo", 1, 0],
-      ["Intervals", null, 2],
+    expect(plan.lanes.map((lane) => [lane.title, lane.columns, lane.inHeads, lane.variant])).toEqual([
+      ["Track", [1], true, 1],
+      ["Tempo", [1], true, 0],
+      ["Intervals", [1, 3], true, 2],
+    ]);
+  });
+
+  it("leaves a series on more than three weekdays to the legend", () => {
+    const plan = posterPlan(data([1, 2, 3, 4].map((day) => entry(day, "Daily")), [recurring("Daily")]));
+    expect(plan.lanes.map((lane) => [lane.columns, lane.inHeads])).toEqual([[[0, 1, 2, 3], false]]);
+  });
+
+  it("tells a series that keeps every one of its weekdays from one that does not, a special edition counting as kept (D10)", () => {
+    // June 2026 has five Mondays (1–29) and four Wednesdays (3–24).
+    const plan = posterPlan(
+      data(
+        [
+          ...[1, 8, 15, 22, 29].map((day) => entry(day, "Happy Monday", day === 15 ? { special: true, tone: "special" } : {})),
+          ...[3, 17].map((day) => entry(day, "Fortnightly")),
+        ],
+        [recurring("Happy Monday"), recurring("Fortnightly")],
+      ),
+    );
+    expect(plan.lanes.map((lane) => [lane.title, lane.weekly])).toEqual([
+      ["Happy Monday", true],
+      ["Fortnightly", false],
     ]);
   });
 
@@ -319,6 +345,198 @@ describe("«Afiș»: each series under its weekday", () => {
     );
     expect([...plan.marks.keys()]).toEqual([1, 15]);
     expect([...plan.dates.keys()]).toEqual([8, 6]);
+  });
+});
+
+describe("«Seriile în cap» drawn: the sample months of `yarn calendar:preview`", () => {
+  const samples = { june, busy, sparse, fortnight } as unknown as Record<string, CalendarImageData>;
+  const fonts = { body: "Roboto", display: "Facon", script: "Caveat", poster: "Poppins" };
+  /** The month on the stub canvas in «Afiș», every detail on: what it wrote, where and at what size. */
+  function draw(name: string, ratio: CalendarImageOptions["ratio"]) {
+    const { ctx, records } = stubCanvas();
+    drawCalendarImage(ctx, samples[name], { theme: "poster", ratio, layout: "heads", week: null, legend: true, details: ALL_DETAILS }, fonts, { logo: null });
+    return records.texts;
+  }
+  const plain = (text: string) => text.replace(/\u00a0/g, " ");
+
+  it("writes a series on two weekdays in both heads, and a fortnightly one's rhythm under its title (D09, D10)", () => {
+    const texts = draw("fortnight", "portrait");
+    const firstDay = Math.min(...texts.filter((text) => text.text === "1").map((text) => text.top));
+    expect(texts.filter((text) => text.text.startsWith("INTERVALE") && text.top < firstDay)).toHaveLength(2);
+    expect(texts.some((text) => text.text.startsWith("O dată la două săptămâni"))).toBe(true);
+  });
+
+  it("starts a weekday with no series right under its label: June's Saturday above its Monday under a strip (D02)", () => {
+    const texts = draw("june", "portrait");
+    const top = (day: string) => Math.min(...texts.filter((text) => text.text === day).map((text) => text.top));
+    expect(top("6")).toBeLessThan(top("1"));
+    // The strips' titles read at a phone's width: 20 px at least.
+    expect(texts.filter((text) => text.text.startsWith("HAPPY MONDAY")).every((text) => text.size >= 20)).toBe(true);
+  });
+
+  /**
+   * The list's day badges in reading order — the numbers drawn after its heading, which the list draws last —
+   * or null when the picture has no list.
+   */
+  function listedDays(texts: ReturnType<typeof draw>, name: string): number[] | null {
+    const at = texts.findIndex((text) => text.text === samples[name].words.specialTitle.toLocaleUpperCase("ro-RO"));
+    if (at < 0) return null;
+    const badges = texts.slice(at + 1).filter((text) => /^\d{1,2}$/.test(text.text));
+    return badges.sort((a, b) => Math.round(a.top / 8) - Math.round(b.top / 8) || a.left - b.left).map((text) => Number(text.text));
+  }
+
+  it("lists every special date in day order, left to right and then down (D11, D28), the hourless one with «time to be announced» (D36) — and no list without the month's race", () => {
+    for (const [name, data] of Object.entries(samples)) {
+      const race = data.specials.find((special) => special.type === "RACE");
+      for (const ratio of ["portrait", "square", "story", "landscape"] as const) {
+        const texts = draw(name, ratio);
+        const days = listedDays(texts, name);
+        if (name === "busy" || name === "fortnight") expect(days, `${name} · ${ratio}`).toEqual(data.specials.map((special) => special.day).sort((a, b) => a - b));
+        if (name === "busy") expect(texts.some((text) => text.text.startsWith("time to be announced")), ratio).toBe(true);
+        // The race in the list wherever a list is drawn, on every sample month and format.
+        if (race && days) expect(days, `${name} · ${ratio}: the race listed`).toContain(race.day);
+      }
+    }
+  });
+
+  /**
+   * The most of `title` that consecutive drawn lines read as its start — «BRAȘOV» then «RUNNERS HAL…» reads
+   * «BRAȘOV RUNNERS HAL», «RECUNOAȘTE-» then «REA TRASEULUI» reads «RECUNOAȘTEREA TRASEULUI» — or "".
+   */
+  function reads(lines: string[], title: string): string {
+    let best = "";
+    lines.forEach((_, start) => {
+      let text = "";
+      for (let index = start; index < lines.length; index += 1) {
+        const line = lines[index];
+        const joined = text === "" ? [line] : text.endsWith("-") ? [text.slice(0, -1) + line, text + line] : [`${text} ${line}`];
+        const next = joined.find((candidate) => title.startsWith(candidate.replace(/[-…]$/, "")));
+        if (next === undefined) break;
+        text = next;
+        const bare = next.replace(/[-…]$/, "");
+        if (bare.length > best.length) best = bare;
+        if (next.endsWith("…")) break;
+      }
+    });
+    return best;
+  }
+
+  it("names every special date on every picture, and the race whole in its day whenever another date is whole in its own (D04)", () => {
+    for (const [name, data] of Object.entries(samples)) {
+      for (const ratio of ["portrait", "square", "story", "landscape"] as const) {
+        const drawn = draw(name, ratio).map((text) => plain(text.text));
+        // The days are drawn after the heads — from the first day's number — and before the list, which
+        // starts at its heading: a strip's «BRAȘOV RUNNERS» is not the race named.
+        const heading = drawn.indexOf(data.words.specialTitle.toLocaleUpperCase("ro-RO"));
+        const days = drawn.slice(drawn.indexOf("1"), heading < 0 ? drawn.length : heading);
+        const list = heading < 0 ? [] : drawn.slice(heading + 1);
+        const titleOf = (special: { title: string }) => plain(special.title.toLocaleUpperCase("ro-RO"));
+        const wholeInDay = (special: { title: string }) => reads(days, titleOf(special)) === titleOf(special);
+        const wordsOf = (text: string) => (text === "" ? 0 : text.split(" ").length);
+        for (const special of data.specials) {
+          const title = titleOf(special);
+          // Whole in the list, or two words of it at least in its day — never only its chip or a «+2 altele».
+          expect(reads(list, title) === title || wordsOf(reads(days, title)) >= Math.min(2, wordsOf(title)), `${name} · ${ratio} · ${special.title}`).toBe(true);
+        }
+        const race = data.specials.find((special) => special.type === "RACE");
+        if (!race) continue;
+        const another = data.specials.some((special) => special !== race && wholeInDay(special));
+        if (another) expect(reads(days, titleOf(race)), `${name} · ${ratio}: the race whole in its day`).toBe(titleOf(race));
+        else expect(wordsOf(reads(days, titleOf(race))), `${name} · ${ratio}: two words of the race in its day`).toBeGreaterThanOrEqual(2);
+      }
+    }
+  });
+
+  it("keeps a cancelled date's glyphs with its grey pill — both of its series' on fortnight's 17th and busy's 19th, on square and portrait (the review of 2026-10-28)", () => {
+    const glyphPaths = new Set<string>([...Object.values(TYPE_PATHS), ...Object.values(SURFACE_PATHS)]);
+    // The stub's capitals are wider than Poppins's: «CANCELLED» does not fit busy's narrow days there at all.
+    // «CANCELED» leaves the room «CANCELLED» has on the picture — the pill alone fits, not with a glyph in it.
+    const months = { ...samples, busyCanceled: { ...samples.busy, words: { ...samples.busy.words, cancelled: "Canceled" } } };
+    for (const [name, data] of Object.entries(months)) {
+      const plan = posterPlan(data);
+      const length = new Date(Date.UTC(data.month.year, data.month.month, 0)).getUTCDate();
+      const label = data.words.cancelled.toLocaleUpperCase("ro-RO");
+      for (const ratio of ["portrait", "square", "story", "landscape"] as const) {
+        const { ctx, records } = stubCanvas();
+        drawCalendarImage(ctx, data, { theme: "poster", ratio, layout: "heads", week: null, legend: true, details: ALL_DETAILS }, fonts, { logo: null });
+        // The days are drawn in order, each from its number: what a day drew comes before the next day's number.
+        const numbers: number[] = [];
+        let at = records.texts.findIndex((text) => text.text === "1");
+        for (let day = 1; day <= length && at >= 0; day += 1) {
+          numbers.push(records.texts[at].order);
+          at = records.texts.findIndex((text, index) => index > at && text.text === String(day + 1));
+        }
+        expect(numbers, `${name} · ${ratio}: every day's number`).toHaveLength(length);
+        for (const [day, marks] of plan.marks) {
+          const cancelled = marks.find((mark) => mark.entry.cancelled);
+          if (!cancelled || marks.length > 1 || plan.dates.has(day)) continue;
+          const within = (order: number) => order > numbers[day - 1] && order < (numbers[day] ?? Infinity);
+          if (!records.texts.some((text) => within(text.order) && text.text === label)) continue;
+          const drawn = records.shapes.filter((shape) => within(shape.order) && glyphPaths.has(shape.d)).map((shape) => shape.d);
+          expect(drawn.length, `${name} · ${ratio} · day ${day}: a cancelled date's glyphs`).toBeGreaterThan(0);
+          if (name !== "busy" && (ratio === "square" || ratio === "portrait")) expect(drawn, `${name} · ${ratio} · day ${day}: both glyphs`).toEqual(eventGlyphs(cancelled.lane.type, cancelled.lane.surface));
+        }
+      }
+    }
+  });
+
+  it("cuts a shortened title after a whole word — «NIGHT RUN…», never «NIGHT RUN O…» nor «NIGHT RUN ON…» — by letters only when its first word does not fit (the review of 2026-10-28)", () => {
+    for (const [name, data] of Object.entries(samples)) {
+      const titles = [...data.entries, ...data.recurring].map((entry) => plain(entry.title.toLocaleUpperCase("ro-RO")));
+      for (const ratio of ["portrait", "square", "story", "landscape"] as const) {
+        for (const text of draw(name, ratio).map((record) => plain(record.text))) {
+          if (!text.endsWith("…") || text !== text.toLocaleUpperCase("ro-RO")) continue;
+          const stem = text.slice(0, -1);
+          // A start of two words or more is cut where a word ends; a single word may be its own first letters.
+          if (!stem.includes(" ")) continue;
+          const atWord = titles.some((title) => {
+            for (let from = title.indexOf(stem); from >= 0; from = title.indexOf(stem, from + 1)) if (!/^[\p{L}\p{N}]/u.test(title.slice(from + stem.length))) return true;
+            return false;
+          });
+          expect(atWord, `${name} · ${ratio}: «${text}»`).toBe(true);
+          // Nor on a word of one or two letters, when the words before it fit: «NIGHT RUN…», not «NIGHT RUN ON…».
+          expect(/\s\p{L}{1,2}$/u.test(stem), `${name} · ${ratio}: «${text}»`).toBe(false);
+        }
+      }
+    }
+  });
+
+  it("draws every run of a day with two series — a pill each, or «+1 altele» counting one — and widens a strip over the free heads before it cuts it (the review of 2026-10-28)", () => {
+    // September's fortnight and a Thursday series at 07:00: Thursdays 3, 10, 17 and 24 hold two marks each,
+    // the 17th's second one cancelled. Its own month here, not a sample of `yarn calendar:preview`.
+    const base = samples.fortnight;
+    const morning = { title: "Alergare de dimineață la Olimpia", tone: "weekly", type: "GROUP_RUN", surface: "ASPHALT", place: "Olimpia", distance: null, elevation: null } as const;
+    const entries = [...base.entries, ...[3, 10, 17, 24].map((day) => ({ ...morning, day, time: "07:00", special: false, cancelled: false }))];
+    const month = { ...base, entries: entries.sort((a, b) => a.day - b.day || (a.time ?? "99").localeCompare(b.time ?? "99")), recurring: [...base.recurring, { ...morning, sentence: "În fiecare joi, la 07:00" }] } as CalendarImageData;
+    const plan = posterPlan(month);
+    const { words } = month;
+    for (const theme of ["poster", "dark"] as const) {
+      for (const ratio of ["portrait", "square", "story", "landscape"] as const) {
+        const { ctx, records } = stubCanvas();
+        drawCalendarImage(ctx, month, { theme, ratio, layout: "heads", week: null, legend: true, details: ALL_DETAILS }, fonts, { logo: null });
+        const texts = records.texts.map((text) => text.text);
+        // The days are drawn in order, each from its number: what a day wrote is what comes before the next one's.
+        let at = texts.indexOf("1");
+        // No strip shortened while a free head is left beside it: the heads come before the first day.
+        expect(texts.slice(0, at).filter((text) => text.includes("…")), `${theme} · ${ratio}`).toEqual([]);
+        for (let day = 1; day <= 30; day += 1) {
+          const next = day < 30 ? texts.indexOf(String(day + 1), at + 1) : texts.length;
+          const drawn = texts.slice(at + 1, next);
+          const marks = plan.marks.get(day) ?? [];
+          const counted = drawn.reduce((sum, text) => sum + Number(/^\+(\d+) /.exec(text)?.[1] ?? 0), 0);
+          const pills = marks.filter(({ entry }) => {
+            const index = drawn.indexOf(entry.cancelled ? words.cancelled.toLocaleUpperCase("ro-RO") : (entry.time ?? ""));
+            if (index >= 0) drawn.splice(index, 1);
+            return index >= 0;
+          }).length;
+          if (marks.length > 0) {
+            expect(pills, `${theme} · ${ratio} · day ${day}: a pill`).toBeGreaterThan(0);
+            expect(pills + counted, `${theme} · ${ratio} · day ${day}: every run`).toBe(marks.length);
+          }
+          at = next;
+        }
+      }
+    }
   });
 });
 
