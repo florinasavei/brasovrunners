@@ -67,7 +67,7 @@ function isVolunteerState(value: string | undefined): value is VolunteerState {
  * A row's name opens the person's own page, where the whole block of the card stands — the contact, the roles
  * given and offered, the agreement, the guardian, «Modifică». The roles and the switches stay on the event's card,
  * one link away: they belong to the event, not to a list across events. «Adaugă un voluntar de mână» stands here too
- * while one event is in scope (§NNN; the owner, 2026-10-28: «as vrea sa pot adauga manual un voluntar si de aici»):
+ * while one event is in scope (§862; the owner, 2026-10-28: «as vrea sa pot adauga manual un voluntar si de aici»):
  * the card's own form, for that event, coming back to this list.
  */
 export default async function AdminVolunteersPage({ params, searchParams }: Props) {
@@ -137,7 +137,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const hasFilters = Boolean(eventId || stateFilter || roleFilter || q);
   const autoScopedToFeatured = !hasFilters && eventFilter.eventId !== undefined;
   const scopeEvent = events.find((event) => event.id === filters.eventId) ?? null;
-  // «Adaugă un voluntar de mână» for the event in scope (§NNN): the context a person's page reads, coming back to this page of the list.
+  // «Adaugă un voluntar de mână» for the event in scope (§862): the context a person's page reads, coming back to this page of the list.
   const scopeEventRow = scopeEvent ? await findEventForRegistrationById(db, scopeEvent.id) : undefined;
   const [addContext, personBoxes] = scopeEventRow ? await Promise.all([volunteerPersonContextOf(db, scopeEventRow, locale, new Date(), returnTo), volunteerPersonBoxes(t)]) : [null, null];
   // The action's language-neutral code (AGENTS.md §14.3) becomes a sentence here; an unknown code says nothing.
@@ -304,7 +304,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
         )}
       </Panel>
 
-      {/* A person the club enters by hand (§NNN): the event card's own form, for the event in scope, while it has a role to offer — as on the card. */}
+      {/* A person the club enters by hand (§862): the event card's own form, for the event in scope, while it has a role to offer — as on the card. */}
       {scopeEvent && addContext && personBoxes && addContext.roles.length > 0 && (
         <Panel glyph="add" collapsible title={t("volunteers.person.addTitle")} aside={t("volunteers.screen.summaryScopeEvent", { event: scopeEvent.title ?? scopeEvent.id })} id="volunteers-add" data-testid="volunteers-add">
           <ActionForm action={addVolunteerAction} scope="volunteer-new" messages={personBoxes}>

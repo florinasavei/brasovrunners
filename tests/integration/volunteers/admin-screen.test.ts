@@ -397,7 +397,7 @@ describe("the list page (§839)", () => {
   });
 });
 
-describe("«Adaugă un voluntar de mână» on the list (§NNN)", () => {
+describe("«Adaugă un voluntar de mână» on the list (§862)", () => {
   it("draws the card's form for the event in scope, coming back to this page, and none across every event", async () => {
     const page = await listPage();
     const add = /data-testid="volunteers-add"[\s\S]*?<\/form>/.exec(page)?.[0] ?? "";

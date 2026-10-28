@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.86-2026-10-28 -->
+<!-- PROJECT_BASELINE: BR-V3.87-2026-10-28 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.86-2026-10-28`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.87-2026-10-28`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28066,3 +28066,23 @@ Baseline `BR-V3.85-2026-10-28`.
 **Both** pack the month boxes in columns (two from `sm`, three from `lg`) instead of a grid's rows, so no month leaves a gap; the months run down each column in order.
 
 Baseline `BR-V3.86-2026-10-28`.
+
+## 861. «Calendarul lunii ca imagine» opens wider, with a larger preview
+
+**The owner, 2026-10-28, with a screenshot of the dialog on a desktop:** "as vrea ca acest pop-up sa fie mai mare!"
+
+**Decision.** The dialog opens at Material UI's `lg` width (1200 px) instead of `md` (900 px), and its preview grows with it: up to 480 px wide for the portrait formats and 720 px for «Facebook 16:9» (was 360 and 560), up to 75 % of the screen's height (was 60 %). The picture drawn and downloaded is unchanged — only its preview and the room around the choices. On a phone the dialog was already the screen's width and the preview stacks above the choices, as before.
+
+**Refused.** A full-screen dialog: on a wide screen the choices would sit far from the preview they change.
+
+Baseline `BR-V3.87-2026-10-28`.
+
+## 862. «Adaugă un voluntar de mână» on the «Voluntari» screen too
+
+**The owner, 2026-10-28, with a screenshot of `/admin/volunteers`:** "as vrea sa pot adauga manual un voluntar si de aici".
+
+**Decision.** Amends §839, which kept the add-by-hand form on the event's card alone ("they belong to the event, not to a list across events"). While one event is in the screen's scope — the featured one by default, or the one chosen — the screen shows the fold «Adaugă un voluntar de mână», «la <event>» beside its title, under the summary. It is the card's own form: the same boxes (`VolunteerPersonFields`), the same Server Action (`addVolunteerAction`) with the same role check (`canManageVolunteers`, BR-REQ-060-01), the same audit and email, and the same refusals shown box by box. It reads the event's context the way a person's page does (`volunteerPersonContextOf`) and posts this page of the list as `returnTo`, so the new row is in view when it comes back. It appears only while the event has a role to offer, as on the card. Across every event («Toate evenimentele», or a name searched without an event) there is no fold: the person must belong to one event.
+
+**Refused.** An event select inside the form: the scope's select above already chooses the event, and a second one could disagree with it. The roles, the switches and the invitations stay on the event's card.
+
+Baseline `BR-V3.87-2026-10-28`.

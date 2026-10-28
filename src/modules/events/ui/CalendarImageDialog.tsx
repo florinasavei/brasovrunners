@@ -192,7 +192,7 @@ export default function CalendarImageDialog({
     }
   }
 
-  // `lg`, and a preview up to three quarters of the screen's height: the picture is what is being judged (§NNN).
+  // `lg`, and a preview up to three quarters of the screen's height: the picture is what is being judged (§861).
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg" data-testid="calendar-image-dialog">
       <DialogTitle>{words.title}</DialogTitle>
