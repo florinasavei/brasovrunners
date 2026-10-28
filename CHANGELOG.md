@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.87-2026-10-28
+
+- **A larger «Calendarul lunii ca imagine»** — the dialog opens wider and its preview is larger; the picture itself is unchanged. §861.
+- **«Adaugă un voluntar de mână» on «Voluntari»** — the event card's form, for the event in scope, coming back to the list. §862.
 ## BR-V3.86-2026-10-28
 
 - **The calendar's year, in two ways** — «Pe scurt» shows each weekly series as one line a month and every special date whole; «Toate datele» shows every date; the months now stack without gaps. §860.

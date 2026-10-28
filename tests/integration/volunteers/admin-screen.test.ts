@@ -397,6 +397,30 @@ describe("the list page (§839)", () => {
   });
 });
 
+describe("«Adaugă un voluntar de mână» on the list (§862)", () => {
+  it("draws the card's form for the event in scope, coming back to this page, and none across every event", async () => {
+    const page = await listPage();
+    const add = /data-testid="volunteers-add"[\s\S]*?<\/form>/.exec(page)?.[0] ?? "";
+    expect(add).toContain("Adaugă un voluntar de mână");
+    expect(add).toContain(`name="eventId" value="${raceId}"`);
+    expect(returnTos(add)).toEqual(["/ro/admin/volunteers"]);
+    expect(add).toContain("Punct de apă");
+    expect(await listPage({ eventId: "all" })).not.toContain('data-testid="volunteers-add"');
+  });
+
+  it("adds the person to the event in scope, typed by an organizer, and comes back to the list", async () => {
+    const back = `/ro/admin/volunteers?eventId=${raceId}&page=1`;
+    state.redirected.length = 0;
+    const fields = { name: "Maria Test", email: "maria@example.test", phone: "0712 345 678", note: "", roleIds: waterId, assignedRoleIds: waterId, returnTo: back };
+    await actions.addVolunteerAction(null, form(fields)).catch((error: unknown) => {
+      if (!(error instanceof Error && error.message === "NEXT_REDIRECT")) throw error;
+    });
+    expect(state.redirected.at(-1)).toBe(back);
+    const [maria] = await db.select({ eventId: eventVolunteers.eventId, source: eventVolunteers.source, state: eventVolunteers.state }).from(eventVolunteers).where(eq(eventVolunteers.name, "Maria Test"));
+    expect(maria).toEqual({ eventId: raceId, source: "STAFF", state: "REGISTERED" });
+  });
+});
+
 describe("the person's page (§839)", () => {
   it("draws the card's block for one person, coming back to itself, with the way back to the list and to the event", async () => {
     const page = await personPage(people.stefan);
