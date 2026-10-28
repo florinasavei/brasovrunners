@@ -366,6 +366,145 @@ describe("«Perioada» → «Săptămâna»: a week of the month, kept to this m
   });
 });
 
+describe("a week's cards: the glyphs and the hour, the details after it, the title under them", () => {
+  const fonts = { body: "sans-serif", display: "sans-serif", script: "cursive", poster: "Poppins" };
+  const words: CalendarImageData["words"] = {
+    heading: "Evenimente",
+    monthTitle: "iunie 2026",
+    monthName: "iunie",
+    weekdays: ["lun.", "mar.", "mie.", "joi", "vin.", "sâm.", "dum."],
+    weekdaysLong: ["luni", "marți", "miercuri", "joi", "vineri", "sâmbătă", "duminică"],
+    at: "ora {time}",
+    hashtags: "#brasovrunners",
+    recurringTitle: "Evenimente recurente",
+    specialTitle: "Evenimente speciale",
+    cancelled: "Anulat",
+    tba: "ora se anunță",
+    follow: "Urmărește-ne",
+    more: "+{count} altele",
+    emptyMonth: "Nicio alergare luna aceasta",
+    emptyWeek: "Nicio alergare săptămâna aceasta",
+  };
+  const entry = (overrides: Partial<CalendarImageEntry> = {}): CalendarImageEntry => ({ day: 1, time: "19:30", title: "Happy Monday", tone: "weekly", type: "GROUP_RUN", surface: "ASPHALT", special: false, cancelled: false, place: "Parc", distance: "8 km", elevation: "≈ 350 m D+", ...overrides });
+  /** The first week of June 2026 with `entries` on Monday the 1st, drawn on the stub: its texts, in the order drawn. */
+  function week(entries: CalendarImageEntry[], details = ALL_DETAILS, ratio: CalendarImageOptions["ratio"] = "portrait") {
+    const data: CalendarImageData = { month: { year: 2026, month: 6 }, entries, recurring: [], specials: [], socials: ["instagram"], host: "example.test", clubName: "Brașov Runners", words };
+    const { ctx, records } = stubCanvas();
+    drawCalendarImage(ctx, data, { theme: "poster", ratio, layout: "heads", week: 0, legend: true, details }, fonts, { logo: null });
+    return records.texts;
+  }
+  const texts = (...args: Parameters<typeof week>) => week(...args).map((text) => text.text);
+
+  it("writes the details after the hour, « · » between them, only those «Detalii» has on, at the hour's size and in the hour's face", () => {
+    const all = week([entry()]);
+    const head = all.find((text) => text.text.startsWith("ora"));
+    expect(head?.text).toBe("ora 19:30 · Parc · 8 km · ≈ 350 m D+");
+    const title = all.find((text) => text.text === "HAPPY MONDAY");
+    expect(head?.font).toMatch(/^500 /);
+    expect(title?.font).toMatch(/^700 /);
+    expect(head?.size).toBeLessThan(title?.size ?? 0);
+    expect(texts([entry()], { place: true, distance: false, elevation: false })).toContain("ora 19:30 · Parc");
+    expect(texts([entry()], { place: false, distance: true, elevation: true })).toContain("ora 19:30 · 8 km · ≈ 350 m D+");
+    expect(texts([entry({ distance: null, elevation: null })])).toContain("ora 19:30 · Parc");
+    const none = texts([entry()], { place: false, distance: false, elevation: false });
+    expect(none).toContain("ora 19:30");
+    expect(none.some((text) => /Parc|8 km|D\+/.test(text))).toBe(false);
+  });
+
+  it("says «ora se anunță» where the hour goes for a date whose hour is not set, the details after it as after an hour", () => {
+    expect(texts([entry({ time: null })])).toContain("ora se anunță · Parc · 8 km · ≈ 350 m D+");
+    expect(texts([entry({ time: null, ...NO_DETAILS })])).toContain("ora se anunță");
+  });
+
+  it("keeps «ora se anunță» whole on a 16:9 column, the title a little smaller for it, and runs the details on to the second line", () => {
+    // At the column's largest size the words do not fit after the glyphs; a few pixels down they do.
+    const all = week([entry({ time: null })], ALL_DETAILS, "landscape");
+    const lines = all.map((text) => text.text);
+    expect(lines).toContain("ora se anunță");
+    expect(lines).toContain("Parc · 8 km");
+    expect(lines.some((text) => /^(ora se|anunță)/.test(text) && text !== "ora se anunță")).toBe(false);
+    const title = all.find((text) => text.text === "HAPPY");
+    expect(title?.size).toBeGreaterThanOrEqual(26);
+    expect(title?.size).toBeLessThan(36);
+  });
+
+  it("breaks an hour no size from 26 up holds — English «time to be announced» on a 16:9 column — over the head's two lines, with no detail glued to its end", () => {
+    const english = { ...words, at: "at {time}", tba: "time to be announced" };
+    const data: CalendarImageData = { month: { year: 2026, month: 6 }, entries: [entry({ time: null })], recurring: [], specials: [], socials: [], host: "example.test", clubName: "Brașov Runners", words: english };
+    const { ctx, records } = stubCanvas();
+    drawCalendarImage(ctx, data, { theme: "poster", ratio: "landscape", layout: "heads", week: 0, legend: true, details: ALL_DETAILS }, fonts, { logo: null });
+    const lines = records.texts.map((text) => text.text);
+    expect(lines).toEqual(expect.arrayContaining(["time to be", "announced"]));
+    expect(lines.some((text) => /Parc|8 km|D\+/.test(text))).toBe(false);
+    // The title keeps the column's largest size: the hour did not shrink it.
+    expect(records.texts.find((text) => text.text === "HAPPY")?.size).toBe(36);
+  });
+
+  it("writes «ANULAT» alone for a cancelled date, in a weight no title has, and none of its details", () => {
+    const all = week([entry({ cancelled: true })]);
+    const off = all.find((text) => text.text === "ANULAT");
+    expect(off?.font).toMatch(/^800 /);
+    expect(all.some((text) => /Parc|8 km|D\+/.test(text.text))).toBe(false);
+    expect(all.map((text) => text.text)).toContain("HAPPY MONDAY");
+  });
+
+  it("wraps the details to a second line on a 16:9 column, and drops them from the end rather than run to a third", () => {
+    // A 16:9 column of a seven-day week is about 249 px wide: after the two glyphs, «ora 19:30» alone fills
+    // the first line; «Poiana Brașov» opens the second and leaves no room for «≈ 12 km», let alone the climb.
+    const all = texts([entry({ place: "Poiana Brașov", distance: "≈ 12 km", elevation: "≈ 700 m D+" })], ALL_DETAILS, "landscape");
+    expect(all).toContain("ora 19:30");
+    expect(all).toContain("Poiana Brașov");
+    expect(all.some((text) => /12 km|700 m/.test(text))).toBe(false);
+    // The same date on the portrait's wide card: one line, every detail.
+    expect(texts([entry({ place: "Poiana Brașov", distance: "≈ 12 km", elevation: "≈ 700 m D+" })])).toContain("ora 19:30 · Poiana Brașov · ≈ 12 km · ≈ 700 m D+");
+  });
+
+  it("balances a title's lines: no short word left alone on the last one", () => {
+    // On the portrait's wide card the greedy break leaves «RUNNERS» alone under «HAPPY MONDAY WITH BRAȘOV».
+    const all = texts([entry({ title: "Happy Monday with Brașov Runners" })]);
+    expect(all).toContain("HAPPY MONDAY WITH");
+    expect(all).toContain("BRAȘOV RUNNERS");
+  });
+
+  it("splits a word no card holds whole with «-» after a vowel, rather than cut the title with «…»", () => {
+    // Four of them on one day of a 16:9 week: no 249-px card holds «ULTRAMARATONIȘTII» whole at 26 px or more,
+    // so under 26 it goes in pieces, each but the last ending in a vowel and «-».
+    const long = Array.from({ length: 4 }, () => entry({ title: "Recunoașterea traseului pentru ultramaratoniștii clubului" }));
+    const all = texts(long, ALL_DETAILS, "landscape");
+    const pieces = all.filter((text) => /^[A-ZĂÂÎȘȚ]+-$/.test(text));
+    expect(pieces.length).toBeGreaterThan(0);
+    for (const piece of pieces) expect(piece, piece).toMatch(/[AEIOUYĂÂÎ]-$/);
+    expect(all.some((text) => text.includes("…"))).toBe(false);
+  });
+
+  it("sets the titles of a week of four dates — June's first — at 26 px or more in every format, over the floor of 18", () => {
+    const june = [
+      entry({ day: 1, title: "Happy Monday with Brașov Runners" }),
+      entry({ day: 3, time: "19:00", title: "Running up that hilly Tâmpa with Brașov Runners", surface: "TRAIL", place: "Tâmpa", distance: "6 km" }),
+      entry({ day: 5, time: "18:00", title: "Girls only shake out run", tone: "special", special: true, distance: "5 km", elevation: null }),
+      entry({ day: 7, time: "10:00", title: "Dynafit shoe testing x Coffee social event", tone: "other", type: "GEAR_TEST", surface: "TRAIL", place: "Tâmpa", distance: null, elevation: null }),
+    ];
+    for (const ratio of ["portrait", "square", "story", "landscape"] as const) {
+      const titles = week(june, ALL_DETAILS, ratio).filter((text) => /^700 /.test(text.font));
+      expect(titles.length, ratio).toBeGreaterThanOrEqual(4);
+      expect(Math.min(...titles.map((text) => text.size)), ratio).toBeGreaterThanOrEqual(26);
+    }
+  });
+
+  it("names each day by its own weekday: the first week of August 2026 is a Saturday and a Sunday, the last a Monday", () => {
+    const august = (index: number) => {
+      const data: CalendarImageData = { month: { year: 2026, month: 8 }, entries: [entry({ day: index === 0 ? 1 : 31 })], recurring: [], specials: [], socials: [], host: "example.test", clubName: "Brașov Runners", words };
+      const { ctx, records } = stubCanvas();
+      drawCalendarImage(ctx, data, { theme: "poster", ratio: "portrait", layout: "heads", week: index, legend: true, details: ALL_DETAILS }, fonts, { logo: null });
+      return records.texts.map((text) => text.text);
+    };
+    expect(august(0)).toEqual(expect.arrayContaining(["SÂMBĂTĂ", "DUMINICĂ"]));
+    expect(august(0)).not.toContain("LUNI");
+    expect(august(5)).toContain("LUNI");
+    expect(august(5)).not.toContain("SÂMBĂTĂ");
+  });
+});
+
 describe("«Sezonul lunii»", () => {
   it("draws each month in its season's palette", () => {
     expect([1, 3, 6, 9, 12].map((month) => paletteFor("season", month))).toEqual(["winter", "spring", "summer", "autumn", "winter"]);
@@ -457,6 +596,7 @@ describe("the frame every picture shares (the owner's audit: D01, D20, D24, D25,
     recurringTitle: "Evenimente recurente",
     specialTitle: "Evenimente speciale",
     cancelled: "Anulat",
+    tba: "ora se anunță",
     follow: "Urmărește-ne",
     more: "+{count} altele",
     emptyMonth: "Nicio alergare luna aceasta",
@@ -492,21 +632,22 @@ describe("the frame every picture shares (the owner's audit: D01, D20, D24, D25,
     expect((body?.y ?? 0) + (body?.h ?? 0)).toBeLessThan(H - COVERED.story.bottom);
   });
 
-  it("keeps a 4:5 post's words and the logo's peaks inside the centre 3:4 the profile grid shows: the top and bottom 67 carry fills alone", () => {
-    for (const assets of [logo, { logo: null }]) {
-      const { texts, boxes } = frame(june, "portrait", assets);
-      const H = CALENDAR_IMAGE_RATIOS.portrait.height;
-      for (const text of texts) {
-        expect(text.top, text.text).toBeGreaterThanOrEqual(COVERED.portrait.top);
-        expect(text.bottom, text.text).toBeLessThanOrEqual(H - COVERED.portrait.bottom);
-      }
-      for (const box of boxes.filter((candidate) => candidate.how === "image")) {
-        expect(box.top).toBeGreaterThanOrEqual(COVERED.portrait.top);
-        expect(box.bottom).toBeLessThanOrEqual(H - COVERED.portrait.bottom);
-      }
-      expect(boxes.some((box) => box.how === "fillRect" && box.top === 0 && box.bottom > COVERED.portrait.top && box.bottom < H / 2)).toBe(true);
-      expect(boxes.some((box) => box.how === "fillRect" && box.bottom === H && box.top < H - COVERED.portrait.bottom && box.top > H / 2)).toBe(true);
-    }
+  it("draws a 4:5 post as it draws the square — the band and the foot rounded inside the 32-px margin, no fill to an edge but the page's — because the profile grid's 3:4 tile trims width, never height", () => {
+    expect(COVERED.portrait).toEqual(COVERED.square);
+    /** The band's box, the foot's height, and the body's distances from them: the same on both shapes. */
+    const geometry = (ratio: "portrait" | "square") => {
+      const { body, boxes } = frame(june, ratio);
+      const { width: W, height: H } = CALENDAR_IMAGE_RATIOS[ratio];
+      // The page alone runs edge to edge; the band and the foot are the two rounded fills, in that order.
+      expect(boxes.filter((box) => box.how === "fillRect" && box.left === 0 && box.right === W).map((box) => [box.top, box.bottom])).toEqual([[0, H]]);
+      const [band, foot] = boxes.filter((box) => box.how === "roundRect" && box.filled);
+      expect([band.left, band.top, band.right]).toEqual([32, 32, W - 32]);
+      expect([foot.left, foot.right]).toEqual([32, W - 32]);
+      expect(foot.bottom).toBeCloseTo(H - 32);
+      expect(body).not.toBeNull();
+      return { band: [band.left, band.top, band.right, band.bottom], footH: foot.bottom - foot.top, bodyTop: body?.y, bodyBottomGap: H - ((body?.y ?? 0) + (body?.h ?? 0)) };
+    };
+    expect(geometry("portrait")).toEqual(geometry("square"));
   });
 
   it("writes the club's name at most once — in the logo's place until it loads, never after each network's mark — and «EVENIMENTE» no smaller than 18 px", () => {

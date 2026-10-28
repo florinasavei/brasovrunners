@@ -18,11 +18,14 @@ import type { CalendarImageData } from "../domain/calendar-image";
  *   the logo stands as tall as the band allows, so the band is never mostly empty.
  * - The foot: «URMĂREȘTE-NE!», each network's mark once, then the club's tags. The club's name is in the logo
  *   and in its tag; the foot does not say it four times more.
- * - The zones a network covers: on a 9:16 story Instagram's bars take the top 250 and the bottom 340 pixels,
- *   and the profile grid's crop of a 4:5 post loses about 67 at each end. There the band's fill runs to the
- *   top edge and the foot's to the bottom one, square at the edge, and the words keep out of the covered
- *   zone — a story seen outside Instagram reads as a tall blue header and footer, not a letterboxed picture.
- *   On 1:1 and 16:9 the band and the foot are rounded, inside the margin.
+ * - The zone a network covers: on a 9:16 story Instagram's bars take the top 250 and the bottom 340 pixels.
+ *   There the band's fill runs to the top edge and the foot's to the bottom one, square at the edge, and the
+ *   words keep out of the covered zone — a story seen outside Instagram reads as a tall blue header and
+ *   footer, not a letterboxed picture. On 4:5, 1:1 and 16:9 the band and the foot are rounded, inside the
+ *   margin: a 4:5 post is drawn exactly as the square is, because the profile grid's 3:4 tile loses width,
+ *   not height — it keeps every row of the picture and trims about 34 px at each side, the margin and a hair
+ *   of the band's edge, never a word (the audit's D20 said the tile cut 67 rows at each end; two verifiers
+ *   refuted it against the pixels).
  * - An empty period (the owner's audit, D18: «an empty month is drawn as a bare ruled grid and nothing says
  *   there are no events»): the frame draws the mountains and one line — «Nicio alergare luna aceasta» — in
  *   the body, and hands the caller no body to draw in.
@@ -38,11 +41,11 @@ export type FramePeriod = {
 
 /**
  * What a network covers of each shape with its own bars, in pixels of a 1080-wide picture: Instagram's story
- * UI at the top and the reply bar at the bottom; the profile grid's crop of a 4:5 post. Zero where the whole
- * picture shows.
+ * UI at the top and the reply bar at the bottom. Zero where every row of the picture shows — a 4:5 post
+ * among them: the profile grid's 3:4 tile trims its width inside the margin, never its height.
  */
 export const COVERED: Record<CalendarImageRatio, { top: number; bottom: number }> = {
-  portrait: { top: 67, bottom: 67 },
+  portrait: { top: 0, bottom: 0 },
   square: { top: 0, bottom: 0 },
   story: { top: 250, bottom: 340 },
   landscape: { top: 0, bottom: 0 },

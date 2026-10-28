@@ -118,7 +118,10 @@ for (const month of months) {
             const failures = assets.flatMap(([state, asset]) => {
               const { ctx, records } = stubCanvas();
               drawCalendarImage(ctx, month.data, { theme, ratio, ...picture.options, details: { place: true, distance: true, elevation: true } }, fonts, asset);
-              return overflowsOf(records, width, height).map((failure) => `${state}: ${failure}`);
+              // The week's floor: nothing under 17 px on a 1080-wide picture, and no title — Bold, the weight
+              // the week gives its titles alone — under 18.
+              const small = picture.options.week === null ? [] : records.texts.filter((text) => text.size < 17 || (/^700 /.test(text.font) && text.size < 18));
+              return [...overflowsOf(records, width, height).map((failure) => `${state}: ${failure}`), ...small.map((text) => `${state}: «${text.text}» is set at ${text.size} px (${text.font}), under the week's floor`)];
             });
             expect(failures.length, [`${month.name} · ${theme} · ${picture.name} · ${ratio}: ${failures.length} overflow(s)`, ...failures].join("\n  ")).toBe(0);
           });
