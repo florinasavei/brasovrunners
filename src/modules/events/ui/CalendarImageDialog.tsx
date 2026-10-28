@@ -192,8 +192,9 @@ export default function CalendarImageDialog({
     }
   }
 
+  // `lg`, and a preview up to three quarters of the screen's height: the picture is what is being judged (§NNN).
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" data-testid="calendar-image-dialog">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg" data-testid="calendar-image-dialog">
       <DialogTitle>{words.title}</DialogTitle>
       <DialogContent>
         <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ alignItems: { md: "flex-start" } }}>
@@ -204,7 +205,7 @@ export default function CalendarImageDialog({
             role="img"
             aria-label={words.preview}
             data-testid="calendar-image-canvas"
-            style={{ width: "100%", maxWidth: options.ratio === "landscape" ? 560 : 360, maxHeight: "60vh", objectFit: "contain", alignSelf: "center", borderRadius: 8 }}
+            style={{ width: "100%", maxWidth: options.ratio === "landscape" ? 720 : 480, maxHeight: "75vh", objectFit: "contain", alignSelf: "center", borderRadius: 8 }}
           />
           <Stack spacing={2} sx={{ minWidth: 0, flex: 1 }}>
             {/* «Perioada»: the month, or one of its weeks — today's when today is in this month, else the first with a date. */}

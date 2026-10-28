@@ -1,0 +1,7 @@
+{
+  "branch": "fix/calendar-image-dialog-larger",
+  "decisionsTitle": "«Calendarul lunii ca imagine» opens wider, with a larger preview",
+  "decisionsSection": "**The owner, 2026-10-28, with a screenshot of the dialog on a desktop:** \"as vrea ca acest pop-up sa fie mai mare!\"\n\n**Decision.** The dialog opens at Material UI's `lg` width (1200 px) instead of `md` (900 px), and its preview grows with it: up to 480 px wide for the portrait formats and 720 px for «Facebook 16:9» (was 360 and 560), up to 75 % of the screen's height (was 60 %). The picture drawn and downloaded is unchanged — only its preview and the room around the choices. On a phone the dialog was already the screen's width and the preview stacks above the choices, as before.\n\n**Refused.** A full-screen dialog: on a wide screen the choices would sit far from the preview they change.",
+  "changelogLine": "- **A larger «Calendarul lunii ca imagine»** — the dialog opens wider and its preview is larger; the picture itself is unchanged. §NNN.",
+  "batchLine": "the calendar picture's dialog opens wider, with a larger preview"
+}
