@@ -130,7 +130,7 @@ describe("a date's details (the owner, 2026-10-27: «short location … and also
     expect(detailWords(entry, { place: false, distance: false, elevation: false })).toEqual([]);
   });
 
-  // The owner, 2026-10-28: «this first check for "Locul" does not change anything!!» — no date had a short place yet (§NNN).
+  // The owner, 2026-10-28: «this first check for "Locul" does not change anything!!» — no date had a short place yet (§863).
   it("says whether «Locul» has anything to draw in the month or the week, so the dialog can grey its tick", () => {
     const entry = (day: number, place: string | null): CalendarImageEntry => ({ day, time: "19:00", title: "Happy Monday", tone: "weekly", type: "GROUP_RUN", surface: null, special: false, cancelled: false, place, distance: null, elevation: null });
     expect(periodHasPlace([], null)).toBe(false);

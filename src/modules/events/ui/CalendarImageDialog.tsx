@@ -119,7 +119,7 @@ export default function CalendarImageDialog({
   // The month's weeks, by their days in this month; the one chosen, or null for the month.
   const weeks = weeksOf(data.month);
   const week = options.week === null ? null : weeks[Math.min(options.week, weeks.length - 1)];
-  // «Locul» draws only a short place the organizer typed (§859); while no date of the period has one, its tick is off and says why (§NNN).
+  // «Locul» draws only a short place the organizer typed (§859); while no date of the period has one, its tick is off and says why (§863).
   const noPlace = !periodHasPlace(data.entries, week ? week.days : null);
   // «brasov-runners-2026-10.png» — «brasov-runners-2026-10-05-11.png» for a week: the diacritics' marks
   // dropped before anything else is, or «ș» splits the word.

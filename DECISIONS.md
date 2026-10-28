@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.87-2026-10-28 -->
+<!-- PROJECT_BASELINE: BR-V3.88-2026-10-28 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.87-2026-10-28`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.88-2026-10-28`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28086,3 +28086,13 @@ Baseline `BR-V3.87-2026-10-28`.
 **Refused.** An event select inside the form: the scope's select above already chooses the event, and a second one could disagree with it. The roles, the switches and the invitations stay on the event's card.
 
 Baseline `BR-V3.87-2026-10-28`.
+
+## 863. «Locul» is greyed, and says why, while no date has a short place
+
+**The owner, 2026-10-28, with a screenshot of «Calendarul lunii ca imagine»:** "also this first check for «Locul» does not change anything!!" It could not: «Locul» draws only «Locul, pe scurt» (§859), a field added the day before, and no event had one yet — 0 of 32 published events on QA. Offered a hint with the field filled in by hand, or the long place's name as a fallback, the owner chose the hint.
+
+**Decision.** While no date of the period — the month, or the week chosen — has a short place, the dialog shows the «Locul» tick unticked and disabled, with one line under «Detalii»: «Nicio alergare din această perioadă nu are încă locul scris pe scurt.» The dialog is public, so the line names no backoffice screen; the club fills «Locul, pe scurt» in the event editor («Când și unde», under the place's name), and the tick comes back by itself on the first period with one. `periodHasPlace` decides it, pure and tested; the picture's drawing is unchanged.
+
+**Refused.** The long place's name in its stead: §859 refused cutting a short place out of the long one, and a name like «Sub Tâmpa, lângă Apeduct, Aleea Tiberiu Brediceanu, Brașov» does not fit a cell.
+
+Baseline `BR-V3.88-2026-10-28`.
