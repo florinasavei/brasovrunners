@@ -1253,6 +1253,18 @@ export const eventTranslations = pgTable(
      */
     locationName: text("location_name"),
 
+    /**
+     * «Locul, pe scurt» (migration `0181`; the owner, 2026-10-27, of the month's picture: «show short
+     * location as well like "Tampa", "Parc"»): a word or two for the place, in this language, drawn
+     * after the hour on «Salvează ca imagine» (§855) where the meeting point's full name has no room.
+     * Optional, both languages or neither (§352), at most 30 characters (checked in
+     * `content/events/fields.ts`, as `discount_note` is); written by the event's own save with the
+     * place's name, under the event row's version (§362). Null means "none": the picture draws no
+     * place for the date. Never shown while the place is to be announced (§328): the public read
+     * withholds it with the name.
+     */
+    locationShort: text("location_short"),
+
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
 

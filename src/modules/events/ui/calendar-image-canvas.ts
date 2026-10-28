@@ -1,4 +1,5 @@
 import { LOGO } from "@/theme/brand";
+import type { CalendarImageDetails } from "../domain/calendar-image";
 import type { EventSurface, EventType } from "../domain/event-type";
 import { SURFACE_PATHS, TYPE_PATHS } from "./calendar-image-glyphs";
 
@@ -113,4 +114,106 @@ export function glyphsWidth(count: number, size: number): number {
 export function drawGlyphs(ctx: CanvasRenderingContext2D, paths: readonly string[], x: number, y: number, size: number, color: string): number {
   paths.forEach((path, index) => drawGlyph(ctx, path, x + index * size * 1.2, y, size, color));
   return glyphsWidth(paths.length, size);
+}
+
+/**
+ * The words a layout writes after a date's hour — «Detalii» (the owner, 2026-10-27): the short place, then the
+ * distance, then the climb, each only when the dialog has it on and the date has it. `["Tâmpa", "6 km",
+ * "≈ 350 m D+"]`, or nothing at all; how they are set is each layout's.
+ *
+ * `details` is spelt inline rather than as `CalendarImageOptions["details"]`: `calendar-image-draw.ts`, which
+ * declares the options, imports this module, and the reverse import would be a cycle.
+ */
+export function detailWords(entry: CalendarImageDetails, details: { place: boolean; distance: boolean; elevation: boolean }): string[] {
+  return [details.place && entry.place, details.distance && entry.distance, details.elevation && entry.elevation].filter(
+    (word): word is string => typeof word === "string" && word !== "",
+  );
+}
+
+/** A vowel in either case, where a hyphen may follow: a, e, i, o, u, y and the Romanian ă, â, î. */
+const VOWEL = /[aeiouyăâî]/i;
+
+/**
+ * `word`, wider than `width`, in pieces for one line each, every piece but the last ending in «-»: the widest
+ * prefix that fits with its hyphen and ends after a vowel, three letters at least on each side — or, when no
+ * such break exists, the widest prefix with three letters each side; the rest goes through the same rule
+ * again, so a 17-letter word may take two hyphens. A hyphen the word already has («SHAKE-OUT», «III-A») is
+ * the first choice, the prefix ending in it taking no second one, and no piece starts with one. A word too
+ * short to split at all stays one piece, wider than the line.
+ */
+function hyphenated(ctx: Ctx, word: string, width: number): string[] {
+  const pieces: string[] = [];
+  let letters = [...word.normalize("NFC")];
+  while (ctx.measureText(letters.join("")).width > width) {
+    const piece = (take: number) => letters.slice(0, take).join("") + (letters[take - 1] === "-" ? "" : "-");
+    const fits = (take: number) => letters[take] !== "-" && ctx.measureText(piece(take)).width <= width;
+    const widest = (allowed: (take: number) => boolean) => {
+      for (let take = letters.length - 3; take >= 3; take -= 1) if (allowed(take)) return take;
+      return 0;
+    };
+    const take = widest((n) => fits(n) && letters[n - 1] === "-") || widest((n) => fits(n) && VOWEL.test(letters[n - 1])) || widest(fits);
+    if (take === 0) break;
+    pieces.push(piece(take));
+    letters = letters.slice(take);
+  }
+  pieces.push(letters.join(""));
+  return pieces;
+}
+
+/**
+ * `text` broken at spaces into lines of at most `width` at the context's font, nothing cut — the one wrap the
+ * layouts and the week share (the audit of 2026-10-27, D23 and D40), a lone dash kept with the word before it
+ * as `wrapWhole` keeps it, so no line starts with «—». Two rules over the greedy break:
+ *
+ * - One short word is not left alone on the last line when the line before can give it one: while the last
+ *   line is narrower than `minLastRatio` of `width` (0.35 unless told), the line before has a word to give and
+ *   keeps more than the last line had, and the longer last line still fits, that word moves down — «EDIȚIA A
+ *   III-A», not «III-A»; never «ab» / «cdefghijklmn op», the orphan merely changing ends.
+ * - A word wider than the line: with `hyphenate`, split with «-» after a vowel, three letters at least on each
+ *   side (`hyphenated`); without it, alone on its own line, for the caller to see it does not fit. The dash
+ *   glued behind a word is not the word: «Marathon» is measured and split bare and its « —» goes back on the
+ *   last piece, so a word that fits is never split for its dash — «Marathon —» may then stand one dash wider
+ *   than the line, for the caller to see. Nothing is ever cut with «…» here — that is `wrapText`'s.
+ *
+ * The empty string gives no line.
+ */
+export function wrapBalanced(ctx: Ctx, text: string, width: number, options: { hyphenate?: boolean; minLastRatio?: number } = {}): string[] {
+  const { hyphenate = false, minLastRatio = 0.35 } = options;
+  const fits = (line: string) => ctx.measureText(line).width <= width;
+  const words = text
+    .replace(/\s+([—–-])\s+/g, "\u00a0$1 ")
+    .split(/[ \t\n\r]+/)
+    .filter(Boolean);
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    const tail = /\u00a0[—–-]$/.exec(word)?.[0] ?? "";
+    const bare = word.slice(0, word.length - tail.length);
+    const pieces = hyphenate && !fits(bare) ? hyphenated(ctx, bare, width) : [bare];
+    pieces[pieces.length - 1] += tail;
+    if (pieces.length > 1 && current) {
+      lines.push(current);
+      current = "";
+    }
+    lines.push(...pieces.slice(0, -1));
+    const last = pieces[pieces.length - 1];
+    const candidate = current ? `${current} ${last}` : last;
+    if (!current || fits(candidate)) current = candidate;
+    else {
+      lines.push(current);
+      current = last;
+    }
+  }
+  if (current) lines.push(current);
+  const narrow = width * minLastRatio;
+  while (lines.length > 1) {
+    const before = lines[lines.length - 2].split(" ");
+    const last = ctx.measureText(lines[lines.length - 1]).width;
+    if (before.length < 2 || last >= narrow) break;
+    const kept = before.slice(0, -1).join(" ");
+    const moved = `${before[before.length - 1]} ${lines[lines.length - 1]}`;
+    if (!fits(moved) || ctx.measureText(kept).width <= last) break;
+    lines.splice(-2, 2, kept, moved);
+  }
+  return lines;
 }

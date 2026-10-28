@@ -340,6 +340,27 @@ function placeRule(
   }
 }
 
+/** «Locul, pe scurt»'s ceiling: a word or two («Parcul Tractorul» is 16), never a sentence. */
+export const LOCATION_SHORT_MAX = 30;
+
+/**
+ * «Locul, pe scurt» in both languages or neither (§352): one box written and the other blank is
+ * refused on the blank one, so the summary links to the language still owed. A caller that posts
+ * neither box is not editing it and is never refused; one that posts one box alone is held to the
+ * rule like any pair, because a short place in one language alone would draw a Romanian word on the
+ * English picture — the thing §352 exists to prevent. Not while the place is to be announced, as
+ * `placeRule` above: the two boxes are hidden with the names then, and the public read withholds
+ * the word with the rest of the place; clearing the tick posts both boxes again, checked as they stand.
+ */
+function shortPlaceRule(
+  fields: { locationShort?: string | null; locationShortEn?: string | null; locationToBeAnnounced: boolean },
+  ctx: z.RefinementCtx,
+): void {
+  if (fields.locationToBeAnnounced) return;
+  if (fields.locationShort === undefined && fields.locationShortEn === undefined) return;
+  refuseOneLanguage(ctx, { ro: fields.locationShort, en: fields.locationShortEn }, { ro: ["locationShort"], en: ["locationShortEn"] }, "the short place");
+}
+
 /**
  * «Copertă» (the facelift's phase 2, §709): the picture's id must be a stored picture's — a UUID here,
  * a row of the store in `service.ts` — and its crop four fractions of it (§541). Named on the
@@ -715,6 +736,14 @@ export const eventFieldsSchema = z
      * is left as it is; the editor always posts it.
      */
     locationNameEn: optionalText(200).optional().meta({ html: { required: true } }),
+    /**
+     * «Locul, pe scurt» (migration `0181`), the Romanian and the English box right under the place's
+     * name: a word or two for the month's picture (§855) — «Tâmpa», «Parc». Optional, and both
+     * languages or neither (`shortPlaceRule`, §352). Absent means "this caller is not editing it":
+     * a script, a fixture, an import — the stored word stays; the editor always posts both.
+     */
+    locationShort: optionalText(LOCATION_SHORT_MAX).optional(),
+    locationShortEn: optionalText(LOCATION_SHORT_MAX).optional(),
     locationAddress: optionalText(300),
     /**
      * "Locația se anunță mai târziu" (§328): the place is not announced yet. A switch, so absent
@@ -1083,6 +1112,7 @@ export const eventFieldsSchema = z
   })
   .strict()
   .superRefine(placeRule)
+  .superRefine(shortPlaceRule)
   .superRefine(costRule)
   .superRefine(coverRule);
 

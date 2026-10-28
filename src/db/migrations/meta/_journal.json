@@ -1233,6 +1233,13 @@
       "when": 1793002009275,
       "tag": "0180_event_reserve_entries",
       "breakpoints": true
+    },
+    {
+      "idx": 176,
+      "version": "7",
+      "when": 1793136393749,
+      "tag": "0181_event_translation_location_short",
+      "breakpoints": true
     }
   ]
 }

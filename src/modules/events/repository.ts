@@ -276,6 +276,9 @@ const PUBLIC_COLUMNS = {
   locationName: publicLocationName,
   locationAddress: unlessToBeAnnounced<string | null>(events.locationAddress),
   locationToBeAnnounced: events.locationToBeAnnounced,
+  // «Locul, pe scurt» (migration `0181`): this language's word or two for the calendar picture (§855) —
+  // its own, never the other language's, and null with the rest while the place is to be announced.
+  locationShort: unlessToBeAnnounced<string | null>(sql<string | null>`NULLIF(btrim(${eventTranslations.locationShort}), '')`),
   // The level on the club's scale of fifteen (§526) — the difficulty's one column; the retired
   // `difficulty` is never read.
   difficultyLevel: events.difficultyLevel,

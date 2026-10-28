@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.84-2026-10-27 -->
+<!-- PROJECT_BASELINE: BR-V3.85-2026-10-28 -->
 
 # Running this locally
 
-**Baseline `BR-V3.84-2026-10-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V3.85-2026-10-28`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -114,8 +114,16 @@ yarn db:seed             reset and reseed sample events
 yarn flags:sync          re-copy the country flags into public/flags/ (runs on install)
 yarn db:reset:local      drop both schemas, migrate and seed from nothing
 yarn release             versioned archive and share copies under dist/
-yarn calendar:preview    «Salvează ca imagine» drawn without a server: three sample months (scripts/calendar-image-preview/),
-                         every format, to dist/calendar-preview/; --month june|busy|sparse, --theme poster,club|all
+yarn calendar:preview    «Salvează ca imagine» drawn without a server: five sample months (scripts/calendar-image-preview/),
+                         every theme asked in its three layouts and four formats, to dist/calendar-preview/<month>/<theme>-<layout>-<format>.png;
+                         --month june|busy|sparse|fortnight|empty|all, --theme poster|club|light|dark|season|mono|warm|all, several with a comma («Afiș» alone by default);
+                         --week none|all|<n> adds the month's weeks («Perioada» → «Săptămâna»: all, or the n-th, 1 first) in every
+                         format, as <theme>-week<n>-<format>.png beside the month's pictures (none by default).
+                         The same months, and every week of each, are drawn on a stub canvas by tests/unit/events/calendar-image-overflow.test.ts,
+                         which fails on any text across its box's edge, over another text, or off the picture — and, in the
+                         three layouts and the week, on any text under the floor a phone's feed still reads: 17 px on a 1080-wide
+                         picture, 16 for an hour or a detail line, 18 for a day number, 21 for anything on 16:9; «Legenda dedesubt»
+                         is drawn also without the legend and without the details, and fails on a month's race missing from the picture
 ```
 
 `yarn check` is the single gate, and CI runs it (its two halves on five runners) on every pull request. The pre-commit

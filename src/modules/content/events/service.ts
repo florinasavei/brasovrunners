@@ -14,7 +14,7 @@ import { estimatedDistance } from "@/modules/events/domain/distance";
 import { estimatedElevation } from "@/modules/events/domain/elevation";
 import { calendarSequenceMoves, EVENT_NOTICE_TEXT_MAX, type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
 import { EVENT_TYPES, type EventType, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
-import { englishNameAfterSave, PLACE_NAME_FIELD, type PlaceNameField, placeNameIn, placeShown } from "@/modules/events/domain/place";
+import { englishNameAfterSave, PLACE_NAME_FIELD, PLACE_SHORT_FIELD, type PlaceNameField, type PlaceShortField, placeNameIn, placeShown } from "@/modules/events/domain/place";
 import { queueEventCancelledNotices, queueEventUpdateNotices } from "@/modules/notifications/event-notices";
 import {
   horizonEnd,
@@ -880,8 +880,21 @@ async function namedUnder<R>(prefix: string, save: () => Promise<R>): Promise<R>
 
 // --- The place's name in each language (§362) -----------------------------------------------
 
-/** Each language's name for the place as one save of the event's fields leaves it; a language absent here is not being edited. */
+/**
+ * Each language's text for the place as one save of the event's fields leaves it — the name (§362) or
+ * the short place (migration `0181`); a language absent here is not being edited.
+ */
 type PlaceNames = Partial<Record<Locale, string | null>>;
+
+/** One box per language, read off the event's fields: the languages the caller posted, as posted. */
+function languageTextsFrom<F extends PlaceNameField | PlaceShortField>(fields: Partial<Pick<EventFieldsInput, F>>, field: Record<Locale, F>): PlaceNames {
+  const texts: PlaceNames = {};
+  for (const locale of routing.locales) {
+    const text = fields[field[locale]];
+    if (text !== undefined) texts[locale] = text;
+  }
+  return texts;
+}
 
 /**
  * The Locul box's names, by language (§362; the owner: "There is some redundance on this meeting
@@ -889,17 +902,17 @@ type PlaceNames = Partial<Record<Locale, string | null>>;
  * own meeting point, so it is always part of the event's fields; the English one only when the
  * caller posted it — absent, the English row keeps what it holds (an older caller, a fixture).
  */
-function placeNamesFrom(fields: Pick<EventFieldsInput, PlaceNameField>): PlaceNames {
-  const names: PlaceNames = {};
-  for (const locale of routing.locales) {
-    const name = fields[PLACE_NAME_FIELD[locale]];
-    if (name !== undefined) names[locale] = name;
-  }
-  return names;
-}
+const placeNamesFrom = (fields: Pick<EventFieldsInput, PlaceNameField>): PlaceNames => languageTextsFrom(fields, PLACE_NAME_FIELD);
 
 /**
- * The names written to each language's row, inside the event save's transaction (§362).
+ * «Locul, pe scurt» by language (migration `0181`), the two boxes under the names: a word or two for
+ * the month's picture (§855). Both or neither (`fields.ts#shortPlaceRule`); absent is "not editing it".
+ */
+const placeShortsFrom = (fields: Pick<EventFieldsInput, PlaceShortField>): PlaceNames => languageTextsFrom(fields, PLACE_SHORT_FIELD);
+
+/**
+ * The names — and the short places — written to each language's row, inside the event save's
+ * transaction (§362).
  *
  * Not a translation save, and deliberately so: the place is the event's — the Organizer's, who
  * sets the place and may not write the words (§207) — so this runs under the event row's version
@@ -908,13 +921,14 @@ function placeNamesFrom(fields: Pick<EventFieldsInput, PlaceNameField>): PlaceNa
  * so there is no second writer to race with, and a Redactor's save in the same minute, carrying
  * the row versions it was rendered with, is not refused over a place it never touched.
  */
-async function writePlaceNames<T extends Record<string, unknown>>(tx: Transaction<T>, eventId: string, names: PlaceNames): Promise<void> {
+async function writePlaceNames<T extends Record<string, unknown>>(tx: Transaction<T>, eventId: string, names: PlaceNames, shorts: PlaceNames = {}): Promise<void> {
   for (const locale of routing.locales) {
     const name = names[locale];
-    if (name === undefined) continue;
+    const short = shorts[locale];
+    if (name === undefined && short === undefined) continue;
     await tx
       .update(eventTranslations)
-      .set({ locationName: name })
+      .set({ ...(name === undefined ? {} : { locationName: name }), ...(short === undefined ? {} : { locationShort: short }) })
       .where(and(eq(eventTranslations.eventId, eventId), eq(eventTranslations.locale, locale)));
   }
 }
@@ -941,11 +955,18 @@ async function clearDiscountNoteIfNotAllowed<T extends Record<string, unknown>>(
 }
 
 /** The rows as `writePlaceNames` left them, without reading them again. */
-function withPlaceNames(rows: readonly EditableTranslation[], names: PlaceNames): EditableTranslation[] {
+function withPlaceNames(rows: readonly EditableTranslation[], names: PlaceNames, shorts: PlaceNames = {}): EditableTranslation[] {
   return rows.map((row) => {
     const name = names[row.locale];
-    return name === undefined ? row : { ...row, locationName: name };
+    const short = shorts[row.locale];
+    return { ...row, ...(name === undefined ? {} : { locationName: name }), ...(short === undefined ? {} : { locationShort: short }) };
   });
+}
+
+/** The languages whose short place differs between two readings of a date's rows (migration `0181`): what a series save carries. */
+function shortPlaceMoved(before: readonly EditableTranslation[], after: readonly EditableTranslation[]): Locale[] {
+  const shortIn = (rows: readonly EditableTranslation[], locale: Locale) => rows.find((row) => row.locale === locale)?.locationShort ?? null;
+  return routing.locales.filter((locale) => shortIn(before, locale) !== shortIn(after, locale));
 }
 
 /** The place each language's page shows (§362), the street address folded in: what a series edit compares. */
@@ -1785,10 +1806,11 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     const announcing = request.notify || request.cancellation !== null;
     const translationsBefore = await listTranslationsForEvent(tx, input.eventId);
     const names = namesAfterSave(current, translationsBefore, placeNamesFrom(fields));
-    await writePlaceNames(tx, input.eventId, names);
+    const shorts = placeShortsFrom(fields);
+    await writePlaceNames(tx, input.eventId, names, shorts);
     await clearDiscountNoteIfNotAllowed(tx, input.eventId, saved);
     // No words are saved here; only the place's names moved, and the notice compares those.
-    const dates: SavedDate[] = [{ before: current, after: saved, translationsBefore, translationsAfter: withPlaceNames(translationsBefore, names) }];
+    const dates: SavedDate[] = [{ before: current, after: saved, translationsBefore, translationsAfter: withPlaceNames(translationsBefore, names, shorts) }];
     // The calendar invitation's number (§672), told or not: the next invitation must outrank the last.
     await bumpCalendarSequences(tx, dates);
     if (announcing) await announceSave(tx, { actor: input.actor, request, saved, dates, now });
@@ -2113,12 +2135,18 @@ async function applyToSeries<T extends Record<string, unknown>>(
   const movedNames: PlaceNames = Object.fromEntries(
     placeMoved.map((locale) => [locale, input.translationsAfter.find((row) => row.locale === locale)?.locationName ?? null]),
   );
+  // «Locul, pe scurt» (migration `0181`) travels the same way: a language whose short place changed sends it to every date.
+  const shortMoved = shortPlaceMoved(input.translationsBefore, input.translationsAfter);
+  const movedShorts: PlaceNames = Object.fromEntries(
+    shortMoved.map((locale) => [locale, input.translationsAfter.find((row) => row.locale === locale)?.locationShort ?? null]),
+  );
   if (
     Object.keys(rowChanges).length === 0 &&
     timeChanges.length === 0 &&
     !scheduleChanged &&
     translationChanges.length === 0 &&
     placeMoved.length === 0 &&
+    shortMoved.length === 0 &&
     !input.discountNoteCleared
   ) {
     return { applied: 0, offered: 0, dates, holds };
@@ -2229,8 +2257,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
     const memberTranslationsBefore = input.collect ? await listTranslationsForEvent(tx, member.id) : [];
     let touched = false;
     // A place moved in one language only still takes the date's version: the names are the
-    // event's, guarded by the event row's version (`writePlaceNames`).
-    if (Object.keys(changes).length > 0 || placeMoved.length > 0) {
+    // event's, guarded by the event row's version (`writePlaceNames`); the short place too.
+    if (Object.keys(changes).length > 0 || placeMoved.length > 0 || shortMoved.length > 0) {
       await tx
         .update(events)
         .set({ ...changes, version: sql`${events.version} + 1`, updatedAt: now, updatedByStaffUserId: input.actor.id })
@@ -2289,8 +2317,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
         touched = true;
       }
     }
-    if (placeMoved.length > 0) {
-      await writePlaceNames(tx, member.id, movedNames);
+    if (placeMoved.length > 0 || shortMoved.length > 0) {
+      await writePlaceNames(tx, member.id, movedNames, movedShorts);
       touched = true;
     }
     if (touched) {
@@ -2754,6 +2782,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     // editor's box did that on the screen already and the organizer saw what it holds.
     const posted: PlaceNames = parsedEventFields ? placeNamesFrom(parsedEventFields) : {};
     const names: PlaceNames = input.placeNamesAsTyped ? posted : namesAfterSave(current, existingTranslations, posted);
+    const shorts: PlaceNames = parsedEventFields ? placeShortsFrom(parsedEventFields) : {};
     // Set true when `clearDiscountNoteIfNotAllowed` below actually nulled the note in the
     // database — read by `translationsAfter` further down, since the in-memory rows loaded
     // before this transaction do not see that write on their own.
@@ -2804,7 +2833,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       */
       holdMoves.push(await moveWindowHolds(tx, { actorStaffUserId: input.actor.id, before: current, after: savedEvent, now, deadlines }));
       // Before the words, so each row a text save writes back already carries its new name.
-      await writePlaceNames(tx, input.eventId, names);
+      await writePlaceNames(tx, input.eventId, names, shorts);
       // Before the translations loop: a settings-only save (an Organizer without text rights)
       // never runs `applyTranslationSave`, so nothing else in this path clears a note the new
       // mode no longer allows. A no-op when the mode still allows one, or when a submitted
@@ -2863,7 +2892,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       the place's names), and the others as loaded with the names written above — an Organizer's
       save writes no words, yet moves the place in both languages.
     */
-    const translationsAfter = withPlaceNames(existingTranslations, names).map((row) => {
+    const translationsAfter = withPlaceNames(existingTranslations, names, shorts).map((row) => {
       const saved = savedTranslations.find((s) => s.id === row.id) ?? row;
       return discountNoteCleared ? { ...saved, discountNote: null } : saved;
     });
@@ -3094,6 +3123,7 @@ function blankTranslationRow(eventId: string, locale: Locale, now: Date): Editab
     checklist: null,
     coverAltText: null,
     locationName: null,
+    locationShort: null,
     seoTitle: null,
     seoDescription: null,
     discountNote: null,
@@ -3170,6 +3200,7 @@ export async function draftEvent<T extends Record<string, unknown>>(db: Database
   const now = input.now ?? new Date();
   let event: EditableEvent = input.current ?? blankEventRow(now);
   let names: PlaceNames = {};
+  let shorts: PlaceNames = {};
   if (input.fields !== undefined) {
     const parsed = normalizeForMode(normalizeForType(parseOrThrow(eventFieldsSchema, ignoreHiddenFields(input.fields))));
     await assertCoherentRegistrationBlock(db, parsed, now);
@@ -3178,6 +3209,7 @@ export async function draftEvent<T extends Record<string, unknown>>(db: Database
     event = { ...event, ...definedOnly(eventColumnsFrom(parsed, times, { isCreate: input.current === null })) } as EditableEvent;
     const posted = placeNamesFrom(parsed);
     names = input.placeNamesAsTyped || !input.current ? posted : namesAfterSave(input.current, input.storedTranslations, posted);
+    shorts = placeShortsFrom(parsed);
   }
 
   const translations = {} as Record<Locale, EditableTranslation>;
@@ -3199,6 +3231,8 @@ export async function draftEvent<T extends Record<string, unknown>>(db: Database
     if (!discountAllowed) row = { ...row, discountNote: null };
     const name = names[locale];
     if (name !== undefined) row = { ...row, locationName: name };
+    const short = shorts[locale];
+    if (short !== undefined) row = { ...row, locationShort: short };
     translations[locale] = row;
   }
   return { event, translations, refused };
@@ -3239,6 +3273,8 @@ type PreparedEventCreate = {
   times: ReturnType<typeof resolveTimes>;
   translationColumns: { ro: ReturnType<typeof translationColumnsFrom>; en: ReturnType<typeof translationColumnsFrom> };
   names: PlaceNames;
+  /** «Locul, pe scurt» per language (migration `0181`), from the two boxes under the names. */
+  shorts: PlaceNames;
   /** The reason of an event created cancelled (§448), for its audit row; null for any other status. */
   cancelledBecause: BilingualText | null;
 };
@@ -3335,8 +3371,9 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
   // Each language's name for the place, from the Locul box (§362); a caller that posts no English
   // name leaves the English row to the event's, as every event before it did.
   const names = placeNamesFrom(parsed);
+  const shorts = placeShortsFrom(parsed);
 
-  return { parsed, times, translationColumns, names, cancelledBecause };
+  return { parsed, times, translationColumns, names, shorts, cancelledBecause };
 }
 
 /** The insert half of a create: no network fetch, safe to run inside any transaction or savepoint. */
@@ -3346,7 +3383,7 @@ async function insertPreparedEvent<T extends Record<string, unknown>>(
   prepared: PreparedEventCreate,
   now: Date,
 ): Promise<EditableEvent> {
-  const { parsed, times, translationColumns, names, cancelledBecause } = prepared;
+  const { parsed, times, translationColumns, names, shorts, cancelledBecause } = prepared;
   if (parsed.featured) await clearFeaturedExcept(tx, null, now);
 
   const [event] = await tx
@@ -3371,6 +3408,7 @@ async function insertPreparedEvent<T extends Record<string, unknown>>(
       locale,
       ...translationColumns[locale],
       locationName: names[locale] ?? null,
+      locationShort: shorts[locale] ?? null,
       authorStaffUserId: actor.id,
       createdAt: now,
       updatedAt: now,
@@ -3760,8 +3798,9 @@ function copiedTranslationValues(
     routeDescriptionJson: translation.routeDescriptionJson,
     checklist: translation.checklist,
     coverAltText: translation.coverAltText,
-    // The place's name in this language goes with the copy: the same place, the same word.
+    // The place's name in this language goes with the copy: the same place, the same word — and its short form.
     locationName: translation.locationName,
+    locationShort: translation.locationShort,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
     // The discount travels with the mode and cost type it belongs to (`copiedEventValues`, both

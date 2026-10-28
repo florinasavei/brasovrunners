@@ -67,6 +67,8 @@ async function seed() {
       elevationGainMeters: 180,
       /** One value for both languages (§36). */
       locationName: "Parcul Tractorul, zona de start",
+      /** «Locul, pe scurt» per language (migration `0181`), for the month's picture. */
+      short: { ro: "Parc", en: "Park" },
       locationAddress: "Strada Nicolae Labiș, Brașov",
       difficultyLevel: 5,
       costType: "FREE" as const,
@@ -91,6 +93,7 @@ async function seed() {
       startsAt: atBrasov(-((todayInBrasov().getUTCDay() + 7) % 7 || 7), 7),
       distanceMeters: 8000,
       locationName: "Parcul Tractorul, intrarea principală",
+      short: { ro: "Parc", en: "Park" },
       // The two ends of the scale of fifteen (§526): «Ușor 1» here, «Foarte greu 3» on the intervals.
       difficultyLevel: 1,
       costType: "FREE" as const,
@@ -112,6 +115,7 @@ async function seed() {
       distanceMeters: 14000,
       elevationGainMeters: 600,
       locationName: "Stația de telecabină Tâmpa",
+      short: { ro: "Tâmpa", en: "Tâmpa" },
       // «Coordonate» typed (§416), so the weather reads the trailhead. No map link: that would
       // be a hostname under `src/` (AGENTS.md §8).
       latitude: 45.6384,
@@ -136,6 +140,7 @@ async function seed() {
       surface: "ASPHALT" as const,
       startsAt: atBrasov(nextWeekday(3, 1), 18, 30),
       locationName: "Stadionul Olimpia",
+      short: { ro: "Olimpia", en: "Olimpia" },
       difficultyLevel: 15,
       costType: "FREE" as const,
       ro: {
@@ -191,6 +196,8 @@ async function seed() {
           slug: row[locale].slug,
           title: row[locale].title,
           excerpt: row[locale].excerpt,
+          // «Locul, pe scurt» in this language (migration `0181`), so QA's calendar picture shows one.
+          locationShort: row.short[locale],
         })),
       );
 

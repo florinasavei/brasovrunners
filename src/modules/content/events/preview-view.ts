@@ -96,6 +96,8 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     locationName: placeLater ? null : placeNameIn(event, translation.locationName),
     locationAddress: placeLater ? null : event.locationAddress,
     locationToBeAnnounced: placeLater,
+    // «Locul, pe scurt» (migration `0181`), this language's own, withheld with the place.
+    locationShort: placeLater ? null : translation.locationShort?.trim() || null,
     difficultyLevel: event.difficultyLevel,
     costType: event.costType,
     costAmount: event.costAmount,

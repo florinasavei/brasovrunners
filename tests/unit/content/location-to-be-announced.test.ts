@@ -103,6 +103,12 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
     unpublished: "Nepublicat cât timp locația se anunță mai târziu.",
     copyToEnglish: "Același nume și în engleză",
     englishLeftBehind: "În engleză scrie tot „{place}”.",
+    short: "Locul, pe scurt",
+    shortHelp: "Un cuvânt sau două, pentru afișul lunii.",
+  };
+  const shorts = {
+    ro: { defaultValue: "Parc", box: textFieldConstraints(eventInputConstraints("locationShort")) },
+    en: { defaultValue: "Park", box: textFieldConstraints(eventInputConstraints("locationShortEn")) },
   };
   const render = (defaultChecked: boolean, values: Record<string, string[]> | null = null, typed = "") =>
     renderToStaticMarkup(
@@ -116,6 +122,7 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
             defaultChecked,
             labels,
             names: { ro: { ...names.ro, defaultValue: typed }, en: { ...names.en, defaultValue: typed } },
+            shorts,
           } as ComponentProps<typeof PlaceToBeAnnounced>,
           createElement("input", { name: "event.mapUrl" }),
         ),
@@ -125,6 +132,26 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
   const locationInput = (html: string) => /<input[^>]*name="event\.locationName"[^>]*>/.exec(html)?.[0] ?? "";
   const englishInput = (html: string) => /<input[^>]*name="event\.locationNameEn"[^>]*>/.exec(html)?.[0] ?? "";
   const switchInput = (html: string) => /<input[^>]*name="event\.locationToBeAnnounced"[^>]*>/.exec(html)?.[0] ?? "";
+  /** Each language's «Locul, pe scurt» `<input>` (migration `0181`). */
+  const shortInput = (html: string, name: "locationShort" | "locationShortEn") => new RegExp(`<input[^>]*name="event\\.${name}"[^>]*>`).exec(html)?.[0] ?? "";
+
+  it("asks «Locul, pe scurt» once per language under the names, never required, hidden with them while the place is to be announced", () => {
+    const shown = render(false);
+    expect(shortInput(shown, "locationShort")).toContain('value="Parc"');
+    expect(shortInput(shown, "locationShortEn")).toContain('value="Park"');
+    for (const input of [shortInput(shown, "locationShort"), shortInput(shown, "locationShortEn")]) {
+      expect(input).not.toContain("required");
+      expect(input).toContain('maxLength="30"');
+    }
+    // The short's boxes come after the names' and before the map link's, inside the block the switch hides.
+    expect(shown.indexOf('data-testid="place-short"')).toBeGreaterThan(shown.indexOf('data-testid="place-names"'));
+    expect(shown.indexOf('data-testid="place-short"')).toBeLessThan(shown.indexOf('name="event.mapUrl"'));
+    // Kept while the switch is on, like the names: still posted, never published.
+    const hidden = render(true);
+    expect(shortInput(hidden, "locationShort")).toContain('value="Parc"');
+    expect(shortInput(hidden, "locationShortEn")).toContain('value="Park"');
+    expect(shortInput(hidden, "locationShort")).not.toMatch(/\brequired\b/);
+  });
 
   it("reads `required` and the ceiling off the schema, so the browser refuses what the server refuses", () => {
     expect(eventInputConstraints("locationName")).toMatchObject({ required: true, maxLength: 200 });

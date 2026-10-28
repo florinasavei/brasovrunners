@@ -16,8 +16,22 @@ import type { SocialNetwork } from "@/shared/ui/SocialIcon";
  * what repeats is `calendar-image-rows.ts`, on the server.
  */
 
+/**
+ * A date's details, the words a layout may draw after the hour (the owner, 2026-10-27: «show short location
+ * as well like "Tampa", "Parc" and also elevation»), each null when the event has none — and which of
+ * them are drawn is the dialog's «Detalii» (`CalendarImageOptions.details`, `calendar-image-canvas.ts#detailWords`).
+ */
+export type CalendarImageDetails = {
+  /** «Locul, pe scurt» in the page's language (migration `0181`): «Tâmpa», «Parc»; null while the place is to be announced. */
+  place: string | null;
+  /** The distance's short words as the site's pills say them (`domain/distance.ts`): «8 km», «≈ 10 km». */
+  distance: string | null;
+  /** The climb's short words (`domain/elevation.ts`): «350 m D+», «≈ 350 m D+». */
+  elevation: string | null;
+};
+
 /** One date in a day's cell. */
-export type CalendarImageEntry = {
+export type CalendarImageEntry = CalendarImageDetails & {
   day: number;
   /** «18:30», or null when the hour is to be announced. */
   time: string | null;
@@ -47,17 +61,23 @@ export type CalendarImageWords = {
   recurringTitle: string;
   specialTitle: string;
   cancelled: string;
+  /** «ora se anunță» where a date's hour goes while `time` is null — lower case, short, like `at`. */
+  tba: string;
   follow: string;
   more: string;
+  /** «Nicio alergare luna aceasta»: what the frame says in the body of a month with no date (`calendar-image-frame.ts`). */
+  emptyMonth: string;
+  /** «Nicio alergare săptămâna aceasta»: the same for a week with none. */
+  emptyWeek: string;
 };
 
 export type CalendarImageData = {
   month: YearMonth;
   entries: CalendarImageEntry[];
-  /** A title that repeats in the month, with its rhythm: «În fiecare luni, la 18:30». */
-  recurring: { title: string; sentence: string; tone: CalendarTone; type: EventType; surface: EventSurface | null }[];
-  /** A date that stands alone in the month: its day and title. */
-  specials: { day: number; title: string; tone: CalendarTone; type: EventType; surface: EventSurface | null }[];
+  /** A title that repeats in the month, with its rhythm: «În fiecare luni, la 18:30» — and the series' details, its first date's. */
+  recurring: (CalendarImageDetails & { title: string; sentence: string; tone: CalendarTone; type: EventType; surface: EventSurface | null })[];
+  /** A date that stands alone in the month: its day and title, with its details. */
+  specials: (CalendarImageDetails & { day: number; title: string; tone: CalendarTone; type: EventType; surface: EventSurface | null })[];
   /** The club's profiles the site links (`clubSocialLinks`), drawn at the poster's foot with the club's name. */
   socials: SocialNetwork[];
   words: CalendarImageWords;

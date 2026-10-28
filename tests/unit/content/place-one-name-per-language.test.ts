@@ -16,6 +16,7 @@ import {
   englishNameAfterSave,
   mayCopyToEnglish,
   PLACE_NAME_FIELD,
+  PLACE_SHORT_FIELD,
   placeInBox,
   placeNameIn,
   placeShown,
@@ -131,6 +132,46 @@ describe("BR-REQ-011-01 criterion 30 the schema: a meeting point in each languag
     expect(labels["translations.en.slug"]).toMatch(/^Titlu și rezumat › Adresa paginii și motoarele de căutare › English › /);
     expect(labels["event.coverAssetId"]).toMatch(/^Titlu și rezumat › Copertă › /);
     expect(labels["event.featured"]).toMatch(/^Ce fel de eveniment › Evidențiere pe site › /);
+  });
+});
+
+describe("«Locul, pe scurt» (migration 0181): the schema, a word or two per language for the month's picture", () => {
+  it("takes both words, trimmed, and an empty pair as none", () => {
+    const both = eventFieldsSchema.safeParse({ ...BASE, locationShort: " Tâmpa ", locationShortEn: " Tâmpa " });
+    expect(both.data).toMatchObject({ locationShort: "Tâmpa", locationShortEn: "Tâmpa" });
+    const neither = eventFieldsSchema.safeParse({ ...BASE, locationShort: "", locationShortEn: "  " });
+    expect(neither.success).toBe(true);
+    expect(neither.data).toMatchObject({ locationShort: null, locationShortEn: null });
+  });
+
+  it("refuses one language alone, naming the empty box (§352) — unless the place is to be announced, when the boxes are hidden with the names", () => {
+    expect(refusedPaths({ ...BASE, locationShort: "Parc", locationShortEn: "" })).toEqual(["locationShortEn"]);
+    expect(refusedPaths({ ...BASE, locationShort: "", locationShortEn: "Park" })).toEqual(["locationShort"]);
+    // The tick on: nothing in the hidden boxes is published, and the rule waits for the tick to clear, as `placeRule` does.
+    expect(refusedPaths({ ...BASE, locationToBeAnnounced: true, locationName: "", locationNameEn: "", locationShort: "Parc", locationShortEn: "" })).toEqual([]);
+    expect(refusedPaths({ ...BASE, locationToBeAnnounced: false, locationShort: "Parc", locationShortEn: "" })).toEqual(["locationShortEn"]);
+  });
+
+  it("does not refuse a caller that posts neither box: it is not editing the short place", () => {
+    const parsed = eventFieldsSchema.safeParse(BASE);
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.locationShort).toBeUndefined();
+    expect(parsed.data?.locationShortEn).toBeUndefined();
+  });
+
+  it("holds both to a word or two, never required, the browser reading the same rule off the schema (§315)", () => {
+    expect(refusedPaths({ ...BASE, locationShort: "x".repeat(31), locationShortEn: "Park" })).toEqual(["locationShort"]);
+    expect(eventInputConstraints("locationShort")).toEqual(eventInputConstraints("locationShortEn"));
+    expect(eventInputConstraints("locationShort")).toMatchObject({ maxLength: 30 });
+    expect(eventInputConstraints("locationShort").required).toBeFalsy();
+  });
+
+  it("names each box by the name the form posts it under, and the refusal summary by its language", async () => {
+    expect(PLACE_SHORT_FIELD).toEqual({ ro: "locationShort", en: "locationShortEn" });
+    const { eventFormFieldLabels } = await import("@/modules/content/events/ui/field-labels");
+    const labels = await eventFormFieldLabels();
+    expect(labels["event.locationShort"]).toBe("Când și unde › Locul, pe scurt (Română)");
+    expect(labels["event.locationShortEn"]).toBe("Când și unde › Locul, pe scurt (English)");
   });
 });
 
@@ -255,6 +296,7 @@ describe("BR-REQ-011-01 criterion 30 the closed Locul box", () => {
 
 describe("BR-REQ-011-01 criterion 30 the two boxes and the copy button", () => {
   const box = textFieldConstraints(eventInputConstraints("locationName"));
+  const shortBox = textFieldConstraints(eventInputConstraints("locationShort"));
   const labels = {
     tick: "Locația se anunță mai târziu",
     tickHelp: "Ajutor.",
@@ -265,6 +307,8 @@ describe("BR-REQ-011-01 criterion 30 the two boxes and the copy button", () => {
     unpublished: "Nepublicat.",
     copyToEnglish: "Același nume și în engleză",
     englishLeftBehind: "În engleză scrie tot „{place}”.",
+    short: "Locul, pe scurt",
+    shortHelp: "Un cuvânt sau două.",
   };
   const render = (roName: string, enName: string, values: Record<string, string[]> | null = null) =>
     renderToStaticMarkup(
@@ -273,7 +317,12 @@ describe("BR-REQ-011-01 criterion 30 the two boxes and the copy button", () => {
         { value: { values, fields: [], generation: values ? 1 : 0, fieldError: "Verifică acest câmp." } } as unknown as ComponentProps<typeof RecallProvider>,
         createElement(
           PlaceToBeAnnounced,
-          { defaultChecked: false, labels, names: { ro: { defaultValue: roName, box }, en: { defaultValue: enName, box } } } as ComponentProps<typeof PlaceToBeAnnounced>,
+          {
+            defaultChecked: false,
+            labels,
+            names: { ro: { defaultValue: roName, box }, en: { defaultValue: enName, box } },
+            shorts: { ro: { defaultValue: "", box: shortBox }, en: { defaultValue: "", box: shortBox } },
+          } as ComponentProps<typeof PlaceToBeAnnounced>,
           createElement("input", { name: "event.mapUrl" }),
         ),
       ),
