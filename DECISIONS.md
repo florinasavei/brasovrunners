@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.85-2026-10-28 -->
+<!-- PROJECT_BASELINE: BR-V3.86-2026-10-28 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.85-2026-10-28`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.86-2026-10-28`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28056,3 +28056,13 @@ Baseline `BR-V3.84-2026-10-27`.
 **Refused.** A hyphenation dictionary (a dependency for a rule of thumb that reads well enough); a short place cut out of the long one by rule («Tâmpa» is not a rule's output, so the organizer types it); equal weeks at any cost (a week takes the height its dates need, a quiet week less); the 67 px a 4:5 had kept clear for a crop that never cuts rows. Still zero server cost: the picture is drawn in the visitor's browser from the month the cached page already carries, and the dialog's chunk imports nothing of the server's.
 
 Baseline `BR-V3.85-2026-10-28`.
+
+## 860. The year in two ways: «Pe scurt», each weekly series one line a month, or «Toate datele»
+
+**The owner, 2026-10-28,** of the calendar's year (§116): «arată super ciudat». A month of four Mondays and four Wednesdays was eight rows, a month with one race two, and the boxes stood in rows of a grid, so a short month left a hole beside a long one. Offered two fixes (only the layout, or the year as the club's schedule), the owner answered «Ce să aleg? Pune configs și butoane»: both, behind two pills.
+
+**«Pe scurt»** (`/calendar/2026`, the year's default): in each month a weekly series is one line — its weekdays, its hour when every date shares one, its title and how many dates («lun. · 19:00 Alergarea de luni · 4 date») — linking to its next date that month, or its last once all are gone; every special date stays whole, on its day. **«Toate datele»** (`/calendar/2026/list`): every date of every month, as the year was. The two pills stand where a month has «Calendar» and «Listă», after the same rule, and the year's path takes the same `list` segment a month does (§574); an old `?year=…&view=list` still means the year as it did.
+
+**Both** pack the month boxes in columns (two from `sm`, three from `lg`) instead of a grid's rows, so no month leaves a gap; the months run down each column in order.
+
+Baseline `BR-V3.86-2026-10-28`.

@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.86` | the calendar's year in two ways: «Pe scurt» and «Toate datele» (§860) |
 | `BR-V3.85` | the calendar picture made to post: a week of its own, the details after each hour, every style in the three layouts (§859) |
 | `BR-V3.84` | the calendar picture reorganised, three layouts and the app's type and ground icons (§858) |
 | `BR-V3.83` | the calendar picture downloads and carries the club's real logo (§857) |
