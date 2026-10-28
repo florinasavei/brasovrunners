@@ -132,6 +132,37 @@ describe("«Seriile în cap»: the floor a phone's feed still reads (the owner's
   }
 });
 
+describe("«Legenda în celule»: the readable floor (the audit's D17, D31)", () => {
+  // A feed shows the picture about 400 px wide: on a 1080-wide picture no title, key line or chip under 17 px,
+  // no hour or detail line under 16, no day number under 18; on 16:9, nothing under 21. The frame's band and
+  // foot are the frame's own; what the layout draws between them is checked.
+  for (const month of months) {
+    for (const ratio of ratios) {
+      it(`${month.name} · ${ratio}`, () => {
+        const options: CalendarImageOptions = { theme: "poster", ratio, layout: "cells", week: null, legend: true, details: { place: true, distance: true, elevation: true } };
+        const body = drawFrame(stubCanvas().ctx, month.data, options, fonts, { logo: null }, CALENDAR_IMAGE_THEMES.poster);
+        if (!body) return;
+        const { ctx, records } = stubCanvas();
+        drawCalendarImage(ctx, month.data, options, fonts, { logo: null });
+        const { width, height } = CALENDAR_IMAGE_RATIOS[ratio];
+        // Told apart by their words, not their weight: the layout sets every title, label, key name and chip's
+        // hour in capitals and figures; a day's number (in its cell or the key's badge) is one or two figures; an
+        // hour or a detail line («ora 09:00», «Tâmpa · 6 km», «Anulat», a rhythm) always has a small letter.
+        const floorOf = (text: (typeof records.texts)[number]) => {
+          if (width > height) return 21;
+          if (/^\d{1,2}$/.test(text.text)) return 18;
+          return /\p{Ll}/u.test(text.text) ? 16 : 17;
+        };
+        const small = records.texts
+          .filter((text) => text.top >= body.y - 0.5 && text.bottom <= body.y + body.h + 0.5)
+          .filter((text) => text.size < floorOf(text) - 0.01)
+          .map((text) => `«${text.text}» ${text.size}px (floor ${floorOf(text)})`);
+        expect(small, small.join("\n  ")).toEqual([]);
+      });
+    }
+  }
+});
+
 for (const month of months) {
   describe(`${month.name}: ${month.data.words.monthTitle}`, () => {
     /** The month in each layout, and each of its weeks: the layout's name, or the week's days. */

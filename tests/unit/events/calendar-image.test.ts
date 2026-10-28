@@ -1,8 +1,9 @@
+import { readdirSync, readFileSync } from "node:fs";
 import { createTranslator } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
 import ro from "../../../messages/ro.json";
 import type { PublicEvent } from "@/modules/events/repository";
-import type { CalendarImageData, CalendarImageEntry } from "@/modules/events/domain/calendar-image";
+import { type CalendarImageData, type CalendarImageEntry, LEGEND_MAX } from "@/modules/events/domain/calendar-image";
 import { type CalendarImageFormat, calendarImageRows } from "@/modules/events/domain/calendar-image-rows";
 import { distanceWords } from "@/modules/events/domain/distance";
 import { elevationWords } from "@/modules/events/domain/elevation";
@@ -11,11 +12,12 @@ import { SPECIAL_PATH, SURFACE_PATHS, TYPE_PATHS } from "@/modules/events/ui/cal
 import { CALENDAR_IMAGE_RATIOS } from "@/modules/events/ui/calendar-image-canvas";
 import { CALENDAR_IMAGE_LAYOUT_CHOICES, CALENDAR_IMAGE_THEME_CHOICES, type CalendarImageAssets, type CalendarImageOptions, drawCalendarImage, paletteFor } from "@/modules/events/ui/calendar-image-draw";
 import { CALENDAR_IMAGE_THEMES } from "@/theme/brand";
-import { breakLines } from "@/modules/events/ui/calendar-image-poster-cells";
+import { weekHeights } from "@/modules/events/ui/calendar-image-poster-cells";
 import { wrapWords } from "@/modules/events/ui/calendar-image-poster-formats";
 import { posterPlan, weekdayColumn, wrapWhole } from "@/modules/events/ui/calendar-image-poster-heads";
 import { COVERED, drawFrame } from "@/modules/events/ui/calendar-image-frame";
 import { initialWeek, weekLabel, weekOf, weeksOf, weekSlug } from "@/modules/events/ui/calendar-image-week";
+import { monthGrid } from "@/modules/events/domain/calendar";
 import { stubCanvas } from "./calendar-image-stub-canvas";
 import busy from "../../../scripts/calendar-image-preview/busy.json";
 import fortnight from "../../../scripts/calendar-image-preview/fortnight.json";
@@ -149,16 +151,6 @@ describe("the words in a cell", () => {
   });
 });
 
-describe("a title on «Afiș», whole", () => {
-  it("breaks at spaces without cutting, a lone dash staying with the word before it", () => {
-    expect(breakLines(ctx, "Crosul Brașov Runners — ediția a III-a", 100)).toEqual(["Crosul", "Brașov", "Runners —", "ediția a", "III-a"]);
-  });
-
-  it("leaves a word wider than the line alone on its own, for the caller to see it does not fit", () => {
-    expect(breakLines(ctx, "a reconnaissance b", 60)).toEqual(["a", "reconnaissance", "b"]);
-  });
-});
-
 describe("a title kept whole", () => {
   it("breaks at spaces and keeps a dash with the word before it", () => {
     expect(wrapWhole(ctx, "Happy Monday with Brașov Runners", 130)).toEqual(["Happy Monday", "with Brașov", "Runners"]);
@@ -183,8 +175,7 @@ describe("the one wrap the layouts share (the audit of 2026-10-27, D23 and D40)"
 
   it("never leaves one short word alone on the last line when the line before can give it one", () => {
     const title = "CROSUL BRAȘOV RUNNERS — EDIȚIA A III-A";
-    // Greedy, the ordinal stands alone; balanced, the line before gives it «EDIȚIA A».
-    expect(breakLines(ctx, title, 330).at(-1)).toBe("III-A");
+    // Greedy, the ordinal would stand alone; balanced, the line before gives it «EDIȚIA A».
     expect(wrapBalanced(ctx, title, 330)).toEqual(["CROSUL BRAȘOV RUNNERS\u00a0—", "EDIȚIA A III-A"]);
     expect(wrapBalanced(ctx, title, 300)).toEqual(["CROSUL BRAȘOV RUNNERS\u00a0—", "EDIȚIA A III-A"]);
     expect(wrapBalanced(ctx, "Girls only shake out run", 200)).toEqual(["Girls only shake", "out run"]);
@@ -944,5 +935,246 @@ describe("«Afiș»: an event's glyphs, as the app's chips show them (§858)", (
     expect(glyphsWidth(0, 10)).toBe(0);
     expect(glyphsWidth(1, 10)).toBeCloseTo(10);
     expect(glyphsWidth(2, 10)).toBeCloseTo(22);
+  });
+});
+
+describe("«Legenda în celule»: the weeks' heights (the audit's D16, D19)", () => {
+  it("keeps the weeks level while none asks more than its share", () => {
+    expect(weekHeights([100, 120, 90], 600)).toEqual([200, 200, 200]);
+  });
+
+  it("gives a week what its titles ask, the quiet weeks sharing the rest alike", () => {
+    expect(weekHeights([100, 300, 90, 0], 800)).toEqual([166.66666666666666, 300, 166.66666666666666, 166.66666666666666]);
+    // Two that ask more than the share of what is left both stand on their own.
+    expect(weekHeights([350, 300, 0, 0], 800)).toEqual([350, 300, 75, 75]);
+  });
+
+  it("keeps the key's week when the asks overflow, each other week its least and the same share of what it asks beyond", () => {
+    const heights = weekHeights([400, 300, 300, 300], 800, [true, false, false, false], [0, 100, 150, 100]);
+    // 400 left over the key's week, 350 of it the least, 50 shared over the 550 asked beyond: a tenth and a bit each.
+    [400, 100 + 200 / 11, 150 + 150 / 11, 100 + 200 / 11].forEach((height, index) => expect(heights[index]).toBeCloseTo(height));
+    // When not even the least fits, all are cut alike rather than the grid spilling out of the body.
+    expect(weekHeights([400, 300, 300], 500, [true, false, false], [0, 100, 150])).toEqual([400, 40, 60]);
+  });
+
+  it("gives the weeks whose days need room the most of it, not one level for all (the review of 2026-10-28: fortnight, 9:16)", () => {
+    const asks = [121, 215, 121, 297, 127];
+    const least = [49, 60, 73, 140, 69];
+    const heights = weekHeights(asks, 740, [], least);
+    expect(heights.reduce((total, height) => total + height, 0)).toBeCloseTo(740);
+    heights.forEach((height, index) => {
+      expect(height).toBeGreaterThanOrEqual(least[index]);
+      expect(height).toBeLessThanOrEqual(asks[index]);
+    });
+    // The 26th's week, which asks the most, gets the most; the quiet weeks no more than they ask.
+    expect(Math.max(...heights)).toBe(heights[3]);
+    expect(heights[3]).toBeGreaterThan(240);
+    expect(heights[1]).toBeGreaterThan(160);
+  });
+});
+
+describe("«Legenda în celule»: the sample months (the audit's D05, D11, D40)", () => {
+  const samples = new URL("../../../scripts/calendar-image-preview/", import.meta.url);
+  const month = (name: string) => JSON.parse(readFileSync(new URL(`${name}.json`, samples), "utf8")) as CalendarImageData;
+  const fonts = { body: "sans-serif", display: "sans-serif", script: "cursive", poster: "Poppins" };
+  const ratios = Object.keys(CALENDAR_IMAGE_RATIOS) as CalendarImageOptions["ratio"][];
+  /** Every word the picture draws, in the order drawn: a title's lines follow each other, so a whole title reads as one run. */
+  function drawn(data: CalendarImageData, ratio: CalendarImageOptions["ratio"], theme: CalendarImageOptions["theme"] = "poster") {
+    const { ctx, records } = stubCanvas();
+    drawCalendarImage(ctx, data, { theme, ratio, layout: "cells", week: null, legend: true, details: ALL_DETAILS }, fonts, { logo: null });
+    return records.texts.map((text) => text.text);
+  }
+  const named = (texts: string[], title: string) => texts.join(" ").replace(/\u00a0/g, " ").includes(title.toLocaleUpperCase("ro-RO"));
+  /**
+   * What the picture says where: the texts drawn in each day's cell, in the order drawn — the sparkle by a day's
+   * number (§168), a shape, as «✦» — the key's rows of special dates \u2014 each its day's badge, its name's lines
+   * and its notes — and how many its «+N altele» counts. Told apart by where they stand (the grid's lines give
+   * the weeks and the columns; a text in an empty day or under the grid is the key's) and by the order drawn,
+   * so a title the key alone names whole is not taken for one its day names.
+   */
+  function places(data: CalendarImageData, ratio: CalendarImageOptions["ratio"], theme: CalendarImageOptions["theme"] = "poster") {
+    const options: CalendarImageOptions = { theme, ratio, layout: "cells", week: null, legend: true, details: ALL_DETAILS };
+    const { ctx, records } = stubCanvas();
+    // A glyph is drawn translated to its top-left: the sparkle's is recorded there.
+    const sparkles: { x: number; y: number }[] = [];
+    let at = { x: 0, y: 0 };
+    const translate = records.translate.bind(records);
+    const fill = records.fill.bind(records);
+    records.translate = (x: number, y: number) => {
+      at = { x, y };
+      translate(x, y);
+    };
+    records.fill = (path?: unknown) => {
+      if ((path as { d?: string } | undefined)?.d === SPECIAL_PATH) sparkles.push(at);
+      fill(path);
+    };
+    drawCalendarImage(ctx, data, options, fonts, { logo: null });
+    const body = drawFrame(stubCanvas().ctx, data, options, fonts, { logo: null }, CALENDAR_IMAGE_THEMES[paletteFor(theme, data.month.month)]);
+    if (!body) throw new Error(`${ratio}: no body`);
+    const right = body.x + body.w;
+    // A week's top runs across the whole grid; a column's edge runs down its week, the last one's to the grid's foot.
+    const tops = records.segments
+      .filter((line) => line.y1 === line.y2 && Math.abs(Math.min(line.x1, line.x2) - body.x) < 0.5 && Math.abs(Math.max(line.x1, line.x2) - right) < 0.5)
+      .map((line) => line.y1)
+      .sort((a, b) => a - b);
+    const foot = Math.max(...records.segments.filter((line) => line.x1 === line.x2 && line.x1 > body.x && line.x1 < right).map((line) => Math.max(line.y1, line.y2)));
+    const weeks = monthGrid(data.month);
+    const days = new Map<number, string[]>();
+    const key: string[] = [];
+    const dayAt = (x: number, y: number) => (y > foot ? undefined : weeks[tops.filter((top) => top <= y).length - 1]?.[Math.floor(((x - body.x) * 7) / body.w)]);
+    for (const text of records.texts) {
+      const x = (text.left + text.right) / 2;
+      const y = (text.top + text.bottom) / 2;
+      // The weekdays' row, the band and the foot say nothing of a date.
+      if (y < tops[0] || y > body.y + body.h) continue;
+      const day = dayAt(x, y);
+      if (day?.inMonth) days.set(day.day, [...(days.get(day.day) ?? []), text.text]);
+      else key.push(text.text);
+    }
+    for (const { x, y } of sparkles) {
+      const day = dayAt(x + 1, y + 1);
+      if (day?.inMonth) days.set(day.day, [...(days.get(day.day) ?? []), "✦"]);
+    }
+    const rows: string[][] = [];
+    const from = key.indexOf(data.words.specialTitle.toLocaleUpperCase("ro-RO"));
+    const moreOf = (text: string) => new RegExp(`^${data.words.more.replace(/[.*+?^$()|[\]\\]/g, "\\$&").replace("{count}", "(\\d+)")}$`).exec(text);
+    let more = 0;
+    if (from >= 0) {
+      for (const text of key.slice(from + 1)) {
+        const counted = moreOf(text);
+        if (counted) more = Number(counted[1]);
+        else if (/^\d{1,2}$/.test(text) || rows.length === 0) rows.push([text]);
+        else rows[rows.length - 1].push(text);
+      }
+    }
+    return { days, rows, more, key, moreOf };
+  }
+  const flat = (text: string) => text.toLocaleUpperCase("ro-RO").replace(/[\s\u00a0-]/g, "");
+  /** Whether `texts` say the date's title whole and its hour with it: under it (\u00abora 09:00\u00bb), or leading it (\u00ab09:00 TITLU\u00bb). */
+  const sayWhole = (texts: readonly string[], entry: CalendarImageEntry, words: CalendarImageData["words"]) => {
+    const all = flat(texts.join(" "));
+    const title = flat(entry.title);
+    const hour = entry.cancelled ? words.cancelled : entry.time ? words.at.replace("{time}", entry.time) : words.tba;
+    const lead = entry.cancelled ? words.cancelled : entry.time;
+    return all.includes(title + flat(hour)) || (lead !== null && all.includes(flat(lead) + title));
+  };
+  const entryOf = (data: CalendarImageData, special: CalendarImageData["specials"][number]) => {
+    const entry = data.entries.find((each) => each.day === special.day && each.title === special.title);
+    if (!entry) throw new Error(`${special.day} ${special.title} has no date`);
+    return entry;
+  };
+
+  it("names every special date of a quiet month whole, cuts nothing and splits a long word rather than cut it", () => {
+    for (const name of ["june", "sparse"]) {
+      const data = month(name);
+      for (const ratio of ratios) {
+        const texts = drawn(data, ratio);
+        expect(texts.filter((text) => text.includes("…")), `${name} · ${ratio}`).toEqual([]);
+        for (const special of data.specials) expect(named(texts, special.title), `${name} · ${ratio}: ${special.title}`).toBe(true);
+      }
+    }
+  });
+
+  it("lists every special date in the key, day by day, where the grid has room for them all (june, every format)", () => {
+    const data = month("june");
+    for (const ratio of ratios) {
+      const texts = drawn(data, ratio);
+      expect(texts, ratio).toContain("EVENIMENTE SPECIALE");
+      // Each special twice: in its day, and in the key with its day's badge.
+      for (const special of data.specials) expect(texts.filter((text) => text === String(special.day)).length, `${ratio}: ${special.day}`).toBe(2);
+    }
+  });
+
+  it("names the month's race whole in its own day, with its hour over it or leading it, on every format and theme", () => {
+    // Its day's cell, not the whole picture: the key names the race too, and must not stand in for its day.
+    for (const name of ["busy", "sparse"]) {
+      const data = month(name);
+      const race = data.specials.find((special) => special.type === "RACE");
+      if (!race) throw new Error(`${name}.json has no race`);
+      for (const theme of CALENDAR_IMAGE_THEME_CHOICES) {
+        for (const ratio of ratios) expect(sayWhole(places(data, ratio, theme).days.get(race.day) ?? [], entryOf(data, race), data.words), `${name} · ${theme} · ${ratio}`).toBe(true);
+      }
+    }
+  });
+
+  const names = readdirSync(samples).filter((file) => file.endsWith(".json")).map((file) => file.replace(/\.json$/, ""));
+  /** Whether a special is named whole with its hour in its own day's cell, or in its own day's row of the key. */
+  const namedWhole = (place: ReturnType<typeof places>, data: CalendarImageData, special: CalendarImageData["specials"][number]) => {
+    const entry = entryOf(data, special);
+    return sayWhole(place.days.get(special.day) ?? [], entry, data.words) || place.rows.some((row) => row[0] === String(special.day) && sayWhole(row, entry, data.words));
+  };
+
+  it("names every special date whole with its hour somewhere — in its day or in its own day's row of the key — on every month, format and theme (the review of 2026-10-28)", () => {
+    // A title its day cuts, or draws without its hour, is owed to the key: never left out of both — but in a
+    // month too full even for that (busy: six weeks, five specials, three series), the key counts the fewest in
+    // its «+N altele», and never the race, which it names whenever it names any.
+    for (const file of names) {
+      const data = month(file);
+      // The empty month has no grid and nothing to name.
+      if (data.specials.length === 0) continue;
+      const name = data.words.monthTitle;
+      const race = data.specials.find((special) => special.type === "RACE");
+      for (const theme of CALENDAR_IMAGE_THEME_CHOICES) {
+        for (const ratio of ratios) {
+          const place = places(data, ratio, theme);
+          const nowhere = data.specials.filter((special) => !namedWhole(place, data, special)).map((special) => `${special.day} ${special.title}`);
+          if (file !== "busy") expect(nowhere, `${name} · ${theme} · ${ratio}`).toEqual([]);
+          expect(nowhere.length, `${name} · ${theme} · ${ratio}: ${nowhere.join(", ")} named nowhere whole, the key's «+N» counts ${place.more}`).toBeLessThanOrEqual(place.more);
+          if (race && place.rows.length > 0) {
+            expect(
+              place.rows.some((row) => row[0] === String(race.day) && sayWhole(row, entryOf(data, race), data.words)),
+              `${name} · ${theme} · ${ratio}: the race in the key`,
+            ).toBe(true);
+          }
+        }
+      }
+    }
+  });
+
+  it("tells in every day that a special date is in it — its title begun, «+N altele», or the sparkle by its number — on every month, format and theme (the review of 2026-10-28)", () => {
+    for (const data of names.map(month).filter((each) => each.specials.length > 0)) {
+      const name = data.words.monthTitle;
+      for (const theme of CALENDAR_IMAGE_THEME_CHOICES) {
+        for (const ratio of ratios) {
+          const place = places(data, ratio, theme);
+          for (const special of data.specials) {
+            const entry = entryOf(data, special);
+            const texts = place.days.get(special.day) ?? [];
+            const lead = entry.cancelled ? data.words.cancelled : entry.time;
+            // A title's first line, cut or not, begins it — after its hour, where the hour leads it.
+            const begun = texts.some((text) => {
+              const bare = flat((lead && text.startsWith(`${lead} `) ? text.slice(lead.length + 1) : text).replace(/…$/, ""));
+              return /\p{Lu}{2}/u.test(bare) && flat(entry.title).startsWith(bare);
+            });
+            const said = begun || texts.some((text) => place.moreOf(text) !== null) || texts.includes("✦");
+            expect(said, `${name} · ${theme} · ${ratio}: ${special.day} ${special.title} — ${texts.join(" | ")}`).toBe(true);
+          }
+        }
+      }
+    }
+  });
+
+  it("names every weekly series in the key on every picture of a month that has one: the key is the one place a series is named (the review of 2026-10-28)", () => {
+    for (const data of names.map(month).filter((each) => each.recurring.length > 0)) {
+      const name = data.words.monthTitle;
+      for (const theme of CALENDAR_IMAGE_THEME_CHOICES) {
+        const chips = Math.min(LEGEND_MAX, CALENDAR_IMAGE_THEMES[paletteFor(theme, data.month.month)].series.length);
+        for (const ratio of ratios) {
+          const { key } = places(data, ratio, theme);
+          expect(key, `${name} · ${theme} · ${ratio}`).toContain(data.words.recurringTitle.toLocaleUpperCase("ro-RO"));
+          const said = flat(key.join(" "));
+          for (const series of data.recurring.slice(0, chips)) expect(said.includes(flat(series.title)), `${name} · ${theme} · ${ratio}: ${series.title}`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("writes «ora se anunță» where an hour is not set, and every series' rhythm in the key", () => {
+    const data = month("busy");
+    for (const ratio of ["portrait", "story"] as const) {
+      const texts = drawn(data, ratio);
+      expect(texts.some((text) => text.startsWith(data.words.tba)), ratio).toBe(true);
+      for (const series of data.recurring) expect(named(texts, series.title) || texts.join(" ").includes(series.sentence), `${ratio}: ${series.title}`).toBe(true);
+    }
   });
 });
