@@ -275,7 +275,9 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/CalendarPicker.tsx", prop: "spacing", step: "gapXs", sm: 1, xsBefore: 1 },
   { file: "src/modules/events/ui/CalendarSection.tsx", prop: "mb", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   { file: "src/modules/events/ui/EventCalendar.tsx", prop: "spacing", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
-  { file: "src/modules/events/ui/EventCalendar.tsx", prop: "gap", step: "gapSm", sm: 2, xsBefore: 2 },
+  // The year's month boxes stand in columns since «Pe scurt» / «Toate datele»: the grid's one gap is the columns' gap and each box's bottom margin.
+  { file: "src/modules/events/ui/EventCalendar.tsx", prop: "columnGap", step: "gapSm", sm: 2, xsBefore: 2 },
+  { file: "src/modules/events/ui/EventCalendar.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   // The event page.
   { file: "src/modules/events/ui/EventPageView.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/modules/events/ui/EventPageView.tsx", prop: "mb", step: "gapSm", sm: 3, xsBefore: 3, count: 2 }, // §480: one step tighter on a phone, the event page

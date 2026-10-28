@@ -23,6 +23,8 @@ import { calendarAddress, type CalendarLayoutName, type CalendarPeriod } from ".
 import type { PublicEvent } from "../repository";
 import { editionDifference, groupSeries, usualOf } from "../domain/series";
 import { calendarTone } from "../domain/calendar-kind";
+import { eventKind } from "../domain/event-kind";
+import { wallClockWeekday } from "../domain/zoned-time";
 import CalendarEventChip from "./CalendarEventChip";
 import type { EditionNote } from "./EditionMark";
 import { readCoHosts } from "../domain/co-hosts";
@@ -39,8 +41,9 @@ export type CalendarLayout = CalendarLayoutName;
 
 /**
  * The calendar's **body**: the month as a grid on every width — or as an agenda when the
- * reader asks (`/calendar/2026-10/list`; `DECISIONS.md` §89, §137, §574) — or the year, as the agenda of every
- * month that has something on it (§116).
+ * reader asks (`/calendar/2026-10/list`; `DECISIONS.md` §89, §137, §574) — or the year, as a box for every
+ * month that has something on it (§116): «Pe scurt» (`/calendar/2026`), each weekly series one line a
+ * month and every special date whole, or «Toate datele» (`/calendar/2026/list`), every date.
  *
  * The controls that change the period are `CalendarHeader`. `events` arrives **already read**
  * — the period's rows, from the public cache (§333) with their last good copy behind them
@@ -177,6 +180,40 @@ export default async function EventCalendar({
     const thisMonth = currentMonth(now, CLUB_TIME_ZONE);
     const monthHref = (ym: YearMonth) => calendarAddress(basePath, { view: { kind: "month", month: ym }, layout: "grid", query, thisMonth });
     const months = Array.from({ length: 12 }, (_, i) => ({ year: view.year, month: i + 1 })).filter((ym) => byMonth.has(monthParam(ym)));
+
+    /**
+     * «Pe scurt» (the owner: the year «arată super ciudat» — a month of four Mondays and four
+     * Wednesdays was eight rows, a month with one race two): a weekly series is one line a month —
+     * its weekdays, its hour when every date shares one, its title and how many dates — and every
+     * special date stays whole, on its day. The line goes to the series' next date that month, or
+     * its last when all are gone.
+     */
+    const seriesLine = (members: PublicEvent[]) => {
+      const held = members.filter((member) => member.eventStatus !== "CANCELLED");
+      const shown = held.length > 0 ? held : members;
+      const ahead = shown.find((member) => !onPastDay(member, today)) ?? shown[shown.length - 1];
+      const weekdays = [...new Set(shown.map((member) => wallClockWeekday(member.startsAt, member.timezone)))].sort((a, b) => a - b);
+      const times = new Set(shown.map(time));
+      const when = [weekdays.map((weekday) => weekdayNames[weekday - 1]).join(", "), ...(times.size === 1 ? [...times] : [])].join(" · ");
+      const glyphs: GlyphName[] = ["repeat", `type:${ahead.type}`, ...(ahead.surface ? [`surface:${ahead.surface}` as const] : [])];
+      return (
+        <CalendarEventChip
+          key={ahead.id}
+          href={getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: ahead.slug } } })}
+          time={when}
+          title={`${ahead.title} · ${t("calendar.yearSeriesDates", { count: shown.length })}`}
+          glyphs={glyphs}
+          filled={false}
+          cancelled={held.length === 0}
+          note={null}
+          partner={partnerPhrase(tEvent, readCoHosts(ahead).length > 0)}
+          dense
+          tone="weekly"
+          past={fadePast && shown.every((member) => onPastDay(member, today)) ? t("calendar.past") : null}
+        />
+      );
+    };
+
     return (
       // The streamed swap settles rather than snapping; static for reduced motion (§166).
       <Box sx={fadeInSoft}>
@@ -185,20 +222,24 @@ export default async function EventCalendar({
             {t("calendar.yearEmpty")}
           </Typography>
         ) : (
-          /* One box per month (the owner: "the year calendar is not boxed enough"): a card
-             each, in columns from `sm` up, so a year reads as a shelf of months rather than
-             one long list; on a phone the boxes stack. */
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(3, minmax(0, 1fr))" }, gap: { xs: DENSITY.gapSm, sm: 2 }, alignItems: "start" }}>
+          /* One box per month (the owner: "the year calendar is not boxed enough"), in columns from
+             `sm` up that pack the boxes without gaps — a short month no longer leaves a hole beside a
+             long one — so a year reads as a shelf of months; on a phone the boxes stack. The months
+             run down each column, in order, as the document reads them. */
+          <Box sx={{ columnCount: { xs: 1, sm: 2, lg: 3 }, columnGap: { xs: DENSITY.gapSm, sm: 2 } }}>
             {months.map((ym) => {
               const items = byMonth.get(monthParam(ym)) ?? [];
-              const byDay = groupByDay(items);
+              const summary = layout === "grid";
+              const series = summary ? groupSeries(items.filter((item) => eventKind(item) === "weekly")) : [];
+              const dated = summary ? items.filter((item) => eventKind(item) !== "weekly") : items;
+              const byDay = groupByDay(dated);
               const days = monthGrid(ym).flat().filter((day) => day.inMonth && byDay.has(day.key));
               return (
                 <Box
                   key={monthParam(ym)}
                   component="section"
                   aria-label={monthNames[ym.month - 1]}
-                  sx={{ border: 1, borderColor: "divider", borderRadius: 1, overflow: "hidden", bgcolor: "background.paper" }}
+                  sx={{ breakInside: "avoid", mb: { xs: DENSITY.gapSm, sm: 2 }, border: 1, borderColor: "divider", borderRadius: 1, overflow: "hidden", bgcolor: "background.paper" }}
                 >
                   <Stack direction="row" spacing={1} sx={{ alignItems: "center", px: 1.5, bgcolor: "action.hover", borderBottom: 1, borderColor: "divider" }}>
                     <Typography component="h3" variant="h3" sx={{ fontSize: "1rem", fontWeight: 600, textTransform: "capitalize" }}>
@@ -211,7 +252,16 @@ export default async function EventCalendar({
                       · {items.length}
                     </Typography>
                   </Stack>
-                  <Box sx={{ p: 1.5 }}>{agenda(days, byDay, true)}</Box>
+                  <Stack spacing={1} sx={{ p: 1.5 }}>
+                    {series.length > 0 && (
+                      <Stack component="ul" spacing={0.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
+                        {series.map((one) => (
+                          <li key={one.key}>{seriesLine(one.members)}</li>
+                        ))}
+                      </Stack>
+                    )}
+                    {days.length > 0 && agenda(days, byDay, true)}
+                  </Stack>
                 </Box>
               );
             })}

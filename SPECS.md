@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.85-2026-10-28 -->
+<!-- PROJECT_BASELINE: BR-V3.86-2026-10-28 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.85-2026-10-28`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.86-2026-10-28`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -660,6 +660,7 @@ coffee is run on nothing.
 49. Amends criterion 48: on an event page the caption, the networks and the «Adaugă în calendar» pill are ONE wrapping row of the same 28-pixel pill, the calendar pill last; its fold's body — the five doors, the file's note and the file's address fold — is a dropdown panel under the pill, out of the flow, so opening it moves no pill and does not grow the row; Escape and a click outside close it where scripts run, and with scripts off it opens and closes by the pill (2026-10-15, `DECISIONS.md` §781). Tested in tests/unit/events/share-row-calendars.test.ts and tests/e2e/share-links.spec.ts.
 50. Given a published, scheduled, ahead event with no registration that the club ticked for «Vin!» while the privacy notice in force describes it, when the calendar feed, the event's `.ics` or the file attached to an email is made, then its description carries, after the times and the registration line, «Vin! → <the event's page>#vin» (the address from `APP_BASE_URL`) and «N vin până acum» in the page's words and the house's plural («Fii primul care spune că vine.» when none), and nothing of the kind for an event the page does not offer «Vii?» to — unticked, with registration, cancelled, started, a members' event, or with a notice that is silent; the count is one cached read filed under `places`, so a confirmation or a withdrawal makes the feed say the new number and a poll reads nothing, and a feed with no ticked event reads neither the notice nor a count (2026-10-18, `DECISIONS.md` §815).
 51. Given the page of an event that offers «Vii?», when its «Adaugă în calendar» links to Google and Outlook are built, then their description carries «Vin! → <the event's page>#vin» and «N vin până acum» as the `.ics` does, from the one read of the answers the page's own card is handed; given an event the page does not offer, a members' event or the preview, then the links are exactly what they were and no read is made (2026-10-19, `DECISIONS.md` §822).
+52. Given the calendar's year, when it renders, then two pills offer «Pe scurt» (`/calendar/YYYY`) and «Toate datele» (`/calendar/YYYY/list`): the first shows each month's weekly series as one line — its weekdays, its hour when every date shares one, its title and its number of dates — linking to its next date, and every other date whole on its day; the second shows every date; in both the month boxes stand in columns without gaps (2026-10-28, `DECISIONS.md` §860).
 
 **Verification:** integration `events/publication.test.ts`; e2e `event-cancelled.spec.ts`
 
