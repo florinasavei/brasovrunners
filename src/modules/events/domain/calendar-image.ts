@@ -88,3 +88,8 @@ export type CalendarImageData = {
 
 /** The most rows each legend draws; a busier month is the calendar's to read in full. */
 export const LEGEND_MAX = 4;
+
+/** Whether «Locul» has anything to draw (§NNN): a date of the month — or of the week's `days` — with a short place. */
+export function periodHasPlace(entries: readonly CalendarImageEntry[], days: readonly number[] | null): boolean {
+  return entries.some((entry) => entry.place !== null && entry.place.trim() !== "" && (days === null || days.includes(entry.day)));
+}

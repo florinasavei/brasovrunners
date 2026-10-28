@@ -92,6 +92,7 @@ export async function calendarImageProps(
     detailsPlace: t("detailsPlace"),
     detailsDistance: t("detailsDistance"),
     detailsElevation: t("detailsElevation"),
+    detailsPlaceNone: t("detailsPlaceNone"),
   };
   return { data, words: dialogWords };
 }
