@@ -91,6 +91,9 @@ yarn check:static        docs:check + secrets:check + migrations:check + typeche
 yarn test                all tests
 yarn test:unit           pure-rule tests only
 yarn test:integration    database tests only
+yarn test:categories     the six test categories with their files (tests/categories.mjs); --files <name> lists one category (§ Test categories)
+yarn test:fast           the categories marked fast — trust, guards, logic; what the pre-commit hook runs on the staged files' tests
+yarn test:skip <names…>  every category but the ones named (`yarn test:skip drawn pages`); «trust» is never left out
 yarn test:concurrency    the two-connection suite; needs the database running
 yarn test:clock          the suite with the real clock moved to +1 month, +1 year and +10 years; about twenty minutes a date (§ Tests that the calendar breaks); `--concurrency` runs the two-connection suite instead, a minute a date
 yarn test:watch          re-run on change
@@ -128,7 +131,8 @@ yarn calendar:preview    «Salvează ca imagine» drawn without a server: five s
 
 `yarn check` is the single gate, and CI runs it (its two halves on five runners) on every pull request. The pre-commit
 hook runs its static half and only the tests that import a staged file (`vitest related`) — the owner, 2026-10-27: ten
-minutes of tests on every commit was too much; the whole suite still blocks the merge. When a step is added to CI that a developer can run locally, it belongs inside `check`.
+minutes of tests on every commit was too much; the whole suite still blocks the merge. Since §NNN the hook runs those tests
+in the `yarn test:fast` categories only (§ Test categories). When a step is added to CI that a developer can run locally, it belongs inside `check`.
 
 **A hook forgets git's own environment first (§553).** git exports `GIT_DIR` and `GIT_INDEX_FILE`
 into a hook, so everything `yarn check` starts inherits them: on 2026-09-28 a test's throwaway
@@ -225,6 +229,41 @@ Tests are named by the requirement they cover. `tests/unit/` holds pure rules;
 should use `expectViolation` from `tests/helpers/constraints.ts` — Drizzle wraps driver
 errors, so matching on the message would pass for any failure at all, including a typo in the
 query. The helper checks the SQLSTATE code and the constraint name instead.
+
+### Test categories
+
+Every vitest file is in exactly one of six categories (§NNN; the owner, 2026-10-28: «vreau să categorisești testele și
+să putem ignora unele dintre ele»), and each category is a Vitest project of the same name (`vitest.config.mts`), so its
+name shows in brackets before each file of the output:
+
+| Category | What it holds | Files | Share of CI time | `yarn test:fast` and the hook |
+| --- | --- | --- | --- | --- |
+| `trust` | the rules CLAUDE.md says cannot be broken: places and the allocator, approved legal texts, publication in both languages, test registrations, the public list, staff powers and server-side authorization, staff-only sign-in, email links, `APP_BASE_URL`, the canonicalizer | 392 | 61 % | always — never left out |
+| `drawn` | pictures, PDFs, spreadsheets and QR codes the code draws | 36 | 8 % | left out |
+| `pages` | a page, component or email rendered to HTML | 208 | 8 % | left out |
+| `database` | the services against a real PostgreSQL in memory (PGlite) | 110 | 20 % | left out |
+| `guards` | the repository's conventions read from disk, and its own scripts | 72 | 2 % | run |
+| `logic` | pure functions — milliseconds | 336 | 2 % | run |
+
+(Counts and shares as measured on 2026-10-28, from the four CI shards' times.)
+
+```text
+yarn test                       everything — what CI runs; nothing is ever left out there
+yarn test --project=drawn       one category
+yarn test:skip drawn pages      all but those
+yarn test:fast                  trust, guards and logic
+yarn test:categories            the categories and their files; --files <name> for one
+```
+
+**Where a file's category comes from.** `tests/categories.json` lists every file, as each was read on 2026-10-28 (its
+tests opened, the rules' guards searched several ways, every disagreement on «trust» settled by two readers). A new test
+needs no line: it takes the first category whose signals it shows (`signalsOf` in `tests/categories.mjs`) — a
+requirement of CLAUDE.md's table or an asserted `FORBIDDEN`/`UNAUTHENTICATED` makes it «trust» first, so a new test of a
+rule that cannot be broken is never skippable by accident. To move a file, move its line in the JSON. A listed file that
+no longer exists fails `tests/unit/scripts/test-categories.test.ts`, which names the line.
+
+**Why «trust» is three fifths of the time.** Every test that a role is refused on the server is a guard of «Authorization
+is asserted on the server», and most backoffice files have one. That is the price of the rule, paid on every run.
 
 ### Tests that the calendar breaks
 

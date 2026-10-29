@@ -53,6 +53,10 @@ esac
 # tests that import a staged file (`vitest related`). The whole suite still runs in CI on every pull
 # request (.github/workflows/docs-check.yml, four shards) and blocks the merge; `yarn check` runs it
 # all locally on demand.
+#
+# Since §NNN (2026-10-28) only the categories `yarn test:fast` runs (tests/categories.mjs: «trust» —
+# the rules that cannot be broken, always — then «guards» and «logic»); «database», «pages» and
+# «drawn» are CI's. `yarn test:categories` says which file is where.
 
 if ! yarn check:static; then
 	echo ""
@@ -64,7 +68,7 @@ fi
 staged=$(git diff --cached --name-only --diff-filter=ACMR -- 'src/*' 'tests/*' 'messages/*' | grep -E '\.(ts|tsx|json)$' || true)
 if [ -n "$staged" ]; then
 	# shellcheck disable=SC2086 # one argument per staged path; paths here carry no spaces
-	if ! yarn vitest related --run --passWithNoTests $staged; then
+	if ! yarn test:fast related --run --passWithNoTests $staged; then
 		echo ""
 		echo "pre-commit: the tests of the staged files failed, so the commit was blocked."
 		echo "Fix the problems above, or bypass with --no-verify and fix before pushing."

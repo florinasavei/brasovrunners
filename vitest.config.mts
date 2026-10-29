@@ -1,6 +1,9 @@
 import { availableParallelism } from "node:os";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { CATEGORIES, categorize } from "./tests/categories.mjs";
+
+const byCategory = categorize(fileURLToPath(new URL(".", import.meta.url)));
 
 export default defineConfig({
   test: {
@@ -21,12 +24,15 @@ export default defineConfig({
      * is loaded.
      */
     setupFiles: process.env.TEST_CLOCK_AT || process.env.TEST_CLOCK_OFFSET_MS ? ["./tests/helpers/shifted-clock.mjs"] : [],
-    include: ["tests/**/*.test.ts"],
-    // The concurrency suite needs two real connections to a PostgreSQL server, which this
-    // command must never require: `yarn check` runs on every commit and in CI without a
-    // database. It has its own configuration and its own command — see
-    // vitest.concurrency.config.mts.
-    exclude: ["tests/concurrency/**", "node_modules/**", "dist/**", ".next/**"],
+    /**
+     * The test categories (§NNN, `tests/categories.mjs`): one project each, every `tests/**\/*.test.ts` in exactly
+     * one, so `yarn test --project=<name>` runs a category alone and `yarn test:skip` leaves some out. No `include`
+     * at the root: under `extends: true` a project's include is added to the root's, and every project ran every
+     * file (measured 2026-10-28). The concurrency suite is in no category: it needs two real connections to a
+     * PostgreSQL server, which this command must never require — `yarn check` runs on every commit and in CI
+     * without a database. It has its own configuration and its own command — see vitest.concurrency.config.mts.
+     */
+    projects: CATEGORIES.map((category) => ({ extends: true, test: { name: category.name, include: byCategory.get(category.name) } })),
     // PGlite instances are per-file and hold WebAssembly memory, so the worker count is
     // capped rather than left to the core count; serialising the files entirely (the setting
     // until 2026-09-18) made the suite take five minutes on a 32-core machine, which the

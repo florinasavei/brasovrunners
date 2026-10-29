@@ -34,6 +34,9 @@ yarn start        production server, honours PORT
 yarn lint         ESLint
 yarn typecheck    tsc --noEmit
 yarn test         unit and database tests; no database or Docker needed (PGlite)
+yarn test:categories  the six test categories (trust, drawn, pages, database, guards, logic) and their files
+yarn test:fast    trust + guards + logic — what the pre-commit hook runs on the staged files' tests
+yarn test:skip    every category but the ones named (`yarn test:skip drawn pages`); «trust» is never left out
 yarn test:concurrency  two-connection suite (BR-REQ-051-01 criterion 5); needs the database
 yarn test:clock   the suite with the real clock at +1 month, +1 year, +10 years: a test that
                   fails only there pins a date the calendar will reach (docs/DEVELOPMENT.md);
