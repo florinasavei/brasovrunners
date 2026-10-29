@@ -25,7 +25,7 @@ export default defineConfig({
      */
     setupFiles: process.env.TEST_CLOCK_AT || process.env.TEST_CLOCK_OFFSET_MS ? ["./tests/helpers/shifted-clock.mjs"] : [],
     /**
-     * The test categories (§NNN, `tests/categories.mjs`): one project each, every `tests/**\/*.test.ts` in exactly
+     * The test categories (§867, `tests/categories.mjs`): one project each, every `tests/**\/*.test.ts` in exactly
      * one, so `yarn test --project=<name>` runs a category alone and `yarn test:skip` leaves some out. No `include`
      * at the root: under `extends: true` a project's include is added to the root's, and every project ran every
      * file (measured 2026-10-28). The concurrency suite is in no category: it needs two real connections to a

@@ -1,4 +1,4 @@
-// The test categories (§NNN; the owner, 2026-10-28: «vreau să categorisești testele și să putem ignora unele dintre ele»).
+// The test categories (§867; the owner, 2026-10-28: «vreau să categorisești testele și să putem ignora unele dintre ele»).
 //
 // Every vitest file is in exactly one category, and each category is a Vitest project of the same name
 // (`vitest.config.mts`), so `yarn test --project=drawn` runs one and `yarn test:skip drawn pages` all but those

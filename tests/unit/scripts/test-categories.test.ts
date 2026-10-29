@@ -4,7 +4,7 @@ import { listing, vitestArgs } from "../../../scripts/test-categories.mjs";
 import { CATEGORIES, categorize, listed, signalsOf, testFiles } from "../../categories.mjs";
 
 /**
- * BR-REQ-090-02 — the test categories (§NNN; the owner, 2026-10-28: «vreau să categorisești testele și să putem ignora
+ * BR-REQ-090-02 — the test categories (§867; the owner, 2026-10-28: «vreau să categorisești testele și să putem ignora
  * unele dintre ele»). Every vitest file is in exactly one category and each category is a Vitest project, so a
  * category can be run alone or left out; «trust», the tests of the rules that cannot be broken, never is; and
  * `yarn test`, which CI runs, still runs every file.
@@ -13,7 +13,7 @@ const ROOT = process.cwd();
 const NAMES = CATEGORIES.map((category) => category.name);
 const KEPT_BY_FAST = CATEGORIES.filter((category) => category.fast).map((category) => `--project=${category.name}`);
 
-describe("BR-REQ-090-02 the test categories (§NNN)", () => {
+describe("BR-REQ-090-02 the test categories (§867)", () => {
   it("puts every vitest file in exactly one category", () => {
     const byCategory = categorize(ROOT);
     const all = [...byCategory.values()].flat();

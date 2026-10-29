@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.91-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.92-2026-10-29 -->
 
 # Running this locally
 
-**Baseline `BR-V3.91-2026-10-29`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V3.92-2026-10-29`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -131,7 +131,7 @@ yarn calendar:preview    «Salvează ca imagine» drawn without a server: five s
 
 `yarn check` is the single gate, and CI runs it (its two halves on five runners) on every pull request. The pre-commit
 hook runs its static half and only the tests that import a staged file (`vitest related`) — the owner, 2026-10-27: ten
-minutes of tests on every commit was too much; the whole suite still blocks the merge. Since §NNN the hook runs those tests
+minutes of tests on every commit was too much; the whole suite still blocks the merge. Since §867 the hook runs those tests
 in the `yarn test:fast` categories only (§ Test categories). When a step is added to CI that a developer can run locally, it belongs inside `check`.
 
 **A hook forgets git's own environment first (§553).** git exports `GIT_DIR` and `GIT_INDEX_FILE`
@@ -232,7 +232,7 @@ query. The helper checks the SQLSTATE code and the constraint name instead.
 
 ### Test categories
 
-Every vitest file is in exactly one of six categories (§NNN; the owner, 2026-10-28: «vreau să categorisești testele și
+Every vitest file is in exactly one of six categories (§867; the owner, 2026-10-28: «vreau să categorisești testele și
 să putem ignora unele dintre ele»), and each category is a Vitest project of the same name (`vitest.config.mts`), so its
 name shows in brackets before each file of the output:
 

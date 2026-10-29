@@ -1,4 +1,4 @@
-// The test categories (§NNN): which category each vitest file is in, and the suite run without some of them.
+// The test categories (§867): which category each vitest file is in, and the suite run without some of them.
 //
 //   yarn test:categories                  each category: its files, what it guards, whether `test:fast` leaves it out
 //   yarn test:categories --files drawn    the files of one category

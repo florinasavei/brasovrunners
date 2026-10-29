@@ -54,7 +54,7 @@ esac
 # request (.github/workflows/docs-check.yml, four shards) and blocks the merge; `yarn check` runs it
 # all locally on demand.
 #
-# Since §NNN (2026-10-28) only the categories `yarn test:fast` runs (tests/categories.mjs: «trust» —
+# Since §867 (2026-10-28) only the categories `yarn test:fast` runs (tests/categories.mjs: «trust» —
 # the rules that cannot be broken, always — then «guards» and «logic»); «database», «pages» and
 # «drawn» are CI's. `yarn test:categories` says which file is where.
 
