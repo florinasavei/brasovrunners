@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.96-2026-10-29
+
+- **A faster commit** — the pre-commit hook runs only the tests that import a staged file directly (one file and four seconds where `vitest related` took 299 files and six minutes), and `yarn lint` keeps ESLint's cache (84 s → 5 s). CI still runs everything. §871.
 ## BR-V3.95-2026-10-29
 
 - **«Invitații» closed by default** — on the registrations page the panel opens only when pressed, or from «Invită pe email». §870.

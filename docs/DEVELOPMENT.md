@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.95-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.96-2026-10-29 -->
 
 # Running this locally
 
-**Baseline `BR-V3.95-2026-10-29`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V3.96-2026-10-29`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -132,7 +132,7 @@ yarn calendar:preview    «Salvează ca imagine» drawn without a server: five s
 `yarn check` is the single gate, and CI runs it (its two halves on five runners) on every pull request. The pre-commit
 hook runs its static half and only the tests that import a staged file (`vitest related`) — the owner, 2026-10-27: ten
 minutes of tests on every commit was too much; the whole suite still blocks the merge. Since §867 the hook runs those tests
-in the `yarn test:fast` categories only (§ Test categories). Since §NNN it runs only the tests that import a staged file
+in the `yarn test:fast` categories only (§ Test categories). Since §871 it runs only the tests that import a staged file
 **directly** (`node scripts/test-categories.mjs direct <files…>`): `vitest related` followed every import and picked 299
 files, six minutes, for a three-function module; the direct ones took four seconds. And `yarn lint` keeps ESLint's cache in
 `node_modules/.cache/eslint/` (84 s cold, 5 s warm; no rule reads types, so a file is re-linted only when it changes);

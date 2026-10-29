@@ -8,7 +8,7 @@
 //   yarn test:fast related --run a.ts     after the names, vitest's own arguments: a subcommand (`related`, `list`, `watch`)
 //                                         or filters; `run` when none
 //   node scripts/test-categories.mjs direct <files…>   the tests that import those files directly, in the fast
-//                                         categories — what the pre-commit hook runs on the staged files (§NNN)
+//                                         categories — what the pre-commit hook runs on the staged files (§871)
 //
 // «trust» — the tests of the rules that cannot be broken (CLAUDE.md) — is never left out: naming it is refused.
 // One category alone is vitest's own `yarn test --project=<name>`; `yarn test` runs everything, as CI does.
@@ -67,7 +67,7 @@ export function listing(byCategory, categories = CATEGORIES) {
 const DIRECT_MAX = 400;
 
 /**
- * The tests that import a staged file directly (§NNN) — what the pre-commit hook runs, in the `fast` categories.
+ * The tests that import a staged file directly (§871) — what the pre-commit hook runs, in the `fast` categories.
  * `vitest related` follows every import transitively: on 2026-10-28 a change to a three-function module selected 299
  * files and six minutes. A staged test is itself; `src/x/y.ts(x)` is every test naming `@/x/y` (`src/x/index.ts`:
  * `@/x`); a test helper or a script is every test naming its path; a catalogue is the catalogue's own guards

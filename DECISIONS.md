@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.95-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.96-2026-10-29 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.95-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.96-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28197,3 +28197,17 @@ Baseline `BR-V3.94-2026-10-29`.
 **Decision.** The registrations page's «Invitații» panel is closed when the page is drawn, whatever its invitations' states; its closed line keeps «N în așteptare». §740's rule that opened it while an invitation was sent and waiting, or expired before the event, is gone, and `invitationsNeedAttention` with it. «Invită pe email», the link from «Toate evenimentele», the event editor's button and the redirect after a send all address `#registrations-invitations`, which opens the fold as before.
 
 Baseline `BR-V3.95-2026-10-29`.
+
+## 871. The pre-commit hook runs the tests that import a staged file directly, and ESLint keeps a cache
+
+**The owner, 2026-10-29**, asked to take all three of the audit's speed findings («toate!»), after «vreau să pot livra mai repede și mai cu încredere».
+
+**Decision.**
+
+- **Direct importers, not `vitest related`.** The hook ran `vitest related`, which follows every import transitively: a change to `src/modules/weather/words.ts`, three functions, selected 299 test files in the fast categories and took six minutes. It now runs `node scripts/test-categories.mjs direct <staged files>`: a staged test is itself; `src/x/y.ts(x)` is every test naming `@/x/y` (`src/x/index.ts`: `@/x`); a test helper or a script is every test naming its path; a catalogue is its own guards (`tests/unit/i18n`) — always in the `test:fast` categories, «trust» among them. The same change now runs one file in four seconds. What a change reaches further is CI's: every pull request runs every test. Scripts are now among the staged files the hook reads.
+- **ESLint's cache.** `yarn lint` keeps it in `node_modules/.cache/eslint/`: 84 s cold, 5 s warm. No rule of the configuration reads types, so a file whose own text did not change cannot change its verdict. CI starts without a cache, as before.
+- **Typecheck unchanged.** It was already incremental (`tsconfig.tsbuildinfo`, ignored by git): 70 s cold, 9 s warm.
+
+**Measured and not done.** The e2e shards: Playwright already shards by test (`fullyParallel`), and the slowest of twelve took 13.5 minutes against a median of 9.7. Balancing by duration needs a splitter of our own fed by recorded times, with 28 files in serial mode that must stay together — about three minutes a pull request, for a fragile part; not worth it now.
+
+Baseline `BR-V3.96-2026-10-29`.

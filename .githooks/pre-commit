@@ -58,7 +58,7 @@ esac
 # the rules that cannot be broken, always — then «guards» and «logic»); «database», «pages» and
 # «drawn» are CI's. `yarn test:categories` says which file is where.
 #
-# Since §NNN (2026-10-29) only the tests that import a staged file DIRECTLY, not `vitest related`'s
+# Since §871 (2026-10-29) only the tests that import a staged file DIRECTLY, not `vitest related`'s
 # transitive closure (299 files and six minutes for a three-function module), and ESLint keeps a
 # cache (`yarn lint`: 84 s cold, 5 s warm). CI still runs everything.
 
