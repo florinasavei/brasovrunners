@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, max, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, max, ne, sql, type SQL } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
@@ -32,6 +32,8 @@ import type { DeskEmailState, RegistrationEmailState, RegistrationEmailStateDeta
 import { deskEmailStateSql, needsEmailActionSql, registrationEmailStateDetailSql, registrationEmailStateSql } from "./email-state";
 import type { PlaceDeadlineCounts, PlaceDeadlineEvent } from "./domain/place-deadlines";
 import { eventInvitations } from "@/db/schema/event-invitations";
+import { invitationOpen } from "./invitation-repository";
+import { PLACE_HOLDING_STATUSES } from "./domain/state-machine";
 import type { RaceNumberFormat } from "./domain/race-number";
 
 /**
@@ -586,6 +588,43 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
     summary.byStatus[row.status] = (summary.byStatus[row.status] ?? 0) + row.total;
   }
   return summary;
+}
+
+/**
+ * «Kituri de pregătit» (the owner, 2026-10-29: «trebuie să am o informație despre câte kit-uri trebuie
+ * să pregătim»): one event's real registrations that hold a place now (`PLACE_HOLDING_STATUSES`, the
+ * special guests among them — they take a kit too), by T-shirt size, and its invitations still open
+ * before their deadline, whose person has chosen no size yet. The waiting list is not in it. Blind to
+ * every filter but the event: it says what to pack, not what the list shows.
+ */
+export type KitCount = {
+  kitShirt: boolean;
+  /** Registrations holding a place, by the size they chose; `NONE` also stands for a row that stored none. */
+  bySize: Partial<Record<RegistrationTshirtSize, number>>;
+  registrations: number;
+  invitations: number;
+};
+
+export async function countKits<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<KitCount> {
+  const [sizes, [invited], [event]] = await Promise.all([
+    db
+      .select({ size: registrations.tshirtSize, total: count() })
+      .from(registrations)
+      .where(and(eq(registrations.eventId, eventId), ne(registrations.kind, "TEST"), inArray(registrations.status, [...PLACE_HOLDING_STATUSES])))
+      .groupBy(registrations.tshirtSize),
+    db
+      .select({ total: count() })
+      .from(eventInvitations)
+      .where(and(eq(eventInvitations.eventId, eventId), gt(eventInvitations.expiresAt, now), invitationOpen())),
+    db.select({ kitShirt: events.kitShirt }).from(events).where(eq(events.id, eventId)),
+  ]);
+  const kits: KitCount = { kitShirt: event?.kitShirt ?? false, bySize: {}, registrations: 0, invitations: invited?.total ?? 0 };
+  for (const row of sizes) {
+    const size = row.size ?? "NONE";
+    kits.bySize[size] = (kits.bySize[size] ?? 0) + row.total;
+    kits.registrations += row.total;
+  }
+  return kits;
 }
 
 /** How many times the form was filled again for one registration, and when last (§312). */

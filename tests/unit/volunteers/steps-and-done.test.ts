@@ -272,17 +272,17 @@ describe("§800 the thank-you: «Mulțumim, Ana!», the lead, when the receipt l
     expect(panel).toMatch(/<h2[^>]*>Mulțumim, Ana!<\/h2>/);
     expect(panel).toContain('data-testid="CelebrationIcon"');
     // The date is the sentence's own: lower-case weekday, «la» before the hour (§452).
-    expect(text(panel)).toContain("Am primit oferta ta pentru Crosul de toamnă, sâmbătă, 21 nov. 2026, la 09:00.");
+    expect(text(panel)).toContain("Am primit formularul tău de înscriere ca voluntar la Crosul de toamnă, sâmbătă, 21 nov. 2026, la 09:00.");
     expect(panel).not.toContain("<details");
   });
 
   it("greets nobody by name when the browser kept none, and leaves the date out when it is held back", async () => {
     const panel = await done({ when: null, sent: null });
     expect(panel).toMatch(/<h2[^>]*>Mulțumim!<\/h2>/);
-    expect(text(panel)).toContain("Am primit oferta ta pentru Crosul de toamnă.");
+    expect(text(panel)).toContain("Am primit formularul tău de înscriere ca voluntar la Crosul de toamnă.");
     expect(text(panel)).not.toContain("Crosul de toamnă,");
     // No address kept: the receipt is said to come to the address written.
-    expect(text(panel)).toContain("Emailul de primire vine la adresa pe care ai scris-o; dacă ai mai trimis oferta pentru acest eveniment, l-ai primit deja pe primul.");
+    expect(text(panel)).toContain("Emailul de primire vine la adresa pe care ai scris-o; dacă ai mai trimis formularul pentru acest eveniment, l-ai primit deja pe primul.");
     expect(text(panel)).not.toMatch(/pleacă|a plecat/);
   });
 
@@ -290,8 +290,8 @@ describe("§800 the thank-you: «Mulțumim, Ana!», the lead, when the receipt l
     // A repeat of the same person, the loser of a race and a honeypot hit queue no email: the screen cannot tell them from a first offer, so it names no send time and no state.
     const line = async (language: "ro" | "en") =>
       text(/data-testid="volunteer-done-email-line"[^>]*>[\s\S]*?<\/p>/.exec(await done({ sent: SENT }, language))?.[0] ?? "");
-    expect(await line("ro")).toContain("Emailul de primire vine la ana@example.test; dacă ai mai trimis oferta pentru acest eveniment, l-ai primit deja pe primul.");
-    expect(await line("en")).toContain("The receipt email comes to ana@example.test; if you already sent an offer for this event, you got the first one.");
+    expect(await line("ro")).toContain("Emailul de primire vine la ana@example.test; dacă ai mai trimis formularul pentru acest eveniment, l-ai primit deja pe primul.");
+    expect(await line("en")).toContain("The receipt email comes to ana@example.test; if you already sent the form for this event, you got the first one.");
     for (const language of ["ro", "en"] as const) expect(await line(language), language).not.toMatch(/pleacă|a plecat|leaves|is leaving|has left|\d{2}:\d{2}/);
     // The messages carry no leaving-time key any more.
     for (const key of ["doneLeavesNow", "doneLeavesToday", "doneLeavesOn", "doneLeft"]) {
@@ -352,7 +352,7 @@ describe("§800 the thank-you: «Mulțumim, Ana!», the lead, when the receipt l
   it("reads in English", async () => {
     const panel = await done({ sent: SENT, minors: true }, "en");
     expect(panel).toMatch(/<h2[^>]*>Thank you, Ana!<\/h2>/);
-    expect(text(panel)).toContain("We received your offer for Crosul de toamnă, sâmbătă, 21 nov. 2026, la 09:00.");
+    expect(text(panel)).toContain("We received your volunteer sign-up form for Crosul de toamnă, sâmbătă, 21 nov. 2026, la 09:00.");
     expect(panel).toMatch(/<h3[^>]*>What happens next<\/h3>/);
     expect(text(panel)).toContain("Your parent or guardian gives consent");
     expect(text(panel)).toContain("On the day of the event");

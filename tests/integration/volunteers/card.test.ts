@@ -371,7 +371,7 @@ describe("§754 an event's volunteers, entered by hand", () => {
       ["Maria.Noua@Example.test", [finish.id]],
     ]);
     // Ion's address is taken: refused, naming the box, keeping what was typed.
-    const clash = await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [finish.id], assignedRoleIds: [finish.id], email: ion.email }));
+    const clash = await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [finish.id], assignedRoleIds: [finish.id], email: ion.email! }));
     expect(clash).toMatchObject({ error: "VOLUNTEER_ALREADY_LISTED", fields: ["email"] });
     // Saving the same address spelled differently is no clash with oneself.
     expect(
