@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.91-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.90-2026-10-29 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.91-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.90-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28124,11 +28124,3 @@ Baseline `BR-V3.89-2026-10-29`.
 Amends §754, §761 and §837.
 
 Baseline `BR-V3.90-2026-10-29`.
-
-## 866. «Invitații» is closed by default
-
-**The owner, 2026-10-29, with a screenshot of «Invitații» open over one sent and nine accepted invitations:** "și partea de invitații ar trebui să fie colapsată by default".
-
-**Decision.** The registrations page's «Invitații» panel is closed when the page is drawn, whatever its invitations' states; its closed line keeps «N în așteptare». §740's rule that opened it while an invitation was sent and waiting, or expired before the event, is gone, and `invitationsNeedAttention` with it. «Invită pe email», the link from «Toate evenimentele», the event editor's button and the redirect after a send all address `#registrations-invitations`, which opens the fold as before.
-
-Baseline `BR-V3.91-2026-10-29`.

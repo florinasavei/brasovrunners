@@ -137,7 +137,6 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
-| `BR-V3.91` | «Invitații» closed by default (§866) |
 | `BR-V3.90` | a volunteer added by hand without an email or a phone, on the list only (§865) |
 | `BR-V3.89` | the volunteer's thank-you screen says «formularul», not «oferta» (§864) |
 | `BR-V3.88` | the calendar picture's «Locul» greyed, saying why, while no date has a short place (§863) |
