@@ -1129,6 +1129,13 @@
       "statusAll": "All statuses",
       "summaryTotal": "Registrations: {count} (all states, cancelled and expired included)",
       "summaryTest": "Test: {count}",
+      "kits": {
+        "title": "Kits to prepare: {count}",
+        "who": "Holding a place now, special guests included: {registrations} · Invitations unanswered: {invitations}. The waiting list is not counted.",
+        "shirts": "T-shirts — {sizes}",
+        "noShirt": "no T-shirt: {count}",
+        "unknownSize": "size not known yet (invitations): {count}"
+      },
       "outside": {
         "pill": "Special guests: {count}",
         "chip": "Special guest",
