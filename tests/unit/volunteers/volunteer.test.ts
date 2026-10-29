@@ -198,7 +198,7 @@ describe("§754 the telephone number an organizer types — the registrations' o
     }
   });
 
-  it("§NNN takes an empty telephone box as none on the club's own row, and keeps it required on a row the person typed and on the public form", () => {
+  it("§865 takes an empty telephone box as none on the club's own row, and keeps it required on a row the person typed and on the public form", () => {
     expect(typedPhone("")).toBe("");
     const none = staffWith("");
     expect(none.success).toBe(true);
@@ -214,7 +214,7 @@ describe("§754 the telephone number an organizer types — the registrations' o
   });
 });
 
-describe("§NNN a person the club types with no address, no telephone number, or neither", () => {
+describe("§865 a person the club types with no address, no telephone number, or neither", () => {
   it("takes each box empty on its own as none, and both empty together: the person is on the list only", () => {
     expect(volunteerStaffInputSchema.parse({ ...staff, email: "" })).toMatchObject({ email: null, phone: "+40712345678" });
     expect(volunteerStaffInputSchema.parse({ ...staff, email: "   " })).toMatchObject({ email: null });
@@ -575,7 +575,7 @@ describe("§754 the CSV", () => {
     expect(csv.split("\r\n")[1].endsWith("2026-10-13T10:00:00.000Z,,,,,Nu,Nu,,,,")).toBe(true);
   });
 
-  it("§NNN writes empty address and telephone cells for a person the club typed without them, and no column moves", () => {
+  it("§865 writes empty address and telephone cells for a person the club typed without them, and no column moves", () => {
     const csv = buildVolunteersCsv(header, [
       {
         role: "Punct de apă",

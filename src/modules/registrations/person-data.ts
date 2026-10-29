@@ -182,7 +182,7 @@ export type PersonData = {
     name: string;
     /**
      * The address and the telephone number as stored. An offer found here is found by its address, so it has one; the telephone may
-     * be null — a row the club typed without one (§NNN). A row typed with no address at all is no address's, and this page, which
+     * be null — a row the club typed without one (§865). A row typed with no address at all is no address's, and this page, which
      * searches by address, never lists it: it is deleted from the event's card, or by the thirty-day sweep, like every offer.
      */
     deliveryEmail: string | null;

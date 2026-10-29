@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0182_volunteers_name_only` (§NNN, amending §754), proven on real PostgreSQL (PGlite): a volunteer the club types may
+ * Migration `0182_volunteers_name_only` (§865, amending §754), proven on real PostgreSQL (PGlite): a volunteer the club types may
  * have no address, no telephone number, or neither — «doar să fie așa pe listă». The four columns lose their NOT NULL; two CHECKs
  * keep what still holds: an address is the typed one, its canonical form and the canonicalizer's version together or none of
  * them, and only a row the club typed (`STAFF`) may lack an address or a telephone number. The rows from before keep everything;

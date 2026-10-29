@@ -61,7 +61,7 @@ export const VOLUNTEER_ADULT_AGE = 18;
 /**
  * Whether the guardian's address is the volunteer's own mailbox, through the canonicalizer (§10.4): a person of fourteen with no
  * mailbox of their own may use their parent's (§389: a family on one address), so it is no refusal — the card marks it, and the
- * organizer's confirm, the human check, sees it. False when either address is missing (a name-only row, §NNN) or cannot be read.
+ * organizer's confirm, the human check, sees it. False when either address is missing (a name-only row, §865) or cannot be read.
  */
 export function guardianSharesAddress(volunteerEmail: string | null, guardianEmail: string | null): boolean {
   if (!volunteerEmail || !guardianEmail) return false;
@@ -490,7 +490,7 @@ const roleIdsField = z
   .transform((ids) => [...new Set(ids)]);
 
 /**
- * The address and the telephone number as the organizers' entry posts them (§NNN, amending §754; the owner, 2026-10-28: «as vrea sa
+ * The address and the telephone number as the organizers' entry posts them (§865, amending §754; the owner, 2026-10-28: «as vrea sa
  * pot adaug si fara adresa de mail si telefon, doar sa fie asa pe lista»). For a row the club types, each is optional on its own: an
  * empty box is none (null), anything typed must be an address, or a number a phone can dial. For a row the person typed on the
  * public form (`required`), both stay required on «Modifică», as the form asked them — the public form's own schema is untouched.
@@ -513,7 +513,7 @@ function staffContactBoxes(required: boolean) {
  * «Rolurile date»: one or several of the event's, ticked by the person or not, §837). At least one of the two
  * (`roleIds` named in the refusal); a person entered with roles given and nothing ticked has those roles as their
  * choices, so every row says what the person offered (`choicesWithAssigned`). The address and the telephone number
- * are optional for the club's own rows (`staffContactBoxes`, §NNN).
+ * are optional for the club's own rows (`staffContactBoxes`, §865).
  */
 const volunteerStaffInputBase = (eventDay: string, contactRequired: boolean) =>
   z
@@ -548,7 +548,7 @@ const volunteerStaffInputBase = (eventDay: string, contactRequired: boolean) =>
  * `keptAge` is what a row from before the date held: an empty date box on it keeps that age, so saving a phone number of a person
  * of sixteen never turns them into an adult with no guardian; `null` for a new entry and for a row that has a date.
  * `contactRequired` is a «Modifică» of a row the person typed on the public form (`PUBLIC`): its address and telephone number stay
- * required; a row the club typed may go without either (§NNN).
+ * required; a row the club typed may go without either (§865).
  */
 export function volunteerStaffInputSchemaFor(eventDay: string, keptAge: number | null = null, options: { contactRequired?: boolean } = {}) {
   const basis: AgeBasis = { eventDay, kept: keptAge };

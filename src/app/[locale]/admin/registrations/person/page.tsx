@@ -368,7 +368,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                       {/* The role given, or «De repartizat» (§761), then the roles the person offered for. */}
                       {(locale === "en" ? offer.roleNameEn : offer.roleNameRo) ?? t("volunteers.unassigned.title")} ·{" "}
                       {t("volunteers.person.choicesLine", { roles: (locale === "en" ? offer.chosenRolesEn : offer.chosenRolesRo).join(", ") || "—" })} · {t(`volunteers.states.${offer.state}`)} · {t(`volunteers.sources.${offer.source}`)} · {offer.name}
-                      {/* The address and the telephone number as stored; one the club typed without is simply absent (§NNN). */}
+                      {/* The address and the telephone number as stored; one the club typed without is simply absent (§865). */}
                       {offer.deliveryEmail ? ` · ${offer.deliveryEmail}` : ""}
                       {offer.phone ? ` · ${offer.phone}` : ""}
                       {offer.message ? ` · ${offer.message}` : ""}
