@@ -2,7 +2,8 @@
 
 **Decided by the owner, 2026-10-26.** Race-day equipment, not platform code: nothing here runs on
 Vercel or touches the site. The photos end up on a laptop; publishing them is the gallery's
-ordinary upload.
+ordinary upload. The race-day livestream's sound is its own page,
+[`docs/LIVESTREAM-AUDIO.md`](./LIVESTREAM-AUDIO.md).
 
 ## Goal
 
