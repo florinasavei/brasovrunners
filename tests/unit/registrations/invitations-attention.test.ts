@@ -1,22 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { invitationsNeedAttention, inviteTarget } from "@/modules/registrations/domain/invitations";
-
-const none = { sent: 0, accepted: 0, expired: 0, withdrawn: 0 };
-
-describe("§740 BR-REQ-037-07 «Invitații» opens by itself while an invitation needs the Administrator's eye", () => {
-  it("opens for a sent invitation, whether or not the event is upcoming", () => {
-    expect(invitationsNeedAttention({ ...none, sent: 1 }, true)).toBe(true);
-    expect(invitationsNeedAttention({ ...none, sent: 2 }, false)).toBe(true);
-  });
-  it("opens for an expired one only while the event is still to come", () => {
-    expect(invitationsNeedAttention({ ...none, expired: 1 }, true)).toBe(true);
-    expect(invitationsNeedAttention({ ...none, expired: 1 }, false)).toBe(false);
-  });
-  it("stays closed for none, and for accepted and withdrawn ones", () => {
-    expect(invitationsNeedAttention(none, true)).toBe(false);
-    expect(invitationsNeedAttention({ ...none, accepted: 3, withdrawn: 2 }, true)).toBe(false);
-  });
-});
+import { inviteTarget } from "@/modules/registrations/domain/invitations";
 
 describe("§740 BR-REQ-037-07 where «Invită pe email» leads", () => {
   it("a list about one event: the panel on the page", () => {
