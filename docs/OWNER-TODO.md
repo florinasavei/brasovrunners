@@ -1,6 +1,6 @@
 # What the club still owes
 
-The club's own work rather than code, moved verbatim from `CLAUDE.md` on 2026-10-29 (`DECISIONS.md` §NNN): `CLAUDE.md`
+The club's own work rather than code, moved verbatim from `CLAUDE.md` on 2026-10-29 (`DECISIONS.md` §869): `CLAUDE.md`
 loads into every AI session, and this list was two fifths of it. `/admin/tasks` reads the same items from the live
 system and is the authority; this file is the summary with its history.
 

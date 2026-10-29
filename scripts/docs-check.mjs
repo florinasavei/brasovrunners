@@ -478,7 +478,7 @@ async function checkReleaseEntries(specs) {
 }
 
 /**
- * What every AI session reads first stays short (§NNN; the owner, 2026-10-28: «acest codebase trebuie să fie
+ * What every AI session reads first stays short (§869; the owner, 2026-10-28: «acest codebase trebuie să fie
  * super-vibecoder-friendly»). CLAUDE.md loads into every session and docs/VIBECODING.md is every implementer's first
  * page; between 2026-10-09 and 10-22 the second grew from 7 KB to 125 KB, one table cell at a time. The detail lives in
  * docs/WHERE-THINGS-LIVE.md, docs/OWNER-TODO.md and DECISIONS.md.

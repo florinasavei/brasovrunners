@@ -1,6 +1,6 @@
 # Where things live — the whole map
 
-Moved verbatim from `docs/VIBECODING.md` on 2026-10-29 (`DECISIONS.md` §NNN): that page is every AI agent's first read,
+Moved verbatim from `docs/VIBECODING.md` on 2026-10-29 (`DECISIONS.md` §869): that page is every AI agent's first read,
 and this table, each row with its why, had grown to four fifths of it. `docs/VIBECODING.md` keeps one line a row; read a
 row here when you change that thing.
 

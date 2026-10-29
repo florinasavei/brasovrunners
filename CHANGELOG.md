@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.94-2026-10-29
+
+- **A shorter first read for AI agents** — CLAUDE.md's to-do list moves to `docs/OWNER-TODO.md`, VIBECODING's map is one line a row with the whole map in `docs/WHERE-THINGS-LIVE.md`, and `docs:check` caps both (about 45 000 tokens a session down to about 9 000). §869.
 ## BR-V3.93-2026-10-29
 
 - **Releases fail fast with the cause** — a failed migration prints Neon's real error and what to do; ship checks qa's migration itself instead of waiting ninety minutes; the scheduled jobs warn at 85 % of a Neon quota; the batch merge stops instead of losing a branch's words or keeping a test twice. §868.
