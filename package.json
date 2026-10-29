@@ -9,7 +9,7 @@
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/wait-for-migration.mjs && node scripts/sync-flags.mjs && next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint --cache --cache-location node_modules/.cache/eslint/",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",

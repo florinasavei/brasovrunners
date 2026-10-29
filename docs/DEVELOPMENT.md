@@ -106,7 +106,7 @@ yarn db:sizes            the database's size, the eight largest tables, 30-day g
 yarn test:e2e:ui         the same, in Playwright's UI mode
 yarn test:e2e:dev        every backoffice and public route against `next dev` (E2E_DEV=1; port 4784, or a running `yarn dev` via E2E_PORT); minutes; not on the docs-check CI a pull request waits on — `.github/workflows/e2e-dev-nightly.yml` runs it once a night at 01:37 UTC on `qa` instead (§370, §426)
 yarn typecheck           tsc --noEmit
-yarn lint                ESLint
+yarn lint                ESLint, with its cache in node_modules/.cache/eslint/ (CI starts without one)
 yarn docs:check          documentation consistency
 yarn secrets:check       refuse a commit carrying a provider credential (the repository is public)
 yarn migrations:check    a migration expands or contracts, never both (AGENTS.md §7.6)
@@ -132,7 +132,11 @@ yarn calendar:preview    «Salvează ca imagine» drawn without a server: five s
 `yarn check` is the single gate, and CI runs it (its two halves on five runners) on every pull request. The pre-commit
 hook runs its static half and only the tests that import a staged file (`vitest related`) — the owner, 2026-10-27: ten
 minutes of tests on every commit was too much; the whole suite still blocks the merge. Since §867 the hook runs those tests
-in the `yarn test:fast` categories only (§ Test categories). When a step is added to CI that a developer can run locally, it belongs inside `check`.
+in the `yarn test:fast` categories only (§ Test categories). Since §NNN it runs only the tests that import a staged file
+**directly** (`node scripts/test-categories.mjs direct <files…>`): `vitest related` followed every import and picked 299
+files, six minutes, for a three-function module; the direct ones took four seconds. And `yarn lint` keeps ESLint's cache in
+`node_modules/.cache/eslint/` (84 s cold, 5 s warm; no rule reads types, so a file is re-linted only when it changes);
+`yarn typecheck` was already incremental (`tsconfig.tsbuildinfo`, 70 s cold, 9 s warm). When a step is added to CI that a developer can run locally, it belongs inside `check`.
 
 **A hook forgets git's own environment first (§553).** git exports `GIT_DIR` and `GIT_INDEX_FILE`
 into a hook, so everything `yarn check` starts inherits them: on 2026-09-28 a test's throwaway

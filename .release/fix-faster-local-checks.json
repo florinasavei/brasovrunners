@@ -1,0 +1,14 @@
+{
+  "branch": "fix/faster-local-checks",
+  "decisionsTitle": "The pre-commit hook runs the tests that import a staged file directly, and ESLint keeps a cache",
+  "decisionsSection": "**The owner, 2026-10-29**, asked to take all three of the audit's speed findings («toate!»), after «vreau să pot livra mai repede și mai cu încredere».\n\n**Decision.**\n\n- **Direct importers, not `vitest related`.** The hook ran `vitest related`, which follows every import transitively: a change to `src/modules/weather/words.ts`, three functions, selected 299 test files in the fast categories and took six minutes. It now runs `node scripts/test-categories.mjs direct <staged files>`: a staged test is itself; `src/x/y.ts(x)` is every test naming `@/x/y` (`src/x/index.ts`: `@/x`); a test helper or a script is every test naming its path; a catalogue is its own guards (`tests/unit/i18n`) — always in the `test:fast` categories, «trust» among them. The same change now runs one file in four seconds. What a change reaches further is CI's: every pull request runs every test. Scripts are now among the staged files the hook reads.\n- **ESLint's cache.** `yarn lint` keeps it in `node_modules/.cache/eslint/`: 84 s cold, 5 s warm. No rule of the configuration reads types, so a file whose own text did not change cannot change its verdict. CI starts without a cache, as before.\n- **Typecheck unchanged.** It was already incremental (`tsconfig.tsbuildinfo`, ignored by git): 70 s cold, 9 s warm.\n\n**Measured and not done.** The e2e shards: Playwright already shards by test (`fullyParallel`), and the slowest of twelve took 13.5 minutes against a median of 9.7. Balancing by duration needs a splitter of our own fed by recorded times, with 28 files in serial mode that must stay together — about three minutes a pull request, for a fragile part; not worth it now.",
+  "changelogLine": "- **A faster commit** — the pre-commit hook runs only the tests that import a staged file directly (one file and four seconds where `vitest related` took 299 files and six minutes), and `yarn lint` keeps ESLint's cache (84 s → 5 s). CI still runs everything. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-090-02",
+      "text": "Given staged files, the pre-commit hook runs `node scripts/test-categories.mjs direct` on them: the staged tests, the tests naming a staged `src/` module as `@/…`, a staged helper's or script's path, and for a catalogue its own guards, in the `test:fast` categories; CI's `yarn test` runs every file. Verification: unit `tests/unit/scripts/test-categories.test.ts` (2026-10-29, `DECISIONS.md` §NNN)."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "a faster commit: direct-importer tests in the hook, ESLint's cache"
+}
