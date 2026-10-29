@@ -1,8 +1,8 @@
 # Vibecoding this repo — the one page to read before asking an AI to change anything
 
-<!-- PROJECT_BASELINE: BR-V3.88-2026-10-28 -->
+<!-- PROJECT_BASELINE: BR-V3.89-2026-10-29 -->
 
-**Baseline `BR-V3.88-2026-10-28`**
+**Baseline `BR-V3.89-2026-10-29`**
 
 The owner's word for how this platform is built: an AI agent writes, the owner reads and
 merges. This page is the short version of everything an agent trips over. `CLAUDE.md` is the
