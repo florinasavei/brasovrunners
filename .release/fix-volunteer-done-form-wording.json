@@ -1,0 +1,7 @@
+{
+  "branch": "fix/volunteer-done-form-wording",
+  "decisionsTitle": "The volunteer's thank-you screen says «formularul», not «oferta»",
+  "decisionsSection": "**The owner, 2026-10-29, with a screenshot of the thank-you screen after «Vreau să fiu voluntar»:** \"«oferta» sună ciudat, zi mai bine «am primit formularul de înscriere ca voluntar»\".\n\n**Decision.** The volunteer form's own words name what the person sent as their form: «Am primit formularul tău de înscriere ca voluntar la {event}, {date}.», «dacă ai mai trimis formularul pentru acest eveniment», and the form's three refusals («altfel nu putem păstra formularul tău», «formularul tău nu a fost păstrat»); in English «your volunteer sign-up form» and «your form». Only the form and its thank-you screen change; the receipt email, its subject and the privacy notice keep their words.",
+  "changelogLine": "- **«Am primit formularul tău de înscriere ca voluntar»** — the volunteer's thank-you screen and the form's refusals say «formularul», not «oferta». §NNN.",
+  "batchLine": "the volunteer's thank-you screen says «formularul», not «oferta»"
+}
