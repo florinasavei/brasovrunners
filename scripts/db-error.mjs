@@ -1,4 +1,4 @@
-// A database error as a person can act on it (§NNN): every level of its `.cause` chain with its code, then what to do
+// A database error as a person can act on it (§868): every level of its `.cause` chain with its code, then what to do
 // for the causes we have met. Drizzle wraps the driver's error, so its own message is only «Failed query: …» — on
 // 2026-10-28 that hid Neon's «53000 Your account or project has exceeded the quota» behind the first query of
 // every migration run, and the cause was found in Neon's console instead.

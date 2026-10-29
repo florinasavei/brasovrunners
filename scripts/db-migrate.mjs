@@ -124,7 +124,7 @@ async function main() {
 
 main().catch((error) => {
   // Non-zero, so the caller can block the deployment (§7.6).
-  // The whole cause chain and what to do (§NNN): drizzle's own message is only «Failed query: …».
+  // The whole cause chain and what to do (§868): drizzle's own message is only «Failed query: …».
   console.error(`\n  Migration failed: ${describeError(error).replace(/\n/g, "\n  ")}\n`);
   process.exit(1);
 });

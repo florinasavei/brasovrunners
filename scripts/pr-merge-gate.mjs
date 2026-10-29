@@ -8,7 +8,7 @@
  */
 
 /**
- * The house's own checks: always required beside whatever GitHub lists (Vercel is in neither). Not «migrate» (§NNN):
+ * The house's own checks: always required beside whatever GitHub lists (Vercel is in neither). Not «migrate» (§868):
  * migrate.yml runs on a push that touched a migration, so it is no check of a head that did not — on 2026-10-28 the
  * gate waited ninety minutes for one that could never come. `scripts/ship.mjs` checks qa's migration run itself.
  */

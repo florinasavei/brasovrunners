@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V3.92-2026-10-29 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V3.93-2026-10-29 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline: one release at a time;
  *   2. waits for the batch PR's checks to settle (§426), stops unless green, merges it into `qa`
@@ -271,7 +271,7 @@ if (qaRun.status === "timeout") stop(`the qa run ${qaRun.run.databaseId} was sti
 console.log(`qa run ${qaRun.run.databaseId}: ${qaRun.conclusion}`);
 if (qaRun.conclusion !== "success") stop(`the release is not opened: the qa run ${qaRun.run.databaseId} ended ${qaRun.conclusion || "without a conclusion"}`);
 
-// qa's own migration (§NNN): a release that carries one goes to main only once it is applied on qa — read from the
+// qa's own migration (§868): a release that carries one goes to main only once it is applied on qa — read from the
 // migrate.yml run of the newest qa commit that touched a migration, and stopped on at once when it failed. Until
 // 2026-10-28 the release PR's merge gate waited ninety minutes for a «migrate» check its head could not have.
 clock.step("qa migration");

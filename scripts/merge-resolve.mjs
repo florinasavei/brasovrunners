@@ -108,7 +108,7 @@ export function mergeImportLines(ours, theirs) {
  * marker would remain.
  */
 /**
- * The `it(…)` / `test(…)` titles a file names more than once (§NNN). The union keeps both sides' lines, so when two
+ * The `it(…)` / `test(…)` titles a file names more than once (§868). The union keeps both sides' lines, so when two
  * branches each edited the same test it keeps the test twice — vitest runs both and says nothing, and one of them
  * asserts the old behaviour (four repairs by hand in October 2026). A title repeated after a union stops the merge.
  */

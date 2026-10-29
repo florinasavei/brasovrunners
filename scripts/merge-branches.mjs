@@ -91,7 +91,7 @@ function resolveAll(paths) {
       if (ours === null || theirs === null) stop(`${file}: one side deleted it — resolve by hand`);
       const { merged, conflicts } = mergeJson3(base ? JSON.parse(base) : {}, JSON.parse(ours), JSON.parse(theirs));
       writeJson(file, merged, eolOf(ours));
-      // Both sides changed one key (§NNN): «theirs wins» lost a branch's words twice in October 2026 (the staff guide is
+      // Both sides changed one key (§868): «theirs wins» lost a branch's words twice in October 2026 (the staff guide is
       // one 75 KB list), and nothing failed. The file holds theirs at those keys; the person brings ours' change back.
       if (conflicts.length) {
         stop(

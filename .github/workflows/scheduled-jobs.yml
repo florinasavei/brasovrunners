@@ -82,7 +82,7 @@ jobs:
             -H "Authorization: Bearer $JOB_SECRET"
 
       - name: Neon budget
-        # A warning before Neon's hard stop (§NNN). On 2026-10-28 QA reached its monthly compute quota and Neon suspended it;
+        # A warning before Neon's hard stop (§868). On 2026-10-28 QA reached its monthly compute quota and Neon suspended it;
         # nothing had said so, and the first sign was a failed migration. The deep health answer already reads the
         # month's budget (§447): red (85 % by default) or a database that does not answer turns this run red, and
         # GitHub emails it; amber (60 %) is a warning in the run. Four deep calls a day wake the database four times.

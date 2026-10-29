@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { causesOf, describeError, remedyOf } from "../../../scripts/db-error.mjs";
 
 /**
- * BR-REQ-090-02 — a failed migration names its cause (§NNN). On 2026-10-28 three QA migration runs printed only drizzle's
+ * BR-REQ-090-02 — a failed migration names its cause (§868). On 2026-10-28 three QA migration runs printed only drizzle's
  * «Failed query: select to_regclass('drizzle.__drizzle_migrations') is not null as present»; the cause, Neon's quota
  * suspension, was one `.cause` deeper.
  */
 const wrapped = (cause: object) => Object.assign(new Error("Failed query: select to_regclass('drizzle.__drizzle_migrations') is not null as present\nparams: "), { cause });
 
-describe("BR-REQ-090-02 a database error names its cause and what to do (§NNN)", () => {
+describe("BR-REQ-090-02 a database error names its cause and what to do (§868)", () => {
   it("prints every level of the cause chain with its code", () => {
     const error = wrapped({ code: "53000", message: "Your account or project has exceeded the compute time quota. Upgrade your plan to increase limits." });
     const text = describeError(error);

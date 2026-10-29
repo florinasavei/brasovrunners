@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.92-2026-10-29`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.93-2026-10-29`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -694,7 +694,7 @@ are the run's to open, merge and approve.
 ## Neon suspended a project
 
 What it looks like: every query refused with `53000 Your account or project has exceeded the quota`; a migration run
-that stops with it (printed by `scripts/db-error.mjs` since §NNN, with what to do); the environment's job endpoints
+that stops with it (printed by `scripts/db-error.mjs` since §868, with what to do); the environment's job endpoints
 answering 500; `scheduled-jobs.yml`'s «Neon budget» step red. It happened to QA on 2026-10-28: 30 CU-hours used, and
 Neon suspends a project at its monthly compute quota until the next period (`SETUP.md` §40).
 

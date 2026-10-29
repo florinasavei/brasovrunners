@@ -76,7 +76,7 @@ describe("§703 ship: the merge gate", () => {
     expect(judgeMergeGate({ mergeStateStatus: "CLEAN", statusCheckRollup: partial }, ["docs-check"]).mergeable).toBe(true);
   });
 
-  it("does not wait for a «migrate» check on a head that touched no migration (release PR #581, 2026-10-28, §NNN)", () => {
+  it("does not wait for a «migrate» check on a head that touched no migration (release PR #581, 2026-10-28, §868)", () => {
     const rollup = [run("docs-check", "SUCCESS"), run("tested-tree", "SUCCESS"), run("e2e", "SUCCESS"), context("Vercel – brasov-runners-qa", "FAILURE")];
     expect(judgeMergeGate({ mergeStateStatus: "UNSTABLE", statusCheckRollup: rollup }, ["docs-check", "e2e", "tested-tree"]).mergeable).toBe(true);
   });
