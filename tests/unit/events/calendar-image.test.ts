@@ -3,7 +3,7 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
 import ro from "../../../messages/ro.json";
 import type { PublicEvent } from "@/modules/events/repository";
-import { type CalendarImageData, type CalendarImageEntry, LEGEND_MAX } from "@/modules/events/domain/calendar-image";
+import { type CalendarImageData, type CalendarImageEntry, LEGEND_MAX, periodHasPlace } from "@/modules/events/domain/calendar-image";
 import { type CalendarImageFormat, calendarImageRows } from "@/modules/events/domain/calendar-image-rows";
 import { distanceWords } from "@/modules/events/domain/distance";
 import { elevationWords } from "@/modules/events/domain/elevation";
@@ -128,6 +128,17 @@ describe("a date's details (the owner, 2026-10-27: «short location … and also
     expect(detailWords({ place: null, distance: "8 km", elevation: null }, all)).toEqual(["8 km"]);
     expect(detailWords({ place: "", distance: null, elevation: null }, all)).toEqual([]);
     expect(detailWords(entry, { place: false, distance: false, elevation: false })).toEqual([]);
+  });
+
+  // The owner, 2026-10-28: «this first check for "Locul" does not change anything!!» — no date had a short place yet (§863).
+  it("says whether «Locul» has anything to draw in the month or the week, so the dialog can grey its tick", () => {
+    const entry = (day: number, place: string | null): CalendarImageEntry => ({ day, time: "19:00", title: "Happy Monday", tone: "weekly", type: "GROUP_RUN", surface: null, special: false, cancelled: false, place, distance: null, elevation: null });
+    expect(periodHasPlace([], null)).toBe(false);
+    expect(periodHasPlace([entry(5, null), entry(12, " ")], null)).toBe(false);
+    expect(periodHasPlace([entry(5, null), entry(12, "Tâmpa")], null)).toBe(true);
+    // A week counts its own days only.
+    expect(periodHasPlace([entry(5, null), entry(12, "Tâmpa")], [5, 6, 7, 8, 9, 10, 11])).toBe(false);
+    expect(periodHasPlace([entry(5, null), entry(12, "Tâmpa")], [12, 13, 14, 15, 16, 17, 18])).toBe(true);
   });
 });
 
