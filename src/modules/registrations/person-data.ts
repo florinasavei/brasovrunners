@@ -180,8 +180,13 @@ export type PersonData = {
     state: (typeof eventVolunteers.$inferSelect)["state"];
     source: (typeof eventVolunteers.$inferSelect)["source"];
     name: string;
-    deliveryEmail: string;
-    phone: string;
+    /**
+     * The address and the telephone number as stored. An offer found here is found by its address, so it has one; the telephone may
+     * be null — a row the club typed without one (§865). A row typed with no address at all is no address's, and this page, which
+     * searches by address, never lists it: it is deleted from the event's card, or by the thirty-day sweep, like every offer.
+     */
+    deliveryEmail: string | null;
+    phone: string | null;
     message: string | null;
     note: string | null;
     /** What the person said about themselves (§765), every answer as stored: nulls and false for a row from before. */

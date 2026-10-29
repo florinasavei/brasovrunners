@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.88-2026-10-28`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.93-2026-10-29`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -690,6 +690,25 @@ The run's **Summary** says where, in words:
 
 Never push to `qa` or `main` by hand from the phone: the release PR and the production migration
 are the run's to open, merge and approve.
+
+## Neon suspended a project
+
+What it looks like: every query refused with `53000 Your account or project has exceeded the quota`; a migration run
+that stops with it (printed by `scripts/db-error.mjs` since §868, with what to do); the environment's job endpoints
+answering 500; `scheduled-jobs.yml`'s «Neon budget» step red. It happened to QA on 2026-10-28: 30 CU-hours used, and
+Neon suspends a project at its monthly compute quota until the next period (`SETUP.md` §40).
+
+1. **Confirm it.** `GET https://console.neon.tech/api/v2/projects/<project id>` with the environment's `NEON_API_KEY`
+   (`.env.local` for QA, the Vercel project for production): `settings.quota.compute_time_seconds` against
+   `compute_time_seconds`. Equal or above — that is it.
+2. **Raise the quota** — only the project concerned: `PATCH` the same address with
+   `{"project":{"settings":{"quota":{"compute_time_seconds":<new seconds>}}}}` (3 600 a CU-hour). The owner decides the
+   number; QA has had 216 000 (60 CU-hours) since 2026-10-28.
+3. **Lift the suspension.** Raising the quota alone does not: `POST …/endpoints/<endpoint id>/start` keeps answering
+   «quota exceeded». Set the quota to `0` (no limit), start the endpoint, then set the quota back to the number of
+   step 2 at once — Neon's own documentation names this reset (consumption limits).
+4. **Finish what failed**: re-run the failed `migrate.yml` run (`gh run rerun <id> --failed`), redeploy the
+   environment's newest Vercel deployment if its build gave up waiting, and tick `ship` again if a release stopped.
 
 ## The domain stops answering
 

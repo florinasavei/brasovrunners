@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V3.88-2026-10-28 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V3.93-2026-10-29 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline: one release at a time;
  *   2. waits for the batch PR's checks to settle (§426), stops unless green, merges it into `qa`
@@ -226,6 +226,12 @@ function releaseChangesMigrations() {
   return diff.stdout.trim().length > 0;
 }
 
+/** The newest qa commit that touched a migration: the push migrate.yml ran on for qa. Null when git cannot say. */
+function qaMigrationCommit() {
+  const log = spawnSync("git", ["log", "-1", "--format=%H", "origin/qa", "--", "src/db/migrations"], { encoding: "utf8" });
+  return log.status === 0 && log.stdout.trim() ? log.stdout.trim() : null;
+}
+
 const BASE = productionUrl();
 const REPO = gh("repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner");
 
@@ -264,6 +270,35 @@ if (qaRun.status === "missing") stop(`no docs-check run appeared on qa for ${bat
 if (qaRun.status === "timeout") stop(`the qa run ${qaRun.run.databaseId} was still ${qaRun.run.status} after ninety minutes`);
 console.log(`qa run ${qaRun.run.databaseId}: ${qaRun.conclusion}`);
 if (qaRun.conclusion !== "success") stop(`the release is not opened: the qa run ${qaRun.run.databaseId} ended ${qaRun.conclusion || "without a conclusion"}`);
+
+// qa's own migration (§868): a release that carries one goes to main only once it is applied on qa — read from the
+// migrate.yml run of the newest qa commit that touched a migration, and stopped on at once when it failed. Until
+// 2026-10-28 the release PR's merge gate waited ninety minutes for a «migrate» check its head could not have.
+clock.step("qa migration");
+if (releaseChangesMigrations() === false) {
+  console.log("== no migration in this release: nothing to wait for on qa");
+} else {
+  const touched = qaMigrationCommit();
+  console.log(`== qa's migration run${touched ? ` on ${touched.slice(0, 8)}` : ""}`);
+  if (!touched) stop("git could not say which qa commit carries the migration: run «migrate» for qa from Actions, then tick ship again");
+  const qaMigration = await waitForRun(() => pushRunOf("migrate.yml", touched), {
+    sleep,
+    every: 15,
+    polls: 120, // thirty minutes
+    maxMissing: 12, // three minutes without the run appearing
+    onRead: (r, i) => {
+      if (i % 8 === 0) console.log(`  qa migration run ${r.databaseId}: ${String(r.status).toLowerCase()}`);
+    },
+  });
+  if (qaMigration.status === "missing") stop(`no migrate.yml run for qa on ${touched.slice(0, 8)}: run «migrate» for qa from Actions, then tick ship again`);
+  if (qaMigration.status === "timeout") stop(`qa's migration run ${qaMigration.run.databaseId} was still ${qaMigration.run.status} after thirty minutes`);
+  console.log(`qa migration run ${qaMigration.run.databaseId}: ${qaMigration.conclusion}`);
+  if (qaMigration.conclusion !== "success") {
+    stop(
+      `the release is not opened: qa's migration run ${qaMigration.run.databaseId} ended ${qaMigration.conclusion || "without a conclusion"} — its log names the cause; fix it, re-run that run (gh run rerun ${qaMigration.run.databaseId} --failed), then tick ship again`,
+    );
+  }
+}
 
 clock.step("release PR");
 let release = ghMayFail("pr", "list", "--base", "main", "--head", "qa", "--json", "number", "-q", ".[0].number");
