@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.91-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.92-2026-10-29 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.91-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.92-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28134,3 +28134,30 @@ Baseline `BR-V3.90-2026-10-29`.
 **Answered, not built.** The owner asked the same morning for writing down, on race day, who finished and in what time: that is «Sosire» (§808), from «Clasament» on the race's editor.
 
 Baseline `BR-V3.91-2026-10-29`.
+
+## 867. Six test categories: run one, leave some out, never the rules that cannot be broken
+
+**The owner, 2026-10-28:** «vreau să categorisești testele și să putem ignora unele dintre ele» — the day a one-line commit's hook ran for sixteen minutes.
+
+**Decision.** Every vitest file is in exactly one of six categories, and each category is a Vitest project of the same name (`vitest.config.mts`, built from `tests/categories.mjs`):
+
+| Category | Holds | Files | CI time |
+| --- | --- | --- | --- |
+| `trust` | the rules CLAUDE.md says cannot be broken — places and the one allocator, approved legal texts, publication in both languages, test registrations, the public list, staff powers and server-side authorization, staff-only sign-in, email action links, `APP_BASE_URL`, the canonicalizer | 392 | 61 % |
+| `drawn` | pictures, PDFs, spreadsheets and QR codes the code draws | 36 | 8 % |
+| `pages` | a page, component or email rendered to HTML | 208 | 8 % |
+| `database` | the services against PGlite | 110 | 20 % |
+| `guards` | the repository's conventions read from disk, and its scripts | 72 | 2 % |
+| `logic` | pure functions | 336 | 2 % |
+
+`yarn test --project=<name>` runs one; `yarn test:skip <names…>` all but those; `yarn test:fast` the categories marked fast (trust, guards, logic); `yarn test:categories` lists them (`scripts/test-categories.mjs`). `yarn test` — what CI runs, in its four shards — still runs every file; nothing is left out there. «trust» is never left out anywhere: `test:skip trust` is refused, and `test:fast` and the pre-commit hook always run it. The hook now runs the staged files' related tests in the `test:fast` categories only; `database`, `pages` and `drawn` are CI's.
+
+**The classification.** Every file was read on 2026-10-28 by seven readers; a separate search mapped each rule of CLAUDE.md's table to the files that assert it (by requirement, by the module that implements it, by title); the 115 files the two disagreed on were each read by two more — one doubting the label, one imagining the rule broken — and kept in «trust» if either said so; a critic added ten guards nobody had listed. `tests/categories.json` holds the result. A file it does not list — a new test — takes the first category whose signals it shows (`signalsOf`): a requirement of the table or an asserted `FORBIDDEN`/`UNAUTHENTICATED` makes it «trust» first, so a new guard is never skippable by accident. «trust» is three fifths of the time because every server-side refusal of a role is a guard of «Authorization is asserted on the server».
+
+**Two facts measured on the way.** Under `extends: true` a project's `include` is added to the root's, so a root `include` would run every file in every project — the root has none, and a test holds that. Vitest joins several `--project=!x` with «or», so two of them exclude nothing; leaving categories out therefore names the ones kept.
+
+**Refused.** Vitest 4.1's test tags: `--tags-filter` is applied after each file is loaded (its documentation's performance note), so leaving a tag out saves nothing. A classification by signals alone: it agreed with the readers on 72 % of the files and missed 159 of the «trust» ones. A `test:skip` that could leave «trust» out. Leaving anything out of CI.
+
+**What it does not fix.** `vitest related` selects widely: a change to a three-function module (`src/modules/weather/words.ts`) selected 299 files in the fast categories alone, six minutes. The hook's remaining cost is that breadth, not the categories.
+
+Baseline `BR-V3.92-2026-10-29`.
