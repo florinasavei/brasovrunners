@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.88-2026-10-28 -->
+<!-- PROJECT_BASELINE: BR-V3.89-2026-10-29 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.88-2026-10-28`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.89-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28096,3 +28096,11 @@ Baseline `BR-V3.87-2026-10-28`.
 **Refused.** The long place's name in its stead: §859 refused cutting a short place out of the long one, and a name like «Sub Tâmpa, lângă Apeduct, Aleea Tiberiu Brediceanu, Brașov» does not fit a cell.
 
 Baseline `BR-V3.88-2026-10-28`.
+
+## 864. The volunteer's thank-you screen says «formularul», not «oferta»
+
+**The owner, 2026-10-29, with a screenshot of the thank-you screen after «Vreau să fiu voluntar»:** "«oferta» sună ciudat, zi mai bine «am primit formularul de înscriere ca voluntar»".
+
+**Decision.** The volunteer form's own words name what the person sent as their form: «Am primit formularul tău de înscriere ca voluntar la {event}, {date}.», «dacă ai mai trimis formularul pentru acest eveniment», and the form's three refusals («altfel nu putem păstra formularul tău», «formularul tău nu a fost păstrat»); in English «your volunteer sign-up form» and «your form». Only the form and its thank-you screen change; the receipt email, its subject and the privacy notice keep their words.
+
+Baseline `BR-V3.89-2026-10-29`.

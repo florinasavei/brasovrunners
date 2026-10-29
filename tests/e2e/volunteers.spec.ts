@@ -580,13 +580,13 @@ test.describe("§754 volunteers for a race", () => {
         await page2.waitForTimeout(1_200);
         await page2.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
         await expect(page2.getByTestId("volunteer-done")).toBeVisible({ timeout: 30_000 });
-        await expect(page2.getByTestId("volunteer-done")).toContainText("Am primit oferta ta");
+        await expect(page2.getByTestId("volunteer-done")).toContainText("Am primit formularul tău");
         // §800 the thank-you says what comes next, like the registration's «Aproape gata»: the first name, where the receipt comes, «Ce urmează». The lead's date reads inside the sentence: lower-case weekday, «la» before the hour.
         await expect(page2.getByTestId("volunteer-done-lead")).toContainText(/, [a-zăâîșț]+, \d{1,2} \S+ \d{4}, la \d{2}:\d{2}\.$/);
         const thanks = page2.getByTestId("volunteer-done");
         await expect(thanks.getByRole("heading", { level: 2 })).toHaveText(`Mulțumim, ${name.split(" ")[0]}!`);
         // One sentence, true whether or not this post queued the email: no hour and no «a plecat».
-        await expect(thanks.getByTestId("volunteer-done-email-line")).toContainText(/Emailul de primire vine la .+; dacă ai mai trimis oferta/);
+        await expect(thanks.getByTestId("volunteer-done-email-line")).toContainText(/Emailul de primire vine la .+; dacă ai mai trimis formularul/);
         await expect(thanks.getByTestId("volunteer-done-email-line")).not.toContainText(/pleacă|a plecat/);
         await expect(thanks.getByTestId("volunteer-done-next")).toContainText("Ce urmează");
         await expect(thanks.getByTestId("volunteer-done-email")).toHaveText(/^Primești emailul de primire/);
@@ -1495,7 +1495,7 @@ test.describe("§754 volunteers for a race", () => {
         // A person takes a moment: the form's timing check refuses a post within the second of its render.
         await guest.waitForTimeout(1_200);
         await guest.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
-        await expect(guest.getByTestId("volunteer-done")).toContainText("Am primit oferta ta", { timeout: 30_000 });
+        await expect(guest.getByTestId("volunteer-done")).toContainText("Am primit formularul tău", { timeout: 30_000 });
       }
       const give = async (name: string) => {
         await page.goto(`/ro/admin/events/${event.id}`);
@@ -1824,7 +1824,7 @@ test.describe("§754 volunteers for a race", () => {
         // A person takes a moment: the form's timing check refuses a post within the second of its render.
         await guest.waitForTimeout(1_200);
         await guest.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
-        await expect(guest.getByTestId("volunteer-done")).toContainText("Am primit oferta ta", { timeout: 30_000 });
+        await expect(guest.getByTestId("volunteer-done")).toContainText("Am primit formularul tău", { timeout: 30_000 });
       }
       await offer("Ana Popescu", ana, true);
       await offer("Ion Ionescu", ion, false);
@@ -1979,7 +1979,7 @@ test.describe("§754 volunteers for a race", () => {
       // A person takes a moment: the form's timing check refuses a post within the second of its render.
       await guest.waitForTimeout(1_200);
       await guest.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
-      await expect(guest.getByTestId("volunteer-done")).toContainText("Am primit oferta ta", { timeout: 30_000 });
+      await expect(guest.getByTestId("volunteer-done")).toContainText("Am primit formularul tău", { timeout: 30_000 });
 
       // --- The organizers see the offer as always; ticking again brings the button back ----------------------------
       await page.goto(`/ro/admin/events/${event.id}`);

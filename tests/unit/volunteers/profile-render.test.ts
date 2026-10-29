@@ -720,7 +720,7 @@ describe("§768 the form is the volunteers' own page's: the thank-you with its f
   it("says «am primit» in a banner with the flash toast's slot — and, where minors are taken, the same line about the parent for everybody", async () => {
     const page = await drawBox({ outcome: "done", minors: true });
     expect(page).toContain('data-testid="volunteer-done"');
-    expect(page).toContain("Am primit oferta ta");
+    expect(page).toContain("Am primit formularul tău");
     expect(page).toMatch(/data-testid="public-flash"[^>]*data-accepts="volunteerSent"|data-accepts="volunteerSent"[^>]*data-testid="public-flash"/);
     expect(page).toContain('data-testid="volunteer-done-guardian"');
     expect(page).toContain("părintele sau tutorele tău primește un email");
