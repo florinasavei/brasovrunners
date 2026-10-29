@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.93-2026-10-29
+
+- **Releases fail fast with the cause** — a failed migration prints Neon's real error and what to do; ship checks qa's migration itself instead of waiting ninety minutes; the scheduled jobs warn at 85 % of a Neon quota; the batch merge stops instead of losing a branch's words or keeping a test twice. §868.
 ## BR-V3.92-2026-10-29
 
 - **Six test categories** — `yarn test:categories`, `yarn test:fast` (trust, guards, logic), `yarn test:skip <names…>`, each category a Vitest project; «trust», the rules that cannot be broken, is never left out; the pre-commit hook runs the fast categories only; CI runs everything. §867.

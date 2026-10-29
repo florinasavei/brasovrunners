@@ -80,3 +80,34 @@ jobs:
           curl --fail --silent --show-error --max-time 60 \
             -X POST "$BASE_URL/api/internal/jobs/registration-maintenance" \
             -H "Authorization: Bearer $JOB_SECRET"
+
+      - name: Neon budget
+        # A warning before Neon's hard stop (§868). On 2026-10-28 QA reached its monthly compute quota and Neon suspended it;
+        # nothing had said so, and the first sign was a failed migration. The deep health answer already reads the
+        # month's budget (§447): red (85 % by default) or a database that does not answer turns this run red, and
+        # GitHub emails it; amber (60 %) is a warning in the run. Four deep calls a day wake the database four times.
+        if: always()
+        env:
+          BASE_URL: ${{ secrets[matrix.base_url_secret] }}
+        run: |
+          if [ -z "$BASE_URL" ]; then
+            echo "::notice::${{ matrix.name }} is not configured; skipping"
+            exit 0
+          fi
+          body=$(curl --silent --show-error --max-time 60 "$BASE_URL/api/health?deep=1" || true)
+          database=$(echo "$body" | jq -r '.database // "no answer"' 2> /dev/null || echo "no answer")
+          level=$(echo "$body" | jq -r '.budget.level // "unknown"' 2> /dev/null || echo "unknown")
+          percent=$(echo "$body" | jq -r '.budget.meteredPercent // "?"' 2> /dev/null || echo "?")
+          echo "${{ matrix.name }}: database $database, Neon budget $level ($percent % of the month's compute quota)"
+          help="raise the quota in Neon (SETUP.md §40); a project already suspended needs the quota set to 0, the compute started and the quota set back (docs/RUNBOOKS.md § Neon suspended a project)"
+          if [ "$database" != "ok" ]; then
+            echo "::error::${{ matrix.name }}'s database does not answer ($database) — if Neon suspended the project for its quota, $help"
+            exit 1
+          fi
+          if [ "$level" = "red" ]; then
+            echo "::error::${{ matrix.name }} has used $percent % of its monthly Neon compute quota — $help, before it stops"
+            exit 1
+          fi
+          if [ "$level" = "amber" ]; then
+            echo "::warning::${{ matrix.name }} has used $percent % of its monthly Neon compute quota"
+          fi

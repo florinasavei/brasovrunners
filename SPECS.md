@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.92-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.93-2026-10-29 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.92-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.93-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -3530,6 +3530,7 @@ When nothing needs changing, the page says "nothing to change" and no audit row 
 23. Given `yarn test:clock`, when it runs the unit and database suite with the real clock moved to +1 month, +1 year and +10 years (`TEST_CLOCK_AT`; every Node process of the run on one offset, a written date left as written), then no test fails that passes under `yarn test`: a test whose path reads the real clock calls it at the fixture's own instant (`tests/helpers/clock.ts`). Verification: unit `scripts/test-clock.test.ts`; the three runs (2026-10-11, `DECISIONS.md` §712).
 24. Given `.githooks/pre-commit` and `.github/workflows/docs-check.yml`, then both run `yarn check` and nothing else — the hook as one command, CI as its two halves `yarn check:static` (the job `checks`, with the build) and `yarn test --shard=i/4` (four `unit` jobs, the union of the shards exactly the suite), their joint verdict reported as the required check `docs-check`, red when any of them is red and green without running when `tested-tree` found the tree passed; `yarn test` starts every `createTestDatabase()` from one migrated PGlite snapshot per run, named by the hash of the migrations, so a changed migration is never served a stale database, and the migration tests under `tests/integration/db/` still apply the SQL themselves; `maxWorkers` is the machine's cores, twelve at most; the e2e suite runs on twelve shards, both projects, their union the whole suite (2026-10-21, `DECISIONS.md` §838).
 25. Given `yarn test`, every vitest file is in exactly one of the six categories of `tests/categories.mjs` (trust, drawn, pages, database, guards, logic), each a Vitest project under `extends: true` with no root `include`; `yarn test:skip` and `yarn test:fast` leave out only skippable categories and refuse «trust»; the pre-commit hook runs the staged files' related tests in the `test:fast` categories; CI's `yarn test` names no category and runs every file. Verification: unit `tests/unit/scripts/test-categories.test.ts` (2026-10-29, `DECISIONS.md` §867).
+26. Given a failed database step of a migration, then the log prints every level of the error's cause chain with its code and, for a quota suspension (`53000`), a wrong password or an unreachable host, what to do; given a release carrying a migration, then `yarn ship` waits for qa's migrate.yml run of the newest commit that touched a migration and stops before the release PR when it failed, and the merge gate requires no «migrate» check; given two branches that changed one catalogue key, or a test file whose union names a test twice, then `yarn batch:merge` stops and names them. Verification: unit `tests/unit/scripts/db-error.test.ts`, `tests/unit/scripts/pr-merge-gate.test.ts`, `tests/unit/scripts/merge-resolve.test.ts` (2026-10-29, `DECISIONS.md` §868).
 
 **Verification:** repository settings audit; CI configuration; `.githooks/pre-commit` and `.github/workflows/docs-check.yml` compared
 
