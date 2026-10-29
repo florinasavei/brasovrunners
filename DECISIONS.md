@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.90-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.91-2026-10-29 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.90-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.91-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28124,3 +28124,13 @@ Baseline `BR-V3.89-2026-10-29`.
 Amends §754, §761 and §837.
 
 Baseline `BR-V3.90-2026-10-29`.
+
+## 866. «Kituri de pregătit» under the registrations list's counts
+
+**The owner, 2026-10-29, with a screenshot of «Cine s-a înscris» (176 in all, 151 confirmed, 9 awaiting the declaration, 7 waiting, 3 special guests):** "la numărătoare trebuie să am o informație despre câte kit-uri trebuie să pregătim". Asked who counts, the owner chose everyone holding a place, and the T-shirts by size.
+
+**Decision.** With one event chosen, the strip «Cine s-a înscris» carries «Kituri de pregătit: N» under its pills: the event's real registrations that hold a place now (`PLACE_HOLDING_STATUSES` — confirmed, awaiting the address or the declaration, holding a waiting-list offer; the special guests among them, who take a kit too) plus its invitations still open before their deadline. A line says which, and that the waiting list is not in it. When the event gives a T-shirt («Kit de participare»), one more line counts the sizes in the form's order, then «fără tricou», then the open invitations as «mărime încă necunoscută». Test rows, cancelled and expired rows and answered, withdrawn or lapsed invitations are never in it. `countKits` is two grouped reads and the event's tick, blind to every filter but the event — it says what to pack, not what the list shows (`tests/integration/registrations/kit-count.test.ts`).
+
+**Answered, not built.** The owner asked the same morning for writing down, on race day, who finished and in what time: that is «Sosire» (§808), from «Clasament» on the race's editor.
+
+Baseline `BR-V3.91-2026-10-29`.
