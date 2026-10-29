@@ -24,7 +24,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import process from "node:process";
-import { conflictKind, dedupeJsonKeys, dependenciesChanged, mergeJson3, rebuildJournal, relinkSnapshots, shippedJournalProblems, unionConflicts } from "./merge-resolve.mjs";
+import { conflictKind, dedupeJsonKeys, dependenciesChanged, duplicateTestTitles, mergeJson3, rebuildJournal, relinkSnapshots, shippedJournalProblems, unionConflicts } from "./merge-resolve.mjs";
 
 const argv = process.argv.slice(2);
 const PROBE = !argv.includes("--no-probe");
@@ -91,10 +91,21 @@ function resolveAll(paths) {
       if (ours === null || theirs === null) stop(`${file}: one side deleted it — resolve by hand`);
       const { merged, conflicts } = mergeJson3(base ? JSON.parse(base) : {}, JSON.parse(ours), JSON.parse(theirs));
       writeJson(file, merged, eolOf(ours));
-      console.log(`  ${file}: merged by key${conflicts.length ? `; theirs won at ${conflicts.join(", ")}` : ""}`);
+      // Both sides changed one key (§NNN): «theirs wins» lost a branch's words twice in October 2026 (the staff guide is
+      // one 75 KB list), and nothing failed. The file holds theirs at those keys; the person brings ours' change back.
+      if (conflicts.length) {
+        stop(
+          `${file}: both branches changed ${conflicts.join(", ")} — the file now holds theirs there; bring ours' change back from \`git show :2:${file}\`, \`git add ${file}\`, and run this again`,
+        );
+      }
+      console.log(`  ${file}: merged by key`);
     } else {
       const { text, blocks } = unionConflicts(current);
       writeFileSync(file, text);
+      const twice = duplicateTestTitles(text);
+      if (twice.length) {
+        stop(`${file}: the union keeps ${twice.length} test(s) twice — ${twice.map((title) => `«${title}»`).join(", ")}: keep the newer of each, \`git add ${file}\`, and run this again`);
+      }
       console.log(`  ${file}: ${blocks} block(s) resolved as the union`);
     }
     git("add", "--", file);

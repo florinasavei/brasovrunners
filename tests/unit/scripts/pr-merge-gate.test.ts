@@ -49,7 +49,7 @@ describe("§703 ship: the merge gate", () => {
   });
 
   it("falls back to the house's checks when GitHub's list cannot be read, and never requires a Vercel status", () => {
-    expect(HOUSE_CHECKS).toEqual(["tested-tree", "docs-check", "e2e", "migrate"]);
+    expect(HOUSE_CHECKS).toEqual(["tested-tree", "docs-check", "e2e"]);
     const rollup = [run("tested-tree", "SUCCESS"), run("docs-check", "SUCCESS"), run("migrate", "SUCCESS"), run("e2e", null, "IN_PROGRESS"), context("Vercel – x", "PENDING")];
     for (const unreadable of [null, undefined, []]) {
       const judged = judgeMergeGate({ mergeStateStatus: "UNSTABLE", statusCheckRollup: rollup }, unreadable as string[] | null);
@@ -72,8 +72,13 @@ describe("§703 ship: the merge gate", () => {
     const partial = [run("docs-check", "SUCCESS")];
     const unstable = judgeMergeGate({ mergeStateStatus: "UNSTABLE", statusCheckRollup: partial }, ["docs-check"]);
     expect(unstable.mergeable).toBe(false);
-    expect(unstable.waitingOn.map((w) => w.name)).toEqual(["tested-tree", "e2e", "migrate"]);
+    expect(unstable.waitingOn.map((w) => w.name)).toEqual(["tested-tree", "e2e"]);
     expect(judgeMergeGate({ mergeStateStatus: "CLEAN", statusCheckRollup: partial }, ["docs-check"]).mergeable).toBe(true);
+  });
+
+  it("does not wait for a «migrate» check on a head that touched no migration (release PR #581, 2026-10-28, §NNN)", () => {
+    const rollup = [run("docs-check", "SUCCESS"), run("tested-tree", "SUCCESS"), run("e2e", "SUCCESS"), context("Vercel – brasov-runners-qa", "FAILURE")];
+    expect(judgeMergeGate({ mergeStateStatus: "UNSTABLE", statusCheckRollup: rollup }, ["docs-check", "e2e", "tested-tree"]).mergeable).toBe(true);
   });
 
   it("counts the e2e shards as the e2e aggregate, which registers only after the last shard", () => {

@@ -107,6 +107,19 @@ export function mergeImportLines(ours, theirs) {
  * one module merged. A line both sides changed is kept twice for the typecheck to judge. Throws if a
  * marker would remain.
  */
+/**
+ * The `it(…)` / `test(…)` titles a file names more than once (§NNN). The union keeps both sides' lines, so when two
+ * branches each edited the same test it keeps the test twice — vitest runs both and says nothing, and one of them
+ * asserts the old behaviour (four repairs by hand in October 2026). A title repeated after a union stops the merge.
+ */
+export function duplicateTestTitles(text) {
+  const seen = new Map();
+  for (const match of String(text).matchAll(/\b(?:it|test)(?:\.(?:only|skip|todo|concurrent|fails))?\(\s*(["'`])((?:\\.|(?!\1)[^\\])*)\1/g)) {
+    seen.set(match[2], (seen.get(match[2]) ?? 0) + 1);
+  }
+  return [...seen].filter(([, count]) => count > 1).map(([title]) => title);
+}
+
 export function unionConflicts(text) {
   const eol = text.includes("\r\n") ? "\r\n" : "\n";
   const lines = text.split(/\r?\n/);

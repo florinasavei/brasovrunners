@@ -7,8 +7,12 @@
  * `statusCheckRollup` as `gh pr view --json` returns it, and the required contexts.
  */
 
-/** The house's own checks: always required beside whatever GitHub lists (Vercel is in neither). */
-export const HOUSE_CHECKS = ["tested-tree", "docs-check", "e2e", "migrate"];
+/**
+ * The house's own checks: always required beside whatever GitHub lists (Vercel is in neither). Not «migrate» (§NNN):
+ * migrate.yml runs on a push that touched a migration, so it is no check of a head that did not — on 2026-10-28 the
+ * gate waited ninety minutes for one that could never come. `scripts/ship.mjs` checks qa's migration run itself.
+ */
+export const HOUSE_CHECKS = ["tested-tree", "docs-check", "e2e"];
 
 const MERGEABLE_STATES = new Set(["CLEAN", "UNSTABLE", "HAS_HOOKS"]);
 const GOOD = new Set(["SUCCESS", "SKIPPED", "NEUTRAL"]);
