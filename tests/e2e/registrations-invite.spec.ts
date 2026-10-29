@@ -147,8 +147,12 @@ test.describe("§740 «Invită pe email»: the button, and every invited person 
     await page.getByRole("dialog").getByRole("button", { name: /Trimite invitațiile|Adaugă .* și trimite/ }).click();
     await expect(page).toHaveURL(/saved=invitationsSent/, { timeout: 30_000 });
 
-    // A fresh load of the list, nothing opened by hand: the person and the state are on the page.
+    // A fresh load of the list: «Invitații» is closed by default (the owner, 2026-10-29), so the Administrator opens it,
+    // and the person and the state are there.
     await openList(page, eventId);
+    await expect(panel).not.toHaveAttribute("open", "");
+    await panel.locator("summary").first().click();
+    await expect(panel).toHaveAttribute("open", "");
     const invited = page.getByTestId("invitation-row").filter({ hasText: email });
     await expect(invited).toBeVisible();
     await expect(invited).toContainText("Trimisă");
@@ -182,6 +186,7 @@ test.describe("§740 «Invită pe email»: the button, and every invited person 
     await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });
 
     await openList(page, eventId);
+    await panel.locator("summary").first().click();
     await expect(page.getByTestId("invitation-row").filter({ hasText: email })).toContainText("Acceptată");
     await expect(page.getByTestId("registrations-invitation-row").filter({ hasText: email }).filter({ visible: true })).toHaveCount(0);
     // The chip is on the registration of the invited person, found by the made-up address, not just anywhere.
