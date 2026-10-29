@@ -137,6 +137,9 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.91` | «Kituri de pregătit» under the registrations list's counts, with the T-shirt sizes (§866) |
+| `BR-V3.90` | a volunteer added by hand without an email or a phone, on the list only (§865) |
+| `BR-V3.89` | the volunteer's thank-you screen says «formularul», not «oferta» (§864) |
 | `BR-V3.88` | the calendar picture's «Locul» greyed, saying why, while no date has a short place (§863) |
 | `BR-V3.87` | the calendar picture's dialog opens wider, with a larger preview (§861) · «Adaugă un voluntar de mână» on the «Voluntari» screen too (§862) |
 | `BR-V3.86` | the calendar's year in two ways: «Pe scurt» and «Toate datele» (§860) |

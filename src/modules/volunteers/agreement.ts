@@ -458,16 +458,20 @@ export async function acceptVolunteerAgreementByLink<T extends Record<string, un
       .where(and(eq(eventVolunteers.id, row.id), eq(eventVolunteers.agreementTokenHash, hash), isNull(eventVolunteers.agreementAcceptedAt)))
       .returning({ id: eventVolunteers.id });
     if (!written) return { outcome: "invalid" };
-    await enqueueEmail(tx, {
-      participantId: null,
-      registrationId: null,
-      messageType: "VOLUNTEER_AGREEMENT_ACCEPTED",
-      locale: input.locale,
-      recipientEmail: row.email,
-      payload: { eventId: row.eventId, volunteerId: row.id },
-      idempotencyKey: `volunteer:${row.id}:agreement-accepted`,
-      now,
-    });
+    // The person's copy — never to a row with no address (§865). Clearing an address kills a live link (`changeVolunteer`), so a row
+    // reached by a link has one; the guard is the rule said where the email is queued.
+    if (row.email !== null) {
+      await enqueueEmail(tx, {
+        participantId: null,
+        registrationId: null,
+        messageType: "VOLUNTEER_AGREEMENT_ACCEPTED",
+        locale: input.locale,
+        recipientEmail: row.email,
+        payload: { eventId: row.eventId, volunteerId: row.id },
+        idempotencyKey: `volunteer:${row.id}:agreement-accepted`,
+        now,
+      });
+    }
     await recordAuditEvent(tx, {
       actorStaffUserId: null,
       action: "volunteer.agreement_accepted",
@@ -507,8 +511,9 @@ function assertIds(...ids: readonly string[]): void {
  * who has accepted (`VOLUNTEER_AGREEMENT_ACCEPTED`) or was cancelled (CONFLICT), and any press while no agreement
  * is in force in every language (`VOLUNTEER_AGREEMENT_MISSING`) or while the privacy notice in force does not
  * describe its acceptance (`VOLUNTEER_AGREEMENT_NOTICE`, `{{volunteerAgreement}}`: the link leads to an acceptance
- * the notice must name). Each press is its own email (a resend is a new trigger, §12.11) and the newest link
- * replaces the older one when it leaves.
+ * the notice must name), and a row with no address (`VOLUNTEER_NO_EMAIL`, §865: the card draws no button for it — the
+ * agreement is signed on paper — so only a forged or stale post reaches this). Each press is its own email (a resend
+ * is a new trigger, §12.11) and the newest link replaces the older one when it leaves.
  */
 export async function requestVolunteerAgreement<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -524,6 +529,7 @@ export async function requestVolunteerAgreement<T extends Record<string, unknown
     const row = await lockedVolunteer(tx, request.eventId, request.id);
     if (row.agreementAcceptedAt) throw new DomainError("VOLUNTEER_AGREEMENT_ACCEPTED", "the volunteer has accepted the agreement");
     if (row.state === "CANCELLED") throw new DomainError("CONFLICT", "a cancelled volunteer is not asked to accept");
+    if (row.email === null) throw new DomainError("VOLUNTEER_NO_EMAIL", "the volunteer has no address: the agreement is signed on paper");
     await tx.update(eventVolunteers).set({ agreementRequestedAt: now, updatedAt: now }).where(eq(eventVolunteers.id, row.id));
     await enqueueEmail(tx, {
       participantId: null,
@@ -564,8 +570,9 @@ export type PrintedAgreement = { documentId: string; roles: string };
  * «Semnat pe hârtie» (§758): the person signed the printed agreement at the desk, and an organizer records it —
  * the version in force in the row's language (the one the desk's PDF prints), the moment of the press, `PAPER`,
  * and who recorded it; the signed sheet stays with the club, and the person is sent their copy by email
- * (`VOLUNTEER_AGREEMENT_ACCEPTED`, the PDF attached at the send), as after the link. Refuses as
- * `requestVolunteerAgreement` does, and — `VOLUNTEER_AGREEMENT_REPRINT` — when the version in force or the
+ * (`VOLUNTEER_AGREEMENT_ACCEPTED`, the PDF attached at the send), as after the link — unless the row has no address
+ * (§865): the paper is that row's one way, and nothing is sent. Refuses as
+ * `requestVolunteerAgreement` does — a missing address excepted —, and — `VOLUNTEER_AGREEMENT_REPRINT` — when the version in force or the
  * person's role is no longer the one the card printed (`printed`): what the row records must be what the sheet
  * says, so a new version approved, or a role changed, between the print and the press asks for a new sheet. The
  * staff member records the person's signature; they never sign for the person (CLAUDE.md: no staff-signed
@@ -607,18 +614,21 @@ export async function recordPaperVolunteerAgreement<T extends Record<string, unk
       now,
     );
     await tx.update(eventVolunteers).set({ ...acceptance, updatedAt: now }).where(eq(eventVolunteers.id, row.id));
-    // The person's copy (§758): the agreement they signed, by email — the club keeps the sheet.
-    await enqueueEmail(tx, {
-      participantId: null,
-      registrationId: null,
-      messageType: "VOLUNTEER_AGREEMENT_ACCEPTED",
-      locale: row.locale,
-      recipientEmail: row.email,
-      payload: { eventId: row.eventId, volunteerId: row.id },
-      idempotencyKey: `volunteer:${row.id}:agreement-accepted`,
-      requestedByStaffUserId: actor.id,
-      now,
-    });
+    // The person's copy (§758): the agreement they signed, by email — the club keeps the sheet. A row with no address (§865) gets
+    // none, and nothing is queued for it: the signed sheet is the record, and the card's PDF prints it again on asking.
+    if (row.email !== null) {
+      await enqueueEmail(tx, {
+        participantId: null,
+        registrationId: null,
+        messageType: "VOLUNTEER_AGREEMENT_ACCEPTED",
+        locale: row.locale,
+        recipientEmail: row.email,
+        payload: { eventId: row.eventId, volunteerId: row.id },
+        idempotencyKey: `volunteer:${row.id}:agreement-accepted`,
+        requestedByStaffUserId: actor.id,
+        now,
+      });
+    }
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
       action: "volunteer.agreement_recorded",
