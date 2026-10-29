@@ -57,6 +57,10 @@ esac
 # Since §867 (2026-10-28) only the categories `yarn test:fast` runs (tests/categories.mjs: «trust» —
 # the rules that cannot be broken, always — then «guards» and «logic»); «database», «pages» and
 # «drawn» are CI's. `yarn test:categories` says which file is where.
+#
+# Since §871 (2026-10-29) only the tests that import a staged file DIRECTLY, not `vitest related`'s
+# transitive closure (299 files and six minutes for a three-function module), and ESLint keeps a
+# cache (`yarn lint`: 84 s cold, 5 s warm). CI still runs everything.
 
 if ! yarn check:static; then
 	echo ""
@@ -65,10 +69,10 @@ if ! yarn check:static; then
 	exit 1
 fi
 
-staged=$(git diff --cached --name-only --diff-filter=ACMR -- 'src/*' 'tests/*' 'messages/*' | grep -E '\.(ts|tsx|json)$' || true)
+staged=$(git diff --cached --name-only --diff-filter=ACMR -- 'src/*' 'tests/*' 'messages/*' 'scripts/*' | grep -E '\.(ts|tsx|json|mjs)$' || true)
 if [ -n "$staged" ]; then
 	# shellcheck disable=SC2086 # one argument per staged path; paths here carry no spaces
-	if ! yarn test:fast related --run --passWithNoTests $staged; then
+	if ! node scripts/test-categories.mjs direct $staged; then
 		echo ""
 		echo "pre-commit: the tests of the staged files failed, so the commit was blocked."
 		echo "Fix the problems above, or bypass with --no-verify and fix before pushing."
