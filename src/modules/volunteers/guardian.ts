@@ -330,7 +330,7 @@ export async function acceptVolunteerGuardianByLink<T extends Record<string, unk
 /**
  * The volunteer's copy of the agreement, queued again once their guardian has accepted (§768): the PDF the send attaches
  * carries both acceptances. Only for a volunteer who accepted their own — nothing to copy before that — and never for a
- * row with no address (§NNN): nothing is queued for it at all.
+ * row with no address (§864): nothing is queued for it at all.
  */
 async function queueVolunteerCopy<T extends Record<string, unknown>>(
   tx: Transaction<T>,
@@ -377,7 +377,7 @@ async function lockedMinor<T extends Record<string, unknown>>(tx: Transaction<T>
  * (§14.5). Refuses an actor who may not (FORBIDDEN), a volunteer not of this event (NOT_FOUND), one who is not under
  * eighteen or was cancelled (CONFLICT), one whose guardian has accepted (`VOLUNTEER_GUARDIAN_ACCEPTED`) or has no address
  * (`VOLUNTEER_GUARDIAN_NO_EMAIL`: the consent is taken on paper), a volunteer the club entered with no address of their own
- * (`VOLUNTEER_NO_EMAIL`, §NNN: such a row is on the list only and gets no email of any kind — its agreements, the guardian's
+ * (`VOLUNTEER_NO_EMAIL`, §864: such a row is on the list only and gets no email of any kind — its agreements, the guardian's
  * too, are signed on paper; the card draws no button for it), and any press while the club may not take minors
  * (`VOLUNTEER_MINORS_CLOSED`). Each press is its own email (a resend is a new trigger, §12.11) and the newest link replaces
  * the older one when it leaves.

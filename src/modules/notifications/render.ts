@@ -943,7 +943,7 @@ async function renderRow(
             .limit(1)
         : [];
     if (!volunteer || volunteer.state === "CANCELLED") throw new OutboxMessageWithdrawn("the volunteer is gone or was cancelled");
-    // A row the club left with no address (§NNN) is on the list only: no verb queues anything for it, and a message queued while it
+    // A row the club left with no address (§864) is on the list only: no verb queues anything for it, and a message queued while it
     // still had one — the roles, the agreement's link or copy, the parent's link — is withdrawn once the address is gone. The club's
     // notice is a colleague's, about a sign-up from the public form, which always has one.
     if (volunteer.canonicalEmail === null && row.messageType !== "VOLUNTEER_CLUB_NOTICE") {

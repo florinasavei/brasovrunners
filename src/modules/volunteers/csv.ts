@@ -19,7 +19,7 @@ import { csvCell } from "@/modules/registrations/csv";
  * Since §768 three more after them: the parent or guardian of a volunteer under eighteen — name and address, empty for an adult — and
  * «Acordul părintelui» as the reader's yes and no (empty for an adult: nothing was asked).
  *
- * Since §NNN the address and the telephone cells are empty for a person the club typed without them: no column moves.
+ * Since §864 the address and the telephone cells are empty for a person the club typed without them: no column moves.
  */
 
 export type VolunteerCsvRow = {
@@ -28,7 +28,7 @@ export type VolunteerCsvRow = {
   /** The roles the person said they would do, in the club's order, joined by «, » (§761). */
   choices: string;
   name: string;
-  /** The address and the telephone number, each null for a row the club typed without it (§NNN): an empty cell, never «null». */
+  /** The address and the telephone number, each null for a row the club typed without it (§864): an empty cell, never «null». */
   email: string | null;
   phone: string | null;
   /** «Înscris» / «Confirmat» / «Anulat», in the reader's words. */

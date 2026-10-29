@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.89-2026-10-29
+
+- **A volunteer added by hand without an email or a phone** — «Adaugă un voluntar de mână» and «Modifică» take the address and the telephone as optional for the club's own entries; such a person is on the list only: no email of any kind, the agreement signed on paper, and one line saying why where the email buttons were. §864.
 ## BR-V3.88-2026-10-28
 
 - **«Locul» says why it draws nothing** — on «Calendarul lunii ca imagine» the tick is greyed, with one line, while no date of the period has «Locul, pe scurt». §863.

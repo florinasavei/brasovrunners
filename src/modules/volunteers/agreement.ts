@@ -458,7 +458,7 @@ export async function acceptVolunteerAgreementByLink<T extends Record<string, un
       .where(and(eq(eventVolunteers.id, row.id), eq(eventVolunteers.agreementTokenHash, hash), isNull(eventVolunteers.agreementAcceptedAt)))
       .returning({ id: eventVolunteers.id });
     if (!written) return { outcome: "invalid" };
-    // The person's copy — never to a row with no address (§NNN). Clearing an address kills a live link (`changeVolunteer`), so a row
+    // The person's copy — never to a row with no address (§864). Clearing an address kills a live link (`changeVolunteer`), so a row
     // reached by a link has one; the guard is the rule said where the email is queued.
     if (row.email !== null) {
       await enqueueEmail(tx, {
@@ -511,7 +511,7 @@ function assertIds(...ids: readonly string[]): void {
  * who has accepted (`VOLUNTEER_AGREEMENT_ACCEPTED`) or was cancelled (CONFLICT), and any press while no agreement
  * is in force in every language (`VOLUNTEER_AGREEMENT_MISSING`) or while the privacy notice in force does not
  * describe its acceptance (`VOLUNTEER_AGREEMENT_NOTICE`, `{{volunteerAgreement}}`: the link leads to an acceptance
- * the notice must name), and a row with no address (`VOLUNTEER_NO_EMAIL`, §NNN: the card draws no button for it — the
+ * the notice must name), and a row with no address (`VOLUNTEER_NO_EMAIL`, §864: the card draws no button for it — the
  * agreement is signed on paper — so only a forged or stale post reaches this). Each press is its own email (a resend
  * is a new trigger, §12.11) and the newest link replaces the older one when it leaves.
  */
@@ -571,7 +571,7 @@ export type PrintedAgreement = { documentId: string; roles: string };
  * the version in force in the row's language (the one the desk's PDF prints), the moment of the press, `PAPER`,
  * and who recorded it; the signed sheet stays with the club, and the person is sent their copy by email
  * (`VOLUNTEER_AGREEMENT_ACCEPTED`, the PDF attached at the send), as after the link — unless the row has no address
- * (§NNN): the paper is that row's one way, and nothing is sent. Refuses as
+ * (§864): the paper is that row's one way, and nothing is sent. Refuses as
  * `requestVolunteerAgreement` does — a missing address excepted —, and — `VOLUNTEER_AGREEMENT_REPRINT` — when the version in force or the
  * person's role is no longer the one the card printed (`printed`): what the row records must be what the sheet
  * says, so a new version approved, or a role changed, between the print and the press asks for a new sheet. The
@@ -614,7 +614,7 @@ export async function recordPaperVolunteerAgreement<T extends Record<string, unk
       now,
     );
     await tx.update(eventVolunteers).set({ ...acceptance, updatedAt: now }).where(eq(eventVolunteers.id, row.id));
-    // The person's copy (§758): the agreement they signed, by email — the club keeps the sheet. A row with no address (§NNN) gets
+    // The person's copy (§758): the agreement they signed, by email — the club keeps the sheet. A row with no address (§864) gets
     // none, and nothing is queued for it: the signed sheet is the record, and the card's PDF prints it again on asking.
     if (row.email !== null) {
       await enqueueEmail(tx, {

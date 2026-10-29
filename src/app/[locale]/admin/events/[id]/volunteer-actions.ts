@@ -97,7 +97,7 @@ async function backToCard(form: FormData, outcome: { saved?: string; error?: str
 /**
  * The telephone as the staff box posts it, read by the parser an Administrator's correction of a registration
  * uses (`typedPhone`): typed with the country code, or as a Romanian number — one E.164, or what was typed for
- * the schema to refuse on `phone`. An empty box stays empty: none, for a row the club types (§NNN).
+ * the schema to refuse on `phone`. An empty box stays empty: none, for a row the club types (§864).
  */
 function phoneOf(form: FormData): string {
   return typedPhone(field(form, "phone").trim());
@@ -108,7 +108,7 @@ const staffFields = (form: FormData) => ({
   roleIds: form.getAll("roleIds").filter((value): value is string => typeof value === "string"),
   assignedRoleIds: form.getAll("assignedRoleIds").filter((value): value is string => typeof value === "string"),
   name: field(form, "name"),
-  // Each optional for a row the club types (§NNN): an empty box is none — the person is then on the list only, never emailed.
+  // Each optional for a row the club types (§864): an empty box is none — the person is then on the list only, never emailed.
   email: field(form, "email"),
   phone: phoneOf(form),
   note: field(form, "note"),
@@ -485,7 +485,7 @@ export async function setVolunteerStateAction(form: FormData): Promise<void> {
 export async function assignVolunteerAction(form: FormData): Promise<void> {
   try {
     const result = await runVolunteer({ kind: "assign", eventId: eventIdOf(form), id: field(form, "volunteerId"), roleId: field(form, "roleId") });
-    // A person with no address hears nothing (§NNN): the toast says so, never «primește un email».
+    // A person with no address hears nothing (§864): the toast says so, never «primește un email».
     return backToCard(form, { saved: result.changed ? (result.volunteer.hasAddress ? "volunteerAssigned" : "volunteerAssignedNoEmail") : "volunteerUnchanged" });
   } catch (error) {
     if (!isDomainError(error)) throw error;

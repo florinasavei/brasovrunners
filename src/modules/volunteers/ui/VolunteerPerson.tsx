@@ -193,7 +193,7 @@ export async function VolunteerPersonFields({ person, context }: { person: Volun
   const { locale, volunteersShirts, profileDescribed, minorsOpen, listDescribed, eventDay } = context;
   const { t, tReg, labelOf, roleGroups, headed, groupName, nameOf } = await sharedOf(context);
   /*
-    The address and the telephone number (§NNN; the owner, 2026-10-28: «as vrea sa pot adaug si fara adresa de mail si telefon, doar sa
+    The address and the telephone number (§864; the owner, 2026-10-28: «as vrea sa pot adaug si fara adresa de mail si telefon, doar sa
     fie asa pe lista»): each optional for a row the club types — the boxes say so, and what an empty address means — and required, as the
     public form asked them, on a row the person typed there. The service holds the same rule (`volunteerStaffInputSchemaFor`).
   */
@@ -488,7 +488,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
     }
     const sent = agreementStandingOf(person, now) === "linkSent" || person.agreementRequestedAt !== null;
     const sendLabel = sent ? t("volunteers.agreement.resend") : t("volunteers.agreement.send");
-    // A row with no address (§NNN) is sent nothing: no link — one line says why where its button would be — and no copy after the paper.
+    // A row with no address (§864) is sent nothing: no link — one line says why where its button would be — and no copy after the paper.
     const noAddress = person.email === null;
     return (
       <Stack spacing={1} sx={{ mt: 0.5 }} data-testid="volunteer-agreement">
@@ -578,7 +578,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
         )}
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
           {person.email === null ? (
-            // A volunteer the club typed with no address (§NNN) is sent nothing, the parent's link included: one line says why, the paper stays.
+            // A volunteer the club typed with no address (§864) is sent nothing, the parent's link included: one line says why, the paper stays.
             <Typography variant="body2" color="text.secondary" sx={{ alignSelf: "center" }} data-testid="volunteer-guardian-volunteer-no-email">
               {t("volunteers.guardian.volunteerNoEmail")}
             </Typography>
@@ -828,7 +828,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
         </Box>
       )}
       {/* The address and the telephone number: drawn here and nowhere else, as links a thumb can press — each only when the row has it
-          (§NNN): no `mailto:` or `tel:` to nothing. A row the club typed with no address says once that the person is on the list only. */}
+          (§864): no `mailto:` or `tel:` to nothing. A row the club typed with no address says once that the person is on the list only. */}
       {(person.email !== null || person.phone !== null) && (
         <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2, mt: 0.5 }}>
           {person.email !== null && (
