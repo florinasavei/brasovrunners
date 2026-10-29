@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.93-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.94-2026-10-29 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V3.93-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.94-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 > **Write code once, run forever, always vibe.**
 
@@ -126,7 +126,9 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `yarn check:static` and the tests of the staged files (`vitest related`), and blocks the commit on failure; CI runs the whole `yarn check` |
 | [`.githooks/pre-push`](./.githooks/pre-push) | Refuses a push to `qa` or `main`; those branches move through pull requests only |
 | [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md) | How to run this locally: prerequisites, first run, every command, and what will catch you out |
-| [`docs/VIBECODING.md`](./docs/VIBECODING.md) | The one page before asking an AI to change anything: the loop, where things live, adding a field end to end, the rules that bite |
+| [`docs/VIBECODING.md`](./docs/VIBECODING.md) | The one page before asking an AI to change anything: the loop, where things live (one line a row), adding a field end to end, the rules that bite; kept under 16 000 characters by `docs:check` |
+| [`docs/WHERE-THINGS-LIVE.md`](./docs/WHERE-THINGS-LIVE.md) | The whole map behind VIBECODING's «Where things live»: each thing a change touches, its files, its why and its decisions — read the one row before changing that thing |
+| [`docs/OWNER-TODO.md`](./docs/OWNER-TODO.md) | What the club still owes — its own work rather than code (legal texts to approve, the race's event, accounts, settings); moved out of CLAUDE.md, which every AI session loads; `/admin/tasks` is the authority |
 | [`docs/REDESIGN.md`](./docs/REDESIGN.md) | The redesign plan (2026): the twelve decisions only the club can make, what exists versus what is new, the visual system, the phases and their gates, the content the club provides, the open questions. Kept by the dispatcher; its rows and their statuses are drawn at `/admin/design` («Setări» → «Aspect» → «Sistemul de design») |
 | [`docs/PRACTICES.md`](./docs/PRACTICES.md) | Practice guides and checklists: code priorities, delivery, mobile-first, SEO, AIO, accessibility, performance, editorial, launch. Guidance, not authority |
 | [`docs/brand/README.md`](./docs/brand/README.md) | The club's logo, kit photograph and display typeface: what each file is, which of the two blues is authoritative, and why the kit font cannot set a Romanian word |

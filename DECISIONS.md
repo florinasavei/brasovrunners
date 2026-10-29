@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.93-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.94-2026-10-29 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.93-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.94-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28174,3 +28174,18 @@ Baseline `BR-V3.92-2026-10-29`.
 **Refused.** Turning the staff guide's list into keyed objects so a three-way merge could join it (a larger change across the catalogue and its readers; the stop is enough to stop the loss). A NEON_API_KEY on GitHub for the warning (the deep health already reads the budget, so no new secret).
 
 Baseline `BR-V3.93-2026-10-29`.
+
+## 869. What every AI session reads first is short again
+
+**The owner, 2026-10-28:** «nu înțeleg de ce AI-ul e foarte slab la a re-face anumite lucruri», «acest codebase trebuie să fie super-vibecoder-friendly». An audit that night measured what an agent reads before it reads the code: `CLAUDE.md` loads into every session and was 39 821 characters (about 10 000 tokens), two fifths of it the club's own to-do list; `docs/VIBECODING.md`, every implementer's first page, was 124 789 characters (about 31 000 tokens) — it had grown seventeen-fold in two weeks, one paragraph-long table cell at a time; and the read order sent agents to `WEEKEND.md`, a historical scope. An agent paid about 45 000 tokens before the first line of code, and skimmed past the path it needed.
+
+**Decision.**
+
+- **The club's to-do list leaves `CLAUDE.md`** for `docs/OWNER-TODO.md`, verbatim; `CLAUDE.md` keeps a four-line pointer (`/admin/tasks` is the authority, as before). 39 821 → about 22 700 characters.
+- **«Where things live» is one line a row.** The table, each row with its why, moves verbatim to `docs/WHERE-THINGS-LIVE.md`; `docs/VIBECODING.md` keeps the thing and the first one or two paths of each row and says to read the row there before changing that thing. 124 789 → about 14 600 characters.
+- **`WEEKEND.md` leaves the read order** (it stays for its reasoning, on demand).
+- **`docs:check` keeps them short**: `CLAUDE.md` under 26 000 characters, `docs/VIBECODING.md` under 16 000 and no line of it over 1 000. A growth that would cross them fails the commit with the place the detail belongs.
+
+**Refused.** Rewriting the rows' words: they moved unchanged, so nothing an agent relied on was lost. Trimming `AGENTS.md`, `SPECS.md` or `DECISIONS.md`, which are read on demand, by section.
+
+Baseline `BR-V3.94-2026-10-29`.
