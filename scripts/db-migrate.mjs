@@ -17,6 +17,7 @@ import process from "node:process";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
+import { describeError } from "./db-error.mjs";
 
 const ROOT = process.cwd();
 const MIGRATIONS_FOLDER = path.join(ROOT, "src", "db", "migrations");
@@ -123,6 +124,7 @@ async function main() {
 
 main().catch((error) => {
   // Non-zero, so the caller can block the deployment (§7.6).
-  console.error("\n  Migration failed:", error instanceof Error ? error.message : error, "\n");
+  // The whole cause chain and what to do (§868): drizzle's own message is only «Failed query: …».
+  console.error(`\n  Migration failed: ${describeError(error).replace(/\n/g, "\n  ")}\n`);
   process.exit(1);
 });

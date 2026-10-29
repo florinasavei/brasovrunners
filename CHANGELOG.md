@@ -8,6 +8,18 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.94-2026-10-29
+
+- **A shorter first read for AI agents** — CLAUDE.md's to-do list moves to `docs/OWNER-TODO.md`, VIBECODING's map is one line a row with the whole map in `docs/WHERE-THINGS-LIVE.md`, and `docs:check` caps both (about 45 000 tokens a session down to about 9 000). §869.
+## BR-V3.93-2026-10-29
+
+- **Releases fail fast with the cause** — a failed migration prints Neon's real error and what to do; ship checks qa's migration itself instead of waiting ninety minutes; the scheduled jobs warn at 85 % of a Neon quota; the batch merge stops instead of losing a branch's words or keeping a test twice. §868.
+## BR-V3.92-2026-10-29
+
+- **Six test categories** — `yarn test:categories`, `yarn test:fast` (trust, guards, logic), `yarn test:skip <names…>`, each category a Vitest project; «trust», the rules that cannot be broken, is never left out; the pre-commit hook runs the fast categories only; CI runs everything. §867.
+## BR-V3.91-2026-10-29
+
+- **«Kituri de pregătit»** — with one event chosen, the registrations list's counts say how many kits to pack (everyone holding a place, special guests included, plus the open invitations) and, when the event gives a T-shirt, how many of each size. §866.
 ## BR-V3.90-2026-10-29
 
 - **A volunteer added by hand without an email or a phone** — «Adaugă un voluntar de mână» and «Modifică» take the address and the telephone as optional for the club's own entries; such a person is on the list only: no email of any kind, the agreement signed on paper, and one line saying why where the email buttons were. §865.

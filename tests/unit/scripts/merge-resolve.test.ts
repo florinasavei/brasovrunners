@@ -3,6 +3,7 @@ import {
   conflictKind,
   dedupeJsonKeys,
   dependenciesChanged,
+  duplicateTestTitles,
   mergeImportLines,
   mergeJson3,
   rebuildJournal,
@@ -102,6 +103,13 @@ describe("§535 a test file both sides appended to", () => {
     const { text: out, blocks } = unionConflicts(text);
     expect(blocks).toBe(1);
     expect(out.split("\r\n")).toEqual(['import { a, b } from "./x";', 'it("ours", () => {});', 'it("theirs", () => {});', "done();"]);
+  });
+
+  it("names a test the union kept twice, so the merge stops instead of running both (§868)", () => {
+    const { text } = unionConflicts(["<<<<<<< HEAD", 'it("shows «Nr.»", () => { expect(a).toBe(1); });', "=======", 'it("shows «Nr.»", () => { expect(a).toBe(2); });', ">>>>>>> feat/y"].join("\n"));
+    expect(duplicateTestTitles(text)).toEqual(["shows «Nr.»"]);
+    expect(duplicateTestTitles('it("a", f);\ntest.skip(\'b\', f);\nit.each(x)("c %s", f);\nit("d", f);')).toEqual([]);
+    expect(duplicateTestTitles("test(`same`, f);\nit.only(`same`, f);")).toEqual(["same"]);
   });
 
   it("ignores a diff3 base section, and refuses an unterminated block", () => {

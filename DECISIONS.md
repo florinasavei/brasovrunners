@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.90-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.94-2026-10-29 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.90-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.94-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28124,3 +28124,68 @@ Baseline `BR-V3.89-2026-10-29`.
 Amends §754, §761 and §837.
 
 Baseline `BR-V3.90-2026-10-29`.
+
+## 866. «Kituri de pregătit» under the registrations list's counts
+
+**The owner, 2026-10-29, with a screenshot of «Cine s-a înscris» (176 in all, 151 confirmed, 9 awaiting the declaration, 7 waiting, 3 special guests):** "la numărătoare trebuie să am o informație despre câte kit-uri trebuie să pregătim". Asked who counts, the owner chose everyone holding a place, and the T-shirts by size.
+
+**Decision.** With one event chosen, the strip «Cine s-a înscris» carries «Kituri de pregătit: N» under its pills: the event's real registrations that hold a place now (`PLACE_HOLDING_STATUSES` — confirmed, awaiting the address or the declaration, holding a waiting-list offer; the special guests among them, who take a kit too) plus its invitations still open before their deadline. A line says which, and that the waiting list is not in it. When the event gives a T-shirt («Kit de participare»), one more line counts the sizes in the form's order, then «fără tricou», then the open invitations as «mărime încă necunoscută». Test rows, cancelled and expired rows and answered, withdrawn or lapsed invitations are never in it. `countKits` is two grouped reads and the event's tick, blind to every filter but the event — it says what to pack, not what the list shows (`tests/integration/registrations/kit-count.test.ts`).
+
+**Answered, not built.** The owner asked the same morning for writing down, on race day, who finished and in what time: that is «Sosire» (§808), from «Clasament» on the race's editor.
+
+Baseline `BR-V3.91-2026-10-29`.
+
+## 867. Six test categories: run one, leave some out, never the rules that cannot be broken
+
+**The owner, 2026-10-28:** «vreau să categorisești testele și să putem ignora unele dintre ele» — the day a one-line commit's hook ran for sixteen minutes.
+
+**Decision.** Every vitest file is in exactly one of six categories, and each category is a Vitest project of the same name (`vitest.config.mts`, built from `tests/categories.mjs`):
+
+| Category | Holds | Files | CI time |
+| --- | --- | --- | --- |
+| `trust` | the rules CLAUDE.md says cannot be broken — places and the one allocator, approved legal texts, publication in both languages, test registrations, the public list, staff powers and server-side authorization, staff-only sign-in, email action links, `APP_BASE_URL`, the canonicalizer | 392 | 61 % |
+| `drawn` | pictures, PDFs, spreadsheets and QR codes the code draws | 36 | 8 % |
+| `pages` | a page, component or email rendered to HTML | 208 | 8 % |
+| `database` | the services against PGlite | 110 | 20 % |
+| `guards` | the repository's conventions read from disk, and its scripts | 72 | 2 % |
+| `logic` | pure functions | 336 | 2 % |
+
+`yarn test --project=<name>` runs one; `yarn test:skip <names…>` all but those; `yarn test:fast` the categories marked fast (trust, guards, logic); `yarn test:categories` lists them (`scripts/test-categories.mjs`). `yarn test` — what CI runs, in its four shards — still runs every file; nothing is left out there. «trust» is never left out anywhere: `test:skip trust` is refused, and `test:fast` and the pre-commit hook always run it. The hook now runs the staged files' related tests in the `test:fast` categories only; `database`, `pages` and `drawn` are CI's.
+
+**The classification.** Every file was read on 2026-10-28 by seven readers; a separate search mapped each rule of CLAUDE.md's table to the files that assert it (by requirement, by the module that implements it, by title); the 115 files the two disagreed on were each read by two more — one doubting the label, one imagining the rule broken — and kept in «trust» if either said so; a critic added ten guards nobody had listed. `tests/categories.json` holds the result. A file it does not list — a new test — takes the first category whose signals it shows (`signalsOf`): a requirement of the table or an asserted `FORBIDDEN`/`UNAUTHENTICATED` makes it «trust» first, so a new guard is never skippable by accident. «trust» is three fifths of the time because every server-side refusal of a role is a guard of «Authorization is asserted on the server».
+
+**Two facts measured on the way.** Under `extends: true` a project's `include` is added to the root's, so a root `include` would run every file in every project — the root has none, and a test holds that. Vitest joins several `--project=!x` with «or», so two of them exclude nothing; leaving categories out therefore names the ones kept.
+
+**Refused.** Vitest 4.1's test tags: `--tags-filter` is applied after each file is loaded (its documentation's performance note), so leaving a tag out saves nothing. A classification by signals alone: it agreed with the readers on 72 % of the files and missed 159 of the «trust» ones. A `test:skip` that could leave «trust» out. Leaving anything out of CI.
+
+**What it does not fix.** `vitest related` selects widely: a change to a three-function module (`src/modules/weather/words.ts`) selected 299 files in the fast categories alone, six minutes. The hook's remaining cost is that breadth, not the categories.
+
+Baseline `BR-V3.92-2026-10-29`.
+
+## 868. The release and the batch merge fail fast, with the cause, and Neon's quota warns before it stops
+
+**The owner, 2026-10-28:** «vreau să lucrezi mai mult la consistența și stabilitatea platformei», «vreau să pot livra mai repede și mai cu încredere» — the day QA's Neon project reached its monthly compute quota and was suspended. Nothing had warned; the QA migration run printed only drizzle's «Failed query: select to_regclass('drizzle.__drizzle_migrations') is not null as present»; the release then waited ninety minutes on its release PR for a «migrate» check that could never come, and stopped. An audit the same night confirmed four causes; this fixes them.
+
+- **A failed database step names its cause.** `scripts/db-error.mjs` prints every level of the error's `.cause` chain with its code, then what to do for the causes met so far: Neon's quota suspension (`53000`), a wrong password, a host that does not resolve or answer. `db-migrate.mjs` and `wait-for-migration.mjs` print it.
+- **The release checks qa's migration itself.** «migrate» is no longer one of the merge gate's house checks (`scripts/pr-merge-gate.mjs`): migrate.yml runs on a push that touched a migration, so it is no check of a head that did not. `scripts/ship.mjs` gains a step «qa migration» before the release PR: when the release carries a migration, it waits up to thirty minutes for the migrate.yml run of the newest qa commit that touched one, and stops at once — before main is touched, so ticking `ship` again is right — when that run failed, naming it and the command that re-runs it.
+- **Neon's quota warns a day ahead.** `scheduled-jobs.yml`, four times a day, asks each configured environment's deep health for the month's budget (§447): red (85 % by default) or a database that does not answer turns the run red, and GitHub emails it; amber (60 %) is a warning in the run. `docs/RUNBOOKS.md` § Neon suspended a project has the steps, including the one that is not obvious: a raised quota does not lift the suspension — set it to 0, start the compute, set it back. Production is checked once `PRODUCTION_APP_BASE_URL` is set on the repository (CLAUDE.md, still owed 19).
+- **The batch merge stops instead of losing work.** When two branches change the same catalogue key, `yarn batch:merge` (and the release's «up to date with qa») used to keep theirs and say so in one line — the staff guide, one 75 KB list, lost a step twice. It now stops, the file holding theirs at those keys, and names them. When the union of a test file keeps a test twice (same `it`/`test` title), it stops too: four repairs by hand in October.
+
+**Refused.** Turning the staff guide's list into keyed objects so a three-way merge could join it (a larger change across the catalogue and its readers; the stop is enough to stop the loss). A NEON_API_KEY on GitHub for the warning (the deep health already reads the budget, so no new secret).
+
+Baseline `BR-V3.93-2026-10-29`.
+
+## 869. What every AI session reads first is short again
+
+**The owner, 2026-10-28:** «nu înțeleg de ce AI-ul e foarte slab la a re-face anumite lucruri», «acest codebase trebuie să fie super-vibecoder-friendly». An audit that night measured what an agent reads before it reads the code: `CLAUDE.md` loads into every session and was 39 821 characters (about 10 000 tokens), two fifths of it the club's own to-do list; `docs/VIBECODING.md`, every implementer's first page, was 124 789 characters (about 31 000 tokens) — it had grown seventeen-fold in two weeks, one paragraph-long table cell at a time; and the read order sent agents to `WEEKEND.md`, a historical scope. An agent paid about 45 000 tokens before the first line of code, and skimmed past the path it needed.
+
+**Decision.**
+
+- **The club's to-do list leaves `CLAUDE.md`** for `docs/OWNER-TODO.md`, verbatim; `CLAUDE.md` keeps a four-line pointer (`/admin/tasks` is the authority, as before). 39 821 → about 22 700 characters.
+- **«Where things live» is one line a row.** The table, each row with its why, moves verbatim to `docs/WHERE-THINGS-LIVE.md`; `docs/VIBECODING.md` keeps the thing and the first one or two paths of each row and says to read the row there before changing that thing. 124 789 → about 14 600 characters.
+- **`WEEKEND.md` leaves the read order** (it stays for its reasoning, on demand).
+- **`docs:check` keeps them short**: `CLAUDE.md` under 26 000 characters, `docs/VIBECODING.md` under 16 000 and no line of it over 1 000. A growth that would cross them fails the commit with the place the detail belongs.
+
+**Refused.** Rewriting the rows' words: they moved unchanged, so nothing an agent relied on was lost. Trimming `AGENTS.md`, `SPECS.md` or `DECISIONS.md`, which are read on demand, by section.
+
+Baseline `BR-V3.94-2026-10-29`.

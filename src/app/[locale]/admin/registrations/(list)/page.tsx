@@ -18,6 +18,7 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import {
+  countKits,
   countNeedingEmailActionForAdmin,
   countRegistrationsForAdmin,
   summariseRegistrationsForAdmin,
@@ -41,6 +42,7 @@ import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
+import KitCount from "@/modules/registrations/ui/KitCount";
 import RowDeadlineCell from "@/modules/registrations/ui/RowDeadlineCell";
 import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
 import { cityLabel } from "@/modules/registrations/domain/city-label";
@@ -239,7 +241,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const featuredEvent = events.find((event) => event.featured) ?? null;
 
   const deadlinesNow = new Date();
-  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction] = await Promise.all([
+  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits] = await Promise.all([
     listRegistrationsForAdmin(
       db,
       filters,
@@ -277,6 +279,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       : Promise.resolve(null),
     // «Doar cu un email respins ({n})» (§671): how many the tick would keep under the other filters, before anybody ticks it.
     countNeedingEmailActionForAdmin(db, { ...filters, emailBounced: undefined }),
+    // «Kituri de pregătit» (the owner, 2026-10-29): everyone holding a place and the open invitations, by T-shirt size — one event only.
+    filters.eventId ? countKits(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
   ]);
 
   // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
@@ -1258,6 +1262,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <GlyphChip glyph="membersOnly" color="primary" label={t("events.membersOnlyChip")} />
         )}
       </SummaryStrip>
+      {kits && <KitCount kits={kits} spaceAbove={1.5} />}
       {/*
         «Când pierde lumea locul?» (§635; the owner, 2026-10-02): until when the people of this event
         keep their place, and what a passed deadline does — right under the counts, and only when the list
