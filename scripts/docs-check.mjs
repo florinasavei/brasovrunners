@@ -477,8 +477,34 @@ async function checkReleaseEntries(specs) {
   for (const problem of duplicateBranches(found)) fail(`${ENTRY_DIR}/: ${problem}`);
 }
 
+/**
+ * What every AI session reads first stays short (§869; the owner, 2026-10-28: «acest codebase trebuie să fie
+ * super-vibecoder-friendly»). CLAUDE.md loads into every session and docs/VIBECODING.md is every implementer's first
+ * page; between 2026-10-09 and 10-22 the second grew from 7 KB to 125 KB, one table cell at a time. The detail lives in
+ * docs/WHERE-THINGS-LIVE.md, docs/OWNER-TODO.md and DECISIONS.md.
+ */
+const READ_FIRST_LIMITS = [
+  { name: "CLAUDE.md", chars: 26_000, line: null },
+  { name: "docs/VIBECODING.md", chars: 16_000, line: 1_000 },
+];
+
+async function checkReadFirstSizes() {
+  for (const { name, chars, line } of READ_FIRST_LIMITS) {
+    const text = await readFile(path.join(ROOT, name), "utf8").catch(() => null);
+    if (text === null) continue;
+    if (text.length > chars) {
+      fail(`${name} is ${text.length} characters; every AI session reads it first — keep it under ${chars} and move the detail to docs/WHERE-THINGS-LIVE.md, docs/OWNER-TODO.md or a DECISIONS.md section.`);
+    }
+    if (line === null) continue;
+    const lines = text.split(/\r?\n/);
+    const long = lines.findIndex((l) => l.length > line);
+    if (long >= 0) fail(`${name}:${long + 1} is ${lines[long].length} characters long; keep each line under ${line} — one line a row, the detail in docs/WHERE-THINGS-LIVE.md.`);
+  }
+}
+
 async function main() {
   await checkRequiredFiles();
+  await checkReadFirstSizes();
 
   const present = ROOT_DOCUMENTS.filter((name) => existsSync(path.join(ROOT, name)));
   const docs = await Promise.all(
