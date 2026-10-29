@@ -193,15 +193,6 @@ export function invitationDraft(link: { name: string; member: boolean }, clubNam
   };
 }
 
-/**
- * Whether «Invitații» opens by itself (§740): an invitation is sent and waiting, or — only while the
- * event is still to come — one ran out unanswered, the person the club may invite again. After the
- * start, or when the event is cancelled, an unanswered invitation is history; accepted and withdrawn ones always are.
- */
-export function invitationsNeedAttention(byState: Readonly<Record<InvitationState, number>>, upcoming: boolean): boolean {
-  return byState.sent + (upcoming ? byState.expired : 0) > 0;
-}
-
 /** Where the registrations toolbar's «Invită pe email» leads (§740). */
 export type InviteTarget =
   | { kind: "panel" } // a list about one event: the panel on this very page
