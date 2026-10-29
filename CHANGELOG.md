@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.95-2026-10-29
+
+- **«Invitații» closed by default** — on the registrations page the panel opens only when pressed, or from «Invită pe email». §870.
 ## BR-V3.94-2026-10-29
 
 - **A shorter first read for AI agents** — CLAUDE.md's to-do list moves to `docs/OWNER-TODO.md`, VIBECODING's map is one line a row with the whole map in `docs/WHERE-THINGS-LIVE.md`, and `docs:check` caps both (about 45 000 tokens a session down to about 9 000). §869.
