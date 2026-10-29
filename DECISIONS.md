@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.92-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.93-2026-10-29 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.92-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.93-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28161,3 +28161,16 @@ Baseline `BR-V3.91-2026-10-29`.
 **What it does not fix.** `vitest related` selects widely: a change to a three-function module (`src/modules/weather/words.ts`) selected 299 files in the fast categories alone, six minutes. The hook's remaining cost is that breadth, not the categories.
 
 Baseline `BR-V3.92-2026-10-29`.
+
+## 868. The release and the batch merge fail fast, with the cause, and Neon's quota warns before it stops
+
+**The owner, 2026-10-28:** «vreau să lucrezi mai mult la consistența și stabilitatea platformei», «vreau să pot livra mai repede și mai cu încredere» — the day QA's Neon project reached its monthly compute quota and was suspended. Nothing had warned; the QA migration run printed only drizzle's «Failed query: select to_regclass('drizzle.__drizzle_migrations') is not null as present»; the release then waited ninety minutes on its release PR for a «migrate» check that could never come, and stopped. An audit the same night confirmed four causes; this fixes them.
+
+- **A failed database step names its cause.** `scripts/db-error.mjs` prints every level of the error's `.cause` chain with its code, then what to do for the causes met so far: Neon's quota suspension (`53000`), a wrong password, a host that does not resolve or answer. `db-migrate.mjs` and `wait-for-migration.mjs` print it.
+- **The release checks qa's migration itself.** «migrate» is no longer one of the merge gate's house checks (`scripts/pr-merge-gate.mjs`): migrate.yml runs on a push that touched a migration, so it is no check of a head that did not. `scripts/ship.mjs` gains a step «qa migration» before the release PR: when the release carries a migration, it waits up to thirty minutes for the migrate.yml run of the newest qa commit that touched one, and stops at once — before main is touched, so ticking `ship` again is right — when that run failed, naming it and the command that re-runs it.
+- **Neon's quota warns a day ahead.** `scheduled-jobs.yml`, four times a day, asks each configured environment's deep health for the month's budget (§447): red (85 % by default) or a database that does not answer turns the run red, and GitHub emails it; amber (60 %) is a warning in the run. `docs/RUNBOOKS.md` § Neon suspended a project has the steps, including the one that is not obvious: a raised quota does not lift the suspension — set it to 0, start the compute, set it back. Production is checked once `PRODUCTION_APP_BASE_URL` is set on the repository (CLAUDE.md, still owed 19).
+- **The batch merge stops instead of losing work.** When two branches change the same catalogue key, `yarn batch:merge` (and the release's «up to date with qa») used to keep theirs and say so in one line — the staff guide, one 75 KB list, lost a step twice. It now stops, the file holding theirs at those keys, and names them. When the union of a test file keeps a test twice (same `it`/`test` title), it stops too: four repairs by hand in October.
+
+**Refused.** Turning the staff guide's list into keyed objects so a three-way merge could join it (a larger change across the catalogue and its readers; the stop is enough to stop the loss). A NEON_API_KEY on GitHub for the warning (the deep health already reads the budget, so no new secret).
+
+Baseline `BR-V3.93-2026-10-29`.

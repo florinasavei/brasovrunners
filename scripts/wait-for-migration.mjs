@@ -8,6 +8,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import pg from "pg";
+import { describeError } from "./db-error.mjs";
 
 const POLL_SECONDS = 15;
 const WAIT_MINUTES = Number(process.env.MIGRATION_WAIT_MINUTES || 20);
@@ -91,7 +92,7 @@ async function main() {
 // Import-safe for the unit test of `compare`; runs only when invoked as a script.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((error) => {
-    console.error(`[wait-for-migration] ${error.message}`);
+    console.error(`[wait-for-migration] ${describeError(error).replace(/\n/g, "\n[wait-for-migration] ")}`);
     process.exit(1);
   });
 }
