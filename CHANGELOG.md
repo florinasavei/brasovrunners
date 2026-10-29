@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.89-2026-10-29
+
+- **«Am primit formularul tău de înscriere ca voluntar»** — the volunteer's thank-you screen and the form's refusals say «formularul», not «oferta». §864.
 ## BR-V3.88-2026-10-28
 
 - **«Locul» says why it draws nothing** — on «Calendarul lunii ca imagine» the tick is greyed, with one line, while no date of the period has «Locul, pe scurt». §863.
