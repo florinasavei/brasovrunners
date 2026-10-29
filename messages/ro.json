@@ -1129,6 +1129,13 @@
       "statusAll": "Toate stările",
       "summaryTotal": "Înscrieri: {count} (toate stările, anulate și expirate incluse)",
       "summaryTest": "De test: {count}",
+      "kits": {
+        "title": "Kituri de pregătit: {count}",
+        "who": "Au acum un loc, cu invitații speciali: {registrations} · Invitații fără răspuns: {invitations}. Lista de așteptare nu intră.",
+        "shirts": "Tricouri — {sizes}",
+        "noShirt": "fără tricou: {count}",
+        "unknownSize": "mărime încă necunoscută (invitații): {count}"
+      },
       "outside": {
         "pill": "Invitați speciali: {count}",
         "chip": "Invitat special",
