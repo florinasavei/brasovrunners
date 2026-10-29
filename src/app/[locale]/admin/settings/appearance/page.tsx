@@ -8,10 +8,12 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { readHomePage } from "@/modules/appearance/home-page";
 import { listPagesForAdmin } from "@/modules/content/pages/repository";
+import { readLiveStream } from "@/modules/appearance/live-stream";
 import { readSiteFontSize } from "@/modules/appearance/site-font-size";
 import { readSiteLook } from "@/modules/appearance/site-look";
 import { readSiteTint } from "@/modules/appearance/site-tint";
 import HomePagePanel from "@/modules/appearance/ui/HomePagePanel";
+import LiveStreamPanel from "@/modules/appearance/ui/LiveStreamPanel";
 import SiteFontSizePanel from "@/modules/appearance/ui/SiteFontSizePanel";
 import SiteLookPanel from "@/modules/appearance/ui/SiteLookPanel";
 import SiteTintPanel from "@/modules/appearance/ui/SiteTintPanel";
@@ -52,6 +54,7 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
   const fontSize = await readSiteFontSize(db);
   const look = await readSiteLook(db);
   const home = await readHomePage(db);
+  const live = await readLiveStream(db);
   // The club's own pages, for the two «Cum funcționează» buttons: by their Romanian title, a draft marked.
   const pages = (await listPagesForAdmin(db, "ro")).map((page) => ({ id: page.id, title: page.title ?? page.slug ?? page.id, published: page.editorialStatus === "PUBLISHED" }));
 
@@ -65,6 +68,7 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
         {saved === "siteLook" && <Alert severity="success">{t("look.saved")}</Alert>}
         {saved === "homePage" && <Alert severity="success">{t("homePage.saved")}</Alert>}
         {saved === "homeStrip" && <Alert severity="success">{t("homePage.strip.saved")}</Alert>}
+        {saved === "liveStream" && <Alert severity="success">{t("liveStream.saved")}</Alert>}
       </Box>
 
       {/*
@@ -78,6 +82,8 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
       <SiteLookPanel locale={locale} state={look} mayEdit={canManageClubSettings(actor.role)} openWhen={{ saved: saved === "siteLook" }} />
       {/* «Pagina principală» (§714): the home page at the site's root, one switch, and a fold for each part of the page. */}
       <HomePagePanel locale={locale} state={home} mayEdit={canManageClubSettings(actor.role)} pages={pages} saved={saved} openWhen={{ primary: true }} />
+      {/* «În direct pe YouTube» (§NNN): the live-broadcast notice on every public page, and its address. */}
+      <LiveStreamPanel locale={locale} state={live} mayEdit={canManageClubSettings(actor.role)} openWhen={{ saved: saved === "liveStream" }} />
 
       {/* «Sistemul de design» (§692): the look as the code draws it, and the redesign plan — one card, one button, for whoever reads this tab. */}
       <Panel glyph="appearance" title={t("design.card.title")} intro={t("design.card.intro")} id="design-system" data-testid="design-system-card">

@@ -29,6 +29,7 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedPublishedPages: async () => [],
   cachedSiteLook: async () => state.look,
   cachedHomePage: async () => state.home,
+  cachedLiveStream: async () => ({ on: false, url: null }),
   cachedUpcomingEvents: async () => {
     state.upcomingReads += 1;
     return state.upcoming;
@@ -54,6 +55,8 @@ vi.mock("@/shared/ui/LogoLink", () => ({
 }));
 vi.mock("@/shared/ui/LocaleSwitcher", () => ({ default: () => createElement("span", { "data-testid": "locale-switcher" }, "locale") }));
 vi.mock("@/shared/ui/NewBuildNotice", () => ({ default: () => null }));
+// «Suntem în direct» (§NNN) is its own Server Component with its own test; here it is off, like the setting by default.
+vi.mock("@/shared/ui/LiveStreamNotice", () => ({ default: () => null }));
 vi.mock("@/shared/ui/ButtonLink", () => ({
   default: ({ href, children, ...rest }: { href: unknown; children: ReactNode } & Record<string, unknown>) =>
     createElement("a", { href: typeof href === "string" ? href : `${(href as { pathname: string }).pathname}|${JSON.stringify((href as { params: unknown }).params)}`, "data-testid": rest["data-testid"] }, children),

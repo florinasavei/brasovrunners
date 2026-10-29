@@ -28,6 +28,11 @@
       "strava": "{club} on Strava",
       "youtube": "{club} on YouTube"
     },
+    "live": {
+      "label": "Live broadcast",
+      "body": "We are live on YouTube",
+      "watch": "Watch the broadcast"
+    },
     "nav": {
       "label": "Main navigation",
       "events": "Events",
@@ -2156,6 +2161,8 @@
       "siteFontSizeBody": "Every public page of the site now opens with its text at the chosen size, for every visitor, in light and dark mode. The backoffice stays as it is. You can go back to «Normal» at any time.",
       "siteLookTitle": "Change the site's theme?",
       "siteLookBody": "Every public page now opens in the chosen theme, for every visitor. The backoffice, the emails and the PDFs stay as they are. You can go back to «Theme v1» at any time.",
+      "liveStreamTitle": "Save the “Live” notice?",
+      "liveStreamBody": "On, the notice appears under the header on every page of the site, for every visitor, until you switch it off. Off, it disappears from the next page view.",
       "homePageTitle": "Save the home page?",
       "homePageBody": "From now on the site's address opens what you chose, for every visitor: the home page or the events list. You can go back at any time.",
       "translationBudgetTitle": "Save the translation budget?",
@@ -6446,6 +6453,27 @@
           "tag": "Weekly"
         }
       }
+    },
+    "liveStream": {
+      "title": "Live on YouTube",
+      "intro": "A notice on every public page, under the header, while the club is broadcasting: a red dot, “We are live on YouTube” and the link to the broadcast.",
+      "introMore": "The address stays saved while the notice is off: the next broadcast is one tick and one save. Use the broadcast's address or the channel's “live” page, which always leads to the current one.",
+      "current": "Now: {state}",
+      "state": {
+        "on": "On",
+        "off": "Off"
+      },
+      "updatedAt": "Set {when}.",
+      "on": "We are live — show the notice on the site",
+      "url": {
+        "label": "The broadcast's YouTube address",
+        "help": "An https address on youtube.com or youtu.be. Required while the notice is on."
+      },
+      "scope": "Only the public pages and the backoffice, under the header. Sends no email and changes nothing on the events.",
+      "save": "Save the notice",
+      "saving": "Saving…",
+      "saved": "The “Live” notice has been saved.",
+      "readOnly": "The Administrator switches the notice on; the state in force is shown here."
     },
     "fontSize": {
       "title": "Text size",
@@ -12871,6 +12899,7 @@
       "siteLook": "The site's theme was saved.",
       "homePage": "The home page was saved.",
       "homeStrip": "The photo strip was saved.",
+      "liveStream": "The “Live” notice was saved.",
       "clubTodoAdded": "Added to the list.",
       "clubTodoSaved": "Line saved.",
       "clubTodoUnchanged": "The line already said this; nothing changed.",

@@ -460,6 +460,8 @@ export type AuditAction =
   | "site_look.changed"
   /** «Pagina principală»: the home page at the site's root on or off, its hero picture and its two lines (§714). */
   | "home_page.changed"
+  /** «În direct pe YouTube»: the live-broadcast notice on every public page, on or off, with its address (§NNN). */
+  | "live_stream.changed"
   /** «Ordinea meniului»: the site menu's one order, every entry's key from first to last (§571). */
   | "menu_order.changed"
   /** The anti-bot challenge switched on or off from the backoffice (§254). */

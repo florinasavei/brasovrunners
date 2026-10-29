@@ -11,6 +11,7 @@ import { notUnderLook, onlyUnderLook } from "@/theme/look";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
 import { clubSocialLinks } from "./club-socials";
 import HeaderSocials, { headerSocials } from "./HeaderSocials";
+import LiveStreamNotice from "./LiveStreamNotice";
 import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
 import NewBuildNotice from "./NewBuildNotice";
@@ -307,6 +308,8 @@ export default async function SiteHeader() {
         desk is a phone somebody is working on. Both need to be told and neither may be
         interrupted.
       */}
+      {/* «Suntem în direct» (§NNN): one slim bar under the header while the club's setting is on; off, nothing. */}
+      <LiveStreamNotice />
       <NewBuildNotice build={buildInfo.id} />
     </>
   );

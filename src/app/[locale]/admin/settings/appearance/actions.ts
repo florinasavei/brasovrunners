@@ -7,6 +7,7 @@ import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { HOME_SECTION_KEYS } from "@/modules/appearance/domain/home-page";
 import { changeStripPicture, updateHomePage } from "@/modules/appearance/home-page";
+import { updateLiveStream } from "@/modules/appearance/live-stream";
 import { updateSiteFontSize } from "@/modules/appearance/site-font-size";
 import { LOOK_ACCENT_REFUSAL, updateSiteLook } from "@/modules/appearance/site-look";
 import { SITE_TINT_REFUSAL, updateSiteTint } from "@/modules/appearance/site-tint";
@@ -50,6 +51,28 @@ export async function updateSiteTintAction(_previous: FormOutcome | null, form: 
   revalidatePath(path);
   await flashOutcome({ saved: "siteTint" });
   redirect(`${path}?saved=siteTint#admin-alert`);
+}
+
+/**
+ * «În direct pe YouTube» (§NNN): the live-broadcast notice on every public page, on or off, with the
+ * broadcast's address. A club setting (§450) — the Administrator's at the door, and the service
+ * asserts it again. Asked first (§384): every visitor sees the bar, or stops seeing it, from the next
+ * page view.
+ */
+export async function updateLiveStreamAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/settings/appearance" });
+
+  try {
+    const actor = await requireStaffCapability(canManageClubSettings);
+    await updateLiveStream(getDb(), actor, { on: form.get("on"), url: form.get("url") }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  // The header reads the notice through the public cache, which the service expired (§333).
+  revalidatePath(path);
+  await flashOutcome({ saved: "liveStream" });
+  redirect(`${path}?saved=liveStream#admin-alert`);
 }
 
 /**

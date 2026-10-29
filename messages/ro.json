@@ -28,6 +28,11 @@
       "strava": "{club} pe Strava",
       "youtube": "{club} pe YouTube"
     },
+    "live": {
+      "label": "Transmisie în direct",
+      "body": "Suntem în direct pe YouTube",
+      "watch": "Urmărește transmisia"
+    },
     "nav": {
       "label": "Navigare principală",
       "events": "Alergări",
@@ -2156,6 +2161,8 @@
       "siteFontSizeBody": "Fiecare pagină publică a site-ului se deschide de acum cu textul la mărimea aleasă, pentru toți vizitatorii, în ambele variante. Backoffice-ul rămâne cum e. Poți reveni oricând la «Normal».",
       "siteLookTitle": "Schimbi tema site-ului?",
       "siteLookBody": "Fiecare pagină publică se deschide de acum în tema aleasă, pentru toți vizitatorii. Backoffice-ul, emailurile și PDF-urile rămân cum sunt. Poți reveni oricând la «Tema v1».",
+      "liveStreamTitle": "Salvezi anunțul «În direct»?",
+      "liveStreamBody": "Pornit, anunțul apare sub antet pe fiecare pagină a site-ului, pentru toți vizitatorii, până îl oprești. Oprit, dispare de la următoarea deschidere a paginii.",
       "homePageTitle": "Salvezi pagina principală?",
       "homePageBody": "Adresa site-ului deschide de acum ce ai ales, pentru toți vizitatorii: pagina principală sau lista de alergări. Poți reveni oricând.",
       "translationBudgetTitle": "Salvezi bugetul de traduceri?",
@@ -6446,6 +6453,27 @@
           "tag": "Săptămânal"
         }
       }
+    },
+    "liveStream": {
+      "title": "În direct pe YouTube",
+      "intro": "Un anunț pe fiecare pagină publică, sub antet, cât timp clubul transmite în direct: un punct roșu, «Suntem în direct pe YouTube» și linkul către transmisie.",
+      "introMore": "Adresa rămâne salvată și când anunțul e oprit: la următoarea transmisie bifezi și salvezi. Merge adresa transmisiei sau pagina «live» a canalului, care duce mereu la transmisia curentă.",
+      "current": "Acum: {state}",
+      "state": {
+        "on": "Pornit",
+        "off": "Oprit"
+      },
+      "updatedAt": "Setat {when}.",
+      "on": "Suntem în direct — arată anunțul pe site",
+      "url": {
+        "label": "Adresa transmisiei pe YouTube",
+        "help": "O adresă https de pe youtube.com sau youtu.be. Obligatorie cât timp anunțul e pornit."
+      },
+      "scope": "Doar paginile publice și backoffice-ul, sub antet. Nu trimite niciun email și nu schimbă nimic la evenimente.",
+      "save": "Salvează anunțul",
+      "saving": "Se salvează…",
+      "saved": "Anunțul «În direct» a fost salvat.",
+      "readOnly": "Anunțul îl pornește Administratorul; vezi aici starea în vigoare."
     },
     "fontSize": {
       "title": "Mărimea textului",
@@ -12871,6 +12899,7 @@
       "siteLook": "Tema site-ului a fost salvată.",
       "homePage": "Pagina principală a fost salvată.",
       "homeStrip": "Banda de fotografii a fost salvată.",
+      "liveStream": "Anunțul «În direct» a fost salvat.",
       "clubTodoAdded": "Adăugat pe listă.",
       "clubTodoSaved": "Rând salvat.",
       "clubTodoUnchanged": "Rândul spunea deja asta; nimic de schimbat.",

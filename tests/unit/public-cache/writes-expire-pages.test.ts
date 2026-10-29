@@ -195,6 +195,8 @@ const WRITES: Record<string, Expected> = {
   // «Pagina principală» (§714): the root and every header (the logo's address).
   "src/modules/appearance/home-page.ts#updateHomePage": ["settings"],
   "src/modules/appearance/home-page.ts#changeStripPicture": ["settings"],
+  // «În direct pe YouTube» (§NNN): the bar under every header.
+  "src/modules/appearance/live-stream.ts#updateLiveStream": ["settings"],
   "src/modules/deadlines/deadlines.ts#updateDeadlines": ["settings"],
 };
 

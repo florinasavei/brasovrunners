@@ -196,6 +196,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateSiteLookAction: [],
   // «Pagina principală» (§714): the site's address opens the home page or the listing, for every visitor, from the next visit.
   updateHomePageAction: [],
+  // «În direct pe YouTube» (§NNN): every visitor sees the bar, or stops seeing it, from the next page view.
+  updateLiveStreamAction: [],
   removeStripPictureAction: [],
   // Who receives the signed declarations and the confirmations, with personal data in them.
   updateClubNoticesAction: [],

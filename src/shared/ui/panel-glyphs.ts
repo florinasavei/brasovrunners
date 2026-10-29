@@ -37,6 +37,7 @@ import HandshakeIcon from "@mui/icons-material/Handshake";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import HistoryIcon from "@mui/icons-material/History";
 import HomeIcon from "@mui/icons-material/Home";
+import LiveTvIcon from "@mui/icons-material/LiveTv";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import HubIcon from "@mui/icons-material/Hub";
@@ -258,6 +259,8 @@ export const PANEL_GLYPHS = {
   // The language switch of «Emailuri» (§318 as amended) takes `translation`, below — never a flag; the two entries differ by their words.
   // «Pagina principală» (§714): the home page at the site's root, under «Aspect».
   home: HomeIcon,
+  // «În direct pe YouTube» (§NNN): the live-broadcast notice on every public page.
+  liveStream: LiveTvIcon,
   textSize: FormatSizeIcon,
   costs: PaidIcon,
   database: StorageIcon,

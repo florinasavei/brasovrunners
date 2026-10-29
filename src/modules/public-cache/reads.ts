@@ -12,6 +12,8 @@ import { readShownContactAddress } from "@/modules/contact/shown-address";
 import { readPublicPhone } from "@/modules/contact/public-phone";
 import { DEFAULT_SITE_TINT_SETTING, parseSiteTint, type SiteTintSetting } from "@/modules/appearance/domain/site-tint";
 import { readSiteTint } from "@/modules/appearance/site-tint";
+import { DEFAULT_LIVE_STREAM_SETTING, type LiveStreamSetting, parseLiveStream } from "@/modules/appearance/domain/live-stream";
+import { readLiveStream } from "@/modules/appearance/live-stream";
 import { DEFAULT_SITE_FONT_SIZE_SETTING, parseSiteFontSize, type SiteFontSizeSetting } from "@/modules/appearance/domain/site-font-size";
 import { readSiteFontSize } from "@/modules/appearance/site-font-size";
 import { DEFAULT_SITE_LOOK_SETTING, parseSiteLook, type SiteLookSetting } from "@/modules/appearance/domain/site-look";
@@ -1139,6 +1141,22 @@ export async function cachedHomePage(): Promise<HomePageSetting> {
     return parseHomePage(read.value);
   } catch {
     return DEFAULT_HOME_PAGE_SETTING;
+  }
+}
+
+/**
+ * «În direct pe YouTube» (§NNN): the live-broadcast notice the header draws while it is on. Off
+ * by default, off while the database is away (the last good copy, else the default): a bar that
+ * says the club is live must never appear because a read failed.
+ */
+export async function cachedLiveStream(): Promise<LiveStreamSetting> {
+  try {
+    const read = await readWithLastGood("settings:live-stream", () =>
+      publicRead(["settings.live-stream"], ["settings"], async () => (await readLiveStream(getDb())).setting),
+    );
+    return parseLiveStream(read.value);
+  } catch {
+    return DEFAULT_LIVE_STREAM_SETTING;
   }
 }
 

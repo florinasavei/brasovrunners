@@ -182,7 +182,8 @@ Tell the room what happened so the announcer does not start a song.
 
 **If YouTube terminates the stream:** stop streaming in OBS; read what YouTube Studio says the
 cause was; fix it (the music off, the microphone moved); start a new broadcast and post the new
-link where the first one was announced. Do not argue the point live.
+link where the first one was announced — the site's «În direct» notice too, unless its address is
+the channel's «live» page, which follows the new stream by itself. Do not argue the point live.
 
 **After the broadcast:** read the broadcast's «Copyright» panel in YouTube Studio. A Content ID
 claim on the archived video for a licensed track is disputed with the license proof kept above
@@ -214,7 +215,13 @@ A checklist, run in the venue with the real equipment, in this order:
 5. **The emergency controls.** Press the music's mute hotkey and the microphone's mute hotkey and
    watch the mixer react; unmute. YouTube Studio's live control room open and signed in, where
    the stream's health and any warning will be shown.
-6. **Monitoring the real output.** Once live, someone other than the announcer watches the actual
+6. **The site's own notice.** Once the stream is live, an Administrator ticks «Setări» → «Aspect» →
+   «În direct pe YouTube» → «Suntem în direct» with the broadcast's address and saves: every page of
+   the site then carries «Suntem în direct pe YouTube» with the link under the header. The channel's
+   own «live» page (youtube.com/@canal/live) as the address survives a restarted stream; a
+   broadcast's own address has to be replaced after a termination (above). **Untick it when the
+   broadcast ends** — nothing switches it off by itself.
+7. **Monitoring the real output.** Once live, someone other than the announcer watches the actual
    YouTube stream on a phone with headphones (on mobile data, not the venue's Wi-Fi, so the stream
    is watched as a viewer gets it), for the first minutes and whenever the scene changes: the
    voice on top, the music under it, no echo, and the stream's health in the control room green.

@@ -113,6 +113,7 @@ One line a row: the thing, then where it starts. Each row's why, the files besid
 | A new kind of checkpoint, or another way a limit is said | `src/db/schema/event-checkpoints.ts`, `domain/checkpoint.ts` |
 | An event's cover picture or its kind | `ui/boxes/CoverBox.tsx`, `src/modules/events/domain/event-kind.ts` |
 | The home page | `src/modules/home/ui/`, `src/modules/events/ui/ListingCard.tsx` |
+| «Suntem în direct pe YouTube» under the header | `src/shared/ui/LiveStreamNotice.tsx`, `src/modules/appearance/live-stream.ts` |
 | The public list's «Club» column | `ui/boxes/StartListBox.tsx`, `domain/public-list-club.ts` |
 | A setting that is on or off | `src/shared/ui/`, `src/shared/ui/TickButton.tsx` |
 | A table or a column | `src/db/schema/*.ts`, `src/db/migrations/00NN_<what>.sql` |
