@@ -29,7 +29,7 @@ import { bornAged } from "../../helpers/volunteer-birth";
 import { readSheet } from "../../helpers/xlsx";
 
 /**
- * §864 — a volunteer the club types with no address, no telephone number, or neither (the owner, 2026-10-28: «Cand adaug voluntar
+ * §NNN — a volunteer the club types with no address, no telephone number, or neither (the owner, 2026-10-28: «Cand adaug voluntar
  * de mana, as vrea sa pot adaug si fara adresa de mail si telefon, doar sa fie asa pe lista»), on a real schema, through the card's
  * own Server Actions, the services and the pages:
  *
@@ -261,7 +261,7 @@ function expectNoNullShown(page: string) {
   expect(page).not.toMatch(/tel:(null|")/);
 }
 
-describe("§864 the table's two CHECKs, on the migrated schema the suite runs on", () => {
+describe("§NNN the table's two CHECKs, on the migrated schema the suite runs on", () => {
   const base = () => ({ eventId, name: "Doar Nume", source: "STAFF" as const, createdAt: NOW, updatedAt: NOW });
 
   it("refuses an address without its canonical form or its version, and either of those without an address", async () => {
@@ -294,7 +294,7 @@ describe("§864 the table's two CHECKs, on the migrated schema the suite runs on
   });
 });
 
-describe("§864 «Adaugă» and «Modifică» take a person the club types with no address, no telephone, or neither", () => {
+describe("§NNN «Adaugă» and «Modifică» take a person the club types with no address, no telephone, or neither", () => {
   it("adds one with neither, one with an address alone and one with a telephone alone — the address's three columns null together", async () => {
     const nameOnly = await addByHand({ name: "Doar Nume", assignedRoleIds: [waterId] });
     const emailOnly = await addByHand({ name: "Doar Email", email: "Doar.Email@Example.test" });
@@ -384,7 +384,7 @@ describe("§864 «Adaugă» and «Modifică» take a person the club types with 
   });
 });
 
-describe("§864 nothing is ever queued for a person with no address", () => {
+describe("§NNN nothing is ever queued for a person with no address", () => {
   it("queues no outbox row when roles are given, given again, taken back, changed in «Modifică», or the person is reopened", async () => {
     const id = await addByHand({ name: "Doar Nume", assignedRoleIds: [waterId] });
     expect(await press(actions.assignVolunteerAction, form({ volunteerId: id, roleId: finishId }))).not.toContain("volunteerError");
@@ -447,7 +447,7 @@ describe("§864 nothing is ever queued for a person with no address", () => {
   });
 });
 
-describe("§864 the verbs that only send an email", () => {
+describe("§NNN the verbs that only send an email", () => {
   it("refuses the agreement's link and the parent's link for a person with no address (VOLUNTEER_NO_EMAIL), writing and queuing nothing", async () => {
     const adult = await addByHand({ name: "Doar Nume", assignedRoleIds: [waterId] });
     await expect(requestVolunteerAgreement(db, admin, { eventId, id: adult }, NOW)).rejects.toMatchObject({ code: "VOLUNTEER_NO_EMAIL" });
@@ -496,7 +496,7 @@ describe("§864 the verbs that only send an email", () => {
   });
 });
 
-describe("§864 every display of the person draws a missing address or telephone number as nothing", () => {
+describe("§NNN every display of the person draws a missing address or telephone number as nothing", () => {
   it("the person's page: no `mailto:` or `tel:` to nothing, never «null», one line that says the person is on the list only", async () => {
     const nameOnly = await addByHand({ name: "Doar Nume", assignedRoleIds: [waterId] });
     const page = await personPage(nameOnly);

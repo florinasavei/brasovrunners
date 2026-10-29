@@ -1189,7 +1189,7 @@ describe("§842 each volunteer on the card is the house's row fold", () => {
     const list = page.slice(start, page.indexOf('data-testid="volunteer-add"'));
     const required = [...list.matchAll(/<input\b[^>]*\brequired\b[^>]*>/g)];
     // The name of each of the two people, and the address and the telephone of Maria, who typed them on the public form — Ion, whom the
-    // club typed, may go without either (§864).
+    // club typed, may go without either (§NNN).
     expect(required).toHaveLength(4);
     for (const match of required) {
       const at = start + (match.index ?? 0);
@@ -1214,7 +1214,7 @@ describe("§842 each volunteer on the card is the house's row fold", () => {
   });
 });
 
-describe("§864 a person the club typed with no address or no telephone number, on the event's card", () => {
+describe("§NNN a person the club typed with no address or no telephone number, on the event's card", () => {
   const NAME_ONLY: VolunteerItem = { ...PEOPLE[1], id: "77777777-7777-4777-8777-777777777777", name: "Doar Nume", email: null, phone: null };
   const MINOR_NAME_ONLY: VolunteerItem = {
     ...NAME_ONLY,
