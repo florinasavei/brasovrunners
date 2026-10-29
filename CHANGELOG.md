@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.92-2026-10-29
+
+- **Six test categories** — `yarn test:categories`, `yarn test:fast` (trust, guards, logic), `yarn test:skip <names…>`, each category a Vitest project; «trust», the rules that cannot be broken, is never left out; the pre-commit hook runs the fast categories only; CI runs everything. §867.
 ## BR-V3.91-2026-10-29
 
 - **«Kituri de pregătit»** — with one event chosen, the registrations list's counts say how many kits to pack (everyone holding a place, special guests included, plus the open invitations) and, when the event gives a T-shirt, how many of each size. §866.

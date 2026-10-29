@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.92` | six test categories: run one, leave some out, never the rules that cannot be broken (§867) |
 | `BR-V3.91` | «Kituri de pregătit» under the registrations list's counts, with the T-shirt sizes (§866) |
 | `BR-V3.90` | a volunteer added by hand without an email or a phone, on the list only (§865) |
 | `BR-V3.89` | the volunteer's thank-you screen says «formularul», not «oferta» (§864) |

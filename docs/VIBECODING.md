@@ -1,8 +1,8 @@
 # Vibecoding this repo — the one page to read before asking an AI to change anything
 
-<!-- PROJECT_BASELINE: BR-V3.91-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.92-2026-10-29 -->
 
-**Baseline `BR-V3.91-2026-10-29`**
+**Baseline `BR-V3.92-2026-10-29`**
 
 The owner's word for how this platform is built: an AI agent writes, the owner reads and
 merges. This page is the short version of everything an agent trips over. `CLAUDE.md` is the
@@ -14,11 +14,12 @@ long one; `AGENTS.md` is the law.
 git checkout qa && git pull                       start from qa, never from main
 git checkout -b feat/<what> --no-track            one branch per unit of work
 …change…                                          keep going until the ask is done, not half
-yarn check                                        docs + migrations + types + lint + 16 000 tests (a minute on many cores; CI shards the tests)
+yarn test:fast                                    the quick tests: trust (the rules that cannot be broken), guards, logic
+yarn check                                        docs + migrations + types + lint + 18 000 tests in six categories (yarn test:categories)
 docker compose up -d db && yarn db:reset:local    local Postgres with the sample data
 yarn build && yarn start --port 4783              a production build, like Vercel's
 yarn test:e2e                                     140 Playwright runs, phone + desktop (~35 s)
-git commit                                        the pre-commit hook runs yarn check again
+git commit                                        the hook: check:static + the staged files' tests in the yarn test:fast categories
 git push -u origin feat/<what> && gh pr create --base qa   the owner merges; a release is qa → main
 ```
 
