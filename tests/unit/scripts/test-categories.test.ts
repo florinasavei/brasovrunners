@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { listing, vitestArgs } from "../../../scripts/test-categories.mjs";
+import { directTestsOf, listing, vitestArgs } from "../../../scripts/test-categories.mjs";
 import { CATEGORIES, categorize, listed, signalsOf, testFiles } from "../../categories.mjs";
 
 /**
@@ -55,7 +55,8 @@ describe("BR-REQ-090-02 the test categories (§867)", () => {
     expect(() => vitestArgs(["--skip", "trust"])).toThrow(/never left out/);
     expect(() => vitestArgs(["--skip", "drawn", "trust"])).toThrow(/never left out/);
     const hook = readFileSync(".githooks/pre-commit", "utf8");
-    expect(hook).toMatch(/yarn test:fast related --run --passWithNoTests \$staged/);
+    // The tests that import a staged file directly, in the fast categories (§871): «trust» among them.
+    expect(hook).toMatch(/node scripts\/test-categories\.mjs direct \$staged/);
     expect(hook).not.toMatch(/--project=!|test:skip/);
   });
 
@@ -74,6 +75,23 @@ describe("BR-REQ-090-02 the test categories (§867)", () => {
     expect(vitestArgs(["--", "calendar"])).toEqual(["run", ...KEPT_BY_FAST, "calendar"]);
     expect(() => vitestArgs(["--skip"])).toThrow(/name the categories/);
     expect(() => vitestArgs(["--skip", "nope"])).toThrow(/no test category «nope»/);
+  });
+
+  it("picks the tests that import a staged file directly, not every test that reaches it (§871)", () => {
+    const files = ["tests/unit/a.test.ts", "tests/unit/b.test.ts", "tests/unit/i18n/messages.test.ts", "tests/unit/scripts/c.test.ts", "tests/integration/d.test.ts"];
+    const text: Record<string, string> = {
+      "tests/unit/a.test.ts": 'import { words } from "@/modules/weather/words";',
+      "tests/unit/b.test.ts": 'import { page } from "@/modules/weather/ui/Page"; // which imports words',
+      "tests/unit/i18n/messages.test.ts": 'import ro from "../../../messages/ro.json";',
+      "tests/unit/scripts/c.test.ts": 'import { x } from "../../../scripts/ship-checks.mjs";',
+      "tests/integration/d.test.ts": 'import { createTestDatabase } from "../helpers/db";\nimport { y } from \'@/modules/x\';',
+    };
+    const read = (file: string) => text[file] ?? "";
+    expect(directTestsOf(["src/modules/weather/words.ts"], files, read)).toEqual(["tests/unit/a.test.ts"]);
+    expect(directTestsOf(["src/modules/x/index.ts", "tests/unit/b.test.ts"], files, read)).toEqual(["tests/integration/d.test.ts", "tests/unit/b.test.ts"]);
+    expect(directTestsOf(["messages/ro.json"], files, read)).toEqual(["tests/unit/i18n/messages.test.ts"]);
+    expect(directTestsOf(["scripts/ship-checks.mjs", "tests/helpers/db.ts"], files, read)).toEqual(["tests/integration/d.test.ts", "tests/unit/scripts/c.test.ts"]);
+    expect(directTestsOf(["src/app/layout.tsx", "docs/README.md"], files, read)).toEqual([]);
   });
 
   it("gives a new, unlisted test its category from its own text, «trust» first", () => {

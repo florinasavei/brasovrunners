@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.96` | a faster commit: direct-importer tests in the hook, ESLint's cache (§871) |
 | `BR-V3.95` | «Invitații» closed by default (§870) |
 | `BR-V3.94` | a shorter first read for AI agents: CLAUDE.md and VIBECODING.md capped (§869) |
 | `BR-V3.93` | the release and the batch merge fail fast with the cause; Neon's quota warns before it stops (§868) |
