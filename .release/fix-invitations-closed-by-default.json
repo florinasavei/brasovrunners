@@ -1,7 +1,0 @@
-{
-  "branch": "fix/invitations-closed-by-default",
-  "decisionsTitle": "«Invitații» is closed by default",
-  "decisionsSection": "**The owner, 2026-10-29, with a screenshot of «Invitații» open over one sent and nine accepted invitations:** \"și partea de invitații ar trebui să fie colapsată by default\".\n\n**Decision.** The registrations page's «Invitații» panel is closed when the page is drawn, whatever its invitations' states; its closed line keeps «N în așteptare». §740's rule that opened it while an invitation was sent and waiting, or expired before the event, is gone, and `invitationsNeedAttention` with it. «Invită pe email», the link from «Toate evenimentele», the event editor's button and the redirect after a send all address `#registrations-invitations`, which opens the fold as before.",
-  "changelogLine": "- **«Invitații» closed by default** — on the registrations page the panel opens only when pressed, or from «Invită pe email». §NNN.",
-  "batchLine": "«Invitații» closed by default"
-}
