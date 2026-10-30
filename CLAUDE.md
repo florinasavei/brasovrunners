@@ -196,6 +196,10 @@ than any training data can be trusted on. Pin exact versions in `package.json`.
   one place, change it, run the tests of what you touched, commit, push, PR, `ship`, one short line
   when it is live. No audit, no agents, no new guards, no waves, no refactor beside it unless the owner
   asks; anything wider is a one-line question first, never a start.
+- **A wish said in passing is a queue row, never a build.** The owner, 2026-10-29, after a session
+  asked for documentation built a feature from a sentence in the chat: a request outside the task
+  you were given goes into `docs/QUEUE.md` under what the owner asked for, with one line back
+  asking whether to build it now. Never start it, and never run the whole end-to-end suite on it.
 - **Commit on a feature branch, push it, open the PR into `qa`; never push to `qa` or `main`.**
   The owner merges pull requests and said so on 2026-09-17 ("commit and push for me and create
   PRs"); before that the rule was to stage and hand back a message. A release is the `qa →
