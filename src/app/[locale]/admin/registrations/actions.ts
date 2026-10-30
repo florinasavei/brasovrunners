@@ -38,6 +38,7 @@ import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { settleReserveEntry } from "@/modules/registrations/reserve-list";
+import { addRegistrationNote, parseNoteBody } from "@/modules/registrations/notes";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
@@ -951,3 +952,70 @@ export async function sendOutboxNowAction(_previous: FormOutcome | null, form: F
   redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}saved=outboxSent&sent=${sent}${carried}#admin-alert`);
 }
 
+/**
+ * Back to the panel the short form sits in (§NNN): the queue on the event's page (`back=event`), or the panel
+ * on the event's registrations list — each opened by the outcome, the toast flashed on the way.
+ */
+async function backToWaitlistPanel(form: FormData, locale: Locale, eventId: string, outcome: Record<string, string | undefined>): Promise<never> {
+  await flashOutcome(outcome);
+  const query = new URLSearchParams(Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][]);
+  if (text(form, "back") === "event") {
+    redirect(`${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } })}?${query.toString()}#box-queue`);
+  }
+  query.set("eventId", eventId);
+  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${query.toString()}#registrations-waitlist-add`);
+}
+
+/**
+ * «Adaugă pe lista de așteptare» (§NNN): the one-press form on the queue panel and on the registrations list —
+ * a name, an address, an optional internal note and the relay tick — posted as the staff entry with «Direct pe
+ * lista de așteptare» ticked: the Administrator's alone (the coarse gate here, the service's own assertion
+ * again, BR-REQ-060-01), the address vouched for, the row through the allocator at once. The note is checked
+ * before anything is written and lands on the registration after it (§777). A refusal keeps what was typed
+ * (§315); a success returns to the panel it came from, open, and the toast says which state the row landed in.
+ */
+export async function addToWaitlistAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+
+  let outcome: { saved: string };
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    const now = new Date();
+    // An over-long note is refused naming its box, before any row exists (§315); an empty box is no note.
+    const typedNote = text(form, "note").trim();
+    const note = typedNote === "" ? null : parseNoteBody(typedNote);
+    const created = await createRegistrationByStaff(
+      getDb(),
+      actor,
+      {
+        eventId,
+        firstName: text(form, "firstName"),
+        lastName: text(form, "lastName"),
+        email: text(form, "email"),
+        // The person's emails in the backoffice's language; the full form asks for their own.
+        locale,
+        // A disclosure the person has to have asked for (§323): never from the short form.
+        listOptOut: true,
+        relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
+        vouchAddress: true,
+      },
+      now,
+    );
+    if (note !== null && created.registrationId) await addRegistrationNote(getDb(), actor, created.registrationId, note, now);
+    outcome = created.status === "PENDING_DECLARATION" ? { saved: "waitlistPlaced" } : { saved: "waitlistAdded" };
+  } catch (error) {
+    // The form comes back as typed (§315); the note's rule names the form's box, not the service's column.
+    const refusal = refused(error, form, {
+      fieldNames: (failure) => failure.fields.filter((name) => name !== ALREADY_ON_ADDRESS && name !== ADDRESS_AT_CAP).map((name) => (name === "body" ? "note" : name)),
+    });
+    // The same sentences the full form says (§493): this person is on the address already, or the address is at the club's limit.
+    if (isDomainError(error) && error.fields.includes(ALREADY_ON_ADDRESS)) return { ...refusal, error: "STAFF_ALREADY_ON_ADDRESS" };
+    if (isDomainError(error) && error.fields.includes(ADDRESS_AT_CAP)) return { ...refusal, error: "STAFF_ADDRESS_AT_CAP" };
+    // No place and the line full (§348): nothing was written — one transaction — and the sentence names no box.
+    const full = waitlistRefusalCode(error);
+    if (full) return { ...refusal, error: full, fields: [] };
+    return refusal;
+  }
+  return backToWaitlistPanel(form, locale, eventId, outcome);
+}

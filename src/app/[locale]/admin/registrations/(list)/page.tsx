@@ -70,6 +70,7 @@ import { listEventInvitations, listOpenInvitationCountsByEvent } from "@/modules
 import Panel from "@/shared/ui/Panel";
 import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
 import ReserveListPanel from "@/modules/registrations/ui/ReserveListPanel";
+import WaitlistAddForm from "@/modules/registrations/ui/WaitlistAddForm";
 import { listReserveEntries } from "@/modules/registrations/reserve-list";
 import { addReserveEntryAction, deleteReserveEntryAction, saveReserveNoteAction } from "../reserve-actions";
 import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
@@ -81,7 +82,7 @@ import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
-import { bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
+import { addToWaitlistAction, bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
 import { resendFamilyEmailAction, resendRegistrationEmailAction } from "../[id]/actions";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
@@ -1344,12 +1345,30 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           eventId={filters.eventId}
           entries={await listReserveEntries(db, actor, filters.eventId)}
           officialHref={(entryId) => `${getPathname({ locale, href: "/admin/registrations/new" })}?${new URLSearchParams({ eventId: filters.eventId ?? "", reserve: entryId }).toString()}`}
-          directHref={mayManage ? `${getPathname({ locale, href: "/admin/registrations/new" })}?${new URLSearchParams({ eventId: filters.eventId }).toString()}` : null}
           addAction={addReserveEntryAction}
           saveNoteAction={saveReserveNoteAction}
           deleteAction={deleteReserveEntryAction}
           opened={saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveDeleted"}
         />
+      )}
+
+      {/*
+        «Adaugă pe lista de așteptare» (§NNN): the one-press entry onto the official waiting list — the address
+        vouched for by the Administrator, the row through the allocator at once. Administrator only, on a list
+        about one event; the new row shows in the list above in the state it landed in.
+      */}
+      {filters.eventId && mayManage && (
+        <Panel
+          glyph="queue"
+          collapsible
+          title={t("waitlistAdd.title")}
+          intro={t("waitlistAdd.intro")}
+          openWhen={{ saved: saved === "waitlistAdded" || saved === "waitlistPlaced" }}
+          id="registrations-waitlist-add"
+          data-testid="registrations-waitlist-add"
+        >
+          <WaitlistAddForm locale={locale} eventId={filters.eventId} waitlistAddAction={addToWaitlistAction} scope="registrations-waitlist-add" heading={false} />
+        </Panel>
       )}
 
       {/*

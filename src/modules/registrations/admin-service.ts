@@ -3,7 +3,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
-import { type Registration, registrations } from "@/db/schema/registrations";
+import { type Registration, type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
@@ -565,7 +565,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   actor: Pick<StaffUser, "id" | "role">,
   input: CreateRegistrationByStaffInput,
   now: Date,
-): Promise<{ registrationId: string | null }> {
+): Promise<{ registrationId: string | null; status: RegistrationStatus | null }> {
   assertDesk(actor);
 
   if (!input.relayedByParticipantRequest) {
@@ -695,8 +695,10 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
       throw error;
     }
   }
-  // The row this entry wrote, for «Trece pe lista oficială» (§854), which carries the line's note onto it.
-  return { registrationId: created?.id ?? null };
+  // The row this entry wrote, for «Trece pe lista oficială» (§854), which carries the line's note onto it, and
+  // the state the entry itself landed in — the line or a hold for a vouched entry (§NNN), before any fast-track
+  // confirmation — for the short form's toast («Adaugă pe lista de așteptare»).
+  return { registrationId: created?.id ?? null, status: created?.status ?? null };
 }
 
 /**

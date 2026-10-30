@@ -2866,9 +2866,14 @@ BR-REQ-037-05):
      (never a place ahead of anyone, never a supplementary one), with the outcome's ordinary email
      (`WAITLIST_JOINED`, or `COMPLETE_DECLARATION` starting the hold) and no verification email. The hold
      waits as «Dă-i un loc acum»'s does (`computeVouchedPlaceExpiry`, capped by the start alone); the
-     public window is not consulted, as at the desk; a full line refuses the whole entry (§348) and nothing
-     is written. Audited (`registration.address_vouched_on_entry`) under the Administrator's id, beside
+     public window is not consulted, as at the desk, but after the start the entry is refused
+     (`VOUCHED_ENTRY_AFTER_START`): a remote act, so only the desk takes a person then, as §637 rules; a
+     full line refuses the whole entry (§348) and nothing is written. Audited (`registration.address_vouched_on_entry`) under the Administrator's id, beside
      `registration.created_by_staff`. The participant still signs their own declaration, online or on paper.
+     The same entry in one press: «Adaugă pe lista de așteptare» (`addToWaitlistAction`, `WaitlistAddForm`)
+     under the queue's line on the event's page and as its own panel on the event's registrations list — a
+     name, an address, an optional internal note (§777) and the relay tick, the tick posted as ticked, the
+     emails in the backoffice's language; the full form stays one link away.
    - **An offer to a named person** («Trimite-i oferta», `offerPlaceToByStaff`, `DECISIONS.md`
      §615, §642). Administrator only (`canManageRegistrations`). The ordinary offer and its email
      to the waiting-list entry the Administrator picks, at any moment before the start — after the

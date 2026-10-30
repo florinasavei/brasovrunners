@@ -61,12 +61,12 @@ beforeEach(async () => {
 const at = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000);
 const PUBLIC = { source: "PUBLIC" as const, createdByStaffUserId: null };
 
-async function createEvent(capacity: number | null, options: { waitlistCapacity?: number | null; closesAt?: Date | null } = {}): Promise<EventInput> {
+async function createEvent(capacity: number | null, options: { waitlistCapacity?: number | null; closesAt?: Date | null; startsAt?: Date } = {}): Promise<EventInput> {
   const [event] = await db
     .insert(events)
     .values({
       type: "RACE",
-      startsAt: STARTS,
+      startsAt: options.startsAt ?? STARTS,
       registrationMode: "INTERNAL",
       capacity,
       waitlistCapacity: options.waitlistCapacity ?? null,
@@ -270,6 +270,19 @@ describe("§NNN «Direct pe lista de așteptare»: the address vouched for at th
     expect(await trailOf(mara.id, "registration.address_vouched_on_entry")).toEqual([]);
     expect((await trailOf(mara.id, "registration.created_by_staff"))[0].metadataJson).toMatchObject({ fastTrack: true });
     expect((await trailOf(mara.id, "registration.created_by_staff"))[0].metadataJson).not.toHaveProperty("addressVouched");
+  });
+
+  it("after the start the remote vouching is refused with its own sentence and nothing is written; the desk's walk-in still goes through", async () => {
+    const event = await createEvent(3, { startsAt: new Date(NOW.getTime() - 60 * 60_000) });
+
+    const started = await refusal(createRegistrationByStaff(db, admin, entryOf(event.id, "Mara", { vouchAddress: true }), at(5)));
+    expect(isDomainError(started) && started.code).toBe("VOUCHED_ENTRY_AFTER_START");
+    expect(await rowOf("Mara")).toBeUndefined();
+    expect(await db.select().from(participants).where(eq(participants.canonicalEmail, "mara@example.ro"))).toEqual([]);
+
+    // Race morning at the table (§67): the person in front of the volunteer, the paper signed — unchanged.
+    await createRegistrationByStaff(db, admin, entryOf(event.id, "Luca", { fastTrack: true }), at(6));
+    expect((await rowOf("Luca")).status).toBe("CONFIRMED");
   });
 
   it("after the public close the Administrator may still enter and vouch, as at the desk; the ordinary entry is refused; the hold is capped by the start, not the close", async () => {

@@ -1715,6 +1715,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   // An invitation's form (§647): the invitation is the door, as the desk's is — local, scheduled and dated.
   const invited = origin.source === "PUBLIC" && origin.invitation !== undefined;
   assertRegistrationOpen(event, now, atTheDesk || invited || vouched);
+  // A vouched entry is a remote act (§NNN): after the gun only the desk takes a person, as «Dă-i un loc acum» rules (§637).
+  if (vouched && event.startsAt.getTime() <= now.getTime()) {
+    throw new DomainError("VOUCHED_ENTRY_AFTER_START", "the event has started: enter the person at the desk instead");
+  }
   // An event for the members alone (§552), before anything is parsed or spent: asked again under the lock.
   if (!invited) assertMembersDoor(event.membersOnly === true, origin);
 

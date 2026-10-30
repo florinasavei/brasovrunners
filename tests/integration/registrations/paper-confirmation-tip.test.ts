@@ -55,6 +55,8 @@ vi.mock("@/modules/staff-identity/session", () => ({
   requireStaffCapability: async () => state.actor,
 }));
 vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
+  // «Adaugă pe lista de așteptare» (§NNN): the list page and the queue panel import it; not under test here.
+  addToWaitlistAction: vi.fn(),
   setOutsideCapacityAction: vi.fn(),
   resendRegistrationEmailAction: vi.fn(),
   givePlaceNowAction: vi.fn(),

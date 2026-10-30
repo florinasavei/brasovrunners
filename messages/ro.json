@@ -2094,6 +2094,8 @@
       "reminderBody": "{name} primește acum reminderul dinaintea cursei.",
       "createRegistrationTitle": "Adaugi înscrierea?",
       "createRegistrationBody": "Persoana este înscrisă la eveniment în numele ei, la cererea ei, și primește emailul pasului următor.",
+      "waitlistAddTitle": "Adaugi pe lista de așteptare?",
+      "waitlistAddBody": "Garantezi adresa, iar persoana intră acum, la cererea ei: pe lista de așteptare sau, dacă e un loc liber, pe el. Primește emailul stării în care ajunge.",
       "withdrawConsentTitle": "Ștergi datele bifate?",
       "withdrawConsentBody": "Datele bifate dispar definitiv din înscriere; motivul rămâne în jurnal, fără numele persoanei.",
       "eraseRegistrationTitle": "Ștergi definitiv înscrierea?",
@@ -2230,6 +2232,7 @@
       "NOTHING_SELECTED": "Nu ai bifat nicio înscriere.",
       "NOTE_EMPTY": "Nota trebuie să aibă cuvinte: scrie ceva înainte să o salvezi.",
       "NOTE_TOO_LONG": "Nota e prea lungă. Scurtează-o sau împarte-o în două note.",
+      "VOUCHED_ENTRY_AFTER_START": "Evenimentul a început: persoana se înscrie la masă, cu bifa «Persoana este la masă». Nu s-a scris nimic.",
       "UNAUTHENTICATED": "Sesiunea a expirat. Autentifică-te din nou.",
       "FORBIDDEN": "Rolul tău nu permite această acțiune.",
       "NOT_FOUND": "Înregistrarea nu mai există.",
@@ -11120,9 +11123,20 @@
       "emailHelp": "Adresa de pe care v-a scris. Nu i se trimite nimic până nu o treceți pe lista oficială.",
       "add": "Adaugă",
       "fromList": "Treci de pe lista internă: {name}. Nota trece pe înscriere și linia dispare de pe lista internă. De aici e o înscriere obișnuită, cu emailul ei.",
-      "fromListClosed": "{name} e pe lista internă a unui eveniment care nu primește înscrieri acum; formularul nu e completat.",
-      "directHint": "Vrei să intre direct pe lista oficială de așteptare, fără să mai confirme adresa? Adaugă înscrierea cu bifa «Direct pe lista de așteptare».",
-      "directButton": "Adaugă direct pe lista oficială"
+      "fromListClosed": "{name} e pe lista internă a unui eveniment care nu primește înscrieri acum; formularul nu e completat."
+    },
+    "waitlistAdd": {
+      "title": "Adaugă pe lista de așteptare",
+      "intro": "Numele și adresa, o apăsare: garantezi tu adresa, iar persoana intră acum pe lista oficială de așteptare, fără emailul de confirmare.",
+      "help": "Garantezi tu adresa: dacă e plin, intră pe ultimul loc și primește emailul „Ești pe lista de așteptare”; dacă e un loc liber, îl primește și semnează declarația din email.",
+      "firstName": "Prenume",
+      "lastName": "Nume",
+      "email": "Email",
+      "emailHelp": "Adresa persoanei, nu a clubului: aici îi ajung emailurile, în limba de aici. Verific-o înainte.",
+      "note": "Notă internă (opțional)",
+      "noteHelp": "Doar pentru organizatori; apare pe înscriere. Nu scrieți date despre sănătate.",
+      "add": "Adaugă pe lista de așteptare",
+      "longForm": "Formularul complet: alte date, altă limbă"
     }
   },
   "NotFound": {
@@ -13143,7 +13157,9 @@
       "resultsAwardsUnchanged": "Premiile erau deja așa; nimic de schimbat.",
       "reserveAdded": "Persoana e pe lista internă. Nu i s-a trimis nimic.",
       "reserveNoteSaved": "Nota a fost salvată.",
-      "reserveDeleted": "Persoana a fost ștearsă de pe lista internă."
+      "reserveDeleted": "Persoana a fost ștearsă de pe lista internă.",
+      "waitlistAdded": "Persoana e pe lista de așteptare; emailul e pus la coadă.",
+      "waitlistPlaced": "Era un loc liber: persoana l-a primit, iar emailul cu declarația e pus la coadă."
     },
     "via": {
       "mailgun": "Pleacă prin Mailgun.",
