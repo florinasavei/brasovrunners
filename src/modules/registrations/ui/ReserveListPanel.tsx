@@ -18,7 +18,8 @@ import type { ReserveEntryRow } from "../reserve-list";
  * «Lista internă de așteptare» (§854) on one event's registrations list, for the Organizer and above: the
  * people who asked to be kept in mind, told nothing and emailed nothing. Each line: the name, the address
  * when the club has it, the internal note (edited in place), «Trece pe lista oficială» — the ordinary staff
- * entry, prefilled; the note follows the registration — and «Șterge». Below, «Adaugă pe lista internă».
+ * entry, prefilled; the note follows the registration — and «Șterge». Below, «Adaugă pe lista internă». The
+ * official list's own one-press entry is the panel beside this one («Adaugă pe lista de așteptare», §872).
  * Presentation only: the page reads the rows and hands in the actions.
  */
 export default async function ReserveListPanel({
@@ -124,6 +125,7 @@ export default async function ReserveListPanel({
           <Typography id="reserve-add-title" variant="h3" sx={{ ...HEADING_SX[3], mb: 1.5 }}>
             {t("reserve.addTitle")}
           </Typography>
+
           <ActionForm action={addAction} messages={refusal} scope="reserve-add" data-testid="reserve-add-form">
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="eventId" value={eventId} />

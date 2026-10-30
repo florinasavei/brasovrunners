@@ -34,6 +34,10 @@ const READERS = new Set(
     "src/app/api/admin/registrations/export/route.ts",
     // «Trece pe lista oficială» (§854): writes the internal list's note onto the new registration, reads none.
     "src/modules/registrations/reserve-list.ts",
+    // «Adaugă pe lista de așteptare» (§872): the one-press entry's optional note, checked and written onto the new
+    // registration by the action, reads none; the form imports the box's length alone.
+    "src/app/[locale]/admin/registrations/actions.ts",
+    "src/modules/registrations/ui/WaitlistAddForm.tsx",
   ].map((file) => path.join(ROOT, file)),
 );
 

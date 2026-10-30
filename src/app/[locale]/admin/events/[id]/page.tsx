@@ -159,7 +159,7 @@ import {
   stopRepeatAction,
   transitionEventAction,
 } from "../../actions";
-import { offerPlaceAction } from "../../registrations/actions";
+import { addToWaitlistAction, offerPlaceAction } from "../../registrations/actions";
 import { countForm } from "@/i18n/count-form";
 import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
 import { registrationState } from "@/modules/events/domain/registration-window";
@@ -1371,13 +1371,23 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       )}
 
                       {/* 16.1 — the queue as the allocator sees it, and the waiting list in its order (§92). */}
-                      <Panel glyph="queue" collapsible level={3} id="box-queue" title={t("editor.boxes.queue.title")} aside={waiting > 0 ? t("editor.boxes.queue.waiting", { waiting }) : undefined}>
+                      <Panel
+                        glyph="queue"
+                        collapsible
+                        level={3}
+                        id="box-queue"
+                        title={t("editor.boxes.queue.title")}
+                        aside={waiting > 0 ? t("editor.boxes.queue.waiting", { waiting }) : undefined}
+                        // Open on the way back from «Adaugă pe lista de așteptare» (§872), with the new row in the line.
+                        openWhen={{ saved: saved === "waitlistAdded" || saved === "waitlistPlaced" }}
+                      >
                         <QueuePanel
                           db={db}
                           event={{ id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity, timezone: event.timezone, waitlistAutoOffer: event.waitlistAutoOffer }}
                           waiting={waiting}
                           now={now}
                           offerAction={canManageRegistrations(staffUser.role) ? offerPlaceAction : undefined}
+                          waitlistAddAction={canManageRegistrations(staffUser.role) ? addToWaitlistAction : undefined}
                           counts={occupiedCounts ?? undefined}
                           placeDeadlines={placeDeadlines ?? undefined}
                         />

@@ -3,7 +3,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
-import { type Registration, registrations } from "@/db/schema/registrations";
+import { type Registration, type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
@@ -502,6 +502,14 @@ export type CreateRegistrationByStaffInput = {
    */
   fastTrack?: boolean;
   /**
+   * «Direct pe lista de așteptare» (§872): the Administrator vouches for the address — as «Dă-i un loc
+   * acum» does on a row waiting for it (§637) — and the row goes through the allocator in the entry's own
+   * transaction: the back of the line when the event is full, a declaration hold when a place is free,
+   * the outcome's ordinary email, no verification email. Administrator only (`canManageRegistrations`).
+   * Ignored under `fastTrack`, which vouches and confirms on paper by itself.
+   */
+  vouchAddress?: boolean;
+  /**
    * The number handed to the walk-in with the paper (§444): the desk's next spare, which the form
    * suggests, or any free number the volunteer typed. Only with the fast track — a person who
    * finishes from their own email is not standing at the table holding a bib — and written only
@@ -557,7 +565,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   actor: Pick<StaffUser, "id" | "role">,
   input: CreateRegistrationByStaffInput,
   now: Date,
-): Promise<{ registrationId: string | null }> {
+): Promise<{ registrationId: string | null; status: RegistrationStatus | null }> {
   assertDesk(actor);
 
   if (!input.relayedByParticipantRequest) {
@@ -584,6 +592,15 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   */
   const handedBib = input.fastTrack ? input.bibNumber : undefined;
   assertHandedBibNumber(handedBib);
+  /*
+    The address vouched for at the entry (§872): the Administrator's alone, as every remote vouching is
+    (§637) — a volunteer or an Organizer posting the box is refused before anything is written. Not beside
+    the fast track, whose paper confirmation already vouches for the address in person.
+  */
+  const vouchAddress = input.vouchAddress === true && input.fastTrack !== true;
+  if (vouchAddress && !canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not vouch for an address at the entry`);
+  }
   if (handedBib !== undefined) {
     if (await bibNumberInUse(db, { eventId: event.id, number: handedBib })) {
       throw new DomainError("CONFLICT", `number ${handedBib} is already somebody's at this event`, ["bibNumber"]);
@@ -636,7 +653,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     },
     now,
     "REAL",
-    { source: "STAFF", createdByStaffUserId: actor.id, atTheDesk: input.fastTrack === true },
+    { source: "STAFF", createdByStaffUserId: actor.id, atTheDesk: input.fastTrack === true, addressVouched: vouchAddress },
   );
 
   const participant = await findParticipantByCanonicalEmail(db, identity.canonicalEmail);
@@ -653,7 +670,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     action: "registration.created_by_staff",
     entityType: "registration",
     entityId: created?.id ?? event.id,
-    metadata: { eventId: event.id, status: created?.status ?? null, fastTrack: Boolean(input.fastTrack) },
+    metadata: { eventId: event.id, status: created?.status ?? null, fastTrack: Boolean(input.fastTrack), ...(vouchAddress ? { addressVouched: true } : {}) },
     now,
   });
 
@@ -678,8 +695,10 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
       throw error;
     }
   }
-  // The row this entry wrote, for «Trece pe lista oficială» (§854), which carries the line's note onto it.
-  return { registrationId: created?.id ?? null };
+  // The row this entry wrote, for «Trece pe lista oficială» (§854), which carries the line's note onto it, and
+  // the state the entry itself landed in — the line or a hold for a vouched entry (§872), before any fast-track
+  // confirmation — for the short form's toast («Adaugă pe lista de așteptare»).
+  return { registrationId: created?.id ?? null, status: created?.status ?? null };
 }
 
 /**

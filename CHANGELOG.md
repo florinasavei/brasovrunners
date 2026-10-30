@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.97-2026-10-30
+
+- **«Adaugă pe lista de așteptare», in one press** — on the event's queue panel and on the registrations list an Administrator types a name and an email and the person is on the official waiting list at once (or holds a place when one is free), with the ordinary email for that state and no confirmation link; the same entry is the tick «Direct pe lista de așteptare» on «Adaugă o înscriere». §872.
 ## BR-V3.96-2026-10-29
 
 - **A faster commit** — the pre-commit hook runs only the tests that import a staged file directly (one file and four seconds where `vitest related` took 299 files and six minutes), and `yarn lint` keeps ESLint's cache (84 s → 5 s). CI still runs everything. §871.
