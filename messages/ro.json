@@ -1359,6 +1359,8 @@
       "event": "Evenimentul",
       "participantEmail": "Adresa de e-mail a participantului",
       "participantEmailHelp": "Aici ajung confirmarea și linkul pentru declarație. Trebuie să fie adresa persoanei, nu a clubului.",
+      "vouchAddress": "Direct pe lista de așteptare: garantez eu adresa, fără emailul de confirmare.",
+      "vouchAddressHelp": "Ca după linkul din email, dar acum: dacă e plin, intră la coadă, pe ultimul loc, și primește emailul „Ești pe lista de așteptare”; dacă e un loc liber, îl primește și semnează din email.",
       "birthDateMinimumAge": "Opțional aici. Dacă o scrii, persoana trebuie să aibă, în ziua cursei, cel puțin vârsta minimă a evenimentului ales (numărul cu „+” de lângă nume); altfel înscrierea este refuzată.",
       "participantLocale": "Limba în care îi scriem",
       "participantLocaleHelp": "Limba tuturor e-mailurilor legate de această înscriere.",
@@ -1503,6 +1505,7 @@
           "family_resent": "Email retrimis familiei",
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
+          "address_vouched_on_entry": "Adresă garantată de echipă la înscriere; loc sau lista de așteptare pe loc («Direct pe lista de așteptare»)",
           "outside_capacity_changed": "Pus pe lista de invitați speciali sau scos de pe ea",
           "deadline_moved_for_outage": "Termen mutat: site-ul nu a putut fi accesat, ceasul a stat pe loc",
           "hold_moved_by_window": "Termenul semnării mutat după fereastra de confirmare schimbată",
@@ -2091,6 +2094,8 @@
       "reminderBody": "{name} primește acum reminderul dinaintea cursei.",
       "createRegistrationTitle": "Adaugi înscrierea?",
       "createRegistrationBody": "Persoana este înscrisă la eveniment în numele ei, la cererea ei, și primește emailul pasului următor.",
+      "waitlistAddTitle": "Adaugi pe lista de așteptare?",
+      "waitlistAddBody": "Garantezi adresa, iar persoana intră acum, la cererea ei: pe lista de așteptare sau, dacă e un loc liber, pe el. Primește emailul stării în care ajunge.",
       "withdrawConsentTitle": "Ștergi datele bifate?",
       "withdrawConsentBody": "Datele bifate dispar definitiv din înscriere; motivul rămâne în jurnal, fără numele persoanei.",
       "eraseRegistrationTitle": "Ștergi definitiv înscrierea?",
@@ -2227,6 +2232,7 @@
       "NOTHING_SELECTED": "Nu ai bifat nicio înscriere.",
       "NOTE_EMPTY": "Nota trebuie să aibă cuvinte: scrie ceva înainte să o salvezi.",
       "NOTE_TOO_LONG": "Nota e prea lungă. Scurtează-o sau împarte-o în două note.",
+      "VOUCHED_ENTRY_AFTER_START": "Evenimentul a început: persoana se înscrie la masă, cu bifa «Persoana este la masă». Nu s-a scris nimic.",
       "UNAUTHENTICATED": "Sesiunea a expirat. Autentifică-te din nou.",
       "FORBIDDEN": "Rolul tău nu permite această acțiune.",
       "NOT_FOUND": "Înregistrarea nu mai există.",
@@ -11118,6 +11124,19 @@
       "add": "Adaugă",
       "fromList": "Treci de pe lista internă: {name}. Nota trece pe înscriere și linia dispare de pe lista internă. De aici e o înscriere obișnuită, cu emailul ei.",
       "fromListClosed": "{name} e pe lista internă a unui eveniment care nu primește înscrieri acum; formularul nu e completat."
+    },
+    "waitlistAdd": {
+      "title": "Adaugă pe lista de așteptare",
+      "intro": "Numele și adresa, o apăsare: garantezi tu adresa, iar persoana intră acum pe lista oficială de așteptare, fără emailul de confirmare.",
+      "help": "Garantezi tu adresa: dacă e plin, intră pe ultimul loc și primește emailul „Ești pe lista de așteptare”; dacă e un loc liber, îl primește și semnează declarația din email.",
+      "firstName": "Prenume",
+      "lastName": "Nume",
+      "email": "Email",
+      "emailHelp": "Adresa persoanei, nu a clubului: aici îi ajung emailurile, în limba de aici. Verific-o înainte.",
+      "note": "Notă internă (opțional)",
+      "noteHelp": "Doar pentru organizatori; apare pe înscriere. Nu scrieți date despre sănătate.",
+      "add": "Adaugă pe lista de așteptare",
+      "longForm": "Formularul complet: alte date, altă limbă"
     }
   },
   "NotFound": {
@@ -13138,7 +13157,9 @@
       "resultsAwardsUnchanged": "Premiile erau deja așa; nimic de schimbat.",
       "reserveAdded": "Persoana e pe lista internă. Nu i s-a trimis nimic.",
       "reserveNoteSaved": "Nota a fost salvată.",
-      "reserveDeleted": "Persoana a fost ștearsă de pe lista internă."
+      "reserveDeleted": "Persoana a fost ștearsă de pe lista internă.",
+      "waitlistAdded": "Persoana e pe lista de așteptare; emailul e pus la coadă.",
+      "waitlistPlaced": "Era un loc liber: persoana l-a primit, iar emailul cu declarația e pus la coadă."
     },
     "via": {
       "mailgun": "Pleacă prin Mailgun.",

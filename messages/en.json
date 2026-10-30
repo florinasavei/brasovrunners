@@ -1359,6 +1359,8 @@
       "event": "Event",
       "participantEmail": "Participant email address",
       "participantEmailHelp": "The confirmation and the declaration link go here. It must be their address, not the club's.",
+      "vouchAddress": "Straight onto the waiting list: I vouch for the address, no confirmation email.",
+      "vouchAddressHelp": "As after the email link, but now: when full, they join the back of the waiting list and get the “you are on the waiting list” email; when a place is free, they get it and sign from the email.",
       "birthDateMinimumAge": "Optional here. When given, the person must be at least the chosen event's minimum age on the day of the race — the number with a “+” beside its name; otherwise the registration is refused.",
       "participantLocale": "Language we write to them in",
       "participantLocaleHelp": "The language of every email about this registration.",
@@ -1503,6 +1505,7 @@
           "family_resent": "Email resent to the family",
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
+          "address_vouched_on_entry": "Address vouched for by the team at the entry; a place or the waiting list at once (“Straight onto the waiting list”)",
           "outside_capacity_changed": "Put on the special guests list, or taken off it",
           "deadline_moved_for_outage": "Deadline moved: the site could not be reached, the clock stood still",
           "hold_moved_by_window": "Signing deadline moved with the changed confirmation window",
@@ -2091,6 +2094,8 @@
       "reminderBody": "{name} receives the pre-race reminder now.",
       "createRegistrationTitle": "Add the registration?",
       "createRegistrationBody": "The person is registered for the event on their behalf, at their request, and receives the email for the next step.",
+      "waitlistAddTitle": "Add to the waiting list?",
+      "waitlistAddBody": "You vouch for the address, and the person enters now, at their request: onto the waiting list or, when a place is free, onto it. They get the email for the state they land in.",
       "withdrawConsentTitle": "Erase the ticked data?",
       "withdrawConsentBody": "The ticked data disappears from the registration for good; the reason stays in the log, without the person's name.",
       "eraseRegistrationTitle": "Erase the registration for good?",
@@ -2227,6 +2232,7 @@
       "NOTHING_SELECTED": "You did not tick any registration.",
       "NOTE_EMPTY": "A note needs words: write something before you save it.",
       "NOTE_TOO_LONG": "The note is too long. Shorten it or split it into two notes.",
+      "VOUCHED_ENTRY_AFTER_START": "The event has started: enter the person at the desk, with the “This person is at the desk” tick. Nothing was written.",
       "UNAUTHENTICATED": "Your session has ended. Sign in again.",
       "FORBIDDEN": "Your role does not allow this.",
       "NOT_FOUND": "That record no longer exists.",
@@ -11118,6 +11124,19 @@
       "add": "Add",
       "fromList": "Moving from the internal list: {name}. The note moves onto the registration and the line leaves the internal list. From here it is an ordinary registration, with its email.",
       "fromListClosed": "{name} is on the internal list of an event that takes no registrations now; the form is not filled."
+    },
+    "waitlistAdd": {
+      "title": "Add to the waiting list",
+      "intro": "Name and address, one press: you vouch for the address, and the person joins the official waiting list now, without the confirmation email.",
+      "help": "You vouch for the address: when full, they join the back of the line and get the “you are on the waiting list” email; when a place is free, they get it and sign the declaration from the email.",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "emailHelp": "The person's address, not the club's: their emails go here, in this screen's language. Check it first.",
+      "note": "Internal note (optional)",
+      "noteHelp": "For the organizers only; shown on the registration. Never write health data.",
+      "add": "Add to the waiting list",
+      "longForm": "The full form: other details, another language"
     }
   },
   "NotFound": {
@@ -13138,7 +13157,9 @@
       "resultsAwardsUnchanged": "The awards were already so; nothing to change.",
       "reserveAdded": "The person is on the internal list. Nothing was sent to them.",
       "reserveNoteSaved": "The note was saved.",
-      "reserveDeleted": "The person was removed from the internal list."
+      "reserveDeleted": "The person was removed from the internal list.",
+      "waitlistAdded": "The person is on the waiting list; the email is queued.",
+      "waitlistPlaced": "A place was free: the person got it, and the declaration email is queued."
     },
     "via": {
       "mailgun": "Leaves by Mailgun.",

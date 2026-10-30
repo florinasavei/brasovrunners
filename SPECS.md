@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.96-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.97-2026-10-30 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.96-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.97-2026-10-30`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1769,6 +1769,7 @@ registration — and it lists registrations and never changes an address.
 14. Given an address with active registrations at an event, when staff enter a person whose name (by the runner's key) differs from every active one — twins with the same birth date included — then a registration of their own is created under the same participant, within the club's limit per address; the same runner again is refused with the address box and `STAFF_ALREADY_ON_ADDRESS`, an address at the limit with `STAFF_ADDRESS_AT_CAP`, and nothing is written; a desk fast track confirms only the row the entry wrote (2026-09-27, `DECISIONS.md` §493). Verification: integration `registrations/staff-crud.test.ts`, `registrations/lifecycle-audit.test.ts`; unit `registrations/family.test.ts`.
 15. §425's export criterion, extended: the CSV and the xlsx end with «Declaration version» and «Declaration signed» — the registration's latest declaration acceptance, blank while none exists — after the terms columns, and the xlsx writes every timestamp on the club's clock.
 16. Given a person written on an event's internal waiting list, when an Organizer or above adds, edits or deletes the line, then no registration, participant or email exists for them and the allocator counts nothing; when «Trece pe lista oficială» enters them through the ordinary staff entry, the line's note becomes the new registration's internal note and the line is removed — never onto a registration of another event (2026-10-27, `DECISIONS.md` §854).
+17. Given an Administrator entering a registration with «Direct pe lista de așteptare» ticked, when the entry is written, then the row carries the staff vouching for the address (`email_confirmed_by_staff_user_id`), goes through the ordinary allocator in the same transaction — `WAITLISTED` at the back of the line on a full event, `PENDING_DECLARATION` on a free counted place, never ahead of anyone and never a supplementary place — receives that state's ordinary email and no verification email, and is audited as `registration.address_vouched_on_entry`; a full line refuses the whole entry and writes nothing; an Organizer or a volunteer posting the tick is refused; under the fast track the tick is ignored; «Adaugă pe lista de așteptare» on the queue panel and the registrations list posts the same entry with the tick on, Administrator only, the relay tick still required (2026-10-30, `DECISIONS.md` §872).
 
 **Verification:** integration `registrations/staff-crud.test.ts`
 

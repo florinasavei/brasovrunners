@@ -18,11 +18,12 @@ import { familyOf } from "../family-marker";
 import FamilyChip from "./FamilyChip";
 import OfferPlaceButton from "./OfferPlaceButton";
 import QuietHelp from "@/shared/ui/QuietHelp";
-import ActionForm from "@/shared/forms/ActionForm";
+import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import type { FormOutcome } from "@/shared/forms/outcome";
 import { staffOfferIfMadeNow, staffOfferQuestion } from "../give-place-tip";
 import { queueOrderFor } from "../domain/waitlist";
+import WaitlistAddForm from "./WaitlistAddForm";
 
 /**
  * The queue of one event as the allocator sees it (`DECISIONS.md` §92; the owner: "I need to
@@ -52,6 +53,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   waiting,
   now,
   offerAction,
+  waitlistAddAction,
   counts: knownCounts,
   placeDeadlines: knownPlaceDeadlines,
 }: {
@@ -66,6 +68,11 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
    * role that may send it (`canManageRegistrations`); absent, no row carries the button.
    */
   offerAction?: (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
+  /**
+   * «Adaugă pe lista de așteptare» under the line (§872): the one-press entry that vouches for the address, handed
+   * down only to an Administrator (`canManageRegistrations`); absent, the form is not drawn.
+   */
+  waitlistAddAction?: ActionFormAction;
   /** The event's `countOccupied`, when the page has already read it (§621) — one aggregate, not two. */
   counts?: Awaited<ReturnType<typeof countOccupied>>;
   /** «Când se pierde un loc» (§635), when the page has already read it — the held places' sentences beside «Rezervate». */
@@ -283,6 +290,13 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
         {t("queue.simulate")}
         <QuietHelp text={t("queue.simulateMore", { hold: words.hold })} />
       </Typography>
+
+      {/* The one-press entry onto this line (§872), for an Administrator: the full form stays one link away. */}
+      {waitlistAddAction && (
+        <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }}>
+          <WaitlistAddForm locale={locale} eventId={event.id} waitlistAddAction={waitlistAddAction} back="event" scope="queue-add" heading />
+        </Box>
+      )}
     </Box>
   );
 }

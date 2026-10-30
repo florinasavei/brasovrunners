@@ -34,6 +34,22 @@ async function setLook(browser: Browser, choice: "on" | "off"): Promise<void> {
   }
 }
 
+/**
+ * The month whose «Filtre» is drawn. The seed dates its events from today (`src/db/seeds/sample-dates.ts`), so in a
+ * month's last days the month on view can hold one event and nothing to narrow — then «Filtre» is held unseen (§575),
+ * on and off the look — while the next month holds the rest: these tests read the next month then. 2026-10-30, a
+ * Friday, was such a day: the Saturday run and the intervals had moved to November.
+ */
+async function gotoMonthWithFilters(page: import("@playwright/test").Page): Promise<void> {
+  await page.goto("/ro/calendar");
+  if (await page.getByTestId("listing-filters").locator("summary").isVisible()) return;
+  const next = new Date();
+  next.setUTCDate(1);
+  next.setUTCMonth(next.getUTCMonth() + 1);
+  const month = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Bucharest", year: "numeric", month: "2-digit" }).format(next).replace("/", "-");
+  await page.goto(`/ro/calendar/${month}`);
+}
+
 /** The page's `h1` is clipped to a pixel: kept for assistive technology, not drawn. */
 const hiddenHeading = (page: import("@playwright/test").Page) =>
   page.locator("#main h1").evaluate((el) => {
@@ -213,7 +229,7 @@ test.describe("phase 4: the calendar under «Tema v2»", () => {
     try {
       for (const viewport of [{ width: 320, height: 568 }, { width: 1280, height: 900 }]) {
         await page.setViewportSize(viewport);
-        await page.goto("/ro/calendar");
+        await gotoMonthWithFilters(page);
         const line = page.getByTestId("calendar-chips-line");
         const chips = page.getByTestId("calendar-kind-chips");
         const filters = page.getByTestId("listing-filters");
@@ -256,7 +272,7 @@ test.describe("phase 4: the calendar under «Tema v2»", () => {
     const context = await browser.newContext({ javaScriptEnabled: false, baseURL: test.info().project.use.baseURL, viewport: { width: 1280, height: 900 } });
     try {
       const page = await context.newPage();
-      await page.goto("/ro/calendar");
+      await gotoMonthWithFilters(page);
       const filters = page.getByTestId("listing-filters");
       await filters.locator("summary").click({ timeout: 10000 });
       // Under the look the surface is the chips', so the first box the panel shows is another group's.
@@ -273,7 +289,7 @@ test.describe("phase 4: the calendar under «Tema v2»", () => {
     const off = await browser.newContext({ baseURL: test.info().project.use.baseURL, viewport: { width: 1280, height: 900 } });
     try {
       const page = await off.newPage();
-      await page.goto("/ro/calendar");
+      await gotoMonthWithFilters(page);
       const [kinds, summary] = [await page.getByTestId("calendar-kind-chips").boundingBox(), await page.getByTestId("listing-filters").locator("summary").boundingBox()];
       expect(kinds, "the chips are not drawn off the look").toBeNull();
       expect(summary?.x ?? 99, "«Filtre» starts the line, as before").toBeLessThan(80);

@@ -98,6 +98,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setOutsideCapacityAction: [],
   setBibNumberAction: [],
   createRegistrationAction: [],
+  // «Adaugă pe lista de așteptare» (§872): an entry that emails the person, asked first on the queue panel and the registrations list.
+  addToWaitlistAction: ["waitlistAddAction"],
   // «Modifică datele» (§645): asks, naming the person and the fields the press changes.
   editRegistrationAnswersAction: [],
   // «Nu e membru» / «E membru» from the list's ⋮ and the sweep «Scoate bifa la cele {n}» (§645): each names whom it changes.

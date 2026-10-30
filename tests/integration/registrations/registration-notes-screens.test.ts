@@ -62,6 +62,8 @@ vi.mock("@/modules/staff-identity/session", () => ({
   },
 }));
 vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
+  // «Adaugă pe lista de așteptare» (§872): the list page and the queue panel import it; not under test here.
+  addToWaitlistAction: vi.fn(),
   bulkCancelRegistrationsAction: vi.fn(),
   bulkDeleteRegistrationsAction: vi.fn(),
   markBibsPrintedAction: vi.fn(),
