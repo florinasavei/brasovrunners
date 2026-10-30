@@ -105,6 +105,12 @@ export type AuditAction =
    */
   | "registration.address_vouched_by_staff"
   /**
+   * «Direct pe lista de așteptare» (§NNN): the Administrator who entered the registration vouched for its
+   * address at the entry, and the allocator placed it at once — `to` is the line (`WAITLISTED`) or a
+   * declaration hold (`PENDING_DECLARATION`), the declaration still the person's to sign. Never a name or an address.
+   */
+  | "registration.address_vouched_on_entry"
+  /**
    * «În afara locurilor» set or cleared by an Administrator (§643): `from` and `to` (the flag before
    * and after), the state the row was in and, when the change moved it, the state after — never a name.
    */

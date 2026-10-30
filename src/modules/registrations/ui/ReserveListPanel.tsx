@@ -18,7 +18,9 @@ import type { ReserveEntryRow } from "../reserve-list";
  * «Lista internă de așteptare» (§854) on one event's registrations list, for the Organizer and above: the
  * people who asked to be kept in mind, told nothing and emailed nothing. Each line: the name, the address
  * when the club has it, the internal note (edited in place), «Trece pe lista oficială» — the ordinary staff
- * entry, prefilled; the note follows the registration — and «Șterge». Below, «Adaugă pe lista internă».
+ * entry, prefilled; the note follows the registration — and «Șterge». Below, «Adaugă pe lista internă»,
+ * and for an Administrator one line to the direct way (§NNN): the staff entry with its «Direct pe lista de
+ * așteptare» tick, which needs no internal line first.
  * Presentation only: the page reads the rows and hands in the actions.
  */
 export default async function ReserveListPanel({
@@ -30,12 +32,15 @@ export default async function ReserveListPanel({
   saveNoteAction,
   deleteAction,
   opened,
+  directHref,
 }: {
   locale: string;
   eventId: string;
   entries: readonly ReserveEntryRow[];
   /** The staff entry prefilled from one line. */
   officialHref: (entryId: string) => string;
+  /** The staff entry for this event, for an Administrator's direct entry onto the official list (§NNN); null for other roles. */
+  directHref: string | null;
   addAction: ActionFormAction;
   saveNoteAction: ActionFormAction;
   deleteAction: ActionFormAction;
@@ -124,6 +129,16 @@ export default async function ReserveListPanel({
           <Typography id="reserve-add-title" variant="h3" sx={{ ...HEADING_SX[3], mb: 1.5 }}>
             {t("reserve.addTitle")}
           </Typography>
+          {directHref && (
+            <Stack spacing={1} sx={{ alignItems: "flex-start", mb: 2 }} data-testid="reserve-direct">
+              <Typography variant="body2" color="text.secondary">
+                {t("reserve.directHint")}
+              </Typography>
+              <GlyphButton icon="addPerson" href={directHref} variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                {t("reserve.directButton")}
+              </GlyphButton>
+            </Stack>
+          )}
           <ActionForm action={addAction} messages={refusal} scope="reserve-add" data-testid="reserve-add-form">
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="eventId" value={eventId} />

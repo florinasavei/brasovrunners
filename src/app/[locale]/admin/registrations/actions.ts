@@ -364,6 +364,8 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
         listOptOut: form.get("listOptIn") !== "on",
         relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
         fastTrack: form.get("fastTrack") === "on",
+        // «Direct pe lista de așteptare» (§NNN): the Administrator vouches for the address; the service asserts the role.
+        vouchAddress: form.get("vouchAddress") === "on",
         // The number handed with the paper (§444); empty is the platform's own draw.
         bibNumber: handedBibNumber(form),
       },

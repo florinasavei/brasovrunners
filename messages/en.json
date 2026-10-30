@@ -1359,6 +1359,8 @@
       "event": "Event",
       "participantEmail": "Participant email address",
       "participantEmailHelp": "The confirmation and the declaration link go here. It must be their address, not the club's.",
+      "vouchAddress": "Straight onto the waiting list: I vouch for the address, no confirmation email.",
+      "vouchAddressHelp": "As after the email link, but now: when full, they join the back of the waiting list and get the “you are on the waiting list” email; when a place is free, they get it and sign from the email.",
       "birthDateMinimumAge": "Optional here. When given, the person must be at least the chosen event's minimum age on the day of the race — the number with a “+” beside its name; otherwise the registration is refused.",
       "participantLocale": "Language we write to them in",
       "participantLocaleHelp": "The language of every email about this registration.",
@@ -1503,6 +1505,7 @@
           "family_resent": "Email resent to the family",
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
+          "address_vouched_on_entry": "Address vouched for by the team at the entry; a place or the waiting list at once (“Straight onto the waiting list”)",
           "outside_capacity_changed": "Put on the special guests list, or taken off it",
           "deadline_moved_for_outage": "Deadline moved: the site could not be reached, the clock stood still",
           "hold_moved_by_window": "Signing deadline moved with the changed confirmation window",
@@ -11117,7 +11120,9 @@
       "emailHelp": "The address they wrote from. Nothing is sent to it until you move them to the official list.",
       "add": "Add",
       "fromList": "Moving from the internal list: {name}. The note moves onto the registration and the line leaves the internal list. From here it is an ordinary registration, with its email.",
-      "fromListClosed": "{name} is on the internal list of an event that takes no registrations now; the form is not filled."
+      "fromListClosed": "{name} is on the internal list of an event that takes no registrations now; the form is not filled.",
+      "directHint": "Want them straight on the official waiting list, without confirming the address themselves? Add the registration with the “Straight onto the waiting list” tick.",
+      "directButton": "Add straight to the official list"
     }
   },
   "NotFound": {

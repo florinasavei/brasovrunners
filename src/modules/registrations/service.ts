@@ -775,8 +775,12 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
    * The registration an invitation's link created (§647): the invitation holds its place — counted in
    * `countOccupied`'s `invitationHolds` until the caller marks it accepted, after this — so the place is
    * the registration's own, given here like a family's reserved one, never counted against it.
+   *
+   * `vouched`: an Administrator's entry that vouched for the address (§NNN, «Direct pe lista de așteptare»):
+   * the place, when one is given, waits as «Dă-i un loc acum»'s does (§637, `computeVouchedPlaceExpiry`) —
+   * the person is not at the form reading an email — and is capped by the start alone, never the close.
    */
-  { invited = false }: { invited?: boolean } = {},
+  { invited = false, vouched = false }: { invited?: boolean; vouched?: boolean } = {},
 ): Promise<Registration> {
   /*
     A family's reserved place (§543): the sitting's form reserved it under this same lock when it was
@@ -849,13 +853,14 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
         */
         fromStatuses: allowedFromStatuses("PENDING_DECLARATION").filter((from) => outside || (from !== "WAITLISTED" && from !== "WAITLIST_OFFERED")),
         changes: {
-          holdExpiresAt: computeDeclarationHoldExpiry({
+          holdExpiresAt: (vouched ? computeVouchedPlaceExpiry : computeDeclarationHoldExpiry)({
             now,
             /*
               An invitation's registration (§647) is capped by the start alone: the club may invite after
-              the public close, and the close is the public door's — as «Dă-i un loc acum»'s place is.
+              the public close, and the close is the public door's — as «Dă-i un loc acum»'s place is, and
+              as an Administrator's vouched entry's is (§NNN).
             */
-            registrationClosesAt: invited ? null : event.registrationClosesAt,
+            registrationClosesAt: invited || vouched ? null : event.registrationClosesAt,
             eventStartsAt: event.startsAt,
             // A week-before confirmation for a race still far off (§104); the club's minutes otherwise (§377).
             window: confirmationWindow(event),
@@ -1434,6 +1439,17 @@ export type RegistrationOrigin = {
    */
   atTheDesk?: boolean;
   /**
+   * «Direct pe lista de așteptare» (§NNN): the Administrator entering the row vouches for the address — as
+   * the desk does in person (§67) and «Dă-i un loc acum» does remotely on a row that waits for it (§637) —
+   * so the row goes through the one allocator in this same transaction: the back of the line when the
+   * event is full, a declaration hold when a place is free, with the outcome's ordinary email, and no
+   * verification email. Staff only (`source: "STAFF"`, the Administrator in `createdByStaffUserId`;
+   * `admin-service.ts` asserts the role); nothing beside `atTheDesk`, which vouches and confirms on paper
+   * by itself. Like the desk, it skips the public window alone: the mode must still be INTERNAL, the
+   * event SCHEDULED and dated, and the capacity lock is exactly the same.
+   */
+  addressVouched?: boolean;
+  /**
    * What the public form already learned before calling (§282): Cloudflare's verdict, and
    * whether this is the try after a refusal. Both are the caller's to know — the token is
    * verified in the action, over the network, and the attempt is a field on the form — and
@@ -1694,9 +1710,11 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   origin: RegistrationOrigin = PUBLIC_ORIGIN,
 ): Promise<SubmitRegistrationResult> {
   const atTheDesk = origin.source === "STAFF" && origin.atTheDesk === true;
+  // An Administrator vouching for the address at the entry (§NNN): the desk's exception, remotely; never beside the desk's own tick.
+  const vouched = origin.source === "STAFF" && origin.addressVouched === true && !atTheDesk && typeof origin.createdByStaffUserId === "string";
   // An invitation's form (§647): the invitation is the door, as the desk's is — local, scheduled and dated.
   const invited = origin.source === "PUBLIC" && origin.invitation !== undefined;
-  assertRegistrationOpen(event, now, atTheDesk || invited);
+  assertRegistrationOpen(event, now, atTheDesk || invited || vouched);
   // An event for the members alone (§552), before anything is parsed or spent: asked again under the lock.
   if (!invited) assertMembersDoor(event.membersOnly === true, origin);
 
@@ -2619,6 +2637,37 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       placeResult = await reserveFamilyPlace(tx, lockedEvent, registration.id, now, settings, reservationUntil);
     };
 
+    /*
+      «Direct pe lista de așteptare» (§NNN): the Administrator vouches for the address as the desk does
+      (§67; BR-REQ-037-07 criterion 2) and as «Dă-i un loc acum» does remotely (§637) —
+      `email_confirmed_by_staff_user_id`, never the participant's own `email_verified_at` — and the row goes
+      through the one allocator here, under the lock this transaction already holds: the back of the line
+      when the event is full, a declaration hold when a place is free, with the outcome's ordinary email
+      («Ești pe lista de așteptare», or the declaration to sign, which starts the hold, §513). No
+      verification email: there is no step left for the person before the one that email asks. A full line
+      refuses the whole entry (§348), so nothing is written. Audited under the Administrator's id.
+    */
+    const vouchAndAllocate = async (registration: Registration): Promise<Registration> => {
+      await tx
+        .update(registrations)
+        .set({ emailConfirmedAt: now, emailConfirmedByStaffUserId: origin.createdByStaffUserId ?? null, updatedAt: now })
+        .where(eq(registrations.id, registration.id));
+      const allocated = await allocateOrWaitlist(tx, lockedEvent, registration.id, now, settings, { vouched: true });
+      await enqueueAllocationEmail(tx, allocated, participant.deliveryEmail, `registration:${allocated.id}:address-vouched-on-entry:${now.toISOString()}`, now);
+      await recordAuditEvent(tx, {
+        actorStaffUserId: origin.createdByStaffUserId ?? null,
+        participantId: participant.id,
+        action: "registration.address_vouched_on_entry",
+        entityType: "registration",
+        entityId: allocated.id,
+        metadata: { from: "PENDING_EMAIL_CONFIRMATION", to: allocated.status },
+        now,
+      });
+      // A hold, a place on the waiting list, or an offer made on the way (§160): the deadlines `confirmEmail` wakes for.
+      createdDeadlines = [allocated.holdExpiresAt, joinedQueue(allocated) ? offerDeadline(event, now, settings) : null];
+      return allocated;
+    };
+
     // Another adult of a family sitting (§543, §421): their own consents are not kept.
     const rowDetails = anotherAdult ? withoutAnotherAdultsDetails(details) : details;
     const rowListOptOut = anotherAdult ? true : input.listOptOut;
@@ -2698,11 +2747,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           changes: { ...carriedFields, emailLinkExpiresAt: linkExpiresAt, holdExpiresAt: null },
           now,
         });
+        createdDeadlines = [linkExpiresAt];
         // Not for another person confirmed from the email (§446): the caller confirms the address itself.
         // The link of this cycle starts with this message (§513): its send re-bases it, once.
-        if (restarted && !atTheDesk && !origin.anotherPerson && !invited) await holdVerification(restarted);
+        // An Administrator's vouched entry (§NNN) moves on at once instead, through the allocator, and sets its own deadlines.
+        if (restarted && vouched) await vouchAndAllocate(restarted);
+        else if (restarted && !atTheDesk && !origin.anotherPerson && !invited) await holdVerification(restarted);
         if (restarted) await recordFormPromoConsent(tx, { registrationId: restarted.id, participantId: participant.id, kept: rowDetails.promoConsent === true, before: existing.promoConsent, now });
-        createdDeadlines = [linkExpiresAt];
         written = restarted?.id;
         await finishSitting();
         return;
@@ -2718,7 +2769,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // participant's restart used to allocate against the capacity the page had read, with
       // no lock — the one door into the allocator that skipped the serialization point
       // (`DECISIONS.md` §151). Held since the transaction's first statement (§389).
-      const allocated = await allocateOrWaitlist(tx, withLockedRow(event, locked), existing.id, now, settings);
+      // An Administrator's vouched entry (§NNN) of an address the person proved before: nothing to vouch,
+      // but the place waits as a vouched one does and the close is not its cap — the window was not consulted.
+      const allocated = await allocateOrWaitlist(tx, withLockedRow(event, locked), existing.id, now, settings, { vouched });
       // In a sitting (§543): the place the allocator gave, or the line — never a held place besides.
       if (inSitting) placeResult = allocated.status === "WAITLISTED" ? "waitlist" : "reserved";
       await enqueueAllocationEmail(tx, allocated, participant.deliveryEmail, `registration:${allocated.id}:restart:${now.toISOString()}`, now);
@@ -2760,8 +2813,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // caller confirms the address in this same transaction (`family-confirm.ts`).
     // The first message of the registration starts its email link (§513): its send re-bases it, once.
     // Nor an invitation's form (§647): the link proved the inbox, and the caller seats the registration.
-    if (!atTheDesk && !origin.anotherPerson && !invited) await holdVerification(created);
+    // An Administrator's vouched entry (§NNN) moves on at once instead, through the allocator, and sets its own deadlines.
     createdDeadlines = [linkExpiresAt];
+    if (vouched) await vouchAndAllocate(created);
+    else if (!atTheDesk && !origin.anotherPerson && !invited) await holdVerification(created);
     written = created.id;
     await finishSitting();
   });

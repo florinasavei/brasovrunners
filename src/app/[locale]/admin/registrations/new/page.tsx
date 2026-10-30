@@ -37,7 +37,7 @@ import { routing } from "@/i18n/routing";
 import { noticeDescribesListStates, noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
 import { listEventsAcceptingRegistrations } from "@/modules/registrations/admin-repository";
 import { listStateWords } from "@/modules/registrations/list-state-words";
-import { canKeepRegistrationNotes, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
+import { canKeepRegistrationNotes, canManageRegistrations, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { findReserveEntry } from "@/modules/registrations/reserve-list";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { CLUB_NAME } from "@/theme/brand";
@@ -168,6 +168,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             relayedByParticipantRequest: t("registrations.relayConfirmation"),
             fastTrack: t("desk.fastTrack"),
             bibNumber: t("desk.handedBib"),
+            vouchAddress: t("registrations.vouchAddress"),
           })}
           // The entry emails the person — the link, or the confirmation on the fast track — and says so (§384).
           confirm={{ title: t("confirm.createRegistrationTitle"), body: t("confirm.createRegistrationBody"), email: words.email(1), road: words.road("links"), confirmLabel: t("registrations.create"), cancelLabel: words.cancel }}
@@ -330,6 +331,21 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
                 />
               </Box>
             </Box>
+
+            {/*
+              «Direct pe lista de așteptare» (§NNN), the Administrator's alone (the service asserts it too):
+              the address vouched for as «Dă-i un loc acum» vouches for it (§637), and the row through the
+              allocator at once — the back of the line, or a declaration hold with its email. Unticked by
+              default: the person's own email stays the ordinary way. Under the fast track it is ignored.
+            */}
+            {canManageRegistrations(actor.role) && (
+              <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, px: 2, py: 1 }} data-testid="staff-vouch-address">
+                <CheckboxField name="vouchAddress">{t("registrations.vouchAddress")}</CheckboxField>
+                <Typography variant="body2" color="text.secondary">
+                  {t("registrations.vouchAddressHelp")}
+                </Typography>
+              </Box>
+            )}
 
             <Box>
               <GlyphSubmitButton

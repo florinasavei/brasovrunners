@@ -1344,6 +1344,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           eventId={filters.eventId}
           entries={await listReserveEntries(db, actor, filters.eventId)}
           officialHref={(entryId) => `${getPathname({ locale, href: "/admin/registrations/new" })}?${new URLSearchParams({ eventId: filters.eventId ?? "", reserve: entryId }).toString()}`}
+          directHref={mayManage ? `${getPathname({ locale, href: "/admin/registrations/new" })}?${new URLSearchParams({ eventId: filters.eventId }).toString()}` : null}
           addAction={addReserveEntryAction}
           saveNoteAction={saveReserveNoteAction}
           deleteAction={deleteReserveEntryAction}
