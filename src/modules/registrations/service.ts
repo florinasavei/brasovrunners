@@ -776,7 +776,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
    * `countOccupied`'s `invitationHolds` until the caller marks it accepted, after this — so the place is
    * the registration's own, given here like a family's reserved one, never counted against it.
    *
-   * `vouched`: an Administrator's entry that vouched for the address (§NNN, «Direct pe lista de așteptare»):
+   * `vouched`: an Administrator's entry that vouched for the address (§872, «Direct pe lista de așteptare»):
    * the place, when one is given, waits as «Dă-i un loc acum»'s does (§637, `computeVouchedPlaceExpiry`) —
    * the person is not at the form reading an email — and is capped by the start alone, never the close.
    */
@@ -858,7 +858,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
             /*
               An invitation's registration (§647) is capped by the start alone: the club may invite after
               the public close, and the close is the public door's — as «Dă-i un loc acum»'s place is, and
-              as an Administrator's vouched entry's is (§NNN).
+              as an Administrator's vouched entry's is (§872).
             */
             registrationClosesAt: invited || vouched ? null : event.registrationClosesAt,
             eventStartsAt: event.startsAt,
@@ -1439,7 +1439,7 @@ export type RegistrationOrigin = {
    */
   atTheDesk?: boolean;
   /**
-   * «Direct pe lista de așteptare» (§NNN): the Administrator entering the row vouches for the address — as
+   * «Direct pe lista de așteptare» (§872): the Administrator entering the row vouches for the address — as
    * the desk does in person (§67) and «Dă-i un loc acum» does remotely on a row that waits for it (§637) —
    * so the row goes through the one allocator in this same transaction: the back of the line when the
    * event is full, a declaration hold when a place is free, with the outcome's ordinary email, and no
@@ -1710,12 +1710,12 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   origin: RegistrationOrigin = PUBLIC_ORIGIN,
 ): Promise<SubmitRegistrationResult> {
   const atTheDesk = origin.source === "STAFF" && origin.atTheDesk === true;
-  // An Administrator vouching for the address at the entry (§NNN): the desk's exception, remotely; never beside the desk's own tick.
+  // An Administrator vouching for the address at the entry (§872): the desk's exception, remotely; never beside the desk's own tick.
   const vouched = origin.source === "STAFF" && origin.addressVouched === true && !atTheDesk && typeof origin.createdByStaffUserId === "string";
   // An invitation's form (§647): the invitation is the door, as the desk's is — local, scheduled and dated.
   const invited = origin.source === "PUBLIC" && origin.invitation !== undefined;
   assertRegistrationOpen(event, now, atTheDesk || invited || vouched);
-  // A vouched entry is a remote act (§NNN): after the gun only the desk takes a person, as «Dă-i un loc acum» rules (§637).
+  // A vouched entry is a remote act (§872): after the gun only the desk takes a person, as «Dă-i un loc acum» rules (§637).
   if (vouched && event.startsAt.getTime() <= now.getTime()) {
     throw new DomainError("VOUCHED_ENTRY_AFTER_START", "the event has started: enter the person at the desk instead");
   }
@@ -2642,7 +2642,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     };
 
     /*
-      «Direct pe lista de așteptare» (§NNN): the Administrator vouches for the address as the desk does
+      «Direct pe lista de așteptare» (§872): the Administrator vouches for the address as the desk does
       (§67; BR-REQ-037-07 criterion 2) and as «Dă-i un loc acum» does remotely (§637) —
       `email_confirmed_by_staff_user_id`, never the participant's own `email_verified_at` — and the row goes
       through the one allocator here, under the lock this transaction already holds: the back of the line
@@ -2754,7 +2754,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         createdDeadlines = [linkExpiresAt];
         // Not for another person confirmed from the email (§446): the caller confirms the address itself.
         // The link of this cycle starts with this message (§513): its send re-bases it, once.
-        // An Administrator's vouched entry (§NNN) moves on at once instead, through the allocator, and sets its own deadlines.
+        // An Administrator's vouched entry (§872) moves on at once instead, through the allocator, and sets its own deadlines.
         if (restarted && vouched) await vouchAndAllocate(restarted);
         else if (restarted && !atTheDesk && !origin.anotherPerson && !invited) await holdVerification(restarted);
         if (restarted) await recordFormPromoConsent(tx, { registrationId: restarted.id, participantId: participant.id, kept: rowDetails.promoConsent === true, before: existing.promoConsent, now });
@@ -2773,7 +2773,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // participant's restart used to allocate against the capacity the page had read, with
       // no lock — the one door into the allocator that skipped the serialization point
       // (`DECISIONS.md` §151). Held since the transaction's first statement (§389).
-      // An Administrator's vouched entry (§NNN) of an address the person proved before: nothing to vouch,
+      // An Administrator's vouched entry (§872) of an address the person proved before: nothing to vouch,
       // but the place waits as a vouched one does and the close is not its cap — the window was not consulted.
       const allocated = await allocateOrWaitlist(tx, withLockedRow(event, locked), existing.id, now, settings, { vouched });
       // In a sitting (§543): the place the allocator gave, or the line — never a held place besides.
@@ -2817,7 +2817,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // caller confirms the address in this same transaction (`family-confirm.ts`).
     // The first message of the registration starts its email link (§513): its send re-bases it, once.
     // Nor an invitation's form (§647): the link proved the inbox, and the caller seats the registration.
-    // An Administrator's vouched entry (§NNN) moves on at once instead, through the allocator, and sets its own deadlines.
+    // An Administrator's vouched entry (§872) moves on at once instead, through the allocator, and sets its own deadlines.
     createdDeadlines = [linkExpiresAt];
     if (vouched) await vouchAndAllocate(created);
     else if (!atTheDesk && !origin.anotherPerson && !invited) await holdVerification(created);

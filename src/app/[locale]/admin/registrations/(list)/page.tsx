@@ -1353,7 +1353,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       )}
 
       {/*
-        «Adaugă pe lista de așteptare» (§NNN): the one-press entry onto the official waiting list — the address
+        «Adaugă pe lista de așteptare» (§872): the one-press entry onto the official waiting list — the address
         vouched for by the Administrator, the row through the allocator at once. Administrator only, on a list
         about one event; the new row shows in the list above in the state it landed in.
       */}

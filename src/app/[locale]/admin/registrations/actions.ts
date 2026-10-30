@@ -365,7 +365,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
         listOptOut: form.get("listOptIn") !== "on",
         relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
         fastTrack: form.get("fastTrack") === "on",
-        // «Direct pe lista de așteptare» (§NNN): the Administrator vouches for the address; the service asserts the role.
+        // «Direct pe lista de așteptare» (§872): the Administrator vouches for the address; the service asserts the role.
         vouchAddress: form.get("vouchAddress") === "on",
         // The number handed with the paper (§444); empty is the platform's own draw.
         bibNumber: handedBibNumber(form),
@@ -953,7 +953,7 @@ export async function sendOutboxNowAction(_previous: FormOutcome | null, form: F
 }
 
 /**
- * Back to the panel the short form sits in (§NNN): the queue on the event's page (`back=event`), or the panel
+ * Back to the panel the short form sits in (§872): the queue on the event's page (`back=event`), or the panel
  * on the event's registrations list — each opened by the outcome, the toast flashed on the way.
  */
 async function backToWaitlistPanel(form: FormData, locale: Locale, eventId: string, outcome: Record<string, string | undefined>): Promise<never> {
@@ -967,7 +967,7 @@ async function backToWaitlistPanel(form: FormData, locale: Locale, eventId: stri
 }
 
 /**
- * «Adaugă pe lista de așteptare» (§NNN): the one-press form on the queue panel and on the registrations list —
+ * «Adaugă pe lista de așteptare» (§872): the one-press form on the queue panel and on the registrations list —
  * a name, an address, an optional internal note and the relay tick — posted as the staff entry with «Direct pe
  * lista de așteptare» ticked: the Administrator's alone (the coarse gate here, the service's own assertion
  * again, BR-REQ-060-01), the address vouched for, the row through the allocator at once. The note is checked

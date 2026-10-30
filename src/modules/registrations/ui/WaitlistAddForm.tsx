@@ -15,7 +15,7 @@ import { HEADING_SX } from "@/shared/ui/heading-scale";
 import { staffRegistrationConstraints } from "../constraints";
 
 /**
- * «Adaugă pe lista de așteptare» (§NNN): the one-press entry onto the official waiting list — a name, an
+ * «Adaugă pe lista de așteptare» (§872): the one-press entry onto the official waiting list — a name, an
  * address, an optional internal note (§777) and the relay tick (§33, binding as on the full form) — posted as
  * the staff entry with «Direct pe lista de așteptare» ticked (`addToWaitlistAction`): the Administrator
  * vouches for the address and the row goes through the allocator at once, to the back of the line or to a

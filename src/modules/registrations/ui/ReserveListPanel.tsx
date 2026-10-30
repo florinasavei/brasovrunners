@@ -19,7 +19,7 @@ import type { ReserveEntryRow } from "../reserve-list";
  * people who asked to be kept in mind, told nothing and emailed nothing. Each line: the name, the address
  * when the club has it, the internal note (edited in place), «Trece pe lista oficială» — the ordinary staff
  * entry, prefilled; the note follows the registration — and «Șterge». Below, «Adaugă pe lista internă». The
- * official list's own one-press entry is the panel beside this one («Adaugă pe lista de așteptare», §NNN).
+ * official list's own one-press entry is the panel beside this one («Adaugă pe lista de așteptare», §872).
  * Presentation only: the page reads the rows and hands in the actions.
  */
 export default async function ReserveListPanel({

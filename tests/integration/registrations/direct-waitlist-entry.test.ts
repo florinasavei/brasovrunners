@@ -17,7 +17,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Direct pe lista de așteptare» (§NNN; BR-REQ-037-05, BR-REQ-034-01; `AGENTS.md` §10.5 rule 3, §15.11). The
+ * «Direct pe lista de așteptare» (§872; BR-REQ-037-05, BR-REQ-034-01; `AGENTS.md` §10.5 rule 3, §15.11). The
  * owner, 2026-10-30: «Ar trebui să pot adăuga pe cineva pe lista de așteptare direct, nu neapărat pe cea
  * internă.»
  *
@@ -157,7 +157,7 @@ async function refusal(work: Promise<unknown>): Promise<unknown> {
   throw new Error("expected a refusal");
 }
 
-describe("§NNN «Direct pe lista de așteptare»: the address vouched for at the entry, the row through the allocator at once", () => {
+describe("§872 «Direct pe lista de așteptare»: the address vouched for at the entry, the row through the allocator at once", () => {
   it("a full event: the row joins the back of the line now, told by the ordinary waiting-list email, no verification email, audited under the Administrator", async () => {
     const event = await createEvent(1);
     expect((await confirmedAddress(event, "Ana", 0)).status).toBe("PENDING_DECLARATION");

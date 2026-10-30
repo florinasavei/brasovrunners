@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.96-2026-10-29 -->
+<!-- PROJECT_BASELINE: BR-V3.97-2026-10-30 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V3.96-2026-10-29`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.97-2026-10-30`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1244,7 +1244,7 @@ Core invariants:
 
 1. one row per event/participant;
 2. unique database constraint;
-3. no place consumed before email confirmation — except an Administrator vouching for the address with «Dă-i un loc acum» (`DECISIONS.md` §637), audited by name, into a counted free place or, on a full race, one supplementary place the press adds, confirmed and audited (`DECISIONS.md` §642), the declaration still the participant's to sign; and except an Administrator vouching for the address at the entry itself with «Direct pe lista de așteptare» (`DECISIONS.md` §NNN), audited by name, the row then through the ordinary allocator in the entry's own transaction — the back of the waiting list when the event is full, a counted free place when one is free, never a place ahead of anyone, no supplementary place — the declaration still the participant's to sign;
+3. no place consumed before email confirmation — except an Administrator vouching for the address with «Dă-i un loc acum» (`DECISIONS.md` §637), audited by name, into a counted free place or, on a full race, one supplementary place the press adds, confirmed and audited (`DECISIONS.md` §642), the declaration still the participant's to sign; and except an Administrator vouching for the address at the entry itself with «Direct pe lista de așteptare» (`DECISIONS.md` §872), audited by name, the row then through the ordinary allocator in the entry's own transaction — the back of the waiting list when the event is full, a counted free place when one is free, never a place ahead of anyone, no supplementary place — the declaration still the participant's to sign;
 4. declaration required before Confirmed;
 5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing, like the rest of its queue (§331); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places — and a registration on «Lista de invitați speciali» (the special guests list; `registrations.outside_capacity`, §643, §647) consumes none, in any state, so no hold of its is released for somebody waiting;
 6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations — the one exception is rule 3's «Dă-i un loc acum», an Administrator's audited press into a counted free place or the one supplementary place it adds (§642), which moves nobody in the line;
@@ -2856,7 +2856,7 @@ BR-REQ-037-05):
      none (§643) — as `PENDING_DECLARATION` with the
      ordinary declaration email. Audited (`registration.address_vouched_by_staff`) under the
      Administrator's id. The participant still signs their own declaration, online or on paper.
-   - **The address vouched for at the entry** («Direct pe lista de așteptare», `DECISIONS.md` §NNN).
+   - **The address vouched for at the entry** («Direct pe lista de așteptare», `DECISIONS.md` §872).
      The staff entry's second tick, the Administrator's alone (`canManageRegistrations`, asserted by
      `createRegistrationByStaff`; ignored under the fast track, which vouches and confirms on paper by
      itself): `submitRegistration` with `addressVouched` writes the desk's vouching

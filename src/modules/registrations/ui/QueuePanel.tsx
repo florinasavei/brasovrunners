@@ -69,7 +69,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
    */
   offerAction?: (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
   /**
-   * «Adaugă pe lista de așteptare» under the line (§NNN): the one-press entry that vouches for the address, handed
+   * «Adaugă pe lista de așteptare» under the line (§872): the one-press entry that vouches for the address, handed
    * down only to an Administrator (`canManageRegistrations`); absent, the form is not drawn.
    */
   waitlistAddAction?: ActionFormAction;
@@ -291,7 +291,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
         <QuietHelp text={t("queue.simulateMore", { hold: words.hold })} />
       </Typography>
 
-      {/* The one-press entry onto this line (§NNN), for an Administrator: the full form stays one link away. */}
+      {/* The one-press entry onto this line (§872), for an Administrator: the full form stays one link away. */}
       {waitlistAddAction && (
         <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }}>
           <WaitlistAddForm locale={locale} eventId={event.id} waitlistAddAction={waitlistAddAction} back="event" scope="queue-add" heading />

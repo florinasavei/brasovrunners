@@ -11,7 +11,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Adaugă pe lista de așteptare» (§NNN; BR-REQ-037-05, BR-REQ-060-01) — the owner, 2026-10-30, asked what was
+ * «Adaugă pe lista de așteptare» (§872; BR-REQ-037-05, BR-REQ-060-01) — the owner, 2026-10-30, asked what was
  * still missing after the staff entry's tick: «a short «Adaugă» form on the waiting-list panel, like «Adaugă pe
  * lista internă»: name and email right in the panel, one press».
  *
@@ -171,7 +171,7 @@ async function rowOf(name: string) {
   return row;
 }
 
-describe("§NNN «Adaugă pe lista de așteptare»: the one-press entry onto the official waiting list", () => {
+describe("§872 «Adaugă pe lista de așteptare»: the one-press entry onto the official waiting list", () => {
   it("a full event: the row is on the waiting list at once, vouched for by the Administrator, with its note, the waiting-list email and the way back to the list's panel", async () => {
     const event = await createEvent(1);
     expect((await confirmedAddress(event, "Ana", 0)).status).toBe("PENDING_DECLARATION");

@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.97` | «Adaugă pe lista de așteptare» in one press: the Administrator vouches for the address and the row joins the line or takes a free place at once (§872) |
 | `BR-V3.96` | a faster commit: direct-importer tests in the hook, ESLint's cache (§871) |
 | `BR-V3.95` | «Invitații» closed by default (§870) |
 | `BR-V3.94` | a shorter first read for AI agents: CLAUDE.md and VIBECODING.md capped (§869) |

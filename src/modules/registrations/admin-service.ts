@@ -502,7 +502,7 @@ export type CreateRegistrationByStaffInput = {
    */
   fastTrack?: boolean;
   /**
-   * «Direct pe lista de așteptare» (§NNN): the Administrator vouches for the address — as «Dă-i un loc
+   * «Direct pe lista de așteptare» (§872): the Administrator vouches for the address — as «Dă-i un loc
    * acum» does on a row waiting for it (§637) — and the row goes through the allocator in the entry's own
    * transaction: the back of the line when the event is full, a declaration hold when a place is free,
    * the outcome's ordinary email, no verification email. Administrator only (`canManageRegistrations`).
@@ -593,7 +593,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   const handedBib = input.fastTrack ? input.bibNumber : undefined;
   assertHandedBibNumber(handedBib);
   /*
-    The address vouched for at the entry (§NNN): the Administrator's alone, as every remote vouching is
+    The address vouched for at the entry (§872): the Administrator's alone, as every remote vouching is
     (§637) — a volunteer or an Organizer posting the box is refused before anything is written. Not beside
     the fast track, whose paper confirmation already vouches for the address in person.
   */
@@ -696,7 +696,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     }
   }
   // The row this entry wrote, for «Trece pe lista oficială» (§854), which carries the line's note onto it, and
-  // the state the entry itself landed in — the line or a hold for a vouched entry (§NNN), before any fast-track
+  // the state the entry itself landed in — the line or a hold for a vouched entry (§872), before any fast-track
   // confirmation — for the short form's toast («Adaugă pe lista de așteptare»).
   return { registrationId: created?.id ?? null, status: created?.status ?? null };
 }

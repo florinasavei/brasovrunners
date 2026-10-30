@@ -28,7 +28,7 @@ export type DomainErrorCode =
   // An internal note on a registration with no words, or past its limit (§777): the form says which, naming its box.
   | "NOTE_EMPTY"
   | "NOTE_TOO_LONG"
-  // «Direct pe lista de așteptare» after the event's start (§NNN): a remote vouching is refused then; the desk takes the person.
+  // «Direct pe lista de așteptare» after the event's start (§872): a remote vouching is refused then; the desk takes the person.
   | "VOUCHED_ENTRY_AFTER_START"
   // A volunteer role removed while people are on it (§754): move them first, so no one is deleted by a click on a role.
   | "VOLUNTEER_ROLE_HAS_PEOPLE"

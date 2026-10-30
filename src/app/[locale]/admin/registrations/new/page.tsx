@@ -333,7 +333,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             </Box>
 
             {/*
-              «Direct pe lista de așteptare» (§NNN), the Administrator's alone (the service asserts it too):
+              «Direct pe lista de așteptare» (§872), the Administrator's alone (the service asserts it too):
               the address vouched for as «Dă-i un loc acum» vouches for it (§637), and the row through the
               allocator at once — the back of the line, or a declaration hold with its email. Unticked by
               default: the person's own email stays the ordinary way. Under the fast track it is ignored.

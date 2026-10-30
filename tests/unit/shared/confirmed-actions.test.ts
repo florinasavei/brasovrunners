@@ -98,7 +98,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setOutsideCapacityAction: [],
   setBibNumberAction: [],
   createRegistrationAction: [],
-  // «Adaugă pe lista de așteptare» (§NNN): an entry that emails the person, asked first on the queue panel and the registrations list.
+  // «Adaugă pe lista de așteptare» (§872): an entry that emails the person, asked first on the queue panel and the registrations list.
   addToWaitlistAction: ["waitlistAddAction"],
   // «Modifică datele» (§645): asks, naming the person and the fields the press changes.
   editRegistrationAnswersAction: [],
