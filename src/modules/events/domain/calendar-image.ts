@@ -24,6 +24,13 @@ import type { SocialNetwork } from "@/shared/ui/SocialIcon";
 export type CalendarImageDetails = {
   /** «Locul, pe scurt» in the page's language (migration `0181`): «Tâmpa», «Parc»; null while the place is to be announced. */
   place: string | null;
+  /**
+   * The place's own name up to its first comma, for a date whose organizer typed no short place (§873):
+   * «Parcul Tractorul» from «Parcul Tractorul, intrarea principală». Null when the date has a short place, and
+   * while the place is to be announced. Drawn after the distance and the climb (`detailWords`), so a cell too
+   * short for it drops it first. Optional: a picture drawn from data without it draws the short place alone.
+   */
+  placeName?: string | null;
   /** The distance's short words as the site's pills say them (`domain/distance.ts`): «8 km», «≈ 10 km». */
   distance: string | null;
   /** The climb's short words (`domain/elevation.ts`): «350 m D+», «≈ 350 m D+». */
@@ -89,7 +96,11 @@ export type CalendarImageData = {
 /** The most rows each legend draws; a busier month is the calendar's to read in full. */
 export const LEGEND_MAX = 4;
 
-/** Whether «Locul» has anything to draw (§863): a date of the month — or of the week's `days` — with a short place. */
+/**
+ * Whether «Locul» has anything to draw (§863, §873): a date of the month — or of the week's `days` — with a short
+ * place or, failing one, its place's name. False only while no date of the period has its place announced.
+ */
 export function periodHasPlace(entries: readonly CalendarImageEntry[], days: readonly number[] | null): boolean {
-  return entries.some((entry) => entry.place !== null && entry.place.trim() !== "" && (days === null || days.includes(entry.day)));
+  const said = (text: string | null | undefined) => typeof text === "string" && text.trim() !== "";
+  return entries.some((entry) => (said(entry.place) || said(entry.placeName)) && (days === null || days.includes(entry.day)));
 }

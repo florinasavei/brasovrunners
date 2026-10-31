@@ -121,11 +121,16 @@ export function drawGlyphs(ctx: CanvasRenderingContext2D, paths: readonly string
  * distance, then the climb, each only when the dialog has it on and the date has it. `["Tâmpa", "6 km",
  * "≈ 350 m D+"]`, or nothing at all; how they are set is each layout's.
  *
+ * A date with no short place says its place's name under «Locul» instead (§873), after the climb: every layout
+ * drops the words from the end when a cell is short, so a long name goes first and never takes the distance or
+ * the climb with it — `["6 km", "Parcul Tractorul"]`.
+ *
  * `details` is spelt inline rather than as `CalendarImageOptions["details"]`: `calendar-image-draw.ts`, which
  * declares the options, imports this module, and the reverse import would be a cycle.
  */
 export function detailWords(entry: CalendarImageDetails, details: { place: boolean; distance: boolean; elevation: boolean }): string[] {
-  return [details.place && entry.place, details.distance && entry.distance, details.elevation && entry.elevation].filter(
+  const name = details.place && !entry.place ? (entry.placeName ?? null) : null;
+  return [details.place && entry.place, details.distance && entry.distance, details.elevation && entry.elevation, name].filter(
     (word): word is string => typeof word === "string" && word !== "",
   );
 }
