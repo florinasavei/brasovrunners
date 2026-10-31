@@ -101,7 +101,7 @@ describe("a date's details (the owner, 2026-10-27: «short location … and also
     expect(none.place).toBeNull();
   });
 
-  // The owner, 2026-10-31, of «Locul» greyed for want of a short place: «ar trebui să facă totuși ceva» (§NNN).
+  // The owner, 2026-10-31, of «Locul» greyed for want of a short place: «ar trebui să facă totuși ceva» (§873).
   it("gives a date with no short place its place's name up to the first comma, and none while the place is to be announced", () => {
     const [typed, named, plain, tba] = calendarImageRows(
       june,
@@ -150,7 +150,7 @@ describe("a date's details (the owner, 2026-10-27: «short location … and also
     expect(detailWords({ place: null, distance: "8 km", elevation: null }, all)).toEqual(["8 km"]);
     expect(detailWords({ place: "", distance: null, elevation: null }, all)).toEqual([]);
     expect(detailWords(entry, { place: false, distance: false, elevation: false })).toEqual([]);
-    // No short place (§NNN): the place's name, after the climb — the first word a short cell drops — and only under «Locul».
+    // No short place (§873): the place's name, after the climb — the first word a short cell drops — and only under «Locul».
     const named = { place: null, placeName: "Parcul Tractorul", distance: "6 km", elevation: "≈ 350 m D+" };
     expect(detailWords(named, all)).toEqual(["6 km", "≈ 350 m D+", "Parcul Tractorul"]);
     expect(detailWords(named, { place: true, distance: false, elevation: false })).toEqual(["Parcul Tractorul"]);
@@ -168,7 +168,7 @@ describe("a date's details (the owner, 2026-10-27: «short location … and also
     // A week counts its own days only.
     expect(periodHasPlace([entry(5, null), entry(12, "Tâmpa")], [5, 6, 7, 8, 9, 10, 11])).toBe(false);
     expect(periodHasPlace([entry(5, null), entry(12, "Tâmpa")], [12, 13, 14, 15, 16, 17, 18])).toBe(true);
-    // The place's name counts as well (§NNN): greyed only while no date of the period has its place announced.
+    // The place's name counts as well (§873): greyed only while no date of the period has its place announced.
     expect(periodHasPlace([{ ...entry(5, null), placeName: "Parcul Tractorul" }], null)).toBe(true);
     expect(periodHasPlace([{ ...entry(5, null), placeName: " " }], null)).toBe(false);
     expect(periodHasPlace([{ ...entry(5, null), placeName: "Parcul Tractorul" }], [12, 13, 14, 15, 16, 17, 18])).toBe(false);

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.97-2026-10-30 -->
+<!-- PROJECT_BASELINE: BR-V3.98-2026-10-31 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.97-2026-10-30`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.98-2026-10-31`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -450,6 +450,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 242. Given the calendar with «Tema v2» on and a next event, then the card under the date carries a line with a glyph saying how far away it is in calendar days on the club's clock: «Acum» once it has started, «Azi» the same day, «Mâine», «Peste 2» to «Peste 13 zile», «Peste 2» to «Peste 8 săptămâni» from fourteen days, «Peste 2 luni» from sixty days (in English «Now», «Today», «Tomorrow», «In 5 days», «In 3 weeks», «In 2 months», Romanian's three plural forms by `countForm`); the clocks changing on the last Sunday of October moves no step, and the static page is held to the club's midnight and to the event's start so the words roll with the page at the club's midnight and at the event's start. Proven by `tests/unit/events/next-event-away.test.ts` (2026-10-19, `DECISIONS.md` §834).
 243. Given a month in the calendar, when a visitor presses «Salvează ca imagine», then the month is drawn in their browser as a PNG in the chosen theme and format — each date on its day in the club's zone, with its hour and title, the recurring and special events listed when asked — and downloaded or shared, with no request to the server beyond the page itself (2026-10-27, `DECISIONS.md` §855).
 244. Given a month in the calendar, when a visitor saves it as a picture, then they may choose the month or one of its weeks, any of seven styles in any of the three layouts, and which details follow each hour (the short place, the distance, the climb); every special date of the period is named whole somewhere on the picture and the race in every list drawn, no word is set under 17 px on a 1080-wide picture (21 on 16:9), a story keeps its words out of its top 250 and bottom 340 px, and a period with no event says so (2026-10-28, `DECISIONS.md` §859).
+245. Given «Calendarul lunii ca imagine» with «Locul» ticked, when a date has no «Locul, pe scurt», then it shows its place's name up to the first comma after its distance and climb — the first word dropped when the cell is short — and the tick is greyed only while no date of the period has its place announced (2026-10-31, `DECISIONS.md` §873).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.97-2026-10-30 -->
+<!-- PROJECT_BASELINE: BR-V3.98-2026-10-31 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.97-2026-10-30`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.98-2026-10-31`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28227,3 +28227,15 @@ Baseline `BR-V3.96-2026-10-29`.
 **Consequences.** `registrations/service.ts` (`RegistrationOrigin.addressVouched`, `submitRegistration`'s `vouchAndAllocate` beside `holdVerification`, `allocateOrWaitlist`'s `vouched` deadline rule), `registrations/admin-service.ts` (`CreateRegistrationByStaffInput.vouchAddress`, the role assertion), `audit/repository.ts` (`registration.address_vouched_on_entry`), `admin/registrations/actions.ts`, `admin/registrations/new/page.tsx` (the tick), `registrations/ui/WaitlistAddForm.tsx` (new), `registrations/ui/QueuePanel.tsx` and the event page, the registrations list page (the panel), `messages/{ro,en}.json`; `AGENTS.md` §10.5 rule 3 and §15.11; CLAUDE.md's staff-verbs row. Tests: `integration/registrations/direct-waitlist-entry.test.ts` and `integration/registrations/waitlist-add-action.test.ts` (new), `unit/shared/confirmed-actions.test.ts`. No migration, no dependency, no new message type.
 
 Baseline `BR-V3.97-2026-10-30`.
+
+## 873. «Locul» in the calendar picture draws the place's name when no short place is typed
+
+**The owner, 2026-10-31,** with a screenshot of «Calendarul lunii ca imagine» on production, «Locul» greyed and the line under it: «Rezolvă și asta cu locul bifat aici în poză calendarului, ar trebui să facă totuși ceva.» Three days earlier the owner had chosen the hint over the long name (§863); the club has not filled «Locul, pe scurt» since, so the tick still did nothing.
+
+**Decision.** Under «Locul», a date whose organizer typed no «Locul, pe scurt» says its place's own name up to the first comma (`placeHead`): «Parcul Tractorul» from «Parcul Tractorul, intrarea principală», «Sub Tâmpa» from «Sub Tâmpa, lângă Apeduct, Aleea Tiberiu Brediceanu, Brașov», the whole name when it has no comma — in the page's language, as the public read gives it, and nothing while the place is to be announced (§328). A typed short place still wins and keeps its place first, before the distance and the climb. The name goes **after** the climb (`detailWords`): every layout drops a date's details from the end when its cell is short, so a long name is the first to go and never takes the distance or the climb with it, which a name in the short place's slot would have done in a busy month. The tick is greyed only while no date of the period has its place announced, and the line under it says that: «Nicio alergare din această perioadă nu are încă locul anunțat.»
+
+**Refused.** Changing the four layouts' fitting so a place first in the line is skipped when it alone does not fit: the same result for the long name, through four layouts' code instead of one ordering. A word cut smaller than the name's head by rule («Tâmpa» out of «Stația de telecabină Tâmpa»): §859's reason stands — the organizer's own word is the short place, and the head of the name is the place as the club wrote it.
+
+**Checked.** The overflow guard draws a busy month whose every date says a long name («Stația de telecabină …») in every theme, layout, format and week: no text crosses its box or meets another, and nothing falls under the readable floor. The month in «Seriile în cap» on 4:5 draws the names, and nothing is drawn unticked.
+
+Baseline `BR-V3.98-2026-10-31`.

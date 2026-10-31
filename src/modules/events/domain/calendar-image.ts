@@ -25,7 +25,7 @@ export type CalendarImageDetails = {
   /** «Locul, pe scurt» in the page's language (migration `0181`): «Tâmpa», «Parc»; null while the place is to be announced. */
   place: string | null;
   /**
-   * The place's own name up to its first comma, for a date whose organizer typed no short place (§NNN):
+   * The place's own name up to its first comma, for a date whose organizer typed no short place (§873):
    * «Parcul Tractorul» from «Parcul Tractorul, intrarea principală». Null when the date has a short place, and
    * while the place is to be announced. Drawn after the distance and the climb (`detailWords`), so a cell too
    * short for it drops it first. Optional: a picture drawn from data without it draws the short place alone.
@@ -97,7 +97,7 @@ export type CalendarImageData = {
 export const LEGEND_MAX = 4;
 
 /**
- * Whether «Locul» has anything to draw (§863, §NNN): a date of the month — or of the week's `days` — with a short
+ * Whether «Locul» has anything to draw (§863, §873): a date of the month — or of the week's `days` — with a short
  * place or, failing one, its place's name. False only while no date of the period has its place announced.
  */
 export function periodHasPlace(entries: readonly CalendarImageEntry[], days: readonly number[] | null): boolean {

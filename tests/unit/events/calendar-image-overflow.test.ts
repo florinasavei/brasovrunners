@@ -24,7 +24,7 @@ const read = readdirSync(samples)
   .sort()
   .map((file) => ({ name: file.replace(/\.json$/, ""), data: JSON.parse(readFileSync(`${samples}${file}`, "utf8")) as CalendarImageData }));
 /**
- * The busiest sample with no short place anywhere (§NNN): every date says its place's name under «Locul», long on
+ * The busiest sample with no short place anywhere (§873): every date says its place's name under «Locul», long on
  * purpose — the name after the climb, the first word a short cell drops, never across a box.
  */
 const named = <T extends { place: string | null }>(row: T): T => (row.place ? { ...row, place: null, placeName: `Stația de telecabină ${row.place}` } : row);
@@ -115,7 +115,7 @@ describe("a week on 16:9", () => {
   });
 });
 
-// The owner, 2026-10-31, of «Locul» greyed for want of a short place: «ar trebui să facă totuși ceva» (§NNN).
+// The owner, 2026-10-31, of «Locul» greyed for want of a short place: «ar trebui să facă totuși ceva» (§873).
 describe("«Locul» without a short place: the place's name is drawn where there is room, and only when ticked", () => {
   const plain = (text: string) => text.replace(/\u00a0/g, " ");
   const june = read.find((each) => each.name === "june")!.data;

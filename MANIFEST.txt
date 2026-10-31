@@ -1,6 +1,6 @@
 Brașov Runners repository handoff
 Repository: https://github.com/florinasavei/brasovrunners
-Baseline: BR-V3.97-2026-10-30
+Baseline: BR-V3.98-2026-10-31
 
 Authoritative/current root documentation:
 - README.md      Entry point

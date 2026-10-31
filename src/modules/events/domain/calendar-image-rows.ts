@@ -19,7 +19,7 @@ export type CalendarImageFormat = {
  * The month's dates in the picture's terms, soonest first. `time`, `distance` and `elevation` are formatted
  * by the caller (the page's language and the club's zone); the short place is copied from the event as the
  * public read gives it (`locationShort`, null while the place is to be announced), and a date without one
- * carries its place's name up to the first comma (`placeHead`, §NNN); everything decided here is pure.
+ * carries its place's name up to the first comma (`placeHead`, §873); everything decided here is pure.
  */
 export function calendarImageRows(
   month: YearMonth,
@@ -50,7 +50,7 @@ export function calendarImageRows(
 }
 
 /**
- * The place's name up to its first comma, trimmed (§NNN; the owner, 2026-10-31, of «Locul» greyed: «ar trebui
+ * The place's name up to its first comma, trimmed (§873; the owner, 2026-10-31, of «Locul» greyed: «ar trebui
  * să facă totuși ceva»): «Parcul Tractorul» from «Parcul Tractorul, intrarea principală», «Sub Tâmpa» from «Sub
  * Tâmpa, lângă Apeduct, Aleea Tiberiu Brediceanu, Brașov», the whole name when it has no comma. Null for no name.
  * What «Locul» draws for a date whose organizer typed no «Locul, pe scurt» — the typed word stays the better one.
@@ -62,7 +62,7 @@ export function placeHead(name: string | null | undefined): string | null {
 
 /**
  * A date's details (`CalendarImageDetails`): the short place as read, else its place's name up to the first comma
- * (§NNN) — both null while the place is to be announced, as the public read gives them — and the two words as the
+ * (§873) — both null while the place is to be announced, as the public read gives them — and the two words as the
  * caller formats them.
  */
 export function calendarImageDetails(event: PublicEvent, format: Pick<CalendarImageFormat, "distance" | "elevation">) {
