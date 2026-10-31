@@ -134,7 +134,7 @@ export function posterPlan(data: CalendarImageData): PosterPlan {
     // Weekly in this month when each of its weekdays has a date of it — a special edition is the series kept.
     const kept = new Set(all.map((entry) => entry.day));
     const weekly = columns.every((column) => days.every((day) => weekdayColumn(data.month, day) !== column || kept.has(day)));
-    const details = { place: row.place ?? null, distance: row.distance ?? null, elevation: row.elevation ?? null };
+    const details = { place: row.place ?? null, placeName: row.placeName ?? null, distance: row.distance ?? null, elevation: row.elevation ?? null };
     const lane: PosterLane = { title: row.title, type: row.type, surface: row.surface, tone: row.tone, sentence: row.sentence, columns, inHeads: columns.length <= HEAD_DAYS_MAX, weekly, time: commonHour(ordinary), variant: 0, details };
     lanes.push(lane);
     byKey.set(key, lane);

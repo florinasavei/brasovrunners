@@ -119,7 +119,8 @@ export default function CalendarImageDialog({
   // The month's weeks, by their days in this month; the one chosen, or null for the month.
   const weeks = weeksOf(data.month);
   const week = options.week === null ? null : weeks[Math.min(options.week, weeks.length - 1)];
-  // «Locul» draws only a short place the organizer typed (§859); while no date of the period has one, its tick is off and says why (§863).
+  // «Locul» draws the short place the organizer typed (§859), else the place's name up to its first comma (§NNN); only while no
+  // date of the period has its place announced is its tick off, saying why (§863).
   const noPlace = !periodHasPlace(data.entries, week ? week.days : null);
   // «brasov-runners-2026-10.png» — «brasov-runners-2026-10-05-11.png» for a week: the diacritics' marks
   // dropped before anything else is, or «ș» splits the word.
@@ -343,7 +344,8 @@ export default function CalendarImageDialog({
               />
             )}
             {/* «Detalii» (the owner, 2026-10-27): which of a date's details the layouts write after its hour — the
-                short place («Locul, pe scurt», migration `0181`), the distance, the climb. All on to begin with. */}
+                short place («Locul, pe scurt», migration `0181`) or the place's name (§NNN), the distance, the climb.
+                All on to begin with. */}
             <div role="group" aria-labelledby="calendar-image-details">
               <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }} id="calendar-image-details">
                 {words.details}

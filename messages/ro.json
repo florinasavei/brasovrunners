@@ -250,7 +250,7 @@
         "detailsPlace": "Locul",
         "detailsDistance": "Distanța",
         "detailsElevation": "Diferența de nivel",
-        "detailsPlaceNone": "Nicio alergare din această perioadă nu are încă locul scris pe scurt."
+        "detailsPlaceNone": "Nicio alergare din această perioadă nu are încă locul anunțat."
       }
     },
     "raceWeek": {

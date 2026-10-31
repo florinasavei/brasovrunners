@@ -250,7 +250,7 @@
         "detailsPlace": "Place",
         "detailsDistance": "Distance",
         "detailsElevation": "Elevation gain",
-        "detailsPlaceNone": "No run in this period has its place in short yet."
+        "detailsPlaceNone": "No run in this period has its place announced yet."
       }
     },
     "raceWeek": {
