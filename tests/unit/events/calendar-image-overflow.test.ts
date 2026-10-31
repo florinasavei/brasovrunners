@@ -19,10 +19,20 @@ import { type Extent, overflowsOf, stubCanvas, type TextRecord } from "./calenda
  */
 
 const samples = fileURLToPath(new URL("../../../scripts/calendar-image-preview/", import.meta.url));
-const months = readdirSync(samples)
+const read = readdirSync(samples)
   .filter((file) => file.endsWith(".json"))
   .sort()
   .map((file) => ({ name: file.replace(/\.json$/, ""), data: JSON.parse(readFileSync(`${samples}${file}`, "utf8")) as CalendarImageData }));
+/**
+ * The busiest sample with no short place anywhere (§873): every date says its place's name under «Locul», long on
+ * purpose — the name after the climb, the first word a short cell drops, never across a box.
+ */
+const named = <T extends { place: string | null }>(row: T): T => (row.place ? { ...row, place: null, placeName: `Stația de telecabină ${row.place}` } : row);
+const busy = read.find((month) => month.name === "busy")!.data;
+const months = [
+  ...read,
+  { name: "busy-names", data: { ...busy, entries: busy.entries.map(named), recurring: busy.recurring.map(named), specials: busy.specials.map(named) } as CalendarImageData },
+];
 const ratios = Object.keys(CALENDAR_IMAGE_RATIOS) as CalendarImageRatio[];
 const fonts: CalendarImageFonts = { body: "Roboto, sans-serif", display: "Facon, sans-serif", script: "Caveat, cursive", poster: "'Poppins', Roboto, sans-serif" };
 /** The band draws the club's logo when it has loaded, else the mountains over the spaced name: both are checked. */
@@ -103,6 +113,29 @@ describe("a week on 16:9", () => {
     expect(ultra[0].size).toBeGreaterThan(18);
     expect(ultra[0].size).toBeLessThan(Math.min(...intervals));
   });
+});
+
+// The owner, 2026-10-31, of «Locul» greyed for want of a short place: «ar trebui să facă totuși ceva» (§873).
+describe("«Locul» without a short place: the place's name is drawn where there is room, and only when ticked", () => {
+  const plain = (text: string) => text.replace(/\u00a0/g, " ");
+  const june = read.find((each) => each.name === "june")!.data;
+  // June as a club with no short place typed would have it: each date's place's name, as long as a real one.
+  const parks = <T extends { place: string | null }>(row: T): T => (row.place ? { ...row, place: null, placeName: `Parcul ${row.place}` } : row);
+  const juneNames = { ...june, entries: june.entries.map(parks), recurring: june.recurring.map(parks), specials: june.specials.map(parks) } as CalendarImageData;
+  const every = { place: true, distance: true, elevation: true };
+  for (const [what, data, options, name] of [
+    ["the month in «Seriile în cap» on 4:5, the dialog's first picture", juneNames, { theme: "poster", ratio: "portrait", layout: "heads", week: null, legend: true, details: every }, "Parcul "],
+    ["a busy month's week, a row a day on 9:16, with long names", months.find((each) => each.name === "busy-names")!.data, { theme: "poster", ratio: "story", layout: "heads", week: 1, legend: true, details: every }, "Stația de telecabină"],
+  ] as const) {
+    it(what, () => {
+      const { ctx, records } = stubCanvas();
+      drawCalendarImage(ctx, data, options as CalendarImageOptions, fonts, { logo: null });
+      expect(records.texts.some((text) => plain(text.text).includes(name))).toBe(true);
+      const off = stubCanvas();
+      drawCalendarImage(off.ctx, data, { ...(options as CalendarImageOptions), details: { ...every, place: false } }, fonts, { logo: null });
+      expect(off.records.texts.some((text) => plain(text.text).includes(name))).toBe(false);
+    });
+  }
 });
 
 describe("«Seriile în cap»: the floor a phone's feed still reads (the owner's audit, D17/D31)", () => {

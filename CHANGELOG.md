@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.98-2026-10-31
+
+- **«Locul» in the calendar picture works without a short place** — a date with no «Locul, pe scurt» says its place's name up to the first comma, after the distance and the climb, so a short cell drops it first; the tick is greyed only while no date has its place announced. §873.
 ## BR-V3.97-2026-10-30
 
 - **«Adaugă pe lista de așteptare», in one press** — on the event's queue panel and on the registrations list an Administrator types a name and an email and the person is on the official waiting list at once (or holds a place when one is free), with the ordinary email for that state and no confirmation link; the same entry is the tick «Direct pe lista de așteptare» on «Adaugă o înscriere». §872.
