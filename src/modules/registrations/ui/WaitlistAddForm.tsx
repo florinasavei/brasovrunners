@@ -73,7 +73,9 @@ export default async function WaitlistAddForm({
         // The entry emails the person — the waiting-list message, or the declaration — and says so (§384).
         confirm={{
           title: t("confirm.waitlistAddTitle"),
-          body: t("confirm.waitlistAddBody"),
+          // Names the address typed in the form (§NNN), as «Dă-i un loc acum» does (§637): the safeguard against a dictated typo.
+          body: t("confirm.waitlistAddBody", { email: "{email}" }),
+          fillFrom: ["email"],
           email: words.email(1),
           road: words.road("links"),
           confirmLabel: t("waitlistAdd.add"),

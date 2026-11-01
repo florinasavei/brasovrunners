@@ -107,7 +107,7 @@ import { previewMemberTickSweep } from "@/modules/registrations/admin-service";
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
-import { givePlaceRefusalAhead } from "@/modules/registrations/give-place-tip";
+import { givePlaceRefusalAhead, waitlistAddDoorOpen } from "@/modules/registrations/give-place-tip";
 import { noFreePlaceValues } from "@/modules/registrations/domain/capacity";
 import { outsideMarkConfirm } from "@/modules/registrations/ui/outside-mark-body";
 import { paperConfirmationText } from "@/modules/registrations/ui/PaperConfirmationTip";
@@ -394,6 +394,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     complaint that started §289's sibling fix.
   */
   const mayManage = canManageRegistrations(actor.role);
+  // «Adaugă pe lista de așteptare» (§NNN) is drawn only where the press can succeed: the door of «Dă-i un loc acum» (§637).
+  const waitlistAddOpen = mayManage && filters.eventId ? await waitlistAddDoorOpen(filters.eventId) : false;
   /*
     «Bife de membru fără cont de membru» (§645): the preview, read only while it is open and only
     for the role that may press it — the scope the list was resolved to (one event, or every event that
@@ -1357,7 +1359,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         vouched for by the Administrator, the row through the allocator at once. Administrator only, on a list
         about one event; the new row shows in the list above in the state it landed in.
       */}
-      {filters.eventId && mayManage && (
+      {filters.eventId && mayManage && waitlistAddOpen && (
         <Panel
           glyph="queue"
           collapsible
