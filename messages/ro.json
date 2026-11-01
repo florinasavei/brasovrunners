@@ -909,7 +909,7 @@
         "DNS": "Neprezentat",
         "DSQ": "Descalificat"
       },
-      "note": "Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate” la o înscriere confirmată, făcută după ce nota de confidențialitate a început să descrie clasamentul. Ceilalți apar ca „Participant #număr”, cu locul, timpul și categoria.",
+      "note": "Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate” la o înscriere confirmată, făcută după ce nota de confidențialitate a început să descrie clasamentul, sau care, înscriși înainte, au cerut apoi să apară cu numele. Ceilalți apar ca „Participant #număr”, cu locul, timpul și categoria.",
       "filter": {
         "label": "Filtrează clasamentul",
         "category": "Categorie",
@@ -1502,6 +1502,7 @@
           "declaration_hold_set": "Declarație păstrată pentru o reclamație sau un litigiu",
           "declaration_hold_cleared": "Păstrarea declarației a fost scoasă",
           "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat",
+          "results_name_consent_changed": "Alegerea pentru numele în clasament schimbată de participant",
           "family_resent": "Email retrimis familiei",
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
@@ -8994,7 +8995,8 @@
               "steps": [
                 "Clasamentul apare pe site doar după ce îl publici, doar după ce a început cursa și doar dacă nota de confidențialitate și termenii în vigoare descriu clasamentul — «Documente legale» spune dacă trebuie aprobate texte noi; «Sarcini» are rândul.",
                 "Pe «Clasament», la «Pe pagina evenimentului», bifează «Clasamentul e public pe pagina evenimentului» și apasă «Salvează». Pagina arată locul, numărul, timpul și categoria; numele doar la cine a bifat lista la înscriere sau la alergătorul neînscris care a acceptat — ceilalți apar ca „Participant #număr”.",
-                "Clasamentul stă pe pagină cât lista publică a participanților, de la sfârșitul cursei («Setări» → «Termene»). Debifezi oricând; rezultatele rămân salvate."
+                "Clasamentul stă pe pagină cât lista publică a participanților, de la sfârșitul cursei («Setări» → «Termene»). Debifezi oricând; rezultatele rămân salvate.",
+                "Cine s-a înscris sub o notă de confidențialitate mai veche, care nu descria clasamentul, apare ca „Participant #număr”, chiar dacă a bifat lista. După ce nota în vigoare descrie clasamentul, pagina înscrierii lor (linkul din emailul ei) le arată «Vreau să apar cu numele în clasament». Clubul nu trimite un email nou pentru asta: spune-le cu «Trimite un mesaj participanților», din editorul cursei, că pot bifa din linkul înscrierii și că pot debifa oricând."
               ]
             }
           ]
@@ -11969,6 +11971,15 @@
       "otherAdult": "Acordul pentru oferte și beneficii îl dă doar persoana, din declarația ei sau din linkul înscrierii ei. De aici îl poți doar retrage.",
       "optInShared": "Dacă îl dai, clubul le poate da partenerilor prenumele, numele și adresa ta.",
       "yesShared": "La această înscriere primești oferte și beneficii de la club și de la partenerii săi. Clubul le poate da partenerilor prenumele, numele și adresa ta, ca să îți scrie ei."
+    },
+    "resultsName": {
+      "title": "Numele în clasament",
+      "older": "Te-ai înscris sub o versiune mai veche a notei de confidențialitate, care nu descria clasamentul, așa că în clasamentul cursei apari doar ca „Participant #numărul de concurs”.",
+      "label": "Vreau să apar cu numele în clasament",
+      "help": "Bifat, clasamentul publicat al cursei îți arată numele lângă loc, număr de concurs, timp și categorie, doar cât ești pe lista publică; debifezi oricând de aici și numele dispare din clasament.",
+      "changed": "Am salvat alegerea ta pentru clasament.",
+      "failed": "Nu am putut salva alegerea. Încearcă din nou.",
+      "otherAdult": "Acordul de a apărea cu numele în clasament îl dă doar persoana, din linkul înscrierii ei. De aici îl poți doar retrage."
     }
   },
   "Devs": {
