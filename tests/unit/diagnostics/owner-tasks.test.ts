@@ -1206,3 +1206,16 @@ describe("BR-REQ-090-05 the race-day settings rows of «Sarcini» (§NNN)", () =
     expect(ro.Admin.tasks.items.raceAgeBands.how.join("\n")).toContain("Categorii de vârstă");
   });
 });
+
+describe("BR-REQ-090-07 the row «Consumul Vercel în cifre, pe /devs» speaks of Active CPU (§NNN)", () => {
+  it("names Hobby's 4 hours of Active CPU in both languages and no build-minute ceiling", () => {
+    for (const catalogue of [ro, en]) {
+      const { todo, done } = catalogue.Admin.tasks.items.vercelUsage;
+      for (const sentence of [todo, done]) {
+        expect(sentence).toMatch(/4/);
+        expect(sentence).toMatch(/CPU/);
+        expect(sentence).not.toMatch(/6[.,\s]?000|build/i);
+      }
+    }
+  });
+});

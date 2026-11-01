@@ -347,6 +347,9 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
         expect(sentence, `${locale} ${key}`).toMatch(locale === "ro" ? /două luni/ : /two months/);
         expect(sentence, `${locale} ${key}`).not.toMatch(/after the race|după cursă/i);
       }
+      // The two-months rule is Vercel's alone: Mailgun goes back to Free by its own guide's step, so this sentence
+      // says nothing of it rather than «what is paid stays», which would contradict that guide.
+      expect(messageAt(messages, "nextSpend.none"), locale).not.toMatch(/Mailgun|plătit rămâne|paid stays/i);
     }
   });
 

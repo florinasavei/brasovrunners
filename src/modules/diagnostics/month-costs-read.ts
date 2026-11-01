@@ -143,7 +143,8 @@ export async function readMonthCosts(inputs: MonthCostInputs, readers: MonthCost
   const current = noReasons();
   if (!inputs.neon.ok) current.neon = inputs.neon.reason;
   // Pro is read by its builds, Hobby by its Active CPU; the other half's failure says nothing about the line (§NNN).
-  if (hobby ? !cpu.ok : !vercel.ok) current.vercel = hobby ? (cpu as { reason: string }).reason : (vercel as { reason: string }).reason;
+  const vercelRead = hobby ? cpu : vercel;
+  if (!vercelRead.ok) current.vercel = vercelRead.reason;
   if (!characters.ok) current.deepl = characters.reason;
   if (!media.ok) current.r2 = media.reason;
   if (inputs.mailgun.planId === "CUSTOM") current.mailgun = "typed plan";

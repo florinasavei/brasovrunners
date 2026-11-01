@@ -375,9 +375,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const raceDaySheetsDue = [...new Set(shredderRows.map((row) => row.title ?? row.eventId))];
   // The coming races' two race-day settings and whether a race has run (§NNN): what the rows «Startul cursei»,
   // «Categorii de vârstă» and «Luăm o lună de Mailgun plătit» read; «Planul Mailgun» is the club's own setting.
-  const raceDaySettings = await readRaceDaySettings(db, locale, now);
-  const raceHasRun = await aRaceHasRun(db, now);
-  const emailPlan = await readEmailPlan(db);
+  const [raceDaySettings, raceHasRun, emailPlan] = await Promise.all([readRaceDaySettings(db, locale, now), aRaceHasRun(db, now), readEmailPlan(db)]);
   const volume = await readEmailVolumeToday(db, now);
   // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
   const email = await checkEmailHealth(db, now, budget.effects.jobFloorMinutes);

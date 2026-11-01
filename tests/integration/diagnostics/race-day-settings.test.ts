@@ -88,4 +88,9 @@ describe("BR-REQ-090-05 the race-day settings a coming race still owes", () => {
     await event({ dateToBeAnnounced: true, startsAt: new Date(NOW.getTime() - 5 * DAY) }, "TBA");
     expect(await aRaceHasRun(db, NOW)).toBe(false);
   });
+
+  it("counts a race that ran and was then archived: archiving it does not reopen the Mailgun question", async () => {
+    await event({ editorialStatus: "ARCHIVED", eventStatus: "COMPLETED", startsAt: new Date(NOW.getTime() - 5 * DAY) }, "Archived");
+    expect(await aRaceHasRun(db, NOW)).toBe(true);
+  });
 });

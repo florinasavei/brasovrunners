@@ -4494,7 +4494,7 @@
         },
         "raceGunTime": {
           "title": "Stabilește startul cursei (ora la care se dă startul)",
-          "todo": "{event} începe în cel mult trei săptămâni și nu are startul cursei stabilit: ceasul de sosire numără de la începutul evenimentului, adică deschiderea biroului, nu de la start.",
+          "todo": "{event} începe în cel mult trei săptămâni și nu are startul cursei stabilit: ceasul de sosire numără de la începutul evenimentului, adică ora de întâlnire, nu de la start.",
           "done": "{event} are startul cursei stabilit: ceasul de sosire numără de la el.",
           "how": [
             "/admin/events → cursa → „Editează” → „Când și unde” → „Data și ora”.",
@@ -4504,12 +4504,12 @@
         },
         "raceAgeBands": {
           "title": "Alege categoriile de vârstă pentru premii",
-          "todo": "{event} începe în cel mult trei săptămâni și folosește categoriile standard. Dacă ți se potrivesc, nu e nimic de făcut: rândul se închide singur după start. Altfel, scrie-le înainte de rezultate.",
+          "todo": "{event} începe în cel mult trei săptămâni și folosește categoriile standard. Dacă ți se potrivesc, nu faci nimic: rândul se închide singur la câteva ore după start. Altfel, scrie-le înainte de rezultate.",
           "done": "{event} are categoriile de vârstă proprii.",
           "how": [
             "/admin/events → cursa → „Clasament” → „Categorii de vârstă”.",
             "La „Vârstele de la care încep grupele” scrie vârstele de început, separate prin virgulă — „18, 35, 45, 55” dă sub 18, 18-34, 35-44, 45-54 și 55+ — și verifică rândul de sub căsuță.",
-            "Apasă „Salvează categoriile” înainte de primul rezultat. Dacă cele standard ți se potrivesc, nu faci nimic: rândul se închide singur după cursă."
+            "Apasă „Salvează categoriile” înainte de primul rezultat. Dacă cele standard ți se potrivesc, nu faci nimic: rândul se închide singur la câteva ore după start."
           ]
         },
         "botCheck": {
@@ -4541,8 +4541,8 @@
         },
         "vercelUsage": {
           "title": "Consumul Vercel în cifre, pe /devs",
-          "todo": "Cu un token de citire și id-ul proiectului, /devs arată deploy-urile lunii, cele de azi din 100 pe zi și minutele de build din cele 6.000 pe lună. Traficul se vede doar în Vercel → Usage.",
-          "done": "/devs arată deploy-urile și minutele de build ale lunii, cu prag de avertizare.",
+          "todo": "Cu un token de citire și id-ul proiectului, /devs arată deploy-urile lunii, cele de azi din 100 pe zi și CPU-ul activ din cele 4 ore pe lună ale lui Hobby. Traficul se vede doar în Vercel → Usage.",
+          "done": "/devs arată deploy-urile lunii și CPU-ul activ din cele 4 ore ale planului Hobby, cu prag de avertizare; «Costuri» citește aceeași cifră.",
           "how": [
             "Vercel → avatar → Account Settings → Tokens → Create: nume „brasovrunners-devs”, scope contul tău, expirare 1 an. Copiază tokenul (se arată o singură dată).",
             "Id-ul proiectului: Vercel → proiectul de producție → Settings → General → Project ID (începe cu prj_).",
@@ -5102,7 +5102,7 @@
       "nextSpend": {
         "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}.",
         "vercel": "Prima cheltuială care urmează: Vercel Pro, {cost}.",
-        "none": "Nu urmează nicio cheltuială nouă. Ce e plătit rămâne: Vercel revine la Hobby doar după două luni la rând sub 3 ore de CPU activ, nu la o dată anume.",
+        "none": "Nu urmează nicio cheltuială nouă. Vercel revine la Hobby doar după două luni la rând sub 3 ore de CPU activ, nu la o dată anume.",
         "mailgunMore": "Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
         "vercelMore": "Apare dacă site-ul cere bani pentru participare, dacă codul se mută pe contul clubului sau dacă CPU-ul activ se apropie de cele 4 ore pe lună ale lui Hobby. Revine la Hobby după două luni sub 3 ore."
       },

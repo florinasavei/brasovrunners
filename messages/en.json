@@ -4494,7 +4494,7 @@
         },
         "raceGunTime": {
           "title": "Set the race start (the gun time)",
-          "todo": "{event} starts within three weeks and has no race start set: the finish clock counts from the event's start, which is the desk's opening, not the gun.",
+          "todo": "{event} starts within three weeks and has no race start set: the finish clock counts from the event's start, which is the gathering time, not the gun.",
           "done": "{event} has its race start set: the finish clock counts from it.",
           "how": [
             "/admin/events → the race → “Edit” → “When and where” → “Date and time”.",
@@ -4504,12 +4504,12 @@
         },
         "raceAgeBands": {
           "title": "Choose the age categories for the awards",
-          "todo": "{event} starts within three weeks and uses the standard age categories. If they suit the race there is nothing to do: the row goes by itself after the start. Otherwise write yours before results.",
+          "todo": "{event} starts within three weeks and uses the standard age categories. If they suit the race, do nothing: the row goes by itself a few hours after the start. Otherwise write yours before results.",
           "done": "{event} has its own age categories.",
           "how": [
             "/admin/events → the race → “Results” → “Age categories”.",
             "In “Ages the groups start at” write the starting ages, separated by commas — “18, 35, 45, 55” gives under 18, 18-34, 35-44, 45-54 and 55+ — and check the line under the box.",
-            "Press “Save the categories” before the first result. If the standard ones suit the race, do nothing: the row goes by itself after the race."
+            "Press “Save the categories” before the first result. If the standard ones suit the race, do nothing: the row goes by itself a few hours after the start."
           ]
         },
         "botCheck": {
@@ -4541,8 +4541,8 @@
         },
         "vercelUsage": {
           "title": "Vercel usage in figures, on /devs",
-          "todo": "With a read token and the project id, /devs shows the month's deployments, today's out of 100 a day and the build minutes out of 6,000 a month. Traffic is only in Vercel → Usage.",
-          "done": "/devs shows the month's deployments and build minutes, with a warning threshold.",
+          "todo": "With a read token and the project id, /devs shows the month's deployments, today's out of 100 a day, and the Active CPU out of Hobby's 4 hours a month. Traffic is only in Vercel → Usage.",
+          "done": "/devs shows the month's deployments and the Active CPU out of Hobby's 4 hours, with a warning threshold; «Costs» reads the same figure.",
           "how": [
             "Vercel → avatar → Account Settings → Tokens → Create: name “brasovrunners-devs”, scope your account, expiry 1 year. Copy the token (shown once).",
             "The project id: Vercel → the production project → Settings → General → Project ID (starts with prj_).",
@@ -5102,7 +5102,7 @@
       "nextSpend": {
         "mailgun": "The next thing to cost money: one month of Mailgun Basic, {cost}.",
         "vercel": "The next thing to cost money: Vercel Pro, {cost}.",
-        "none": "No new spend is coming. What is paid stays: Vercel goes back to Hobby only after two months in a row under 3 Active CPU-hours, never on a date.",
+        "none": "No new spend is coming. Vercel goes back to Hobby only after two months in a row under 3 Active CPU-hours, never on a date.",
         "mailgunMore": "Bought for a single race, when a day is expected to bring more entries than the free emails cover.",
         "vercelMore": "It arrives if the site asks for money to take part, if its code moves to the club's account, or if Active CPU nears Hobby's 4 hours a month. It goes back to Hobby after two months under 3 hours."
       },
