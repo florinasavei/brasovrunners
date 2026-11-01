@@ -909,7 +909,7 @@
         "DNS": "Did not start",
         "DSQ": "Disqualified"
       },
-      "note": "A name is shown only for those who ticked “I want to appear on the participants & results list” on a confirmed registration made after the privacy notice began to describe the results. The others appear as “Participant #number”, with place, time and category.",
+      "note": "A name is shown only for those who ticked “I want to appear on the participants & results list” on a confirmed registration made after the privacy notice began to describe the results, or who, having registered before, have since asked to appear by name. The others appear as “Participant #number”, with place, time and category.",
       "filter": {
         "label": "Filter the results",
         "category": "Category",
@@ -1502,6 +1502,7 @@
           "declaration_hold_set": "Declaration kept for a complaint or a dispute",
           "declaration_hold_cleared": "Keep removed from the declaration",
           "promo_consent_changed": "Consent to offers and benefits changed",
+          "results_name_consent_changed": "Choice to appear by name in the results changed by the participant",
           "family_resent": "Email resent to the family",
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
@@ -3882,6 +3883,7 @@
         "volunteerMinors": "Only in the privacy notice: the parent's boxes of the volunteers' form, in quotation marks; without it, the club takes no volunteers under 18",
         "volunteersList": "Only in the privacy notice: the tick “I want to appear on the public list of volunteers”, in quotes. With it in the notice in force, a public list can show names",
         "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them",
+        "resultsNameAsk": "Only in the privacy notice: the tick “I want to appear by name in the results”, in quotes. With it and “Results” in the notice in force, earlier registrants see it on their registration's page",
         "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming",
         "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question before the event",
         "rsvpAskAnswerers": "Only in the privacy notice: the name of the button “Don't ask me again for this series”, in quotes. With it in the notice in force, those who answered “I'm coming!” before are asked too",
@@ -9055,7 +9057,8 @@
               "steps": [
                 "The results appear on the site only once you publish them, only after the race has started and only if the privacy notice and the terms in force describe the results — «Legal documents» says whether new texts must be approved; «Tasks» has the row.",
                 "On «Results», under «On the event's page», tick «The results are public on the event's page» and press «Save». The page shows the place, the number, the time and the category; a name only for who ticked the list at registration or a runner who did not register and agreed — everyone else is “Participant #number”.",
-                "The results stay on the page as long as the public participant list, from the end of the race («Settings» → «Deadlines»). Untick at any time; the results stay saved."
+                "The results stay on the page as long as the public participant list, from the end of the race («Settings» → «Deadlines»). Untick at any time; the results stay saved.",
+                "Whoever registered under an older privacy notice, which did not describe the results, appears as “Participant #number”, even if they ticked the list. Only once the club approves a privacy notice that names that tick beside the results (the field {{resultsNameAsk}}, in «Legal documents») — after the club and its lawyer amend the sentence telling them they appear only by number — does their registration's page (the link in its email) show them «I want to appear by name in the results». The club sends no new email for it: tell them with «Send a message to participants», from the race's editor, that they can tick it from their registration's link and untick it at any time."
               ]
             }
           ]
@@ -12030,6 +12033,15 @@
       "otherAdult": "Only the person gives the consent to offers and benefits, on their own declaration or from their own registration's link. From here you can only withdraw it.",
       "optInShared": "If you give it, the club may give its partners your first name, last name and address.",
       "yesShared": "On this registration you receive offers and benefits from the club and its partners. The club may give the partners your first name, last name and address, so they write to you themselves."
+    },
+    "resultsName": {
+      "title": "Your name in the results",
+      "older": "You registered under an older version of the privacy notice, which did not describe the results, so in the race's results you appear only as “Participant #race number”.",
+      "label": "I want to appear by name in the results",
+      "help": "Ticked, the race's published results show your name beside your place, race number, time and category, only while you are on the public list; untick it here at any time and the name leaves them.",
+      "changed": "Your choice for the results is saved.",
+      "failed": "We could not save your choice. Try again.",
+      "otherAdult": "Only the person gives the consent to appear by name in the results, from their own registration's link. From here you can only withdraw it."
     }
   },
   "Devs": {

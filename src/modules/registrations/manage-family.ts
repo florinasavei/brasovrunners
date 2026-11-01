@@ -48,6 +48,9 @@ export type ManagedPerson = {
   /** When the yes was given, and the notice the registration recorded: whether it may reach a partner (§570). */
   promoConsentAt: Date | null;
   privacyNoticeVersion: number;
+  /** «Vreau să apar cu numele în clasament» (§NNN): the answer of an older notice's runner, and the notice it was given under. */
+  resultsNameConsent: boolean;
+  resultsConsentVersion: number;
   /** The birth date, read only so a minor's row never says a partner may receive it (§570). */
   birthDate: string | null;
   /**
@@ -86,6 +89,8 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
       promoConsent: registrations.promoConsent,
       promoConsentAt: registrations.promoConsentAt,
       privacyNoticeVersion: registrations.privacyNoticeVersion,
+      resultsNameConsent: registrations.resultsNameConsent,
+      resultsConsentVersion: registrations.resultsConsentVersion,
       birthDate: registrations.birthDate,
     })
     .from(registrations)
@@ -122,6 +127,8 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
     promoConsent: row.promoConsent,
     promoConsentAt: row.promoConsentAt,
     privacyNoticeVersion: row.privacyNoticeVersion,
+    resultsNameConsent: row.resultsNameConsent,
+    resultsConsentVersion: row.resultsConsentVersion,
     birthDate: row.birthDate,
     anotherAdult: anotherAdultOnTheLink(own, row, now),
     declarationMethod: methods.get(row.id) ?? null,
