@@ -218,7 +218,7 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Admin.registrations.statistics.note2",
           "Admin.registrations.statistics.note3",
           "Admin.registrations.statistics.note7",
-          "Admin.guide.sections.4.tasks.16.steps.2",
+          "Admin.guide.sections.4.tasks.17.steps.2",
           "Admin.tasks.items.contactForm.how.1",
           "Admin.tasks.items.inviteKey.how.0",
           // «Beneficiile membrilor» without the club's words (§524).

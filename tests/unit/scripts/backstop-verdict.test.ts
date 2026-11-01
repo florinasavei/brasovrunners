@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { inNightlyGap, judge } from "../../../scripts/backstop-verdict.mjs";
+import { gitEnv } from "../../helpers/git-env";
 
 /**
  * BR-REQ-090-03 (the backstop criterion, §874): the GitHub backstop reads the deep health answer before it
@@ -110,15 +111,15 @@ describe("BR-REQ-090-03 §874 the backstop's verdict", () => {
     const file = path.join(dir, "health.json");
     const script = path.resolve("scripts/backstop-verdict.mjs");
     writeFileSync(file, JSON.stringify(health({ email: { status: "stalled" } })));
-    const bad = spawnSync("node", [script, "--name", "production", "--file", file, "--now", "2026-07-01T10:00:00Z"], { encoding: "utf8" });
+    const bad = spawnSync("node", [script, "--name", "production", "--file", file, "--now", "2026-07-01T10:00:00Z"], { encoding: "utf8", env: gitEnv() });
     expect(bad.status).toBe(1);
     expect(bad.stdout).toContain("::error::production's email outbox is stalled");
     writeFileSync(file, JSON.stringify(health()));
-    const good = spawnSync("node", [script, "--name", "production", "--file", file], { encoding: "utf8" });
+    const good = spawnSync("node", [script, "--name", "production", "--file", file], { encoding: "utf8", env: gitEnv() });
     expect(good.status).toBe(0);
     expect(good.stdout).toContain("production: database ok");
     expect(good.stdout).not.toContain("::error::");
-    const missing = spawnSync("node", [script, "--name", "production", "--file", path.join(dir, "absent.json")], { encoding: "utf8" });
+    const missing = spawnSync("node", [script, "--name", "production", "--file", path.join(dir, "absent.json")], { encoding: "utf8", env: gitEnv() });
     expect(missing.status).toBe(1);
     expect(missing.stdout).toContain("no health answer was saved");
   });
