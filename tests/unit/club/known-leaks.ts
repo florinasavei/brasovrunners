@@ -13,7 +13,11 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
   // the local database's name and role in CI (`brasov_runners`)
   ".github/workflows/e2e-dev-nightly.yml": { Brașov: 4, "Brașov Runners": 4 },
   // the local database's name and role in CI (`brasov_runners`)
-  ".github/workflows/release.yml": { Brașov: 1, "Brașov Runners": 1 },
+  ".github/workflows/release.yml": {
+    Brașov: 1,
+    "Brașov Runners": 1,
+    "Brașov Runners (apart)": 1,
+  },
   // the local database's name and role
   "docker-compose.yml": { Brașov: 3, "Brașov Runners": 6, brasovrunners: 3 },
   // the catalogues' wording — moved by the wording change
@@ -46,17 +50,27 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
     Șchei: 1,
   },
   // the package's name
-  "package.json": { Brașov: 1, "Brașov Runners": 2, brasovrunners: 1 },
+  "package.json": {
+    Brașov: 1,
+    "Brașov Runners": 2,
+    "Brașov Runners (apart)": 1,
+    brasovrunners: 1,
+  },
   // the scripts' own messages and the local database's name
   "scripts/backstop-verdict.mjs": { Brașov: 1 },
   // the scripts' own messages and the local database's name
-  "scripts/bind-domain.mjs": { Brașov: 2, "Brașov Runners": 2 },
+  "scripts/bind-domain.mjs": {
+    Brașov: 2,
+    "Brașov Runners": 2,
+    "Brașov Runners (apart)": 2,
+  },
   // the calendar picture's sample months
   "scripts/calendar-image-preview/busy.json": {
     "#NoOneLeftBehind": 1,
     "#brasovrunners": 1,
     Brașov: 24,
     "Brașov Runners": 15,
+    "Brașov Runners (apart)": 14,
     Poiana: 14,
     Tâmpa: 16,
     brasovrunners: 1,
@@ -67,6 +81,7 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
     "#brasovrunners": 1,
     Brașov: 1,
     "Brașov Runners": 2,
+    "Brașov Runners (apart)": 1,
     brasovrunners: 1,
   },
   // the calendar picture's sample months
@@ -75,6 +90,7 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
     "#brasovrunners": 1,
     Brașov: 3,
     "Brașov Runners": 2,
+    "Brașov Runners (apart)": 1,
     Olimpia: 10,
     Poiana: 3,
     Tâmpa: 2,
@@ -86,6 +102,7 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
     "#brasovrunners": 1,
     Brașov: 12,
     "Brașov Runners": 13,
+    "Brașov Runners (apart)": 12,
     Tâmpa: 12,
     brasovrunners: 1,
   },
@@ -95,6 +112,7 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
     "#brasovrunners": 1,
     Brașov: 3,
     "Brașov Runners": 4,
+    "Brașov Runners (apart)": 3,
     Tâmpa: 2,
     brasovrunners: 1,
   },
@@ -107,7 +125,11 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
   // the scripts' own messages and the local database's name
   "scripts/db-reset-local.mjs": { "Brașov Runners": 1, brasovrunners: 1 },
   // the scripts' own messages and the local database's name
-  "scripts/email-probe.ts": { Brașov: 2, "Brașov Runners": 2 },
+  "scripts/email-probe.ts": {
+    Brașov: 2,
+    "Brașov Runners": 2,
+    "Brașov Runners (apart)": 2,
+  },
   // the scripts' own messages and the local database's name
   "scripts/release.mjs": { "Brașov Runners": 1, brasovrunners: 1 },
   // the scripts' own messages and the local database's name

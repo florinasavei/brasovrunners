@@ -54,6 +54,23 @@ const glued = (label: string): Forbidden => ({
   ),
 });
 
+/**
+ * The name with its words apart, behind a space or a hyphen («Brașov Runners», «brasov-runners») — §369's own pattern,
+ * counted under a label of its own: the glued count alone would let a string that drops «brasovrunners» pay for a new
+ * «Echipa Brașov Runners», and the catalogues, where §369 allowed none, must stay at none.
+ */
+const apart = (label: string): Forbidden => ({
+  label: `${label} (apart)`,
+  pattern: new RegExp(
+    fold(label)
+      .split(new RegExp(`${NOT_WORD}+`, "u"))
+      .filter(Boolean)
+      .map(escape)
+      .join("[\\s-]+"),
+    "u",
+  ),
+});
+
 /** A word or a phrase standing on its own, never inside a longer word: «tractorul», not «tractorului». */
 const whole = (label: string): Forbidden => ({
   label,
@@ -64,6 +81,7 @@ const whole = (label: string): Forbidden => ({
 function forbiddenWords(club: ClubConfig, guardWords: ClubGuardWords): Forbidden[] {
   const words: Forbidden[] = [
     glued(club.name),
+    apart(club.name),
     glued(club.wordmark),
     whole(club.slug),
     ...[club.shortName, ...club.shortForms.nicknames].filter((word) => /^[\p{L}\p{N}]{3,}$/u.test(word)).map(whole),
@@ -212,6 +230,16 @@ describe("BR-REQ-101-01: the club's words come from club/club.json, never a lite
     const { fresh, stale } = ratchetDifferences(leaks(), KNOWN_LEAKS);
     expect(fresh, "a new literal of the club's: read it from brand.ts, place.ts or dates.ts").toEqual([]);
     expect(stale, "a listed leak that is gone: lower or take off its count in KNOWN_LEAKS").toEqual([]);
+  });
+
+  it("keeps §369's pin: no catalogue string names the club with its words apart, and a glued string cannot pay for one", () => {
+    for (const file of ["messages/ro.json", "messages/en.json"]) {
+      expect(countSaid(textsOf(file))[`${CLUB.name} (apart)`] ?? 0, file).toBe(0);
+      expect(KNOWN_LEAKS[file]?.[`${CLUB.name} (apart)`], file).toBeUndefined();
+    }
+    const swapped = countSaid([`Echipa ${CLUB.name}`]);
+    expect(swapped[`${CLUB.name} (apart)`]).toBe(1);
+    expect(countSaid([`@${fold(CLUB.name).replace(/\s+/g, "")}`])[`${CLUB.name} (apart)`]).toBeUndefined();
   });
 
   it("sees one more string in a listed file: a new message that says the name fails though the file is grandfathered", () => {
