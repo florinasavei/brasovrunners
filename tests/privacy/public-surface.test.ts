@@ -647,7 +647,7 @@ describe("§810 what a race's public results may contain — a name only for a r
       { eventId: race.id, bibNumber: 900, displayName: "Ion Vasile", status: "FINISHED", gunTimeMs: 2_520_000 },
       { eventId: race.id, bibNumber: 901, displayName: "Maria Pop", status: "FINISHED", gunTimeMs: 2_580_000, nameAgreedAt: new Date("2026-11-21T12:30:00.000Z") },
     ]);
-    const options = { now: new Date("2026-11-23T10:00:00.000Z"), deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 as number | null };
+    const options = { now: new Date("2026-11-23T10:00:00.000Z"), deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 as number | null, firstResultsNameAskNoticeVersion: null };
     const named = await readPublicEventResults(db, race.id, options);
     expect(named?.rows.map((row) => [row.bibNumber, row.name])).toEqual([[900, null], [901, "Maria Pop"]]);
     expect(JSON.stringify(named)).not.toContain("Ion Vasile");

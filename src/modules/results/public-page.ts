@@ -1,6 +1,7 @@
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import {
   cachedDeadlines,
+  cachedFirstResultsNameAskNoticeVersion,
   cachedFirstResultsNoticeVersion,
   cachedPublicEventResults,
   cachedResultsDescribed,
@@ -21,12 +22,14 @@ import type { PublicEventResults } from "./results";
  * listing with no published race asks nobody, so the pages that are not a race's cost what they cost before this existed.
  */
 
-/** The four inputs of the rule that are not on the event's row. */
+/** The inputs of the rule that are not on the event's row. */
 export type ResultsGates = {
   deadlines: Pick<Deadlines, "publicListDays">;
   noticeDescribes: boolean;
   termsDescribe: boolean;
   firstResultsNoticeVersion: number | null;
+  /** The first notice that named «Vreau să apar cu numele în clasament» (§879): a yes asked since names the runner only at or above it. */
+  firstResultsNameAskNoticeVersion: number | null;
 };
 
 /** An event the results *might* be on show for: a race the Administrator published, with a date. The rest ask nobody. */
@@ -36,12 +39,14 @@ function couldShowResults(event: ResultsOpenEvent): boolean {
 
 /**
  * The inputs, read through the public cache (one read each, asked once per request however many cards or sections need them):
- * "Termene", the privacy notice's verdict, the terms' verdict, and — only when both describe the results — the first notice that did.
+ * "Termene", the privacy notice's verdict, the terms' verdict, and — only when both describe the results — the first notice that did,
+ * and the first that named «Vreau să apar cu numele în clasament» (§879).
  */
 export async function readResultsGates(now: Date): Promise<ResultsGates> {
   const [deadlines, noticeDescribes, termsDescribe] = await Promise.all([cachedDeadlines(), cachedResultsDescribed(now), cachedResultsTermsDescribed(now)]);
-  const firstResultsNoticeVersion = noticeDescribes && termsDescribe ? await cachedFirstResultsNoticeVersion() : null;
-  return { deadlines, noticeDescribes, termsDescribe, firstResultsNoticeVersion };
+  const [firstResultsNoticeVersion, firstResultsNameAskNoticeVersion] =
+    noticeDescribes && termsDescribe ? await Promise.all([cachedFirstResultsNoticeVersion(), cachedFirstResultsNameAskNoticeVersion()]) : [null, null];
+  return { deadlines, noticeDescribes, termsDescribe, firstResultsNoticeVersion, firstResultsNameAskNoticeVersion };
 }
 
 /**

@@ -6,7 +6,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { type AuditAction, recordAuditEvent } from "@/modules/audit/repository";
 import { type Deadlines, publicListClosesAt, publicListStillOpen } from "@/modules/deadlines/domain/deadlines";
-import { findFirstResultsNoticeVersion, noticeDescribesResults, termsDescribeResults } from "@/modules/legal-documents/repository";
+import { findFirstResultsNameAskNoticeVersion, findFirstResultsNoticeVersion, noticeDescribesResults, termsDescribeResults } from "@/modules/legal-documents/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { ageOnRaceDay, dayIn } from "@/modules/registrations/domain/age";
 import { RACE_NUMBER_FORMAT } from "@/modules/events/repository";
@@ -86,6 +86,9 @@ type RegisteredRunner = {
   outsideCapacity: boolean;
   /** The privacy notice version the registration recorded: a tick under an older notice does not name the runner in the results (§421's line). */
   noticeVersion: number;
+  /** «Vreau să apar cu numele în clasament», asked since by an older notice's runner (§879), and the notice in force when asked. */
+  resultsNameConsent: boolean;
+  resultsConsentVersion: number;
 };
 
 /** The event's registered runners, by race number and by registration. */
@@ -161,6 +164,8 @@ async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Data
       status: registrations.status,
       outsideCapacity: registrations.outsideCapacity,
       noticeVersion: registrations.privacyNoticeVersion,
+      resultsNameConsent: registrations.resultsNameConsent,
+      resultsConsentVersion: registrations.resultsConsentVersion,
     })
     .from(registrations)
     .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), isNotNull(registrations.bibNumber)));
@@ -178,6 +183,8 @@ async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Data
       status: row.status,
       outsideCapacity: row.outsideCapacity,
       noticeVersion: row.noticeVersion,
+      resultsNameConsent: row.resultsNameConsent,
+      resultsConsentVersion: row.resultsConsentVersion,
     };
     runners.byBib.set(row.bibNumber, runner);
     runners.byRegistration.set(row.registrationId, runner);
@@ -317,7 +324,12 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
   assertMayEnter(actor);
   assertIds(eventId);
   const event = await loadEvent(db, eventId, false);
-  const [runners, stored, firstResultsNoticeVersion] = await Promise.all([loadRegisteredRunners(db, eventId), loadStored(db, eventId, false), findFirstResultsNoticeVersion(db)]);
+  const [runners, stored, firstResultsNoticeVersion, firstResultsNameAskNoticeVersion] = await Promise.all([
+    loadRegisteredRunners(db, eventId),
+    loadStored(db, eventId, false),
+    findFirstResultsNoticeVersion(db),
+    findFirstResultsNameAskNoticeVersion(db),
+  ]);
   const index = indexStored(stored, runners);
   const ranking = rankingOf(stored, runners.byRegistration, event);
   const rankedOf = (row: EventResultRow) => ranking.get(row.bibNumber) as Ranked;
@@ -347,6 +359,9 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
           hidden: runner.outsideCapacity && !hiddenShown,
           noticeVersion: runner.noticeVersion,
           firstResultsNoticeVersion,
+          firstResultsNameAskNoticeVersion,
+          resultsNameConsent: runner.resultsNameConsent,
+          resultsConsentVersion: runner.resultsConsentVersion,
           typedNameAgreed: false,
           typedDisplayName: null,
         }) !== null,
@@ -377,6 +392,9 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
           hidden: false,
           noticeVersion: null,
           firstResultsNoticeVersion,
+          firstResultsNameAskNoticeVersion,
+          resultsNameConsent: false,
+          resultsConsentVersion: null,
           typedNameAgreed: row.nameAgreedAt !== null,
           typedDisplayName: row.displayName,
         }) !== null,
@@ -1008,7 +1026,8 @@ export type PublicEventResults = {
  * period has not passed (`publicListStillOpen`, §421, checked here at request time because a date passing is no write). Then every
  * stored row, in the sheet's order, ranked from the live answers, with a name **only** for a runner `publicResultName` names: the
  * public list's own conditions (confirmed, ticked, not a hidden special guest, §743) and a registration made under a notice that
- * described the results (`firstResultsNoticeVersion`, §421's line), or a runner typed by hand whom the staff recorded as agreeing to appear by name
+ * described the results (`firstResultsNoticeVersion`, §421's line) — or, made under an older one, whose runner asked since to appear by name
+ * under a notice that named the tick (`results_name_consent`, `firstResultsNameAskNoticeVersion`, §879) — or a runner typed by hand whom the staff recorded as agreeing to appear by name
  * under a notice that described the results — everyone else is «Participant #bib». Never an address, a phone
  * number, a document, a note or a registration's id: the select names its columns.
  */
@@ -1022,6 +1041,8 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
     termsDescribe: boolean;
     /** The first approved notice that described the results (`cachedFirstResultsNoticeVersion`); null when none did — then nobody is named. Required, so no caller can forget it. */
     firstResultsNoticeVersion: number | null;
+    /** The first approved notice that named «Vreau să apar cu numele în clasament» (`cachedFirstResultsNameAskNoticeVersion`, §879); null — no yes asked since names anybody. Required, like the line above. */
+    firstResultsNameAskNoticeVersion: number | null;
   },
 ): Promise<PublicEventResults | null> {
   if (!isUuid(eventId) || !options.noticeDescribes || !options.termsDescribe) return null;
@@ -1061,6 +1082,8 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       registrationStatus: registrations.status,
       outsideCapacity: registrations.outsideCapacity,
       noticeVersion: registrations.privacyNoticeVersion,
+      resultsNameConsent: registrations.resultsNameConsent,
+      resultsConsentVersion: registrations.resultsConsentVersion,
       registeredSex: registrations.sex,
       typedSex: eventResults.sex,
       typedName: eventResults.displayName,
@@ -1086,6 +1109,10 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
         hidden: row.outsideCapacity === true && !hiddenShown,
         noticeVersion: row.noticeVersion,
         firstResultsNoticeVersion: options.firstResultsNoticeVersion,
+        firstResultsNameAskNoticeVersion: options.firstResultsNameAskNoticeVersion,
+        // Asked since by an older notice's runner (§879); a typed row's left join reads null, which names nobody.
+        resultsNameConsent: row.resultsNameConsent === true,
+        resultsConsentVersion: row.resultsConsentVersion,
         // A runner the club typed by hand: the staff-recorded agreement (§810), on a row no registration holds (the database's check says the same)
         // and whose number no confirmed registration has taken since: the backoffice already draws that number as the registered runner's, whose
         // name follows their own tick and never a staff mark, so until the next save re-files the row the line is «Participant #bib».

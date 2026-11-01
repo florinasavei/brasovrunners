@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.00-2026-11-01
+
+- **«Vreau să apar cu numele în clasament»** — a runner who registered under a privacy notice that did not yet describe the results can tick it on their own registration's page and is then named in a race's published results (still only while on the public list); unticked from the same page at any time. Asked only once the club approves a privacy notice that names the tick (`{{resultsNameAsk}}`) beside the results — the platform's template does not, until the club and its lawyer amend it; «Ghid» tells the club to announce it with «Trimite un mesaj participanților». §879.
+- **«Sarcini» reminds the club of «Startul cursei» and «Categorii de vârstă», and «Costuri» measures Hobby by Active CPU** — two race-day rows read from the live system, the Mailgun question follows the club's own plan, Hobby is shown against 4 Active CPU-hours instead of an unconfirmed build-minute ceiling (on «Costuri» and in the «Sarcini» row for `/devs`), and the Vercel wording states the two-months-under-3-hours rule. §880.
+- **The race number draws the fork too** — a checkpoint with water and food shows the fork on the bib's profile strip as on the event page; the «Eveniment» filter lists each event once, in your language; «Invitații fără răspuns» goes soonest first; the concurrency suite passes on a seeded database. §881.
+- **The club's identity in one file** — `club/club.json` holds the name, slug, short mark, place, time zone, coordinates, hashtags and logo files, read at build time through `brand.ts`, `place.ts`, `dates.ts`, `sun.ts` and `env.ts`; nothing a visitor sees changed, a literal-word guard and `yarn test:fork` keep it that way. §882.
 ## BR-V3.99-2026-11-01
 
 - **The GitHub backstop watches production's jobs and outbox** — it reads the deep health before it pokes, still pokes, and turns red on a stale job or a stalled outbox (the nightly 03:05–04:00 maintenance gap excepted); an unconfigured production is a warning, and `SETUP.md` §40 names the missing `PRODUCTION_JOB_SECRET`. §874.

@@ -8,6 +8,7 @@ import { isSelfServiceField, withdrawFromManageLink } from "@/modules/registrati
 import { setListConsentFromManageLink } from "@/modules/registrations/list-consent";
 import { parseCancelReason } from "@/modules/registrations/domain/cancel-reason";
 import { setPromoConsentFromManageLink } from "@/modules/registrations/promo-consent";
+import { setResultsNameConsentFromManageLink } from "@/modules/registrations/results-consent";
 import { checkInSelf, consumeAndCancel } from "@/modules/registrations/token-actions";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashPublic } from "@/shared/feedback/flash";
@@ -117,6 +118,29 @@ export async function setPromoConsentFromManageAction(form: FormData): Promise<v
     redirect(result.ok ? `${path}?promo=1${who}#promo` : `${path}?invalid=1`);
   } catch (error) {
     if (isDomainError(error)) redirect(`${path}?promo=0${who}#promo`);
+    throw error;
+  }
+}
+
+/**
+ * «Vreau să apar cu numele în clasament» from the participant's own link (§879), per person like the switches above: read, not
+ * spent. `consent` is the state the tick asks for, so a double submission lands on it. A yes the gate does not allow — the notice in
+ * force does not describe the results, not a race, a registration made under the results notice already, off the list, another
+ * adult — is refused by the module, never kept.
+ */
+export async function setResultsNameConsentFromManageAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const consent = form.get("consent") === "1";
+  const person = personOf(form);
+  const path = getPathname({ locale, href: { pathname: "/registrations/manage/[token]", params: { token } } });
+  const who = person ? `&person=${encodeURIComponent(person)}` : "";
+
+  try {
+    const result = await setResultsNameConsentFromManageLink(getDb(), token, consent, new Date(), person);
+    redirect(result.ok ? `${path}?results=1${who}#results` : `${path}?invalid=1`);
+  } catch (error) {
+    if (isDomainError(error)) redirect(`${path}?results=0${who}#results`);
     throw error;
   }
 }

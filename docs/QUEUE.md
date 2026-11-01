@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.00` | «Vreau să apar cu numele în clasament» for an older notice's runners, behind the notice's own marker (§879) · «Sarcini» asks for the gun time and age categories, the Mailgun question follows the plan, «Costuri» reads Hobby by Active CPU (§880) · the bib's fork, the filter's event once, the concurrency suite on a seeded database (§881) · the club's identity read from club/club.json (§882) |
 | `BR-V3.99` | the GitHub backstop reads health before it pokes and fails on a stale job or a stalled outbox (§874) · the waiting-list verbs finished: addresses named in the dialogs, the button drawn only where it works, the guide's tasks (§875) · the person's data page reads and erases the internal waiting list and event invitations (§876) · owner to-do list caught up; Neon restore runbook (§877) · a nightly date-check run, the calendar spec on the Brașov weekday, and skip-build installs where secrets are held (§878) |
 | `BR-V3.98` | «Locul» in the calendar picture draws the place's name when no short place is typed (§873) |
 | `BR-V3.97` | «Adaugă pe lista de așteptare» in one press: the Administrator vouches for the address and the row joins the line or takes a free place at once (§872) |

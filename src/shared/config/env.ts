@@ -1,6 +1,6 @@
-import { DEFAULT_CLUB_COORDINATES, parseCoordinates } from "@/modules/events/domain/sun";
+import { CLUB } from "@/club/config";
+import { parseCoordinates } from "@/modules/events/domain/sun";
 import { isValidEmail } from "@/modules/participants/domain/canonical-email";
-import { CLUB_NAME } from "@/theme/brand";
 import { z } from "zod";
 import { ALLOW_EVERY_RECIPIENT, APP_ENVIRONMENTS, EMAIL_DELIVERY_MODES, STAFF_AUTH_MODES, TRANSLATE_PROVIDERS } from "./env-enums";
 
@@ -214,7 +214,7 @@ export const envSchema = z
      * decides whether a start is a night event — the pill, the calendar line and the reminder's
      * line, unless the organizer said "Da" or "Nu". A fact of the club like `CLUB_NAME` (§369),
      * but configuration rather than a constant because another club running this platform
-     * runs somewhere else. Never a secret; unset is Brașov's centre (`DEFAULT_CLUB_COORDINATES`).
+     * runs somewhere else. Never a secret; unset is the club's centre from `club/club.json` (§882).
      * A value that is not two numbers in range fails at startup with the value named, like the
      * allowlist: a typo here would otherwise move every sunset without anybody noticing.
      */
@@ -222,10 +222,10 @@ export const envSchema = z
       .string()
       .optional()
       .transform((value, ctx) => {
-        if (value === undefined || value.trim() === "") return DEFAULT_CLUB_COORDINATES;
+        if (value === undefined || value.trim() === "") return { ...CLUB.place.coordinates };
         const parsed = parseCoordinates(value);
         if (!parsed) {
-          ctx.addIssue({ code: "custom", message: `CLUB_COORDINATES must be "latitude,longitude" in decimal degrees, e.g. "45.6427,25.5887"; got "${value}".` });
+          ctx.addIssue({ code: "custom", message: `CLUB_COORDINATES must be "latitude,longitude" in decimal degrees, e.g. "${CLUB.place.coordinates.latitude},${CLUB.place.coordinates.longitude}"; got "${value}".` });
           return z.NEVER;
         }
         return parsed;
@@ -302,13 +302,13 @@ export const envSchema = z
      * exists. The club's real sender name and address are an owner decision (`BUSINESS.md`
      * §9) and can be filled in whenever they are made.
      *
-     * The name's default is the platform's one constant (`CLUB_NAME`, §215, §357), never the
-     * name written in again here: the From line of every message and the contact form's
-     * sender read it, so a renamed club is renamed in one place. `EMAIL_FROM_NAME` still wins
-     * when it is set.
+     * The name's default is the club's one name (`club/club.json`, read here as `brand.ts#CLUB_NAME` is,
+     * §215, §357, §882), never the name written in again here: the From line of every message and the
+     * contact form's sender read it, so a renamed club is renamed in one place. `EMAIL_FROM_NAME` still
+     * wins when it is set.
      */
     EMAIL_FROM_ADDRESS: z.email().optional(),
-    EMAIL_FROM_NAME: z.string().min(1).max(120).default(CLUB_NAME),
+    EMAIL_FROM_NAME: z.string().min(1).max(120).default(CLUB.name),
     /**
      * Absent means a reply goes to the from address, which for `noreply@` means nowhere.
      * Setting this to a mailbox the club actually reads is the whole of "people can reply".

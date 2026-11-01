@@ -50,7 +50,7 @@ export type MonthCostId = (typeof MONTH_COST_IDS)[number];
 
 export type MonthPeriod = { start: Date; end: Date };
 
-export type MonthUsageUnit = "cuHours" | "messages" | "buildMinutes" | "characters" | "gigabytes";
+export type MonthUsageUnit = "cuHours" | "cpuHours" | "messages" | "buildMinutes" | "characters" | "gigabytes";
 
 export type MonthUsage = {
   unit: MonthUsageUnit;
@@ -120,8 +120,13 @@ export type MonthCostFacts = {
   };
   /** This month's build minutes and deployments from Vercel, or null without a token or an answer. */
   vercel: { buildMinutes: number; deployments: number } | null;
-  /** Hobby's build minutes a month — the ceiling the usage meets on Hobby only. */
-  vercelBuildMinutesPerMonth: number;
+  /**
+   * The month's Fluid Active CPU in hours, from the billing charges `/devs` reads (`readVercelUsage`, §803), or null without
+   * a token, an answer or an hour unit. It is what Hobby is measured by (§880).
+   */
+  vercelActiveCpuHours: number | null;
+  /** Hobby's included Active CPU a month — the ceiling the usage meets on Hobby only. */
+  vercelActiveCpuHoursPerMonth: number;
   /**
    * The Vercel plan the club states (§610): Hobby, or Pro with its seats and the catalogue's seat
    * price (`domain/vercel-plan.ts`), which this file multiplies and never quotes.
@@ -322,7 +327,9 @@ function mailgunLine(facts: MonthCostFacts): MonthCostLine {
 }
 
 /**
- * Vercel. On Hobby: free; the build minutes are the ceiling a busy month of pushes meets (§101).
+ * Vercel. On Hobby: free; the usage is the Active CPU against Hobby's four hours (§880), the allowance whose overrun
+ * pauses the site for about thirty days (§803) — the figure `/devs` reads, not the build minutes, whose Hobby ceiling
+ * Vercel's pages do not confirm and which is no longer presented as a limit.
  * On Pro (§610): the seats' price, billed whole for the month like Mailgun's, so so far and at the
  * end are the same figure, with VAT on top as the invoice decides; last month is the same plan's
  * price, as Mailgun's is — the plan is today's. The build minutes are still counted, with no
@@ -331,9 +338,13 @@ function mailgunLine(facts: MonthCostFacts): MonthCostLine {
 function vercelLine(facts: MonthCostFacts): MonthCostLine {
   const period = utcMonth(facts.now);
   const pro = facts.vercelPlan.plan === "PRO";
-  const use = facts.vercel
-    ? usage("buildMinutes", facts.vercel.buildMinutes, period, facts.now, pro ? null : facts.vercelBuildMinutesPerMonth, "plan")
-    : null;
+  const use = pro
+    ? facts.vercel
+      ? usage("buildMinutes", facts.vercel.buildMinutes, period, facts.now, null, null)
+      : null
+    : facts.vercelActiveCpuHours !== null
+      ? usage("cpuHours", facts.vercelActiveCpuHours, period, facts.now, facts.vercelActiveCpuHoursPerMonth, "plan")
+      : null;
   const detail = facts.vercel ? { kind: "deployments" as const, count: facts.vercel.deployments } : null;
   const price = pro ? roundUsd(facts.vercelPlan.usdPerSeatPerMonth * facts.vercelPlan.seats) : 0;
   const line = {
@@ -353,7 +364,7 @@ function vercelLine(facts: MonthCostFacts): MonthCostLine {
       ? { period: previousMonth(period), usd: price, usage: null, estimated: false, plusVat: true }
       : nothingLastMonth(period),
   };
-  return { ...line, severity: severityOf(line, facts.vercel !== null) };
+  return { ...line, severity: severityOf(line, pro ? facts.vercel !== null : facts.vercelActiveCpuHours !== null) };
 }
 
 /**

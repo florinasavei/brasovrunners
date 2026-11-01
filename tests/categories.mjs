@@ -50,12 +50,15 @@ export function signalsOf(file, text) {
   return "logic";
 }
 
-/** Every file `yarn test` runs, repository-relative with forward slashes: `*.test.ts` under tests/, never the two-connection suite. */
+/**
+ * Every file `yarn test` runs, repository-relative with forward slashes: `*.test.ts` under tests/, never the two-connection
+ * suite, and never `tests/fork/`, which reads a made-up club's folder and runs under its own configuration (`yarn test:fork`, §882).
+ */
 export function testFiles(root) {
   const walk = (dir) =>
     readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap((entry) => {
       const relative = `${dir}/${entry.name}`;
-      if (entry.isDirectory()) return relative === "tests/concurrency" || entry.name === "node_modules" ? [] : walk(relative);
+      if (entry.isDirectory()) return relative === "tests/concurrency" || relative === "tests/fork" || entry.name === "node_modules" ? [] : walk(relative);
       return entry.name.endsWith(".test.ts") ? [relative] : [];
     });
   return walk("tests").sort();

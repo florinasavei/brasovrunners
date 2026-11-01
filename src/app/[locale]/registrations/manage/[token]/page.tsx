@@ -1,4 +1,6 @@
 import CampaignIcon from "@mui/icons-material/Campaign";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
@@ -27,7 +29,15 @@ import { findEventNotificationDetails } from "@/modules/events/repository";
 import { getDb } from "@/db/client";
 import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import { isActiveStatus } from "@/modules/registrations/domain/state-machine";
-import { cachedPromotionalMaterialsOffered, cachedPromotionalMaterialsShared } from "@/modules/public-cache/reads";
+import {
+  cachedFirstResultsNameAskNoticeVersion,
+  cachedFirstResultsNoticeVersion,
+  cachedPromotionalMaterialsOffered,
+  cachedPromotionalMaterialsShared,
+  cachedResultsNameAskDescribed,
+} from "@/modules/public-cache/reads";
+import { eventTypeOf } from "@/modules/registrations/results-consent";
+import { holdsResultsNameConsent, resultsNameConsentLine, resultsNameConsentOffered } from "@/modules/results/domain/name-consent";
 import { reachesPartner } from "@/modules/registrations/domain/sponsor-share";
 import { readSponsorShareGate } from "@/modules/registrations/sponsor-list";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
@@ -44,6 +54,7 @@ import {
   selfCheckInAction,
   setListConsentFromManageAction,
   setPromoConsentFromManageAction,
+  setResultsNameConsentFromManageAction,
   withdrawFromManageAction,
 } from "./actions";
 import { DENSITY } from "@/theme/density";
@@ -61,6 +72,8 @@ type Props = {
     withdrawn?: string;
     /** The offers-and-benefits switch's outcome (§562): 1 saved, 0 refused. */
     promo?: string;
+    /** «Vreau să apar cu numele în clasament»'s outcome (§879): 1 saved, 0 refused. */
+    results?: string;
     /** Which person a check-in or a list answer was about (§547): an id the page already lists, never a name. */
     person?: string;
     /** The box a cancel without its reason named (§558): `kind`, `text` or `long`, under `person`'s cancel. */
@@ -93,7 +106,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, list, withdrawn, promo, person, reason } = await searchParams;
+  const { done, invalid, started, here, list, withdrawn, promo, results, person, reason } = await searchParams;
   const t = await getTranslations("Registrations");
   // The words beside every QR (§547): whose it is, their number, the code.
   const qrWords: QrWords = {
@@ -172,6 +185,28 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   const shareGate = live && people.some((one) => one.promoConsent) ? await readSponsorShareGate(getDb()) : null;
   const promoYes = (one: { promoConsent: boolean; promoConsentAt: Date | null; privacyNoticeVersion: number; birthDate: string | null }) =>
     shareGate && reachesPartner(one, shareGate, new Date()) ? t("promo.yesShared") : t("promo.yes");
+  /*
+    «Vreau să apar cu numele în clasament» (§879): asked only of a registration whose notice predates the first that described the
+    results, while the notice in force names the tick (`{{resultsNameAsk}}`) and the results and the event is a race
+    (`resultsNameConsentLine`); the rest of the reads are
+    skipped when nobody on the page registered under an older notice. A yes that counts is always offered the way out — and
+    "counts" is `holdsResultsNameConsent`, the reading the published results and the press make: a yes recorded under a notice
+    below the first that named the tick (`firstResultsNameAskNoticeVersion`) is drawn empty, as the results draw that runner
+    «Participant #bib». The line is read only when some row on the page says yes.
+  */
+  const resultsAskLine = live && people.some((one) => one.resultsNameConsent) ? await cachedFirstResultsNameAskNoticeVersion() : null;
+  const firstResults = live ? await cachedFirstResultsNoticeVersion() : null;
+  // The event's type is read only once the notice in force asks: until then (today's template) no query beyond the cached ones.
+  const asksResultsName =
+    live && firstResults !== null && people.some((one) => one.privacyNoticeVersion < firstResults) ? await cachedResultsNameAskDescribed(new Date()) : false;
+  const resultsLine =
+    live && asksResultsName
+      ? resultsNameConsentLine({
+          noticeDescribesResultsNameAsk: true,
+          firstResultsNoticeVersion: firstResults,
+          eventType: (await eventTypeOf(getDb(), live.registration.eventId)) ?? "",
+        })
+      : null;
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -209,6 +244,14 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
             const confirmed = one.status === "CONFIRMED" && one.checkinCode && !live.eventCancelled ? one.checkinCode : null;
             const active = isActiveStatus(one.status);
             const answered = answeredFor === one.id;
+            /*
+              The results' name (§879): held — a yes that names the runner (`holdsResultsNameConsent`, the one predicate the press
+              and `publicResultName` read), offered the way out whatever the notice in force says today — or asked: on the list,
+              active, an older notice, under one that names the tick and the results. A pre-§322 yes, or one recorded under a
+              notice that described the results without naming the tick, names nobody and is not drawn as held.
+            */
+            const resultsHeld = holdsResultsNameConsent(one, resultsAskLine);
+            const resultsAsked = active && !one.listOptOut && resultsNameConsentOffered(one.privacyNoticeVersion, resultsLine);
             return (
               <Box
                 component="section"
@@ -415,6 +458,64 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                         {t("promo.help")}
                       </Typography>
                     )}
+                    {!family && <Divider sx={{ mt: 3 }} />}
+                  </Box>
+                )}
+
+                {/*
+                  «Vreau să apar cu numele în clasament» (§879), per registration, drawn as a tick (§766): the words name the setting,
+                  the state is in the glyph and `aria-checked`. The form posts the state it asks for; the token is read, never spent;
+                  one write and an audit row without the name. Another adult's row offers only the way out: the yes is theirs (§421).
+                */}
+                {(resultsHeld || resultsAsked) && (
+                  <Box id={one.own ? "results" : undefined} sx={{ mb: 2 }} data-testid="manage-results-name">
+                    {!family && (
+                      <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+                        {t("resultsName.title")}
+                      </Typography>
+                    )}
+                    {answered && results === "1" && (
+                      <Alert severity="success" sx={{ mb: 2 }}>
+                        {t("resultsName.changed")}
+                      </Alert>
+                    )}
+                    {answered && results === "0" && (
+                      <Alert severity="warning" sx={{ mb: 2 }}>
+                        {t("resultsName.failed")}
+                      </Alert>
+                    )}
+                    {/* «apari doar ca „Participant #…”» is true only until they tick: a held yes names them, and the ticked box and `help` say so. */}
+                    {!resultsHeld && <Typography sx={{ mb: 1 }}>{t("resultsName.older")}</Typography>}
+                    {resultsHeld || !one.anotherAdult ? (
+                      <form action={setResultsNameConsentFromManageAction}>
+                        <input type="hidden" name="locale" value={locale} />
+                        <input type="hidden" name="token" value={token} />
+                        <input type="hidden" name="registrationId" value={one.id} />
+                        <input type="hidden" name="consent" value={resultsHeld ? "0" : "1"} />
+                        <Button
+                          type="submit"
+                          role="checkbox"
+                          aria-checked={resultsHeld}
+                          color={resultsHeld ? "success" : "inherit"}
+                          sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, justifyContent: "flex-start", textAlign: "left", textTransform: "none", fontWeight: 400, fontSize: "1rem" }}
+                          data-testid="manage-results-name-tick"
+                        >
+                          {resultsHeld ? (
+                            <CheckBoxIcon aria-hidden="true" sx={glyphSx("medium")} />
+                          ) : (
+                            <CheckBoxOutlineBlankIcon aria-hidden="true" sx={glyphSx("medium")} />
+                          )}
+                          {t("resultsName.label")}
+                        </Button>
+                      </form>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary" data-testid="manage-results-name-other-adult">
+                        {t("resultsName.otherAdult")}
+                      </Typography>
+                    )}
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      {t("resultsName.help")}
+                    </Typography>
                     {!family && <Divider sx={{ mt: 3 }} />}
                   </Box>
                 )}

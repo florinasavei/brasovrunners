@@ -264,7 +264,7 @@ describe("§810 the page's data and the export", () => {
 });
 
 describe("§810 the public read: a typed runner is named only while the staff's record stands", () => {
-  const options = { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 as number | null };
+  const options = { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 as number | null, firstResultsNameAskNoticeVersion: null };
 
   async function published(rows: PostedResultRow[]) {
     await save(rows);
