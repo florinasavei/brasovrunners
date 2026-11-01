@@ -1,6 +1,6 @@
 import { and, asc, count, eq, isNull, or } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
-import type { EmailMessageType } from "@/db/schema/email-outbox";
+import { type EmailMessageType, emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type Registration, type RegistrationStatus, registrations } from "@/db/schema/registrations";
@@ -71,6 +71,7 @@ import {
 } from "./service";
 import { listMemberTickCandidates, type MemberTickCandidate, type MemberTickScope } from "./member-ticks";
 import { ANSWERS_UNCHANGED } from "./answers";
+import { addRegistrationNote } from "./notes";
 import { rerankEventResults } from "@/modules/results/results";
 
 /**
@@ -699,6 +700,95 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   // the state the entry itself landed in — the line or a hold for a vouched entry (§872), before any fast-track
   // confirmation — for the short form's toast («Adaugă pe lista de așteptare»).
   return { registrationId: created?.id ?? null, status: created?.status ?? null };
+}
+
+export type WaitlistEntryByStaffInput = {
+  eventId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  /** The person's emails leave in the backoffice's language; the full form asks for their own. */
+  locale: Locale;
+  /** The relay tick (§33), binding: the entry is refused without it. */
+  relayedByParticipantRequest: boolean;
+  /** An internal note (§777), already parsed by the caller, written on the registration in the entry's transaction. */
+  note?: string | null;
+  /**
+   * «Oferă-i un loc acum» (§NNN): after the entry, in the same transaction, a row the allocator left on the
+   * waiting list is offered a place as «Trimite-i oferta» offers it (§642) — a counted free place, or the one
+   * supplementary place the dialog named (`addPlaceTo`). Absent, the entry is «Adaugă pe lista de așteptare» alone.
+   */
+  offerNow?: StaffPlaceOptions | null;
+};
+
+export type WaitlistEntryByStaffResult = { registrationId: string; status: RegistrationStatus; capacityRaisedTo: number | null };
+
+/**
+ * One press onto the official waiting list (§872, §NNN): «Adaugă pe lista de așteptare», and «Oferă-i un loc
+ * acum» beside it — from the official list's add form, or from a line of the internal list (`reserve-list.ts`).
+ * The Administrator's alone (`canManageRegistrations`), asserted here before anything is read, and again by the
+ * entry and by the offer.
+ *
+ * One transaction: the staff entry with the address vouched for (`createRegistrationByStaff`, `vouchAddress`) —
+ * the one allocator under the event lock, the back of the line or a counted free place, the outcome's ordinary
+ * email, no verification email — then, with `offerNow` and a row left `WAITLISTED`, §642's offer under the same
+ * lock (`offerPlaceByStaff`): a counted free place, or one supplementary place only when the dialog named it,
+ * otherwise `SUPPLEMENTARY_PLACE_UNCONFIRMED` and nothing at all is written — no registration, no note. The
+ * offer's email says everything then, so the waiting-list email the entry queued a moment before is withdrawn
+ * in the same transaction, never tried (as §643 withdraws an offer's), and the person gets one email. A row the
+ * allocator gave a place, or an offer on the way (§160), keeps it: the ordinary outcome is enough. Then the
+ * note. After the start the entry is refused (`VOUCHED_ENTRY_AFTER_START`), a full line refuses it (§348).
+ */
+export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  input: WaitlistEntryByStaffInput,
+  now: Date,
+): Promise<WaitlistEntryByStaffResult> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not enter a person on the waiting list with the address vouched for`);
+  }
+  const result = await db.transaction(async (tx) => {
+    const created = await createRegistrationByStaff(
+      tx,
+      actor,
+      {
+        eventId: input.eventId,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+        locale: input.locale,
+        // A disclosure the person has to have asked for (§323): never from a one-press entry.
+        listOptOut: true,
+        relayedByParticipantRequest: input.relayedByParticipantRequest,
+        vouchAddress: true,
+      },
+      now,
+    );
+    if (!created.registrationId || !created.status) throw new DomainError("CONFLICT", "the entry wrote no registration");
+    let status: RegistrationStatus = created.status;
+    let capacityRaisedTo: number | null = null;
+    if (input.offerNow && status === "WAITLISTED") {
+      const offered = await offerPlaceByStaff(tx, actor, created.registrationId, now, input.offerNow);
+      status = offered.status;
+      capacityRaisedTo = offered.capacityRaisedTo;
+      await tx
+        .delete(emailOutbox)
+        .where(
+          and(
+            eq(emailOutbox.registrationId, created.registrationId),
+            eq(emailOutbox.messageType, "WAITLIST_JOINED"),
+            eq(emailOutbox.status, "PENDING"),
+            eq(emailOutbox.attemptCount, 0),
+          ),
+        );
+    }
+    if (input.note) await addRegistrationNote(tx, actor, created.registrationId, input.note, now);
+    return { registrationId: created.registrationId, status, capacityRaisedTo };
+  });
+  // The capacity is on every public page that counts places (§333): told after the commit, as the offer's own press.
+  if (result.capacityRaisedTo !== null) revalidatePublicContent("places");
+  return result;
 }
 
 /**

@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import { type CSSProperties, type FormEvent, type ReactNode, useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
-import { choiceAnswer, type ConfirmSpec, fillFromForm, pickConfirm, resolveBodyCount, resolveChangedFields, resolveEmailCount } from "@/shared/feedback/notice";
+import { choiceAnswer, type ConfirmSpec, fillFromForm, pickConfirm, resolveBodyCount, resolveChangedFields, resolveEmailCount, tickAnswer } from "@/shared/feedback/notice";
 import { useToast } from "@/shared/feedback/toast-context";
 import { openFoldsAround, REVEAL_EVENT } from "@/shared/ui/fold";
 import { CONFIRM_CANCEL_EVENT } from "./confirm-cancel";
@@ -364,6 +364,12 @@ export default function ActionFormIsland({
     if (chosen) {
       const input = element.elements.namedItem(chosen.field);
       if (input instanceof HTMLInputElement) input.value = chosen.value;
+    }
+    // A box ticked in the dialog (§NNN): its hidden input carries the tick to the action; the dialog let nothing through unticked.
+    const ticked = which === "confirm" ? tickAnswer(pending.spec) : null;
+    if (ticked) {
+      const input = element.elements.namedItem(ticked.field);
+      if (input instanceof HTMLInputElement) input.value = ticked.value;
     }
     confirmed.current = true;
     // The same submitter, so a button's own `formAction` and `name=value` still travel (§287).

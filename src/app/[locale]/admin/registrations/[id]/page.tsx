@@ -642,6 +642,36 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       )}
 
       {/*
+        «Trimite-i oferta» (§615): the ordinary offer, by the organizer's choice — the email and the deadline, no
+        confirmation. The Administrator's; offered at any moment before the start, after the close too, and on a
+        full event it adds one supplementary place (§642), as the dialog says. Its own block since §NNN, beside
+        «Dă-i un loc acum» and out of the race-day card, with the sentence that says it works at any time.
+      */}
+      {registration.status === "WAITLISTED" && mayManage && offerForecast !== null && (
+        <ActionForm
+          action={offerPlaceAction}
+          confirm={{
+            title: tr("confirm.offerPlaceTitle"),
+            ...staffOfferQuestion((key, values) => tr(key, values), registration.registeredName, offerForecast),
+            ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
+            road: words.road("links"),
+            cancelLabel: words.cancel,
+          }}
+          data-testid="offer-place-form"
+        >
+          {deskHidden}
+          {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
+          {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
+            <OfferPlaceButton />
+            <Typography variant="body2" color="text.secondary" data-testid="offer-place-any-time">
+              {tr("registrations.offerAnyTimeHelp")}
+            </Typography>
+          </Stack>
+        </ActionForm>
+      )}
+
+      {/*
         Race day (BR-REQ-037-07, BR-REQ-037-08). The same verbs the desk offers, on the full
         page: confirm on a paper declaration, give a waiting-list entry a free place, type a
         number, mark them here. The code and its QR are shown so a runner who lost the email
@@ -695,29 +725,6 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 {deskHidden}
                 {/* On a full race, an «i» says why the press will be refused (§592). */}
                 <GivePlaceButton eventId={registration.eventId} />
-              </ActionForm>
-            )}
-            {/*
-              «Trimite-i oferta» (§615): the ordinary offer, by the organizer's choice — the email and the
-              deadline, no confirmation. The Administrator's; offered at any moment before the start, after
-              the close too, and on a full event it adds one supplementary place (§642), as the dialog says.
-            */}
-            {registration.status === "WAITLISTED" && mayManage && offerForecast !== null && (
-              <ActionForm
-                action={offerPlaceAction}
-                confirm={{
-                  title: tr("confirm.offerPlaceTitle"),
-                  ...staffOfferQuestion((key, values) => tr(key, values), registration.registeredName, offerForecast),
-                  ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
-                  road: words.road("links"),
-                  cancelLabel: words.cancel,
-                }}
-                data-testid="offer-place-form"
-              >
-                {deskHidden}
-                {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
-                {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
-                <OfferPlaceButton />
               </ActionForm>
             )}
             {registration.status === "CONFIRMED" && (

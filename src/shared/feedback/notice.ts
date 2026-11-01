@@ -348,7 +348,23 @@ export type ConfirmSpec = {
    * which says nothing would change (`resolveChangedFields`).
    */
   changedFields?: ChangedFields;
+  /**
+   * A box the reader ticks in the dialog before its confirm button answers (§NNN): the relay tick of a
+   * one-press move from the internal list onto the official waiting list, «Confirm că această persoană mi-a
+   * cerut să o înscriu…» (§33, binding). `field` is a hidden input of the form, posted empty as drawn; the
+   * confirm writes `on` into it (`tickAnswer`). Without JavaScript there is no dialog, the field posts empty
+   * and the server refuses naming it.
+   */
+  tick?: ConfirmTick;
 };
+
+/** `ConfirmSpec.tick`: the hidden input the tick fills, and the box's words. */
+export type ConfirmTick = { field: string; label: string };
+
+/** What a confirmed dialog with a tick writes into its form: `on` in the tick's hidden input; null without one. Pure. */
+export function tickAnswer(spec: ConfirmSpec): { field: string; value: "on" } | null {
+  return spec.tick ? { field: spec.tick.field, value: "on" } : null;
+}
 
 /** `ConfirmSpec.road`: the facts and the words of the dialog's road line, worded on the server. */
 export type ConfirmRoad = {

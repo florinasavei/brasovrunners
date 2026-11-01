@@ -13,6 +13,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
 import { staffRegistrationConstraints } from "../constraints";
+import { staffOfferIfMadeNow, waitlistOfferQuestion } from "../give-place-tip";
 
 /**
  * «Adaugă pe lista de așteptare» (§872): the one-press entry onto the official waiting list — a name, an
@@ -23,7 +24,9 @@ import { staffRegistrationConstraints } from "../constraints";
  * (`back="event"`, with its own title and help) and inside its own panel on the event's registrations list
  * (the panel carries the title); the page hands the action down only to an Administrator. The full form —
  * every other answer, the person's own language — is one link away. The dialog names the email it sends
- * (§384). Presentation only.
+ * (§384). Its second button, «Oferă-i un loc acum» (§NNN), posts the same entry with `intent=offer`: the row is
+ * given a place in the same press — a free one, or §642's offer — and its own question names the supplementary
+ * place a full event gets (`addPlace`, the capacity it names) and the close. Presentation only.
  */
 export default async function WaitlistAddForm({
   locale,
@@ -53,6 +56,10 @@ export default async function WaitlistAddForm({
     relayedByParticipantRequest: t("registrations.relayConfirmation"),
   });
   const fullForm = `${getPathname({ locale, href: "/admin/registrations/new" })}?${new URLSearchParams({ eventId }).toString()}`;
+  // «Oferă-i un loc acum»'s question (§642): the supplementary place and the close; null once the event has started.
+  const forecast = await staffOfferIfMadeNow(eventId, locale);
+  const offer = forecast ? waitlistOfferQuestion((key, values) => t(key, values), "{email}", forecast) : null;
+  const emailLine = { fillFrom: ["email"], email: words.email(1), road: words.road("links"), cancelLabel: words.cancel };
 
   return (
     <Box component="section" aria-labelledby={heading ? `${scope}-title` : undefined} data-testid="waitlist-add">
@@ -70,22 +77,25 @@ export default async function WaitlistAddForm({
         action={waitlistAddAction}
         messages={refusal}
         scope={scope}
-        // The entry emails the person — the waiting-list message, or the declaration — and says so (§384).
-        confirm={{
-          title: t("confirm.waitlistAddTitle"),
-          // Names the address typed in the form (§875), as «Dă-i un loc acum» does (§637): the safeguard against a dictated typo.
-          body: t("confirm.waitlistAddBody", { email: "{email}" }),
-          fillFrom: ["email"],
-          email: words.email(1),
-          road: words.road("links"),
-          confirmLabel: t("waitlistAdd.add"),
-          cancelLabel: words.cancel,
-        }}
+        // The entry emails the person — the waiting-list message, the declaration or the offer — and says so (§384);
+        // which question asks is the button pressed (`intent`).
+        confirm={[
+          ...(offer ? [{ ...emailLine, when: [{ field: "intent", equals: "offer" }], title: t("confirm.waitlistOfferTitle"), body: offer.body, confirmLabel: offer.confirmLabel }] : []),
+          {
+            ...emailLine,
+            title: t("confirm.waitlistAddTitle"),
+            // Names the address typed in the form (§875), as «Dă-i un loc acum» does (§637): the safeguard against a dictated typo.
+            body: t("confirm.waitlistAddBody", { email: "{email}" }),
+            confirmLabel: t("waitlistAdd.add"),
+          },
+        ]}
         data-testid="waitlist-add-form"
       >
         <input type="hidden" name="uiLocale" value={locale} />
         <input type="hidden" name="eventId" value={eventId} />
         {back && <input type="hidden" name="back" value={back} />}
+        {/* The capacity the offer's question named (§642): the server adds that one place and no other, and none unasked. */}
+        {forecast && forecast.raisedTo !== null && <input type="hidden" name="addPlace" value={forecast.raisedTo} />}
         <Stack spacing={1.5} sx={{ alignItems: "flex-start" }}>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ width: "100%" }}>
             <RecallField name="firstName" label={t("waitlistAdd.firstName")} fullWidth {...textFieldConstraints(staffRegistrationConstraints("firstName"))} required />
@@ -105,9 +115,16 @@ export default async function WaitlistAddForm({
           <CheckboxField name="relayedByParticipantRequest" required>
             {t("registrations.relayConfirmation")}
           </CheckboxField>
-          <GlyphButton icon="addPerson" type="submit" variant="contained" sx={{ minHeight: 44 }}>
-            {t("waitlistAdd.add")}
-          </GlyphButton>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
+            <GlyphButton icon="addPerson" type="submit" name="intent" value="add" variant="contained" sx={{ minHeight: 44 }} data-testid="waitlist-add-submit">
+              {t("waitlistAdd.add")}
+            </GlyphButton>
+            {offer && (
+              <GlyphButton icon="place" type="submit" name="intent" value="offer" variant="outlined" sx={{ minHeight: 44 }} data-testid="waitlist-add-offer">
+                {t("waitlistAdd.offerNow")}
+              </GlyphButton>
+            )}
+          </Stack>
           <GlyphButton icon="addPerson" href={fullForm} variant="text" size="small" sx={{ minHeight: 44 }} data-testid="waitlist-add-full-form">
             {t("waitlistAdd.longForm")}
           </GlyphButton>

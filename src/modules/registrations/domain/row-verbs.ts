@@ -30,6 +30,12 @@ export type RowVerb =
   | "confirmOnPaper"
   /** Give a waiting-list entry a free place (BR-REQ-037-07). */
   | "givePlace"
+  /**
+   * «Trimite-i oferta» (§615, §642): the ordinary offer to the waiting-list entry the Administrator picks, at any
+   * moment before the start — after the close too, and on a full race with one supplementary place its question
+   * names. On the list's «⋮» since §NNN, as on the queue panel and the registration's page.
+   */
+  | "offerPlace"
   | "checkIn"
   | "undoCheckIn"
   | "cancel"
@@ -110,7 +116,7 @@ export function rowVerbsFor(
 
   // A place is given, never assigned: `promoteRegistrationByStaff` goes through the allocator,
   // which is why the verb exists at all rather than an UPDATE (§10.6).
-  if (status === "WAITLISTED" && mayManage) verbs.push("givePlace");
+  if (status === "WAITLISTED" && mayManage) verbs.push("offerPlace", "givePlace");
 
   /*
     Confirming on paper is the one way a registration reaches CONFIRMED from this screen, and it

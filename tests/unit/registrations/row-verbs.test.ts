@@ -47,6 +47,16 @@ describe("BR-REQ-037-05 the verbs a registration row offers", () => {
     }
   });
 
+  // «Trimite-i oferta» from the list's «⋮» (§NNN), as on the queue panel and the registration's page: a waiting row, the Administrator's.
+  it("offers «Trimite-i oferta» on every waiting row, before «Dă-i un loc», and on no other", () => {
+    const verbs = rowVerbsFor("WAITLISTED", "ADMIN", { checkedIn: false });
+    expect(verbs.indexOf("offerPlace")).toBeGreaterThan(-1);
+    expect(verbs.indexOf("offerPlace")).toBeLessThan(verbs.indexOf("givePlace"));
+    for (const status of ALL.filter((s) => s !== "WAITLISTED")) {
+      expect(rowVerbsFor(status, "ADMIN", { checkedIn: false }), status).not.toContain("offerPlace");
+    }
+  });
+
   it("offers check-in only to a confirmed registration, and undo only once they are here", () => {
     expect(rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false })).toContain("checkIn");
     expect(rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false })).not.toContain("undoCheckIn");
@@ -73,6 +83,7 @@ describe("BR-REQ-037-05 the verbs a registration row offers", () => {
       const verbs = rowVerbsFor(status, "CONTRIBUTOR", { checkedIn: false });
       expect(verbs, status).not.toContain("cancel");
       expect(verbs, status).not.toContain("givePlace");
+      expect(verbs, status).not.toContain("offerPlace");
       expect(verbs, status).not.toContain("confirmOnPaper");
       expect(verbs, status).not.toContain("erase");
     }
@@ -205,7 +216,7 @@ describe("§289 the Organizer's row", () => {
         });
 
         expect(verbs, `${status}/${checkedIn}`).toContain("open");
-        for (const verb of ["resend", "cancel", "erase", "givePlace", "confirmOnPaper", "markBibPrinted", "unmarkBibPrinted", "memberTick"] as const) {
+        for (const verb of ["resend", "cancel", "erase", "givePlace", "offerPlace", "confirmOnPaper", "markBibPrinted", "unmarkBibPrinted", "memberTick"] as const) {
           expect(verbs, `${status}/${checkedIn} must not offer ${verb}`).not.toContain(verb);
         }
       }

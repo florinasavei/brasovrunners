@@ -3,6 +3,7 @@ import path from "node:path";
 import { type ComponentProps, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { tickAnswer } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
 import { succeeded } from "@/shared/forms/outcome";
 
@@ -57,6 +58,19 @@ describe("§384 ActionForm asks first", () => {
     expect(source).toMatch(/alternative=\{asking\.spec\.choice \? \{ label: asking\.spec\.choice\.alternativeLabel, onClick: \(\) => answer\("alternative"\) \} : null\}/);
     expect(source).toMatch(/const chosen = choiceAnswer\(pending\.spec, which\);/);
     expect(source).toMatch(/if \(input instanceof HTMLInputElement\) input\.value = chosen\.value;/);
+  });
+
+  it("asks for a tick in the dialog and writes it into the form's hidden input on «yes» alone (§NNN)", () => {
+    expect(source).toMatch(/const ticked = which === "confirm" \? tickAnswer\(pending\.spec\) : null;/);
+    expect(source).toMatch(/if \(input instanceof HTMLInputElement\) input\.value = ticked\.value;/);
+    const spec = { title: "t", body: "b", confirmLabel: "c", cancelLabel: "x" };
+    expect(tickAnswer({ ...spec, tick: { field: "relayedByParticipantRequest", label: "Confirm…" } })).toEqual({ field: "relayedByParticipantRequest", value: "on" });
+    expect(tickAnswer(spec)).toBeNull();
+    // The dialog answers only once the box is ticked: its button disabled, Enter ignored, until then.
+    const dialog = readFileSync(path.join(ROOT, "src/shared/feedback/ConfirmDialog.tsx"), "utf8").replace(/\r\n/g, "\n");
+    expect(dialog).toMatch(/const mayConfirm = !spec\.tick \|\| ticked;/);
+    expect(dialog).toMatch(/if \(mayConfirm\) confirm\(\);/);
+    expect(dialog).toMatch(/onClick=\{confirm\}\s*disabled=\{!mayConfirm\}/);
   });
 
   it("hands a returned notice to the toast provider from an effect, and never a refusal", () => {

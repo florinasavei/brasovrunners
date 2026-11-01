@@ -106,10 +106,15 @@ vi.mock("@/shared/forms/ActionForm", () => ({ default: () => null }));
 vi.mock("@/shared/forms/recall", () => ({ default: () => null }));
 vi.mock("@/shared/ui/CheckboxField", () => ({ default: () => null }));
 vi.mock("@/shared/ui/GlyphButton", () => ({ default: () => null }));
+// «Oferă-i un loc acum»'s question (§NNN) reads the places: a full race whose next capacity is 151, registration open.
+vi.mock("@/modules/registrations/give-place-tip", async (original) => ({
+  ...(await original<typeof import("@/modules/registrations/give-place-tip")>()),
+  staffOfferIfMadeNow: async () => ({ deadline: "vin., 20 nov., 10:00", afterClose: false, raisedTo: 151 }),
+}));
 
-function findConfirm(node: ReactNode): ConfirmSpec | undefined {
+function findConfirm(node: ReactNode): ConfirmSpec | readonly ConfirmSpec[] | undefined {
   if (!isValidElement(node)) return undefined;
-  const element = node as ReactElement<{ confirm?: ConfirmSpec; children?: ReactNode }>;
+  const element = node as ReactElement<{ confirm?: ConfirmSpec | readonly ConfirmSpec[]; children?: ReactNode }>;
   if (element.props.confirm) return element.props.confirm;
   for (const child of Array.isArray(element.props.children) ? element.props.children : [element.props.children]) {
     const found = findConfirm(child);
@@ -127,12 +132,27 @@ describe("BR-REQ-037-05 «Adaugă pe lista de așteptare» asks, naming the addr
     currentLocale = locale;
     const { default: WaitlistAddForm } = await import("@/modules/registrations/ui/WaitlistAddForm");
     const tree = await WaitlistAddForm({ locale, eventId: "e1", waitlistAddAction: (async () => ({})) as never, scope: "s", heading: false });
-    const confirm = findConfirm(tree);
+    // Two buttons, two questions: the first button's is the add alone.
+    const confirm = pickConfirm(findConfirm(tree), posted({ intent: "add", email: typed }));
+    expect(confirm?.title).toBe(catalogues[locale].Admin.confirm.waitlistAddTitle);
     expect(confirm?.fillFrom).toEqual(["email"]);
     expect(confirm?.body).toContain("{email}");
     const filled = fillFromForm(confirm as ConfirmSpec, posted({ email: ` ${typed} ` }));
     expect(filled.body).toContain(typed);
     expect(filled.body).not.toContain("{email}");
     expect(filled.email).toBe("email line");
+  });
+
+  it.each(["ro", "en"] as const)("%s: «Oferă-i un loc acum» asks its own question — the typed address, the capacity it becomes, a button naming the added place (§NNN)", async (locale) => {
+    currentLocale = locale;
+    const words = catalogues[locale].Admin;
+    const { default: WaitlistAddForm } = await import("@/modules/registrations/ui/WaitlistAddForm");
+    const tree = await WaitlistAddForm({ locale, eventId: "e1", waitlistAddAction: (async () => ({})) as never, scope: "s", heading: false });
+    const offer = pickConfirm(findConfirm(tree), posted({ intent: "offer", email: typed }));
+    expect(offer?.title).toBe(words.confirm.waitlistOfferTitle);
+    expect(offer?.confirmLabel).toBe(words.confirm.waitlistOfferRaiseConfirm);
+    const filled = fillFromForm(offer as ConfirmSpec, posted({ email: typed }));
+    expect(filled.body).toContain(typed);
+    expect(filled.body).toContain(words.confirm.offerPlaceRaise.replace("{n}", "151"));
   });
 });

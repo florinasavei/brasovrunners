@@ -6,40 +6,48 @@ import { RESERVE_EMAIL_MAX, RESERVE_NAME_MAX, RESERVE_NOTE_MAX } from "@/db/sche
 import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { confirmWords } from "@/shared/feedback/confirm-words";
+import type { ConfirmSpec } from "@/shared/feedback/notice";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
 import Panel from "@/shared/ui/Panel";
+import { staffOfferIfMadeNow, waitlistOfferQuestion } from "../give-place-tip";
 import type { ReserveEntryRow } from "../reserve-list";
 
 /**
- * «Lista internă de așteptare» (§854) on one event's registrations list, for the Organizer and above: the
- * people who asked to be kept in mind, told nothing and emailed nothing. Each line: the name, the address
- * when the club has it, the internal note (edited in place), «Trece pe lista oficială» — the ordinary staff
- * entry, prefilled; the note follows the registration — and «Șterge». Below, «Adaugă pe lista internă». The
- * official list's own one-press entry is the panel beside this one («Adaugă pe lista de așteptare», §872).
- * Presentation only: the page reads the rows and hands in the actions.
+ * «Lista internă (doar notițe)» (§854, renamed by §NNN) on one event's registrations list, for the Organizer and
+ * above: the people who asked to be kept in mind, told nothing and emailed nothing. Each line: the name, the
+ * address when the club has it, the internal note (edited in place) and «Șterge» — the Organizer's three verbs.
+ * For the Administrator (`moveAction`, handed down only to that role and only while the event takes a vouched
+ * entry), two one-press verbs onto the official waiting list (§NNN): «Mută pe lista oficială» — the official
+ * list's add form, from the line — and «Oferă-i un loc acum», the same entry with §642's offer; each dialog says
+ * the consequence, names the address the emails go to and asks for the relay tick (§33); a line without an
+ * address shows a box for it. The full form, prefilled, stays one link away (`fullFormHref`). Below, «Adaugă pe
+ * lista internă». Presentation only: the page reads the rows and hands in the actions.
  */
 export default async function ReserveListPanel({
   locale,
   eventId,
   entries,
-  officialHref,
+  fullFormHref,
   addAction,
   saveNoteAction,
   deleteAction,
+  moveAction,
   opened,
 }: {
   locale: string;
   eventId: string;
   entries: readonly ReserveEntryRow[];
-  /** The staff entry prefilled from one line. */
-  officialHref: (entryId: string) => string;
+  /** The staff entry prefilled from one line — the Administrator's, as moving a line is. */
+  fullFormHref?: (entryId: string) => string;
   addAction: ActionFormAction;
   saveNoteAction: ActionFormAction;
   deleteAction: ActionFormAction;
+  /** «Mută pe lista oficială» and «Oferă-i un loc acum»: absent, no line carries them. */
+  moveAction?: ActionFormAction;
   opened: boolean;
 }) {
   const t = await getTranslations("Admin");
@@ -50,8 +58,40 @@ export default async function ReserveListPanel({
     email: t("reserve.email"),
     note: t("reserve.note"),
   });
+  // A refused move names the boxes of the move: the address typed for the official list, the dialog's tick.
+  const moveRefusal = moveAction
+    ? await refusalMessages({
+        firstName: t("reserve.firstName"),
+        lastName: t("reserve.lastName"),
+        email: t("reserve.emailForOfficial"),
+        relayedByParticipantRequest: t("registrations.relayConfirmation"),
+      })
+    : refusal;
+  // The offer's question (§642): the supplementary place and the close, read once for every line; null once started.
+  const forecast = moveAction ? await staffOfferIfMadeNow(eventId, locale) : null;
   const aside = entries.length === 0 ? t("reserve.none") : t(`reserve.count.${countForm(entries.length, locale)}`, { count: entries.length });
   const when = (value: Date) => formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
+
+  /** The two dialogs of one line: which one asks is the button pressed (`intent`). */
+  const moveQuestions = (entry: ReserveEntryRow): ConfirmSpec[] => {
+    const name = `${entry.firstName} ${entry.lastName}`;
+    // The address the emails go to: the line's, or the one typed beside the buttons (§875's safeguard).
+    const email = entry.email ?? "{email}";
+    const fillFrom = entry.email ? undefined : ["email"];
+    const shared = { email: words.email(1), road: words.road("links"), cancelLabel: words.cancel, tick: { field: "relayedByParticipantRequest", label: t("registrations.relayConfirmation") }, fillFrom };
+    const questions: ConfirmSpec[] = [];
+    if (forecast) {
+      const offer = waitlistOfferQuestion((key, values) => t(key, values), email, forecast);
+      questions.push({ ...shared, when: [{ field: "intent", equals: "offer" }], title: t("confirm.waitlistOfferTitle"), body: `${name}: ${offer.body} ${t("reserve.noteFollows")}`, confirmLabel: offer.confirmLabel });
+    }
+    questions.push({
+      ...shared,
+      title: t("reserve.moveTitle"),
+      body: `${name}: ${t("confirm.waitlistAddBody", { email })} ${t("reserve.noteFollows")}`,
+      confirmLabel: t("reserve.move"),
+    });
+    return questions;
+  };
 
   return (
     <Panel glyph="queue" collapsible title={t("reserve.title")} intro={t("reserve.intro")} aside={aside} openWhen={{ saved: opened }} id="registrations-reserve" data-testid="registrations-reserve">
@@ -87,35 +127,71 @@ export default async function ReserveListPanel({
                       size="small"
                       slotProps={{ htmlInput: { maxLength: RESERVE_NOTE_MAX } }}
                     />
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                      <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
-                        {t("reserve.saveNote")}
-                      </GlyphButton>
-                      <GlyphButton icon="addPerson" href={officialHref(entry.id)} variant="contained" size="small" sx={{ minHeight: 44 }} data-testid="reserve-official">
-                        {t("reserve.official")}
-                      </GlyphButton>
-                    </Stack>
+                    <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                      {t("reserve.saveNote")}
+                    </GlyphButton>
                   </Stack>
                 </ActionForm>
-                <ActionForm
-                  action={deleteAction}
-                  messages={refusal}
-                  confirm={{
-                    title: t("reserve.deleteTitle"),
-                    body: t("reserve.deleteBody", { name: `${entry.firstName} ${entry.lastName}` }),
-                    confirmLabel: t("reserve.delete"),
-                    cancelLabel: words.cancel,
-                    destructive: true,
-                  }}
-                  scope={`reserve-delete-${entry.id}`}
-                  data-testid="reserve-delete-form"
-                >
-                  <input type="hidden" name="uiLocale" value={locale} />
-                  <input type="hidden" name="entryId" value={entry.id} />
-                  <GlyphButton icon="delete" type="submit" variant="text" color="error" size="small" sx={{ minHeight: 44 }}>
-                    {t("reserve.delete")}
-                  </GlyphButton>
-                </ActionForm>
+                {moveAction && (
+                  <ActionForm action={moveAction} messages={moveRefusal} confirm={moveQuestions(entry)} scope={`reserve-move-${entry.id}`} data-testid="reserve-move-form">
+                    <input type="hidden" name="uiLocale" value={locale} />
+                    <input type="hidden" name="entryId" value={entry.id} />
+                    {/* The relay tick, asked in the dialog (§33): posted empty as drawn, `on` once ticked there. */}
+                    <input type="hidden" name="relayedByParticipantRequest" value="" />
+                    {/* The capacity the offer's question named (§642): the server adds that one place and no other, and none unasked. */}
+                    {forecast && forecast.raisedTo !== null && <input type="hidden" name="addPlace" value={forecast.raisedTo} />}
+                    <Stack spacing={1} sx={{ alignItems: "flex-start", mt: 1.5 }}>
+                      {!entry.email && (
+                        <RecallField
+                          name="email"
+                          type="email"
+                          label={t("reserve.emailForOfficial")}
+                          helperText={t("reserve.emailForOfficialHelp")}
+                          required
+                          fullWidth
+                          size="small"
+                          slotProps={{ htmlInput: { maxLength: RESERVE_EMAIL_MAX } }}
+                        />
+                      )}
+                      <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
+                        <GlyphButton icon="waiting" type="submit" name="intent" value="move" variant="contained" size="small" sx={{ minHeight: 44 }} data-testid="reserve-move">
+                          {t("reserve.move")}
+                        </GlyphButton>
+                        {forecast && (
+                          <GlyphButton icon="place" type="submit" name="intent" value="offer" variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="reserve-offer">
+                            {t("waitlistAdd.offerNow")}
+                          </GlyphButton>
+                        )}
+                      </Stack>
+                    </Stack>
+                  </ActionForm>
+                )}
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: "flex-start", mt: 0.5 }}>
+                  {fullFormHref && (
+                    <GlyphButton icon="addPerson" href={fullFormHref(entry.id)} variant="text" size="small" sx={{ minHeight: 44 }} data-testid="reserve-full-form">
+                      {t("waitlistAdd.longForm")}
+                    </GlyphButton>
+                  )}
+                  <ActionForm
+                    action={deleteAction}
+                    messages={refusal}
+                    confirm={{
+                      title: t("reserve.deleteTitle"),
+                      body: t("reserve.deleteBody", { name: `${entry.firstName} ${entry.lastName}` }),
+                      confirmLabel: t("reserve.delete"),
+                      cancelLabel: words.cancel,
+                      destructive: true,
+                    }}
+                    scope={`reserve-delete-${entry.id}`}
+                    data-testid="reserve-delete-form"
+                  >
+                    <input type="hidden" name="uiLocale" value={locale} />
+                    <input type="hidden" name="entryId" value={entry.id} />
+                    <GlyphButton icon="delete" type="submit" variant="text" color="error" size="small" sx={{ minHeight: 44 }}>
+                      {t("reserve.delete")}
+                    </GlyphButton>
+                  </ActionForm>
+                </Stack>
               </Box>
             ))}
           </Stack>
