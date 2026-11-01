@@ -16,8 +16,10 @@
  */
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { readClub } from "./club-files.mjs";
 
-const CLUB_TIME_ZONE = "Europe/Bucharest";
+const CLUB = readClub();
+const CLUB_TIME_ZONE = CLUB.place.timeZone;
 /** The gap, in minutes after local midnight: from 03:05 (inclusive) up to 04:00 (exclusive). */
 export const NIGHTLY_GAP = { from: 3 * 60 + 5, to: 4 * 60 };
 export const TOLERATED_JOB = "registration-maintenance";
@@ -80,7 +82,7 @@ export function judge(health, now, name) {
       if (!job || job.status === "ok") continue;
       const jobName = String(job.jobName);
       if (jobName === TOLERATED_JOB && job.status === "stale" && gap) {
-        lines.push(`${name}: ${jobName} is stale inside the nightly gap (03:05–04:00 in Brașov); tolerated`);
+        lines.push(`${name}: ${jobName} is stale inside the nightly gap (03:05–04:00 in ${CLUB.place.locality}); tolerated`);
         continue;
       }
       errors.push(

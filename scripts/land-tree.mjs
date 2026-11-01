@@ -4,6 +4,7 @@
  * implementer returns; the landing numbers them and deletes them in the landing commit.
  */
 
+import { readClub } from "./club-files.mjs";
 import { PLACEHOLDER } from "./land-entry.mjs";
 
 /** Where the pending entries live, one `<branch slug>.json` per change. */
@@ -129,7 +130,7 @@ export function typedBaseline(input, current, date) {
 export const shortBaseline = (baseline) => String(baseline).replace(/-\d{4}-\d{2}-\d{2}$/, "");
 
 /** Today's date in the club's zone, `YYYY-MM-DD`, not UTC's. */
-export function todayIn(timeZone = "Europe/Bucharest", now = new Date()) {
+export function todayIn(timeZone = readClub().place.timeZone, now = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 }
 

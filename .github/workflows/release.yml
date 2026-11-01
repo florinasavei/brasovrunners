@@ -173,7 +173,9 @@ jobs:
 
       - name: Who commits
         run: |
-          git config user.name "Brașov Runners release"
+          # The author is club/infra.json's releaseAuthor (§NNN); a branch cut before the file existed falls back to the repository's name.
+          author=$(node -e 'try { process.stdout.write(JSON.parse(require("fs").readFileSync("club/infra.json", "utf8")).releaseAuthor || "") } catch {}')
+          git config user.name "${author:-${GITHUB_REPOSITORY#*/}}"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch --quiet origin qa main
 

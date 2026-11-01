@@ -13,6 +13,21 @@ application never needs these: the literal check reads them, nothing under `src/
 should not receive. One guard word, the safety form's name, is also `safetyProgramme` there: a
 public form's name, which the contact page prints anyway — the list as a whole never ships.
 
+`infra.json` is the names the club's tooling holds, read by the scripts and the release workflow and by
+nothing under `src/` (`tests/unit/club/import-surface.test.ts`; `DECISIONS.md` §NNN):
+
+- `domainLabels` — the labels of the club's own hostname (`<label>.<tld>`). `yarn docs:check` builds
+  its «the club's domain appears nowhere but SETUP.md §26» pattern from them; a dotted suffix is
+  required, so a bare repository name does not match.
+- `vercelProjects` — the Vercel project of each environment, `qa` and `production`, which
+  `yarn domain:bind` addresses by name.
+- `releaseAuthor` — the name on the release workflow's commits (`.github/workflows/release.yml`);
+  without the file, the repository's name.
+
+The release archive's and the ship times file's names come from `club.json`'s `slug`, the idle and
+backstop clocks from `place.timeZone`. The local database, its role, the container and the package
+name keep the old spelling (renaming wipes local volumes).
+
 How it reaches the code:
 
 - `src/club/config.ts` is the only file that imports `club.json` (through the `@club/*` alias in

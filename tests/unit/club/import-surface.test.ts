@@ -53,6 +53,13 @@ describe("BR-REQ-101-01: the club's file has one way into the platform (§882)",
     expect(readers).toEqual(["src/club/config.ts"]);
   });
 
+  it("and the tooling's names (club/infra.json) by nothing under src/: only the scripts read it (§NNN)", () => {
+    const readers = FILES.filter(({ file, imports }) => file.startsWith("src/") && imports.some((specifier) => /(^|\/)infra(\.json)?$/.test(specifier))).map(({ file }) => file);
+    expect(readers).toEqual([]);
+    const text = FILES.filter(({ file }) => file.startsWith("src/")).filter(({ full }) => /club\/infra/.test(readFileSync(full, "utf8"))).map(({ file }) => file);
+    expect(text).toEqual([]);
+  });
+
   it("and the guard words by nothing the application builds: no file under src/ or scripts/ imports club/guard-words.json", () => {
     const readers = FILES.filter(({ imports }) => imports.some((specifier) => /(^|\/)guard-words(\.json)?$/.test(specifier))).map(({ file }) => file);
     expect(readers).toEqual([]);

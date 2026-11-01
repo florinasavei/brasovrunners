@@ -12,6 +12,7 @@
  * permanent-failure mapping. Reads `MAILGUN_*` from the environment (§8), never the outbox.
  */
 import { createMailgunAdapter } from "../src/infrastructure/email/mailgun-adapter";
+import { CLUB_NAME } from "../src/theme/brand";
 
 /** Refused by any sandbox domain, which is the point of `--fail`. */
 const UNAUTHORIZED = "unauthorized-probe@example.com";
@@ -43,7 +44,7 @@ async function main(): Promise<number> {
     apiKey,
     domain,
     apiBaseUrl,
-    from: `${process.env.EMAIL_FROM_NAME ?? "Brașov Runners"} <${fromAddress}>`,
+    from: `${process.env.EMAIL_FROM_NAME ?? CLUB_NAME} <${fromAddress}>`,
     replyTo: process.env.EMAIL_REPLY_TO,
   });
 
@@ -53,7 +54,7 @@ async function main(): Promise<number> {
 
   const result = await adapter.send({
     to,
-    subject: "[QA] Mailgun probe — Brașov Runners",
+    subject: `[QA] Mailgun probe — ${CLUB_NAME}`,
     text: "Sent by yarn email:probe. Nothing in the application enqueued this message.",
     html: "<p>Sent by <code>yarn email:probe</code>. Nothing in the application enqueued this message.</p>",
     locale: "ro",

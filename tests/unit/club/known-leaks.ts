@@ -6,19 +6,13 @@
  * `theme/brand.ts`, `events/domain/place.ts` or `i18n/dates.ts` instead.
  */
 export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
-  // the local database's name and role in CI (`brasov_runners`)
+  // the local database's name and role in CI (`brasov_runners`) stay by design: decision 10 of §NNN
   ".github/workflows/date-nightly.yml": { Brașov: 4, "Brașov Runners": 4 },
-  // the local database's name and role in CI (`brasov_runners`)
+  // the local database's name and role in CI (`brasov_runners`) stay by design: decision 10 of §NNN
   ".github/workflows/docs-check.yml": { Brașov: 4, "Brașov Runners": 4 },
-  // the local database's name and role in CI (`brasov_runners`)
+  // the local database's name and role in CI (`brasov_runners`) stay by design: decision 10 of §NNN
   ".github/workflows/e2e-dev-nightly.yml": { Brașov: 4, "Brașov Runners": 4 },
-  // the local database's name and role in CI (`brasov_runners`)
-  ".github/workflows/release.yml": {
-    Brașov: 1,
-    "Brașov Runners": 1,
-    "Brașov Runners (apart)": 1,
-  },
-  // the local database's name and role
+  // the local database's name and role stay by design: decision 10 of §NNN
   "docker-compose.yml": { Brașov: 3, "Brașov Runners": 6, brasovrunners: 3 },
   // the catalogues' wording — moved by the wording change
   "messages/en.json": {
@@ -55,14 +49,6 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
     "Brașov Runners": 2,
     "Brașov Runners (apart)": 1,
     brasovrunners: 1,
-  },
-  // the scripts' own messages and the local database's name
-  "scripts/backstop-verdict.mjs": { Brașov: 1 },
-  // the scripts' own messages and the local database's name
-  "scripts/bind-domain.mjs": {
-    Brașov: 2,
-    "Brașov Runners": 2,
-    "Brașov Runners (apart)": 2,
   },
   // the calendar picture's sample months
   "scripts/calendar-image-preview/busy.json": {
@@ -116,24 +102,14 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
     Tâmpa: 2,
     brasovrunners: 1,
   },
-  // the scripts' own messages and the local database's name
+  // the local database's name and role stay by design: decision 10 of §NNN
   "scripts/cloud-setup.sh": {
     Brașov: 3,
     "Brașov Runners": 4,
     brasovrunners: 1,
   },
-  // the scripts' own messages and the local database's name
+  // the local database's container (`brasovrunners-db`) stays by design: decision 10 of §NNN
   "scripts/db-reset-local.mjs": { "Brașov Runners": 1, brasovrunners: 1 },
-  // the scripts' own messages and the local database's name
-  "scripts/email-probe.ts": {
-    Brașov: 2,
-    "Brașov Runners": 2,
-    "Brașov Runners (apart)": 2,
-  },
-  // the scripts' own messages and the local database's name
-  "scripts/release.mjs": { "Brașov Runners": 1, brasovrunners: 1 },
-  // the scripts' own messages and the local database's name
-  "scripts/ship.mjs": { "Brașov Runners": 1, brasovrunners: 1 },
   // the design page's sample event
   "src/modules/design/fixtures.ts": { "Piața Sfatului": 1, Titulescu: 2 },
   // the safety form's name in the relayed message

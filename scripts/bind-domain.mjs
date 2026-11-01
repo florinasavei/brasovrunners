@@ -28,8 +28,9 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import process from "node:process";
+import { readInfra } from "./club-files.mjs";
 
-const PROJECTS = { qa: "brasov-runners-qa", production: "brasov-runners-production" };
+const PROJECTS = readInfra().vercelProjects;
 const REDIRECT_STATUS = 308;
 
 function fail(message) {
