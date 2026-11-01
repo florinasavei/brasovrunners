@@ -12,7 +12,7 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
   ".github/workflows/docs-check.yml": { Brașov: 4, "Brașov Runners": 4 },
   // the local database's name and role in CI (`brasov_runners`) stay by design (§NNN, kept by design: the local database, role, container and package name)
   ".github/workflows/e2e-dev-nightly.yml": { Brașov: 4, "Brașov Runners": 4 },
-  // the local database's name and role stay by design (§NNN, kept by design: the local database, role, container and package name)
+  // the local database's name and role, its container and volume (`brasovrunners-db`, `brasovrunners_pgdata`) stay by design (§NNN, kept by design: the local database, role, container and package name)
   "docker-compose.yml": { Brașov: 3, "Brașov Runners": 6, brasovrunners: 3 },
   // the catalogues' wording — moved by the wording change
   "messages/en.json": {

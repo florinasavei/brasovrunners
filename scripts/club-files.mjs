@@ -22,12 +22,15 @@ export const readInfra = () => read("infra.json");
  * so a bare repository name does not match. Case-insensitive as DNS is.
  */
 export function ownHostPattern(labels) {
-  const alternatives = labels.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
-  return new RegExp(`(?<![A-Za-z0-9.-])(?:[A-Za-z0-9-]+\\.)*(?:${alternatives})(?:\\.[A-Za-z0-9-]+)+(?![A-Za-z0-9-])`, "gi");
+  return new RegExp(`(?<![A-Za-z0-9.-])(?:[A-Za-z0-9-]+\\.)*(?:${alternation(labels)})(?:\\.[A-Za-z0-9-]+)+(?![A-Za-z0-9-])`, "gi");
 }
 
 /** The repository's own clone URL: a bare label plus ".git", nothing either side. */
 export function ownCloneUrlPattern(labels) {
-  const alternatives = labels.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
-  return new RegExp(`^(?:${alternatives})\\.git$`, "i");
+  return new RegExp(`^(?:${alternation(labels)})\\.git$`, "i");
+}
+
+/** The labels as one regular-expression alternation, each escaped. */
+function alternation(labels) {
+  return labels.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
 }
