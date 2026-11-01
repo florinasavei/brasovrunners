@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
+import { writeFileSync, mkdtempSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { inNightlyGap, judge } from "../../../scripts/backstop-verdict.mjs";
 
 /**
- * BR-REQ-090-03 criterion 14 (§NNN): the GitHub backstop reads the deep health answer before it
+ * BR-REQ-090-03 (the backstop criterion, §NNN): the GitHub backstop reads the deep health answer before it
  * pokes and fails at the end on a stalled outbox or a stale job, except maintenance in the
  * pinger's nightly gap. The health bodies are shaped as `src/app/api/health/route.ts` returns them.
  */
@@ -33,7 +33,7 @@ const WINTER_BEFORE = new Date("2026-12-01T01:04:00Z"); // 03:04
 const SUMMER_RUN = new Date("2026-07-01T01:17:00Z"); // 04:17 (UTC+3)
 const SUMMER_GAP = new Date("2026-07-01T00:30:00Z"); // 03:30
 
-describe("scripts/backstop-verdict.mjs", () => {
+describe("BR-REQ-090-03 §NNN the backstop's verdict", () => {
   it("is ok when everything is ok", () => {
     const verdict = judge(health(), WINTER_GAP, "production");
     expect(verdict.errors).toEqual([]);
@@ -116,6 +116,10 @@ describe("scripts/backstop-verdict.mjs", () => {
     writeFileSync(file, JSON.stringify(health()));
     const good = spawnSync("node", [script, "--name", "production", "--file", file], { encoding: "utf8" });
     expect(good.status).toBe(0);
-    expect(readFileSync(file, "utf8")).toContain("ok");
+    expect(good.stdout).toContain("production: database ok");
+    expect(good.stdout).not.toContain("::error::");
+    const missing = spawnSync("node", [script, "--name", "production", "--file", path.join(dir, "absent.json")], { encoding: "utf8" });
+    expect(missing.status).toBe(1);
+    expect(missing.stdout).toContain("no health answer was saved");
   });
 });

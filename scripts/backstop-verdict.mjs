@@ -106,8 +106,15 @@ function main(args) {
   const nowText = option(args, "--now");
   const now = nowText ? new Date(nowText) : new Date();
   let health = null;
+  let text;
   try {
-    health = JSON.parse(readFileSync(file ?? "", "utf8"));
+    text = readFileSync(file ?? "", "utf8");
+  } catch {
+    console.log(`::error::no health answer was saved for ${name} (the early read did not run, e.g. the checkout failed); ${HELP}`);
+    return 1;
+  }
+  try {
+    health = JSON.parse(text);
   } catch {
     health = null;
   }

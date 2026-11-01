@@ -702,7 +702,8 @@ watch over production's jobs and outbox (§NNN). It reads `/api/health?deep=1` *
   the job fails. `registration-maintenance` stale between 03:05 and 04:00 in Brașov is the known nightly gap and does
   not turn the run red. What to do: open the pinger's monitors for that environment (disabled, failed, wrong secret?),
   fix or re-enable them; the pokes of this very run already did the due work, so a re-run of the workflow reads green
-  once the pinger's pings are back. If the pinger is fine, read `/devs` → Stare for the job's last error.
+  once the pinger's pings are back. If the pinger is fine, read `/devs` → Stare for the job's last error. A single red
+  that a re-run clears may be an evicted ping slot (`src/modules/jobs/health.ts` reads `stale` for one reading), not a dead pinger.
 - **«email outbox is stalled»** — a message is deferred by the provider's allowance, overdue or failed
   (`modules/notifications/health.ts`). Open `/devs` → outbox: deferred rows go at the allowance reset, overdue rows mean
   the outbox job is not running (the pinger, as above), failed ones need «Reîncearcă emailurile eșuate».
@@ -714,7 +715,7 @@ watch over production's jobs and outbox (§NNN). It reads `/api/health?deep=1` *
 
 What it looks like: every query refused with `53000 Your account or project has exceeded the quota`; a migration run
 that stops with it (printed by `scripts/db-error.mjs` since §868, with what to do); the environment's job endpoints
-answering 500; `scheduled-jobs.yml`'s «Neon budget» step red. It happened to QA on 2026-10-28: 30 CU-hours used, and
+answering 500; `scheduled-jobs.yml`'s «Verdict» step red (its `::error::` names the database or the Neon budget). It happened to QA on 2026-10-28: 30 CU-hours used, and
 Neon suspends a project at its monthly compute quota until the next period (`SETUP.md` §40).
 
 1. **Confirm it.** `GET https://console.neon.tech/api/v2/projects/<project id>` with the environment's `NEON_API_KEY`

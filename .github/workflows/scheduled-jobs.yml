@@ -50,8 +50,9 @@ jobs:
           - name: qa
             base_url_secret: QA_APP_BASE_URL
             job_secret: QA_JOB_SECRET
-          # Skipped with a notice (production: a warning, it must be configured) until both secrets exist — set them on deployment day, not
-          # before (SETUP.md §26): a host that is not serving yet turns every run red.
+          # Skipped with a notice (production: a warning, it must be configured)
+          # until both secrets exist — set them on deployment day, not before
+          # (SETUP.md §26): a host that is not serving yet turns every run red.
           - name: production
             base_url_secret: PRODUCTION_APP_BASE_URL
             job_secret: PRODUCTION_JOB_SECRET
