@@ -3,6 +3,7 @@ import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import FieldLegend from "@/shared/ui/FieldLegend";
 import { DECLARATION_TOKENS, type TokenLocale, tokensUsedIn } from "../templates/tokens";
+import { CLUB_SHORT_NAME, SAFETY_PROGRAMME } from "@/theme/brand";
 
 /**
  * What each `{{token}}` in the declaration becomes, beside the box where the text is written
@@ -44,7 +45,7 @@ export default async function TokenLegend({ body }: { body?: string }) {
       <FieldLegend
         rows={DECLARATION_TOKENS.map((entry) => ({
           token: entry.token,
-          meaning: t(`tokens.${entry.messageKey}`),
+          meaning: t(`tokens.${entry.messageKey}`, { short: CLUB_SHORT_NAME, safetyName: SAFETY_PROGRAMME[first] }),
           example: (
             <>
               <span lang={first}>{entry.example[first]}</span>

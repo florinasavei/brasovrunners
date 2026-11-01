@@ -1,12 +1,16 @@
 import { IntlMessageFormat } from "intl-messageformat";
 import { describe, expect, it } from "vitest";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
+import { CLUB_SHORT_NAME, SAFETY_PROGRAMME } from "@/theme/brand";
+
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * `/admin/legal`'s token legend calls `t()` on every `Admin.legal.tokens.*` message: a bare
  * `{{event}}` is malformed ICU and would throw on the page. Every entry must parse and format
- * through the formatter next-intl uses, with the literal token text quoted as `'{{…}}'` (§523).
+ * through the formatter next-intl uses, with the literal token text quoted as `'{{…}}'` (§523) — and with the club's
+ * words `TokenLegend` hands every entry (§NNN): its short mark and its safety form's name.
  */
 describe("Admin.legal.tokens — every legend entry is well-formed ICU", () => {
   for (const [locale, catalogue] of [
@@ -17,7 +21,7 @@ describe("Admin.legal.tokens — every legend entry is well-formed ICU", () => {
     for (const [key, message] of Object.entries(tokens)) {
       if (typeof message !== "string") continue;
       it(`${locale}: ${key}`, () => {
-        const formatted = new IntlMessageFormat(message, locale).format({});
+        const formatted = new IntlMessageFormat(message, locale).format({ short: CLUB_SHORT_NAME, safetyName: SAFETY_PROGRAMME[locale] });
         expect(typeof formatted).toBe("string");
       });
     }

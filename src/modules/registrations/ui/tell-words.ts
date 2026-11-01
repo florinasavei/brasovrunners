@@ -1,6 +1,5 @@
 import { createTranslator } from "next-intl";
-import en from "../../../../messages/en.json";
-import ro from "../../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { formatDay } from "@/i18n/dates";
 import { waitlistCountShown } from "@/modules/events/domain/registration-cta";
@@ -12,6 +11,10 @@ import { rowDeadlineOf } from "../domain/row-deadline";
 import { shortEmailName } from "./rejected-email-words";
 import { waitlistStandingPhrase } from "./waitlist-position-words";
 import { formatRaceNumber, type RaceNumberFormat } from "@/modules/registrations/domain/race-number";
+
+// The platform's words with the club's own laid over them (§NNN, `i18n/catalogue.ts`).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 type Say = (key: string, values?: Record<string, string | number>) => string;
 

@@ -1,7 +1,10 @@
 import { createTranslator } from "next-intl";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
 import type { CalendarLabels } from "./ical";
+
+// The platform's words with the club's own laid over them (§NNN, `i18n/catalogue.ts`).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * The `Event` catalogue outside a request (§174).

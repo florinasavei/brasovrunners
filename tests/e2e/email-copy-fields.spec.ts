@@ -78,7 +78,7 @@ test.describe("the fields of an email's words, as a legend", () => {
     await openFold(card);
     // Each half its own title, in the subject too (§373, email follow-up).
     await expect(card).toContainText("Detalii actualizate pentru Crosul de toamnă / Updated details for The autumn cross");
-    await expect(card.locator("iframe")).toHaveAttribute("srcdoc", /The meeting point is now: Tâmpa cable-car station\./);
+    await expect(card.locator("iframe")).toHaveAttribute("srcdoc", /The meeting point is now: Central Park entrance\./);
   });
 });
 

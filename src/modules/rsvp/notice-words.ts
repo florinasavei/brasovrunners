@@ -1,6 +1,11 @@
 import { topicsPhrase } from "@/modules/newsletter/topic-words";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
+import { CLUB_SHORT_NAME } from "@/theme/brand";
+import { createTranslator } from "next-intl";
+
+// The platform's words with the club's own laid over them (§NNN, `i18n/catalogue.ts`).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * What the privacy notice's `{{rsvp}}` becomes (§811, «Vin!» part 1): the answer's own button on an event's page,
@@ -31,10 +36,12 @@ export function rsvpAskAnswerersClause(locale: string): string {
 
 /**
  * What `{{rsvpMember}}` becomes (§831): the mark beside a shown name, quoted, in that language — „BVR” / “BVR” — read from the catalogue the chip
- * reads (`Event.rsvp.memberMark`), so the approved sentence names what a visitor sees on «Cine vine».
+ * reads (`Event.rsvp.memberMark`), so the approved sentence names what a visitor sees on «Cine vine»; the mark itself is the club's short
+ * name, an argument of the message since §NNN.
  */
 export function rsvpMemberClause(locale: string): string {
-  return locale === "en" ? `“${en.Event.rsvp.memberMark}”` : `„${ro.Event.rsvp.memberMark}”`;
+  const mark = createTranslator({ locale: locale === "en" ? "en" : "ro", messages: locale === "en" ? en : ro, namespace: "Event" })("rsvp.memberMark", { short: CLUB_SHORT_NAME });
+  return locale === "en" ? `“${mark}”` : `„${mark}”`;
 }
 
 /** The notice's merge values, beside the other features' on the legal pages. */

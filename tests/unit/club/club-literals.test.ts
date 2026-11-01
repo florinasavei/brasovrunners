@@ -242,8 +242,20 @@ describe("BR-REQ-101-01: the club's words come from club/club.json, never a lite
     expect(countSaid([`@${fold(CLUB.name).replace(/\s+/g, "")}`])[`${CLUB.name} (apart)`]).toBeUndefined();
   });
 
-  it("sees one more string in a listed file: a new message that says the name fails though the file is grandfathered", () => {
-    const file = "messages/ro.json";
+  it("lists no catalogue: the platform's words are neutral, and this club's own sentences live in club/messages (§NNN)", () => {
+    for (const file of ["messages/ro.json", "messages/en.json"]) {
+      expect(KNOWN_LEAKS[file], file).toBeUndefined();
+      expect(countSaid(textsOf(file)), file).toEqual({});
+    }
+    // A new message that says the name or a place of the club's fails at once, in a file with no row.
+    const probed = countSaid([...textsOf("messages/ro.json"), `Echipa ${CLUB.name} te așteaptă la ${GUARD_WORDS[0]}`]);
+    const { fresh } = ratchetDifferences({ "messages/ro.json": probed }, KNOWN_LEAKS);
+    expect(fresh.some((line) => line.includes(`${CLUB.name} listed 0`))).toBe(true);
+    expect(fresh.some((line) => line.includes(`${GUARD_WORDS[0]} listed 0`))).toBe(true);
+  });
+
+  it("sees one more string in a listed file: a new string that says the name fails though the file is grandfathered", () => {
+    const file = "scripts/calendar-image-preview/june.json";
     expect(KNOWN_LEAKS[file]?.[CLUB.name]).toBeGreaterThan(0);
     const probe = { ...KNOWN_LEAKS[file] };
     const probed = countSaid([...textsOf(file), `Echipa ${CLUB.name} te așteaptă la ${GUARD_WORDS[0]}, ${CLUB.shortName}`]);

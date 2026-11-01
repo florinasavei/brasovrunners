@@ -20,8 +20,9 @@ let currentRole: StaffRole = "COPYWRITER";
 
 vi.mock("next-intl/server", async () => {
   const { createFormatter, createTranslator } = await import("next-intl");
-  const ro = (await import("../../../messages/ro.json")).default;
-  const en = (await import("../../../messages/en.json")).default;
+  const { catalogueOf } = await import("@/i18n/catalogue");
+  const ro = catalogueOf("ro");
+  const en = catalogueOf("en");
   return {
     getTranslations: async (arg: string | { namespace: string }) => {
       const namespace = typeof arg === "string" ? arg : arg.namespace;
@@ -55,8 +56,11 @@ vi.mock("@/modules/staff-identity/session", () => ({
 }));
 
 const { NextIntlClientProvider } = await import("next-intl");
-const ro = (await import("../../../messages/ro.json")).default;
-const en = (await import("../../../messages/en.json")).default;
+// What the page reads (§NNN): the platform's words with this club's over them; the plan's words are the club's alone.
+const { catalogueOf } = await import("@/i18n/catalogue");
+const ro = catalogueOf("ro");
+const en = catalogueOf("en");
+const roPlan = (await import("@club/messages/ro.json")).default.Admin.design.plan;
 const { default: DesignSystem } = await import("@/modules/design/ui/DesignSystem");
 const { default: DesignSectionLayout } = await import("@/app/[locale]/admin/design/layout");
 const { DESIGN_SECTION_IDS } = await import("@/modules/design/ui/section");
@@ -204,16 +208,16 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
     }
     for (const decision of REDESIGN_DECISIONS) {
       expect(markup).toContain(`data-decision="${decision.id}"`);
-      expect(markup).toContain(ro.Admin.design.plan.decisions[String(decision.id) as "1"].title);
+      expect(markup).toContain(roPlan.decisions[String(decision.id) as "1"].title);
     }
     for (const phase of REDESIGN_PHASES) {
       expect(markup).toContain(`data-phase="${phase.id}"`);
-      expect(markup).toContain(ro.Admin.design.plan.phases[String(phase.id) as "0"].title);
+      expect(markup).toContain(roPlan.phases[String(phase.id) as "0"].title);
     }
     expect(markup).toContain(">docs/REDESIGN.md<");
-    expect(markup).toContain(ro.Admin.design.plan.statuses.default);
-    expect(markup).toContain(ro.Admin.design.plan.statuses.planned);
-    expect(markup).toContain(ro.Admin.design.plan.statuses.decided);
+    expect(markup).toContain(roPlan.statuses.default);
+    expect(markup).toContain(roPlan.statuses.planned);
+    expect(markup).toContain(roPlan.statuses.decided);
   });
 
   it("names no person and no real event in its samples", async () => {

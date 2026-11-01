@@ -47,7 +47,7 @@
   "Events": {
     "undatedTitle": "Data sau ora se anunță",
     "title": "Alergări",
-    "intro": "Alergări, ture pe munte și antrenamente organizate de club — întotdeauna gratuite.",
+    "intro": "Alergări și antrenamente organizate de club.",
     "empty": "Nu sunt alergări publicate momentan. Revino în curând.",
     "noUpcoming": "Nu sunt alergări viitoare programate. Cea mai recentă alergare a clubului:",
     "featured": "Alergarea principală",
@@ -117,13 +117,13 @@
       "googleHintWhy": "Nu merge butonul? Google ascunde calendarul în loc să-l scoată și ține o copie veche după adresă.",
       "googleHintHow": "Pe web: calendar.google.com → „+” lângă „Alte calendare” → „Din URL” → lipește adresa, cu ?v=2 la final.",
       "phoneAppHint": "Pe Android, butonul „Apple / Outlook” nu face nimic, iar aplicația Google Calendar nu adaugă un calendar după adresă: folosește calendar.google.com în browser, „Din URL”.",
-      "androidSync": "Pe Android nu-l vezi după „Calendar adăugat”? Google Calendar → Meniu → Setări → contul tău → „Afișează mai multe” → 🏃 BVR → Sincronizare.",
+      "androidSync": "Pe Android nu-l vezi după „Calendar adăugat”? Google Calendar → Meniu → Setări → contul tău → „Afișează mai multe” → 🏃 {short} → Sincronizare.",
       "look": {
         "taglineLead": "Planifică-ți următoarea",
         "taglineWord": "alergare",
         "taglineEnd": ".",
         "mottoLead": "Alergăm",
-        "mottoRest": "împreună în Brașov.",
+        "mottoRest": "împreună.",
         "subline": "Vezi când alergăm, unde ne întâlnim și ce ți se potrivește.",
         "kinds": {
           "label": "Ce evenimente arată calendarul",
@@ -245,7 +245,6 @@
         "emptyMonth": "Nicio alergare luna aceasta",
         "emptyWeek": "Nicio alergare săptămâna aceasta",
         "at": "ora {time}",
-        "hashtags": "#NoOneLeftBehind #brasovrunners",
         "details": "Detalii",
         "detailsPlace": "Locul",
         "detailsDistance": "Distanța",
@@ -790,7 +789,7 @@
       }
     },
     "calendar": {
-      "feedName": "🏃 BVR",
+      "feedName": "🏃 {short}",
       "page": "Pagina evenimentului",
       "rules": "Regulament",
       "programme": "Program",
@@ -829,7 +828,7 @@
           "birthDate": "Data nașterii",
           "captcha": "Verificarea anti-bot"
         },
-        "idDocumentHelp": "Cartea de identitate (de ex. „BV 123456”) sau pașaportul. În copiile trimise pe e-mail apare mascat; platforma îl șterge la {days} după alergare și nu păstrează o copie a actului.",
+        "idDocumentHelp": "Cartea de identitate (de ex. „{idExample}”) sau pașaportul. În copiile trimise pe e-mail apare mascat; platforma îl șterge la {days} după alergare și nu păstrează o copie a actului.",
         "emailHelp": "Aici îți trimitem declarația semnată, în PDF.",
         "languageNote": "Declarația se semnează în limba acestei pagini, iar PDF-ul și emailul sunt tot în ea. Pentru cealaltă limbă, schimbă limba (RO / EN) înainte să semnezi.",
         "adultsOnly": "O semnezi doar pentru tine, dacă ai împlinit {age} în ziua alergării; nu o semnezi în numele altcuiva, nici al unui minor.",
@@ -861,7 +860,7 @@
       "gear": "Încălțăminte și haine potrivite terenului și vremii; la o alergare de noapte, o lanternă frontală.",
       "supplies": "Apa și mâncarea le ai la tine.",
       "health": "Alergi doar dacă, din câte știi, sănătatea ta îți permite.",
-      "wildlife": "Animale și vreme: urmezi indicațiile generale de siguranță date de organizator.",
+      "wildlife": "Vremea: urmezi indicațiile generale de siguranță date de organizator.",
       "leaving": "Dacă pleci din grup, îi spui organizatorului."
     },
     "timeLimit": "Timp limită",
@@ -972,7 +971,7 @@
         "closed": "Evenimentul nu mai primește răspunsuri „Vin!”, așa că numele nu se mai poate arăta.",
         "wait": "Prea multe schimbări într-o oră. Încearcă mai târziu; „Nu mai vin” merge oricând."
       },
-      "memberMark": "BVR",
+      "memberMark": "{short}",
       "memberLabel": "Membru {club}",
       "memberHelp": "Bifa e declarația ta; clubul nu o verifică. Lângă numele afișat apare „{mark}”; fără nume ești doar numărat printre membri.",
       "memberFact": "Membru",
@@ -2392,7 +2391,7 @@
       "mapUrl": "Link către punctul de întâlnire",
       "mapUrlHelp": "Opțional. Punctul de întâlnire pe Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
       "coordinates": "Coordonate (lat, lng)",
-      "coordinatesHelp": "Opțional: latitudine, longitudine, de ex. 45.6427, 25.5887 — clic dreapta pe punct în Google Maps. Doar pentru vreme, când linkul hărții nu le conține.",
+      "coordinatesHelp": "Opțional: latitudine, longitudine, de ex. 45.0000, 25.0000 — clic dreapta pe punct în Google Maps. Doar pentru vreme, când linkul hărții nu le conține.",
       "weatherPlace": {
         "map": "Vremea se citește acum pentru punctul din linkul hărții ({coordinates}).",
         "typed": "Vremea se citește acum pentru aceste coordonate ({coordinates}).",
@@ -2415,7 +2414,7 @@
         "noteHelp": "Scurt, cel mult 200 de caractere, de ex. „Pe creastă e polei, veniți cu colțari.”"
       },
       "locationHelp": "Locul, cum i-ai spune unui prieten, în română și în engleză. Dacă numele e același, apasă „Același nume și în engleză”.",
-      "locationShortHelp": "Un cuvânt sau două, pentru afișul lunii: „Parc”, „Poiana”. În ambele limbi sau în niciuna.",
+      "locationShortHelp": "Un cuvânt sau două, pentru afișul lunii: „Parc”, „Stadion”. În ambele limbi sau în niciuna.",
       "locationCopyToEnglish": "Același nume și în engleză",
       "locationEnglishLeftBehind": "În engleză scrie tot „{place}”. Dacă s-a mutat locul, schimbă-l și aici.",
       "placeToBeAnnounced": "Locația se anunță mai târziu",
@@ -2592,7 +2591,7 @@
       "difficultyStepHelp": "Nivelul e de la {lowest} ({lowestBand}) la {highest} ({highestBand}): fiecare categorie are trei niveluri — {ranges}.",
       "difficultyScale": {
         "EASY": "ușor {from}–{to}: scurt, plat, pentru oricine",
-        "MEDIUM1": "mediu {level}: alergarea de pe Tâmpa",
+        "MEDIUM1": "mediu {level}: urcușurile scurte",
         "MEDIUM2": "mediu {level}: alergările mai lungi",
         "MEDIUM3": "mediu {level}: lungi și tehnice",
         "FAIRLY_HARD": "greuț {from}–{to}: de la semimaraton în sus",
@@ -3257,7 +3256,7 @@
             "duration": "{duration}"
           },
           "timezone": {
-            "home": "{zone} — ora României"
+            "home": "{zone} — {zoneWords}"
           },
           "place": {
             "tba": "Se anunță mai târziu",
@@ -3456,7 +3455,7 @@
         "EVENT_DECLARATION": "Eveniment montan",
         "EVENT_DECLARATION_ROAD": "Eveniment pe șosea sau în parc"
       },
-      "membersOnly": "Doar pentru membrii BVR",
+      "membersOnly": "Doar pentru membrii {short}",
       "membersOnlyHelp": "Îl văd doar membrii autentificați, nu apare pe site. Înscrierile făcute rămân.",
       "membersOnlyShort": "Doar membri",
       "waitlistAutoOffer": "Locurile din lista de așteptare se alocă automat",
@@ -3869,7 +3868,7 @@
         "eventInvitations": "Doar în nota de confidențialitate: numele secțiunii Invitații, între ghilimele. Cu el în nota în vigoare, /admin/tasks consideră invitațiile descrise",
         "feedbackForms": "Doar în nota de confidențialitate: numele formularelor „Spune-ne ceva”, între ghilimele. Cu el în nota în vigoare, pagina de contact arată formularele pornite",
         "feedbackFormsNamed": "Doar în nota de confidențialitate: alegerea „Cu nume și prenume” din formularele „Spune-ne ceva”, între ghilimele. Fără el în nota în vigoare, formularele sunt doar anonime",
-        "feedbackSafetyGmail": "Doar în nota de confidențialitate: „Gmail-ul clubului”, în propoziția despre mesajele Girl Zone. Fără el în nota în vigoare, ele pleacă doar prin Mailgun",
+        "feedbackSafetyGmail": "Doar în nota de confidențialitate: „Gmail-ul clubului”, în propoziția despre mesajele {safetyName}. Fără el în nota în vigoare, ele pleacă doar prin Mailgun",
         "relayQueue": "Doar în nota de confidențialitate: cât ține site-ul mesajul de la „Scrie-ne” și „Spune-ne ceva” până pleacă. Fără el, /admin/tasks te anunță; mesajele nu se opresc.",
         "membersShop": "Doar în nota de confidențialitate: numele secțiunii „Magazinul clubului”, între ghilimele. Cu el în nota în vigoare, zona membrilor arată magazinul și primește comenzi",
         "volunteers": "Doar în nota de confidențialitate: numele formularului „Vreau să fiu voluntar”, între ghilimele. Cu el în nota în vigoare, un eveniment cu voluntari își arată formularul și păstrează ofertele",
@@ -3888,7 +3887,7 @@
         "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin",
         "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc întrebarea „Vii?” înainte de eveniment",
         "rsvpAskAnswerers": "Doar în nota de confidențialitate: numele butonului „Nu mă mai întreba la seria aceasta”, între ghilimele. Cu el în nota în vigoare, se întreabă „Vii?” și cei care au mai răspuns „Vin!”",
-        "rsvpMember": "Doar în nota de confidențialitate: semnul „BVR”, între ghilimele. Cu el în nota în vigoare, „Vin!” are bifa „Sunt membru al grupului …”, iar „Cine vine” arată semnul lângă numele afișate ale membrilor"
+        "rsvpMember": "Doar în nota de confidențialitate: semnul „{short}”, între ghilimele. Cu el în nota în vigoare, „Vin!” are bifa „Sunt membru al grupului …”, iar „Cine vine” arată semnul lângă numele afișate ale membrilor"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4188,7 +4187,7 @@
           "LAUNCH": "{name} — pe consum: {rate} $/oră-CU, {storageRate} $/GB-lună, fără abonament"
         },
         "note": "Notă (de ce, până când)",
-        "december": "La revizuirea din decembrie 2026 se poate reveni la Free de aici, fără deploy.",
+        "december": "Se poate reveni la Free de aici, fără deploy.",
         "save": "Salvează planul Neon",
         "saving": "Se salvează…",
         "saved": "Planul Neon a fost salvat; cifrele de pe /devs și rândul Neon de mai jos îl folosesc de acum.",
@@ -4319,7 +4318,7 @@
       },
       "emailStalled": {
         "title": "Emailurile nu pleacă.",
-        "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure {resumesAt} (ora României); nimic nu s-a pierdut.",
+        "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure {resumesAt} (ora clubului); nimic nu s-a pierdut.",
         "failed": "Mesaje netrimise în ultimele 7 zile: {count} — motivul Mailgun: „{reason}”. După ce repari cauza: «Setări» → «Emailuri» → «Reîncearcă emailurile eșuate».",
         "overdue": "Mesaje cu rândul trecut de peste 90 de minute: {count} — monitoarele nu rulează. Vezi rândul „Monitoarele” de mai jos.",
         "notify": "Ca să afli de asta fără să deschizi pagina: un monitor zilnic pe cron-job.org către /api/health?deep=1, cu notificare la eșec — pasul din rândul „Monitoarele”."
@@ -4364,7 +4363,7 @@
           "how": [
             "În Mailgun: Sending → Domains → „Add new domain”. Numele: {mailDomain}. Regiunea: EU. Nu folosi domeniul principal — el rămâne liber pentru poșta clubului.",
             "Mailgun îți arată înregistrările DNS de creat: două TXT (SPF și DKIM) și un CNAME (tracking).",
-            "Adaugă-le la ROMARG → cPanel → Zone Editor, exact cum le arată Mailgun, cu numele scurt (fără domeniul repetat).",
+            "Adaugă-le la registrar-ul domeniului (de ex. cPanel → Zone Editor), exact cum le arată Mailgun, cu numele scurt (fără domeniul repetat).",
             "Atenție la DKIM: valoarea are peste 255 de caractere și cPanel o taie — scrie-o ca două șiruri între ghilimele, pe un singur rând („k=rsa; p=…prima parte” „…restul”), altfel Mailgun o vede trunchiată.",
             "Apoi „Verify” în Mailgun — poate dura până la o oră.",
             "Tot în Mailgun: Sending → API keys → o cheie de trimitere (MAILGUN_API_KEY).",
@@ -4384,7 +4383,7 @@
           "todo": "Monitoare pentru cele două sarcini programate, cu JOB_SECRET-ul mediului. Acest mediu e apelat la {pingerDay} ziua și la {pingerNight} noaptea. Lipsește sau întârzie",
           "done": "Ambele sarcini rulează la timp. Acest mediu e apelat la {pingerDay} ziua și la {pingerNight} noaptea.",
           "how": [
-            "Pe cron-job.org (cont gratuit): Settings → Time zone = Europe/Bucharest. Apoi „Create cronjob”, de patru ori pentru producție: câte două pe fiecare adresă (una de zi, una de noapte).",
+            "Pe cron-job.org (cont gratuit): Settings → Time zone = {timeZone}. Apoi „Create cronjob”, de patru ori pentru producție: câte două pe fiecare adresă (una de zi, una de noapte).",
             "Adresele: {outboxUrl} și {maintenanceUrl}.",
             "La toate: Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
             "Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45 (crontab */15 7-22 * * *).",
@@ -4427,8 +4426,8 @@
           "unreachable": "Nu am putut verifica cheia: Zitadel nu a răspuns. Nu este neapărat o problemă a cheii — reîncarcă pagina peste câteva minute. Răspunsul",
           "done": "Cheia funcționează: verificată chiar acum cu o căutare reală, a găsit contul tău. „Adaugă” pe Echipa creează contul de autentificare și Zitadel trimite linkul pentru parolă.",
           "how": [
-            "Consola Zitadel → Users → Service Accounts → New: user name „brasovrunners-invites”, nume „{club} — invitații”, access token type Bearer. Create.",
-            "Organization → Managers → + New: service account-ul, rolul Org User Manager. Dialogul se numește „Add an Administrator”; dacă cere un Loginname, este „brasovrunners-invites”.",
+            "Consola Zitadel → Users → Service Accounts → New: user name „{slug}-invites”, nume „{club} — invitații”, access token type Bearer. Create.",
+            "Organization → Managers → + New: service account-ul, rolul Org User Manager. Dialogul se numește „Add an Administrator”; dacă cere un Loginname, este „{slug}-invites”.",
             "Nu „Role Assignments”.",
             "Pe service account → Personal Access Tokens → New.",
             "Consola nu oferă expirare aici și tokenul nu expiră — este un secret care se revocă de mână, pe același ecran, când nu mai e dorit.",
@@ -4438,7 +4437,7 @@
             "Apoi, pe Echipa, „Adaugă” creează contul și Zitadel trimite linkul pentru parolă; cine nu s-a autentificat încă are „Retrimite invitația” pe rând."
           ],
           "howBroken": [
-            "Consola Zitadel → Organization → Managers → + New: service account-ul cheii („brasovrunners-invites”), rolul Org User Manager. Dialogul se numește „Add an Administrator”.",
+            "Consola Zitadel → Organization → Managers → + New: service account-ul cheii („{slug}-invites”), rolul Org User Manager. Dialogul se numește „Add an Administrator”.",
             "Nu „Role Assignments”: acea pagină dă roluri într-un proiect și nu ajută la crearea utilizatorilor.",
             "Dacă Zitadel a răspuns 401 sau tokenul a fost revocat: pe service account → Personal Access Tokens → New, apoi noul token ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel și redeploy.",
             "Verificare: reîncarcă pagina; rândul se face verde când cheia găsește contul tău.",
@@ -4461,11 +4460,11 @@
           "how": [
             "Cont Cloudflare (gratuit) pe adresa clubului. Nu trebuie mutat domeniul acolo.",
             "În meniul din stânga → R2 Object Storage → activează R2 (aici cere cardul; nu se plătește nimic sub 10 GB).",
-            "Create bucket → numele „brasovrunners-media”, locația „European Union”.",
+            "Create bucket → numele „{bucket}”, locația „European Union”.",
             "Apoi, în setările bucket-ului, activează „Public access” prin subdomeniul r2.dev (sau un domeniu propriu) și copiază adresa publică — este R2_PUBLIC_BASE_URL.",
-            "R2 → „Manage R2 API Tokens” → Create API token → nume „brasovrunners-site”, permisiune „Object Read & Write”, doar pe acest bucket.",
+            "R2 → „Manage R2 API Tokens” → Create API token → nume „{slug}-site”, permisiune „Object Read & Write”, doar pe acest bucket.",
             "Copiază Access Key ID, Secret Access Key și endpoint-ul S3 (apar o singură dată).",
-            "În Vercel → proiectul de producție (și cel de QA) → Settings → Environment Variables: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET=brasovrunners-media, R2_PUBLIC_BASE_URL. Redeploy.",
+            "În Vercel → proiectul de producție (și cel de QA) → Settings → Environment Variables: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET={bucket}, R2_PUBLIC_BASE_URL. Redeploy.",
             "Rândul acesta devine verde și pagina albumului primește butonul de încărcare."
           ]
         },
@@ -4518,17 +4517,17 @@
         },
         "botCheck": {
           "title": "Verificarea anti-bot la înscriere (Cloudflare Turnstile)",
-          "todo": "Widgetul „brasovrunners-site” există și ambele chei sunt pe ambele proiecte Vercel; rândul devine verde la următoarea publicare. Turnstile oprește roboții pe care capcana formularului nu îi prinde.",
+          "todo": "Widgetul „{slug}-site” există și ambele chei sunt pe ambele proiecte Vercel; rândul devine verde la următoarea publicare. Turnstile oprește roboții pe care capcana formularului nu îi prinde.",
           "done": "Formularul de înscriere are verificarea anti-bot pornită.",
           "misconfigured": "Ambele chei sunt puse, dar Cloudflare spune că cheia secretă e greșită. Nimeni nu e refuzat din cauza asta, dar protecția anti-bot e slăbită până o corectezi mai jos.",
           "how": [
             "✓ Cloudflare (același cont ca pentru fotografii) → meniul din stânga → Turnstile → Add widget.",
-            "✓ Nume „brasovrunners-site”; hostname-uri: domeniul clubului și subdomeniul qa; Widget mode „Managed”. Salvează: primești un Site key și un Secret key.",
+            "✓ Nume „{slug}-site”; hostname-uri: domeniul clubului și subdomeniul qa; Widget mode „Managed”. Salvează: primești un Site key și un Secret key.",
             "✓ În Vercel → proiectul de producție (și QA, cu aceleași chei) → Settings → Environment Variables: TURNSTILE_SITE_KEY și TURNSTILE_SECRET_KEY. Redeploy.",
             "✓ Deschide formularul de înscriere: sub câmpuri apare căsuța „Verify you are human”; o înscriere de test trece. Rândul acesta devine verde."
           ],
           "howMisconfigured": [
-            "Cloudflare → Turnstile → widgetul „brasovrunners-site” → copiază din nou Secret key; dacă a putut fi expus, apasă Rotate Secret Key.",
+            "Cloudflare → Turnstile → widgetul „{slug}-site” → copiază din nou Secret key; dacă a putut fi expus, apasă Rotate Secret Key.",
             "Vercel → proiectul de producție → Settings → Environment Variables: înlocuiește TURNSTILE_SECRET_KEY, apoi Redeploy. La fel pe QA, dacă are cheia lui.",
             "Reîncarcă această pagină după deploy: rândul devine verde imediat ce Cloudflare acceptă din nou secretul. Nu e nevoie de o înscriere de test — rândul se verifică fără una."
           ]
@@ -4548,7 +4547,7 @@
           "todo": "Cu un token de citire și id-ul proiectului, /devs arată deploy-urile lunii, cele de azi din 100 pe zi și CPU-ul activ din cele 4 ore pe lună ale lui Hobby. Traficul se vede doar în Vercel → Usage.",
           "done": "/devs arată deploy-urile lunii și CPU-ul activ din cele 4 ore ale planului Hobby, cu prag de avertizare; «Costuri» citește aceeași cifră.",
           "how": [
-            "Vercel → avatar → Account Settings → Tokens → Create: nume „brasovrunners-devs”, scope contul tău, expirare 1 an. Copiază tokenul (se arată o singură dată).",
+            "Vercel → avatar → Account Settings → Tokens → Create: nume „{slug}-devs”, scope contul tău, expirare 1 an. Copiază tokenul (se arată o singură dată).",
             "Id-ul proiectului: Vercel → proiectul de producție → Settings → General → Project ID (începe cu prj_).",
             "În Vercel → proiectul de producție → Settings → Environment Variables: VERCEL_API_TOKEN și VERCEL_PROJECT_ID (pe QA la fel, cu id-ul proiectului QA). Redeploy.",
             "Rândul devine verde; /devs arată cifrele. Traficul rămâne în dashboard → Usage — linkul e tot pe /devs."
@@ -4685,12 +4684,12 @@
           ]
         },
         "feedbackSafetyGmailNotice": {
-          "title": "Nota de confidențialitate: Girl Zone prin Gmail",
-          "todo": "Ai ales Gmail-ul pentru Girl Zone, dar nota în vigoare promite că mesajele ei nu trec prin căsuța clubului: până aprobi o notă care spune altfel, mesajele pleacă prin Mailgun.",
-          "done": "Nota în vigoare spune că mesajele Girl Zone pot pleca prin Gmail-ul clubului și rămân în folderul lui Trimise, pe care îl văd cei care citesc căsuța.",
+          "title": "Nota de confidențialitate: {safetyName} prin Gmail",
+          "todo": "Ai ales Gmail-ul pentru {safetyName}, dar nota în vigoare promite că mesajele ei nu trec prin căsuța clubului: până aprobi o notă care spune altfel, mesajele pleacă prin Mailgun.",
+          "done": "Nota în vigoare spune că mesajele {safetyName} pot pleca prin Gmail-ul clubului și rămân în folderul lui Trimise, pe care îl văd cei care citesc căsuța.",
           "how": [
-            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre formulare din secțiunea 5 spune acum și când mesajul Girl Zone pleacă prin Gmail.",
-            "Deschide ciorna, citește, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, mesajele Girl Zone pleacă prin Gmail, fără altă setare."
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre formulare din secțiunea 5 spune acum și când mesajul {safetyName} pleacă prin Gmail.",
+            "Deschide ciorna, citește, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, mesajele {safetyName} pleacă prin Gmail, fără altă setare."
           ]
         },
         "relayQueueNotice": {
@@ -5033,9 +5032,9 @@
         "rsvpMemberNotice": {
           "title": "Nota de confidențialitate: semnul de membru la „Cine vine”",
           "todo": "Un eveniment primește răspunsuri „Vin!”, dar nota în vigoare nu descrie încă semnul de membru: formularul nu are bifa „Sunt membru al grupului …”, iar „Cine vine” nu arată semn și nu numără membrii.",
-          "done": "Nota în vigoare descrie semnul de membru: cine bifează „Sunt membru al grupului …” (sau răspunde din contul de membru) sub ea apare cu „BVR” lângă numele afișat, iar membrii sunt numărați.",
+          "done": "Nota în vigoare descrie semnul de membru: cine bifează „Sunt membru al grupului …” (sau răspunde din contul de membru) sub ea apare cu „{short}” lângă numele afișat, iar membrii sunt numărați.",
           "how": [
-            "Înainte de aprobare, un avocat citește din șablon, în secțiunea 4, propoziția despre semnul „BVR” lângă nume și despre numărul membrilor.",
+            "Înainte de aprobare, un avocat citește din șablon, în secțiunea 4, propoziția despre semnul „{short}” lângă nume și despre numărul membrilor.",
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Semnul apare doar la răspunsurile date sub nota nouă ori sub una mai nouă; cele de dinainte rămân fără semn.",
             "Deschide ciorna, citește, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi."
           ]
@@ -5058,7 +5057,7 @@
         "paysForPlans": "Se plătesc: {services}; restul serviciilor sunt pe planuri gratuite.",
         "freeButAtALimit": "Da, dar e-mailurile gratuite de azi s-au terminat, iar cele rămase pleacă după miezul nopții.",
         "notFree": "Atenție: e publicat un eveniment cu taxă, iar planurile gratuite nu țin cont că suntem ONG.",
-        "paysForUsageMore": "Launch e fără abonament și a fost ales de club pe 22 septembrie 2026.",
+        "paysForUsageMore": "Launch e fără abonament.",
         "freeButAtALimitMore": "Nu se pierde nimic. Dacă deschizi înscrierile acum, confirmările ajung mâine dimineață.",
         "notFreeMore": "Nu e neapărat o problemă: o donație e permisă, o taxă obligatorie nu, chiar dacă acoperă doar costurile.",
         "paidName": {
@@ -5145,7 +5144,7 @@
           "whenCrossed": "Pasul următor este reînnoirea .com pe mai mulți ani.",
           "closeYes": "Acest mediu răspunde pe domeniul clubului.",
           "closeNo": "Acest mediu răspunde pe adresa furnizorului — pentru QA sau un laptop, așa trebuie.",
-          "more": "Cumpărat pe 16 septembrie 2026 de la ROMARG, pentru un an; ROMARG facturează în lei, cu TVA. .ro nu se mai cumpără."
+          "more": "Se plătește registrar-ului domeniului, o dată pe an."
         },
         "mailgun": {
           "name": "Mailgun (trimiterea e-mailurilor)",
@@ -5192,9 +5191,9 @@
             "whenCrossed": "Factura rămâne mică doar cât baza de date adoarme după cinci minute fără cereri.",
             "close": "Luna aceasta, la ritmul de până acum ({cu} ore-CU, circa {perDay} pe zi): circa {usd} $ pe lună, estimare.",
             "closeUnknown": "Ritmul lunii apare când NEON_API_KEY e setat; până atunci, cifra e în consola Neon → Billing.",
-            "bumpBack": "Drumul înapoi e revizuirea din decembrie 2026: o alegere în „Planul Neon”, fără deploy.",
+            "bumpBack": "Drumul înapoi e o alegere în „Planul Neon”, fără deploy.",
             "closeMore": "La {rate} $/oră-CU și {storageRate} $/GB-lună; factura o face Neon.",
-            "more": "Monitoarele trezesc baza la 15 minute ziua și o dată pe oră noaptea; mai des ar ține-o trează și plătită. În decembrie clubul poate reveni la Free."
+            "more": "Monitoarele trezesc baza la 15 minute ziua și o dată pe oră noaptea; mai des ar ține-o trează și plătită."
           },
           "monthly": "Orele de calcul (CU) se văd pe /devs. Cost lunar dacă am ieși din gratuit, la ritmul acestei luni ({cu} ore-CU până acum): circa {usd} $/lună pe Launch ({rate} $/oră-CU, {storageRate} $/GB, fără abonament).",
           "monthlyUnknown": "Orele de calcul (CU) se văd pe /devs. Cost lunar pe Launch: {rate} $/oră-CU + {storageRate} $/GB, fără abonament; ritmul exact apare când NEON_API_KEY e setat.",
@@ -5202,7 +5201,7 @@
         },
         "zitadel": {
           "name": "Zitadel (contul echipei și al membrilor)",
-          "freeGives": "Gratuit: până la 100 de utilizatori activi pe zi, oricâți utilizatori stocați — membrii clubului încap —, organizații nelimitate, 3 furnizori de identitate. Verificat pe 27.09.2026.",
+          "freeGives": "Gratuit: până la 100 de utilizatori activi pe zi, oricâți utilizatori stocați — membrii clubului încap —, organizații nelimitate, 3 furnizori de identitate.",
           "ceiling": "Singura limită care contează: un singur administrator, fără de care nimeni nu mai poate invita pe nimeni.",
           "whenCrossed": "Nu se traversează: se notează cine este administratorul și unde sunt datele de acces.",
           "closeYes": "—",
@@ -6047,11 +6046,11 @@
       "deleteBody": "„{text}” dispare de pe listă pentru toată echipa și nu se poate anula. Jurnalul păstrează cine l-a șters și ce scria. Dacă e doar gata, bifează-l în loc să-l ștergi.",
       "defaults": {
         "teamPage": {
-          "text": "Scrie pagina Echipa: Pagini → Echipa → introducerea → «Salvează»; pentru fiecare persoană «Adaugă o persoană» → «Adaugă cardul» → «Pune pe site» → «Publică pagina».",
+          "text": "Scrie pagina Echipa: Pagini → Echipa → introducerea și câte un card pentru fiecare persoană → «Publică pagina».",
           "link": "Deschide pagina Echipa"
         },
         "faqPage": {
-          "text": "Scrie pagina Întrebări frecvente: Pagini → Întrebări frecvente → întrebările și răspunsurile, în română și engleză, cu «Pe site» bifat la fiecare → «Salvează pagina» → «Publică pagina».",
+          "text": "Scrie pagina Întrebări frecvente: Pagini → Întrebări frecvente → întrebările și răspunsurile, în ambele limbi → «Publică pagina».",
           "link": "Deschide pagina Întrebări frecvente"
         }
       }
@@ -6454,11 +6453,11 @@
           },
           "blue": {
             "name": "Albastru",
-            "help": "Albastrul clubului, cel din Tema v1."
+            "help": "Culoarea clubului, cea din Tema v1."
           },
           "orange": {
             "name": "Portocaliu",
-            "help": "Portocaliul clubului. Ziua e mai închis, ca textul să se citească pe el."
+            "help": "A doua culoare a clubului. Ziua e mai închisă, ca textul să se citească pe ea."
           }
         },
         "custom": {
@@ -6493,7 +6492,7 @@
       "saved": "Mărimea textului a fost salvată.",
       "readOnly": "Mărimea o alege Administratorul; vezi aici alegerea în vigoare.",
       "scope": "Se aplică în varianta deschisă și în cea întunecată. Backoffice-ul rămâne mereu la mărimea lui.",
-      "sample": "Alergare de grup în Pădurea Noua, sâmbătă la 9:00",
+      "sample": "Alergare de grup în Parcul Central, sâmbătă la 9:00",
       "sizes": {
         "small": {
           "name": "Mic",
@@ -6532,15 +6531,15 @@
         },
         "faintBlue": {
           "name": "Albastru abia vizibil",
-          "help": "Albastrul clubului, cam 4 % peste alb."
+          "help": "Culoarea clubului, cam 4 % peste alb."
         },
         "lightBlue": {
           "name": "Albastru deschis",
-          "help": "Albastrul clubului, cam 8 % peste alb."
+          "help": "Culoarea clubului, cam 8 % peste alb."
         },
         "blueGrey": {
           "name": "Gri albăstrui",
-          "help": "Un gri rece, înspre albastrul clubului."
+          "help": "Un gri rece, înspre culoarea clubului."
         },
         "custom": {
           "name": "Personalizat",
@@ -7575,7 +7574,7 @@
           "verificationRetries": "Fiecare email de confirmare se socotește, și «Retrimite» sau o retrimitere din backoffice. 0 = nu se retrimite singur. Termenul nu se mută.",
           "outageGraceMaxHours": "Cât numele nu se găsește, termenele care curg se mută la fiecare rulare; după o tăcere a verificărilor, ulterior. Cel mult atâtea ore; 0 = fără mutare, întreruperile se înregistrează totuși.",
           "rsvpAskDaysBefore": "0 = nu se trimite deloc. Cine e întrebat alegi în „Emailuri”; fiecare primește un singur email, cu „Vin” și „Nu vin”. Un eveniment poate renunța la ea, în editor, la „Vin!”.",
-          "rsvpAskHour": "Ora clubului (Brașov) de la care pleacă, în ziua aleasă mai sus; emailul pleacă la prima trecere a jobului după ea. Miezul nopții e 0."
+          "rsvpAskHour": "Ora clubului de la care pleacă, în ziua aleasă mai sus; emailul pleacă la prima trecere a jobului după ea. Miezul nopții e 0."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablon, care le citește de aici.",
         "updatedAt": "Setat {when}.",
@@ -7764,7 +7763,7 @@
           "howItWent": "Cum a fost",
           "suggestion": "O sugestie",
           "complaint": "O reclamație",
-          "safety": "Girl Zone (confidențial)"
+          "safety": "{safetyName} (confidențial)"
         },
         "help": {
           "howItWent": "Evenimentul, data, o notă de la 1 la 5, ce s-a întâmplat și de ce nu mai vine cineva. Și din emailul de mulțumire.",
@@ -7787,16 +7786,16 @@
           "gmailMissing": "Gmail-ul nu e pregătit aici: lipsesc contul clubului și parola lui de aplicație.",
           "mailgunMissing": "Mailgun nu trimite aici: emailurile nu sunt pornite pe acest mediu.",
           "steps": "Vezi pașii",
-          "gmailNotice": "Nota de confidențialitate în vigoare promite că mesajele Girl Zone nu trec prin căsuța clubului: aprobă mai întâi o notă nouă, din șablon, care spune că pot pleca prin Gmail.",
+          "gmailNotice": "Nota de confidențialitate în vigoare promite că mesajele {safetyName} nu trec prin căsuța clubului: aprobă mai întâi o notă nouă, din șablon, care spune că pot pleca prin Gmail.",
           "noticeSteps": "Texte legale",
-          "safetyNote": "Prin Gmail, mesajul Girl Zone rămâne în căsuța clubului și îl văd cei care o citesc; prin Mailgun ajunge doar la persoana de mai sus.",
+          "safetyNote": "Prin Gmail, mesajul {safetyName} rămâne în căsuța clubului și îl văd cei care o citesc; prin Mailgun ajunge doar la persoana de mai sus.",
           "stateGmail": "Gmail",
           "stateMailgun": "Mailgun",
           "why": "Mailgun pleacă de pe domeniul clubului, cu adresa persoanei ca Reply-To, fără nicio copie în folderul „Trimise” al clubului; Gmail rămâne drum de rezervă acolo unde e permis.",
           "gmailCopy": "Prin Gmail rămâne o copie în „Trimise”.",
           "fallback": "Dacă Mailgun pică, trimite prin Gmail-ul clubului",
-          "fallbackHelp": "Doar pentru mesajele Girl Zone. Fără bifă, un mesaj care nu poate pleca prin Mailgun așteaptă până merge. Cu bifă, pleacă din căsuța clubului, iar cei care o citesc îl văd în folderul „Trimise”.",
-          "fallbackNotice": "Bifa nu se poate schimba până când nota de confidențialitate în vigoare spune că mesajele Girl Zone pot pleca prin Gmail."
+          "fallbackHelp": "Doar pentru mesajele {safetyName}. Fără bifă, un mesaj care nu poate pleca prin Mailgun așteaptă până merge. Cu bifă, pleacă din căsuța clubului, iar cei care o citesc îl văd în folderul „Trimise”.",
+          "fallbackNotice": "Bifa nu se poate schimba până când nota de confidențialitate în vigoare spune că mesajele {safetyName} pot pleca prin Gmail."
         },
         "safetyName": "Prenumele afișat",
         "safetyNameHelp": "Formularul îl scrie în propoziția despre cine citește mesajul. Cel mult 40 de caractere.",
@@ -7936,7 +7935,7 @@
         "sideBySideNote": "Același cod de două ori; doar caseta din dreapta poartă Tema v2.",
         "today": "Tema v1",
         "new": "Tema v2",
-        "heading": "Alergăm împreună prin Brașov",
+        "heading": "Alergăm împreună prin oraș",
         "body": "Un paragraf al site-ului, la mărimea textului, cu",
         "link": "un link",
         "primary": "Vezi alergările",
@@ -7993,7 +7992,7 @@
       },
       "type": {
         "intro": "Variantele temei, așa cum le definește fișierul temei, și fețele pe care le încarcă aspectul paginii.",
-        "sample": "Alergăm împreună prin Brașov: pe asfalt, pe munte și prin Șchei.",
+        "sample": "Alergăm împreună prin oraș: pe asfalt, pe munte și prin parc.",
         "variants": "Variantele temei",
         "family": "familia",
         "weight": "grosimea",
@@ -8142,108 +8141,6 @@
           "primitives": "Un buton sau o pastilă e a casei (GlyphButton, ButtonLink, GlyphChip, StatusChip), nu un Button, IconButton sau Chip MUI pe care l-a scris cineva din nou.",
           "serverFirst": "Componentele de server mai întâi; o insulă de client își câștigă locul.",
           "iconFamily": "O singură familie Material plină; o glifă pe fiecare buton și pliu."
-        }
-      },
-      "plan": {
-        "intro1": "Textul complet al planului, în engleză, e ținut de dispecer în depozit:",
-        "intro2": "Comparația dintre Tema v1 și Tema v2 e acum în capul paginii, la «Tema v2».",
-        "decisionsTitle": "Deciziile clubului",
-        "decisionsNote": "Douăsprezece alegeri; fiecare are implicitul pe care îl construiește dispecerul dacă nimeni nu se opune.",
-        "phasesTitle": "Fazele",
-        "phasesNote": "Fiecare fază pornește când poarta celei dinainte e trecută; fazele 1 și 2 pot merge în paralel.",
-        "number": "Nr.",
-        "decision": "Decizia",
-        "default": "Implicit",
-        "phase": "Faza",
-        "gate": "Poarta",
-        "status": "Stare",
-        "statuses": {
-          "default": "implicit",
-          "decided": "decis",
-          "open": "deschis",
-          "planned": "planificat",
-          "building": "în lucru",
-          "released": "lansat"
-        },
-        "decisions": {
-          "1": {
-            "title": "Culoarea de accent",
-            "default": "Un roz aprins lângă albastrul siglei, sau albastrul, portocaliul ori o culoare aleasă de club în «Tema v2»; emailurile, PDF-urile, numerele și cardurile de distribuire rămân albastre."
-          },
-          "2": {
-            "title": "Fontul titlurilor",
-            "default": "Inter 800 pentru titluri, găzduit de noi, cu ș ț ă â î; textul rămâne Roboto."
-          },
-          "3": {
-            "title": "O pagină principală adevărată",
-            "default": "O pagină principală adevărată la `/ro` și `/en`, la care duce sigla, niciodată o intrare de meniu; se pornește și se oprește în «Aspect» → «Pagina principală»."
-          },
-          "4": {
-            "title": "Cele patru cuvinte din meniu",
-            "default": "«Alergări», «Calendar», «Comunitatea» — o pagină a clubului care leagă echipa, galeria, întrebările și zona membrilor — și «Despre noi»."
-          },
-          "5": {
-            "title": "Unde duce «Vino cu noi»",
-            "default": "La pagina următoarei alergări săptămânale; «Cum funcționează» deschide o pagină a clubului."
-          },
-          "6": {
-            "title": "Fotografiile",
-            "default": "Doar fotografii adevărate ale clubului, din galerie; oamenii dintr-o fotografie de pe prima pagină și-au dat acordul."
-          },
-          "7": {
-            "title": "Blocul Instagram",
-            "default": "O bandă statică de șase poze din galerie, cu un link; fără flux în direct."
-          },
-          "8": {
-            "title": "Banda cu cifre",
-            "default": "Scrise în «Aspect» → «Pagina principală»: data înființării și alergătorii activi; restul calculat din evenimente."
-          },
-          "9": {
-            "title": "Ce înseamnă «Evenimente speciale»",
-            "default": "Tot ce nu e o serie săptămânală; pastila «Ediție specială» își păstrează sensul."
-          },
-          "10": {
-            "title": "Săgeata rotundă de pe carduri",
-            "default": "Niciuna: prima pagină arată chiar cardurile din «Alergări», cu ușa lor cu text, «Descrierea completă a evenimentului»."
-          },
-          "11": {
-            "title": "Iconițele",
-            "default": "Rămâne familia Material plină; aerul mai ușor vine din culoare, grosime și spațiere."
-          },
-          "12": {
-            "title": "Cum se lansează",
-            "default": "În spatele unei singure setări, «Tema v2»: pornită pe QA, oprită în producție până aprobă clubul; Tema v1 e ștearsă la o lansare după comutare."
-          }
-        },
-        "phases": {
-          "0": {
-            "title": "Deciziile și materialele — fără cod",
-            "gate": "Răspunsurile în scris, fotografiile urcate."
-          },
-          "1": {
-            "title": "Tokenii și învelișul public",
-            "gate": "Testele de brand și de fonturi verzi, antetul pe un rând la 320 px, da-ul clubului pe QA."
-          },
-          "2": {
-            "title": "Pozele de copertă pe evenimente și felul evenimentului",
-            "gate": "Testele listei verzi; fiecare alergare săptămânală și cursa au copertă."
-          },
-          "3": {
-            "title": "Pagina principală",
-            "gate": "LCP sub 2,5 s pe un telefon de 320 px, testele rădăcinii rescrise, da-ul clubului pe QA."
-          },
-          "4": {
-            "title": "Calendarul",
-            "gate": "Prima săptămână deasupra pliului la 320 px; filtrele merg fără scripturi."
-          },
-          "5": {
-            "title": "Lista și pagina evenimentului",
-            "gate": "Testele listei și ale evenimentului verzi."
-          },
-          "6": {
-            "title": "Comutarea și curățenia",
-            "gate": "O săptămână în producție fără să fie folosită calea înapoi."
-          }
         }
       },
       "card": {
@@ -10909,17 +10806,17 @@
         "empty": "Evenimentul nu are încă roluri. Adaugă-le în cardul „Voluntari” al evenimentului.",
         "choiceOf": "Culoarea rolului {role}",
         "typedOf": "Culoarea scrisă pentru rolul {role}",
-        "theme": "Portocaliul clubului",
+        "theme": "A doua culoare a clubului",
         "typed": "Altă culoare",
         "choice": "Culoarea benzii pe ecuson",
-        "themeOption": "Implicit: portocaliul clubului",
+        "themeOption": "Implicit: a doua culoare a clubului",
         "typedLabel": "Culoarea scrisă",
         "typedHelp": "Pentru banda ecusonului: diez și șase cifre, ca #1b8a3a. Se păstrează doar dacă textul alb sau negru se citește pe ea, la contrast de cel puțin 4,5 la 1. Culoarea nouă scrisă aici se păstrează.",
         "perRoleOnly": "Culoarea se folosește doar când ecusonul e pe roluri. Ecusonul pentru toți are culoarea lui, în „Cum arată ecusonul”.",
         "state": "Banda pe ecuson: {colour}, contrast {ratio} la 1",
         "save": "Salvează culorile",
         "saving": "Se salvează…",
-        "unreadable": "{colour}, care nu se citește: se tipărește portocaliul clubului"
+        "unreadable": "{colour}, care nu se citește: se tipărește a doua culoare a clubului"
       },
       "print": {
         "title": "Tipărire",
@@ -11707,8 +11604,8 @@
       "deadlinePassed": "Termenul, {deadline}, a trecut, dar locul este încă al tău: semnează acum și înscrierea e completă.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
       "idDocument": "Act de identitate (seria și numărul)",
-      "idDocumentHelp": "Cartea de identitate (de ex. „BV 123456”) sau pașaportul; kitul se ridică pe baza lui. Se șterge la șapte zile după eveniment, e mascată în copia clubului; nu păstrăm o copie.",
-      "idDocumentPlaceholder": "BV 123456",
+      "idDocumentHelp": "Cartea de identitate (de ex. „{idExample}”) sau pașaportul; kitul se ridică pe baza lui. Se șterge la șapte zile după eveniment, e mascată în copia clubului; nu păstrăm o copie.",
+      "idDocumentPlaceholder": "{idExample}",
       "nextTitle": "Ce urmează",
       "nextConfirmed": [
         "Primești acum emailul de confirmare, cu codul QR și codul tău de acces — păstrează-l pentru ziua cursei.",
@@ -11738,13 +11635,13 @@
       "nameRefusedTitle": "Semnătura nu se potrivește cu numele de la înscriere",
       "nameRefusedNothingRecorded": "Nu s-a înregistrat nimic, iar linkul tău este în regulă: corectează numele și semnează din nou.",
       "documentRefusedTitle": "Lipsește un act de identitate sau nu este scris corect",
-      "documentRefusedNothingRecorded": "Nu s-a înregistrat nimic, iar linkul tău este în regulă: trece seria și numărul actului, de exemplu „BV 123456”, și semnează din nou.",
+      "documentRefusedNothingRecorded": "Nu s-a înregistrat nimic, iar linkul tău este în regulă: trece seria și numărul actului, de exemplu „{idExample}”, și semnează din nou.",
       "twoSignersIntro": "Declarația unui participant minor o semnează două persoane: minorul și părintele sau tutorele legal. Fiecare își trece actul de identitate și își scrie numele, mai jos.",
       "minorSection": "Minorul: {name}",
       "guardianSection": "Părintele sau tutorele legal: {name}",
       "minorIdDocumentType": "Ce act prezintă minorul",
       "minorIdDocument": "Actul de identitate al minorului (seria și numărul)",
-      "minorIdDocumentHelp": "Cartea de identitate a minorului — de exemplu „BV 123456” — sau pașaportul. Intră în declarație, lângă cel al părintelui sau tutorelui.",
+      "minorIdDocumentHelp": "Cartea de identitate a minorului — de exemplu „{idExample}” — sau pașaportul. Intră în declarație, lângă cel al părintelui sau tutorelui.",
       "guardianIdDocumentType": "Ce act prezintă părintele sau tutorele",
       "guardianIdDocument": "Actul de identitate al părintelui sau tutorelui (seria și numărul)",
       "minorTypedName": "Semnătura minorului",
@@ -12527,7 +12424,7 @@
         "intro": "Spune-ne ce s-a întâmplat; alergarea și data sunt opționale."
       },
       "safety": {
-        "label": "Girl Zone",
+        "label": "{safetyName}",
         "hint": "Știm că alergatul, ca femeie, vine cu provocări în plus. Dacă ceva te-a făcut să nu te simți în siguranță la noi, spune-ne — confidențial."
       }
     },
@@ -12636,6 +12533,19 @@
     "eventPage": {
       "lead": "Ai fost? Spune-ne cum a fost — anonim, durează un minut.",
       "button": "Spune-ne cum a fost"
+    },
+    "relay": {
+      "subject": {
+        "safety": "Mesaj confidențial de pe site",
+        "howItWent": "Cum a fost",
+        "suggestion": "O sugestie de pe site",
+        "complaint": "O reclamație de pe site"
+      },
+      "footer": {
+        "safety": "— Trimis prin formularul confidențial „{safetyName}” al site-ului. Site-ul nu a păstrat nimic din el.",
+        "toPerson": "— Trimis prin formularele „Spune-ne ceva” ale site-ului; cine a scris a ales să afli doar tu. Site-ul nu a păstrat nimic din el.",
+        "club": "— Trimis prin formularele „Spune-ne ceva” ale site-ului. Site-ul nu a păstrat nimic din el."
+      }
     }
   },
   "Budget": {
@@ -13313,7 +13223,7 @@
     },
     "topicHints": {
       "ALL": "Toate temele de mai jos și cele pe care le vom adăuga.",
-      "BIG_EVENTS": "Marile zile ale clubului, de exemplu crosul aniversar: un anunț când apare în calendar, apoi înscrierile și ce se schimbă.",
+      "BIG_EVENTS": "Marile zile ale clubului: un anunț când apare una în calendar, apoi înscrierile și ce se schimbă.",
       "GEAR_TESTING": "Când un magazin sau un producător aduce încălțăminte și echipament de încercat.",
       "SPECIAL_EVENTS": "Ediții speciale, alergări tematice, evenimente făcute împreună cu alți organizatori și evenimentele altor organizatori.",
       "WEEKLY_RUNS": "Un anunț când pornește o serie nouă de alergări săptămânale — o dată pe serie, nu la fiecare alergare.",
@@ -13385,12 +13295,12 @@
   },
   "Home": {
     "meta": {
-      "title": "{club} — alergări de grup în Brașov",
-      "description": "Alergările de grup ale clubului, turele pe munte și evenimentele speciale, cu următoarea alergare și vremea la start. Întotdeauna gratuite."
+      "title": "{club} — alergări de grup",
+      "description": "Alergările de grup ale clubului și evenimentele speciale, cu următoarea alergare și vremea la start."
     },
     "hero": {
-      "headline": "Alergăm împreună prin Brașov",
-      "subline": "Alergări de grup, ture pe munte și evenimente speciale organizate de club — întotdeauna gratuite. Vino la prima alergare, te așteptăm.",
+      "headline": "Alergăm împreună",
+      "subline": "Alergări de grup și evenimente speciale organizate de club. Vino la prima alergare, te așteptăm.",
       "join": "Vino cu noi",
       "calendar": "Vezi calendarul",
       "how": "Cum funcționează"
@@ -13404,7 +13314,7 @@
     },
     "special": {
       "title": "Evenimente speciale",
-      "intro": "Curse, ture pe munte și tot ce nu se repetă în fiecare săptămână."
+      "intro": "Curse și tot ce nu se repetă în fiecare săptămână."
     },
     "more": "Vezi toate alergările"
   },
@@ -13630,8 +13540,8 @@
           "body": "Alergi alături de alții, nu singur."
         },
         "2": {
-          "title": "Munții de lângă oraș",
-          "body": "Brașovul are trasee la câțiva pași de centru."
+          "title": "Trasee aproape",
+          "body": "Traseele noastre pornesc aproape de centru."
         },
         "3": {
           "title": "Fără taxă",

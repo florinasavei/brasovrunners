@@ -22,7 +22,7 @@ import { getDb } from "@/db/client";
 import { CLUB_TIME_ZONE, formatDateInWords, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { CLUB_LOCALITY } from "@/modules/events/domain/place";
+import { CLUB_LOCALITY, ID_DOCUMENT_EXAMPLE } from "@/modules/events/domain/place";
 import { findEventNotificationDetails } from "@/modules/events/repository";
 import { findEventDeclaration } from "@/modules/legal-documents/repository";
 import { DEADLINE_RULES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
@@ -723,7 +723,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           {documentRefused && (
             <Alert severity="error" id={DECLARATION_ERROR_SUMMARY_ID} role="alert" tabIndex={-1} sx={{ mb: 3 }}>
               <AlertTitle>{t("declare.documentRefusedTitle")}</AlertTitle>
-              <Box>{t("declare.documentRefusedNothingRecorded")}</Box>
+              <Box>{t("declare.documentRefusedNothingRecorded", { idExample: ID_DOCUMENT_EXAMPLE })}</Box>
               {refusedDocuments.map((box) => (
                 <Box key={box} sx={{ mt: 0.5 }}>
                   <MuiLink href={`#${box}`}>{documentLabel(box)}</MuiLink>
@@ -808,8 +808,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                       typeLabel={t("declare.idDocumentType")}
                       typeHelp={t("declare.idDocumentTypeHelp")}
                       label={documentLabel("idDocument")}
-                      help={t("declare.idDocumentHelp")}
-                      placeholder={t("declare.idDocumentPlaceholder")}
+                      help={t("declare.idDocumentHelp", { idExample: ID_DOCUMENT_EXAMPLE })}
+                      placeholder={t("declare.idDocumentPlaceholder", { idExample: ID_DOCUMENT_EXAMPLE })}
                       kinds={documentKinds}
                       defaultKind={draftKind(draft?.idDocumentType)}
                       defaultValue={draft?.idDocument ?? ""}
@@ -851,8 +851,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                       typeLabel={t("declare.minorIdDocumentType")}
                       typeHelp={t("declare.idDocumentTypeHelp")}
                       label={t("declare.minorIdDocument")}
-                      help={t("declare.minorIdDocumentHelp")}
-                      placeholder={t("declare.idDocumentPlaceholder")}
+                      help={t("declare.minorIdDocumentHelp", { idExample: ID_DOCUMENT_EXAMPLE })}
+                      placeholder={t("declare.idDocumentPlaceholder", { idExample: ID_DOCUMENT_EXAMPLE })}
                       kinds={documentKinds}
                       defaultKind={draftKind(draft?.minorIdDocumentType)}
                       defaultValue={draft?.minorIdDocument ?? ""}
@@ -881,8 +881,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                       typeLabel={t("declare.guardianIdDocumentType")}
                       typeHelp={t("declare.idDocumentTypeHelp")}
                       label={t("declare.guardianIdDocument")}
-                      help={t("declare.idDocumentHelp")}
-                      placeholder={t("declare.idDocumentPlaceholder")}
+                      help={t("declare.idDocumentHelp", { idExample: ID_DOCUMENT_EXAMPLE })}
+                      placeholder={t("declare.idDocumentPlaceholder", { idExample: ID_DOCUMENT_EXAMPLE })}
                       kinds={documentKinds}
                       defaultKind={draftKind(draft?.idDocumentType)}
                       defaultValue={draft?.idDocument ?? ""}

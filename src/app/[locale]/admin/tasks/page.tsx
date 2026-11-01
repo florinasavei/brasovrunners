@@ -117,7 +117,7 @@ import Panel from "@/shared/ui/Panel";
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 import { FACTS_SX, LINE_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import StatusChip from "@/shared/ui/StatusChip";
-import { CLUB_NAME } from "@/theme/brand";
+import { CLUB_NAME, CLUB_SHORT_NAME, CLUB_SLUG, SAFETY_PROGRAMME } from "@/theme/brand";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -435,11 +435,19 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
    * the club's apex domain (the mail subdomain hangs off it, whichever host QA answers on),
    * the two job endpoints, and the webhook. Never a secret: `JOB_SECRET` is named, not shown.
    * The club's name from its one constant, and the sender's from the setting the From line
-   * reads (§369): a step that names either says what this deployment actually uses.
+   * reads (§369): a step that names either says what this deployment actually uses. And the club's
+   * other words a step names (§NNN): its short mark, its slug (the names of the accounts and keys to
+   * create), its zone, its safety form's name, and the media bucket — `R2_BUCKET` once it is set, else
+   * the name the step asks to create.
    */
   const apex = clubDomainBound ? hostname.split(".").slice(-2).join(".") : hostname;
   const howValues: Record<string, string> = {
     club: CLUB_NAME,
+    short: CLUB_SHORT_NAME,
+    slug: CLUB_SLUG,
+    timeZone: CLUB_TIME_ZONE,
+    safetyName: SAFETY_PROGRAMME[locale === "en" ? "en" : "ro"],
+    bucket: env.R2_BUCKET ?? `${CLUB_SLUG}-media`,
     senderName: env.EMAIL_FROM_NAME,
     apex,
     mailDomain: `mail.${apex}`,
@@ -697,7 +705,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     const words = (
       <Box sx={{ gridArea: "words", minWidth: 0 }}>
         <Typography component="h4" variant="body2" sx={{ fontWeight: 600 }}>
-          {t(`items.${task.id}.title`)}
+          {t(`items.${task.id}.title`, howValues)}
         </Typography>
         {/* The row's own sentence for its state when `todo`/`done` cannot say it — a key that is set and does not work is neither (§288). */}
         <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", wordBreak: "break-word" }}>

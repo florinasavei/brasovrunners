@@ -6,6 +6,7 @@ import { CHOICE_CARD_SX, CHOICE_INPUT_SX, paletteWash } from "@/shared/ui/choice
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import { branchLabelLang, FEEDBACK_BRANCH_GLYPH, FEEDBACK_BRANCH_TINT } from "./branch-glyph";
+import { SAFETY_PROGRAMME } from "@/theme/brand";
 
 /**
  * A branch's glyph on its tinted tile — 40 pixels, a rounded square, a 24-pixel picture — the same on
@@ -70,7 +71,7 @@ export default async function BranchChoice({ branches, chosen }: { branches: rea
               <BranchGlyphTile branch={branch} />
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography id={`${idBase}-title`} component="span" variant="body1" lang={branchLabelLang(branch, locale)} sx={{ display: "block", fontWeight: 600 }}>
-                  {t(`branches.${branch}.label`)}
+                  {t(`branches.${branch}.label`, { safetyName: SAFETY_PROGRAMME[locale === "en" ? "en" : "ro"] })}
                 </Typography>
                 <Typography id={`${idBase}-hint`} component="span" variant="body2" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
                   {t(`branches.${branch}.hint`)}

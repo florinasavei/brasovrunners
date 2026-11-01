@@ -1,6 +1,5 @@
 import { createTranslator } from "next-intl";
-import en from "../../../../messages/en.json";
-import ro from "../../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
 import type { events } from "@/db/schema/events";
 import { formatDay, formatTime, intlLocale } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
@@ -9,6 +8,10 @@ import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/
 import { whenTimes } from "@/modules/events/domain/when-times";
 import { orderRoutePills, routePillParts } from "@/modules/events/ui/route-pills";
 import { COLOR } from "@/theme/brand";
+
+// The platform's words with the club's own laid over them (§NNN, `i18n/catalogue.ts`).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * The event's facts in an email, as one block (§392; the owner, 2026-09-25: "la mailul de

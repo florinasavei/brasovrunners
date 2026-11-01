@@ -1,0 +1,261 @@
+{
+  "$club": "brasovrunners",
+  "Home": {
+    "meta": {
+      "title": "{club} — group runs in Brașov",
+      "description": "The club's group runs, mountain outings and special events, with the next run and the weather at the start. Always free."
+    },
+    "hero": {
+      "headline": "We run together in Brașov",
+      "subline": "Group runs, mountain outings and special events organised by the club — always free. Come to your first run; we'll be waiting."
+    },
+    "special": {
+      "intro": "Races, mountain outings and everything that does not repeat every week."
+    }
+  },
+  "HomeSections": {
+    "why": {
+      "items": {
+        "2": {
+          "title": "Mountains by the city",
+          "body": "Brașov has trails a few steps from the centre."
+        }
+      }
+    }
+  },
+  "Events": {
+    "intro": "Runs, trail outings and training sessions organised by the club — always free.",
+    "calendar": {
+      "look": {
+        "mottoRest": "together in Brașov."
+      }
+    }
+  },
+  "Event": {
+    "safetyRules": {
+      "wildlife": "Animals and weather: follow the organiser's general safety instructions."
+    }
+  },
+  "Newsletter": {
+    "topicHints": {
+      "BIG_EVENTS": "The club's big days, such as the anniversary cross: an announcement when one appears on the calendar, then registration and what changes."
+    }
+  },
+  "Admin": {
+    "editor": {
+      "coordinatesHelp": "Optional: latitude, longitude, e.g. 45.6427, 25.5887 — right-click the point in Google Maps. Only for the weather, when the map link does not carry them.",
+      "locationShortHelp": "A word or two, for the month's poster: “Park”, “Poiana”. In both languages or neither.",
+      "difficultyScale": {
+        "MEDIUM1": "medium {level}: the run up Tâmpa"
+      }
+    },
+    "fontSize": {
+      "sample": "Group run in Noua forest, Saturday at 9:00"
+    },
+    "design": {
+      "look": {
+        "heading": "We run together through Brașov"
+      },
+      "type": {
+        "sample": "We run together through Brașov: on asphalt, on the mountain and through Șchei."
+      },
+      "plan": {
+        "intro1": "The plan's full text, in English, is kept by the dispatcher in the repository:",
+        "intro2": "The side-by-side of Theme v1 and Theme v2 is now at the top of the page, under «Theme v2».",
+        "decisionsTitle": "The club's decisions",
+        "decisionsNote": "Twelve choices; each has the default the dispatcher builds if nobody objects.",
+        "phasesTitle": "The phases",
+        "phasesNote": "A phase starts when the gate under the previous one is passed; phases 1 and 2 can run side by side.",
+        "number": "No.",
+        "decision": "Decision",
+        "default": "Default",
+        "phase": "Phase",
+        "gate": "Gate",
+        "status": "Status",
+        "statuses": {
+          "default": "default",
+          "decided": "decided",
+          "open": "open",
+          "planned": "planned",
+          "building": "building",
+          "released": "released"
+        },
+        "decisions": {
+          "1": {
+            "title": "The accent colour",
+            "default": "A hot pink beside the logo blue, or the blue, the orange or a colour the club chooses under «Theme v2»; emails, PDFs, race numbers and share cards stay blue."
+          },
+          "2": {
+            "title": "The heading face",
+            "default": "Inter 800 for headings, self-hosted with ș ț ă â î; the body stays Roboto."
+          },
+          "3": {
+            "title": "A real home page",
+            "default": "A real home page at `/ro` and `/en`, reached from the logo — never a menu entry — switchable on and off in «Aspect» → «Pagina principală»."
+          },
+          "4": {
+            "title": "The four menu words",
+            "default": "«Alergări», «Calendar», «Comunitatea» — a club page linking the team, the gallery, the FAQ and the members' zone — and «Despre noi»."
+          },
+          "5": {
+            "title": "Where «Vino cu noi» goes",
+            "default": "To the next weekly run's page; «Cum funcționează» opens a club page."
+          },
+          "6": {
+            "title": "Photographs",
+            "default": "Real club photos from the gallery only; people in a home-page photo have agreed."
+          },
+          "7": {
+            "title": "The Instagram block",
+            "default": "A static strip of six gallery pictures with a link; no live feed."
+          },
+          "8": {
+            "title": "The numbers band",
+            "default": "Typed under «Aspect» → «Pagina principală»: the founding date and the active runners; the rest computed from the events."
+          },
+          "9": {
+            "title": "What «Evenimente speciale» means",
+            "default": "Everything that is not a weekly series; the chip «Ediție specială» keeps its meaning."
+          },
+          "10": {
+            "title": "The round arrow on cards",
+            "default": "None: the home page shows the very cards of «Alergări», with their text door, «Descrierea completă a evenimentului»."
+          },
+          "11": {
+            "title": "Icons",
+            "default": "The filled Material family stays; the lighter look comes from colour, weight and spacing."
+          },
+          "12": {
+            "title": "How it ships",
+            "default": "Behind one setting, «Theme v2»: on for QA, off on production until the club approves; Theme v1 deleted one release after the flip."
+          }
+        },
+        "phases": {
+          "0": {
+            "title": "Decisions and assets — no code",
+            "gate": "The answers in writing, the photos uploaded."
+          },
+          "1": {
+            "title": "Tokens and the public shell",
+            "gate": "Brand and font tests green, the header one row at 320 px, the club's yes on QA."
+          },
+          "2": {
+            "title": "Cover photos on events, and the event kind",
+            "gate": "Listing specs green; every weekly run and the race carry a cover."
+          },
+          "3": {
+            "title": "The home page",
+            "gate": "LCP under 2.5 s on a 320 px phone, the root tests rewritten, the club's yes on QA."
+          },
+          "4": {
+            "title": "The calendar",
+            "gate": "The first week above the fold at 320 px; the filters work with scripts off."
+          },
+          "5": {
+            "title": "The listing and the event page",
+            "gate": "Listing and event specs green."
+          },
+          "6": {
+            "title": "The flip and the clean-up",
+            "gate": "A week on production without the way back being used."
+          }
+        }
+      }
+    },
+    "emails": {
+      "deadlines": {
+        "help": {
+          "rsvpAskHour": "The club's clock (Brașov): it leaves from this hour on the chosen day, on the job's first run after it. Midnight is 0."
+        }
+      }
+    },
+    "tasks": {
+      "emailStalled": {
+        "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves on {resumesAt} (Romania time); nothing is lost."
+      },
+      "neonPlan": {
+        "december": "At the December 2026 review you can return to Free here, with no deployment."
+      },
+      "freeVerdict": {
+        "paysForUsageMore": "Launch has no subscription and was chosen by the club on 22 September 2026."
+      },
+      "services": {
+        "domain": {
+          "more": "Bought on 16 September 2026 from ROMARG, for a year; ROMARG invoices in lei, with VAT. The .ro is no longer bought."
+        },
+        "neon": {
+          "launch": {
+            "bumpBack": "The way back is the December 2026 review: one choice under “The Neon plan”, no deployment.",
+            "more": "The monitors wake the database every 15 minutes by day and hourly at night; more often would keep it awake and paid. In December the club may go back to Free."
+          }
+        },
+        "zitadel": {
+          "freeGives": "Free: up to 100 daily active users, any number of stored users — the club's members fit —, unlimited organizations, 3 identity providers. Checked on 27 Sept 2026."
+        }
+      },
+      "items": {
+        "liveEmail": {
+          "how": [
+            "In Mailgun: Sending → Domains → “Add new domain”. Name: {mailDomain}. Region: EU. Not the main domain — that stays free for the club's own mailboxes.",
+            "Mailgun shows the DNS records to create: two TXT (SPF and DKIM) and one CNAME (tracking).",
+            "Add them at ROMARG → cPanel → Zone Editor exactly as Mailgun shows them, with the short name (no repeated domain).",
+            "Mind the DKIM one: the value is over 255 characters and cPanel cuts it — enter it as two quoted strings on one line (“k=rsa; p=…first part” “…the rest”), or Mailgun sees it truncated.",
+            "Then “Verify” in Mailgun — up to an hour.",
+            "Still in Mailgun: Sending → API keys → a sending key (MAILGUN_API_KEY).",
+            "Sending → Webhooks → copy the “HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) and add the webhook {webhookUrl} for “Permanent Failure” and “Spam Complaints”.",
+            "The two the application acts on (a rejected address shows at the desk and on the registration). “Delivered” is optional.",
+            "In Vercel, the production project → Settings → Environment Variables (or `vercel env add NAME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY.",
+            "In the same place: MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3 and EMAIL_REPLY_TO=a mailbox the club reads.",
+            "If no such mailbox exists yet, leave EMAIL_REPLY_TO unset: an empty one is refused at startup.",
+            "The sender is “{senderName}” <noreply@{mailDomain}> with no further setting — the name in EMAIL_FROM_NAME, the club’s own name by default.",
+            "Rehearse on QA, not on production: production refuses registrations until the legal texts are approved.",
+            "On the QA Vercel project set the same MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_API_BASE_URL (the mode stays allowlist, EMAIL_ALLOWLIST=your address), redeploy, register on QA.",
+            "The email comes from noreply@{mailDomain}. When it does: on production EMAIL_DELIVERY_MODE=live, redeploy. This row turns green."
+          ]
+        }
+      }
+    },
+    "look": {
+      "accent": {
+        "presets": {
+          "blue": {
+            "help": "The club's blue, the one Theme v1 wears."
+          },
+          "orange": {
+            "help": "The club's orange. Darker by day, so text on it can be read."
+          }
+        }
+      }
+    },
+    "appearance": {
+      "tints": {
+        "faintBlue": {
+          "help": "The club's blue, about 4 % over white."
+        },
+        "lightBlue": {
+          "help": "The club's blue, about 8 % over white."
+        },
+        "blueGrey": {
+          "help": "A cool grey leaning to the club's blue."
+        }
+      }
+    },
+    "badges": {
+      "colours": {
+        "theme": "The club's orange",
+        "themeOption": "Default: the club's orange",
+        "unreadable": "{colour}, which does not read: the club's orange prints"
+      }
+    },
+    "clubTodo": {
+      "defaults": {
+        "teamPage": {
+          "text": "Write the team page: Pages → The team → the introduction → “Save”; for each person “Add a person” → “Add the card” → “Put on the site” → “Publish the page”."
+        },
+        "faqPage": {
+          "text": "Write the FAQ page: Pages → FAQ → the questions and answers, in Romanian and English, with “On the site” ticked on each → “Save the page” → “Publish the page”."
+        }
+      }
+    }
+  }
+}

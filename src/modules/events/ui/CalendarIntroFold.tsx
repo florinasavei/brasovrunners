@@ -7,6 +7,7 @@ import { getTranslations } from "next-intl/server";
 import { webcalUrl } from "@/modules/events/ical";
 import CalendarAddress from "@/modules/events/ui/CalendarAddress";
 import { DROPDOWN_PANEL_SURFACE_SX } from "@/modules/events/ui/share-pill";
+import { CLUB_SHORT_NAME } from "@/theme/brand";
 
 /**
  * The two doors into a reader's own calendar (§107, §139), built exactly as `CalendarSection` builds
@@ -26,10 +27,10 @@ export function calendarFeedLinks(baseUrl: string, locale: string): { google: st
  * that always works, and the phone app's limit. One list for both places that draw the address.
  */
 export function feedAddressHints(
-  t: (key: "calendar.googleHintWhy" | "calendar.googleHintHow" | "calendar.phoneAppHint" | "calendar.androidSync") => string,
+  t: (key: "calendar.googleHintWhy" | "calendar.googleHintHow" | "calendar.phoneAppHint" | "calendar.androidSync", values?: { short: string }) => string,
 ): string[] {
   // The Android step last (the owner, 2026-10-08: «It just says that calendar was added successfully but I can't see it»).
-  return [t("calendar.googleHintWhy"), t("calendar.googleHintHow"), t("calendar.phoneAppHint"), t("calendar.androidSync")];
+  return [t("calendar.googleHintWhy"), t("calendar.googleHintHow"), t("calendar.phoneAppHint"), t("calendar.androidSync", { short: CLUB_SHORT_NAME })];
 }
 
 const LINK_SX = {

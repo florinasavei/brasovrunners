@@ -1,7 +1,10 @@
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
+
+// The platform's words with the club's own laid over them (§NNN, `i18n/catalogue.ts`).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * The backoffice's own words, as «Șabloanele textelor legale s-au schimbat» quotes them (§639): the

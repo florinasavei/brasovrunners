@@ -1,7 +1,10 @@
 import { createTranslator } from "next-intl";
 import { CLUB_NAME } from "@/theme/brand";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
+
+// The platform's words with the club's own laid over them (§NNN, `i18n/catalogue.ts`).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * The register form's own box, in that language, with the club's name filled in from the one

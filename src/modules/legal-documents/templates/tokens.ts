@@ -120,7 +120,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
       formatDay(TOKEN_EXAMPLE_EVENT_STARTS_AT, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
     ),
   },
-  { token: "{{eventLocation}}", messageKey: "eventLocation", example: same("Parcul Nicolae Titulescu") },
+  { token: "{{eventLocation}}", messageKey: "eventLocation", example: same("Parcul Central") },
   {
     token: "{{signedAt}}",
     messageKey: "signedAt",
@@ -143,7 +143,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     // Three Tuesdays at 18:30 in Brașov, through the words a signature is filled with.
     example: inBoth((locale) => seriesRhythmPhrase(TOKEN_EXAMPLE_SERIES_DATES, CLUB_TIME_ZONE, locale)),
   },
-  { token: "{{seriesPlace}}", messageKey: "seriesPlace", example: same("Parcul Nicolae Titulescu") },
+  { token: "{{seriesPlace}}", messageKey: "seriesPlace", example: same("Parcul Central") },
   // A group run's declaration for a minor (§769): the minor's own name in the paragraph only a minor's
   // declaration keeps, and the adult's own name in the sentence only an adult's keeps.
   { token: `{{${GROUP_RUN_MINOR_MERGE_FIELD}}}`, messageKey: GROUP_RUN_MINOR_MERGE_FIELD, example: same("Ion Popescu") },

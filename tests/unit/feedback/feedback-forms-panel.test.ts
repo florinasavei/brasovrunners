@@ -3,8 +3,12 @@ import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { FEEDBACK_BRANCHES } from "@/modules/feedback/domain/branches";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
+import { withClubWords } from "../../helpers/club-words";
+
+// What a page reads: the platform's catalogue with this club's own sentences over it (§NNN).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §716 — the backoffice card that switches «Spune-ne ceva»'s four forms
@@ -21,7 +25,7 @@ import ro from "../../../messages/ro.json";
 vi.mock("@/shared/feedback/email-roads-request", () => ({ emailRoadsForThisRequest: async () => ({ groups: { links: "mailgun", confirmations: "mailgun", reminders: "mailgun", announcements: "mailgun", club: "gmail", newsletter: "mailgun" }, gmail: false }) }));
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
-  const messages = (await import("../../../messages/ro.json")).default;
+  const messages = (await import("@/i18n/catalogue")).catalogueOf("ro");
   return {
     getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages: messages as typeof messages, namespace: namespace as "Admin" }),
     getLocale: async () => "ro",
@@ -96,7 +100,7 @@ describe("the backoffice card of the four forms (§842: the house's row folds)",
       expect(summary, branch).toContain(`title="${words.edit}"`);
       const name = /data-testid="feedback-branch-name">([\s\S]*?)<\/span>/.exec(summary)?.[1] ?? "";
       expect(name, branch).toMatch(/^<svg[^>]*aria-hidden="true"/);
-      expect(name, branch).toContain(words.branches[branch]);
+      expect(name, branch).toContain(withClubWords(words.branches[branch]));
       expect(summary, branch).toContain(`data-testid="feedback-branch-state-${branch}"`);
       expect(summary, branch).toContain(state[branch].on ? `>${words.rowOn}<` : `>${words.rowOff}<`);
       expect(summary, branch).toContain(`>${state[branch].via === "gmail" ? words.via.stateGmail : words.via.stateMailgun}<`);
@@ -176,7 +180,7 @@ describe("§772 «Prin ce trimitem» under each form", () => {
     expect(gmail).toMatch(/\sdisabled(=|\s|\/|>)/);
     expect(mailgun).not.toMatch(/\sdisabled(=|\s|\/|>)/);
     const group = viaGroup(out, "safety");
-    expect(group).toContain(ro.Admin.emails.feedbackForms.via.gmailNotice);
+    expect(group).toContain(withClubWords(ro.Admin.emails.feedbackForms.via.gmailNotice));
     expect(group).toContain('href="/ro/admin/legal"');
     expect(group).not.toContain(ro.Admin.emails.feedbackForms.via.gmailMissing);
     for (const branch of ["howItWent", "suggestion", "complaint"]) {
@@ -222,8 +226,8 @@ describe("§772 «Prin ce trimitem» under each form", () => {
 
   it("gives Girl Zone, and only Girl Zone, the one-line note that Gmail means the club's mailbox readers see the message", async () => {
     const out = await html();
-    expect(viaGroup(out, "safety")).toContain(ro.Admin.emails.feedbackForms.via.safetyNote);
-    for (const branch of ["howItWent", "suggestion", "complaint"]) expect(viaGroup(out, branch)).not.toContain(ro.Admin.emails.feedbackForms.via.safetyNote);
+    expect(viaGroup(out, "safety")).toContain(withClubWords(ro.Admin.emails.feedbackForms.via.safetyNote));
+    for (const branch of ["howItWent", "suggestion", "complaint"]) expect(viaGroup(out, branch)).not.toContain(withClubWords(ro.Admin.emails.feedbackForms.via.safetyNote));
     expect(ro.Admin.emails.feedbackForms.via.safetyNote).toMatch(/Gmail/);
     expect(ro.Admin.emails.feedbackForms.via.safetyNote).toMatch(/Mailgun/);
     expect(en.Admin.emails.feedbackForms.via.safetyNote).toMatch(/Gmail/);

@@ -1,9 +1,13 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
 import { routing } from "@/i18n/routing";
+
+// What a page reads (§NNN): the platform's catalogue with the club's own sentences over it. The platform's two files
+// alone are held to the same parity by `tests/unit/club/overlay.test.ts`.
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * BR-REQ-040-04 — no untranslated user-facing strings.

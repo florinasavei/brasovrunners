@@ -18,10 +18,14 @@ import {
  * can run on GitHub Actions: the journal, the catalogues and the tests by rule, anything else a stop.
  */
 describe("§535 which conflicts a rule resolves", () => {
-  it("resolves the journal, the two catalogues and test sources, and nothing else", () => {
+  it("resolves the journal, the catalogues — the platform's and the club's — and test sources, and nothing else", () => {
     expect(conflictKind("src/db/migrations/meta/_journal.json")).toBe("journal");
     expect(conflictKind("messages/ro.json")).toBe("catalogue");
     expect(conflictKind("messages\\en.json")).toBe("catalogue");
+    // the club's own sentences, laid over the platform's (§NNN): the same JSON, the same rule
+    expect(conflictKind("club/messages/ro.json")).toBe("catalogue");
+    expect(conflictKind("club\\messages\\en.json")).toBe("catalogue");
+    expect(conflictKind("club/club.json")).toBeNull();
     expect(conflictKind("tests/unit/scripts/a.test.ts")).toBe("union");
     expect(conflictKind("tests/e2e/a.spec.ts")).toBe("union");
     for (const other of ["src/app/page.tsx", "CLAUDE.md", "tests/fixtures/photo.jpg", "src/db/migrations/meta/0105_snapshot.json", "package.json"]) {

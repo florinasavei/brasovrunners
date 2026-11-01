@@ -24,6 +24,7 @@ import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { FACTS_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import RoadChoice, { roadWords } from "./RoadChoice";
 import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
+import { SAFETY_PROGRAMME } from "@/theme/brand";
 
 type Props = {
   locale: Locale;
@@ -66,9 +67,10 @@ const STEPS_ROW: Readonly<Record<FeedbackVia, string>> = { gmail: "task-contactF
 export default async function FeedbackFormsPanel({ locale, state, noticeDescribes, mayEdit, roads, safetyGmailDescribed, gmailAccount = null, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
-  const roadWordsOfCard = roadWords((key) => t(key as never));
+  const safety = { safetyName: SAFETY_PROGRAMME[locale] };
+  const roadWordsOfCard = roadWords((key) => t(key as never, safety as never));
   const on = branchesSwitchedOn(state).length;
-  const label = (branch: FeedbackBranch) => t(`emails.feedbackForms.branches.${branch}`);
+  const label = (branch: FeedbackBranch) => t(`emails.feedbackForms.branches.${branch}`, safety);
   const tasksPath = getPathname({ locale, href: "/admin/tasks" });
   const legalPath = getPathname({ locale, href: "/admin/legal" });
   /** Why a road cannot be newly chosen on this form, or null: the deployment lacks it, or (Girl Zone's Gmail) the notice does not say it yet. */
@@ -233,7 +235,7 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                           >
                             {branch === "safety" && (
                               <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} data-testid="feedback-via-safety-note">
-                                {t("emails.feedbackForms.via.safetyNote")}
+                                {t("emails.feedbackForms.via.safetyNote", safety)}
                               </Typography>
                             )}
                             {/* «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (§778): a real tick, off by default, with the readers' note.
@@ -246,7 +248,7 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                                   name="safetyFallbackToGmail"
                                   defaultChecked={state.safety.fallbackToGmail}
                                   disabled={fallbackBlocked !== null}
-                                  help={t("emails.feedbackForms.via.fallbackHelp")}
+                                  help={t("emails.feedbackForms.via.fallbackHelp", safety)}
                                   helpTestId="feedback-fallback-help"
                                 >
                                   {t("emails.feedbackForms.via.fallback")}
@@ -254,7 +256,7 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                                 {fallbackBlocked !== null && state.safety.fallbackToGmail && <input type="hidden" name="safetyFallbackToGmail" value="on" />}
                                 {fallbackBlocked === "notice" && (
                                   <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6 }} data-testid="feedback-fallback-notice">
-                                    {t("emails.feedbackForms.via.fallbackNotice")}{" "}
+                                    {t("emails.feedbackForms.via.fallbackNotice", safety)}{" "}
                                     <MuiLink href={legalPath} sx={INLINE_TAP_TARGET}>
                                       {t("emails.feedbackForms.via.noticeSteps")}
                                     </MuiLink>

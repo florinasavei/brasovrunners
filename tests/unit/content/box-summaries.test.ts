@@ -104,8 +104,8 @@ describe("§350 each box's summary, empty and filled", () => {
   });
 
   it("Fus orar", () => {
-    expect(timezoneSummary(words, ZONE)).toBe("Europe/Bucharest — ora României");
-    expect(timezoneSummary(words, "Europe/Vienna")).toBe("Europe/Vienna");
+    expect(timezoneSummary(words, ZONE, "ro")).toBe("Europe/Bucharest — ora României");
+    expect(timezoneSummary(words, "Europe/Vienna", "ro")).toBe("Europe/Vienna");
   });
 
   it("Titlu și rezumat: the titles — what is missing is the card's required line's to say (§406)", () => {

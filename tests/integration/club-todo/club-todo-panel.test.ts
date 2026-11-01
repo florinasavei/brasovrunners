@@ -1,9 +1,12 @@
 import { createTranslator } from "next-intl";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import ro from "../../../messages/ro.json";
 import type { ClubTodoItem } from "@/modules/club-todo/domain/club-todo";
 import { withClientWords } from "../../helpers/client-words";
+import { catalogueOf } from "@/i18n/catalogue";
+
+// What a page reads: the platform's catalogue with this club's own sentences over it (§NNN).
+const ro = catalogueOf("ro");
 
 /**
  * §438, drawn by §842 (wave 2) — «De făcut», the club's own checklist, as the event to-dos' row (§749): one `TodoLine` per
