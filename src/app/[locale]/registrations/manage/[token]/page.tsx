@@ -196,10 +196,13 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   */
   const resultsAskLine = live && people.some((one) => one.resultsNameConsent) ? await cachedFirstResultsNameAskNoticeVersion() : null;
   const firstResults = live ? await cachedFirstResultsNoticeVersion() : null;
+  // The event's type is read only once the notice in force asks: until then (today's template) no query beyond the cached ones.
+  const asksResultsName =
+    live && firstResults !== null && people.some((one) => one.privacyNoticeVersion < firstResults) ? await cachedResultsNameAskDescribed(new Date()) : false;
   const resultsLine =
-    live && firstResults !== null && people.some((one) => one.privacyNoticeVersion < firstResults)
+    live && asksResultsName
       ? resultsNameConsentLine({
-          noticeDescribesResultsNameAsk: await cachedResultsNameAskDescribed(new Date()),
+          noticeDescribesResultsNameAsk: true,
           firstResultsNoticeVersion: firstResults,
           eventType: (await eventTypeOf(getDb(), live.registration.eventId)) ?? "",
         })
