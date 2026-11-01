@@ -5,6 +5,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import pg from "pg";
 import { elevationGpx } from "../helpers/elevation-gpx";
+import { ahead } from "./support/dates";
 import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 
@@ -23,8 +24,8 @@ import { openEditorBox, openFold } from "./support/fold";
  * se închide la 11:00»), and the finish closing at 12:30.
  *
  * The race is written straight into the database — the setup, not the subject — one per project and
- * run, so the two projects never share a row: a 21 km race on 15 May 2027, the meeting at 09:00 and the
- * gun at 10:00 on the club's clock.
+ * run, so the two projects never share a row: a 21 km race on a Saturday months ahead (`ahead`, §NNN), the meeting at 09:00 and the
+ * gun at 10:00 on the club's clock — written as local times, so the summer or winter offset of the day never moves them.
  */
 function databaseUrl(): string {
   if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
@@ -48,8 +49,9 @@ async function seedRace(tag: string): Promise<{ id: string; slug: string }> {
   return withDatabase(async (client) => {
     const { rows } = await client.query<{ id: string }>(
       `INSERT INTO events (type, starts_at, race_starts_at, registration_mode, capacity, location_name, distance_meters, timezone)
-       VALUES ('RACE', '2027-05-15T06:00:00Z', '2027-05-15T07:00:00Z', 'INTERNAL', 50, 'Parcul Tractorul', 21000, 'Europe/Bucharest')
+       VALUES ('RACE', ($1::timestamp + time '09:00') AT TIME ZONE 'Europe/Bucharest', ($1::timestamp + time '10:00') AT TIME ZONE 'Europe/Bucharest', 'INTERNAL', 50, 'Parcul Tractorul', 21000, 'Europe/Bucharest')
        RETURNING id`,
+      [ahead("2027-05-15")],
     );
     const slug = `puncte-${tag}`;
     await client.query(

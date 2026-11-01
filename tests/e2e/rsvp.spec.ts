@@ -3,6 +3,7 @@ import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openEventFold, openFold } from "./support/fold";
 import { mintRsvpLink, rememberedBrowsers, rsvpCount, rsvpMessages, rsvpRow, withDatabase } from "./support/rsvp-link";
+import { ahead } from "./support/dates";
 
 /**
  * §811 («Vin!» part 1), end to end, on the phone and the desktop: the club ticks «Acceptă răspunsuri „Vin!”» on a group run, a visitor types an
@@ -19,7 +20,7 @@ import { mintRsvpLink, rememberedBrowsers, rsvpCount, rsvpMessages, rsvpRow, wit
  * live. The spec creates its own group run and its second date (as `group-run-declaration.spec.ts` does), so the two projects, which run side
  * by side, never share an event or an address.
  */
-const DATE = "2027-05-12";
+const DATE = ahead("2027-05-12");
 let title = "";
 let slug = "";
 let englishTitle = "";

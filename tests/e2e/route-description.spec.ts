@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead } from "./support/dates";
 
 /**
  * BR-REQ-050-02 and BR-REQ-011-01 (`DECISIONS.md` §387) — "Descriere traseu / antrenament".
@@ -62,7 +63,7 @@ test.describe.serial("BR-REQ-050-02 the route / training description (§387)", (
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
     await hydrated(page);
-    await fillDateField(page, "Începutul evenimentului", "2027-05-08");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-05-08"));
     await fillTimeField(page, "Ora", "19:00");
     await field("event.locationName").fill("Stația de telecabină Tâmpa");
     await field("event.locationNameEn").fill("Tâmpa cable car station");

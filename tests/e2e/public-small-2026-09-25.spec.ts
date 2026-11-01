@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead } from "./support/dates";
 
 /**
  * Three small things on the public site the owner asked for, 2026-09-25 (`DECISIONS.md` §401):
@@ -16,7 +17,7 @@ import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } fr
  * AND-combination with "Colaborare" can be proven against a kind nothing else answers to.
  */
 
-const DATE = "2027-06-12";
+const DATE = ahead("2027-06-12");
 
 let title = "";
 let englishTitle = "";

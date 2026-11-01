@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { monthOf, nextMonthDay, written } from "./support/dates";
 
 /**
  * BR-REQ-050-02 and BR-REQ-020-01 (`DECISIONS.md` §394, replacing §382's checkbox) — "Eveniment de
@@ -18,9 +19,12 @@ import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } fr
  * expired by it (§333).
  */
 
-const NOVEMBER = "2027-11-17";
-const MONTH = "2027-11";
-const JUNE = "2027-06-16";
+// The next 17 November and 16 June at least twelve weeks ahead (§NNN): the season is what the sunset line reads, the year and the weekday follow.
+const NOVEMBER = nextMonthDay(11, 17);
+const MONTH = monthOf(NOVEMBER);
+const JUNE = nextMonthDay(6, 16);
+/** The day as the line writes it — short weekday, day, short month, year — ready for a regular expression. */
+const lineDate = (iso: string) => written(iso, "ro", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).replace(/\./g, "\\.");
 
 /**
  * The crescent moon (§428, replacing §382's lit torch), by its drawing: a production build has no
@@ -82,9 +86,9 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(page.getByRole("radio", { name: "Automat (după apus)", exact: true })).toBeChecked();
 
     await fillDateField(page, "Începutul evenimentului", NOVEMBER);
-    await expect(autoLine(page)).toHaveText(/^Automat: mie\., 17 nov\. 2027, apusul la 16:\d\d — alege ora startului$/);
+    await expect(autoLine(page)).toHaveText(new RegExp(`^Automat: ${lineDate(NOVEMBER)}, apusul la 16:\\d\\d — alege ora startului$`));
     await fillTimeField(page, "Ora", "19:00");
-    await expect(autoLine(page)).toHaveText(/^Automat: mie\., 17 nov\. 2027, începe la 19:00, apusul la 16:\d\d — eveniment de noapte$/);
+    await expect(autoLine(page)).toHaveText(new RegExp(`^Automat: ${lineDate(NOVEMBER)}, începe la 19:00, apusul la 16:\\d\\d — eveniment de noapte$`));
 
     await field("event.locationName").fill("Stația de telecabină Tâmpa");
     await field("event.locationNameEn").fill("Tâmpa cable car station");
@@ -171,7 +175,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await openEditorBox(page, "Când și unde");
     await fillDateField(page, "Începutul evenimentului", JUNE);
     await openEditorBox(page, "Traseul");
-    await expect(autoLine(page)).toHaveText(/^Automat: mie\., 16 iun\. 2027, începe la 19:00, apusul la 21:\d\d — nu e eveniment de noapte$/);
+    await expect(autoLine(page)).toHaveText(new RegExp(`^Automat: ${lineDate(JUNE)}, începe la 19:00, apusul la 21:\\d\\d — nu e eveniment de noapte$`));
     await saveWithChoice(page, "Automat (după apus)", true);
 
     await page.goto(`/ro/evenimente/${slug}`);

@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead, monthOf } from "./support/dates";
 
 /**
  * BR-REQ-020-01 criteria 18 and 19 (`DECISIONS.md` §367, amended §375) — an event held with a
@@ -18,13 +19,13 @@ import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } fr
  *
  * It creates and publishes its **own** event, the way `event-route.spec.ts` does, rather than
  * giving a seeded one a partner: other specs read and unpublish the seeded rows, and two projects
- * run in parallel against one database. The date is fixed in a month nothing else uses, so the
- * calendar can be opened on it directly; the title is unique per project and run, so an earlier
- * run's event in the same month is never the one measured.
+ * run in parallel against one database. The date moves with `ahead` (§NNN), and the calendar is
+ * opened on its month directly; the title is unique per project and run, so another event in the
+ * same month — this run's or an earlier one's — is never the one measured.
  */
 
-const DATE = "2027-04-17";
-const MONTH = "2027-04";
+const DATE = ahead("2027-04-17");
+const MONTH = monthOf(DATE);
 
 /**
  * The partner marker's glyph, Material's `Handshake` (§367, reverted from §379/§386's 🤝 emoji

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { ahead, monthOf } from "./support/dates";
 import { FEATURED } from "./support/featured-event";
 
 /**
@@ -59,10 +60,19 @@ test.describe("BR-REQ-070-02 criterion 1 canonical and hreflang", () => {
   });
 
   test("the calendar's canonical ignores the month named in the address — the reported duplicate", async ({ page, baseURL }) => {
-    await page.goto("/ro/calendar?month=2027-01");
+    // A month inside the calendar's two-year window, from the suite's one helper (§NNN): a month
+    // outside it is no named period, and the old address would be sent to the bare calendar instead.
+    const month = monthOf(ahead("2027-04-14"));
+    const old = await page.request.get(`/ro/calendar?month=${month}`, { maxRedirects: 0 });
+    expect(old.status()).toBe(308);
+    const target = new URL(old.headers().location ?? "", baseURL);
+    expect(`${target.pathname}${target.search}`).toBe(`/ro/calendar/${month}`);
+    // The named period's own page is canonical to the bare calendar.
+    await page.goto(`/ro/calendar/${month}`);
     await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute("href", `${baseURL}/ro/calendar`);
-    // Never the query it was just handed — a canonical carrying it would be no canonical at all.
+    // Never the month it was just handed, as a path or a query — a canonical carrying it would be no canonical at all.
     const href = await page.locator('head link[rel="canonical"]').getAttribute("href");
+    expect(href).not.toContain(month);
     expect(href).not.toContain("month=");
   });
 });

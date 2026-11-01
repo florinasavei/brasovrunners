@@ -5,6 +5,7 @@ import pg from "pg";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { addDays, ahead, birthOn, dayLine, digits, dmy } from "./support/dates";
 
 /**
  * §393 — a group run's optional self-declaration, end to end, on the phone and the desktop.
@@ -21,7 +22,9 @@ import { languagePanel, languageTab, openEditorBox, openFold } from "./support/f
  * signature as the Administrator — then checks the Tehnic role is refused the PDF.
  */
 
-const DATE = "2027-04-14";
+const DATE = ahead("2027-04-14");
+/** The run's second date, a week later (§113, §523): the ages typed below are counted on the day they are typed against. */
+const SECOND_DATE = addDays(DATE, 7);
 
 /** The consent box's words while a minor may sign (§769): the minor's tick is above it, and it says the adult's age too. */
 const ACCEPT_ANY_RO = "Am citit declarația de mai sus și o semnez pe propria răspundere: pentru mine, având cel puțin 18 ani împliniți, sau pentru minorul bifat mai sus";
@@ -311,15 +314,16 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
       const box = page.getByRole("textbox", { name: locale === "en" ? "Date of birth" : "Data nașterii" });
       await expect(box).toHaveAttribute("type", "text");
       await expect(box).toHaveAttribute("placeholder", locale === "en" ? "DD.MM.YYYY" : "ZZ.LL.AAAA");
-      // A phone's numeric keypad has no dot: eight digits are 11 May, shown day first on leaving the box.
-      await box.fill("11051990");
+      // A phone's numeric keypad has no dot: eight digits are a date, shown day first on leaving the box.
+      const adult = birthOn(SECOND_DATE, 36, 20);
+      await box.fill(digits(adult));
       await box.blur();
-      await expect(box).toHaveValue("11.05.1990");
+      await expect(box).toHaveValue(dmy(adult));
       const field = page.locator(".MuiFormControl-root", { has: box });
-      // The second date is 21 April 2027: thirty-six on the run's day.
-      await expect(field).toContainText(locale === "en" ? "Friday, 11 May 1990 · 36 years on the event day" : "Vineri, 11 mai 1990 · 36 de ani în ziua evenimentului");
+      // Thirty-six on the second date's day.
+      await expect(field).toContainText(locale === "en" ? `${dayLine(adult, "en")} · 36 years on the event day` : `${dayLine(adult, "ro")} · 36 de ani în ziua evenimentului`);
       // Nineteen on the run's day: the rule's sentence, under the box, before any press.
-      await box.fill("22.04.2007");
+      await box.fill(dmy(birthOn(SECOND_DATE, 19, 1)));
       await expect(field).toContainText(locale === "en" ? "The minimum age for this run is 20 years" : "Vârsta minimă pentru această alergare este 20 de ani");
       await expect(box).toHaveAttribute("aria-invalid", "true");
       await noSidewaysScroll(page);
@@ -621,9 +625,10 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     // Both names, the parent's tick and the minor's birth date (counted against the run's minimum, never kept).
     await page.getByRole("textbox", { name: "Semnătura minorului: numele lui complet" }).fill("Ion Popescu");
     const date = page.getByRole("textbox", { name: "Data nașterii minorului" });
-    await date.fill("01032012");
+    const fifteen = birthOn(DATE, 15, 100);
+    await date.fill(digits(fifteen));
     await date.blur();
-    await expect(date).toHaveValue("01.03.2012");
+    await expect(date).toHaveValue(dmy(fifteen));
     await page.getByRole("checkbox", { name: "Sunt părintele sau tutorele legal și sunt de acord", exact: true }).check();
     await page.getByRole("checkbox", { name: ACCEPT_ANY_RO }).check();
     await page.waitForTimeout(1_500);
@@ -650,8 +655,8 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     await hydrated(page);
     await page.getByRole("checkbox", { name: "I am signing for a minor (under 18)", exact: true }).check();
     const date = page.getByRole("textbox", { name: "The minor's date of birth" });
-    // Thirteen on the run's day (14 April 2027), under the default fourteen.
-    await date.fill("15.04.2013");
+    // Thirteen on the run's day under the default fourteen.
+    await date.fill(dmy(birthOn(DATE, 13, 1)));
     const field = page.locator(".MuiFormControl-root", { has: date });
     await expect(field).toContainText("The minimum age for this run is 14 years");
     await expect(date).toHaveAttribute("aria-invalid", "true");
@@ -664,13 +669,13 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     await hydrated(page);
     await page.getByRole("checkbox", { name: "I am signing for a minor (under 18)", exact: true }).check();
     const date = page.getByRole("textbox", { name: "The minor's date of birth" });
-    // Forty on the run's day (14 April 2027).
-    await date.fill("01.01.1987");
+    // Forty on the run's day.
+    await date.fill(dmy(birthOn(DATE, 40, 100)));
     const field = page.locator(".MuiFormControl-root", { has: date });
     await expect(field).toContainText("The minor must be under 18 on the day of the run");
     await expect(date).toHaveAttribute("aria-invalid", "true");
     // Seventeen on the run's day: no refusal.
-    await date.fill("15.04.2009");
+    await date.fill(dmy(birthOn(DATE, 17, 1)));
     await expect(field).not.toContainText("The minor must be under 18");
     await expect(date).toHaveAttribute("aria-invalid", "false");
     await noSidewaysScroll(page);
@@ -757,7 +762,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     await page.getByRole("checkbox", { name: "Semnez pentru un minor (sub 18 ani)", exact: true }).check();
     await page.getByRole("textbox", { name: "Semnătura: numele tău complet" }).fill("Maria Ionescu");
     await page.getByRole("textbox", { name: "Semnătura minorului: numele lui complet" }).fill("Radu Ionescu");
-    await page.getByRole("textbox", { name: "Data nașterii minorului" }).fill("02.04.2011");
+    await page.getByRole("textbox", { name: "Data nașterii minorului" }).fill(dmy(birthOn(DATE, 16, 200)));
     await page.getByRole("checkbox", { name: "Sunt părintele sau tutorele legal și sunt de acord", exact: true }).check();
     await page.waitForTimeout(1_500);
     await page.getByTestId("group-run-declaration-submit").click();

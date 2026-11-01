@@ -147,7 +147,7 @@ async function publishSeries(page: Page, created: Created, first?: Date): Promis
  *   wrapping between them, and must not clip the start time. The seed publishes no such card (its
  *   only race with `raceStartsAt` is `featured: true`, the hero, not a card);
  * - `yearOut` — a run more than a year ahead, whose card keeps the year on a phone ("Duminică,
- *   27 sept. 2027 · 18:30", 227 pixels against the 226 a 320-pixel card leaves the row);
+ *   27 sept. <year> · 18:30", 227 pixels against the 226 a 320-pixel card leaves the row);
  * - `past` — a run already held, on the listing's "past events" fold (§267), whose card keeps its
  *   year too. The seed's own past run moves with the week and another spec unpublishes it, so
  *   this one is made here, where the spec can name it.
