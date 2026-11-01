@@ -6798,7 +6798,20 @@
       "volunteerInvitationsErase": "Erase the invitations to volunteer",
       "volunteerInvitationsEraseTitle": "Erase this person's invitations to volunteer?",
       "volunteerInvitationsEraseBody": "The invitations sent to this address are erased, with the club's message. Offers to volunteer and registrations stay. This cannot be undone.",
-      "volunteerInvitationsErased": "The invitations to volunteer sent to this address were erased."
+      "volunteerInvitationsErased": "The invitations to volunteer sent to this address were erased.",
+      "reserveEntries": "Internal waiting list ({count})",
+      "reserveEntryBy": "written down by {role}, {date} · changed {updated}",
+      "reserveErase": "Erase from the internal list",
+      "reserveEraseTitle": "Erase this person from the internal lists?",
+      "reserveEraseBody": "This address's lines on the internal waiting lists are erased, with the name, address and note. They hold no place, and nothing is sent to the person. This cannot be undone.",
+      "reserveErased": "This address's lines on the internal waiting lists were erased.",
+      "eventInvitations": "Invitations to events ({count})",
+      "eventInvitationOutside": "on the special guests list (holds no place)",
+      "eventInvitationsErase": "Withdraw and erase the invitations",
+      "eventInvitationsEraseTitle": "Withdraw and erase this person's invitations?",
+      "eventInvitationsEraseBody": "Open invitations are withdrawn first, as with “Withdraw”: their place passes through the waiting list. Then unaccepted ones are erased; accepted ones stay with their registration. Cannot be undone.",
+      "eventInvitationsErased": "This address's invitations were withdrawn and erased; accepted ones stay with their registrations.",
+      "eventInvitationsAcceptedKept": "An accepted invitation is part of its registration: it is erased with the registration, from the registration's page."
     },
     "desk": {
       "title": "Number pickup desk",

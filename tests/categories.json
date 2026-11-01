@@ -181,6 +181,7 @@
     "tests/integration/registrations/outside-row-menu.test.ts",
     "tests/integration/registrations/paper-confirmation-tip.test.ts",
     "tests/integration/registrations/participant-count-public-render.test.ts",
+    "tests/integration/registrations/person-data-reserve-invitations.test.ts",
     "tests/integration/registrations/person-data.test.ts",
     "tests/integration/registrations/place-deadlines-screens.test.ts",
     "tests/integration/registrations/promo-consent.test.ts",

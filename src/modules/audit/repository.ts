@@ -245,6 +245,17 @@ export type AuditAction =
    * `{ invitations }`, the count, never the address, a name or the club's line.
    */
   | "participant.volunteer_invitations_erased"
+  /**
+   * The lines of «Lista internă de așteptare» written down with one address erased by an Administrator on the person's request
+   * (§NNN, art. 17 GDPR) — `{ entries }`, the count, never a name, an address or the note's words.
+   */
+  | "participant.reserve_entries_erased"
+  /**
+   * The personal invitations to an event sent to one address erased by an Administrator on the person's request (§NNN, art. 17 GDPR) —
+   * `{ withdrawn, erased, keptAccepted }`, the counts, never the address or a name. Each open one was first withdrawn through
+   * «Retrage» (`event.invitation_withdrawn`, its own row), so its place went back through the allocator.
+   */
+  | "participant.invitations_erased"
   /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
   | "outbox.sent_by_staff"
   /**

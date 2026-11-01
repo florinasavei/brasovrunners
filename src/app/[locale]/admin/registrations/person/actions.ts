@@ -3,7 +3,15 @@
 import { redirect } from "next/navigation";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { canonicalLookupOf, eraseRsvpsOfPerson, eraseVolunteerInvitationsOfPerson, openPersonLookup, sealPersonLookup } from "@/modules/registrations/person-data";
+import {
+  canonicalLookupOf,
+  eraseEventInvitationsOfPerson,
+  eraseReserveEntriesOfPerson,
+  eraseRsvpsOfPerson,
+  eraseVolunteerInvitationsOfPerson,
+  openPersonLookup,
+  sealPersonLookup,
+} from "@/modules/registrations/person-data";
 import { getDb } from "@/db/client";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -77,4 +85,46 @@ export async function eraseVolunteerInvitationsAction(form: FormData): Promise<v
     throw error;
   }
   redirect(`${path}?q=${encodeURIComponent(sealed)}${erased ? "&erased=invitations" : ""}`);
+}
+
+/**
+ * «Șterge de pe lista internă» (§854, §NNN, art. 17 GDPR): the lines of «Lista internă de așteptare» written down with the address the
+ * page was opened for. The address comes back through the same sealed lookup, never typed again, and goes no further than the
+ * Administrator who pressed (`requireStaffCapability`, asserted again in the service).
+ */
+export async function eraseReserveEntriesAction(form: FormData): Promise<void> {
+  await erasePersonPart(form, "reserve", eraseReserveEntriesOfPerson);
+}
+
+/**
+ * «Retrage și șterge invitațiile» (§647, §NNN, art. 17 GDPR): the personal invitations to an event sent to the address the page was
+ * opened for — each open one withdrawn first through «Retrage», its place back through the allocator, then the ended ones deleted; an
+ * accepted one stays with its registration. Same sealed lookup, same Administrator, asserted again in the service.
+ */
+export async function eraseEventInvitationsAction(form: FormData): Promise<void> {
+  await erasePersonPart(form, "eventInvitations", eraseEventInvitationsOfPerson);
+}
+
+/** The two presses above: the role first, the sealed lookup opened, the erase, and back to the page with the result's alert. */
+async function erasePersonPart(
+  form: FormData,
+  erased: "reserve" | "eventInvitations",
+  erase: (db: ReturnType<typeof getDb>, actor: Awaited<ReturnType<typeof requireStaffCapability>>, canonicalEmail: string, now: Date) => Promise<unknown>,
+): Promise<void> {
+  const locale: Locale = form.get("uiLocale") === "en" ? "en" : "ro";
+  const path = getPathname({ locale, href: "/admin/registrations/person" });
+  const sealed = typeof form.get("q") === "string" ? String(form.get("q")) : "";
+  let done = false;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    const now = new Date();
+    const canonicalEmail = openPersonLookup(sealed, now);
+    if (!canonicalEmail) redirect(path);
+    await erase(getDb(), actor, canonicalEmail, now);
+    done = true;
+  } catch (error) {
+    if (isDomainError(error)) redirect(`${path}?error=${error.code}#admin-alert`);
+    throw error;
+  }
+  redirect(`${path}?q=${encodeURIComponent(sealed)}${done ? `&erased=${erased}` : ""}`);
 }

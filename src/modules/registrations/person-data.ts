@@ -1,7 +1,9 @@
-import { and, asc, desc, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventInvitations } from "@/db/schema/event-invitations";
+import { eventReserveEntries } from "@/db/schema/event-reserve-entries";
 import { eventResults } from "@/db/schema/event-results";
 import { eventRsvps, rsvpAskRefusals, rsvpRefuseTokens } from "@/db/schema/event-rsvps";
 import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
@@ -25,7 +27,9 @@ import { parseClubMember } from "@/modules/rsvp/domain/public-member";
 import { roleLabel } from "@/modules/volunteers/domain/volunteer";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
+import { InvitationRefusal, type InvitationState, invitationState } from "./domain/invitations";
 import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
+import { withdrawInvitationByStaff } from "./service";
 
 /**
  * Everything the platform holds about one person (§322) — the answer to an access request
@@ -37,7 +41,8 @@ import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
  * in every status with every stored column, the declaration acceptances, the consents and their
  * versions (they are columns of the registration), the messages by type, date and status and what
  * the provider reported of each (delivered, refused, why — never its words), the
- * addresses left for an announcement, and the audit rows about the person or their registrations.
+ * addresses left for an announcement, the lines of «Lista internă de așteptare» and the personal invitations to an event (§NNN),
+ * and the audit rows about the person or their registrations.
  *
  * Administrator only (`canManageRegistrations`): it is the whole of a person on one screen, the
  * health note included, and the Organizer's reading of the list (§289) was never that.
@@ -272,6 +277,50 @@ export type PersonData = {
    * data). Deleted notes hold no words and are not listed; the registration's erase removes the rest.
    */
   notes: Array<{ registrationId: string; eventId: string; eventTitle: string | null; body: string; createdAt: Date; authorRole: StaffUser["role"] | null }>;
+  /**
+   * The lines of «Lista internă de așteptare» (§854) written down with this address (§NNN; art. 15 GDPR): the event, the name and
+   * the address as the organizers typed them, their internal note, when it was written and changed, and who wrote it — as a
+   * **role**, never the colleague's name, as the internal notes above (§777): the note becomes one of them on «Trece pe lista
+   * oficială». The rows keep the address as typed, so each is matched through the canonicalizer (`reserveEntryIdsOf`). A line
+   * written with no address is no address's, and this page, which searches by address, cannot find it.
+   */
+  reserveEntries: Array<{
+    eventId: string;
+    eventTitle: string | null;
+    firstName: string;
+    lastName: string;
+    deliveryEmail: string;
+    note: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    createdByRole: StaffUser["role"] | null;
+  }>;
+  /**
+   * The club's personal invitations to an event sent to this address (§647, §NNN; art. 15 GDPR): the event, the name and the address
+   * as the Administrator typed them, the language, the state now (`invitationState`: sent, accepted, expired, withdrawn), the deadline,
+   * whether it held a counted place or was «În afara locurilor», whether it raised the capacity, and every moment — every column of the
+   * row but the colleagues' ids. Found by the canonical address the send wrote through the canonicalizer, or by the participant.
+   */
+  eventInvitations: Array<{
+    eventId: string;
+    eventTitle: string | null;
+    name: string;
+    deliveryEmail: string;
+    locale: string;
+    state: InvitationState;
+    expiresAt: Date;
+    outsideCapacity: boolean;
+    supplementaryRaise: boolean;
+    fromMemberAccount: boolean;
+    sentAt: Date;
+    lastSentAt: Date;
+    resendCount: number;
+    acceptedAt: Date | null;
+    acceptedRegistrationId: string | null;
+    withdrawnAt: Date | null;
+    expiredAt: Date | null;
+    createdAt: Date;
+  }>;
   auditTrail: Array<{ action: string; entityType: string; entityId: string | null; createdAt: Date; actorName: string | null; metadata: unknown }>;
 };
 
@@ -285,6 +334,7 @@ function assertAdministrator(actor: Pick<StaffUser, "role">): void {
 async function collectPersonData<T extends Record<string, unknown>>(
   db: Database<T>,
   canonicalEmail: string,
+  now: Date,
 ): Promise<PersonData> {
   const [participant] = await db.select().from(participants).where(eq(participants.canonicalEmail, canonicalEmail)).limit(1);
 
@@ -495,6 +545,77 @@ async function collectPersonData<T extends Record<string, unknown>>(
 
   const groupRuns = await groupRunDeclarationsOf(db, canonicalEmail);
 
+  // «Lista internă de așteptare» (§854, §NNN): the lines whose typed address is this person's, the author as a role (§777).
+  const reserveIds = await reserveEntryIdsOf(db, canonicalEmail);
+  const reserveEntries =
+    reserveIds.length > 0
+      ? (
+          await db
+            .select({
+              eventId: eventReserveEntries.eventId,
+              eventTitle: eventTranslations.title,
+              firstName: eventReserveEntries.firstName,
+              lastName: eventReserveEntries.lastName,
+              deliveryEmail: eventReserveEntries.email,
+              note: eventReserveEntries.note,
+              createdAt: eventReserveEntries.createdAt,
+              updatedAt: eventReserveEntries.updatedAt,
+              createdByRole: staffUsers.role,
+            })
+            .from(eventReserveEntries)
+            .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventReserveEntries.eventId), eq(eventTranslations.locale, "ro")))
+            .leftJoin(staffUsers, eq(staffUsers.id, eventReserveEntries.createdByStaffUserId))
+            .where(inArray(eventReserveEntries.id, reserveIds))
+            .orderBy(asc(eventReserveEntries.createdAt), asc(eventReserveEntries.id))
+        ).map((entry) => ({ ...entry, deliveryEmail: entry.deliveryEmail ?? "" }))
+      : [];
+
+  // The personal invitations to an event (§647, §NNN): by the canonical address the send wrote, or the participant it was sent to.
+  const invitationRows = await db
+    .select({
+      eventId: eventInvitations.eventId,
+      eventTitle: eventTranslations.title,
+      name: eventInvitations.name,
+      deliveryEmail: eventInvitations.email,
+      locale: eventInvitations.locale,
+      expiresAt: eventInvitations.expiresAt,
+      outsideCapacity: eventInvitations.outsideCapacity,
+      supplementaryRaise: eventInvitations.supplementaryRaise,
+      memberStaffUserId: eventInvitations.memberStaffUserId,
+      sentAt: eventInvitations.sentAt,
+      lastSentAt: eventInvitations.lastSentAt,
+      resendCount: eventInvitations.resendCount,
+      acceptedAt: eventInvitations.acceptedAt,
+      acceptedRegistrationId: eventInvitations.acceptedRegistrationId,
+      withdrawnAt: eventInvitations.withdrawnAt,
+      expiredAt: eventInvitations.expiredAt,
+      createdAt: eventInvitations.createdAt,
+    })
+    .from(eventInvitations)
+    .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventInvitations.eventId), eq(eventTranslations.locale, eventInvitations.locale)))
+    .where(invitationsOf(canonicalEmail, participant?.id ?? null))
+    .orderBy(asc(eventInvitations.sentAt), asc(eventInvitations.id));
+  const invitationsHeld: PersonData["eventInvitations"] = invitationRows.map(({ memberStaffUserId, ...row }) => ({
+    eventId: row.eventId,
+    eventTitle: row.eventTitle,
+    name: row.name,
+    deliveryEmail: row.deliveryEmail,
+    locale: row.locale,
+    state: invitationState(row, now),
+    expiresAt: row.expiresAt,
+    outsideCapacity: row.outsideCapacity,
+    supplementaryRaise: row.supplementaryRaise,
+    fromMemberAccount: memberStaffUserId !== null,
+    sentAt: row.sentAt,
+    lastSentAt: row.lastSentAt,
+    resendCount: row.resendCount,
+    acceptedAt: row.acceptedAt,
+    acceptedRegistrationId: row.acceptedRegistrationId,
+    withdrawnAt: row.withdrawnAt,
+    expiredAt: row.expiredAt,
+    createdAt: row.createdAt,
+  }));
+
   // The results entered for these registrations (§808): this person's own rows, by their registrations.
   const results =
     registrationIds.length > 0
@@ -584,8 +705,42 @@ async function collectPersonData<T extends Record<string, unknown>>(
     groupRunDeclarations: groupRuns,
     results: results.map((row) => ({ ...row, registrationId: row.registrationId as string })),
     notes,
+    reserveEntries,
+    eventInvitations: invitationsHeld,
     auditTrail,
   };
+}
+
+/**
+ * The lines of «Lista internă de așteptare» (§854) written down with this person's address (§NNN). The organizers type the address
+ * as the person wrote from it, so it is stored as typed: each is read through the canonicalizer and matched on the canonical form,
+ * never compared raw (AGENTS.md §10.4) — the same reading as `groupRunDeclarationsOf` below, and for the same reason: a notebook of
+ * a few lines per event, an access request rare. An address the canonicalizer refuses is nobody's here.
+ */
+async function reserveEntryIdsOf<T extends Record<string, unknown>>(db: Database<T>, canonicalEmail: string): Promise<string[]> {
+  const addresses = await db
+    .select({ id: eventReserveEntries.id, email: eventReserveEntries.email })
+    .from(eventReserveEntries)
+    .where(isNotNull(eventReserveEntries.email));
+  return addresses
+    .filter(({ email }) => {
+      try {
+        return email !== null && canonicalizeEmail(email).canonicalEmail === canonicalEmail;
+      } catch {
+        return false;
+      }
+    })
+    .map(({ id }) => id);
+}
+
+/**
+ * A person's invitations to an event (§647): the send wrote the canonical address through the canonicalizer and the participant of
+ * that address, so either finds them — never the address as typed.
+ */
+function invitationsOf(canonicalEmail: string, participantId: string | null) {
+  return participantId
+    ? or(eq(eventInvitations.canonicalEmail, canonicalEmail), eq(eventInvitations.participantId, participantId))
+    : eq(eventInvitations.canonicalEmail, canonicalEmail);
 }
 
 /**
@@ -695,6 +850,100 @@ export async function eraseVolunteerInvitationsOfPerson<T extends Record<string,
 }
 
 /**
+ * Erase the lines of «Lista internă de așteptare» written down with one canonical address (§854, §NNN, art. 17 GDPR), on the person's
+ * request, by an Administrator (`assertAdministrator`). A line holds no place, no slot in the queue and no state (the allocator never
+ * reads the table), so it goes whole — the name, the address and the organizers' note — with nothing to release. Matched exactly as the
+ * page lists them (`reserveEntryIdsOf`, through the canonicalizer). One audit row keeps the count (`participant.reserve_entries_erased`),
+ * never a name, an address or the note's words.
+ */
+export async function eraseReserveEntriesOfPerson<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  canonicalEmail: string,
+  now: Date,
+): Promise<{ entries: number }> {
+  assertAdministrator(actor);
+  return db.transaction(async (tx) => {
+    const ids = await reserveEntryIdsOf(tx, canonicalEmail);
+    const deleted = ids.length > 0 ? await tx.delete(eventReserveEntries).where(inArray(eventReserveEntries.id, ids)).returning({ id: eventReserveEntries.id }) : [];
+    const result = { entries: deleted.length };
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      participantId: null,
+      action: "participant.reserve_entries_erased",
+      entityType: "participant",
+      entityId: null,
+      metadata: result,
+      now,
+    });
+    return result;
+  });
+}
+
+/**
+ * Erase the personal invitations to an event sent to one canonical address (§647, §NNN, art. 17 GDPR), on the person's request, by an
+ * Administrator (`assertAdministrator`). An open invitation **holds a place** (`invitationHoldsCount`, AGENTS.md §10.6), so it is never
+ * deleted raw: each one still open is first withdrawn through «Retrage»'s own path (`withdrawInvitationByStaff`) — under the event's
+ * lock, its own audit row (`event.invitation_withdrawn`, the invitation's id and never a name), and the place handed back through the
+ * allocator (`fillAvailableSpots`), so whoever waits is offered it as at any withdrawal. Only then are the rows that ended unaccepted —
+ * withdrawn, stamped expired or past their deadline, none of which holds anything — deleted, their links with them (`on delete cascade`).
+ * An invitation that became a registration is not touched: it is the registration's record and goes with that registration's own erase
+ * (BR-REQ-037-06, `accepted_registration_id … on delete cascade`). One that changed state under the press (accepted or ended between the
+ * read and the lock) is left to what it became. One audit row keeps the counts (`participant.invitations_erased`), never the address.
+ */
+export async function eraseEventInvitationsOfPerson<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  canonicalEmail: string,
+  now: Date,
+): Promise<{ withdrawn: number; erased: number; keptAccepted: number }> {
+  assertAdministrator(actor);
+  const [participant] = await db.select({ id: participants.id }).from(participants).where(eq(participants.canonicalEmail, canonicalEmail)).limit(1);
+  const matched = invitationsOf(canonicalEmail, participant?.id ?? null);
+  const rows = await db
+    .select({ id: eventInvitations.id, acceptedAt: eventInvitations.acceptedAt, withdrawnAt: eventInvitations.withdrawnAt, expiredAt: eventInvitations.expiredAt, expiresAt: eventInvitations.expiresAt })
+    .from(eventInvitations)
+    .where(matched);
+  let withdrawn = 0;
+  for (const row of rows) {
+    if (invitationState(row, now) !== "sent") continue;
+    try {
+      await withdrawInvitationByStaff(db, row.id, actor, now);
+      withdrawn += 1;
+    } catch (error) {
+      // Accepted, withdrawn or gone between the read and the lock: nothing of it holds a place this erase could release.
+      if (error instanceof InvitationRefusal || (error instanceof DomainError && error.code === "NOT_FOUND")) continue;
+      throw error;
+    }
+  }
+  return db.transaction(async (tx) => {
+    // Only rows that hold nothing: unaccepted and withdrawn, stamped expired or past the deadline. A live one is never deleted here.
+    const deleted = await tx
+      .delete(eventInvitations)
+      .where(
+        and(
+          matched,
+          isNull(eventInvitations.acceptedAt),
+          or(isNotNull(eventInvitations.withdrawnAt), isNotNull(eventInvitations.expiredAt), lte(eventInvitations.expiresAt, now)),
+        ),
+      )
+      .returning({ id: eventInvitations.id });
+    const [kept] = await tx.select({ count: sql<number>`count(*)::int` }).from(eventInvitations).where(and(matched, isNotNull(eventInvitations.acceptedAt)));
+    const result = { withdrawn, erased: deleted.length, keptAccepted: kept?.count ?? 0 };
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      participantId: null,
+      action: "participant.invitations_erased",
+      entityType: "participant",
+      entityId: null,
+      metadata: result,
+      now,
+    });
+    return result;
+  });
+}
+
+/**
  * The page's read. Every registration shown carries its emergency details and health note, so
  * each one is recorded as read (`registration.health_viewed`, §322) exactly as the section on
  * the registration's own page is — the same question, "who has seen my health note", from
@@ -707,7 +956,7 @@ export async function viewPersonData<T extends Record<string, unknown>>(
   now: Date,
 ): Promise<PersonData> {
   assertAdministrator(actor);
-  const data = await collectPersonData(db, canonicalEmail);
+  const data = await collectPersonData(db, canonicalEmail, now);
   for (const registration of data.registrations) {
     await recordAuditEvent(db, {
       actorStaffUserId: actor.id,
@@ -734,7 +983,7 @@ export async function exportPersonData<T extends Record<string, unknown>>(
   now: Date,
 ): Promise<PersonData> {
   assertAdministrator(actor);
-  const data = await collectPersonData(db, canonicalEmail);
+  const data = await collectPersonData(db, canonicalEmail, now);
   await recordAuditEvent(db, {
     actorStaffUserId: actor.id,
     participantId: data.participant?.id ?? null,
@@ -754,6 +1003,8 @@ export async function exportPersonData<T extends Record<string, unknown>>(
       groupRunDeclarations: data.groupRunDeclarations.length,
       results: data.results.length,
       notes: data.notes.length,
+      reserveEntries: data.reserveEntries.length,
+      eventInvitations: data.eventInvitations.length,
       auditRows: data.auditTrail.length,
     },
     now,

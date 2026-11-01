@@ -1730,6 +1730,16 @@ languages go live together; that is the rule, not a setting.
    - The privacy notice describes invitations once the club approves it from the template:
      `/admin/tasks` shows the row «Nota de confidențialitate: invitațiile pe email» until then.
      Invitations work meanwhile.
+   - **A person who asks for their data, or for it to be erased** (art. 15 and 17 GDPR, §NNN): «Toate
+     datele unei persoane» (`/admin/registrations/person`, Administrator) lists the invitations sent to
+     the address — state, deadline, every moment — and the lines of every event's «Lista internă de
+     așteptare» written with it (name, address as typed, the note, who wrote it as a role), and its file
+     carries both. **«Retrage și șterge invitațiile»** withdraws each open invitation exactly as
+     «Retrage» does — the place goes back through the waiting list — then deletes the unaccepted ones;
+     an accepted invitation stays with its registration and goes with that registration's erase.
+     **«Șterge de pe lista internă»** deletes the person's internal-list lines. Each asks first; the
+     trail keeps counts, never the address. A line typed with no address cannot be found by address:
+     delete it from the event's list by hand.
 
 ### If somebody says the site is blocked at work
 

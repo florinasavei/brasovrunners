@@ -6798,7 +6798,20 @@
       "volunteerInvitationsErase": "Șterge invitațiile de voluntariat",
       "volunteerInvitationsEraseTitle": "Ștergi invitațiile de voluntariat ale acestei persoane?",
       "volunteerInvitationsEraseBody": "Se șterg invitațiile trimise acestei adrese, cu mesajul clubului. Ofertele de voluntar și înscrierile rămân. Ștergerea nu se poate anula.",
-      "volunteerInvitationsErased": "Invitațiile de voluntariat ale acestei adrese au fost șterse."
+      "volunteerInvitationsErased": "Invitațiile de voluntariat ale acestei adrese au fost șterse.",
+      "reserveEntries": "Lista internă de așteptare ({count})",
+      "reserveEntryBy": "scrisă de {role}, {date} · modificată {updated}",
+      "reserveErase": "Șterge de pe lista internă",
+      "reserveEraseTitle": "Ștergi această persoană de pe listele interne?",
+      "reserveEraseBody": "Se șterg rândurile acestei adrese de pe listele interne de așteptare, cu nume, adresă și notă. Nu țin locuri, iar persoanei nu i se trimite nimic. Ștergerea nu se poate anula.",
+      "reserveErased": "Rândurile acestei adrese de pe listele interne de așteptare au fost șterse.",
+      "eventInvitations": "Invitații la evenimente ({count})",
+      "eventInvitationOutside": "pe lista de invitați speciali (nu ține un loc)",
+      "eventInvitationsErase": "Retrage și șterge invitațiile",
+      "eventInvitationsEraseTitle": "Retragi și ștergi invitațiile acestei persoane?",
+      "eventInvitationsEraseBody": "Invitațiile deschise se retrag întâi, ca la „Retrage”: locul lor trece prin lista de așteptare. Apoi se șterg cele neacceptate; cele acceptate rămân cu înscrierea. Nu se poate anula.",
+      "eventInvitationsErased": "Invitațiile acestei adrese au fost retrase și șterse; cele acceptate rămân cu înscrierile lor.",
+      "eventInvitationsAcceptedKept": "O invitație acceptată e parte din înscrierea ei: se șterge odată cu înscrierea, din pagina înscrierii."
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
