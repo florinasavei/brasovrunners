@@ -13,7 +13,7 @@ import { COLOR, contrastRatio, HEX_COLOR, MIN_TEXT_CONTRAST } from "@/theme/bran
  *
  * The presets in `SITE_TINT` (`theme/brand.ts`) are held to the same two rules by `brand.test.ts`.
  *
- * The contrast itself is `theme/brand.ts`'s since §NNN — the one file that computes colours, which derives a
+ * The contrast itself is `theme/brand.ts`'s since §885 — the one file that computes colours, which derives a
  * club's missing tints with it — and is named from here as it always was, so none of its readers changed.
  */
 export { contrastRatio, HEX_COLOR, MIN_TEXT_CONTRAST, relativeLuminance } from "@/theme/brand";

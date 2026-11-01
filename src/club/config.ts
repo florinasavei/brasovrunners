@@ -2,7 +2,7 @@ import club from "@club/club.json";
 import type { ClubConfig } from "./schema";
 
 /**
- * The club this deployment is (§882): `club/club.json`, read at build time — since §NNN its palette too, which
+ * The club this deployment is (§882): `club/club.json`, read at build time — since §885 its palette too, which
  * `theme/brand.ts` alone turns into colours. The mountains drawing is `club/decor.json`, which has its own door
  * (`src/club/decor.ts`) so that it never rides into the client islands with this file.
  *

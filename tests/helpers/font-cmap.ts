@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 /**
  * A font's `cmap`, read by hand — no font library — for the tests that prove a character is in a file rather
  * than assume it: `tests/unit/theme/fonts.test.ts` (the WOFF2 faces' Romanian letters) and
- * `tests/unit/theme/brand.test.ts` (every character of the wordmark in `Wordmark.ttf`, §NNN).
+ * `tests/unit/theme/brand.test.ts` (every character of the wordmark in `Wordmark.ttf`, §885).
  */
 
 /** Whether a Unicode `cmap` subtable (format 4 or 12) maps a code point to a real glyph. */

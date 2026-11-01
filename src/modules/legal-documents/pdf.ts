@@ -69,7 +69,7 @@ const PAGE = { width: 595.28, height: 841.89 } as const;
 const MARGIN = { top: 56, bottom: 64, left: 56, right: 56 } as const;
 const TEXT_WIDTH = PAGE.width - MARGIN.left - MARGIN.right;
 
-/** The lockup at the top of the first page: 150 points wide, as tall as its own proportion makes it (§NNN). */
+/** The lockup at the top of the first page: 150 points wide, as tall as its own proportion makes it (§885). */
 export const LEGAL_PDF_LOGO = { width: 150, height: 150 * LOGO_HEIGHT_SHARE } as const;
 
 // The site's own tokens: `brand.ts` is the one file allowed a hex value, and a printed

@@ -2,7 +2,7 @@
  * The platform's text for this document (`DECISIONS.md` §95), written to describe exactly what
  * the application does; the only blanks are the club's own four facts, marked <LIKE THIS>, and its
  * sentence on prize money — a club's choice, `<PREMIILE ÎN BANI>` / `<PRIZE MONEY>` here, written in
- * from `club/legal.json` (`withClubClauses`, §NNN). The deadlines it states are merge fields — `{{confirmationHours}}`, `{{holdMinutes}}`,
+ * from `club/legal.json` (`withClubClauses`, §884). The deadlines it states are merge fields — `{{confirmationHours}}`, `{{holdMinutes}}`,
  * `{{offerHours}}` — filled from the club's "Termene" when the page is shown (§377), so the text
  * says the numbers the platform keeps.
  * Read by the seed (with a not-approved banner) and by `/admin/legal/new?template=`.

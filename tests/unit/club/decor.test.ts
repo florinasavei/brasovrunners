@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-101-01 (§NNN): the mountains drawing is the club's, in `club/decor.json`, and Brașov's is the drawing that
+ * BR-REQ-101-01 (§885): the mountains drawing is the club's, in `club/decor.json`, and Brașov's is the drawing that
  * was written in `MountainMark.tsx` — the same two ridges, the same markup. A club with no mountains draws none.
  */
 
@@ -29,7 +29,7 @@ afterEach(() => {
   vi.resetModules();
 });
 
-describe("BR-REQ-101-01: the mountains are the club's drawing (§NNN)", () => {
+describe("BR-REQ-101-01: the mountains are the club's drawing (§885)", () => {
   it("draws Brașov's two ridges in the box they were drawn in, far then near", async () => {
     const { MOUNTAINS } = await import("@/club/decor");
     expect(MOUNTAINS).toEqual({ width: 120, height: 48, layers: [{ depth: "far", d: FAR }, { depth: "near", d: NEAR }] });

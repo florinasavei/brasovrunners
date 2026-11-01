@@ -169,14 +169,14 @@ describe("§369 the declaration's token legend: made-up examples, in both langua
 });
 
 /*
-  §NNN — the club's own choices left the platform's templates: whether it has a data protection officer, what its
+  §884 — the club's own choices left the platform's templates: whether it has a data protection officer, what its
   mailbox is and whose, where it publishes photographs, whether it pays prize money, its safety form's name. Each is a
   `<PLACEHOLDER>` in the source, written in from `club/legal.json` (or `club.json`'s `safetyProgramme`) when the module
   is read. So the source names none of this club's: not its mailbox, not its safety form, not its photo channels, not
   one of its sentences. A merge field's name (`{{feedbackSafetyGmail}}`) and a function named in a comment are code,
   not words of the text, and are left out of the search; `tokens.ts`, the fields' legend, is the token change's.
 */
-describe("§NNN the club's choices are not written in the templates' source", () => {
+describe("§884 the club's choices are not written in the templates' source", () => {
   const DIRECTORY = path.join(process.cwd(), "src/modules/legal-documents/templates");
   const SOURCES = readdirSync(DIRECTORY)
     .filter((file) => file.endsWith(".ts") && file !== "tokens.ts")

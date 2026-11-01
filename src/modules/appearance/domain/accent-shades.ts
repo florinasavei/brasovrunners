@@ -11,7 +11,7 @@ import { HEX_COLOR, shadesOf } from "@/theme/brand";
  *
  * Pure arithmetic, no zod, no database, no colour literal: the service derives a typed colour with it
  * and the backoffice's colour island shows the same shades live, from one source. The walk itself is
- * `theme/brand.ts#shadesOf` since §NNN — the one file that computes colours, which also fills the shades a
+ * `theme/brand.ts#shadesOf` since §885 — the one file that computes colours, which also fills the shades a
  * club's `club.json` leaves out with it — and this module judges the typed colour before asking it.
  *
  * **How.** Each shade is the colour walked towards black (by day) or towards white (after dark) in

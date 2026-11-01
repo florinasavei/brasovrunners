@@ -7,7 +7,7 @@ import { CLUB_CLAUSES, type ClubLegalClauses, remainingPlaceholders, withClubCla
 import { SAFETY_PROGRAMME } from "@/theme/brand";
 
 /**
- * BR-REQ-101-01 (§NNN) — the club's own choices in its legal texts are `club/legal.json`'s, written into the
+ * BR-REQ-101-01 (§884) — the club's own choices in its legal texts are `club/legal.json`'s, written into the
  * platform's templates where each `<PLACEHOLDER>` stands, in both languages or neither; a choice the file does not
  * say stays its placeholder, for the club to type and for `approveVersion` to refuse until it does (BR-REQ-053-01).
  */
@@ -26,7 +26,7 @@ function pairs(value: unknown, at = ""): Array<[string, Record<string, unknown>]
   return Object.entries(record).flatMap(([key, inner]) => pairs(inner, at ? `${at}.${key}` : key));
 }
 
-describe("BR-REQ-101-01: the club's legal clauses come from club/legal.json (§NNN)", () => {
+describe("BR-REQ-101-01: the club's legal clauses come from club/legal.json (§884)", () => {
   it("says every choice in both languages, words and nothing else", () => {
     const found = pairs(clubLegal);
     expect(found.map(([at]) => at).sort()).toEqual([

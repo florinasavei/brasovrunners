@@ -1,7 +1,7 @@
 /**
  * The platform's text for this document (`DECISIONS.md` §95), written to describe exactly what
  * the application does; the only blanks are the club's own four facts, marked <LIKE THIS>, and the
- * club's own choices (§NNN) — whether it has a data protection officer, what its mailbox is, where it
+ * club's own choices (§884) — whether it has a data protection officer, what its mailbox is, where it
  * publishes photographs, its safety form's name — marked the same way in the source and written in from
  * `club/legal.json` and `club/club.json` (`withClubClauses`) before anything reads the text: the
  * club's own words, never the platform's. Read by the seed (with a not-approved banner) and by
@@ -249,7 +249,7 @@
  * TODO(legal-soon): §5's "Anunță-mă" keeps its email-only withdrawal until the form has its own
  * "Retrage adresa" button — then the amendment's sentence replaces it. §6's mailbox sentences are the
  * club's (`club/legal.json`, `mailbox`): when the club moves its mailbox to a provider that signs a
- * processing contract, it rewrites them there or in /admin/legal at approval (§NNN).
+ * processing contract, it rewrites them there or in /admin/legal at approval (§884).
  */
 import { RSVP_CONFIRM_HOURS } from "@/modules/rsvp/domain/link-life";
 import type { LegalDocumentBody } from "../domain/content-hash";

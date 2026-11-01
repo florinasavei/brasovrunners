@@ -18,7 +18,7 @@ import { MOUNTAINS } from "@/club/decor";
 
 /**
  * The drawing's own box — Brașov's is 120 by 48, so a width of 120 draws it at its natural size — and its
- * ridges, the far one then the near one: the club's, in `club/decor.json` since §NNN (`src/club/decor.ts`).
+ * ridges, the far one then the near one: the club's, in `club/decor.json` since §885 (`src/club/decor.ts`).
  */
 export const MOUNTAIN_MARK_VIEWBOX = { width: MOUNTAINS.width, height: MOUNTAINS.height } as const;
 

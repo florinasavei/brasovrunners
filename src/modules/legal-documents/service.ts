@@ -382,7 +382,7 @@ export async function approveVersion<T extends Record<string, unknown>>(
 
   /*
     No text in effect that the club did not approve (§29, §95), and a blank is not approved text
-    (§NNN, the owner's decision 7): a version that still reads `<ADRESA SEDIULUI>` or
+    (§884, the owner's decision 7): a version that still reads `<ADRESA SEDIULUI>` or
     `<PREMIILE ÎN BANI>` — a club fact the environment did not know, a club choice `club/legal.json`
     does not say — is refused here, on the server, whichever press reached it: «Aprobă și publică»,
     «Aprobă ciornele» (which plans such a draft out already) or the one press (which refuses before
@@ -1039,7 +1039,7 @@ export async function approvePlatformTemplates<T extends Record<string, unknown>
     if (blanks.length > 0) {
       throw new DomainError(
         "VALIDATION_ERROR",
-        `the club's facts are not all set — ${key} still reads ${blanks.join(", ")}; set CLUB_LEGAL_NAME, CLUB_REGISTRATION_NUMBER, CLUB_REGISTERED_ADDRESS, and a contact address — EMAIL_REPLY_TO or the club's Gmail under «Adresa de contact afișată» on /admin/emails — and write the club's choices in club/legal.json (§NNN)`,
+        `the club's facts are not all set — ${key} still reads ${blanks.join(", ")}; set CLUB_LEGAL_NAME, CLUB_REGISTRATION_NUMBER, CLUB_REGISTERED_ADDRESS, and a contact address — EMAIL_REPLY_TO or the club's Gmail under «Adresa de contact afișată» on /admin/emails — and write the club's choices in club/legal.json (§884)`,
       );
     }
     const versionId = await createDraftVersion(db, actor, { key, translations }, now);

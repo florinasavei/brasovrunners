@@ -102,7 +102,7 @@ export function fillClubFacts(body: LegalDocumentBody, facts: ClubFacts): LegalD
 }
 
 /**
- * The club's own choices in its legal texts (§NNN), beside its four facts: whether it has a data
+ * The club's own choices in its legal texts (§884), beside its four facts: whether it has a data
  * protection officer, what its mailbox is and whose, where it publishes photographs, whether it pays
  * prize money, and its safety form's name. A choice, not a fact of the platform's: another club running
  * it answers each differently, so the platform's templates (`privacy-notice.ts`, `terms.ts`) carry a
@@ -119,7 +119,7 @@ export function fillClubFacts(body: LegalDocumentBody, facts: ClubFacts): LegalD
  *
  * A choice left out of the file — or written in one language only (both or neither) — stays its
  * visible `<PLACEHOLDER>`, which `remainingPlaceholders` names and `approveVersion` refuses to approve
- * (§NNN): a fork's empty `legal.json` gives drafts with holes, never this club's sentences
+ * (§884): a fork's empty `legal.json` gives drafts with holes, never this club's sentences
  * (`tests/fork/legal.test.ts`).
  */
 type ClauseWords = { readonly ro?: string; readonly en?: string };
@@ -180,7 +180,7 @@ function clauseValue(words: ClauseWords | undefined, locale: ClauseLocale): stri
 }
 
 /**
- * The platform's template with the club's choices written in (§NNN): what `privacy-notice.ts` and
+ * The platform's template with the club's choices written in (§884): what `privacy-notice.ts` and
  * `terms.ts` export. `clauses` and `safetyProgramme` are the club's files; a test passes others.
  */
 export function withClubClauses(

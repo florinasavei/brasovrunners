@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.01-2026-11-01 -->
+<!-- PROJECT_BASELINE: BR-V4.02-2026-11-01 -->
 
 # Running this locally
 
-**Baseline `BR-V4.01-2026-11-01`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V4.02-2026-11-01`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -133,7 +133,7 @@ yarn brand:assets        the logo's rasters — the PDFs' lockup, the emails' le
                          the primary when it is left out, and the primary's ink), then
                          club/assets.lock.json: each source's sha256 (LF line endings) and those colours. Run it after changing
                          an SVG or the palette and commit what it writes; tests/unit/theme/brand-assets-lock.test.ts fails with
-                         «run yarn brand:assets» until you do. --lock-only rewrites the lock alone (§NNN)
+                         «run yarn brand:assets» until you do. --lock-only rewrites the lock alone (§885)
 ```
 
 `yarn check` is the single gate, and CI runs it (its two halves on five runners) on every pull request. The pre-commit

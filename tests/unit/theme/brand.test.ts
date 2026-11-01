@@ -38,7 +38,7 @@ import {
 import { cmapHas, sfntCmap } from "../../helpers/font-cmap";
 
 /**
- * The colour the club's logo file fills its drawing with (§NNN): `public/brand/logo.svg` states it once, as the
+ * The colour the club's logo file fills its drawing with (§885): `public/brand/logo.svg` states it once, as the
  * group's `fill:#rrggbb`. The palette's `primary` is held to it rather than to a pinned hex, so a club that
  * replaces both keeps this test, and a club that replaces one fails it.
  */
@@ -187,7 +187,7 @@ describe("BR-REQ-070-02 the palette is readable", () => {
     expect(COLOR.blue).toBe(PALETTE.primary);
   });
 
-  it("BR-REQ-101-01: reads every colour of the club from club/club.json, the hue names aliases of its roles (§NNN)", () => {
+  it("BR-REQ-101-01: reads every colour of the club from club/club.json, the hue names aliases of its roles (§885)", () => {
     const written = CLUB.palette;
     expect({ blue: COLOR.blue, blueInk: COLOR.blueInk, orange: COLOR.orange }).toEqual({ blue: written.primary, blueInk: written.primaryInk, orange: written.secondary });
     expect({ blue: COLOR_DARK.blue, blueInk: COLOR_DARK.blueInk }).toEqual({ blue: written.dark.primary, blueInk: written.dark.primaryInk });
@@ -521,7 +521,7 @@ describe("the brand assets the theme points at exist", () => {
   });
 
   describe("the kit wordmark constant stays inside what the kit typeface can render", () => {
-    it("BR-REQ-101-01: has every wordmark character in the font's cmap (§NNN)", () => {
+    it("BR-REQ-101-01: has every wordmark character in the font's cmap (§885)", () => {
       // Read from the font's own cmap. Facón, Brașov's face, maps 129 characters and not one of
       // ș ț ă â î in either the comma-below or the cedilla encoding. Writing "BRAȘOV" in the
       // wordmark would not throw — it would silently render the Ș in the fallback font, one Roboto

@@ -93,7 +93,7 @@ async function noticeInForce(client: pg.Client): Promise<{ version: number; tran
 
 /**
  * The text with every `<PLACEHOLDER>` typed in, as the club would before approving: the sample in force carries the
- * club's facts as blanks, and `approveVersion` refuses a version that still holds one (§NNN).
+ * club's facts as blanks, and `approveVersion` refuses a version that still holds one (§884).
  */
 const typedIn = (translations: Translation[]): Translation[] =>
   JSON.parse(JSON.stringify(translations).replace(/<[A-ZĂÂÎȘȚ'’][^<>]{3,}>/g, "Exemplu")) as Translation[];

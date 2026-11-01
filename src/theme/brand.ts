@@ -8,10 +8,10 @@
  *
  * What must be replaced, and what to replace it with:
  *
- *   colour   `palette` in `club/club.json`, by role, as hex (§NNN). Keep the token names here.
+ *   colour   `palette` in `club/club.json`, by role, as hex (§885). Keep the token names here.
  *   logo     drop the real SVGs over `public/brand/*.svg`, same filenames, and write their
  *            proportions in `club/club.json`'s `logo`; then `yarn brand:assets`.
- *   font     `src/theme/fonts/Wordmark.ttf` and its licence beside it (§NNN); see FONT below.
+ *   font     `src/theme/fonts/Wordmark.ttf` and its licence beside it (§885); see FONT below.
  *            A licence permitting web embedding is required before a typeface
  *            is self-hosted — many licences that cover print do not, and shipping one that
  *            does not is redistribution the club would be liable for.
@@ -21,7 +21,7 @@
  *
  * The club's identity — its name, its wordmark, its short forms, its logo files — is not written here
  * any more but read from `club/club.json` (§882, through `src/club/config.ts`): this file keeps every
- * name it exported, so none of the places that read them changed. Since §NNN the club's colours are
+ * name it exported, so none of the places that read them changed. Since §885 the club's colours are
  * there too (`palette`, by role); the platform's neutrals and this file's arithmetic stay here, and this
  * is still the only file that turns a colour into another.
  */
@@ -29,7 +29,7 @@ import { CLUB } from "@/club/config";
 import type { ClubPalette, ClubShades } from "@/club/schema";
 
 /*
-  The colour arithmetic (§NNN), here because this is the one file that computes colours: the WCAG contrast
+  The colour arithmetic (§885), here because this is the one file that computes colours: the WCAG contrast
   the AA tests and the backoffice's colour checks measure with (`appearance/domain/tint-contrast.ts` names
   it from here), `mix`, and the accent's derivation (`shadesOf`, which `appearance/domain/accent-shades.ts`
   answers a typed colour with). The palette below calls them only for a colour `club.json` leaves out.
@@ -123,7 +123,7 @@ export function shadesOf(base: string): { readonly light: ClubShades; readonly d
 }
 
 /**
- * The club's palette by role (§NNN): `club/club.json`'s `palette` as written, and for each colour a club leaves
+ * The club's palette by role (§885): `club/club.json`'s `palette` as written, and for each colour a club leaves
  * out, the derivation from its required ones — the primary and its ink by day and after dark, the secondary and the
  * accent: the tints and the kit's gradient mixed from the primary, each accent's four shades walked by `shadesOf`.
  * Brașov's file writes every value out, its hand-picked tints included, so what it wrote wins over every mix and
@@ -395,7 +395,7 @@ export const SHEET_FRAME = {
  * on paper and from the club's blue, which is the empty choice. Hex triplets, because that is
  * what `events.bib_colour` checks for and what the sheet paints. The members' header offers the
  * same six (§664), its empty choice being the event's own band. Print colours, the platform's
- * rather than the club's, and here since §NNN because this is the one file that names a colour.
+ * rather than the club's, and here since §885 because this is the one file that names a colour.
  */
 export const BIB_COLOURS = [
   { key: "green", hex: "#1b8a3a" },
@@ -625,7 +625,7 @@ export const LOGO = {
 } as const;
 
 /**
- * The lockup's width over its height, to three decimals (§NNN): what a race number, a volunteer badge and the bib
+ * The lockup's width over its height, to three decimals (§885): what a race number, a volunteer badge and the bib
  * designer's swatch size the logo by — 2.424 for Brașov's 2880 × 1188, the number they wrote by hand before. A
  * club's own lockup brings its own (`club/club.json`'s `logo`), and the bib's band caps how tall it may stand
  * (`registrations/bib-geometry.ts`).
@@ -633,7 +633,7 @@ export const LOGO = {
 export const LOGO_RATIO = Math.round((LOGO.lockup.width / LOGO.lockup.height) * 1000) / 1000;
 
 /**
- * Its height over its width, exactly (§NNN): how far below the lockup the PDFs start their title — 1188 / 2880,
+ * Its height over its width, exactly (§885): how far below the lockup the PDFs start their title — 1188 / 2880,
  * the same number as the raster's 495 / 1200 they wrote by hand before (`src/theme/pdf/logo.png` is the lockup at
  * 1200 wide), so not a point moves.
  */

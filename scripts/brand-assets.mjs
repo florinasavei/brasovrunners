@@ -10,7 +10,7 @@ import { brandAssetsLock, brandColours } from "./brand-assets-lock.mjs";
  * composites badly on some viewers and printers. Run after changing the SVG source or the palette in
  * `club/club.json`; the outputs are committed so `next build` needs no native dependency.
  *
- * Its colours are the club's (§NNN): the palette's `tints.emailBand` behind the white lockup (the primary
+ * Its colours are the club's (§885): the palette's `tints.emailBand` behind the white lockup (the primary
  * when a club leaves it out), the primary's ink for the glyph, read from `club/club.json`; white is the page's. It ends by writing `club/assets.lock.json` —
  * each source's sha256 and those colours — which `tests/unit/theme/brand-assets-lock.test.ts` holds the
  * sources to, so a changed source without a rebuild fails the tests. `--lock-only` writes the lock alone,
@@ -72,7 +72,7 @@ const OUTPUTS = [
       The glyph before «Nu mai pot ajunge» in every email about a live registration (§558): the
       manage page's cancel glyph (`EventBusy`) in the club's ink blue, drawn at 20 px, so 2× here.
       With alpha, so it sits on the button's white and on a dark theme's re-coloured one alike.
-      Its fill is the club's primary ink, whatever the source file says (§NNN).
+      Its fill is the club's primary ink, whatever the source file says (§885).
     */
     width: 40,
     background: null,

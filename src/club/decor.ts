@@ -1,7 +1,7 @@
 import decor from "@club/decor.json";
 
 /**
- * The club's drawing (§NNN): `club/decor.json`, the mountains the new look puts under the public pages and the
+ * The club's drawing (§885): `club/decor.json`, the mountains the new look puts under the public pages and the
  * calendar picture draws across its empty days — Brașov's two ridges, as `shared/ui/MountainMark.tsx` wrote them.
  *
  * Its own file and its own door, apart from `club.json` and `config.ts`, because the theme carries `club.json`

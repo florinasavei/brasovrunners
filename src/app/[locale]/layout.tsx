@@ -97,7 +97,7 @@ const nunito = localFont({
  * The club's wordmark face — Facón, the face on Brașov's kit — for the wordmark beside the logo.
  * Self-hosted from `src/theme/fonts/`, unmodified — the designer's licence forbids altering the file,
  * and a TTF serves perfectly well, so no WOFF2 conversion is performed. See `docs/brand/README.md`.
- * A fixed slot since §NNN: `Wordmark.ttf` with its `Wordmark-LICENSE.txt` beside it, so a club's own
+ * A fixed slot since §885: `Wordmark.ttf` with its `Wordmark-LICENSE.txt` beside it, so a club's own
  * face replaces the file and no code (`club/README.md`).
  *
  * `adjustFontFallback` is off: Next's automatic fallback metric matching assumes the fallback

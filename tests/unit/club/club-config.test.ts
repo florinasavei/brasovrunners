@@ -75,7 +75,7 @@ describe("BR-REQ-101-01: club/club.json is a club the platform can run (§882)",
     expect(new Set(words).size).toBe(words.length);
   });
 
-  it("BR-REQ-101-01: writes every colour of its palette as #rrggbb in lower case, and names no role the platform does not read (§NNN)", () => {
+  it("BR-REQ-101-01: writes every colour of its palette as #rrggbb in lower case, and names no role the platform does not read (§885)", () => {
     const colours = (value: unknown, at: string): [string, unknown][] =>
       value && typeof value === "object" ? Object.entries(value).flatMap(([key, child]) => colours(child, `${at}.${key}`)) : [[at, value]];
     const found = colours(CLUB.palette, "palette");

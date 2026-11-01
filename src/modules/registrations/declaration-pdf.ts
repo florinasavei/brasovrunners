@@ -354,7 +354,7 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
   return finished;
 }
 
-/** The lockup at the head of each declaration: 140 points wide, as tall as its own proportion makes it (§NNN). */
+/** The lockup at the head of each declaration: 140 points wide, as tall as its own proportion makes it (§885). */
 export const DECLARATION_LOGO = { width: 140, height: 140 * LOGO_HEIGHT_SHARE } as const;
 
 function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: DeclarationPdfInput["labels"], lockup: unknown): void {

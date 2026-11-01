@@ -39,7 +39,7 @@ describe("BR-REQ-101-01: the identity exports read from club/club.json equal the
   });
 
   /**
-   * §NNN: the palette moved into `club/club.json` too, and Brașov stays identical to the pixel. Every colour
+   * §885: the palette moved into `club/club.json` too, and Brașov stays identical to the pixel. Every colour
    * export of `brand.ts` (the bib's colours since they moved into it), the pairs the AA tests walk and the logo's
    * proportions as the race number and the PDFs round them — written from `origin/qa` before the move.
    */

@@ -20,7 +20,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-053-01 (§NNN, the owner's decision 7) — no text in effect that the club did not approve, and a
+ * BR-REQ-053-01 (§884, the owner's decision 7) — no text in effect that the club did not approve, and a
  * `<PLACEHOLDER>` is not approved text: `approveVersion` refuses a version that still holds one, in either
  * language — a club fact the environment did not know (`<ADRESA SEDIULUI>`) or a club choice
  * `club/legal.json` does not say (`<PREMIILE ÎN BANI>`) — on the server, whichever press reached it. The one
@@ -49,7 +49,7 @@ async function codeOf(operation: Promise<unknown>): Promise<string> {
   }
 }
 
-describe("BR-REQ-053-01: a version that still holds a <PLACEHOLDER> is never approved (§NNN)", () => {
+describe("BR-REQ-053-01: a version that still holds a <PLACEHOLDER> is never approved (§884)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

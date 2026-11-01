@@ -3,13 +3,13 @@ import { ownCloneUrlPattern, ownHostPattern, readClub, readInfra } from "../../.
 import { todayIn } from "../../../scripts/land-tree.mjs";
 
 /**
- * BR-REQ-101-01 «Hosting portability» (§NNN): the scripts and the workflow no longer write the club's names; they read
+ * BR-REQ-101-01 «Hosting portability» (§886): the scripts and the workflow no longer write the club's names; they read
  * `club/infra.json` and `club/club.json`. The hostname is assembled here from the labels and a TLD, never written out:
  * the club's domain may appear in no file but SETUP.md §26.
  */
 const matches = (pattern: RegExp, text: string) => [...text.matchAll(pattern)].map((m) => m[0]);
 
-describe("BR-REQ-101-01: docs:check's own-host pattern is built from club/infra.json's domainLabels (§NNN)", () => {
+describe("BR-REQ-101-01: docs:check's own-host pattern is built from club/infra.json's domainLabels (§886)", () => {
   const infra = readInfra() as { domainLabels: string[]; vercelProjects: Record<string, string>; releaseAuthor: string };
   const [first, second] = infra.domainLabels;
 

@@ -12,7 +12,7 @@ import { createTestDatabase, type TestDatabase } from "../helpers/db";
 import { UPSTREAM_IDENTITY } from "./upstream-identity";
 
 /**
- * BR-REQ-101-01 and BR-REQ-053-01 (§NNN): a club that runs the platform with an empty `legal.json` gets the
+ * BR-REQ-101-01 and BR-REQ-053-01 (§884): a club that runs the platform with an empty `legal.json` gets the
  * platform's legal texts with a visible `<PLACEHOLDER>` wherever Brașov Runners' own choices stood — the data
  * protection officer, the mailbox and its company, the photo channels, the prize money — and its own safety
  * form's name from its `club.json`; never one of the upstream club's sentences. And it cannot approve them
@@ -64,7 +64,7 @@ async function codeOf(operation: Promise<unknown>): Promise<string> {
   }
 }
 
-describe("BR-REQ-101-01: a fork with an empty legal.json gets blanks, never Brașov Runners' clauses (§NNN)", () => {
+describe("BR-REQ-101-01: a fork with an empty legal.json gets blanks, never Brașov Runners' clauses (§884)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.02-2026-11-01
+
+- **The club's own legal clauses live in `club/legal.json`** — the data protection officer, the mailbox, the photo channels and the prize money are the club's values, written into the platform's templates (Brașov's text and its fingerprint unchanged, so no «Șablon nou» email), and «Aprobă și publică» now refuses a version that still holds a `<PLACEHOLDER>`. §884.
+- **The club's colours, mountains, logo proportions and wordmark face are its own data** — `club/club.json`'s `palette` (by role; what a club leaves out is derived at AA), `club/decor.json` for the mountains, the logo's ratio read wherever it was written by hand, `Wordmark.ttf` as a fixed slot, and `yarn brand:assets` with a lock its test holds the sources to. Brașov is identical to the pixel. §885.
+- **The club's names leave the scripts and the release workflow** — hostname labels, Vercel projects and the release commit's author are read from `club/infra.json`, the archive name and the clocks from `club/club.json`. §886.
 ## BR-V4.01-2026-11-01
 
 - **The e2e specs no longer hold dates the calendar will reach** — `ahead()` in `tests/e2e/support/dates.ts` moves a written day by whole weeks so it is always months ahead with the same weekday and gaps, read once per process, and the months, ages, seasons and offsets the specs read are derived from it; twenty-two specs stay green past April 2027, and the calendar's canonical test now checks the old `?month=` address's 308 itself. §883.

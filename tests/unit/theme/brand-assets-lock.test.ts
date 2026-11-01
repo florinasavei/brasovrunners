@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { BRAND_SOURCES, brandAssetsLock } from "../../../scripts/brand-assets-lock.mjs";
 
 /**
- * BR-REQ-101-01 (§NNN): the committed rasters — the PDFs' lockup, the emails' letterhead and the «Nu mai pot ajunge»
+ * BR-REQ-101-01 (§885): the committed rasters — the PDFs' lockup, the emails' letterhead and the «Nu mai pot ajunge»
  * glyph — are the SVG sources and the club's colours as `yarn brand:assets` last drew them.
  *
  * The script writes `club/assets.lock.json` with each source's sha256 (line endings normalised to LF, so a Windows
@@ -19,7 +19,7 @@ type Lock = { sources: Record<string, string>; colours: Record<string, string> }
 
 const committed = JSON.parse(readFileSync(path.join(ROOT, "club/assets.lock.json"), "utf8")) as Lock;
 
-describe("BR-REQ-101-01: the brand rasters are built from today's sources (§NNN)", () => {
+describe("BR-REQ-101-01: the brand rasters are built from today's sources (§885)", () => {
   const now = brandAssetsLock(ROOT) as Lock;
 
   it("locks every SVG source the script draws from", () => {

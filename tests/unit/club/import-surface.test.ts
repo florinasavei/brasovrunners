@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 /**
  * BR-REQ-101-01 (§882): the club's file reaches the platform through five doors and no other — and its legal clauses,
- * `club/legal.json`, through one: the legal texts' module (§NNN).
+ * `club/legal.json`, through one: the legal texts' module (§884).
  *
  * `src/club/config.ts` is the only importer of `club/club.json`, and only `theme/brand.ts`, `events/domain/place.ts`,
  * `i18n/dates.ts`, `events/domain/sun.ts` and `shared/config/env.ts` import it: every other file reads the names
@@ -54,14 +54,14 @@ describe("BR-REQ-101-01: the club's file has one way into the platform (§882)",
     expect(readers).toEqual(["src/club/config.ts"]);
   });
 
-  it("and the tooling's names (club/infra.json) by nothing under src/: only the scripts read it (§NNN)", () => {
+  it("and the tooling's names (club/infra.json) by nothing under src/: only the scripts read it (§886)", () => {
     const readers = FILES.filter(({ file, imports }) => file.startsWith("src/") && imports.some((specifier) => /(^|\/)infra(\.json)?$/.test(specifier))).map(({ file }) => file);
     expect(readers).toEqual([]);
     const text = FILES.filter(({ file }) => file.startsWith("src/")).filter(({ full }) => /club\/infra/.test(readFileSync(full, "utf8"))).map(({ file }) => file);
     expect(text).toEqual([]);
   });
 
-  it("and the club's legal clauses, club/legal.json, only by the legal texts' module (§NNN)", () => {
+  it("and the club's legal clauses, club/legal.json, only by the legal texts' module (§884)", () => {
     const readers = FILES.filter(({ imports }) => imports.some((specifier) => /(^@club\/legal(\.json)?$|(^|\/)club\/legal\.json$)/.test(specifier))).map(({ file }) => file);
     expect(readers).toEqual(["src/modules/legal-documents/templates/club-facts.ts"]);
     expect(readers.every((file) => file.startsWith("src/modules/legal-documents/"))).toBe(true);
@@ -77,7 +77,7 @@ describe("BR-REQ-101-01: the club's file has one way into the platform (§882)",
   });
 
   /**
-   * BR-REQ-101-01 (§NNN): the mountains drawing is the club's (`club/decor.json`), and only its readers carry it. The
+   * BR-REQ-101-01 (§885): the mountains drawing is the club's (`club/decor.json`), and only its readers carry it. The
    * theme's door (`config.ts`) brings `club.json` into every client island, so the drawing has a door of its own,
    * `src/club/decor.ts`, which only `MountainMark` (a Server Component: an inline SVG in the HTML, no script) and the
    * calendar picture's canvas files (loaded with the dialog, on a click) import — and `MountainMark` in turn only the

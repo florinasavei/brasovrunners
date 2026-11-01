@@ -1,5 +1,5 @@
 /**
- * The club's two files, read by the scripts (§NNN): `club/club.json` (its identity) and
+ * The club's two files, read by the scripts (§886): `club/club.json` (its identity) and
  * `club/infra.json` (the names its tooling holds). Plain `fs` and `JSON.parse`, so a `.mjs` script needs
  * no compiler; nothing under `src/` imports `infra.json` (`tests/unit/club/import-surface.test.ts`).
  */

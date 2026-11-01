@@ -173,7 +173,7 @@ jobs:
 
       - name: Who commits
         run: |
-          # The author is club/infra.json's releaseAuthor (§NNN), read from qa (else the branch's own copy) so a branch cut before the file existed commits under the same name; without it, the repository's name.
+          # The author is club/infra.json's releaseAuthor (§886), read from qa (else the branch's own copy) so a branch cut before the file existed commits under the same name; without it, the repository's name.
           git fetch --quiet origin qa main
           # `|| true` inside: under the job's `bash -eo pipefail` a missing file would otherwise stop the step before the fallback.
           author=$( (git show origin/qa:club/infra.json 2> /dev/null || cat club/infra.json 2> /dev/null || true) | node -e 'try { process.stdout.write(JSON.parse(require("fs").readFileSync(0, "utf8")).releaseAuthor || "") } catch {}')

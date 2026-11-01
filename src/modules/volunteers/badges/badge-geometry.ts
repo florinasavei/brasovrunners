@@ -105,7 +105,7 @@ export const BADGE_LAYOUT = {
   headerShare: 0.27,
   roleShare: 0.3,
   phoneShare: 0.1,
-  /** The logo's height, of the header's; its width at the lockup's own proportion (`LOGO_RATIO`, §NNN). */
+  /** The logo's height, of the header's; its width at the lockup's own proportion (`LOGO_RATIO`, §885). */
   logoShare: 0.68,
   logoRatio: LOGO_RATIO,
   /** The room inside the content's sides and between the logo and the title, of the header's height. */

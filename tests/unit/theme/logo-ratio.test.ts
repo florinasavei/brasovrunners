@@ -8,14 +8,14 @@ import { BADGE_LAYOUT, badgeLayout } from "@/modules/volunteers/badges/badge-geo
 import { LOGO, LOGO_HEIGHT_SHARE, LOGO_RATIO } from "@/theme/brand";
 
 /**
- * BR-REQ-101-01 (§NNN): the logo's proportions are read from `club/club.json` wherever the code sized the lockup by
+ * BR-REQ-101-01 (§885): the logo's proportions are read from `club/club.json` wherever the code sized the lockup by
  * hand — the race number, the volunteer badge, the bib designer's swatch and the two PDFs — and not a point moved.
  *
  * Each ratio is `LOGO` rounded to three decimals, the number those places wrote before (2.424); the PDFs, which wrote
  * the raster's 495 / 1200, read the lockup's exact share, the same number. The literals below are today's geometry,
  * computed as origin/qa computed it.
  */
-describe("BR-REQ-101-01: the logo's proportions come from the club's file, and every geometry number is today's (§NNN)", () => {
+describe("BR-REQ-101-01: the logo's proportions come from the club's file, and every geometry number is today's (§885)", () => {
   it("is LOGO rounded to three decimals: 2.424 for 2880 × 1188", () => {
     expect(LOGO_RATIO).toBe(Math.round((LOGO.lockup.width / LOGO.lockup.height) * 1000) / 1000);
     expect(LOGO_RATIO).toBe(2.424);

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.01-2026-11-01 -->
+<!-- PROJECT_BASELINE: BR-V4.02-2026-11-01 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.01-2026-11-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.02-2026-11-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28399,3 +28399,72 @@ What a whole-week shift does not keep is derived, never written a second time: t
 **Refused.** Moving the written dates to 2031 by whole weeks: it would have worked for four years and been the same afternoon again, and a hand-edited year is the one fix no one remembers. A fake clock in the browser: the server renders the dates, and `test:clock` already moves the unit tests' clock. A seeded fixture event for every spec: the specs create their own events on purpose, as other specs unpublish the seeded ones. One shift for the whole run across Playwright's workers (an environment variable set by the configuration): a test, and a serial group of tests, runs in one worker process, which is all a fill and its assertion need.
 
 Baseline `BR-V4.01-2026-11-01`.
+
+## 884. The club's own choices in its legal texts come from club/legal.json; a version with a `<PLACEHOLDER>` is never approved
+
+**The owner (2026-11-01, §882):** «we should make an effort to have the entire app white-labeled cuz I might want to reuse this repo for another run club».
+
+**The owner's standing rule, 2026-09-24 (§357):** "I do not [want] hardcoded stuff in the document and emails anymore!" — every value in a legal text is a placeholder or a field, never written in. §882 moved the club's identity into `club/club.json`; the legal templates still wrote this club's own choices as platform text: «Nu avem responsabil cu protecția datelor…», «Căsuța de e-mail a clubului este un cont Gmail (Google)», «prin căsuța Gmail a clubului (Google Ireland Ltd.)», «Fotografiile publicate pe Facebook, Instagram (Meta) sau Strava», «Nu se acordă premii în bani», and «Girl Zone» three times per language. A club running the platform would have prefilled — and could have approved — Brașov Runners' sentences as its own.
+
+**Decision.**
+
+- **The club's choices are values in `club/legal.json`**, each in Romanian and English: `dataProtectionOfficer`; `mailbox` (`account`, `providerTerms`, `name`, `theClubs`, `withCompany`, `company` — the six places the privacy notice names the mailbox and its company); `photoChannels`; `prizeMoney`. The safety form's name is `club.json`'s `safetyProgramme`, which the contact page already prints. The templates (`privacy-notice.ts`, `terms.ts`) carry a visible `<PLACEHOLDER>` where each goes — `<RESPONSABILUL CU PROTECȚIA DATELOR>` / `<DATA PROTECTION OFFICER>`, `<PREMIILE ÎN BANI>` / `<PRIZE MONEY>`, `<NUMELE FORMULARULUI DE SIGURANȚĂ>` / `<THE SAFETY FORM'S NAME>`… — and `withClubClauses` (`templates/club-facts.ts`, beside `fillText`) writes the club's words in when the template module is read, so "start from the platform's text", the one press, «Regenerează», the seed and `filledHash` all read the club's sentences. A value written in one language only fills neither (both or neither).
+- **Brașov's filled text is byte-identical.** `tests/unit/legal-documents/filled-hash-parity.test.ts` (§882's) passes unedited, so the maintenance job's fingerprint (§639) does not move and no «Șablon nou» digest goes out; the QA samples hash as before. The templates-notice digest code is untouched.
+- **Only `src/modules/legal-documents/**` imports `club/legal.json`** (`tests/unit/club/import-surface.test.ts`: `templates/club-facts.ts` alone). The templates' source no longer says «Gmail», «Girl Zone» or «Facebook, Instagram», nor any sentence of `legal.json` (`no-hardcoded-values.test.ts`); `known-leaks.ts` loses the privacy notice's row.
+- **The owner's decision 7, default taken: a version that still holds a `<PLACEHOLDER>` is never approved.** `approveVersion` refuses it on the server (`LEGAL_PLACEHOLDERS_LEFT`, «Nu s-a aprobat nimic: textul mai are locuri de completat…» in both catalogues) — a club fact the environment did not know or a club choice `legal.json` does not say, in either language, whichever press reached it («Aprobă și publică», «Aprobă ciornele», the one press). The update approves only the text it checked (`content_sha256` in its condition). It only strengthens §29/§95's rule: no legal text in effect that the club did not approve, and a blank is not approved text. The one press is unchanged for complete texts and refuses an incomplete one as before, before making a draft.
+- **A fork:** `yarn test:fork` (`tests/fork/legal.test.ts`) runs with an empty `legal.json` — the prefilled notice and terms show every choice's placeholder, the fork's own safety form's name, no upstream word; the one press and «Aprobă și publică» refuse.
+
+**Refused.**
+
+- **A new `{{field}}` per choice**, filled when the text is shown: a new token changes every template's hash (the §639 digest to every Administrator) and would let a setting change an approved text's meaning after approval.
+- **Deriving the photo channels from the site's social links:** it would add YouTube to Brașov's text. The channels are listed explicitly.
+- **Moving Romanian law, ANSPDCP and the four environment facts:** they stay as they are — the region is Romania for every club (§882), and the facts are the Vercel projects' (§132, §565).
+- **Filling the choices only at draft time, leaving the exported templates blank:** the catalogue is what the seed, the prefill and the fingerprint read, and every one of them must read the club's own sentences unchanged; filling the module once, from the club's folder, is the same values at the same moment for every reader.
+
+**Left for the changes that follow:** the merge field `{{feedbackSafetyGmail}}` is still filled, when the notice is shown, with the platform's own words «Gmail-ul clubului» / "the club's Gmail" (`feedback/notice-words.ts`), and the backoffice calls the second road «Gmail» throughout (the catalogues' wording) — the tokens' change and the wording change move them; a fork that names another mailbox in `legal.json` reads «Gmail» there until then. Renaming the field itself would change every template's hash, so it stays.
+
+Baseline `BR-V4.02-2026-11-01`.
+
+## 885. The club's palette, its mountains, its logo's proportions and its wordmark face are the club's data
+
+**The owner (2026-11-01):** «we should make an effort to have the entire app white-labeled cuz I might want to reuse this repo for another run club».
+
+This is the third of the seven chains in the plan judged after §882 (C3). Its card: «Colours, the mountains drawing, the logo proportions and the wordmark font become the club's data and fixed file slots. Brașov stays identical to the pixel.»
+
+**Decision.**
+
+- **The palette is `palette` in `club/club.json`, by role.** Five are required — `primary` (the logo's own colour), `primaryInk`, `dark` (the two after dark: a choice that decides whether words read on the dark page, so a club makes it), `secondary`, `accent` — and the rest are Brașov's hand-picked values written out as they were in the code: `kit` (the kit's gradient), `tints` (the three page tints, the hero's two ends, the poster's hairline, the sheet's member fill, the blue preset's pressed shades), `look` and `secondaryLook` (the pink and the orange presets' four shades by day and after dark). A club that leaves one out gets it derived from those by `theme/brand.ts` — `shadesOf` (the accent derivation of §723, which `appearance/domain/accent-shades.ts` now asks rather than carries) and a `mix` helper — so a fork with five colours gets a whole theme whose every pair clears AA (`tests/fork/palette.test.ts`). `brand.ts` stays the only file that computes colours: the WCAG contrast, `mix` and the derivation moved into it, and `tint-contrast.ts` and `accent-shades.ts` name them from there, so none of their readers changed. The roles are `PALETTE`; the hue names every file reads (`COLOR.blue`, `COLOR.blueInk`, `COLOR.orange`, `COLOR_DARK.blue`…) are kept as their aliases, and the stored preset ids (`faintBlue`, `lightBlue`, `blueGrey`, `pink`, `blue`, `orange`) are unchanged, so no migration and no rename across files. The platform's neutrals — the ink, the paper, the kinds' fills, the calendar picture's other themes, the providers' logo colours — stay literals in `brand.ts`: they are the same for every club. `BIB_COLOURS`, the race numbers' six print colours, moved into `brand.ts` too, and the colour guard's allowlist lost its entry.
+- **The mountains are `club/decor.json`**: the drawing's box and its ridges (`far`, `near`), Brașov's two paths from `MountainMark.tsx`. Its own door, `src/club/decor.ts`, imported only by `MountainMark` (a Server Component: an inline SVG, no script) and the calendar picture's five canvas files (`fillMountains`, loaded with the dialog on a click) — never by `brand.ts` or `config.ts`, because `club.json` rides whole into every client island and a drawing has no business there (`tests/unit/club/import-surface.test.ts`). `"layers": []` draws nothing: no mark, no fill.
+- **The logo's proportions are read where they were written by hand.** `LOGO_RATIO` is `LOGO`'s width over height rounded to three decimals — 2.424, the number the race number and the badge wrote — and the bib designer's swatch is `53 × round(53 / LOGO_RATIO)`, 53 × 22 as before. The two PDFs wrote the raster's `495 / 1200`; they read `LOGO_HEIGHT_SHARE`, the lockup's exact height over width, which is the same number (1188 / 2880), so not a point moves — three decimals there would have been 0.413 and moved each title by a tenth of a point. The race number's lockup is 122 points wide or as wide as a 52-point height allows, whichever is less: Brașov's meets the width (122 × 50.3, unchanged), a square logo stands 52 points tall inside the 62-point band.
+- **The wordmark's face is a fixed slot**: `src/theme/fonts/Wordmark.ttf` with `Wordmark-LICENSE.txt` beside it (Facón, unchanged, renamed), loaded by `next/font/local` from that folder (BR-REQ-101-01 criterion 10) under `--font-wordmark`, which replaces `--font-facon` everywhere. The test that the wordmark is ASCII became one that reads the face's own `cmap` and finds every character of the configured wordmark there.
+- **`yarn brand:assets`** (was `node scripts/brand-assets.mjs`) takes its colours from `club.json` — the white lockup's band is the palette's `tints.emailBand` (the `#1a1aff` literal is gone from the script: Brașov's file writes that value, the band `logo-white-email.png` was painted in and delivered emails link; a club that leaves it out gets its primary), the «Nu mai pot ajunge» glyph's fill the primary's ink — and writes `club/assets.lock.json`: each SVG source's sha256, line endings normalised to LF, and those two colours. `tests/unit/theme/brand-assets-lock.test.ts` fails with «run yarn brand:assets» when a source or a colour changes without a rebuild, and reads the colours back from the committed PNGs themselves — the band's first pixel, the glyph's every opaque one — so the lock cannot name a colour a raster does not hold.
+
+**Proved identical.** Every palette export of `brand.ts`, `BIB_COLOURS` and the pairs `brand-pairs.ts` builds are a file snapshot written from `origin/qa` before the move (`tests/unit/club/__snapshots__/palette-exports.json`); the mark's markup equals the old component's; the bib, badge and both PDFs' logo numbers equal today's (`tests/unit/theme/logo-ratio.test.ts`); and the 1 176 pictures of `yarn calendar:preview --theme all --week all` are byte-identical to `origin/qa`'s. No «drawn» snapshot was updated.
+
+**Refused.**
+
+- *Renaming the hue names to roles across the code* (`COLOR.blue` → `COLOR.primary`). Hundreds of readers, no pixel gained, and the design page lists `COLOR`'s keys: the roles are added as `PALETTE` and the hue names kept as their aliases.
+- *Renaming the stored preset ids* (`faintBlue`, `blue`, `orange`). They are rows in the database; a rename is a migration for a word.
+- *Folding the email band into the primary.* Brașov's band is a step lighter than the logo's blue; painting it with the primary would have locked a colour the committed raster does not hold, and the next `yarn brand:assets` would have repainted a public PNG that delivered emails show. The band is its own role, `tints.emailBand`.
+- *Regenerating the committed rasters.* Today's `sharp` draws `logo.png` and `logo-email.png` a few bytes differently from the same sources, and delivered emails link both email logos: the lock was written from the sources the rasters were drawn from (`--lock-only` does exactly that), the PNGs the run redrew were put back, and every PNG is the one that shipped.
+- *Moving the font out of `src/theme/fonts/`*, and *touching the favicon*: `next/font/local` loads from that folder (criterion 10), and the favicon is the lockup's own file.
+- *Putting the drawing in `club.json`.* The bundler carries that file whole into every client island; the mountains are an inline SVG on the server and a canvas path behind a click.
+- *Leaving Brașov's tints to the derivation.* The mixes are overlaid by what the club wrote; Brașov's file writes every value, so its theme is its literals, not an approximation of them.
+- *A palette that costs every visitor more than a kilobyte.* `brand.ts` is in every client island, so the derivation and the palette ride with every page: the derivation is one walk parametrised by scheme and the tokens are spread rather than restated, which keeps the home route's first JavaScript at +0.94 KB gzip over `origin/qa` (298.91 → 299.85 KB, a production build each). Deriving the dark scheme's primary too was dropped for the same bytes — and because whether words read on the dark page is the club's choice to make.
+- *Moving the catalogues' colour labels* («Albastru abia vizibil»…): a later change (C5).
+
+Baseline `BR-V4.02-2026-11-01`.
+
+## 886. Scripts and workflows stop writing the club's names
+
+**The owner (2026-11-01):** «we should make an effort to have the entire app white-labeled cuz I might want to reuse this repo for another run club»
+
+This is chain C2 of the judged plan, after §882.
+
+**Decision.** `club/infra.json` holds what the tooling needs and `club.json` does not: `domainLabels` (the labels of the club's own hostname), `vercelProjects` (`qa`, `production`) and `releaseAuthor`. Plain `.mjs` scripts read it, and `club/club.json`, with `fs` and `JSON.parse` through `scripts/club-files.mjs`; nothing under `src/` imports `infra.json` (the import-surface test). `docs:check`'s own-host pattern is built from the labels with the same shape as before (a dotted suffix is required; SETUP.md §26 stays exempt); `bind-domain` reads the projects; the release archive and ship's times file are named by the slug (the archive's name is byte-identical); the idle-cost, backstop and land-tree clocks read `place.timeZone`; `email-probe` reads the club's name from the theme; `release.yml` reads `releaseAuthor` with `node -e` and falls back to the repository's name. The release author lives in `infra.json` rather than a GitHub variable, so the owner has nothing to set. KNOWN_LEAKS lost every script and workflow row a club name, the hashtags or the zone caused.
+
+**Kept by design.** The local database, its role, the container (`brasovrunners-db`) and the package name stay, because renaming wipes local volumes; `BR-` ids and `br_` cookie prefixes stay. Their rows stay in KNOWN_LEAKS with the same counts. `scripts/calendar-image-preview/*.json` are not this change's.
+
+**Refused.** A GitHub variable for the author (one more thing for the owner to do); importing `infra.json` into the application (the bundler would ship it to every visitor); renaming the local database.
+
+Baseline `BR-V4.02-2026-11-01`.

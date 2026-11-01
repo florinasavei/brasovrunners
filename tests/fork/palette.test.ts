@@ -13,7 +13,7 @@ import { BRAND_PAIRS, CALENDAR_TONE_PAIRS } from "@/theme/brand-pairs";
 import fork from "../fixtures/fork-club/club.json";
 
 /**
- * BR-REQ-101-01 (§NNN): another club's palette and logo run the platform's own checks.
+ * BR-REQ-101-01 (§885): another club's palette and logo run the platform's own checks.
  *
  * Under `yarn test:fork` the theme is built from `tests/fixtures/fork-club/club.json`: a green club that writes only
  * the colours a palette must have — its primary and its ink by day and after dark, its secondary and its accent — and
@@ -23,7 +23,7 @@ import fork from "../fixtures/fork-club/club.json";
  * number's band and the badge's header rather than spilling past them. Its `decor.json` writes no mountains, and
  * nothing is drawn: no mark on the page, no fill on the calendar picture's canvas.
  */
-describe("BR-REQ-101-01: a fork's palette and logo pass the platform's checks (§NNN)", () => {
+describe("BR-REQ-101-01: a fork's palette and logo pass the platform's checks (§885)", () => {
   it("builds the theme from the fork's colours, deriving what it leaves out", () => {
     expect({ blue: COLOR.blue, blueInk: COLOR.blueInk, orange: COLOR.orange, accent: PALETTE.accent }).toEqual({
       blue: fork.palette.primary,

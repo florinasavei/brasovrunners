@@ -14,7 +14,7 @@ should not receive. One guard word, the safety form's name, is also `safetyProgr
 public form's name, which the contact page prints anyway — the list as a whole never ships.
 
 `infra.json` is the names the club's tooling holds, read by the scripts and the release workflow and by
-nothing under `src/` (`tests/unit/club/import-surface.test.ts`; `DECISIONS.md` §NNN):
+nothing under `src/` (`tests/unit/club/import-surface.test.ts`; `DECISIONS.md` §886):
 
 - `domainLabels` — the labels of the club's own hostname (`<label>.<tld>`). `yarn docs:check` builds
   its «the club's domain appears nowhere but SETUP.md §26» pattern from them; a dotted suffix is
@@ -45,7 +45,7 @@ How it reaches the code:
 - `yarn test:fork` builds the identity from a made-up club (`tests/fixtures/fork-club/`) and finds
   none of this club's words in what it renders.
 
-## The palette, the drawing, the logo and the wordmark (§NNN)
+## The palette, the drawing, the logo and the wordmark (§885)
 
 - **`palette`** in `club.json`, by role, each `#rrggbb` in lower case. Five are required: `primary` (the
   logo's own colour — `tests/unit/theme/brand.test.ts` holds it equal to `public/brand/logo.svg`'s fill),
@@ -78,7 +78,7 @@ How it reaches the code:
 
 ## The legal texts' club choices (§884)
 
-`legal.json` is the club's own choices in its legal texts (§NNN), each in Romanian and English — both
+`legal.json` is the club's own choices in its legal texts (§884), each in Romanian and English — both
 or neither. The platform's templates (`src/modules/legal-documents/templates/`) carry a visible
 `<PLACEHOLDER>` where each goes, and `withClubClauses` (`templates/club-facts.ts`, the only importer of
 this file — `tests/unit/club/import-surface.test.ts`) writes the club's words in when the templates are

@@ -56,7 +56,7 @@ export type ClubPlace = {
 export type ClubShades = { readonly accent: string; readonly accentInk: string; readonly accentDeep: string; readonly accentTint: string };
 
 /**
- * The club's colours (§NNN), by role, each `#rrggbb` in lower case: what `theme/brand.ts` turns into the tokens it
+ * The club's colours (§885), by role, each `#rrggbb` in lower case: what `theme/brand.ts` turns into the tokens it
  * always exported — the role here, the hue name there (`primary` is `COLOR.blue`, `secondary` is `COLOR.orange`).
  * Five are required — the primary and its ink, the same two after dark, the secondary and the accent; everything else
  * is the hand-picked value it was in the code, and a club that leaves one out gets it derived from those by the same arithmetic the backoffice's typed accent uses (`brand.ts#shadesOf`, `mix`).
@@ -87,7 +87,7 @@ export type ClubPalette = {
     readonly sheet?: string;
     readonly deep?: string;
     readonly deepDark?: string;
-    /** The band behind the white lockup in `public/brand/logo-white-email.png`, which delivered emails link: `yarn brand:assets` paints it, the primary when left out (§NNN). */
+    /** The band behind the white lockup in `public/brand/logo-white-email.png`, which delivered emails link: `yarn brand:assets` paints it, the primary when left out (§885). */
     readonly emailBand?: string;
   };
   /** The accent's four shades by day and after dark; derived from `accent` when left out. */

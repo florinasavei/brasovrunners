@@ -46,7 +46,7 @@ const SCAN_IGNORE = new Set([
 // The club's own hostname, any subdomain and TLD, case-insensitive as DNS is. A dotted suffix is
 // required so a bare repository name does not match. Keep this file free of the literal hostname
 // — the check scans itself.
-// The labels are `club/infra.json`'s `domainLabels` (§NNN); the pattern is built in `club-files.mjs`.
+// The labels are `club/infra.json`'s `domainLabels` (§886); the pattern is built in `club-files.mjs`.
 const OWN_LABELS = readInfra().domainLabels;
 const OWN_HOST = ownHostPattern(OWN_LABELS);
 const OWN_CLONE = ownCloneUrlPattern(OWN_LABELS);

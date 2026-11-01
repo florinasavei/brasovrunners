@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.01-2026-11-01 -->
+<!-- PROJECT_BASELINE: BR-V4.02-2026-11-01 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.01-2026-11-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.02-2026-11-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1454,7 +1454,7 @@ V1 internal registration requires approved declaration version.
 - staff cannot sign on participant's behalf;
 - do not label as qualified electronic signature;
 - exact wording/effect approved by human/legal owner;
-- a version that still holds a `<PLACEHOLDER>` — a club fact the environment did not give, or a club choice `club/legal.json` does not say — is never approved: `approveVersion` refuses it on the server (§NNN).
+- a version that still holds a `<PLACEHOLDER>` — a club fact the environment did not give, or a club choice `club/legal.json` does not say — is never approved: `approveVersion` refuses it on the server (§884).
 
 ### 10.9 Public runner profile
 

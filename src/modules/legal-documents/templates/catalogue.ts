@@ -16,7 +16,7 @@ import { volunteerAgreementEn, volunteerAgreementRo } from "./volunteer-agreemen
  * address, marked <LIKE THIS> — so that approving them in `/admin/legal` is reading, filling
  * four facts and pressing approve, not drafting. The club's own choices (its data protection
  * officer, its mailbox, its photo channels, its prize money, its safety form's name) are already
- * written in here, from `club/legal.json` and `club/club.json` (`withClubClauses`, §NNN); one the
+ * written in here, from `club/legal.json` and `club/club.json` (`withClubClauses`, §884); one the
  * club's files do not say is a placeholder like the facts, and as unapprovable.
  *
  * Two readers: the seed, which wraps each in a not-approved banner for every environment but

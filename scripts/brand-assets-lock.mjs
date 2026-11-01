@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 
 /**
- * What the committed rasters were built from (§NNN): each SVG source's sha256 — its line endings normalised to
+ * What the committed rasters were built from (§885): each SVG source's sha256 — its line endings normalised to
  * LF first, so a Windows checkout and Linux CI agree — and the palette colours `brand-assets.mjs` paints with,
  * read from `club/club.json`. `yarn brand:assets` writes it to `club/assets.lock.json` beside the rasters it
  * builds; `tests/unit/theme/brand-assets-lock.test.ts` computes it again and fails with «run yarn brand:assets»
