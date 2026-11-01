@@ -7,6 +7,7 @@ import { registrationByEmail, registrationPhones } from "./support/action-link";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 import { chooseSex } from "./support/sex-choice";
 import { ensureRegistrationIsOpen, FEATURED, fillDateField, fillTimeField, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
+import { ahead, yearsBefore } from "./support/dates";
 
 /**
  * BR-REQ-031-01, BR-REQ-031-04, BR-REQ-031-05, BR-REQ-031-06, BR-REQ-041-01 — the shape of the
@@ -1067,10 +1068,11 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     await page.goto("/ro/admin/events/new");
     await hydrated(page);
 
-    // A race on 3 May 2027 that takes its registrations here, for sixteen and over.
+    // A race on a Monday months ahead that takes its registrations here, for sixteen and over.
+    const raceDay = ahead("2027-05-03");
     await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
     await page.getByRole("option", { name: "Concurs" }).click();
-    await fillDateField(page, "Începutul evenimentului", "2027-05-03");
+    await fillDateField(page, "Începutul evenimentului", raceDay);
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Parcul Tractorul");
@@ -1103,12 +1105,12 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
 
     try {
       // The form: the line before the first field — said once (§546) — and the picker's bound,
-      // the last birth date that is sixteen on 3 May 2027.
+      // the last birth date that is sixteen on the race's day.
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
       await expect(page.getByTestId("age-rule")).toHaveText(
         "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       );
-      await expect(field("birthDate")).toHaveAttribute("data-max", "2011-05-03");
+      await expect(field("birthDate")).toHaveAttribute("data-max", yearsBefore(raceDay, 16));
 
       // The event's page says the same sentence in «Condiții de participare» (§505), and its structured data "16-".
       await page.goto(`/ro/evenimente/${slug}`);
@@ -1130,10 +1132,10 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       expect(page.url()).toContain("saved=");
 
       // Eighteen: the minimum alone, nobody who may enter needs a parent; the picker's bound is the
-      // last birth date that is eighteen on 3 May 2027, and the structured data says "18-".
+      // last birth date that is eighteen on the race's day, and the structured data says "18-".
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
       await expect(page.getByTestId("age-rule")).toHaveText("Vârsta minimă: 18 ani.");
-      await expect(field("birthDate")).toHaveAttribute("data-max", "2009-05-03");
+      await expect(field("birthDate")).toHaveAttribute("data-max", yearsBefore(raceDay, 18));
       await page.goto(`/ro/evenimente/${slug}`);
       expect(await typicalAgeRange()).toBe("18-");
     } finally {

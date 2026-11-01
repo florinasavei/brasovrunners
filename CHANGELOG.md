@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.01-2026-11-01
+
+- **The e2e specs no longer hold dates the calendar will reach** — `ahead()` in `tests/e2e/support/dates.ts` moves a written day by whole weeks so it is always months ahead with the same weekday and gaps, read once per process, and the months, ages, seasons and offsets the specs read are derived from it; twenty-two specs stay green past April 2027, and the calendar's canonical test now checks the old `?month=` address's 308 itself. §883.
 ## BR-V4.00-2026-11-01
 
 - **«Vreau să apar cu numele în clasament»** — a runner who registered under a privacy notice that did not yet describe the results can tick it on their own registration's page and is then named in a race's published results (still only while on the public list); unticked from the same page at any time. Asked only once the club approves a privacy notice that names the tick (`{{resultsNameAsk}}`) beside the results — the platform's template does not, until the club and its lawyer amend it; «Ghid» tells the club to announce it with «Trimite un mesaj participanților». §879.

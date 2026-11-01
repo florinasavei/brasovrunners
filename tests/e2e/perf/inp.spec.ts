@@ -5,6 +5,7 @@ import { confirmDialog } from "../support/confirm";
 import { ensureRegistrationIsOpen, FEATURED, fillDateField, fillTimeField, hydrated, signIn } from "../support/featured-event";
 import { languagePanel, languageTab, openEditorBox } from "../support/fold";
 import { chooseSex } from "../support/sex-choice";
+import { ahead } from "../support/dates";
 
 /**
  * How long a press of each heavy form's primary button blocks the page — its Interaction to Next
@@ -350,7 +351,7 @@ async function fillCreatePage(page: Page, { englishTitle }: { englishTitle: bool
   const suffix = `perf-${Date.now().toString(36)}`;
   await page.goto("/ro/admin/events/new");
   await hydrated(page);
-  await fillDateField(page, "Începutul evenimentului", "2027-09-26");
+  await fillDateField(page, "Începutul evenimentului", ahead("2027-09-26"));
   await fillTimeField(page, "Ora", "09:00");
   await field(page, "event.locationName").fill("Parcul Tractorul");
   // The meeting point is asked once per language, side by side in the Locul box (§362).

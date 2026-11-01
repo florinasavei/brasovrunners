@@ -1,6 +1,7 @@
 import { expect, type Page, type Request, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { editorBox, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead } from "./support/dates";
 
 /**
  * §406 — the event editor mirrors the page (BR-REQ-050-01). The owner, 2026-09-25: "am nevoie de
@@ -77,7 +78,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(editorBox(page, "Când și unde").getByTestId("required-place")).toHaveText("lipsesc: Punct de întâlnire (RO, EN)");
     await expect(chip(page, /^4 · Când și unde/).getByTestId("section-map-missing")).toBeVisible();
 
-    await fillDateField(page, "Începutul evenimentului", "2027-06-06");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-06-06"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Tractorul Park");
