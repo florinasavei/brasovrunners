@@ -64,6 +64,7 @@ describe("BR-REQ-101-01: club/club.json is a club the platform can run (§882)",
       place: true,
       hashtags: true,
       safetyProgramme: true,
+      palette: true,
       logo: true,
     };
     const file = JSON.parse(readFileSync(path.join(ROOT, "club/club.json"), "utf8")) as Record<string, unknown>;
@@ -72,6 +73,26 @@ describe("BR-REQ-101-01: club/club.json is a club the platform can run (§882)",
     expect(Array.isArray(words) && words.length > 0).toBe(true);
     for (const word of words) expect(typeof word === "string" && word.trim() === word && word !== "", JSON.stringify(word)).toBe(true);
     expect(new Set(words).size).toBe(words.length);
+  });
+
+  it("BR-REQ-101-01: writes every colour of its palette as #rrggbb in lower case, and names no role the platform does not read (§885)", () => {
+    const colours = (value: unknown, at: string): [string, unknown][] =>
+      value && typeof value === "object" ? Object.entries(value).flatMap(([key, child]) => colours(child, `${at}.${key}`)) : [[at, value]];
+    const found = colours(CLUB.palette, "palette");
+    expect(found.length).toBeGreaterThan(3);
+    for (const [at, hex] of found) expect(hex, at).toMatch(/^#[0-9a-f]{6}$/);
+    const roles: Record<keyof ClubConfig["palette"], true> = {
+      primary: true,
+      primaryInk: true,
+      secondary: true,
+      accent: true,
+      dark: true,
+      kit: true,
+      tints: true,
+      look: true,
+      secondaryLook: true,
+    };
+    for (const key of Object.keys(CLUB.palette)) expect(roles, key).toHaveProperty(key);
   });
 
   it("has a slug of lower-case letters, digits and hyphens", () => {

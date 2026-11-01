@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.01-2026-11-01 -->
+<!-- PROJECT_BASELINE: BR-V4.02-2026-11-01 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.01-2026-11-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.02-2026-11-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1453,7 +1453,8 @@ V1 internal registration requires approved declaration version.
 - no raw IP/user-agent stored by default — the one exception is the trace of an **electronic** signature (§771, the owner, 2026-10-14): the caller's IP address and browser at the moment the typed name was posted (`declaration_acceptances.ip` / `user_agent`, and the same on a group run's declaration and on the volunteer agreement's and its guardian's acceptance), written only at an electronic acceptance (the race's email link, a group run's page, the volunteer's form or link, the guardian's link) — never with `PAPER`, whatever the caller passes (`signature-trace.ts#traceColumns`) —, read from the request's headers by the action (`readSignatureTrace`, never a form box), kept as long as the row and deleted with it, printed small under the signature of the PDF, listed in «Toate datele unei persoane», and named in the privacy notice's template (the declaration's, the group run's and the volunteers' paragraphs);
 - staff cannot sign on participant's behalf;
 - do not label as qualified electronic signature;
-- exact wording/effect approved by human/legal owner.
+- exact wording/effect approved by human/legal owner;
+- a version that still holds a `<PLACEHOLDER>` — a club fact the environment did not give, or a club choice `club/legal.json` does not say — is never approved: `approveVersion` refuses it on the server (§884).
 
 ### 10.9 Public runner profile
 

@@ -43,7 +43,7 @@ function loadPosterFaces(): Promise<unknown> {
 export function calendarImageFonts(): CalendarImageFonts {
   const style = getComputedStyle(document.body);
   const body = style.fontFamily || "sans-serif";
-  const display = style.getPropertyValue("--font-facon").trim() || body;
+  const display = style.getPropertyValue("--font-wordmark").trim() || body;
   const script = style.getPropertyValue("--font-signature").trim() || body;
   return { body, display, script, poster: `'${POSTER_FAMILY}', ${body}` };
 }

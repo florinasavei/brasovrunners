@@ -35,7 +35,7 @@ import { type EventFieldName, eventInputConstraints } from "../../constraints";
 import { waitlistLimitSchema } from "../../fields";
 import { WAITLIST_CHOICES, waitlistChoiceOf } from "../../waitlist-choice";
 import BibDesignPanel from "../BibDesignPanel";
-import { BIB_COLOURS } from "../bib-colours";
+import { BIB_COLOURS } from "@/theme/brand";
 import {
   bibDesignSummary,
   bibsSummary,

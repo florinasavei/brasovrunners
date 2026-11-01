@@ -19,10 +19,11 @@ import { existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import process from "node:process";
+import { readClub } from "./club-files.mjs";
 
 const ROOT = process.cwd();
 const DIST = path.join(ROOT, "dist");
-const NAME = "brasovrunners";
+const NAME = readClub().slug;
 
 const EXCLUDE = new Set([".git", "node_modules", "dist", ".next", "coverage", "playwright-report", "test-results"]);
 

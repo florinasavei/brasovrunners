@@ -16,6 +16,7 @@
  * box does not jump while the picture loads.
  */
 
+import { LOGO_RATIO } from "@/theme/brand";
 import { ELLIPSIS, withEllipsis } from "./bib-type";
 
 /** An A4 page, portrait, in points: what the club prints on. */
@@ -49,14 +50,21 @@ export const BIB_CARD = {
  * §180 — the card is as tall as it was, and 20 points wider — so a design the club saved keeps its
  * meaning: the same number, the same name, the same band.
  */
+/** The tallest the lockup may stand on the band (§885): ten points short of its 62, so a square logo keeps a margin. */
+export const BIB_LOGO_MAX_HEIGHT = 52;
+
 export const BIB_LAYOUT = {
   /** The coloured band across the top of the card, or the club's picture that replaces it. */
   bandHeight: 62,
   /** How far text sits in from the card's sides: the lockup, the race, the name, the small print. */
   inset: 18,
-  /** The white lockup at the left of the band, at its own proportion. */
-  logoWidth: 122,
-  logoRatio: 2.424,
+  /**
+   * The white lockup at the left of the band, at its own proportion (`LOGO_RATIO`, §885): 122 points wide, or less
+   * when the club's lockup is squarer than 122 by `BIB_LOGO_MAX_HEIGHT` — Brașov's 2.424 : 1 meets the width first,
+   * so it stays 122 by 50.3; a square logo stands 52 points tall inside the 62-point band.
+   */
+  logoWidth: Math.min(122, BIB_LOGO_MAX_HEIGHT * LOGO_RATIO),
+  logoRatio: LOGO_RATIO,
   /**
    * The race and its date at the right of the band, laid out once by `bibHeaderLayout` (§755) and
    * drawn at its points by both renderers, which is what keeps the preview the paper rather than a

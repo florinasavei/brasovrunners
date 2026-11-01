@@ -1,0 +1,8 @@
+{
+  "domainLabels": ["brasovrunners", "brasov-runners"],
+  "vercelProjects": {
+    "qa": "brasov-runners-qa",
+    "production": "brasov-runners-production"
+  },
+  "releaseAuthor": "Brașov Runners release"
+}

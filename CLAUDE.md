@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.01-2026-11-01 -->
+<!-- PROJECT_BASELINE: BR-V4.02-2026-11-01 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V4.01-2026-11-01`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V4.02-2026-11-01`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -59,6 +59,8 @@ yarn idle:measure  Neon's wakes and Vercel's requests while nobody visited (docs
 yarn db:sizes     the database's size, its largest tables and 30-day growth; `--env qa|production` (read-only; docs/PLATFORM.md § Keeping Neon and Vercel light)
 yarn release      versioned archive and share copies under dist/
 yarn calendar:preview  the calendar picture drawn without a server, every format, to dist/calendar-preview/
+yarn brand:assets  the logo's rasters (PDFs, emails) from public/brand/*.svg in club/club.json's colours,
+                  and club/assets.lock.json; run after changing a source or the palette (§885)
 yarn batch:merge  merge branches into the one checked out; the journal, catalogues and tests by rule
 yarn docs:land    land a batch's documents: a dispatcher's manifest, or `--tree` for the branch's
                   own `.release/*.json` entries (`.release/README.md`)

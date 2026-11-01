@@ -6,7 +6,7 @@ import { type SignatureTrace, signatureTraceLine } from "@/modules/legal-documen
 import path from "node:path";
 import PDFDocument from "pdfkit";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
-import { COLOR } from "@/theme/brand";
+import { COLOR, LOGO_HEIGHT_SHARE } from "@/theme/brand";
 
 /**
  * A declaration as the club's paper one looks (`DECISIONS.md` §95): the lockup, the title
@@ -354,12 +354,14 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
   return finished;
 }
 
+/** The lockup at the head of each declaration: 140 points wide, as tall as its own proportion makes it (§885). */
+export const DECLARATION_LOGO = { width: 140, height: 140 * LOGO_HEIGHT_SHARE } as const;
+
 function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: DeclarationPdfInput["labels"], lockup: unknown): void {
   doc.addPage();
   // The lockup, and the title centred under it, as the paper form has them.
-  const logoWidth = 140;
-  doc.image(lockup as string, MARGIN.left, MARGIN.top, { width: logoWidth });
-  doc.y = MARGIN.top + logoWidth * (495 / 1200) + 20;
+  doc.image(lockup as string, MARGIN.left, MARGIN.top, { width: DECLARATION_LOGO.width });
+  doc.y = MARGIN.top + DECLARATION_LOGO.height + 20;
   doc.font("bold").fontSize(14).fillColor(COLOR.ink).text(entry.title.toUpperCase(), MARGIN.left, doc.y, { width: TEXT_WIDTH, align: "center" });
   doc.moveDown(0.2);
   doc.font("body").fontSize(11).fillColor(COLOR.ink).text(entry.eventTitle, { width: TEXT_WIDTH, align: "center" });

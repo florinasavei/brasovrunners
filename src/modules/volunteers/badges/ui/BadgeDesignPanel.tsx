@@ -10,7 +10,6 @@ import BibHeaderWarning from "@/modules/content/events/ui/BibHeaderWarning";
 import BibPictureField, { type BibPictureLabels } from "@/modules/content/events/ui/BibPictureField";
 import OnlyWhenChosen from "@/modules/content/events/ui/OnlyWhenChosen";
 import OnlyWhenTicked from "@/modules/content/events/ui/OnlyWhenTicked";
-import { BIB_COLOURS } from "@/modules/content/events/ui/bib-colours";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { BIB_EMERGENCY_PHONE_MAX } from "@/modules/registrations/bib-design";
@@ -22,7 +21,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import RadioField from "@/shared/ui/RadioField";
-import { HEADER_CLEARANCE_PX } from "@/theme/brand";
+import { BIB_COLOURS, HEADER_CLEARANCE_PX } from "@/theme/brand";
 import {
   BADGE_FREE_TEXT_MAX,
   BADGE_LABEL_MAX,

@@ -14,6 +14,7 @@ import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import process from "node:process";
+import { ownCloneUrlPattern, ownHostPattern, readInfra } from "./club-files.mjs";
 import { ENTRY_DIR, duplicateBranches, validateEntry } from "./land-tree.mjs";
 
 const ROOT = process.cwd();
@@ -45,8 +46,10 @@ const SCAN_IGNORE = new Set([
 // The club's own hostname, any subdomain and TLD, case-insensitive as DNS is. A dotted suffix is
 // required so a bare repository name does not match. Keep this file free of the literal hostname
 // — the check scans itself.
-const OWN_HOST =
-  /(?<![A-Za-z0-9.-])(?:[A-Za-z0-9-]+\.)*(?:brasovrunners|brasov-runners)(?:\.[A-Za-z0-9-]+)+(?![A-Za-z0-9-])/gi;
+// The labels are `club/infra.json`'s `domainLabels` (§886); the pattern is built in `club-files.mjs`.
+const OWN_LABELS = readInfra().domainLabels;
+const OWN_HOST = ownHostPattern(OWN_LABELS);
+const OWN_CLONE = ownCloneUrlPattern(OWN_LABELS);
 
 const BINARY_FILE = /\.(png|jpe?g|webp|gif|ico|pdf|woff2?|ttf|eot|zip|gz|mp4|mp3)$/i;
 
@@ -352,7 +355,7 @@ async function checkOwnDomainLiterals() {
     for (const [isDewrapped, text] of passes) {
       for (const match of matchAll(text, OWN_HOST)) {
         // The repository's own clone URL: a bare repo name plus ".git", nothing either side.
-        if (/^(?:brasovrunners|brasov-runners)\.git$/i.test(match[0])) continue;
+        if (OWN_CLONE.test(match[0])) continue;
         // A clone URL followed by the next command joins into "….gitcd" when de-wrapped.
         // A genuinely wrapped hostname never contains ".git", so this costs no coverage.
         if (isDewrapped && /\.git/i.test(match[0])) continue;

@@ -54,12 +54,12 @@ await esbuild.build({
 const fontDir = path.join(root, "src/theme/fonts");
 const faces = fs.readdirSync(fontDir).filter((file) => /\.(woff2|ttf|otf)$/.test(file)).map((file) => {
   const [family, rest = "400"] = file.replace(/\.(woff2|ttf|otf)$/, "").split("-");
-  const weight = family === "Facon" ? "900" : (rest.match(/\d{3}/)?.[0] ?? "400");
-  const style = family === "Facon" || /italic/i.test(rest) ? "italic" : "normal";
+  const weight = family === "Wordmark" ? "900" : (rest.match(/\d{3}/)?.[0] ?? "400");
+  const style = family === "Wordmark" || /italic/i.test(rest) ? "italic" : "normal";
   fs.copyFileSync(path.join(fontDir, file), path.join(work, file));
   return `@font-face{font-family:'${family}';src:url('/${file}');font-weight:${weight};font-style:${style}}`;
 });
-fs.writeFileSync(path.join(work, "index.html"), `<!doctype html><meta charset="utf-8"><style>${faces.join("")}</style><body style="font-family:Roboto,sans-serif;--font-facon:Facon,Roboto,sans-serif;--font-signature:Caveat,cursive"><script src="/bundle.js"></script></body>`);
+fs.writeFileSync(path.join(work, "index.html"), `<!doctype html><meta charset="utf-8"><style>${faces.join("")}</style><body style="font-family:Roboto,sans-serif;--font-wordmark:Wordmark,Roboto,sans-serif;--font-signature:Caveat,cursive"><script src="/bundle.js"></script></body>`);
 
 // One origin for the page, the logo and the fonts, as on the site: a canvas that draws a file:// image is tainted.
 const types = { ".html": "text/html", ".js": "text/javascript", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".ttf": "font/ttf", ".otf": "font/otf", ".png": "image/png" };

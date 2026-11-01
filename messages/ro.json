@@ -2293,6 +2293,7 @@
       "LEGAL_NOTHING_DEPENDS": "Nu s-a șters nimic: între timp nu mai depinde nimic de această versiune. Reîncarcă pagina și șterge-o definitiv.",
       "LEGAL_RETIRE_IN_FORCE": "Nu s-a șters nimic: aceasta este versiunea în vigoare. Aprobă întâi versiunea următoare, apoi o poți șterge.",
       "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă.",
+      "LEGAL_PLACEHOLDERS_LEFT": "Nu s-a aprobat nimic: textul mai are locuri de completat, cu majuscule între paranteze unghiulare. Scrie în locul lor cuvintele clubului, salvează ciorna și aprobă din nou.",
       "SEND_NOW_HOUR_SPENT": "Nu s-a trimis nimic: limita pe oră a Mailgun («Limita pe oră» din «Emailuri») nu mai are loc acum. Alege «Pune la coadă»; emailul pleacă singur când ora are din nou loc.",
       "RETRY_FAILED_THROTTLED": "Nu s-a pus nimic înapoi: emailurile eșuate au fost deja reîncercate de 3 ori în ultima oră. Așteaptă puțin și uită-te de ce au eșuat înainte să apeși din nou.",
       "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nu s-a trimis nimic: Mailgun e oprit, iar «Gmail preia când Mailgun se oprește» e pe Nu. Pune-l pe Da în «Emailuri», sau alege «Pune la coadă»: pleacă singur când Mailgun reia.",

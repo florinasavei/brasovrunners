@@ -27,8 +27,9 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import process from "node:process";
 import { pathToFileURL } from "node:url";
+import { readClub } from "./club-files.mjs";
 
-const CLUB_TIME_ZONE = "Europe/Bucharest";
+const CLUB_TIME_ZONE = readClub().place.timeZone;
 /** The daily window (`jobs/schedule.ts#DAILY_WINDOW_CLUB_MINUTE`) and how long its wake may last. */
 export const WINDOW_START_MINUTE = 4 * 60;
 export const WINDOW_LENGTH_MINUTES = 15;

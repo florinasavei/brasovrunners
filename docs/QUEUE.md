@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.02` | the club's legal clauses read from club/legal.json, and no approval of a text with a blank (§884) · the club's palette, mountains, logo proportions and wordmark face are its own data (§885) · the club's names leave the scripts and the release workflow (§886) |
 | `BR-V4.01` | the e2e specs stop writing dates the calendar will reach (§883) |
 | `BR-V4.00` | «Vreau să apar cu numele în clasament» for an older notice's runners, behind the notice's own marker (§879) · «Sarcini» asks for the gun time and age categories, the Mailgun question follows the plan, «Costuri» reads Hobby by Active CPU (§880) · the bib's fork, the filter's event once, the concurrency suite on a seeded database (§881) · the club's identity read from club/club.json (§882) |
 | `BR-V3.99` | the GitHub backstop reads health before it pokes and fails on a stale job or a stalled outbox (§874) · the waiting-list verbs finished: addresses named in the dialogs, the button drawn only where it works, the guide's tasks (§875) · the person's data page reads and erases the internal waiting list and event invitations (§876) · owner to-do list caught up; Neon restore runbook (§877) · a nightly date-check run, the calendar spec on the Brașov weekday, and skip-build installs where secrets are held (§878) |
