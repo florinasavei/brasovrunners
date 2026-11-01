@@ -8,8 +8,6 @@ import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { platformSettings } from "@/db/schema/platform-settings";
 import { registrations } from "@/db/schema/registrations";
-import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
-import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { forgetCachedAddressCap } from "@/modules/registrations/address-cap-memo";
 import { ADDRESS_CAP_SETTING_KEY } from "@/modules/registrations/address-cap";
 import { familyRegistrationOpen, LEGACY_ONE_PER_ADDRESS_CONSTRAINT } from "@/modules/registrations/family-gate";
@@ -18,6 +16,7 @@ import { pendingFamilyEntries } from "@/db/schema/family-entries";
 import { confirmFamilyEntry } from "@/modules/registrations/family-confirm";
 import { linkFamilyEntryToken } from "@/modules/registrations/family-entries";
 import { type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
+import { approveNotices, removeApprovedNotices } from "./legal-fixture";
 
 /**
  * §389 × BR-REQ-034-02 — a family on one address under real concurrency.
@@ -44,33 +43,13 @@ describe("§389 BR-REQ-034-02 a family on one address, under real concurrency", 
   const db = drizzle(pool);
   const NOW = new Date("2026-09-25T10:00:00.000Z");
   const createdEventIds: string[] = [];
+  const noticeIds: string[] = [];
   let existedAtStart = false;
   let previousCap: unknown = undefined;
 
   beforeAll(async () => {
-    const translations: LegalDocumentTranslationInput[] = [
-      { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["p"] }] } },
-      { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["p"] }] } },
-    ];
-    await insertLegalDocumentVersion(db, {
-      key: "PRIVACY_NOTICE",
-      version: 1,
-      effectiveAt: new Date("2020-01-01T00:00:00.000Z"),
-      isApproved: true,
-      contentSha256: computeContentHash(translations),
-      translations,
-      now: NOW,
-    }).catch(() => undefined);
-    // The club's terms (§421): a public submission is refused while none is approved.
-    await insertLegalDocumentVersion(db, {
-      key: "TERMS",
-      version: 1,
-      effectiveAt: new Date("2020-01-01T00:00:00.000Z"),
-      isApproved: true,
-      contentSha256: computeContentHash(translations),
-      translations,
-      now: NOW,
-    }).catch(() => undefined);
+    // Their own documents, above any seeded version and in force at this suite's clock (§NNN); the club's terms (§421): a public submission is refused while none is approved.
+    noticeIds.push(...(await approveNotices(db, ["PRIVACY_NOTICE", "TERMS"], NOW)));
     existedAtStart = !(await familyRegistrationOpen(db));
     const [kept] = await db.select().from(platformSettings).where(eq(platformSettings.key, ADDRESS_CAP_SETTING_KEY));
     previousCap = kept?.value;
@@ -104,6 +83,7 @@ describe("§389 BR-REQ-034-02 a family on one address, under real concurrency", 
     await db.delete(platformSettings).where(eq(platformSettings.key, ADDRESS_CAP_SETTING_KEY));
     if (previousCap !== undefined) await db.insert(platformSettings).values({ key: ADDRESS_CAP_SETTING_KEY, value: previousCap, updatedAt: NOW });
     forgetCachedAddressCap();
+    await removeApprovedNotices(db, noticeIds);
     await pool.end();
   });
 

@@ -124,7 +124,7 @@ describe("§757 which checkpoints the strip pins, and what each says", () => {
   });
 
   it("draws the five earlier kinds with the very paths and order they had, so the picture's version stays (§824)", () => {
-    expect(BIB_DRAWING_VERSION).toBe(4);
+    expect(BIB_DRAWING_VERSION).toBe(5);
     const paths = (["water", "food", "firstAid", "timing", "direction", "none"] as const).map((glyph) => ELEVATION_GLYPH_PATHS[glyph]);
     expect(paths).toEqual([
       "M0 -7.5C3.6 -3.4 5.8 -0.6 5.8 2.4A5.8 5.8 0 0 1 -5.8 2.4C-5.8 -0.6 -3.6 -3.4 0 -7.5Z",
@@ -220,6 +220,11 @@ describe("§804 the kilometres and the altitudes on the strip", () => {
       expect(from >= start.x + width(start.text) + BIB_LAYOUT.checkpointTimeGap || to <= start.x).toBe(true);
       expect(to <= finish.x - width(finish.text) - BIB_LAYOUT.checkpointTimeGap || from >= finish.x).toBe(true);
     }
+  });
+
+  it("draws the fork, not the drop, for a checkpoint offering food and water — the event page's rule (BR-REQ-011-01, §NNN)", () => {
+    const g = bibProfileStrip(drawingOf([at(3, null, ["WATER", "FOOD"]), at(6, null, ["WATER"])]), STRIP).geometry;
+    expect(g.markers.map((marker) => marker.glyph)).toEqual(["food", "water"]);
   });
 
   it("lets the checkpoints' words win over the kilometres too", () => {
@@ -380,7 +385,7 @@ describe("§757 the pins stand side by side, never over one another", () => {
       expect(strip.checkpoints).toHaveLength(1);
       expect(strip.checkpoints[0].kinds).toEqual([first, second]);
       expect(strip.texts.map((text) => text.text)).toContain("km 4 · apă + hrană");
-      expect(strip.geometry.markers[0].glyph).toBe("water");
+      expect(strip.geometry.markers[0].glyph).toBe("food");
     }
     // Two of the same kind stay what they are; an aid station and a plain point stay the aid station's words.
     expect(bibProfileStrip(drawingOf([at(4, null, ["WATER"]), at(4.1, null, ["WATER"])]), STRIP).texts.map((text) => text.text)).toContain("km 4 · apă");

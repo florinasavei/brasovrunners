@@ -9,12 +9,11 @@ import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
 import { computeOccupied, NoFreePlaceError } from "@/modules/registrations/domain/capacity";
 import { countOccupied } from "@/modules/registrations/repository";
-import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
-import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { WAITLIST_FULL, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
 import { SUPPLEMENTARY_PLACE_UNCONFIRMED, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { eventInvitations } from "@/db/schema/event-invitations";
+import { approveNotices, removeApprovedNotices } from "./legal-fixture";
 import {
   confirmEmail,
   type EventForRegistration,
@@ -57,6 +56,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   const NOW = new Date("2026-09-04T10:00:00.000Z");
   let eventCounter = 0;
   const createdEventIds: string[] = [];
+  const noticeIds: string[] = [];
   const createdParticipantIds: string[] = [];
   /** The Administrator who sends the offers of §615's and §642's cases, made once by the first and removed after. */
   let staffId: string | null = null;
@@ -74,30 +74,8 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   }
 
   beforeAll(async () => {
-    const translations: LegalDocumentTranslationInput[] = [
-      { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["p"] }] } },
-      { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["p"] }] } },
-    ];
-    // Idempotent: only inserted if no approved version exists yet, so re-runs don't collide.
-    await insertLegalDocumentVersion(db, {
-      key: "PRIVACY_NOTICE",
-      version: 1,
-      effectiveAt: new Date("2020-01-01T00:00:00.000Z"),
-      isApproved: true,
-      contentSha256: computeContentHash(translations),
-      translations,
-      now: NOW,
-    }).catch(() => undefined);
-    // The club's terms (§421): a public submission is refused while none is approved.
-    await insertLegalDocumentVersion(db, {
-      key: "TERMS",
-      version: 1,
-      effectiveAt: new Date("2020-01-01T00:00:00.000Z"),
-      isApproved: true,
-      contentSha256: computeContentHash(translations),
-      translations,
-      now: NOW,
-    }).catch(() => undefined);
+    // Their own documents, above any seeded version and in force at this suite's clock (§NNN); the club's terms (§421): a public submission is refused while none is approved.
+    noticeIds.push(...(await approveNotices(db, ["PRIVACY_NOTICE", "TERMS"], NOW)));
   });
 
   afterAll(async () => {
@@ -118,6 +96,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       await db.delete(auditLogs).where(eq(auditLogs.actorStaffUserId, id));
       await db.delete(staffUsers).where(eq(staffUsers.id, id));
     }
+    await removeApprovedNotices(db, noticeIds);
     await pool.end();
   });
 

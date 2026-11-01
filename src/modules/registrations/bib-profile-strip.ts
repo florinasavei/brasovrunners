@@ -140,6 +140,8 @@ export function bibProfileStrip(drawing: BibProfileDrawing, options: BibStripOpt
       minAltitudeGapMeters: 5,
       endWords: { start: drawing.start, finish: drawing.finish },
       pinRadius: L.profilePinRadius,
+      // The event page's rule (§NNN): a checkpoint offering food and water draws the fork.
+      foodBeforeWater: true,
     });
   };
 
