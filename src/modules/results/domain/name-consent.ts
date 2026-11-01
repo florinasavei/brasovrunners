@@ -8,16 +8,23 @@ import { eventTakesResults } from "./event-type";
  * name, so `publicResultName` shows such a runner as «Participant #bib». This is the separate asking the older terms promised: the
  * runner's own press, on their own registration's page, recorded with the notice in force at the moment (`results_consent_version`).
  *
- * **It does nothing until the club's texts allow it.** The question is put only while the privacy notice in force, in every language,
- * describes the results (`noticeDescribesResults`, so `firstResultsNoticeVersion` is not null either), only for a race (the one event
- * that takes results, `eventTakesResults`), and only to a registration whose own notice predates the first that described them — a
- * runner who registered under that notice or a later one was told already, and their tick answers. Pure, so the page that draws the
- * button, the server that accepts the press and the test that pins it read one rule.
+ * **It does nothing until the club approves a text that says so.** Describing the results (`{{results}}`) is not enough: the
+ * platform's template names it in the very section that tells the older registrants they appear «doar cu numărul … chiar dacă ai
+ * bifat». So the question is put only while the privacy notice in force, in every language, names the tick's own marker
+ * `{{resultsNameAsk}}` beside `{{results}}` (`noticeDescribesResultsNameAsk`), which the club and its lawyer add when they amend that
+ * sentence; only for a race (the one event that takes results, `eventTakesResults`); and only to a registration whose own notice
+ * predates the first that described the results — a runner who registered under that notice or a later one was told already, and
+ * their tick answers. A yes counts only when given under a notice at or above the first that named the marker
+ * (`firstResultsNameAskNoticeVersion`). Pure, so the page that draws the button, the server that accepts the press and the test that
+ * pins it read one rule.
  */
 
-/** The line a registration's notice must be under for the question to be put: the first results notice, or null while nothing may be asked. */
-export function resultsNameConsentLine(facts: { noticeDescribesResults: boolean; firstResultsNoticeVersion: number | null; eventType: string }): number | null {
-  if (!facts.noticeDescribesResults || facts.firstResultsNoticeVersion === null) return null;
+/**
+ * The line a registration's notice must be under for the question to be put: the first results notice, or null while nothing may be
+ * asked — the notice in force does not name `{{resultsNameAsk}}` and `{{results}}` in every language, or the event takes no results.
+ */
+export function resultsNameConsentLine(facts: { noticeDescribesResultsNameAsk: boolean; firstResultsNoticeVersion: number | null; eventType: string }): number | null {
+  if (!facts.noticeDescribesResultsNameAsk || facts.firstResultsNoticeVersion === null) return null;
   if (!eventTakesResults(facts.eventType)) return null;
   return facts.firstResultsNoticeVersion;
 }
@@ -38,8 +45,14 @@ export function gaveResultsNameConsentSince(row: { resultsNameConsent: boolean; 
 
 /**
  * Whether a registration holds a consent that counts (`publicResultName`'s own reading): given, and under a notice at or above the
- * first that described the results. A consent from before §322, recorded under the notice of its day, counts for nothing.
+ * first that named «Vreau să apar cu numele în clasament» (`firstResultsNameAskNoticeVersion`). A consent from before §322, or one
+ * recorded under a notice that described the results but not the tick, counts for nothing.
  */
-export function holdsResultsNameConsent(row: { resultsNameConsent: boolean; resultsConsentVersion: number | null }, firstResultsNoticeVersion: number | null): boolean {
-  return row.resultsNameConsent && firstResultsNoticeVersion !== null && row.resultsConsentVersion !== null && row.resultsConsentVersion >= firstResultsNoticeVersion;
+export function holdsResultsNameConsent(row: { resultsNameConsent: boolean; resultsConsentVersion: number | null }, firstResultsNameAskNoticeVersion: number | null): boolean {
+  return (
+    row.resultsNameConsent &&
+    firstResultsNameAskNoticeVersion !== null &&
+    row.resultsConsentVersion !== null &&
+    row.resultsConsentVersion >= firstResultsNameAskNoticeVersion
+  );
 }

@@ -6,7 +6,7 @@ import { TOKEN_NOT_FOUND, type TokenRejection } from "@/modules/action-tokens/do
 import { readActionTokenContext } from "@/modules/action-tokens/repository";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { findCurrentApprovedDocument, findFirstResultsNoticeVersion, noticeDescribesResults } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, findFirstResultsNameAskNoticeVersion, findFirstResultsNoticeVersion, noticeDescribesResultsNameAsk } from "@/modules/legal-documents/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { holdsResultsNameConsent, resultsNameConsentLine, resultsNameConsentOffered } from "@/modules/results/domain/name-consent";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -23,8 +23,9 @@ import { findRegistrationById } from "./repository";
  * posted id is only ever another person the same link already manages (`managedRegistration`, §547). Another adult on the address
  * may have their yes taken back from this link, never given: it is theirs (§421, `anotherAdultOnTheLink`).
  *
- * **The gate, asked again at every yes.** The notice in force describes the results in every language (`noticeDescribesResults`),
- * the event is a race, the registration's own notice is older than the first that described them, the registration is active and
+ * **The gate, asked again at every yes.** The notice in force names the tick's own marker `{{resultsNameAsk}}` beside `{{results}}`
+ * in every language (`noticeDescribesResultsNameAsk`) — describing the results alone is not enough, because the platform's template
+ * describes them in the section that tells these runners they stay «Participant #numărul» — the event is a race, the registration's own notice is older than the first that described them, the registration is active and
  * on the public list — the name in the results follows the list's tick (§808), so a yes off the list would be a consent to nothing.
  * Anything else is refused and nothing is written. A no is always accepted (art. 7(3) GDPR), whatever the notice says today.
  *
@@ -50,14 +51,14 @@ export async function eventTypeOf<T extends Record<string, unknown>>(db: Databas
 }
 
 /**
- * The line for this event, read uncached: the first results notice while the notice in force describes the results and the event is a
- * race, else null. The page reads the same through the public cache; the write asks here, at every yes.
+ * The line for this event, read uncached: the first results notice while the notice in force names the tick and the results and the
+ * event is a race, else null. The page reads the same through the public cache; the write asks here, at every yes.
  */
 export async function readResultsNameConsentLine<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<number | null> {
   const type = await eventTypeOf(db, eventId);
   if (type === null) return null;
-  const [describes, first] = await Promise.all([noticeDescribesResults(db, now), findFirstResultsNoticeVersion(db)]);
-  return resultsNameConsentLine({ noticeDescribesResults: describes, firstResultsNoticeVersion: first, eventType: type });
+  const [describes, first] = await Promise.all([noticeDescribesResultsNameAsk(db, now), findFirstResultsNoticeVersion(db)]);
+  return resultsNameConsentLine({ noticeDescribesResultsNameAsk: describes, firstResultsNoticeVersion: first, eventType: type });
 }
 
 export async function setResultsNameConsent<T extends Record<string, unknown>>(
@@ -74,11 +75,12 @@ export async function setResultsNameConsent<T extends Record<string, unknown>>(
       if (!resultsNameConsentOffered(current.privacyNoticeVersion, line) || !isActiveStatus(current.status) || current.listOptOut) {
         throw new DomainError("VALIDATION_ERROR", "this registration is not asked to appear by name in the results", [RESULTS_NAME_NOT_OFFERED]);
       }
-      if (holdsResultsNameConsent(current, line)) return { consent: true, changed: false };
+      const askLine = await findFirstResultsNameAskNoticeVersion(tx);
+      if (holdsResultsNameConsent(current, askLine)) return { consent: true, changed: false };
       const notice = await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", current.locale, input.now);
-      // A notice in force below the line would record a consent that counts for nothing: refused, never kept.
-      if (!notice || line === null || notice.version < line) {
-        throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not describe the results", [RESULTS_NAME_NOT_OFFERED]);
+      // A notice in force below the first that named the tick would record a consent that counts for nothing: refused, never kept.
+      if (!notice || askLine === null || notice.version < askLine) {
+        throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not name the tick to appear by name in the results", [RESULTS_NAME_NOT_OFFERED]);
       }
       version = notice.version;
     } else if (!current.resultsNameConsent) {

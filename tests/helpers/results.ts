@@ -94,10 +94,17 @@ export async function registerRunner(db: TestDatabase, eventId: string, input: R
 
 let nextVersion = 1;
 
-/** Puts a privacy notice in force, both languages: the platform's template as it is, or with `{{results}}` taken out (what an older notice reads like). */
-export async function approvePrivacyNotice(db: TestDatabase, options: { results: boolean }) {
+/**
+ * Puts a privacy notice in force, both languages: the platform's template as it is, or with `{{results}}` taken out (what an older notice
+ * reads like). `resultsNameAsk` adds a paragraph naming `{{resultsNameAsk}}` (§NNN) — what the club's amended text would carry; the
+ * platform's template does not name it.
+ */
+export async function approvePrivacyNotice(db: TestDatabase, options: { results: boolean; resultsNameAsk?: boolean }) {
   const strip = (body: LegalDocumentBody) => JSON.parse(JSON.stringify(body).split("{{results}}").join("")) as LegalDocumentBody;
-  const bodies = options.results ? { ro: privacyNoticeRo, en: privacyNoticeEn } : { ro: strip(privacyNoticeRo), en: strip(privacyNoticeEn) };
+  const ask = (body: LegalDocumentBody): LegalDocumentBody =>
+    options.resultsNameAsk ? { ...body, sections: [...body.sections, { heading: "Clasament", paragraphs: ["{{resultsNameAsk}}"] }] } : body;
+  const base = options.results ? { ro: privacyNoticeRo, en: privacyNoticeEn } : { ro: strip(privacyNoticeRo), en: strip(privacyNoticeEn) };
+  const bodies = { ro: ask(base.ro), en: ask(base.en) };
   const translations = [
     { locale: "ro" as const, title: "Nota de confidențialitate", body: bodies.ro },
     { locale: "en" as const, title: "Privacy notice", body: bodies.en },

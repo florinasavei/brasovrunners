@@ -29,7 +29,7 @@ import { findEventNotificationDetails } from "@/modules/events/repository";
 import { getDb } from "@/db/client";
 import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import { isActiveStatus } from "@/modules/registrations/domain/state-machine";
-import { cachedFirstResultsNoticeVersion, cachedPromotionalMaterialsOffered, cachedPromotionalMaterialsShared, cachedResultsDescribed } from "@/modules/public-cache/reads";
+import { cachedFirstResultsNoticeVersion, cachedPromotionalMaterialsOffered, cachedPromotionalMaterialsShared, cachedResultsNameAskDescribed } from "@/modules/public-cache/reads";
 import { eventTypeOf } from "@/modules/registrations/results-consent";
 import { gaveResultsNameConsentSince, resultsNameConsentLine, resultsNameConsentOffered } from "@/modules/results/domain/name-consent";
 import { reachesPartner } from "@/modules/registrations/domain/sponsor-share";
@@ -181,14 +181,15 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
     shareGate && reachesPartner(one, shareGate, new Date()) ? t("promo.yesShared") : t("promo.yes");
   /*
     «Vreau să apar cu numele în clasament» (§NNN): asked only of a registration whose notice predates the first that described the
-    results, while the notice in force describes them and the event is a race (`resultsNameConsentLine`); the rest of the reads are
+    results, while the notice in force names the tick (`{{resultsNameAsk}}`) and the results and the event is a race
+    (`resultsNameConsentLine`); the rest of the reads are
     skipped when nobody on the page registered under an older notice. A yes that counts is always offered the way out.
   */
   const firstResults = live ? await cachedFirstResultsNoticeVersion() : null;
   const resultsLine =
     live && firstResults !== null && people.some((one) => one.privacyNoticeVersion < firstResults)
       ? resultsNameConsentLine({
-          noticeDescribesResults: await cachedResultsDescribed(new Date()),
+          noticeDescribesResultsNameAsk: await cachedResultsNameAskDescribed(new Date()),
           firstResultsNoticeVersion: firstResults,
           eventType: (await eventTypeOf(getDb(), live.registration.eventId)) ?? "",
         })
@@ -233,7 +234,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
             /*
               The results' name (§NNN): held — a yes given from this page, under a notice newer than the registration's own, offered
               the way out whatever the notice in force says today — or asked: on the list, active, an older notice, under one that
-              describes the results. A pre-§322 yes recorded with the registration's own notice is neither.
+              names the tick and the results. A pre-§322 yes recorded with the registration's own notice is neither.
             */
             const resultsHeld = gaveResultsNameConsentSince(one);
             const resultsAsked = active && !one.listOptOut && resultsNameConsentOffered(one.privacyNoticeVersion, resultsLine);
@@ -469,7 +470,8 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                         {t("resultsName.failed")}
                       </Alert>
                     )}
-                    <Typography sx={{ mb: 1 }}>{t("resultsName.older")}</Typography>
+                    {/* «apari doar ca „Participant #…”» is true only until they tick: a held yes names them, and the ticked box and `help` say so. */}
+                    {!resultsHeld && <Typography sx={{ mb: 1 }}>{t("resultsName.older")}</Typography>}
                     {resultsHeld || !one.anotherAdult ? (
                       <form action={setResultsNameConsentFromManageAction}>
                         <input type="hidden" name="locale" value={locale} />

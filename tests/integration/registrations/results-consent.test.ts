@@ -9,10 +9,10 @@ import { registrations, type Registration } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { issueActionToken } from "@/modules/action-tokens/repository";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
-import { findFirstResultsNoticeVersion } from "@/modules/legal-documents/repository";
+import { findFirstResultsNameAskNoticeVersion, findFirstResultsNoticeVersion } from "@/modules/legal-documents/repository";
 import type { PostedResultRow } from "@/modules/results/rows";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import { AFTER_THE_RACE, approvePrivacyNotice, approveResultsTexts, createRace, person, registerRunner, resetNoticeCounter, type Runner } from "../../helpers/results";
+import { AFTER_THE_RACE, approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, registerRunner, resetNoticeCounter, type Runner } from "../../helpers/results";
 
 /**
  * BR-REQ-072-01, §NNN — «Vreau să apar cu numele în clasament» on the runner's own registration page.
@@ -21,8 +21,10 @@ import { AFTER_THE_RACE, approvePrivacyNotice, approveResultsTexts, createRace, 
  * results (§808). The owner asked for the way to be named: the runner's own press, from the manage link, recorded with the notice in
  * force. What is protected:
  *
- * - nothing is asked, and a yes is refused, until the notice in force describes the results; and never for a group run, for a
- *   registration made under the results notice, for a runner off the public list, or by the link for another adult on the address;
+ * - nothing is asked, and a yes is refused, until the notice in force names the tick's own marker `{{resultsNameAsk}}` beside
+ *   `{{results}}` — a notice that only describes the results (the platform's template as it is, whose section 4 tells these runners
+ *   they stay «Participant #număr») opens nothing; and never for a group run, for a registration made under the results notice, for a
+ *   runner off the public list or no longer active, or by the link for another adult on the address;
  * - the press is a POST through the manage link, read and never spent (GET never mutates: rendering the page writes nothing); it
  *   records `results_name_consent` and `results_consent_version` = the notice in force, once, with one audit row without the name;
  *   a second press withdraws;
@@ -118,7 +120,16 @@ async function page(token: string, searchParams: Record<string, string> = {}) {
 
 const TICK_WORDS = "Vreau să apar cu numele în clasament";
 
-/** The older notice (v1) the runner registered under, then the texts that describe the results (notice v2, terms v1). */
+/**
+ * The texts the club approves once it amends the template: a privacy notice naming `{{results}}` and `{{resultsNameAsk}}`, and terms
+ * naming `{{results}}`.
+ */
+async function approveAskTexts() {
+  await approvePrivacyNotice(db, { results: true, resultsNameAsk: true });
+  await approveTerms(db, { results: true });
+}
+
+/** The older notice (v1) the runner registered under; the texts that describe the results come after it. */
 async function olderRunner(over: Partial<Runner> = {}) {
   await approvePrivacyNotice(db, { results: false });
   const ana = await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101, noticeVersion: 1, ...over });
@@ -128,7 +139,14 @@ async function olderRunner(over: Partial<Runner> = {}) {
 const line = (bib: number, time: string): PostedResultRow => ({ key: `r[${bib}]`, bib: String(bib), name: "", sex: "", birthDate: "", time, status: "", chip: "", note: "" });
 
 async function publicNames() {
-  const result = await readPublicEventResults(db, raceId, { now: NOW, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: await findFirstResultsNoticeVersion(db) });
+  const result = await readPublicEventResults(db, raceId, {
+    now: NOW,
+    deadlines: DEFAULT_DEADLINES,
+    noticeDescribes: true,
+    termsDescribe: true,
+    firstResultsNoticeVersion: await findFirstResultsNoticeVersion(db),
+    firstResultsNameAskNoticeVersion: await findFirstResultsNameAskNoticeVersion(db),
+  });
   return Object.fromEntries((result?.rows ?? []).map((row) => [row.bibNumber, row.name]));
 }
 
@@ -142,9 +160,20 @@ describe("BR-REQ-072-01 §NNN the runner's page asks «Vreau să apar cu numele 
     expect(await trail(ana.id)).toEqual([]);
   });
 
-  it("shows the tick, empty, with what is published, once the notice in force describes the results — and rendering writes nothing", async () => {
+  it("shows nothing and refuses a yes under a notice that describes the results without naming the tick — the platform's template as it is", async () => {
     const ana = await olderRunner();
+    // The template's section 4 names {{results}} and tells these runners they appear only by number: no {{resultsNameAsk}}.
     await approveResultsTexts(db);
+    const token = await manageLink(ana);
+    expect(await page(token)).not.toContain(TICK_WORDS);
+    await expect(setResultsNameConsentFromManageLink(db, token, true, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(await rowOf(ana.id)).toMatchObject({ resultsNameConsent: false, resultsConsentVersion: 1 });
+    expect(await trail(ana.id)).toEqual([]);
+  });
+
+  it("shows the tick, empty, with what is published, once the notice in force names it beside the results — and rendering writes nothing", async () => {
+    const ana = await olderRunner();
+    await approveAskTexts();
     const token = await manageLink(ana);
     const before = await rowOf(ana.id);
     const html = await page(token);
@@ -152,6 +181,7 @@ describe("BR-REQ-072-01 §NNN the runner's page asks «Vreau să apar cu numele 
     expect(html).toContain('data-testid="manage-results-name-tick"');
     expect(html).toMatch(/role="checkbox"[^>]*aria-checked="false"/);
     expect(html).toContain("doar cât ești pe lista publică");
+    expect(html).toContain("apari doar ca „Participant #numărul de concurs”");
     // GET never mutates (BR-REQ-036-02 criterion 4): the row and the token are as they were.
     expect(await rowOf(ana.id)).toEqual(before);
     const [link] = await db.select({ usedAt: emailActionTokens.usedAt }).from(emailActionTokens).where(eq(emailActionTokens.registrationId, ana.id));
@@ -159,7 +189,7 @@ describe("BR-REQ-072-01 §NNN the runner's page asks «Vreau să apar cu numele 
   });
 
   it("does not ask a runner who registered under the results notice", async () => {
-    await approveResultsTexts(db);
+    await approveAskTexts();
     const ana = await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101, noticeVersion: 1 });
     const token = await manageLink(ana);
     expect(await page(token)).not.toContain(TICK_WORDS);
@@ -169,7 +199,7 @@ describe("BR-REQ-072-01 §NNN the runner's page asks «Vreau să apar cu numele 
   it("does not ask at an event that takes no results", async () => {
     await db.update(events).set({ type: "GROUP_RUN" }).where(eq(events.id, raceId));
     const ana = await olderRunner();
-    await approveResultsTexts(db);
+    await approveAskTexts();
     const token = await manageLink(ana);
     expect(await page(token)).not.toContain(TICK_WORDS);
     await expect(setResultsNameConsentFromManageLink(db, token, true, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
@@ -177,7 +207,7 @@ describe("BR-REQ-072-01 §NNN the runner's page asks «Vreau să apar cu numele 
 
   it("does not ask a runner off the public list: the name in the results follows the list's tick", async () => {
     const ana = await olderRunner({ ticked: false });
-    await approveResultsTexts(db);
+    await approveAskTexts();
     const token = await manageLink(ana);
     expect(await page(token)).not.toContain(TICK_WORDS);
     await expect(setResultsNameConsentFromManageLink(db, token, true, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
@@ -187,7 +217,7 @@ describe("BR-REQ-072-01 §NNN the runner's page asks «Vreau să apar cu numele 
 describe("BR-REQ-072-01 §NNN the press", () => {
   it("records the consent and the notice in force through the manage link, once, audited without the name; a second press withdraws", async () => {
     const ana = await olderRunner();
-    await approveResultsTexts(db);
+    await approveAskTexts();
     const token = await manageLink(ana);
 
     await expect(setResultsNameConsentFromManageLink(db, token, true, NOW)).resolves.toEqual({ ok: true, consent: true, changed: true });
@@ -200,6 +230,8 @@ describe("BR-REQ-072-01 §NNN the press", () => {
     const html = await page(token, { results: "1", person: ana.id });
     expect(html).toMatch(/role="checkbox"[^>]*aria-checked="true"/);
     expect(html).toContain("Am salvat alegerea ta pentru clasament.");
+    // Ticked, the page no longer says they appear only by number: the published results name them now.
+    expect(html).not.toContain("apari doar ca");
 
     await expect(setResultsNameConsentFromManageLink(db, token, false, LATER)).resolves.toEqual({ ok: true, consent: false, changed: true });
     expect(await rowOf(ana.id)).toMatchObject({ resultsNameConsent: false });
@@ -215,7 +247,7 @@ describe("BR-REQ-072-01 §NNN the press", () => {
 
   it("refuses a yes for another adult on the address, accepts the way out for them, and refuses a stranger's registration", async () => {
     const ana = await olderRunner();
-    await approveResultsTexts(db);
+    await approveAskTexts();
     const [mihai] = await db
       .insert(registrations)
       .values({ ...ana, id: undefined, registeredName: "Mihai Popescu", displayName: "Mihai", bibNumber: 102, checkinCode: null, birthDate: "1987-02-14", createdAt: undefined, updatedAt: undefined })
@@ -235,7 +267,7 @@ describe("BR-REQ-072-01 §NNN the press", () => {
 
   it("keeps offering the way out of a yes after the notice in force stops describing the results, while a new yes is refused", async () => {
     const ana = await olderRunner();
-    await approveResultsTexts(db);
+    await approveAskTexts();
     const token = await manageLink(ana);
     await setResultsNameConsentFromManageLink(db, token, true, NOW);
     // A later notice without the results (v3) comes into force.
@@ -248,9 +280,33 @@ describe("BR-REQ-072-01 §NNN the press", () => {
     await expect(setResultsNameConsentFromManageLink(db, token, true, LATER)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 
+  it("asks a registration no longer active nothing and refuses its yes, yet keeps offering the way out of a yes it holds", async () => {
+    const ana = await olderRunner();
+    await approveAskTexts();
+    const token = await manageLink(ana);
+
+    // Cancelled without a consent: no tick, a yes refused, nothing written.
+    await db.update(registrations).set({ status: "CANCELLED" }).where(eq(registrations.id, ana.id));
+    expect(await page(token)).not.toContain(TICK_WORDS);
+    await expect(setResultsNameConsentFromManageLink(db, token, true, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(await rowOf(ana.id)).toMatchObject({ resultsNameConsent: false, resultsConsentVersion: 1 });
+    expect(await trail(ana.id)).toEqual([]);
+
+    // Cancelled after a yes: the ticked box stays, and its press withdraws (art. 7(3) GDPR).
+    await db.update(registrations).set({ status: "CONFIRMED" }).where(eq(registrations.id, ana.id));
+    await setResultsNameConsentFromManageLink(db, token, true, NOW);
+    await db.update(registrations).set({ status: "CANCELLED" }).where(eq(registrations.id, ana.id));
+    const html = await page(token);
+    expect(html).toContain(TICK_WORDS);
+    expect(html).toMatch(/role="checkbox"[^>]*aria-checked="true"/);
+    await expect(setResultsNameConsentFromManageLink(db, token, false, LATER)).resolves.toMatchObject({ ok: true, consent: false, changed: true });
+    expect(await rowOf(ana.id)).toMatchObject({ resultsNameConsent: false });
+    expect(await page(token)).not.toContain(TICK_WORDS);
+  });
+
   it("refuses a link that is not a manage link", async () => {
     const ana = await olderRunner();
-    await approveResultsTexts(db);
+    await approveAskTexts();
     await expect(setResultsNameConsentFromManageLink(db, "not-a-real-secret", true, NOW)).resolves.toMatchObject({ ok: false });
     expect(await rowOf(ana.id)).toMatchObject({ resultsNameConsent: false });
   });
@@ -259,7 +315,7 @@ describe("BR-REQ-072-01 §NNN the press", () => {
 describe("BR-REQ-072-01 §NNN the published results", () => {
   it("name the older runner with a consent, not without it, not after a withdrawal — and leave the newer registrant and the unticked as they were", async () => {
     const ana = await olderRunner();
-    await approveResultsTexts(db);
+    await approveAskTexts();
     // Under the results notice (v2): named by the tick alone; Dan did not tick.
     await registerRunner(db, raceId, { name: "Bia Marin", bibNumber: 102, noticeVersion: 2 });
     await registerRunner(db, raceId, { name: "Dan Ionescu", bibNumber: 103, noticeVersion: 2, ticked: false });
@@ -279,5 +335,24 @@ describe("BR-REQ-072-01 §NNN the published results", () => {
 
     await setResultsNameConsentFromManageLink(db, token, false, NOW);
     expect(await publicNames()).toEqual({ 101: null, 102: "Bia Marin", 103: null });
+  });
+
+  it("name nobody on a yes recorded under a notice that described the results but not the tick, until it is given again under one that names it", async () => {
+    const ana = await olderRunner();
+    // v2: the template as it is — results described, the tick not named.
+    await approveResultsTexts(db);
+    await saveEventResults(db, admin, { eventId: raceId, rows: [line(101, "50:00")] }, NOW);
+    await setResultsPublished(db, admin, raceId, true, NOW);
+    // A yes recorded under v2 (the column kept since §322, written by no door this branch opens) is not one.
+    await db.update(registrations).set({ resultsNameConsent: true, resultsConsentVersion: 2 }).where(eq(registrations.id, ana.id));
+    expect(await publicNames()).toEqual({ 101: null });
+
+    // v3 names the tick: the old yes still counts for nothing; the runner's own press under v3 does.
+    await approvePrivacyNotice(db, { results: true, resultsNameAsk: true });
+    expect(await publicNames()).toEqual({ 101: null });
+    const token = await manageLink(ana);
+    await expect(setResultsNameConsentFromManageLink(db, token, true, NOW)).resolves.toEqual({ ok: true, consent: true, changed: true });
+    expect(await rowOf(ana.id)).toMatchObject({ resultsNameConsent: true, resultsConsentVersion: 3 });
+    expect(await publicNames()).toEqual({ 101: "Ana Popescu" });
   });
 });

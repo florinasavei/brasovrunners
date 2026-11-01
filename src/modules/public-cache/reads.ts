@@ -77,6 +77,7 @@ import {
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
   describesResults,
+  describesResultsNameAsk,
   describesRsvp,
   describesRsvpAsk,
   describesRsvpMember,
@@ -90,7 +91,7 @@ import {
 import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { readPublicVolunteersList } from "@/modules/volunteers/public-list";
 import { describesRefusal } from "@/modules/legal-documents/domain/refusal-clause";
-import { findCurrentApprovedDocument, findFirstResultsNoticeVersion, findFirstRsvpMemberNoticeVersion, findFirstRsvpNoticeVersion, findFirstStatesNoticeVersion, findFirstVolunteersListNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, findFirstResultsNameAskNoticeVersion, findFirstResultsNoticeVersion, findFirstRsvpMemberNoticeVersion, findFirstRsvpNoticeVersion, findFirstStatesNoticeVersion, findFirstVolunteersListNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { countRsvpsForEvents } from "@/modules/rsvp/counts";
 import { type PublicRsvps, readPublicRsvps } from "@/modules/rsvp/rsvp";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
@@ -555,20 +556,35 @@ export async function cachedFirstResultsNoticeVersion(): Promise<number | null> 
 }
 
 /**
+ * The first approved privacy notice that described «Vreau să apar cu numele în clasament» (`findFirstResultsNameAskNoticeVersion`,
+ * §NNN), or null — the line below which a yes recorded no notice that named the tick, and names nobody. Expired with every legal
+ * text, like the results' twin above.
+ */
+export async function cachedFirstResultsNameAskNoticeVersion(): Promise<number | null> {
+  return publicRead(["legal.first-results-name-ask-notice"], ["legal"], () => findFirstResultsNameAskNoticeVersion(getDb()));
+}
+
+/**
  * A race's published results, the rows the event page draws (§809, race results part 2): `readPublicEventResults` through the data
  * cache, filed under `places` and `events` — the tags the results' save, its publish switch, a confirmation, a cancellation, an erasure and
  * somebody leaving the list already expire, so a name is never shown after its owner withdrew it and a correction is on the page at
  * once. Like the start list's rows it has **no saved copy** (`places` is never kept): a stale ranking is a wrong place, so a month
  * that cannot be asked leaves the section out and the page stands (`ResultsSection`).
  *
- * The key carries every input that decides the answer — the event, the club's period, the two notices' verdicts and the version
- * below which nobody is named — so an approval or a change of "Termene" reads a new entry, never an old one. The clock is **not**
+ * The key carries every input that decides the answer — the event, the club's period, the two notices' verdicts, the version
+ * below which nobody is named and the one below which a yes asked since names nobody (§NNN) — so an approval or a change of "Termene" reads a new entry, never an old one. The clock is **not**
  * in it: the entry is made at a request, and the page checks `closesAt` against its own `now` again (a date passing is no write),
  * holding itself until then (`resultsClockInstants`).
  */
 export async function cachedPublicEventResults(
   eventId: string,
-  gates: { deadlines: Pick<Deadlines, "publicListDays">; noticeDescribes: boolean; termsDescribe: boolean; firstResultsNoticeVersion: number | null },
+  gates: {
+    deadlines: Pick<Deadlines, "publicListDays">;
+    noticeDescribes: boolean;
+    termsDescribe: boolean;
+    firstResultsNoticeVersion: number | null;
+    firstResultsNameAskNoticeVersion: number | null;
+  },
 ): Promise<PublicEventResults | null> {
   return publicRead(
     [
@@ -578,6 +594,7 @@ export async function cachedPublicEventResults(
       gates.noticeDescribes ? "notice" : "no-notice",
       gates.termsDescribe ? "terms" : "no-terms",
       gates.firstResultsNoticeVersion ?? "none",
+      gates.firstResultsNameAskNoticeVersion ?? "none",
     ],
     ["places", "events"],
     () => readPublicEventResults(getDb(), eventId, { now: new Date(), ...gates }),
@@ -670,6 +687,16 @@ export async function cachedVolunteersDescribed(now: Date): Promise<boolean> {
 export async function cachedResultsDescribed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesResults(notice.body));
+}
+
+/**
+ * Whether an older notice's runner's page may ask «Vreau să apar cu numele în clasament» (§NNN): the notice in force describes the
+ * results and the tick (`describesResults`, `describesResultsNameAsk`), in every language — `noticeDescribesResultsNameAsk`'s cached
+ * twin, which the server asks again at every yes.
+ */
+export async function cachedResultsNameAskDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesResults(notice.body) && describesResultsNameAsk(notice.body));
 }
 
 /**

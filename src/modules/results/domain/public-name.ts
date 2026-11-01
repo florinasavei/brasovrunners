@@ -18,7 +18,8 @@ import { holdsResultsNameConsent } from "./name-consent";
  *   or above `firstResultsNoticeVersion`, §421's line for the states): a tick given under the older notice — «Rezultate cu nume nu
  *   publicăm încă», with terms that promised to ask separately first — agreed to a list, not to a ranking by name — **unless** the runner
  *   asked since, from their own registration's page, «Vreau să apar cu numele în clasament» (§NNN: `registrations.results_name_consent`
- *   true and `results_consent_version`, the notice in force at the press, at or above the same line). The asking never stands in for
+ *   true and `results_consent_version`, the notice in force at the press, at or above the first notice that named that tick,
+ *   `firstResultsNameAskNoticeVersion`). The asking never stands in for
  *   any condition above it: the tick, the confirmed state and the guests' rule apply to that runner exactly as to everyone else.
  *
  * **A runner the club typed by hand** (no registration, so no form and no tick) is named under a rule of its own (§810, amending the
@@ -48,10 +49,12 @@ export type PublicNameInput = {
   /**
    * «Vreau să apar cu numele în clasament», asked after registration by a runner whose notice predates the results (§NNN):
    * `registrations.results_name_consent`, and the notice version in force when it was given (`results_consent_version`). False and
-   * null for a runner typed by hand. A consent recorded under a notice below the line counts for nothing.
+   * null for a runner typed by hand. A consent recorded under a notice below `firstResultsNameAskNoticeVersion` counts for nothing.
    */
   resultsNameConsent: boolean;
   resultsConsentVersion: number | null;
+  /** The first approved notice that named «Vreau să apar cu numele în clasament» (`findFirstResultsNameAskNoticeVersion`); null — no yes asked since counts. */
+  firstResultsNameAskNoticeVersion: number | null;
   /** A runner typed by hand: the staff recorded that the person agreed to appear by name (`name_agreed_at` is set). Ignored for a registered runner. */
   typedNameAgreed: boolean;
   /** A runner typed by hand: the name the club typed; null for a registered one, whose registration's `displayName` answers. */
@@ -68,8 +71,8 @@ export function publicResultName(runner: PublicNameInput): string | null {
   if (!runner.ticked || !runner.confirmed || runner.hidden) return null;
   if (runner.firstResultsNoticeVersion === null) return null;
   const registeredUnderResults = runner.noticeVersion !== null && runner.noticeVersion >= runner.firstResultsNoticeVersion;
-  // An older notice's runner who asked since, under a notice that describes the results (§NNN); withdrawn, the flag is false.
-  const askedSince = holdsResultsNameConsent(runner, runner.firstResultsNoticeVersion);
+  // An older notice's runner who asked since, under a notice that named the tick (§NNN); withdrawn, the flag is false.
+  const askedSince = holdsResultsNameConsent(runner, runner.firstResultsNameAskNoticeVersion);
   if (!registeredUnderResults && !askedSince) return null;
   const name = runner.displayName?.trim();
   return name ? name : null;

@@ -25,6 +25,7 @@ import {
   deadlineMergeValues,
   LIST_NUMBERS_MERGE_FIELD,
   RESULTS_MERGE_FIELD,
+  RESULTS_NAME_ASK_MERGE_FIELD,
   RSVP_ASK_ANSWERERS_MERGE_FIELD,
   RSVP_ASK_MERGE_FIELD,
   RSVP_MEMBER_MERGE_FIELD,
@@ -48,7 +49,7 @@ import { eventInvitationsClause } from "@/modules/registrations/invitation-words
 import { feedbackFormsClause, feedbackFormsNamedClause, feedbackSafetyGmailClause, relayQueueClause } from "@/modules/feedback/notice-words";
 import { membersShopClause } from "@/modules/content/shop/notice-words";
 import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause, volunteersListClause } from "@/modules/volunteers/notice-words";
-import { resultsClause } from "@/modules/results/notice-words";
+import { resultsClause, resultsNameAskClause } from "@/modules/results/notice-words";
 import { rsvpAskAnswerersClause, rsvpAskClause, rsvpClause, rsvpMemberClause } from "@/modules/rsvp/notice-words";
 
 /**
@@ -209,6 +210,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${RESULTS_MERGE_FIELD}}}`,
     messageKey: RESULTS_MERGE_FIELD,
     example: inBoth((locale) => resultsClause(locale)),
+  },
+  // The privacy notice's marker for «Vreau să apar cu numele în clasament» (§NNN): filled with the tick's own words, and — beside
+  // `{{results}}` — the switch that lets an older notice's runner ask to be named in the results (`describesResultsNameAsk`).
+  {
+    token: `{{${RESULTS_NAME_ASK_MERGE_FIELD}}}`,
+    messageKey: RESULTS_NAME_ASK_MERGE_FIELD,
+    example: inBoth((locale) => resultsNameAskClause(locale)),
   },
   // The privacy notice's marker for the answer «Vin!» (§811): filled with the button's own name, and the switch that
   // lets the event page offer it and the service take it (`describesRsvp`).

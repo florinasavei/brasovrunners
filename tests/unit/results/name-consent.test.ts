@@ -1,26 +1,32 @@
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { describesResults, describesResultsNameAsk, MERGE_FIELDS, mergeText, RESULTS_NAME_ASK_MERGE_FIELD } from "@/modules/legal-documents/domain/merge-fields";
+import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
+import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import { gaveResultsNameConsentSince, holdsResultsNameConsent, resultsNameConsentLine, resultsNameConsentOffered } from "@/modules/results/domain/name-consent";
 import { type PublicNameInput, publicResultName } from "@/modules/results/domain/public-name";
+import { resultsMergeValues, resultsNameAskClause } from "@/modules/results/notice-words";
 
 /**
  * BR-REQ-072-01, §NNN — «Vreau să apar cu numele în clasament»: the runner who registered under a privacy notice older than the first
  * that described the results asks, from their own registration's page, to be named in a race's published results.
  *
- * The rule the page, the server and the public read share: asked only while the notice in force describes the results, only for a
- * race, only of a registration whose notice is below the line; a consent counts only when given under a notice at or above it; and the
+ * The rule the page, the server and the public read share: asked only while the notice in force names the tick's own marker
+ * `{{resultsNameAsk}}` beside `{{results}}` — describing the results is not enough, the platform's template describes them in the
+ * section that tells these runners they stay «Participant #numărul» — only for a race, only of a registration whose notice is below
+ * the first results notice; a consent counts only when given under a notice at or above the first that named the marker; and the
  * name still needs every condition `publicResultName` applied before (§808): the tick, a confirmed registration, not a hidden guest.
  */
-const facts = { noticeDescribesResults: true, firstResultsNoticeVersion: 3, eventType: "RACE" };
+const facts = { noticeDescribesResultsNameAsk: true, firstResultsNoticeVersion: 3, eventType: "RACE" };
 
 describe("BR-REQ-072-01 §NNN when «Vreau să apar cu numele în clasament» is asked", () => {
-  it("draws the line at the first results notice for a race while the notice in force describes the results", () => {
+  it("draws the line at the first results notice for a race while the notice in force names the tick and the results", () => {
     expect(resultsNameConsentLine(facts)).toBe(3);
   });
 
-  it("draws no line — nothing is asked — while the notice in force does not describe the results", () => {
-    expect(resultsNameConsentLine({ ...facts, noticeDescribesResults: false })).toBeNull();
+  it("draws no line — nothing is asked — while the notice in force does not name the tick, however it describes the results", () => {
+    expect(resultsNameConsentLine({ ...facts, noticeDescribesResultsNameAsk: false })).toBeNull();
     expect(resultsNameConsentLine({ ...facts, firstResultsNoticeVersion: null })).toBeNull();
   });
 
@@ -42,11 +48,13 @@ describe("BR-REQ-072-01 §NNN when «Vreau să apar cu numele în clasament» is
     expect(gaveResultsNameConsentSince({ resultsNameConsent: true, resultsConsentVersion: 1, privacyNoticeVersion: 1 })).toBe(false);
   });
 
-  it("counts a consent only when given under a notice at or above the line", () => {
+  it("counts a consent only when given under a notice at or above the first that named the tick", () => {
     expect(holdsResultsNameConsent({ resultsNameConsent: true, resultsConsentVersion: 3 }, 3)).toBe(true);
     expect(holdsResultsNameConsent({ resultsNameConsent: true, resultsConsentVersion: 5 }, 3)).toBe(true);
     // A consent from before §322, recorded under the notice of its day, names nobody.
     expect(holdsResultsNameConsent({ resultsNameConsent: true, resultsConsentVersion: 1 }, 3)).toBe(false);
+    // Nor one recorded under a notice that described the results (v3) but did not yet name the tick (first named at v4).
+    expect(holdsResultsNameConsent({ resultsNameConsent: true, resultsConsentVersion: 3 }, 4)).toBe(false);
     expect(holdsResultsNameConsent({ resultsNameConsent: false, resultsConsentVersion: 3 }, 3)).toBe(false);
     expect(holdsResultsNameConsent({ resultsNameConsent: true, resultsConsentVersion: 3 }, null)).toBe(false);
     expect(holdsResultsNameConsent({ resultsNameConsent: true, resultsConsentVersion: null }, 3)).toBe(false);
@@ -62,20 +70,27 @@ describe("BR-REQ-072-01 §NNN publicResultName with the consent asked since", ()
     hidden: false,
     noticeVersion: 1,
     firstResultsNoticeVersion: 3,
+    // The results were first described at v3; the tick was first named at v4.
+    firstResultsNameAskNoticeVersion: 4,
     typedNameAgreed: false,
     typedDisplayName: null,
     resultsNameConsent: false,
     resultsConsentVersion: 1,
   };
-  const asked: PublicNameInput = { ...older, resultsNameConsent: true, resultsConsentVersion: 3 };
+  const asked: PublicNameInput = { ...older, resultsNameConsent: true, resultsConsentVersion: 4 };
 
   it("keeps an older notice's runner without the consent anonymous, «Participant #bib»", () => {
     expect(publicResultName(older)).toBeNull();
   });
 
-  it("names an older notice's runner who consented under a notice that describes the results", () => {
+  it("names an older notice's runner who consented under a notice that named the tick", () => {
     expect(publicResultName(asked)).toBe("Ana Popescu");
-    expect(publicResultName({ ...asked, resultsConsentVersion: 4 })).toBe("Ana Popescu");
+    expect(publicResultName({ ...asked, resultsConsentVersion: 5 })).toBe("Ana Popescu");
+  });
+
+  it("names nobody on a yes recorded under a notice that described the results but not the tick, or while no notice named it", () => {
+    expect(publicResultName({ ...asked, resultsConsentVersion: 3 })).toBeNull();
+    expect(publicResultName({ ...asked, firstResultsNameAskNoticeVersion: null })).toBeNull();
   });
 
   it("makes the runner anonymous again once the consent is withdrawn", () => {
@@ -88,7 +103,7 @@ describe("BR-REQ-072-01 §NNN publicResultName with the consent asked since", ()
     expect(publicResultName({ ...asked, hidden: true })).toBeNull();
     expect(publicResultName({ ...asked, displayName: "  " })).toBeNull();
     expect(publicResultName({ ...asked, firstResultsNoticeVersion: null })).toBeNull();
-    // A consent below the line (the pre-§322 column) is not one.
+    // A consent below the results line (the pre-§322 column) is not one.
     expect(publicResultName({ ...asked, resultsConsentVersion: 2 })).toBeNull();
   });
 
@@ -116,5 +131,31 @@ describe("BR-REQ-072-01 §NNN the words, in both languages", () => {
     expect(ro.Registrations.resultsName.label).toBe("Vreau să apar cu numele în clasament");
     expect(ro.Registrations.resultsName.help).toMatch(/loc.*număr.*timp.*categorie.*debifezi oricând/);
     expect(en.Registrations.resultsName.help).toMatch(/place.*race number.*time.*category.*at any time/);
+  });
+});
+
+describe("BR-REQ-072-01 §NNN the notice's own marker {{resultsNameAsk}}", () => {
+  it("is a known merge field, distinct from {{results}}, and a notice opens the tick only by naming it", () => {
+    expect(MERGE_FIELDS).toContain(RESULTS_NAME_ASK_MERGE_FIELD);
+    expect(describesResultsNameAsk({ sections: [{ heading: "4", paragraphs: ["Clasamentul ({{results}})."] }] })).toBe(false);
+    expect(describesResultsNameAsk({ sections: [{ heading: "4", paragraphs: ["Bifa {{resultsNameAsk}}."] }] })).toBe(true);
+  });
+
+  it("is absent from the platform's template, whose section 4 tells the older registrants they stay «Participant #număr»: approving it as it is asks nobody", () => {
+    for (const body of [privacyNoticeRo, privacyNoticeEn]) {
+      expect(describesResults(body)).toBe(true);
+      expect(describesResultsNameAsk(body)).toBe(false);
+    }
+  });
+
+  it("is filled with the tick's own words, quoted, in each language, and has a legend entry in both catalogues", () => {
+    expect(resultsNameAskClause("ro")).toBe(`„${ro.Registrations.resultsName.label}”`);
+    expect(resultsNameAskClause("en")).toBe(`“${en.Registrations.resultsName.label}”`);
+    expect(mergeText("Bifa {{resultsNameAsk}}.", resultsMergeValues("ro"))).toBe("Bifa „Vreau să apar cu numele în clasament”.");
+    const entry = DECLARATION_TOKENS.find((token) => token.token === "{{resultsNameAsk}}");
+    expect(entry?.messageKey).toBe("resultsNameAsk");
+    expect(entry?.example.ro).toBe(resultsNameAskClause("ro"));
+    expect(ro.Admin.legal.tokens.resultsNameAsk).toContain("Vreau să apar cu numele în clasament");
+    expect(en.Admin.legal.tokens.resultsNameAsk).toContain("I want to appear by name in the results");
   });
 });
