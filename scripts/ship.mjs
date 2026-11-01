@@ -29,6 +29,7 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
+import { readClub } from "./club-files.mjs";
 import { gateLine, sourceLine, waitForMergeGate } from "./pr-merge-gate.mjs";
 import {
   createClock,
@@ -55,7 +56,7 @@ function measured(outcome) {
   const { steps, totalMs } = clock.summary();
   console.log(`\n== ${NEW}: ${outcome}, step by step (m:ss)`);
   for (const line of clock.report()) console.log(line);
-  const file = process.env.SHIP_TIMES_FILE || join(tmpdir(), "brasovrunners-ship-times.jsonl");
+  const file = process.env.SHIP_TIMES_FILE || join(tmpdir(), `${readClub().slug}-ship-times.jsonl`);
   const record = {
     at: new Date().toISOString(),
     release: NEW,
