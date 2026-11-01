@@ -3,7 +3,7 @@
 `club.json` is the club's identity, read at build time (`DECISIONS.md` §882): its name, slug, short
 mark and wordmark; the public list's short forms; its place — city, county, plate code, country,
 time zone and the zone's words, the coordinates the sunset is read for, an identity card example;
-its hashtags; its safety form's name; its logo files and their proportions.
+its hashtags; its safety form's name; its palette; its logo files and their proportions.
 
 `guard-words.json` is the club's own places and names that no code should spell out — its hill, its
 parks, its stadiums, its programmes — which the literal check refuses anywhere else. A file of its
@@ -30,6 +30,36 @@ How it reaches the code:
 - `yarn test:fork` builds the identity from a made-up club (`tests/fixtures/fork-club/`) and finds
   none of this club's words in what it renders.
 
+## The palette, the drawing, the logo and the wordmark (§NNN)
+
+- **`palette`** in `club.json`, by role, each `#rrggbb` in lower case. Four are required: `primary` (the
+  logo's own colour — `tests/unit/theme/brand.test.ts` holds it equal to `public/brand/logo.svg`'s fill),
+  `primaryInk` (its deeper ink), `secondary` (a fill under the body's ink) and `accent` («Aspectul nou»'s
+  default). The rest — `dark` (the primary and its ink after dark), `kit` (the kit's gradient), `tints`
+  (the page tints, the hero's ends, the poster's hairline, the sheet's member fill, the blue preset's pressed
+  shades), `look` and `secondaryLook` (each accent's four shades by day and after dark) — are Brașov's
+  hand-picked values; a club that leaves one out gets it derived from the four by `src/theme/brand.ts`
+  (`shadesOf`, `mix`), the one file that computes colours. `brand.ts` keeps every name it exported: the roles
+  are `PALETTE`, the hue names (`COLOR.blue`, `COLOR.orange`…) their aliases, and the stored preset ids
+  (`faintBlue`, `blue`, `orange`…) unchanged. The platform's neutrals — the ink, the paper, the kinds' fills,
+  the calendar picture's other themes, the race numbers' print colours — stay in `brand.ts`: they are the same
+  for every club. Every pair the pages draw is held at AA on whatever the file says (`yarn test`, and
+  `yarn test:fork` on a made-up club that writes only the four).
+- **`decor.json`**: the mountains drawing — its box and its ridges (`far`, `near`), drawn under the public
+  pages by `MountainMark` and across the calendar picture's empty days. Read through `src/club/decor.ts` by
+  those readers alone, never by `brand.ts` or anything every visitor's scripts carry
+  (`tests/unit/club/import-surface.test.ts`). `"layers": []` draws nothing.
+- **The logo**: `logo` in `club.json` gives the lockup's proportions, and every place that sized it by hand —
+  the race number, the badge, the bib designer, the two PDFs — reads them (`brand.ts#LOGO_RATIO`, rounded to
+  three decimals, and `LOGO_HEIGHT_SHARE`). A squarer lockup stands inside the race number's band. The files are
+  `public/brand/logo.svg` and its siblings; after changing one, or the palette, run `yarn brand:assets`, which
+  redraws the rasters the PDFs and the emails use and writes `assets.lock.json` — each source's sha256 and the
+  colours. A test fails with «run yarn brand:assets» while the lock and the sources disagree.
+- **The wordmark's face**: `src/theme/fonts/Wordmark.ttf`, with its licence beside it as
+  `Wordmark-LICENSE.txt` — a fixed slot in the fonts folder (`next/font/local` loads only from there), so a
+  club's own face replaces the two files and no code. Every character of `wordmark` must be in the face
+  (`brand.test.ts` reads its `cmap`).
+
 The region stays Romania for every club: `country` is `"RO"`, the languages `ro` and `en`, the legal
-texts Romanian law, the prices RON. The palette, the mountains drawing, the legal clauses and the
-catalogues' wording are not here yet; later changes move them.
+texts Romanian law, the prices RON. The legal clauses and the catalogues' wording are not here yet;
+later changes move them.

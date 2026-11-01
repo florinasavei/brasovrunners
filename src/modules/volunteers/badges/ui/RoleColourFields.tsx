@@ -2,7 +2,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import OnlyWhenChosen from "@/modules/content/events/ui/OnlyWhenChosen";
-import { BIB_COLOURS } from "@/modules/content/events/ui/bib-colours";
+import { BIB_COLOURS } from "@/theme/brand";
 import RecallField from "@/shared/forms/recall";
 import { badgeColourReadable } from "../badge-design";
 import { TYPED_COLOUR } from "../badges";

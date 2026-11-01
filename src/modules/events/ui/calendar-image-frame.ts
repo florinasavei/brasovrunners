@@ -1,5 +1,5 @@
 import type { CalendarImagePalette } from "@/theme/brand";
-import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
+import { fillMountains, MOUNTAINS } from "@/club/decor";
 import { SOCIAL_MARKS } from "@/shared/ui/SocialIcon";
 import { type Box, CALENDAR_IMAGE_RATIOS, type CalendarImageRatio, fillSpaced, fitText, LOGO_RATIO, roundRect } from "./calendar-image-canvas";
 import type { CalendarImageAssets, CalendarImageFonts, CalendarImageOptions } from "./calendar-image-draw";
@@ -89,12 +89,9 @@ export function drawFrame(
   const mountains = (x: number, y: number, w: number, h: number, color: string, far: number, near: number) => {
     ctx.save();
     ctx.translate(x, y);
-    ctx.scale(w / MOUNTAIN_MARK_VIEWBOX.width, h / MOUNTAIN_MARK_VIEWBOX.height);
+    ctx.scale(w / MOUNTAINS.width, h / MOUNTAINS.height);
     ctx.fillStyle = color;
-    ctx.globalAlpha = far;
-    ctx.fill(new Path2D(FAR));
-    ctx.globalAlpha = near;
-    ctx.fill(new Path2D(NEAR));
+    fillMountains(ctx, far, near);
     ctx.restore();
   };
   ctx.textBaseline = "alphabetic";
@@ -138,7 +135,7 @@ export function drawFrame(
     // Until the logo loads: the mountains over the club's name, spaced, in the logo's place.
     const nameSize = logoH * 0.16;
     const markH = logoH - nameSize * 1.7;
-    const markW = (markH * MOUNTAIN_MARK_VIEWBOX.width) / MOUNTAIN_MARK_VIEWBOX.height;
+    const markW = (markH * MOUNTAINS.width) / MOUNTAINS.height;
     mountains(logoX + (logoW - markW) / 2, bandTop + logoInset, markW, markH, palette.bandInk, 0.55, 1);
     ctx.globalAlpha = 1;
     ctx.fillStyle = palette.bandInk;
@@ -232,7 +229,7 @@ export function drawFrame(
   ctx.font = face(lineSize, 700);
   const line = fitText(ctx, period.empty, body.w - 2 * inset);
   const markW = Math.min(body.w * 0.45, 420 * unit);
-  const markH = (markW * MOUNTAIN_MARK_VIEWBOX.height) / MOUNTAIN_MARK_VIEWBOX.width;
+  const markH = (markW * MOUNTAINS.height) / MOUNTAINS.width;
   const blockH = markH + lineSize * 0.6 + lineSize * 0.72;
   const top = body.y + (body.h - blockH) / 2;
   mountains(body.x + (body.w - markW) / 2, top, markW, markH, palette.line, 0.6, 0.9);

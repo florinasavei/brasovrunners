@@ -18,7 +18,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
     { path: "src/app/global-error.tsx", reason: "the last-resort error page renders without the theme provider (it replaces the root layout), so it carries its own plain colours", count: 5 },
     { path: "src/modules/content/events/fields.ts", reason: "an error message's example («such as #1a73e8»), not a colour used", count: 1 },
     { path: "src/modules/content/events/ui/DifficultyStepField.tsx", reason: "an rgba() built from the theme's own channel variable (§526); the literal is the fallback syntax, not a hue", count: 1 },
-    { path: "src/modules/content/events/ui/bib-colours.ts", reason: "the bib colours the club may pick for a race number are data, not the site's palette", count: 6 },
     { path: "src/modules/content/rich-text/ui/ImageCropBox.tsx", reason: "the crop frame's dimming scrim and handle: black and white at an opacity over any picture, in both modes", count: 2 },
     { path: "src/modules/content/rich-text/ui/PictureLightboxDialog.tsx", reason: "the lightbox's near-black backdrop: a scrim over a picture, the same in both modes", count: 1 },
     { path: "src/modules/content/rich-text/ui/RichTextEditor.tsx", reason: "inline styles in the editor's serialised picture-placeholder DOM, which is outside React's theme", count: 2 },
@@ -243,7 +242,7 @@ export const BACK_ARROWS: readonly { key: string; reason: string }[] = [
 
 /** Per rule, the entries and the hits (the sum of the counts): lower them in the same edit that removes an entry or a count. */
 export const PINNED = {
-  colours: { entries: 13, hits: 29 },
+  colours: { entries: 12, hits: 23 },
   icons: { entries: 31, hits: 121 },
   primitives: { entries: 77, hits: 81 },
   toggles: { entries: 0, hits: 0 },

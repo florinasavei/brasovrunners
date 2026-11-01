@@ -4,7 +4,6 @@ import { inflateSync } from "node:zlib";
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { BIB_COLOURS } from "@/modules/content/events/ui/bib-colours";
 import { contrastRatio, MIN_TEXT_CONTRAST } from "@/modules/appearance/domain/tint-contrast";
 import {
   BIB_MEMBER_CARD,
@@ -20,7 +19,7 @@ import { BIB_CARD, BIB_IMAGE, BIB_LAYOUT, BIB_MARGIN } from "@/modules/registrat
 import { renderBibImage } from "@/modules/registrations/bib-image";
 import { BIB_PICTURE_BOX, BIB_PICTURE_RATIO } from "@/modules/registrations/bib-picture-frame";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
-import { COLOR, GRADIENT } from "@/theme/brand";
+import { BIB_COLOURS, COLOR, GRADIENT } from "@/theme/brand";
 
 /**
  * §695, BR-REQ-038-01 — a members' race number «Tot numărul»: the whole card above the small print

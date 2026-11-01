@@ -1,5 +1,5 @@
 import type { CalendarImagePalette } from "@/theme/brand";
-import { FAR, MOUNTAIN_MARK_VIEWBOX, NEAR } from "@/shared/ui/MountainMark";
+import { fillMountains, MOUNTAINS } from "@/club/decor";
 import { type Box, CALENDAR_IMAGE_RATIOS, detailWords, drawGlyphs, eventGlyphs, fitText, glyphsWidth, roundRect, wrapBalanced } from "./calendar-image-canvas";
 import { drawFrame } from "./calendar-image-frame";
 import { SPECIAL_PATH } from "./calendar-image-glyphs";
@@ -55,15 +55,12 @@ export function weekHeights(asks: readonly number[], room: number, hard: readonl
 
 /** The empty days' mountains: the club's ridge across `box`, from its foot, as the poster draws them. */
 function drawRidge(ctx: CanvasRenderingContext2D, box: Box, color: string, far: number, near: number) {
-  const h = Math.min(box.h * 0.8, (box.w * MOUNTAIN_MARK_VIEWBOX.height) / MOUNTAIN_MARK_VIEWBOX.width);
+  const h = Math.min(box.h * 0.8, (box.w * MOUNTAINS.height) / MOUNTAINS.width);
   ctx.save();
   ctx.translate(box.x, box.y + box.h - h);
-  ctx.scale(box.w / MOUNTAIN_MARK_VIEWBOX.width, h / MOUNTAIN_MARK_VIEWBOX.height);
+  ctx.scale(box.w / MOUNTAINS.width, h / MOUNTAINS.height);
   ctx.fillStyle = color;
-  ctx.globalAlpha = far;
-  ctx.fill(new Path2D(FAR));
-  ctx.globalAlpha = near;
-  ctx.fill(new Path2D(NEAR));
+  fillMountains(ctx, far, near);
   ctx.restore();
 }
 

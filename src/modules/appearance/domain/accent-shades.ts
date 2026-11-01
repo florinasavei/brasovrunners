@@ -1,5 +1,4 @@
-import { COLOR, COLOR_DARK } from "@/theme/brand";
-import { contrastRatio, HEX_COLOR, MIN_TEXT_CONTRAST, relativeLuminance } from "./tint-contrast";
+import { HEX_COLOR, shadesOf } from "@/theme/brand";
 
 /**
  * The new look's accent from one colour (§723, amending §708): the four shades «Aspectul nou» wears —
@@ -11,7 +10,9 @@ import { contrastRatio, HEX_COLOR, MIN_TEXT_CONTRAST, relativeLuminance } from "
  * club's orange.
  *
  * Pure arithmetic, no zod, no database, no colour literal: the service derives a typed colour with it
- * and the backoffice's colour island shows the same shades live, from one source.
+ * and the backoffice's colour island shows the same shades live, from one source. The walk itself is
+ * `theme/brand.ts#shadesOf` since §NNN — the one file that computes colours, which also fills the shades a
+ * club's `club.json` leaves out with it — and this module judges the typed colour before asking it.
  *
  * **How.** Each shade is the colour walked towards black (by day) or towards white (after dark) in
  * steps of 1 %, stopping at the first step that keeps its rule. A colour that already keeps it is kept
@@ -44,82 +45,17 @@ export const ACCENT_SHADE_KEYS = ["accent", "accentInk", "accentDeep", "accentTi
 export const MIN_CHROMA = 40;
 
 /** The contrast `accentInk` keeps against the card, in either scheme. */
-export const ACCENT_INK_CONTRAST = 7;
+export { ACCENT_INK_CONTRAST } from "@/theme/brand";
 
 /** Why a typed accent is refused, or `null` when the shades can be derived from it. */
 export type AccentVerdict = "notAColour" | "tooGrey" | null;
 
-type Rgb = readonly [number, number, number];
-
-const BLACK: Rgb = [0, 0, 0];
-const WHITE: Rgb = [255, 255, 255];
-
-function rgb(hex: string): Rgb {
-  return [1, 3, 5].map((start) => Number.parseInt(hex.slice(start, start + 2), 16)) as unknown as Rgb;
-}
-
-function hexOf(channels: Rgb): string {
-  return `#${channels.map((value) => Math.round(value).toString(16).padStart(2, "0")).join("")}`;
-}
-
-/** `from` moved `share` (0–1) of the way to `to`, channel by channel. */
-function mix(from: string, to: Rgb, share: number): string {
-  const start = rgb(from);
-  return hexOf([0, 1, 2].map((index) => start[index] + (to[index] - start[index]) * share) as unknown as Rgb);
-}
-
-/** The first 1 % step from `from` towards `to`, starting at `minimum`, that keeps `keeps`; `to` itself at worst. */
-function walk(from: string, to: Rgb, minimum: number, keeps: (hex: string) => boolean): string {
-  for (let step = Math.round(minimum * 100); step <= 100; step += 1) {
-    const candidate = mix(from, to, step / 100);
-    if (keeps(candidate)) return candidate;
-  }
-  return mix(from, to, 1);
-}
-
-/** The card colour with `share` of the accent in it, lessened a step at a time until `keeps` holds; the card itself at worst. */
-function tint(card: string, accent: string, share: number, keeps: (hex: string) => boolean): string {
-  const target = rgb(accent);
-  for (let step = Math.round(share * 100); step > 0; step -= 1) {
-    const candidate = mix(card, target, step / 100);
-    if (keeps(candidate)) return candidate;
-  }
-  return card;
-}
-
-const atAa = (a: string, b: string) => contrastRatio(a, b) >= MIN_TEXT_CONTRAST;
-
 /** The accent the club may type: `#rrggbb` (lower-cased by the caller), and not a grey. */
 export function judgeAccent(hex: string): AccentVerdict {
   if (!HEX_COLOR.test(hex)) return "notAColour";
-  const channels = rgb(hex);
+  const channels = [1, 3, 5].map((start) => Number.parseInt(hex.slice(start, start + 2), 16));
   if (Math.max(...channels) - Math.min(...channels) < MIN_CHROMA) return "tooGrey";
   return null;
-}
-
-/** The light scheme's four shades of a colour. */
-function lightShades(base: string): AccentShade {
-  const accent = walk(base, BLACK, 0, (hex) => atAa(hex, COLOR.paper) && atAa(hex, COLOR.surface));
-  const accentInk = walk(
-    accent,
-    BLACK,
-    0.15,
-    (hex) => relativeLuminance(hex) <= relativeLuminance(COLOR.inkMuted) && contrastRatio(COLOR.surface, hex) >= ACCENT_INK_CONTRAST,
-  );
-  const deepTarget = Math.min(contrastRatio(COLOR.surface, accentInk) + 2.5, 19);
-  const accentDeep = walk(accentInk, BLACK, 0.15, (hex) => contrastRatio(COLOR.surface, hex) >= deepTarget);
-  const accentTint = tint(COLOR.surface, accent, 0.1, (hex) => atAa(COLOR.ink, hex) && atAa(COLOR.inkMuted, hex) && atAa(accentInk, hex));
-  return { accent, accentInk, accentDeep, accentTint };
-}
-
-/** The dark scheme's four shades of a colour. */
-function darkShades(base: string): AccentShade {
-  const accent = walk(base, WHITE, 0, (hex) => atAa(hex, COLOR_DARK.paper) && atAa(hex, COLOR_DARK.surface));
-  const accentInk = walk(accent, WHITE, 0.15, (hex) => contrastRatio(hex, COLOR_DARK.surface) >= ACCENT_INK_CONTRAST);
-  const deepTarget = Math.min(contrastRatio(accentInk, COLOR_DARK.surface) + 2, 16);
-  const accentDeep = walk(accentInk, WHITE, 0.15, (hex) => contrastRatio(hex, COLOR_DARK.surface) >= deepTarget);
-  const accentTint = tint(COLOR_DARK.surface, accent, 0.14, (hex) => atAa(COLOR_DARK.ink, hex) && atAa(COLOR_DARK.inkMuted, hex) && atAa(accentInk, hex));
-  return { accent, accentInk, accentDeep, accentTint };
 }
 
 /**
@@ -129,5 +65,5 @@ function darkShades(base: string): AccentShade {
 export function deriveAccentShades(hex: string): AccentShades {
   const base = hex.toLowerCase();
   if (!HEX_COLOR.test(base)) throw new Error(`not a #rrggbb colour: ${hex}`);
-  return { light: lightShades(base), dark: darkShades(base) };
+  return shadesOf(base);
 }

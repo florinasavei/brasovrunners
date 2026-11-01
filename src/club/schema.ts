@@ -52,6 +52,48 @@ export type ClubPlace = {
   readonly idExample: string;
 };
 
+/** The four shades an accent wears in one scheme (`brand.ts#LOOK_ACCENT`), each `#rrggbb`. */
+export type ClubShades = { readonly accent: string; readonly accentInk: string; readonly accentDeep: string; readonly accentTint: string };
+
+/**
+ * The club's colours (§NNN), by role, each `#rrggbb` in lower case: what `theme/brand.ts` turns into the tokens it
+ * always exported — the role here, the hue name there (`primary` is `COLOR.blue`, `secondary` is `COLOR.orange`).
+ * Four are required — the primary, its ink, the secondary and the accent; everything else is the hand-picked value it
+ * was in the code, and a club that leaves one out gets it derived from the four by the same arithmetic the backoffice's typed accent uses (`brand.ts#shadesOf`, `mix`).
+ * The platform's neutrals — the ink, the paper, the kinds' fills, the calendar picture's other themes — are not here:
+ * they are the platform's, the same for every club, and every pair of them is held at AA by `brand.test.ts`.
+ */
+export type ClubPalette = {
+  /** The logo's own colour: links, outlines, a filled button. `logo.svg`'s fill (`brand.test.ts`). */
+  readonly primary: string;
+  /** Its deeper ink: a hover, the large flat areas, the sheets' header row. */
+  readonly primaryInk: string;
+  /** The second colour, a fill under the body's ink: the rule's far end, the event kinds' chips. */
+  readonly secondary: string;
+  /** «Aspectul nou»'s default accent (the preset «Roz» in Brașov's case). */
+  readonly accent: string;
+  /** The primary and its ink after dark, lighter so they read on the dark page. */
+  readonly dark?: { readonly primary: string; readonly primaryInk: string };
+  /** The kit's gradient, shoulders to hem: a surface that carries no text, and the calendar picture's navy band. */
+  readonly kit?: { readonly deep: string; readonly mid: string; readonly light: string };
+  /** The primary walked pale (or dark): the page tints, the hero's ends, the poster's hairline, the sheet's member fill, the blue preset's pressed shade. */
+  readonly tints?: {
+    readonly faint?: string;
+    readonly light?: string;
+    readonly grey?: string;
+    readonly hero?: string;
+    readonly heroDark?: string;
+    readonly rule?: string;
+    readonly sheet?: string;
+    readonly deep?: string;
+    readonly deepDark?: string;
+  };
+  /** The accent's four shades by day and after dark; derived from `accent` when left out. */
+  readonly look?: { readonly light: ClubShades; readonly dark: ClubShades };
+  /** The secondary's four shades, the look's second preset; derived from `secondary` when left out. */
+  readonly secondaryLook?: { readonly light: ClubShades; readonly dark: ClubShades };
+};
+
 export type ClubConfig = {
   /** The club's name, the one place it is written (§369, §882): `brand.ts#CLUB_NAME`. */
   readonly name: string;
@@ -68,7 +110,8 @@ export type ClubConfig = {
   readonly hashtags: readonly string[];
   /** The club's confidential safety form's name in both languages. */
   readonly safetyProgramme: ClubWords;
-  readonly logo: { readonly lockup: ClubLogoFile; readonly mark: ClubLogoFile };
+  readonly palette: ClubPalette;
+  readonly logo:{ readonly lockup: ClubLogoFile; readonly mark: ClubLogoFile };
 };
 
 /**
