@@ -301,7 +301,9 @@ test.describe("phase 4: the calendar under «Tema v2»", () => {
   test("on: a date on a day gone is faded and says it; off, nothing is marked (§745)", async ({ page, browser }) => {
     test.slow();
     // The seed's weekly run stands on the last Sunday: one to seven days ago, so on that day's month.
-    const day = new Date(Date.now() - (((new Date().getUTCDay() + 7) % 7) || 7) * 86_400_000);
+    // Counted from the Brașov weekday, the seed's own clock (§NNN): the UTC one is a day behind from 22:00 to 24:00 UTC in winter.
+    const brasovDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Bucharest", weekday: "short" }).format(new Date()));
+    const day = new Date(Date.now() - (brasovDay || 7) * 86_400_000);
     const month = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Bucharest", year: "numeric", month: "2-digit" }).format(day).replace("/", "-");
     await setLook(browser, "on");
     try {

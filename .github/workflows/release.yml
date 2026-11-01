@@ -168,7 +168,8 @@ jobs:
           node-version-file: .nvmrc
           cache: yarn
       # The branch's dependencies; the merge below installs again when qa changed package.json or yarn.lock.
-      - run: yarn install --immutable
+      # --mode=skip-build: this job holds SHIP_TOKEN, and a compromised package's install script would read it (§NNN).
+      - run: yarn install --immutable --mode=skip-build
 
       - name: Who commits
         run: |
