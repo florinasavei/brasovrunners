@@ -16,7 +16,7 @@ import { R2_FREE_STORAGE_GB, R2_USD_PER_GB_MONTH } from "@/modules/diagnostics/p
 import { neonBudget } from "@/modules/diagnostics/domain/neon-budget";
 import { NEON_PLANS } from "@/modules/diagnostics/domain/neon-plan";
 import { DOMAIN_PRICE_USD_PER_YEAR } from "@/modules/diagnostics/platform-plans";
-import { VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
+import { VERCEL_HOBBY_ACTIVE_CPU_HOURS_PER_MONTH } from "@/modules/diagnostics/vercel";
 import { VERCEL_PLANS } from "@/modules/diagnostics/domain/vercel-plan";
 
 /** Vercel Pro with `seats` developer seats, at the catalogue's seat price (§610). */
@@ -38,7 +38,8 @@ function facts(patch: Partial<MonthCostFacts> = {}): MonthCostFacts {
     neon: { plan: "LAUNCH", meter: { usedCuHours: 10, periodStart: OCTOBER.start, periodEnd: OCTOBER.end, quotaCuHours: null }, databaseBytes: GB },
     mailgun: { planName: "Free", usdPerMonth: 0, sentThisMonth: 100, monthlyAllowance: null, dailyAllowance: 100 },
     vercel: { buildMinutes: 100, deployments: 12 },
-    vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
+    vercelActiveCpuHours: 1,
+    vercelActiveCpuHoursPerMonth: VERCEL_HOBBY_ACTIVE_CPU_HOURS_PER_MONTH,
     vercelPlan: { plan: "HOBBY", seats: 1, usdPerSeatPerMonth: VERCEL_PLANS.HOBBY.usdPerSeatPerMonth },
     domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2027-09-16" },
     deepl: { charactersThisMonth: 50_000 },
@@ -173,12 +174,17 @@ describe("one line per provider that bills or meters something", () => {
     expect(custom).toMatchObject({ billing: "monthly", soFarUsd: null, projectedUsd: null, severity: "unknown" });
   });
 
-  it("Vercel: free, the build minutes against Hobby's month, grey without a token", () => {
-    const busy = line(facts({ vercel: { buildMinutes: 1_600, deployments: 40 } }), "vercel");
-    // 1,600 in ten days is about 4,960 by the end: past 80% of 6,000.
-    expect(busy).toMatchObject({ plan: "Hobby", soFarUsd: 0, projectedUsd: 0, severity: "watch" });
-    expect(busy.usage).toMatchObject({ unit: "buildMinutes", ceiling: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH, state: "close" });
-    expect(line(facts({ vercel: null }), "vercel")).toMatchObject({ usage: null, severity: "unknown" });
+  it("§NNN Vercel on Hobby: free, the Active CPU against Hobby's four hours — never the unconfirmed build-minute figure — grey without a reading", () => {
+    // 1.5 CPU-hours in ten days (240 of 744 hours) is about 4.8 by the end: past the four.
+    const busy = line(facts({ vercelActiveCpuHours: 1.5 }), "vercel");
+    expect(busy).toMatchObject({ plan: "Hobby", soFarUsd: 0, projectedUsd: 0, severity: "act" });
+    expect(busy.usage).toMatchObject({ unit: "cpuHours", used: 1.5, ceiling: 4, ceilingKind: "plan", state: "over" });
+    // 1.1 is about 3.4 by the end: past 80% of the four, not yet over.
+    expect(line(facts({ vercelActiveCpuHours: 1.1 }), "vercel")).toMatchObject({ severity: "watch", usage: { state: "close" } });
+    expect(line(facts({ vercelActiveCpuHours: 0.5 }), "vercel")).toMatchObject({ severity: "ok", usage: { state: "ok" } });
+    // Hundreds of build minutes, as many as you like: they are no ceiling on Hobby.
+    expect(line(facts({ vercel: { buildMinutes: 9_000, deployments: 40 } }), "vercel").usage?.unit).toBe("cpuHours");
+    expect(line(facts({ vercelActiveCpuHours: null }), "vercel")).toMatchObject({ usage: null, severity: "unknown" });
     // Hobby is the setting's default and reads exactly as before it existed: free, nothing last month.
     expect(line(facts(), "vercel")).toMatchObject({ plan: "Hobby", billing: "free", soFarUsd: 0, projectedUsd: 0, plusVat: false, estimated: false });
     expect(line(facts(), "vercel").lastMonth).toMatchObject({ usd: 0, plusVat: false });

@@ -1,4 +1,5 @@
 import type { CreditReading } from "@/modules/translate/credit";
+import type { VercelUsageRead } from "./vercel-usage";
 import type { NeonPlanId } from "./domain/neon-plan";
 import { VERCEL_PLANS, type VercelPlanId } from "./domain/vercel-plan";
 import { type MonthCostFacts, type MonthCostId, type MonthCostLine, monthCosts, type MonthTotals, monthTotals, previousMonth, utcMonth } from "./domain/month-costs";
@@ -19,6 +20,8 @@ export type Read<T> = { ok: true; value: T } | { ok: false; reason: string };
 export type MonthCostReaders = {
   /** Vercel's month, from the hour-long cache (`readVercelMonthForCosts`). */
   vercelMonth: () => Promise<{ ok: true; month: { buildMinutes: number; deployments: number } } | { ok: false; reason: string }>;
+  /** Vercel's month of usage, the very reading `/devs` shows (`readVercelUsageCached`, §803); only asked on Hobby (§NNN). */
+  vercelUsage: () => Promise<VercelUsageRead>;
   /** The characters sent to DeepL since `since` (`charactersTranslatedSince`). */
   charactersSince: (since: Date) => Promise<number>;
   /** The messages Mailgun carried in `[start, end)` (`mailgunMessagesSentBetween`). */
@@ -48,7 +51,7 @@ export type MonthCostInputs = {
     monthlyAllowance: number | null;
     dailyAllowance: number | null;
   };
-  vercelBuildMinutesPerMonth: number;
+  vercelActiveCpuHoursPerMonth: number;
   /** The Vercel plan the club states on Costuri (`readVercelPlan`, §610): Hobby, or Pro and its seats. */
   vercelPlan: { plan: VercelPlanId; seats: number };
   domain: { planName: string; usdPerYear: number; expiresOn: string | null };
@@ -81,10 +84,23 @@ export async function readMonthCosts(inputs: MonthCostInputs, readers: MonthCost
   const before = previousMonth(month);
   const neonPeriodStart = inputs.neon.ok ? inputs.neon.meter.periodStart : month.start;
 
-  const [vercel, characters, lastMailgun, lastNeon, media, credit] = await Promise.all([
+  const hobby = inputs.vercelPlan.plan !== "PRO";
+  const [vercel, cpu, characters, lastMailgun, lastNeon, media, credit] = await Promise.all([
     settle(readers.vercelMonth).then((read): Read<{ buildMinutes: number; deployments: number }> =>
       !read.ok ? read : read.value.ok ? { ok: true, value: read.value.month } : { ok: false, reason: read.value.reason },
     ),
+    // Hobby is measured by Active CPU (§NNN); Pro has no such ceiling here, so it is not asked.
+    hobby
+      ? settle(readers.vercelUsage).then((read): Read<number> =>
+          !read.ok
+            ? read
+            : !read.value.ok
+              ? { ok: false, reason: read.value.reason }
+              : read.value.usage.activeCpuHours === null
+                ? { ok: false, reason: `unit ${read.value.usage.activeCpuUnit ?? "?"}` }
+                : { ok: true, value: read.value.usage.activeCpuHours },
+        )
+      : Promise.resolve<Read<number>>({ ok: false, reason: "pro" }),
     settle(() => readers.charactersSince(month.start)),
     settle(() => readers.mailgunSentBetween(before.start, before.end)),
     // Without this period's meter there is no period to ask the one before of.
@@ -109,7 +125,8 @@ export async function readMonthCosts(inputs: MonthCostInputs, readers: MonthCost
       dailyAllowance: inputs.mailgun.dailyAllowance,
     },
     vercel: vercel.ok ? vercel.value : null,
-    vercelBuildMinutesPerMonth: inputs.vercelBuildMinutesPerMonth,
+    vercelActiveCpuHours: cpu.ok ? cpu.value : null,
+    vercelActiveCpuHoursPerMonth: inputs.vercelActiveCpuHoursPerMonth,
     // The seat price from the one catalogue; the plan and the seats are the club's setting.
     vercelPlan: { ...inputs.vercelPlan, usdPerSeatPerMonth: VERCEL_PLANS[inputs.vercelPlan.plan].usdPerSeatPerMonth },
     domain: inputs.domain,
@@ -125,7 +142,8 @@ export async function readMonthCosts(inputs: MonthCostInputs, readers: MonthCost
 
   const current = noReasons();
   if (!inputs.neon.ok) current.neon = inputs.neon.reason;
-  if (!vercel.ok) current.vercel = vercel.reason;
+  // Pro is read by its builds, Hobby by its Active CPU; the other half's failure says nothing about the line (§NNN).
+  if (hobby ? !cpu.ok : !vercel.ok) current.vercel = hobby ? (cpu as { reason: string }).reason : (vercel as { reason: string }).reason;
   if (!characters.ok) current.deepl = characters.reason;
   if (!media.ok) current.r2 = media.reason;
   if (inputs.mailgun.planId === "CUSTOM") current.mailgun = "typed plan";

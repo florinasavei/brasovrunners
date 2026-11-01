@@ -5,7 +5,7 @@ import { type MonthCostFacts, monthCosts, monthTotals, utcMonth } from "@/module
 import type { MonthCostReasons } from "@/modules/diagnostics/month-costs-read";
 import { DOMAIN_PRICE_USD_PER_YEAR } from "@/modules/diagnostics/platform-plans";
 import { translationCredit } from "@/modules/translate/domain/credit";
-import { VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
+import { VERCEL_HOBBY_ACTIVE_CPU_HOURS_PER_MONTH } from "@/modules/diagnostics/vercel";
 
 /**
  * BR-REQ-090-07 criterion 19 (§479) — «Luna aceasta», rendered to HTML on the server the way the
@@ -41,7 +41,8 @@ function facts(patch: Partial<MonthCostFacts> = {}): MonthCostFacts {
     neon: { plan: "LAUNCH", meter: { usedCuHours: 10, periodStart: OCTOBER.start, periodEnd: OCTOBER.end, quotaCuHours: 30 }, databaseBytes: GB },
     mailgun: { planName: "Free", usdPerMonth: 0, sentThisMonth: 100, monthlyAllowance: null, dailyAllowance: 100 },
     vercel: null,
-    vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
+    vercelActiveCpuHours: null,
+    vercelActiveCpuHoursPerMonth: VERCEL_HOBBY_ACTIVE_CPU_HOURS_PER_MONTH,
     vercelPlan: { plan: "HOBBY", seats: 1, usdPerSeatPerMonth: 0 },
     domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2026-10-20" },
     deepl: { charactersThisMonth: 1_234 },
@@ -105,7 +106,7 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     // Mailgun Free: the daily hundred, named per day.
     expect(words).toContain("100 pe zi, pe planul Free");
     // Vercel without a token: why, never a zero usage.
-    expect(words).toContain("Nu se măsoară fără VERCEL_API_TOKEN și VERCEL_PROJECT_ID pe acest mediu.");
+    expect(words).toContain("Nu se măsoară fără VERCEL_API_TOKEN pe acest mediu: Hobby se citește după CPU-ul activ.");
     // The domain's renewal, in the month that has it.
     // No «pe» before a date the helper wrote (§452).
     expect(words).toMatch(/Expiră luna aceasta, marți, 20 oct\. 2026: reînnoirea intră în suma lunii\./);

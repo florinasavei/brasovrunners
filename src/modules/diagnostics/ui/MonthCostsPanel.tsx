@@ -87,7 +87,7 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
       ? t("tasks.month.notMeasured")
       : t(plusVat && value > 0 ? "tasks.costToday.amountPlusVat" : "tasks.costToday.amount", { amount: usd(value), currency: "USD" });
   const quantity = (unit: MonthUsage["unit"], value: number) =>
-    format.number(value, { maximumFractionDigits: unit === "cuHours" ? 1 : unit === "gigabytes" ? 2 : 0 });
+    format.number(value, { maximumFractionDigits: unit === "cuHours" || unit === "cpuHours" ? 1 : unit === "gigabytes" ? 2 : 0 });
   // A period as the provider counts it, first day to last: the end is exclusive, so the last day is one instant before it.
   const span = (line: MonthCostLine) =>
     formatDayRange(line.period.start, new Date(line.period.end.getTime() - 1), { locale, timeZone: "UTC", style: "short", position: "inline" });

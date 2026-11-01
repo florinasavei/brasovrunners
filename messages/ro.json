@@ -4492,6 +4492,26 @@
             "Caută subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y, apoi șterge tot ce găsește."
           ]
         },
+        "raceGunTime": {
+          "title": "Stabilește startul cursei (ora la care se dă startul)",
+          "todo": "{event} începe în cel mult trei săptămâni și nu are startul cursei stabilit: ceasul de sosire numără de la începutul evenimentului, adică deschiderea biroului, nu de la start.",
+          "done": "{event} are startul cursei stabilit: ceasul de sosire numără de la el.",
+          "how": [
+            "/admin/events → cursa → „Modifică” → „Când și unde” → „Data și ora”.",
+            "La „Startul cursei” scrie data și ora la care se dă startul. Dacă e aceeași cu începutul evenimentului, scrie aceeași oră.",
+            "Lasă nebifat „Startul cursei nu e stabilit”, apoi salvează. Rândul devine verde."
+          ]
+        },
+        "raceAgeBands": {
+          "title": "Alege categoriile de vârstă pentru premii",
+          "todo": "{event} începe în cel mult trei săptămâni și nu și-a ales categoriile de vârstă: se aplică cele standard. Schimbate după ce s-au scris rezultate, locurile se recalculează.",
+          "done": "{event} are categoriile de vârstă proprii.",
+          "how": [
+            "/admin/events → cursa → „Clasament” → „Categorii de vârstă”.",
+            "La „Vârstele de la care încep grupele” scrie vârstele de început, separate prin virgulă — „18, 35, 45, 55” dă sub 18, 18-34, 35-44, 45-54 și 55+ — și verifică rândul de sub căsuță.",
+            "Apasă „Salvează categoriile”. Fă-o înainte să scrii primul rezultat: după aceea, o schimbare recalculează locurile pe categorii."
+          ]
+        },
         "botCheck": {
           "title": "Verificarea anti-bot la înscriere (Cloudflare Turnstile)",
           "todo": "Widgetul „brasovrunners-site” există și ambele chei sunt pe ambele proiecte Vercel; rândul devine verde la următoarea publicare. Turnstile oprește roboții pe care capcana formularului nu îi prinde.",
@@ -5082,9 +5102,9 @@
       "nextSpend": {
         "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}.",
         "vercel": "Prima cheltuială care urmează: Vercel Pro, {cost}.",
-        "none": "Nu urmează nicio cheltuială nouă: ce e luat temporar se poate opri după cursă.",
+        "none": "Nu urmează nicio cheltuială nouă. Ce e plătit rămâne: Vercel revine la Hobby doar după două luni la rând sub 3 ore de CPU activ, nu la o dată anume.",
         "mailgunMore": "Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
-        "vercelMore": "Apare doar dacă site-ul începe să ceară bani pentru participare sau dacă codul site-ului se mută pe contul clubului."
+        "vercelMore": "Apare dacă site-ul cere bani pentru participare, dacă codul se mută pe contul clubului sau dacă CPU-ul activ se apropie de cele 4 ore pe lună ale lui Hobby. Revine la Hobby după două luni sub 3 ore."
       },
       "currencyNote": "Sumele sunt în moneda în care facturează fiecare firmă; TVA în România este {vat}%.",
       "freshness": {
@@ -5369,6 +5389,7 @@
           "cuHours": "{used} ore-CU până acum, ~{projected} la final.",
           "messages": "{used} e-mailuri trimise până acum, ~{projected} la final.",
           "buildMinutes": "{used} minute de build până acum, ~{projected} la final.",
+          "cpuHours": "{used} ore de CPU activ până acum, ~{projected} la final.",
           "characters": "{used} caractere traduse până acum, ~{projected} la final.",
           "gigabytes": "{used} GB de poze stocate, cel puțin.",
           "gigabytesMore": "Se numără o singură variantă a fiecărei poze, deci cifra reală e mai mare."
@@ -5383,7 +5404,7 @@
         "over": {
           "neon": "La ritmul ăsta limita se atinge înainte de sfârșitul perioadei, iar Neon oprește baza de date până la perioada următoare.",
           "mailgun": "La ritmul ăsta limita lunară se atinge înainte de sfârșitul lunii, iar restul mesajelor așteaptă luna următoare.",
-          "vercel": "La ritmul ăsta minutele de build se termină înainte de sfârșitul lunii, iar publicările noi se opresc până luna viitoare.",
+          "vercel": "La ritmul ăsta CPU-ul activ trece de cele 4 ore ale planului Hobby înainte de sfârșitul lunii, iar Vercel poate opri site-ul pentru aproximativ 30 de zile.",
           "r2": "Pozele trec de limita gratuită: surplusul se plătește lunar."
         },
         "domain": {
@@ -5393,7 +5414,7 @@
         },
         "unmeasured": {
           "neon": "Nu se măsoară fără NEON_API_KEY și NEON_PROJECT_ID pe acest mediu.",
-          "vercel": "Nu se măsoară fără VERCEL_API_TOKEN și VERCEL_PROJECT_ID pe acest mediu."
+          "vercel": "Nu se măsoară fără VERCEL_API_TOKEN pe acest mediu: Hobby se citește după CPU-ul activ."
         },
         "unread": "Furnizorul nu a răspuns acum ({reason}).",
         "deeplOff": "Cheia DeepL nu e pusă pe acest server, deci butonul de traducere din editoare e gri.",
