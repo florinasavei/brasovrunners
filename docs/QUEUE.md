@@ -116,7 +116,7 @@ way into the backoffice, not even to a colleague (§684).
 | QA's Neon cap | 30 CU-hours may run out late in a month of heavy testing (QA only); raise it if that matters |
 | Two daily deep health monitors (§577) | cron-job.org: `GET /api/health?deep=1` on production and on QA at 04:02, notifications on failure — the hourly health check is shallow now and no longer sees a stalled outbox; the steps are on `/admin/tasks` |
 | The privacy notice from the new template, on production | `/admin/legal` → the notice → «Versiune nouă» → «Pornește de la șablon» → approve: until then «Descarcă lista pentru sponsori» refuses (§570), and the newsletter and the members' zone are not described |
-| Vercel back to Hobby | after the 21 November race: production was moved to Pro on 2026-09-30 (the function quota) |
+| Vercel for December | before the Pro renewal around 28 November, by `docs/PLATFORM.md`'s rule: Hobby only after two consecutive months under 3 Active CPU-hours (October paced 6.9 against Hobby's 4, and going over on Hobby pauses the site for about 30 days); production has been on Pro since 2026-09-30 (§877) |
 | Open the members' shop on production (§683) | approve a privacy notice from the template in `/admin/legal` (section 5 names the shop, `{{membersShop}}`; a lawyer reads the accounting-records retention first), then the top bar's «Magazin»: «Cum se plătește», «Cine primește comenzile», the products — `SETUP.md` §43; `/admin/tasks` shows `shopNotice` until then |
 | The members' race-number design | the owner, 2026-10-09: «I want different BIB design for BVR members». A members' own design exists since §664 (its own header colour or picture and a label, chosen in the event's bib card) and members print on their own pages since §681 — say what else should differ (a colour band, the club's logo, a «Membru» stripe, the number's colour) |
 | The club's own Google calendar | proposed, not built: the site would keep a Google calendar of the club's events in step (Calendar API through a service account the club creates in its Google account, its key on both Vercel projects). Needs the owner's yes and the account; the public `.ics` feed and the calendar page already exist (§107, §672, §674) |
@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.99` | the GitHub backstop reads health before it pokes and fails on a stale job or a stalled outbox (§874) · the waiting-list verbs finished: addresses named in the dialogs, the button drawn only where it works, the guide's tasks (§875) · the person's data page reads and erases the internal waiting list and event invitations (§876) · owner to-do list caught up; Neon restore runbook (§877) · a nightly date-check run, the calendar spec on the Brașov weekday, and skip-build installs where secrets are held (§878) |
 | `BR-V3.98` | «Locul» in the calendar picture draws the place's name when no short place is typed (§873) |
 | `BR-V3.97` | «Adaugă pe lista de așteptare» in one press: the Administrator vouches for the address and the row joins the line or takes a free place at once (§872) |
 | `BR-V3.96` | a faster commit: direct-importer tests in the hook, ESLint's cache (§871) |

@@ -8,6 +8,13 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.99-2026-11-01
+
+- **The GitHub backstop watches production's jobs and outbox** — it reads the deep health before it pokes, still pokes, and turns red on a stale job or a stalled outbox (the nightly 03:05–04:00 maintenance gap excepted); an unconfigured production is a warning, and `SETUP.md` §40 names the missing `PRODUCTION_JOB_SECRET`. §874.
+- **The waiting-list verbs finished** — «Adaugă pe lista de așteptare» and «Direct pe lista de așteptare» now name the address being vouched for in their dialog, the one-press button is drawn only on an internal, scheduled, dated event that has not started, and the «Ghid» has tasks for the internal list and for both verbs. §875.
+- **«Toate datele unei persoane» lists a person's «Lista internă de așteptare» lines and invitations to events** — found through the canonicalizer, in the page and its file; «Șterge de pe lista internă» deletes the lines, and «Retrage și șterge invitațiile» withdraws each open invitation through «Retrage» (the place back through the waiting list) before deleting the ended ones, an accepted one staying with its registration. §876.
+- **Owner's to-do list brought up to date, and a runbook for restoring production from Neon's history** — race published, results gated on the new notice and terms, the missing `PRODUCTION_JOB_SECRET`, Vercel's December rule. §877.
+- **A night run for what only the date breaks** — `yarn test:clock` and the full end-to-end suite run every night and email the owner when red; the calendar spec counts from the Brașov weekday; the release and migration installs skip dependency install scripts. §878.
 ## BR-V3.98-2026-10-31
 
 - **«Locul» in the calendar picture works without a short place** — a date with no «Locul, pe scurt» says its place's name up to the first comma, after the distance and the climb, so a short cell drops it first; the tick is greyed only while no date has its place announced. §873.

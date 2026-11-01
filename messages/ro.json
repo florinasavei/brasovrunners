@@ -2094,8 +2094,9 @@
       "reminderBody": "{name} primește acum reminderul dinaintea cursei.",
       "createRegistrationTitle": "Adaugi înscrierea?",
       "createRegistrationBody": "Persoana este înscrisă la eveniment în numele ei, la cererea ei, și primește emailul pasului următor.",
+      "createRegistrationVouchBody": "Garantezi adresa {email}: persoana intră acum, la cererea ei, pe lista de așteptare sau, dacă e un loc liber, pe el, fără emailul de confirmare. Primește emailul stării în care ajunge.",
       "waitlistAddTitle": "Adaugi pe lista de așteptare?",
-      "waitlistAddBody": "Garantezi adresa, iar persoana intră acum, la cererea ei: pe lista de așteptare sau, dacă e un loc liber, pe el. Primește emailul stării în care ajunge.",
+      "waitlistAddBody": "Garantezi adresa {email}, iar persoana intră acum, la cererea ei: pe lista de așteptare sau, dacă e un loc liber, pe el. Primește emailul stării în care ajunge.",
       "withdrawConsentTitle": "Ștergi datele bifate?",
       "withdrawConsentBody": "Datele bifate dispar definitiv din înscriere; motivul rămâne în jurnal, fără numele persoanei.",
       "eraseRegistrationTitle": "Ștergi definitiv înscrierea?",
@@ -6798,7 +6799,20 @@
       "volunteerInvitationsErase": "Șterge invitațiile de voluntariat",
       "volunteerInvitationsEraseTitle": "Ștergi invitațiile de voluntariat ale acestei persoane?",
       "volunteerInvitationsEraseBody": "Se șterg invitațiile trimise acestei adrese, cu mesajul clubului. Ofertele de voluntar și înscrierile rămân. Ștergerea nu se poate anula.",
-      "volunteerInvitationsErased": "Invitațiile de voluntariat ale acestei adrese au fost șterse."
+      "volunteerInvitationsErased": "Invitațiile de voluntariat ale acestei adrese au fost șterse.",
+      "reserveEntries": "Lista internă de așteptare ({count})",
+      "reserveEntryBy": "scrisă de {role}, {date} · modificată {updated}",
+      "reserveErase": "Șterge de pe lista internă",
+      "reserveEraseTitle": "Ștergi această persoană de pe listele interne?",
+      "reserveEraseBody": "Se șterg rândurile acestei adrese de pe listele interne de așteptare, cu nume, adresă și notă. Nu țin locuri, iar persoanei nu i se trimite nimic. Ștergerea nu se poate anula.",
+      "reserveErased": "Rândurile acestei adrese de pe listele interne de așteptare au fost șterse.",
+      "eventInvitations": "Invitații la evenimente ({count})",
+      "eventInvitationOutside": "pe lista de invitați speciali (nu ține un loc)",
+      "eventInvitationsErase": "Retrage și șterge invitațiile",
+      "eventInvitationsEraseTitle": "Retragi și ștergi invitațiile acestei persoane?",
+      "eventInvitationsEraseBody": "Invitațiile deschise se retrag întâi, ca la „Retrage”: locul lor trece prin lista de așteptare. Apoi se șterg cele neacceptate; cele acceptate rămân cu înscrierea. Nu se poate anula.",
+      "eventInvitationsErased": "Invitațiile acestei adrese au fost retrase și șterse; cele acceptate rămân cu înscrierile lor.",
+      "eventInvitationsAcceptedKept": "O invitație acceptată e parte din înscrierea ei: se șterge odată cu înscrierea, din pagina înscrierii."
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
@@ -8513,9 +8527,22 @@
                 "La «Evenimentul» alege evenimentul.",
                 "Completează datele persoanei, «Adresa de e-mail a participantului» și «Limba în care îi scriem».",
                 "Bifează «Confirm că această persoană mi-a cerut să o înscriu…».",
+                "Administrator: bifează «Direct pe lista de așteptare…» ca să garantezi tu adresa; persoana intră acum pe listă sau, dacă e un loc liber, pe el, fără emailul de confirmare.",
+                "Verifică adresa înainte: fereastra o repetă, iar o adresă greșită ține un loc sau un rând pe listă pentru nimeni.",
                 "Persoana nu e în fața ta? Lasă nebifat «Persoana este la masă…»: primește emailul și își semnează singură declarația.",
                 "Apasă «Adaugă înscrierea» și confirmă în fereastră.",
                 "Refuzat pentru că adresa are deja o înscriere: a doua persoană din familie se înscrie din formularul public (vezi „O familie pe o singură adresă”)."
+              ]
+            },
+            {
+              "title": "Lista internă de așteptare: cine a cerut un loc",
+              "steps": [
+                "«Înscrieri» → alege evenimentul: sub listă e «Lista internă de așteptare».",
+                "Completează «Prenume», «Nume», «Email (opțional)» și, dacă vrei, «Notă internă»; apasă «Adaugă». Persoana nu ocupă loc, nu e în coadă și nu primește niciun email.",
+                "Ai ceva de ținut minte? Scrie în «Notă internă» și apasă «Salvează nota».",
+                "Nu mai e nevoie de ea? Apasă «Șterge» și confirmă; persoanei nu i se trimite nimic.",
+                "Gata să se înscrie? «Trece pe lista oficială» deschide formularul de înscriere cu datele ei; nota trece pe înscriere, iar de acolo e o înscriere obișnuită, cu emailul ei.",
+                "Verifică adresa înainte: la înscriere pleacă un email și o adresă greșită nu ajunge la nimeni."
               ]
             },
             {
@@ -8754,6 +8781,17 @@
                 "Dacă nu e niciun loc liber, fereastra spune dinainte că adaugi un loc suplimentar peste limită și cât devine capacitatea; nu mai trebuie să mărești «Număr de locuri» și nici să pui «Nu» la alocarea automată.",
                 "Locul adăugat e al ei din aceeași apăsare: nu ajunge la lista de așteptare. Jurnalul înscrierii spune cine l-a adăugat, pentru cine, și de la cât la cât.",
                 "Cei de pe lista de așteptare rămân unde sunt. Verifică adresa înainte: o adresă greșită ține locul până la termen."
+              ]
+            },
+            {
+              "title": "Adaugă pe lista de așteptare, dintr-o apăsare",
+              "steps": [
+                "Pe pagina evenimentului, în caseta cozii, sau în «Înscrieri» cu evenimentul ales, găsești «Adaugă pe lista de așteptare». Apare doar la un eveniment cu înscrieri la noi, programat, cu dată, care nu a început.",
+                "Completează «Prenume», «Nume», «Email» și, dacă vrei, «Notă internă»; bifează «Confirm că această persoană mi-a cerut să o înscriu…».",
+                "Verifică adresa înainte: apasă «Adaugă pe lista de așteptare», iar fereastra repetă adresa pe care o garantezi; confirmă abia atunci.",
+                "Dacă e plin, persoana intră pe ultimul loc și primește emailul „Ești pe lista de așteptare”; dacă e un loc liber, îl primește și semnează declarația din email. Nu trece înaintea nimănui.",
+                "Declarația o semnează tot ea; nimeni nu o semnează în locul ei.",
+                "Alte date sau altă limbă? «Formularul complet: alte date, altă limbă», cu «Direct pe lista de așteptare…» bifat."
               ]
             },
             {

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.98-2026-10-31 -->
+<!-- PROJECT_BASELINE: BR-V3.99-2026-11-01 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.98-2026-10-31`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.99-2026-11-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28239,3 +28239,85 @@ Baseline `BR-V3.97-2026-10-30`.
 **Checked.** The overflow guard draws a busy month whose every date says a long name («Stația de telecabină …») in every theme, layout, format and week: no text crosses its box or meets another, and nothing falls under the readable floor. The month in «Seriile în cap» on 4:5 draws the names, and nothing is drawn unticked.
 
 Baseline `BR-V3.98-2026-10-31`.
+
+## 874. The GitHub backstop watches the jobs and the outbox, reading health before it pokes
+
+**The owner:** «Do them all» — on the list of what the review of the scheduler found.
+
+**Problem.** `scheduled-jobs.yml` is the backstop for the external pinger, but its only check was the database and the Neon budget, and it read the deep health AFTER the two pokes. Every poke records a ping, and a recent ping reads as `ok` (`jobs/health.ts`), so the read hid a dead pinger. Nothing else watched production's jobs or outbox automatically (the deep monitors were never added, `docs/QUEUE.md`). On 2026-11-01 the production steps also printed «not configured; skipping» green, because `PRODUCTION_JOB_SECRET` was empty.
+
+**Decision.** The run reads `/api/health?deep=1` first, saves it, still runs both pokes whatever it said, and ends with a verdict step (`scripts/backstop-verdict.mjs`, which also names a missing saved answer as its own error, a pure function of the health JSON and the clock, no dependency, unit-tested on bodies shaped as `route.ts` returns them). It fails on a database that does not answer, a red Neon budget (as before; amber stays a warning), any job that is not `ok`, and an outbox that is `stalled`. One tolerance: `registration-maintenance` `stale` between 03:05 and 04:00 in Brașov (the zone by name, so daylight saving is right), the pinger's known nightly gap — the 01:17 UTC run is 03:17 there in winter. A production without its secrets prints a `::warning::` (it must be configured); QA's skip stays a notice. `SETUP.md` §40 step 3 now names `PRODUCTION_JOB_SECRET` as the missing value, and `docs/RUNBOOKS.md` says what a red run means.
+
+**Refused.** Failing the run on a degraded (not stalled) outbox, which reports a provider fallback and moves no status; tolerating any other job or hour; adding a dependency or a second deep monitor on the pinger (a paid-call and Neon-wake cost the backstop's four reads a day do not have); editing `docs/OWNER-TODO.md`, which another change owns.
+
+**Review.** The runbook's Neon section points at the «Verdict» step, and says not to judge the pinger by re-running the workflow — its own pokes record pings, so a re-run within the threshold reads green either way — but by the pinger's own history on cron-job.org or the `last ping` time the error names.
+
+Baseline `BR-V3.99-2026-11-01`.
+
+## 875. The waiting-list verbs finished: the dialogs name the address, the button is drawn only where it can work, the guide has the tasks
+
+**The owner:** "Do them all" — the three gaps left in the newest waiting-list verbs («Lista internă de așteptare», §854; «Direct pe lista de așteptare» and «Adaugă pe lista de așteptare», §872).
+
+**Decision.**
+
+1. **The dialogs that vouch for an address name it.** «Dă-i un loc acum» (§637) already says «Garantezi adresa {email}…», the first safeguard against a dictated typo, which would hold a place or a line position for a dead inbox. The dialog of «Adaugă pe lista de așteptare» now repeats the address typed in the form (`fillFrom: ["email"]`, the mechanism of §511), and the full staff entry asks one of two questions chosen by the posted form (`staffEntryConfirm`): with «Direct pe lista de așteptare» ticked it says the address is vouched for and names it; unticked — or under the fast track, which ignores the tick — it is today's dialog, unchanged.
+
+2. **«Adaugă pe lista de așteptare» is drawn only where the press can succeed.** On a started, cancelled, completed, date-to-be-announced, time-to-be-announced, external or registration-less event every press was refused by the service. It is now drawn on an internal, scheduled, dated event that has not started — the predicate of «Dă-i un loc acum» (`givePlaceDoorOpen`, one function for both, §637) — on the event page's queue panel and on the registrations list. The service keeps refusing regardless; a hidden button is not a permission.
+
+3. **The «Ghid» has the tasks.** «Lista internă de așteptare: cine a cerut un loc» (Organizator), «Adaugă pe lista de așteptare, dintr-o apăsare» (Administrator), and the «Adaugă o înscriere» task now names the «Direct pe lista de așteptare…» tick, each with the step «Verifică adresa înainte…» as the §637 task has, in both languages.
+
+**Refused.** A second confirm field to retype the address (the dialog repeats what was typed; a second box is one more thing to mistype). A typo check against the mail domain (the platform cannot know a dead inbox). Drawing the button disabled with a tooltip on a refusing event (a button that can never work is noise, unlike a full race where the press adds a place, §642).
+
+Baseline `BR-V3.99-2026-11-01`.
+
+## 876. «Toate datele unei persoane» reads the internal waiting list and the invitations, and erases them
+
+**The owner, 2026-11-01:** «Do them all» — the batch of small fixes that included this one: «Toate datele unei persoane» (§322), the answer to an access request (art. 15 GDPR) and the checklist before an erasure (art. 17), read participants, registrations, acceptances, the outbox, the «Anunță-mă» list, «Vin!», the remembered browsers, the volunteers' invitations and offers, results, notes, the trail and the group-run declarations — but never «Lista internă de așteptare» (§854: a first and last name, an address as the organizers typed it, a staff note) and never the personal invitations to an event (§647: a name, an address, a deadline, a place held). An access answer was incomplete, and an erasure left those lines behind.
+
+**Decision.**
+
+- **Read.** `person-data.ts` returns two more parts, on the page and in its JSON file, counted in the export's audit row (`reserveEntries`, `eventInvitations`) with no value:
+  - `reserveEntries` — every line whose address is the person's: the event, the name and the address as typed, the internal note, when it was written and changed, and who wrote it **as a role** («Organizator», «Administrator»), never the colleague's name, exactly as the internal notes (§777) — the line's note becomes one of them on «Trece pe lista oficială». The table keeps the address as typed, so each candidate is read **through the versioned canonicalizer** and matched on the canonical form (`reserveEntryIdsOf`, the reading `groupRunDeclarationsOf` already does for the same reason: a small table, a rare request, no second index): `Ana.Pop+club@Gmail.com` is `ana.pop@gmail.com`. A line typed with no address is nobody's by address and cannot be found here; SETUP says to delete it from the event's list by hand.
+  - `eventInvitations` — every invitation found by the canonical address the send already wrote through the canonicalizer (`event_invitations.canonical_email`), or by the participant of that address: the event, the name and address as typed, the language, the **state now** (`invitationState`: sent, accepted, expired, withdrawn — a deadline passed and not yet stamped reads expired), the deadline, «În afara locurilor», the supplementary place, whether it came from a member's account, and every moment. The colleagues' ids are not returned.
+  - An address with only these is no longer reported as unknown.
+- **Erase.** The page already erases part by part on request («Șterge răspunsurile „Vin!”», «Șterge invitațiile de voluntariat»), so the two new parts get their own press, each asking first, Administrator only:
+  - **«Șterge de pe lista internă»** (`eraseReserveEntriesOfPerson`) deletes the person's lines, matched exactly as listed. A line holds no place, no slot and no state (the allocator never reads the table), so there is nothing to release. One audit row `participant.reserve_entries_erased` `{ entries }`.
+  - **«Retrage și șterge invitațiile»** (`eraseEventInvitationsOfPerson`). An open invitation **holds a counted place** (AGENTS.md §10.6), so it is never deleted raw: each one still open is first withdrawn through «Retrage»'s own path, `withdrawInvitationByStaff` — under the event's lock, with its own `event.invitation_withdrawn` row (the invitation's id, never a name), and the place handed back through the allocator (`fillAvailableSpots`), so whoever waits is offered it exactly as at any withdrawal. One past its deadline that the maintenance job has not stamped yet holds no place already (the count reads the deadline), but its stamp, its `event.invitation_expired` row and the immediate offer of its place are the job's sweep, so the erase runs that event's sweep first, under its lock (`sweepLapsedInvitationsOfEvent`: `expireStaleHolds` through `fillAvailableSpots`, what the job does when it reaches the event) — rather than let the delete take them with it and leave the place to the §612 backstop, which only looks at events that offer on their own. Only then are the rows that hold nothing — unaccepted and withdrawn, stamped expired or past their deadline — deleted, their links with them (`on delete cascade`). An invitation that changed state under the press is left to what it became. **An accepted invitation is not touched**: it is its registration's record and goes with that registration's own erase (BR-REQ-037-06, `accepted_registration_id … on delete cascade`); the page says so beside the list. One audit row `participant.invitations_erased` `{ withdrawn, erased, keptAccepted }`.
+  - Neither audit row names the person, an address or the note's words.
+- **Who.** Unchanged: the page, its file and every press are the Administrator's (`canManageRegistrations`), asserted on the server in the page, the route, the action and the service. The Organizer — who keeps the internal list itself (`canKeepRegistrationNotes`) — is refused the person's whole record, as before.
+
+**Refused.**
+
+- **A raw compare of the typed address** (`lower(email) = …`) — CLAUDE.md: email identity goes through the versioned canonicalizer, never a raw string compare; a `+tag` or a dot would hide a line from an access answer.
+- **A new column or index for the canonical address of a reserve line** — a migration for a notebook of a few lines per event; the in-code reading is the one `groupRunDeclarationsOf` already uses.
+- **Deleting an open invitation directly** — it would free a counted place outside the allocator: no waiting-list offer, no lock, no trail of the release.
+- **Deleting a lapsed, unstamped invitation without the sweep** — the place is already free in the count, but the stamp's audit row would never be written and the place would wait for the §612 backstop, which an event whose organizer hands out the places never reaches.
+- **Erasing an accepted invitation here** — it would leave a registration whose invitation vanished; the registration's own erase removes both together.
+- **The colleague's name beside a line** — a colleague's name is that colleague's personal data; the person is owed what is held and the kind of recipient, as §777 decided for notes.
+- **One «erase everything» press** — the page erases part by part, each part saying what it leaves; a single press would hide that an accepted invitation stays.
+
+Baseline `BR-V3.99-2026-11-01`.
+
+## 877. The owner's to-do list catches up with the live system, and the restore gets a runbook
+
+**Why.** On 2026-11-01 `docs/OWNER-TODO.md` still listed the race as unpublished (it was published by 2026-10-02 and full that day, §632), `docs/PLATFORM.md` said Vercel returns to Hobby after the race although its own rule (two consecutive months under 3 Active CPU-hours; October paced 6.9 against Hobby's 4, and going over pauses the site for about 30 days) says otherwise, and the backups box in `SETUP.md` §25 and §30 pointed at nothing.
+
+**Decision.** Documentation only. Item 12 is done and names what remains for race day: «Startul cursei» (event editor, «Când și unde») and «Categorii de vârstă» («Clasament») before any result. Item 16 says that approving the new privacy notice and terms is what opens the results, that the notice in force is wrong on the IP address kept with every e-signature (§771) and on contact messages (§778), the order (lawyer, then `/admin/legal` on production: notice, terms, declarations, before 21 November), and two data questions for the lawyer: how long group-run declarations are kept, and whether the notice must name «Lista internă de așteptare» (§854). Item 19 names the missing GitHub secret `PRODUCTION_JOB_SECRET`. New items: the restore rehearsal, second-person recovery access (BR-BUS-101), Mailgun's two dates, the Vercel December rule. `docs/RUNBOOKS.md` gains «Restoring production from Neon's history»: a restore to a new branch only, a read-only count, bringing rows back, deleting the branch. Rows come back in two halves: copied from the branch into staging tables on production (one psql per connection, the connection strings in the shell, no file), then one production transaction that locks the event row as the allocator does, re-counts the counted places, inserts each registration with its dependent rows into a free counted place only, and commits or rolls back as a whole; an erased row never comes back. Its console labels are still from memory because neon.com was unreachable from the build and review sessions; the section says so and what to re-read. `SETUP.md` §25 and §30 stay unticked and point to it.
+
+**Refused.** Ticking the backup boxes (nobody has rehearsed a restore), and any restore over production.
+
+Baseline `BR-V3.99-2026-11-01`.
+
+## 878. A night run for what only the date breaks, and no install scripts where a secret is held
+
+**The owner, 2026-11-01:** «Do them all» — three CI changes after a failure caused only by the date stopped a release on 2026-10-30 (runs 41073245515 and 41089037560, `tests/e2e/calendar-look.spec.ts`).
+
+**Decision.**
+
+1. **A nightly workflow, `.github/workflows/date-nightly.yml`**, on a night cron (00:47 UTC, 03:47 in Brașov in summer) and by hand: `yarn test:clock` (§712) with one runner per date (+1 month, +1 year, +10 years), and the whole end-to-end suite, both projects and the concurrency suite, in six shards with the PostgreSQL service, migration, seed, build and Playwright steps copied from `docs-check.yml`. It runs on the default branch. It is not a required check and `docs-check.yml` is untouched, its job names being the ones branch protection and `scripts/pr-merge-gate.mjs` require. A failed scheduled run emails the owner, GitHub's own notification; `docs/DEVELOPMENT.md` says so next to `test:clock`.
+2. **`calendar-look.spec.ts` counts the past Sunday from the Brașov weekday**, as `event-weather.spec.ts` does, because the seed counts from the Brașov date: between Brașov midnight and UTC midnight the test opened the wrong month.
+3. **`yarn install --immutable --mode=skip-build`** in `release.yml` (the job holds `SHIP_TOKEN`), `migrate.yml` (the database URLs) and the second install in `scripts/merge-branches.mjs`, each with a comment why: a compromised package's install script would read the token or the URL. Those jobs need no build step of a dependency; the `postinstall` that copies the flags is for the site's pages, not for them. Every other install stays as it was.
+
+**Refused.** Adding the night run to `docs-check.yml` or making it required (a date-bomb must not stop a pull request that did not cause it); skipping or loosening a test that the clock finds (fix the fixture or pass `now`); turning `enableScripts` off for the whole repository (the build and local installs need the scripts).
+
+Baseline `BR-V3.99-2026-11-01`.
