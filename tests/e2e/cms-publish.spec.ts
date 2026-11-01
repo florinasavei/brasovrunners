@@ -4,6 +4,7 @@ import { confirmDialog } from "./support/confirm";
 // one of them needed a longer wait than the other.
 import { fillDateField, fillTimeField, hydrated, pickerGroup, programmeRow, signIn } from "./support/featured-event";
 import { editorBox, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead, dmy } from "./support/dates";
 
 /**
  * BR-REQ-051-01 — editorial workflow, over HTTP.
@@ -232,7 +233,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // The names are namespaced now: the editor is one form carrying the event row and both
     // languages, so `event.*` and `translations.<locale>.*` say which half each field belongs to.
     // A date and a time, each on MUI's picker (`DECISIONS.md` §70, §345).
-    await fillDateField(page, "Începutul evenimentului", "2027-05-01");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-05-01"));
     await fillTimeField(page, "Ora", "09:00");
     // The meeting point is asked once per language, side by side in the Locul box (§362).
     await field("event.locationName").fill("Parcul Tractorul");
@@ -273,7 +274,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
 
-    await fillDateField(page, "Începutul evenimentului", "2027-05-02");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-05-02"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Parcul Tractorul");
@@ -297,7 +298,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // partners are boxes of their own, shut on the create page (§350).
     await openEditorBox(page, "Programul zilei și ce să aduci");
     const row = programmeRow(page, 0);
-    await fillDateField(row, "Data", "2027-05-02");
+    await fillDateField(row, "Data", ahead("2027-05-02"));
     await fillTimeField(row, "Ora", "10:00");
     await field("event.schedule[0].ro").fill("Startul");
     await field("event.schedule[0].en").fill("The start");
@@ -331,7 +332,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await expect(refusal.getByRole("link", { name: "Titlu și rezumat › Română › Titlu" })).toBeVisible();
     await expect(page).toHaveURL(/\/admin\/events\/new$/);
     await expect(field("event.locationName")).toHaveValue("Parcul Tractorul");
-    await expect(field("event.startsAtDate")).toHaveValue("2027-05-02");
+    await expect(field("event.startsAtDate")).toHaveValue(ahead("2027-05-02"));
     await expect(field("translations.ro.slug")).toHaveValue(`fara-titlu-${suffix}`);
     await expect(field("translations.ro.excerptBody")).toHaveValue(/Zece kilometri prin parc\./);
     await expect(field("translations.en.title")).toHaveValue(`Untitled ${suffix}`);
@@ -339,7 +340,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // the repeat tick and its cadence — each as it was chosen, none back at its default.
     await expect(field("event.type")).toHaveValue("MEETUP");
     await expect(page.getByRole("combobox", { name: /Tip eveniment/ })).toContainText("Alt eveniment");
-    await expect(field("event.schedule[0].date")).toHaveValue("2027-05-02");
+    await expect(field("event.schedule[0].date")).toHaveValue(ahead("2027-05-02"));
     await expect(field("event.schedule[0].time")).toHaveValue("10:00");
     await expect(field("event.schedule[0].ro")).toHaveValue("Startul");
     await expect(field("event.schedule[0].en")).toHaveValue("The start");
@@ -377,7 +378,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const wednesday = page.locator('[name="weekday"][value="3"]');
 
-    await fillDateField(page, "Începutul evenimentului", "2027-05-04");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-05-04"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Parcul Tractorul");
@@ -394,7 +395,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
 
     await field("repeat.on").check();
     await field("repeat.cadence").selectOption("FORTNIGHTLY");
-    await fillDateField(page, "Până la (opțional)", "2027-05-01");
+    await fillDateField(page, "Până la (opțional)", ahead("2027-05-01"));
     await wednesday.check();
 
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
@@ -410,10 +411,10 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await expect(field("translations.ro.slug")).toHaveValue(slug);
     await expect(field("translations.ro.excerptBody")).toHaveValue(/O serie care se termină înainte să înceapă\./);
     await expect(field("translations.en.title")).toHaveValue(`Refused series ${suffix}`);
-    await expect(field("event.startsAtDate")).toHaveValue("2027-05-04");
+    await expect(field("event.startsAtDate")).toHaveValue(ahead("2027-05-04"));
     await expect(field("repeat.on")).toBeChecked();
     await expect(field("repeat.cadence")).toHaveValue("FORTNIGHTLY");
-    await expect(field("repeat.until")).toHaveValue("2027-05-01");
+    await expect(field("repeat.until")).toHaveValue(ahead("2027-05-01"));
     await expect(wednesday).toBeChecked();
 
     // Nothing was written: the same addresses are free for the create that goes through. (Without
@@ -441,7 +442,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
       await page.keyboard.type(text);
     };
 
-    await fillDateField(page, "Începutul evenimentului", "2027-05-03");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-05-03"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Parcul Tractorul");
@@ -539,7 +540,7 @@ test.describe("§448 an event created already cancelled", () => {
       await page.keyboard.type(text);
     };
 
-    await fillDateField(page, "Începutul evenimentului", "2027-05-09");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-05-09"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Parcul Tractorul");
@@ -695,7 +696,7 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
 
-    await fillDateField(page, "Începutul evenimentului", "2027-05-10");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-05-10"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Parcul Tractorul");
@@ -716,19 +717,19 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
     const row = programmeRow(page, 0);
     // The spare line took the start date the moment it was typed (§405): its default day is the
     // event's, never an empty box whose calendar opens on today.
-    await expect(field("event.schedule[0].date")).toHaveValue("2027-05-10");
-    await fillDateField(row, "Data", "2027-05-10");
+    await expect(field("event.schedule[0].date")).toHaveValue(ahead("2027-05-10"));
+    await fillDateField(row, "Data", ahead("2027-05-10"));
     await fillTimeField(row, "Ora", "10:00");
-    await expect(field("event.schedule[0].date")).toHaveValue("2027-05-10");
+    await expect(field("event.schedule[0].date")).toHaveValue(ahead("2027-05-10"));
     await expect(field("event.schedule[0].time")).toHaveValue("10:00");
     await field("event.schedule[0].ro").fill("Startul");
     await field("event.schedule[0].en").fill("The start");
 
-    // The create page. The bug: without the fix the row stays on "2027-05-10", because the
+    // The create page. The bug: without the fix the row stays on the first start date, because the
     // listener died with the scriptless box before the picker's own change ever reached it.
-    await fillDateField(page, "Începutul evenimentului", "2027-05-12");
-    await expect(field("event.startsAtDate")).toHaveValue("2027-05-12");
-    await expect(field("event.schedule[0].date")).toHaveValue("2027-05-12");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-05-12"));
+    await expect(field("event.startsAtDate")).toHaveValue(ahead("2027-05-12"));
+    await expect(field("event.schedule[0].date")).toHaveValue(ahead("2027-05-12"));
 
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
@@ -737,12 +738,12 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
     // landed here, and never the fragment jump `page.goto(page.url())` would be.
     await loadAfresh(page);
 
-    await expect(field("event.schedule[0].date")).toHaveValue("2027-05-12");
+    await expect(field("event.schedule[0].date")).toHaveValue(ahead("2027-05-12"));
     // "Data și ora" is folded on the editor (§350).
     await openEditorBox(page, "Când și unde");
-    await fillDateField(page, "Începutul evenimentului", "2027-05-13");
-    await expect(field("event.startsAtDate")).toHaveValue("2027-05-13");
-    await expect(field("event.schedule[0].date")).toHaveValue("2027-05-13");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-05-13"));
+    await expect(field("event.startsAtDate")).toHaveValue(ahead("2027-05-13"));
+    await expect(field("event.schedule[0].date")).toHaveValue(ahead("2027-05-13"));
   });
 });
 
@@ -785,13 +786,13 @@ test.describe("BR-REQ-050-02 the programme card: one grid per row, the help in t
     // The default day. No start date yet on the create page: the spare line has none either,
     // and takes the start the moment it is typed; a new row opens on it; both follow it.
     await expect(field("event.schedule[0].date")).toHaveValue("");
-    await fillDateField(page, "Începutul evenimentului", "2027-06-05");
-    await expect(field("event.schedule[0].date")).toHaveValue("2027-06-05");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-06-05"));
+    await expect(field("event.schedule[0].date")).toHaveValue(ahead("2027-06-05"));
     await page.getByRole("button", { name: "Adaugă un rând" }).click();
-    await expect(field("event.schedule[1].date")).toHaveValue("2027-06-05");
-    await fillDateField(page, "Începutul evenimentului", "2027-06-07");
-    await expect(field("event.schedule[0].date")).toHaveValue("2027-06-07");
-    await expect(field("event.schedule[1].date")).toHaveValue("2027-06-07");
+    await expect(field("event.schedule[1].date")).toHaveValue(ahead("2027-06-05"));
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-06-07"));
+    await expect(field("event.schedule[0].date")).toHaveValue(ahead("2027-06-07"));
+    await expect(field("event.schedule[1].date")).toHaveValue(ahead("2027-06-07"));
 
     // The layout, read off where each box is drawn.
     const row = page.getByRole("group", { name: "Rândul 1", exact: true });
@@ -898,7 +899,7 @@ test.describe("BR-REQ-050-02 a saved programme row reaches the public page and t
       await page.keyboard.type(text);
     };
 
-    await fillDateField(page, "Începutul evenimentului", "2027-06-20");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-06-20"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Piața Sfatului");
     await field("event.locationNameEn").fill("Council Square");
@@ -918,7 +919,7 @@ test.describe("BR-REQ-050-02 a saved programme row reaches the public page and t
 
     await openEditorBox(page, "Programul zilei și ce să aduci");
     const row = programmeRow(page, 0);
-    await fillDateField(row, "Data", "2027-06-20");
+    await fillDateField(row, "Data", ahead("2027-06-20"));
     await fillTimeField(row, "Ora", "08:30");
     await field("event.schedule[0].place").fill("Cortul de start");
     await field("event.schedule[0].ro").fill("Predarea kitului de concurs");
@@ -970,11 +971,11 @@ test.describe("BR-REQ-050-02 a saved programme row reaches the public page and t
   reload.
 
   Not the date box's text: the element MUI names with the label is the whole outlined input, and
-  its notch repeats the label inside it, so its `textContent` is "30.09.2027Începutul
-  evenimentului" — never "30.09.2027". What a person reads is the sections, one `spinbutton`
-  each, in the order the format puts them, and the separators between them, which MUI's own
-  unnamed input carries as its value ("30.09.2027") beside the hidden one the form posts
-  ("2027-09-30").
+  its notch repeats the label inside it, so its `textContent` is the typed day as DD.MM.YYYY
+  followed by "Începutul evenimentului" — never the day alone. What a person reads is the
+  sections, one `spinbutton` each, in the order the format puts them, and the separators between
+  them, which MUI's own unnamed input carries as its value (the typed day as DD.MM.YYYY) beside
+  the hidden one the form posts (YYYY-MM-DD).
 
   The time box is a typed text box since §439 (the browser's own time control of §400 drew
   "07:00 PM" on an English-language browser), so what it shows is its value: asserting the value
@@ -986,7 +987,7 @@ async function expectPickerShows(group: Locator, sections: string[], shown: stri
 }
 
 test.describe("BR-REQ-050-02 the date reads as day-month-year, and the time always posts 24-hour (§303, §345)", () => {
-  test("shows 30.09.2027 in day, month, year order, and posts 19:00 with no AM/PM — before and after saving", async ({ page }) => {
+  test("shows the date in day, month, year order, and posts 19:00 with no AM/PM — before and after saving", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const slug = `ceas-24h-${suffix}`;
 
@@ -995,7 +996,8 @@ test.describe("BR-REQ-050-02 the date reads as day-month-year, and the time alwa
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
 
-    await fillDateField(page, "Începutul evenimentului", "2027-09-30");
+    const day = ahead("2027-09-30");
+    await fillDateField(page, "Începutul evenimentului", day);
     await fillTimeField(page, "Ora", "19:00");
     // Typed by hand, key by key, the box keeps every keystroke as typed — no colon of its own
     // (the review of §439: an auto-colon made «19:00» into «19::0») — and reads «1930» as 19:30
@@ -1025,9 +1027,9 @@ test.describe("BR-REQ-050-02 the date reads as day-month-year, and the time alwa
     const dateGroup = pickerGroup(page, "Începutul evenimentului");
     const readsTheClubsWay = async () => {
       // Day, month, year — three sections in that order, never month first.
-      await expectPickerShows(dateGroup, ["30", "09", "2027"], "30.09.2027");
+      await expectPickerShows(dateGroup, [day.slice(8), day.slice(5, 7), day.slice(0, 4)], dmy(day));
       // What the form posts is still the service's shape, untouched by what either box shows.
-      await expect(field("event.startsAtDate")).toHaveValue("2027-09-30");
+      await expect(field("event.startsAtDate")).toHaveValue(day);
       await expect(field("event.startsAtTime")).toHaveValue("19:00");
       // A text box shows exactly its value: 19:00, never the browser's "07:00 PM" (§439).
       await expect(field("event.startsAtTime")).toHaveAttribute("type", "text");

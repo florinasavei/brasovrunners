@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead } from "./support/dates";
 
 /**
  * `DECISIONS.md` §485 — «Din galerie», through the browser. The route and the pure filter are
@@ -184,7 +185,7 @@ test.describe.serial("§485 pictures from the gallery", () => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
     await hydrated(page);
-    await fillDateField(page, "Începutul evenimentului", "2027-06-12");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-06-12"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Parcul Tractorul");

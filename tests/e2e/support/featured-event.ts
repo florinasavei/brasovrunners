@@ -199,7 +199,7 @@ export async function fillTimeField(scope: Page | Locator, label: string, value:
 
 /**
  * A picker box by its label: the element MUI gives `role="group"`, named by the `<label>`, whose
- * `spinbutton` children are the sections — `["30", "09", "2027"]`, `["19", "00"]`. Its own
+ * `spinbutton` children are the sections — day, month, year (`["DD", "MM", "YYYY"]`), `["19", "00"]`. Its own
  * text is *not* the value: the outlined box's notch repeats the label inside it (a `<legend>`,
  * hidden from the accessibility tree but not from `textContent`), so a spec reads the sections.
  */
