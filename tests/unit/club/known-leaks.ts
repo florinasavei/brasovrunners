@@ -6,13 +6,13 @@
  * `theme/brand.ts`, `events/domain/place.ts` or `i18n/dates.ts` instead.
  */
 export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
-  // the local database's name and role in CI (`brasov_runners`) stay by design: decision 10 of §NNN
+  // the local database's name and role in CI (`brasov_runners`) stay by design (§NNN, kept by design: the local database, role, container and package name)
   ".github/workflows/date-nightly.yml": { Brașov: 4, "Brașov Runners": 4 },
-  // the local database's name and role in CI (`brasov_runners`) stay by design: decision 10 of §NNN
+  // the local database's name and role in CI (`brasov_runners`) stay by design (§NNN, kept by design: the local database, role, container and package name)
   ".github/workflows/docs-check.yml": { Brașov: 4, "Brașov Runners": 4 },
-  // the local database's name and role in CI (`brasov_runners`) stay by design: decision 10 of §NNN
+  // the local database's name and role in CI (`brasov_runners`) stay by design (§NNN, kept by design: the local database, role, container and package name)
   ".github/workflows/e2e-dev-nightly.yml": { Brașov: 4, "Brașov Runners": 4 },
-  // the local database's name and role stay by design: decision 10 of §NNN
+  // the local database's name and role stay by design (§NNN, kept by design: the local database, role, container and package name)
   "docker-compose.yml": { Brașov: 3, "Brașov Runners": 6, brasovrunners: 3 },
   // the catalogues' wording — moved by the wording change
   "messages/en.json": {
@@ -43,7 +43,7 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
     brasovrunners: 11,
     Șchei: 1,
   },
-  // the package's name
+  // the package's name (kept by design, §NNN) and its description string, left for a later chain
   "package.json": {
     Brașov: 1,
     "Brașov Runners": 2,
@@ -102,13 +102,9 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
     Tâmpa: 2,
     brasovrunners: 1,
   },
-  // the local database's name and role stay by design: decision 10 of §NNN
-  "scripts/cloud-setup.sh": {
-    Brașov: 3,
-    "Brașov Runners": 4,
-    brasovrunners: 1,
-  },
-  // the local database's container (`brasovrunners-db`) stays by design: decision 10 of §NNN
+  // the local database's name and role stay by design (§NNN, kept by design: the local database, role, container and package name)
+  "scripts/cloud-setup.sh": { Brașov: 3, "Brașov Runners": 3 },
+  // the local database's container (`brasovrunners-db`) stays by design (§NNN, kept by design: the local database, role, container and package name)
   "scripts/db-reset-local.mjs": { "Brașov Runners": 1, brasovrunners: 1 },
   // the design page's sample event
   "src/modules/design/fixtures.ts": { "Piața Sfatului": 1, Titulescu: 2 },
