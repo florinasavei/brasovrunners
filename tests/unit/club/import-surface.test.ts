@@ -67,7 +67,7 @@ describe("BR-REQ-101-01: the club's file has one way into the platform (§882)",
     expect(readers.every((file) => file.startsWith("src/modules/legal-documents/"))).toBe(true);
   });
 
-  it("names nothing in the club's folder but club.json, decor.json and legal.json, each through its own door (§NNN)", () => {
+  it("names nothing in the club's folder but club.json, decor.json and legal.json, each through its own door (§884, §885)", () => {
     const named = FILES.flatMap(({ file, imports }) => imports.filter((specifier) => specifier.startsWith("@club/")).map((specifier) => `${file} → ${specifier}`)).sort();
     expect(named).toEqual([
       "src/club/config.ts → @club/club.json",

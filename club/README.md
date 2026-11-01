@@ -76,7 +76,7 @@ How it reaches the code:
   club's own face replaces the two files and no code. Every character of `wordmark` must be in the face
   (`brand.test.ts` reads its `cmap`).
 
-## The legal texts' club choices (§NNN)
+## The legal texts' club choices (§884)
 
 `legal.json` is the club's own choices in its legal texts (§NNN), each in Romanian and English — both
 or neither. The platform's templates (`src/modules/legal-documents/templates/`) carry a visible
