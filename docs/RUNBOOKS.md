@@ -691,6 +691,45 @@ The run's **Summary** says where, in words:
 Never push to `qa` or `main` by hand from the phone: the release PR and the production migration
 are the run's to open, merge and approve.
 
+## Restoring production from Neon's history
+
+When: rows were deleted or changed by mistake (a bad script, an erase of the wrong registration), and the audit trail cannot
+put them back. **Never restore over production**: a restore in place rewrites the live database, including every
+registration taken since the moment you restore to, and it cannot be undone by waiting. Restore to a **new branch**, look at
+it, and only then decide what to bring back. Nobody has rehearsed this yet (`SETUP.md` §25, §30 stay open;
+`docs/OWNER-TODO.md` item 22): do it once on a quiet day.
+
+**Check against Neon's documentation.** The steps follow Neon's pages on branching, point-in-time restore ("Instant restore",
+"Time Travel") and the project's restore window, whose labels move. This session could not reach Neon's documentation host on
+2026-11-01, so the labels below are from memory of those pages and **must be read against them the first time** — correct
+this section with what the console really shows.
+
+1. **How far back can you go.** In the Neon console open the production project (not QA) → **Settings** → the storage /
+   restore-window setting ("Restore window", the history Neon keeps; Launch allows up to 7 days by default). A moment older
+   than the window cannot be restored. The history is billed ($0.20/GB-month of changes retained, `docs/PLATFORM.md`), so the
+   club keeps it short; if the loss is older than the window, stop here and say so.
+2. **Pick the moment.** Just before the mistake, in UTC, from the audit log or the registrations' history. Earlier is safer
+   than later; you only lose what you do not bring back.
+3. **Restore to a new branch.** Production project → **Branches** → create a branch from the `production`/default branch with
+   the option to take **past data** ("a point in time"), the date and time from step 2, and a name that says what it is
+   (`restore-check-<date>`). Do not use the in-place **Restore** action on the default branch. Wait until the new branch
+   shows an endpoint.
+4. **Check the branch with a read-only count.** From the branch's **SQL Editor** (or its connection string in a local `psql`
+   that you close afterwards, never written into a file): `SELECT count(*) FROM registrations;` and, for the moment
+   in question, the same count with the event's id, compared with `/admin` as it stood. Only `SELECT`. The branch is a
+   separate database with its own endpoint, so nothing here touches production.
+5. **Bring the rows back, or switch.** *Rows:* copy the missing rows from the branch into production through the console's
+   SQL Editor, in one transaction, and only the rows lost (registrations go through no allocator on a copy: re-check the
+   event's counted places afterwards on `/admin` and run `yarn smoke` on production). *Switch:* only if the whole database
+   is damaged; it means pointing `DATABASE_URL` on the production Vercel project and the GitHub `production` environment to the branch's
+   connection strings and redeploying, which loses everything written since the moment chosen — an owner's decision, not a
+   reflex.
+6. **Delete the branch.** When the rows are back and checked, Branches → the restore-check branch → **Delete**. A forgotten
+   branch keeps computing and storing, and bills.
+
+Record the date, the moment restored to, what was brought back and what the console really said in `docs/OWNER-TODO.md`
+item 22, and then tick `SETUP.md` §25 and §30.
+
 ## Neon suspended a project
 
 What it looks like: every query refused with `53000 Your account or project has exceeded the quota`; a migration run

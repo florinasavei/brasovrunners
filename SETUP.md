@@ -433,6 +433,7 @@ Checklist, walked 2026-09-16:
       design.
 - [ ] Backup/restore capability documented and tested before launch — Neon's own restore exists;
       nothing has been rehearsed, and the configured Launch retention window is not recorded here.
+      The steps are `docs/RUNBOOKS.md` § Restoring production from Neon's history; tick this once someone has rehearsed them.
 - [x] No production clone into QA — nothing to clone yet, and no procedure does it.
 - [ ] PostgreSQL majors match — QA and production are both PostgreSQL 18 on Neon; the local
       `docker-compose.yml` image is `postgres:17.6-alpine` and PGlite runs its own. Nothing has
@@ -1024,7 +1025,7 @@ Operations/privacy:
       with the numbers on `/devs` → «Baza de date» (`yarn db:sizes`) and the proposal table in
       `docs/PLATFORM.md` § Keeping Neon and Vercel light, long term.
 - [ ] Participant/profile/photo support process — the club.
-- [ ] Backups and restore test — Neon's own restore, not rehearsed (§25).
+- [ ] Backups and restore test — Neon's own restore, not rehearsed (§25). The steps: `docs/RUNBOOKS.md` § Restoring production from Neon's history.
 - [ ] Monitoring/alerts — `/api/health` and `yarn smoke` exist; `/devs` shows the database's
       CU-hours once `NEON_API_KEY` is set (§33); failure alerting from the pinger to a real
       inbox is not confirmed.
