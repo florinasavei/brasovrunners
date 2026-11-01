@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 /**
- * The fork check (§NNN): the platform built from another club's folder.
+ * The fork check (§882): the platform built from another club's folder.
  *
  * `@club` points at `tests/fixtures/fork-club/` — a made-up club with its own name, short mark, slug, city, county,
  * zone and hashtag — instead of `club/`, and `tests/fork/` renders what carries the club's identity (the page

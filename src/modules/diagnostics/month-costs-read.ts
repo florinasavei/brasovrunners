@@ -20,7 +20,7 @@ export type Read<T> = { ok: true; value: T } | { ok: false; reason: string };
 export type MonthCostReaders = {
   /** Vercel's month, from the hour-long cache (`readVercelMonthForCosts`). */
   vercelMonth: () => Promise<{ ok: true; month: { buildMinutes: number; deployments: number } } | { ok: false; reason: string }>;
-  /** Vercel's month of usage, the very reading `/devs` shows (`readVercelUsageCached`, §803); only asked on Hobby (§NNN). */
+  /** Vercel's month of usage, the very reading `/devs` shows (`readVercelUsageCached`, §803); only asked on Hobby (§880). */
   vercelUsage: () => Promise<VercelUsageRead>;
   /** The characters sent to DeepL since `since` (`charactersTranslatedSince`). */
   charactersSince: (since: Date) => Promise<number>;
@@ -89,7 +89,7 @@ export async function readMonthCosts(inputs: MonthCostInputs, readers: MonthCost
     settle(readers.vercelMonth).then((read): Read<{ buildMinutes: number; deployments: number }> =>
       !read.ok ? read : read.value.ok ? { ok: true, value: read.value.month } : { ok: false, reason: read.value.reason },
     ),
-    // Hobby is measured by Active CPU (§NNN); Pro has no such ceiling here, so it is not asked.
+    // Hobby is measured by Active CPU (§880); Pro has no such ceiling here, so it is not asked.
     hobby
       ? settle(readers.vercelUsage).then((read): Read<number> =>
           !read.ok
@@ -142,7 +142,7 @@ export async function readMonthCosts(inputs: MonthCostInputs, readers: MonthCost
 
   const current = noReasons();
   if (!inputs.neon.ok) current.neon = inputs.neon.reason;
-  // Pro is read by its builds, Hobby by its Active CPU; the other half's failure says nothing about the line (§NNN).
+  // Pro is read by its builds, Hobby by its Active CPU; the other half's failure says nothing about the line (§880).
   const vercelRead = hobby ? cpu : vercel;
   if (!vercelRead.ok) current.vercel = vercelRead.reason;
   if (!characters.ok) current.deepl = characters.reason;

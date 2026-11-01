@@ -5,7 +5,7 @@ import type { Locale } from "@/i18n/routing";
 import { eventTakesResults } from "@/modules/results/domain/event-type";
 
 /**
- * The two race-day settings «Sarcini» reminds the club of (§NNN), read from the live system.
+ * The two race-day settings «Sarcini» reminds the club of (§880), read from the live system.
  *
  * «Startul cursei» (`events.race_starts_at`) is the gun the finish clock counts from — `raceStartsAt ?? startsAt`, and
  * the event's own start is the gathering time — and «Categorii de vârstă» (`events.result_age_bands`, §850) are the
@@ -63,7 +63,7 @@ export async function readRaceDaySettings<T extends Record<string, unknown>>(db:
 /**
  * Whether a published or archived, dated race that was not cancelled has already started — the first real race is behind the club.
  * «Luăm o lună de Mailgun plătit înainte de prima cursă adevărată?» is a question with a deadline, and the deadline is that race
- * (§NNN). An archived race ran as much as a published one: archiving it must not reopen the question.
+ * (§880). An archived race ran as much as a published one: archiving it must not reopen the question.
  */
 export async function aRaceHasRun<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const [row] = await db

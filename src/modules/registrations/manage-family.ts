@@ -48,7 +48,7 @@ export type ManagedPerson = {
   /** When the yes was given, and the notice the registration recorded: whether it may reach a partner (§570). */
   promoConsentAt: Date | null;
   privacyNoticeVersion: number;
-  /** «Vreau să apar cu numele în clasament» (§NNN): the answer of an older notice's runner, and the notice it was given under. */
+  /** «Vreau să apar cu numele în clasament» (§879): the answer of an older notice's runner, and the notice it was given under. */
   resultsNameConsent: boolean;
   resultsConsentVersion: number;
   /** The birth date, read only so a minor's row never says a partner may receive it (§570). */

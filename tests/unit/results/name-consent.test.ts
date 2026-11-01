@@ -9,7 +9,7 @@ import { type PublicNameInput, publicResultName } from "@/modules/results/domain
 import { resultsMergeValues, resultsNameAskClause } from "@/modules/results/notice-words";
 
 /**
- * BR-REQ-072-01, §NNN — «Vreau să apar cu numele în clasament»: the runner who registered under a privacy notice older than the first
+ * BR-REQ-072-01, §879 — «Vreau să apar cu numele în clasament»: the runner who registered under a privacy notice older than the first
  * that described the results asks, from their own registration's page, to be named in a race's published results.
  *
  * The rule the page, the server and the public read share: asked only while the notice in force names the tick's own marker
@@ -20,7 +20,7 @@ import { resultsMergeValues, resultsNameAskClause } from "@/modules/results/noti
  */
 const facts = { noticeDescribesResultsNameAsk: true, firstResultsNoticeVersion: 3, eventType: "RACE" };
 
-describe("BR-REQ-072-01 §NNN when «Vreau să apar cu numele în clasament» is asked", () => {
+describe("BR-REQ-072-01 §879 when «Vreau să apar cu numele în clasament» is asked", () => {
   it("draws the line at the first results notice for a race while the notice in force names the tick and the results", () => {
     expect(resultsNameConsentLine(facts)).toBe(3);
   });
@@ -55,7 +55,7 @@ describe("BR-REQ-072-01 §NNN when «Vreau să apar cu numele în clasament» is
   });
 });
 
-describe("BR-REQ-072-01 §NNN publicResultName with the consent asked since", () => {
+describe("BR-REQ-072-01 §879 publicResultName with the consent asked since", () => {
   const older: PublicNameInput = {
     registered: true,
     ticked: true,
@@ -126,7 +126,7 @@ describe("BR-REQ-072-01 §NNN publicResultName with the consent asked since", ()
   });
 });
 
-describe("BR-REQ-072-01 §NNN the words, in both languages", () => {
+describe("BR-REQ-072-01 §879 the words, in both languages", () => {
   it("names the setting the same in both catalogues' shape, and says what is published and that it is withdrawn", () => {
     for (const catalogue of [ro, en]) {
       const words = catalogue.Registrations.resultsName;
@@ -139,7 +139,7 @@ describe("BR-REQ-072-01 §NNN the words, in both languages", () => {
   });
 });
 
-describe("BR-REQ-072-01 §NNN the notice's own marker {{resultsNameAsk}}", () => {
+describe("BR-REQ-072-01 §879 the notice's own marker {{resultsNameAsk}}", () => {
   it("is a known merge field, distinct from {{results}}, and a notice opens the tick only by naming it", () => {
     expect(MERGE_FIELDS).toContain(RESULTS_NAME_ASK_MERGE_FIELD);
     expect(describesResultsNameAsk({ sections: [{ heading: "4", paragraphs: ["Clasamentul ({{results}})."] }] })).toBe(false);

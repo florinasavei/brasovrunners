@@ -35,7 +35,7 @@ import { WAITLIST_CHOICES } from "../waitlist-choice";
 /**
  * The `format` every file carries, and the only one this release reads. Hyphenated, not dotted:
  * `docs:check` reads the club's name followed by a dot and a word as the club's own hostname. The club's slug
- * (`club/club.json`, §NNN) and `-event`: byte for byte the format every file exported so far carries.
+ * (`club/club.json`, §882) and `-event`: byte for byte the format every file exported so far carries.
  */
 export const EVENT_FILE_FORMAT = `${CLUB_SLUG}-event`;
 

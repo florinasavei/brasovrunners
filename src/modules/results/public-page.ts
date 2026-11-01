@@ -28,7 +28,7 @@ export type ResultsGates = {
   noticeDescribes: boolean;
   termsDescribe: boolean;
   firstResultsNoticeVersion: number | null;
-  /** The first notice that named «Vreau să apar cu numele în clasament» (§NNN): a yes asked since names the runner only at or above it. */
+  /** The first notice that named «Vreau să apar cu numele în clasament» (§879): a yes asked since names the runner only at or above it. */
   firstResultsNameAskNoticeVersion: number | null;
 };
 
@@ -40,7 +40,7 @@ function couldShowResults(event: ResultsOpenEvent): boolean {
 /**
  * The inputs, read through the public cache (one read each, asked once per request however many cards or sections need them):
  * "Termene", the privacy notice's verdict, the terms' verdict, and — only when both describe the results — the first notice that did,
- * and the first that named «Vreau să apar cu numele în clasament» (§NNN).
+ * and the first that named «Vreau să apar cu numele în clasament» (§879).
  */
 export async function readResultsGates(now: Date): Promise<ResultsGates> {
   const [deadlines, noticeDescribes, termsDescribe] = await Promise.all([cachedDeadlines(), cachedResultsDescribed(now), cachedResultsTermsDescribed(now)]);

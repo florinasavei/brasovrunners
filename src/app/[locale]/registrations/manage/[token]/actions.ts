@@ -123,7 +123,7 @@ export async function setPromoConsentFromManageAction(form: FormData): Promise<v
 }
 
 /**
- * «Vreau să apar cu numele în clasament» from the participant's own link (§NNN), per person like the switches above: read, not
+ * «Vreau să apar cu numele în clasament» from the participant's own link (§879), per person like the switches above: read, not
  * spent. `consent` is the state the tick asks for, so a double submission lands on it. A yes the gate does not allow — the notice in
  * force does not describe the results, not a race, a registration made under the results notice already, off the list, another
  * adult — is refused by the module, never kept.

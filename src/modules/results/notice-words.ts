@@ -12,7 +12,7 @@ export function resultsClause(locale: string): string {
 }
 
 /**
- * What the privacy notice's `{{resultsNameAsk}}` becomes (§NNN): the tick an older notice's runner finds on their own registration's
+ * What the privacy notice's `{{resultsNameAsk}}` becomes (§879): the tick an older notice's runner finds on their own registration's
  * page, quoted, in that language — „Vreau să apar cu numele în clasament” / “I want to appear by name in the results” — read from the
  * catalogue the page reads (`Registrations.resultsName.label`), so the approved sentence names what the runner sees.
  */

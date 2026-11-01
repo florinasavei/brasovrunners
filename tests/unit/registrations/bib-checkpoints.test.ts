@@ -222,7 +222,7 @@ describe("§804 the kilometres and the altitudes on the strip", () => {
     }
   });
 
-  it("draws the fork, not the drop, for a checkpoint offering food and water — the event page's rule (BR-REQ-038-01, §NNN)", () => {
+  it("draws the fork, not the drop, for a checkpoint offering food and water — the event page's rule (BR-REQ-038-01, §881)", () => {
     const g = bibProfileStrip(drawingOf([at(3, null, ["WATER", "FOOD"]), at(6, null, ["WATER"])]), STRIP).geometry;
     expect(g.markers.map((marker) => marker.glyph)).toEqual(["food", "water"]);
   });

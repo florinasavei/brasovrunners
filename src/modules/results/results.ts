@@ -86,7 +86,7 @@ type RegisteredRunner = {
   outsideCapacity: boolean;
   /** The privacy notice version the registration recorded: a tick under an older notice does not name the runner in the results (§421's line). */
   noticeVersion: number;
-  /** «Vreau să apar cu numele în clasament», asked since by an older notice's runner (§NNN), and the notice in force when asked. */
+  /** «Vreau să apar cu numele în clasament», asked since by an older notice's runner (§879), and the notice in force when asked. */
   resultsNameConsent: boolean;
   resultsConsentVersion: number;
 };
@@ -1027,7 +1027,7 @@ export type PublicEventResults = {
  * stored row, in the sheet's order, ranked from the live answers, with a name **only** for a runner `publicResultName` names: the
  * public list's own conditions (confirmed, ticked, not a hidden special guest, §743) and a registration made under a notice that
  * described the results (`firstResultsNoticeVersion`, §421's line) — or, made under an older one, whose runner asked since to appear by name
- * under a notice that named the tick (`results_name_consent`, `firstResultsNameAskNoticeVersion`, §NNN) — or a runner typed by hand whom the staff recorded as agreeing to appear by name
+ * under a notice that named the tick (`results_name_consent`, `firstResultsNameAskNoticeVersion`, §879) — or a runner typed by hand whom the staff recorded as agreeing to appear by name
  * under a notice that described the results — everyone else is «Participant #bib». Never an address, a phone
  * number, a document, a note or a registration's id: the select names its columns.
  */
@@ -1041,7 +1041,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
     termsDescribe: boolean;
     /** The first approved notice that described the results (`cachedFirstResultsNoticeVersion`); null when none did — then nobody is named. Required, so no caller can forget it. */
     firstResultsNoticeVersion: number | null;
-    /** The first approved notice that named «Vreau să apar cu numele în clasament» (`cachedFirstResultsNameAskNoticeVersion`, §NNN); null — no yes asked since names anybody. Required, like the line above. */
+    /** The first approved notice that named «Vreau să apar cu numele în clasament» (`cachedFirstResultsNameAskNoticeVersion`, §879); null — no yes asked since names anybody. Required, like the line above. */
     firstResultsNameAskNoticeVersion: number | null;
   },
 ): Promise<PublicEventResults | null> {
@@ -1110,7 +1110,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
         noticeVersion: row.noticeVersion,
         firstResultsNoticeVersion: options.firstResultsNoticeVersion,
         firstResultsNameAskNoticeVersion: options.firstResultsNameAskNoticeVersion,
-        // Asked since by an older notice's runner (§NNN); a typed row's left join reads null, which names nobody.
+        // Asked since by an older notice's runner (§879); a typed row's left join reads null, which names nobody.
         resultsNameConsent: row.resultsNameConsent === true,
         resultsConsentVersion: row.resultsConsentVersion,
         // A runner the club typed by hand: the staff-recorded agreement (§810), on a row no registration holds (the database's check says the same)

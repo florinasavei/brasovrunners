@@ -48,7 +48,7 @@ describe("§389 BR-REQ-034-02 a family on one address, under real concurrency", 
   let previousCap: unknown = undefined;
 
   beforeAll(async () => {
-    // Their own documents, above any seeded version and in force at this suite's clock (§NNN); the club's terms (§421): a public submission is refused while none is approved.
+    // Their own documents, above any seeded version and in force at this suite's clock (§881); the club's terms (§421): a public submission is refused while none is approved.
     noticeIds.push(...(await approveNotices(db, ["PRIVACY_NOTICE", "TERMS"], NOW)));
     existedAtStart = !(await familyRegistrationOpen(db));
     const [kept] = await db.select().from(platformSettings).where(eq(platformSettings.key, ADDRESS_CAP_SETTING_KEY));

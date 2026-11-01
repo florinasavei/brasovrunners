@@ -9,7 +9,7 @@ import { CLUB_TIME_ZONE, ZONE_WORDS } from "@/i18n/dates";
 import { CLUB_HASHTAGS, CLUB_NAME, CLUB_SHORT_FORMS, CLUB_SHORT_NAME, CLUB_SLUG, LOGO, SAFETY_PROGRAMME, WORDMARK } from "@/theme/brand";
 
 /**
- * BR-REQ-101-01 (§NNN): `club/club.json` is validated here rather than by a schema in the application.
+ * BR-REQ-101-01 (§882): `club/club.json` is validated here rather than by a schema in the application.
  *
  * `src/club/config.ts` reaches the public client islands through the theme, so it may carry neither Zod nor the
  * environment (`tests/unit/shared/public-islands-weight.test.ts`); its types come from `satisfies`. What the types
@@ -29,7 +29,7 @@ function bilingualPairs(value: unknown, at = ""): [string, unknown][] {
 
 const viewBoxOf = (file: string) => /viewBox="([^"]+)"/.exec(readFileSync(path.join(ROOT, "public", file), "utf8"))?.[1];
 
-describe("BR-REQ-101-01: club/club.json is a club the platform can run (§NNN)", () => {
+describe("BR-REQ-101-01: club/club.json is a club the platform can run (§882)", () => {
   it("names a time zone Intl knows", () => {
     expect(Intl.supportedValuesOf("timeZone")).toContain(CLUB.place.timeZone);
   });

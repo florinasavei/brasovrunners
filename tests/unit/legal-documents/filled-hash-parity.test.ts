@@ -5,7 +5,7 @@ import { templatePrefill } from "@/modules/legal-documents/templates/catalogue";
 import type { ClubFacts } from "@/modules/legal-documents/templates/club-facts";
 
 /**
- * BR-REQ-053-01 and BR-REQ-101-01 (§NNN): moving the club's identity into `club/club.json` changed no word of a
+ * BR-REQ-053-01 and BR-REQ-101-01 (§882): moving the club's identity into `club/club.json` changed no word of a
  * legal template. `filledHash` is what the maintenance job fingerprints a change of the templates by (§639) and
  * what «Regenerează din șabloane» compares with the text in force (§532): one byte moved here would announce
  * every template to the Administrators as newer and ask the club to approve it again.
@@ -60,7 +60,7 @@ const RECORDED: Record<string, { ro: string; en: string; both: string }> = {
   },
 };
 
-describe("BR-REQ-101-01: every legal template's filled hash is the one recorded on origin/qa (§NNN)", () => {
+describe("BR-REQ-101-01: every legal template's filled hash is the one recorded on origin/qa (§882)", () => {
   it.each(LEGAL_DOCUMENT_KEYS.map((key) => [key]))("%s", (key) => {
     const prefill = templatePrefill(key, FACTS);
     const ro = computeContentHash([{ locale: "ro", ...prefill.ro }]);

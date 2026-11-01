@@ -50,7 +50,7 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
   let staffId: string | undefined;
 
   beforeAll(async () => {
-    // The club's terms (§421) with them: a public submission is refused while none is approved. Their own documents, above any seeded version (§NNN).
+    // The club's terms (§421) with them: a public submission is refused while none is approved. Their own documents, above any seeded version (§881).
     noticeIds.push(...(await approveNotices(db, ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"], NOW)));
     const [staff] = await db
       .insert(staffUsers)

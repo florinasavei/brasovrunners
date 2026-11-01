@@ -96,7 +96,7 @@ let nextVersion = 1;
 
 /**
  * Puts a privacy notice in force, both languages: the platform's template as it is, or with `{{results}}` taken out (what an older notice
- * reads like). `resultsNameAsk` adds a paragraph naming `{{resultsNameAsk}}` (§NNN) — what the club's amended text would carry; the
+ * reads like). `resultsNameAsk` adds a paragraph naming `{{resultsNameAsk}}` (§879) — what the club's amended text would carry; the
  * platform's template does not name it.
  */
 export async function approvePrivacyNotice(db: TestDatabase, options: { results: boolean; resultsNameAsk?: boolean }) {

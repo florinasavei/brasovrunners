@@ -557,7 +557,7 @@ export async function cachedFirstResultsNoticeVersion(): Promise<number | null> 
 
 /**
  * The first approved privacy notice that described «Vreau să apar cu numele în clasament» (`findFirstResultsNameAskNoticeVersion`,
- * §NNN), or null — the line below which a yes recorded no notice that named the tick, and names nobody. Expired with every legal
+ * §879), or null — the line below which a yes recorded no notice that named the tick, and names nobody. Expired with every legal
  * text, like the results' twin above.
  */
 export async function cachedFirstResultsNameAskNoticeVersion(): Promise<number | null> {
@@ -572,7 +572,7 @@ export async function cachedFirstResultsNameAskNoticeVersion(): Promise<number |
  * that cannot be asked leaves the section out and the page stands (`ResultsSection`).
  *
  * The key carries every input that decides the answer — the event, the club's period, the two notices' verdicts, the version
- * below which nobody is named and the one below which a yes asked since names nobody (§NNN) — so an approval or a change of "Termene" reads a new entry, never an old one. The clock is **not**
+ * below which nobody is named and the one below which a yes asked since names nobody (§879) — so an approval or a change of "Termene" reads a new entry, never an old one. The clock is **not**
  * in it: the entry is made at a request, and the page checks `closesAt` against its own `now` again (a date passing is no write),
  * holding itself until then (`resultsClockInstants`).
  */
@@ -690,7 +690,7 @@ export async function cachedResultsDescribed(now: Date): Promise<boolean> {
 }
 
 /**
- * Whether an older notice's runner's page may ask «Vreau să apar cu numele în clasament» (§NNN): the notice in force describes the
+ * Whether an older notice's runner's page may ask «Vreau să apar cu numele în clasament» (§879): the notice in force describes the
  * results and the tick (`describesResults`, `describesResultsNameAsk`), in every language — `noticeDescribesResultsNameAsk`'s cached
  * twin, which the server asks again at every yes.
  */

@@ -214,7 +214,7 @@ export const envSchema = z
      * decides whether a start is a night event — the pill, the calendar line and the reminder's
      * line, unless the organizer said "Da" or "Nu". A fact of the club like `CLUB_NAME` (§369),
      * but configuration rather than a constant because another club running this platform
-     * runs somewhere else. Never a secret; unset is the club's centre from `club/club.json` (§NNN).
+     * runs somewhere else. Never a secret; unset is the club's centre from `club/club.json` (§882).
      * A value that is not two numbers in range fails at startup with the value named, like the
      * allowlist: a typo here would otherwise move every sunset without anybody noticing.
      */
@@ -303,7 +303,7 @@ export const envSchema = z
      * §9) and can be filled in whenever they are made.
      *
      * The name's default is the club's one name (`club/club.json`, read here as `brand.ts#CLUB_NAME` is,
-     * §215, §357, §NNN), never the name written in again here: the From line of every message and the
+     * §215, §357, §882), never the name written in again here: the From line of every message and the
      * contact form's sender read it, so a renamed club is renamed in one place. `EMAIL_FROM_NAME` still
      * wins when it is set.
      */

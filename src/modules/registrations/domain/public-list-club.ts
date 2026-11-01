@@ -70,7 +70,7 @@ const FILLER = new Set([
   "membru",
   "member",
   // Where the club is, or its site's ending typed after the name: «Brasov Runners Romania», «… ro», «… com».
-  // The country in both languages and its code, from `club/club.json` (§NNN).
+  // The country in both languages and its code, from `club/club.json` (§882).
   foldWord(HOME_COUNTRY_NAME.ro),
   foldWord(HOME_COUNTRY_NAME.en),
   foldWord(HOME_COUNTRY),

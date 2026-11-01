@@ -1159,7 +1159,7 @@ describe("the email rows of «Sarcini»", () => {
 });
 
 
-describe("BR-REQ-090-05 the race-day settings rows of «Sarcini» (§NNN)", () => {
+describe("BR-REQ-090-05 the race-day settings rows of «Sarcini» (§880)", () => {
   const rows = (input: Partial<OwnerTaskInputs>) =>
     ownerTasks({ ...LAUNCHED, ...input }).filter((task) => task.id === "raceGunTime" || task.id === "raceAgeBands");
 
@@ -1207,7 +1207,7 @@ describe("BR-REQ-090-05 the race-day settings rows of «Sarcini» (§NNN)", () =
   });
 });
 
-describe("BR-REQ-090-07 the row «Consumul Vercel în cifre, pe /devs» speaks of Active CPU (§NNN)", () => {
+describe("BR-REQ-090-07 the row «Consumul Vercel în cifre, pe /devs» speaks of Active CPU (§880)", () => {
   it("names Hobby's 4 hours of Active CPU in both languages and no build-minute ceiling", () => {
     for (const catalogue of [ro, en]) {
       const { todo, done } = catalogue.Admin.tasks.items.vercelUsage;

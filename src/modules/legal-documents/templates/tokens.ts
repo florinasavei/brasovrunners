@@ -211,7 +211,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: RESULTS_MERGE_FIELD,
     example: inBoth((locale) => resultsClause(locale)),
   },
-  // The privacy notice's marker for «Vreau să apar cu numele în clasament» (§NNN): filled with the tick's own words, and — beside
+  // The privacy notice's marker for «Vreau să apar cu numele în clasament» (§879): filled with the tick's own words, and — beside
   // `{{results}}` — the switch that lets an older notice's runner ask to be named in the results (`describesResultsNameAsk`).
   {
     token: `{{${RESULTS_NAME_ASK_MERGE_FIELD}}}`,

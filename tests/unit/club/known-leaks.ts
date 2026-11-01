@@ -1,5 +1,5 @@
 /**
- * The club's words still written as a literal, file by file, word by word, with the number of strings that say it (§NNN) — what `club-literals.test.ts` lets through
+ * The club's words still written as a literal, file by file, word by word, with the number of strings that say it (§882) — what `club-literals.test.ts` lets through
  * until the later changes move each to `club/club.json`: the catalogues' and the legal templates' wording, the
  * scripts and the CI's local database name, the sample events. A ratchet: each word is counted in strings, so a new string that says it fails even in a listed file, and a file that says a word
  * fewer times fails the test until its count is lowered, and a new one is never added here to make a change pass — read the word from

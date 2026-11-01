@@ -672,7 +672,7 @@ days, the registrations by state and by the age of their event) and «Vercel: co
 page's lines, read from Vercel's billing API, and the builds by project); the deployments line above them
 now says how many of this project's deployments built, by branch, and no longer reads the build minutes against
 the 6,000 a month the code once held (Vercel's current pages list no such Hobby allowance; `VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH`
-is marked unconfirmed and no screen reads it: since §NNN «Costuri» too measures Hobby by Active CPU against its 4 hours, the reading this card shows). The card counts only the `Usage` charges: a credit, a
+is marked unconfirmed and no screen reads it: since §880 «Costuri» too measures Hobby by Active CPU against its 4 hours, the reading this card shows). The card counts only the `Usage` charges: a credit, a
 tax or an adjustment is never a service's consumption. `yarn db:sizes [--env qa|production]`
 prints the first from a terminal with the very same queries. `/admin/tasks` carries one informational row,
 «Retenția datelor: perioade de decis», that opens the first card. The Vercel card reads

@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * BR-REQ-101-01 (§NNN): the club's file reaches the platform through five doors and no other.
+ * BR-REQ-101-01 (§882): the club's file reaches the platform through five doors and no other.
  *
  * `src/club/config.ts` is the only importer of `club/club.json`, and only `theme/brand.ts`, `events/domain/place.ts`,
  * `i18n/dates.ts`, `events/domain/sun.ts` and `shared/config/env.ts` import it: every other file reads the names
@@ -47,7 +47,7 @@ const FILES = [...sourceFiles(path.join(ROOT, "src")), ...sourceFiles(path.join(
   full: file,
 }));
 
-describe("BR-REQ-101-01: the club's file has one way into the platform (§NNN)", () => {
+describe("BR-REQ-101-01: the club's file has one way into the platform (§882)", () => {
   it("is imported by src/club/config.ts alone", () => {
     const readers = FILES.filter(({ imports }) => imports.some((specifier) => /(^@club\/|(^|\/)club\/club\.json$)/.test(specifier))).map(({ file }) => file);
     expect(readers).toEqual(["src/club/config.ts"]);

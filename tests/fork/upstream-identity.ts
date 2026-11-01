@@ -1,5 +1,5 @@
 /**
- * Brașov Runners' identity, as words — the one file under `tests/fork/` allowed to list it (§NNN).
+ * Brașov Runners' identity, as words — the one file under `tests/fork/` allowed to list it (§882).
  *
  * `yarn test:fork` builds the platform's identity from a made-up club (`tests/fixtures/fork-club/club.json`) and
  * asserts that none of these words comes out: a word that does is a literal of this club's still written in the

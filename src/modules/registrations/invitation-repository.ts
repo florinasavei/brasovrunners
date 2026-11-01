@@ -181,7 +181,7 @@ export async function listOpenInvitationCountsByEvent<T extends Record<string, u
     // Only while the event can still be invited to: after its start, or cancelled, an unanswered invitation is history.
     .where(and(sql`${eventInvitations.acceptedAt} is null`, sql`${eventInvitations.withdrawnAt} is null`, eq(events.eventStatus, "SCHEDULED"), gt(events.startsAt, now)))
     .groupBy(eventInvitations.eventId, events.startsAt)
-    // Soonest event first, the id breaking a tie (§NNN): a grouped read has no order of its own.
+    // Soonest event first, the id breaking a tie (§881): a grouped read has no order of its own.
     .orderBy(asc(events.startsAt), asc(eventInvitations.eventId));
   return rows.map((row) => ({ eventId: row.eventId, startsAt: row.startsAt, sent: Number(row.sent), expired: Number(row.expired) }));
 }

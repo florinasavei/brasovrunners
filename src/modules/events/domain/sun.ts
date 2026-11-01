@@ -27,7 +27,7 @@ import { toWallTimeInput } from "./zoned-time";
 
 export type Coordinates = { latitude: number; longitude: number };
 
-/** The club's centre, from `club/club.json` (§NNN): its default place when `CLUB_COORDINATES` is unset. */
+/** The club's centre, from `club/club.json` (§882): its default place when `CLUB_COORDINATES` is unset. */
 export const DEFAULT_CLUB_COORDINATES: Coordinates = { ...CLUB.place.coordinates };
 
 /** The sun's centre at the horizon, with refraction and the solar radius: sunrise and sunset. */

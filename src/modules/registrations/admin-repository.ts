@@ -1436,7 +1436,7 @@ export async function listOutboxHistory<T extends Record<string, unknown>>(
  * not reach its invitations, and the editor's «Trimite invitații» link fell back to every event.
  * Events registered elsewhere or not at all, with nobody here, stay out: the CMS lists those.
  *
- * Each event once (§NNN; the review of 2026-10-31: the same event twice in the «Eveniment» filter): the title is in the viewer's
+ * Each event once (§881; the review of 2026-10-31: the same event twice in the «Eveniment» filter): the title is in the viewer's
  * language, else in Romanian, else in whatever language the event has — read as one value per event, never a join
  * on the registrations' own language, which listed an event with registrations in both languages once per language.
  */

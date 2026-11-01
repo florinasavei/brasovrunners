@@ -4,7 +4,7 @@ import { aRaceHasRun, readRaceDaySettings } from "@/modules/diagnostics/race-day
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-090-05, §NNN — «Sarcini» reminds the club to set «Startul cursei» and «Categorii de vârstă» for a coming
+ * BR-REQ-090-05, §880 — «Sarcini» reminds the club to set «Startul cursei» and «Categorii de vârstă» for a coming
  * race that takes results, read from the live system: the reader says per race whether each column holds a value
  * (open while it does not, done once it does), and returns nothing when no such race is coming. The rows made from
  * it are `owner-tasks.test.ts`'s.

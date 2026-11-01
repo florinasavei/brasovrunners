@@ -238,7 +238,7 @@ describe("BR-REQ-090-05 a decision is a question, not a grey fact among facts", 
     expect(contradicted?.state).toBe("open");
   });
 
-  it("§NNN derives «a paid Mailgun month before the first race» from the club's own plan: open only on Free with no race run", () => {
+  it("§880 derives «a paid Mailgun month before the first race» from the club's own plan: open only on Free with no race run", () => {
     const state = (patch: { emailPlan?: EmailPlanId; raceHasRun?: boolean }) =>
       moneyDecisions({ ...BASE, ...patch }).find((d) => d.id === "mailgunBeforeRace")?.state;
     // Free, no race yet: still the club's question.
@@ -339,7 +339,7 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
     }
   });
 
-  it("§NNN states §803's rule for Vercel's way back to Hobby — two months under 3 Active CPU-hours — and never «after the race»", () => {
+  it("§880 states §803's rule for Vercel's way back to Hobby — two months under 3 Active CPU-hours — and never «after the race»", () => {
     for (const [locale, messages] of LOCALES) {
       for (const key of ["nextSpend.none", "nextSpend.vercelMore"]) {
         const sentence = messageAt(messages, key);

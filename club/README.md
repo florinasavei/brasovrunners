@@ -1,6 +1,6 @@
 # `club/` — which club this platform is
 
-`club.json` is the club's identity, read at build time (`DECISIONS.md` §NNN): its name, slug, short
+`club.json` is the club's identity, read at build time (`DECISIONS.md` §882): its name, slug, short
 mark and wordmark; the public list's short forms; its place — city, county, plate code, country,
 time zone and the zone's words, the coordinates the sunset is read for, an identity card example;
 its hashtags; its safety form's name; its logo files and their proportions.

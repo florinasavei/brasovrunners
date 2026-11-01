@@ -201,7 +201,7 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     expect(words).toContain("— planul scris de mână nu are preț înregistrat.");
   });
 
-  it("§NNN says a Hobby CPU reading in another unit as «not measured», with the unit — the provider did answer", async () => {
+  it("§880 says a Hobby CPU reading in another unit as «not measured», with the unit — the provider did answer", async () => {
     const ro = text(await render("ro", facts(), reasons({ current: { vercel: "unit GB-Hrs" } })));
     expect(ro).toContain("Timpul de CPU nu se poate compara cu limita Hobby: Vercel l-a dat în «GB-Hrs», nu în ore.");
     expect(ro).not.toContain("Furnizorul nu a răspuns");

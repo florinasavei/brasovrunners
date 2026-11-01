@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.99-2026-11-01 -->
+<!-- PROJECT_BASELINE: BR-V4.00-2026-11-01 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V3.99-2026-11-01`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V4.00-2026-11-01`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -39,7 +39,7 @@ yarn test:fast    trust + guards + logic — what the pre-commit hook runs on th
 yarn test:skip    every category but the ones named (`yarn test:skip drawn pages`); «trust» is never left out
 yarn test:concurrency  two-connection suite (BR-REQ-051-01 criterion 5); needs the database
 yarn test:fork    the identity built from a made-up club (`tests/fixtures/fork-club/`): none of
-                  this club's words may come out (`club/README.md`, §NNN); CI runs it
+                  this club's words may come out (`club/README.md`, §882); CI runs it
 yarn test:clock   the suite with the real clock at +1 month, +1 year, +10 years: a test that
                   fails only there pins a date the calendar will reach (docs/DEVELOPMENT.md);
                   `--concurrency` for the two-connection suite

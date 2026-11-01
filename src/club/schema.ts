@@ -1,5 +1,5 @@
 /**
- * The shape of `club/club.json` (§NNN): the club's identity, its place, its clock and its logo — what makes
+ * The shape of `club/club.json` (§882): the club's identity, its place, its clock and its logo — what makes
  * this platform one club's rather than another's, read at build time and never from the database.
  *
  * Types only, and on purpose. `config.ts` reaches every client island that shows the club's name (the theme
@@ -8,7 +8,7 @@
  * coordinates in range, both languages of every pair, a slug of `[a-z0-9-]` — is checked by
  * `tests/unit/club/club-config.test.ts`, on every commit, rather than in every visitor's browser.
  *
- * The region stays Romania (§NNN): the platform's languages are `ro` and `en`, its legal texts cite Romanian
+ * The region stays Romania (§882): the platform's languages are `ro` and `en`, its legal texts cite Romanian
  * law, its prices are in RON — so a club running it is in Romania, and `country` says exactly that.
  */
 
@@ -53,7 +53,7 @@ export type ClubPlace = {
 };
 
 export type ClubConfig = {
-  /** The club's name, the one place it is written (§369, §NNN): `brand.ts#CLUB_NAME`. */
+  /** The club's name, the one place it is written (§369, §882): `brand.ts#CLUB_NAME`. */
   readonly name: string;
   /** Lower-case letters, digits and hyphens: the export file's format, the Instagram example. */
   readonly slug: string;
@@ -72,7 +72,7 @@ export type ClubConfig = {
 };
 
 /**
- * The shape of `club/guard-words.json` (§NNN): the club's own places and names that no code should spell out.
+ * The shape of `club/guard-words.json` (§882): the club's own places and names that no code should spell out.
  * Its own file, beside `club.json` rather than in it, because the theme brings `club.json` whole into every
  * public client island and the application never needs these: only the literal guard reads them
  * (`tests/unit/club/club-literals.test.ts`), and nothing under `src/` imports the file

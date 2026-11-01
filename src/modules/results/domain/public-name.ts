@@ -17,7 +17,7 @@ import { holdsResultsNameConsent } from "./name-consent";
  * - the registration was made **under a privacy notice that described the named results** (`registrations.privacy_notice_version` at
  *   or above `firstResultsNoticeVersion`, §421's line for the states): a tick given under the older notice — «Rezultate cu nume nu
  *   publicăm încă», with terms that promised to ask separately first — agreed to a list, not to a ranking by name — **unless** the runner
- *   asked since, from their own registration's page, «Vreau să apar cu numele în clasament» (§NNN: `registrations.results_name_consent`
+ *   asked since, from their own registration's page, «Vreau să apar cu numele în clasament» (§879: `registrations.results_name_consent`
  *   true and `results_consent_version`, the notice in force at the press, at or above the first notice that named that tick,
  *   `firstResultsNameAskNoticeVersion`). The asking never stands in for
  *   any condition above it: the tick, the confirmed state and the guests' rule apply to that runner exactly as to everyone else.
@@ -47,7 +47,7 @@ export type PublicNameInput = {
   /** The first approved notice that described the results (`findFirstResultsNoticeVersion`); null when none did. */
   firstResultsNoticeVersion: number | null;
   /**
-   * «Vreau să apar cu numele în clasament», asked after registration by a runner whose notice predates the results (§NNN):
+   * «Vreau să apar cu numele în clasament», asked after registration by a runner whose notice predates the results (§879):
    * `registrations.results_name_consent`, and the notice version in force when it was given (`results_consent_version`). False and
    * null for a runner typed by hand. A consent recorded under a notice below `firstResultsNameAskNoticeVersion` counts for nothing.
    */
@@ -71,7 +71,7 @@ export function publicResultName(runner: PublicNameInput): string | null {
   if (!runner.ticked || !runner.confirmed || runner.hidden) return null;
   if (runner.firstResultsNoticeVersion === null) return null;
   const registeredUnderResults = runner.noticeVersion !== null && runner.noticeVersion >= runner.firstResultsNoticeVersion;
-  // An older notice's runner who asked since, under a notice that named the tick (§NNN); withdrawn, the flag is false.
+  // An older notice's runner who asked since, under a notice that named the tick (§879); withdrawn, the flag is false.
   const askedSince = holdsResultsNameConsent(runner, runner.firstResultsNameAskNoticeVersion);
   if (!registeredUnderResults && !askedSince) return null;
   const name = runner.displayName?.trim();

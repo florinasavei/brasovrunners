@@ -61,7 +61,7 @@ async function invite(eventId: string, patch: Partial<typeof eventInvitations.$i
 }
 
 describe("§740 the open invitations per event", () => {
-  it("lists the soonest event first, whatever order they were created in (§NNN)", async () => {
+  it("lists the soonest event first, whatever order they were created in (§881)", async () => {
     const later = await event({ startsAt: new Date(NOW.getTime() + 60 * DAY) });
     const sooner = await event({ startsAt: new Date(NOW.getTime() + 10 * DAY) });
     const middle = await event({ startsAt: new Date(NOW.getTime() + 30 * DAY) });

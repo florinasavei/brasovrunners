@@ -172,7 +172,7 @@ export type CalendarEvent = {
  */
 const CLUB_NAME_ASCII = CLUB_NAME.normalize("NFD").replace(/\p{M}/gu, "");
 
-/** The product id's last field is the club's country (`HOME_COUNTRY`, §NNN) — "RO", as calendar apps have always seen it. */
+/** The product id's last field is the club's country (`HOME_COUNTRY`, §882) — "RO", as calendar apps have always seen it. */
 const PRODID = `-//${CLUB_NAME_ASCII}//events//${HOME_COUNTRY}`;
 
 /** The feed's file name in one language: "brasov-runners-ro.ics". */

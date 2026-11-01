@@ -92,7 +92,7 @@ describe("§357 no hardcoded value in the emails' own sentences", () => {
       expect(source, file).not.toMatch(/Bra(?:ș|s)ov Runners/);
       expect(source, file).toContain('from "@/theme/brand"');
     }
-    // The From line's default reads the same file `brand.ts` does (§NNN): env.ts may not import the theme.
+    // The From line's default reads the same file `brand.ts` does (§882): env.ts may not import the theme.
     const envSource = readFileSync(path.join(process.cwd(), "src/shared/config/env.ts"), "utf8");
     expect(envSource).not.toMatch(/Bra(?:ș|s)ov Runners/);
     expect(envSource).toContain('from "@/club/config"');
@@ -104,7 +104,7 @@ describe("§357 no hardcoded value in the emails' own sentences", () => {
 const fold = (value: string) => value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 /*
   The scans that refused the name in a string of `src/` and in a message of either catalogue moved to
-  `tests/unit/club/club-literals.test.ts` (§NNN), which builds every forbidden word — the name among them —
+  `tests/unit/club/club-literals.test.ts` (§882), which builds every forbidden word — the name among them —
   from `club/club.json` and scans more than `src/`. The pins below stay: they say where the name is read.
 */
 

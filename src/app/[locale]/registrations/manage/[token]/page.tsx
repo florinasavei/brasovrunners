@@ -72,7 +72,7 @@ type Props = {
     withdrawn?: string;
     /** The offers-and-benefits switch's outcome (§562): 1 saved, 0 refused. */
     promo?: string;
-    /** «Vreau să apar cu numele în clasament»'s outcome (§NNN): 1 saved, 0 refused. */
+    /** «Vreau să apar cu numele în clasament»'s outcome (§879): 1 saved, 0 refused. */
     results?: string;
     /** Which person a check-in or a list answer was about (§547): an id the page already lists, never a name. */
     person?: string;
@@ -186,7 +186,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   const promoYes = (one: { promoConsent: boolean; promoConsentAt: Date | null; privacyNoticeVersion: number; birthDate: string | null }) =>
     shareGate && reachesPartner(one, shareGate, new Date()) ? t("promo.yesShared") : t("promo.yes");
   /*
-    «Vreau să apar cu numele în clasament» (§NNN): asked only of a registration whose notice predates the first that described the
+    «Vreau să apar cu numele în clasament» (§879): asked only of a registration whose notice predates the first that described the
     results, while the notice in force names the tick (`{{resultsNameAsk}}`) and the results and the event is a race
     (`resultsNameConsentLine`); the rest of the reads are
     skipped when nobody on the page registered under an older notice. A yes that counts is always offered the way out — and
@@ -245,7 +245,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
             const active = isActiveStatus(one.status);
             const answered = answeredFor === one.id;
             /*
-              The results' name (§NNN): held — a yes that names the runner (`holdsResultsNameConsent`, the one predicate the press
+              The results' name (§879): held — a yes that names the runner (`holdsResultsNameConsent`, the one predicate the press
               and `publicResultName` read), offered the way out whatever the notice in force says today — or asked: on the list,
               active, an older notice, under one that names the tick and the results. A pre-§322 yes, or one recorded under a
               notice that described the results without naming the tick, names nobody and is not drawn as held.
@@ -463,7 +463,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 )}
 
                 {/*
-                  «Vreau să apar cu numele în clasament» (§NNN), per registration, drawn as a tick (§766): the words name the setting,
+                  «Vreau să apar cu numele în clasament» (§879), per registration, drawn as a tick (§766): the words name the setting,
                   the state is in the glyph and `aria-checked`. The form posts the state it asks for; the token is read, never spent;
                   one write and an audit row without the name. Another adult's row offers only the way out: the yes is theirs (§421).
                 */}

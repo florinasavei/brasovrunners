@@ -17,7 +17,7 @@ import type { Env } from "@/shared/config/env";
  * Hobby, from vercel.com/docs/limits on 2026-09-19. The 6,000 build minutes a month are **not
  * confirmed**: Vercel's current pages (read 2026-10-16) list no monthly build-minute allowance for
  * Hobby — a build is metered as Build CPU Minutes, which Hobby does not bill. `/devs` no longer reads
- * the month against it (§803), and since §NNN neither does «Costuri»: Hobby is measured there by Active CPU
+ * the month against it (§803), and since §880 neither does «Costuri»: Hobby is measured there by Active CPU
  * (`VERCEL_HOBBY_ACTIVE_CPU_HOURS_PER_MONTH`), and this figure is no longer presented as a limit anywhere.
  */
 export const VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH = 6_000;

@@ -15,7 +15,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { AFTER_THE_RACE, approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, registerRunner, resetNoticeCounter, type Runner } from "../../helpers/results";
 
 /**
- * BR-REQ-072-01, §NNN — «Vreau să apar cu numele în clasament» on the runner's own registration page.
+ * BR-REQ-072-01, §879 — «Vreau să apar cu numele în clasament» on the runner's own registration page.
  *
  * A runner who registered under a privacy notice that did not yet describe the results is «Participant #bib» in a published race's
  * results (§808). The owner asked for the way to be named: the runner's own press, from the manage link, recorded with the notice in
@@ -150,7 +150,7 @@ async function publicNames() {
   return Object.fromEntries((result?.rows ?? []).map((row) => [row.bibNumber, row.name]));
 }
 
-describe("BR-REQ-072-01 §NNN the runner's page asks «Vreau să apar cu numele în clasament» only when it may", () => {
+describe("BR-REQ-072-01 §879 the runner's page asks «Vreau să apar cu numele în clasament» only when it may", () => {
   it("shows nothing and refuses a yes while the notice in force does not describe the results", async () => {
     const ana = await olderRunner();
     const token = await manageLink(ana);
@@ -214,7 +214,7 @@ describe("BR-REQ-072-01 §NNN the runner's page asks «Vreau să apar cu numele 
   });
 });
 
-describe("BR-REQ-072-01 §NNN the press", () => {
+describe("BR-REQ-072-01 §879 the press", () => {
   it("records the consent and the notice in force through the manage link, once, audited without the name; a second press withdraws", async () => {
     const ana = await olderRunner();
     await approveAskTexts();
@@ -312,7 +312,7 @@ describe("BR-REQ-072-01 §NNN the press", () => {
   });
 });
 
-describe("BR-REQ-072-01 §NNN the published results", () => {
+describe("BR-REQ-072-01 §879 the published results", () => {
   it("name the older runner with a consent, not without it, not after a withdrawal — and leave the newer registrant and the unticked as they were", async () => {
     const ana = await olderRunner();
     await approveAskTexts();

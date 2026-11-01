@@ -127,7 +127,7 @@ export const LIST_NUMBERS_MERGE_FIELD = "participantListNumbers";
 export const RESULTS_MERGE_FIELD = "results";
 
 /**
- * The privacy notice's marker for «Vreau să apar cu numele în clasament» (§NNN; the owner, 2026-11-01: «Do them all»): the tick a runner
+ * The privacy notice's marker for «Vreau să apar cu numele în clasament» (§879; the owner, 2026-11-01: «Do them all»): the tick a runner
  * who registered under a notice older than the first that described the results (`{{results}}`) finds on their own registration's page,
  * to be named in a race's published results. Filled, when the notice is shown, with the tick's own words, quoted
  * (`results/notice-words.ts`) — „Vreau să apar cu numele în clasament” / “I want to appear by name in the results”.
@@ -810,7 +810,7 @@ export function describesResults(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes «Vreau să apar cu numele în clasament» (§NNN): it names `{{resultsNameAsk}}`. One half of the
+ * Whether a privacy notice describes «Vreau să apar cu numele în clasament» (§879): it names `{{resultsNameAsk}}`. One half of the
  * gate for the tick on an older notice's runner's page — the other is `describesResults`, which the caller also asks, because the
  * tick names the runner in those results. Pure; the caller asks it of the notice in force, in every language.
  */

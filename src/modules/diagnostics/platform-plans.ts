@@ -648,7 +648,7 @@ export function moneyDecisions(
      * the question rather than quietly overriding it — and it is listed only while it is open.
      */
     { id: "entryContribution", owner: "club", state: input.hasPaidEvent ? "open" : "answered" },
-    // Derived from the club's own «Planul Mailgun» setting, never fixed (§NNN): any plan but Free answers it (the club has
+    // Derived from the club's own «Planul Mailgun» setting, never fixed (§880): any plan but Free answers it (the club has
     // paid since 2026-10-01), and so does a race that has run. Open only while the plan is Free and no race has run — a
     // decision with a deadline attached: before a registration window opens, never during one.
     {

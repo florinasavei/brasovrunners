@@ -40,7 +40,7 @@ import { CLUB_COUNTY, CLUB_COUNTY_CODE, CLUB_LOCALITY, HOME_COUNTRY, HOME_COUNTR
  *    - its county (`CLUB_COUNTY`, `CLUB_COUNTY_CODE`): "județul Brașov", "jud. Brașov", "jud. BV", "BV",
  *      "Brașov County";
  *    - the country (`HOME_COUNTRY`, `HOME_COUNTRY_NAME`): "România", "Romania", "RO" — these three
- *      kinds built from `club/club.json` (§NNN), so another club's city and county are its own;
+ *      kinds built from `club/club.json` (§882), so another club's city and county are its own;
  *    - a postcode: six digits, alone or with the city — "500152", "500152 Brașov";
  *    - a Romanian street, by the word it starts with: "strada"/"str.", "bulevardul"/"bd."/"b-dul",
  *      "calea", "aleea", "șoseaua"/"șos.", "splaiul" — "Aleea Tiberiu Brediceanu", "str. Turnului

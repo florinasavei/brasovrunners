@@ -52,7 +52,7 @@ export function signalsOf(file, text) {
 
 /**
  * Every file `yarn test` runs, repository-relative with forward slashes: `*.test.ts` under tests/, never the two-connection
- * suite, and never `tests/fork/`, which reads a made-up club's folder and runs under its own configuration (`yarn test:fork`, §NNN).
+ * suite, and never `tests/fork/`, which reads a made-up club's folder and runs under its own configuration (`yarn test:fork`, §882).
  */
 export function testFiles(root) {
   const walk = (dir) =>

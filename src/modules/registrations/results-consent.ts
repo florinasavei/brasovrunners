@@ -15,7 +15,7 @@ import { anotherAdultOnTheLink, managedRegistration } from "./manage-family";
 import { findRegistrationById } from "./repository";
 
 /**
- * «Vreau să apar cu numele în clasament» from the runner's own registration page (§NNN, BR-REQ-072-01) — the asking §808 left to
+ * «Vreau să apar cu numele în clasament» from the runner's own registration page (§879, BR-REQ-072-01) — the asking §808 left to
  * the owner and the lawyer for a runner who registered under a privacy notice that did not yet describe the results.
  *
  * The shape of `promo-consent.ts`: the `MANAGE_REGISTRATION` token is read, never spent (the same page must still be able to cancel),

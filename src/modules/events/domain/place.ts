@@ -1,7 +1,7 @@
 import { CLUB } from "@/club/config";
 
 /**
- * The city every club event happens in (`DECISIONS.md` §328), from `club/club.json` (§NNN).
+ * The city every club event happens in (`DECISIONS.md` §328), from `club/club.json` (§882).
  *
  * The one thing said about a place that is not announced yet where a *name* has to stand rather
  * than a sentence: the structured data's `Place` (schema.org requires one, and "Brașov" is true)
@@ -13,13 +13,13 @@ export const CLUB_LOCALITY = CLUB.place.locality;
 
 /**
  * The club's county and its plate code, as an address types them («județul …», «jud. BV»): what
- * `same-place.ts` reads as an address part rather than a place (§367, §NNN).
+ * `same-place.ts` reads as an address part rather than a place (§367, §882).
  */
 export const CLUB_COUNTY = CLUB.place.county;
 export const CLUB_COUNTY_CODE = CLUB.place.countyCode;
 
 /**
- * The club's country (§NNN), an ISO 3166-1 alpha-2 code: a registration's country and nationality by
+ * The club's country (§882), an ISO 3166-1 alpha-2 code: a registration's country and nationality by
  * default, the phone's default prefix, the structured data's `addressCountry`, the country a list does
  * not print after a city. Typed `"RO"`: the platform's languages, laws and currency are Romania's, so
  * a club running it is there. Never a country table's row — those name every country.

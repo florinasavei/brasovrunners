@@ -498,7 +498,7 @@ export type OwnerTaskInputs = {
    */
   raceDaySheetsDue: readonly string[];
   /**
-   * The published, dated races that take results and start within the next three weeks (§NNN), with whether the
+   * The published, dated races that take results and start within the next three weeks (§880), with whether the
    * club has set «Startul cursei» (`events.raceStartsAt`, the finish clock's gun) and «Categorii de vârstă»
    * (`events.resultAgeBands`) for each. Read by the page; empty means no race is coming and no row is drawn.
    */
@@ -1084,7 +1084,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   }
 
   /*
-    Two settings of a coming race that nothing else reminds the club of (§NNN): the gun time, which the finish
+    Two settings of a coming race that nothing else reminds the club of (§880): the gun time, which the finish
     clock counts from (`raceStartsAt ?? startsAt`), and the age categories, which re-rank the stored places when
     changed after results are entered (§850). One row per race and per setting, open until it is set, done after;
     no race in the window, no row.

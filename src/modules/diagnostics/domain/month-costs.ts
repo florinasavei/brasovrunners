@@ -122,7 +122,7 @@ export type MonthCostFacts = {
   vercel: { buildMinutes: number; deployments: number } | null;
   /**
    * The month's Fluid Active CPU in hours, from the billing charges `/devs` reads (`readVercelUsage`, §803), or null without
-   * a token, an answer or an hour unit. It is what Hobby is measured by (§NNN).
+   * a token, an answer or an hour unit. It is what Hobby is measured by (§880).
    */
   vercelActiveCpuHours: number | null;
   /** Hobby's included Active CPU a month — the ceiling the usage meets on Hobby only. */
@@ -327,7 +327,7 @@ function mailgunLine(facts: MonthCostFacts): MonthCostLine {
 }
 
 /**
- * Vercel. On Hobby: free; the usage is the Active CPU against Hobby's four hours (§NNN), the allowance whose overrun
+ * Vercel. On Hobby: free; the usage is the Active CPU against Hobby's four hours (§880), the allowance whose overrun
  * pauses the site for about thirty days (§803) — the figure `/devs` reads, not the build minutes, whose Hobby ceiling
  * Vercel's pages do not confirm and which is no longer presented as a limit.
  * On Pro (§610): the seats' price, billed whole for the month like Mailgun's, so so far and at the

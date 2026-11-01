@@ -8,7 +8,7 @@ import type { ClubConfig, ClubGuardWords } from "@/club/schema";
 import { KNOWN_LEAKS } from "./known-leaks";
 
 /**
- * BR-REQ-101-01 (§NNN, amending §369): the club's words are written in `club/club.json` and read through
+ * BR-REQ-101-01 (§882, amending §369): the club's words are written in `club/club.json` and read through
  * `theme/brand.ts`, `events/domain/place.ts` and `i18n/dates.ts` — never typed again as a literal.
  *
  * The forbidden words are built from the config itself, so a fork's guard forbids the fork's words: the name,
@@ -196,7 +196,7 @@ export function ratchetDifferences(found: Record<string, Record<string, number>>
   return { fresh, stale };
 }
 
-describe("BR-REQ-101-01: the club's words come from club/club.json, never a literal (§NNN)", () => {
+describe("BR-REQ-101-01: the club's words come from club/club.json, never a literal (§882)", () => {
   it("builds its words from the club's file, and finds them in a string, a template and JSX text, not in a comment", () => {
     const labels = FORBIDDEN.map(({ label }) => label);
     expect(labels).toContain(CLUB.name);

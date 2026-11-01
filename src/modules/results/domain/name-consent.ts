@@ -2,7 +2,7 @@ import { eventTakesResults } from "./event-type";
 
 /**
  * «Vreau să apar cu numele în clasament» — the runner who registered under an older privacy notice asks, after registration, to be
- * named in a race's published results (§NNN; the owner asked for it, §808 having left those runners to the owner and the lawyer).
+ * named in a race's published results (§879; the owner asked for it, §808 having left those runners to the owner and the lawyer).
  *
  * The line is §808's: a tick given under a notice that said «Rezultate cu nume nu publicăm încă» agreed to a list, not to a ranking by
  * name, so `publicResultName` shows such a runner as «Participant #bib». This is the separate asking the older terms promised: the

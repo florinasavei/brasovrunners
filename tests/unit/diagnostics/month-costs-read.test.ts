@@ -73,7 +73,7 @@ describe("BR-REQ-090-07 «Luna aceasta» assembled from its readers", () => {
     // Neon's history is asked for the period before Neon's own period start.
     expect(fakes.neonPreviousPeriod).toHaveBeenCalledWith(OCTOBER.start);
 
-    // Hobby is read by its Active CPU against the 4 hours, from the very reading /devs shows (§NNN); the builds only give the deployments.
+    // Hobby is read by its Active CPU against the 4 hours, from the very reading /devs shows (§880); the builds only give the deployments.
     expect(line(reading, "vercel")).toMatchObject({ usage: { unit: "cpuHours", used: 1.5, ceiling: 4, ceilingKind: "plan" }, detail: { kind: "deployments", count: 9 } });
     expect(line(reading, "deepl").usage).toMatchObject({ used: 1_000 });
     expect(line(reading, "mailgun").lastMonth).toMatchObject({ usd: 0, usage: 321 });
@@ -148,7 +148,7 @@ describe("BR-REQ-090-07 «Luna aceasta» assembled from its readers", () => {
     expect(odd.reasons.current.vercel).toBe("unit GB-Hrs");
   });
 
-  it("§NNN Pro is read by its builds, and the usage billing is not asked for at all", async () => {
+  it("§880 Pro is read by its builds, and the usage billing is not asked for at all", async () => {
     const fakes = readers({ vercelUsage: vi.fn(async () => ({ ok: false as const, reason: "must not be asked" })) });
     const pro = await readMonthCosts(inputs({ vercelPlan: { plan: "PRO", seats: 1 } }), fakes);
     expect(fakes.vercelUsage).not.toHaveBeenCalled();

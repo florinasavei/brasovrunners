@@ -213,7 +213,7 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
       birthDate: syntheticBirthDate(event),
       // One of the two answers the form offers (§554): the retired «Prefer să nu spun» is refused.
       sex: "FEMALE",
-      // The club's own city and country (§NNN): a demonstration runner lives where the club runs.
+      // The club's own city and country (§882): a demonstration runner lives where the club runs.
       nationality: HOME_COUNTRY,
       country: HOME_COUNTRY,
       city: CLUB_LOCALITY,

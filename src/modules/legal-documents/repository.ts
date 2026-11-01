@@ -394,7 +394,7 @@ export async function noticeDescribesResults<T extends Record<string, unknown>>(
 }
 
 /**
- * Whether the privacy notice in force describes «Vreau să apar cu numele în clasament» (§NNN, `describesResultsNameAsk`) — in every
+ * Whether the privacy notice in force describes «Vreau să apar cu numele în clasament» (§879, `describesResultsNameAsk`) — in every
  * language, AND the results themselves (`describesResults`), because the tick names the runner in them. False while either is silent.
  * For the server, which asks again at every yes (`registrations/results-consent.ts`); the manage page reads the cached twin
  * (`cachedResultsNameAskDescribed`). A notice approved before the marker existed is silent, and asks nobody: the club approves it.
@@ -714,7 +714,7 @@ export async function findFirstResultsNoticeVersion<T extends Record<string, unk
 /**
  * The lowest version of an approved, not withdrawn privacy notice that describes «Vreau să apar cu numele în clasament» in **every**
  * language (`describesResultsNameAsk`, with `describesResults` beside it), or null when none does — `findFirstResultsNoticeVersion`'s
- * twin (§NNN, the §421 rule). The yes records the notice in force when it was given (`registrations.results_consent_version`); it
+ * twin (§879, the §421 rule). The yes records the notice in force when it was given (`registrations.results_consent_version`); it
  * names the runner only if that is this version or a later one — a yes recorded under a notice that did not name the tick agreed to
  * nothing that described it.
  */

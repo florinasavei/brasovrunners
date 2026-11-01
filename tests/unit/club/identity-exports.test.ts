@@ -9,14 +9,14 @@ import { envSchema } from "@/shared/config/env";
 import { CLUB_NAME, CLUB_SHORT_FORMS, LOGO, WORDMARK } from "@/theme/brand";
 
 /**
- * BR-REQ-101-01 (§NNN): the club's identity moved into `club/club.json`, and nothing a person sees changed.
+ * BR-REQ-101-01 (§882): the club's identity moved into `club/club.json`, and nothing a person sees changed.
  *
  * The file snapshot beside this test was written from `origin/qa` before the move — every identity, place,
  * time and logo export, and the strings the platform builds from them — so the values read from the config
  * are proved equal, character for character, to the ones that were written in the code. A diff in the
  * snapshot is a change the club would see: it is never updated to make this pass.
  */
-describe("BR-REQ-101-01: the identity exports read from club/club.json equal the literals they replaced (§NNN)", () => {
+describe("BR-REQ-101-01: the identity exports read from club/club.json equal the literals they replaced (§882)", () => {
   it("prints the same values as origin/qa did", async () => {
     const defaults = envSchema.parse({});
     const calendar = buildCalendar({ events: [], baseUrl: "http://localhost:3000", name: "x", labels: {} as CalendarLabels });

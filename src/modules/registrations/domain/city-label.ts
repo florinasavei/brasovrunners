@@ -9,7 +9,7 @@ import { HOME_COUNTRY } from "@/modules/events/domain/place";
  * The country is `registrations.country` (§510): an ISO 3166-1 alpha-2 code, `RO` by default. The list's
  * cell and its phone row read this one function; the export keeps the country and the city in their own
  * columns, as the spreadsheet always has, so a sheet can filter by either. "Romania" is the club's country,
- * `HOME_COUNTRY` (§NNN).
+ * `HOME_COUNTRY` (§882).
  */
 export function cityLabel(city: string | null | undefined, country: string | null | undefined): string {
   const typed = city?.trim() ?? "";

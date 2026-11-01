@@ -82,7 +82,7 @@ describe("§736 the events the registrations list offers", () => {
     expect((await listEventsWithRegistrations(db)).map((row) => row.id)).toContain(past);
   });
 
-  it("offers an event once, in the viewer's language, when its registrations are in both languages (§NNN)", async () => {
+  it("offers an event once, in the viewer's language, when its registrations are in both languages (§881)", async () => {
     const id = await event("Crosul bilingv", "INTERNAL");
     for (const [i, locale] of (["ro", "en"] as const).entries()) {
       const email = `p${i}@example.test`;
@@ -115,7 +115,7 @@ describe("§736 the events the registrations list offers", () => {
     expect(inEnglish[0].title).toBe("Crosul bilingv (en)");
   });
 
-  it("falls back to Romanian, then to any translation, for a viewer's language the event lacks (§NNN)", async () => {
+  it("falls back to Romanian, then to any translation, for a viewer's language the event lacks (§881)", async () => {
     const [row] = await db.insert(events).values({ type: "RACE", startsAt: new Date("2026-11-21T07:00:00Z"), registrationMode: "INTERNAL", locationName: "Start" }).returning();
     await db.insert(eventTranslations).values({ eventId: row.id, locale: "ro", title: "Doar română", slug: `ro-${row.id.slice(0, 8)}` });
     expect((await listEventsWithRegistrations(db, "en")).find((offered) => offered.id === row.id)?.title).toBe("Doar română");

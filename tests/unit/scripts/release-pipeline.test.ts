@@ -39,7 +39,7 @@ describe("§504 docs-check: one tree, tested once", () => {
 
   it("keeps the two check names ship and branch protection read, each the verdict of its jobs", () => {
     // The hook's `yarn check` is `check:static` followed by `test`: CI runs exactly those two — and, beside them in the
-    // `checks` job, the fork check (§NNN), which `yarn test` cannot run because it reads a made-up club's folder.
+    // `checks` job, the fork check (§882), which `yarn test` cannot run because it reads a made-up club's folder.
     expect(job("checks")).toMatch(/run: yarn check:static\n/);
     expect(job("unit")).toContain("run: yarn test --shard=${{ matrix.shard }}/$SHARD_TOTAL");
     expect(workflow.match(/run: yarn (check|test)\b[^\n]*/g)).toEqual(["run: yarn check:static", "run: yarn test:fork", "run: yarn test --shard=${{ matrix.shard }}/$SHARD_TOTAL", "run: yarn test:concurrency", "run: yarn test:e2e --shard=${{ matrix.shard }}/$SHARD_TOTAL"]);

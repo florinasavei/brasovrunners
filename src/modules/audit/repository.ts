@@ -195,7 +195,7 @@ export type AuditAction =
    */
   | "registration.promo_consent_changed"
   /**
-   * «Vreau să apar cu numele în clasament» switched by an older notice's runner from their own manage link (§NNN,
+   * «Vreau să apar cu numele în clasament» switched by an older notice's runner from their own manage link (§879,
    * `registrations/results-consent.ts`): the new value (`to`), the door and, for a yes, the notice version it was given under.
    * Never the name.
    */

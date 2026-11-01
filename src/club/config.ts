@@ -2,7 +2,7 @@ import club from "@club/club.json";
 import type { ClubConfig } from "./schema";
 
 /**
- * The club this deployment is (§NNN): `club/club.json`, read at build time.
+ * The club this deployment is (§882): `club/club.json`, read at build time.
  *
  * The **only** importer of the file, and imported in turn only by the five modules that turn it into the
  * platform's constants — `theme/brand.ts` (the name, the wordmark, the short forms, the logo),
@@ -22,7 +22,7 @@ const { country } = club.place;
 if (country !== "RO") throw new Error(`club/club.json: place.country must be "RO" — the platform is written for Romania; got "${country}".`);
 
 // The bundler carries `club.json` whole into every public client island, so nothing goes in it that a visitor's
-// browser should not receive: the guard words are `club/guard-words.json`, read by the literal guard alone (§NNN).
+// browser should not receive: the guard words are `club/guard-words.json`, read by the literal guard alone (§882).
 export const CLUB = {
   ...club,
   place: { ...club.place, country },

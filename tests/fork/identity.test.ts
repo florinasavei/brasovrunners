@@ -24,7 +24,7 @@ import { createTestDatabase, type TestDatabase } from "../helpers/db";
 import { UPSTREAM_IDENTITY } from "./upstream-identity";
 
 /**
- * BR-REQ-101-01 (§NNN): another club runs the platform by replacing `club/`, and nothing of Brașov Runners' comes
+ * BR-REQ-101-01 (§882): another club runs the platform by replacing `club/`, and nothing of Brașov Runners' comes
  * with it.
  *
  * Under `yarn test:fork` (`vitest.fork.config.mts`) `@club` is `tests/fixtures/fork-club/` — a made-up club in
@@ -64,7 +64,7 @@ const TBA_EVENT = {
   publishedAt: NOW,
 } as unknown as PublicEvent;
 
-describe("BR-REQ-101-01: a fork's identity comes from its own club folder (§NNN)", () => {
+describe("BR-REQ-101-01: a fork's identity comes from its own club folder (§882)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

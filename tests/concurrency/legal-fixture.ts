@@ -5,7 +5,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion, nextVersionNumber } from "@/modules/legal-documents/repository";
 
 /**
- * §NNN — the approved notices a concurrency suite needs in force, whatever the database holds already.
+ * §881 — the approved notices a concurrency suite needs in force, whatever the database holds already.
  *
  * A seeded database (every cloud session's) carries the sample notices at version 1, 2… effective *now*; the suites
  * pin a September clock, at which none of them is in force, and a fixed «version 1, effective 2020» insert collided

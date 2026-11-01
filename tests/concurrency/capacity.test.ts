@@ -74,7 +74,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   }
 
   beforeAll(async () => {
-    // Their own documents, above any seeded version and in force at this suite's clock (§NNN); the club's terms (§421): a public submission is refused while none is approved.
+    // Their own documents, above any seeded version and in force at this suite's clock (§881); the club's terms (§421): a public submission is refused while none is approved.
     noticeIds.push(...(await approveNotices(db, ["PRIVACY_NOTICE", "TERMS"], NOW)));
   });
 

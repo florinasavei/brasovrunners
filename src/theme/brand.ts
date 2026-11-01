@@ -19,7 +19,7 @@
  * the only place in `src/` allowed to name a colour.
  *
  * The club's identity — its name, its wordmark, its short forms, its logo files — is not written here
- * any more but read from `club/club.json` (§NNN, through `src/club/config.ts`): this file keeps every
+ * any more but read from `club/club.json` (§882, through `src/club/config.ts`): this file keeps every
  * name it exported, so none of the places that read them changed. The palette stays here for now.
  */
 import { CLUB } from "@/club/config";
@@ -418,7 +418,7 @@ export const FONT = {
 export const WORDMARK = CLUB.wordmark;
 
 /**
- * The club's name — written in **one** place, `club/club.json` (§369, §NNN), and read here. A runner's club on their
+ * The club's name — written in **one** place, `club/club.json` (§369, §882), and read here. A runner's club on their
  * registration (`DECISIONS.md` §215), the From line's default, the page title, the header's and
  * the wordmark's accessible name, the JSON-LD organiser, the share pictures, the calendar, the
  * PDFs' Author, and every catalogue sentence that names the club, which takes it as `{club}`.
@@ -427,7 +427,7 @@ export const WORDMARK = CLUB.wordmark;
  * the locales one day". A proper name is not translated, and two copies are two things to rename
  * and one to forget, so the catalogues no longer hold the name at all:
  * `tests/unit/notifications/no-hardcoded-values.test.ts` refuses it in `src/` outside this file
- * and the seeds, and in every message of both catalogues — since §NNN `tests/unit/club/club-literals.test.ts`,
+ * and the seeds, and in every message of both catalogues — since §882 `tests/unit/club/club-literals.test.ts`,
  * which builds the forbidden words from the config itself. The same distinction `WORDMARK` draws
  * above, from the other side: that is a logotype, this is the name.
  */
@@ -441,7 +441,7 @@ const folded = (word: string) => word.normalize("NFD").replace(/\p{M}+/gu, "").t
 
 /**
  * The club's short forms that no rule derives from `CLUB_NAME` — they belong to this club, so they live
- * beside its name in `club/club.json` (`shortForms`, §NNN). The public list's matcher
+ * beside its name in `club/club.json` (`shortForms`, §882). The public list's matcher
  * (`registrations/domain/public-list-club.ts`, §753, §756) reads them as the club's own words: `city` is
  * the county's plate code standing for the name's first word («BV Runners»), each of `nicknames` names
  * the club on its own («BVR»). Folded here, whatever the file's case: lower case, no diacritics. A club
@@ -452,7 +452,7 @@ export const CLUB_SHORT_FORMS: { readonly city: string | null; readonly nickname
   nicknames: CLUB.shortForms.nicknames.map(folded),
 };
 
-/** The club's slug, `[a-z0-9-]` (§NNN): the export file's `format` (`EVENT_FILE_FORMAT`), the Instagram example. */
+/** The club's slug, `[a-z0-9-]` (§882): the export file's `format` (`EVENT_FILE_FORMAT`), the Instagram example. */
 export const CLUB_SLUG = CLUB.slug;
 
 /** The club's own short mark («BVR»), as the club writes it. */
@@ -470,7 +470,7 @@ export const SAFETY_PROGRAMME: { readonly ro: string; readonly en: string } = CL
  * Dimensions are here so a layout can reserve the right space before the SVG loads; a logo
  * that changes size on load pushes the page around on a slow connection.
  *
- * The files and their proportions are the club's, in `club/club.json` (`logo`, §NNN); the descriptions
+ * The files and their proportions are the club's, in `club/club.json` (`logo`, §882); the descriptions
  * of what each drawing is for stay here. Paths are root-relative and resolve under `public/`. They
  * are not absolute URLs, so `AGENTS.md` §8 does not apply — nothing here needs `APP_BASE_URL`. The `SportsOrganization`
  * JSON-LD does need an absolute logo URL (BR-REQ-052-02) and must build it from

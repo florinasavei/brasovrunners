@@ -5,7 +5,7 @@ import { CLUB_TIME_ZONE } from "@/i18n/dates";
  * slides into the past: a Sunday run last weekend, the Tâmpa run next Saturday, the intervals
  * next Wednesday, the race on a Sunday three weeks out.
  *
- * The club's zone is `CLUB_TIME_ZONE` (`club/club.json`, §NNN), never a name written here: a club
+ * The club's zone is `CLUB_TIME_ZONE` (`club/club.json`, §882), never a name written here: a club
  * west of Greenwich has a negative offset, which the signed arithmetic below keeps.
  */
 export const ZONE = CLUB_TIME_ZONE;
