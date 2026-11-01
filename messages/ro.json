@@ -5428,6 +5428,7 @@
         },
         "typedPlan": "Planul e scris de mână, fără preț înregistrat, deci suma lunii nu e cunoscută.",
         "unreadHere": "Nu s-a putut citi acum din baza de date a site-ului.",
+        "unitUnknown": "Timpul de CPU nu se poate compara cu limita Hobby: Vercel l-a dat în «{unit}», nu în ore.",
         "lastMonth": {
           "neonKey": "— Neon păstrează istoricul doar pentru o cheie de organizație; cheia pe proiect e refuzată ({reason}).",
           "typedPlan": "— planul scris de mână nu are preț înregistrat.",

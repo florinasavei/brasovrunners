@@ -95,7 +95,13 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
   // (and a locator) looking for the table's row finds one and not two.
   const name = (line: MonthCostLine) => t(`tasks.month.name.${line.id}`);
   // A reason as the reader reads it: a query that failed here is not "the provider did not answer".
-  const why = (reason: string) => (reason === "error" ? t("tasks.month.unreadHere") : t("tasks.month.unread", { reason }));
+  // A reading in another unit than hours was answered, not missed: «not measured», with the unit (as /devs says it).
+  const why = (reason: string) =>
+    reason === "error"
+      ? t("tasks.month.unreadHere")
+      : reason.startsWith("unit ")
+        ? t("tasks.month.unitUnknown", { unit: reason.slice("unit ".length) })
+        : t("tasks.month.unread", { reason });
 
   /** The usage, one sentence: so far and by the end — or why it is not there. */
   const usageText = (line: MonthCostLine) => {

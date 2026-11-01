@@ -5428,6 +5428,7 @@
         },
         "typedPlan": "The plan is typed by hand with no recorded price, so the month's amount is unknown.",
         "unreadHere": "Could not be read just now from the site's database.",
+        "unitUnknown": "CPU time cannot be compared with the Hobby allowance: Vercel gave it in «{unit}», not in hours.",
         "lastMonth": {
           "neonKey": "— Neon keeps the history for an organization's key only; the project key is refused ({reason}).",
           "typedPlan": "— the typed plan has no recorded price.",

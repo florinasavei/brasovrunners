@@ -1118,10 +1118,10 @@ project are §40.
    with no ceiling and nothing red; on Free against the 100 CU-hours, red past 80%. Nothing else
    reads the key.
 
-**The same for Vercel, as far as Vercel allows (`DECISIONS.md` §101).** Vercel's public API
-has no usage endpoint — bandwidth and invocations are on the dashboard's Usage page only — but
-it lists deployments, and from those `/devs` shows the month's deployments, today's against
-Hobby's 100 a day and the build minutes against Hobby's 6,000 a month. Vercel → avatar →
+**The same for Vercel (`DECISIONS.md` §101, §803).** From Vercel's deployments `/devs` shows the
+month's deployments and today's against Hobby's 100 a day; from its billing charges (the Usage
+page's own lines, `GET /v1/billing/charges`) the month's Active CPU against Hobby's 4 hours —
+the figure «Costuri» measures too. Vercel → avatar →
 **Account Settings** → **Tokens** → Create (`brasovrunners-devs`, scope the account, one year);
 the project id from the project's **Settings → General → Project ID** (`prj_…`); then
 `VERCEL_API_TOKEN` and `VERCEL_PROJECT_ID` on each project (QA with its own id;

@@ -637,7 +637,7 @@ export function moneyDecisions(
   input: Pick<PlatformFacts, "hasPaidEvent"> & {
     /** The club's «Planul Mailgun» setting (`EmailPlanId`); Free when the caller does not know. */
     emailPlan?: EmailPlanId;
-    /** Whether a published race has already started: the first real race is behind the club. */
+    /** Whether a published or archived race has already started: the first real race is behind the club. */
     raceHasRun?: boolean;
   },
 ): MoneyDecision[] {

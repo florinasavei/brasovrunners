@@ -201,6 +201,14 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     expect(words).toContain("— planul scris de mână nu are preț înregistrat.");
   });
 
+  it("§NNN says a Hobby CPU reading in another unit as «not measured», with the unit — the provider did answer", async () => {
+    const ro = text(await render("ro", facts(), reasons({ current: { vercel: "unit GB-Hrs" } })));
+    expect(ro).toContain("Timpul de CPU nu se poate compara cu limita Hobby: Vercel l-a dat în «GB-Hrs», nu în ore.");
+    expect(ro).not.toContain("Furnizorul nu a răspuns");
+    const en = text(await render("en", facts(), reasons({ current: { vercel: "unit GB-Hrs" } })));
+    expect(en).toContain("Vercel gave it in «GB-Hrs», not in hours.");
+  });
+
   it("says a query that failed here as the site's own database, not the provider", async () => {
     const words = text(await render("ro", facts({ deepl: null, r2: null }), reasons({ current: { deepl: "error", r2: "error" }, lastMonth: { r2: "error" } })));
     expect(words).toContain("Nu s-a putut citi acum din baza de date a site-ului.");
