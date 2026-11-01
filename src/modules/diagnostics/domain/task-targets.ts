@@ -64,6 +64,9 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   inviteStaff: { kind: "section", section: "staff" },
   // The race is one save and a publish on «Alergări» (`SETUP.md` §39).
   publishEvents: { kind: "section", section: "events" },
+  // The gun time is a box of the race's editor, the categories a card of its «Clasament» (§NNN).
+  raceGunTime: { kind: "section", section: "events" },
+  raceAgeBands: { kind: "section", section: "events" },
   // The queue, its stop header and «Reîncearcă emailurile eșuate» (§622); the switch and the cap are the panel above it.
   emailFailSafe: { kind: "settings", tab: "emails", hash: "outbox-queue" },
   // The two roads and the visitors' messages beside the queue (§778).

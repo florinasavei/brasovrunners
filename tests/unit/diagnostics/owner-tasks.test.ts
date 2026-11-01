@@ -1158,3 +1158,64 @@ describe("the email rows of «Sarcini»", () => {
   });
 });
 
+
+describe("BR-REQ-090-05 the race-day settings rows of «Sarcini» (§NNN)", () => {
+  const rows = (input: Partial<OwnerTaskInputs>) =>
+    ownerTasks({ ...LAUNCHED, ...input }).filter((task) => task.id === "raceGunTime" || task.id === "raceAgeBands");
+
+  it("has no row when no race is coming", () => {
+    expect(rows({})).toEqual([]);
+    expect(rows({ raceDaySettings: [] })).toEqual([]);
+  });
+
+  it("is open per race and per setting while the gun time or the age categories are not set, the race named", () => {
+    const tasks = rows({ raceDaySettings: [{ eventId: "e1", title: "Crosul", hasGunTime: false, hasAgeBands: false }] });
+    expect(tasks).toHaveLength(2);
+    expect(tasks[0]).toMatchObject({ id: "raceGunTime", owner: "club", state: "open", kind: "check", key: "raceGunTime-e1", values: { event: "Crosul" } });
+    expect(tasks[1]).toMatchObject({ id: "raceAgeBands", owner: "club", state: "open", kind: "check", key: "raceAgeBands-e1", values: { event: "Crosul" } });
+  });
+
+  it("is done once each is set, independently, and one row per race", () => {
+    const tasks = rows({
+      raceDaySettings: [
+        { eventId: "e1", title: "Crosul", hasGunTime: true, hasAgeBands: false },
+        { eventId: "e2", title: "Semimaratonul", hasGunTime: true, hasAgeBands: true },
+      ],
+    });
+    expect(tasks.map((task) => [task.key, task.state])).toEqual([
+      ["raceGunTime-e1", "done"],
+      ["raceAgeBands-e1", "open"],
+      ["raceGunTime-e2", "done"],
+      ["raceAgeBands-e2", "done"],
+    ]);
+  });
+
+  it("says each state and the steps in both languages, naming the editor's boxes", () => {
+    for (const catalogue of [ro, en]) {
+      for (const id of ["raceGunTime", "raceAgeBands"] as const) {
+        const item = catalogue.Admin.tasks.items[id];
+        expect(item.title && item.todo && item.done).toBeTruthy();
+        expect(item.todo).toContain("{event}");
+        expect(item.done).toContain("{event}");
+        expect(item.how.length).toBeGreaterThan(0);
+      }
+    }
+    expect(en.Admin.tasks.items.raceGunTime.how.join("\n")).toContain("Race start");
+    expect(ro.Admin.tasks.items.raceGunTime.how.join("\n")).toContain("Startul cursei");
+    expect(en.Admin.tasks.items.raceAgeBands.how.join("\n")).toContain("Age categories");
+    expect(ro.Admin.tasks.items.raceAgeBands.how.join("\n")).toContain("Categorii de vârstă");
+  });
+});
+
+describe("BR-REQ-090-07 the row «Consumul Vercel în cifre, pe /devs» speaks of Active CPU (§NNN)", () => {
+  it("names Hobby's 4 hours of Active CPU in both languages and no build-minute ceiling", () => {
+    for (const catalogue of [ro, en]) {
+      const { todo, done } = catalogue.Admin.tasks.items.vercelUsage;
+      for (const sentence of [todo, done]) {
+        expect(sentence).toMatch(/4/);
+        expect(sentence).toMatch(/CPU/);
+        expect(sentence).not.toMatch(/6[.,\s]?000|build/i);
+      }
+    }
+  });
+});

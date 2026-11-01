@@ -87,7 +87,7 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
       ? t("tasks.month.notMeasured")
       : t(plusVat && value > 0 ? "tasks.costToday.amountPlusVat" : "tasks.costToday.amount", { amount: usd(value), currency: "USD" });
   const quantity = (unit: MonthUsage["unit"], value: number) =>
-    format.number(value, { maximumFractionDigits: unit === "cuHours" ? 1 : unit === "gigabytes" ? 2 : 0 });
+    format.number(value, { maximumFractionDigits: unit === "cuHours" || unit === "cpuHours" ? 1 : unit === "gigabytes" ? 2 : 0 });
   // A period as the provider counts it, first day to last: the end is exclusive, so the last day is one instant before it.
   const span = (line: MonthCostLine) =>
     formatDayRange(line.period.start, new Date(line.period.end.getTime() - 1), { locale, timeZone: "UTC", style: "short", position: "inline" });
@@ -95,7 +95,13 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
   // (and a locator) looking for the table's row finds one and not two.
   const name = (line: MonthCostLine) => t(`tasks.month.name.${line.id}`);
   // A reason as the reader reads it: a query that failed here is not "the provider did not answer".
-  const why = (reason: string) => (reason === "error" ? t("tasks.month.unreadHere") : t("tasks.month.unread", { reason }));
+  // A reading in another unit than hours was answered, not missed: «not measured», with the unit (as /devs says it).
+  const why = (reason: string) =>
+    reason === "error"
+      ? t("tasks.month.unreadHere")
+      : reason.startsWith("unit ")
+        ? t("tasks.month.unitUnknown", { unit: reason.slice("unit ".length) })
+        : t("tasks.month.unread", { reason });
 
   /** The usage, one sentence: so far and by the end — or why it is not there. */
   const usageText = (line: MonthCostLine) => {
@@ -107,7 +113,7 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
     if (!line.usage) {
       const reason = reasons.current[line.id];
       if ((line.id === "neon" || line.id === "vercel") && (reason === "unconfigured" || reason === null)) {
-        return t(`tasks.month.unmeasured.${line.id}`);
+        return t(`tasks.month.unmeasured.${line.id === "vercel" && line.plan === "Pro" ? "vercelPro" : line.id}`);
       }
       return why(reason ?? "error");
     }

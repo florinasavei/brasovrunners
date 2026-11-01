@@ -4493,6 +4493,26 @@
             "Caută subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y, apoi șterge tot ce găsește."
           ]
         },
+        "raceGunTime": {
+          "title": "Stabilește startul cursei (ora la care se dă startul)",
+          "todo": "{event} începe în cel mult trei săptămâni și nu are startul cursei stabilit: ceasul de sosire numără de la începutul evenimentului, adică ora de întâlnire, nu de la start.",
+          "done": "{event} are startul cursei stabilit: ceasul de sosire numără de la el.",
+          "how": [
+            "/admin/events → cursa → „Editează” → „Când și unde” → „Data și ora”.",
+            "La „Startul cursei” scrie data și ora la care se dă startul. Dacă e aceeași cu începutul evenimentului, scrie aceeași oră.",
+            "Lasă nebifat „Startul cursei nu e stabilit”, apoi salvează. Rândul devine verde."
+          ]
+        },
+        "raceAgeBands": {
+          "title": "Alege categoriile de vârstă pentru premii",
+          "todo": "{event} începe în cel mult trei săptămâni și folosește categoriile standard. Dacă ți se potrivesc, nu faci nimic: rândul se închide singur la câteva ore după start. Altfel, scrie-le înainte de rezultate.",
+          "done": "{event} are categoriile de vârstă proprii.",
+          "how": [
+            "/admin/events → cursa → „Clasament” → „Categorii de vârstă”.",
+            "La „Vârstele de la care încep grupele” scrie vârstele de început, separate prin virgulă — „18, 35, 45, 55” dă sub 18, 18-34, 35-44, 45-54 și 55+ — și verifică rândul de sub căsuță.",
+            "Apasă „Salvează categoriile” înainte de primul rezultat. Dacă cele standard ți se potrivesc, nu faci nimic: rândul se închide singur la câteva ore după start."
+          ]
+        },
         "botCheck": {
           "title": "Verificarea anti-bot la înscriere (Cloudflare Turnstile)",
           "todo": "Widgetul „brasovrunners-site” există și ambele chei sunt pe ambele proiecte Vercel; rândul devine verde la următoarea publicare. Turnstile oprește roboții pe care capcana formularului nu îi prinde.",
@@ -4522,8 +4542,8 @@
         },
         "vercelUsage": {
           "title": "Consumul Vercel în cifre, pe /devs",
-          "todo": "Cu un token de citire și id-ul proiectului, /devs arată deploy-urile lunii, cele de azi din 100 pe zi și minutele de build din cele 6.000 pe lună. Traficul se vede doar în Vercel → Usage.",
-          "done": "/devs arată deploy-urile și minutele de build ale lunii, cu prag de avertizare.",
+          "todo": "Cu un token de citire și id-ul proiectului, /devs arată deploy-urile lunii, cele de azi din 100 pe zi și CPU-ul activ din cele 4 ore pe lună ale lui Hobby. Traficul se vede doar în Vercel → Usage.",
+          "done": "/devs arată deploy-urile lunii și CPU-ul activ din cele 4 ore ale planului Hobby, cu prag de avertizare; «Costuri» citește aceeași cifră.",
           "how": [
             "Vercel → avatar → Account Settings → Tokens → Create: nume „brasovrunners-devs”, scope contul tău, expirare 1 an. Copiază tokenul (se arată o singură dată).",
             "Id-ul proiectului: Vercel → proiectul de producție → Settings → General → Project ID (începe cu prj_).",
@@ -5083,9 +5103,9 @@
       "nextSpend": {
         "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}.",
         "vercel": "Prima cheltuială care urmează: Vercel Pro, {cost}.",
-        "none": "Nu urmează nicio cheltuială nouă: ce e luat temporar se poate opri după cursă.",
+        "none": "Nu urmează nicio cheltuială nouă. Vercel revine la Hobby doar după două luni la rând sub 3 ore de CPU activ, nu la o dată anume.",
         "mailgunMore": "Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
-        "vercelMore": "Apare doar dacă site-ul începe să ceară bani pentru participare sau dacă codul site-ului se mută pe contul clubului."
+        "vercelMore": "Apare dacă site-ul cere bani pentru participare, dacă codul se mută pe contul clubului sau dacă CPU-ul activ se apropie de cele 4 ore pe lună ale lui Hobby. Revine la Hobby după două luni sub 3 ore."
       },
       "currencyNote": "Sumele sunt în moneda în care facturează fiecare firmă; TVA în România este {vat}%.",
       "freshness": {
@@ -5370,6 +5390,7 @@
           "cuHours": "{used} ore-CU până acum, ~{projected} la final.",
           "messages": "{used} e-mailuri trimise până acum, ~{projected} la final.",
           "buildMinutes": "{used} minute de build până acum, ~{projected} la final.",
+          "cpuHours": "{used} ore de CPU activ până acum, ~{projected} la final.",
           "characters": "{used} caractere traduse până acum, ~{projected} la final.",
           "gigabytes": "{used} GB de poze stocate, cel puțin.",
           "gigabytesMore": "Se numără o singură variantă a fiecărei poze, deci cifra reală e mai mare."
@@ -5384,7 +5405,7 @@
         "over": {
           "neon": "La ritmul ăsta limita se atinge înainte de sfârșitul perioadei, iar Neon oprește baza de date până la perioada următoare.",
           "mailgun": "La ritmul ăsta limita lunară se atinge înainte de sfârșitul lunii, iar restul mesajelor așteaptă luna următoare.",
-          "vercel": "La ritmul ăsta minutele de build se termină înainte de sfârșitul lunii, iar publicările noi se opresc până luna viitoare.",
+          "vercel": "La ritmul ăsta CPU-ul activ trece de cele 4 ore ale planului Hobby înainte de sfârșitul lunii, iar Vercel poate opri site-ul pentru aproximativ 30 de zile.",
           "r2": "Pozele trec de limita gratuită: surplusul se plătește lunar."
         },
         "domain": {
@@ -5394,7 +5415,8 @@
         },
         "unmeasured": {
           "neon": "Nu se măsoară fără NEON_API_KEY și NEON_PROJECT_ID pe acest mediu.",
-          "vercel": "Nu se măsoară fără VERCEL_API_TOKEN și VERCEL_PROJECT_ID pe acest mediu."
+          "vercel": "Nu se măsoară fără VERCEL_API_TOKEN pe acest mediu: Hobby se citește după CPU-ul activ.",
+          "vercelPro": "Nu se măsoară fără VERCEL_API_TOKEN și VERCEL_PROJECT_ID pe acest mediu."
         },
         "unread": "Furnizorul nu a răspuns acum ({reason}).",
         "deeplOff": "Cheia DeepL nu e pusă pe acest server, deci butonul de traducere din editoare e gri.",
@@ -5407,6 +5429,7 @@
         },
         "typedPlan": "Planul e scris de mână, fără preț înregistrat, deci suma lunii nu e cunoscută.",
         "unreadHere": "Nu s-a putut citi acum din baza de date a site-ului.",
+        "unitUnknown": "Timpul de CPU nu se poate compara cu limita Hobby: Vercel l-a dat în «{unit}», nu în ore.",
         "lastMonth": {
           "neonKey": "— Neon păstrează istoricul doar pentru o cheie de organizație; cheia pe proiect e refuzată ({reason}).",
           "typedPlan": "— planul scris de mână nu are preț înregistrat.",

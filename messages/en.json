@@ -4493,6 +4493,26 @@
             "Search subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y, then delete everything it finds."
           ]
         },
+        "raceGunTime": {
+          "title": "Set the race start (the gun time)",
+          "todo": "{event} starts within three weeks and has no race start set: the finish clock counts from the event's start, which is the gathering time, not the gun.",
+          "done": "{event} has its race start set: the finish clock counts from it.",
+          "how": [
+            "/admin/events → the race → “Edit” → “When and where” → “Date and time”.",
+            "In “Race start” type the date and the hour at which the gun goes. If it is the same as the event's start, type the same hour.",
+            "Leave “Race start not set yet” unticked, then save. The row turns green."
+          ]
+        },
+        "raceAgeBands": {
+          "title": "Choose the age categories for the awards",
+          "todo": "{event} starts within three weeks and uses the standard age categories. If they suit the race, do nothing: the row goes by itself a few hours after the start. Otherwise write yours before results.",
+          "done": "{event} has its own age categories.",
+          "how": [
+            "/admin/events → the race → “Results” → “Age categories”.",
+            "In “Ages the groups start at” write the starting ages, separated by commas — “18, 35, 45, 55” gives under 18, 18-34, 35-44, 45-54 and 55+ — and check the line under the box.",
+            "Press “Save the categories” before the first result. If the standard ones suit the race, do nothing: the row goes by itself a few hours after the start."
+          ]
+        },
         "botCheck": {
           "title": "The anti-bot check on registration (Cloudflare Turnstile)",
           "todo": "The widget “brasovrunners-site” exists and both keys are on both Vercel projects; this row turns green on the next deployment. Turnstile stops the bots the form's trap field does not catch.",
@@ -4522,8 +4542,8 @@
         },
         "vercelUsage": {
           "title": "Vercel usage in figures, on /devs",
-          "todo": "With a read token and the project id, /devs shows the month's deployments, today's out of 100 a day and the build minutes out of 6,000 a month. Traffic is only in Vercel → Usage.",
-          "done": "/devs shows the month's deployments and build minutes, with a warning threshold.",
+          "todo": "With a read token and the project id, /devs shows the month's deployments, today's out of 100 a day, and the Active CPU out of Hobby's 4 hours a month. Traffic is only in Vercel → Usage.",
+          "done": "/devs shows the month's deployments and the Active CPU out of Hobby's 4 hours, with a warning threshold; «Costs» reads the same figure.",
           "how": [
             "Vercel → avatar → Account Settings → Tokens → Create: name “brasovrunners-devs”, scope your account, expiry 1 year. Copy the token (shown once).",
             "The project id: Vercel → the production project → Settings → General → Project ID (starts with prj_).",
@@ -5083,9 +5103,9 @@
       "nextSpend": {
         "mailgun": "The next thing to cost money: one month of Mailgun Basic, {cost}.",
         "vercel": "The next thing to cost money: Vercel Pro, {cost}.",
-        "none": "No new spend is coming: what is taken for now can be dropped after the race.",
+        "none": "No new spend is coming. Vercel goes back to Hobby only after two months in a row under 3 Active CPU-hours, never on a date.",
         "mailgunMore": "Bought for a single race, when a day is expected to bring more entries than the free emails cover.",
-        "vercelMore": "It arrives only if the site starts asking for money to take part, or if the site's code moves to the club's own account."
+        "vercelMore": "It arrives if the site asks for money to take part, if its code moves to the club's account, or if Active CPU nears Hobby's 4 hours a month. It goes back to Hobby after two months under 3 hours."
       },
       "currencyNote": "Amounts are in the currency each company invoices in; VAT in Romania is {vat}%.",
       "freshness": {
@@ -5370,6 +5390,7 @@
           "cuHours": "{used} CU-hours so far, ~{projected} by the end.",
           "messages": "{used} emails sent so far, ~{projected} by the end.",
           "buildMinutes": "{used} build minutes so far, ~{projected} by the end.",
+          "cpuHours": "{used} Active CPU hours so far, ~{projected} by the end.",
           "characters": "{used} characters translated so far, ~{projected} by the end.",
           "gigabytes": "{used} GB of pictures stored, at least.",
           "gigabytesMore": "One variant of each picture is counted, so the real figure is higher."
@@ -5384,7 +5405,7 @@
         "over": {
           "neon": "At this pace the limit is reached before the period ends, and Neon stops the database until the next period.",
           "mailgun": "At this pace the monthly limit is reached before the month ends, and the remaining messages wait for next month.",
-          "vercel": "At this pace the build minutes run out before the month ends, and new deployments stop until next month.",
+          "vercel": "At this pace the Active CPU passes Hobby's 4 hours before the month ends, and Vercel can pause the site for about 30 days.",
           "r2": "The pictures are past the free allowance: the excess is billed monthly."
         },
         "domain": {
@@ -5394,7 +5415,8 @@
         },
         "unmeasured": {
           "neon": "Not measured without NEON_API_KEY and NEON_PROJECT_ID on this environment.",
-          "vercel": "Not measured without VERCEL_API_TOKEN and VERCEL_PROJECT_ID on this environment."
+          "vercel": "Not measured without VERCEL_API_TOKEN on this environment: Hobby is read by its Active CPU.",
+          "vercelPro": "Not measured without VERCEL_API_TOKEN and VERCEL_PROJECT_ID on this environment."
         },
         "unread": "The provider did not answer just now ({reason}).",
         "deeplOff": "The DeepL key is not set on this server, so the editors' translation button is grey.",
@@ -5407,6 +5429,7 @@
         },
         "typedPlan": "The plan is typed by hand with no recorded price, so the month's amount is unknown.",
         "unreadHere": "Could not be read just now from the site's database.",
+        "unitUnknown": "CPU time cannot be compared with the Hobby allowance: Vercel gave it in «{unit}», not in hours.",
         "lastMonth": {
           "neonKey": "— Neon keeps the history for an organization's key only; the project key is refused ({reason}).",
           "typedPlan": "— the typed plan has no recorded price.",
