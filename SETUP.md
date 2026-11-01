@@ -1889,10 +1889,17 @@ brasovrunners QA origin      GET  https://brasov-runners-qa-nu.vercel.app/api/he
    → **Actions** → **Secrets**: `PRODUCTION_APP_BASE_URL` = `https://brasov-runners-production.vercel.app`
    and `QA_APP_BASE_URL` = `https://brasov-runners-qa-nu.vercel.app`, no trailing slash, beside
    `PRODUCTION_JOB_SECRET` and `QA_JOB_SECRET` (each that project's `JOB_SECRET`, character for
-   character). **Today the two base URLs are unset**: `.github/workflows/scheduled-jobs.yml`'s steps
-   print «not configured; skipping» and exit in zero seconds with a green tick, four times a day,
-   and guard nothing (the green skip of `DECISIONS.md` §31). Verify with **Actions** →
-   **scheduled-jobs** → **Run workflow**: each step takes a second or two and prints the job's JSON.
+   character). **Both base URLs are set; the missing value is `PRODUCTION_JOB_SECRET`**: it is empty,
+   so the production steps print "production is not configured" and poke nothing (run 41206544730
+   printed `JOB_SECRET:` empty). Copy it character for character from the production Vercel
+   project's **Settings** → **Environment Variables** → `JOB_SECRET` (the value the pinger's
+   `Authorization: Bearer` carries), never into a file or a message. Verify with **Actions** →
+   **scheduled-jobs** → **Run workflow**: the production steps print the two jobs' JSON, and the
+   last step, «Verdict», prints the database, the Neon budget and no error. Since §NNN the run reads
+   the deep health before it pokes and turns red at its end on a stale job or a stalled outbox
+   (`registration-maintenance` excepted between 03:05 and 04:00 in Brașov, the pinger's nightly
+   gap), and an unconfigured production prints a `::warning::`, not a notice (QA's skip is
+   unchanged); what a red run means is `docs/RUNBOOKS.md` § A red backstop run.
 
 **Why `/api` on the `vercel.app` host is not sent to the public name.** Nothing in the application
 redirects one host to another, and `src/proxy.ts` — the only code that redirects at all (locales,

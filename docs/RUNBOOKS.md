@@ -691,6 +691,25 @@ The run's **Summary** says where, in words:
 Never push to `qa` or `main` by hand from the phone: the release PR and the production migration
 are the run's to open, merge and approve.
 
+## A red backstop run (scheduled-jobs)
+
+`.github/workflows/scheduled-jobs.yml` runs four times a day (01:17, 07:17, 13:17, 19:17 UTC) and is the only automatic
+watch over production's jobs and outbox (§NNN). It reads `/api/health?deep=1` **before** it pokes the two job endpoints
+(a poke records a ping, which would hide a dead pinger), pokes anyway, and judges at the end in the «Verdict» step
+(`scripts/backstop-verdict.mjs`). GitHub emails the owner when it is red. Read the `::error::` line of that step:
+
+- **«job … is stale» / «failing» / «never_run»** — the pinger (cron-job.org, `SETUP.md` §40) has stopped calling, or
+  the job fails. `registration-maintenance` stale between 03:05 and 04:00 in Brașov is the known nightly gap and does
+  not turn the run red. What to do: open the pinger's monitors for that environment (disabled, failed, wrong secret?),
+  fix or re-enable them; the pokes of this very run already did the due work, so a re-run of the workflow reads green
+  once the pinger's pings are back. If the pinger is fine, read `/devs` → Stare for the job's last error.
+- **«email outbox is stalled»** — a message is deferred by the provider's allowance, overdue or failed
+  (`modules/notifications/health.ts`). Open `/devs` → outbox: deferred rows go at the allowance reset, overdue rows mean
+  the outbox job is not running (the pinger, as above), failed ones need «Reîncearcă emailurile eșuate».
+- **«database does not answer» / the Neon budget** — § Neon suspended a project, below.
+- **A `::warning::` «production is not configured»** is not red: `PRODUCTION_APP_BASE_URL` or `PRODUCTION_JOB_SECRET` is
+  empty and nothing is watching or poking production — `SETUP.md` §40 step 3.
+
 ## Neon suspended a project
 
 What it looks like: every query refused with `53000 Your account or project has exceeded the quota`; a migration run
