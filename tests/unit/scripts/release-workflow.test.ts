@@ -121,7 +121,7 @@ describe("§535 release.yml — the same tools as the PC, in order", () => {
     expect(merge).toContain("qa has no scripts/$f yet");
     // The tool installs the dependencies again when qa changed them: the runner's are the branch's.
     const tool = readFileSync("scripts/merge-branches.mjs", "utf8");
-    const install = tool.indexOf('spawnSync("yarn", ["install", "--immutable"]');
+    const install = tool.indexOf('spawnSync("yarn", ["install", "--immutable", "--mode=skip-build"]');
     expect(install).toBeGreaterThan(-1);
     expect(install).toBeLessThan(tool.indexOf("if (PROBE) refreshNewestSnapshot("));
     expect(install).toBeLessThan(tool.indexOf('for (const script of ["migrations:check", "typecheck"])'));

@@ -1,0 +1,138 @@
+name: date-nightly
+
+# The two checks that only the calendar can break, once a night (§878): `yarn test:clock` (the unit and
+# database suite with the real clock moved forward, §712) and the whole end-to-end suite, both
+# projects, on a schedule.
+#
+# Why: on 2026-10-30 a failure caused only by the date stopped a release (tests/e2e/calendar-look.spec.ts
+# counted from the UTC weekday while the seed counts from Brașov's). `yarn test:clock` had not run since
+# it was written, and the e2e suite ran only on pull requests, on the day's tree — never on a night
+# between a pull request and the next. A date-bomb is found here, the morning after, not in a release.
+#
+# A red run is an email to whoever last changed this file's schedule (GitHub's own notification of a
+# failed scheduled workflow) — the owner, in practice. It is NOT a required check and is not part of
+# `docs-check.yml`, whose job names branch protection and `scripts/pr-merge-gate.mjs` require.
+#
+# GitHub runs a schedule from the default branch's copy of this file, so it starts the night after the
+# release that carries it reaches `main`; it tests `main`, the tree production runs. The Actions
+# minutes are free: the repository is public.
+
+on:
+  schedule:
+    # 00:47 UTC — 03:47 in Brașov in summer, 02:47 in winter: after the evening's merges, before
+    # anybody's morning, and off the top of the hour, when GitHub's scheduler is busiest. Away from
+    # e2e-dev-nightly's 01:37, so the two do not wait for runners together.
+    - cron: "47 0 * * *"
+  # By hand — after a change to a test with dated fixtures, or before a release.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: date-nightly
+  # A hand-dispatched run queues behind a nightly already in progress rather than killing it.
+  cancel-in-progress: false
+
+jobs:
+  # One runner per date: about twenty minutes a date on two workers (docs/DEVELOPMENT.md), faster on
+  # the runner's four. The dates are `yarn test:clock`'s own defaults, one each.
+  clock:
+    name: clock ${{ matrix.date }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      # Every date reports: one red date should not hide what the others would have found.
+      fail-fast: false
+      matrix:
+        date: ["+1m", "+1y", "+10y"]
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+      - name: The suite with the clock at ${{ matrix.date }}
+        run: yarn test:clock --workers 4 ${{ matrix.date }}
+
+  # The whole suite, both projects, as docs-check's `e2e-shard` runs it on a pull request — the same
+  # PostgreSQL service, migration, seed, build and Playwright steps — in six slices instead of twelve:
+  # a night has no reader waiting, and six runners take about fifteen minutes each.
+  e2e:
+    name: e2e ${{ matrix.shard }}/6
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    services:
+      postgres:
+        image: postgres:17.6-alpine
+        env:
+          POSTGRES_DB: brasov_runners
+          POSTGRES_USER: brasov_runners
+          POSTGRES_PASSWORD: local_only_not_a_secret
+        ports:
+          - 5432:5432
+        # Without this the first migration races the server's startup.
+        options: >-
+          --health-cmd "pg_isready -U brasov_runners -d brasov_runners"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgres://brasov_runners:local_only_not_a_secret@localhost:5432/brasov_runners
+      SHARD_TOTAL: 6
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+
+      # The same Chromium cache as docs-check's e2e job (§276).
+      - name: Playwright's version, for the cache key
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - run: yarn playwright install --with-deps chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+      - run: yarn playwright install-deps chromium
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+
+      - run: yarn db:migrate
+
+      # Once per run, not once per shard: the two-connection suite (BR-REQ-051-01 criterion 5).
+      - run: yarn test:concurrency
+        if: matrix.shard == 1
+
+      - uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: next-e2e-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            next-e2e-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
+            next-e2e-${{ runner.os }}-
+
+      # The seed builds its events relative to today: tonight's date, which is the point of this run.
+      - run: yarn db:seed
+
+      - name: End-to-end, shard ${{ matrix.shard }} of 6, both projects
+        run: yarn test:e2e --shard=${{ matrix.shard }}/$SHARD_TOTAL
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.shard }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

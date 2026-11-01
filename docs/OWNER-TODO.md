@@ -55,13 +55,13 @@ it is the authority, this is the summary):
     `CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` on both projects, and `/ro/contact` shows
     the **form** on production and on QA rather than the address (§149, `SETUP.md` §38). Who
     receives a message is «Pagini» → «Contact» → "Cine primește mesajele de contact".
-12. **The race itself, and this is the launch item.** Production publishes the weekly group run
-    and nothing else: the 21 November race has no event there, so nobody can register for it.
-    It is one save in `/admin/events` — the event, its capacity, its participation window, its
-    bib band — and then publish. Everything under it is live already, which is what items 1–11
-    were about. **The click list is `SETUP.md` §39**, field by field, with every value filled
-    in; the two the club alone can decide are marked there (how many places, and how many days
-    before the race a confirmation is asked and owed).
+12. ~~**The race itself**~~ — done 2026-10-02 (§632): the 21 November race was published by 2026-10-02 and full that day
+    (`SETUP.md` §39). **What is left for race day, both before any result is entered:** (a) set «Startul cursei» in
+    `/admin/events` → the race → «Când și unde» (the field `SETUP.md` §39 lists; it holds the gun time, not the desk's): the hour the gun goes, with the tick «Startul cursei nu e stabilit» cleared — while it is ticked the gun time is saved empty whatever the boxes hold. Every «Sosit» stamp counts from
+    it; when it is empty the site counts from the event's start (`gunOf`, `src/modules/results/results.ts`), which
+    `SETUP.md` §39 sets to the hour the desk opens, so the times would all be too long by the minutes between the desk and the
+    gun. (b) On «Înscrierile primite» → «Clasament», choose «Categorii de vârstă» (empty means the standard groups; or the ages each group starts at). Changing them
+    later recounts the saved results' category places (`docs/RUNBOOKS.md` § Race results).
 13. ~~**The monitors' cadence, for Neon's bill**~~ — set 2026-09-24, the eight jobs recorded in
     `SETUP.md` §40: production health hourly at :02 (not 02:02 or 03:02), QA's every six hours;
     the job monitors frequent, because an idle ping wakes nothing. **Two small things left:** tick
@@ -102,6 +102,17 @@ it is the authority, this is the summary):
     Since §758 a seventh text, «Contract de voluntariat»: approve the volunteer agreement from the template (a lawyer reads it first, against Legea nr. 78/2014) — until it is in force in both languages no event page shows «Vreau să fiu voluntar» (`/admin/tasks` carries the row `volunteerAgreement`) — and, in the same sitting, a notice from the new template, whose volunteers' paragraph names the agreement's acceptance (`{{volunteerAgreement}}`; until then the form, the link and «Semnat pe hârtie» wait and `/admin/tasks` carries the row `volunteerAgreementNotice`; `SETUP.md` §44 steps 2–3). Before approving, the owner and the lawyer decide whether the club must keep a record of the agreements beyond the thirty-day deletion of the volunteers' rows, and how (a narrowed acceptance record, or an archive copy to the club like the declarations'): until then the text promises only the volunteer's copy by email and the proof kept as the notice says.
     Since §761 a volunteer ticks every role they would do and the organizers give one (or several, since §837): the agreement template names the roles offered for in its own sentence (`{{volunteerRoleChoices}}`, «Ce presupune fiecare rol») — approve the agreement from the new template, a lawyer reading the two new sentences first; until then a sign-up accepts «în rolul Masă, Traseu» and `/admin/tasks` carries the row `volunteerRoleChoicesAgreement`. The notice's volunteers paragraph now names the roles ticked, the role given and the short email naming it — approve the notice from the new template too.
     Since §771 the two race declarations carry five more clauses (insurance or the medical costs, the marked route and the volunteers' instructions, disqualification on objective grounds, litter, no vehicle) and the typed-name signature sentence, and the notice says an electronic signature keeps the IP address and browser — approve both on production from the new templates, the notice first, a lawyer reading the disqualification clause, the signature sentence and the notice's IP paragraph and section 10 first (`docs/RUNBOOKS.md`).
+    **What approving opens, and the order (added 2026-11-01).** Approving the new privacy notice and the new terms is what
+    opens the race's results: `setResultsPublished` refuses with `RESULTS_NOTICE` while the notice in force does not describe
+    them and `RESULTS_TERMS` while the terms do not (`/admin/tasks` carries a row for each). **The notice in force on production
+    is wrong today** on two points: it says the IP address is not kept, while every e-signature has kept the IP address and the
+    browser since `BR-V3.30` (§771; `docs/RUNBOOKS.md` § Five more clauses in the race declaration), and it does not describe
+    what happens to contact messages (§778). The order: the Romanian lawyer reads the templates first; then, on production in
+    `/admin/legal`, the notice first, then the terms, then the declarations; all of it **before 21 November**.
+    **Two data questions for the same lawyer sitting:** (1) how long the group-run declarations are kept — today there is no
+    limit (`docs/PLATFORM.md` § retention table: kept while the signer takes part and erased at their request), and the
+    platform needs a period; (2) whether the notice must name «Lista internă de așteptare», whose lines (name, optional
+    address, a note) are kept until the event is deleted or someone presses «Șterge»; there is no retention sweep (§854 left it open).
 17. **Re-grade every event's difficulty** — migration `0104` put each event in the middle step of its old band (§526). Open each
     event in `/admin/events` and choose the band and «Nivelul» (one of the band's three levels, 1–15 in order); the guide («Ghid») explains the scale.
 18. **Open the members' zone and the FAQ** — approve the members' zone address, `/ro/zona-membri` (it sits outside the backoffice,
@@ -116,6 +127,11 @@ it is the authority, this is the summary):
     `scheduled-jobs.yml` skips green in zero seconds and guards nothing. At the registrar: the registrant and admin contact
     a mailbox outside the domain, read daily; the registrar's and its verification service's senders whitelisted there;
     auto-renew on with a valid card; `DOMAIN_REGISTERED_ON` and `DOMAIN_RENEWAL_YEARS` on both Vercel projects (`SETUP.md` §26).
+    **Still missing (checked 2026-11-01): the GitHub secret `PRODUCTION_JOB_SECRET`.** The base URL is set, but run
+    41206544730 of `scheduled-jobs` printed the secret empty and «production is not configured; skipping», so the production
+    backstop guards nothing. Copy the production Vercel project's `JOB_SECRET` character for character into GitHub →
+    Settings → Secrets and variables → Actions → `PRODUCTION_JOB_SECRET`, then Actions → scheduled-jobs → Run workflow once:
+    each production step must take a second or two and print the job's JSON, not «skipping» (`SETUP.md` §40, «The backstop's secrets»).
 20. **Open the members' shop** — approve a privacy notice from the template (section 5 names the shop,
     `{{membersShop}}`; a lawyer reads the accounting-records period first), then in the top bar's «Magazin»
     write how to pay and who receives the orders, and add the products. Payment is never on the site.
@@ -128,6 +144,22 @@ it is the authority, this is the summary):
     and a race whose gun is after its meeting time now reads shorter than the box said. Before the
     release reaches production, open each upcoming race in `/admin/events` → «Când și unde» and confirm
     «Timp limită» — the 21 November race first.
+
+22. **Rehearse restoring production from Neon's history** — never done; the box in `SETUP.md` §25 and §30 stays open until
+    someone does it once. The steps are `docs/RUNBOOKS.md` § Restoring production from Neon's history: a restore to a new
+    branch, a read-only count, then delete the branch. Do it on a quiet day before 21 November, not on the day it is needed.
+23. **A second person who can recover the platform** (`BR-BUS-101`, `BUSINESS.md`): today one person holds every account.
+    The cheap first step: a second member in the Neon organisation, and a sealed note, kept by someone else, of where each
+    account's two-factor recovery codes are kept (never the codes in this repository). Then the same for Vercel, GitHub,
+    the registrar, Cloudflare and Mailgun. On Zitadel the free tier allows one administrator (`docs/PLATFORM.md`), so a second
+    person there needs the paid tier, or a recovery route that does not need one (the sealed note of recovery codes).
+24. **Mailgun's two dates.** On 1 November move Mailgun to Basic and set «Planul Mailgun» on «Setări» → «Emailuri» to Basic
+    the same day (the platform's daily brake follows the setting, `src/modules/notifications/domain/email-plan.ts`; Basic counts only once the probation is lifted); on 30
+    November move it to Free and set it to Free the same day.
+25. **Vercel in December.** The team is on Pro for the race. Back to Hobby is not automatic after 21 November: the rule is
+    `docs/PLATFORM.md` § (c) Vercel after December, «The fit» — only if two consecutive months show under 3 Active CPU-hours (`/devs` → «Vercel: consumul
+    lunii»); otherwise stay on Pro, because October paced 6.9 hours against Hobby's 4 and passing it pauses the site for
+    about 30 days.
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The
