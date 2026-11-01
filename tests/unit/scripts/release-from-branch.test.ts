@@ -377,7 +377,7 @@ describe("§535 yarn batch:merge resolves the conflicts every batch has, and sto
     const run = spawnSync("node", [MERGE, "qa", "--no-probe"], { cwd: dir, encoding: "utf8", env });
     expect(run.status, run.stderr + run.stdout).toBe(0);
     expect(run.stdout).toContain("the merges changed yarn.lock: yarn install --immutable");
-    expect(calls().trim()).toBe("install --immutable");
+    expect(calls().trim()).toBe("install --immutable --mode=skip-build");
 
     // A second merge that leaves the dependencies alone installs nothing.
     git("checkout", "-q", "qa");
@@ -388,6 +388,6 @@ describe("§535 yarn batch:merge resolves the conflicts every batch has, and sto
     const again = spawnSync("node", [MERGE, "qa", "--no-probe"], { cwd: dir, encoding: "utf8", env });
     expect(again.status, again.stderr + again.stdout).toBe(0);
     expect(again.stdout).not.toContain("yarn install");
-    expect(calls().trim()).toBe("install --immutable");
+    expect(calls().trim()).toBe("install --immutable --mode=skip-build");
   });
 });

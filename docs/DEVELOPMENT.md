@@ -280,7 +280,7 @@ morning: its fixture race started at 07:00Z, and the skip it pressed read its li
 `readRegistrationTokenContext`, which takes `new Date()` although the caller passes `now`. Nothing
 in the release touched it — the calendar did (§712).
 
-`yarn test:clock` finds those tests before the day. It runs the suite three times with the real
+`yarn test:clock` finds those tests before the day. **It also runs every night** (`.github/workflows/date-nightly.yml`, §NNN, one runner per date, with the whole end-to-end suite beside it): a failed scheduled run emails the owner, GitHub's own notification, and is not a required check, so it stops no pull request. It runs the suite three times with the real
 clock moved forward — +1 month, +1 year, +10 years — through `TEST_CLOCK_AT` and
 `tests/helpers/shifted-clock.mjs`: every argument-less `new Date()`, `Date()` and `Date.now()`, and
 PGlite's own `now()`, read the moved date, while a date the test writes stays as written; a Node

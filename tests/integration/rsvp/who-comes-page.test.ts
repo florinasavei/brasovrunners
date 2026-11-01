@@ -18,6 +18,7 @@ import { answerRsvp } from "@/modules/rsvp/rsvp";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { fakeNextCache } from "../../helpers/next-cache";
 
@@ -190,7 +191,12 @@ async function confirmedRunner(eventId: string, name: string, listOptOut = false
 }
 
 /** The page the way `events/[slug]/page.tsx` draws it for a visitor: `visit.rsvpBox` is the page's own decision (`rsvpOffered`). */
-async function draw(slug: string, visit: { rsvpBox?: boolean } | null = { rsvpBox: true }, membersOnly = false, asPreview = false) {
+function draw(slug: string, visit: { rsvpBox?: boolean } | null = { rsvpBox: true }, membersOnly = false, asPreview = false) {
+  // The page reads the real clock for whether a race has started: on the fixture's day, not the suite's (§NNN, docs/DEVELOPMENT.md § Tests that the calendar breaks).
+  return atTheClock(NOW, () => drawNow(slug, visit, membersOnly, asPreview));
+}
+
+async function drawNow(slug: string, visit: { rsvpBox?: boolean } | null, membersOnly: boolean, asPreview: boolean) {
   const found = await findPublishedEventBySlug(db, language, language === "ro" ? slug : `${slug}-en`);
   if (!found || !datedOrNull(found)) throw new Error("the event did not publish");
   const stream = await renderToReadableStream(
