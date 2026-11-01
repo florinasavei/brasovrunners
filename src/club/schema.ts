@@ -38,7 +38,13 @@ export type ClubPlace = {
   readonly countryName: ClubWords;
   /** An IANA zone `Intl` knows: every timestamp that belongs to no event (`dates.ts#CLUB_TIME_ZONE`). */
   readonly timeZone: string;
-  /** The zone in words, as the emails and the signed PDFs say it beside a time («ora României»). */
+  /**
+   * The zone in words beside a time, as the emails say it: «ora României» / "Romanian time" (the legal texts'
+   * digest, `notifications/templates.ts`; the editor's zone summary says it so too). Not the signed PDF's proof
+   * lines nor «Sarcini»'s stalled-email row, which say "Romania time" in English
+   * (`registrations/declaration-labels.ts`, `Admin.tasks.emailStalled`): a change that wires this there brings
+   * that form beside this one, never this one in its place (`dates.ts#ZONE_WORDS`).
+   */
   readonly zoneWords: ClubWords;
   /** Where the sun is read for when an event names no point (`sun.ts#DEFAULT_CLUB_COORDINATES`). */
   readonly coordinates: { readonly latitude: number; readonly longitude: number };
@@ -63,9 +69,13 @@ export type ClubConfig = {
   /** The club's confidential safety form's name in both languages. */
   readonly safetyProgramme: ClubWords;
   readonly logo: { readonly lockup: ClubLogoFile; readonly mark: ClubLogoFile };
-  /**
-   * The club's own places and names that no code should spell out — read only by the literal guard
-   * (`tests/unit/club/club-literals.test.ts`), never by the application.
-   */
-  readonly guardWords: readonly string[];
 };
+
+/**
+ * The shape of `club/guard-words.json` (§NNN): the club's own places and names that no code should spell out.
+ * Its own file, beside `club.json` rather than in it, because the theme brings `club.json` whole into every
+ * public client island and the application never needs these: only the literal guard reads them
+ * (`tests/unit/club/club-literals.test.ts`), and nothing under `src/` imports the file
+ * (`tests/unit/club/import-surface.test.ts`).
+ */
+export type ClubGuardWords = readonly string[];

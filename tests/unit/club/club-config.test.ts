@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import guardWords from "@club/guard-words.json";
 import { CLUB } from "@/club/config";
-import type { ClubWords } from "@/club/schema";
+import type { ClubConfig, ClubGuardWords, ClubWords } from "@/club/schema";
 import { CLUB_COUNTY, CLUB_COUNTY_CODE, CLUB_LOCALITY, HOME_COUNTRY, HOME_COUNTRY_NAME, ID_DOCUMENT_EXAMPLE } from "@/modules/events/domain/place";
 import { CLUB_TIME_ZONE, ZONE_WORDS } from "@/i18n/dates";
 import { CLUB_HASHTAGS, CLUB_NAME, CLUB_SHORT_FORMS, CLUB_SHORT_NAME, CLUB_SLUG, LOGO, SAFETY_PROGRAMME, WORDMARK } from "@/theme/brand";
@@ -13,7 +14,8 @@ import { CLUB_HASHTAGS, CLUB_NAME, CLUB_SHORT_FORMS, CLUB_SHORT_NAME, CLUB_SLUG,
  * `src/club/config.ts` reaches the public client islands through the theme, so it may carry neither Zod nor the
  * environment (`tests/unit/shared/public-islands-weight.test.ts`); its types come from `satisfies`. What the types
  * cannot say — a zone `Intl` knows, coordinates on the globe, a text in both languages, a slug a file name can
- * carry, a logo whose proportions are the drawing's — is said here, and fails the commit that breaks it.
+ * carry, a logo whose proportions are the drawing's — is said here, and fails the commit that breaks it. And the
+ * guard words stay in `club/guard-words.json`, out of the file the bundler carries to every visitor.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 
@@ -49,6 +51,27 @@ describe("BR-REQ-101-01: club/club.json is a club the platform can run (§NNN)",
       expect(Object.keys(pair as object).sort(), at).toEqual(["en", "ro"]);
       for (const text of Object.values(pair as ClubWords)) expect(typeof text === "string" && text.trim() !== "", at).toBe(true);
     }
+  });
+
+  it("keeps the guard words in their own file, out of the one the bundler carries to the browser", () => {
+    // Every key the schema names, and no other: a `guardWords` written back into club.json fails here.
+    const schemaKeys: Record<keyof ClubConfig, true> = {
+      name: true,
+      slug: true,
+      shortName: true,
+      wordmark: true,
+      shortForms: true,
+      place: true,
+      hashtags: true,
+      safetyProgramme: true,
+      logo: true,
+    };
+    const file = JSON.parse(readFileSync(path.join(ROOT, "club/club.json"), "utf8")) as Record<string, unknown>;
+    expect(Object.keys(file).sort()).toEqual(Object.keys(schemaKeys).sort());
+    const words: ClubGuardWords = guardWords;
+    expect(Array.isArray(words) && words.length > 0).toBe(true);
+    for (const word of words) expect(typeof word === "string" && word.trim() === word && word !== "", JSON.stringify(word)).toBe(true);
+    expect(new Set(words).size).toBe(words.length);
   });
 
   it("has a slug of lower-case letters, digits and hyphens", () => {

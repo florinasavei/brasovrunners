@@ -3,8 +3,15 @@
 `club.json` is the club's identity, read at build time (`DECISIONS.md` §NNN): its name, slug, short
 mark and wordmark; the public list's short forms; its place — city, county, plate code, country,
 time zone and the zone's words, the coordinates the sunset is read for, an identity card example;
-its hashtags; its safety form's name; its logo files and their proportions; and the guard words the
-literal check refuses anywhere else.
+its hashtags; its safety form's name; its logo files and their proportions.
+
+`guard-words.json` is the club's own places and names that no code should spell out — its hill, its
+parks, its stadiums, its programmes — which the literal check refuses anywhere else. A file of its
+own because the bundler carries `club.json` whole into every public page's scripts, and the
+application never needs these: the literal check reads them, nothing under `src/` imports them
+(`tests/unit/club/import-surface.test.ts`). So nothing goes in `club.json` that a visitor's browser
+should not receive. One guard word, the safety form's name, is also `safetyProgramme` there: a
+public form's name, which the contact page prints anyway — the list as a whole never ships.
 
 How it reaches the code:
 
@@ -16,9 +23,10 @@ How it reaches the code:
 - JSON, not TypeScript, so a plain `.mjs` script can read it without a compiler.
 - No Zod and no environment in `src/club/`: the theme brings it into every public client island.
   `tests/unit/club/club-config.test.ts` checks what a schema would.
-- `tests/unit/club/club-literals.test.ts` refuses the club's words written as a literal in `src/`,
-  `scripts/`, the catalogues, the workflows, `package.json` and `docker-compose.yml`; the ones still
-  there are listed in `tests/unit/club/known-leaks.ts`, a list that only shrinks.
+- `tests/unit/club/club-literals.test.ts` refuses the club's words — built from `club.json` and
+  `guard-words.json` — written as a literal in `src/`, `scripts/`, the catalogues, the workflows,
+  `package.json` and `docker-compose.yml`; the ones still there are listed in
+  `tests/unit/club/known-leaks.ts`, a list that only shrinks.
 - `yarn test:fork` builds the identity from a made-up club (`tests/fixtures/fork-club/`) and finds
   none of this club's words in what it renders.
 

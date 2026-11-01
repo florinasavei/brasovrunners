@@ -2,8 +2,9 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
-import club from "@club/club.json";
+import guardWordsFile from "@club/guard-words.json";
 import { CLUB } from "@/club/config";
+import type { ClubConfig, ClubGuardWords } from "@/club/schema";
 import { KNOWN_LEAKS } from "./known-leaks";
 
 /**
@@ -14,7 +15,8 @@ import { KNOWN_LEAKS } from "./known-leaks";
  * folded and with optional separators between its words (it catches «Brașov Runners», «BRASOV RUNNERS»,
  * «brasov-runners» and «brasovrunners» alike); the wordmark; the slug; the short name and the nicknames as whole
  * words of three letters or more; the locality and the county; the identity card example; the hashtags; and the
- * club's guard words (its places, its parks, its programmes).
+ * club's guard words (its places, its parks, its programmes) — `club/guard-words.json`, a file of their own that
+ * this test alone reads, so that no bundle the application builds carries the list.
  *
  * Scanned: every string a program hands a person or another system — a string literal, each piece of a template
  * literal and the text between JSX tags — in `src/**\/*.ts(x)` and `scripts/**`; every leaf of both catalogues;
@@ -59,7 +61,7 @@ const whole = (label: string): Forbidden => ({
 });
 
 /** The club's words, from its own file. Deduplicated by what they match: the county is the locality in Brașov. */
-function forbiddenWords(club: typeof CLUB & { guardWords: readonly string[] }): Forbidden[] {
+function forbiddenWords(club: ClubConfig, guardWords: ClubGuardWords): Forbidden[] {
   const words: Forbidden[] = [
     glued(club.name),
     glued(club.wordmark),
@@ -69,14 +71,14 @@ function forbiddenWords(club: typeof CLUB & { guardWords: readonly string[] }): 
     whole(club.place.county),
     glued(club.place.idExample),
     ...club.hashtags.map(whole),
-    ...club.guardWords.map(whole),
+    ...guardWords.map(whole),
   ];
   const seen = new Set<string>();
   return words.filter(({ pattern }) => !seen.has(pattern.source) && seen.add(pattern.source));
 }
 
-const GUARD_WORDS: readonly string[] = club.guardWords;
-const FORBIDDEN = forbiddenWords({ ...CLUB, guardWords: GUARD_WORDS });
+const GUARD_WORDS: ClubGuardWords = guardWordsFile;
+const FORBIDDEN = forbiddenWords(CLUB, GUARD_WORDS);
 
 /** The labels of the forbidden words a text says. */
 const said = (text: string): string[] => {

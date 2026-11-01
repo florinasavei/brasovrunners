@@ -9,7 +9,8 @@ import { describe, expect, it } from "vitest";
  * `i18n/dates.ts`, `events/domain/sun.ts` and `shared/config/env.ts` import it: every other file reads the names
  * those export (`CLUB_NAME`, `CLUB_LOCALITY`, `CLUB_TIME_ZONE`…), so a club's identity has one way in and a later
  * change knows the five places to look. And `config.ts` itself carries neither Zod nor the environment, because the
- * theme brings it into every public client island (`tests/unit/shared/public-islands-weight.test.ts`).
+ * theme brings it into every public client island (`tests/unit/shared/public-islands-weight.test.ts`) — which is
+ * also why `club/guard-words.json` has no door at all: the literal guard reads it, the application never does.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 
@@ -50,6 +51,11 @@ describe("BR-REQ-101-01: the club's file has one way into the platform (§NNN)",
   it("is imported by src/club/config.ts alone", () => {
     const readers = FILES.filter(({ imports }) => imports.some((specifier) => /(^@club\/|(^|\/)club\/club\.json$)/.test(specifier))).map(({ file }) => file);
     expect(readers).toEqual(["src/club/config.ts"]);
+  });
+
+  it("and the guard words by nothing the application builds: no file under src/ or scripts/ imports club/guard-words.json", () => {
+    const readers = FILES.filter(({ imports }) => imports.some((specifier) => /(^|\/)guard-words(\.json)?$/.test(specifier))).map(({ file }) => file);
+    expect(readers).toEqual([]);
   });
 
   it("whose config is imported only by brand.ts, place.ts, dates.ts, sun.ts and env.ts", () => {

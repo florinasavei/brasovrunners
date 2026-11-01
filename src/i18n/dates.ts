@@ -60,8 +60,12 @@ import { CLUB } from "@/club/config";
 export const CLUB_TIME_ZONE = CLUB.place.timeZone;
 
 /**
- * The club's zone in words, as a time beside it says it — «ora României» / "Romanian time" — in each
- * language (§NNN). The legal templates and the emails still write their own; they read this in a later change.
+ * The club's zone in words beside a time, in each language, as the emails say it — «ora României» /
+ * "Romanian time" (§NNN; the legal texts' digest in `notifications/templates.ts`, and the editor's zone
+ * summary). Nothing reads it yet: the emails still write their own words and read these in a later change.
+ * Not the words of the signed PDF's proof lines (`formatSigningInstant` below, `registrations/declaration-labels.ts`)
+ * nor of «Sarcini»'s stalled-email row (`Admin.tasks.emailStalled`), which say "Romania time" in English:
+ * a change that wires the zone's words there gives them that form of their own, so no signed line changes.
  */
 export const ZONE_WORDS: { readonly ro: string; readonly en: string } = CLUB.place.zoneWords;
 
