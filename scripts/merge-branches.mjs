@@ -161,10 +161,11 @@ if (git("status", "--porcelain", "--", "messages").trim()) {
 if ((CHECKS || PROBE) && existsSync("package.json")) {
   const changed = git("diff", "--name-only", startedAt, "HEAD", "--", "package.json", "yarn.lock").trim().split("\n").filter(Boolean);
   if (dependenciesChanged(changed)) {
-    console.log(`the merges changed ${changed.join(" and ")}: yarn install --immutable`);
+    console.log(`the merges changed ${changed.join(" and ")}: yarn install --immutable --mode=skip-build`);
     // --mode=skip-build: the release job holding SHIP_TOKEN runs this; a compromised package's install script would read it (§NNN).
+    // On a PC the next plain `yarn install` builds what this skipped (esbuild's check, the postinstall that copies the flags).
     const r = spawnSync("yarn", ["install", "--immutable", "--mode=skip-build"], { encoding: "utf8", stdio: "inherit", shell: process.platform === "win32", timeout: 600_000 });
-    if (r.status !== 0) stop("yarn install --immutable fails on the merged tree — the merges are committed; the lockfile and package.json disagree: run yarn install, commit yarn.lock, and run this again");
+    if (r.status !== 0) stop("yarn install --immutable --mode=skip-build fails on the merged tree — the merges are committed; the lockfile and package.json disagree: run yarn install, commit yarn.lock, and run this again");
   }
 }
 
