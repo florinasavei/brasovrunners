@@ -169,4 +169,52 @@ test.describe("BR-REQ-060-01 everything held about a person, for the Administrat
     await expect(page.getByText("astm, inhalator in rucsac")).toBeVisible();
     await expect(page.getByRole("link", { name: "Descarcă JSON" })).toBeVisible();
   });
+
+  /**
+   * §NNN, BR-REQ-070-01 — the internal waiting list's line, typed with the address in capitals, and an invitation already past its
+   * deadline (it holds no place) are on the page in both languages, and each erase asks first. The invitations' erase sweeps the
+   * event's lapsed invitations first, which may hand a place another spec freed to whoever waits; nothing below depends on that.
+   */
+  test("lists the internal waiting list and the invitations, in both languages, and erases them", async ({ page }) => {
+    const runner = await seedRunner(tagOf(test.info().project.name));
+    await withDatabase(async (client) => {
+      await client.query(
+        "INSERT INTO event_reserve_entries (event_id, first_name, last_name, email, note) VALUES ($1, 'Gdpr', 'Rezerva', $2, 'a scris pe formularul de contact')",
+        [runner.eventId, runner.email.toUpperCase()],
+      );
+      await client.query(
+        `INSERT INTO event_invitations (event_id, participant_id, name, email, canonical_email, sent_at, expires_at, last_sent_at)
+         SELECT $1, id, $2, delivery_email, canonical_email, now() - interval '3 days', now() - interval '1 day', now() - interval '3 days'
+         FROM participants WHERE canonical_email = $3`,
+        [runner.eventId, runner.name, runner.email],
+      );
+    });
+
+    await signIn(page, "Dev Administrator");
+    for (const [locale, field, button, reserve, invitations] of [
+      ["en", "Email address", "Look up", "Internal waiting list (1)", "Invitations to events (1)"],
+      ["ro", "Adresa de email", "Caută", "Lista internă de așteptare (1)", "Invitații la evenimente (1)"],
+    ] as const) {
+      await page.goto(`/${locale}/admin/registrations/person`);
+      await page.getByRole("textbox", { name: field }).fill(runner.email);
+      await page.getByRole("button", { name: button }).click();
+      await page.waitForURL(/\?q=/);
+      await expect(page.getByRole("heading", { name: reserve })).toBeVisible();
+      await expect(page.getByTestId("person-reserve-entry")).toContainText("a scris pe formularul de contact");
+      await expect(page.getByRole("heading", { name: invitations })).toBeVisible();
+      await expect(page.getByTestId("person-event-invitation")).toContainText(runner.name);
+    }
+
+    const eraseReserve = page.getByRole("button", { name: "Șterge de pe lista internă" });
+    expect((await eraseReserve.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await eraseReserve.click();
+    await confirmDialog(page);
+    await expect(page.getByTestId("person-reserve-erased")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Lista internă de așteptare (0)" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Retrage și șterge invitațiile" }).click();
+    await confirmDialog(page);
+    await expect(page.getByTestId("person-event-invitations-erased")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Invitații la evenimente (0)" })).toBeVisible();
+  });
 });

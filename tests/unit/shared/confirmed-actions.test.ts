@@ -64,6 +64,10 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   eraseRsvpsAction: [],
   // The club's invitations to volunteer sent to one address erased (§820, art. 17): the person page's own button asks first.
   eraseVolunteerInvitationsAction: [],
+  // «Lista internă de așteptare» lines of one address erased (§NNN, art. 17): the person page's own button asks first.
+  eraseReserveEntriesAction: [],
+  // A person's invitations to an event withdrawn through «Retrage» and erased (§NNN, art. 17): the person page's own button asks first.
+  eraseEventInvitationsAction: [],
   // A group run's self-declaration erased (§393), from its fold: handed to the panel as `eraseAction`.
   eraseGroupRunDeclarationAction: ["eraseAction"],
   eraseGroupRunDeclarationsAction: ["batchEraseAction"],
