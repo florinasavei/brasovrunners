@@ -4,7 +4,7 @@ import ro from "../../../messages/ro.json";
 import { describesResults, describesResultsNameAsk, MERGE_FIELDS, mergeText, RESULTS_NAME_ASK_MERGE_FIELD } from "@/modules/legal-documents/domain/merge-fields";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
-import { gaveResultsNameConsentSince, holdsResultsNameConsent, resultsNameConsentLine, resultsNameConsentOffered } from "@/modules/results/domain/name-consent";
+import { holdsResultsNameConsent, resultsNameConsentLine, resultsNameConsentOffered } from "@/modules/results/domain/name-consent";
 import { type PublicNameInput, publicResultName } from "@/modules/results/domain/public-name";
 import { resultsMergeValues, resultsNameAskClause } from "@/modules/results/notice-words";
 
@@ -40,12 +40,6 @@ describe("BR-REQ-072-01 §NNN when «Vreau să apar cu numele în clasament» is
     expect(resultsNameConsentOffered(3, 3)).toBe(false);
     expect(resultsNameConsentOffered(4, 3)).toBe(false);
     expect(resultsNameConsentOffered(1, null)).toBe(false);
-  });
-
-  it("offers the way out of a yes given from the page since registering, never of a pre-§322 yes recorded with the registration's notice", () => {
-    expect(gaveResultsNameConsentSince({ resultsNameConsent: true, resultsConsentVersion: 3, privacyNoticeVersion: 1 })).toBe(true);
-    expect(gaveResultsNameConsentSince({ resultsNameConsent: false, resultsConsentVersion: 3, privacyNoticeVersion: 1 })).toBe(false);
-    expect(gaveResultsNameConsentSince({ resultsNameConsent: true, resultsConsentVersion: 1, privacyNoticeVersion: 1 })).toBe(false);
   });
 
   it("counts a consent only when given under a notice at or above the first that named the tick", () => {
@@ -112,6 +106,17 @@ describe("BR-REQ-072-01 §NNN publicResultName with the consent asked since", ()
     expect(publicResultName(newer)).toBe("Ana Popescu");
     expect(publicResultName({ ...newer, resultsNameConsent: true })).toBe("Ana Popescu");
     expect(publicResultName({ ...newer, ticked: false })).toBeNull();
+  });
+
+  it("is one reading with the page's tick: a yes the page draws ticked is exactly a yes the results name an older runner by", () => {
+    // The page draws the tick by `holdsResultsNameConsent`; for an older notice's runner who passes every other condition, the
+    // published name follows it — a yes under a notice that only described the results (v3) is drawn empty and stays anonymous.
+    for (const version of [1, 2, 3, 4, 5]) {
+      for (const consent of [true, false]) {
+        const row = { ...asked, resultsNameConsent: consent, resultsConsentVersion: version };
+        expect(publicResultName(row) !== null, `v${version} ${consent}`).toBe(holdsResultsNameConsent(row, row.firstResultsNameAskNoticeVersion));
+      }
+    }
   });
 
   it("changes nothing for a runner the club typed by hand", () => {

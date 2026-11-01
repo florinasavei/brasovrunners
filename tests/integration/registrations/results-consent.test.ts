@@ -337,7 +337,7 @@ describe("BR-REQ-072-01 §NNN the published results", () => {
     expect(await publicNames()).toEqual({ 101: null, 102: "Bia Marin", 103: null });
   });
 
-  it("name nobody on a yes recorded under a notice that described the results but not the tick, until it is given again under one that names it", async () => {
+  it("treat a yes recorded under a notice that described the results but not the tick as no yes — the page draws it empty, the results name nobody — until it is given again under one that names it", async () => {
     const ana = await olderRunner();
     // v2: the template as it is — results described, the tick not named.
     await approveResultsTexts(db);
@@ -345,14 +345,28 @@ describe("BR-REQ-072-01 §NNN the published results", () => {
     await setResultsPublished(db, admin, raceId, true, NOW);
     // A yes recorded under v2 (the column kept since §322, written by no door this branch opens) is not one.
     await db.update(registrations).set({ resultsNameConsent: true, resultsConsentVersion: 2 }).where(eq(registrations.id, ana.id));
+    const token = await manageLink(ana);
     expect(await publicNames()).toEqual({ 101: null });
+    // The page reads it as the results do: no yes to withdraw, nothing asked under v2 — no tick at all, never a ticked one.
+    expect(await page(token)).not.toContain(TICK_WORDS);
 
-    // v3 names the tick: the old yes still counts for nothing; the runner's own press under v3 does.
+    // v3 names the tick: the old yes still counts for nothing, so the page asks — empty, with the «only by number» sentence, posting
+    // a yes — while the published results keep «Participant #bib».
     await approvePrivacyNotice(db, { results: true, resultsNameAsk: true });
     expect(await publicNames()).toEqual({ 101: null });
-    const token = await manageLink(ana);
+    const asked = await page(token);
+    expect(asked).toContain(TICK_WORDS);
+    expect(asked).toMatch(/role="checkbox"[^>]*aria-checked="false"/);
+    expect(asked).not.toMatch(/aria-checked="true"/);
+    expect(asked).toContain("apari doar ca „Participant #numărul de concurs”");
+    expect(asked).toContain('name="consent" value="1"');
+
+    // The press agrees with the page: the v2 yes is not «already given», so a yes now is a change, recorded under v3.
     await expect(setResultsNameConsentFromManageLink(db, token, true, NOW)).resolves.toEqual({ ok: true, consent: true, changed: true });
     expect(await rowOf(ana.id)).toMatchObject({ resultsNameConsent: true, resultsConsentVersion: 3 });
     expect(await publicNames()).toEqual({ 101: "Ana Popescu" });
+    const named = await page(token);
+    expect(named).toMatch(/role="checkbox"[^>]*aria-checked="true"/);
+    expect(named).not.toContain("apari doar ca");
   });
 });

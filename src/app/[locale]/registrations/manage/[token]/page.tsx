@@ -29,9 +29,15 @@ import { findEventNotificationDetails } from "@/modules/events/repository";
 import { getDb } from "@/db/client";
 import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import { isActiveStatus } from "@/modules/registrations/domain/state-machine";
-import { cachedFirstResultsNoticeVersion, cachedPromotionalMaterialsOffered, cachedPromotionalMaterialsShared, cachedResultsNameAskDescribed } from "@/modules/public-cache/reads";
+import {
+  cachedFirstResultsNameAskNoticeVersion,
+  cachedFirstResultsNoticeVersion,
+  cachedPromotionalMaterialsOffered,
+  cachedPromotionalMaterialsShared,
+  cachedResultsNameAskDescribed,
+} from "@/modules/public-cache/reads";
 import { eventTypeOf } from "@/modules/registrations/results-consent";
-import { gaveResultsNameConsentSince, resultsNameConsentLine, resultsNameConsentOffered } from "@/modules/results/domain/name-consent";
+import { holdsResultsNameConsent, resultsNameConsentLine, resultsNameConsentOffered } from "@/modules/results/domain/name-consent";
 import { reachesPartner } from "@/modules/registrations/domain/sponsor-share";
 import { readSponsorShareGate } from "@/modules/registrations/sponsor-list";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
@@ -183,8 +189,12 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
     «Vreau să apar cu numele în clasament» (§NNN): asked only of a registration whose notice predates the first that described the
     results, while the notice in force names the tick (`{{resultsNameAsk}}`) and the results and the event is a race
     (`resultsNameConsentLine`); the rest of the reads are
-    skipped when nobody on the page registered under an older notice. A yes that counts is always offered the way out.
+    skipped when nobody on the page registered under an older notice. A yes that counts is always offered the way out — and
+    "counts" is `holdsResultsNameConsent`, the reading the published results and the press make: a yes recorded under a notice
+    below the first that named the tick (`firstResultsNameAskNoticeVersion`) is drawn empty, as the results draw that runner
+    «Participant #bib». The line is read only when some row on the page says yes.
   */
+  const resultsAskLine = live && people.some((one) => one.resultsNameConsent) ? await cachedFirstResultsNameAskNoticeVersion() : null;
   const firstResults = live ? await cachedFirstResultsNoticeVersion() : null;
   const resultsLine =
     live && firstResults !== null && people.some((one) => one.privacyNoticeVersion < firstResults)
@@ -232,11 +242,12 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
             const active = isActiveStatus(one.status);
             const answered = answeredFor === one.id;
             /*
-              The results' name (§NNN): held — a yes given from this page, under a notice newer than the registration's own, offered
-              the way out whatever the notice in force says today — or asked: on the list, active, an older notice, under one that
-              names the tick and the results. A pre-§322 yes recorded with the registration's own notice is neither.
+              The results' name (§NNN): held — a yes that names the runner (`holdsResultsNameConsent`, the one predicate the press
+              and `publicResultName` read), offered the way out whatever the notice in force says today — or asked: on the list,
+              active, an older notice, under one that names the tick and the results. A pre-§322 yes, or one recorded under a
+              notice that described the results without naming the tick, names nobody and is not drawn as held.
             */
-            const resultsHeld = gaveResultsNameConsentSince(one);
+            const resultsHeld = holdsResultsNameConsent(one, resultsAskLine);
             const resultsAsked = active && !one.listOptOut && resultsNameConsentOffered(one.privacyNoticeVersion, resultsLine);
             return (
               <Box

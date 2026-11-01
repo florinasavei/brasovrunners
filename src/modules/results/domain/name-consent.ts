@@ -35,18 +35,12 @@ export function resultsNameConsentOffered(noticeVersion: number, line: number | 
 }
 
 /**
- * Whether the runner said yes from their own page since registering (the yes recorded a notice newer than the registration's own):
- * what the page offers the way out of, whatever the notice in force says today (art. 7(3) GDPR). A pre-§322 yes, recorded with the
- * registration's own notice, is not one.
- */
-export function gaveResultsNameConsentSince(row: { resultsNameConsent: boolean; resultsConsentVersion: number; privacyNoticeVersion: number }): boolean {
-  return row.resultsNameConsent && row.resultsConsentVersion > row.privacyNoticeVersion;
-}
-
-/**
- * Whether a registration holds a consent that counts (`publicResultName`'s own reading): given, and under a notice at or above the
- * first that named «Vreau să apar cu numele în clasament» (`firstResultsNameAskNoticeVersion`). A consent from before §322, or one
- * recorded under a notice that described the results but not the tick, counts for nothing.
+ * Whether a registration holds a consent that counts: given, and under a notice at or above the first that named «Vreau să apar cu
+ * numele în clasament» (`firstResultsNameAskNoticeVersion`). A consent from before §322, or one recorded under a notice that described
+ * the results but not the tick, counts for nothing. The **one** reading of a yes: `publicResultName` names the runner by it, the
+ * press treats it as the answer already given (a yes again is no change), and the manage page draws the tick ticked by it and offers
+ * its way out whatever the notice in force says today (art. 7(3) GDPR) — so the page never says «named» while the results show
+ * «Participant #bib».
  */
 export function holdsResultsNameConsent(row: { resultsNameConsent: boolean; resultsConsentVersion: number | null }, firstResultsNameAskNoticeVersion: number | null): boolean {
   return (
