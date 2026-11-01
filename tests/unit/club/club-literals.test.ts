@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import club from "@club/club.json";
 import { CLUB } from "@/club/config";
 import { KNOWN_LEAKS } from "./known-leaks";
 
@@ -28,7 +29,11 @@ import { KNOWN_LEAKS } from "./known-leaks";
 const ROOT = path.resolve(__dirname, "../../..");
 
 /** Diacritics and case folded: «Brașov», «BRASOV» and «brasov» are one word. */
-const fold = (value: string) => value.normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase();
+const fold = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/\p{M}+/gu, "")
+    .toLowerCase();
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const NOT_WORD = "[^\\p{L}\\p{N}]";
 
@@ -54,7 +59,7 @@ const whole = (label: string): Forbidden => ({
 });
 
 /** The club's words, from its own file. Deduplicated by what they match: the county is the locality in Brașov. */
-function forbiddenWords(club: typeof CLUB): Forbidden[] {
+function forbiddenWords(club: typeof CLUB & { guardWords: readonly string[] }): Forbidden[] {
   const words: Forbidden[] = [
     glued(club.name),
     glued(club.wordmark),
@@ -70,7 +75,8 @@ function forbiddenWords(club: typeof CLUB): Forbidden[] {
   return words.filter(({ pattern }) => !seen.has(pattern.source) && seen.add(pattern.source));
 }
 
-const FORBIDDEN = forbiddenWords(CLUB);
+const GUARD_WORDS: readonly string[] = club.guardWords;
+const FORBIDDEN = forbiddenWords({ ...CLUB, guardWords: GUARD_WORDS });
 
 /** The labels of the forbidden words a text says. */
 const said = (text: string): string[] => {
@@ -132,17 +138,42 @@ function scannedFiles(): string[] {
   const scripts = filesUnder(path.join(ROOT, "scripts"));
   const workflows = filesUnder(path.join(ROOT, ".github/workflows")).filter((file) => /\.ya?ml$/.test(file));
   const singles = ["messages/ro.json", "messages/en.json", "package.json", "docker-compose.yml"].map((file) => path.join(ROOT, file));
-  return [...src, ...scripts, ...workflows, ...singles].map(relative).filter((file) => !EXEMPT(file)).sort();
+  return [...src, ...scripts, ...workflows, ...singles]
+    .map(relative)
+    .filter((file) => !EXEMPT(file))
+    .sort();
 }
 
-/** File → the forbidden words it says, sorted. */
-function leaks(): Record<string, string[]> {
-  const found: Record<string, string[]> = {};
+/** How many of a text list's strings say each forbidden word: label → count of strings. */
+export function countSaid(texts: readonly string[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const text of texts) for (const label of new Set(said(text))) counts[label] = (counts[label] ?? 0) + 1;
+  return counts;
+}
+
+/** File → word → how many strings of it say the word. A new string is a new count, even in a listed file. */
+export function leaks(): Record<string, Record<string, number>> {
+  const found: Record<string, Record<string, number>> = {};
   for (const file of scannedFiles()) {
-    const words = [...new Set(textsOf(file).flatMap(said))].sort();
-    if (words.length > 0) found[file] = words;
+    const counts = countSaid(textsOf(file));
+    if (Object.keys(counts).length > 0) found[file] = counts;
   }
   return found;
+}
+
+/** The differences between what is listed and what is found, as lines: «file: word listed N, found M». */
+export function ratchetDifferences(found: Record<string, Record<string, number>>, listed: Record<string, Record<string, number>>) {
+  const fresh: string[] = [];
+  const stale: string[] = [];
+  for (const file of new Set([...Object.keys(found), ...Object.keys(listed)])) {
+    for (const word of new Set([...Object.keys(found[file] ?? {}), ...Object.keys(listed[file] ?? {})])) {
+      const have = found[file]?.[word] ?? 0;
+      const allowed = listed[file]?.[word] ?? 0;
+      if (have > allowed) fresh.push(`${file}: ${word} listed ${allowed}, found ${have}`);
+      if (have < allowed) stale.push(`${file}: ${word} listed ${allowed}, found ${have}`);
+    }
+  }
+  return { fresh, stale };
 }
 
 describe("BR-REQ-101-01: the club's words come from club/club.json, never a literal (§NNN)", () => {
@@ -150,7 +181,7 @@ describe("BR-REQ-101-01: the club's words come from club/club.json, never a lite
     const labels = FORBIDDEN.map(({ label }) => label);
     expect(labels).toContain(CLUB.name);
     expect(labels).toContain(CLUB.place.locality);
-    for (const word of CLUB.guardWords) expect(labels).toContain(word);
+    for (const word of GUARD_WORDS) expect(labels).toContain(word);
     const probe = programStrings(
       "probe.tsx",
       [
@@ -175,12 +206,23 @@ describe("BR-REQ-101-01: the club's words come from club/club.json, never a lite
     expect(locality?.pattern.test(`x ${fold(CLUB.place.locality)}, ro`)).toBe(true);
   });
 
-  it("finds no leak that KNOWN_LEAKS does not list, and no listed leak that is gone", () => {
-    const found = leaks();
-    const listed = Object.fromEntries(Object.entries(KNOWN_LEAKS).map(([file, words]) => [file, [...words].sort()]));
-    const fresh = Object.entries(found).flatMap(([file, words]) => words.filter((word) => !listed[file]?.includes(word)).map((word) => `${file}: ${word}`));
-    const stale = Object.entries(listed).flatMap(([file, words]) => words.filter((word) => !found[file]?.includes(word)).map((word) => `${file}: ${word}`));
+  it("finds no leak that KNOWN_LEAKS does not count, and no counted leak that is gone", () => {
+    const { fresh, stale } = ratchetDifferences(leaks(), KNOWN_LEAKS);
     expect(fresh, "a new literal of the club's: read it from brand.ts, place.ts or dates.ts").toEqual([]);
-    expect(stale, "a listed leak that is gone: take it off KNOWN_LEAKS").toEqual([]);
+    expect(stale, "a listed leak that is gone: lower or take off its count in KNOWN_LEAKS").toEqual([]);
+  });
+
+  it("sees one more string in a listed file: a new message that says the name fails though the file is grandfathered", () => {
+    const file = "messages/ro.json";
+    expect(KNOWN_LEAKS[file]?.[CLUB.name]).toBeGreaterThan(0);
+    const probe = { ...KNOWN_LEAKS[file] };
+    const probed = countSaid([...textsOf(file), `Echipa ${CLUB.name} te așteaptă la ${GUARD_WORDS[0]}, ${CLUB.shortName}`]);
+    const { fresh } = ratchetDifferences({ [file]: probed }, { [file]: probe });
+    expect(fresh.length).toBeGreaterThanOrEqual(2);
+    expect(fresh.some((line) => line.includes(`${CLUB.name} listed`))).toBe(true);
+    expect(fresh.some((line) => line.includes(`${GUARD_WORDS[0]} listed`))).toBe(true);
+    // and a second guard word in a listed program file is seen the same way
+    expect(ratchetDifferences({ f: { w: 2 } }, { f: { w: 1 } }).fresh).toHaveLength(1);
+    expect(ratchetDifferences({ f: { w: 1 } }, { f: { w: 2 } }).stale).toHaveLength(1);
   });
 });

@@ -21,4 +21,12 @@ const { country } = club.place;
 // The one runtime check, because the type promises it: the platform's laws, languages and currency are Romania's.
 if (country !== "RO") throw new Error(`club/club.json: place.country must be "RO" — the platform is written for Romania; got "${country}".`);
 
-export const CLUB = { ...club, place: { ...club.place, country } } satisfies ClubConfig;
+// `guardWords` are read by the literal guard alone (`tests/unit/club/club-literals.test.ts` reads the file itself):
+// the application never needs them, so they stay out of what the client islands import.
+const { guardWords, ...applicationClub } = club;
+void guardWords;
+
+export const CLUB = {
+  ...applicationClub,
+  place: { ...club.place, country },
+} satisfies Omit<ClubConfig, "guardWords">;
