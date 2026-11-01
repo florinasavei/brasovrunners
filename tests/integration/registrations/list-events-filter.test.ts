@@ -119,5 +119,8 @@ describe("§736 the events the registrations list offers", () => {
     const [row] = await db.insert(events).values({ type: "RACE", startsAt: new Date("2026-11-21T07:00:00Z"), registrationMode: "INTERNAL", locationName: "Start" }).returning();
     await db.insert(eventTranslations).values({ eventId: row.id, locale: "ro", title: "Doar română", slug: `ro-${row.id.slice(0, 8)}` });
     expect((await listEventsWithRegistrations(db, "en")).find((offered) => offered.id === row.id)?.title).toBe("Doar română");
+    const [onlyEnglish] = await db.insert(events).values({ type: "RACE", startsAt: new Date("2026-11-22T07:00:00Z"), registrationMode: "INTERNAL", locationName: "Start" }).returning();
+    await db.insert(eventTranslations).values({ eventId: onlyEnglish.id, locale: "en", title: "English only", slug: `en-${onlyEnglish.id.slice(0, 8)}` });
+    expect((await listEventsWithRegistrations(db, "ro")).find((offered) => offered.id === onlyEnglish.id)?.title).toBe("English only");
   });
 });

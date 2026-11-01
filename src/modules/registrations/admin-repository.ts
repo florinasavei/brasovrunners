@@ -1436,7 +1436,7 @@ export async function listOutboxHistory<T extends Record<string, unknown>>(
  * not reach its invitations, and the editor's «Trimite invitații» link fell back to every event.
  * Events registered elsewhere or not at all, with nobody here, stay out: the CMS lists those.
  *
- * Each event once (§NNN; the owner: the same event twice in the «Eveniment» filter): the title is in the viewer's
+ * Each event once (§NNN; the review of 2026-10-31: the same event twice in the «Eveniment» filter): the title is in the viewer's
  * language, else in Romanian, else in whatever language the event has — read as one value per event, never a join
  * on the registrations' own language, which listed an event with registrations in both languages once per language.
  */
@@ -1444,9 +1444,11 @@ export async function listEventsWithRegistrations<T extends Record<string, unkno
   db: Database<T>,
   locale: Locale = "ro",
 ): Promise<Array<{ id: string; title: string | null; featured: boolean; membersOnly: boolean; type: string; startsAt: Date; editorialStatus: string }>> {
+  // Qualified by hand: drizzle prints a single-table select's columns bare, and a bare `id` inside the subquery is the translation's own.
+  const own = sql.raw('"event_translations"');
   const titleIn = (language: SQL | string) =>
-    sql`(select ${eventTranslations.title} from ${eventTranslations} where ${eventTranslations.eventId} = ${events.id} and ${eventTranslations.locale} = ${language})`;
-  const title = sql<string | null>`coalesce(${titleIn(locale)}, ${titleIn("ro")}, (select min(${eventTranslations.title}) from ${eventTranslations} where ${eventTranslations.eventId} = ${events.id}))`;
+    sql`(select ${own}."title" from ${eventTranslations} where ${own}."event_id" = "events"."id" and ${own}."locale" = ${language})`;
+  const title = sql<string | null>`coalesce(${titleIn(locale)}, ${titleIn("ro")}, (select min(${own}."title") from ${eventTranslations} where ${own}."event_id" = "events"."id"))`;
   return db
     // `membersOnly` (§552): the list's «Membri» chip on an event for the members alone. `type`, `startsAt` and `editorialStatus` (§808, §816):
     // the header's «Clasament» link, for a published race or one that has started (`resultsDoorOpen`).

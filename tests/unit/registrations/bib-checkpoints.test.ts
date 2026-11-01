@@ -123,7 +123,7 @@ describe("§757 which checkpoints the strip pins, and what each says", () => {
     expect(regroupWater.label).toBe("km 6 · apă");
   });
 
-  it("draws the five earlier kinds with the very paths and order they had, so the picture's version stays (§824)", () => {
+  it("draws the five earlier kinds with the very paths and order they had (§824)", () => {
     expect(BIB_DRAWING_VERSION).toBe(5);
     const paths = (["water", "food", "firstAid", "timing", "direction", "none"] as const).map((glyph) => ELEVATION_GLYPH_PATHS[glyph]);
     expect(paths).toEqual([
@@ -222,7 +222,7 @@ describe("§804 the kilometres and the altitudes on the strip", () => {
     }
   });
 
-  it("draws the fork, not the drop, for a checkpoint offering food and water — the event page's rule (BR-REQ-011-01, §NNN)", () => {
+  it("draws the fork, not the drop, for a checkpoint offering food and water — the event page's rule (BR-REQ-038-01, §NNN)", () => {
     const g = bibProfileStrip(drawingOf([at(3, null, ["WATER", "FOOD"]), at(6, null, ["WATER"])]), STRIP).geometry;
     expect(g.markers.map((marker) => marker.glyph)).toEqual(["food", "water"]);
   });
