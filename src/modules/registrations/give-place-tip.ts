@@ -4,8 +4,8 @@ import { cache } from "react";
 import { getDb } from "@/db/client";
 import { events } from "@/db/schema/events";
 import { formatDay } from "@/i18n/dates";
-import { startHeldBack } from "@/modules/events/domain/dated";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
+import { givePlaceDoorOpen } from "./domain/give-place-door";
 import { noFreePlace, type PlacesTaken, placesTakenValues } from "./domain/capacity";
 import { computeWaitlistOfferExpiry } from "./domain/hold-deadlines";
 import { countOccupied } from "./repository";
@@ -52,12 +52,32 @@ export const givePlaceNowAhead = cache(async (eventId: string): Promise<{ full: 
     .where(eq(events.id, eventId))
     .limit(1);
   const now = new Date();
-  if (!row || row.registrationMode !== "INTERNAL" || row.eventStatus !== "SCHEDULED" || startHeldBack(row) || row.startsAt.getTime() <= now.getTime()) {
+  if (!row || !givePlaceDoorOpen(row, now)) {
     return null;
   }
   if (row.capacity === null) return { full: false, raisedTo: null };
   const raisedTo = await supplementaryPlaceIfFull(eventId);
   return { full: raisedTo !== null, raisedTo };
+});
+
+/**
+ * Whether «Adaugă pe lista de așteptare» (§875) is drawn for an event a page holds only the id of: the
+ * same door as «Dă-i un loc acum», read once per event per request. A forecast; the service decides.
+ */
+export const waitlistAddDoorOpen = cache(async (eventId: string): Promise<boolean> => {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      registrationMode: events.registrationMode,
+      eventStatus: events.eventStatus,
+      startsAt: events.startsAt,
+      dateToBeAnnounced: events.dateToBeAnnounced,
+      timeToBeAnnounced: events.timeToBeAnnounced,
+    })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
+  return row !== undefined && givePlaceDoorOpen(row, new Date());
 });
 
 /**

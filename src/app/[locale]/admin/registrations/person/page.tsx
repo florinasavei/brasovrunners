@@ -17,11 +17,12 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import VolunteerAnswers from "@/modules/volunteers/ui/VolunteerAnswers";
-import { eraseRsvpsAction, eraseVolunteerInvitationsAction, lookUpPersonAction } from "./actions";
+import { eraseEventInvitationsAction, eraseReserveEntriesAction, eraseRsvpsAction, eraseVolunteerInvitationsAction, lookUpPersonAction } from "./actions";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import { actionKeyOf } from "@/shared/forms/action-key";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import { HEADING_SX } from "@/shared/ui/heading-scale";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -97,6 +98,10 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
         {erased === "invitations" ? (
           <Alert severity="success" data-testid="person-volunteer-invitations-erased">{t("person.volunteerInvitationsErased")}</Alert>
+        ) : erased === "reserve" ? (
+          <Alert severity="success" data-testid="person-reserve-erased">{t("person.reserveErased")}</Alert>
+        ) : erased === "eventInvitations" ? (
+          <Alert severity="success" data-testid="person-event-invitations-erased">{t("person.eventInvitationsErased")}</Alert>
         ) : (
           erased && <Alert severity="success" data-testid="person-rsvps-erased">{t("person.rsvpsErased")}</Alert>
         )}
@@ -136,7 +141,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
             </GlyphButton>
           </Stack>
 
-          {!data.participant && data.announcementRequests.length === 0 && data.rsvpAnswers.length === 0 && data.askRefusals.length === 0 && data.rememberedBrowsers.length === 0 && data.volunteerOffers.length === 0 && data.volunteerInvitations.length === 0 && data.groupRunDeclarations.length === 0 ? (
+          {!data.participant && data.announcementRequests.length === 0 && data.rsvpAnswers.length === 0 && data.askRefusals.length === 0 && data.rememberedBrowsers.length === 0 && data.volunteerOffers.length === 0 && data.volunteerInvitations.length === 0 && data.groupRunDeclarations.length === 0 && data.reserveEntries.length === 0 && data.eventInvitations.length === 0 ? (
             <Alert severity="info">{t("person.notFound")}</Alert>
           ) : (
             <>
@@ -213,6 +218,110 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                       </Box>
                     ))}
                   </Stack>
+                )}
+              </Box>
+              <Divider />
+              {/*
+                «Lista internă de așteptare» (§854, §876; art. 15 GDPR): the lines written down with this address — the event, the name and the
+                address as typed, the organizers' note and who wrote it as a role (§777) — erased here on request (art. 17). They hold no place.
+              */}
+              <Box component="section" data-testid="person-reserve-entries">
+                <Typography variant="h3" sx={{ ...HEADING_SX[3], mb: 1 }}>
+                  {t("person.reserveEntries", { count: data.reserveEntries.length })}
+                </Typography>
+                {data.reserveEntries.length === 0 ? (
+                  <Typography variant="body2">{t("person.none")}</Typography>
+                ) : (
+                  <>
+                    <Stack spacing={1}>
+                      {data.reserveEntries.map((entry, index) => (
+                        <Box key={index} data-testid="person-reserve-entry">
+                          <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
+                            {entry.eventTitle ?? entry.eventId} · {entry.firstName} {entry.lastName} · {entry.deliveryEmail}
+                          </Typography>
+                          {entry.note && (
+                            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
+                              {entry.note}
+                            </Typography>
+                          )}
+                          <Typography variant="caption" color="text.secondary">
+                            {t("person.reserveEntryBy", {
+                              role: entry.createdByRole ? STAFF_ROLE_LABEL[entry.createdByRole] : t("person.noteAuthorGone"),
+                              date: show(entry.createdAt),
+                              updated: show(entry.updatedAt),
+                            })}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Stack>
+                    <form action={eraseReserveEntriesAction} style={{ marginTop: 12 }}>
+                      <input type="hidden" name="uiLocale" value={locale} />
+                      <input type="hidden" name="q" value={q ?? ""} />
+                      <ConfirmSubmitButton
+                        label={t("person.reserveErase")}
+                        icon="erase"
+                        title={t("person.reserveEraseTitle")}
+                        body={t("person.reserveEraseBody")}
+                        confirmLabel={t("person.reserveErase")}
+                        cancelLabel={words.cancel}
+                        color="error"
+                        variant="outlined"
+                        size="small"
+                      />
+                    </form>
+                  </>
+                )}
+              </Box>
+              <Divider />
+              {/*
+                The club's personal invitations to an event (§647, §876; art. 15 GDPR): the state now, the deadline, whether it held a counted
+                place, and every moment. Erased here on request (art. 17): an open one is withdrawn first through «Retrage», its place back
+                through the allocator; an accepted one stays with its registration.
+              */}
+              <Box component="section" data-testid="person-event-invitations">
+                <Typography variant="h3" sx={{ ...HEADING_SX[3], mb: 1 }}>
+                  {t("person.eventInvitations", { count: data.eventInvitations.length })}
+                </Typography>
+                {data.eventInvitations.length === 0 ? (
+                  <Typography variant="body2">{t("person.none")}</Typography>
+                ) : (
+                  <>
+                    {data.eventInvitations.map((invitation, index) => (
+                      <Typography key={index} variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }} data-testid="person-event-invitation">
+                        {t(`invitations.state.${invitation.state}`)} · {invitation.eventTitle ?? invitation.eventId} · {invitation.name} · {invitation.deliveryEmail} · {invitation.locale}
+                        {` · ${t("invitations.until", { deadline: show(invitation.expiresAt) })}`}
+                        {` · ${t("person.volunteerInvitationSent", { when: show(invitation.sentAt) })}`}
+                        {invitation.resendCount > 0 ? ` · ${t("person.volunteerInvitationResent", { when: show(invitation.lastSentAt) })}` : ""}
+                        {invitation.outsideCapacity ? ` · ${t("person.eventInvitationOutside")}` : ""}
+                        {invitation.supplementaryRaise ? ` · ${t("invitations.raised")}` : ""}
+                        {invitation.acceptedAt ? ` · ${t("invitations.acceptedAt", { at: show(invitation.acceptedAt) })}` : ""}
+                        {invitation.withdrawnAt ? ` · ${t("invitations.withdrawnAt", { at: show(invitation.withdrawnAt) })}` : ""}
+                        {invitation.expiredAt ? ` · ${t("invitations.expiredAt", { at: show(invitation.expiredAt) })}` : ""}
+                      </Typography>
+                    ))}
+                    {data.eventInvitations.some((invitation) => invitation.state !== "accepted") && (
+                      <form action={eraseEventInvitationsAction} style={{ marginTop: 12 }}>
+                        <input type="hidden" name="uiLocale" value={locale} />
+                        <input type="hidden" name="q" value={q ?? ""} />
+                        <ConfirmSubmitButton
+                          label={t("person.eventInvitationsErase")}
+                          icon="erase"
+                          title={t("person.eventInvitationsEraseTitle")}
+                          body={t("person.eventInvitationsEraseBody")}
+                          confirmLabel={t("person.eventInvitationsErase")}
+                          cancelLabel={words.cancel}
+                          color="error"
+                          variant="outlined"
+                          size="small"
+                        />
+                      </form>
+                    )}
+                    {data.eventInvitations.some((invitation) => invitation.state === "accepted") && (
+                      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+                        {t("person.eventInvitationsAcceptedKept")}
+                      </Typography>
+                    )}
+                  </>
                 )}
               </Box>
               <Divider />

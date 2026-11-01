@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.98-2026-10-31 -->
+<!-- PROJECT_BASELINE: BR-V3.99-2026-11-01 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.98-2026-10-31`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.99-2026-11-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -433,6 +433,7 @@ Checklist, walked 2026-09-16:
       design.
 - [ ] Backup/restore capability documented and tested before launch — Neon's own restore exists;
       nothing has been rehearsed, and the configured Launch retention window is not recorded here.
+      The steps are `docs/RUNBOOKS.md` § Restoring production from Neon's history; tick this once someone has rehearsed them.
 - [x] No production clone into QA — nothing to clone yet, and no procedure does it.
 - [ ] PostgreSQL majors match — QA and production are both PostgreSQL 18 on Neon; the local
       `docker-compose.yml` image is `postgres:17.6-alpine` and PGlite runs its own. Nothing has
@@ -1024,7 +1025,7 @@ Operations/privacy:
       with the numbers on `/devs` → «Baza de date» (`yarn db:sizes`) and the proposal table in
       `docs/PLATFORM.md` § Keeping Neon and Vercel light, long term.
 - [ ] Participant/profile/photo support process — the club.
-- [ ] Backups and restore test — Neon's own restore, not rehearsed (§25).
+- [ ] Backups and restore test — Neon's own restore, not rehearsed (§25). The steps: `docs/RUNBOOKS.md` § Restoring production from Neon's history.
 - [ ] Monitoring/alerts — `/api/health` and `yarn smoke` exist; `/devs` shows the database's
       CU-hours once `NEON_API_KEY` is set (§33); failure alerting from the pinger to a real
       inbox is not confirmed.
@@ -1730,6 +1731,16 @@ languages go live together; that is the rule, not a setting.
    - The privacy notice describes invitations once the club approves it from the template:
      `/admin/tasks` shows the row «Nota de confidențialitate: invitațiile pe email» until then.
      Invitations work meanwhile.
+   - **A person who asks for their data, or for it to be erased** (art. 15 and 17 GDPR, §876): «Toate
+     datele unei persoane» (`/admin/registrations/person`, Administrator) lists the invitations sent to
+     the address — state, deadline, every moment — and the lines of every event's «Lista internă de
+     așteptare» written with it (name, address as typed, the note, who wrote it as a role), and its file
+     carries both. **«Retrage și șterge invitațiile»** withdraws each open invitation exactly as
+     «Retrage» does — the place goes back through the waiting list — then deletes the unaccepted ones;
+     an accepted invitation stays with its registration and goes with that registration's erase.
+     **«Șterge de pe lista internă»** deletes the person's internal-list lines. Each asks first; the
+     trail keeps counts, never the address. A line typed with no address cannot be found by address:
+     delete it from the event's list by hand.
 
 ### If somebody says the site is blocked at work
 
@@ -1889,10 +1900,17 @@ brasovrunners QA origin      GET  https://brasov-runners-qa-nu.vercel.app/api/he
    → **Actions** → **Secrets**: `PRODUCTION_APP_BASE_URL` = `https://brasov-runners-production.vercel.app`
    and `QA_APP_BASE_URL` = `https://brasov-runners-qa-nu.vercel.app`, no trailing slash, beside
    `PRODUCTION_JOB_SECRET` and `QA_JOB_SECRET` (each that project's `JOB_SECRET`, character for
-   character). **Today the two base URLs are unset**: `.github/workflows/scheduled-jobs.yml`'s steps
-   print «not configured; skipping» and exit in zero seconds with a green tick, four times a day,
-   and guard nothing (the green skip of `DECISIONS.md` §31). Verify with **Actions** →
-   **scheduled-jobs** → **Run workflow**: each step takes a second or two and prints the job's JSON.
+   character). **Both base URLs are set; the missing value is `PRODUCTION_JOB_SECRET`**: it is empty,
+   so the production steps print "production is not configured" and poke nothing (run 41206544730
+   printed `JOB_SECRET:` empty). Copy it character for character from the production Vercel
+   project's **Settings** → **Environment Variables** → `JOB_SECRET` (the value the pinger's
+   `Authorization: Bearer` carries), never into a file or a message. Verify with **Actions** →
+   **scheduled-jobs** → **Run workflow**: the production steps print the two jobs' JSON, and the
+   last step, «Verdict», prints the database, the Neon budget and no error. Since §874 the run reads
+   the deep health before it pokes and turns red at its end on a stale job or a stalled outbox
+   (`registration-maintenance` excepted between 03:05 and 04:00 in Brașov, the pinger's nightly
+   gap), and an unconfigured production prints a `::warning::`, not a notice (QA's skip is
+   unchanged); what a red run means is `docs/RUNBOOKS.md` § A red backstop run.
 
 **Why `/api` on the `vercel.app` host is not sent to the public name.** Nothing in the application
 redirects one host to another, and `src/proxy.ts` — the only code that redirects at all (locales,
