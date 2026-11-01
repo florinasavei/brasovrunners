@@ -8,6 +8,7 @@ import { useRecall } from "@/shared/forms/recall";
 import Flag from "@/shared/ui/Flag";
 import type { SearchableCountry } from "../country-search";
 import { chooseInSelect, CountryPicker, type CountrySearchWords, PICKER_BUTTON_SX } from "./CountryPicker";
+import { HOME_COUNTRY } from "@/modules/events/domain/place";
 
 /**
  * Citizenship: required, Romania unless the runner says otherwise (§432), and searchable (§463;
@@ -48,7 +49,7 @@ function NationalityFieldIsland({
 }) {
   const initial = countries.some((country) => country.code === defaultValue)
     ? (defaultValue as string)
-    : (countries.find((country) => country.code === "RO")?.code ?? countries[0]?.code ?? "");
+    : (countries.find((country) => country.code === HOME_COUNTRY)?.code ?? countries[0]?.code ?? "");
   const [value, setValue] = useState(initial);
   const hydrated = useSyncExternalStore(
     useCallback(() => () => {}, []),

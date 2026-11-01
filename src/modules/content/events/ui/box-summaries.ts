@@ -294,7 +294,7 @@ export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale
   ]);
 }
 
-/** Sub-card 4.1: `Europe/Bucharest — ora României`, or the zone alone elsewhere. */
+/** Sub-card 4.1: the club's zone with its words (`CLUB_TIME_ZONE` — «ora României»), or the zone alone elsewhere. */
 export function timezoneSummary(words: SummaryWords, zone: string): string {
   return zone === CLUB_TIME_ZONE ? fillIn(words.timezone.home, { zone }) : zone;
 }

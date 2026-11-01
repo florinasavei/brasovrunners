@@ -1,4 +1,5 @@
 import { COUNTRY_CODES } from "./countries";
+import { HOME_COUNTRY } from "@/modules/events/domain/place";
 
 /**
  * Telephone numbers, stored the one way a phone can dial them (`DECISIONS.md` §84).
@@ -69,7 +70,7 @@ export const PHONE_COUNTRY_CODES: readonly string[] = COUNTRY_CODES.filter((code
 export function phoneCountryOrder(locale: string): string[] {
   const names = new Intl.DisplayNames([locale], { type: "region" });
   return PHONE_COUNTRY_CODES.map((code) => ({ code, name: names.of(code) ?? code }))
-    .sort((a, b) => (a.code === "RO" ? -1 : b.code === "RO" ? 1 : a.name.localeCompare(b.name, locale)))
+    .sort((a, b) => (a.code === HOME_COUNTRY ? -1 : b.code === HOME_COUNTRY ? 1 : a.name.localeCompare(b.name, locale)))
     .map((entry) => entry.code);
 }
 
@@ -135,7 +136,7 @@ export function composePhone(countryCode: string, typed: string): string | null 
  * the first country carrying it in ISO order, which for `+1` is Antigua and for `+44` Great
  * Britain: good enough for a prefill, and the person corrects the country in one tap.
  */
-export function splitPhone(stored: string | null | undefined, fallbackCountry = "RO"): { countryCode: string; national: string } {
+export function splitPhone(stored: string | null | undefined, fallbackCountry: string = HOME_COUNTRY): { countryCode: string; national: string } {
   if (!stored || !stored.startsWith("+")) return { countryCode: fallbackCountry, national: stored ?? "" };
   const digits = stored.slice(1);
   let best: { countryCode: string; dialing: string } | undefined;

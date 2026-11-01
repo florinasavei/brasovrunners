@@ -2,7 +2,7 @@ import { env } from "@/shared/config/env";
 import { coHostDescription, primaryCoHostLink, readCoHosts } from "./domain/co-hosts";
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { forecastPlace } from "@/modules/weather/domain/place";
-import { CLUB_LOCALITY } from "./domain/place";
+import { CLUB_LOCALITY, HOME_COUNTRY } from "./domain/place";
 import type { PublicEvent } from "./repository";
 
 /**
@@ -147,7 +147,7 @@ function eventPlace(event: PublicEvent) {
     return {
       "@type": "Place",
       name: CLUB_LOCALITY,
-      address: { "@type": "PostalAddress", addressLocality: CLUB_LOCALITY, addressCountry: "RO" },
+      address: { "@type": "PostalAddress", addressLocality: CLUB_LOCALITY, addressCountry: HOME_COUNTRY },
     };
   }
   return {
@@ -157,7 +157,7 @@ function eventPlace(event: PublicEvent) {
       "@type": "PostalAddress",
       ...(event.locationAddress ? { streetAddress: event.locationAddress } : {}),
       addressLocality: CLUB_LOCALITY,
-      addressCountry: "RO",
+      addressCountry: HOME_COUNTRY,
     },
     /**
      * The map link a person follows — the same one the page renders, so the two cannot

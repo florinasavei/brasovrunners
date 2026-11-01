@@ -17,6 +17,7 @@
  * name comes from the platform's one constant (§357), never written here.
  */
 
+import { HOME_COUNTRY, HOME_COUNTRY_NAME } from "@/modules/events/domain/place";
 import { CLUB_NAME, CLUB_SHORT_FORMS } from "@/theme/brand";
 
 /** The three modes, in the order the editor offers them; the first is the default. */
@@ -35,6 +36,9 @@ export function publicListClubOf(event: { publicListClub?: string | null } | nul
   const value = event?.publicListClub;
   return PUBLIC_LIST_CLUBS.find((mode) => mode === value) ?? DEFAULT_PUBLIC_LIST_CLUB;
 }
+
+/** Folded as `wordsOf` folds a typed word: lower case, no diacritics. */
+const foldWord = (value: string) => value.normalize("NFD").replace(/\p{M}+/gu, "").toLocaleLowerCase("en-US");
 
 /**
  * Words people put around the club's name without changing whose it is: «Clubul …», «Asociația …», «ACS …»,
@@ -66,8 +70,10 @@ const FILLER = new Set([
   "membru",
   "member",
   // Where the club is, or its site's ending typed after the name: «Brasov Runners Romania», «… ro», «… com».
-  "romania",
-  "ro",
+  // The country in both languages and its code, from `club/club.json` (§NNN).
+  foldWord(HOME_COUNTRY_NAME.ro),
+  foldWord(HOME_COUNTRY_NAME.en),
+  foldWord(HOME_COUNTRY),
   "com",
 ]);
 

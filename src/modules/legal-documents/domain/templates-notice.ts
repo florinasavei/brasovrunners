@@ -13,7 +13,7 @@ import { LEGAL_DOCUMENT_KEYS } from "./keys";
  *
  * - **A digest, not a notice per change** (§775; the owner, 2026-10-15: «Parcă totuși șabloanele
  *   textelor se schimbă prea des, că tot primesc email, de ce?» — six releases in one night sent six
- *   emails). ONE look at the templates per club day (`LEGAL_TEMPLATES_DIGEST_HOUR`, Europe/Bucharest),
+ *   emails). ONE look at the templates per club day (`LEGAL_TEMPLATES_DIGEST_HOUR`, `CLUB_TIME_ZONE`),
  *   made by the first run at or after 08:00 club time; if it finds a change the last email did not
  *   carry, it sends ONE email naming every text whose template is newer than the text in force. A
  *   change that lands after the day's look — at 10:00, at 22:30 — waits for tomorrow's. The mark is

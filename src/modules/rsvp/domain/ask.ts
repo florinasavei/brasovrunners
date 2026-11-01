@@ -10,7 +10,7 @@ import { fromWallTimeInput, toWallTimeInput } from "@/modules/events/domain/zone
  * `rsvpAskHour` (0–23 club time, eight by default). Both arrive here as `RsvpAskTiming`; the defaults below are today's behaviour, so
  * nothing moves on a deployment until the club changes them.
  *
- * **The window.** An event's question is asked from the club's calendar day N days BEFORE the day its start falls on (Europe/Bucharest,
+ * **The window.** An event's question is asked from the club's calendar day N days BEFORE the day its start falls on (`CLUB_TIME_ZONE`,
  * the club's zone — never "N × 24 hours before", which is the wrong day twice a year), by the first run of the maintenance job at or after
  * the chosen hour on that day, and until the midnight that opens the start's day. So, with the defaults (one day, 08:00):
  *

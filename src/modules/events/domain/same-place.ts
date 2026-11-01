@@ -1,4 +1,4 @@
-import { CLUB_LOCALITY } from "./place";
+import { CLUB_COUNTY, CLUB_COUNTY_CODE, CLUB_LOCALITY, HOME_COUNTRY, HOME_COUNTRY_NAME } from "./place";
 
 /**
  * Whether two dates of a series meet at the same place (`DECISIONS.md` §122, and §367 for the
@@ -37,8 +37,10 @@ import { CLUB_LOCALITY } from "./place";
  *    taken off, one by one from the end, never the first part. A part is what stands between two
  *    commas, and a trailing one is an address part when, folded, it is exactly:
  *    - the club's city (`CLUB_LOCALITY`): "Brașov", "Brasov", "municipiul Brașov", "mun. Brașov";
- *    - its county: "județul Brașov", "jud. Brașov", "jud. BV", "BV", "Brașov County";
- *    - the country: "România", "Romania", "RO";
+ *    - its county (`CLUB_COUNTY`, `CLUB_COUNTY_CODE`): "județul Brașov", "jud. Brașov", "jud. BV", "BV",
+ *      "Brașov County";
+ *    - the country (`HOME_COUNTRY`, `HOME_COUNTRY_NAME`): "România", "Romania", "RO" — these three
+ *      kinds built from `club/club.json` (§NNN), so another club's city and county are its own;
  *    - a postcode: six digits, alone or with the city — "500152", "500152 Brașov";
  *    - a Romanian street, by the word it starts with: "strada"/"str.", "bulevardul"/"bd."/"b-dul",
  *      "calea", "aleea", "șoseaua"/"șos.", "splaiul" — "Aleea Tiberiu Brediceanu", "str. Turnului
@@ -64,6 +66,9 @@ export type PlaceFacts = { locationName: string | null; mapUrl?: string | null }
 
 /** The club's city as compared: "brasov". */
 const CITY = foldPart(CLUB_LOCALITY);
+/** Its county and the county's plate code, as compared: "brasov", "bv". */
+const COUNTY = foldPart(CLUB_COUNTY);
+const COUNTY_CODE = foldPart(CLUB_COUNTY_CODE);
 
 /**
  * One comma-separated part as compared: no diacritics, lower case, every run of anything that is
@@ -83,13 +88,14 @@ const WHERE = new Set([
   CITY,
   `municipiul ${CITY}`,
   `mun ${CITY}`,
-  `judetul ${CITY}`,
-  `jud ${CITY}`,
-  `${CITY} county`,
-  "jud bv",
-  "bv",
-  "romania",
-  "ro",
+  `judetul ${COUNTY}`,
+  `jud ${COUNTY}`,
+  `${COUNTY} county`,
+  `jud ${COUNTY_CODE}`,
+  COUNTY_CODE,
+  foldPart(HOME_COUNTRY_NAME.ro),
+  foldPart(HOME_COUNTRY_NAME.en),
+  foldPart(HOME_COUNTRY),
 ]);
 
 /** A Romanian postcode: six digits, alone or with the city it belongs to. */

@@ -6,6 +6,7 @@ import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
+import { CLUB_LOCALITY, HOME_COUNTRY } from "@/modules/events/domain/place";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageTestRegistrations } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
@@ -212,9 +213,10 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
       birthDate: syntheticBirthDate(event),
       // One of the two answers the form offers (§554): the retired «Prefer să nu spun» is refused.
       sex: "FEMALE",
-      nationality: "RO",
-      country: "RO",
-      city: "Brașov",
+      // The club's own city and country (§NNN): a demonstration runner lives where the club runs.
+      nationality: HOME_COUNTRY,
+      country: HOME_COUNTRY,
+      city: CLUB_LOCALITY,
       phone: "+40000000000",
       emergencyContactName: "Test Contact",
       // A different number from the participant's, because the schema now refuses a contact

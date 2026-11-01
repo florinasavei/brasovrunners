@@ -1,0 +1,44 @@
+{
+  "WORDMARK": "BRASOV RUNNERS",
+  "CLUB_NAME": "Brașov Runners",
+  "CLUB_SHORT_FORMS": {
+    "city": "bv",
+    "nicknames": [
+      "bvr"
+    ]
+  },
+  "LOGO": {
+    "lockup": {
+      "src": "/brand/logo.svg",
+      "onDark": "/brand/logo-white.svg",
+      "viewBox": "60 906 2880 1188",
+      "width": 2880,
+      "height": 1188
+    },
+    "mark": {
+      "src": "/brand/logo-mark.svg",
+      "onDark": "/brand/logo-mark-white.svg",
+      "viewBox": "60 906 2840 889",
+      "width": 2840,
+      "height": 889
+    }
+  },
+  "CLUB_LOCALITY": "Brașov",
+  "DEFAULT_CLUB_COORDINATES": {
+    "latitude": 45.6427,
+    "longitude": 25.5887
+  },
+  "CLUB_TIME_ZONE": "Europe/Bucharest",
+  "EMAIL_FROM_NAME_default": "Brașov Runners",
+  "CLUB_COORDINATES_default": {
+    "latitude": 45.6427,
+    "longitude": 25.5887
+  },
+  "EVENT_FILE_FORMAT": "brasovrunners-event",
+  "calendarFeedFileName": {
+    "ro": "brasov-runners-ro.ics",
+    "en": "brasov-runners-en.ics"
+  },
+  "PRODID": "PRODID:-//Brasov Runners//events//RO",
+  "glossaryContext": "Texts written by a small amateur running club in Brașov, Romania, for its event pages and messages to runners. Use these terms: «Alergare de grup» = \"group run\"; «Concurs» = \"race\"; «Cros» = \"cross-country race\"; «masa (de înscrieri)» = \"the desk\"; «număr de concurs» = \"race number\"; «declarație» = \"declaration\"; «înscriere» = \"registration\"; «listă de așteptare» = \"waiting list\"; «traseu» = \"route\"; «diferență de nivel» = \"elevation gain\"; «frontală» = \"head torch\". Keep names of people, places, trails, partners and the club exactly as written, and keep every number, time, date and distance unchanged."
+}

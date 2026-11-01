@@ -783,7 +783,7 @@ async function lockAlertDay<T extends Record<string, unknown>>(tx: Database<T>, 
 
 /**
  * Whether an alert that reached somebody was already queued on the club's calendar day of `now`
- * (`alertDayOf`, Europe/Bucharest): the sends of the last day and a bit, read in the club's zone.
+ * (`alertDayOf`, `CLUB_TIME_ZONE`): the sends of the last day and a bit, read in the club's zone.
  */
 async function alertAlreadyAnnouncedToday<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const today = alertDayOf(now, CLUB_TIME_ZONE);

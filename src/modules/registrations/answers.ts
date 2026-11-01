@@ -8,6 +8,7 @@ import { registrationNameKey } from "./domain/name-key";
 import { answerRules, UNDER_MINIMUM_AGE } from "./fields";
 import { composeLegalName, resolveDisplayName } from "./names";
 import { composePhone, splitPhone } from "./phone";
+import { HOME_COUNTRY } from "@/modules/events/domain/place";
 
 /**
  * «Modifică datele» (§645; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic vreau
@@ -173,7 +174,7 @@ export function typedPhone(typed: string): string {
     const international = `+${compact.replace(/^\+|^00/, "")}`;
     return composePhone(splitPhone(international).countryCode, international) ?? typed;
   }
-  return composePhone("RO", compact) ?? typed;
+  return composePhone(HOME_COUNTRY, compact) ?? typed;
 }
 
 type Value = string | boolean | null;

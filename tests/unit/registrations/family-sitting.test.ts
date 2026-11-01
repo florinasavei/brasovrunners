@@ -164,7 +164,8 @@ describe("§519 the browser's half of a sitting", () => {
     expect(sittingSharedValues(first, posted({ city: "Wien" }))).toEqual({ city: "Wien", country: "AT" });
     // And the form reads it back through the same prefill as the city.
     const page = readFileSync(path.join(process.cwd(), "src/modules/registrations/ui/registration-form.tsx"), "utf8");
-    expect(page).toContain('defaultValue={prefill("country") || "RO"}');
+    // The default is the club's country (`HOME_COUNTRY`, §NNN), no longer a literal "RO".
+    expect(page).toContain('defaultValue={prefill("country") || HOME_COUNTRY}');
   });
 });
 

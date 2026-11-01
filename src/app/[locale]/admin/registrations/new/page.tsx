@@ -43,6 +43,7 @@ import { findReserveEntry } from "@/modules/registrations/reserve-list";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { CLUB_NAME } from "@/theme/brand";
 import { createRegistrationAction } from "../actions";
+import { HOME_COUNTRY } from "@/modules/events/domain/place";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -242,7 +243,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           </StaffGuardian>
           {/* Where the person lives (§510): the country before the city, as on the public form —
               the same searchable native select, on Romania unless the volunteer changes it. */}
-          <NationalityField name="country" label={rt("country")} defaultValue="RO" countries={countries} words={countrySearchWords} />
+          <NationalityField name="country" label={rt("country")} defaultValue={HOME_COUNTRY} countries={countries} words={countrySearchWords} />
           <RecallField name="city" label={rt("city")} {...textFieldConstraints(staffRegistrationConstraints("city"))} />
           <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} countryOrder={phoneOrder} countryNames={phoneNames} searchWords={countrySearchWords} />
           <RecallField name="emergencyContactName" label={rt("emergencyContactName")} {...textFieldConstraints(staffRegistrationConstraints("emergencyContactName"))} />

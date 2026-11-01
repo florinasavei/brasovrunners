@@ -1,3 +1,4 @@
+import { CLUB } from "@/club/config";
 import { toWallTimeInput } from "./zoned-time";
 
 /**
@@ -19,15 +20,15 @@ import { toWallTimeInput } from "./zoned-time";
  * server that draws the pill.
  *
  * **Dates are the event's own.** "The sunset of that day" means the calendar day on the wall clock
- * in the event's zone — `Europe/Bucharest` for everything the club holds — read through `Intl`
+ * in the event's zone — the club's own (`CLUB_TIME_ZONE`) for everything it holds — read through `Intl`
  * (`zoned-time.ts`), never a fixed offset: the same 19:00 is UTC+3 in October and UTC+2 in
  * November. The instants returned are plain `Date`s; the printed times go through the same zone.
  */
 
 export type Coordinates = { latitude: number; longitude: number };
 
-/** Brașov's centre (Piața Sfatului), the club's default place when `CLUB_COORDINATES` is unset. */
-export const DEFAULT_CLUB_COORDINATES: Coordinates = { latitude: 45.6427, longitude: 25.5887 };
+/** The club's centre, from `club/club.json` (§NNN): its default place when `CLUB_COORDINATES` is unset. */
+export const DEFAULT_CLUB_COORDINATES: Coordinates = { ...CLUB.place.coordinates };
 
 /** The sun's centre at the horizon, with refraction and the solar radius: sunrise and sunset. */
 const ZENITH_SUNSET = 90.833;
