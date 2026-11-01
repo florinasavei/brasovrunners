@@ -1890,7 +1890,7 @@ brasovrunners QA origin      GET  https://brasov-runners-qa-nu.vercel.app/api/he
    → **Actions** → **Secrets**: `PRODUCTION_APP_BASE_URL` = `https://brasov-runners-production.vercel.app`
    and `QA_APP_BASE_URL` = `https://brasov-runners-qa-nu.vercel.app`, no trailing slash, beside
    `PRODUCTION_JOB_SECRET` and `QA_JOB_SECRET` (each that project's `JOB_SECRET`, character for
-   character). **Today the two base URLs are unset**: `.github/workflows/scheduled-jobs.yml`'s steps
+   character). **Today the base URL is set and `PRODUCTION_JOB_SECRET` is missing** (checked 2026-11-01, run 41206544730): `.github/workflows/scheduled-jobs.yml`'s steps
    print «not configured; skipping» and exit in zero seconds with a green tick, four times a day,
    and guard nothing (the green skip of `DECISIONS.md` §31). Verify with **Actions** →
    **scheduled-jobs** → **Run workflow**: each step takes a second or two and prints the job's JSON.

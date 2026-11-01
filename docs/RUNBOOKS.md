@@ -695,17 +695,19 @@ are the run's to open, merge and approve.
 
 When: rows were deleted or changed by mistake (a bad script, an erase of the wrong registration), and the audit trail cannot
 put them back. **Never restore over production**: a restore in place rewrites the live database, including every
-registration taken since the moment you restore to, and it cannot be undone by waiting. Restore to a **new branch**, look at
+registration taken since the moment you restore to (Neon may keep a backup branch of the state it replaced; unverified, see below, and not a reason to try it). Restore to a **new branch**, look at
 it, and only then decide what to bring back. Nobody has rehearsed this yet (`SETUP.md` §25, §30 stay open;
 `docs/OWNER-TODO.md` item 22): do it once on a quiet day.
 
-**Check against Neon's documentation.** The steps follow Neon's pages on branching, point-in-time restore ("Instant restore",
-"Time Travel") and the project's restore window, whose labels move. This session could not reach Neon's documentation host on
-2026-11-01, so the labels below are from memory of those pages and **must be read against them the first time** — correct
-this section with what the console really shows.
+**Check against Neon's documentation — still open.** The steps follow Neon's pages on branch restore, point-in-time
+branching and the restore window. On 2026-11-01 the build and review sessions could not reach neon.com or neon.tech (the
+network allowlist refuses both), so the labels below are from memory and **neon.com must be allowed for a session that
+re-reads those three pages, then this paragraph replaced with the pages' names and the date read**. Two points are
+especially unverified: the default versus the maximum restore window per plan, and whether an in-place restore keeps a
+backup branch. Until then, read the console against this text on the first rehearsal.
 
 1. **How far back can you go.** In the Neon console open the production project (not QA) → **Settings** → the storage /
-   restore-window setting ("Restore window", the history Neon keeps; Launch allows up to 7 days by default). A moment older
+   restore-window setting ("Restore window", the history Neon keeps; read the plan's default and its maximum in the console, not here). A moment older
    than the window cannot be restored. The history is billed ($0.20/GB-month of changes retained, `docs/PLATFORM.md`), so the
    club keeps it short; if the loss is older than the window, stop here and say so.
 2. **Pick the moment.** Just before the mistake, in UTC, from the audit log or the registrations' history. Earlier is safer
@@ -718,14 +720,21 @@ this section with what the console really shows.
    that you close afterwards, never written into a file): `SELECT count(*) FROM registrations;` and, for the moment
    in question, the same count with the event's id, compared with `/admin` as it stood. Only `SELECT`. The branch is a
    separate database with its own endpoint, so nothing here touches production.
-5. **Bring the rows back, or switch.** *Rows:* copy the missing rows from the branch into production through the console's
-   SQL Editor, in one transaction, and only the rows lost (registrations go through no allocator on a copy: re-check the
-   event's counted places afterwards on `/admin` and run `yarn smoke` on production). *Switch:* only if the whole database
+5. **Bring the rows back, or switch.** *Rows:* a copy bypasses the allocator, so set the conditions first. (a) Compare with
+   production's current counted places for the event: insert a CONFIRMED or held row only if a counted place is free;
+   otherwise re-enter the person through the staff verbs («Adaugă pe lista de așteptare», «Trimite-i oferta»). (b) Never
+   bring back a row whose erasure the audit trail records (at the person's request) or that the retention job removed: the
+   branch holds data erased since the moment chosen, which is also a reason to delete it the same day. (c) Bring each
+   registration's dependent rows (declaration acceptance and the rest) with it, or none of them: a confirmed row without
+   its signed declaration is forbidden. (d) Mechanism: one `psql` session with the branch's and production's connection
+   strings in the shell environment, never in a file, piping `\copy (SELECT …) TO STDOUT` into `\copy … FROM STDIN` per table
+   in one transaction, and no file kept; the console's SQL Editor works on one branch at a time and cannot do it. Afterwards
+   re-check the event's counted places on `/admin` and run `yarn smoke` on production. *Switch:* only if the whole database
    is damaged; it means pointing `DATABASE_URL` on the production Vercel project and the GitHub `production` environment to the branch's
    connection strings and redeploying, which loses everything written since the moment chosen — an owner's decision, not a
    reflex.
 6. **Delete the branch.** When the rows are back and checked, Branches → the restore-check branch → **Delete**. A forgotten
-   branch keeps computing and storing, and bills.
+   branch keeps computing and storing, and bills, and holds personal data that production may since have erased.
 
 Record the date, the moment restored to, what was brought back and what the console really said in `docs/OWNER-TODO.md`
 item 22, and then tick `SETUP.md` §25 and §30.

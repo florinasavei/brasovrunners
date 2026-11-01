@@ -55,12 +55,12 @@ it is the authority, this is the summary):
     `CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` on both projects, and `/ro/contact` shows
     the **form** on production and on QA rather than the address (§149, `SETUP.md` §38). Who
     receives a message is «Pagini» → «Contact» → "Cine primește mesajele de contact".
-12. ~~**The race itself**~~ — done 2026-10-02 (§632): the 21 November race was published and filled in one save
-    (`SETUP.md` §39). **What is left for race day, both in `/admin/events` → the race → «Înscrierile primite» → «Clasament»,
-    and both before any result is entered:** (a) set «Startul cursei», the hour the gun goes. Every «Sosit» stamp counts from
+12. ~~**The race itself**~~ — done 2026-10-02 (§632): the 21 November race was published by 2026-10-02 and full that day
+    (`SETUP.md` §39). **What is left for race day, both before any result is entered:** (a) set «Startul cursei» in
+    `/admin/events` → the race → «Când și unde» (the field `SETUP.md` §39 lists; it holds the gun time, not the desk's): the hour the gun goes. Every «Sosit» stamp counts from
     it; when it is empty the site counts from the event's start (`gunOf`, `src/modules/results/results.ts`), which
     `SETUP.md` §39 sets to the hour the desk opens, so the times would all be too long by the minutes between the desk and the
-    gun. (b) Choose «Categorii de vârstă» (empty means the standard groups; or the ages each group starts at). Changing them
+    gun. (b) On «Înscrierile primite» → «Clasament», choose «Categorii de vârstă» (empty means the standard groups; or the ages each group starts at). Changing them
     later recounts the saved results' category places (`docs/RUNBOOKS.md` § Race results).
 13. ~~**The monitors' cadence, for Neon's bill**~~ — set 2026-09-24, the eight jobs recorded in
     `SETUP.md` §40: production health hourly at :02 (not 02:02 or 03:02), QA's every six hours;
@@ -112,7 +112,7 @@ it is the authority, this is the summary):
     **Two data questions for the same lawyer sitting:** (1) how long the group-run declarations are kept — today there is no
     limit (`docs/PLATFORM.md` § retention table: kept while the signer takes part and erased at their request), and the
     platform needs a period; (2) whether the notice must name «Lista internă de așteptare», whose lines (name, optional
-    address, a note) are never deleted by the platform (§854 left it open).
+    address, a note) are kept until the event is deleted or someone presses «Șterge»; there is no retention sweep (§854 left it open).
 17. **Re-grade every event's difficulty** — migration `0104` put each event in the middle step of its old band (§526). Open each
     event in `/admin/events` and choose the band and «Nivelul» (one of the band's three levels, 1–15 in order); the guide («Ghid») explains the scale.
 18. **Open the members' zone and the FAQ** — approve the members' zone address, `/ro/zona-membri` (it sits outside the backoffice,
@@ -151,12 +151,13 @@ it is the authority, this is the summary):
 23. **A second person who can recover the platform** (`BR-BUS-101`, `BUSINESS.md`): today one person holds every account.
     The cheap first step: a second member in the Neon organisation, and a sealed note, kept by someone else, of where each
     account's two-factor recovery codes are kept (never the codes in this repository). Then the same for Vercel, GitHub,
-    the registrar, Cloudflare, Mailgun and Zitadel.
+    the registrar, Cloudflare and Mailgun. On Zitadel the free tier allows one administrator (`docs/PLATFORM.md`), so a second
+    person there needs the paid tier, or a recovery route that does not need one (the sealed note of recovery codes).
 24. **Mailgun's two dates.** On 1 November move Mailgun to Basic and set «Planul Mailgun» on «Setări» → «Emailuri» to Basic
-    the same day (the platform's daily brake follows the setting, `src/modules/club-todo/domain/starting-list.ts`); on 30
+    the same day (the platform's daily brake follows the setting, `src/modules/notifications/domain/email-plan.ts`; Basic counts only once the probation is lifted); on 30
     November move it to Free and set it to Free the same day.
 25. **Vercel in December.** The team is on Pro for the race. Back to Hobby is not automatic after 21 November: the rule is
-    `docs/PLATFORM.md` § The fit — only if two consecutive months show under 3 Active CPU-hours (`/devs` → «Vercel: consumul
+    `docs/PLATFORM.md` § (c) Vercel after December, «The fit» — only if two consecutive months show under 3 Active CPU-hours (`/devs` → «Vercel: consumul
     lunii»); otherwise stay on Pro, because October paced 6.9 hours against Hobby's 4 and passing it pauses the site for
     about 30 days.
 
