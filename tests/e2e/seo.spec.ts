@@ -59,7 +59,7 @@ test.describe("BR-REQ-070-02 criterion 1 canonical and hreflang", () => {
   });
 
   test("the calendar's canonical ignores the month named in the address — the reported duplicate", async ({ page, baseURL }) => {
-    await page.goto("/ro/calendar?month=2027-01");
+    await page.goto("/ro/calendar?month=2031-01");
     await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute("href", `${baseURL}/ro/calendar`);
     // Never the query it was just handed — a canonical carrying it would be no canonical at all.
     const href = await page.locator('head link[rel="canonical"]').getAttribute("href");

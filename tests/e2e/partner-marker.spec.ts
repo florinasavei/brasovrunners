@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead, monthOf } from "./support/dates";
 
 /**
  * BR-REQ-020-01 criteria 18 and 19 (`DECISIONS.md` §367, amended §375) — an event held with a
@@ -23,8 +24,8 @@ import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } fr
  * run's event in the same month is never the one measured.
  */
 
-const DATE = "2027-04-17";
-const MONTH = "2027-04";
+const DATE = ahead("2027-04-17");
+const MONTH = monthOf(DATE);
 
 /**
  * The partner marker's glyph, Material's `Handshake` (§367, reverted from §379/§386's 🤝 emoji

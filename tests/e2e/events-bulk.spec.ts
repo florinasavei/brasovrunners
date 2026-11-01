@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languageTab } from "./support/fold";
+import { ahead } from "./support/dates";
 
 /**
  * BR-REQ-050-02 criteria 11 and 12 (`DECISIONS.md` §113, §114) — a repeated event is one row,
@@ -20,7 +21,7 @@ test.describe("BR-REQ-050-02 a series is one row, and the bulk bar deletes it", 
 
     await signIn(page, "Dev Superadministrator");
 
-    for (const [index, date] of ["2027-06-07", "2027-06-14"].entries()) {
+    for (const [index, date] of [ahead("2027-06-07"), ahead("2027-06-14")].entries()) {
       await page.goto("/ro/admin/events/new");
       // The tabs switch with React state: a click before hydration is discarded when React
       // takes over, the English panel stays hidden, and a hidden box cannot be filled.

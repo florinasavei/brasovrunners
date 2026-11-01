@@ -2,6 +2,7 @@ import { type APIResponse, expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead } from "./support/dates";
 
 /**
  * BR-REQ-011-01 criterion 8 — an organizer pastes the route link, and a runner can open it.
@@ -56,7 +57,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await page.getByRole("combobox", { name: "Suprafață" }).click();
     await page.getByRole("option", { name: "Trail" }).click();
     // A date and a 24-hour time, each on MUI's picker (`DECISIONS.md` §70, §345).
-    await fillDateField(page, "Începutul evenimentului", "2027-05-01");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-05-01"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Parcul Tractorul");

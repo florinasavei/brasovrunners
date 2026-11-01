@@ -2,6 +2,7 @@ import { expect, type Locator, type Page, type Request, test } from "@playwright
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead } from "./support/dates";
 
 /**
  * BR-REQ-011-01 and BR-REQ-050-02 (§718) — «Traseul»'s Strava and Garmin Connect maps, behind one
@@ -62,7 +63,7 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
     await hydrated(page);
-    await fillDateField(page, "Începutul evenimentului", "2027-05-15");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-05-15"));
     await fillTimeField(page, "Ora", "19:00");
     await field("event.locationName").fill("Stația de telecabină Tâmpa");
     await field("event.locationNameEn").fill("Tâmpa cable car station");
