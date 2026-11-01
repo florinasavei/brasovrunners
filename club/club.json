@@ -36,7 +36,8 @@
       "rule": "#c7d2ff",
       "sheet": "#c5d1ff",
       "deep": "#092591",
-      "deepDark": "#becdff"
+      "deepDark": "#becdff",
+      "emailBand": "#1a1aff"
     },
     "look": {
       "light": { "accent": "#d6176f", "accentInk": "#a01650", "accentDeep": "#7e0e3c", "accentTint": "#fde8f1" },

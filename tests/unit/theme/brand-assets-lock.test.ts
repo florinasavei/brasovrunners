@@ -1,6 +1,7 @@
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import { BRAND_SOURCES, brandAssetsLock } from "../../../scripts/brand-assets-lock.mjs";
 
@@ -33,6 +34,16 @@ describe("BR-REQ-101-01: the brand rasters are built from today's sources (§NNN
 
   it("the palette's colours are the ones the rasters were painted in", () => {
     expect(now.colours, "the palette in club/club.json changed since the rasters were built — run yarn brand:assets").toEqual(committed.colours);
+  });
+
+  it("names the colours the committed rasters actually hold: the white lockup's band and the glyph's ink", async () => {
+    const hex = (data: Buffer, at: number) => `#${data.subarray(at, at + 3).toString("hex")}`;
+    const band = await sharp(path.join(ROOT, "public/brand/logo-white-email.png")).raw().toBuffer({ resolveWithObject: true });
+    expect(hex(band.data, 0), "logo-white-email.png's band").toBe(committed.colours.emailBand);
+    const glyph = await sharp(path.join(ROOT, "public/brand/email-cannot-come.png")).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    const opaque = new Set<string>();
+    for (let at = 0; at < glyph.data.length; at += 4) if (glyph.data[at + 3] === 255) opaque.add(hex(glyph.data, at));
+    expect([...opaque], "email-cannot-come.png's ink").toEqual([committed.colours.primaryInk]);
   });
 
   it("locks a CRLF checkout of the same files to the same hashes, and a changed source to another", () => {

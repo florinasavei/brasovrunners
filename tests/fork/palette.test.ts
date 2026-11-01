@@ -1,10 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
+import { fillMountains } from "@/club/decor";
 import { judgeTint } from "@/modules/appearance/domain/tint-contrast";
 import { bibFooterWidth } from "@/modules/registrations/bib-footer";
 import { BIB_CARD, BIB_LAYOUT } from "@/modules/registrations/bib-geometry";
 import { bibTitleWidth } from "@/modules/registrations/bib-header";
 import { type BadgeSizeChoice, badgeLayout } from "@/modules/volunteers/badges/badge-geometry";
 import { COLOR, COLOR_DARK, contrastRatio, GRADIENT, LOGO_RATIO, LOOK_ACCENT, MIN_TEXT_CONTRAST, PALETTE, SITE_TINT } from "@/theme/brand";
+import MountainMark from "@/shared/ui/MountainMark";
 import { BRAND_PAIRS, CALENDAR_TONE_PAIRS } from "@/theme/brand-pairs";
 import fork from "../fixtures/fork-club/club.json";
 
@@ -16,7 +20,8 @@ import fork from "../fixtures/fork-club/club.json";
  * a square lockup. Every tint, the kit's gradient and both accents' shades are then derived by `brand.ts`,
  * and every pair the pages draw (`brand-pairs.ts`, the same list `tests/unit/theme/brand.test.ts` holds at AA for
  * Brașov) clears AA on them; the page tints keep §488's two rules; and the square logo stands inside the race
- * number's band and the badge's header rather than spilling past them.
+ * number's band and the badge's header rather than spilling past them. Its `decor.json` writes no mountains, and
+ * nothing is drawn: no mark on the page, no fill on the calendar picture's canvas.
  */
 describe("BR-REQ-101-01: a fork's palette and logo pass the platform's checks (§NNN)", () => {
   it("builds the theme from the fork's colours, deriving what it leaves out", () => {
@@ -45,6 +50,18 @@ describe("BR-REQ-101-01: a fork's palette and logo pass the platform's checks (�
       expect(judgeTint(hex), hex).toBeNull();
     });
   }
+
+  it("draws no mountains from a decor with no layers: no mark, no fill", () => {
+    expect(renderToStaticMarkup(createElement(MountainMark, { width: 96, title: "Munții" }))).toBe("");
+    const filled: unknown[] = [];
+    vi.stubGlobal("Path2D", class {});
+    try {
+      fillMountains({ globalAlpha: 1, fill: (path: unknown) => filled.push(path) } as unknown as CanvasRenderingContext2D, 0.6, 0.9);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    expect(filled).toEqual([]);
+  });
 
   it("has a square logo", () => {
     expect(LOGO_RATIO).toBe(1);

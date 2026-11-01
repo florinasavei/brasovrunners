@@ -5,7 +5,7 @@
     "public/brand/email-cannot-come.svg": "739a63dabd4f6aa7c0ae70fb6faca7d57d7a6f58852f7b11585e193ce3c3ab55"
   },
   "colours": {
-    "primary": "#0000ff",
+    "emailBand": "#1a1aff",
     "primaryInk": "#0b2fb8"
   }
 }

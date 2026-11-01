@@ -87,6 +87,8 @@ export type ClubPalette = {
     readonly sheet?: string;
     readonly deep?: string;
     readonly deepDark?: string;
+    /** The band behind the white lockup in `public/brand/logo-white-email.png`, which delivered emails link: `yarn brand:assets` paints it, the primary when left out (§NNN). */
+    readonly emailBand?: string;
   };
   /** The accent's four shades by day and after dark; derived from `accent` when left out. */
   readonly look?: { readonly light: ClubShades; readonly dark: ClubShades };
@@ -111,7 +113,7 @@ export type ClubConfig = {
   /** The club's confidential safety form's name in both languages. */
   readonly safetyProgramme: ClubWords;
   readonly palette: ClubPalette;
-  readonly logo:{ readonly lockup: ClubLogoFile; readonly mark: ClubLogoFile };
+  readonly logo: { readonly lockup: ClubLogoFile; readonly mark: ClubLogoFile };
 };
 
 /**

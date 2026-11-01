@@ -13,10 +13,14 @@ import path from "node:path";
 /** The SVG sources the rasters are drawn from, repository-relative. */
 export const BRAND_SOURCES = ["public/brand/logo.svg", "public/brand/logo-white.svg", "public/brand/email-cannot-come.svg"];
 
-/** The club's palette, as the script paints with it: the primary behind the white lockup, the primary's ink for the glyph. */
+/**
+ * The club's palette, as the script paints with it: `tints.emailBand` behind the white lockup (the primary when the
+ * club leaves it out) and the primary's ink for the glyph — the colours the committed rasters hold, which the lock
+ * test reads back from the PNGs themselves.
+ */
 export function brandColours(root) {
   const { palette } = JSON.parse(readFileSync(path.join(root, "club/club.json"), "utf8"));
-  return { primary: palette.primary, primaryInk: palette.primaryInk };
+  return { emailBand: palette.tints?.emailBand ?? palette.primary, primaryInk: palette.primaryInk };
 }
 
 /** The lock's content, as `club/assets.lock.json` holds it. */
