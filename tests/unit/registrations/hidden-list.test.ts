@@ -84,8 +84,8 @@ describe("§649 the name, in both languages: «Lista de invitați speciali»", (
     expect(en.Admin.registrations.outside.help).toContain("The public list and the count show them only with the event's ticks");
     for (const help of [ro.Admin.registrations.outside.help, en.Admin.registrations.outside.help]) expect(help.length).toBeLessThan(200);
     expect(ro.Admin.editor.boxes.received.outside).toBe("invitați speciali: {count}");
-    expect(ro.Admin.guide.sections[4].tasks[10].title).toBe("Invitați speciali: organizatori, pacemakeri, voluntari");
-    expect(en.Admin.guide.sections[4].tasks[10].title).toBe("Special guests: organizers, pacemakers, volunteers");
+    expect(ro.Admin.guide.sections[4].tasks[11].title).toBe("Invitați speciali: organizatori, pacemakeri, voluntari");
+    expect(en.Admin.guide.sections[4].tasks[11].title).toBe("Special guests: organizers, pacemakers, volunteers");
     expect(ro.Admin.registrations.audit.registration.outside_capacity_changed).toContain("lista de invitați speciali");
     expect(ro.Admin.invitations.outsideLabel).toBe("Pe lista de invitați speciali (nu ocupă un loc)");
     expect(en.Admin.invitations.outsideLabel).toBe("On the special guests list (takes no place)");
@@ -109,13 +109,13 @@ describe("§649 the name, in both languages: «Lista de invitați speciali»", (
 
   it("opens the guide with what the list is for and what it is not, then splits the counting into two steps, each under 200 characters", () => {
     for (const catalogue of [ro, en]) {
-      const steps = catalogue.Admin.guide.sections[4].tasks[10].steps as string[];
+      const steps = catalogue.Admin.guide.sections[4].tasks[11].steps as string[];
       for (const step of steps) expect(step.length, step).toBeLessThan(200);
     }
-    const steps = ro.Admin.guide.sections[4].tasks[10].steps as string[];
+    const steps = ro.Admin.guide.sections[4].tasks[11].steps as string[];
     expect(steps.findIndex((step) => step.includes("«Numără și invitații speciali»"))).toBeLessThan(steps.findIndex((step) => step.startsWith("«Arată public numărătoarea»")));
     expect(steps[0]).toContain("Nu e pentru un participant obișnuit");
-    expect((en.Admin.guide.sections[4].tasks[10].steps as string[])[0]).toContain("It is not for an ordinary participant");
+    expect((en.Admin.guide.sections[4].tasks[11].steps as string[])[0]).toContain("It is not for an ordinary participant");
   });
 
   it("says in the switch's help what ticking shows and what unticking keeps, and behind its «?» the difference from «Invitații»", () => {

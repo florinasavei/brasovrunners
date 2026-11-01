@@ -42,6 +42,7 @@ import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
 import { eventMergeValues } from "@/modules/registrations/signed-declaration";
 import { listStaffUsers } from "@/modules/staff-identity/repository";
 import { dayIn } from "@/modules/registrations/domain/age";
+import { givePlaceDoorOpen } from "@/modules/registrations/domain/give-place-door";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
 import { type ScopeDate, SeriesPickDates, SeriesScopeBox, SeriesScopeProvider } from "@/modules/content/events/ui/SeriesScope";
 import { editionNote, ruleSentence } from "@/modules/events/ui/series-sentence";
@@ -1387,7 +1388,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                           waiting={waiting}
                           now={now}
                           offerAction={canManageRegistrations(staffUser.role) ? offerPlaceAction : undefined}
-                          waitlistAddAction={canManageRegistrations(staffUser.role) ? addToWaitlistAction : undefined}
+                          waitlistAddAction={canManageRegistrations(staffUser.role) && givePlaceDoorOpen(event, now) ? addToWaitlistAction : undefined}
                           counts={occupiedCounts ?? undefined}
                           placeDeadlines={placeDeadlines ?? undefined}
                         />

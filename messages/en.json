@@ -2094,8 +2094,9 @@
       "reminderBody": "{name} receives the pre-race reminder now.",
       "createRegistrationTitle": "Add the registration?",
       "createRegistrationBody": "The person is registered for the event on their behalf, at their request, and receives the email for the next step.",
+      "createRegistrationVouchBody": "You vouch for the address {email}: the person enters now, at their request, onto the waiting list or a free place; no confirmation email, but the email for the state they land in.",
       "waitlistAddTitle": "Add to the waiting list?",
-      "waitlistAddBody": "You vouch for the address, and the person enters now, at their request: onto the waiting list or, when a place is free, onto it. They get the email for the state they land in.",
+      "waitlistAddBody": "You vouch for the address {email}, and the person enters now, at their request: onto the waiting list or, when a place is free, onto it. They get the email for the state they land in.",
       "withdrawConsentTitle": "Erase the ticked data?",
       "withdrawConsentBody": "The ticked data disappears from the registration for good; the reason stays in the log, without the person's name.",
       "eraseRegistrationTitle": "Erase the registration for good?",
@@ -8513,9 +8514,22 @@
                 "Under «Event» pick the event.",
                 "Fill in the person's details, «Participant email address» and «Language we write to them in».",
                 "Tick «I confirm this person asked me to register them…».",
+                "Administrator: tick «Straight onto the waiting list…» to vouch for the address yourself; the person joins now, onto the list or, when a place is free, onto it, without the confirmation email.",
+                "Check the address first: the window repeats it, and a wrong address holds a place or a spot in line for nobody.",
                 "The person is not in front of you? Leave «This person is at the desk…» unticked: they get the email and sign their own declaration.",
                 "Press «Add the registration» and confirm in the window.",
                 "Refused because the address already has a registration: the family's second person registers from the public form (see “A family on one address”)."
+              ]
+            },
+            {
+              "title": "Internal waiting list: who asked for a place",
+              "steps": [
+                "«Registrations» → pick the event: below the list is «Internal waiting list».",
+                "Fill in «First name», «Last name», «Email (optional)» and, if you like, «Internal note»; press «Add». The person takes no place, is not in the queue and gets no email.",
+                "Something to remember? Write it in «Internal note» and press «Save note».",
+                "No longer needed? Press «Delete» and confirm; nothing is sent to the person.",
+                "Ready to register? «Move to the official list» opens the registration form with their details; the note moves onto the registration, and from there it is an ordinary registration, with its own email.",
+                "Check the address first: an email goes out when they are registered, and a wrong address reaches nobody."
               ]
             },
             {
@@ -8754,6 +8768,17 @@
                 "When no place is free, the window says beforehand that you add one supplementary place over the limit and what the capacity becomes; there is no need to raise «Capacity» or to set the automatic allocation to «No».",
                 "The added place is theirs in the same press: it never reaches the waiting list. The registration's trail says who added it, for whom, and from how many to how many.",
                 "The people on the waiting list stay where they are. Check the address first: a wrong address holds the place until the deadline."
+              ]
+            },
+            {
+              "title": "Add to the waiting list in one press",
+              "steps": [
+                "On the event's page, in the queue box, or in «Registrations» with the event chosen, you find «Add to the waiting list». It appears only on an event that takes registrations here, scheduled, with a date, that has not started.",
+                "Fill in «First name», «Last name», «Email» and, if you like, «Internal note»; tick «I confirm this person asked me to register them…».",
+                "Check the address first: press «Add to the waiting list», and the window repeats the address you vouch for; confirm only then.",
+                "When full, the person joins the back of the line and gets the “You are on the waiting list” email; when a place is free, they get it and sign the declaration from the email. They never pass anyone.",
+                "They sign the declaration themselves; nobody signs it for them.",
+                "Other details or another language? «The full form: other details, another language», with «Straight onto the waiting list…» ticked."
               ]
             },
             {

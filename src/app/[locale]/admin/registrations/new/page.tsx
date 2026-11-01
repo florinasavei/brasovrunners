@@ -1,3 +1,4 @@
+import { staffEntryConfirm } from "@/modules/registrations/staff-entry-confirm";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
@@ -171,7 +172,17 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             vouchAddress: t("registrations.vouchAddress"),
           })}
           // The entry emails the person — the link, or the confirmation on the fast track — and says so (§384).
-          confirm={{ title: t("confirm.createRegistrationTitle"), body: t("confirm.createRegistrationBody"), email: words.email(1), road: words.road("links"), confirmLabel: t("registrations.create"), cancelLabel: words.cancel }}
+          // With «Direct pe lista de așteptare» ticked (and no fast track, which ignores it) the dialog says the address is
+          // vouched for and names the typed one (§NNN); unticked, it is the ordinary one.
+          confirm={staffEntryConfirm({
+            title: t("confirm.createRegistrationTitle"),
+            body: t("confirm.createRegistrationBody"),
+            vouchBody: t("confirm.createRegistrationVouchBody", { email: "{email}" }),
+            email: words.email(1),
+            road: words.road("links"),
+            confirmLabel: t("registrations.create"),
+            cancelLabel: words.cancel,
+          })}
           data-testid="registration-new-form"
         >
           <input type="hidden" name="uiLocale" value={locale} />
