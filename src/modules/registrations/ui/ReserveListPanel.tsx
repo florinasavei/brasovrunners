@@ -10,12 +10,16 @@ import type { ConfirmSpec } from "@/shared/feedback/notice";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
-import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
+import { DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
 import Panel from "@/shared/ui/Panel";
 import { staffOfferIfMadeNow, waitlistOfferQuestion } from "../give-place-tip";
 import type { ReserveEntryRow } from "../reserve-list";
+
+/** The address fold's glyph (§521): the email the official list sends to. */
+const AddressIcon = ACTION_ICONS.emailConfirmation;
 
 /**
  * «Lista internă (doar notițe)» (§854, renamed by §NNN) on one event's registrations list, for the Organizer and
@@ -146,6 +150,7 @@ export default async function ReserveListPanel({
                         // A line written without an address (§NNN): its box behind a fold that says so — a press with it empty opens it (`revealField`).
                         <Box component="details" sx={{ ...DISCLOSURE_SX, width: "100%" }} data-testid="reserve-move-email">
                           <Box component="summary">
+                            <AddressIcon fontSize="small" aria-hidden sx={FOLD_GLYPH_SX} />
                             <Typography component="span" variant="body2">
                               {t("reserve.emailForOfficialHelp")}
                             </Typography>
