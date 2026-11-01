@@ -38,7 +38,7 @@ How it reaches the code:
   `secondary` (a fill under the body's ink) and `accent` («Aspectul nou»'s default). The rest — `kit` (the
   kit's gradient), `tints`
   (the page tints, the hero's ends, the poster's hairline, the sheet's member fill, the blue preset's pressed
-  shades), `look` and `secondaryLook` (each accent's four shades by day and after dark) — are Brașov's
+  shades, and `emailBand`: the band behind `logo-white-email.png`, the primary when left out), `look` and `secondaryLook` (each accent's four shades by day and after dark) — are Brașov's
   hand-picked values; a club that leaves one out gets it derived from those by `src/theme/brand.ts`
   (`shadesOf`, `mix`), the one file that computes colours. `brand.ts` keeps every name it exported: the roles
   are `PALETTE`, the hue names (`COLOR.blue`, `COLOR.orange`…) their aliases, and the stored preset ids
