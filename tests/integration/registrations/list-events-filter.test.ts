@@ -41,7 +41,7 @@ describe("§736 the events the registrations list offers", () => {
 
     const offered = await listEventsWithRegistrations(db);
     expect(offered.map((row) => row.id)).toContain(fresh);
-    // In Romanian while nobody registered, the language of the registrations otherwise.
+    // In the viewer's language (Romanian by default), else Romanian, else any translation.
     expect(offered.find((row) => row.id === fresh)?.title).toBe("Crosul nou");
     expect(offered.map((row) => row.id)).not.toContain(elsewhere);
     expect(offered.map((row) => row.id)).not.toContain(nowhere);
@@ -80,5 +80,47 @@ describe("§736 the events the registrations list offers", () => {
       submittedAt: new Date("2026-09-01T00:00:00Z"),
     });
     expect((await listEventsWithRegistrations(db)).map((row) => row.id)).toContain(past);
+  });
+
+  it("offers an event once, in the viewer's language, when its registrations are in both languages (§NNN)", async () => {
+    const id = await event("Crosul bilingv", "INTERNAL");
+    for (const [i, locale] of (["ro", "en"] as const).entries()) {
+      const email = `p${i}@example.test`;
+      const [participant] = await db
+        .insert(participants)
+        .values({ deliveryEmail: email, normalizedEmail: email, canonicalEmail: email, canonicalizationVersion: 1, defaultName: "Ana" })
+        .returning();
+      await db.insert(registrations).values({
+        eventId: id,
+        participantId: participant.id,
+        status: "CANCELLED",
+        cancelledAt: new Date("2026-10-12T10:00:00Z"),
+        cancellationSource: "PARTICIPANT",
+        kind: "REAL",
+        locale,
+        registeredName: "Ana",
+        displayName: "Ana",
+        privacyNoticeVersion: 1,
+        privacyAcknowledgedAt: new Date("2026-09-01T00:00:00Z"),
+        resultsNameConsent: false,
+        resultsConsentVersion: 1,
+        submittedAt: new Date("2026-09-01T00:00:00Z"),
+      });
+    }
+    const inRomanian = (await listEventsWithRegistrations(db, "ro")).filter((row) => row.id === id);
+    expect(inRomanian).toHaveLength(1);
+    expect(inRomanian[0].title).toBe("Crosul bilingv");
+    const inEnglish = (await listEventsWithRegistrations(db, "en")).filter((row) => row.id === id);
+    expect(inEnglish).toHaveLength(1);
+    expect(inEnglish[0].title).toBe("Crosul bilingv (en)");
+  });
+
+  it("falls back to Romanian, then to any translation, for a viewer's language the event lacks (§NNN)", async () => {
+    const [row] = await db.insert(events).values({ type: "RACE", startsAt: new Date("2026-11-21T07:00:00Z"), registrationMode: "INTERNAL", locationName: "Start" }).returning();
+    await db.insert(eventTranslations).values({ eventId: row.id, locale: "ro", title: "Doar română", slug: `ro-${row.id.slice(0, 8)}` });
+    expect((await listEventsWithRegistrations(db, "en")).find((offered) => offered.id === row.id)?.title).toBe("Doar română");
+    const [onlyEnglish] = await db.insert(events).values({ type: "RACE", startsAt: new Date("2026-11-22T07:00:00Z"), registrationMode: "INTERNAL", locationName: "Start" }).returning();
+    await db.insert(eventTranslations).values({ eventId: onlyEnglish.id, locale: "en", title: "English only", slug: `en-${onlyEnglish.id.slice(0, 8)}` });
+    expect((await listEventsWithRegistrations(db, "ro")).find((offered) => offered.id === onlyEnglish.id)?.title).toBe("English only");
   });
 });

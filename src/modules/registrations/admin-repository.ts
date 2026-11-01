@@ -1436,18 +1436,25 @@ export async function listOutboxHistory<T extends Record<string, unknown>>(
  * not reach its invitations, and the editor's «Trimite invitații» link fell back to every event.
  * Events registered elsewhere or not at all, with nobody here, stay out: the CMS lists those.
  *
- * The title in the language of the event's registrations, as before; in Romanian for an event
- * nobody registered for yet.
+ * Each event once (§NNN; the review of 2026-10-31: the same event twice in the «Eveniment» filter): the title is in the viewer's
+ * language, else in Romanian, else in whatever language the event has — read as one value per event, never a join
+ * on the registrations' own language, which listed an event with registrations in both languages once per language.
  */
 export async function listEventsWithRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
+  locale: Locale = "ro",
 ): Promise<Array<{ id: string; title: string | null; featured: boolean; membersOnly: boolean; type: string; startsAt: Date; editorialStatus: string }>> {
+  // Qualified by hand: drizzle prints a single-table select's columns bare, and a bare `id` inside the subquery is the translation's own.
+  const own = sql.raw('"event_translations"');
+  const titleIn = (language: SQL | string) =>
+    sql`(select ${own}."title" from ${eventTranslations} where ${own}."event_id" = "events"."id" and ${own}."locale" = ${language})`;
+  const title = sql<string | null>`coalesce(${titleIn(locale)}, ${titleIn("ro")}, (select min(${own}."title") from ${eventTranslations} where ${own}."event_id" = "events"."id"))`;
   return db
     // `membersOnly` (§552): the list's «Membri» chip on an event for the members alone. `type`, `startsAt` and `editorialStatus` (§808, §816):
     // the header's «Clasament» link, for a published race or one that has started (`resultsDoorOpen`).
-    .selectDistinct({
+    .select({
       id: events.id,
-      title: eventTranslations.title,
+      title,
       featured: events.featured,
       membersOnly: events.membersOnly,
       type: events.type,
@@ -1455,13 +1462,8 @@ export async function listEventsWithRegistrations<T extends Record<string, unkno
       editorialStatus: events.editorialStatus,
     })
     .from(events)
-    .leftJoin(registrations, eq(registrations.eventId, events.id))
-    .leftJoin(
-      eventTranslations,
-      and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, sql`coalesce(${registrations.locale}, 'ro')`)),
-    )
-    .where(sql`${registrations.id} is not null or ${events.registrationMode} = 'INTERNAL'`)
-    .orderBy(asc(eventTranslations.title));
+    .where(sql`${events.registrationMode} = 'INTERNAL' or exists (select 1 from ${registrations} where ${registrations.eventId} = ${events.id})`)
+    .orderBy(asc(title), asc(events.id));
 }
 
 /**

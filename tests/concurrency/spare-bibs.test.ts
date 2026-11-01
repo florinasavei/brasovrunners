@@ -9,10 +9,9 @@ import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
-import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
-import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { createRegistrationByStaff, handedBibRefusalCode } from "@/modules/registrations/admin-service";
 import { reserveSpareBibs } from "@/modules/registrations/bibs";
+import { approveNotices, removeApprovedNotices } from "./legal-fixture";
 
 /**
  * §444 × BR-REQ-037-07 — two volunteers handing the same desk spare at once, on two connections.
@@ -39,26 +38,13 @@ describe("§444 BR-REQ-037-07 two volunteers handing one spare, on two connectio
   const db = drizzle(pool);
   const NOW = new Date("2026-09-26T08:00:00.000Z");
   const createdEventIds: string[] = [];
+  const noticeIds: string[] = [];
   let staffId: string | undefined;
   let adminId: string | undefined;
 
   beforeAll(async () => {
-    for (const key of ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const) {
-      const translations: LegalDocumentTranslationInput[] = [
-        { locale: "ro", title: key, body: { sections: [{ paragraphs: ["p"] }] } },
-        { locale: "en", title: key, body: { sections: [{ paragraphs: ["p"] }] } },
-      ];
-      // Already there on a database another suite prepared: the one in force is what counts.
-      await insertLegalDocumentVersion(db, {
-        key,
-        version: 1,
-        effectiveAt: new Date("2020-01-01T00:00:00.000Z"),
-        isApproved: true,
-        contentSha256: computeContentHash(translations),
-        translations,
-        now: NOW,
-      }).catch(() => undefined);
-    }
+    // The club's terms (§421) with them: a public submission is refused while none is approved. Their own documents, above any seeded version (§NNN).
+    noticeIds.push(...(await approveNotices(db, ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"], NOW)));
     const [staff] = await db
       .insert(staffUsers)
       .values({ email: `spare.race.${Date.now()}@example.ro`, displayName: "Desk", role: "CONTRIBUTOR" })
@@ -99,6 +85,7 @@ describe("§444 BR-REQ-037-07 two volunteers handing one spare, on two connectio
       await db.delete(auditLogs).where(eq(auditLogs.actorStaffUserId, id));
       await db.delete(staffUsers).where(eq(staffUsers.id, id));
     }
+    await removeApprovedNotices(db, noticeIds);
     await pool.end();
   });
 
