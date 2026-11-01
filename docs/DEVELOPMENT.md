@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.00-2026-11-01 -->
+<!-- PROJECT_BASELINE: BR-V4.01-2026-11-01 -->
 
 # Running this locally
 
-**Baseline `BR-V4.00-2026-11-01`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V4.01-2026-11-01`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -313,7 +313,7 @@ What `test:clock` cannot reach: `tests/e2e/` against a running server, and the d
 with a fixed one. The seeds draw their dates from today (`src/db/seeds/sample-dates.ts`, §162) and
 never age.
 
-**An e2e spec never writes a date the calendar will reach (§NNN).** A spec that creates an event
+**An e2e spec never writes a date the calendar will reach (§883).** A spec that creates an event
 types its day through `ahead("2027-05-04")` from `tests/e2e/support/dates.ts`: the written date is a
 pattern, and the helper returns the same weekday a whole number of weeks later — one shift for the
 whole suite, the smallest that puts the earliest pattern 24 weeks (`LEAD_DAYS`) ahead of today in

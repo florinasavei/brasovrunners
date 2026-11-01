@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.00-2026-11-01 -->
+<!-- PROJECT_BASELINE: BR-V4.01-2026-11-01 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.00-2026-11-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.01-2026-11-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2351,6 +2351,7 @@ way through every step, and none of them is a way around the allocator.
 197. Given a volunteer with no address, when an organizer gives a role, takes one back, changes the roles in «Modifică», reopens the person, or records the agreement or the parent's consent on paper, then no outbox row is queued for anyone — not even one withdrawn later — and a message queued while the row still had an address is withdrawn at the send once the address is cleared; «Trimite linkul contractului» and «Trimite linkul părintelui» are not drawn for such a row, one line in both languages says why where each would be, and a post of either is refused (`VOLUNTEER_NO_EMAIL`) with nothing written; an address typed in later tells the person, once, the roles they hold (2026-10-29, `DECISIONS.md` §865).
 198. Given a volunteer with no address or no telephone number, when the person's block (the event's card, `/admin/volunteers/[id]`), the «Voluntari» list, the CSV, the Excel files, the public list or the badges' count reads them, then a missing one is an empty cell or simply absent — never «null», never a `mailto:` or a `tel:` to nothing — and the block says once that the person is on the list only (2026-10-29, `DECISIONS.md` §865).
 199. Migration `0182_volunteers_name_only` is expand-only: it drops the NOT NULL of `event_volunteers.email`, `canonical_email`, `canonicalization_version` and `phone`, and adds the CHECKs `event_volunteers_address_whole` (the three address columns together or none) and `event_volunteers_public_contact` (a `PUBLIC` row has an address and a telephone number); the rows from before keep everything, and `UNIQUE (event_id, canonical_email)` still refuses one address twice on an event (2026-10-29, `DECISIONS.md` §865).
+200. Given an end-to-end spec that creates an event on a written day, when the calendar passes that day, then the spec still passes: it types the day through the suite's one helper, which moves a written date by whole weeks to at least 24 weeks ahead of today in Brașov — the same weekday, the same gaps between two dates, two equal dates still equal, the shift read once per process so a fill and its assertion agree across midnight — and every month, age, season and clock offset the spec asserts is derived from that day, never written again (2026-11-01, `DECISIONS.md` §883).
 - only the lines with a date whose title, page address or place contains every typed word in either language (accents and case ignored) and whose state matches are listed;
 - the state is an editorial state, «Anulat» (the event's own status), «Viitoare» or «Trecute»;
 - a series is narrowed to its matching dates before it is grouped;
@@ -3250,6 +3251,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 17. Under «Aspectul nou» the accent is the club's setting: pink (the default, phase 1's tokens), blue, orange, or a typed `#rrggbb` that is not a grey. For every preset and every typed colour, the four shades by day and after dark clear WCAG AA on every pair the look draws with the accent; the shade that carries words is no lighter than the muted ink, so it reads on every page tint; and a pressed button's shade is a step deeper by day and lighter after dark. A public page wears the accent only through MUI's primary and the band's variable, never the backoffice (2026-10-11, `DECISIONS.md` §723).
 18. The public glyph table holds only names a public page draws (`done`, `cancelled`, `planned` and `club` also sit in the backoffice's status registry, each from its own icon file); the shop's backoffice chips draw `visible`, `hidden`, `language`, `orders` and `club` through `StatusChip`, and `tests/unit/design/status-chip.test.ts` holds both tables to their surfaces (2026-10-12, `DECISIONS.md` §728).
 19. The setting that switches the facelift is drawn as the choice «Tema» with two radios, «Tema v1» and «Tema v2» ("Theme v1", "Theme v2"), the same field and stored value as before, and neither catalogue reads «Aspectul nou» or "the new look"; on the «Aspect» page light and dark are «varianta deschisă» / «varianta întunecată» ("light mode" / "dark mode") and no `Admin` string says «ambele teme», «tema deschisă» or «tema întunecată» (2026-10-13, `DECISIONS.md` §745).
+20. Given the calendar's old address naming a month inside its two-year window (`/ro/calendar?month=YYYY-MM`, the month derived from the suite's dates helper), when it is requested without following redirects, then it answers 308 to `/ro/calendar/YYYY-MM`, and that period page's canonical is the bare `/ro/calendar`, carrying neither the month nor `month=` (2026-11-01, `DECISIONS.md` §883).
 
 **Verification:** e2e `seo.spec.ts`; accessibility audit in CI
 

@@ -24,7 +24,7 @@ import { openEditorBox, openFold } from "./support/fold";
  * se închide la 11:00»), and the finish closing at 12:30.
  *
  * The race is written straight into the database — the setup, not the subject — one per project and
- * run, so the two projects never share a row: a 21 km race on a Saturday months ahead (`ahead`, §NNN), the meeting at 09:00 and the
+ * run, so the two projects never share a row: a 21 km race on a Saturday months ahead (`ahead`, §883), the meeting at 09:00 and the
  * gun at 10:00 on the club's clock — written as local times, so the summer or winter offset of the day never moves them.
  */
 function databaseUrl(): string {

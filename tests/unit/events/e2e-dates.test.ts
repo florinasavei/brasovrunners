@@ -3,7 +3,7 @@ import { addDays, ahead, birthOn, dayLine, dmy, nextMonthDay, todayInBrasov, wee
 
 /**
  * BR-REQ-050-02 — the e2e specs that type an event's date no longer hold a day the calendar reaches
- * (§NNN): `ahead` moves a written date by whole weeks so it is always months ahead, with the same
+ * (§883): `ahead` moves a written date by whole weeks so it is always months ahead, with the same
  * weekday and the same gaps to the other dates of the suite.
  */
 

@@ -19,7 +19,7 @@ import { ahead, monthOf } from "./support/dates";
  *
  * It creates and publishes its **own** event, the way `event-route.spec.ts` does, rather than
  * giving a seeded one a partner: other specs read and unpublish the seeded rows, and two projects
- * run in parallel against one database. The date moves with `ahead` (§NNN), and the calendar is
+ * run in parallel against one database. The date moves with `ahead` (§883), and the calendar is
  * opened on its month directly; the title is unique per project and run, so another event in the
  * same month — this run's or an earlier one's — is never the one measured.
  */

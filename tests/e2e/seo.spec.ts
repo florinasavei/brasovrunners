@@ -60,7 +60,7 @@ test.describe("BR-REQ-070-02 criterion 1 canonical and hreflang", () => {
   });
 
   test("the calendar's canonical ignores the month named in the address — the reported duplicate", async ({ page, baseURL }) => {
-    // A month inside the calendar's two-year window, from the suite's one helper (§NNN): a month
+    // A month inside the calendar's two-year window, from the suite's one helper (§883): a month
     // outside it is no named period, and the old address would be sent to the bare calendar instead.
     const month = monthOf(ahead("2027-04-14"));
     const old = await page.request.get(`/ro/calendar?month=${month}`, { maxRedirects: 0 });

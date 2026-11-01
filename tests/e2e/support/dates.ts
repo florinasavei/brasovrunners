@@ -1,5 +1,5 @@
 /**
- * Dates for the e2e specs that the calendar never reaches (§NNN).
+ * Dates for the e2e specs that the calendar never reaches (§883).
  *
  * A spec used to write the day of its event as a literal (`"2027-04-14"`), and every such literal
  * started failing as the day passed: the event was in the past, so it left the listing, the

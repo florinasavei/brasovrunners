@@ -19,7 +19,7 @@ import { monthOf, nextMonthDay, written } from "./support/dates";
  * expired by it (§333).
  */
 
-// The next 17 November and 16 June at least twelve weeks ahead (§NNN): the season is what the sunset line reads, the year and the weekday follow.
+// The next 17 November and 16 June at least twelve weeks ahead (§883): the season is what the sunset line reads, the year and the weekday follow.
 const NOVEMBER = nextMonthDay(11, 17);
 const MONTH = monthOf(NOVEMBER);
 const JUNE = nextMonthDay(6, 16);
