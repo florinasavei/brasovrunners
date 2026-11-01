@@ -8540,13 +8540,15 @@
               ]
             },
             {
-              "title": "Lista internă de așteptare: cine a cerut un loc",
+              "title": "Lista internă (doar notițe): cine a cerut un loc",
               "steps": [
-                "«Înscrieri» → alege evenimentul: sub listă e «Lista internă de așteptare».",
+                "«Înscrieri» → alege evenimentul: sub listă e «Lista internă (doar notițe)».",
                 "Completează «Prenume», «Nume», «Email (opțional)» și, dacă vrei, «Notă internă»; apasă «Adaugă». Persoana nu ocupă loc, nu e în coadă și nu primește niciun email.",
                 "Ai ceva de ținut minte? Scrie în «Notă internă» și apasă «Salvează nota».",
                 "Nu mai e nevoie de ea? Apasă «Șterge» și confirmă; persoanei nu i se trimite nimic.",
-                "Gata să se înscrie? «Trece pe lista oficială» deschide formularul de înscriere cu datele ei; nota trece pe înscriere, iar de acolo e o înscriere obișnuită, cu emailul ei.",
+                "Gata să intre pe lista oficială? Administratorul apasă «Mută pe lista oficială»: fereastra numește adresa și cere bifa «Confirm că această persoană mi-a cerut să o înscriu…». Persoana intră la coadă sau pe un loc liber, cu emailul obișnuit; nota trece pe înscriere, iar rândul dispare.",
+                "«Oferă-i un loc acum» face același lucru și îi dă și un loc: unul liber sau o ofertă pe email. Pe o cursă plină fereastra spune cât devine capacitatea, iar butonul e «Adaugă un loc și oferă-i locul».",
+                "Alte date sau altă limbă? «Formularul complet: alte date, altă limbă» deschide formularul de înscriere cu datele ei.",
                 "Verifică adresa înainte: la înscriere pleacă un email și o adresă greșită nu ajunge la nimeni."
               ]
             },

@@ -10,6 +10,7 @@ import type { ConfirmSpec } from "@/shared/feedback/notice";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
 import Panel from "@/shared/ui/Panel";
@@ -142,16 +143,23 @@ export default async function ReserveListPanel({
                     {forecast && forecast.raisedTo !== null && <input type="hidden" name="addPlace" value={forecast.raisedTo} />}
                     <Stack spacing={1} sx={{ alignItems: "flex-start", mt: 1.5 }}>
                       {!entry.email && (
-                        <RecallField
-                          name="email"
-                          type="email"
-                          label={t("reserve.emailForOfficial")}
-                          helperText={t("reserve.emailForOfficialHelp")}
-                          required
-                          fullWidth
-                          size="small"
-                          slotProps={{ htmlInput: { maxLength: RESERVE_EMAIL_MAX } }}
-                        />
+                        // A line written without an address (§NNN): its box behind a fold that says so — a press with it empty opens it (`revealField`).
+                        <Box component="details" sx={{ ...DISCLOSURE_SX, width: "100%" }} data-testid="reserve-move-email">
+                          <Box component="summary">
+                            <Typography component="span" variant="body2">
+                              {t("reserve.emailForOfficialHelp")}
+                            </Typography>
+                          </Box>
+                          <RecallField
+                            name="email"
+                            type="email"
+                            label={t("reserve.emailForOfficial")}
+                            required
+                            fullWidth
+                            size="small"
+                            slotProps={{ htmlInput: { maxLength: RESERVE_EMAIL_MAX } }}
+                          />
+                        </Box>
                       )}
                       <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
                         <GlyphButton icon="waiting" type="submit" name="intent" value="move" variant="contained" size="small" sx={{ minHeight: 44 }} data-testid="reserve-move">
