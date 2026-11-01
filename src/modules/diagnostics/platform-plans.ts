@@ -40,6 +40,7 @@
  * estimate everywhere it is printed, and the total that includes it marked the same way.
  */
 
+import type { EmailPlanId } from "@/modules/notifications/domain/email-plan";
 import { NEON_PLANS, type NeonPlanId, NEON_PLANS_CHECKED_ON, roundUsd } from "./domain/neon-plan";
 import { VERCEL_PLANS, VERCEL_PLANS_CHECKED_ON, type VercelPlanId, vercelUsdPerMonth } from "./domain/vercel-plan";
 
@@ -632,7 +633,14 @@ export type MoneyDecision = {
  * Only the one fact it reads: «Sarcini» → «Club» lists the open questions and no longer reads the
  * cost table's facts since the money moved to «Setări» → «Costuri» (§516).
  */
-export function moneyDecisions(input: Pick<PlatformFacts, "hasPaidEvent">): MoneyDecision[] {
+export function moneyDecisions(
+  input: Pick<PlatformFacts, "hasPaidEvent"> & {
+    /** The club's «Planul Mailgun» setting (`EmailPlanId`); Free when the caller does not know. */
+    emailPlan?: EmailPlanId;
+    /** Whether a published or archived race has already started: the first real race is behind the club. */
+    raceHasRun?: boolean;
+  },
+): MoneyDecision[] {
   return [
     /**
      * Answered by the owner on 2026-09-07 (`DECISIONS.md` §50): the club sells nothing and takes
@@ -640,9 +648,14 @@ export function moneyDecisions(input: Pick<PlatformFacts, "hasPaidEvent">): Mone
      * the question rather than quietly overriding it — and it is listed only while it is open.
      */
     { id: "entryContribution", owner: "club", state: input.hasPaidEvent ? "open" : "answered" },
-    // Open for as long as the club is on the free daily cap, and it is a decision with a
-    // deadline attached: before a registration window opens, never during one.
-    { id: "mailgunBeforeRace", owner: "club", state: "open" },
+    // Derived from the club's own «Planul Mailgun» setting, never fixed (§880): any plan but Free answers it (the club has
+    // paid since 2026-10-01), and so does a race that has run. Open only while the plan is Free and no race has run — a
+    // decision with a deadline attached: before a registration window opens, never during one.
+    {
+      id: "mailgunBeforeRace",
+      owner: "club",
+      state: (input.emailPlan ?? "FREE") !== "FREE" || input.raceHasRun === true ? "answered" : "open",
+    },
   ];
 }
 

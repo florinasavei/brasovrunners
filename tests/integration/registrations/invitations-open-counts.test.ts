@@ -61,6 +61,14 @@ async function invite(eventId: string, patch: Partial<typeof eventInvitations.$i
 }
 
 describe("§740 the open invitations per event", () => {
+  it("lists the soonest event first, whatever order they were created in (§881)", async () => {
+    const later = await event({ startsAt: new Date(NOW.getTime() + 60 * DAY) });
+    const sooner = await event({ startsAt: new Date(NOW.getTime() + 10 * DAY) });
+    const middle = await event({ startsAt: new Date(NOW.getTime() + 30 * DAY) });
+    for (const id of [later, sooner, middle]) await invite(id);
+    expect((await listOpenInvitationCountsByEvent(db, NOW)).map((row) => row.eventId)).toEqual([sooner, middle, later]);
+  });
+
   it("counts sent and unanswered-expired ones apart, per event, and leaves accepted and withdrawn out", async () => {
     const first = await event();
     const second = await event();

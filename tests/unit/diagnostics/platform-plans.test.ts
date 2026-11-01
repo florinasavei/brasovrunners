@@ -22,6 +22,7 @@ import {
   registrationsLeftToday,
   type ServiceRow,
 } from "@/modules/diagnostics/platform-plans";
+import type { EmailPlanId } from "@/modules/notifications/domain/email-plan";
 import { VERCEL_PLANS } from "@/modules/diagnostics/domain/vercel-plan";
 import {
   MAILGUN_FREE_DAILY_MESSAGES,
@@ -237,6 +238,20 @@ describe("BR-REQ-090-05 a decision is a question, not a grey fact among facts", 
     expect(contradicted?.state).toBe("open");
   });
 
+  it("§880 derives «a paid Mailgun month before the first race» from the club's own plan: open only on Free with no race run", () => {
+    const state = (patch: { emailPlan?: EmailPlanId; raceHasRun?: boolean }) =>
+      moneyDecisions({ ...BASE, ...patch }).find((d) => d.id === "mailgunBeforeRace")?.state;
+    // Free, no race yet: still the club's question.
+    expect(state({ emailPlan: "FREE", raceHasRun: false })).toBe("open");
+    expect(state({})).toBe("open");
+    // Any paid plan answers it — the club has paid since 2026-10-01 — whether a race has run or not.
+    for (const plan of ["BASIC", "FOUNDATION", "SCALE", "CUSTOM"] as const) {
+      expect(state({ emailPlan: plan, raceHasRun: false }), plan).toBe("answered");
+    }
+    // A race that has run answers it as well: the deadline was before the first one.
+    expect(state({ emailPlan: "FREE", raceHasRun: true })).toBe("answered");
+  });
+
   it("keeps at least one question open for the club to answer before a race", () => {
     const open = moneyDecisions(BASE).filter((decision) => decision.state === "open");
     expect(open.map((decision) => decision.id)).toContain("mailgunBeforeRace");
@@ -321,6 +336,20 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
             .toBeTruthy();
         }
       }
+    }
+  });
+
+  it("§880 states §803's rule for Vercel's way back to Hobby — two months under 3 Active CPU-hours — and never «after the race»", () => {
+    for (const [locale, messages] of LOCALES) {
+      for (const key of ["nextSpend.none", "nextSpend.vercelMore"]) {
+        const sentence = messageAt(messages, key);
+        expect(sentence, `${locale} ${key}`).toMatch(/3/);
+        expect(sentence, `${locale} ${key}`).toMatch(locale === "ro" ? /două luni/ : /two months/);
+        expect(sentence, `${locale} ${key}`).not.toMatch(/after the race|după cursă/i);
+      }
+      // The two-months rule is Vercel's alone: Mailgun goes back to Free by its own guide's step, so this sentence
+      // says nothing of it rather than «what is paid stays», which would contradict that guide.
+      expect(messageAt(messages, "nextSpend.none"), locale).not.toMatch(/Mailgun|plătit rămâne|paid stays/i);
     }
   });
 

@@ -29,6 +29,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+      // The club's own folder (§882), read through `src/club/config.ts`; `vitest.fork.config.mts` points it at a made-up club.
+      "@club": fileURLToPath(new URL("./club", import.meta.url)),
     },
   },
 });

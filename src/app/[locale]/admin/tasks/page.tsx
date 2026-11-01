@@ -85,6 +85,8 @@ import OlderPicturesPanel from "@/modules/media/ui/OlderPicturesPanel";
 import { readBotCheck } from "@/modules/registrations/bot-check";
 import { probeTurnstileSecret } from "@/modules/registrations/turnstile";
 import { moneyDecisions } from "@/modules/diagnostics/platform-plans";
+import { readEmailPlan } from "@/modules/notifications/email-plan";
+import { aRaceHasRun, readRaceDaySettings } from "@/modules/diagnostics/race-day-settings";
 import { TASK_TARGETS } from "@/modules/diagnostics/domain/task-targets";
 import TaskTargetLink from "@/modules/diagnostics/ui/TaskTargetLink";
 import { readNeonConsumption } from "@/modules/diagnostics/neon";
@@ -371,6 +373,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       ),
     );
   const raceDaySheetsDue = [...new Set(shredderRows.map((row) => row.title ?? row.eventId))];
+  // The coming races' two race-day settings and whether a race has run (§880): what the rows «Startul cursei»,
+  // «Categorii de vârstă» and «Luăm o lună de Mailgun plătit» read; «Planul Mailgun» is the club's own setting.
+  const [raceDaySettings, raceHasRun, emailPlan] = await Promise.all([readRaceDaySettings(db, locale, now), aRaceHasRun(db, now), readEmailPlan(db)]);
   const volume = await readEmailVolumeToday(db, now);
   // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
   const email = await checkEmailHealth(db, now, budget.effects.jobFloorMinutes);
@@ -586,6 +591,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       },
       publishedEventCount,
       raceDaySheetsDue,
+      raceDaySettings,
       domainRenewal: domain,
       unreachableWindow: outage,
       storageConfigured: isStorageConfigured(),
@@ -758,7 +764,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // Only what is still undecided: a settled question rendered "answered" for ever is a line to
   // scroll past, and the section disappears entirely when nothing is open. It reads one fact since
   // the cost table moved to «Setări» → «Costuri» (§516).
-  const decisions = moneyDecisions({ hasPaidEvent }).filter((decision) => decision.state === "open");
+  const decisions = moneyDecisions({ hasPaidEvent, emailPlan: emailPlan.plan, raceHasRun }).filter((decision) => decision.state === "open");
 
   return (
     <Stack spacing={3} sx={{ py: { xs: 2, sm: 3 } }}>

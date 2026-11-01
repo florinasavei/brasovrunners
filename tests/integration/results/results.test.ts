@@ -415,7 +415,7 @@ describe("§808 the publish gate: the terms and the race's start", () => {
 });
 
 describe("§808 the public read: a name only for a registered runner who ticked", () => {
-  const options = { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 as number | null };
+  const options = { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 as number | null, firstResultsNameAskNoticeVersion: null };
 
   async function published() {
     await field();
@@ -559,7 +559,7 @@ describe("§808 the delete and the export", () => {
 });
 
 describe("§808 the public name is the public list's rule, and one rule more: the notice line", () => {
-  const options = { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true };
+  const options = { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNameAskNoticeVersion: null };
 
   async function publish() {
     await approveTerms(db, { results: true });
@@ -653,7 +653,7 @@ describe("§808 a result follows its registration when the desk changes the numb
     expect((await resultsTrail()).at(-1)?.metadataJson).toMatchObject({ bibNumber: 99, changed: ["bib"] });
     await approveResultsTexts(db);
     await setResultsPublished(db, staff.ADMIN!, raceId, true, NOW);
-    const publicRows = await readPublicEventResults(db, raceId, { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 });
+    const publicRows = await readPublicEventResults(db, raceId, { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1, firstResultsNameAskNoticeVersion: null });
     expect(publicRows?.rows.map((row) => [row.bibNumber, row.name, row.positionOverall])).toEqual([[102, "Bia Marin", 1], [99, "Ana Popescu", 2]]);
   });
 
@@ -695,7 +695,7 @@ describe("§808 the places follow the live answers, and an erasure leaves nothin
     expect(view.registered.find((runner) => runner.bibNumber === 104)?.result).toMatchObject({ categoryKey: "MALE:from30", positionCategory: 1 });
     await approveResultsTexts(db);
     await setResultsPublished(db, staff.ADMIN!, raceId, true, NOW);
-    const publicRows = await readPublicEventResults(db, raceId, { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 });
+    const publicRows = await readPublicEventResults(db, raceId, { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1, firstResultsNameAskNoticeVersion: null });
     expect(publicRows?.rows.find((row) => row.bibNumber === 104)).toMatchObject({ categoryKey: "MALE:from30", positionCategory: 1, sex: "MALE" });
   });
 
@@ -792,7 +792,7 @@ describe("§850 «Categorii de vârstă»: the race's own bands", () => {
     await save([line(101, { time: "50:00" }), line(102, { time: "45:00" })]);
     await bands([18, 45]);
     await setResultsPublished(db, staff.ADMIN!, raceId, true, clock());
-    const result = await readPublicEventResults(db, raceId, { now: clock(), deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: await findFirstResultsNoticeVersion(db) });
+    const result = await readPublicEventResults(db, raceId, { now: clock(), deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: await findFirstResultsNoticeVersion(db), firstResultsNameAskNoticeVersion: null });
     expect(result?.ageBandStarts).toEqual([18, 45]);
     expect(result?.rows.map((row) => [row.bibNumber, row.categoryKey, row.positionCategory])).toEqual([
       [102, "FEMALE:from18", 1],

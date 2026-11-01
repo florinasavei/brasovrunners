@@ -128,6 +128,12 @@ jobs:
       # `unit` shards below, so the two halves together are exactly the hook's command (SETUP.md §8).
       - run: yarn check:static
 
+      # The fork check (§882): the identity built from a made-up club's folder, none of this club's words
+      # in it. A step of this job rather than a job of its own — the job names are required checks — and
+      # outside `yarn test`, whose shards read the real club.
+      - name: Fork check
+        run: yarn test:fork
+
       # The build's own cache (§276): a Turbopack build that does not start from nothing. It
       # used to carry the fonts too, while `next/font/google` downloaded them at build time and
       # a runner that could not reach Google failed with "cannot resolve

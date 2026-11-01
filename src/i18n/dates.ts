@@ -1,3 +1,5 @@
+import { CLUB } from "@/club/config";
+
 /**
  * Every date a person reads, written one way, with its day of the week (§349; the owner,
  * 2026-09-24: "I want all dates to show the day of the week as well, like 'Sâmbătă, 17 Jan,
@@ -43,7 +45,7 @@
  * **The language is the reader's**: a page's own locale, an email's registration language
  * (each half of a bilingual one in its own), the declaration's language on its PDF.
  *
- * Import-free beyond `Intl`, so a client island may use it too (§188) — but a client island
+ * Import-free beyond `Intl` and the club's own file (`club/club.json`, plain data, §882), so a client island may use it too (§188) — but a client island
  * must not format a date the server already rendered (§324): pass it the server's string.
  *
  * Kept as they are, on purpose: birth dates (a weekday on a birth date means nothing), a legal
@@ -54,8 +56,18 @@
  * ISO text of a `<time dateTime>` attribute.
  */
 
-/** The club's own zone, for a timestamp that belongs to no event (AGENTS.md §3.1). */
-export const CLUB_TIME_ZONE = "Europe/Bucharest";
+/** The club's own zone, for a timestamp that belongs to no event (AGENTS.md §3.1), from `club/club.json` (§882). */
+export const CLUB_TIME_ZONE = CLUB.place.timeZone;
+
+/**
+ * The club's zone in words beside a time, in each language, as the emails say it — «ora României» /
+ * "Romanian time" (§882; the legal texts' digest in `notifications/templates.ts`, and the editor's zone
+ * summary). Nothing reads it yet: the emails still write their own words and read these in a later change.
+ * Not the words of the signed PDF's proof lines (`formatSigningInstant` below, `registrations/declaration-labels.ts`)
+ * nor of «Sarcini»'s stalled-email row (`Admin.tasks.emailStalled`), which say "Romania time" in English:
+ * a change that wires the zone's words there gives them that form of their own, so no signed line changes.
+ */
+export const ZONE_WORDS: { readonly ro: string; readonly en: string } = CLUB.place.zoneWords;
 
 export type DayStyle = "long" | "short";
 

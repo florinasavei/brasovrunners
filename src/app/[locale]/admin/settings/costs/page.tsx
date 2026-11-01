@@ -51,7 +51,8 @@ import PlanCostTable from "@/modules/diagnostics/ui/PlanCostTable";
 import VercelPlanPanel from "@/modules/diagnostics/ui/VercelPlanPanel";
 import { readVercelPlan } from "@/modules/diagnostics/vercel-plan";
 import { VERCEL_PLANS } from "@/modules/diagnostics/domain/vercel-plan";
-import { readVercelMonthForCosts, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
+import { readVercelMonthForCosts, VERCEL_HOBBY_ACTIVE_CPU_HOURS_PER_MONTH } from "@/modules/diagnostics/vercel";
+import { readVercelUsageCached } from "@/modules/diagnostics/vercel-usage";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import { FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
@@ -231,12 +232,13 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
         monthlyAllowance: emailPlanCeilings.monthlyAllowance,
         dailyAllowance: emailPlanCeilings.dailyAllowance,
       },
-      vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
+      vercelActiveCpuHoursPerMonth: VERCEL_HOBBY_ACTIVE_CPU_HOURS_PER_MONTH,
       vercelPlan: { plan: vercelPlan.plan, seats: vercelPlan.seats },
       domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: domain.status === "unknown" ? null : domain.expiresOn },
     },
     {
       vercelMonth: () => readVercelMonthForCosts(env, now),
+      vercelUsage: () => readVercelUsageCached(env, now),
       charactersSince: (since) => charactersTranslatedSince(db, since),
       mailgunSentBetween: (start, end) => mailgunMessagesSentBetween(db, start, end),
       neonPreviousPeriod: (periodStart) => readNeonPreviousPeriod(env, periodStart),

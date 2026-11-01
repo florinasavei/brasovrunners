@@ -113,7 +113,7 @@ function chartOf(
     distanceMeters,
     pinRadius: radius,
     compact,
-    // The page's chart and the editor's preview: food implies water, so a point with both pins the fork (the race number's strip keeps its glyphs).
+    // The page's chart and the editor's preview: food implies water, so a point with both pins the fork (the race number's strip passes it too since BIB_DRAWING_VERSION 5).
     foodBeforeWater: true,
   });
   // Without pins the top holds the «Alt» caption's line (the page's charts), so the caption never meets the highest altitude label.

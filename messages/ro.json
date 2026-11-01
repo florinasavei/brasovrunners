@@ -909,7 +909,7 @@
         "DNS": "Neprezentat",
         "DSQ": "Descalificat"
       },
-      "note": "Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate” la o înscriere confirmată, făcută după ce nota de confidențialitate a început să descrie clasamentul. Ceilalți apar ca „Participant #număr”, cu locul, timpul și categoria.",
+      "note": "Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate” la o înscriere confirmată, făcută după ce nota de confidențialitate a început să descrie clasamentul, sau care, înscriși înainte, au cerut apoi să apară cu numele. Ceilalți apar ca „Participant #număr”, cu locul, timpul și categoria.",
       "filter": {
         "label": "Filtrează clasamentul",
         "category": "Categorie",
@@ -1502,6 +1502,7 @@
           "declaration_hold_set": "Declarație păstrată pentru o reclamație sau un litigiu",
           "declaration_hold_cleared": "Păstrarea declarației a fost scoasă",
           "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat",
+          "results_name_consent_changed": "Alegerea pentru numele în clasament schimbată de participant",
           "family_resent": "Email retrimis familiei",
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
@@ -3882,6 +3883,7 @@
         "volunteerMinors": "Doar în nota de confidențialitate: casetele părintelui din formularul de voluntari, între ghilimele; fără el, clubul nu primește voluntari sub 18 ani",
         "volunteersList": "Doar în nota de confidențialitate: bifa „Vreau să apar pe lista publică a voluntarilor”, între ghilimele. Cu ea în nota în vigoare, lista publică poate arăta nume",
         "results": "Numele secțiunii „Clasament”, între ghilimele, în nota de confidențialitate și în termeni. Cu el în ambele texte în vigoare, un administrator poate publica clasamentul, iar pagina cursei îl arată",
+        "resultsNameAsk": "Doar în nota de confidențialitate: bifa „Vreau să apar cu numele în clasament”, între ghilimele. Cu ea și „Clasament” în nota în vigoare, cine s-a înscris înainte o vede pe pagina înscrierii",
         "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin",
         "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc întrebarea „Vii?” înainte de eveniment",
         "rsvpAskAnswerers": "Doar în nota de confidențialitate: numele butonului „Nu mă mai întreba la seria aceasta”, între ghilimele. Cu el în nota în vigoare, se întreabă „Vii?” și cei care au mai răspuns „Vin!”",
@@ -4493,6 +4495,26 @@
             "Caută subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y, apoi șterge tot ce găsește."
           ]
         },
+        "raceGunTime": {
+          "title": "Stabilește startul cursei (ora la care se dă startul)",
+          "todo": "{event} începe în cel mult trei săptămâni și nu are startul cursei stabilit: ceasul de sosire numără de la începutul evenimentului, adică ora de întâlnire, nu de la start.",
+          "done": "{event} are startul cursei stabilit: ceasul de sosire numără de la el.",
+          "how": [
+            "/admin/events → cursa → „Editează” → „Când și unde” → „Data și ora”.",
+            "La „Startul cursei” scrie data și ora la care se dă startul. Dacă e aceeași cu începutul evenimentului, scrie aceeași oră.",
+            "Lasă nebifat „Startul cursei nu e stabilit”, apoi salvează. Rândul devine verde."
+          ]
+        },
+        "raceAgeBands": {
+          "title": "Alege categoriile de vârstă pentru premii",
+          "todo": "{event} începe în cel mult trei săptămâni și folosește categoriile standard. Dacă ți se potrivesc, nu faci nimic: rândul se închide singur la câteva ore după start. Altfel, scrie-le înainte de rezultate.",
+          "done": "{event} are categoriile de vârstă proprii.",
+          "how": [
+            "/admin/events → cursa → „Clasament” → „Categorii de vârstă”.",
+            "La „Vârstele de la care încep grupele” scrie vârstele de început, separate prin virgulă — „18, 35, 45, 55” dă sub 18, 18-34, 35-44, 45-54 și 55+ — și verifică rândul de sub căsuță.",
+            "Apasă „Salvează categoriile” înainte de primul rezultat. Dacă cele standard ți se potrivesc, nu faci nimic: rândul se închide singur la câteva ore după start."
+          ]
+        },
         "botCheck": {
           "title": "Verificarea anti-bot la înscriere (Cloudflare Turnstile)",
           "todo": "Widgetul „brasovrunners-site” există și ambele chei sunt pe ambele proiecte Vercel; rândul devine verde la următoarea publicare. Turnstile oprește roboții pe care capcana formularului nu îi prinde.",
@@ -4522,8 +4544,8 @@
         },
         "vercelUsage": {
           "title": "Consumul Vercel în cifre, pe /devs",
-          "todo": "Cu un token de citire și id-ul proiectului, /devs arată deploy-urile lunii, cele de azi din 100 pe zi și minutele de build din cele 6.000 pe lună. Traficul se vede doar în Vercel → Usage.",
-          "done": "/devs arată deploy-urile și minutele de build ale lunii, cu prag de avertizare.",
+          "todo": "Cu un token de citire și id-ul proiectului, /devs arată deploy-urile lunii, cele de azi din 100 pe zi și CPU-ul activ din cele 4 ore pe lună ale lui Hobby. Traficul se vede doar în Vercel → Usage.",
+          "done": "/devs arată deploy-urile lunii și CPU-ul activ din cele 4 ore ale planului Hobby, cu prag de avertizare; «Costuri» citește aceeași cifră.",
           "how": [
             "Vercel → avatar → Account Settings → Tokens → Create: nume „brasovrunners-devs”, scope contul tău, expirare 1 an. Copiază tokenul (se arată o singură dată).",
             "Id-ul proiectului: Vercel → proiectul de producție → Settings → General → Project ID (începe cu prj_).",
@@ -5083,9 +5105,9 @@
       "nextSpend": {
         "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}.",
         "vercel": "Prima cheltuială care urmează: Vercel Pro, {cost}.",
-        "none": "Nu urmează nicio cheltuială nouă: ce e luat temporar se poate opri după cursă.",
+        "none": "Nu urmează nicio cheltuială nouă. Vercel revine la Hobby doar după două luni la rând sub 3 ore de CPU activ, nu la o dată anume.",
         "mailgunMore": "Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
-        "vercelMore": "Apare doar dacă site-ul începe să ceară bani pentru participare sau dacă codul site-ului se mută pe contul clubului."
+        "vercelMore": "Apare dacă site-ul cere bani pentru participare, dacă codul se mută pe contul clubului sau dacă CPU-ul activ se apropie de cele 4 ore pe lună ale lui Hobby. Revine la Hobby după două luni sub 3 ore."
       },
       "currencyNote": "Sumele sunt în moneda în care facturează fiecare firmă; TVA în România este {vat}%.",
       "freshness": {
@@ -5370,6 +5392,7 @@
           "cuHours": "{used} ore-CU până acum, ~{projected} la final.",
           "messages": "{used} e-mailuri trimise până acum, ~{projected} la final.",
           "buildMinutes": "{used} minute de build până acum, ~{projected} la final.",
+          "cpuHours": "{used} ore de CPU activ până acum, ~{projected} la final.",
           "characters": "{used} caractere traduse până acum, ~{projected} la final.",
           "gigabytes": "{used} GB de poze stocate, cel puțin.",
           "gigabytesMore": "Se numără o singură variantă a fiecărei poze, deci cifra reală e mai mare."
@@ -5384,7 +5407,7 @@
         "over": {
           "neon": "La ritmul ăsta limita se atinge înainte de sfârșitul perioadei, iar Neon oprește baza de date până la perioada următoare.",
           "mailgun": "La ritmul ăsta limita lunară se atinge înainte de sfârșitul lunii, iar restul mesajelor așteaptă luna următoare.",
-          "vercel": "La ritmul ăsta minutele de build se termină înainte de sfârșitul lunii, iar publicările noi se opresc până luna viitoare.",
+          "vercel": "La ritmul ăsta CPU-ul activ trece de cele 4 ore ale planului Hobby înainte de sfârșitul lunii, iar Vercel poate opri site-ul pentru aproximativ 30 de zile.",
           "r2": "Pozele trec de limita gratuită: surplusul se plătește lunar."
         },
         "domain": {
@@ -5394,7 +5417,8 @@
         },
         "unmeasured": {
           "neon": "Nu se măsoară fără NEON_API_KEY și NEON_PROJECT_ID pe acest mediu.",
-          "vercel": "Nu se măsoară fără VERCEL_API_TOKEN și VERCEL_PROJECT_ID pe acest mediu."
+          "vercel": "Nu se măsoară fără VERCEL_API_TOKEN pe acest mediu: Hobby se citește după CPU-ul activ.",
+          "vercelPro": "Nu se măsoară fără VERCEL_API_TOKEN și VERCEL_PROJECT_ID pe acest mediu."
         },
         "unread": "Furnizorul nu a răspuns acum ({reason}).",
         "deeplOff": "Cheia DeepL nu e pusă pe acest server, deci butonul de traducere din editoare e gri.",
@@ -5407,6 +5431,7 @@
         },
         "typedPlan": "Planul e scris de mână, fără preț înregistrat, deci suma lunii nu e cunoscută.",
         "unreadHere": "Nu s-a putut citi acum din baza de date a site-ului.",
+        "unitUnknown": "Timpul de CPU nu se poate compara cu limita Hobby: Vercel l-a dat în «{unit}», nu în ore.",
         "lastMonth": {
           "neonKey": "— Neon păstrează istoricul doar pentru o cheie de organizație; cheia pe proiect e refuzată ({reason}).",
           "typedPlan": "— planul scris de mână nu are preț înregistrat.",
@@ -9032,7 +9057,8 @@
               "steps": [
                 "Clasamentul apare pe site doar după ce îl publici, doar după ce a început cursa și doar dacă nota de confidențialitate și termenii în vigoare descriu clasamentul — «Documente legale» spune dacă trebuie aprobate texte noi; «Sarcini» are rândul.",
                 "Pe «Clasament», la «Pe pagina evenimentului», bifează «Clasamentul e public pe pagina evenimentului» și apasă «Salvează». Pagina arată locul, numărul, timpul și categoria; numele doar la cine a bifat lista la înscriere sau la alergătorul neînscris care a acceptat — ceilalți apar ca „Participant #număr”.",
-                "Clasamentul stă pe pagină cât lista publică a participanților, de la sfârșitul cursei («Setări» → «Termene»). Debifezi oricând; rezultatele rămân salvate."
+                "Clasamentul stă pe pagină cât lista publică a participanților, de la sfârșitul cursei («Setări» → «Termene»). Debifezi oricând; rezultatele rămân salvate.",
+                "Cine s-a înscris sub o notă de confidențialitate mai veche, care nu descria clasamentul, apare ca „Participant #număr”, chiar dacă a bifat lista. Abia după ce clubul aprobă o notă de confidențialitate care numește bifa lângă clasament (câmpul {{resultsNameAsk}}, în «Documente legale») — după ce clubul și avocatul modifică fraza care le spune că apar doar cu numărul — pagina înscrierii lor (linkul din emailul ei) le arată «Vreau să apar cu numele în clasament». Clubul nu trimite un email nou pentru asta: spune-le cu «Trimite un mesaj participanților», din editorul cursei, că pot bifa din linkul înscrierii și că pot debifa oricând."
               ]
             }
           ]
@@ -12007,6 +12033,15 @@
       "otherAdult": "Acordul pentru oferte și beneficii îl dă doar persoana, din declarația ei sau din linkul înscrierii ei. De aici îl poți doar retrage.",
       "optInShared": "Dacă îl dai, clubul le poate da partenerilor prenumele, numele și adresa ta.",
       "yesShared": "La această înscriere primești oferte și beneficii de la club și de la partenerii săi. Clubul le poate da partenerilor prenumele, numele și adresa ta, ca să îți scrie ei."
+    },
+    "resultsName": {
+      "title": "Numele în clasament",
+      "older": "Te-ai înscris sub o versiune mai veche a notei de confidențialitate, care nu descria clasamentul, așa că în clasamentul cursei apari doar ca „Participant #numărul de concurs”.",
+      "label": "Vreau să apar cu numele în clasament",
+      "help": "Bifat, clasamentul publicat al cursei îți arată numele lângă loc, număr de concurs, timp și categorie, doar cât ești pe lista publică; debifezi oricând de aici și numele dispare din clasament.",
+      "changed": "Am salvat alegerea ta pentru clasament.",
+      "failed": "Nu am putut salva alegerea. Încearcă din nou.",
+      "otherAdult": "Acordul de a apărea cu numele în clasament îl dă doar persoana, din linkul înscrierii ei. De aici îl poți doar retrage."
     }
   },
   "Devs": {

@@ -18,9 +18,12 @@ const named: PublicNameInput = {
   firstResultsNoticeVersion: 2,
   typedNameAgreed: false,
   typedDisplayName: null,
+  resultsNameConsent: false,
+  resultsConsentVersion: 2,
+  firstResultsNameAskNoticeVersion: null,
 };
 /** A runner the club typed by hand, with the staff's record that the person agreed to appear by name (§810): no registration, so none of the registration's answers. */
-const typedAgreed: PublicNameInput = { registered: false, ticked: false, displayName: null, confirmed: false, hidden: false, noticeVersion: null, firstResultsNoticeVersion: 2, typedNameAgreed: true, typedDisplayName: "Ion Vasile" };
+const typedAgreed: PublicNameInput = { registered: false, ticked: false, displayName: null, confirmed: false, hidden: false, noticeVersion: null, firstResultsNoticeVersion: 2, typedNameAgreed: true, typedDisplayName: "Ion Vasile", resultsNameConsent: false, resultsConsentVersion: null, firstResultsNameAskNoticeVersion: null };
 
 describe("§808 publicResultName", () => {
   it("shows the registration's display name of a confirmed, ticked, shown runner who registered under a notice that described the results", () => {

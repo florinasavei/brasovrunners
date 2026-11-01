@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { namesVolunteerGuardian } from "@/modules/legal-documents/domain/merge-fields";
 import type { EventVolunteerSource, EventVolunteerState } from "@/db/schema/event-volunteers";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
@@ -106,7 +107,7 @@ export function volunteerEventDay(
   },
   now: Date,
 ): string {
-  const zone = event.timezone || "Europe/Bucharest";
+  const zone = event.timezone || CLUB_TIME_ZONE;
   if (event.dateToBeAnnounced === true) return dayIn(now, zone);
   const at = event.raceStartsAt ?? event.startsAt;
   if (at) return dayIn(at, zone);

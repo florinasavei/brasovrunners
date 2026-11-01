@@ -909,7 +909,7 @@
         "DNS": "Did not start",
         "DSQ": "Disqualified"
       },
-      "note": "A name is shown only for those who ticked “I want to appear on the participants & results list” on a confirmed registration made after the privacy notice began to describe the results. The others appear as “Participant #number”, with place, time and category.",
+      "note": "A name is shown only for those who ticked “I want to appear on the participants & results list” on a confirmed registration made after the privacy notice began to describe the results, or who, having registered before, have since asked to appear by name. The others appear as “Participant #number”, with place, time and category.",
       "filter": {
         "label": "Filter the results",
         "category": "Category",
@@ -1502,6 +1502,7 @@
           "declaration_hold_set": "Declaration kept for a complaint or a dispute",
           "declaration_hold_cleared": "Keep removed from the declaration",
           "promo_consent_changed": "Consent to offers and benefits changed",
+          "results_name_consent_changed": "Choice to appear by name in the results changed by the participant",
           "family_resent": "Email resent to the family",
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
@@ -3882,6 +3883,7 @@
         "volunteerMinors": "Only in the privacy notice: the parent's boxes of the volunteers' form, in quotation marks; without it, the club takes no volunteers under 18",
         "volunteersList": "Only in the privacy notice: the tick “I want to appear on the public list of volunteers”, in quotes. With it in the notice in force, a public list can show names",
         "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them",
+        "resultsNameAsk": "Only in the privacy notice: the tick “I want to appear by name in the results”, in quotes. With it and “Results” in the notice in force, earlier registrants see it on their registration's page",
         "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming",
         "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question before the event",
         "rsvpAskAnswerers": "Only in the privacy notice: the name of the button “Don't ask me again for this series”, in quotes. With it in the notice in force, those who answered “I'm coming!” before are asked too",
@@ -4493,6 +4495,26 @@
             "Search subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y, then delete everything it finds."
           ]
         },
+        "raceGunTime": {
+          "title": "Set the race start (the gun time)",
+          "todo": "{event} starts within three weeks and has no race start set: the finish clock counts from the event's start, which is the gathering time, not the gun.",
+          "done": "{event} has its race start set: the finish clock counts from it.",
+          "how": [
+            "/admin/events → the race → “Edit” → “When and where” → “Date and time”.",
+            "In “Race start” type the date and the hour at which the gun goes. If it is the same as the event's start, type the same hour.",
+            "Leave “Race start not set yet” unticked, then save. The row turns green."
+          ]
+        },
+        "raceAgeBands": {
+          "title": "Choose the age categories for the awards",
+          "todo": "{event} starts within three weeks and uses the standard age categories. If they suit the race, do nothing: the row goes by itself a few hours after the start. Otherwise write yours before results.",
+          "done": "{event} has its own age categories.",
+          "how": [
+            "/admin/events → the race → “Results” → “Age categories”.",
+            "In “Ages the groups start at” write the starting ages, separated by commas — “18, 35, 45, 55” gives under 18, 18-34, 35-44, 45-54 and 55+ — and check the line under the box.",
+            "Press “Save the categories” before the first result. If the standard ones suit the race, do nothing: the row goes by itself a few hours after the start."
+          ]
+        },
         "botCheck": {
           "title": "The anti-bot check on registration (Cloudflare Turnstile)",
           "todo": "The widget “brasovrunners-site” exists and both keys are on both Vercel projects; this row turns green on the next deployment. Turnstile stops the bots the form's trap field does not catch.",
@@ -4522,8 +4544,8 @@
         },
         "vercelUsage": {
           "title": "Vercel usage in figures, on /devs",
-          "todo": "With a read token and the project id, /devs shows the month's deployments, today's out of 100 a day and the build minutes out of 6,000 a month. Traffic is only in Vercel → Usage.",
-          "done": "/devs shows the month's deployments and build minutes, with a warning threshold.",
+          "todo": "With a read token and the project id, /devs shows the month's deployments, today's out of 100 a day, and the Active CPU out of Hobby's 4 hours a month. Traffic is only in Vercel → Usage.",
+          "done": "/devs shows the month's deployments and the Active CPU out of Hobby's 4 hours, with a warning threshold; «Costs» reads the same figure.",
           "how": [
             "Vercel → avatar → Account Settings → Tokens → Create: name “brasovrunners-devs”, scope your account, expiry 1 year. Copy the token (shown once).",
             "The project id: Vercel → the production project → Settings → General → Project ID (starts with prj_).",
@@ -5083,9 +5105,9 @@
       "nextSpend": {
         "mailgun": "The next thing to cost money: one month of Mailgun Basic, {cost}.",
         "vercel": "The next thing to cost money: Vercel Pro, {cost}.",
-        "none": "No new spend is coming: what is taken for now can be dropped after the race.",
+        "none": "No new spend is coming. Vercel goes back to Hobby only after two months in a row under 3 Active CPU-hours, never on a date.",
         "mailgunMore": "Bought for a single race, when a day is expected to bring more entries than the free emails cover.",
-        "vercelMore": "It arrives only if the site starts asking for money to take part, or if the site's code moves to the club's own account."
+        "vercelMore": "It arrives if the site asks for money to take part, if its code moves to the club's account, or if Active CPU nears Hobby's 4 hours a month. It goes back to Hobby after two months under 3 hours."
       },
       "currencyNote": "Amounts are in the currency each company invoices in; VAT in Romania is {vat}%.",
       "freshness": {
@@ -5370,6 +5392,7 @@
           "cuHours": "{used} CU-hours so far, ~{projected} by the end.",
           "messages": "{used} emails sent so far, ~{projected} by the end.",
           "buildMinutes": "{used} build minutes so far, ~{projected} by the end.",
+          "cpuHours": "{used} Active CPU hours so far, ~{projected} by the end.",
           "characters": "{used} characters translated so far, ~{projected} by the end.",
           "gigabytes": "{used} GB of pictures stored, at least.",
           "gigabytesMore": "One variant of each picture is counted, so the real figure is higher."
@@ -5384,7 +5407,7 @@
         "over": {
           "neon": "At this pace the limit is reached before the period ends, and Neon stops the database until the next period.",
           "mailgun": "At this pace the monthly limit is reached before the month ends, and the remaining messages wait for next month.",
-          "vercel": "At this pace the build minutes run out before the month ends, and new deployments stop until next month.",
+          "vercel": "At this pace the Active CPU passes Hobby's 4 hours before the month ends, and Vercel can pause the site for about 30 days.",
           "r2": "The pictures are past the free allowance: the excess is billed monthly."
         },
         "domain": {
@@ -5394,7 +5417,8 @@
         },
         "unmeasured": {
           "neon": "Not measured without NEON_API_KEY and NEON_PROJECT_ID on this environment.",
-          "vercel": "Not measured without VERCEL_API_TOKEN and VERCEL_PROJECT_ID on this environment."
+          "vercel": "Not measured without VERCEL_API_TOKEN on this environment: Hobby is read by its Active CPU.",
+          "vercelPro": "Not measured without VERCEL_API_TOKEN and VERCEL_PROJECT_ID on this environment."
         },
         "unread": "The provider did not answer just now ({reason}).",
         "deeplOff": "The DeepL key is not set on this server, so the editors' translation button is grey.",
@@ -5407,6 +5431,7 @@
         },
         "typedPlan": "The plan is typed by hand with no recorded price, so the month's amount is unknown.",
         "unreadHere": "Could not be read just now from the site's database.",
+        "unitUnknown": "CPU time cannot be compared with the Hobby allowance: Vercel gave it in «{unit}», not in hours.",
         "lastMonth": {
           "neonKey": "— Neon keeps the history for an organization's key only; the project key is refused ({reason}).",
           "typedPlan": "— the typed plan has no recorded price.",
@@ -9032,7 +9057,8 @@
               "steps": [
                 "The results appear on the site only once you publish them, only after the race has started and only if the privacy notice and the terms in force describe the results — «Legal documents» says whether new texts must be approved; «Tasks» has the row.",
                 "On «Results», under «On the event's page», tick «The results are public on the event's page» and press «Save». The page shows the place, the number, the time and the category; a name only for who ticked the list at registration or a runner who did not register and agreed — everyone else is “Participant #number”.",
-                "The results stay on the page as long as the public participant list, from the end of the race («Settings» → «Deadlines»). Untick at any time; the results stay saved."
+                "The results stay on the page as long as the public participant list, from the end of the race («Settings» → «Deadlines»). Untick at any time; the results stay saved.",
+                "Whoever registered under an older privacy notice, which did not describe the results, appears as “Participant #number”, even if they ticked the list. Only once the club approves a privacy notice that names that tick beside the results (the field {{resultsNameAsk}}, in «Legal documents») — after the club and its lawyer amend the sentence telling them they appear only by number — does their registration's page (the link in its email) show them «I want to appear by name in the results». The club sends no new email for it: tell them with «Send a message to participants», from the race's editor, that they can tick it from their registration's link and untick it at any time."
               ]
             }
           ]
@@ -12007,6 +12033,15 @@
       "otherAdult": "Only the person gives the consent to offers and benefits, on their own declaration or from their own registration's link. From here you can only withdraw it.",
       "optInShared": "If you give it, the club may give its partners your first name, last name and address.",
       "yesShared": "On this registration you receive offers and benefits from the club and its partners. The club may give the partners your first name, last name and address, so they write to you themselves."
+    },
+    "resultsName": {
+      "title": "Your name in the results",
+      "older": "You registered under an older version of the privacy notice, which did not describe the results, so in the race's results you appear only as “Participant #race number”.",
+      "label": "I want to appear by name in the results",
+      "help": "Ticked, the race's published results show your name beside your place, race number, time and category, only while you are on the public list; untick it here at any time and the name leaves them.",
+      "changed": "Your choice for the results is saved.",
+      "failed": "We could not save your choice. Try again.",
+      "otherAdult": "Only the person gives the consent to appear by name in the results, from their own registration's link. From here you can only withdraw it."
     }
   },
   "Devs": {

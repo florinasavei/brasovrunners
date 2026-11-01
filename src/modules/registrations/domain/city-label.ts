@@ -1,3 +1,5 @@
+import { HOME_COUNTRY } from "@/modules/events/domain/place";
+
 /**
  * «Oraș» on the registrations list (§660): where the person lives, as one short cell — the city as typed,
  * followed by the country's ISO code in brackets only when it is not Romania («Bristol (GB)»), because
@@ -6,10 +8,9 @@
  *
  * The country is `registrations.country` (§510): an ISO 3166-1 alpha-2 code, `RO` by default. The list's
  * cell and its phone row read this one function; the export keeps the country and the city in their own
- * columns, as the spreadsheet always has, so a sheet can filter by either.
+ * columns, as the spreadsheet always has, so a sheet can filter by either. "Romania" is the club's country,
+ * `HOME_COUNTRY` (§882).
  */
-const HOME_COUNTRY = "RO";
-
 export function cityLabel(city: string | null | undefined, country: string | null | undefined): string {
   const typed = city?.trim() ?? "";
   if (!typed) return "";

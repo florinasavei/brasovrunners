@@ -99,7 +99,7 @@ export async function GET(request: Request): Promise<Response> {
     event while a name is searched.
   */
   const db = getDb();
-  const scope = defaultEventFilter(eventId ?? undefined, await listEventsWithRegistrations(db), search ?? undefined);
+  const scope = defaultEventFilter(eventId ?? undefined, await listEventsWithRegistrations(db, locale), search ?? undefined);
 
   /**
    * `TEST` rows are omitted, not labelled (`DECISIONS.md` §30). The export is the club's own

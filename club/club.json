@@ -1,0 +1,39 @@
+{
+  "name": "Brașov Runners",
+  "slug": "brasovrunners",
+  "shortName": "BVR",
+  "wordmark": "BRASOV RUNNERS",
+  "shortForms": {
+    "city": "bv",
+    "nicknames": ["bvr"]
+  },
+  "place": {
+    "locality": "Brașov",
+    "county": "Brașov",
+    "countyCode": "BV",
+    "country": "RO",
+    "countryName": { "ro": "România", "en": "Romania" },
+    "timeZone": "Europe/Bucharest",
+    "zoneWords": { "ro": "ora României", "en": "Romanian time" },
+    "coordinates": { "latitude": 45.6427, "longitude": 25.5887 },
+    "idExample": "BV 123456"
+  },
+  "hashtags": ["#NoOneLeftBehind", "#brasovrunners"],
+  "safetyProgramme": { "ro": "Girl Zone", "en": "Girl Zone" },
+  "logo": {
+    "lockup": {
+      "src": "/brand/logo.svg",
+      "onDark": "/brand/logo-white.svg",
+      "viewBox": "60 906 2880 1188",
+      "width": 2880,
+      "height": 1188
+    },
+    "mark": {
+      "src": "/brand/logo-mark.svg",
+      "onDark": "/brand/logo-mark-white.svg",
+      "viewBox": "60 906 2840 889",
+      "width": 2840,
+      "height": 889
+    }
+  }
+}

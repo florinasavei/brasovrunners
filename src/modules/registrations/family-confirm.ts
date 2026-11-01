@@ -19,6 +19,7 @@ import { familyRegistrationOpen } from "./family-gate";
 import { publicFormEvent } from "./public-form-event";
 import { confirmEmail, submitRegistration } from "./service";
 import { releaseFamilyPlaceHold } from "./repository";
+import { HOME_COUNTRY } from "@/modules/events/domain/place";
 
 /**
  * Another person on a registered address, confirmed from the inbox (§446, amending §389; the
@@ -142,7 +143,7 @@ export async function confirmFamilyEntry<T extends Record<string, unknown>>(
       // before the country was asked (§510) has none, and the public schema now requires it: it
       // lives in Romania, as the column's default reads every older row — never a refusal of a
       // parent who did everything right. A kept «Prefer să nu spun» is dropped the same way (§554).
-      { country: "RO", ...withoutRetiredSex(entry.fields), email: participant.deliveryEmail, fitnessAcknowledged: input.fitnessAcknowledged },
+      { country: HOME_COUNTRY, ...withoutRetiredSex(entry.fields), email: participant.deliveryEmail, fitnessAcknowledged: input.fitnessAcknowledged },
       now,
       "REAL",
       { source: "PUBLIC", createdByStaffUserId: null, anotherPerson: { participantId: participant.id } },

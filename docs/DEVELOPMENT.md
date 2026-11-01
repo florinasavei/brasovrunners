@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.99-2026-11-01 -->
+<!-- PROJECT_BASELINE: BR-V4.00-2026-11-01 -->
 
 # Running this locally
 
-**Baseline `BR-V3.99-2026-11-01`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V4.00-2026-11-01`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -95,6 +95,7 @@ yarn test:categories     the six test categories with their files (tests/categor
 yarn test:fast           the categories marked fast — trust, guards, logic; what the pre-commit hook runs on the staged files' tests
 yarn test:skip <names…>  every category but the ones named (`yarn test:skip drawn pages`); «trust» is never left out
 yarn test:concurrency    the two-connection suite; needs the database running
+yarn test:fork           the fork check (§882): `@club` pointed at a made-up club (tests/fixtures/fork-club/), tests/fork/ renders the identity and finds none of this club's words; no database (PGlite); CI runs it in the `checks` job
 yarn test:clock          the suite with the real clock moved to +1 month, +1 year and +10 years; about twenty minutes a date (§ Tests that the calendar breaks); `--concurrency` runs the two-connection suite instead, a minute a date
 yarn test:watch          re-run on change
 yarn test:e2e            browser tests, mobile and desktop; needs the database running

@@ -127,6 +127,22 @@ export const LIST_NUMBERS_MERGE_FIELD = "participantListNumbers";
 export const RESULTS_MERGE_FIELD = "results";
 
 /**
+ * The privacy notice's marker for «Vreau să apar cu numele în clasament» (§879; the owner, 2026-11-01: «Do them all»): the tick a runner
+ * who registered under a notice older than the first that described the results (`{{results}}`) finds on their own registration's page,
+ * to be named in a race's published results. Filled, when the notice is shown, with the tick's own words, quoted
+ * (`results/notice-words.ts`) — „Vreau să apar cu numele în clasament” / “I want to appear by name in the results”.
+ *
+ * **A marker of its own, not `{{results}}`, for the reason `{{rsvpAskAnswerers}}` is one (§823):** the platform's template names
+ * `{{results}}` in a section that also says the older registrants appear «doar cu numărul … chiar dacă ai bifat» and that a name
+ * appears only for a tick given «la înscriere» — so a gate on `{{results}}` would open the question under a text that promises the
+ * opposite. This marker is silent in every notice approved before it, and in the platform's template until the club and its lawyer
+ * amend that sentence and add it: the tick is offered and taken only while the notice in force names it AND `{{results}}` in every
+ * language (`describesResultsNameAsk`), and a yes counts only when it was given under that version or a later one
+ * (`findFirstResultsNameAskNoticeVersion`).
+ */
+export const RESULTS_NAME_ASK_MERGE_FIELD = "resultsNameAsk";
+
+/**
  * The privacy notice's marker for the answer «Vin!» on a turn-up event (§811, «Vin!» part 1; the owner, 2026-10-18:
  * «how do I mark myself as "Going"?»). The same two-in-one as the results above: filled, when the notice is shown, with
  * the answer's own name, quoted (`rsvp/notice-words.ts`) — «Vin!» / “I'm coming!” — in the paragraph that says what the
@@ -600,6 +616,7 @@ export const MERGE_FIELDS = [
   LIST_SOCIALS_MERGE_FIELD,
   LIST_NUMBERS_MERGE_FIELD,
   RESULTS_MERGE_FIELD,
+  RESULTS_NAME_ASK_MERGE_FIELD,
   RSVP_MERGE_FIELD,
   RSVP_ASK_MERGE_FIELD,
   RSVP_ASK_ANSWERERS_MERGE_FIELD,
@@ -790,6 +807,15 @@ export function describesListNumbers(body: unknown): boolean {
  */
 export function describesResults(body: unknown): boolean {
   return mergeFieldsIn(body).has(RESULTS_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes «Vreau să apar cu numele în clasament» (§879): it names `{{resultsNameAsk}}`. One half of the
+ * gate for the tick on an older notice's runner's page — the other is `describesResults`, which the caller also asks, because the
+ * tick names the runner in those results. Pure; the caller asks it of the notice in force, in every language.
+ */
+export function describesResultsNameAsk(body: unknown): boolean {
+  return mergeFieldsIn(body).has(RESULTS_NAME_ASK_MERGE_FIELD);
 }
 
 /**
