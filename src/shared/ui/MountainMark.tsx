@@ -14,12 +14,13 @@
  * A Server Component with no state: it may be rendered from a client component's children too.
  */
 
-/** The drawing's own box: 120 by 48, so a width of 120 draws it at its natural size. */
-export const MOUNTAIN_MARK_VIEWBOX = { width: 120, height: 48 } as const;
+import { MOUNTAINS } from "@/club/decor";
 
-/** The far ridge, then the near one. */
-export const FAR = "M6 48 38 17l12 10 23-22 18 18 12-6 17 12v19Z";
-export const NEAR = "M0 48 22 26l8 6 18-20 12 14 8-6 18 18 8-6 26 16Z";
+/**
+ * The drawing's own box — Brașov's is 120 by 48, so a width of 120 draws it at its natural size — and its
+ * ridges, the far one then the near one: the club's, in `club/decor.json` since §885 (`src/club/decor.ts`).
+ */
+export const MOUNTAIN_MARK_VIEWBOX = { width: MOUNTAINS.width, height: MOUNTAINS.height } as const;
 
 type Props = {
   /** The drawn width in pixels; the height follows the 5:2 box. */
@@ -29,6 +30,8 @@ type Props = {
 };
 
 export default function MountainMark({ width = MOUNTAIN_MARK_VIEWBOX.width, title }: Props) {
+  // A club with no mountains draws none: no empty box holding a place on the page.
+  if (MOUNTAINS.layers.length === 0) return null;
   const height = Math.round((width * MOUNTAIN_MARK_VIEWBOX.height) / MOUNTAIN_MARK_VIEWBOX.width);
   return (
     <svg
@@ -42,8 +45,9 @@ export default function MountainMark({ width = MOUNTAIN_MARK_VIEWBOX.width, titl
       data-testid="mountain-mark"
     >
       {title && <title>{title}</title>}
-      <path d={FAR} opacity={0.55} />
-      <path d={NEAR} />
+      {MOUNTAINS.layers.map((layer, index) => (
+        <path key={index} d={layer.d} opacity={layer.depth === "far" ? 0.55 : undefined} />
+      ))}
     </svg>
   );
 }

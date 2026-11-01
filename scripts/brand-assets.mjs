@@ -1,13 +1,25 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import { brandAssetsLock, brandColours } from "./brand-assets-lock.mjs";
 
 /**
- * The club's lockup as the rasters the PDFs and the emails need (`DECISIONS.md` §174): pdfkit
+ * `yarn brand:assets` — the club's lockup as the rasters the PDFs and the emails need (`DECISIONS.md` §174): pdfkit
  * draws no SVG and many mail clients refuse it. Flattened onto white, since an alpha PNG in a PDF
- * composites badly on some viewers and printers. Run after changing the SVG source; the outputs
- * are committed so `next build` needs no native dependency.
+ * composites badly on some viewers and printers. Run after changing the SVG source or the palette in
+ * `club/club.json`; the outputs are committed so `next build` needs no native dependency.
+ *
+ * Its colours are the club's (§885): the palette's `tints.emailBand` behind the white lockup (the primary
+ * when a club leaves it out), the primary's ink for the glyph, read from `club/club.json`; white is the page's. It ends by writing `club/assets.lock.json` —
+ * each source's sha256 and those colours — which `tests/unit/theme/brand-assets-lock.test.ts` holds the
+ * sources to, so a changed source without a rebuild fails the tests. `--lock-only` writes the lock alone,
+ * for a change that moved nothing the rasters are drawn from.
  */
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const colours = brandColours(root);
+const lockOnly = process.argv.includes("--lock-only");
 
 const OUTPUTS = [
   {
@@ -21,8 +33,9 @@ const OUTPUTS = [
     source: "public/brand/logo-white.svg",
     target: "public/brand/logo-white-email.png",
     width: 720,
-    // For a message that still wants a blue band; the card's header is white since §189.
-    background: "#1a1aff",
+    // For a message that still wants a blue band; the card's header is white since §189. No template links it
+    // any more, but delivered emails do, so it stays in public/; its band is the club's `tints.emailBand`.
+    background: colours.emailBand,
   },
   {
     source: "public/brand/logo.svg",
@@ -59,14 +72,17 @@ const OUTPUTS = [
       The glyph before «Nu mai pot ajunge» in every email about a live registration (§558): the
       manage page's cancel glyph (`EventBusy`) in the club's ink blue, drawn at 20 px, so 2× here.
       With alpha, so it sits on the button's white and on a dark theme's re-coloured one alike.
+      Its fill is the club's primary ink, whatever the source file says (§885).
     */
     width: 40,
     background: null,
+    fill: colours.primaryInk,
   },
 ];
 
-for (const { source, target, width, background, canvas } of OUTPUTS) {
-  const svg = await readFile(source);
+for (const { source, target, width, background, canvas, fill } of lockOnly ? [] : OUTPUTS) {
+  const text = await readFile(path.join(root, source), "utf8");
+  const svg = Buffer.from(fill ? text.replace(/fill="#[0-9a-fA-F]{6}"/g, `fill="${fill}"`) : text);
   const raster = canvas
     ? // A banner: the lockup fitted in its box, centred on the full canvas.
       sharp(
@@ -83,7 +99,10 @@ for (const { source, target, width, background, canvas } of OUTPUTS) {
     : sharp(svg, { density: 600 }).resize({ width, fit: "inside" });
   if (background) raster.flatten({ background });
   const png = await raster.png({ compressionLevel: 9, palette: background !== null }).toBuffer();
-  await writeFile(target, png);
+  await writeFile(path.join(root, target), png);
   const { width: w, height: h, hasAlpha } = await sharp(png).metadata();
   console.log(`${path.basename(target)}: ${w}x${h}, alpha ${hasAlpha ? "yes" : "no"}, ${(png.byteLength / 1024).toFixed(1)} KiB`);
 }
+
+await writeFile(path.join(root, "club/assets.lock.json"), `${JSON.stringify(brandAssetsLock(root), null, 2)}\n`);
+console.log("club/assets.lock.json: the sources and colours the rasters were built from");

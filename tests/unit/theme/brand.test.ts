@@ -4,6 +4,7 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import messages from "@/../messages/ro.json";
 import en from "@/../messages/en.json";
+import { CLUB } from "@/club/config";
 import { contrastRatio, MAX_CARD_STEP, relativeLuminance } from "@/modules/appearance/domain/tint-contrast";
 import {
   CALENDAR_IMAGE_THEMES,
@@ -15,6 +16,8 @@ import {
   GRADIENT,
   LOGO,
   LOOK_ACCENT,
+  mix,
+  PALETTE,
   SITE_TINT,
   SURFACE_GRADIENT,
   TEAM_CANVAS,
@@ -32,6 +35,18 @@ import {
   TEXT_PAIRS,
   TEXT_PAIRS_DARK,
 } from "@/theme/brand-pairs";
+import { cmapHas, sfntCmap } from "../../helpers/font-cmap";
+
+/**
+ * The colour the club's logo file fills its drawing with (§885): `public/brand/logo.svg` states it once, as the
+ * group's `fill:#rrggbb`. The palette's `primary` is held to it rather than to a pinned hex, so a club that
+ * replaces both keeps this test, and a club that replaces one fails it.
+ */
+const LOGO_FILL = (() => {
+  const fills = new Set([...readFileSync(join(process.cwd(), "public", LOGO.lockup.src), "utf8").matchAll(/fill:(#[0-9a-fA-F]{6})/g)].map((match) => match[1].toLowerCase()));
+  expect(fills.size, "logo.svg states one fill colour").toBe(1);
+  return [...fills][0];
+})();
 
 /** A pair's names, `COLOR.ink/COLOR.paper`, for the lists below that pin which pairs are asserted. */
 const names = (pairs: readonly BrandPair[]) => pairs.map((pair) => `${pair.foreground.name}/${pair.background.name}`);
@@ -164,11 +179,30 @@ describe("BR-REQ-070-02 the palette is readable", () => {
     expect(COLOR.surface).not.toBe(COLOR.paper);
   });
 
-  it("uses the blue the club's own logo file states", () => {
+  it("uses the blue the club's own logo file states: primary equals logo.svg's fill", () => {
     // Every path in public/brand/logo.svg is filled with this value. If the club settles on
     // the t-shirt's navy instead, this and the SVG have to move together — a palette that
     // disagrees with the logo beside it is the one branding error everybody notices.
-    expect(COLOR.blue).toBe("#0000ff");
+    expect(PALETTE.primary).toBe(LOGO_FILL);
+    expect(COLOR.blue).toBe(PALETTE.primary);
+  });
+
+  it("BR-REQ-101-01: reads every colour of the club from club/club.json, the hue names aliases of its roles (§885)", () => {
+    const written = CLUB.palette;
+    expect({ blue: COLOR.blue, blueInk: COLOR.blueInk, orange: COLOR.orange }).toEqual({ blue: written.primary, blueInk: written.primaryInk, orange: written.secondary });
+    expect({ blue: COLOR_DARK.blue, blueInk: COLOR_DARK.blueInk }).toEqual({ blue: written.dark.primary, blueInk: written.dark.primaryInk });
+    expect(LOOK_ACCENT.pink).toEqual(written.look);
+    expect(LOOK_ACCENT.orange).toEqual(written.secondaryLook);
+    expect(written.look.light.accent).toBe(written.accent);
+    expect({ deep: GRADIENT.deep, mid: GRADIENT.mid, light: GRADIENT.light }).toEqual(written.kit);
+    expect({ faint: SITE_TINT.faintBlue, light: SITE_TINT.lightBlue, grey: SITE_TINT.blueGrey, hero: GRADIENT.heroTint, heroDark: GRADIENT.heroTintDark }).toEqual({
+      faint: written.tints.faint,
+      light: written.tints.light,
+      grey: written.tints.grey,
+      hero: written.tints.hero,
+      heroDark: written.tints.heroDark,
+    });
+    expect(PALETTE.tints).toEqual(written.tints);
   });
 
   it("uses six-digit hex everywhere, which the contrast helper assumes", () => {
@@ -259,7 +293,7 @@ describe("BR-REQ-070-02 the new look's palette is readable", () => {
   });
 
   it("keeps the logo blue the logo's", () => {
-    expect(COLOR.blue).toBe("#0000ff");
+    expect(COLOR.blue).toBe(LOGO_FILL);
     expect(COLOR.accentInk).not.toBe(COLOR.blue);
   });
 });
@@ -377,12 +411,9 @@ describe("BR-REQ-070-02 every site background preset is readable", () => {
 
   it("keeps the platform's paper as the first preset, and the two blues are the club's blue over white", () => {
     expect(SITE_TINT.paper).toBe(COLOR.paper);
-    // `COLOR.blue` is #0000ff: over white at a share `a`, red and green fall to 255 × (1 − a).
-    const overWhite = (share: number) => {
-      const channel = Math.round(255 * (1 - share)).toString(16).padStart(2, "0");
-      return `#${channel}${channel}ff`;
-    };
-    expect(COLOR.blue).toBe("#0000ff");
+    // The club's blue laid over white at a share `a`: white moved `a` of the way to the blue, channel by channel.
+    const overWhite = (share: number) => mix(COLOR.surface, COLOR.blue, share);
+    expect(COLOR.surface).toBe("#ffffff");
     expect(SITE_TINT.faintBlue).toBe(overWhite(0.04));
     expect(SITE_TINT.lightBlue).toBe(overWhite(0.08));
   });
@@ -490,20 +521,23 @@ describe("the brand assets the theme points at exist", () => {
   });
 
   describe("the kit wordmark constant stays inside what the kit typeface can render", () => {
-    it("is ASCII, because Facón contains no Romanian characters", () => {
-      // Verified by reading the font's own cmap: 129 mapped characters, and not one of
-      // ș ț ă â î in either the comma-below or the cedilla encoding. Writing "BRAȘOV" here
-      // would not throw — it would silently render the Ș in the fallback font, one Roboto
-      // letter in the middle of a Facón word. docs/brand/README.md has the full table.
-      expect(WORDMARK).toMatch(/^[\x20-\x7e]+$/);
+    it("BR-REQ-101-01: has every wordmark character in the font's cmap (§885)", () => {
+      // Read from the font's own cmap. Facón, Brașov's face, maps 129 characters and not one of
+      // ș ț ă â î in either the comma-below or the cedilla encoding. Writing "BRAȘOV" in the
+      // wordmark would not throw — it would silently render the Ș in the fallback font, one Roboto
+      // letter in the middle of a Facón word. A club's own face and wordmark answer the same question.
+      const cmap = sfntCmap(join(process.cwd(), "src/theme/fonts/Wordmark.ttf"));
+      const missing = [...new Set(WORDMARK)].filter((char) => !cmapHas(cmap, char.codePointAt(0) ?? 0));
+      expect(missing).toEqual([]);
+      expect(cmapHas(cmap, "ș".codePointAt(0) ?? 0)).toBe(false);
     });
 
-    it("is the kit's logotype, not the club's name", () => {
+    it("is the kit's logotype, not the club's name: both read from club/club.json", () => {
       // The name, spelled properly, is CLUB_NAME and is what the header link announces to a
-      // screen reader. These two are allowed to differ; that is the whole point. If someone
-      // ever "corrects" the constant, the assertion above catches it.
-      expect(WORDMARK).toBe("BRASOV RUNNERS");
-      expect(CLUB_NAME).toBe("Brașov Runners");
+      // screen reader. These two are allowed to differ; that is the whole point.
+      expect(WORDMARK).toBe(CLUB.wordmark);
+      expect(CLUB_NAME).toBe(CLUB.name);
+      expect(WORDMARK).not.toBe(CLUB_NAME);
     });
 
     it("is the one copy of the club's name: the catalogues ask for it rather than hold it (§215, §369)", () => {
@@ -524,8 +558,8 @@ describe("the brand assets the theme points at exist", () => {
       // next/font/local resolves this path at build time, so a rename breaks the build rather
       // than the page. The licence is asserted because the file is redistributed in every
       // deploy, and a font without its terms is the kind of thing nobody notices is missing.
-      expect(existsSync(join(process.cwd(), "src/theme/fonts/Facon.ttf"))).toBe(true);
-      expect(existsSync(join(process.cwd(), "src/theme/fonts/Facon-LICENSE.txt"))).toBe(true);
+      expect(existsSync(join(process.cwd(), "src/theme/fonts/Wordmark.ttf"))).toBe(true);
+      expect(existsSync(join(process.cwd(), "src/theme/fonts/Wordmark-LICENSE.txt"))).toBe(true);
     });
   });
 });

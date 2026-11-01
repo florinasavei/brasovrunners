@@ -31,7 +31,7 @@ import {
   DEFAULT_BIB_DESIGN,
 } from "@/modules/registrations/bib-design";
 import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARK_VIEWBOX, BIB_MEMBER_MARKS, isVectorMark } from "@/modules/registrations/bib-member-mark";
-import { CLUB_NAME, HEADER_CLEARANCE_PX, LOGO } from "@/theme/brand";
+import { BIB_COLOURS, CLUB_NAME, HEADER_CLEARANCE_PX, LOGO, LOGO_RATIO } from "@/theme/brand";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { BIB_FOOTER_TEXT_MAX, bibWebsiteHost } from "@/modules/registrations/bib-footer";
 import { BIB_PICTURE_PRINT_DPI, BIB_PICTURE_RATIO, type BibPictureSlot, bibProfilePictureExample, bibProfilePictureRatio } from "@/modules/registrations/bib-picture-frame";
@@ -47,7 +47,6 @@ import BibPictureField, { type BibPictureLabels } from "./BibPictureField";
 import BibFooterTextField from "./BibFooterTextField";
 import OnlyWhenChosen from "./OnlyWhenChosen";
 import OnlyWhenTicked from "./OnlyWhenTicked";
-import { BIB_COLOURS } from "./bib-colours";
 
 /** The radios' glyphs, by name from the registry (§318, §759): the GPX's route, a picture, the right way up, turned; the figures' ruler. */
 const FiguresGlyph = ACTION_ICONS.profileFigures;
@@ -790,7 +789,7 @@ export default async function BibDesignPanel({
                                   sx={{ flexShrink: 0, display: "inline-flex", bgcolor: "common.white", border: 1, borderColor: "divider", px: 0.5, borderRadius: 0.5 }}
                                 >
                                   {/* eslint-disable-next-line @next/next/no-img-element -- the club's own SVG, a few pixels tall */}
-                                  <img src={LOGO.lockup.src} alt="" width={53} height={22} style={{ display: "block" }} />
+                                  <img src={LOGO.lockup.src} alt="" width={53} height={Math.round(53 / LOGO_RATIO)} style={{ display: "block" }} />
                                 </Box>
                               )}
                               {t(`editor.bibDesign.member.markShapes.${mark}`)}

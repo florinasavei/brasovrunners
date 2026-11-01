@@ -1,0 +1,31 @@
+{
+  "dataProtectionOfficer": {
+    "ro": "Nu avem responsabil cu protecția datelor: art. 37 din Regulamentul (UE) 2016/679 (GDPR) nu îl cere unui club mic, fără monitorizare sistematică sau date speciale la scară largă.",
+    "en": "We have no data protection officer: article 37 of Regulation (EU) 2016/679 (the GDPR) does not require one of a small club without systematic monitoring or large-scale special data."
+  },
+  "mailbox": {
+    "account": {
+      "ro": "Căsuța de e-mail a clubului este un cont Gmail (Google).",
+      "en": "The club's mailbox is a Gmail account (Google)."
+    },
+    "providerTerms": {
+      "ro": "Pentru un cont Gmail obișnuit, Google prelucrează datele și după propriile reguli, nu doar în numele nostru.",
+      "en": "For an ordinary Gmail account, Google also processes data under its own terms, not only on our behalf."
+    },
+    "name": { "ro": "Gmail", "en": "Gmail" },
+    "theClubs": { "ro": "Gmail-ul clubului", "en": "the club's Gmail" },
+    "withCompany": {
+      "ro": "căsuța Gmail a clubului (Google Ireland Ltd.)",
+      "en": "the club's Gmail mailbox (Google Ireland Ltd.)"
+    },
+    "company": { "ro": "Google", "en": "Google" }
+  },
+  "photoChannels": {
+    "ro": "Facebook, Instagram (Meta) sau Strava",
+    "en": "Facebook, Instagram (Meta) or Strava"
+  },
+  "prizeMoney": {
+    "ro": "Nu se acordă premii în bani.",
+    "en": "No prize money is awarded."
+  }
+}

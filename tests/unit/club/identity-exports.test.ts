@@ -37,4 +37,32 @@ describe("BR-REQ-101-01: the identity exports read from club/club.json equal the
     };
     await expect(`${JSON.stringify(values, null, 2)}\n`).toMatchFileSnapshot("./__snapshots__/identity-exports.json");
   });
+
+  /**
+   * §885: the palette moved into `club/club.json` too, and Brașov stays identical to the pixel. Every colour
+   * export of `brand.ts` (the bib's colours since they moved into it), the pairs the AA tests walk and the logo's
+   * proportions as the race number and the PDFs round them — written from `origin/qa` before the move.
+   */
+  it("prints the same palette as origin/qa did", async () => {
+    const brand = await import("@/theme/brand");
+    const pairs = await import("@/theme/brand-pairs");
+    const values = {
+      COLOR: brand.COLOR,
+      COLOR_DARK: brand.COLOR_DARK,
+      PROVIDER_LOGO: brand.PROVIDER_LOGO,
+      SITE_TINT: brand.SITE_TINT,
+      EMAIL_EMPHASIS: brand.EMAIL_EMPHASIS,
+      GRADIENT: brand.GRADIENT,
+      SHEET_TINT: brand.SHEET_TINT,
+      SHEET_FRAME: brand.SHEET_FRAME,
+      LOOK_ACCENT: brand.LOOK_ACCENT,
+      TEAM_CANVAS: brand.TEAM_CANVAS,
+      SURFACE_GRADIENT: brand.SURFACE_GRADIENT,
+      CALENDAR_IMAGE_THEMES: brand.CALENDAR_IMAGE_THEMES,
+      BIB_COLOURS: brand.BIB_COLOURS,
+      BRAND_PAIRS: pairs.BRAND_PAIRS,
+      CALENDAR_TONE_PAIRS: pairs.CALENDAR_TONE_PAIRS,
+    };
+    await expect(`${JSON.stringify(values, null, 2)}\n`).toMatchFileSnapshot("./__snapshots__/palette-exports.json");
+  });
 });

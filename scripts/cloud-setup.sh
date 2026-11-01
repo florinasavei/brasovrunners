@@ -29,7 +29,7 @@ DB_PORT="5432"
 LOCAL_DATABASE_URL="postgresql://brasov_runners:local_only_not_a_secret@localhost:5432/brasov_runners"
 LOCAL_BASE_URL="http://localhost:47821"
 
-LOG="${TMPDIR:-/tmp}/brasovrunners-cloud-setup.log"
+LOG="${TMPDIR:-/tmp}/cloud-setup.log"
 : >"$LOG"
 
 # Corepack would otherwise stop and ask before downloading Yarn, and a hook has nobody to answer.

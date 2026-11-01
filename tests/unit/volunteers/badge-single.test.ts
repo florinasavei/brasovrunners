@@ -3,7 +3,6 @@ import path from "node:path";
 import PDFDocument from "pdfkit";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { contrastRatio, MIN_TEXT_CONTRAST } from "@/modules/appearance/domain/tint-contrast";
-import { BIB_COLOURS } from "@/modules/content/events/ui/bib-colours";
 import {
   BADGE_MODES,
   type BadgeDesign,
@@ -30,7 +29,7 @@ import {
   readPrintCounts,
 } from "@/modules/volunteers/badges/badges";
 import { badgeSheetOrder, renderBadgeSheet } from "@/modules/volunteers/badges/badges-pdf";
-import { COLOR } from "@/theme/brand";
+import { BIB_COLOURS, COLOR } from "@/theme/brand";
 
 /**
  * §783 — one volunteer badge for everyone, no role (the owner, 2026-10-15: «aș vrea să am un singur ecuson de voluntari, fără roluri»), the

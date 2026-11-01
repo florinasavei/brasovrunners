@@ -20,13 +20,20 @@
   },
   "hashtags": ["#somesstriders"],
   "safetyProgramme": { "ro": "Zona Sigură", "en": "Safe Zone" },
+  "palette": {
+    "primary": "#0a6b3d",
+    "primaryInk": "#08532f",
+    "dark": { "primary": "#5fd39a", "primaryInk": "#9be6c0" },
+    "secondary": "#e8b04a",
+    "accent": "#7a3fb0"
+  },
   "logo": {
     "lockup": {
       "src": "/brand/logo.svg",
       "onDark": "/brand/logo-white.svg",
-      "viewBox": "60 906 2880 1188",
-      "width": 2880,
-      "height": 1188
+      "viewBox": "0 0 1000 1000",
+      "width": 1000,
+      "height": 1000
     },
     "mark": {
       "src": "/brand/logo-mark.svg",
