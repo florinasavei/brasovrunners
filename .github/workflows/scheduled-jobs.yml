@@ -21,7 +21,7 @@ name: scheduled-jobs
 # 07:17, 13:17 and 19:17 UTC — off the pinger's quarter-hours — to do what is due if the external
 # pinger has stopped. It used to say every five minutes; GitHub ran it every three to five hours.
 #
-# It also WATCHES (§NNN). Every poke records a ping, and a recent ping reads as «ok» in the health
+# It also WATCHES (§874). Every poke records a ping, and a recent ping reads as «ok» in the health
 # answer, so the deep health is read FIRST, before the pokes: a dead pinger shows as a stale job or a
 # stalled outbox there, and hides after them. Both pokes still run when it says something is wrong; the
 # run turns red at its end (scripts/backstop-verdict.mjs, docs/RUNBOOKS.md § A red backstop run).
@@ -115,7 +115,7 @@ jobs:
 
       - name: Verdict (database, Neon budget, jobs, outbox)
         # The early health answer judged by scripts/backstop-verdict.mjs: the database that does not answer and a
-        # red Neon budget (§868; red is 85 % by default, amber 60 % a warning) as before, and since §NNN a stale job
+        # red Neon budget (§868; red is 85 % by default, amber 60 % a warning) as before, and since §874 a stale job
         # or a stalled outbox — registration-maintenance excepted between 03:05 and 04:00 in Brașov, the pinger's
         # known nightly gap. Four deep calls a day wake the database four times.
         if: always()

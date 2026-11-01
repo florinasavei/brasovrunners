@@ -192,7 +192,7 @@ async function confirmedRunner(eventId: string, name: string, listOptOut = false
 
 /** The page the way `events/[slug]/page.tsx` draws it for a visitor: `visit.rsvpBox` is the page's own decision (`rsvpOffered`). */
 function draw(slug: string, visit: { rsvpBox?: boolean } | null = { rsvpBox: true }, membersOnly = false, asPreview = false) {
-  // The page reads the real clock for whether a race has started: on the fixture's day, not the suite's (§NNN, docs/DEVELOPMENT.md § Tests that the calendar breaks).
+  // The page reads the real clock for whether a race has started: on the fixture's day, not the suite's (§878, docs/DEVELOPMENT.md § Tests that the calendar breaks).
   return atTheClock(NOW, () => drawNow(slug, visit, membersOnly, asPreview));
 }
 

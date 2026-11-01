@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.98-2026-10-31`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.99-2026-11-01`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -694,7 +694,7 @@ are the run's to open, merge and approve.
 ## A red backstop run (scheduled-jobs)
 
 `.github/workflows/scheduled-jobs.yml` runs four times a day (01:17, 07:17, 13:17, 19:17 UTC) and is the only automatic
-watch over production's jobs and outbox (§NNN). It reads `/api/health?deep=1` **before** it pokes the two job endpoints
+watch over production's jobs and outbox (§874). It reads `/api/health?deep=1` **before** it pokes the two job endpoints
 (a poke records a ping, which would hide a dead pinger), pokes anyway, and judges at the end in the «Verdict» step
 (`scripts/backstop-verdict.mjs`). GitHub emails the owner when it is red. Read the `::error::` line of that step:
 

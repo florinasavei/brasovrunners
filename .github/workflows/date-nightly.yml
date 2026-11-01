@@ -1,6 +1,6 @@
 name: date-nightly
 
-# The two checks that only the calendar can break, once a night (§NNN): `yarn test:clock` (the unit and
+# The two checks that only the calendar can break, once a night (§878): `yarn test:clock` (the unit and
 # database suite with the real clock moved forward, §712) and the whole end-to-end suite, both
 # projects, on a schedule.
 #

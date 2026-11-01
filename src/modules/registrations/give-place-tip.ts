@@ -61,7 +61,7 @@ export const givePlaceNowAhead = cache(async (eventId: string): Promise<{ full: 
 });
 
 /**
- * Whether «Adaugă pe lista de așteptare» (§NNN) is drawn for an event a page holds only the id of: the
+ * Whether «Adaugă pe lista de așteptare» (§875) is drawn for an event a page holds only the id of: the
  * same door as «Dă-i un loc acum», read once per event per request. A forecast; the service decides.
  */
 export const waitlistAddDoorOpen = cache(async (eventId: string): Promise<boolean> => {

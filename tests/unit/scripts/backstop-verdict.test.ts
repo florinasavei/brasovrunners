@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { inNightlyGap, judge } from "../../../scripts/backstop-verdict.mjs";
 
 /**
- * BR-REQ-090-03 (the backstop criterion, §NNN): the GitHub backstop reads the deep health answer before it
+ * BR-REQ-090-03 (the backstop criterion, §874): the GitHub backstop reads the deep health answer before it
  * pokes and fails at the end on a stalled outbox or a stale job, except maintenance in the
  * pinger's nightly gap. The health bodies are shaped as `src/app/api/health/route.ts` returns them.
  */
@@ -33,7 +33,7 @@ const WINTER_BEFORE = new Date("2026-12-01T01:04:00Z"); // 03:04
 const SUMMER_RUN = new Date("2026-07-01T01:17:00Z"); // 04:17 (UTC+3)
 const SUMMER_GAP = new Date("2026-07-01T00:30:00Z"); // 03:30
 
-describe("BR-REQ-090-03 §NNN the backstop's verdict", () => {
+describe("BR-REQ-090-03 §874 the backstop's verdict", () => {
   it("is ok when everything is ok", () => {
     const verdict = judge(health(), WINTER_GAP, "production");
     expect(verdict.errors).toEqual([]);

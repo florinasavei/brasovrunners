@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * The verdict of the GitHub backstop (`.github/workflows/scheduled-jobs.yml`, §NNN).
+ * The verdict of the GitHub backstop (`.github/workflows/scheduled-jobs.yml`, §874).
  *
  * The workflow reads `/api/health?deep=1` BEFORE it pokes the two job endpoints (a poke records a
  * ping, and a recent ping reads as «ok», so a health read after the pokes hides a dead pinger),

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.98-2026-10-31 -->
+<!-- PROJECT_BASELINE: BR-V3.99-2026-11-01 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.98-2026-10-31`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.99-2026-11-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1731,7 +1731,7 @@ languages go live together; that is the rule, not a setting.
    - The privacy notice describes invitations once the club approves it from the template:
      `/admin/tasks` shows the row «Nota de confidențialitate: invitațiile pe email» until then.
      Invitations work meanwhile.
-   - **A person who asks for their data, or for it to be erased** (art. 15 and 17 GDPR, §NNN): «Toate
+   - **A person who asks for their data, or for it to be erased** (art. 15 and 17 GDPR, §876): «Toate
      datele unei persoane» (`/admin/registrations/person`, Administrator) lists the invitations sent to
      the address — state, deadline, every moment — and the lines of every event's «Lista internă de
      așteptare» written with it (name, address as typed, the note, who wrote it as a role), and its file
@@ -1906,7 +1906,7 @@ brasovrunners QA origin      GET  https://brasov-runners-qa-nu.vercel.app/api/he
    project's **Settings** → **Environment Variables** → `JOB_SECRET` (the value the pinger's
    `Authorization: Bearer` carries), never into a file or a message. Verify with **Actions** →
    **scheduled-jobs** → **Run workflow**: the production steps print the two jobs' JSON, and the
-   last step, «Verdict», prints the database, the Neon budget and no error. Since §NNN the run reads
+   last step, «Verdict», prints the database, the Neon budget and no error. Since §874 the run reads
    the deep health before it pokes and turns red at its end on a stale job or a stalled outbox
    (`registration-maintenance` excepted between 03:05 and 04:00 in Brașov, the pinger's nightly
    gap), and an unconfigured production prints a `::warning::`, not a notice (QA's skip is

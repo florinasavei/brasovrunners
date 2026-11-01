@@ -9,7 +9,7 @@ import { staffEntryConfirm } from "@/modules/registrations/staff-entry-confirm";
 import { fillFromForm, pickConfirm, type ConfirmSpec } from "@/shared/feedback/notice";
 
 /**
- * `DECISIONS.md` §NNN — the newest waiting-list verbs finished (BR-REQ-037-05): the two dialogs that vouch
+ * `DECISIONS.md` §875 — the newest waiting-list verbs finished (BR-REQ-037-05): the two dialogs that vouch
  * for an address name it; «Adaugă pe lista de așteptare» is drawn only where the press can succeed.
  */
 

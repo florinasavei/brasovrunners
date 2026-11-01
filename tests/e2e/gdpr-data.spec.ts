@@ -171,7 +171,7 @@ test.describe("BR-REQ-060-01 everything held about a person, for the Administrat
   });
 
   /**
-   * §NNN, BR-REQ-070-01 — the internal waiting list's line, typed with the address in capitals, and an invitation already past its
+   * §876, BR-REQ-070-01 — the internal waiting list's line, typed with the address in capitals, and an invitation already past its
    * deadline (it holds no place) are on the page in both languages, and each erase asks first. The invitations' erase sweeps the
    * event's lapsed invitations first, which may hand a place another spec freed to whoever waits; nothing below depends on that.
    */

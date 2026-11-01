@@ -173,7 +173,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           })}
           // The entry emails the person — the link, or the confirmation on the fast track — and says so (§384).
           // With «Direct pe lista de așteptare» ticked (and no fast track, which ignores it) the dialog says the address is
-          // vouched for and names the typed one (§NNN); unticked, it is the ordinary one.
+          // vouched for and names the typed one (§875); unticked, it is the ordinary one.
           confirm={staffEntryConfirm({
             title: t("confirm.createRegistrationTitle"),
             body: t("confirm.createRegistrationBody"),

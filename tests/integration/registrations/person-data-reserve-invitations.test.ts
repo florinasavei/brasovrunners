@@ -18,7 +18,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * BR-REQ-070-01, BR-REQ-060-01, BR-REQ-034-01 — «Toate datele unei persoane» reads «Lista internă de așteptare» (§854) and the
- * personal invitations to an event (§647), and erases both on request (§NNN; the owner: «Do them all»).
+ * personal invitations to an event (§647), and erases both on request (§876; the owner: «Do them all»).
  *
  * - The internal list keeps the address as typed: a line is the person's when its address, through the versioned canonicalizer, is
  *   the person's canonical address (AGENTS.md §10.4) — `Ana.Pop+club@Gmail.com` is `ana.pop@gmail.com` — never by a raw compare.
@@ -175,7 +175,7 @@ const refusalOf = (promise: Promise<unknown>) => promise.then(() => null, (error
 const ANA = canonicalLookupOf("ana.pop@gmail.com");
 const trail = (action: string) => db.select().from(auditLogs).where(eq(auditLogs.action, action));
 
-describe("BR-REQ-070-01 «Lista internă de așteptare» on «Toate datele unei persoane» (§NNN)", () => {
+describe("BR-REQ-070-01 «Lista internă de așteptare» on «Toate datele unei persoane» (§876)", () => {
   it("lists the lines whose typed address canonicalizes to the person's — never a raw compare — with the author as a role", async () => {
     const cross = await createEvent(10, "Crosul");
     const night = await createEvent(10, "Noaptea");
@@ -228,7 +228,7 @@ describe("BR-REQ-070-01 «Lista internă de așteptare» on «Toate datele unei 
   });
 });
 
-describe("BR-REQ-070-01 the personal invitations to an event on «Toate datele unei persoane» (§647, §NNN)", () => {
+describe("BR-REQ-070-01 the personal invitations to an event on «Toate datele unei persoane» (§647, §876)", () => {
   it("lists every invitation sent to the canonical address with its state, deadline and moments, and counts them in the file", async () => {
     const cross = await createEvent(3, "Crosul");
     const night = await createEvent(3, "Noaptea");
@@ -386,7 +386,7 @@ describe("BR-REQ-060-01 Administrator only, asserted on the server", () => {
   });
 });
 
-describe("BR-REQ-070-01 the page's words, in both languages (§NNN)", () => {
+describe("BR-REQ-070-01 the page's words, in both languages (§876)", () => {
   it("every new key of «Toate datele unei persoane» is in Romanian and in English", () => {
     const keys = [
       "reserveEntries",

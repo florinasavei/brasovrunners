@@ -88,7 +88,7 @@ export async function eraseVolunteerInvitationsAction(form: FormData): Promise<v
 }
 
 /**
- * «Șterge de pe lista internă» (§854, §NNN, art. 17 GDPR): the lines of «Lista internă de așteptare» written down with the address the
+ * «Șterge de pe lista internă» (§854, §876, art. 17 GDPR): the lines of «Lista internă de așteptare» written down with the address the
  * page was opened for. The address comes back through the same sealed lookup, never typed again, and goes no further than the
  * Administrator who pressed (`requireStaffCapability`, asserted again in the service).
  */
@@ -97,7 +97,7 @@ export async function eraseReserveEntriesAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Retrage și șterge invitațiile» (§647, §NNN, art. 17 GDPR): the personal invitations to an event sent to the address the page was
+ * «Retrage și șterge invitațiile» (§647, §876, art. 17 GDPR): the personal invitations to an event sent to the address the page was
  * opened for — each open one withdrawn first through «Retrage», its place back through the allocator, then the ended ones deleted; an
  * accepted one stays with its registration. Same sealed lookup, same Administrator, asserted again in the service.
  */

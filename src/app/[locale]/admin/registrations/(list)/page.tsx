@@ -394,7 +394,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     complaint that started §289's sibling fix.
   */
   const mayManage = canManageRegistrations(actor.role);
-  // «Adaugă pe lista de așteptare» (§NNN) is drawn only where the press can succeed: the door of «Dă-i un loc acum» (§637).
+  // «Adaugă pe lista de așteptare» (§875) is drawn only where the press can succeed: the door of «Dă-i un loc acum» (§637).
   const waitlistAddOpen = mayManage && filters.eventId ? await waitlistAddDoorOpen(filters.eventId) : false;
   /*
     «Bife de membru fără cont de membru» (§645): the preview, read only while it is open and only

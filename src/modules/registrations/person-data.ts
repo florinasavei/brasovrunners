@@ -41,7 +41,7 @@ import { sweepLapsedInvitationsOfEvent, withdrawInvitationByStaff } from "./serv
  * in every status with every stored column, the declaration acceptances, the consents and their
  * versions (they are columns of the registration), the messages by type, date and status and what
  * the provider reported of each (delivered, refused, why — never its words), the
- * addresses left for an announcement, the lines of «Lista internă de așteptare» and the personal invitations to an event (§NNN),
+ * addresses left for an announcement, the lines of «Lista internă de așteptare» and the personal invitations to an event (§876),
  * and the audit rows about the person or their registrations.
  *
  * Administrator only (`canManageRegistrations`): it is the whole of a person on one screen, the
@@ -278,7 +278,7 @@ export type PersonData = {
    */
   notes: Array<{ registrationId: string; eventId: string; eventTitle: string | null; body: string; createdAt: Date; authorRole: StaffUser["role"] | null }>;
   /**
-   * The lines of «Lista internă de așteptare» (§854) written down with this address (§NNN; art. 15 GDPR): the event, the name and
+   * The lines of «Lista internă de așteptare» (§854) written down with this address (§876; art. 15 GDPR): the event, the name and
    * the address as the organizers typed them, their internal note, when it was written and changed, and who wrote it — as a
    * **role**, never the colleague's name, as the internal notes above (§777): the note becomes one of them on «Trece pe lista
    * oficială». The rows keep the address as typed, so each is matched through the canonicalizer (`reserveEntryIdsOf`). A line
@@ -296,7 +296,7 @@ export type PersonData = {
     createdByRole: StaffUser["role"] | null;
   }>;
   /**
-   * The club's personal invitations to an event sent to this address (§647, §NNN; art. 15 GDPR): the event, the name and the address
+   * The club's personal invitations to an event sent to this address (§647, §876; art. 15 GDPR): the event, the name and the address
    * as the Administrator typed them, the language, the state now (`invitationState`: sent, accepted, expired, withdrawn), the deadline,
    * whether it held a counted place or was «În afara locurilor», whether it raised the capacity, and every moment — every column of the
    * row but the colleagues' ids. Found by the canonical address the send wrote through the canonicalizer, or by the participant.
@@ -545,7 +545,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
 
   const groupRuns = await groupRunDeclarationsOf(db, canonicalEmail);
 
-  // «Lista internă de așteptare» (§854, §NNN): the lines whose typed address is this person's, the author as a role (§777).
+  // «Lista internă de așteptare» (§854, §876): the lines whose typed address is this person's, the author as a role (§777).
   const reserveIds = await reserveEntryIdsOf(db, canonicalEmail);
   const reserveEntries =
     reserveIds.length > 0
@@ -570,7 +570,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
         ).map((entry) => ({ ...entry, deliveryEmail: entry.deliveryEmail ?? "" }))
       : [];
 
-  // The personal invitations to an event (§647, §NNN): by the canonical address the send wrote, or the participant it was sent to.
+  // The personal invitations to an event (§647, §876): by the canonical address the send wrote, or the participant it was sent to.
   const invitationRows = await db
     .select({
       eventId: eventInvitations.eventId,
@@ -712,7 +712,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
 }
 
 /**
- * The lines of «Lista internă de așteptare» (§854) written down with this person's address (§NNN). The organizers type the address
+ * The lines of «Lista internă de așteptare» (§854) written down with this person's address (§876). The organizers type the address
  * as the person wrote from it, so it is stored as typed: each is read through the canonicalizer and matched on the canonical form,
  * never compared raw (AGENTS.md §10.4) — the same reading as `groupRunDeclarationsOf` below, and for the same reason: a notebook of
  * a few lines per event, an access request rare. An address the canonicalizer refuses is nobody's here.
@@ -850,7 +850,7 @@ export async function eraseVolunteerInvitationsOfPerson<T extends Record<string,
 }
 
 /**
- * Erase the lines of «Lista internă de așteptare» written down with one canonical address (§854, §NNN, art. 17 GDPR), on the person's
+ * Erase the lines of «Lista internă de așteptare» written down with one canonical address (§854, §876, art. 17 GDPR), on the person's
  * request, by an Administrator (`assertAdministrator`). A line holds no place, no slot in the queue and no state (the allocator never
  * reads the table), so it goes whole — the name, the address and the organizers' note — with nothing to release. Matched exactly as the
  * page lists them (`reserveEntryIdsOf`, through the canonicalizer). One audit row keeps the count (`participant.reserve_entries_erased`),
@@ -881,7 +881,7 @@ export async function eraseReserveEntriesOfPerson<T extends Record<string, unkno
 }
 
 /**
- * Erase the personal invitations to an event sent to one canonical address (§647, §NNN, art. 17 GDPR), on the person's request, by an
+ * Erase the personal invitations to an event sent to one canonical address (§647, §876, art. 17 GDPR), on the person's request, by an
  * Administrator (`assertAdministrator`). An open invitation **holds a place** (`invitationHoldsCount`, AGENTS.md §10.6), so it is never
  * deleted raw: each one still open is first withdrawn through «Retrage»'s own path (`withdrawInvitationByStaff`) — under the event's
  * lock, its own audit row (`event.invitation_withdrawn`, the invitation's id and never a name), and the place handed back through the

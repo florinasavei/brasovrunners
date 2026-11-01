@@ -4579,7 +4579,7 @@ export async function withdrawInvitationByStaff<T extends Record<string, unknown
 }
 
 /**
- * One event's sweep, now (§647, §NNN): under the event's lock, its invitations past their deadline stamped expired with
+ * One event's sweep, now (§647, §876): under the event's lock, its invitations past their deadline stamped expired with
  * their own `event.invitation_expired` rows (`expireStaleHolds`), and the places they held offered to the line
  * (`fillAvailableSpots`) — exactly what the maintenance job does when it reaches the event (`eventsWithLapsedInvitations`).
  * For a caller about to delete an invitation the job has not reached yet (`eraseEventInvitationsOfPerson`), so the

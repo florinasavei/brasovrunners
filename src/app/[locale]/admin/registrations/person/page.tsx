@@ -222,7 +222,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
               </Box>
               <Divider />
               {/*
-                «Lista internă de așteptare» (§854, §NNN; art. 15 GDPR): the lines written down with this address — the event, the name and the
+                «Lista internă de așteptare» (§854, §876; art. 15 GDPR): the lines written down with this address — the event, the name and the
                 address as typed, the organizers' note and who wrote it as a role (§777) — erased here on request (art. 17). They hold no place.
               */}
               <Box component="section" data-testid="person-reserve-entries">
@@ -274,7 +274,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
               </Box>
               <Divider />
               {/*
-                The club's personal invitations to an event (§647, §NNN; art. 15 GDPR): the state now, the deadline, whether it held a counted
+                The club's personal invitations to an event (§647, §876; art. 15 GDPR): the state now, the deadline, whether it held a counted
                 place, and every moment. Erased here on request (art. 17): an open one is withdrawn first through «Retrage», its place back
                 through the allocator; an accepted one stays with its registration.
               */}
