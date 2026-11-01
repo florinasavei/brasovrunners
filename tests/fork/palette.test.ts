@@ -12,8 +12,8 @@ import fork from "../fixtures/fork-club/club.json";
  * BR-REQ-101-01 (§NNN): another club's palette and logo run the platform's own checks.
  *
  * Under `yarn test:fork` the theme is built from `tests/fixtures/fork-club/club.json`: a green club that writes only
- * the four colours a palette must have — its primary and its ink, its secondary and its accent — and a square lockup.
- * Every tint, the dark scheme's primary, the kit's gradient and both accents' shades are then derived by `brand.ts`,
+ * the colours a palette must have — its primary and its ink by day and after dark, its secondary and its accent — and
+ * a square lockup. Every tint, the kit's gradient and both accents' shades are then derived by `brand.ts`,
  * and every pair the pages draw (`brand-pairs.ts`, the same list `tests/unit/theme/brand.test.ts` holds at AA for
  * Brașov) clears AA on them; the page tints keep §488's two rules; and the square logo stands inside the race
  * number's band and the badge's header rather than spilling past them.
@@ -26,7 +26,8 @@ describe("BR-REQ-101-01: a fork's palette and logo pass the platform's checks (�
       orange: fork.palette.secondary,
       accent: fork.palette.accent,
     });
-    expect("tints" in fork.palette || "dark" in fork.palette || "look" in fork.palette).toBe(false);
+    expect({ blue: COLOR_DARK.blue, blueInk: COLOR_DARK.blueInk }).toEqual({ blue: fork.palette.dark.primary, blueInk: fork.palette.dark.primaryInk });
+    expect(["kit", "tints", "look", "secondaryLook"].filter((role) => role in fork.palette)).toEqual([]);
     for (const hex of [COLOR_DARK.blue, COLOR_DARK.blueInk, GRADIENT.heroTint, GRADIENT.heroTintDark, GRADIENT.deep, ...Object.values(PALETTE.tints)]) {
       expect(hex).toMatch(/^#[0-9a-f]{6}$/);
     }

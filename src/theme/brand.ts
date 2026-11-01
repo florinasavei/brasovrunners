@@ -8,10 +8,11 @@
  *
  * What must be replaced, and what to replace it with:
  *
- *   colour   sampled from the t-shirt, as hex. Keep the token names; change the values.
- *   logo     drop the real SVGs over `public/brand/*.svg`, same filenames, same viewBox
- *            proportions, or update LOGO below if the proportions differ.
- *   font     see FONT below. A licence permitting web embedding is required before a typeface
+ *   colour   `palette` in `club/club.json`, by role, as hex (§NNN). Keep the token names here.
+ *   logo     drop the real SVGs over `public/brand/*.svg`, same filenames, and write their
+ *            proportions in `club/club.json`'s `logo`; then `yarn brand:assets`.
+ *   font     `src/theme/fonts/Wordmark.ttf` and its licence beside it (§NNN); see FONT below.
+ *            A licence permitting web embedding is required before a typeface
  *            is self-hosted — many licences that cover print do not, and shipping one that
  *            does not is redistribution the club would be liable for.
  *
@@ -43,15 +44,12 @@ export const MIN_TEXT_CONTRAST = 4.5;
 /** The contrast an accent's `accentInk` keeps against the card, in either scheme. */
 export const ACCENT_INK_CONTRAST = 7;
 
-function channelLuminance(value: number): number {
-  const v = value / 255;
-  return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-}
+const channels = (hex: string) => [1, 3, 5].map((start) => Number.parseInt(hex.slice(start, start + 2), 16));
 
 /** WCAG 2.1 relative luminance of a `#rrggbb` colour. */
 export function relativeLuminance(hex: string): number {
   if (!HEX_COLOR.test(hex)) throw new Error(`not a #rrggbb colour: ${hex}`);
-  const [r, g, b] = [1, 3, 5].map((start) => channelLuminance(Number.parseInt(hex.slice(start, start + 2), 16)));
+  const [r, g, b] = channels(hex).map((value) => (value / 255 <= 0.03928 ? value / 255 / 12.92 : ((value / 255 + 0.055) / 1.055) ** 2.4));
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
@@ -61,106 +59,101 @@ export function contrastRatio(a: string, b: string): number {
   return (light + 0.05) / (dark + 0.05);
 }
 
-const channels = (hex: string) => [1, 3, 5].map((start) => Number.parseInt(hex.slice(start, start + 2), 16));
-
 /** `from` moved `share` (0–1) of the way to `to`, channel by channel, as `#rrggbb`. */
 export function mix(from: string, to: string, share: number): string {
-  const [start, end] = [channels(from), channels(to)];
-  return `#${start.map((value, index) => Math.round(value + (end[index] - value) * share).toString(16).padStart(2, "0")).join("")}`;
+  const end = channels(to);
+  return `#${channels(from)
+    .map((value, index) => Math.round(value + (end[index] - value) * share).toString(16).padStart(2, "0"))
+    .join("")}`;
 }
 
-/** The platform's neutrals, the same for every club: the ink, the paper and the card, by day and after dark. */
+/**
+ * The platform's neutrals, the same for every club, by day (`COLOR`) and after dark (`COLOR_DARK`), in the order
+ * those list them: the body's text, the secondary text (captions, field labels), the page background and the card
+ * and surface background, one step lighter than the page. Here, ahead of the palette, because a club's missing
+ * shades are derived against them.
+ */
 const NEUTRAL = { ink: "#1c1b19", inkMuted: "#5b574f", paper: "#fafaf7", surface: "#ffffff" } as const;
-const NEUTRAL_DARK = { ink: "#f3f2ee", inkMuted: "#b5b2a9", paper: "#111318", surface: "#1a1d24" } as const;
+const NEUTRAL_DARK = { paper: "#111318", surface: "#1a1d24", ink: "#f3f2ee", inkMuted: "#b5b2a9" } as const;
 const BLACK = "#000000";
 const WHITE = "#ffffff";
 
-/** The first 1 % step from `from` towards `to`, starting at `minimum`, that keeps `keeps`; `to` itself at worst. */
-function walk(from: string, to: string, minimum: number, keeps: (hex: string) => boolean): string {
-  for (let step = Math.round(minimum * 100); step <= 100; step += 1) {
+/**
+ * The first 1 % step from `from` towards `to`, from `first` to `last` percent (either way round), that keeps
+ * `keeps`; `otherwise` when none does.
+ */
+function firstStep(from: string, to: string, first: number, last: number, keeps: (hex: string) => boolean, otherwise: string): string {
+  const by = first <= last ? 1 : -1;
+  for (let step = first; step !== last + by; step += by) {
     const candidate = mix(from, to, step / 100);
     if (keeps(candidate)) return candidate;
   }
-  return mix(from, to, 1);
-}
-
-/** The card colour with `share` of the accent in it, lessened a step at a time until `keeps` holds; the card itself at worst. */
-function tint(card: string, accent: string, share: number, keeps: (hex: string) => boolean): string {
-  for (let step = Math.round(share * 100); step > 0; step -= 1) {
-    const candidate = mix(card, accent, step / 100);
-    if (keeps(candidate)) return candidate;
-  }
-  return card;
+  return otherwise;
 }
 
 const atAa = (a: string, b: string) => contrastRatio(a, b) >= MIN_TEXT_CONTRAST;
 
 /**
+ * One scheme's four shades of `base`, walked towards `toward` (black by day, white after dark): the accent
+ * at AA on the page and the card; its ink 15 % further at least, to `inkKeeps`; the pressed shade 15 % further
+ * again, `deepGap` past the ink's contrast on the card (at most `deepCap`); and the tint, the card with
+ * `tintShare` % of the accent in it, lessened until the ink, the muted ink and the accent's ink read on it.
+ */
+function schemeShades(base: string, n: typeof NEUTRAL | typeof NEUTRAL_DARK, toward: string, inkKeeps: (hex: string) => boolean, deepGap: number, deepCap: number, tintShare: number): ClubShades {
+  const accent = firstStep(base, toward, 0, 100, (hex) => atAa(hex, n.paper) && atAa(hex, n.surface), toward);
+  const accentInk = firstStep(accent, toward, 15, 100, inkKeeps, toward);
+  const deepTarget = Math.min(contrastRatio(n.surface, accentInk) + deepGap, deepCap);
+  const accentDeep = firstStep(accentInk, toward, 15, 100, (hex) => contrastRatio(n.surface, hex) >= deepTarget, toward);
+  const accentTint = firstStep(n.surface, accent, tintShare, 1, (hex) => atAa(n.ink, hex) && atAa(n.inkMuted, hex) && atAa(accentInk, hex), n.surface);
+  return { accent, accentInk, accentDeep, accentTint };
+}
+
+/**
  * An accent's four shades in both schemes, derived from one `#rrggbb` (§723; the rules are written out in
- * `appearance/domain/accent-shades.ts`, which judges a typed colour first and then asks this). Each shade is the
- * colour walked towards black by day, towards white after dark, a 1 % step at a time, to the first step that keeps
- * its rule; the tint is the card with a little of the accent in it.
+ * `appearance/domain/accent-shades.ts`, which judges a typed colour first and then asks this). By day the ink is
+ * also no lighter than the muted ink, so every page tint carries it; after dark it only keeps its contrast.
  */
 export function shadesOf(base: string): { readonly light: ClubShades; readonly dark: ClubShades } {
-  const n = NEUTRAL;
-  const accent = walk(base, BLACK, 0, (hex) => atAa(hex, n.paper) && atAa(hex, n.surface));
-  const accentInk = walk(accent, BLACK, 0.15, (hex) => relativeLuminance(hex) <= relativeLuminance(n.inkMuted) && contrastRatio(n.surface, hex) >= ACCENT_INK_CONTRAST);
-  const deepTarget = Math.min(contrastRatio(n.surface, accentInk) + 2.5, 19);
-  const accentDeep = walk(accentInk, BLACK, 0.15, (hex) => contrastRatio(n.surface, hex) >= deepTarget);
-  const accentTint = tint(n.surface, accent, 0.1, (hex) => atAa(n.ink, hex) && atAa(n.inkMuted, hex) && atAa(accentInk, hex));
-
-  const d = NEUTRAL_DARK;
-  const darkAccent = walk(base, WHITE, 0, (hex) => atAa(hex, d.paper) && atAa(hex, d.surface));
-  const darkInk = walk(darkAccent, WHITE, 0.15, (hex) => contrastRatio(hex, d.surface) >= ACCENT_INK_CONTRAST);
-  const darkTarget = Math.min(contrastRatio(darkInk, d.surface) + 2, 16);
-  const darkDeep = walk(darkInk, WHITE, 0.15, (hex) => contrastRatio(hex, d.surface) >= darkTarget);
-  const darkTint = tint(d.surface, darkAccent, 0.14, (hex) => atAa(d.ink, hex) && atAa(d.inkMuted, hex) && atAa(darkInk, hex));
+  const inkContrast = (surface: string) => (hex: string) => contrastRatio(surface, hex) >= ACCENT_INK_CONTRAST;
+  const dayInk = (hex: string) => relativeLuminance(hex) <= relativeLuminance(NEUTRAL.inkMuted) && inkContrast(NEUTRAL.surface)(hex);
   return {
-    light: { accent, accentInk, accentDeep, accentTint },
-    dark: { accent: darkAccent, accentInk: darkInk, accentDeep: darkDeep, accentTint: darkTint },
+    light: schemeShades(base, NEUTRAL, BLACK, dayInk, 2.5, 19, 10),
+    dark: schemeShades(base, NEUTRAL_DARK, WHITE, inkContrast(NEUTRAL_DARK.surface), 2, 16, 14),
   };
 }
 
 /**
  * The club's palette by role (§NNN): `club/club.json`'s `palette` as written, and for each colour a club leaves
- * out, the derivation from its four required ones — the primary and its ink, the secondary and the accent. Brașov's file
- * writes every value out, its hand-picked tints included, so nothing here is derived for it and every token below
- * is the literal it was (`tests/unit/club/__snapshots__/palette-exports.json`). The hue names the rest of the code
- * reads (`COLOR.blue`, `COLOR.orange`…) are aliases of these roles.
+ * out, the derivation from its required ones — the primary and its ink by day and after dark, the secondary and the
+ * accent: the tints and the kit's gradient mixed from the primary, each accent's four shades walked by `shadesOf`.
+ * Brașov's file writes every value out, its hand-picked tints included, so what it wrote wins over every mix and
+ * every token below is the literal it was (`tests/unit/club/__snapshots__/palette-exports.json`). The hue names the
+ * rest of the code reads (`COLOR.blue`, `COLOR.orange`…) are aliases of these roles.
  */
 const written: ClubPalette = CLUB.palette;
-const primaryInk = written.primaryInk;
-// After dark the primary carries words on the dark page and on the hero's far end (7 : 1 on the card, as Brașov's
-// 7.6 : 1), and its ink is a step lighter still: the derivation's ink and deep shades, not its resting one, which only
-// just clears AA on the page.
-const derivedDark = written.dark ? null : shadesOf(written.primary).dark;
-const dark = written.dark ?? { primary: derivedDark?.accentInk ?? written.primary, primaryInk: derivedDark?.accentDeep ?? written.primary };
-const tints = written.tints ?? {};
+const { primary, primaryInk, dark } = written;
 export const PALETTE = {
-  primary: written.primary,
-  primaryInk,
-  secondary: written.secondary,
-  accent: written.accent,
-  dark,
-  kit: written.kit ?? { deep: mix(primaryInk, BLACK, 0.55), mid: mix(primaryInk, BLACK, 0.2), light: mix(written.primary, WHITE, 0.3) },
+  ...written,
+  kit: { deep: mix(primaryInk, BLACK, 0.55), mid: mix(primaryInk, BLACK, 0.2), light: mix(primary, WHITE, 0.3), ...written.kit },
   tints: {
     /** The primary at 4 % over white: «Albastru abia vizibil». */
-    faint: tints.faint ?? mix(written.primary, WHITE, 0.96),
+    faint: mix(primary, WHITE, 0.96),
     /** At 8 %: «Albastru deschis», and the emails' highlighted band. */
-    light: tints.light ?? mix(written.primary, WHITE, 0.92),
+    light: mix(primary, WHITE, 0.92),
     /** A cool grey leaning to the primary: «Gri albăstrui». */
-    grey: tints.grey ?? mix(primaryInk, WHITE, 0.93),
+    grey: mix(primaryInk, WHITE, 0.93),
     /** The hero's far end, the boxes on «Echipa»'s canvas, the poster's weekday row. */
-    hero: tints.hero ?? mix(written.primary, WHITE, 0.9),
+    hero: mix(primary, WHITE, 0.9),
     /** The hero's far end after dark. */
-    heroDark: tints.heroDark ?? mix(NEUTRAL_DARK.surface, dark.primary, 0.1),
+    heroDark: mix(NEUTRAL_DARK.surface, dark.primary, 0.1),
     /** The poster's hairline. */
-    rule: tints.rule ?? mix(written.primary, WHITE, 0.78),
+    rule: mix(primary, WHITE, 0.78),
     /** The registrations sheet's member fill, a step stronger than its sky blue. */
-    sheet: tints.sheet ?? mix(written.primary, WHITE, 0.77),
+    sheet: mix(primary, WHITE, 0.77),
     /** The primary preset's pressed button by day, and after dark. */
-    deep: tints.deep ?? mix(primaryInk, BLACK, 0.2),
-    deepDark: tints.deepDark ?? mix(dark.primaryInk, WHITE, 0.3),
+    deep: mix(primaryInk, BLACK, 0.2),
+    deepDark: mix(dark.primaryInk, WHITE, 0.3),
+    ...written.tints,
   },
   look: written.look ?? shadesOf(written.accent),
   secondaryLook: written.secondaryLook ?? shadesOf(written.secondary),
@@ -190,14 +183,8 @@ export const COLOR = {
   blueInk: PALETTE.primaryInk,
   /** Secondary (`PALETTE.secondary`). Accents and the event-kind chips. */
   orange: PALETTE.secondary,
-  /** Body text. */
-  ink: NEUTRAL.ink,
-  /** Secondary text: captions, field labels. */
-  inkMuted: NEUTRAL.inkMuted,
-  /** Page background. */
-  paper: NEUTRAL.paper,
-  /** Card and surface background, one step lighter than the page. */
-  surface: NEUTRAL.surface,
+  /** Body text (`ink`), secondary text (`inkMuted`), the page (`paper`) and a card (`surface`): `NEUTRAL`. */
+  ...NEUTRAL,
   /** Hairlines and dividers. */
   line: "#e2e0d8",
 
@@ -207,18 +194,16 @@ export const COLOR = {
     number or a share card — those keep the logo blue. Each has a twin in `COLOR_DARK` and its pairs
     in `brand-pairs.ts` (`LOOK_PAIRS`), held at AA by `tests/unit/theme/brand.test.ts`.
   */
-  /** The hot pink: the mark, a rule, a large word. 4.77:1 on the page, white on it 4.99:1. */
-  accent: PALETTE.look.light.accent,
-  /**
-   * The pink that carries words: `primary` under the new look — a link, an outline, a contained
-   * button's fill under white text (7.6:1). No lighter than `inkMuted`, so every page tint the club
-   * may choose (§488 holds `inkMuted` at AA on it) carries it too — the test asserts the order.
-   */
-  accentInk: PALETTE.look.light.accentInk,
-  /** A contained pink button under the pointer: deeper still, white on it 10.4:1. */
-  accentDeep: PALETTE.look.light.accentDeep,
-  /** A pale pink band or chip under ink or `accentInk` (the weekly runs' chip in a later phase). */
-  accentTint: PALETTE.look.light.accentTint,
+  /*
+    `PALETTE.look.light`, its four shades in this order:
+    - `accent`, the hot pink: the mark, a rule, a large word. 4.77:1 on the page, white on it 4.99:1.
+    - `accentInk`, the pink that carries words: `primary` under the new look — a link, an outline, a
+      contained button's fill under white text (7.6:1). No lighter than `inkMuted`, so every page tint the
+      club may choose (§488 holds `inkMuted` at AA on it) carries it too — the test asserts the order.
+    - `accentDeep`, a contained pink button under the pointer: deeper still, white on it 10.4:1.
+    - `accentTint`, a pale pink band or chip under ink or `accentInk` (the weekly runs' chip).
+  */
+  ...PALETTE.look.light,
   /** A special event's fill in the calendar and its chips (a later phase): a pale green. */
   kindSpecial: "#dcefe0",
   /** The words on `kindSpecial`, and a green as text on the page or a card. */
@@ -244,14 +229,8 @@ export const COLOR_DARK = {
   blue: PALETTE.dark.primary,
   /** Hover and pressed states, lighter still (`PALETTE.dark.primaryInk`). */
   blueInk: PALETTE.dark.primaryInk,
-  /** Page background. */
-  paper: NEUTRAL_DARK.paper,
-  /** Card and surface background, one step lighter than the page. */
-  surface: NEUTRAL_DARK.surface,
-  /** Body text. */
-  ink: NEUTRAL_DARK.ink,
-  /** Secondary text. */
-  inkMuted: NEUTRAL_DARK.inkMuted,
+  /** The page, a card, the body's text and the secondary text after dark: `NEUTRAL_DARK`. */
+  ...NEUTRAL_DARK,
   /** Hairlines and dividers. */
   line: "#2c3038",
 
@@ -259,14 +238,12 @@ export const COLOR_DARK = {
     The new look's twins (§708): lighter pinks of the same hue on the dark page, as the blue lifts
     (the order resting → hover reads the same way), and the fills walked towards the dark surface.
   */
-  /** The hot pink after dark: 6.56:1 on the page. */
-  accent: PALETTE.look.dark.accent,
-  /** `primary` under the new look after dark: text 8.64:1 on the page, and a fill under the dark page colour. */
-  accentInk: PALETTE.look.dark.accentInk,
-  /** A contained pink button under the pointer, lighter still. */
-  accentDeep: PALETTE.look.dark.accentDeep,
-  /** The pale pink band after dark. */
-  accentTint: PALETTE.look.dark.accentTint,
+  /*
+    `PALETTE.look.dark`: the hot pink after dark (6.56:1 on the page); `primary` under the new look after
+    dark (text 8.64:1 on the page, and a fill under the dark page colour); a contained pink button under the
+    pointer, lighter still; the pale pink band after dark.
+  */
+  ...PALETTE.look.dark,
   /** A special event's fill after dark. */
   kindSpecial: "#173b22",
   /** The words on it, and green as text on the dark page. */
@@ -352,12 +329,8 @@ export const EMAIL_EMPHASIS = {
  * them before this ships anywhere a member will compare it against a shirt.
  */
 export const GRADIENT = {
-  /** Shoulders (`PALETTE.kit`). */
-  deep: PALETTE.kit.deep,
-  /** Mid-body. */
-  mid: PALETTE.kit.mid,
-  /** Approaching the hem. */
-  light: PALETTE.kit.light,
+  /** `PALETTE.kit`: `deep` at the shoulders, `mid` mid-body, `light` approaching the hem. */
+  ...PALETTE.kit,
   /**
    * Top to bottom, the way the shirt is worn. Kept as a CSS value rather than assembled at
    * each use, so every surface that carries it carries the same one.
@@ -462,10 +435,7 @@ export const LOOK_ACCENT = {
    * match). By day the orange itself is 2.6:1 on the page, too light to carry words, so its shades
    * walk towards brown until they do; after dark the orange is kept as it is.
    */
-  orange: {
-    light: PALETTE.secondaryLook.light,
-    dark: PALETTE.secondaryLook.dark,
-  },
+  orange: PALETTE.secondaryLook,
 } as const;
 
 /**

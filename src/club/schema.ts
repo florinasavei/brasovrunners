@@ -58,8 +58,8 @@ export type ClubShades = { readonly accent: string; readonly accentInk: string; 
 /**
  * The club's colours (§NNN), by role, each `#rrggbb` in lower case: what `theme/brand.ts` turns into the tokens it
  * always exported — the role here, the hue name there (`primary` is `COLOR.blue`, `secondary` is `COLOR.orange`).
- * Four are required — the primary, its ink, the secondary and the accent; everything else is the hand-picked value it
- * was in the code, and a club that leaves one out gets it derived from the four by the same arithmetic the backoffice's typed accent uses (`brand.ts#shadesOf`, `mix`).
+ * Five are required — the primary and its ink, the same two after dark, the secondary and the accent; everything else
+ * is the hand-picked value it was in the code, and a club that leaves one out gets it derived from those by the same arithmetic the backoffice's typed accent uses (`brand.ts#shadesOf`, `mix`).
  * The platform's neutrals — the ink, the paper, the kinds' fills, the calendar picture's other themes — are not here:
  * they are the platform's, the same for every club, and every pair of them is held at AA by `brand.test.ts`.
  */
@@ -72,8 +72,8 @@ export type ClubPalette = {
   readonly secondary: string;
   /** «Aspectul nou»'s default accent (the preset «Roz» in Brașov's case). */
   readonly accent: string;
-  /** The primary and its ink after dark, lighter so they read on the dark page. */
-  readonly dark?: { readonly primary: string; readonly primaryInk: string };
+  /** The primary and its ink after dark, lighter so they read on the dark page (7 : 1 or so on the dark card). */
+  readonly dark: { readonly primary: string; readonly primaryInk: string };
   /** The kit's gradient, shoulders to hem: a surface that carries no text, and the calendar picture's navy band. */
   readonly kit?: { readonly deep: string; readonly mid: string; readonly light: string };
   /** The primary walked pale (or dark): the page tints, the hero's ends, the poster's hairline, the sheet's member fill, the blue preset's pressed shade. */

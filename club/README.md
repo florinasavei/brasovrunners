@@ -32,19 +32,20 @@ How it reaches the code:
 
 ## The palette, the drawing, the logo and the wordmark (§NNN)
 
-- **`palette`** in `club.json`, by role, each `#rrggbb` in lower case. Four are required: `primary` (the
+- **`palette`** in `club.json`, by role, each `#rrggbb` in lower case. Five are required: `primary` (the
   logo's own colour — `tests/unit/theme/brand.test.ts` holds it equal to `public/brand/logo.svg`'s fill),
-  `primaryInk` (its deeper ink), `secondary` (a fill under the body's ink) and `accent` («Aspectul nou»'s
-  default). The rest — `dark` (the primary and its ink after dark), `kit` (the kit's gradient), `tints`
+  `primaryInk` (its deeper ink), `dark` (the two after dark, light enough to carry words on the dark page),
+  `secondary` (a fill under the body's ink) and `accent` («Aspectul nou»'s default). The rest — `kit` (the
+  kit's gradient), `tints`
   (the page tints, the hero's ends, the poster's hairline, the sheet's member fill, the blue preset's pressed
   shades), `look` and `secondaryLook` (each accent's four shades by day and after dark) — are Brașov's
-  hand-picked values; a club that leaves one out gets it derived from the four by `src/theme/brand.ts`
+  hand-picked values; a club that leaves one out gets it derived from those by `src/theme/brand.ts`
   (`shadesOf`, `mix`), the one file that computes colours. `brand.ts` keeps every name it exported: the roles
   are `PALETTE`, the hue names (`COLOR.blue`, `COLOR.orange`…) their aliases, and the stored preset ids
   (`faintBlue`, `blue`, `orange`…) unchanged. The platform's neutrals — the ink, the paper, the kinds' fills,
   the calendar picture's other themes, the race numbers' print colours — stay in `brand.ts`: they are the same
   for every club. Every pair the pages draw is held at AA on whatever the file says (`yarn test`, and
-  `yarn test:fork` on a made-up club that writes only the four).
+  `yarn test:fork` on a made-up club that writes only the five).
 - **`decor.json`**: the mountains drawing — its box and its ridges (`far`, `near`), drawn under the public
   pages by `MountainMark` and across the calendar picture's empty days. Read through `src/club/decor.ts` by
   those readers alone, never by `brand.ts` or anything every visitor's scripts carry
