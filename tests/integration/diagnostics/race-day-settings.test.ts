@@ -63,6 +63,11 @@ describe("BR-REQ-090-05 the race-day settings a coming race still owes", () => {
     expect(await read()).toEqual([]);
   });
 
+  it("draws no row for a cancelled race in the window", async () => {
+    await event({ eventStatus: "CANCELLED" }, "Cancelled");
+    expect(await read()).toEqual([]);
+  });
+
   it("keeps a race whose gun went off a few hours ago, and orders the races by their start", async () => {
     const later = await event({ startsAt: new Date(NOW.getTime() + 15 * DAY) }, "Later");
     const today = await event({ startsAt: new Date(NOW.getTime() - 2 * 3_600_000) }, "Today");
@@ -76,5 +81,11 @@ describe("BR-REQ-090-05 the race-day settings a coming race still owes", () => {
     expect(await aRaceHasRun(db, NOW)).toBe(false);
     await event({ startsAt: new Date(NOW.getTime() - 5 * DAY) }, "Run");
     expect(await aRaceHasRun(db, NOW)).toBe(true);
+  });
+
+  it("does not count a cancelled past race, nor a date-to-be-announced one, as run", async () => {
+    await event({ eventStatus: "CANCELLED", startsAt: new Date(NOW.getTime() - 5 * DAY) }, "Cancelled");
+    await event({ dateToBeAnnounced: true, startsAt: new Date(NOW.getTime() - 5 * DAY) }, "TBA");
+    expect(await aRaceHasRun(db, NOW)).toBe(false);
   });
 });

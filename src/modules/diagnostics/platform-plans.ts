@@ -40,6 +40,7 @@
  * estimate everywhere it is printed, and the total that includes it marked the same way.
  */
 
+import type { EmailPlanId } from "@/modules/notifications/domain/email-plan";
 import { NEON_PLANS, type NeonPlanId, NEON_PLANS_CHECKED_ON, roundUsd } from "./domain/neon-plan";
 import { VERCEL_PLANS, VERCEL_PLANS_CHECKED_ON, type VercelPlanId, vercelUsdPerMonth } from "./domain/vercel-plan";
 
@@ -635,7 +636,7 @@ export type MoneyDecision = {
 export function moneyDecisions(
   input: Pick<PlatformFacts, "hasPaidEvent"> & {
     /** The club's «Planul Mailgun» setting (`EmailPlanId`); Free when the caller does not know. */
-    emailPlan?: string;
+    emailPlan?: EmailPlanId;
     /** Whether a published race has already started: the first real race is behind the club. */
     raceHasRun?: boolean;
   },

@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, lte } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
 import type { Database } from "@/db/types";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { Locale } from "@/i18n/routing";
@@ -44,6 +44,7 @@ export async function readRaceDaySettings<T extends Record<string, unknown>>(db:
         eq(events.type, "RACE"),
         eq(events.editorialStatus, "PUBLISHED"),
         eq(events.dateToBeAnnounced, false),
+        eq(events.eventStatus, "SCHEDULED"),
         gte(events.startsAt, new Date(now.getTime() - RACE_DAY_SETTINGS_GRACE_HOURS * hour)),
         lte(events.startsAt, new Date(now.getTime() + RACE_DAY_SETTINGS_WINDOW_DAYS * 24 * hour)),
       ),
@@ -60,14 +61,22 @@ export async function readRaceDaySettings<T extends Record<string, unknown>>(db:
 }
 
 /**
- * Whether a published race has already started — the first real race is behind the club. «Luăm o lună de Mailgun
+ * Whether a published, dated race that was not cancelled has already started — the first real race is behind the club. «Luăm o lună de Mailgun
  * plătit înainte de prima cursă adevărată?» is a question with a deadline, and the deadline is that race (§NNN).
  */
 export async function aRaceHasRun<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const [row] = await db
     .select({ id: events.id })
     .from(events)
-    .where(and(eq(events.type, "RACE"), eq(events.editorialStatus, "PUBLISHED"), lte(events.startsAt, now)))
+    .where(
+      and(
+        eq(events.type, "RACE"),
+        eq(events.editorialStatus, "PUBLISHED"),
+        eq(events.dateToBeAnnounced, false),
+        inArray(events.eventStatus, ["SCHEDULED", "COMPLETED"]),
+        lte(events.startsAt, now),
+      ),
+    )
     .limit(1);
   return row !== undefined;
 }

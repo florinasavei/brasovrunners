@@ -175,7 +175,7 @@ describe("one line per provider that bills or meters something", () => {
   });
 
   it("§NNN Vercel on Hobby: free, the Active CPU against Hobby's four hours — never the unconfirmed build-minute figure — grey without a reading", () => {
-    // 1.5 CPU-hours in ten days (240 of 744 hours) is about 4.8 by the end: past the four.
+    // 1.5 CPU-hours in ten days (240 of 744 hours) is about 4.7 by the end: past the four.
     const busy = line(facts({ vercelActiveCpuHours: 1.5 }), "vercel");
     expect(busy).toMatchObject({ plan: "Hobby", soFarUsd: 0, projectedUsd: 0, severity: "act" });
     expect(busy.usage).toMatchObject({ unit: "cpuHours", used: 1.5, ceiling: 4, ceilingKind: "plan", state: "over" });

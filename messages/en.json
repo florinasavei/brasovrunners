@@ -4504,12 +4504,12 @@
         },
         "raceAgeBands": {
           "title": "Choose the age categories for the awards",
-          "todo": "{event} starts within three weeks and has not chosen its age categories: the standard ones apply. Changing them after results are entered ranks the places again.",
+          "todo": "{event} starts within three weeks and uses the standard age categories. If they suit the race there is nothing to do: the row goes by itself after the start. Otherwise write yours before results.",
           "done": "{event} has its own age categories.",
           "how": [
             "/admin/events → the race → “Results” → “Age categories”.",
             "In “Ages the groups start at” write the starting ages, separated by commas — “18, 35, 45, 55” gives under 18, 18-34, 35-44, 45-54 and 55+ — and check the line under the box.",
-            "Press “Save the categories”. Do it before the first result is typed: after that, a change recounts the category places."
+            "Press “Save the categories” before the first result. If the standard ones suit the race, do nothing: the row goes by itself after the race."
           ]
         },
         "botCheck": {
@@ -5414,7 +5414,8 @@
         },
         "unmeasured": {
           "neon": "Not measured without NEON_API_KEY and NEON_PROJECT_ID on this environment.",
-          "vercel": "Not measured without VERCEL_API_TOKEN on this environment: Hobby is read by its Active CPU."
+          "vercel": "Not measured without VERCEL_API_TOKEN on this environment: Hobby is read by its Active CPU.",
+          "vercelPro": "Not measured without VERCEL_API_TOKEN and VERCEL_PROJECT_ID on this environment."
         },
         "unread": "The provider did not answer just now ({reason}).",
         "deeplOff": "The DeepL key is not set on this server, so the editors' translation button is grey.",

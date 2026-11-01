@@ -107,7 +107,7 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
     if (!line.usage) {
       const reason = reasons.current[line.id];
       if ((line.id === "neon" || line.id === "vercel") && (reason === "unconfigured" || reason === null)) {
-        return t(`tasks.month.unmeasured.${line.id}`);
+        return t(`tasks.month.unmeasured.${line.id === "vercel" && line.plan === "Pro" ? "vercelPro" : line.id}`);
       }
       return why(reason ?? "error");
     }

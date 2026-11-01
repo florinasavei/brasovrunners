@@ -22,6 +22,7 @@ import {
   registrationsLeftToday,
   type ServiceRow,
 } from "@/modules/diagnostics/platform-plans";
+import type { EmailPlanId } from "@/modules/notifications/domain/email-plan";
 import { VERCEL_PLANS } from "@/modules/diagnostics/domain/vercel-plan";
 import {
   MAILGUN_FREE_DAILY_MESSAGES,
@@ -238,13 +239,13 @@ describe("BR-REQ-090-05 a decision is a question, not a grey fact among facts", 
   });
 
   it("§NNN derives «a paid Mailgun month before the first race» from the club's own plan: open only on Free with no race run", () => {
-    const state = (patch: { emailPlan?: string; raceHasRun?: boolean }) =>
+    const state = (patch: { emailPlan?: EmailPlanId; raceHasRun?: boolean }) =>
       moneyDecisions({ ...BASE, ...patch }).find((d) => d.id === "mailgunBeforeRace")?.state;
     // Free, no race yet: still the club's question.
     expect(state({ emailPlan: "FREE", raceHasRun: false })).toBe("open");
     expect(state({})).toBe("open");
     // Any paid plan answers it — the club has paid since 2026-10-01 — whether a race has run or not.
-    for (const plan of ["BASIC", "FOUNDATION", "SCALE", "CUSTOM"]) {
+    for (const plan of ["BASIC", "FOUNDATION", "SCALE", "CUSTOM"] as const) {
       expect(state({ emailPlan: plan, raceHasRun: false }), plan).toBe("answered");
     }
     // A race that has run answers it as well: the deadline was before the first one.

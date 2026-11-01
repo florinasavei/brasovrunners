@@ -4497,19 +4497,19 @@
           "todo": "{event} începe în cel mult trei săptămâni și nu are startul cursei stabilit: ceasul de sosire numără de la începutul evenimentului, adică deschiderea biroului, nu de la start.",
           "done": "{event} are startul cursei stabilit: ceasul de sosire numără de la el.",
           "how": [
-            "/admin/events → cursa → „Modifică” → „Când și unde” → „Data și ora”.",
+            "/admin/events → cursa → „Editează” → „Când și unde” → „Data și ora”.",
             "La „Startul cursei” scrie data și ora la care se dă startul. Dacă e aceeași cu începutul evenimentului, scrie aceeași oră.",
             "Lasă nebifat „Startul cursei nu e stabilit”, apoi salvează. Rândul devine verde."
           ]
         },
         "raceAgeBands": {
           "title": "Alege categoriile de vârstă pentru premii",
-          "todo": "{event} începe în cel mult trei săptămâni și nu și-a ales categoriile de vârstă: se aplică cele standard. Schimbate după ce s-au scris rezultate, locurile se recalculează.",
+          "todo": "{event} începe în cel mult trei săptămâni și folosește categoriile standard. Dacă ți se potrivesc, nu e nimic de făcut: rândul se închide singur după start. Altfel, scrie-le înainte de rezultate.",
           "done": "{event} are categoriile de vârstă proprii.",
           "how": [
             "/admin/events → cursa → „Clasament” → „Categorii de vârstă”.",
             "La „Vârstele de la care încep grupele” scrie vârstele de început, separate prin virgulă — „18, 35, 45, 55” dă sub 18, 18-34, 35-44, 45-54 și 55+ — și verifică rândul de sub căsuță.",
-            "Apasă „Salvează categoriile”. Fă-o înainte să scrii primul rezultat: după aceea, o schimbare recalculează locurile pe categorii."
+            "Apasă „Salvează categoriile” înainte de primul rezultat. Dacă cele standard ți se potrivesc, nu faci nimic: rândul se închide singur după cursă."
           ]
         },
         "botCheck": {
@@ -5414,7 +5414,8 @@
         },
         "unmeasured": {
           "neon": "Nu se măsoară fără NEON_API_KEY și NEON_PROJECT_ID pe acest mediu.",
-          "vercel": "Nu se măsoară fără VERCEL_API_TOKEN pe acest mediu: Hobby se citește după CPU-ul activ."
+          "vercel": "Nu se măsoară fără VERCEL_API_TOKEN pe acest mediu: Hobby se citește după CPU-ul activ.",
+          "vercelPro": "Nu se măsoară fără VERCEL_API_TOKEN și VERCEL_PROJECT_ID pe acest mediu."
         },
         "unread": "Furnizorul nu a răspuns acum ({reason}).",
         "deeplOff": "Cheia DeepL nu e pusă pe acest server, deci butonul de traducere din editoare e gri.",
