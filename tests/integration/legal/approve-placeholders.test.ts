@@ -95,7 +95,8 @@ describe("BR-REQ-053-01: a version that still holds a <PLACEHOLDER> is never app
   it("keeps «Aprobă ciornele» from approving it either: planned out, and refused if named", async () => {
     const id = await createDraftVersion(db, admin, { key: "TERMS", translations: translations("<PREMIILE ÎN BANI>", "<PRIZE MONEY>") }, NOW);
     expect((await planDraftApproval(db)).find((item) => item.row.id === id)?.outcome).toBe("placeholders");
-    expect(await codeOf(approveDrafts(db, admin, [id], NOW))).not.toBe("ok");
+    // The batch refuses a draft its plan holds back as a CONFLICT naming the outcome (`assertDraftsReady`), before any approval.
+    expect(await codeOf(approveDrafts(db, admin, [id], NOW))).toBe("CONFLICT");
     expect(await isApproved(id)).toBe(false);
   });
 
