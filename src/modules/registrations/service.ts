@@ -4579,6 +4579,27 @@ export async function withdrawInvitationByStaff<T extends Record<string, unknown
 }
 
 /**
+ * One event's sweep, now (§647, §NNN): under the event's lock, its invitations past their deadline stamped expired with
+ * their own `event.invitation_expired` rows (`expireStaleHolds`), and the places they held offered to the line
+ * (`fillAvailableSpots`) — exactly what the maintenance job does when it reaches the event (`eventsWithLapsedInvitations`).
+ * For a caller about to delete an invitation the job has not reached yet (`eraseEventInvitationsOfPerson`), so the
+ * deletion does not take the stamp, its audit row and the immediate offer with it.
+ */
+export async function sweepLapsedInvitationsOfEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<void> {
+  const settings = await currentDeadlines(db);
+  const result = await db.transaction(async (tx) => {
+    const lockedEvent = await repo.lockEventForCapacity(tx, eventId);
+    if (!lockedEvent) return null;
+    const event = publicFormEvent(lockedEvent, lockedEvent.publishedAt);
+    const offersMade = await fillAvailableSpots(tx, event, now, settings);
+    return { event, offersMade };
+  });
+  if (!result) return;
+  revalidatePublicContent("places");
+  wakeMaintenance(result.event, now, settings, result.offersMade > 0 ? offerDeadline(result.event, now, settings) : null);
+}
+
+/**
  * The registration an invitation's link created, seated in the invitation's place (§647), inside the
  * caller's transaction (`invitations.ts#acceptInvitation`), after `submitRegistration` wrote it waiting
  * for its address:

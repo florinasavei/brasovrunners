@@ -22,6 +22,7 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import { actionKeyOf } from "@/shared/forms/action-key";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import { HEADING_SX } from "@/shared/ui/heading-scale";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -225,7 +226,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                 address as typed, the organizers' note and who wrote it as a role (§777) — erased here on request (art. 17). They hold no place.
               */}
               <Box component="section" data-testid="person-reserve-entries">
-                <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+                <Typography variant="h3" sx={{ ...HEADING_SX[3], mb: 1 }}>
                   {t("person.reserveEntries", { count: data.reserveEntries.length })}
                 </Typography>
                 {data.reserveEntries.length === 0 ? (
@@ -278,7 +279,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                 through the allocator; an accepted one stays with its registration.
               */}
               <Box component="section" data-testid="person-event-invitations">
-                <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+                <Typography variant="h3" sx={{ ...HEADING_SX[3], mb: 1 }}>
                   {t("person.eventInvitations", { count: data.eventInvitations.length })}
                 </Typography>
                 {data.eventInvitations.length === 0 ? (

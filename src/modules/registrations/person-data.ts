@@ -29,7 +29,7 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { InvitationRefusal, type InvitationState, invitationState } from "./domain/invitations";
 import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
-import { withdrawInvitationByStaff } from "./service";
+import { sweepLapsedInvitationsOfEvent, withdrawInvitationByStaff } from "./service";
 
 /**
  * Everything the platform holds about one person (§322) — the answer to an access request
@@ -885,7 +885,9 @@ export async function eraseReserveEntriesOfPerson<T extends Record<string, unkno
  * Administrator (`assertAdministrator`). An open invitation **holds a place** (`invitationHoldsCount`, AGENTS.md §10.6), so it is never
  * deleted raw: each one still open is first withdrawn through «Retrage»'s own path (`withdrawInvitationByStaff`) — under the event's
  * lock, its own audit row (`event.invitation_withdrawn`, the invitation's id and never a name), and the place handed back through the
- * allocator (`fillAvailableSpots`), so whoever waits is offered it as at any withdrawal. Only then are the rows that ended unaccepted —
+ * allocator (`fillAvailableSpots`), so whoever waits is offered it as at any withdrawal. One past its deadline that the job has not
+ * stamped yet goes through the event's own sweep first (`sweepLapsedInvitationsOfEvent`): its stamp, its `event.invitation_expired`
+ * row and the offer of its place, as the job would have made them. Only then are the rows that ended unaccepted —
  * withdrawn, stamped expired or past their deadline, none of which holds anything — deleted, their links with them (`on delete cascade`).
  * An invitation that became a registration is not touched: it is the registration's record and goes with that registration's own erase
  * (BR-REQ-037-06, `accepted_registration_id … on delete cascade`). One that changed state under the press (accepted or ended between the
@@ -901,9 +903,23 @@ export async function eraseEventInvitationsOfPerson<T extends Record<string, unk
   const [participant] = await db.select({ id: participants.id }).from(participants).where(eq(participants.canonicalEmail, canonicalEmail)).limit(1);
   const matched = invitationsOf(canonicalEmail, participant?.id ?? null);
   const rows = await db
-    .select({ id: eventInvitations.id, acceptedAt: eventInvitations.acceptedAt, withdrawnAt: eventInvitations.withdrawnAt, expiredAt: eventInvitations.expiredAt, expiresAt: eventInvitations.expiresAt })
+    .select({
+      id: eventInvitations.id,
+      eventId: eventInvitations.eventId,
+      acceptedAt: eventInvitations.acceptedAt,
+      withdrawnAt: eventInvitations.withdrawnAt,
+      expiredAt: eventInvitations.expiredAt,
+      expiresAt: eventInvitations.expiresAt,
+    })
     .from(eventInvitations)
     .where(matched);
+  /*
+    Past its deadline but not yet stamped by the job: its place is already free in the count, but the stamp, its
+    `event.invitation_expired` row and the offer to the line are the sweep's. Run the event's sweep now, under its lock,
+    rather than let the delete below take them with it.
+  */
+  const lapsedEvents = new Set(rows.filter((row) => invitationState(row, now) === "expired" && !row.expiredAt && !row.withdrawnAt).map((row) => row.eventId));
+  for (const eventId of lapsedEvents) await sweepLapsedInvitationsOfEvent(db, eventId, now);
   let withdrawn = 0;
   for (const row of rows) {
     if (invitationState(row, now) !== "sent") continue;

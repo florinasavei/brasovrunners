@@ -281,6 +281,28 @@ describe("BR-REQ-070-01 the personal invitations to an event on «Toate datele u
     for (const row of [withdrawal, erased]) expect(JSON.stringify(row.metadataJson)).not.toMatch(/ana|pop|gmail/i);
   });
 
+  it("an invitation past its deadline that the job has not stamped goes through the event's sweep first: stamped, audited, its place offered to the one waiting", async () => {
+    const event = await createEvent(1, "Crosul", { auto: true });
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana.pop@gmail.com" }], days: 1, outsideCapacity: false }, admin, NOW);
+    expect((await registered(event, "Elena", 1)).status).toBe("WAITLISTED");
+
+    // Two days on the deadline has passed and no job ran: the row is still unstamped.
+    const when = at(2 * 24 * 60);
+    const [before] = await db.select().from(eventInvitations);
+    expect(before.expiredAt).toBeNull();
+
+    expect(await eraseEventInvitationsOfPerson(db, admin, ANA, when)).toEqual({ withdrawn: 0, erased: 1, keptAccepted: 0 });
+    // The sweep's own work, as the job would have done it: the stamp's audit row (the invitation's id, never a name)…
+    const [expired] = await trail("event.invitation_expired");
+    expect(expired).toMatchObject({ actorStaffUserId: null, entityId: event.id, metadataJson: { invitationId: before.id } });
+    expect(JSON.stringify(expired.metadataJson)).not.toMatch(/ana|pop|gmail/i);
+    // …and the place offered at once to Elena, never overbooked.
+    const [elena] = await db.select().from(registrations).where(eq(registrations.registeredName, "Elena Munteanu"));
+    expect(elena.status).toBe("WAITLIST_OFFERED");
+    expect(computeOccupied(await countOccupied(db, event.id, when))).toBeLessThanOrEqual(1);
+    expect(await db.select().from(eventInvitations)).toEqual([]);
+  });
+
   it("an accepted invitation stays with its registration; a withdrawn or expired one is deleted with nothing to release; somebody else's is untouched", async () => {
     const cross = await createEvent(5, "Crosul");
     const night = await createEvent(5, "Noaptea");
@@ -364,7 +386,7 @@ describe("BR-REQ-060-01 Administrator only, asserted on the server", () => {
   });
 });
 
-describe("§NNN the page's words, in both languages", () => {
+describe("BR-REQ-070-01 the page's words, in both languages (§NNN)", () => {
   it("every new key of «Toate datele unei persoane» is in Romanian and in English", () => {
     const keys = [
       "reserveEntries",
