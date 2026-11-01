@@ -725,7 +725,7 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
     await field("event.schedule[0].ro").fill("Startul");
     await field("event.schedule[0].en").fill("The start");
 
-    // The create page. The bug: without the fix the row stays on "2027-05-10", because the
+    // The create page. The bug: without the fix the row stays on the first start date, because the
     // listener died with the scriptless box before the picker's own change ever reached it.
     await fillDateField(page, "Începutul evenimentului", ahead("2027-05-12"));
     await expect(field("event.startsAtDate")).toHaveValue(ahead("2027-05-12"));
@@ -971,11 +971,11 @@ test.describe("BR-REQ-050-02 a saved programme row reaches the public page and t
   reload.
 
   Not the date box's text: the element MUI names with the label is the whole outlined input, and
-  its notch repeats the label inside it, so its `textContent` is "30.09.2027Începutul
-  evenimentului" — never "30.09.2027". What a person reads is the sections, one `spinbutton`
-  each, in the order the format puts them, and the separators between them, which MUI's own
-  unnamed input carries as its value ("30.09.2027") beside the hidden one the form posts
-  ("2027-09-30").
+  its notch repeats the label inside it, so its `textContent` is the typed day as DD.MM.YYYY
+  followed by "Începutul evenimentului" — never the day alone. What a person reads is the
+  sections, one `spinbutton` each, in the order the format puts them, and the separators between
+  them, which MUI's own unnamed input carries as its value (the typed day as DD.MM.YYYY) beside
+  the hidden one the form posts (YYYY-MM-DD).
 
   The time box is a typed text box since §439 (the browser's own time control of §400 drew
   "07:00 PM" on an English-language browser), so what it shows is its value: asserting the value

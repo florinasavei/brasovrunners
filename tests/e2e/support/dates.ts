@@ -17,9 +17,13 @@
  *  - the lead: the earliest pattern is always about as far ahead as it was when the specs were
  *    written, so no registration window a spec opens has started already.
  *
+ * The shift is read once per process, when this module is first imported, so a spec that crosses
+ * the club's midnight fills a box with `ahead(...)` and asserts `ahead(...)` on the same day.
+ *
  * What a whole-week shift does NOT keep is the month, the year and the season. A spec that reads
- * one of those (a month named in a header, `?month=`, the sunset) derives it with `longDay`,
- * `monthOf` or `nextMonthDay` from the date it typed, never from a second literal. A time of day
+ * one of those (a month named in a header, `?month=`, the line under a typed date, an age, the
+ * sunset) derives it from the date it typed — `monthOf`, `written`, `dayLine`, `dmy`, `birthOn`,
+ * `yearsBefore` — or asks for its season with `nextMonthDay`, never from a second literal. A time of day
  * typed into the editor is local and is not affected; an instant written into the database is
  * written as a local time (`AT TIME ZONE 'Europe/Bucharest'`), because the offset changes with
  * the season and a shifted summer instant would read an hour early in winter.
@@ -52,9 +56,15 @@ export function weeksShift(now: Date = new Date()): number {
   return Math.max(0, Math.ceil(short / 7));
 }
 
-/** The written date, moved a whole number of weeks forward so it is ahead of today: same weekday, same gaps. */
-export function ahead(written: string, now: Date = new Date()): string {
-  return isoOf(dayNumber(written) + 7 * weeksShift(now));
+/** The suite's shift, read once per process: every `ahead` of one run moves by the same weeks, even across midnight. */
+const SHIFT = weeksShift();
+
+/**
+ * The written date, moved a whole number of weeks forward so it is ahead of today: same weekday,
+ * same gaps. `now` is for the unit test alone; a spec leaves it out and gets the process's one shift.
+ */
+export function ahead(written: string, now?: Date): string {
+  return isoOf(dayNumber(written) + 7 * (now ? weeksShift(now) : SHIFT));
 }
 
 /** The `YYYY-MM` of a date — the calendar's `?month=`. */
@@ -98,7 +108,7 @@ export function birthOn(runDay: string, age: number, daysUntilBirthday: number):
   return `${Number(year) - age - 1}-${month}-${day}`;
 }
 
-/** The same day `years` earlier: the last birth date that is `years` old on `iso` (a 29 February is not asked for: no spec's day falls on one). */
+/** The same day `years` earlier: the last birth date that is `years` old on `iso` (a 29 February is not asked for before 2044: its one caller types a Monday, and the next Monday 29 February is in 2044). */
 export function yearsBefore(iso: string, years: number): string {
   return `${Number(iso.slice(0, 4)) - years}${iso.slice(4)}`;
 }

@@ -41,8 +41,8 @@ test.describe("BR-REQ-050-02 a series is one row, and the bulk bar deletes it", 
       await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
     }
 
-    // «Toate» (§555): the plain list keeps only the dates to come, which these two stop being in
-    // June 2027 — and after the delete, the row must be gone from every state, not just one.
+    // «Toate» (§555): the plain list keeps only the dates to come, which these two stop being once
+    // their two Mondays pass — and after the delete, the row must be gone from every state, not just one.
     await page.goto("/ro/admin?state=ALL");
     // The row's checkbox is MUI's: a tick before hydration is reverted when React takes over.
     await hydrated(page);

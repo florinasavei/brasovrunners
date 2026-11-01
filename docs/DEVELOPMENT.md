@@ -316,10 +316,11 @@ never age.
 types its day through `ahead("2027-05-04")` from `tests/e2e/support/dates.ts`: the written date is a
 pattern, and the helper returns the same weekday a whole number of weeks later — one shift for the
 whole suite, the smallest that puts the earliest pattern 24 weeks (`LEAD_DAYS`) ahead of today in
-Brașov — so a weekday a spec relies on, the gap between two of its dates and two dates written
-alike all stay true, and the event is never in the past. What a shift does not keep is the month,
-the year and the season: a spec that reads one derives it from the date it typed (`monthOf`,
-`dayLine`, `written`), a spec that needs a season asks for it (`nextMonthDay(11, 17)`, the sunset
+Brașov, read once per process — so a weekday a spec relies on, the gap between two of its dates and
+two dates written alike all stay true, even across the club's midnight, and the event is never in
+the past. What a shift does not keep is the month, the year and the season: a spec that reads one
+derives it from the date it typed (`monthOf`, `dayLine`, `written`, `dmy`, `yearsBefore`), a
+spec that needs a season asks for it (`nextMonthDay(11, 17)`, the sunset
 of a November evening), an age typed against a run's limit comes from `birthOn(runDay, age, days)`,
 and an instant written into the database is written as a local time (`AT TIME ZONE
 'Europe/Bucharest'`), because the offset changes with the season. `tests/unit/events/e2e-dates.test.ts`

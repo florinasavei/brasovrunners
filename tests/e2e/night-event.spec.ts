@@ -23,7 +23,7 @@ import { monthOf, nextMonthDay, written } from "./support/dates";
 const NOVEMBER = nextMonthDay(11, 17);
 const MONTH = monthOf(NOVEMBER);
 const JUNE = nextMonthDay(6, 16);
-/** «mie., 17 nov. 2027» as the line writes it, ready for a regular expression. */
+/** The day as the line writes it — short weekday, day, short month, year — ready for a regular expression. */
 const lineDate = (iso: string) => written(iso, "ro", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).replace(/\./g, "\\.");
 
 /**

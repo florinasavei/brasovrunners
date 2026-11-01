@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { addDays, ahead, birthOn, dayLine, dmy, nextMonthDay, todayInBrasov, weeksShift } from "../../e2e/support/dates";
 
 /**
@@ -34,6 +34,17 @@ describe("BR-REQ-050-02 dates that stay ahead of the calendar", () => {
       expect(lead).toBeGreaterThanOrEqual(24 * 7);
       expect(lead).toBeLessThan(25 * 7);
     }
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("reads the shift once per process: a spec that crosses midnight, or a week, fills and asserts the same day", () => {
+    const filled = ahead("2027-05-04");
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(Date.now() + 8 * 86_400_000));
+    expect(ahead("2027-05-04")).toBe(filled);
   });
 
   it("leaves the dates alone while they are still far enough ahead", () => {
