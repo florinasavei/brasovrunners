@@ -111,8 +111,6 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
   // the safety form's name in the relayed message
   "src/modules/feedback/domain/branches.ts": { "Girl Zone": 1 },
   // the legal templates' wording — moved by the legal-clauses change
-  "src/modules/legal-documents/templates/privacy-notice.ts": { "Girl Zone": 2 },
-  // the legal templates' wording — moved by the legal-clauses change
   "src/modules/legal-documents/templates/tokens.ts": { Titulescu: 2 },
   // the email preview's sample event
   "src/modules/notifications/domain/email-sample.ts": {

@@ -3,7 +3,8 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * BR-REQ-101-01 (§882): the club's file reaches the platform through five doors and no other.
+ * BR-REQ-101-01 (§882): the club's file reaches the platform through five doors and no other — and its legal clauses,
+ * `club/legal.json`, through one: the legal texts' module (§NNN).
  *
  * `src/club/config.ts` is the only importer of `club/club.json`, and only `theme/brand.ts`, `events/domain/place.ts`,
  * `i18n/dates.ts`, `events/domain/sun.ts` and `shared/config/env.ts` import it: every other file reads the names
@@ -49,7 +50,7 @@ const FILES = [...sourceFiles(path.join(ROOT, "src")), ...sourceFiles(path.join(
 
 describe("BR-REQ-101-01: the club's file has one way into the platform (§882)", () => {
   it("is imported by src/club/config.ts alone", () => {
-    const readers = FILES.filter(({ imports }) => imports.some((specifier) => /(^@club\/club\.json$|(^|\/)club\/club\.json$)/.test(specifier))).map(({ file }) => file);
+    const readers = FILES.filter(({ imports }) => imports.some((specifier) => /(^@club\/club(\.json)?$|(^|\/)club\/club\.json$)/.test(specifier))).map(({ file }) => file);
     expect(readers).toEqual(["src/club/config.ts"]);
   });
 
@@ -60,9 +61,19 @@ describe("BR-REQ-101-01: the club's file has one way into the platform (§882)",
     expect(text).toEqual([]);
   });
 
-  it("names nothing in the club's folder but club.json and decor.json, each through its own door (§NNN)", () => {
+  it("and the club's legal clauses, club/legal.json, only by the legal texts' module (§NNN)", () => {
+    const readers = FILES.filter(({ imports }) => imports.some((specifier) => /(^@club\/legal(\.json)?$|(^|\/)club\/legal\.json$)/.test(specifier))).map(({ file }) => file);
+    expect(readers).toEqual(["src/modules/legal-documents/templates/club-facts.ts"]);
+    expect(readers.every((file) => file.startsWith("src/modules/legal-documents/"))).toBe(true);
+  });
+
+  it("names nothing in the club's folder but club.json, decor.json and legal.json, each through its own door (§NNN)", () => {
     const named = FILES.flatMap(({ file, imports }) => imports.filter((specifier) => specifier.startsWith("@club/")).map((specifier) => `${file} → ${specifier}`)).sort();
-    expect(named).toEqual(["src/club/config.ts → @club/club.json", "src/club/decor.ts → @club/decor.json"]);
+    expect(named).toEqual([
+      "src/club/config.ts → @club/club.json",
+      "src/club/decor.ts → @club/decor.json",
+      "src/modules/legal-documents/templates/club-facts.ts → @club/legal.json",
+    ]);
   });
 
   /**
