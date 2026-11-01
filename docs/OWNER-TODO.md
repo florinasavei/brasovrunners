@@ -57,7 +57,7 @@ it is the authority, this is the summary):
     receives a message is «Pagini» → «Contact» → "Cine primește mesajele de contact".
 12. ~~**The race itself**~~ — done 2026-10-02 (§632): the 21 November race was published by 2026-10-02 and full that day
     (`SETUP.md` §39). **What is left for race day, both before any result is entered:** (a) set «Startul cursei» in
-    `/admin/events` → the race → «Când și unde» (the field `SETUP.md` §39 lists; it holds the gun time, not the desk's): the hour the gun goes. Every «Sosit» stamp counts from
+    `/admin/events` → the race → «Când și unde» (the field `SETUP.md` §39 lists; it holds the gun time, not the desk's): the hour the gun goes, with the tick «Startul cursei nu e stabilit» cleared — while it is ticked the gun time is saved empty whatever the boxes hold. Every «Sosit» stamp counts from
     it; when it is empty the site counts from the event's start (`gunOf`, `src/modules/results/results.ts`), which
     `SETUP.md` §39 sets to the hour the desk opens, so the times would all be too long by the minutes between the desk and the
     gun. (b) On «Înscrierile primite» → «Clasament», choose «Categorii de vârstă» (empty means the standard groups; or the ages each group starts at). Changing them

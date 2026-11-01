@@ -691,6 +691,25 @@ The run's **Summary** says where, in words:
 Never push to `qa` or `main` by hand from the phone: the release PR and the production migration
 are the run's to open, merge and approve.
 
+## Neon suspended a project
+
+What it looks like: every query refused with `53000 Your account or project has exceeded the quota`; a migration run
+that stops with it (printed by `scripts/db-error.mjs` since §868, with what to do); the environment's job endpoints
+answering 500; `scheduled-jobs.yml`'s «Neon budget» step red. It happened to QA on 2026-10-28: 30 CU-hours used, and
+Neon suspends a project at its monthly compute quota until the next period (`SETUP.md` §40).
+
+1. **Confirm it.** `GET https://console.neon.tech/api/v2/projects/<project id>` with the environment's `NEON_API_KEY`
+   (`.env.local` for QA, the Vercel project for production): `settings.quota.compute_time_seconds` against
+   `compute_time_seconds`. Equal or above — that is it.
+2. **Raise the quota** — only the project concerned: `PATCH` the same address with
+   `{"project":{"settings":{"quota":{"compute_time_seconds":<new seconds>}}}}` (3 600 a CU-hour). The owner decides the
+   number; QA has had 216 000 (60 CU-hours) since 2026-10-28.
+3. **Lift the suspension.** Raising the quota alone does not: `POST …/endpoints/<endpoint id>/start` keeps answering
+   «quota exceeded». Set the quota to `0` (no limit), start the endpoint, then set the quota back to the number of
+   step 2 at once — Neon's own documentation names this reset (consumption limits).
+4. **Finish what failed**: re-run the failed `migrate.yml` run (`gh run rerun <id> --failed`), redeploy the
+   environment's newest Vercel deployment if its build gave up waiting, and tick `ship` again if a release stopped.
+
 ## Restoring production from Neon's history
 
 When: rows were deleted or changed by mistake (a bad script, an erase of the wrong registration), and the audit trail cannot
@@ -720,43 +739,30 @@ backup branch. Until then, read the console against this text on the first rehea
    that you close afterwards, never written into a file): `SELECT count(*) FROM registrations;` and, for the moment
    in question, the same count with the event's id, compared with `/admin` as it stood. Only `SELECT`. The branch is a
    separate database with its own endpoint, so nothing here touches production.
-5. **Bring the rows back, or switch.** *Rows:* a copy bypasses the allocator, so set the conditions first. (a) Compare with
-   production's current counted places for the event: insert a CONFIRMED or held row only if a counted place is free;
-   otherwise re-enter the person through the staff verbs («Adaugă pe lista de așteptare», «Trimite-i oferta»). (b) Never
-   bring back a row whose erasure the audit trail records (at the person's request) or that the retention job removed: the
-   branch holds data erased since the moment chosen, which is also a reason to delete it the same day. (c) Bring each
-   registration's dependent rows (declaration acceptance and the rest) with it, or none of them: a confirmed row without
-   its signed declaration is forbidden. (d) Mechanism: one `psql` session with the branch's and production's connection
-   strings in the shell environment, never in a file, piping `\copy (SELECT …) TO STDOUT` into `\copy … FROM STDIN` per table
-   in one transaction, and no file kept; the console's SQL Editor works on one branch at a time and cannot do it. Afterwards
-   re-check the event's counted places on `/admin` and run `yarn smoke` on production. *Switch:* only if the whole database
-   is damaged; it means pointing `DATABASE_URL` on the production Vercel project and the GitHub `production` environment to the branch's
-   connection strings and redeploying, which loses everything written since the moment chosen — an owner's decision, not a
-   reflex.
+5. **Bring the rows back, or switch.** *Rows:* a copy bypasses the allocator, so it must take the allocator's lock and
+   re-count, exactly as a registration does (`AGENTS.md` §10.6). (a) Never bring back a row whose erasure the audit trail
+   records (at the person's request) or that the retention job removed: the branch holds data erased since the moment
+   chosen, which is also a reason to delete it the same day. (b) Bring each registration's dependent rows (declaration
+   acceptance and the rest) with it, or none of them: a confirmed row without its signed declaration is forbidden.
+   (c) Mechanism, in two halves. First, copy from the branch into **staging tables on production** — one `psql` per
+   connection, the two connection strings in the shell environment and never in a file:
+   `psql "$BRANCH_URL" -c "\copy (SELECT … ) TO STDOUT" | psql "$PRODUCTION_URL" -c "\copy restore_stage_<table> FROM STDIN"`,
+   one pipe per table, into tables created for this (`CREATE TABLE restore_stage_<table> (LIKE <table>)`). Nothing live
+   has changed yet. Second, **one transaction on production** that locks the event row the way the allocator does
+   (`SELECT … FROM events WHERE id = … FOR UPDATE`), re-counts the event's counted places, inserts a held or confirmed
+   registration only into a counted free place — anything else goes back through the staff verbs («Adaugă pe lista de
+   așteptare», «Trimite-i oferta») —, inserts each registration together with its dependent rows from the staging tables,
+   and commits, or rolls back as a whole. Then drop the staging tables, re-check the event's counted places on `/admin`,
+   run `yarn smoke` on production, and write what was brought back, and why, into `docs/OWNER-TODO.md` item 22. If that is
+   more than a few rows, close the event's registrations while you do it. *Switch:* only if the whole database is damaged;
+   it means pointing `DATABASE_URL` on the production Vercel project and the GitHub `production` environment to the
+   branch's connection strings and redeploying, which loses everything written since the moment chosen — an owner's
+   decision, not a reflex.
 6. **Delete the branch.** When the rows are back and checked, Branches → the restore-check branch → **Delete**. A forgotten
    branch keeps computing and storing, and bills, and holds personal data that production may since have erased.
 
 Record the date, the moment restored to, what was brought back and what the console really said in `docs/OWNER-TODO.md`
 item 22, and then tick `SETUP.md` §25 and §30.
-
-## Neon suspended a project
-
-What it looks like: every query refused with `53000 Your account or project has exceeded the quota`; a migration run
-that stops with it (printed by `scripts/db-error.mjs` since §868, with what to do); the environment's job endpoints
-answering 500; `scheduled-jobs.yml`'s «Neon budget» step red. It happened to QA on 2026-10-28: 30 CU-hours used, and
-Neon suspends a project at its monthly compute quota until the next period (`SETUP.md` §40).
-
-1. **Confirm it.** `GET https://console.neon.tech/api/v2/projects/<project id>` with the environment's `NEON_API_KEY`
-   (`.env.local` for QA, the Vercel project for production): `settings.quota.compute_time_seconds` against
-   `compute_time_seconds`. Equal or above — that is it.
-2. **Raise the quota** — only the project concerned: `PATCH` the same address with
-   `{"project":{"settings":{"quota":{"compute_time_seconds":<new seconds>}}}}` (3 600 a CU-hour). The owner decides the
-   number; QA has had 216 000 (60 CU-hours) since 2026-10-28.
-3. **Lift the suspension.** Raising the quota alone does not: `POST …/endpoints/<endpoint id>/start` keeps answering
-   «quota exceeded». Set the quota to `0` (no limit), start the endpoint, then set the quota back to the number of
-   step 2 at once — Neon's own documentation names this reset (consumption limits).
-4. **Finish what failed**: re-run the failed `migrate.yml` run (`gh run rerun <id> --failed`), redeploy the
-   environment's newest Vercel deployment if its build gave up waiting, and tick `ship` again if a release stopped.
 
 ## The domain stops answering
 
