@@ -39,7 +39,11 @@ export async function approveNotices(
   return ids;
 }
 
-/** Remove the documents `approveNotices` inserted (their translations go with them); call after the suite's registrations are deleted. */
+/**
+ * Remove the documents `approveNotices` inserted (their translations go with them); call after the suite's registrations are deleted.
+ * The version numbers are not retired in `legal_document_numbering`, so the next run on the same local database reuses them —
+ * which §151 forbids for real documents, and harmless here: the suite's database is a local, throwaway one.
+ */
 export async function removeApprovedNotices(db: NodePgDatabase, ids: readonly string[]): Promise<void> {
   if (ids.length > 0) await db.delete(legalDocuments).where(inArray(legalDocuments.id, [...ids]));
 }

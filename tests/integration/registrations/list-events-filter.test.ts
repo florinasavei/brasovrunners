@@ -41,7 +41,7 @@ describe("§736 the events the registrations list offers", () => {
 
     const offered = await listEventsWithRegistrations(db);
     expect(offered.map((row) => row.id)).toContain(fresh);
-    // In Romanian while nobody registered, the language of the registrations otherwise.
+    // In the viewer's language (Romanian by default), else Romanian, else any translation.
     expect(offered.find((row) => row.id === fresh)?.title).toBe("Crosul nou");
     expect(offered.map((row) => row.id)).not.toContain(elsewhere);
     expect(offered.map((row) => row.id)).not.toContain(nowhere);
