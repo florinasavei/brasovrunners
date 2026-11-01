@@ -128,6 +128,12 @@ yarn calendar:preview    «Salvează ca imagine» drawn without a server: five s
                          three layouts and the week, on any text under the floor a phone's feed still reads: 17 px on a 1080-wide
                          picture, 16 for an hour or a detail line, 18 for a day number, 21 for anything on 16:9; «Legenda dedesubt»
                          is drawn also without the legend and without the details, and fails on a month's race missing from the picture
+yarn brand:assets        the logo's rasters — the PDFs' lockup, the emails' letterhead, the «Nu mai pot ajunge» glyph — from
+                         public/brand/*.svg in the colours of club/club.json's palette (the email band `tints.emailBand`, or
+                         the primary when it is left out, and the primary's ink), then
+                         club/assets.lock.json: each source's sha256 (LF line endings) and those colours. Run it after changing
+                         an SVG or the palette and commit what it writes; tests/unit/theme/brand-assets-lock.test.ts fails with
+                         «run yarn brand:assets» until you do. --lock-only rewrites the lock alone (§NNN)
 ```
 
 `yarn check` is the single gate, and CI runs it (its two halves on five runners) on every pull request. The pre-commit

@@ -49,7 +49,7 @@ const FILES = [...sourceFiles(path.join(ROOT, "src")), ...sourceFiles(path.join(
 
 describe("BR-REQ-101-01: the club's file has one way into the platform (§882)", () => {
   it("is imported by src/club/config.ts alone", () => {
-    const readers = FILES.filter(({ imports }) => imports.some((specifier) => /(^@club\/|(^|\/)club\/club\.json$)/.test(specifier))).map(({ file }) => file);
+    const readers = FILES.filter(({ imports }) => imports.some((specifier) => /(^@club\/club\.json$|(^|\/)club\/club\.json$)/.test(specifier))).map(({ file }) => file);
     expect(readers).toEqual(["src/club/config.ts"]);
   });
 
@@ -58,6 +58,48 @@ describe("BR-REQ-101-01: the club's file has one way into the platform (§882)",
     expect(readers).toEqual([]);
     const text = FILES.filter(({ file }) => file.startsWith("src/")).filter(({ full }) => /club\/infra/.test(readFileSync(full, "utf8"))).map(({ file }) => file);
     expect(text).toEqual([]);
+  });
+
+  it("names nothing in the club's folder but club.json and decor.json, each through its own door (§NNN)", () => {
+    const named = FILES.flatMap(({ file, imports }) => imports.filter((specifier) => specifier.startsWith("@club/")).map((specifier) => `${file} → ${specifier}`)).sort();
+    expect(named).toEqual(["src/club/config.ts → @club/club.json", "src/club/decor.ts → @club/decor.json"]);
+  });
+
+  /**
+   * BR-REQ-101-01 (§NNN): the mountains drawing is the club's (`club/decor.json`), and only its readers carry it. The
+   * theme's door (`config.ts`) brings `club.json` into every client island, so the drawing has a door of its own,
+   * `src/club/decor.ts`, which only `MountainMark` (a Server Component: an inline SVG in the HTML, no script) and the
+   * calendar picture's canvas files (loaded with the dialog, on a click) import — and `MountainMark` in turn only the
+   * pages and sections that draw it. Neither `brand.ts` nor `config.ts` imports it, and none of its readers is a
+   * `"use client"` file: the one island that reaches it, the picture's dialog, is `lazy()` behind its button.
+   */
+  it("and decor.json is read only by the drawing's readers", () => {
+    const importersOf = (target: string) =>
+      FILES.filter(({ full, imports }) =>
+        imports.some((specifier) => {
+          if (specifier === `@/${target}`) return true;
+          return specifier.startsWith(".") && relative(path.resolve(path.dirname(full), specifier)).replace(/\.tsx?$/, "") === `src/${target}`;
+        }),
+      )
+        .map(({ file }) => file)
+        .sort();
+    expect(importersOf("club/decor")).toEqual([
+      "src/modules/events/ui/calendar-image-frame.ts",
+      "src/modules/events/ui/calendar-image-poster-cells.ts",
+      "src/modules/events/ui/calendar-image-poster-formats.ts",
+      "src/modules/events/ui/calendar-image-poster-heads.ts",
+      "src/modules/events/ui/calendar-image-week.ts",
+      "src/shared/ui/MountainMark.tsx",
+    ]);
+    expect(importersOf("shared/ui/MountainMark")).toEqual([
+      "src/app/[locale]/calendar/page.tsx",
+      "src/modules/design/ui/LookSection.tsx",
+      "src/modules/home/ui/HomePicture.tsx",
+      "src/modules/home/ui/PhotoStrip.tsx",
+      "src/shared/ui/LookWatermark.tsx",
+    ]);
+    const isClient = (file: string) => /^\s*["']use client["']/.test(readFileSync(path.join(ROOT, file), "utf8"));
+    for (const file of [...importersOf("club/decor"), ...importersOf("shared/ui/MountainMark")]) expect(isClient(file), file).toBe(false);
   });
 
   it("and the guard words by nothing the application builds: no file under src/ or scripts/ imports club/guard-words.json", () => {

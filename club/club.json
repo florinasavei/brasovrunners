@@ -20,6 +20,34 @@
   },
   "hashtags": ["#NoOneLeftBehind", "#brasovrunners"],
   "safetyProgramme": { "ro": "Girl Zone", "en": "Girl Zone" },
+  "palette": {
+    "primary": "#0000ff",
+    "primaryInk": "#0b2fb8",
+    "secondary": "#d98a2b",
+    "accent": "#d6176f",
+    "dark": { "primary": "#7b9cff", "primaryInk": "#a3b8ff" },
+    "kit": { "deep": "#0b1f4d", "mid": "#12508f", "light": "#3aa0d8" },
+    "tints": {
+      "faint": "#f5f5ff",
+      "light": "#ebebff",
+      "grey": "#eef1f5",
+      "hero": "#e9eeff",
+      "heroDark": "#232a3c",
+      "rule": "#c7d2ff",
+      "sheet": "#c5d1ff",
+      "deep": "#092591",
+      "deepDark": "#becdff",
+      "emailBand": "#1a1aff"
+    },
+    "look": {
+      "light": { "accent": "#d6176f", "accentInk": "#a01650", "accentDeep": "#7e0e3c", "accentTint": "#fde8f1" },
+      "dark": { "accent": "#ff5fa2", "accentInk": "#ff8cc0", "accentDeep": "#ffb3d6", "accentTint": "#3b1a2a" }
+    },
+    "secondaryLook": {
+      "light": { "accent": "#a16620", "accentInk": "#794d18", "accentDeep": "#5e3c13", "accentTint": "#f6f0e9" },
+      "dark": { "accent": "#d98a2b", "accentInk": "#df9c4b", "accentDeep": "#e8b77c", "accentTint": "#352c25" }
+    }
+  },
   "logo": {
     "lockup": {
       "src": "/brand/logo.svg",

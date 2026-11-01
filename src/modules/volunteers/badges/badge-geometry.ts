@@ -33,6 +33,7 @@
 
 import { A4_PAGE, BIB_TEXT_LINE } from "@/modules/registrations/bib-geometry";
 import { withEllipsis } from "@/modules/registrations/bib-type";
+import { LOGO_RATIO } from "@/theme/brand";
 
 /** Points in a millimetre. */
 export const MM = 72 / 25.4;
@@ -104,9 +105,9 @@ export const BADGE_LAYOUT = {
   headerShare: 0.27,
   roleShare: 0.3,
   phoneShare: 0.1,
-  /** The logo's height, of the header's; its width at the lockup's own proportion. */
+  /** The logo's height, of the header's; its width at the lockup's own proportion (`LOGO_RATIO`, §NNN). */
   logoShare: 0.68,
-  logoRatio: 2.424,
+  logoRatio: LOGO_RATIO,
   /** The room inside the content's sides and between the logo and the title, of the header's height. */
   padShare: 0.18,
   /** The title's largest size, of the header's height, and the least it shrinks to before it is cut. */

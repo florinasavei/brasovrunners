@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { plainInline } from "./domain/inline";
 import path from "node:path";
 import PDFDocument from "pdfkit";
-import { COLOR } from "@/theme/brand";
+import { COLOR, LOGO_HEIGHT_SHARE } from "@/theme/brand";
 import type { LegalDocumentBody } from "./domain/content-hash";
 
 /**
@@ -69,6 +69,9 @@ const PAGE = { width: 595.28, height: 841.89 } as const;
 const MARGIN = { top: 56, bottom: 64, left: 56, right: 56 } as const;
 const TEXT_WIDTH = PAGE.width - MARGIN.left - MARGIN.right;
 
+/** The lockup at the top of the first page: 150 points wide, as tall as its own proportion makes it (§NNN). */
+export const LEGAL_PDF_LOGO = { width: 150, height: 150 * LOGO_HEIGHT_SHARE } as const;
+
 // The site's own tokens: `brand.ts` is the one file allowed a hex value, and a printed
 // declaration should look like the site that produced it.
 const INK = COLOR.ink;
@@ -110,10 +113,9 @@ export async function renderLegalDocumentPdf(input: LegalPdfInput): Promise<Buff
   });
 
   // The lockup, whole, at the top of the first page — the same artwork as the header.
-  const logoWidth = 150;
-  doc.image(logo, MARGIN.left, MARGIN.top, { width: logoWidth });
+  doc.image(logo, MARGIN.left, MARGIN.top, { width: LEGAL_PDF_LOGO.width });
   doc.moveDown();
-  doc.y = MARGIN.top + logoWidth * (495 / 1200) + 18;
+  doc.y = MARGIN.top + LEGAL_PDF_LOGO.height + 18;
 
   doc.font("bold").fontSize(20).fillColor(INK).text(input.title, { width: TEXT_WIDTH });
   doc.moveDown(0.4);

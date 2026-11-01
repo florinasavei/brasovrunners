@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { brotliDecompressSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
+import { cmapHas } from "../../helpers/font-cmap";
 
 /**
  * §460 (2026-09-26) — every face is a file in the repository; the build never asks Google.
@@ -80,48 +81,6 @@ function woff2Tables(file: string): Map<string, Buffer> {
   return tables;
 }
 
-/** Whether a Unicode `cmap` subtable (format 4 or 12) maps a code point to a real glyph. */
-function cmapHas(cmap: Buffer, codePoint: number): boolean {
-  const count = cmap.readUInt16BE(2);
-  const subtables: number[] = [];
-  for (let i = 0; i < count; i++) {
-    const platform = cmap.readUInt16BE(4 + i * 8);
-    const encoding = cmap.readUInt16BE(6 + i * 8);
-    if ((platform === 3 && (encoding === 1 || encoding === 10)) || platform === 0) {
-      subtables.push(cmap.readUInt32BE(8 + i * 8));
-    }
-  }
-  return subtables.some((start) => {
-    const format = cmap.readUInt16BE(start);
-    if (format === 12) {
-      const groups = cmap.readUInt32BE(start + 12);
-      for (let g = 0; g < groups; g++) {
-        const base = start + 16 + g * 12;
-        if (codePoint >= cmap.readUInt32BE(base) && codePoint <= cmap.readUInt32BE(base + 4)) return true;
-      }
-      return false;
-    }
-    if (format === 4) {
-      const segments = cmap.readUInt16BE(start + 6) / 2;
-      const ends = start + 14;
-      const starts = ends + segments * 2 + 2;
-      const deltas = starts + segments * 2;
-      const rangeOffsets = deltas + segments * 2;
-      for (let s = 0; s < segments; s++) {
-        const end = cmap.readUInt16BE(ends + s * 2);
-        const first = cmap.readUInt16BE(starts + s * 2);
-        if (codePoint < first || codePoint > end) continue;
-        if (first === 0xffff) return false;
-        const rangeOffset = cmap.readUInt16BE(rangeOffsets + s * 2);
-        if (rangeOffset === 0) return true;
-        const glyphAt = rangeOffsets + s * 2 + rangeOffset + (codePoint - first) * 2;
-        return cmap.readUInt16BE(glyphAt) !== 0;
-      }
-    }
-    return false;
-  });
-}
-
 // ------------------------------------------------------------------------------------------------
 
 /** The letters a Romanian page cannot do without, and the punctuation the club's texts use. */
@@ -138,7 +97,7 @@ describe("the fonts are files in the repository, never a download at build (§46
   it("the locale layout declares the four faces through next/font/local, variables unchanged", () => {
     const source = readFileSync(LAYOUT, "utf8");
     expect(source).toContain('from "next/font/local"');
-    for (const variable of ["--font-roboto", "--font-inter", "--font-signature", "--font-nunito", "--font-facon"]) {
+    for (const variable of ["--font-roboto", "--font-inter", "--font-signature", "--font-nunito", "--font-wordmark"]) {
       expect(source).toContain(`variable: "${variable}"`);
     }
   });
