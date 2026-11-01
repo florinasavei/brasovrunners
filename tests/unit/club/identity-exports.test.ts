@@ -1,0 +1,40 @@
+import { describe, expect, it } from "vitest";
+import { EVENT_FILE_FORMAT } from "@/modules/content/events/transfer/file-format";
+import { CLUB_LOCALITY } from "@/modules/events/domain/place";
+import { DEFAULT_CLUB_COORDINATES } from "@/modules/events/domain/sun";
+import { buildCalendar, calendarFeedFileName, type CalendarLabels } from "@/modules/events/ical";
+import { glossaryContext } from "@/modules/translate/domain/glossary";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
+import { envSchema } from "@/shared/config/env";
+import { CLUB_NAME, CLUB_SHORT_FORMS, LOGO, WORDMARK } from "@/theme/brand";
+
+/**
+ * BR-REQ-101-01 (§NNN): the club's identity moved into `club/club.json`, and nothing a person sees changed.
+ *
+ * The file snapshot beside this test was written from `origin/qa` before the move — every identity, place,
+ * time and logo export, and the strings the platform builds from them — so the values read from the config
+ * are proved equal, character for character, to the ones that were written in the code. A diff in the
+ * snapshot is a change the club would see: it is never updated to make this pass.
+ */
+describe("BR-REQ-101-01: the identity exports read from club/club.json equal the literals they replaced (§NNN)", () => {
+  it("prints the same values as origin/qa did", async () => {
+    const defaults = envSchema.parse({});
+    const calendar = buildCalendar({ events: [], baseUrl: "http://localhost:3000", name: "x", labels: {} as CalendarLabels });
+    const values = {
+      WORDMARK,
+      CLUB_NAME,
+      CLUB_SHORT_FORMS,
+      LOGO,
+      CLUB_LOCALITY,
+      DEFAULT_CLUB_COORDINATES,
+      CLUB_TIME_ZONE,
+      EMAIL_FROM_NAME_default: defaults.EMAIL_FROM_NAME,
+      CLUB_COORDINATES_default: defaults.CLUB_COORDINATES,
+      EVENT_FILE_FORMAT,
+      calendarFeedFileName: { ro: calendarFeedFileName("ro"), en: calendarFeedFileName("en") },
+      PRODID: calendar.split("\r\n").find((line) => line.startsWith("PRODID:")),
+      glossaryContext: glossaryContext(),
+    };
+    await expect(`${JSON.stringify(values, null, 2)}\n`).toMatchFileSnapshot("./__snapshots__/identity-exports.json");
+  });
+});

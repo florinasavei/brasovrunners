@@ -1,0 +1,40 @@
+{
+  "name": "Someș Striders",
+  "slug": "somesstriders",
+  "shortName": "SST",
+  "wordmark": "SOMES STRIDERS",
+  "shortForms": {
+    "city": "cj",
+    "nicknames": ["sst"]
+  },
+  "place": {
+    "locality": "Cluj-Napoca",
+    "county": "Cluj",
+    "countyCode": "CJ",
+    "country": "RO",
+    "countryName": { "ro": "România", "en": "Romania" },
+    "timeZone": "Atlantic/Azores",
+    "zoneWords": { "ro": "ora Azorelor", "en": "Azores time" },
+    "coordinates": { "latitude": 46.7712, "longitude": 23.6236 },
+    "idExample": "CJ 654321"
+  },
+  "hashtags": ["#somesstriders"],
+  "safetyProgramme": { "ro": "Zona Sigură", "en": "Safe Zone" },
+  "logo": {
+    "lockup": {
+      "src": "/brand/logo.svg",
+      "onDark": "/brand/logo-white.svg",
+      "viewBox": "60 906 2880 1188",
+      "width": 2880,
+      "height": 1188
+    },
+    "mark": {
+      "src": "/brand/logo-mark.svg",
+      "onDark": "/brand/logo-mark-white.svg",
+      "viewBox": "60 906 2840 889",
+      "width": 2840,
+      "height": 889
+    }
+  },
+  "guardWords": ["Feleac", "Cetățuia"]
+}

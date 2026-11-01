@@ -2,6 +2,7 @@ import type { Locale } from "@/i18n/routing";
 import { composePhone } from "./phone";
 import { env } from "@/shared/config/env";
 import { normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
+import { HOME_COUNTRY } from "@/modules/events/domain/place";
 
 /**
  * The rendered form's field names, read into the shape `registrationSubmissionSchema` parses.
@@ -51,7 +52,7 @@ function checked(form: FormData, name: string): boolean {
 function phoneField(form: FormData, name: string): string | undefined {
   const typed = text(form, name).trim();
   if (typed === "") return undefined;
-  return composePhone(text(form, `${name}Country`) || "RO", typed) ?? typed;
+  return composePhone(text(form, `${name}Country`) || HOME_COUNTRY, typed) ?? typed;
 }
 
 export function readRegistrationForm(

@@ -1,7 +1,6 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { createTranslator } from "next-intl";
-import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import en from "@/../messages/en.json";
 import ro from "@/../messages/ro.json";
@@ -85,7 +84,6 @@ describe("§357 no hardcoded value in the emails' own sentences", () => {
     for (const file of [
       "src/modules/staff-identity/zitadel-users.ts",
       "src/modules/registrations/bibs-pdf.ts",
-      "src/shared/config/env.ts",
       "src/modules/events/share-image.tsx",
       "src/modules/events/ical.ts",
       "src/app/api/admin/legal/[id]/pdf/route.ts",
@@ -94,33 +92,21 @@ describe("§357 no hardcoded value in the emails' own sentences", () => {
       expect(source, file).not.toMatch(/Bra(?:ș|s)ov Runners/);
       expect(source, file).toContain('from "@/theme/brand"');
     }
+    // The From line's default reads the same file `brand.ts` does (§NNN): env.ts may not import the theme.
+    const envSource = readFileSync(path.join(process.cwd(), "src/shared/config/env.ts"), "utf8");
+    expect(envSource).not.toMatch(/Bra(?:ș|s)ov Runners/);
+    expect(envSource).toContain('from "@/club/config"');
+    expect(envSource).toContain("default(CLUB.name)");
   });
 });
 
 /** Diacritics and case folded, so "Brașov Runners", "BRASOV RUNNERS" and "brasov-runners" are one name. */
 const fold = (value: string) => value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-const CLUB_NAME_PATTERN = new RegExp(fold(CLUB_NAME).replace(/\s+/g, "[\\s-]"));
-
-/**
- * Every string a program can hand a person or another system — a string literal, each piece of a
- * template literal, and the text between JSX tags — that names the club. Comments are not nodes of
- * the tree, so the owner's own words quoted in a comment are not counted.
- */
-function clubNamesIn(file: string, text: string): string[] {
-  const kind = file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
-  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kind);
-  const found: string[] = [];
-  const visit = (node: ts.Node) => {
-    const words =
-      ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node) || ts.isJsxText(node)
-        ? node.text
-        : null;
-    if (words !== null && CLUB_NAME_PATTERN.test(fold(words))) found.push(words.trim());
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
-  return found;
-}
+/*
+  The scans that refused the name in a string of `src/` and in a message of either catalogue moved to
+  `tests/unit/club/club-literals.test.ts` (§NNN), which builds every forbidden word — the name among them —
+  from `club/club.json` and scans more than `src/`. The pins below stay: they say where the name is read.
+*/
 
 function sourceFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
@@ -140,55 +126,7 @@ function flatMessages(messages: unknown, prefix = ""): Record<string, string> {
   );
 }
 
-/**
- * Where the name may be written: the constant itself, and the sample data a developer seeds — a
- * made-up event may be called anything, and a test fixture reads it by that title.
- */
-const MAY_NAME_THE_CLUB = (relative: string) => relative === "src/theme/brand.ts" || relative.startsWith("src/db/seeds/");
-
 describe("§369 the club's name leaves the platform only through the constant", () => {
-  it("finds the name in a string, a template and JSX text, and not in a comment", () => {
-    const found = clubNamesIn(
-      "probe.tsx",
-      [
-        "// Brașov Runners, in a comment",
-        'const a = "Echipa Brașov Runners";',
-        "const b = `-//Brasov Runners//${x}`;",
-        "const c = `x ${y} brasov-runners-${z}.ics`;",
-        "const d = <div>BRASOV RUNNERS</div>;",
-        'const e = "@brasovrunners";',
-      ].join("\n"),
-    );
-    expect(found).toEqual(["Echipa Brașov Runners", "-//Brasov Runners//", "brasov-runners-", "BRASOV RUNNERS"]);
-  });
-
-  it("no string in src/ names the club outside theme/brand.ts and the seeds", () => {
-    const root = process.cwd();
-    const offenders = sourceFiles(path.join(root, "src"))
-      .map((file) => ({ file: path.relative(root, file).split(path.sep).join("/"), text: readFileSync(file, "utf8") }))
-      .filter(({ file }) => !MAY_NAME_THE_CLUB(file))
-      .flatMap(({ file, text }) => clubNamesIn(file, text).map((words) => `${file}: ${words}`));
-    expect(offenders).toEqual([]);
-  });
-
-  it("no message in either catalogue names the club: a sentence that needs it asks for {club}", () => {
-    // The catalogues are the other place a reader's words come from, and the scan above never
-    // opens them. `Site.name` and `Home.title` were a second and third copy of the constant, the
-    // footer's club description a fourth; a renamed club would have been renamed in `src/` and
-    // gone on reading the old name in the page title, the header and the member tick (§369).
-    const offenders = (
-      [
-        ["ro", ro],
-        ["en", en],
-      ] as const
-    ).flatMap(([locale, catalogue]) =>
-      Object.entries(flatMessages(catalogue))
-        .filter(([, text]) => CLUB_NAME_PATTERN.test(fold(text)))
-        .map(([key, text]) => `${locale}.json ${key}: ${text}`),
-    );
-    expect(offenders).toEqual([]);
-  });
-
   it("fills every {club} with the constant, at each place the sentence is read", () => {
     // Which sentences ask, pinned: a new one is a new call site, and it has to pass the name.
     for (const catalogue of [ro, en]) {

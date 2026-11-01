@@ -3,6 +3,7 @@ import { type CoHost, primaryCoHostLink } from "./domain/co-hosts";
 import { costUrlHost, type EventCostType } from "./domain/cost";
 import { difficultyLevelOf, difficultyWords } from "./domain/difficulty";
 import { distanceWords } from "./domain/distance";
+import { HOME_COUNTRY } from "./domain/place";
 import { elevationWords } from "./domain/elevation";
 import { type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
@@ -171,7 +172,8 @@ export type CalendarEvent = {
  */
 const CLUB_NAME_ASCII = CLUB_NAME.normalize("NFD").replace(/\p{M}/gu, "");
 
-const PRODID = `-//${CLUB_NAME_ASCII}//events//RO`;
+/** The product id's last field is the club's country (`HOME_COUNTRY`, §NNN) — "RO", as calendar apps have always seen it. */
+const PRODID = `-//${CLUB_NAME_ASCII}//events//${HOME_COUNTRY}`;
 
 /** The feed's file name in one language: "brasov-runners-ro.ics". */
 export function calendarFeedFileName(locale: string): string {

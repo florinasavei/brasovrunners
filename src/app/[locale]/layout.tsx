@@ -20,7 +20,7 @@ import { siteLookStyle } from "@/modules/appearance/domain/site-look";
 import { siteTintStyle } from "@/modules/appearance/domain/site-tint";
 import { cachedSiteFontSize, cachedSiteLook, cachedSiteTint } from "@/modules/public-cache/reads";
 import AppTheme from "@/theme/AppTheme";
-import { CLUB_NAME } from "@/theme/brand";
+import { SITE_TITLE } from "@/theme/brand";
 import { LOOK_ATTRIBUTE, LOOK_VALUE } from "@/theme/look";
 import LookWatermark from "@/shared/ui/LookWatermark";
 
@@ -135,7 +135,7 @@ export async function generateMetadata(): Promise<Metadata> {
     // BR-REQ-101-02: every absolute URL derives from APP_BASE_URL.
     metadataBase: new URL(env.APP_BASE_URL),
     // The club's name from its one constant (§369): a proper name, the same in both languages.
-    title: { default: CLUB_NAME, template: `%s · ${CLUB_NAME}` },
+    title: { ...SITE_TITLE },
     // The large card on X and everywhere that reads Twitter tags; Facebook reads `og:*`, which
     // the `opengraph-image.tsx` files write (`DECISIONS.md` §90).
     twitter: { card: "summary_large_image" },

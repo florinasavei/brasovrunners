@@ -1,3 +1,4 @@
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import type { PublicEvent } from "@/modules/events/repository";
 import { homeFigures, type HomeFigure, type NumbersContent } from "@/modules/home/domain/numbers";
@@ -51,7 +52,7 @@ function row(locale: Locale, overrides: Partial<PublicEvent> = {}): PublicEvent 
     startsAt: new Date("2026-09-28T15:30:00Z"),
     endsAt: null,
     raceStartsAt: null,
-    timezone: "Europe/Bucharest",
+    timezone: CLUB_TIME_ZONE,
     mapUrl: null,
     routeUrl: null,
     stravaEventUrl: null,

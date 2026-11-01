@@ -38,6 +38,8 @@ yarn test:categories  the six test categories (trust, drawn, pages, database, gu
 yarn test:fast    trust + guards + logic — what the pre-commit hook runs on the staged files' tests
 yarn test:skip    every category but the ones named (`yarn test:skip drawn pages`); «trust» is never left out
 yarn test:concurrency  two-connection suite (BR-REQ-051-01 criterion 5); needs the database
+yarn test:fork    the identity built from a made-up club (`tests/fixtures/fork-club/`): none of
+                  this club's words may come out (`club/README.md`, §NNN); CI runs it
 yarn test:clock   the suite with the real clock at +1 month, +1 year, +10 years: a test that
                   fails only there pins a date the calendar will reach (docs/DEVELOPMENT.md);
                   `--concurrency` for the two-connection suite

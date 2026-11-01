@@ -1,3 +1,5 @@
+import { HOME_COUNTRY } from "@/modules/events/domain/place";
+
 /**
  * ISO 3166-1 alpha-2 codes (BR-REQ-031-04).
  *
@@ -28,16 +30,16 @@ export const COUNTRY_CODES: readonly string[] = [
 ];
 
 /**
- * The club is in Brașov and most entrants will be Romanian, so `RO` is offered first and the
+ * Most entrants live where the club runs, so its country (`HOME_COUNTRY`, `RO`) is offered first and the
  * rest follow in the reader's own alphabetical order — a Romanian reader should not scroll past
  * two hundred countries to find their own, and an Austrian should still find Österreich under Ö.
  */
 export function countryOptions(locale: "ro" | "en", name: (code: string) => string) {
-  const rest = COUNTRY_CODES.filter((code) => code !== "RO")
+  const rest = COUNTRY_CODES.filter((code) => code !== HOME_COUNTRY)
     .map((code) => ({ code, label: name(code) }))
     .sort((a, b) => a.label.localeCompare(b.label, locale));
 
-  return [{ code: "RO", label: name("RO") }, ...rest];
+  return [{ code: HOME_COUNTRY, label: name(HOME_COUNTRY) }, ...rest];
 }
 
 // The flag beside each name is `shared/ui/Flag`, over the set `scripts/sync-flags.mjs` copies

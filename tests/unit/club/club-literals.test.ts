@@ -1,0 +1,186 @@
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import path from "node:path";
+import ts from "typescript";
+import { describe, expect, it } from "vitest";
+import { CLUB } from "@/club/config";
+import { KNOWN_LEAKS } from "./known-leaks";
+
+/**
+ * BR-REQ-101-01 (§NNN, amending §369): the club's words are written in `club/club.json` and read through
+ * `theme/brand.ts`, `events/domain/place.ts` and `i18n/dates.ts` — never typed again as a literal.
+ *
+ * The forbidden words are built from the config itself, so a fork's guard forbids the fork's words: the name,
+ * folded and with optional separators between its words (it catches «Brașov Runners», «BRASOV RUNNERS»,
+ * «brasov-runners» and «brasovrunners» alike); the wordmark; the slug; the short name and the nicknames as whole
+ * words of three letters or more; the locality and the county; the identity card example; the hashtags; and the
+ * club's guard words (its places, its parks, its programmes).
+ *
+ * Scanned: every string a program hands a person or another system — a string literal, each piece of a template
+ * literal and the text between JSX tags — in `src/**\/*.ts(x)` and `scripts/**`; every leaf of both catalogues;
+ * the lines of the workflows that are not comments; `package.json` and `docker-compose.yml`. Comments are not
+ * nodes of the tree, so the owner's own words quoted in one are not counted. Exempt: `club/**`, `tests/**`, every
+ * `*.md`, `src/db/migrations/**` (history), and — until the seeds read the config — `src/db/seeds/**`.
+ *
+ * `KNOWN_LEAKS` (`./known-leaks.ts`) lists what is still written as a literal today, file by file — the legal
+ * templates' and the catalogues' wording, the scripts — for the later changes that move them. It is a ratchet:
+ * a new leak fails, and so does an entry that no longer leaks, so the list only ever shrinks.
+ */
+const ROOT = path.resolve(__dirname, "../../..");
+
+/** Diacritics and case folded: «Brașov», «BRASOV» and «brasov» are one word. */
+const fold = (value: string) => value.normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase();
+const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const NOT_WORD = "[^\\p{L}\\p{N}]";
+
+type Forbidden = { label: string; pattern: RegExp };
+
+/** A phrase whose words may stand glued or apart, behind any separator: «brasov runners», «brasov_runners», «brasovrunners». */
+const glued = (label: string): Forbidden => ({
+  label,
+  pattern: new RegExp(
+    fold(label)
+      .split(new RegExp(`${NOT_WORD}+`, "u"))
+      .filter(Boolean)
+      .map(escape)
+      .join(`${NOT_WORD}*`),
+    "u",
+  ),
+});
+
+/** A word or a phrase standing on its own, never inside a longer word: «tractorul», not «tractorului». */
+const whole = (label: string): Forbidden => ({
+  label,
+  pattern: new RegExp(`(?<![\\p{L}\\p{N}])${escape(fold(label)).replace(/\s+/g, "\\s+")}(?![\\p{L}\\p{N}])`, "u"),
+});
+
+/** The club's words, from its own file. Deduplicated by what they match: the county is the locality in Brașov. */
+function forbiddenWords(club: typeof CLUB): Forbidden[] {
+  const words: Forbidden[] = [
+    glued(club.name),
+    glued(club.wordmark),
+    whole(club.slug),
+    ...[club.shortName, ...club.shortForms.nicknames].filter((word) => /^[\p{L}\p{N}]{3,}$/u.test(word)).map(whole),
+    whole(club.place.locality),
+    whole(club.place.county),
+    glued(club.place.idExample),
+    ...club.hashtags.map(whole),
+    ...club.guardWords.map(whole),
+  ];
+  const seen = new Set<string>();
+  return words.filter(({ pattern }) => !seen.has(pattern.source) && seen.add(pattern.source));
+}
+
+const FORBIDDEN = forbiddenWords(CLUB);
+
+/** The labels of the forbidden words a text says. */
+const said = (text: string): string[] => {
+  const folded = fold(text);
+  return FORBIDDEN.filter(({ pattern }) => pattern.test(folded)).map(({ label }) => label);
+};
+
+/** Every string a program can hand a person or another system — a literal, a template's pieces, JSX text. */
+function programStrings(file: string, text: string): string[] {
+  const kind = file.endsWith(".tsx") ? ts.ScriptKind.TSX : /\.(mjs|cjs|js)$/.test(file) ? ts.ScriptKind.JS : ts.ScriptKind.TS;
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kind);
+  const found: string[] = [];
+  const visit = (node: ts.Node) => {
+    if (ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node) || ts.isJsxText(node)) {
+      found.push(node.text);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return found;
+}
+
+/** Every leaf of a JSON document, keys included. */
+function jsonLeaves(value: unknown): string[] {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(jsonLeaves);
+  if (value && typeof value === "object") return Object.entries(value).flatMap(([key, child]) => [key, ...jsonLeaves(child)]);
+  return [];
+}
+
+/** The lines of a YAML or shell file that are not comments. */
+const nonCommentLines = (text: string) => text.split(/\r?\n/).filter((line) => !/^\s*#/.test(line));
+
+function filesUnder(directory: string): string[] {
+  return readdirSync(directory).flatMap((entry) => {
+    const full = path.join(directory, entry);
+    if (statSync(full).isDirectory()) return entry === "node_modules" ? [] : filesUnder(full);
+    return [full];
+  });
+}
+
+const relative = (file: string) => path.relative(ROOT, file).split(path.sep).join("/");
+
+/** Exempt: the club's own folder, the tests, prose, the migrations' history and (for now) the seeds. */
+const EXEMPT = (file: string) =>
+  file.startsWith("club/") || file.startsWith("tests/") || file.endsWith(".md") || file.startsWith("src/db/migrations/") || file.startsWith("src/db/seeds/");
+
+/** What one file says that the club's file should say instead: the texts to read, by kind. */
+function textsOf(file: string): string[] {
+  const text = readFileSync(path.join(ROOT, file), "utf8");
+  if (/\.(ts|tsx|mts|mjs|cjs|js)$/.test(file)) return programStrings(file, text);
+  if (file.endsWith(".json")) return jsonLeaves(JSON.parse(text));
+  if (/\.(ya?ml|sh)$/.test(file)) return nonCommentLines(text);
+  return [];
+}
+
+function scannedFiles(): string[] {
+  const src = filesUnder(path.join(ROOT, "src")).filter((file) => /\.tsx?$/.test(file));
+  const scripts = filesUnder(path.join(ROOT, "scripts"));
+  const workflows = filesUnder(path.join(ROOT, ".github/workflows")).filter((file) => /\.ya?ml$/.test(file));
+  const singles = ["messages/ro.json", "messages/en.json", "package.json", "docker-compose.yml"].map((file) => path.join(ROOT, file));
+  return [...src, ...scripts, ...workflows, ...singles].map(relative).filter((file) => !EXEMPT(file)).sort();
+}
+
+/** File → the forbidden words it says, sorted. */
+function leaks(): Record<string, string[]> {
+  const found: Record<string, string[]> = {};
+  for (const file of scannedFiles()) {
+    const words = [...new Set(textsOf(file).flatMap(said))].sort();
+    if (words.length > 0) found[file] = words;
+  }
+  return found;
+}
+
+describe("BR-REQ-101-01: the club's words come from club/club.json, never a literal (§NNN)", () => {
+  it("builds its words from the club's file, and finds them in a string, a template and JSX text, not in a comment", () => {
+    const labels = FORBIDDEN.map(({ label }) => label);
+    expect(labels).toContain(CLUB.name);
+    expect(labels).toContain(CLUB.place.locality);
+    for (const word of CLUB.guardWords) expect(labels).toContain(word);
+    const probe = programStrings(
+      "probe.tsx",
+      [
+        `// ${CLUB.name}, in a comment`,
+        `const a = "Echipa ${CLUB.name}";`,
+        `const b = \`-//${fold(CLUB.name)}//\${x}\`;`,
+        `const c = <div>${CLUB.wordmark}</div>;`,
+        `const d = "@${CLUB.slug}";`,
+        `const e = "un ${CLUB.place.locality.toUpperCase()} oarecare";`,
+      ].join("\n"),
+    ).flatMap(said);
+    expect(probe).toEqual(expect.arrayContaining([CLUB.name, CLUB.place.locality]));
+    expect(programStrings("probe.ts", `// ${CLUB.name}\n/* ${CLUB.place.locality} */ const z = 1;`).flatMap(said)).toEqual([]);
+  });
+
+  it("matches a word whole and the name glued: never a word inside a longer one", () => {
+    const name = FORBIDDEN.find(({ label }) => label === CLUB.name);
+    const locality = FORBIDDEN.find(({ label }) => label === CLUB.place.locality);
+    expect(name?.pattern.test(fold(CLUB.slug))).toBe(true);
+    expect(name?.pattern.test(fold(CLUB.name).replace(/\s+/g, "_"))).toBe(true);
+    expect(locality?.pattern.test(`${fold(CLUB.place.locality)}x`)).toBe(false);
+    expect(locality?.pattern.test(`x ${fold(CLUB.place.locality)}, ro`)).toBe(true);
+  });
+
+  it("finds no leak that KNOWN_LEAKS does not list, and no listed leak that is gone", () => {
+    const found = leaks();
+    const listed = Object.fromEntries(Object.entries(KNOWN_LEAKS).map(([file, words]) => [file, [...words].sort()]));
+    const fresh = Object.entries(found).flatMap(([file, words]) => words.filter((word) => !listed[file]?.includes(word)).map((word) => `${file}: ${word}`));
+    const stale = Object.entries(listed).flatMap(([file, words]) => words.filter((word) => !found[file]?.includes(word)).map((word) => `${file}: ${word}`));
+    expect(fresh, "a new literal of the club's: read it from brand.ts, place.ts or dates.ts").toEqual([]);
+    expect(stale, "a listed leak that is gone: take it off KNOWN_LEAKS").toEqual([]);
+  });
+});

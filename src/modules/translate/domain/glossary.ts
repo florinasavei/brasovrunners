@@ -1,3 +1,5 @@
+import { CLUB_LOCALITY, HOME_COUNTRY_NAME } from "@/modules/events/domain/place";
+
 /**
  * The club's words, for the provider (`DECISIONS.md` §464).
  *
@@ -27,7 +29,7 @@ export const CLUB_GLOSSARY: readonly (readonly [ro: string, en: string])[] = [
 export function glossaryContext(): string {
   const terms = CLUB_GLOSSARY.map(([ro, en]) => `«${ro}» = "${en}"`).join("; ");
   return [
-    "Texts written by a small amateur running club in Brașov, Romania, for its event pages and messages to runners.",
+    `Texts written by a small amateur running club in ${CLUB_LOCALITY}, ${HOME_COUNTRY_NAME.en}, for its event pages and messages to runners.`,
     `Use these terms: ${terms}.`,
     "Keep names of people, places, trails, partners and the club exactly as written, and keep every number, time, date and distance unchanged.",
   ].join(" ");

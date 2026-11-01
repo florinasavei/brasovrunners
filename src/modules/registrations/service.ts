@@ -115,6 +115,7 @@ import { confirmsInvitationRaises, INVITATION_BATCH_MAX, InvitationRefusal, invi
 import { waitlistRefusalOf } from "./domain/waitlist";
 import { memberBibKept } from "./domain/member-bib";
 import { readBibDesign } from "./bib-design";
+import { HOME_COUNTRY } from "@/modules/events/domain/place";
 
 /**
  * The registration lifecycle (AGENTS.md §15.1-§15.7; BR-REQ-030/031/033/034/035/036).
@@ -1960,7 +1961,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     nationality: input.nationality ?? null,
     // Never null (§510): a staff entry without one lives in Romania, the column's own default —
     // on a restart too, which writes these fields over the old row.
-    country: input.country ?? "RO",
+    country: input.country ?? HOME_COUNTRY,
     city: input.city ?? null,
     phone: input.phone ?? null,
     emergencyContactName: input.emergencyContactName ?? null,
