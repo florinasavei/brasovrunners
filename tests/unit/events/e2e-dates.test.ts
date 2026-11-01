@@ -23,7 +23,6 @@ describe("BR-REQ-050-02 dates that stay ahead of the calendar", () => {
         expect(weekday(moved)).toBe(weekday(written));
       }
       expect(days(ahead("2027-05-01", now), ahead("2027-05-04", now))).toBe(3);
-      expect(ahead("2027-05-02", now)).toBe(ahead("2027-05-02", now));
     }
   });
 
