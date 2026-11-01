@@ -20,6 +20,11 @@ name: scheduled-jobs
 # runs its jobs for real once a day at 04:00 in Brașov; so this runs four times a day, at 01:17,
 # 07:17, 13:17 and 19:17 UTC — off the pinger's quarter-hours — to do what is due if the external
 # pinger has stopped. It used to say every five minutes; GitHub ran it every three to five hours.
+#
+# It also WATCHES (§NNN). Every poke records a ping, and a recent ping reads as «ok» in the health
+# answer, so the deep health is read FIRST, before the pokes: a dead pinger shows as a stale job or a
+# stalled outbox there, and hides after them. Both pokes still run when it says something is wrong; the
+# run turns red at its end (scripts/backstop-verdict.mjs, docs/RUNBOOKS.md § A red backstop run).
 on:
   schedule:
     - cron: "17 1,7,13,19 * * *"
@@ -45,19 +50,42 @@ jobs:
           - name: qa
             base_url_secret: QA_APP_BASE_URL
             job_secret: QA_JOB_SECRET
-          # Skipped with a notice until both secrets exist — set them on deployment day, not
-          # before (SETUP.md §26): a host that is not serving yet turns every run red.
+          # Skipped with a notice (production: a warning, it must be configured)
+          # until both secrets exist — set them on deployment day, not before
+          # (SETUP.md §26): a host that is not serving yet turns every run red.
           - name: production
             base_url_secret: PRODUCTION_APP_BASE_URL
             job_secret: PRODUCTION_JOB_SECRET
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Health before the pokes
+        # Read first, judged last. No --fail: a degraded answer is a 503 with a body, and the body is the point.
+        env:
+          BASE_URL: ${{ secrets[matrix.base_url_secret] }}
+        run: |
+          if [ -z "$BASE_URL" ]; then
+            if [ "${{ matrix.name }}" = "production" ]; then
+              echo "::warning::production is not configured: PRODUCTION_APP_BASE_URL is empty, so nothing watches production's jobs or database (SETUP.md §40 step 3)"
+            else
+              echo "::notice::${{ matrix.name }} is not configured; skipping"
+            fi
+            exit 0
+          fi
+          curl --silent --show-error --max-time 60 "$BASE_URL/api/health?deep=1" > "$RUNNER_TEMP/health.json" || echo "{}" > "$RUNNER_TEMP/health.json"
+
       - name: Email outbox
+        if: always()
         env:
           BASE_URL: ${{ secrets[matrix.base_url_secret] }}
           JOB_SECRET: ${{ secrets[matrix.job_secret] }}
         run: |
           if [ -z "$BASE_URL" ] || [ -z "$JOB_SECRET" ]; then
-            echo "::notice::${{ matrix.name }} is not configured; skipping"
+            if [ "${{ matrix.name }}" = "production" ]; then
+              echo "::warning::production is not configured (${{ matrix.base_url_secret }} or ${{ matrix.job_secret }} is empty); skipping the outbox poke — production must be configured (SETUP.md §40 step 3)"
+            else
+              echo "::notice::${{ matrix.name }} is not configured; skipping"
+            fi
             exit 0
           fi
           # --fail so a non-2xx is a failed run rather than a green tick over a 401.
@@ -74,40 +102,27 @@ jobs:
           JOB_SECRET: ${{ secrets[matrix.job_secret] }}
         run: |
           if [ -z "$BASE_URL" ] || [ -z "$JOB_SECRET" ]; then
-            echo "::notice::${{ matrix.name }} is not configured; skipping"
+            if [ "${{ matrix.name }}" = "production" ]; then
+              echo "::warning::production is not configured (${{ matrix.base_url_secret }} or ${{ matrix.job_secret }} is empty); skipping the maintenance poke — production must be configured (SETUP.md §40 step 3)"
+            else
+              echo "::notice::${{ matrix.name }} is not configured; skipping"
+            fi
             exit 0
           fi
           curl --fail --silent --show-error --max-time 60 \
             -X POST "$BASE_URL/api/internal/jobs/registration-maintenance" \
             -H "Authorization: Bearer $JOB_SECRET"
 
-      - name: Neon budget
-        # A warning before Neon's hard stop (§868). On 2026-10-28 QA reached its monthly compute quota and Neon suspended it;
-        # nothing had said so, and the first sign was a failed migration. The deep health answer already reads the
-        # month's budget (§447): red (85 % by default) or a database that does not answer turns this run red, and
-        # GitHub emails it; amber (60 %) is a warning in the run. Four deep calls a day wake the database four times.
+      - name: Verdict (database, Neon budget, jobs, outbox)
+        # The early health answer judged by scripts/backstop-verdict.mjs: the database that does not answer and a
+        # red Neon budget (§868; red is 85 % by default, amber 60 % a warning) as before, and since §NNN a stale job
+        # or a stalled outbox — registration-maintenance excepted between 03:05 and 04:00 in Brașov, the pinger's
+        # known nightly gap. Four deep calls a day wake the database four times.
         if: always()
         env:
           BASE_URL: ${{ secrets[matrix.base_url_secret] }}
         run: |
           if [ -z "$BASE_URL" ]; then
-            echo "::notice::${{ matrix.name }} is not configured; skipping"
             exit 0
           fi
-          body=$(curl --silent --show-error --max-time 60 "$BASE_URL/api/health?deep=1" || true)
-          database=$(echo "$body" | jq -r '.database // "no answer"' 2> /dev/null || echo "no answer")
-          level=$(echo "$body" | jq -r '.budget.level // "unknown"' 2> /dev/null || echo "unknown")
-          percent=$(echo "$body" | jq -r '.budget.meteredPercent // "?"' 2> /dev/null || echo "?")
-          echo "${{ matrix.name }}: database $database, Neon budget $level ($percent % of the month's compute quota)"
-          help="raise the quota in Neon (SETUP.md §40); a project already suspended needs the quota set to 0, the compute started and the quota set back (docs/RUNBOOKS.md § Neon suspended a project)"
-          if [ "$database" != "ok" ]; then
-            echo "::error::${{ matrix.name }}'s database does not answer ($database) — if Neon suspended the project for its quota, $help"
-            exit 1
-          fi
-          if [ "$level" = "red" ]; then
-            echo "::error::${{ matrix.name }} has used $percent % of its monthly Neon compute quota — $help, before it stops"
-            exit 1
-          fi
-          if [ "$level" = "amber" ]; then
-            echo "::warning::${{ matrix.name }} has used $percent % of its monthly Neon compute quota"
-          fi
+          node scripts/backstop-verdict.mjs --name "${{ matrix.name }}" --file "$RUNNER_TEMP/health.json"
