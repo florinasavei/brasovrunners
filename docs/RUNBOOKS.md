@@ -701,9 +701,11 @@ watch over production's jobs and outbox (§NNN). It reads `/api/health?deep=1` *
 - **«job … is stale» / «failing» / «never_run»** — the pinger (cron-job.org, `SETUP.md` §40) has stopped calling, or
   the job fails. `registration-maintenance` stale between 03:05 and 04:00 in Brașov is the known nightly gap and does
   not turn the run red. What to do: open the pinger's monitors for that environment (disabled, failed, wrong secret?),
-  fix or re-enable them; the pokes of this very run already did the due work, so a re-run of the workflow reads green
-  once the pinger's pings are back. If the pinger is fine, read `/devs` → Stare for the job's last error. A single red
-  that a re-run clears may be an evicted ping slot (`src/modules/jobs/health.ts` reads `stale` for one reading), not a dead pinger.
+  fix or re-enable them; the pokes of this very run already did the due work. **Do not judge the pinger by re-running
+  the workflow:** its own pokes record pings, so a re-run within 35 minutes by day (125 at night) reads green whether the
+  pinger is alive or dead. Judge it by the pinger's own history on cron-job.org (calls in the last hour or two, each
+  answered 200), or by the `last ping` time in the error line compared with this workflow's own run times — a ping
+  between two backstop runs came from the pinger. If the pinger is fine, read `/devs` → Stare for the job's last error.
 - **«email outbox is stalled»** — a message is deferred by the provider's allowance, overdue or failed
   (`modules/notifications/health.ts`). Open `/devs` → outbox: deferred rows go at the allowance reset, overdue rows mean
   the outbox job is not running (the pinger, as above), failed ones need «Reîncearcă emailurile eșuate».
