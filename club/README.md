@@ -30,6 +30,34 @@ How it reaches the code:
 - `yarn test:fork` builds the identity from a made-up club (`tests/fixtures/fork-club/`) and finds
   none of this club's words in what it renders.
 
+`legal.json` is the club's own choices in its legal texts (§NNN), each in Romanian and English — both
+or neither. The platform's templates (`src/modules/legal-documents/templates/`) carry a visible
+`<PLACEHOLDER>` where each goes, and `withClubClauses` (`templates/club-facts.ts`, the only importer of
+this file — `tests/unit/club/import-surface.test.ts`) writes the club's words in when the templates are
+read, so "start from the platform's text", the one press, the seed and the templates' fingerprint
+(`filledHash`, §639) all read the club's sentences:
+
+| Key | Placeholder | What it says |
+| --- | --- | --- |
+| `dataProtectionOfficer` | `<RESPONSABILUL CU PROTECȚIA DATELOR>` / `<DATA PROTECTION OFFICER>` | The notice's §1 sentence: whether the club has a data protection officer, and why |
+| `mailbox.account` | `<CĂSUȚA DE E-MAIL A CLUBULUI: CE CONT ESTE>` / `<THE CLUB'S MAILBOX: WHAT ACCOUNT IT IS>` | The notice's §6 sentence on what account the club's mailbox is |
+| `mailbox.providerTerms` | `<CĂSUȚA DE E-MAIL A CLUBULUI: REGULILE FURNIZORULUI>` / `<THE CLUB'S MAILBOX: ITS PROVIDER'S OWN TERMS>` | Whether the mailbox's provider also processes data under its own terms |
+| `mailbox.name` | `<NUMELE CĂSUȚEI CLUBULUI>` / `<THE CLUB'S MAILBOX NAME>` | The mailbox's bare name, «prin … sau Mailgun» |
+| `mailbox.theClubs` | `<CĂSUȚA CLUBULUI>` / `<THE CLUB'S MAILBOX>` | «the club's …», as the contact form's road says it |
+| `mailbox.withCompany` | `<CĂSUȚA CLUBULUI ȘI FIRMA EI>` / `<THE CLUB'S MAILBOX AND ITS COMPANY>` | The mailbox with its company in brackets, on the road a message takes while Mailgun is stopped |
+| `mailbox.company` | `<FIRMA CĂSUȚEI CLUBULUI>` / `<THE CLUB'S MAILBOX COMPANY>` | The company alone, among those that may access data from the US |
+| `photoChannels` | `<UNDE PUBLICĂ CLUBUL FOTOGRAFII>` / `<WHERE THE CLUB PUBLISHES PHOTOGRAPHS>` | The platforms the club publishes photographs on, named one by one |
+| `prizeMoney` | `<PREMIILE ÎN BANI>` / `<PRIZE MONEY>` | The terms' sentence on prize money |
+
+The safety form's name in the notice (`<NUMELE FORMULARULUI DE SIGURANȚĂ>` / `<THE SAFETY FORM'S NAME>`)
+is `club.json`'s `safetyProgramme`. A key left out — or written in one language — keeps its placeholder:
+the draft shows it, and `/admin/legal` refuses to approve a text that still holds one, so a fork that
+empties this file types its own sentences before anything is in force (`yarn test:fork`,
+`tests/fork/legal.test.ts`). Changing a value changes this club's filled templates, which the daily
+check announces to the Administrators as a new template («Șablon nou») to read and approve; it never
+changes a text already approved. Values only, never a new `{{field}}`: a field changes every template's
+fingerprint.
+
 The region stays Romania for every club: `country` is `"RO"`, the languages `ro` and `en`, the legal
-texts Romanian law, the prices RON. The palette, the mountains drawing, the legal clauses and the
-catalogues' wording are not here yet; later changes move them.
+texts Romanian law, the prices RON. The palette, the mountains drawing and the catalogues' wording are
+not here yet; later changes move them.

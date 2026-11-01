@@ -2293,6 +2293,7 @@
       "LEGAL_NOTHING_DEPENDS": "Nothing was deleted: meanwhile nothing depends on this version any more. Reload the page and delete it permanently.",
       "LEGAL_RETIRE_IN_FORCE": "Nothing was deleted: this is the version in force. Approve the next version first, then you can delete this one.",
       "LEGAL_ALREADY_DELETED": "This version has already been deleted from the list. Its text stays in the archive.",
+      "LEGAL_PLACEHOLDERS_LEFT": "Nothing was approved: the text still has blanks to fill in, in capitals between angle brackets. Write the club's words in their place, save the draft and approve again.",
       "SEND_NOW_HOUR_SPENT": "Nothing was sent: Mailgun's hourly limit («Hourly limit» under «Emails») has no room right now. Choose «Queue it»; the email leaves on its own once the hour has room again.",
       "RETRY_FAILED_THROTTLED": "Nothing was put back: the failed emails were already retried 3 times in the last hour. Wait a while, and look at why they failed before pressing again.",
       "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nothing was sent: Mailgun is stopped and «Gmail takes over when Mailgun stops» is set to No. Set it to Yes under «Emails», or choose «Queue it»: it leaves when Mailgun resumes.",

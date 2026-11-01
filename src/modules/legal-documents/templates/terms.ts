@@ -1,7 +1,8 @@
 /**
  * The platform's text for this document (`DECISIONS.md` §95), written to describe exactly what
- * the application does; the only blanks are the club's own four facts, marked <LIKE THIS>. The
- * deadlines it states are merge fields — `{{confirmationHours}}`, `{{holdMinutes}}`,
+ * the application does; the only blanks are the club's own four facts, marked <LIKE THIS>, and its
+ * sentence on prize money — a club's choice, `<PREMIILE ÎN BANI>` / `<PRIZE MONEY>` here, written in
+ * from `club/legal.json` (`withClubClauses`, §NNN). The deadlines it states are merge fields — `{{confirmationHours}}`, `{{holdMinutes}}`,
  * `{{offerHours}}` — filled from the club's "Termene" when the page is shown (§377), so the text
  * says the numbers the platform keeps.
  * Read by the seed (with a not-approved banner) and by `/admin/legal/new?template=`.
@@ -39,8 +40,9 @@
  * §1's separate box and the version §9 records are `Registration.terms.accept` on the form and `registrations.terms_version` (§421).
  */
 import type { LegalDocumentBody } from "../domain/content-hash";
+import { withClubClauses } from "./club-facts";
 
-export const termsRo: LegalDocumentBody = {
+export const termsRo: LegalDocumentBody = withClubClauses("ro", {
   sections: [
     {
       heading: "1. Părțile",
@@ -73,7 +75,7 @@ export const termsRo: LegalDocumentBody = {
       paragraphs: [
         "Participi pe propria răspundere, declarându-te sănătos, pregătit pentru distanță și teren și conștient de limitele tale. Respecți indicațiile organizatorilor și ale voluntarilor, urmezi traseul marcat, respecți regulile de circulație și nu lași nimic în urmă; cine nu o face, pune pe cineva în pericol sau nu mai poate continua poate fi oprit sau exclus pe loc, fără despăgubire.",
         "Un eveniment poate cere o vârstă minimă de participare; când o cere, ea este afișată pe pagina evenimentului și trebuie să o ai împlinită în ziua lui, iar o înscriere cu o dată a nașterii care arată mai puțin este refuzată. Un minor (sub 18 ani) este înscris de părinte sau de tutorele legal, cu datele copilului. Declarația o semnează părintele sau tutorele, cu actul lui de identitate, iar când declarația în vigoare o cere, o semnează alături de el și minorul, cu actul lui; părintele sau tutorele își dă acordul pentru participarea minorului, dă consimțămintele și răspunde pentru el.",
-        "Numărul de concurs și kitul se ridică personal, de la birou, cu actul de identitate de pe declarație (pentru un minor, al minorului sau al părintelui ori tutorelui) și nu se cedează. Nu se acordă premii în bani. Pagina evenimentului poate adăuga reguli, care fac parte din acești termeni așa cum sunt afișate când te înscrii. O schimbare ulterioară impusă de vreme, de siguranță sau de autorități se aplică tuturor, ca la punctul 3; oricare alta ți se aplică doar după ce ți-o anunțăm pe e-mail, iar dacă nu ești de acord îți poți anula înscrierea oricând înainte de start.",
+        "Numărul de concurs și kitul se ridică personal, de la birou, cu actul de identitate de pe declarație (pentru un minor, al minorului sau al părintelui ori tutorelui) și nu se cedează. <PREMIILE ÎN BANI> Pagina evenimentului poate adăuga reguli, care fac parte din acești termeni așa cum sunt afișate când te înscrii. O schimbare ulterioară impusă de vreme, de siguranță sau de autorități se aplică tuturor, ca la punctul 3; oricare alta ți se aplică doar după ce ți-o anunțăm pe e-mail, iar dacă nu ești de acord îți poți anula înscrierea oricând înainte de start.",
       ],
     },
     {
@@ -118,9 +120,9 @@ export const termsRo: LegalDocumentBody = {
       ],
     },
   ],
-};
+});
 
-export const termsEn: LegalDocumentBody = {
+export const termsEn: LegalDocumentBody = withClubClauses("en", {
   sections: [
     {
       heading: "1. The parties",
@@ -153,7 +155,7 @@ export const termsEn: LegalDocumentBody = {
       paragraphs: [
         "You take part on your own responsibility, declaring yourself healthy, fit for the distance and terrain and aware of your limits. You follow the organisers' and volunteers' instructions, keep to the marked course, obey the rules of the road and leave nothing behind; whoever does not, endangers anybody or cannot continue may be stopped or excluded on the spot, without compensation.",
         "An event may set a minimum age to take part; where it does, the age is shown on the event's page and must be reached by the day of the event, and a registration whose date of birth gives less is refused. A minor (under 18) is registered by a parent or legal guardian with the child's details. The parent or guardian signs the declaration with their own identity document and, where the declaration in force asks for it, the minor signs it too, with their own; the parent or guardian consents to the minor taking part, gives the consents and answers for them.",
-        "The race number and kit are collected in person at the desk against the identity document on the declaration (for a minor, the minor's or the parent's or guardian's) and are not passed on. No prize money is awarded. An event page may add rules, which form part of these terms as shown when you register. A later change required by weather, safety or the authorities applies to everybody, as in section 3; any other change applies to you only once we have announced it to you by email, and if you do not agree you may cancel your registration at any time before the start.",
+        "The race number and kit are collected in person at the desk against the identity document on the declaration (for a minor, the minor's or the parent's or guardian's) and are not passed on. <PRIZE MONEY> An event page may add rules, which form part of these terms as shown when you register. A later change required by weather, safety or the authorities applies to everybody, as in section 3; any other change applies to you only once we have announced it to you by email, and if you do not agree you may cancel your registration at any time before the start.",
       ],
     },
     {
@@ -198,4 +200,4 @@ export const termsEn: LegalDocumentBody = {
       ],
     },
   ],
-};
+});

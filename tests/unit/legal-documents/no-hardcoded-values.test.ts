@@ -1,10 +1,14 @@
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
+import clubLegal from "@club/legal.json";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { SAMPLE_DOCUMENTS } from "@/db/seeds/sample-legal-documents";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
+import { CLUB_CLAUSES } from "@/modules/legal-documents/templates/club-facts";
 import {
   DECLARATION_TOKENS,
   TOKEN_EXAMPLE_EVENT_STARTS_AT,
@@ -160,6 +164,51 @@ describe("§369 the declaration's token legend: made-up examples, in both langua
   it("gives the declarant the words a minor's signature actually produces", () => {
     for (const locale of ["ro", "en"] as const) {
       expect(example("{{declarant}}")[locale]).toBe(declarantValues("Ana Popescu", "Mihai Popescu", locale).declarant);
+    }
+  });
+});
+
+/*
+  §NNN — the club's own choices left the platform's templates: whether it has a data protection officer, what its
+  mailbox is and whose, where it publishes photographs, whether it pays prize money, its safety form's name. Each is a
+  `<PLACEHOLDER>` in the source, written in from `club/legal.json` (or `club.json`'s `safetyProgramme`) when the module
+  is read. So the source names none of this club's: not its mailbox, not its safety form, not its photo channels, not
+  one of its sentences. A merge field's name (`{{feedbackSafetyGmail}}`) and a function named in a comment are code,
+  not words of the text, and are left out of the search; `tokens.ts`, the fields' legend, is the token change's.
+*/
+describe("§NNN the club's choices are not written in the templates' source", () => {
+  const DIRECTORY = path.join(process.cwd(), "src/modules/legal-documents/templates");
+  const SOURCES = readdirSync(DIRECTORY)
+    .filter((file) => file.endsWith(".ts") && file !== "tokens.ts")
+    .map((file) => ({ file, text: readFileSync(path.join(DIRECTORY, file), "utf8").replace(/\{\{\s*\w+\s*\}\}|`[^`\n]*`/g, "") }));
+
+  /** Every sentence `club/legal.json` holds, both languages: a value long enough to be the club's words and nobody else's. */
+  const SENTENCES = (function leaves(value: unknown): string[] {
+    if (typeof value === "string") return [value];
+    return value && typeof value === "object" ? Object.values(value).flatMap(leaves) : [];
+  })(clubLegal).filter((value) => value.length > 30);
+
+  it("reads every template file, and the club's sentences to look for", () => {
+    expect(SOURCES.map(({ file }) => file)).toEqual(expect.arrayContaining(["privacy-notice.ts", "terms.ts", "club-facts.ts", "catalogue.ts"]));
+    expect(SENTENCES.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it.each(["Gmail", "Girl Zone", "Facebook, Instagram"])("no template file says «%s»", (word) => {
+    expect(SOURCES.filter(({ text }) => text.includes(word)).map(({ file }) => file)).toEqual([]);
+  });
+
+  it("nor one of the sentences club/legal.json holds", () => {
+    const found = SOURCES.flatMap(({ file, text }) => SENTENCES.filter((sentence) => text.includes(sentence)).map((sentence) => `${file}: ${sentence}`));
+    expect(found).toEqual([]);
+  });
+
+  it("and the platform's text holds each choice's placeholder, in both languages, where the club's words go", () => {
+    const source = SOURCES.filter(({ file }) => file === "privacy-notice.ts" || file === "terms.ts")
+      .map(({ text }) => text)
+      .join("\n");
+    for (const { placeholder } of CLUB_CLAUSES) {
+      expect(source, placeholder.ro).toContain(placeholder.ro);
+      expect(source, placeholder.en).toContain(placeholder.en);
     }
   });
 });

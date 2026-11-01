@@ -84,7 +84,9 @@ export type DomainErrorCode =
   // A member tier deleted while members hold it (§811): give them another level first. The action adds how many.
   | "MEMBER_TIER_HAS_MEMBERS"
   // A member tier deleted while a discount code is for that tier alone (§811): an empty limit means every member, so the code would open to all.
-  | "MEMBER_TIER_IN_CODES";
+  | "MEMBER_TIER_IN_CODES"
+  // A legal version approved while a `<PLACEHOLDER>` still stands in its text (§NNN): a club fact or a club choice nobody typed.
+  | "LEGAL_PLACEHOLDERS_LEFT";
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

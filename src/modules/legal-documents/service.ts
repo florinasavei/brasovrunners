@@ -381,6 +381,21 @@ export async function approveVersion<T extends Record<string, unknown>>(
   await assertStillADraft(db, versionId);
 
   /*
+    No text in effect that the club did not approve (§29, §95), and a blank is not approved text
+    (§NNN, the owner's decision 7): a version that still reads `<ADRESA SEDIULUI>` or
+    `<PREMIILE ÎN BANI>` — a club fact the environment did not know, a club choice `club/legal.json`
+    does not say — is refused here, on the server, whichever press reached it: «Aprobă și publică»,
+    «Aprobă ciornele» (which plans such a draft out already) or the one press (which refuses before
+    making the draft). The update below approves only the text checked here: a save of other words in
+    between moves `content_sha256`, and the update then matches nothing — the CONFLICT below.
+  */
+  const checked = await findVersionWithTranslations(db, versionId);
+  const blanks = placeholdersIn(checked?.translations ?? []);
+  if (blanks.length > 0) {
+    throw new DomainError("LEGAL_PLACEHOLDERS_LEFT", `this version still reads ${blanks.join(", ")}; type the club's words in their place before approving`);
+  }
+
+  /*
     The result is checked, and that is new.
 
     This was `UPDATE ... WHERE id = $1` with nothing read back. Until drafts could be deleted a
@@ -400,7 +415,13 @@ export async function approveVersion<T extends Record<string, unknown>>(
       // draft happened to be typed.
       effectiveAt: now,
     })
-    .where(and(eq(legalDocuments.id, versionId), eq(legalDocuments.isApproved, false)))
+    .where(
+      and(
+        eq(legalDocuments.id, versionId),
+        eq(legalDocuments.isApproved, false),
+        ...(checked ? [eq(legalDocuments.contentSha256, checked.contentSha256)] : []),
+      ),
+    )
     .returning({ id: legalDocuments.id });
 
   if (!approved) {
@@ -1018,7 +1039,7 @@ export async function approvePlatformTemplates<T extends Record<string, unknown>
     if (blanks.length > 0) {
       throw new DomainError(
         "VALIDATION_ERROR",
-        `the club's facts are not all set — ${key} still reads ${blanks.join(", ")}; set CLUB_LEGAL_NAME, CLUB_REGISTRATION_NUMBER, CLUB_REGISTERED_ADDRESS, and a contact address — EMAIL_REPLY_TO or the club's Gmail under «Adresa de contact afișată» on /admin/emails`,
+        `the club's facts are not all set — ${key} still reads ${blanks.join(", ")}; set CLUB_LEGAL_NAME, CLUB_REGISTRATION_NUMBER, CLUB_REGISTERED_ADDRESS, and a contact address — EMAIL_REPLY_TO or the club's Gmail under «Adresa de contact afișată» on /admin/emails — and write the club's choices in club/legal.json (§NNN)`,
       );
     }
     const versionId = await createDraftVersion(db, actor, { key, translations }, now);
@@ -1195,12 +1216,17 @@ export async function regenerateFromTemplates<T extends Record<string, unknown>>
 
 export type DraftApprovalItem = { row: LegalDocumentVersionRow; outcome: DraftApprovalOutcome };
 
+/** Every club-fact or club-choice `<PLACEHOLDER>` still standing in a version's translations, both languages. */
+function placeholdersIn(translations: ReadonlyArray<{ body: unknown }>): string[] {
+  return [
+    ...new Set(translations.flatMap((translation) => (isLegalDocumentBody(translation.body) ? remainingPlaceholders(translation.body) : []))),
+  ];
+}
+
 /** Whether a version's text still carries a club-fact `<PLACEHOLDER>` in either language. */
 async function versionHasPlaceholders<T extends Record<string, unknown>>(db: Database<T>, versionId: string): Promise<boolean> {
   const document = await findVersionWithTranslations(db, versionId);
-  return (document?.translations ?? []).some(
-    (translation) => isLegalDocumentBody(translation.body) && remainingPlaceholders(translation.body).length > 0,
-  );
+  return placeholdersIn(document?.translations ?? []).length > 0;
 }
 
 /**
