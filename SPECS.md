@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.03-2026-11-02 -->
+<!-- PROJECT_BASELINE: BR-V4.04-2026-11-02 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.03-2026-11-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.04-2026-11-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -771,6 +771,7 @@ coffee is run on nothing.
 28. `yarn test:clock --concurrency` runs the two-connection suite with the clock moved and it passes at +2 months, +1 year and +10 years; a month ahead of the 31st is the last day of the next month (2026-10-11, `DECISIONS.md` §719).
 29. The «Termene» screen draws the club's deadlines in seven named folds, closed by default, each with a glyph and a closed line of its deadlines' values in force in words, plus how many differ from the recommendation; which deadline sits in which fold is `DEADLINE_GROUPS`, and every deadline is in exactly one. The form stays one, with one save and one «Completează valorile recomandate» outside the folds, and a refused number opens the fold that holds it; the limit per address and «Când pleacă emailurile» are cards of their own with their own saves. Nothing saved or validated changes (2026-10-18, `DECISIONS.md` §813).
 30. Given a database that is seeded or one that is not, when `yarn test:concurrency` runs, then every case passes: the suites insert their own approved notices above any existing version and remove them afterwards (2026-11-01, `DECISIONS.md` §881).
+31. «Oferă-i un loc acum» adds a place only as «Trimite-i oferta» does: exactly the locked capacity + 1, on the press whose dialog named it, under the event lock, in the transaction whose offer occupies it, audited `event.capacity_raised_for_offer` with who and for whom; a confirmation of another capacity, or none, raises nothing (2026-11-02, `DECISIONS.md` §888).
 
 **Verification:** integration `capacity/concurrency.test.ts` against real PostgreSQL; integration `cms/capacity-raise.test.ts`
 
@@ -1777,6 +1778,9 @@ registration — and it lists registrations and never changes an address.
 17. Given an Administrator entering a registration with «Direct pe lista de așteptare» ticked, when the entry is written, then the row carries the staff vouching for the address (`email_confirmed_by_staff_user_id`), goes through the ordinary allocator in the same transaction — `WAITLISTED` at the back of the line on a full event, `PENDING_DECLARATION` on a free counted place, never ahead of anyone and never a supplementary place — receives that state's ordinary email and no verification email, and is audited as `registration.address_vouched_on_entry`; a full line refuses the whole entry and writes nothing; an Organizer or a volunteer posting the tick is refused; under the fast track the tick is ignored; «Adaugă pe lista de așteptare» on the queue panel and the registrations list posts the same entry with the tick on, Administrator only, the relay tick still required (2026-10-30, `DECISIONS.md` §872).
 18. Given an Administrator pressing «Adaugă pe lista de așteptare», or the full staff entry with «Direct pe lista de așteptare» ticked and no fast track, when the dialog opens, then it says the address is vouched for and names the address typed in the form; with the tick off it is the ordinary dialog, unchanged (2026-11-01, `DECISIONS.md` §875).
 19. Given an event that has started, is cancelled or completed, has its date or time to be announced, takes registrations elsewhere or not at all, when an Administrator opens the event's queue panel or the registrations list, then «Adaugă pe lista de așteptare» is not drawn, by the predicate of «Dă-i un loc acum»; the service refuses the press regardless (2026-11-01, `DECISIONS.md` §875).
+20. Given a line of an event's internal list, when an Administrator presses «Mută pe lista oficială» and ticks the relay confirmation in its dialog, then in one transaction the line's person is entered as «Adaugă pe lista de așteptare» enters one — the address vouched for, the one allocator, the back of the line on a full event or a counted free place, that state's ordinary email and no verification email — the line's note becomes the registration's internal note and the line is deleted; a line without an address takes the one typed for it and is refused naming that box without one; without the tick, after the start (`VOUCHED_ENTRY_AFTER_START`) or on a full line, it is refused and nothing is written, the line keeping its note; an Organizer is refused, and keeps only the line's add, note and delete (2026-11-02, `DECISIONS.md` §888).
+21. Given an Administrator pressing «Oferă-i un loc acum» on an internal-list line or on «Adaugă pe lista de așteptare», when the entry leaves the row waiting, then in the same transaction it is offered a place as «Trimite-i oferta» offers one — a counted free place, or on a full event one supplementary place only when the dialog named the new capacity (`addPlace`), else `SUPPLEMENTARY_PLACE_UNCONFIRMED` with nothing written — and the person gets one email, the offer, never the waiting-list email besides; when the entry already took a free place, that is the outcome (2026-11-02, `DECISIONS.md` §888).
+22. «Trimite-i oferta» is offered for every waiting registration on the registrations list's row menu, as on the queue panel and the registration's page — the Administrator's, at any moment before the start, after the close too, its dialog the queue's own (2026-11-02, `DECISIONS.md` §888).
 
 **Verification:** integration `registrations/staff-crud.test.ts`
 

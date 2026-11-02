@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { flash, flashOutcome } from "@/shared/feedback/flash";
@@ -14,6 +15,7 @@ import {
   confirmRegistrationByStaff,
   createRegistrationByStaff,
   deleteRegistrationByStaff,
+  enterOnWaitlistByStaff,
   givePlaceToUnconfirmedByStaff,
   handedBibRefusalCode,
   offerPlaceByStaff,
@@ -23,6 +25,7 @@ import {
   editRegistrationAnswers,
   setOutsideCapacity,
   withdrawOptionalData,
+  type WaitlistEntryByStaffResult,
 } from "@/modules/registrations/admin-service";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
 import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modules/registrations/declaration-hold";
@@ -36,9 +39,10 @@ import { PLACES_TAKEN_KEYS, confirmedCapacityOf, noFreePlaceOutcome, supplementa
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
-import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
-import { settleReserveEntry } from "@/modules/registrations/reserve-list";
-import { addRegistrationNote, parseNoteBody } from "@/modules/registrations/notes";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { moveReserveEntryToWaitlist, settleReserveEntry } from "@/modules/registrations/reserve-list";
+import { parseNoteBody } from "@/modules/registrations/notes";
+import type { StaffPlaceOptions } from "@/modules/registrations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
@@ -377,8 +381,9 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
       onto the new registration, the line removed. Only for a role that keeps the list; the registration
       stands whatever happens here, so a line already gone is no refusal.
     */
+    // Moving a line is the Administrator's since §888, in one press or through this form.
     const reserveEntryId = text(form, "reserveEntryId");
-    if (reserveEntryId && created.registrationId && canKeepRegistrationNotes(actor.role)) {
+    if (reserveEntryId && created.registrationId && canManageRegistrations(actor.role)) {
       await settleReserveEntry(getDb(), actor, reserveEntryId, created.registrationId, new Date());
       reserveEventId = eventId;
     }
@@ -966,26 +971,62 @@ async function backToWaitlistPanel(form: FormData, locale: Locale, eventId: stri
   redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${query.toString()}#registrations-waitlist-add`);
 }
 
+/** «Oferă-i un loc acum» (§888): the press's second button, with the capacity its question named (§642). */
+function offerNowOf(form: FormData): StaffPlaceOptions | null {
+  return text(form, "intent") === "offer" ? { addPlaceTo: confirmedCapacityOf(form.get("addPlace")) } : null;
+}
+
+/** The toast after a one-press entry onto the official waiting list (§872, §888): where the row landed. */
+function waitlistEntrySaved(entry: WaitlistEntryByStaffResult): { saved: string; count?: string } {
+  if (entry.status === "PENDING_DECLARATION") return { saved: "waitlistPlaced" };
+  if (entry.status === "WAITLIST_OFFERED") return entry.capacityRaisedTo === null ? { saved: "registrationOffered" } : { saved: "registrationOfferedRaised", count: String(entry.capacityRaisedTo) };
+  return { saved: "waitlistAdded" };
+}
+
 /**
- * «Adaugă pe lista de așteptare» (§872): the one-press form on the queue panel and on the registrations list —
- * a name, an address, an optional internal note and the relay tick — posted as the staff entry with «Direct pe
- * lista de așteptare» ticked: the Administrator's alone (the coarse gate here, the service's own assertion
- * again, BR-REQ-060-01), the address vouched for, the row through the allocator at once. The note is checked
- * before anything is written and lands on the registration after it (§777). A refusal keeps what was typed
- * (§315); a success returns to the panel it came from, open, and the toast says which state the row landed in.
+ * A refused one-press entry (§872, §888): the form comes back as typed (§315), and nothing was written — one
+ * transaction. The note's rule names the form's box, not the service's column; this person on the address
+ * already, or the address at the club's limit, the full form's sentences (§493); the line full (§348) names no
+ * box. The places changed since the page was read (§642): the page is drawn again (`revalidatePath`), so its
+ * question asks with the numbers of now beside the sentence that says so.
+ */
+function waitlistEntryRefused(error: unknown, form: FormData, page: string): FormOutcome {
+  const refusal = refused(error, form, {
+    fieldNames: (failure) => failure.fields.filter((name) => name !== ALREADY_ON_ADDRESS && name !== ADDRESS_AT_CAP).map((name) => (name === "body" ? "note" : name)),
+  });
+  if (isDomainError(error) && error.fields.includes(ALREADY_ON_ADDRESS)) return { ...refusal, error: "STAFF_ALREADY_ON_ADDRESS" };
+  if (isDomainError(error) && error.fields.includes(ADDRESS_AT_CAP)) return { ...refusal, error: "STAFF_ADDRESS_AT_CAP" };
+  const full = waitlistRefusalCode(error);
+  if (full) return { ...refusal, error: full, fields: [] };
+  const stale = supplementaryPlaceRefusalOutcome(error);
+  if (stale) {
+    revalidatePath(page);
+    return { ...refusal, error: stale.error, fields: [] };
+  }
+  return refusal;
+}
+
+/**
+ * «Adaugă pe lista de așteptare» (§872) and, its second button, «Oferă-i un loc acum» (§888): the one-press form on
+ * the queue panel and on the registrations list — a name, an address, an optional internal note and the relay tick
+ * — posted as the staff entry with «Direct pe lista de așteptare» ticked (`enterOnWaitlistByStaff`): the
+ * Administrator's alone (the coarse gate here, the service's own assertion again, BR-REQ-060-01), the address
+ * vouched for, the row through the allocator at once and, on the second button, offered a place in the same
+ * transaction (§642's offer, the supplementary place only as its question named it). The note is checked before
+ * anything is written and lands on the registration in the entry's transaction (§777). A refusal keeps what was
+ * typed (§315); a success returns to the panel it came from, open, and the toast says which state the row landed in.
  */
 export async function addToWaitlistAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
 
-  let outcome: { saved: string };
+  let outcome: { saved: string; count?: string };
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
-    const now = new Date();
     // An over-long note is refused naming its box, before any row exists (§315); an empty box is no note.
     const typedNote = text(form, "note").trim();
     const note = typedNote === "" ? null : parseNoteBody(typedNote);
-    const created = await createRegistrationByStaff(
+    const entered = await enterOnWaitlistByStaff(
       getDb(),
       actor,
       {
@@ -995,27 +1036,49 @@ export async function addToWaitlistAction(_previous: FormOutcome | null, form: F
         email: text(form, "email"),
         // The person's emails in the backoffice's language; the full form asks for their own.
         locale,
-        // A disclosure the person has to have asked for (§323): never from the short form.
-        listOptOut: true,
         relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
-        vouchAddress: true,
+        note,
+        offerNow: offerNowOf(form),
       },
-      now,
+      new Date(),
     );
-    if (note !== null && created.registrationId) await addRegistrationNote(getDb(), actor, created.registrationId, note, now);
-    outcome = created.status === "PENDING_DECLARATION" ? { saved: "waitlistPlaced" } : { saved: "waitlistAdded" };
+    outcome = waitlistEntrySaved(entered);
   } catch (error) {
-    // The form comes back as typed (§315); the note's rule names the form's box, not the service's column.
-    const refusal = refused(error, form, {
-      fieldNames: (failure) => failure.fields.filter((name) => name !== ALREADY_ON_ADDRESS && name !== ADDRESS_AT_CAP).map((name) => (name === "body" ? "note" : name)),
-    });
-    // The same sentences the full form says (§493): this person is on the address already, or the address is at the club's limit.
-    if (isDomainError(error) && error.fields.includes(ALREADY_ON_ADDRESS)) return { ...refusal, error: "STAFF_ALREADY_ON_ADDRESS" };
-    if (isDomainError(error) && error.fields.includes(ADDRESS_AT_CAP)) return { ...refusal, error: "STAFF_ADDRESS_AT_CAP" };
-    // No place and the line full (§348): nothing was written — one transaction — and the sentence names no box.
-    const full = waitlistRefusalCode(error);
-    if (full) return { ...refusal, error: full, fields: [] };
-    return refusal;
+    const page =
+      text(form, "back") === "event" ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } }) : getPathname({ locale, href: "/admin/registrations" });
+    return waitlistEntryRefused(error, form, page);
   }
   return backToWaitlistPanel(form, locale, eventId, outcome);
+}
+
+/**
+ * «Mută pe lista oficială» and «Oferă-i un loc acum» on a line of «Lista internă (doar notițe)» (§888): the line's
+ * person entered on the official waiting list as the add form enters one, the note following and the line gone,
+ * in one transaction (`moveReserveEntryToWaitlist`). The Administrator's alone — the coarse gate here, the
+ * service's own assertion again (BR-REQ-060-01); the Organizer keeps the list's add, note and delete. The relay
+ * tick is asked in the dialog; a line written without an address takes the one typed beside the buttons. A
+ * refusal keeps the line and what was typed; a success returns to the internal list, open, where the line is gone.
+ */
+export async function moveReserveEntryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  let eventId: string;
+  let outcome: { saved: string; count?: string };
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    const moved = await moveReserveEntryToWaitlist(
+      getDb(),
+      actor,
+      text(form, "entryId"),
+      { email: form.get("email"), relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on", locale, offerNow: offerNowOf(form) },
+      new Date(),
+    );
+    eventId = moved.eventId;
+    outcome = waitlistEntrySaved(moved);
+  } catch (error) {
+    return waitlistEntryRefused(error, form, getPathname({ locale, href: "/admin/registrations" }));
+  }
+  await flashOutcome(outcome);
+  // `from=reserve`: the internal list opens on the way back, not the official list's add form.
+  const query = new URLSearchParams({ eventId, ...outcome, from: "reserve" });
+  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${query.toString()}#registrations-reserve`);
 }
