@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.05-2026-11-02 -->
+<!-- PROJECT_BASELINE: BR-V4.06-2026-11-02 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.05-2026-11-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.06-2026-11-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28522,3 +28522,15 @@ Baseline `BR-V4.04-2026-11-02`.
 **Refused.** Opening the footer fold by default, or a block under the bar: §565 drew one and the owner removed it the same evening («ai duplicat footerul, arată oribil!!»). A hidden page for Google alone: the line is useful to every visitor and costs one line at the foot of the page.
 
 Baseline `BR-V4.05-2026-11-02`.
+
+## 890. The association's name, seat and email on the site, as the club chooses
+
+**Google for Nonprofits, 2026-11-02, after the listing showed the legal name and CIF:** «Your official website must include the organization details submitted during registration. Please ensure your site explicitly displays your physical street address, and generic email.» A first cut printed the seat (`CLUB_REGISTERED_ADDRESS`) and the contact email under the name on every page that ends with the identity line, the listing — the site's home page — included. The owner refused it: the seat is a home address, and he would not have it forced onto the home page. His words: «a checkmark», «they should all be configs!». Then: the line must not print `CLUB_REGISTERED_ADDRESS` at all — it carries the building, the staircase and the flat.
+
+**Decision.** One Administrator-only card on «Pagini» → «Contact», under «Telefon public»: «Ce arată site-ul despre asociație» / «What the site shows about the association». A grid of real tick boxes — a row per line, «Denumirea și CIF-ul» («<legal name> (<site name>) · CIF <CIF>»), «Sediul» («Sediul: <address>») and «Emailul de contact» («Email: <address>», the address the club shows for contact, §442); a column per place, «Pagina principală (lista de evenimente)», «Contact», «Echipa și paginile clubului» and «Footer («Despre club»)». Under the seat's row one text box, «Adresa afișată pe site» / «Address shown on the site», one value for both languages like «Telefon public», its help «Strada și numărul, localitatea, județul — fără bloc, scară sau apartament.» The «Sediul» line prints that typed text and nothing else: an empty box is no seat line anywhere, whatever is ticked, and the site never falls back to `CLUB_REGISTERED_ADDRESS`, which stays the legal texts' alone. One «Salvează» for the ticks and the box, behind the usual confirmation. A line shows where its box is ticked and its value is set. Nothing stored, the name and the CIF show in all four places, as they did (§565), and the seat and the email nowhere.
+
+One `platform_settings` row (`clubIdentity`, no migration), audited with the ticks and whether a seat is typed, never the address, read by `ClubIdentity` through the public cache with the settings tag, like the phone, so no visitor wakes the database for it. `ClubIdentity` takes the place from its caller (`home`, `contact`, `pages`, `footer`) instead of a shape; the footer's fold draws the same lines at the panel's size.
+
+**Amends §565,** which left the seat out of the site altogether: it is now the club's choice, off by default, in words the club types for the site.
+
+Baseline `BR-V4.06-2026-11-02`.

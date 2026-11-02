@@ -20,7 +20,7 @@ describe("BR-REQ-070-04 the contact page's sections, in order (§679)", () => {
     const form = jsx.indexOf("<form action={submitContactAction}>");
     const feedback = jsx.indexOf("{feedbackSection}");
     const newsletter = jsx.indexOf("<NewsletterSignup");
-    const identity = jsx.indexOf('<ClubIdentity shape="line" />');
+    const identity = jsx.indexOf('<ClubIdentity place="contact" />');
     for (const [name, at] of Object.entries({ ways, form, feedback, newsletter, identity })) expect(at, name).toBeGreaterThan(-1);
     expect(feedback).toBeLessThan(form);
     expect(form).toBeLessThan(ways);

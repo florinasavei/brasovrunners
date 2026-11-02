@@ -10,6 +10,8 @@ import { readContactRecipients } from "@/modules/contact/recipients";
 import { resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
 import { readPublicPhone } from "@/modules/contact/public-phone";
+import { readClubIdentityShown } from "@/modules/contact/club-identity";
+import { type ClubIdentityShown, DEFAULT_CLUB_IDENTITY_SHOWN } from "@/modules/contact/domain/club-identity";
 import { DEFAULT_SITE_TINT_SETTING, parseSiteTint, type SiteTintSetting } from "@/modules/appearance/domain/site-tint";
 import { readSiteTint } from "@/modules/appearance/site-tint";
 import { DEFAULT_SITE_FONT_SIZE_SETTING, parseSiteFontSize, type SiteFontSizeSetting } from "@/modules/appearance/domain/site-font-size";
@@ -1098,6 +1100,23 @@ export async function cachedPublicPhone(): Promise<string | null> {
     return await publicRead(["settings.public-phone"], ["settings"], async () => (await readPublicPhone(getDb())).phone);
   } catch {
     return null;
+  }
+}
+
+/**
+ * «Ce arată site-ul despre asociație» (§890): where the identity line shows the name and CIF, the
+ * seat and the email, and the seat as typed — read by `ClubIdentity` on public pages, so cached like
+ * the phone. When the database cannot answer, the default: the name and the CIF everywhere, no seat
+ * and no email.
+ */
+export async function cachedClubIdentityShown(): Promise<ClubIdentityShown> {
+  try {
+    return await publicRead(["settings.club-identity"], ["settings"], async () => {
+      const { name, seat, email, seatAddress } = await readClubIdentityShown(getDb());
+      return { name, seat, email, seatAddress };
+    });
+  } catch {
+    return DEFAULT_CLUB_IDENTITY_SHOWN;
   }
 }
 
