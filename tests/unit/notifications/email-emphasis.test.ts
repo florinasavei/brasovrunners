@@ -45,6 +45,15 @@ function inverted(hex: string): string {
   return `#${value.toString(16).padStart(6, "0")}`;
 }
 
+describe("§NNN the email's language attribute follows the message's first language", () => {
+  it("says lang=\"ro\" on a Romanian-first message and lang=\"en\" on an English-first one", () => {
+    const ro = renderBilingual("REGISTRATION_CONFIRMED", "ro", emailSampleFor("REGISTRATION_CONFIRMED", "ro"), ACTION, null);
+    const en = renderBilingual("REGISTRATION_CONFIRMED", "en", emailSampleFor("REGISTRATION_CONFIRMED", "en"), ACTION, null);
+    expect(ro.html).toContain('<html lang="ro">');
+    expect(en.html).toContain('<html lang="en">');
+  });
+});
+
 describe("§580 the renderer's emphasis vocabulary", () => {
   it("draws `**x**` as bold in the HTML and drops the markers in the plain text", () => {
     const message = renderContent(content(), "ro");
