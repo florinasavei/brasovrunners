@@ -9,7 +9,7 @@ import { CALENDAR_TARGET_NAMESPACE, calendarTargetMark } from "@/modules/events/
 import { webcalUrl } from "@/modules/events/ical";
 import { calendarFeedLinks } from "@/modules/events/ui/CalendarIntroFold";
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
-import { CLUB_NAME } from "@/theme/brand";
+import { CLUB_NAME, CLUB_SHORT_NAME } from "@/theme/brand";
 import { LOOK_ACCENT_TINT, UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
 
 /**
@@ -167,7 +167,7 @@ export default async function SubscribeBox({ locale, baseUrl, addressId = "calen
             t("calendar.googleHintHow"),
             t("calendar.look.subscribe.hintPhone"),
             t("calendar.look.subscribe.hintOutlook"),
-            t("calendar.androidSync"),
+            t("calendar.androidSync", { short: CLUB_SHORT_NAME }),
           ]}
         />
       </Box>

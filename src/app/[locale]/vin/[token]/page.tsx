@@ -29,7 +29,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import Hint from "@/shared/ui/Hint";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { CLUB_NAME } from "@/theme/brand";
+import { CLUB_NAME, CLUB_SHORT_NAME } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 import { confirmRsvpAction, refuseRsvpAsksAction, setNameByLinkAction, withdrawRsvpAction } from "./actions";
 
@@ -171,7 +171,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
   const tForm = await getTranslations("Registration");
   const memberDefinition = (await cachedMemberDefinition(locale)) ?? tForm("clubMemberDefinition");
   const memberTick = tForm("clubMemberDeclared", { club: CLUB_NAME });
-  const mark = tEvent("rsvp.memberMark");
+  const mark = tEvent("rsvp.memberMark", { short: CLUB_SHORT_NAME });
   const memberOutcome = memberQuery === "on" ? (live?.clubMember ? memberQuery : null) : memberQuery === "off" ? (live && !live.clubMember ? memberQuery : null) : memberQuery;
   const nameOutcome = nameQuery === "shown" ? (live?.showName ? nameQuery : null) : nameQuery === "hidden" ? (live && !live.showName ? nameQuery : null) : nameQuery;
   // A declared member tick beside a shown name, put there by whoever typed the address (§831): said before the press, which is then the person's own.

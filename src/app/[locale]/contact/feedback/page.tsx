@@ -83,6 +83,7 @@ import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import { DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { DENSITY } from "@/theme/density";
 import { submitFeedbackAction } from "./actions";
+import { SAFETY_PROGRAMME } from "@/theme/brand";
 
 type Search = {
   tip?: string;
@@ -420,7 +421,7 @@ async function BranchForm({
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <BranchGlyphTile branch={branch} />
           <Typography variant="h2" lang={branchLabelLang(branch, locale)} sx={{ fontSize: "1.35rem", m: 0 }}>
-            {t(`branches.${branch}.label`)}
+            {t(`branches.${branch}.label`, { safetyName: SAFETY_PROGRAMME[locale] })}
           </Typography>
         </Box>
         {otherBranches && (

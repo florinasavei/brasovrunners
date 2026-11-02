@@ -1,7 +1,7 @@
 import { getFormatter, getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatTime } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
-import { CLUB_NAME } from "@/theme/brand";
+import { CLUB_NAME, CLUB_HASHTAGS } from "@/theme/brand";
 import { calendarTone } from "../domain/calendar-kind";
 import type { CalendarImageData } from "../domain/calendar-image";
 import { type CalendarImageFormat, calendarImageDetails, calendarImageRows } from "../domain/calendar-image-rows";
@@ -60,7 +60,8 @@ export async function calendarImageProps(
       weekdaysLong: Array.from({ length: 7 }, (_, i) => format.dateTime(new Date(Date.UTC(2024, 0, 1 + i, 12)), { timeZone: "UTC", weekday: "long" })),
       monthName: format.dateTime(new Date(Date.UTC(month.year, month.month - 1, 1, 12)), { timeZone: "UTC", month: "long" }),
       at: t.raw("at") as string,
-      hashtags: t("hashtags"),
+      // The club's hashtags from its own file (§887), never a catalogue's sentence.
+      hashtags: CLUB_HASHTAGS.join(" "),
       recurringTitle: t("recurringTitle"),
       specialTitle: t("specialTitle"),
       cancelled: t("cancelled"),

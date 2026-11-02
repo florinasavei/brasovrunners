@@ -24,7 +24,7 @@ test.describe("the event's facts in the confirmed email's preview", () => {
     const ro = facts.nth(0);
     for (const label of ["Când", "Unde", "Program", "Traseu", "Cost", "Linkuri"]) await expect(ro).toContainText(label);
     await expect(ro).toContainText("09:00 (start eveniment) · 09:30 (start cursă)");
-    await expect(ro).toContainText("Stația de telecabină Tâmpa");
+    await expect(ro).toContainText("Intrarea în Parcul Central");
     await expect(ro).toContainText("Aleea Tiberiu Brediceanu");
     await expect(ro).toContainText("Ridicarea numerelor");
     await expect(ro).toContainText("Trail · Mediu, nivelul 5 din 15 · 12 km · 450 m D+");
@@ -37,7 +37,7 @@ test.describe("the event's facts in the confirmed email's preview", () => {
 
     const en = facts.nth(1);
     for (const label of ["When", "Where", "Programme", "Route", "Cost", "Links"]) await expect(en).toContainText(label);
-    await expect(en).toContainText("Tâmpa cable-car station");
+    await expect(en).toContainText("Central Park entrance");
     await expect(en).toContainText("Number pickup");
     await expect(en).toContainText("Trail · Medium, level 5 of 15 · 12 km · 450 m climb");
     await expect(en.getByRole("link", { name: "The route" })).toHaveAttribute("href", /\/en\/EXAMPLE-event#route$/);

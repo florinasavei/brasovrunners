@@ -209,7 +209,7 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
   ro: {
     participantName: "Ana Popescu",
     eventTitle: "Crosul de toamnă",
-    eventLocationName: "Stația de telecabină Tâmpa",
+    eventLocationName: "Intrarea în Parcul Central",
     eventStartsAtFormatted: emailSampleWhen("ro"),
     currentStatus: registrationStatusWords("CONFIRMED", "ro"),
     checkinCode: "EXAMPL",
@@ -222,8 +222,8 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     inviterName: "Ion Exemplu",
     feedbackLink: "/ro/contact/spune-ne?tip=cum-a-fost",
     staffEmail: "ana.popescu@example.org",
-    organizerNote: "Ne vedem la intrarea dinspre Livada Poștei, lângă panoul cu harta.",
-    cancellationReason: "Avertizare meteo de cod portocaliu pentru Tâmpa: traseul nu este sigur.",
+    organizerNote: "Ne vedem la intrarea dinspre stadion, lângă panoul cu harta.",
+    cancellationReason: "Avertizare meteo de cod portocaliu pentru munte: traseul nu este sigur.",
     organizerSubject: "Vreme rea la {eventTitle}: startul se mută la 10:00",
     organizerBody: [
       "Salut, {participantName}!",
@@ -239,7 +239,7 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
   en: {
     participantName: "Ana Popescu",
     eventTitle: "The autumn cross",
-    eventLocationName: "Tâmpa cable-car station",
+    eventLocationName: "Central Park entrance",
     eventStartsAtFormatted: emailSampleWhen("en"),
     currentStatus: registrationStatusWords("CONFIRMED", "en"),
     checkinCode: "EXAMPL",
@@ -252,8 +252,8 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     inviterName: "Ion Exemplu",
     feedbackLink: "/en/contact/tell-us?tip=cum-a-fost",
     staffEmail: "ana.popescu@example.org",
-    organizerNote: "We meet at the Livada Poștei entrance, by the map board.",
-    cancellationReason: "An orange weather warning for Tâmpa: the route is not safe.",
+    organizerNote: "We meet at the stadium entrance, by the map board.",
+    cancellationReason: "An orange weather warning for the mountain: the route is not safe.",
     organizerSubject: "Bad weather at {eventTitle}: the start moves to 10:00",
     organizerBody: [
       "Hi, {participantName}!",
@@ -405,7 +405,7 @@ const HYPHEN = String.raw`[\-‐‑]`;
  *   `tests/unit/notifications/email-sample-guard.test.ts`: the runner, the title, the place, the
  *   checklist, the dates, the code, the inviter and the address are refused as the sample writes
  *   them, anywhere; the role only inside the invitation (`only`); a real place written as the
- *   sample writes it ("Stația de telecabină Tâmpa") is refused too and named with its field, which
+ *   sample writes it ("Intrarea în Parcul Central") is refused too and named with its field, which
  *   is what an event held there puts in its place anyway.
  * - **Canonical Unicode**: the text and the value are compared composed (NFC), so an "ă" typed as
  *   "a" and a breve is the same letter.

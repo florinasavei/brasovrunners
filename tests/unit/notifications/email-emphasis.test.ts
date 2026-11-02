@@ -45,6 +45,15 @@ function inverted(hex: string): string {
   return `#${value.toString(16).padStart(6, "0")}`;
 }
 
+describe("§887 the email's language attribute follows the message's first language", () => {
+  it("says lang=\"ro\" on a Romanian-first message and lang=\"en\" on an English-first one", () => {
+    const ro = renderBilingual("REGISTRATION_CONFIRMED", "ro", emailSampleFor("REGISTRATION_CONFIRMED", "ro"), ACTION, null);
+    const en = renderBilingual("REGISTRATION_CONFIRMED", "en", emailSampleFor("REGISTRATION_CONFIRMED", "en"), ACTION, null);
+    expect(ro.html).toContain('<html lang="ro">');
+    expect(en.html).toContain('<html lang="en">');
+  });
+});
+
 describe("§580 the renderer's emphasis vocabulary", () => {
   it("draws `**x**` as bold in the HTML and drops the markers in the plain text", () => {
     const message = renderContent(content(), "ro");
@@ -129,7 +138,7 @@ const HIGHLIGHTED: ReadonlyArray<{ type: EmailMessageType; ro: readonly string[]
   { type: "WAITLIST_JOINED", ro: ["pe lista de așteptare"], en: ["the waiting list"] },
   { type: "WAITLIST_SPOT_OFFER", ro: ["vineri, 2 octombrie 2026, la 18:30", "24 de ore"], en: ["Friday, 2 October 2026, at 18:30", "24 hours"], button: true },
   { type: "REGISTRATION_CONFIRMED", ro: ["Numărul tău de concurs: 42.", "spune codul EXAMPL"], en: ["Your race number: 42.", "say the code EXAMPL"] },
-  { type: "EVENT_REMINDER", ro: ["Duminică, 4 oct. 2026, la 09:00 · Stația de telecabină Tâmpa"], en: ["Sunday, 4 Oct 2026, at 09:00 · Tâmpa cable-car station"] },
+  { type: "EVENT_REMINDER", ro: ["Duminică, 4 oct. 2026, la 09:00 · Intrarea în Parcul Central"], en: ["Sunday, 4 Oct 2026, at 09:00 · Central Park entrance"] },
   { type: "EVENT_THANKS", ro: ["Rezultatele și pozele"], en: ["The results and the photos"], button: true },
   { type: "DECLARATION_SIGNED", ro: ["Păstreaz-o: este copia ta."], en: ["Keep it: it is your copy."] },
   { type: "BIB_ASSIGNED", ro: ["numărul 42", "codul EXAMPL"], en: ["number 42", "the code EXAMPL"] },
@@ -198,7 +207,7 @@ describe("§580 every participant message puts its one fact on the band, in both
   it("bolds the facts block's day, hours and place name", () => {
     const message = renderBilingual("REGISTRATION_CONFIRMED", "ro", emailSampleFor("REGISTRATION_CONFIRMED", "ro"), ACTION, null);
     const facts = message.html.slice(message.html.indexOf('data-email-part="event-facts"'));
-    expect(facts).toContain("<strong>Stația de telecabină Tâmpa</strong>");
+    expect(facts).toContain("<strong>Intrarea în Parcul Central</strong>");
     expect(facts).toMatch(/<strong>[^<]*09:00[^<]*<\/strong>/);
   });
 

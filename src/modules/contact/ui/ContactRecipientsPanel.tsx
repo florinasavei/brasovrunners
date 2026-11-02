@@ -19,6 +19,7 @@ import { countForm } from "@/i18n/count-form";
 import { getPathname } from "@/i18n/navigation";
 import type { FeedbackRoads, FeedbackVia } from "@/modules/feedback/domain/branches";
 import RoadChoice, { roadWords } from "@/modules/feedback/ui/RoadChoice";
+import { SAFETY_PROGRAMME } from "@/theme/brand";
 
 type Props = {
   locale: Locale;
@@ -180,7 +181,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
             name="via"
             testId="contact-via"
             current={via}
-            words={roadWords((key) => t(key as never))}
+            words={roadWords((key) => t(key as never, { safetyName: SAFETY_PROGRAMME[locale === "en" ? "en" : "ro"] } as never))}
             blocked={{ gmail: roads.gmail ? null : "missing", mailgun: roads.mailgun ? null : "missing" }}
             tasksPath={tasksPath}
             legalPath={legalPath}

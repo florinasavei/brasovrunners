@@ -1,8 +1,11 @@
 import { createTranslator } from "next-intl";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { rainLikely as isRainLikely, summarizeSpan, type WeatherReading } from "./domain/forecast";
+
+// The platform's words with the club's own laid over them (§887, `i18n/catalogue.ts`).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * A forecast in words, in one language (§402) — the page's row and the reminder's row say the

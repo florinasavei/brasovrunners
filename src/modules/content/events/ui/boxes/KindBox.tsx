@@ -19,6 +19,7 @@ import { promotionSummary, type SummaryWords } from "../box-summaries";
 import CostBox, { costLine } from "./CostBox";
 import PromotionBox from "./PromotionBox";
 import StatusCard, { type StatusNotice } from "./StatusBox";
+import { CLUB_SHORT_NAME } from "@/theme/brand";
 
 /**
  * Card 1, "Ce fel de eveniment" (§350, §406, §448): the type, which the page's overline says first
@@ -189,7 +190,7 @@ export default async function KindBox({
           <Box>
             <input type="hidden" name="event.membersOnly.present" value="1" />
             <CheckboxField name="event.membersOnly" defaultChecked={event?.membersOnly ?? false}>
-              {t("editor.membersOnly")}
+              {t("editor.membersOnly", { short: CLUB_SHORT_NAME })}
             </CheckboxField>
             <BoxNote>{t("editor.membersOnlyHelp")}</BoxNote>
           </Box>

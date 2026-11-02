@@ -24,7 +24,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import process from "node:process";
-import { conflictKind, dedupeJsonKeys, dependenciesChanged, duplicateTestTitles, mergeJson3, rebuildJournal, relinkSnapshots, shippedJournalProblems, unionConflicts } from "./merge-resolve.mjs";
+import { CATALOGUES, conflictKind, dedupeJsonKeys, dependenciesChanged, duplicateTestTitles, mergeJson3, rebuildJournal, relinkSnapshots, shippedJournalProblems, unionConflicts } from "./merge-resolve.mjs";
 
 const argv = process.argv.slice(2);
 const PROBE = !argv.includes("--no-probe");
@@ -144,7 +144,7 @@ for (const ref of refs) {
 }
 
 // The catalogues: a key git's line merge left twice.
-for (const file of ["messages/ro.json", "messages/en.json"]) {
+for (const file of CATALOGUES) {
   if (!existsSync(file)) continue;
   const { duplicates, text } = dedupeJsonKeys(readFileSync(file, "utf8"));
   if (text) {
@@ -152,8 +152,8 @@ for (const file of ["messages/ro.json", "messages/en.json"]) {
     console.log(`  ${file}: dropped ${duplicates.length} duplicate key(s), the last kept: ${duplicates.join(", ")}`);
   }
 }
-if (git("status", "--porcelain", "--", "messages").trim()) {
-  git("add", "--", "messages");
+if (git("status", "--porcelain", "--", "messages", "club/messages").trim()) {
+  git("add", "--", "messages", "club/messages");
   git("commit", "--no-verify", "-q", "-m", "chore(i18n): drop duplicate keys left by the merges");
 }
 

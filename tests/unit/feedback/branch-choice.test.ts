@@ -6,8 +6,12 @@ import { describe, expect, it, vi } from "vitest";
 import { BRANCH_SLUG, FEEDBACK_BRANCHES, type FeedbackBranch } from "@/modules/feedback/domain/branches";
 import { branchLabelLang, FEEDBACK_BRANCH_GLYPH, FEEDBACK_BRANCH_TINT } from "@/modules/feedback/ui/branch-glyph";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
+import { withClubWords } from "../../helpers/club-words";
+
+// What a page reads: the platform's catalogue with this club's own sentences over it (§887).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * BR-REQ-070-04 — «Spune-ne ceva»'s step 1 as cards (§676, §678, §679), rendered
@@ -56,7 +60,7 @@ describe("BR-REQ-070-04 step 1: one card per branch offered", () => {
       expect(card, branch).not.toBe("");
       expect(card).toContain(`data-testid="feedback-glyph-${slug}"`);
       expect(card).toContain(`value="${slug}"`);
-      expect(card).toContain(ro.Tell.branches[branch].label);
+      expect(card).toContain(withClubWords(ro.Tell.branches[branch].label));
       expect(card).toContain(ro.Tell.branches[branch].hint);
     }
     // The pictures the decision names, by Material's own test ids.
@@ -75,7 +79,7 @@ describe("BR-REQ-070-04 step 1: one card per branch offered", () => {
       const input = new RegExp(`<input[^>]*value="${slug}"[^>]*>`).exec(html)?.[0] ?? "";
       expect(input).toContain(`aria-labelledby="feedback-choice-${slug}-title"`);
       expect(input).toContain(`aria-describedby="feedback-choice-${slug}-hint"`);
-      expect(html).toMatch(new RegExp(`id="feedback-choice-${slug}-title"[^>]*>${ro.Tell.branches[branch].label}<`));
+      expect(html).toMatch(new RegExp(`id="feedback-choice-${slug}-title"[^>]*>${withClubWords(ro.Tell.branches[branch].label)}<`));
       expect(html).toMatch(new RegExp(`id="feedback-choice-${slug}-hint"[^>]*>${ro.Tell.branches[branch].hint}<`));
     }
   });
@@ -116,10 +120,10 @@ describe("BR-REQ-070-04 one glyph per branch", () => {
   it("§679 the safety form is «Girl Zone» with a flower, in both languages; the hint and the door's sentence stay", () => {
     expect(FEEDBACK_BRANCH_GLYPH.safety).toBe(LocalFloristOutlinedIcon);
     expect(renderToStaticMarkup(createElement(LocalFloristOutlinedIcon))).toContain('data-testid="LocalFloristOutlinedIcon"');
-    expect(ro.Tell.branches.safety.label).toBe("Girl Zone");
-    expect(en.Tell.branches.safety.label).toBe("Girl Zone");
-    expect(ro.Admin.emails.feedbackForms.branches.safety).toBe("Girl Zone (confidențial)");
-    expect(en.Admin.emails.feedbackForms.branches.safety).toBe("Girl Zone (confidential)");
+    expect(withClubWords(ro.Tell.branches.safety.label)).toBe("Girl Zone");
+    expect(withClubWords(en.Tell.branches.safety.label, "en")).toBe("Girl Zone");
+    expect(withClubWords(ro.Admin.emails.feedbackForms.branches.safety)).toBe("Girl Zone (confidențial)");
+    expect(withClubWords(en.Admin.emails.feedbackForms.branches.safety, "en")).toBe("Girl Zone (confidential)");
     expect(ro.Tell.branches.safety.hint).toBe(
       "Știm că alergatul, ca femeie, vine cu provocări în plus. Dacă ceva te-a făcut să nu te simți în siguranță la noi, spune-ne — confidențial.",
     );

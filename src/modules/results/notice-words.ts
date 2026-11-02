@@ -1,5 +1,8 @@
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
+
+// The platform's words with the club's own laid over them (§887, `i18n/catalogue.ts`).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * What the privacy notice's `{{results}}` becomes (§808, race results part 1): the public section's own name on an

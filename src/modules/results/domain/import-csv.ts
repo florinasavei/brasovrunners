@@ -1,8 +1,11 @@
 import { DomainError } from "@/shared/errors/domain-error";
-import en from "../../../../messages/en.json";
-import ro from "../../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
 import { parseResultTime } from "./result-time";
 import { isResultStatus, RESULTS_MAX, type ResultStatus } from "./ranking";
+
+// The platform's words with the club's own laid over them (§887, `i18n/catalogue.ts`).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * «Importă din CSV» (§808): the file a timing sheet or a spreadsheet gives the club, read into rows — nothing else.
