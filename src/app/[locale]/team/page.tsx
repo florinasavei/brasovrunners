@@ -192,7 +192,7 @@ export default async function TeamPage({ params }: Props) {
         {t.rich("contact", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
       </Typography>
       {/* «Echipa» is an «about» page: the club's legal name and CIF at its end (§565). */}
-      <ClubIdentity shape="line" />
+      <ClubIdentity place="pages" />
     </Container>
   );
 }

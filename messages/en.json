@@ -2158,6 +2158,8 @@
       "shownAddressBody": "The site shows the chosen address from now on, and replies to the club's emails go to it. Approved legal texts keep their own address.",
       "publicPhoneTitle": "Change the phone shown?",
       "publicPhoneBody": "The site shows this number at the foot of every page from now on. An empty box takes it off.",
+      "clubIdentityTitle": "Change what the site shows about the association?",
+      "clubIdentityBody": "Each line now shows only at the foot of the ticked pages, for every visitor; the registered office as you typed it.",
       "feedbackFormsTitle": "Save the “Tell us something” forms?",
       "feedbackFormsBody": "The forms switched on appear on the contact page while the privacy notice in force describes them.",
       "siteTintTitle": "Change the site's background?",
@@ -7758,6 +7760,39 @@
         "saving": "Saving…",
         "saved": "The public phone was saved."
       },
+      "clubIdentity": {
+        "title": "What the site shows about the association",
+        "intro": "For each line, tick the pages it shows at the foot of; you type the registered office yourself, under its row. A line with no value shows nowhere.",
+        "aside": "On the site — name: {name} of {all}, registered office: {seat} of {all}, email: {email} of {all}",
+        "items": {
+          "name": "Name and CIF",
+          "seat": "Registered office",
+          "email": "Contact email"
+        },
+        "help": {
+          "name": "The legal name, the site's name and the CIF, from the configuration.",
+          "seat": "The address typed below, never the full one from the configuration.",
+          "email": "The contact address shown, chosen above."
+        },
+        "notSet": {
+          "name": "Without the legal name in the configuration nothing in this card shows, whatever is ticked.",
+          "seat": "The box below is empty: the line shows nowhere, whatever is ticked.",
+          "email": "No contact address shown: the line shows nowhere, whatever is ticked."
+        },
+        "seatAddress": "Address shown on the site",
+        "seatAddressHelp": "Street and number, town, county — no building, staircase or flat.",
+        "places": {
+          "home": "Home page (the events list)",
+          "contact": "Contact",
+          "pages": "Team and the club's pages",
+          "footer": "Footer («About the club»)"
+        },
+        "updatedAt": "Set {when}.",
+        "readOnly": "The Administrator decides what the site shows about the association; you see the choice in force.",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "What the site shows about the association was saved."
+      },
       "feedbackForms": {
         "title": "Tell us something",
         "intro": "Four anonymous forms on the contact page, above the contact form, “Reach us directly” and the newsletter. Each is off until you switch it on here, and reaches one address.",
@@ -12883,6 +12918,7 @@
       "groupRunDeclarationErased": "The declaration was erased.",
       "shownContactAddress": "The contact address shown was saved.",
       "publicPhone": "The public phone was saved.",
+      "clubIdentity": "What the site shows about the association was saved.",
       "feedbackForms": "The “Tell us something” forms were saved.",
       "siteTint": "The site's background was saved.",
       "siteFontSize": "The site's text size was saved.",

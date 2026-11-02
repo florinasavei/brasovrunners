@@ -2158,6 +2158,8 @@
       "shownAddressBody": "Site-ul arată de acum adresa aleasă, iar răspunsurile la emailurile clubului ajung la ea. Textele legale aprobate își păstrează adresa lor.",
       "publicPhoneTitle": "Schimbi telefonul afișat?",
       "publicPhoneBody": "Site-ul arată de acum acest număr în subsolul fiecărei pagini. Un câmp gol îl scoate.",
+      "clubIdentityTitle": "Schimbi ce arată site-ul despre asociație?",
+      "clubIdentityBody": "Fiecare rând apare de acum doar la sfârșitul paginilor bifate, pentru toți vizitatorii; sediul, cum l-ai scris.",
       "feedbackFormsTitle": "Salvezi formularele „Spune-ne ceva”?",
       "feedbackFormsBody": "Formularele pornite apar pe pagina de contact cât timp nota de confidențialitate în vigoare le descrie.",
       "siteTintTitle": "Schimbi fundalul site-ului?",
@@ -7758,6 +7760,39 @@
         "saving": "Se salvează…",
         "saved": "Telefonul public a fost salvat."
       },
+      "clubIdentity": {
+        "title": "Ce arată site-ul despre asociație",
+        "intro": "Pentru fiecare rând, bifează paginile la sfârșitul cărora apare; sediul îl scrii tu, sub rândul lui. Un rând fără valoare nu apare nicăieri.",
+        "aside": "Pe site — denumirea: {name} din {all}, sediul: {seat} din {all}, emailul: {email} din {all}",
+        "items": {
+          "name": "Denumirea și CIF-ul",
+          "seat": "Sediul",
+          "email": "Emailul de contact"
+        },
+        "help": {
+          "name": "Denumirea legală, numele site-ului și CIF-ul, din configurație.",
+          "seat": "Adresa scrisă mai jos, niciodată cea completă din configurație.",
+          "email": "Adresa de contact afișată, aleasă mai sus."
+        },
+        "notSet": {
+          "name": "Fără denumirea legală în configurație nu apare nimic din acest card, oricum ar fi bifat.",
+          "seat": "Căsuța de mai jos e goală: rândul nu apare nicăieri, oricum ar fi bifat.",
+          "email": "Nicio adresă de contact afișată: rândul nu apare nicăieri, oricum ar fi bifat."
+        },
+        "seatAddress": "Adresa afișată pe site",
+        "seatAddressHelp": "Strada și numărul, localitatea, județul — fără bloc, scară sau apartament.",
+        "places": {
+          "home": "Pagina principală (lista de evenimente)",
+          "contact": "Contact",
+          "pages": "Echipa și paginile clubului",
+          "footer": "Footer («Despre club»)"
+        },
+        "updatedAt": "Setat {when}.",
+        "readOnly": "Ce arată site-ul despre asociație stabilește Administratorul; tu vezi alegerea în vigoare.",
+        "save": "Salvează",
+        "saving": "Se salvează…",
+        "saved": "Ce arată site-ul despre asociație a fost salvat."
+      },
       "feedbackForms": {
         "title": "Spune-ne ceva",
         "intro": "Patru formulare anonime pe pagina de contact, deasupra formularului de contact, a lui „Contact direct” și a newsletterului. Fiecare e oprit până îl pornești aici și primește la o singură adresă.",
@@ -12883,6 +12918,7 @@
       "groupRunDeclarationErased": "Declarația a fost ștearsă.",
       "shownContactAddress": "Adresa de contact afișată a fost salvată.",
       "publicPhone": "Telefonul public a fost salvat.",
+      "clubIdentity": "Ce arată site-ul despre asociație a fost salvat.",
       "feedbackForms": "Formularele „Spune-ne ceva” au fost salvate.",
       "siteTint": "Fundalul site-ului a fost salvat.",
       "siteFontSize": "Mărimea textului a fost salvată.",

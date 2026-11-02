@@ -69,6 +69,8 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedShownContactAddresses: async () => shownAddresses,
   // «Telefon public» (§565), beside «Scrie-ne» in the fold since the hotfix (#293): unset, as it is by default.
   cachedPublicPhone: async () => null,
+  // «Ce arată site-ul despre asociație» (§NNN): nothing stored, the name and the CIF alone in the fold.
+  cachedClubIdentityShown: async () => (await import("@/modules/contact/domain/club-identity")).DEFAULT_CLUB_IDENTITY_SHOWN,
 }));
 
 const { NextIntlClientProvider } = await import("next-intl");

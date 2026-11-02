@@ -8,6 +8,7 @@ import { routing, type Locale } from "@/i18n/routing";
 import { addressListRefusal, CONTACT_RECIPIENTS_MAX, parseAddressList } from "@/modules/contact/domain/recipients";
 import { updateContactRecipients } from "@/modules/contact/recipients";
 import { updatePublicPhone } from "@/modules/contact/public-phone";
+import { updateClubIdentityShown } from "@/modules/contact/club-identity";
 import { feedbackRoads } from "@/modules/feedback/roads";
 import { noticeDescribesFeedbackSafetyGmail } from "@/modules/legal-documents/repository";
 import { updateFeedbackSettings } from "@/modules/feedback/settings";
@@ -104,6 +105,34 @@ export async function updatePublicPhoneAction(_previous: FormOutcome | null, for
   revalidatePath(path);
   await flashOutcome({ saved: "publicPhone" });
   redirect(`${path}?saved=publicPhone#admin-alert`);
+}
+
+/**
+ * «Ce arată site-ul despre asociație» (§NNN): for each line — the name and CIF, the seat, the email —
+ * the places it is ticked for; a box posts its place under the line's name, an unticked one nothing;
+ * and «Adresa afișată pe site», the seat the site prints (empty, none). Administrator at the door,
+ * the service asserting it again.
+ */
+export async function updateClubIdentityAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/pages/contact" });
+  const ticked = (name: string) => form.getAll(name).filter((value): value is string => typeof value === "string");
+
+  try {
+    const actor = await requireStaffCapability(canManageClubSettings);
+    const seatAddress = form.get("seatAddress");
+    await updateClubIdentityShown(
+      getDb(),
+      actor,
+      { name: ticked("showName"), seat: ticked("showSeat"), email: ticked("showEmail"), seatAddress: typeof seatAddress === "string" ? seatAddress : null },
+      new Date(),
+    );
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "clubIdentity" });
+  redirect(`${path}?saved=clubIdentity#admin-alert`);
 }
 
 /**

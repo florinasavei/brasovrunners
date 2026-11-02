@@ -519,7 +519,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
       {/* Who is written to, by its legal name and CIF (§565): the page's last line, under the form,
           «Spune-ne ceva», «Contact direct» and the newsletter's box; nothing while the facts are
           unset. */}
-      <ClubIdentity shape="line" />
+      <ClubIdentity place="contact" />
     </Container>
   );
 }
