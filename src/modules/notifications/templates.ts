@@ -14,7 +14,7 @@ import { type EmailEventFacts, type EventFactsBlock, eventFactsBlock } from "./d
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import { CLUB_NAME, COLOR, EMAIL_EMPHASIS } from "@/theme/brand";
-import { capitalizeFirst, formatBirthDate } from "@/i18n/dates";
+import { capitalizeFirst, formatBirthDate, ZONE_WORDS } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { RETENTION_PERIODS } from "@/modules/jobs/domain/retention-periods";
@@ -582,16 +582,17 @@ export function renderContent(
       : []),
   ];
 
-  return { html: card([htmlParts]), text: textLines.join("\n"), htmlParts, textLines };
+  return { html: card([htmlParts], locale), text: textLines.join("\n"), htmlParts, textLines };
 }
 
 /**
  * One card, the club's name on a blue band above it (§96), holding one language's parts — or
  * two, one under the other with a rule between (§96: "make the email bilingual by default").
  * Inline styles only — mail clients drop stylesheets — and a table-free layout that Gmail,
- * Outlook and Apple Mail all keep.
+ * Outlook and Apple Mail all keep. The document's `lang` is the message's own language — the first half's (§887):
+ * «ro» for a Romanian message as before, «en» for one that starts in English.
  */
-function card(blocks: string[][]): string {
+function card(blocks: string[][], lang: EmailLocale): string {
   const rule = `<hr style="border:0;border-top:1px solid ${COLOR.line};margin:24px 0">`;
   /**
    * The club's lockup on the band, not its name in letters (§174; the owner: "în mailul de
@@ -644,7 +645,7 @@ function card(blocks: string[][]): string {
    */
   return [
     "<!DOCTYPE html>",
-    '<html lang="ro"><head>',
+    `<html lang="${lang}"><head>`,
     '<meta charset="utf-8">',
     '<meta name="color-scheme" content="light">',
     '<meta name="supported-color-schemes" content="light">',
@@ -742,7 +743,7 @@ export function renderBilingual(
   return {
     // A message for the club or a colleague starts with its tags, once, before the two halves (§786); every other type has none.
     subject: tagSubject(tagsOfMessageType(messageType), `${first.subject} / ${second.subject}`),
-    html: card([a.htmlParts, b.htmlParts]),
+    html: card([a.htmlParts, b.htmlParts], locale),
     text: [...a.textLines, "", "— — —", "", ...b.textLines].join("\n"),
   };
 }
@@ -1941,7 +1942,7 @@ const T = {
           // A digest (§775): one email a day for everything that moved, so one sitting approves it all.
           "Aprobă-le pe toate într-o singură ședință, nu pe rând, în zile diferite.",
           lawyerReads("ro", d.legalTemplateKeys ?? []),
-          `«${w.tasks}» arată aceleași rânduri până când textele sunt aprobate. Mesajul acesta vine cel mult o dată pe zi, după ora ${LEGAL_TEMPLATES_DIGEST_CLOCK} (ora României), cu tot ce așteaptă încă aprobarea, fiecărui Administrator și Superadministrator.`,
+          `«${w.tasks}» arată aceleași rânduri până când textele sunt aprobate. Mesajul acesta vine cel mult o dată pe zi, după ora ${LEGAL_TEMPLATES_DIGEST_CLOCK} (${ZONE_WORDS.ro}), cu tot ce așteaptă încă aprobarea, fiecărui Administrator și Superadministrator.`,
         ];
       },
       // The screen the button opens and what is done there (§654): «Versiune nouă» regenerates; approving is on «Documente legale».
@@ -2800,7 +2801,7 @@ const T = {
           `A text that already has a draft waiting shows «${w.draftExists}»: approve it or delete it first, then regenerate it.`,
           "Approve them all in one sitting, not one at a time over several days.",
           lawyerReads("en", d.legalTemplateKeys ?? []),
-          `«${w.tasks}» shows the same rows until the texts are approved. This message comes at most once a day, after ${LEGAL_TEMPLATES_DIGEST_CLOCK} Romanian time, with everything still waiting for approval, to every Administrator and Superadministrator.`,
+          `«${w.tasks}» shows the same rows until the texts are approved. This message comes at most once a day, after ${LEGAL_TEMPLATES_DIGEST_CLOCK} ${ZONE_WORDS.en}, with everything still waiting for approval, to every Administrator and Superadministrator.`,
         ];
       },
       action: `${legalTemplatesWords("en").newVersion}: regenerate the texts`,

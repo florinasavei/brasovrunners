@@ -91,8 +91,16 @@ async function noticeInForce(client: pg.Client): Promise<{ version: number; tran
   return { version: rows[0].version, translations };
 }
 
+/**
+ * The text with every `<PLACEHOLDER>` typed in, as the club would before approving: the sample in force carries the
+ * club's facts as blanks, and `approveVersion` refuses a version that still holds one (§884).
+ */
+const typedIn = (translations: Translation[]): Translation[] =>
+  JSON.parse(JSON.stringify(translations).replace(/<[A-ZĂÂÎȘȚ'’][^<>]{3,}>/g, "Exemplu")) as Translation[];
+
 /** A draft of the next privacy-notice version, written to the table; returns its id. */
-async function insertDraft(client: pg.Client, translations: Translation[]): Promise<string> {
+async function insertDraft(client: pg.Client, blanks: Translation[]): Promise<string> {
+  const translations = typedIn(blanks);
   const { rows: last } = await client.query<{ version: number }>(
     "SELECT coalesce(max(version), 0) AS version FROM legal_documents WHERE key = 'PRIVACY_NOTICE'",
   );

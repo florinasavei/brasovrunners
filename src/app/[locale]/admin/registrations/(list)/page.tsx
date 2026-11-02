@@ -236,7 +236,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   */
   const [volume, events, members] = await Promise.all([
     readEmailVolumeToday(db, new Date()),
-    listEventsWithRegistrations(db),
+    listEventsWithRegistrations(db, locale),
     // «Membru (verificat)» (§662): the member accounts' canonical addresses, read once for the list, its count and its strip.
     memberCanonicalEmails(db),
   ]);

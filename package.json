@@ -16,6 +16,7 @@
     "test:integration": "vitest run tests/integration",
     "test:clock": "node scripts/test-clock.mjs",
     "test:concurrency": "vitest run --config vitest.concurrency.config.mts",
+    "test:fork": "vitest run --config vitest.fork.config.mts",
     "test:watch": "vitest",
     "test:categories": "node scripts/test-categories.mjs",
     "test:fast": "node scripts/test-categories.mjs run",
@@ -46,6 +47,7 @@
     "check": "yarn check:static && yarn test",
     "release": "node scripts/release.mjs",
     "calendar:preview": "node scripts/calendar-image-preview.mjs",
+    "brand:assets": "node scripts/brand-assets.mjs",
     "flags:sync": "node scripts/sync-flags.mjs",
     "postinstall": "node scripts/sync-flags.mjs"
   },

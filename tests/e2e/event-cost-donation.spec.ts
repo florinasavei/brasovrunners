@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead } from "./support/dates";
 
 /**
  * `DECISIONS.md` §343 — the owner, 2026-09-24, on "Cu taxă" showing no box for the money:
@@ -34,7 +35,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     };
 
     // MUI pickers since the pickers landed beside the cost boxes (§347): driven, not filled.
-    await fillDateField(page, "Începutul evenimentului", "2027-05-08");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-05-08"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Parcul Tractorul");

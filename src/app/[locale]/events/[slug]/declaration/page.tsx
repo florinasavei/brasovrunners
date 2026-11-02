@@ -55,6 +55,7 @@ import LegalLink from "@/shared/ui/LegalLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import { signGroupRunDeclarationAction } from "./actions";
+import { ID_DOCUMENT_EXAMPLE } from "@/modules/events/domain/place";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
@@ -333,8 +334,8 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
               typeLabel={tDeclare("declare.idDocumentType")}
               typeHelp={tDeclare("declare.idDocumentTypeHelp")}
               label={fieldLabel("idDocument")}
-              help={t("groupRunDeclaration.page.idDocumentHelp", { days: durationPhrase(locale, GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS, "days") })}
-              placeholder={tDeclare("declare.idDocumentPlaceholder")}
+              help={t("groupRunDeclaration.page.idDocumentHelp", { idExample: ID_DOCUMENT_EXAMPLE, days: durationPhrase(locale, GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS, "days") })}
+              placeholder={tDeclare("declare.idDocumentPlaceholder", { idExample: ID_DOCUMENT_EXAMPLE })}
               kinds={documentKinds}
               defaultKind={draftKind}
               defaultValue={draft?.idDocument ?? ""}

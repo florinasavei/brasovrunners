@@ -25,6 +25,7 @@ import {
   deadlineMergeValues,
   LIST_NUMBERS_MERGE_FIELD,
   RESULTS_MERGE_FIELD,
+  RESULTS_NAME_ASK_MERGE_FIELD,
   RSVP_ASK_ANSWERERS_MERGE_FIELD,
   RSVP_ASK_MERGE_FIELD,
   RSVP_MEMBER_MERGE_FIELD,
@@ -48,7 +49,7 @@ import { eventInvitationsClause } from "@/modules/registrations/invitation-words
 import { feedbackFormsClause, feedbackFormsNamedClause, feedbackSafetyGmailClause, relayQueueClause } from "@/modules/feedback/notice-words";
 import { membersShopClause } from "@/modules/content/shop/notice-words";
 import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause, volunteersListClause } from "@/modules/volunteers/notice-words";
-import { resultsClause } from "@/modules/results/notice-words";
+import { resultsClause, resultsNameAskClause } from "@/modules/results/notice-words";
 import { rsvpAskAnswerersClause, rsvpAskClause, rsvpClause, rsvpMemberClause } from "@/modules/rsvp/notice-words";
 
 /**
@@ -119,7 +120,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
       formatDay(TOKEN_EXAMPLE_EVENT_STARTS_AT, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
     ),
   },
-  { token: "{{eventLocation}}", messageKey: "eventLocation", example: same("Parcul Nicolae Titulescu") },
+  { token: "{{eventLocation}}", messageKey: "eventLocation", example: same("Parcul Central") },
   {
     token: "{{signedAt}}",
     messageKey: "signedAt",
@@ -142,7 +143,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     // Three Tuesdays at 18:30 in Brașov, through the words a signature is filled with.
     example: inBoth((locale) => seriesRhythmPhrase(TOKEN_EXAMPLE_SERIES_DATES, CLUB_TIME_ZONE, locale)),
   },
-  { token: "{{seriesPlace}}", messageKey: "seriesPlace", example: same("Parcul Nicolae Titulescu") },
+  { token: "{{seriesPlace}}", messageKey: "seriesPlace", example: same("Parcul Central") },
   // A group run's declaration for a minor (§769): the minor's own name in the paragraph only a minor's
   // declaration keeps, and the adult's own name in the sentence only an adult's keeps.
   { token: `{{${GROUP_RUN_MINOR_MERGE_FIELD}}}`, messageKey: GROUP_RUN_MINOR_MERGE_FIELD, example: same("Ion Popescu") },
@@ -209,6 +210,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${RESULTS_MERGE_FIELD}}}`,
     messageKey: RESULTS_MERGE_FIELD,
     example: inBoth((locale) => resultsClause(locale)),
+  },
+  // The privacy notice's marker for «Vreau să apar cu numele în clasament» (§879): filled with the tick's own words, and — beside
+  // `{{results}}` — the switch that lets an older notice's runner ask to be named in the results (`describesResultsNameAsk`).
+  {
+    token: `{{${RESULTS_NAME_ASK_MERGE_FIELD}}}`,
+    messageKey: RESULTS_NAME_ASK_MERGE_FIELD,
+    example: inBoth((locale) => resultsNameAskClause(locale)),
   },
   // The privacy notice's marker for the answer «Vin!» (§811): filled with the button's own name, and the switch that
   // lets the event page offer it and the service take it (`describesRsvp`).

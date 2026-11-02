@@ -29,6 +29,7 @@ import { allowedFromStatuses } from "./domain/state-machine";
 import { type SignatureTrace, traceColumns } from "@/modules/legal-documents/domain/signature-trace";
 import { queueHoldLapsedEmails } from "./hold-lapsed-email";
 import { resolveDisplayName, type RegistrationEntryDetails } from "./names";
+import { HOME_COUNTRY } from "@/modules/events/domain/place";
 
 /**
  * A `TEST` registration cannot be written in production, and this is the second place that is
@@ -372,7 +373,7 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       nationality: input.details?.nationality ?? null,
       // Never null (§510): a staff entry or a kept family entry without one lives in Romania,
       // the column's own default, said here so the insert never names a null.
-      country: input.details?.country ?? "RO",
+      country: input.details?.country ?? HOME_COUNTRY,
       city: input.details?.city ?? null,
       phone: input.details?.phone ?? null,
       emergencyContactName: input.details?.emergencyContactName ?? null,

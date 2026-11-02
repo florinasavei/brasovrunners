@@ -19,7 +19,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import Hint from "@/shared/ui/Hint";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX, PUBLIC_FOLD_SX } from "@/shared/ui/disclosure";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import { CLUB_NAME } from "@/theme/brand";
+import { CLUB_NAME, CLUB_SHORT_NAME } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 import { rsvpCountText } from "../domain/summary";
 import { RSVP_BOX_ID, type RsvpOutcome } from "../rsvp-box";
@@ -85,7 +85,7 @@ export default async function RsvpBox({
   const memberHint = (memberOffered ? await cachedMemberDefinition(locale) : null) ?? tForm("clubMemberDefinition");
   const memberTick = tForm("clubMemberDeclared", { club: CLUB_NAME });
   // The mark's word is said once, in `rsvp.memberMark`, and read into every sentence that names it.
-  const mark = t("rsvp.memberMark");
+  const mark = t("rsvp.memberMark", { short: CLUB_SHORT_NAME });
   // Read once: the closed line and the fold «Cine vine» under it (the page hands both the same read) say one number, and a database that is away says neither (§281).
   const rsvps = given === undefined ? await readRsvpsOf(eventId) : given;
   const summaryWords = {

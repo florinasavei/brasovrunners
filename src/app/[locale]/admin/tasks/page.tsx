@@ -10,7 +10,7 @@ import { getDb } from "@/db/client";
 import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import { countBackofficeStaff } from "@/modules/staff-identity/repository";
-import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatCalendarDay, formatDay, ZONE_WORDS } from "@/i18n/dates";
 import { routing } from "@/i18n/routing";
 import { listPublishedEvents, listUndatedPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
@@ -85,6 +85,8 @@ import OlderPicturesPanel from "@/modules/media/ui/OlderPicturesPanel";
 import { readBotCheck } from "@/modules/registrations/bot-check";
 import { probeTurnstileSecret } from "@/modules/registrations/turnstile";
 import { moneyDecisions } from "@/modules/diagnostics/platform-plans";
+import { readEmailPlan } from "@/modules/notifications/email-plan";
+import { aRaceHasRun, readRaceDaySettings } from "@/modules/diagnostics/race-day-settings";
 import { TASK_TARGETS } from "@/modules/diagnostics/domain/task-targets";
 import TaskTargetLink from "@/modules/diagnostics/ui/TaskTargetLink";
 import { readNeonConsumption } from "@/modules/diagnostics/neon";
@@ -115,7 +117,7 @@ import Panel from "@/shared/ui/Panel";
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 import { FACTS_SX, LINE_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import StatusChip from "@/shared/ui/StatusChip";
-import { CLUB_NAME } from "@/theme/brand";
+import { CLUB_NAME, CLUB_SHORT_NAME, CLUB_SLUG, SAFETY_PROGRAMME } from "@/theme/brand";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -371,6 +373,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       ),
     );
   const raceDaySheetsDue = [...new Set(shredderRows.map((row) => row.title ?? row.eventId))];
+  // The coming races' two race-day settings and whether a race has run (§880): what the rows «Startul cursei»,
+  // «Categorii de vârstă» and «Luăm o lună de Mailgun plătit» read; «Planul Mailgun» is the club's own setting.
+  const [raceDaySettings, raceHasRun, emailPlan] = await Promise.all([readRaceDaySettings(db, locale, now), aRaceHasRun(db, now), readEmailPlan(db)]);
   const volume = await readEmailVolumeToday(db, now);
   // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
   const email = await checkEmailHealth(db, now, budget.effects.jobFloorMinutes);
@@ -430,11 +435,19 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
    * the club's apex domain (the mail subdomain hangs off it, whichever host QA answers on),
    * the two job endpoints, and the webhook. Never a secret: `JOB_SECRET` is named, not shown.
    * The club's name from its one constant, and the sender's from the setting the From line
-   * reads (§369): a step that names either says what this deployment actually uses.
+   * reads (§369): a step that names either says what this deployment actually uses. And the club's
+   * other words a step names (§887): its short mark, its slug (the names of the accounts and keys to
+   * create), its zone, its safety form's name, and the media bucket — `R2_BUCKET` once it is set, else
+   * the name the step asks to create.
    */
   const apex = clubDomainBound ? hostname.split(".").slice(-2).join(".") : hostname;
   const howValues: Record<string, string> = {
     club: CLUB_NAME,
+    short: CLUB_SHORT_NAME,
+    slug: CLUB_SLUG,
+    timeZone: CLUB_TIME_ZONE,
+    safetyName: SAFETY_PROGRAMME[locale === "en" ? "en" : "ro"],
+    bucket: env.R2_BUCKET ?? `${CLUB_SLUG}-media`,
     senderName: env.EMAIL_FROM_NAME,
     apex,
     mailDomain: `mail.${apex}`,
@@ -586,6 +599,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       },
       publishedEventCount,
       raceDaySheetsDue,
+      raceDaySettings,
       domainRenewal: domain,
       unreachableWindow: outage,
       storageConfigured: isStorageConfigured(),
@@ -691,7 +705,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     const words = (
       <Box sx={{ gridArea: "words", minWidth: 0 }}>
         <Typography component="h4" variant="body2" sx={{ fontWeight: 600 }}>
-          {t(`items.${task.id}.title`)}
+          {t(`items.${task.id}.title`, howValues)}
         </Typography>
         {/* The row's own sentence for its state when `todo`/`done` cannot say it — a key that is set and does not work is neither (§288). */}
         <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", wordBreak: "break-word" }}>
@@ -758,7 +772,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // Only what is still undecided: a settled question rendered "answered" for ever is a line to
   // scroll past, and the section disappears entirely when nothing is open. It reads one fact since
   // the cost table moved to «Setări» → «Costuri» (§516).
-  const decisions = moneyDecisions({ hasPaidEvent }).filter((decision) => decision.state === "open");
+  const decisions = moneyDecisions({ hasPaidEvent, emailPlan: emailPlan.plan, raceHasRun }).filter((decision) => decision.state === "open");
 
   return (
     <Stack spacing={3} sx={{ py: { xs: 2, sm: 3 } }}>
@@ -846,6 +860,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                   resumesAt: email.resumesAt
                     ? formatDay(new Date(email.resumesAt), { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" })
                     : "—",
+                  zoneWords: ZONE_WORDS[locale === "en" ? "en" : "ro"],
                 })}
               </Typography>
             )}

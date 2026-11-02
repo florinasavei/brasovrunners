@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { editorBox, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead } from "./support/dates";
 
 /**
  * `DECISIONS.md` §315 on a small form — adding a colleague.
@@ -69,7 +70,7 @@ test.describe("§315 a stale save stays refused with JavaScript off", () => {
     await page.goto("/ro/admin/events/new");
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
-    await fillDateField(page, "Începutul evenimentului", "2027-06-06");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-06-06"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Noua");
     await field("event.locationNameEn").fill("Parcul Noua");
@@ -144,7 +145,7 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
 
     await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
     await page.getByRole("option", { name: "Concurs" }).click();
-    await fillDateField(page, "Începutul evenimentului", "2027-06-20");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-06-20"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Noua");
     await field("event.locationNameEn").fill("Parcul Noua");
@@ -260,7 +261,7 @@ test.describe("§406 a refusal inside the links box opens it", () => {
     await expect(page.getByTestId("cancel-fields")).toHaveCount(0);
     await expect(status.getByTestId("status-on-create")).toContainText("Niciuna nu trimite emailuri: nimeni nu e încă înscris.");
 
-    await fillDateField(page, "Începutul evenimentului", "2027-07-04");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-07-04"));
     await fillTimeField(page, "Ora", "09:00");
     // The meeting point in both languages (§362): a blank English box is the browser's refusal,
     // and the one this test is about is the server's.
@@ -313,7 +314,7 @@ test.describe("§350 a wrong value in a hidden registration mode", () => {
 
     await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
     await page.getByRole("option", { name: "Concurs" }).click();
-    await fillDateField(page, "Începutul evenimentului", "2027-06-27");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-06-27"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Noua");
     await field("event.locationNameEn").fill("Parcul Noua");

@@ -8,25 +8,165 @@
  *
  * What must be replaced, and what to replace it with:
  *
- *   colour   sampled from the t-shirt, as hex. Keep the token names; change the values.
- *   logo     drop the real SVGs over `public/brand/*.svg`, same filenames, same viewBox
- *            proportions, or update LOGO below if the proportions differ.
- *   font     see FONT below. A licence permitting web embedding is required before a typeface
+ *   colour   `palette` in `club/club.json`, by role, as hex (§885). Keep the token names here.
+ *   logo     drop the real SVGs over `public/brand/*.svg`, same filenames, and write their
+ *            proportions in `club/club.json`'s `logo`; then `yarn brand:assets`.
+ *   font     `src/theme/fonts/Wordmark.ttf` and its licence beside it (§885); see FONT below.
+ *            A licence permitting web embedding is required before a typeface
  *            is self-hosted — many licences that cover print do not, and shipping one that
  *            does not is redistribution the club would be liable for.
  *
  * Nothing here is a rule that carries trust, so this file is not priority-1. It is, however,
  * the only place in `src/` allowed to name a colour.
+ *
+ * The club's identity — its name, its wordmark, its short forms, its logo files — is not written here
+ * any more but read from `club/club.json` (§882, through `src/club/config.ts`): this file keeps every
+ * name it exported, so none of the places that read them changed. Since §885 the club's colours are
+ * there too (`palette`, by role); the platform's neutrals and this file's arithmetic stay here, and this
+ * is still the only file that turns a colour into another.
  */
+import { CLUB } from "@/club/config";
+import type { ClubPalette, ClubShades } from "@/club/schema";
+
+/*
+  The colour arithmetic (§885), here because this is the one file that computes colours: the WCAG contrast
+  the AA tests and the backoffice's colour checks measure with (`appearance/domain/tint-contrast.ts` names
+  it from here), `mix`, and the accent's derivation (`shadesOf`, which `appearance/domain/accent-shades.ts`
+  answers a typed colour with). The palette below calls them only for a colour `club.json` leaves out.
+*/
+
+/** A colour as the club may type it: `#rrggbb`, six hex digits, nothing else. */
+export const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+/** WCAG 2.1 AA for body-size text. */
+export const MIN_TEXT_CONTRAST = 4.5;
+
+/** The contrast an accent's `accentInk` keeps against the card, in either scheme. */
+export const ACCENT_INK_CONTRAST = 7;
+
+const channels = (hex: string) => [1, 3, 5].map((start) => Number.parseInt(hex.slice(start, start + 2), 16));
+
+/** WCAG 2.1 relative luminance of a `#rrggbb` colour. */
+export function relativeLuminance(hex: string): number {
+  if (!HEX_COLOR.test(hex)) throw new Error(`not a #rrggbb colour: ${hex}`);
+  const [r, g, b] = channels(hex).map((value) => (value / 255 <= 0.03928 ? value / 255 / 12.92 : ((value / 255 + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** WCAG 2.1 contrast ratio between two `#rrggbb` colours, 1 to 21. */
+export function contrastRatio(a: string, b: string): number {
+  const [light, dark] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+  return (light + 0.05) / (dark + 0.05);
+}
+
+/** `from` moved `share` (0–1) of the way to `to`, channel by channel, as `#rrggbb`. */
+export function mix(from: string, to: string, share: number): string {
+  const end = channels(to);
+  return `#${channels(from)
+    .map((value, index) => Math.round(value + (end[index] - value) * share).toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+/**
+ * The platform's neutrals, the same for every club, by day (`COLOR`) and after dark (`COLOR_DARK`), in the order
+ * those list them: the body's text, the secondary text (captions, field labels), the page background and the card
+ * and surface background, one step lighter than the page. Here, ahead of the palette, because a club's missing
+ * shades are derived against them.
+ */
+const NEUTRAL = { ink: "#1c1b19", inkMuted: "#5b574f", paper: "#fafaf7", surface: "#ffffff" } as const;
+const NEUTRAL_DARK = { paper: "#111318", surface: "#1a1d24", ink: "#f3f2ee", inkMuted: "#b5b2a9" } as const;
+const BLACK = "#000000";
+const WHITE = "#ffffff";
+
+/**
+ * The first 1 % step from `from` towards `to`, from `first` to `last` percent (either way round), that keeps
+ * `keeps`; `otherwise` when none does.
+ */
+function firstStep(from: string, to: string, first: number, last: number, keeps: (hex: string) => boolean, otherwise: string): string {
+  const by = first <= last ? 1 : -1;
+  for (let step = first; step !== last + by; step += by) {
+    const candidate = mix(from, to, step / 100);
+    if (keeps(candidate)) return candidate;
+  }
+  return otherwise;
+}
+
+const atAa = (a: string, b: string) => contrastRatio(a, b) >= MIN_TEXT_CONTRAST;
+
+/**
+ * One scheme's four shades of `base`, walked towards `toward` (black by day, white after dark): the accent
+ * at AA on the page and the card; its ink 15 % further at least, to `inkKeeps`; the pressed shade 15 % further
+ * again, `deepGap` past the ink's contrast on the card (at most `deepCap`); and the tint, the card with
+ * `tintShare` % of the accent in it, lessened until the ink, the muted ink and the accent's ink read on it.
+ */
+function schemeShades(base: string, n: typeof NEUTRAL | typeof NEUTRAL_DARK, toward: string, inkKeeps: (hex: string) => boolean, deepGap: number, deepCap: number, tintShare: number): ClubShades {
+  const accent = firstStep(base, toward, 0, 100, (hex) => atAa(hex, n.paper) && atAa(hex, n.surface), toward);
+  const accentInk = firstStep(accent, toward, 15, 100, inkKeeps, toward);
+  const deepTarget = Math.min(contrastRatio(n.surface, accentInk) + deepGap, deepCap);
+  const accentDeep = firstStep(accentInk, toward, 15, 100, (hex) => contrastRatio(n.surface, hex) >= deepTarget, toward);
+  const accentTint = firstStep(n.surface, accent, tintShare, 1, (hex) => atAa(n.ink, hex) && atAa(n.inkMuted, hex) && atAa(accentInk, hex), n.surface);
+  return { accent, accentInk, accentDeep, accentTint };
+}
+
+/**
+ * An accent's four shades in both schemes, derived from one `#rrggbb` (§723; the rules are written out in
+ * `appearance/domain/accent-shades.ts`, which judges a typed colour first and then asks this). By day the ink is
+ * also no lighter than the muted ink, so every page tint carries it; after dark it only keeps its contrast.
+ */
+export function shadesOf(base: string): { readonly light: ClubShades; readonly dark: ClubShades } {
+  const inkContrast = (surface: string) => (hex: string) => contrastRatio(surface, hex) >= ACCENT_INK_CONTRAST;
+  const dayInk = (hex: string) => relativeLuminance(hex) <= relativeLuminance(NEUTRAL.inkMuted) && inkContrast(NEUTRAL.surface)(hex);
+  return {
+    light: schemeShades(base, NEUTRAL, BLACK, dayInk, 2.5, 19, 10),
+    dark: schemeShades(base, NEUTRAL_DARK, WHITE, inkContrast(NEUTRAL_DARK.surface), 2, 16, 14),
+  };
+}
+
+/**
+ * The club's palette by role (§885): `club/club.json`'s `palette` as written, and for each colour a club leaves
+ * out, the derivation from its required ones — the primary and its ink by day and after dark, the secondary and the
+ * accent: the tints and the kit's gradient mixed from the primary, each accent's four shades walked by `shadesOf`.
+ * Brașov's file writes every value out, its hand-picked tints included, so what it wrote wins over every mix and
+ * every token below is the literal it was (`tests/unit/club/__snapshots__/palette-exports.json`). The hue names the
+ * rest of the code reads (`COLOR.blue`, `COLOR.orange`…) are aliases of these roles.
+ */
+const written: ClubPalette = CLUB.palette;
+const { primary, primaryInk, dark } = written;
+export const PALETTE = {
+  ...written,
+  kit: { deep: mix(primaryInk, BLACK, 0.55), mid: mix(primaryInk, BLACK, 0.2), light: mix(primary, WHITE, 0.3), ...written.kit },
+  tints: {
+    /** The primary at 4 % over white: «Albastru abia vizibil». */
+    faint: mix(primary, WHITE, 0.96),
+    /** At 8 %: «Albastru deschis», and the emails' highlighted band. */
+    light: mix(primary, WHITE, 0.92),
+    /** A cool grey leaning to the primary: «Gri albăstrui». */
+    grey: mix(primaryInk, WHITE, 0.93),
+    /** The hero's far end, the boxes on «Echipa»'s canvas, the poster's weekday row. */
+    hero: mix(primary, WHITE, 0.9),
+    /** The hero's far end after dark. */
+    heroDark: mix(NEUTRAL_DARK.surface, dark.primary, 0.1),
+    /** The poster's hairline. */
+    rule: mix(primary, WHITE, 0.78),
+    /** The registrations sheet's member fill, a step stronger than its sky blue. */
+    sheet: mix(primary, WHITE, 0.77),
+    /** The primary preset's pressed button by day, and after dark. */
+    deep: mix(primaryInk, BLACK, 0.2),
+    deepDark: mix(dark.primaryInk, WHITE, 0.3),
+    ...written.tints,
+  },
+  look: written.look ?? shadesOf(written.accent),
+  secondaryLook: written.secondaryLook ?? shadesOf(written.secondary),
+} as const;
 
 /**
  * The palette.
  *
- * `blue` is taken from the club's own logo file, where every path is filled `#0000ff` — pure
- * sRGB blue. It is not sampled from the t-shirt, whose blue is a navy-to-cyan gradient and
- * visibly not this colour. Which of the two is the brand blue is an open question for the club;
- * until it is answered, the supplied vector file wins, because it is the only place the colour
- * is stated as a value rather than photographed under a lamp.
+ * `blue` is the club's `primary`, taken from the club's own logo file, where every path is filled
+ * `#0000ff` — pure sRGB blue (`brand.test.ts` holds the two equal). It is not sampled from the
+ * t-shirt, whose blue is a navy-to-cyan gradient and visibly not this colour. Which of the two is the
+ * brand blue is an open question for the club; until it is answered, the supplied vector file wins,
+ * because it is the only place the colour is stated as a value rather than photographed under a lamp.
  *
  * `blueInk` exists because pure blue is a poor UI colour even when it passes contrast: it is
  * the default unvisited-link colour of every browser, so buttons and headings set in it read
@@ -37,20 +177,14 @@
  * contrast ratio asserted in `tests/unit/theme/brand.test.ts`.
  */
 export const COLOR = {
-  /** Primary, exactly as the supplied logo states it. 8.22:1 on paper, 8.59:1 on a card. */
-  blue: "#0000ff",
-  /** Hover and pressed states, and any large fill where pure blue would vibrate. */
-  blueInk: "#0b2fb8",
-  /** Secondary. Accents and the event-kind chips. */
-  orange: "#d98a2b",
-  /** Body text. */
-  ink: "#1c1b19",
-  /** Secondary text: captions, field labels. */
-  inkMuted: "#5b574f",
-  /** Page background. */
-  paper: "#fafaf7",
-  /** Card and surface background, one step lighter than the page. */
-  surface: "#ffffff",
+  /** Primary, exactly as the supplied logo states it (`PALETTE.primary`). 8.22:1 on paper, 8.59:1 on a card. */
+  blue: PALETTE.primary,
+  /** Hover and pressed states, and any large fill where pure blue would vibrate (`PALETTE.primaryInk`). */
+  blueInk: PALETTE.primaryInk,
+  /** Secondary (`PALETTE.secondary`). Accents and the event-kind chips. */
+  orange: PALETTE.secondary,
+  /** Body text (`ink`), secondary text (`inkMuted`), the page (`paper`) and a card (`surface`): `NEUTRAL`. */
+  ...NEUTRAL,
   /** Hairlines and dividers. */
   line: "#e2e0d8",
 
@@ -60,18 +194,16 @@ export const COLOR = {
     number or a share card — those keep the logo blue. Each has a twin in `COLOR_DARK` and its pairs
     in `brand-pairs.ts` (`LOOK_PAIRS`), held at AA by `tests/unit/theme/brand.test.ts`.
   */
-  /** The hot pink: the mark, a rule, a large word. 4.77:1 on the page, white on it 4.99:1. */
-  accent: "#d6176f",
-  /**
-   * The pink that carries words: `primary` under the new look — a link, an outline, a contained
-   * button's fill under white text (7.6:1). No lighter than `inkMuted`, so every page tint the club
-   * may choose (§488 holds `inkMuted` at AA on it) carries it too — the test asserts the order.
-   */
-  accentInk: "#a01650",
-  /** A contained pink button under the pointer: deeper still, white on it 10.4:1. */
-  accentDeep: "#7e0e3c",
-  /** A pale pink band or chip under ink or `accentInk` (the weekly runs' chip in a later phase). */
-  accentTint: "#fde8f1",
+  /*
+    `PALETTE.look.light`, its four shades in this order:
+    - `accent`, the hot pink: the mark, a rule, a large word. 4.77:1 on the page, white on it 4.99:1.
+    - `accentInk`, the pink that carries words: `primary` under the new look — a link, an outline, a
+      contained button's fill under white text (7.6:1). No lighter than `inkMuted`, so every page tint the
+      club may choose (§488 holds `inkMuted` at AA on it) carries it too — the test asserts the order.
+    - `accentDeep`, a contained pink button under the pointer: deeper still, white on it 10.4:1.
+    - `accentTint`, a pale pink band or chip under ink or `accentInk` (the weekly runs' chip).
+  */
+  ...PALETTE.look.light,
   /** A special event's fill in the calendar and its chips (a later phase): a pale green. */
   kindSpecial: "#dcefe0",
   /** The words on `kindSpecial`, and a green as text on the page or a card. */
@@ -93,18 +225,12 @@ export const COLOR = {
  * `tests/unit/theme/brand.test.ts` exactly as the light ones are.
  */
 export const COLOR_DARK = {
-  /** Primary as text and outlines: 7.6:1 on the dark page. */
-  blue: "#7b9cff",
-  /** Hover and pressed states, lighter still. */
-  blueInk: "#a3b8ff",
-  /** Page background. */
-  paper: "#111318",
-  /** Card and surface background, one step lighter than the page. */
-  surface: "#1a1d24",
-  /** Body text. */
-  ink: "#f3f2ee",
-  /** Secondary text. */
-  inkMuted: "#b5b2a9",
+  /** Primary as text and outlines (`PALETTE.dark.primary`): 7.6:1 on the dark page. */
+  blue: PALETTE.dark.primary,
+  /** Hover and pressed states, lighter still (`PALETTE.dark.primaryInk`). */
+  blueInk: PALETTE.dark.primaryInk,
+  /** The page, a card, the body's text and the secondary text after dark: `NEUTRAL_DARK`. */
+  ...NEUTRAL_DARK,
   /** Hairlines and dividers. */
   line: "#2c3038",
 
@@ -112,14 +238,12 @@ export const COLOR_DARK = {
     The new look's twins (§708): lighter pinks of the same hue on the dark page, as the blue lifts
     (the order resting → hover reads the same way), and the fills walked towards the dark surface.
   */
-  /** The hot pink after dark: 6.56:1 on the page. */
-  accent: "#ff5fa2",
-  /** `primary` under the new look after dark: text 8.64:1 on the page, and a fill under the dark page colour. */
-  accentInk: "#ff8cc0",
-  /** A contained pink button under the pointer, lighter still. */
-  accentDeep: "#ffb3d6",
-  /** The pale pink band after dark. */
-  accentTint: "#3b1a2a",
+  /*
+    `PALETTE.look.dark`: the hot pink after dark (6.56:1 on the page); `primary` under the new look after
+    dark (text 8.64:1 on the page, and a fill under the dark page colour); a contained pink button under the
+    pointer, lighter still; the pale pink band after dark.
+  */
+  ...PALETTE.look.dark,
   /** A special event's fill after dark. */
   kindSpecial: "#173b22",
   /** The words on it, and green as text on the dark page. */
@@ -160,11 +284,11 @@ export const SITE_TINT = {
   /** «Alb»: the platform's page colour, unchanged — the default. */
   paper: COLOR.paper,
   /** «Albastru abia vizibil»: `COLOR.blue` at 4 % over white (255 − 0.04 × 255 = 245). */
-  faintBlue: "#f5f5ff",
+  faintBlue: PALETTE.tints.faint,
   /** «Albastru deschis»: `COLOR.blue` at 8 % over white (255 − 0.08 × 255 ≈ 235). */
-  lightBlue: "#ebebff",
+  lightBlue: PALETTE.tints.light,
   /** «Gri albăstrui»: a cool grey leaning to the club's blue. */
-  blueGrey: "#eef1f5",
+  blueGrey: PALETTE.tints.grey,
 } as const;
 
 /**
@@ -205,17 +329,13 @@ export const EMAIL_EMPHASIS = {
  * them before this ships anywhere a member will compare it against a shirt.
  */
 export const GRADIENT = {
-  /** Shoulders. */
-  deep: "#0b1f4d",
-  /** Mid-body. */
-  mid: "#12508f",
-  /** Approaching the hem. */
-  light: "#3aa0d8",
+  /** `PALETTE.kit`: `deep` at the shoulders, `mid` mid-body, `light` approaching the hem. */
+  ...PALETTE.kit,
   /**
    * Top to bottom, the way the shirt is worn. Kept as a CSS value rather than assembled at
    * each use, so every surface that carries it carries the same one.
    */
-  vertical: "linear-gradient(180deg, #0b1f4d 0%, #12508f 55%, #3aa0d8 100%)",
+  vertical: `linear-gradient(180deg, ${PALETTE.kit.deep} 0%, ${PALETTE.kit.mid} 55%, ${PALETTE.kit.light} 100%)`,
 
   /**
    * The two tints the site's own surfaces are allowed to end on (`DECISIONS.md` §166; the
@@ -228,9 +348,9 @@ export const GRADIENT = {
    * muted ink against both ends of both schemes, which is what makes that a rule rather than
    * a claim. The kit ramp stays for a surface that carries no text.
    */
-  heroTint: "#e9eeff",
+  heroTint: PALETTE.tints.hero,
   /** The same step after dark: the dark card colour, walked towards the dark blue. */
-  heroTintDark: "#232a3c",
+  heroTintDark: PALETTE.tints.heroDark,
 } as const;
 
 /**
@@ -253,7 +373,7 @@ export const SHEET_TINT = {
   warning: "#fff0c2",
   info: "#d7edf8",
   neutral: "#e4e4e4",
-  member: "#c5d1ff",
+  member: PALETTE.tints.sheet,
   clubRunner: "#e2d4f4",
   guest: "#ffd9c0",
 } as const;
@@ -265,10 +385,26 @@ export const SHEET_TINT = {
  * from `SHEET_TINT` on purpose: those are the conditional fills the registrations sheet's tests hold to its rules one by one.
  */
 export const SHEET_FRAME = {
-  header: "#0b2fb8",
+  header: COLOR.blueInk,
   headerInk: "#ffffff",
   grid: "#cfccc2",
 } as const;
+
+/**
+ * The colours a race's numbers may print in (§173, §177): six that stay apart from each other
+ * on paper and from the club's blue, which is the empty choice. Hex triplets, because that is
+ * what `events.bib_colour` checks for and what the sheet paints. The members' header offers the
+ * same six (§664), its empty choice being the event's own band. Print colours, the platform's
+ * rather than the club's, and here since §885 because this is the one file that names a colour.
+ */
+export const BIB_COLOURS = [
+  { key: "green", hex: "#1b8a3a" },
+  { key: "red", hex: "#c62828" },
+  { key: "orange", hex: "#ef6c00" },
+  { key: "purple", hex: "#6a1b9a" },
+  { key: "teal", hex: "#00838f" },
+  { key: "black", hex: "#212121" },
+] as const;
 
 /**
  * The new look's accent presets (§723, amending §708; the owner, 2026-10-11: «this should be a
@@ -291,18 +427,15 @@ export const LOOK_ACCENT = {
    * dark, a lighter step, 10.7:1 on the dark card).
    */
   blue: {
-    light: { accent: COLOR.blue, accentInk: COLOR.blueInk, accentDeep: "#092591", accentTint: GRADIENT.heroTint },
-    dark: { accent: COLOR_DARK.blue, accentInk: COLOR_DARK.blueInk, accentDeep: "#becdff", accentTint: GRADIENT.heroTintDark },
+    light: { accent: COLOR.blue, accentInk: COLOR.blueInk, accentDeep: PALETTE.tints.deep, accentTint: GRADIENT.heroTint },
+    dark: { accent: COLOR_DARK.blue, accentInk: COLOR_DARK.blueInk, accentDeep: PALETTE.tints.deepDark, accentTint: GRADIENT.heroTintDark },
   },
   /**
    * «Portocaliu»: the club's secondary orange, as the derivation makes it (the test asserts the
    * match). By day the orange itself is 2.6:1 on the page, too light to carry words, so its shades
    * walk towards brown until they do; after dark the orange is kept as it is.
    */
-  orange: {
-    light: { accent: "#a16620", accentInk: "#794d18", accentDeep: "#5e3c13", accentTint: "#f6f0e9" },
-    dark: { accent: COLOR.orange, accentInk: "#df9c4b", accentDeep: "#e8b77c", accentTint: "#352c25" },
-  },
+  orange: PALETTE.secondaryLook,
 } as const;
 
 /**
@@ -386,7 +519,7 @@ export const FONT = {
    * Its fallback is Roboto 900 italic, which is not an approximation chosen by eye: the
    * designer's read-me names "Roboto Black Italic" as the base font Facón was drawn from.
    */
-  wordmark: "var(--font-facon)",
+  wordmark: "var(--font-wordmark)",
   /**
    * The headings' face under «Aspectul nou» (§708, the redesign's decision 2): Inter at 800, a
    * repository file like every face (§460), `letter-spacing: -0.02em`. Only the new look's scope
@@ -410,10 +543,10 @@ export const FONT = {
  * The club's actual name, correctly spelled, is `CLUB_NAME` below, and is what prose, page
  * titles and the header link's accessible name use.
  */
-export const WORDMARK = "BRASOV RUNNERS";
+export const WORDMARK = CLUB.wordmark;
 
 /**
- * The club's name — the **one** place it is written (§369). A runner's club on their
+ * The club's name — written in **one** place, `club/club.json` (§369, §882), and read here. A runner's club on their
  * registration (`DECISIONS.md` §215), the From line's default, the page title, the header's and
  * the wordmark's accessible name, the JSON-LD organiser, the share pictures, the calendar, the
  * PDFs' Author, and every catalogue sentence that names the club, which takes it as `{club}`.
@@ -422,22 +555,42 @@ export const WORDMARK = "BRASOV RUNNERS";
  * the locales one day". A proper name is not translated, and two copies are two things to rename
  * and one to forget, so the catalogues no longer hold the name at all:
  * `tests/unit/notifications/no-hardcoded-values.test.ts` refuses it in `src/` outside this file
- * and the seeds, and in every message of both catalogues. The same distinction `WORDMARK` draws
+ * and the seeds, and in every message of both catalogues — since §882 `tests/unit/club/club-literals.test.ts`,
+ * which builds the forbidden words from the config itself. The same distinction `WORDMARK` draws
  * above, from the other side: that is a logotype, this is the name.
  */
-export const CLUB_NAME = "Brașov Runners";
+export const CLUB_NAME = CLUB.name;
+
+/** Every page's title (§369): the club's name alone, or a page's own title before it — «Calendar · {club}». */
+export const SITE_TITLE: { readonly default: string; readonly template: string } = { default: CLUB_NAME, template: `%s · ${CLUB_NAME}` };
+
+/** Folded as the matcher compares: lower case, no diacritics. */
+const folded = (word: string) => word.normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase();
 
 /**
  * The club's short forms that no rule derives from `CLUB_NAME` — they belong to this club, so they live
- * beside its name. The public list's matcher (`registrations/domain/public-list-club.ts`, §753, §756) reads
- * them as the club's own words: `city` is the county's plate code standing for the name's first word
- * («BV Runners»), each of `nicknames` names the club on its own («BVR»). Folded: lower case, no
- * diacritics. A club renamed here renames these too.
+ * beside its name in `club/club.json` (`shortForms`, §882). The public list's matcher
+ * (`registrations/domain/public-list-club.ts`, §753, §756) reads them as the club's own words: `city` is
+ * the county's plate code standing for the name's first word («BV Runners»), each of `nicknames` names
+ * the club on its own («BVR»). Folded here, whatever the file's case: lower case, no diacritics. A club
+ * renamed there renames these too.
  */
 export const CLUB_SHORT_FORMS: { readonly city: string | null; readonly nicknames: readonly string[] } = {
-  city: "bv",
-  nicknames: ["bvr"],
+  city: CLUB.shortForms.city === null ? null : folded(CLUB.shortForms.city),
+  nicknames: CLUB.shortForms.nicknames.map(folded),
 };
+
+/** The club's slug, `[a-z0-9-]` (§882): the export file's `format` (`EVENT_FILE_FORMAT`), the Instagram example. */
+export const CLUB_SLUG = CLUB.slug;
+
+/** The club's own short mark («BVR»), as the club writes it. */
+export const CLUB_SHORT_NAME = CLUB.shortName;
+
+/** The club's hashtags, each with its `#`, as the calendar picture prints them. */
+export const CLUB_HASHTAGS: readonly string[] = CLUB.hashtags;
+
+/** The confidential safety form's name, in both languages. */
+export const SAFETY_PROGRAMME: { readonly ro: string; readonly en: string } = CLUB.safetyProgramme;
 
 /**
  * The logo assets and their intrinsic proportions.
@@ -445,8 +598,9 @@ export const CLUB_SHORT_FORMS: { readonly city: string | null; readonly nickname
  * Dimensions are here so a layout can reserve the right space before the SVG loads; a logo
  * that changes size on load pushes the page around on a slow connection.
  *
- * Paths are root-relative and resolve under `public/`. They are not absolute URLs, so
- * `AGENTS.md` §8 does not apply — nothing here needs `APP_BASE_URL`. The `SportsOrganization`
+ * The files and their proportions are the club's, in `club/club.json` (`logo`, §882); the descriptions
+ * of what each drawing is for stay here. Paths are root-relative and resolve under `public/`. They
+ * are not absolute URLs, so `AGENTS.md` §8 does not apply — nothing here needs `APP_BASE_URL`. The `SportsOrganization`
  * JSON-LD does need an absolute logo URL (BR-REQ-052-02) and must build it from
  * `APP_BASE_URL` at the point of use, never by pasting a host in here.
  */
@@ -458,13 +612,7 @@ export const LOGO = {
    * is about four pixels tall. Use it where the logo is the subject: the brand sheet, an Open
    * Graph image, print.
    */
-  lockup: {
-    src: "/brand/logo.svg",
-    onDark: "/brand/logo-white.svg",
-    viewBox: "60 906 2880 1188",
-    width: 2880,
-    height: 1188,
-  },
+  lockup: { ...CLUB.logo.lockup },
   /**
    * The mountains alone, cropped from the same artwork.
    *
@@ -473,14 +621,23 @@ export const LOGO = {
    * (`SiteHeader.tsx` records both attempts). Kept for the places a wider, shorter shape fits
    * better than a 2.42:1 lockup.
    */
-  mark: {
-    src: "/brand/logo-mark.svg",
-    onDark: "/brand/logo-mark-white.svg",
-    viewBox: "60 906 2840 889",
-    width: 2840,
-    height: 889,
-  },
+  mark: { ...CLUB.logo.mark },
 } as const;
+
+/**
+ * The lockup's width over its height, to three decimals (§885): what a race number, a volunteer badge and the bib
+ * designer's swatch size the logo by — 2.424 for Brașov's 2880 × 1188, the number they wrote by hand before. A
+ * club's own lockup brings its own (`club/club.json`'s `logo`), and the bib's band caps how tall it may stand
+ * (`registrations/bib-geometry.ts`).
+ */
+export const LOGO_RATIO = Math.round((LOGO.lockup.width / LOGO.lockup.height) * 1000) / 1000;
+
+/**
+ * Its height over its width, exactly (§885): how far below the lockup the PDFs start their title — 1188 / 2880,
+ * the same number as the raster's 495 / 1200 they wrote by hand before (`src/theme/pdf/logo.png` is the lockup at
+ * 1200 wide), so not a point moves.
+ */
+export const LOGO_HEIGHT_SHARE = LOGO.lockup.height / LOGO.lockup.width;
 
 /**
  * The size of the header lockup, as fluid CSS rather than fixed pixels.
@@ -605,8 +762,8 @@ const SERIES_ON_WHITE: CalendarImagePalette["series"] = [
 ];
 
 /** The poster's weekday row and its hairlines: the club's blue, very pale — the blue themes' too. */
-const PALE_BLUE_ROW = "#e9eeff";
-const PALE_BLUE_LINE = "#c7d2ff";
+const PALE_BLUE_ROW = PALETTE.tints.hero;
+const PALE_BLUE_LINE = PALETTE.tints.rule;
 
 /** «Întunecat»'s day cell: a blue-grey a step above its page, and a weekly date's bare card on it. */
 const DARK_CELL = "#1b1e2b";

@@ -29,6 +29,8 @@ import TypeSection from "./TypeSection";
  */
 export default async function DesignSystem({ locale }: { locale: Locale }) {
   const t = await getTranslations("Admin");
+  // The plan is this club's own (club/messages): a fork without one draws no «Planul» link to an absent section.
+  const sectionIds = DESIGN_SECTION_IDS.filter((id) => id !== "plan" || t.has("design.plan.decisionsTitle"));
 
   return (
     <Stack spacing={4} data-testid="design-system">
@@ -45,7 +47,7 @@ export default async function DesignSystem({ locale }: { locale: Locale }) {
         {/* The contents: one anchor per section, each a 44-pixel target in a row that wraps. */}
         <Box component="nav" aria-label={t("design.contents")} sx={{ mt: 1.5 }}>
           <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, display: "flex", flexWrap: "wrap", columnGap: 2 }}>
-            {DESIGN_SECTION_IDS.map((id) => (
+            {sectionIds.map((id) => (
               <li key={id}>
                 <Link href={`#${id}`} underline="hover" sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontWeight: 500 }}>
                   {t(`design.sections.${id}`)}

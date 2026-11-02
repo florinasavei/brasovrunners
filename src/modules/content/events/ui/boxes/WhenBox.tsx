@@ -190,7 +190,7 @@ export default async function WhenBox({
           <Panel variant="section" glyph="place" level={3} id="box-place" title={t("editor.boxes.place.title")}>
             <PlaceFields event={event} mayEditSettings languages={languages} />
           </Panel>
-          <Panel glyph="timezone" collapsible level={3} id="box-timezone" title={t("editor.boxes.when.timezone")} aside={timezoneSummary(words, zone)}>
+          <Panel glyph="timezone" collapsible level={3} id="box-timezone" title={t("editor.boxes.when.timezone")} aside={timezoneSummary(words, zone, locale)}>
             <RecallField
               select
               name="event.timezone"

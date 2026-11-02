@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { contrastRatio, MIN_TEXT_CONTRAST } from "@/modules/appearance/domain/tint-contrast";
-import { BIB_COLOURS } from "@/modules/content/events/ui/bib-colours";
 import { bibFooterWidth } from "@/modules/registrations/bib-footer";
 import { A4_PAGE } from "@/modules/registrations/bib-geometry";
 import { bibTitleWidth } from "@/modules/registrations/bib-header";
@@ -43,7 +42,7 @@ import {
 } from "@/modules/volunteers/badges/badge-geometry";
 import { badgeDesignQuery, readBadgeDesignForm } from "@/modules/volunteers/badges/badge-query";
 import { fnv1a } from "@/shared/hash";
-import { COLOR } from "@/theme/brand";
+import { BIB_COLOURS, COLOR } from "@/theme/brand";
 
 /**
  * §764 — the volunteer badge's one geometry (BR-REQ-050-02): a small, long strip with no printed name;

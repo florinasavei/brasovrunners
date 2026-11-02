@@ -47,7 +47,7 @@
   "Events": {
     "undatedTitle": "Date or time to be announced",
     "title": "Events",
-    "intro": "Runs, trail outings and training sessions organised by the club — always free.",
+    "intro": "Runs and training sessions organised by the club.",
     "empty": "No events are published right now. Check back soon.",
     "noUpcoming": "No upcoming events are scheduled. The club's most recent event:",
     "featured": "Featured event",
@@ -117,13 +117,13 @@
       "googleHintWhy": "The button does nothing? Google hides a calendar rather than removing it, and keeps an old copy by its address.",
       "googleHintHow": "On the web: calendar.google.com → “+” beside “Other calendars” → “From URL” → paste the address, with ?v=2 at the end.",
       "phoneAppHint": "On Android the “Apple / Outlook” button does nothing, and the Google Calendar app cannot add a calendar by its address: use calendar.google.com in the browser, “From URL”.",
-      "androidSync": "On Android, nothing after “Calendar added”? Google Calendar → Menu → Settings → your account → “Show more” → 🏃 BVR → Sync.",
+      "androidSync": "On Android, nothing after “Calendar added”? Google Calendar → Menu → Settings → your account → “Show more” → 🏃 {short} → Sync.",
       "look": {
         "taglineLead": "Plan your next",
         "taglineWord": "run",
         "taglineEnd": ".",
         "mottoLead": "We run",
-        "mottoRest": "together in Brașov.",
+        "mottoRest": "together.",
         "subline": "See when we run, where we meet and what suits you.",
         "kinds": {
           "label": "Which events the calendar shows",
@@ -245,7 +245,6 @@
         "emptyMonth": "No runs this month",
         "emptyWeek": "No runs this week",
         "at": "at {time}",
-        "hashtags": "#NoOneLeftBehind #brasovrunners",
         "details": "Details",
         "detailsPlace": "Place",
         "detailsDistance": "Distance",
@@ -790,7 +789,7 @@
       }
     },
     "calendar": {
-      "feedName": "🏃 BVR",
+      "feedName": "🏃 {short}",
       "page": "Event page",
       "rules": "Rules",
       "programme": "Programme",
@@ -829,7 +828,7 @@
           "birthDate": "Date of birth",
           "captcha": "The anti-bot check"
         },
-        "idDocumentHelp": "Your identity card (e.g. “BV 123456”) or your passport. It is masked in the copies sent by email; the platform deletes it {days} after the run and keeps no copy of the document.",
+        "idDocumentHelp": "Your identity card (e.g. “{idExample}”) or your passport. It is masked in the copies sent by email; the platform deletes it {days} after the run and keeps no copy of the document.",
         "emailHelp": "We send the signed declaration here, as a PDF.",
         "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language (RO / EN) before you sign.",
         "adultsOnly": "Sign it only for yourself, if you are at least {age} old on the day of the run; never on behalf of someone else, nor of a minor.",
@@ -861,7 +860,7 @@
       "gear": "Shoes and clothing suited to the ground and the weather; on a night run, a headlamp.",
       "supplies": "Bring your own water and food.",
       "health": "Run only if, as far as you know, your health allows it.",
-      "wildlife": "Animals and weather: follow the organiser's general safety instructions.",
+      "wildlife": "Weather: follow the organiser's general safety instructions.",
       "leaving": "If you leave the group, tell the organiser."
     },
     "timeLimit": "Time limit",
@@ -909,7 +908,7 @@
         "DNS": "Did not start",
         "DSQ": "Disqualified"
       },
-      "note": "A name is shown only for those who ticked “I want to appear on the participants & results list” on a confirmed registration made after the privacy notice began to describe the results. The others appear as “Participant #number”, with place, time and category.",
+      "note": "A name is shown only for those who ticked “I want to appear on the participants & results list” on a confirmed registration made after the privacy notice began to describe the results, or who, having registered before, have since asked to appear by name. The others appear as “Participant #number”, with place, time and category.",
       "filter": {
         "label": "Filter the results",
         "category": "Category",
@@ -972,7 +971,7 @@
         "closed": "This event no longer takes “I'm coming!” answers, so the name can't be shown now.",
         "wait": "Too many changes in an hour. Try again later; “I'm not coming any more” works any time."
       },
-      "memberMark": "BVR",
+      "memberMark": "{short}",
       "memberLabel": "{club} member",
       "memberHelp": "The tick is your own statement; the club does not check it. “{mark}” shows beside the name you show; with no name you are only counted among the members.",
       "memberFact": "Member",
@@ -1502,6 +1501,7 @@
           "declaration_hold_set": "Declaration kept for a complaint or a dispute",
           "declaration_hold_cleared": "Keep removed from the declaration",
           "promo_consent_changed": "Consent to offers and benefits changed",
+          "results_name_consent_changed": "Choice to appear by name in the results changed by the participant",
           "family_resent": "Email resent to the family",
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
@@ -2296,6 +2296,7 @@
       "LEGAL_NOTHING_DEPENDS": "Nothing was deleted: meanwhile nothing depends on this version any more. Reload the page and delete it permanently.",
       "LEGAL_RETIRE_IN_FORCE": "Nothing was deleted: this is the version in force. Approve the next version first, then you can delete this one.",
       "LEGAL_ALREADY_DELETED": "This version has already been deleted from the list. Its text stays in the archive.",
+      "LEGAL_PLACEHOLDERS_LEFT": "Nothing was approved: the text still has blanks to fill in, in capitals between angle brackets. Write the club's words in their place, save the draft and approve again.",
       "SEND_NOW_HOUR_SPENT": "Nothing was sent: Mailgun's hourly limit («Hourly limit» under «Emails») has no room right now. Choose «Queue it»; the email leaves on its own once the hour has room again.",
       "RETRY_FAILED_THROTTLED": "Nothing was put back: the failed emails were already retried 3 times in the last hour. Wait a while, and look at why they failed before pressing again.",
       "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nothing was sent: Mailgun is stopped and «Gmail takes over when Mailgun stops» is set to No. Set it to Yes under «Emails», or choose «Queue it»: it leaves when Mailgun resumes.",
@@ -2394,7 +2395,7 @@
       "mapUrl": "Meeting point link",
       "mapUrlHelp": "Optional. The meeting point on Google Maps or any other map. It must start with https://.",
       "coordinates": "Coordinates (lat, lng)",
-      "coordinatesHelp": "Optional: latitude, longitude, e.g. 45.6427, 25.5887 — right-click the point in Google Maps. Only for the weather, when the map link does not carry them.",
+      "coordinatesHelp": "Optional: latitude, longitude, e.g. 45.0000, 25.0000 — right-click the point in Google Maps. Only for the weather, when the map link does not carry them.",
       "weatherPlace": {
         "map": "The weather is read for the point in the map link ({coordinates}).",
         "typed": "The weather is read for these coordinates ({coordinates}).",
@@ -2417,7 +2418,7 @@
         "noteHelp": "Short, at most 200 characters, e.g. “The ridge is icy, bring microspikes.”"
       },
       "locationHelp": "The place, as you would tell a friend, in Romanian and in English. If the name is the same, press “Same name in English”.",
-      "locationShortHelp": "A word or two, for the month's poster: “Park”, “Poiana”. In both languages or neither.",
+      "locationShortHelp": "A word or two, for the month's poster: “Park”, “Stadium”. In both languages or neither.",
       "locationCopyToEnglish": "Same name in English",
       "locationEnglishLeftBehind": "The English box still says “{place}”. If the place has moved, change it here too.",
       "placeToBeAnnounced": "Location to be announced",
@@ -2594,7 +2595,7 @@
       "difficultyStepHelp": "The level runs from {lowest} ({lowestBand}) to {highest} ({highestBand}): every band has three levels — {ranges}.",
       "difficultyScale": {
         "EASY": "easy {from}–{to}: short, flat, for anyone",
-        "MEDIUM1": "medium {level}: the run up Tâmpa",
+        "MEDIUM1": "medium {level}: the short climbs",
         "MEDIUM2": "medium {level}: the longer runs",
         "MEDIUM3": "medium {level}: long and technical",
         "FAIRLY_HARD": "fairly hard {from}–{to}: from a half marathon up",
@@ -3259,7 +3260,7 @@
             "duration": "{duration}"
           },
           "timezone": {
-            "home": "{zone} — Romanian time"
+            "home": "{zone} — {zoneWords}"
           },
           "place": {
             "tba": "To be announced",
@@ -3458,7 +3459,7 @@
         "EVENT_DECLARATION": "Mountain event",
         "EVENT_DECLARATION_ROAD": "Road or park event"
       },
-      "membersOnly": "BVR members only",
+      "membersOnly": "{short} members only",
       "membersOnlyHelp": "Only signed-in members see it; it is not on the public site. Existing registrations stay.",
       "membersOnlyShort": "Members only",
       "waitlistAutoOffer": "Places from the waiting list are allocated automatically",
@@ -3872,7 +3873,7 @@
         "eventInvitations": "Privacy notice only: the Invitations section's name, in quotation marks. With it in the notice in force, /admin/tasks counts the invitations as described",
         "feedbackForms": "Privacy notice only: the “Tell us something” forms’ name, in quotation marks. With it in the notice in force, the contact page shows the forms switched on",
         "feedbackFormsNamed": "Privacy notice only: the “With my name” choice of the “Tell us something” forms, in quotation marks. Without it in the notice in force, the forms are anonymous only",
-        "feedbackSafetyGmail": "Privacy notice only: “the club's Gmail”, in the sentence about Girl Zone messages. Without it in the notice in force, they leave by Mailgun only",
+        "feedbackSafetyGmail": "Privacy notice only: “the club's Gmail”, in the sentence about {safetyName} messages. Without it in the notice in force, they leave by Mailgun only",
         "relayQueue": "Only in the privacy notice: how long the site keeps a “Write to us” or “Tell us something” message before it leaves. Without it, /admin/tasks tells you; messages still go.",
         "membersShop": "Privacy notice only: the section name “The club's shop”, in quotes. With it in the notice in force, the members' area shows the shop and takes orders",
         "volunteers": "Privacy notice only: the form's name “I want to volunteer”, in quotes. With it in the notice in force, an event that takes volunteers shows its form and keeps the offers",
@@ -3887,10 +3888,11 @@
         "volunteerMinors": "Only in the privacy notice: the parent's boxes of the volunteers' form, in quotation marks; without it, the club takes no volunteers under 18",
         "volunteersList": "Only in the privacy notice: the tick “I want to appear on the public list of volunteers”, in quotes. With it in the notice in force, a public list can show names",
         "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them",
+        "resultsNameAsk": "Only in the privacy notice: the tick “I want to appear by name in the results”, in quotes. With it and “Results” in the notice in force, earlier registrants see it on their registration's page",
         "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming",
         "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question before the event",
         "rsvpAskAnswerers": "Only in the privacy notice: the name of the button “Don't ask me again for this series”, in quotes. With it in the notice in force, those who answered “I'm coming!” before are asked too",
-        "rsvpMember": "Only in the privacy notice: the mark “BVR”, in quotes. With it in force, “I'm coming!” has the tick “I am a member of the … group” and “Who's coming” marks the shown names of members"
+        "rsvpMember": "Only in the privacy notice: the mark “{short}”, in quotes. With it in force, “I'm coming!” has the tick “I am a member of the … group” and “Who's coming” marks the shown names of members"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4190,7 +4192,7 @@
           "LAUNCH": "{name} — by usage: ${rate}/CU-hour, ${storageRate}/GB-month, no subscription"
         },
         "note": "Note (why, until when)",
-        "december": "At the December 2026 review you can return to Free here, with no deployment.",
+        "december": "You can return to Free here, with no deployment.",
         "save": "Save the Neon plan",
         "saving": "Saving…",
         "saved": "The Neon plan is saved; the figures on /devs and the Neon row below follow it from now on.",
@@ -4321,7 +4323,7 @@
       },
       "emailStalled": {
         "title": "Emails are not going out.",
-        "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves on {resumesAt} (Romania time); nothing is lost.",
+        "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves on {resumesAt} ({zoneWords}); nothing is lost.",
         "failed": "Messages not sent in the last 7 days: {count} — Mailgun's reason: “{reason}”. Once the cause is fixed: «Settings» → «Emails» → «Retry the failed emails».",
         "overdue": "Messages whose turn passed more than 90 minutes ago: {count} — the monitors are not running. See the “Monitors” row below.",
         "notify": "To hear about this without opening the page: a daily cron-job.org monitor on /api/health?deep=1 with failure notifications on — the step in the “Monitors” row."
@@ -4366,7 +4368,7 @@
           "how": [
             "In Mailgun: Sending → Domains → “Add new domain”. Name: {mailDomain}. Region: EU. Not the main domain — that stays free for the club's own mailboxes.",
             "Mailgun shows the DNS records to create: two TXT (SPF and DKIM) and one CNAME (tracking).",
-            "Add them at ROMARG → cPanel → Zone Editor exactly as Mailgun shows them, with the short name (no repeated domain).",
+            "Add them at the domain's registrar (e.g. cPanel → Zone Editor) exactly as Mailgun shows them, with the short name (no repeated domain).",
             "Mind the DKIM one: the value is over 255 characters and cPanel cuts it — enter it as two quoted strings on one line (“k=rsa; p=…first part” “…the rest”), or Mailgun sees it truncated.",
             "Then “Verify” in Mailgun — up to an hour.",
             "Still in Mailgun: Sending → API keys → a sending key (MAILGUN_API_KEY).",
@@ -4386,7 +4388,7 @@
           "todo": "Monitors for the two scheduled jobs, with this environment's JOB_SECRET. This environment is called every {pingerDay} by day and every {pingerNight} at night. Missing or late",
           "done": "Both jobs are running on time. This environment is called every {pingerDay} by day and every {pingerNight} at night.",
           "how": [
-            "On cron-job.org (free account): Settings → Time zone = Europe/Bucharest. Then “Create cronjob”, four times for production: two per address (one for the day, one for the night).",
+            "On cron-job.org (free account): Settings → Time zone = {timeZone}. Then “Create cronjob”, four times for production: two per address (one for the day, one for the night).",
             "The addresses: {outboxUrl} and {maintenanceUrl}.",
             "On all of them: Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
             "Day: Execution schedule → Custom → every day, hours 7–22, minutes 0, 15, 30, 45 (crontab */15 7-22 * * *).",
@@ -4429,8 +4431,8 @@
           "unreachable": "The key could not be checked: Zitadel did not answer. Not necessarily a problem with the key — reload the page in a few minutes. The answer",
           "done": "The key works: checked just now with a real search, it found your account. “Add” on Echipa creates the sign-in account and Zitadel sends the password link.",
           "how": [
-            "Zitadel console → Users → Service Accounts → New: user name “brasovrunners-invites”, name “{club} — invitații”, access token type Bearer. Create.",
-            "Organization → Managers → + New: the service account, role Org User Manager. The dialog is called “Add an Administrator”; if it asks for a Loginname, that is “brasovrunners-invites”.",
+            "Zitadel console → Users → Service Accounts → New: user name “{slug}-invites”, name “{club} — invitații”, access token type Bearer. Create.",
+            "Organization → Managers → + New: the service account, role Org User Manager. The dialog is called “Add an Administrator”; if it asks for a Loginname, that is “{slug}-invites”.",
             "Not “Role Assignments”.",
             "On the service account → Personal Access Tokens → New.",
             "The console offers no expiry here and the token does not expire — it is a secret that has to be revoked by hand, on the same screen, when it is no longer wanted.",
@@ -4440,7 +4442,7 @@
             "Then, on Echipa, “Add” creates the account and Zitadel sends the password link; whoever has not signed in yet has “Resend the invitation” on their row."
           ],
           "howBroken": [
-            "Zitadel console → Organization → Managers → + New: the key's service account (“brasovrunners-invites”), role Org User Manager. The dialog is called “Add an Administrator”.",
+            "Zitadel console → Organization → Managers → + New: the key's service account (“{slug}-invites”), role Org User Manager. The dialog is called “Add an Administrator”.",
             "Not “Role Assignments”: that page grants roles inside a project and does not help create users.",
             "If Zitadel answered 401 or the token was revoked: on the service account → Personal Access Tokens → New, then the new token as ZITADEL_MANAGEMENT_PAT on both Vercel projects and redeploy.",
             "Check: reload this page; the row turns green when the key finds your account.",
@@ -4463,11 +4465,11 @@
           "how": [
             "A Cloudflare account (free) on the club's address. The domain does not move there.",
             "Left menu → R2 Object Storage → enable R2 (this is where the card is asked for; nothing is charged under 10 GB).",
-            "Create bucket → name “brasovrunners-media”, location “European Union”.",
+            "Create bucket → name “{bucket}”, location “European Union”.",
             "Then, in the bucket's settings, enable “Public access” through the r2.dev subdomain (or a custom domain) and copy the public address — that is R2_PUBLIC_BASE_URL.",
-            "R2 → “Manage R2 API Tokens” → Create API token → name “brasovrunners-site”, permission “Object Read & Write”, this bucket only.",
+            "R2 → “Manage R2 API Tokens” → Create API token → name “{slug}-site”, permission “Object Read & Write”, this bucket only.",
             "Copy the Access Key ID, the Secret Access Key and the S3 endpoint (shown once).",
-            "In Vercel → the production project (and QA) → Settings → Environment Variables: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET=brasovrunners-media, R2_PUBLIC_BASE_URL. Redeploy.",
+            "In Vercel → the production project (and QA) → Settings → Environment Variables: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET={bucket}, R2_PUBLIC_BASE_URL. Redeploy.",
             "This row turns green and the album page gets its upload button."
           ]
         },
@@ -4498,19 +4500,39 @@
             "Search subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y, then delete everything it finds."
           ]
         },
+        "raceGunTime": {
+          "title": "Set the race start (the gun time)",
+          "todo": "{event} starts within three weeks and has no race start set: the finish clock counts from the event's start, which is the gathering time, not the gun.",
+          "done": "{event} has its race start set: the finish clock counts from it.",
+          "how": [
+            "/admin/events → the race → “Edit” → “When and where” → “Date and time”.",
+            "In “Race start” type the date and the hour at which the gun goes. If it is the same as the event's start, type the same hour.",
+            "Leave “Race start not set yet” unticked, then save. The row turns green."
+          ]
+        },
+        "raceAgeBands": {
+          "title": "Choose the age categories for the awards",
+          "todo": "{event} starts within three weeks and uses the standard age categories. If they suit the race, do nothing: the row goes by itself a few hours after the start. Otherwise write yours before results.",
+          "done": "{event} has its own age categories.",
+          "how": [
+            "/admin/events → the race → “Results” → “Age categories”.",
+            "In “Ages the groups start at” write the starting ages, separated by commas — “18, 35, 45, 55” gives under 18, 18-34, 35-44, 45-54 and 55+ — and check the line under the box.",
+            "Press “Save the categories” before the first result. If the standard ones suit the race, do nothing: the row goes by itself a few hours after the start."
+          ]
+        },
         "botCheck": {
           "title": "The anti-bot check on registration (Cloudflare Turnstile)",
-          "todo": "The widget “brasovrunners-site” exists and both keys are on both Vercel projects; this row turns green on the next deployment. Turnstile stops the bots the form's trap field does not catch.",
+          "todo": "The widget “{slug}-site” exists and both keys are on both Vercel projects; this row turns green on the next deployment. Turnstile stops the bots the form's trap field does not catch.",
           "done": "The registration form has the anti-bot check on.",
           "misconfigured": "Both keys are set, but Cloudflare says the secret key is wrong. Nobody is refused because of it, but the bot defence is weaker until you fix the key below.",
           "how": [
             "✓ Cloudflare (the same account as for the photos) → left menu → Turnstile → Add widget.",
-            "✓ Name “brasovrunners-site”; hostnames: the club's domain and the qa subdomain; Widget mode “Managed”. Save: you get a Site key and a Secret key.",
+            "✓ Name “{slug}-site”; hostnames: the club's domain and the qa subdomain; Widget mode “Managed”. Save: you get a Site key and a Secret key.",
             "✓ In Vercel → the production project (and QA, same keys) → Settings → Environment Variables: TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY. Redeploy.",
             "✓ Open the registration form: the “Verify you are human” box appears under the fields; a test registration goes through. This row turns green."
           ],
           "howMisconfigured": [
-            "Cloudflare → Turnstile → the “brasovrunners-site” widget → copy the Secret key again; if it may have leaked, press Rotate Secret Key.",
+            "Cloudflare → Turnstile → the “{slug}-site” widget → copy the Secret key again; if it may have leaked, press Rotate Secret Key.",
             "Vercel → the production project → Settings → Environment Variables: replace TURNSTILE_SECRET_KEY, then Redeploy. The same on QA, if it has its own key.",
             "Reload this page after the deployment: the row turns green once Cloudflare accepts the secret again. A test registration is not required — this row is checked without one."
           ]
@@ -4527,10 +4549,10 @@
         },
         "vercelUsage": {
           "title": "Vercel usage in figures, on /devs",
-          "todo": "With a read token and the project id, /devs shows the month's deployments, today's out of 100 a day and the build minutes out of 6,000 a month. Traffic is only in Vercel → Usage.",
-          "done": "/devs shows the month's deployments and build minutes, with a warning threshold.",
+          "todo": "With a read token and the project id, /devs shows the month's deployments, today's out of 100 a day, and the Active CPU out of Hobby's 4 hours a month. Traffic is only in Vercel → Usage.",
+          "done": "/devs shows the month's deployments and the Active CPU out of Hobby's 4 hours, with a warning threshold; «Costs» reads the same figure.",
           "how": [
-            "Vercel → avatar → Account Settings → Tokens → Create: name “brasovrunners-devs”, scope your account, expiry 1 year. Copy the token (shown once).",
+            "Vercel → avatar → Account Settings → Tokens → Create: name “{slug}-devs”, scope your account, expiry 1 year. Copy the token (shown once).",
             "The project id: Vercel → the production project → Settings → General → Project ID (starts with prj_).",
             "In Vercel → the production project → Settings → Environment Variables: VERCEL_API_TOKEN and VERCEL_PROJECT_ID (QA the same, with the QA project id). Redeploy.",
             "The row turns green; /devs shows the figures. Bandwidth stays in the dashboard → Usage — the link is on /devs too."
@@ -4667,12 +4689,12 @@
           ]
         },
         "feedbackSafetyGmailNotice": {
-          "title": "Privacy notice: Girl Zone by Gmail",
-          "todo": "You chose Gmail for Girl Zone, but the notice in force promises its messages do not pass through the club's mailbox: until you approve a notice that says otherwise, the messages leave by Mailgun.",
-          "done": "The notice in force says Girl Zone messages may leave by the club's Gmail and stay in its Sent folder, which whoever reads the mailbox sees.",
+          "title": "Privacy notice: {safetyName} by Gmail",
+          "todo": "You chose Gmail for {safetyName}, but the notice in force promises its messages do not pass through the club's mailbox: until you approve a notice that says otherwise, the messages leave by Mailgun.",
+          "done": "The notice in force says {safetyName} messages may leave by the club's Gmail and stay in its Sent folder, which whoever reads the mailbox sees.",
           "how": [
-            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The forms' paragraph in section 5 now also says when a Girl Zone message leaves by Gmail.",
-            "Open the draft, read it, “Save draft”, then “Approve and publish”. Once in force in both languages, Girl Zone messages leave by Gmail, with no other setting."
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The forms' paragraph in section 5 now also says when a {safetyName} message leaves by Gmail.",
+            "Open the draft, read it, “Save draft”, then “Approve and publish”. Once in force in both languages, {safetyName} messages leave by Gmail, with no other setting."
           ]
         },
         "relayQueueNotice": {
@@ -5015,9 +5037,9 @@
         "rsvpMemberNotice": {
           "title": "Privacy notice: the member mark on “Who's coming”",
           "todo": "An event takes “I'm coming!” answers, but the notice in force does not describe the member mark yet: no “I am a member of the … group” tick, no mark, no member count.",
-          "done": "The notice in force describes the member mark: whoever ticks “I am a member of the … group” (or answers from a member account) shows “BVR” beside a shown name, and members are counted.",
+          "done": "The notice in force describes the member mark: whoever ticks “I am a member of the … group” (or answers from a member account) shows “{short}” beside a shown name, and members are counted.",
           "how": [
-            "Before approving, a lawyer reads from the template, in section 4, the sentence about the “BVR” mark beside a name and about the number of members.",
+            "Before approving, a lawyer reads from the template, in section 4, the sentence about the “{short}” mark beside a name and about the number of members.",
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The mark shows only for answers given under the new notice or a newer one; earlier ones stay unmarked.",
             "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages."
           ]
@@ -5040,7 +5062,7 @@
         "paysForPlans": "Paid for: {services}; every other service is on a free plan.",
         "freeButAtALimit": "Yes, but today's free emails are used up, and the rest go out after midnight.",
         "notFree": "Careful: a published event charges a fee, and the free plans do not care that we are a non-profit.",
-        "paysForUsageMore": "Launch has no subscription and was chosen by the club on 22 September 2026.",
+        "paysForUsageMore": "Launch has no subscription.",
         "freeButAtALimitMore": "Nothing is lost. If you open entries now, the confirmations arrive tomorrow morning.",
         "notFreeMore": "Not necessarily a problem: a donation is allowed, a compulsory fee is not, even if it only covers costs.",
         "paidName": {
@@ -5088,9 +5110,9 @@
       "nextSpend": {
         "mailgun": "The next thing to cost money: one month of Mailgun Basic, {cost}.",
         "vercel": "The next thing to cost money: Vercel Pro, {cost}.",
-        "none": "No new spend is coming: what is taken for now can be dropped after the race.",
+        "none": "No new spend is coming. Vercel goes back to Hobby only after two months in a row under 3 Active CPU-hours, never on a date.",
         "mailgunMore": "Bought for a single race, when a day is expected to bring more entries than the free emails cover.",
-        "vercelMore": "It arrives only if the site starts asking for money to take part, or if the site's code moves to the club's own account."
+        "vercelMore": "It arrives if the site asks for money to take part, if its code moves to the club's account, or if Active CPU nears Hobby's 4 hours a month. It goes back to Hobby after two months under 3 hours."
       },
       "currencyNote": "Amounts are in the currency each company invoices in; VAT in Romania is {vat}%.",
       "freshness": {
@@ -5127,7 +5149,7 @@
           "whenCrossed": "The next step is renewing the .com for several years.",
           "closeYes": "This deployment answers on the club's domain.",
           "closeNo": "This deployment answers on the provider's address — for QA or a laptop, that is as it should be.",
-          "more": "Bought on 16 September 2026 from ROMARG, for a year; ROMARG invoices in lei, with VAT. The .ro is no longer bought."
+          "more": "Paid to the domain's registrar, once a year."
         },
         "mailgun": {
           "name": "Mailgun (sending email)",
@@ -5174,9 +5196,9 @@
             "whenCrossed": "The bill stays small only while the database sleeps after five minutes without a request.",
             "close": "This month, at the pace so far ({cu} CU-hours, about {perDay} a day): about ${usd} a month, an estimate.",
             "closeUnknown": "The month's pace appears once NEON_API_KEY is set; until then the figure is in the Neon console → Billing.",
-            "bumpBack": "The way back is the December 2026 review: one choice under “The Neon plan”, no deployment.",
+            "bumpBack": "The way back is one choice under “The Neon plan”, no deployment.",
             "closeMore": "At ${rate}/CU-hour and ${storageRate}/GB-month; the invoice is Neon's.",
-            "more": "The monitors wake the database every 15 minutes by day and hourly at night; more often would keep it awake and paid. In December the club may go back to Free."
+            "more": "The monitors wake the database every 15 minutes by day and hourly at night; more often would keep it awake and paid."
           },
           "monthly": "Compute hours (CU) are on /devs. Monthly cost if we left Free, at this month's pace ({cu} CU-hours so far): about ${usd}/month on Launch (${rate}/CU-hour, ${storageRate}/GB, no subscription).",
           "monthlyUnknown": "Compute hours (CU) are on /devs. Monthly cost on Launch: ${rate}/CU-hour + ${storageRate}/GB, no subscription; the exact pace appears once NEON_API_KEY is set.",
@@ -5184,7 +5206,7 @@
         },
         "zitadel": {
           "name": "Zitadel (sign-in for the team and members)",
-          "freeGives": "Free: up to 100 daily active users, any number of stored users — the club's members fit —, unlimited organizations, 3 identity providers. Checked on 27 Sept 2026.",
+          "freeGives": "Free: up to 100 daily active users, any number of stored users — the club's members fit —, unlimited organizations, 3 identity providers.",
           "ceiling": "The one limit that matters: a single administrator, without whom nobody can invite anybody.",
           "whenCrossed": "It is not crossed: who the administrator is and where the credentials are is written down.",
           "closeYes": "—",
@@ -5375,6 +5397,7 @@
           "cuHours": "{used} CU-hours so far, ~{projected} by the end.",
           "messages": "{used} emails sent so far, ~{projected} by the end.",
           "buildMinutes": "{used} build minutes so far, ~{projected} by the end.",
+          "cpuHours": "{used} Active CPU hours so far, ~{projected} by the end.",
           "characters": "{used} characters translated so far, ~{projected} by the end.",
           "gigabytes": "{used} GB of pictures stored, at least.",
           "gigabytesMore": "One variant of each picture is counted, so the real figure is higher."
@@ -5389,7 +5412,7 @@
         "over": {
           "neon": "At this pace the limit is reached before the period ends, and Neon stops the database until the next period.",
           "mailgun": "At this pace the monthly limit is reached before the month ends, and the remaining messages wait for next month.",
-          "vercel": "At this pace the build minutes run out before the month ends, and new deployments stop until next month.",
+          "vercel": "At this pace the Active CPU passes Hobby's 4 hours before the month ends, and Vercel can pause the site for about 30 days.",
           "r2": "The pictures are past the free allowance: the excess is billed monthly."
         },
         "domain": {
@@ -5399,7 +5422,8 @@
         },
         "unmeasured": {
           "neon": "Not measured without NEON_API_KEY and NEON_PROJECT_ID on this environment.",
-          "vercel": "Not measured without VERCEL_API_TOKEN and VERCEL_PROJECT_ID on this environment."
+          "vercel": "Not measured without VERCEL_API_TOKEN on this environment: Hobby is read by its Active CPU.",
+          "vercelPro": "Not measured without VERCEL_API_TOKEN and VERCEL_PROJECT_ID on this environment."
         },
         "unread": "The provider did not answer just now ({reason}).",
         "deeplOff": "The DeepL key is not set on this server, so the editors' translation button is grey.",
@@ -5412,6 +5436,7 @@
         },
         "typedPlan": "The plan is typed by hand with no recorded price, so the month's amount is unknown.",
         "unreadHere": "Could not be read just now from the site's database.",
+        "unitUnknown": "CPU time cannot be compared with the Hobby allowance: Vercel gave it in «{unit}», not in hours.",
         "lastMonth": {
           "neonKey": "— Neon keeps the history for an organization's key only; the project key is refused ({reason}).",
           "typedPlan": "— the typed plan has no recorded price.",
@@ -6026,11 +6051,11 @@
       "deleteBody": "“{text}” leaves the list for the whole team and cannot be undone. The log keeps who deleted it and what it said. If it is only done, tick it instead.",
       "defaults": {
         "teamPage": {
-          "text": "Write the team page: Pages → The team → the introduction → “Save”; for each person “Add a person” → “Add the card” → “Put on the site” → “Publish the page”.",
+          "text": "Write the team page: Pages → The team → the introduction and a card for each person → “Publish the page”.",
           "link": "Open the team page"
         },
         "faqPage": {
-          "text": "Write the FAQ page: Pages → FAQ → the questions and answers, in Romanian and English, with “On the site” ticked on each → “Save the page” → “Publish the page”.",
+          "text": "Write the FAQ page: Pages → FAQ → the questions and answers, in both languages → “Publish the page”.",
           "link": "Open the FAQ page"
         }
       }
@@ -6433,11 +6458,11 @@
           },
           "blue": {
             "name": "Blue",
-            "help": "The club's blue, the one Theme v1 wears."
+            "help": "The club's colour, the one Theme v1 wears."
           },
           "orange": {
             "name": "Orange",
-            "help": "The club's orange. Darker by day, so text on it can be read."
+            "help": "The club's second colour. Darker by day, so text on it can be read."
           }
         },
         "custom": {
@@ -6472,7 +6497,7 @@
       "saved": "The site's text size was saved.",
       "readOnly": "The Administrator chooses the size; this is the choice in force.",
       "scope": "Applies in light and dark mode. The backoffice always stays at its own size.",
-      "sample": "Group run in Noua forest, Saturday at 9:00",
+      "sample": "Group run in the Central Park, Saturday at 9:00",
       "sizes": {
         "small": {
           "name": "Small",
@@ -6511,15 +6536,15 @@
         },
         "faintBlue": {
           "name": "Barely-there blue",
-          "help": "The club's blue, about 4 % over white."
+          "help": "The club's colour, about 4 % over white."
         },
         "lightBlue": {
           "name": "Light blue",
-          "help": "The club's blue, about 8 % over white."
+          "help": "The club's colour, about 8 % over white."
         },
         "blueGrey": {
           "name": "Blue-grey",
-          "help": "A cool grey leaning to the club's blue."
+          "help": "A cool grey leaning to the club's colour."
         },
         "custom": {
           "name": "Custom",
@@ -7554,7 +7579,7 @@
           "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move.",
           "outageGraceMaxHours": "While the name is not found, running deadlines move on every run; after a silence of the scheduled calls, afterwards. At most this many hours; 0 = no moving, the outages are still recorded.",
           "rsvpAskDaysBefore": "0 = never sent. You choose who is asked in “Emails”; each person gets one email, with “I'm coming” and “I'm not coming”. An event can opt out, in the editor, under “I'm coming!”.",
-          "rsvpAskHour": "The club's clock (Brașov): it leaves from this hour on the chosen day, on the job's first run after it. Midnight is 0."
+          "rsvpAskHour": "The club's clock: it leaves from this hour on the chosen day, on the job's first run after it. Midnight is 0."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -7743,7 +7768,7 @@
           "howItWent": "How it was",
           "suggestion": "A suggestion",
           "complaint": "A complaint",
-          "safety": "Girl Zone (confidential)"
+          "safety": "{safetyName} (confidential)"
         },
         "help": {
           "howItWent": "The event, the date, a rating from 1 to 5, what happened and why someone stopped coming. Also from the thank-you email.",
@@ -7766,16 +7791,16 @@
           "gmailMissing": "Gmail is not ready here: the club's account and its app password are missing.",
           "mailgunMissing": "Mailgun does not send here: emails are not switched on in this environment.",
           "steps": "See the steps",
-          "gmailNotice": "The privacy notice in force promises that Girl Zone messages do not pass through the club's mailbox: first approve a new notice, from the template, that says they may leave by Gmail.",
+          "gmailNotice": "The privacy notice in force promises that {safetyName} messages do not pass through the club's mailbox: first approve a new notice, from the template, that says they may leave by Gmail.",
           "noticeSteps": "Legal texts",
-          "safetyNote": "Through Gmail, a Girl Zone message stays in the club's mailbox and whoever reads it sees it; through Mailgun it reaches only the person above.",
+          "safetyNote": "Through Gmail, a {safetyName} message stays in the club's mailbox and whoever reads it sees it; through Mailgun it reaches only the person above.",
           "stateGmail": "Gmail",
           "stateMailgun": "Mailgun",
           "why": "Mailgun sends from the club's own domain, with the person's address as Reply-To and no copy in the club's “Sent” folder; Gmail stays as the backup road where it is allowed.",
           "gmailCopy": "Through Gmail, a copy stays in “Sent”.",
           "fallback": "If Mailgun is down, send through the club's Gmail",
-          "fallbackHelp": "Only for Girl Zone messages. Unticked, a message Mailgun cannot send waits until it works. Ticked, it leaves from the club's mailbox, and whoever reads that mailbox sees it in the “Sent” folder.",
-          "fallbackNotice": "The tick cannot be changed until the privacy notice in force says Girl Zone messages may leave through Gmail."
+          "fallbackHelp": "Only for {safetyName} messages. Unticked, a message Mailgun cannot send waits until it works. Ticked, it leaves from the club's mailbox, and whoever reads that mailbox sees it in the “Sent” folder.",
+          "fallbackNotice": "The tick cannot be changed until the privacy notice in force says {safetyName} messages may leave through Gmail."
         },
         "safetyName": "First name shown",
         "safetyNameHelp": "The form writes it in the sentence about who reads the message. At most 40 characters.",
@@ -7915,7 +7940,7 @@
         "sideBySideNote": "The same code twice; only the box on the right wears Theme v2.",
         "today": "Theme v1",
         "new": "Theme v2",
-        "heading": "We run together through Brașov",
+        "heading": "We run together through the city",
         "body": "A paragraph of the site, at the text size, with",
         "link": "a link",
         "primary": "See the runs",
@@ -7972,7 +7997,7 @@
       },
       "type": {
         "intro": "The theme's variants as the theme file defines them, and the faces the page's layout loads.",
-        "sample": "We run together through Brașov: on asphalt, on the mountain and through Șchei.",
+        "sample": "We run together through the city: on asphalt, on the mountain and through the park.",
         "variants": "The theme's variants",
         "family": "family",
         "weight": "weight",
@@ -8121,108 +8146,6 @@
           "primitives": "A button or a pill is the house's own (GlyphButton, ButtonLink, GlyphChip, StatusChip), not a bare MUI Button, IconButton or Chip written again.",
           "serverFirst": "Server Components first; a client island earns its place.",
           "iconFamily": "One filled Material family; a glyph on every button and fold."
-        }
-      },
-      "plan": {
-        "intro1": "The plan's full text, in English, is kept by the dispatcher in the repository:",
-        "intro2": "The side-by-side of Theme v1 and Theme v2 is now at the top of the page, under «Theme v2».",
-        "decisionsTitle": "The club's decisions",
-        "decisionsNote": "Twelve choices; each has the default the dispatcher builds if nobody objects.",
-        "phasesTitle": "The phases",
-        "phasesNote": "A phase starts when the gate under the previous one is passed; phases 1 and 2 can run side by side.",
-        "number": "No.",
-        "decision": "Decision",
-        "default": "Default",
-        "phase": "Phase",
-        "gate": "Gate",
-        "status": "Status",
-        "statuses": {
-          "default": "default",
-          "decided": "decided",
-          "open": "open",
-          "planned": "planned",
-          "building": "building",
-          "released": "released"
-        },
-        "decisions": {
-          "1": {
-            "title": "The accent colour",
-            "default": "A hot pink beside the logo blue, or the blue, the orange or a colour the club chooses under «Theme v2»; emails, PDFs, race numbers and share cards stay blue."
-          },
-          "2": {
-            "title": "The heading face",
-            "default": "Inter 800 for headings, self-hosted with ș ț ă â î; the body stays Roboto."
-          },
-          "3": {
-            "title": "A real home page",
-            "default": "A real home page at `/ro` and `/en`, reached from the logo — never a menu entry — switchable on and off in «Aspect» → «Pagina principală»."
-          },
-          "4": {
-            "title": "The four menu words",
-            "default": "«Alergări», «Calendar», «Comunitatea» — a club page linking the team, the gallery, the FAQ and the members' zone — and «Despre noi»."
-          },
-          "5": {
-            "title": "Where «Vino cu noi» goes",
-            "default": "To the next weekly run's page; «Cum funcționează» opens a club page."
-          },
-          "6": {
-            "title": "Photographs",
-            "default": "Real club photos from the gallery only; people in a home-page photo have agreed."
-          },
-          "7": {
-            "title": "The Instagram block",
-            "default": "A static strip of six gallery pictures with a link; no live feed."
-          },
-          "8": {
-            "title": "The numbers band",
-            "default": "Typed under «Aspect» → «Pagina principală»: the founding date and the active runners; the rest computed from the events."
-          },
-          "9": {
-            "title": "What «Evenimente speciale» means",
-            "default": "Everything that is not a weekly series; the chip «Ediție specială» keeps its meaning."
-          },
-          "10": {
-            "title": "The round arrow on cards",
-            "default": "None: the home page shows the very cards of «Alergări», with their text door, «Descrierea completă a evenimentului»."
-          },
-          "11": {
-            "title": "Icons",
-            "default": "The filled Material family stays; the lighter look comes from colour, weight and spacing."
-          },
-          "12": {
-            "title": "How it ships",
-            "default": "Behind one setting, «Theme v2»: on for QA, off on production until the club approves; Theme v1 deleted one release after the flip."
-          }
-        },
-        "phases": {
-          "0": {
-            "title": "Decisions and assets — no code",
-            "gate": "The answers in writing, the photos uploaded."
-          },
-          "1": {
-            "title": "Tokens and the public shell",
-            "gate": "Brand and font tests green, the header one row at 320 px, the club's yes on QA."
-          },
-          "2": {
-            "title": "Cover photos on events, and the event kind",
-            "gate": "Listing specs green; every weekly run and the race carry a cover."
-          },
-          "3": {
-            "title": "The home page",
-            "gate": "LCP under 2.5 s on a 320 px phone, the root tests rewritten, the club's yes on QA."
-          },
-          "4": {
-            "title": "The calendar",
-            "gate": "The first week above the fold at 320 px; the filters work with scripts off."
-          },
-          "5": {
-            "title": "The listing and the event page",
-            "gate": "Listing and event specs green."
-          },
-          "6": {
-            "title": "The flip and the clean-up",
-            "gate": "A week on production without the way back being used."
-          }
         }
       },
       "card": {
@@ -9039,7 +8962,8 @@
               "steps": [
                 "The results appear on the site only once you publish them, only after the race has started and only if the privacy notice and the terms in force describe the results — «Legal documents» says whether new texts must be approved; «Tasks» has the row.",
                 "On «Results», under «On the event's page», tick «The results are public on the event's page» and press «Save». The page shows the place, the number, the time and the category; a name only for who ticked the list at registration or a runner who did not register and agreed — everyone else is “Participant #number”.",
-                "The results stay on the page as long as the public participant list, from the end of the race («Settings» → «Deadlines»). Untick at any time; the results stay saved."
+                "The results stay on the page as long as the public participant list, from the end of the race («Settings» → «Deadlines»). Untick at any time; the results stay saved.",
+                "Whoever registered under an older privacy notice, which did not describe the results, appears as “Participant #number”, even if they ticked the list. Only once the club approves a privacy notice that names that tick beside the results (the field {{resultsNameAsk}}, in «Legal documents») — after the club and its lawyer amend the sentence telling them they appear only by number — does their registration's page (the link in its email) show them «I want to appear by name in the results». The club sends no new email for it: tell them with «Send a message to participants», from the race's editor, that they can tick it from their registration's link and untick it at any time."
               ]
             }
           ]
@@ -10889,17 +10813,17 @@
         "empty": "The event has no roles yet. Add them in the event's “Volunteers” card.",
         "choiceOf": "The colour of the role {role}",
         "typedOf": "The typed colour for the role {role}",
-        "theme": "The club's orange",
+        "theme": "The club's second colour",
         "typed": "Another colour",
         "choice": "The band's colour on the badge",
-        "themeOption": "Default: the club's orange",
+        "themeOption": "Default: the club's second colour",
         "typedLabel": "The typed colour",
         "typedHelp": "For the badge's band: a hash and six digits, like #1b8a3a. Kept only if white or black text reads on it, at a contrast of at least 4.5 to 1. A new colour typed here is the one kept.",
         "perRoleOnly": "The colour is used only when the badge is per role. The badge for everyone has its own colour, in “What the badge looks like”.",
         "state": "Badge band: {colour}, contrast {ratio} to 1",
         "save": "Save the colours",
         "saving": "Saving…",
-        "unreadable": "{colour}, which does not read: the club's orange prints"
+        "unreadable": "{colour}, which does not read: the club's second colour prints"
       },
       "print": {
         "title": "Printing",
@@ -11732,8 +11656,8 @@
       "deadlineAtStart": "Your place is held until the start, {deadline}: it does not lapse before. The registration is complete only with the signed declaration.",
       "deadlinePassed": "The deadline, {deadline}, has passed, but the place is still yours: sign now and the registration is complete.",
       "idDocument": "Identity document (series and number)",
-      "idDocumentHelp": "Your identity card (e.g. “BV 123456”) or passport; the kit is collected against it. Deleted seven days after the event, masked in the club's copy; we keep no copy of the document.",
-      "idDocumentPlaceholder": "BV 123456",
+      "idDocumentHelp": "Your identity card (e.g. “{idExample}”) or passport; the kit is collected against it. Deleted seven days after the event, masked in the club's copy; we keep no copy of the document.",
+      "idDocumentPlaceholder": "{idExample}",
       "typedNameHelp": "Type the full name you registered with. It appears as a signature.",
       "nextTitle": "What happens next",
       "nextConfirmed": [
@@ -11764,13 +11688,13 @@
       "nameRefusedTitle": "The signature does not match the name given at registration",
       "nameRefusedNothingRecorded": "Nothing was recorded and your link is fine: correct the name and sign again.",
       "documentRefusedTitle": "An identity document is missing or not written correctly",
-      "documentRefusedNothingRecorded": "Nothing was recorded and your link is fine: type the document's series and number, for example “BV 123456”, and sign again.",
+      "documentRefusedNothingRecorded": "Nothing was recorded and your link is fine: type the document's series and number, for example “{idExample}”, and sign again.",
       "twoSignersIntro": "A minor participant's declaration is signed by two people: the minor and the parent or legal guardian. Each gives their identity document and types their name, below.",
       "minorSection": "The minor: {name}",
       "guardianSection": "The parent or legal guardian: {name}",
       "minorIdDocumentType": "Which document the minor will show",
       "minorIdDocument": "The minor's identity document (series and number)",
-      "minorIdDocumentHelp": "The minor's identity card — for example “BV 123456” — or passport. It goes into the declaration, beside the parent's or guardian's.",
+      "minorIdDocumentHelp": "The minor's identity card — for example “{idExample}” — or passport. It goes into the declaration, beside the parent's or guardian's.",
       "guardianIdDocumentType": "Which document the parent or guardian will show",
       "guardianIdDocument": "The parent's or guardian's identity document (series and number)",
       "minorTypedName": "Minor's signature",
@@ -12020,6 +11944,15 @@
       "otherAdult": "Only the person gives the consent to offers and benefits, on their own declaration or from their own registration's link. From here you can only withdraw it.",
       "optInShared": "If you give it, the club may give its partners your first name, last name and address.",
       "yesShared": "On this registration you receive offers and benefits from the club and its partners. The club may give the partners your first name, last name and address, so they write to you themselves."
+    },
+    "resultsName": {
+      "title": "Your name in the results",
+      "older": "You registered under an older version of the privacy notice, which did not describe the results, so in the race's results you appear only as “Participant #race number”.",
+      "label": "I want to appear by name in the results",
+      "help": "Ticked, the race's published results show your name beside your place, race number, time and category, only while you are on the public list; untick it here at any time and the name leaves them.",
+      "changed": "Your choice for the results is saved.",
+      "failed": "We could not save your choice. Try again.",
+      "otherAdult": "Only the person gives the consent to appear by name in the results, from their own registration's link. From here you can only withdraw it."
     }
   },
   "Devs": {
@@ -12504,7 +12437,7 @@
         "intro": "Tell us what happened; the event and the date are optional."
       },
       "safety": {
-        "label": "Girl Zone",
+        "label": "{safetyName}",
         "hint": "We know running as a woman comes with extra challenges. If something made you feel unsafe with us, tell us — confidentially."
       }
     },
@@ -12613,6 +12546,19 @@
     "eventPage": {
       "lead": "Were you there? Tell us how it was — anonymously, it takes a minute.",
       "button": "Tell us how it was"
+    },
+    "relay": {
+      "subject": {
+        "safety": "A confidential message from the site",
+        "howItWent": "How it went",
+        "suggestion": "A suggestion from the site",
+        "complaint": "A complaint from the site"
+      },
+      "footer": {
+        "safety": "— Sent through the site's confidential “{safetyName}” form. The site kept nothing of it.",
+        "toPerson": "— Sent through the site's “Tell us something” forms; whoever wrote chose that only you would know. The site kept nothing of it.",
+        "club": "— Sent through the site's “Tell us something” forms. The site kept nothing of it."
+      }
     }
   },
   "Budget": {
@@ -13290,7 +13236,7 @@
     },
     "topicHints": {
       "ALL": "Every topic below, and any we add later.",
-      "BIG_EVENTS": "The club's big days, such as the anniversary cross: an announcement when one appears on the calendar, then registration and what changes.",
+      "BIG_EVENTS": "The club's big days: an announcement when one appears on the calendar, then registration and what changes.",
       "GEAR_TESTING": "When a shop or a maker brings shoes and gear to try.",
       "SPECIAL_EVENTS": "Special editions, themed runs, events held with other organizers and other organizers' events.",
       "WEEKLY_RUNS": "An announcement when a new series of weekly runs starts — once per series, not for every run.",
@@ -13362,12 +13308,12 @@
   },
   "Home": {
     "meta": {
-      "title": "{club} — group runs in Brașov",
-      "description": "The club's group runs, mountain outings and special events, with the next run and the weather at the start. Always free."
+      "title": "{club} — group runs",
+      "description": "The club's group runs and special events, with the next run and the weather at the start."
     },
     "hero": {
-      "headline": "We run together in Brașov",
-      "subline": "Group runs, mountain outings and special events organised by the club — always free. Come to your first run; we'll be waiting.",
+      "headline": "We run together",
+      "subline": "Group runs and special events organised by the club. Come to your first run; we'll be waiting.",
       "join": "Join us",
       "calendar": "See the calendar",
       "how": "How it works"
@@ -13381,7 +13327,7 @@
     },
     "special": {
       "title": "Special events",
-      "intro": "Races, mountain outings and everything that does not repeat every week."
+      "intro": "Races and everything that does not repeat every week."
     },
     "more": "See all events"
   },
@@ -13607,8 +13553,8 @@
           "body": "You run beside others, not alone."
         },
         "2": {
-          "title": "Mountains by the city",
-          "body": "Brașov has trails a few steps from the centre."
+          "title": "Routes close by",
+          "body": "Our routes start close to the centre."
         },
         "3": {
           "title": "No fee",

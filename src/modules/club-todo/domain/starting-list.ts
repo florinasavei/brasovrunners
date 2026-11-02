@@ -1,6 +1,9 @@
-import en from "../../../../messages/en.json";
-import ro from "../../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
 import { CLUB_TODO_MAX_ITEMS, type ClubTodoItem } from "./club-todo";
+
+// The platform's words with the club's own laid over them (§887, `i18n/catalogue.ts`).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * The list «De făcut» starts from, until somebody first changes it (§438).

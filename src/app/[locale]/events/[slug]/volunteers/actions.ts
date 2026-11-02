@@ -20,6 +20,7 @@ import { readSignatureTrace } from "@/modules/legal-documents/domain/signature-t
 import { VOLUNTEER_ROLES_MAX } from "@/modules/volunteers/domain/volunteer";
 import { VOLUNTEER_BOX_ID } from "@/modules/volunteers/ui/volunteer-box";
 import { submitVolunteer } from "@/modules/volunteers/volunteers";
+import { HOME_COUNTRY } from "@/modules/events/domain/place";
 
 function toLocale(value: FormDataEntryValue | null): Locale {
   return value === "en" ? "en" : "ro";
@@ -68,7 +69,7 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
   const event = await findPublishedEventBySlug(db, locale, slug);
   if (!event) redirect(getPathname({ locale, href: "/events" }));
 
-  const country = text(form, "phoneCountry") || "RO";
+  const country = text(form, "phoneCountry") || HOME_COUNTRY;
   const national = text(form, "phone");
   // What was typed comes back sealed, so a refusal never costs the boxes (§142). Never the consent tick:
   // it is the person's own act each time.

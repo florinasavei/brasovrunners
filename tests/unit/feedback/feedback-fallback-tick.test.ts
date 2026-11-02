@@ -2,8 +2,12 @@ import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { fallbackAllowedFor, DEFAULT_FEEDBACK_SETTINGS, type FeedbackSettings, sendsToItself } from "@/modules/feedback/domain/branches";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
+import { withClubWords } from "../../helpers/club-words";
+
+// What a page reads: the platform's catalogue with this club's own sentences over it (§887).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * §778 (amending §772) — «Dacă Mailgun pică, trimite prin Gmail-ul clubului»: Girl Zone's own tick, a real checkbox, off by default,
@@ -15,7 +19,7 @@ import ro from "../../../messages/ro.json";
 vi.mock("@/shared/feedback/email-roads-request", () => ({ emailRoadsForThisRequest: async () => ({ groups: { links: "mailgun", confirmations: "mailgun", reminders: "mailgun", announcements: "mailgun", club: "gmail", newsletter: "mailgun" }, gmail: false }) }));
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
-  const messages = (await import("../../../messages/ro.json")).default;
+  const messages = (await import("@/i18n/catalogue")).catalogueOf("ro");
   return {
     getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages: messages as typeof messages, namespace: namespace as "Admin" }),
     getLocale: async () => "ro",
@@ -65,7 +69,7 @@ describe("§778 Girl Zone's «dacă Mailgun pică» tick", () => {
     // The words of the box, and the note that whoever reads the club's mailbox sees it.
     expect(ro.Admin.emails.feedbackForms.via.fallbackHelp).toContain("cei care o citesc");
     expect(en.Admin.emails.feedbackForms.via.fallbackHelp).toContain("whoever reads");
-    expect(out).toContain(ro.Admin.emails.feedbackForms.via.fallbackHelp);
+    expect(out).toContain(withClubWords(ro.Admin.emails.feedbackForms.via.fallbackHelp));
     // It sits inside Girl Zone's branch, not beside the other three.
     const safety = out.indexOf('data-testid="feedback-branch-safety"');
     expect(out.indexOf('data-box="safetyFallbackToGmail"')).toBeGreaterThan(safety);
@@ -78,7 +82,7 @@ describe("§778 Girl Zone's «dacă Mailgun pică» tick", () => {
   it("is greyed while the notice in force does not say her messages may leave by Gmail — with the reason and a link to the texts — and keeps what is saved in a hidden field", async () => {
     const out = await html(state({ fallbackToGmail: true }), { described: false });
     expect(out).toMatch(/data-box="safetyFallbackToGmail"[^>]*data-disabled="true"/);
-    expect(out).toContain(ro.Admin.emails.feedbackForms.via.fallbackNotice);
+    expect(out).toContain(withClubWords(ro.Admin.emails.feedbackForms.via.fallbackNotice));
     expect(out).toContain('data-testid="feedback-fallback-notice"');
     // A greyed box posts nothing; the saved tick travels so a save does not turn it off by omission.
     expect(out).toMatch(/<input type="hidden" name="safetyFallbackToGmail" value="on"\/>/);

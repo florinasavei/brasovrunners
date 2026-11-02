@@ -20,7 +20,7 @@ import { siteLookStyle } from "@/modules/appearance/domain/site-look";
 import { siteTintStyle } from "@/modules/appearance/domain/site-tint";
 import { cachedSiteFontSize, cachedSiteLook, cachedSiteTint } from "@/modules/public-cache/reads";
 import AppTheme from "@/theme/AppTheme";
-import { CLUB_NAME } from "@/theme/brand";
+import { SITE_TITLE } from "@/theme/brand";
 import { LOOK_ATTRIBUTE, LOOK_VALUE } from "@/theme/look";
 import LookWatermark from "@/shared/ui/LookWatermark";
 
@@ -94,20 +94,22 @@ const nunito = localFont({
 });
 
 /**
- * Facón, the face on the club's kit, for the wordmark beside the logo. Self-hosted from
- * `src/theme/fonts/`, unmodified — the designer's licence forbids altering the file, and a TTF
- * serves perfectly well, so no WOFF2 conversion is performed. See `docs/brand/README.md`.
+ * The club's wordmark face — Facón, the face on Brașov's kit — for the wordmark beside the logo.
+ * Self-hosted from `src/theme/fonts/`, unmodified — the designer's licence forbids altering the file,
+ * and a TTF serves perfectly well, so no WOFF2 conversion is performed. See `docs/brand/README.md`.
+ * A fixed slot since §885: `Wordmark.ttf` with its `Wordmark-LICENSE.txt` beside it, so a club's own
+ * face replaces the file and no code (`club/README.md`).
  *
  * `adjustFontFallback` is off: Next's automatic fallback metric matching assumes the fallback
  * covers the same characters, and this font covers only ASCII. Roboto 900 italic is named
  * explicitly instead — the read-me identifies it as the base font Facón was drawn from.
  */
-const facon = localFont({
-  src: "../../theme/fonts/Facon.ttf",
+const wordmarkFace = localFont({
+  src: "../../theme/fonts/Wordmark.ttf",
   weight: "900",
   style: "italic",
   display: "swap",
-  variable: "--font-facon",
+  variable: "--font-wordmark",
   adjustFontFallback: false,
   fallback: ["Roboto", "Segoe UI", "Arial", "sans-serif"],
 });
@@ -135,7 +137,7 @@ export async function generateMetadata(): Promise<Metadata> {
     // BR-REQ-101-02: every absolute URL derives from APP_BASE_URL.
     metadataBase: new URL(env.APP_BASE_URL),
     // The club's name from its one constant (§369): a proper name, the same in both languages.
-    title: { default: CLUB_NAME, template: `%s · ${CLUB_NAME}` },
+    title: { ...SITE_TITLE },
     // The large card on X and everywhere that reads Twitter tags; Facebook reads `og:*`, which
     // the `opengraph-image.tsx` files write (`DECISIONS.md` §90).
     twitter: { card: "summary_large_image" },
@@ -167,7 +169,7 @@ export default async function LocaleLayout({ children, params }: Props) {
     // `data-look`: the new look's scope (`theme/look.ts`), absent while the setting is off; its
     // rules stop at the backoffice's marker, so staff pages look as they always did.
     <html lang={locale} suppressHydrationWarning {...(look.on ? { [LOOK_ATTRIBUTE]: LOOK_VALUE } : {})}>
-      <body className={`${roboto.variable} ${facon.variable} ${inter.variable} ${nunito.variable} ${signature.variable}`}>
+      <body className={`${roboto.variable} ${wordmarkFace.variable} ${inter.variable} ${nunito.variable} ${signature.variable}`}>
         {/* Drawn on the server, before the first paint; light scheme and public pages only
             (`modules/appearance/domain/site-tint.ts`). Its text is a preset or a checked #rrggbb, never raw typed text. */}
         {tintStyle && <style data-site-tint="">{tintStyle}</style>}

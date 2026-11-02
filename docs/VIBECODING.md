@@ -1,8 +1,8 @@
 # Vibecoding this repo — the one page to read before asking an AI to change anything
 
-<!-- PROJECT_BASELINE: BR-V3.99-2026-11-01 -->
+<!-- PROJECT_BASELINE: BR-V4.03-2026-11-02 -->
 
-**Baseline `BR-V3.99-2026-11-01`**
+**Baseline `BR-V4.03-2026-11-02`**
 
 The owner's word for how this platform is built: an AI agent writes, the owner reads and
 merges. This page is the short version of everything an agent trips over. `CLAUDE.md` is the
@@ -140,6 +140,8 @@ One line a row: the thing, then where it starts. Each row's why, the files besid
 - **Both languages or none.** Every message key exists in both files; the test `i18n/messages.test.ts` checks every `t("…")` in `src/` — use one-word namespaces (`getTranslations("Admin")` + `t("queue.title")`), never `"Admin.queue"`.
 - **Server → client.** A Server Component may not pass a function or a component reference to a client component (MUI `Chip`, `IconButton`, `Link`): use `component="a"` with a string `href` from `getPathname(...)`. An icon too: pass its name (`icon="save"`) to the backoffice-only `GlyphButton` / `GlyphSubmitButton` / `GlyphButtonLink`, never an element — and a public page never imports `action-icons.ts` (a test enforces it, §318). `divider` is on the list too, and `yarn check` refuses any element-valued prop into a client component (§370).
 - **Messages with `{x}` or a tag** are `t("key", values)` or `t.raw("key")`, never a bare `t("key")`: a production build prints it raw and `next dev` prints the key. Write a literal `<` as `'<'` (§370).
+- **The club's words come from `club/club.json`** (§882): its name, city, county, country, zone and short forms are read from `brand.ts`, `place.ts` or `dates.ts` (`CLUB_NAME`, `CLUB_LOCALITY`, `HOME_COUNTRY`, `CLUB_TIME_ZONE`…), never typed as a literal — `tests/unit/club/club-literals.test.ts` refuses a new one, and `yarn test:fork` builds the site as another club.
+- **This club's own sentences go in `club/messages/<locale>.json`; the base stays neutral** (§887): `messages/*.json` is the platform's catalogue, which every club can live with, and `src/i18n/catalogue.ts` lays the club's overlay over it — read the merged catalogue through it, never a JSON file; the club's name, mark, card example, safety form, slug and zone arrive as `{arguments}`; `club/README.md` has the overlay's rules.
 - **No hostname of the club's in `src/`** — everything derives from `APP_BASE_URL`; a third party's fixed host (Cloudflare, Vercel, Facebook) goes in `PROVIDER_HOSTS` in `scripts/docs-check.mjs` with one line saying why.
 - **Migrations expand only.** Add a column or an enum value; never drop or rename in the same release (`yarn migrations:check`).
 - **The design system has guards (§694).** No colour literal outside `src/theme/brand.ts`, no `@mui/icons-material` barrel import, and in the backoffice no icon file imported directly (ask `shared/ui/action-icons.ts` by name; a public page imports its one icon file, or names it in a registry listed in `ICON_REGISTRIES` (`tests/unit/design/guards-allowlist.ts`)), no bare MUI `Button` / `IconButton` / `Chip` in a page or an area's `ui/` — `ButtonLink`, `GlyphButton`, `GlyphChip` instead — and in the backoffice a state's chip is `StatusChip` (`shared/ui/status-glyphs.ts`), the public table keeping only the names public pages draw. `tests/unit/design/` fails on a new offender; today's are listed with a reason in `guards-allowlist.ts`, a ratchet that only shrinks (a fixed file leaves the list and `PINNED` drops). The page `/admin/design` shows the system.

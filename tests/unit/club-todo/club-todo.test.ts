@@ -25,9 +25,12 @@ import {
   mergeClubTodoDefaults,
   startingClubTodo,
 } from "@/modules/club-todo/domain/starting-list";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
+
+// The words a reader sees: the platform's catalogue with this club's own sentences over it (§887).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * BR-REQ-090-05 and BR-REQ-060-01 — «De făcut», the club's own checklist on `/admin/tasks`

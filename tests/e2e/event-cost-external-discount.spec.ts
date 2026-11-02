@@ -10,6 +10,7 @@ import {
   withFeaturedEventLock,
 } from "./support/featured-event";
 import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead } from "./support/dates";
 
 /**
  * `DECISIONS.md` §394 — the owner, 2026-09-25: "another friend's race where we just go as a
@@ -48,7 +49,7 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§394)", () 
       await page.keyboard.type(text);
     };
 
-    await fillDateField(page, "Începutul evenimentului", "2027-06-12");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-06-12"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Piața Sfatului");
     await field("event.locationNameEn").fill("Council Square");

@@ -1,7 +1,6 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { createTranslator } from "next-intl";
-import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import en from "@/../messages/en.json";
 import ro from "@/../messages/ro.json";
@@ -11,7 +10,7 @@ import { formatSenderIdentity } from "@/infrastructure/email/sender";
 import { contactDeliveryFor } from "@/modules/contact/delivery";
 import { buildCalendar, type CalendarLabels, calendarFeedFileName } from "@/modules/events/ical";
 import { envSchema } from "@/shared/config/env";
-import { CLUB_NAME } from "@/theme/brand";
+import { CLUB_NAME, CLUB_SHORT_NAME } from "@/theme/brand";
 
 /**
  * §357 — the owner, 2026-09-24: "I do not [want] hardcoded stuff in the document and emails
@@ -85,7 +84,6 @@ describe("§357 no hardcoded value in the emails' own sentences", () => {
     for (const file of [
       "src/modules/staff-identity/zitadel-users.ts",
       "src/modules/registrations/bibs-pdf.ts",
-      "src/shared/config/env.ts",
       "src/modules/events/share-image.tsx",
       "src/modules/events/ical.ts",
       "src/app/api/admin/legal/[id]/pdf/route.ts",
@@ -94,33 +92,21 @@ describe("§357 no hardcoded value in the emails' own sentences", () => {
       expect(source, file).not.toMatch(/Bra(?:ș|s)ov Runners/);
       expect(source, file).toContain('from "@/theme/brand"');
     }
+    // The From line's default reads the same file `brand.ts` does (§882): env.ts may not import the theme.
+    const envSource = readFileSync(path.join(process.cwd(), "src/shared/config/env.ts"), "utf8");
+    expect(envSource).not.toMatch(/Bra(?:ș|s)ov Runners/);
+    expect(envSource).toContain('from "@/club/config"');
+    expect(envSource).toContain("default(CLUB.name)");
   });
 });
 
 /** Diacritics and case folded, so "Brașov Runners", "BRASOV RUNNERS" and "brasov-runners" are one name. */
 const fold = (value: string) => value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-const CLUB_NAME_PATTERN = new RegExp(fold(CLUB_NAME).replace(/\s+/g, "[\\s-]"));
-
-/**
- * Every string a program can hand a person or another system — a string literal, each piece of a
- * template literal, and the text between JSX tags — that names the club. Comments are not nodes of
- * the tree, so the owner's own words quoted in a comment are not counted.
- */
-function clubNamesIn(file: string, text: string): string[] {
-  const kind = file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
-  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kind);
-  const found: string[] = [];
-  const visit = (node: ts.Node) => {
-    const words =
-      ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node) || ts.isJsxText(node)
-        ? node.text
-        : null;
-    if (words !== null && CLUB_NAME_PATTERN.test(fold(words))) found.push(words.trim());
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
-  return found;
-}
+/*
+  The scans that refused the name in a string of `src/` and in a message of either catalogue moved to
+  `tests/unit/club/club-literals.test.ts` (§882), which builds every forbidden word — the name among them —
+  from `club/club.json` and scans more than `src/`. The pins below stay: they say where the name is read.
+*/
 
 function sourceFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
@@ -140,55 +126,7 @@ function flatMessages(messages: unknown, prefix = ""): Record<string, string> {
   );
 }
 
-/**
- * Where the name may be written: the constant itself, and the sample data a developer seeds — a
- * made-up event may be called anything, and a test fixture reads it by that title.
- */
-const MAY_NAME_THE_CLUB = (relative: string) => relative === "src/theme/brand.ts" || relative.startsWith("src/db/seeds/");
-
 describe("§369 the club's name leaves the platform only through the constant", () => {
-  it("finds the name in a string, a template and JSX text, and not in a comment", () => {
-    const found = clubNamesIn(
-      "probe.tsx",
-      [
-        "// Brașov Runners, in a comment",
-        'const a = "Echipa Brașov Runners";',
-        "const b = `-//Brasov Runners//${x}`;",
-        "const c = `x ${y} brasov-runners-${z}.ics`;",
-        "const d = <div>BRASOV RUNNERS</div>;",
-        'const e = "@brasovrunners";',
-      ].join("\n"),
-    );
-    expect(found).toEqual(["Echipa Brașov Runners", "-//Brasov Runners//", "brasov-runners-", "BRASOV RUNNERS"]);
-  });
-
-  it("no string in src/ names the club outside theme/brand.ts and the seeds", () => {
-    const root = process.cwd();
-    const offenders = sourceFiles(path.join(root, "src"))
-      .map((file) => ({ file: path.relative(root, file).split(path.sep).join("/"), text: readFileSync(file, "utf8") }))
-      .filter(({ file }) => !MAY_NAME_THE_CLUB(file))
-      .flatMap(({ file, text }) => clubNamesIn(file, text).map((words) => `${file}: ${words}`));
-    expect(offenders).toEqual([]);
-  });
-
-  it("no message in either catalogue names the club: a sentence that needs it asks for {club}", () => {
-    // The catalogues are the other place a reader's words come from, and the scan above never
-    // opens them. `Site.name` and `Home.title` were a second and third copy of the constant, the
-    // footer's club description a fourth; a renamed club would have been renamed in `src/` and
-    // gone on reading the old name in the page title, the header and the member tick (§369).
-    const offenders = (
-      [
-        ["ro", ro],
-        ["en", en],
-      ] as const
-    ).flatMap(([locale, catalogue]) =>
-      Object.entries(flatMessages(catalogue))
-        .filter(([, text]) => CLUB_NAME_PATTERN.test(fold(text)))
-        .map(([key, text]) => `${locale}.json ${key}: ${text}`),
-    );
-    expect(offenders).toEqual([]);
-  });
-
   it("fills every {club} with the constant, at each place the sentence is read", () => {
     // Which sentences ask, pinned: a new one is a new call site, and it has to pass the name.
     for (const catalogue of [ro, en]) {
@@ -348,5 +286,143 @@ describe("§369 the club's name leaves the platform only through the constant", 
     expect(calendar).toContain(`PRODID:-//${fold(CLUB_NAME).replace(/\b\w/g, (letter) => letter.toUpperCase())}//events//RO`);
     expect(calendarFeedFileName("ro")).toBe("brasov-runners-ro.ics");
     expect(calendarFeedFileName("en")).toBe(`${fold(CLUB_NAME).replace(/\s+/g, "-")}-en.ics`);
+  });
+});
+
+/**
+ * §887 — the club's other words arrive as arguments too, so a fork with an empty overlay (`club/messages`) is already
+ * right: its short mark (`{short}`, `brand.ts#CLUB_SHORT_NAME`), its identity card example (`{idExample}`,
+ * `place.ts#ID_DOCUMENT_EXAMPLE`), its safety form's name (`{safetyName}`, `brand.ts#SAFETY_PROGRAMME`, in the reader's
+ * language), its slug (`{slug}`), its media bucket (`{bucket}`, `R2_BUCKET`) and its zone (`{timeZone}`, `{zoneWords}`,
+ * `dates.ts`). next-intl 4 has no default values, and a missing one is quiet on QA and production (§353): each call site
+ * is pinned here and hands the value from its one constant.
+ */
+describe("§887 the club's short mark, card example, safety form, slug, bucket and zone arrive as arguments", () => {
+  const sources = new Map(sourceFiles(path.join(process.cwd(), "src")).map((file) => [path.relative(process.cwd(), file).split(path.sep).join("/"), readFileSync(file, "utf8")]));
+  const read = (file: string) => {
+    const text = sources.get(file);
+    expect(text, file).toBeDefined();
+    return text ?? "";
+  };
+
+  it("pins which sentences ask for each", () => {
+    const asking = (argument: string) =>
+      Object.entries(flatMessages(ro))
+        .filter(([, text]) => text.includes(`{${argument}}`))
+        .map(([key]) => key)
+        .sort();
+    expect(asking("short")).toEqual(
+      [
+        // the short mark: the calendar's name in a phone's list, the member chip, the editor's tick, the legend, the task row
+        "Events.calendar.androidSync",
+        "Event.calendar.feedName",
+        "Event.rsvp.memberMark",
+        "Admin.editor.membersOnly",
+        "Admin.legal.tokens.rsvpMember",
+        "Admin.tasks.items.rsvpMemberNotice.done",
+        "Admin.tasks.items.rsvpMemberNotice.how.0",
+        // a different value under the same name: an email's short name on a registration's row (§626)
+        "Admin.registrations.rejected.line.missing",
+      ].sort(),
+    );
+    expect(asking("idExample")).toEqual(
+      [
+        "Event.groupRunDeclaration.page.idDocumentHelp",
+        "Registrations.declare.documentRefusedNothingRecorded",
+        "Registrations.declare.idDocumentHelp",
+        "Registrations.declare.idDocumentPlaceholder",
+        "Registrations.declare.minorIdDocumentHelp",
+      ].sort(),
+    );
+    expect(asking("safetyName")).toEqual(
+      [
+        "Admin.emails.feedbackForms.branches.safety",
+        "Admin.emails.feedbackForms.via.fallbackHelp",
+        "Admin.emails.feedbackForms.via.fallbackNotice",
+        "Admin.emails.feedbackForms.via.gmailNotice",
+        "Admin.emails.feedbackForms.via.safetyNote",
+        "Admin.legal.tokens.feedbackSafetyGmail",
+        "Admin.tasks.items.feedbackSafetyGmailNotice.done",
+        "Admin.tasks.items.feedbackSafetyGmailNotice.how.0",
+        "Admin.tasks.items.feedbackSafetyGmailNotice.how.1",
+        "Admin.tasks.items.feedbackSafetyGmailNotice.title",
+        "Admin.tasks.items.feedbackSafetyGmailNotice.todo",
+        "Tell.branches.safety.label",
+        // the relayed message's footer, which moved out of `feedback/domain/branches.ts`
+        "Tell.relay.footer.safety",
+      ].sort(),
+    );
+    expect(asking("slug")).toEqual(
+      [
+        "Admin.tasks.items.botCheck.how.1",
+        "Admin.tasks.items.botCheck.howMisconfigured.0",
+        "Admin.tasks.items.botCheck.todo",
+        "Admin.tasks.items.inviteKey.how.0",
+        "Admin.tasks.items.inviteKey.how.1",
+        "Admin.tasks.items.inviteKey.howBroken.0",
+        "Admin.tasks.items.mediaStorage.how.4",
+        "Admin.tasks.items.vercelUsage.how.0",
+        // a different value under the same name: an imported event's page address (§539)
+        "Admin.eventJson.notes.slugSuffixed",
+      ].sort(),
+    );
+    expect(asking("bucket")).toEqual(["Admin.tasks.items.mediaStorage.how.2", "Admin.tasks.items.mediaStorage.how.6"]);
+    expect(asking("timeZone")).toEqual(["Admin.tasks.items.scheduler.how.0"]);
+    expect(asking("zoneWords")).toEqual(["Admin.editor.boxes.summary.timezone.home", "Admin.tasks.emailStalled.deferred"]);
+  });
+
+  it("hands each call the value from its constant", () => {
+    // Each call names the key as its namespace sees it; every one carries the argument from the constant.
+    const calls: Array<[key: string, count: number, value: RegExp]> = [
+      ["calendar.androidSync", 2, /short: CLUB_SHORT_NAME/],
+      ["calendar.feedName", 1, /short: CLUB_SHORT_NAME/],
+      ["rsvp.memberMark", 4, /short: CLUB_SHORT_NAME/],
+      ["editor.membersOnly", 1, /short: CLUB_SHORT_NAME/],
+      ["declare.documentRefusedNothingRecorded", 1, /idExample: ID_DOCUMENT_EXAMPLE/],
+      ["declare.idDocumentHelp", 2, /idExample: ID_DOCUMENT_EXAMPLE/],
+      ["declare.idDocumentPlaceholder", 4, /idExample: ID_DOCUMENT_EXAMPLE/],
+      ["declare.minorIdDocumentHelp", 1, /idExample: ID_DOCUMENT_EXAMPLE/],
+      ["groupRunDeclaration.page.idDocumentHelp", 1, /idExample: ID_DOCUMENT_EXAMPLE/],
+      ["emails.feedbackForms.via.safetyNote", 1, /, safety\)$/],
+      ["emails.feedbackForms.via.fallbackHelp", 1, /, safety\)$/],
+      ["emails.feedbackForms.via.fallbackNotice", 1, /, safety\)$/],
+    ];
+    for (const [key, expected, value] of calls) {
+      const pattern = new RegExp(`\\b(?:t|tEvent|tDeclare)\\(\\s*"${key.replace(/\./g, "\\.")}"\\s*([,)])[^)]*\\)?`, "g");
+      const found = [...sources.values()].flatMap((text) => [...text.matchAll(pattern)].map((match) => match[0]));
+      expect(found, key).toHaveLength(expected);
+      for (const call of found) expect(call, key).toMatch(value);
+    }
+    // The keys read through a template or a lambda, which the scan above cannot count: each hands the value too.
+    const pins: Array<[file: string, pattern: RegExp]> = [
+      ["src/modules/feedback/ui/FeedbackFormsPanel.tsx", /const safety = \{ safetyName: SAFETY_PROGRAMME\[locale\] \};/],
+      ["src/modules/feedback/ui/FeedbackFormsPanel.tsx", /roadWords\(\(key\) => t\(key as never, safety as never\)\)/],
+      ["src/modules/feedback/ui/FeedbackFormsPanel.tsx", /t\(`emails\.feedbackForms\.branches\.\$\{branch\}`, safety\)/],
+      ["src/modules/contact/ui/ContactRecipientsPanel.tsx", /roadWords\(\(key\) => t\(key as never, \{ safetyName: SAFETY_PROGRAMME\[/],
+      ["src/modules/feedback/ui/BranchChoice.tsx", /t\(`branches\.\$\{branch\}\.label`, \{ safetyName: SAFETY_PROGRAMME\[/],
+      ["src/app/[locale]/contact/feedback/page.tsx", /t\(`branches\.\$\{branch\}\.label`, \{ safetyName: SAFETY_PROGRAMME\[locale\] \}\)/],
+      ["src/modules/legal-documents/ui/TokenLegend.tsx", /t\(`tokens\.\$\{entry\.messageKey\}`, \{ short: CLUB_SHORT_NAME, safetyName: SAFETY_PROGRAMME\[first\] \}\)/],
+      ["src/modules/feedback/domain/branches.ts", /relayWords\("relay\.footer\.safety", \{ safetyName: SAFETY_PROGRAMME\.ro \}\)/],
+      ["src/modules/rsvp/notice-words.ts", /\("rsvp\.memberMark", \{ short: CLUB_SHORT_NAME \}\)/],
+      ["src/modules/content/events/ui/box-summaries.ts", /fillIn\(words\.timezone\.home, \{ zone, zoneWords: ZONE_WORDS\[/],
+      // «Sarcini» fills its rows' titles, sentences and steps from one set of values (`howValues`).
+      ["src/app/[locale]/admin/tasks/page.tsx", /short: CLUB_SHORT_NAME,\n\s*slug: CLUB_SLUG,\n\s*timeZone: CLUB_TIME_ZONE,\n\s*safetyName: SAFETY_PROGRAMME\[/],
+      ["src/app/[locale]/admin/tasks/page.tsx", /bucket: env\.R2_BUCKET \?\? `\$\{CLUB_SLUG\}-media`,/],
+      ["src/app/[locale]/admin/tasks/page.tsx", /t\(`items\.\$\{task\.id\}\.title`, howValues\)/],
+      // The stalled email's alert says when the outbox resumes in the club's own zone words, not the overlay's.
+      ["src/app/[locale]/admin/tasks/page.tsx", /t\("emailStalled\.deferred", \{[\s\S]{0,400}?zoneWords: ZONE_WORDS\[locale === "en" \? "en" : "ro"\],\n\s*\}\)/],
+    ];
+    for (const [file, pattern] of pins) expect(read(file), `${file}: ${pattern}`).toMatch(pattern);
+  });
+
+  it("fills every one with this club's words, so Brașov reads what it read", () => {
+    for (const [locale, messages] of [
+      ["ro", ro],
+      ["en", en],
+    ] as const) {
+      const t = createTranslator({ locale, messages, namespace: "Event" });
+      expect(t("rsvp.memberMark", { short: CLUB_SHORT_NAME })).toBe(CLUB_SHORT_NAME);
+      expect(t("calendar.feedName", { short: CLUB_SHORT_NAME })).toContain(CLUB_SHORT_NAME);
+    }
   });
 });

@@ -1,5 +1,5 @@
 import { countForm } from "@/i18n/count-form";
-import { CLUB_TIME_ZONE, durationShort, formatDay, formatTime } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, durationShort, formatDay, formatTime, ZONE_WORDS } from "@/i18n/dates";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { identicalInBothLanguages, isWrittenText, missingLanguage } from "@/shared/forms/both-languages";
 import { fillIn } from "@/shared/forms/fill-in";
@@ -294,9 +294,9 @@ export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale
   ]);
 }
 
-/** Sub-card 4.1: `Europe/Bucharest — ora României`, or the zone alone elsewhere. */
-export function timezoneSummary(words: SummaryWords, zone: string): string {
-  return zone === CLUB_TIME_ZONE ? fillIn(words.timezone.home, { zone }) : zone;
+/** Sub-card 4.1: the club's zone with its words (`CLUB_TIME_ZONE` — `ZONE_WORDS`, in the reader's language), or the zone alone elsewhere. */
+export function timezoneSummary(words: SummaryWords, zone: string, locale: string): string {
+  return zone === CLUB_TIME_ZONE ? fillIn(words.timezone.home, { zone, zoneWords: ZONE_WORDS[locale === "en" ? "en" : "ro"] }) : zone;
 }
 
 type PlaceEvent = Pick<EditableEvent, "locationName" | "locationAddress" | "locationToBeAnnounced" | "mapUrl">;

@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V3.99-2026-11-01 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V4.03-2026-11-02 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline: one release at a time;
  *   2. waits for the batch PR's checks to settle (§426), stops unless green, merges it into `qa`
@@ -29,6 +29,7 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
+import { readClub } from "./club-files.mjs";
 import { gateLine, sourceLine, waitForMergeGate } from "./pr-merge-gate.mjs";
 import {
   createClock,
@@ -55,7 +56,7 @@ function measured(outcome) {
   const { steps, totalMs } = clock.summary();
   console.log(`\n== ${NEW}: ${outcome}, step by step (m:ss)`);
   for (const line of clock.report()) console.log(line);
-  const file = process.env.SHIP_TIMES_FILE || join(tmpdir(), "brasovrunners-ship-times.jsonl");
+  const file = process.env.SHIP_TIMES_FILE || join(tmpdir(), `${readClub().slug}-ship-times.jsonl`);
   const record = {
     at: new Date().toISOString(),
     release: NEW,

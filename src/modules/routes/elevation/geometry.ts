@@ -57,8 +57,7 @@ const GLYPH_OF_KIND_FOOD_FIRST: ReadonlyArray<readonly [string, ElevationGlyph]>
 
 /**
  * The one glyph a pin draws for a point with several kinds. `foodBeforeWater` is the event page's chart and the editor's
- * preview (food implies water, so the fork says more); it is off by default because the race number's strip draws from this
- * same core and its pictures are versioned (`BIB_DRAWING_VERSION`) — it follows at its next drawing version.
+ * preview (food implies water, so the fork says more); it is off by default, and the race number's strip passes it since `BIB_DRAWING_VERSION` 5 (§881).
  */
 export function glyphForKinds(kinds: readonly string[], foodBeforeWater = false): ElevationGlyph {
   for (const [kind, glyph] of foodBeforeWater ? GLYPH_OF_KIND_FOOD_FIRST : GLYPH_OF_KIND) if (kinds.includes(kind)) return glyph;
@@ -164,7 +163,7 @@ export type ElevationOptions = {
   pinRadius?: number;
   /** A small picture: no marker labels, at most two altitude ticks, only the highest extreme. */
   compact?: boolean;
-  /** The pin of a point that offers food and water draws the fork, not the drop (the page's chart, §802); off by default — the race number's strip keeps its glyphs. */
+  /** The pin of a point that offers food and water draws the fork, not the drop (the page's chart, §802); off by default; the race number's strip passes it (§881). */
   foodBeforeWater?: boolean;
 };
 

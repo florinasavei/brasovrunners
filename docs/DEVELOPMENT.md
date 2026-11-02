@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.99-2026-11-01 -->
+<!-- PROJECT_BASELINE: BR-V4.03-2026-11-02 -->
 
 # Running this locally
 
-**Baseline `BR-V3.99-2026-11-01`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V4.03-2026-11-02`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -95,6 +95,7 @@ yarn test:categories     the six test categories with their files (tests/categor
 yarn test:fast           the categories marked fast — trust, guards, logic; what the pre-commit hook runs on the staged files' tests
 yarn test:skip <names…>  every category but the ones named (`yarn test:skip drawn pages`); «trust» is never left out
 yarn test:concurrency    the two-connection suite; needs the database running
+yarn test:fork           the fork check (§882): `@club` pointed at a made-up club (tests/fixtures/fork-club/), tests/fork/ renders the identity and finds none of this club's words; no database (PGlite); CI runs it in the `checks` job
 yarn test:clock          the suite with the real clock moved to +1 month, +1 year and +10 years; about twenty minutes a date (§ Tests that the calendar breaks); `--concurrency` runs the two-connection suite instead, a minute a date
 yarn test:watch          re-run on change
 yarn test:e2e            browser tests, mobile and desktop; needs the database running
@@ -127,6 +128,12 @@ yarn calendar:preview    «Salvează ca imagine» drawn without a server: five s
                          three layouts and the week, on any text under the floor a phone's feed still reads: 17 px on a 1080-wide
                          picture, 16 for an hour or a detail line, 18 for a day number, 21 for anything on 16:9; «Legenda dedesubt»
                          is drawn also without the legend and without the details, and fails on a month's race missing from the picture
+yarn brand:assets        the logo's rasters — the PDFs' lockup, the emails' letterhead, the «Nu mai pot ajunge» glyph — from
+                         public/brand/*.svg in the colours of club/club.json's palette (the email band `tints.emailBand`, or
+                         the primary when it is left out, and the primary's ink), then
+                         club/assets.lock.json: each source's sha256 (LF line endings) and those colours. Run it after changing
+                         an SVG or the palette and commit what it writes; tests/unit/theme/brand-assets-lock.test.ts fails with
+                         «run yarn brand:assets» until you do. --lock-only rewrites the lock alone (§885)
 ```
 
 `yarn check` is the single gate, and CI runs it (its two halves on five runners) on every pull request. The pre-commit
@@ -311,6 +318,20 @@ What `test:clock` cannot reach: `tests/e2e/` against a running server, and the d
 `now()` — read those by hand for a `new Date()` (or a form filled with a written date) compared
 with a fixed one. The seeds draw their dates from today (`src/db/seeds/sample-dates.ts`, §162) and
 never age.
+
+**An e2e spec never writes a date the calendar will reach (§883).** A spec that creates an event
+types its day through `ahead("2027-05-04")` from `tests/e2e/support/dates.ts`: the written date is a
+pattern, and the helper returns the same weekday a whole number of weeks later — one shift for the
+whole suite, the smallest that puts the earliest pattern 24 weeks (`LEAD_DAYS`) ahead of today in
+Brașov, read once per process — so a weekday a spec relies on, the gap between two of its dates and
+two dates written alike all stay true, even across the club's midnight, and the event is never in
+the past. What a shift does not keep is the month, the year and the season: a spec that reads one
+derives it from the date it typed (`monthOf`, `dayLine`, `written`, `dmy`, `yearsBefore`), a
+spec that needs a season asks for it (`nextMonthDay(11, 17)`, the sunset
+of a November evening), an age typed against a run's limit comes from `birthOn(runDay, age, days)`,
+and an instant written into the database is written as a local time (`AT TIME ZONE
+'Europe/Bucharest'`), because the offset changes with the season. `tests/unit/events/e2e-dates.test.ts`
+holds the helper.
 
 ### Tests that fail by chance
 

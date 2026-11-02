@@ -12,6 +12,10 @@ Source material for the club's visual identity. Nothing here is served to the we
 | `fonts/Facon.ttf` | The display face used on the kit. **Not shipped — see below** |
 | `fonts/Facon-read-me.txt` | Its licence, as the designer wrote it |
 
+The face the site sets the wordmark in is a copy of `fonts/Facon.ttf` shipped as
+`src/theme/fonts/Wordmark.ttf`, with its licence beside it as `Wordmark-LICENSE.txt` — a fixed slot, so a
+club running the platform replaces the two files and no code (`club/README.md`).
+
 The two PNG exports of the logo are deliberately absent: 64MB and 23MB. Git keeps every blob
 forever, so committing them would add 111MB to every clone the club ever makes, in order to
 store what the 16kB vectors already say. Generate rasters from the SVG at the size needed.

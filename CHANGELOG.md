@@ -8,6 +8,23 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.03-2026-11-02
+
+- **This club's own sentences live in `club/messages`** — the platform's catalogues are neutral, Brașov's home page, places, history and plan are an overlay merged over them, and the club's mark, card example, safety form, slug and zone arrive as arguments; every page and email reads as before. §887.
+## BR-V4.02-2026-11-01
+
+- **The club's own legal clauses live in `club/legal.json`** — the data protection officer, the mailbox, the photo channels and the prize money are the club's values, written into the platform's templates (Brașov's text and its fingerprint unchanged, so no «Șablon nou» email), and «Aprobă și publică» now refuses a version that still holds a `<PLACEHOLDER>`. §884.
+- **The club's colours, mountains, logo proportions and wordmark face are its own data** — `club/club.json`'s `palette` (by role; what a club leaves out is derived at AA), `club/decor.json` for the mountains, the logo's ratio read wherever it was written by hand, `Wordmark.ttf` as a fixed slot, and `yarn brand:assets` with a lock its test holds the sources to. Brașov is identical to the pixel. §885.
+- **The club's names leave the scripts and the release workflow** — hostname labels, Vercel projects and the release commit's author are read from `club/infra.json`, the archive name and the clocks from `club/club.json`. §886.
+## BR-V4.01-2026-11-01
+
+- **The e2e specs no longer hold dates the calendar will reach** — `ahead()` in `tests/e2e/support/dates.ts` moves a written day by whole weeks so it is always months ahead with the same weekday and gaps, read once per process, and the months, ages, seasons and offsets the specs read are derived from it; twenty-two specs stay green past April 2027, and the calendar's canonical test now checks the old `?month=` address's 308 itself. §883.
+## BR-V4.00-2026-11-01
+
+- **«Vreau să apar cu numele în clasament»** — a runner who registered under a privacy notice that did not yet describe the results can tick it on their own registration's page and is then named in a race's published results (still only while on the public list); unticked from the same page at any time. Asked only once the club approves a privacy notice that names the tick (`{{resultsNameAsk}}`) beside the results — the platform's template does not, until the club and its lawyer amend it; «Ghid» tells the club to announce it with «Trimite un mesaj participanților». §879.
+- **«Sarcini» reminds the club of «Startul cursei» and «Categorii de vârstă», and «Costuri» measures Hobby by Active CPU** — two race-day rows read from the live system, the Mailgun question follows the club's own plan, Hobby is shown against 4 Active CPU-hours instead of an unconfirmed build-minute ceiling (on «Costuri» and in the «Sarcini» row for `/devs`), and the Vercel wording states the two-months-under-3-hours rule. §880.
+- **The race number draws the fork too** — a checkpoint with water and food shows the fork on the bib's profile strip as on the event page; the «Eveniment» filter lists each event once, in your language; «Invitații fără răspuns» goes soonest first; the concurrency suite passes on a seeded database. §881.
+- **The club's identity in one file** — `club/club.json` holds the name, slug, short mark, place, time zone, coordinates, hashtags and logo files, read at build time through `brand.ts`, `place.ts`, `dates.ts`, `sun.ts` and `env.ts`; nothing a visitor sees changed, a literal-word guard and `yarn test:fork` keep it that way. §882.
 ## BR-V3.99-2026-11-01
 
 - **The GitHub backstop watches production's jobs and outbox** — it reads the deep health before it pokes, still pokes, and turns red on a stale job or a stalled outbox (the nightly 03:05–04:00 maintenance gap excepted); an unconfigured production is a warning, and `SETUP.md` §40 names the missing `PRODUCTION_JOB_SECRET`. §874.

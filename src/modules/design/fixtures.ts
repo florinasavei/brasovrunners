@@ -1,3 +1,4 @@
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import type { PublicEvent } from "@/modules/events/repository";
 import { homeFigures, type HomeFigure, type NumbersContent } from "@/modules/home/domain/numbers";
@@ -24,8 +25,8 @@ const WORDS = {
     race: "Cursa de probă",
     raceExcerpt: "O cursă montană de probă, cu start din centru. Traseul e marcat.",
     night: "Alergare de seară",
-    place: "Parcul Titulescu, la fântâna arteziană",
-    square: "Piața Sfatului",
+    place: "Parcul Central, la fântâna arteziană",
+    square: "Piața Mare",
     partner: "Partener de probă",
   },
   en: {
@@ -34,8 +35,8 @@ const WORDS = {
     race: "Sample race",
     raceExcerpt: "A sample mountain race starting from the centre. The course is marked.",
     night: "Evening run",
-    place: "Titulescu Park, at the fountain",
-    square: "Council Square",
+    place: "Central Park, at the fountain",
+    square: "Main Square",
     partner: "Sample partner",
   },
 } as const;
@@ -51,7 +52,7 @@ function row(locale: Locale, overrides: Partial<PublicEvent> = {}): PublicEvent 
     startsAt: new Date("2026-09-28T15:30:00Z"),
     endsAt: null,
     raceStartsAt: null,
-    timezone: "Europe/Bucharest",
+    timezone: CLUB_TIME_ZONE,
     mapUrl: null,
     routeUrl: null,
     stravaEventUrl: null,

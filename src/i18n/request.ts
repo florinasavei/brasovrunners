@@ -1,6 +1,7 @@
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
 import { env } from "@/shared/config/env";
+import { catalogueOf } from "./catalogue";
 import { CLUB_TIME_ZONE, DATE_FORMATS } from "./dates";
 import { missingMessagesAreLoud, onIntlError } from "./errors";
 import { routing } from "./routing";
@@ -14,7 +15,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale,
-    messages: (await import(`../../messages/${locale}.json`)).default,
+    // The platform's words with the club's own laid over them (§887, `catalogue.ts`).
+    messages: catalogueOf(locale),
     // AGENTS.md §3.1: every date and time the site shows is Brașov local time.
     timeZone: CLUB_TIME_ZONE,
     // The named date formats (§349): `format.dateTime(date, "dayLong")` in a Server Component.

@@ -3,6 +3,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { signatureTraceSchema } from "@/modules/legal-documents/domain/signature-trace";
 import { effectiveMinimumAge, isMinorOn, isUnderMinimumAge } from "./domain/age";
+import { CLUB_SLUG } from "@/theme/brand";
 import { SEX_CHOICES } from "./domain/sex";
 import { E164_PHONE } from "./phone";
 
@@ -117,7 +118,7 @@ const submissionFields = z.object({
     .max(40)
     .optional()
     .transform((value) => (value ? value.replace(/^@/, "") : undefined))
-    .refine((value) => value === undefined || INSTAGRAM_HANDLE.test(value), "an Instagram username, like @brasovrunners"),
+    .refine((value) => value === undefined || INSTAGRAM_HANDLE.test(value), `an Instagram username, like @${CLUB_SLUG}`),
 
   /**
    * "I am a Brașov Runners team member" (BR-REQ-031-06).

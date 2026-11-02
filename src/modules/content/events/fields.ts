@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { bibDesignSchema } from "@/modules/registrations/bib-design";
 import { badgeDesignSchema } from "@/modules/volunteers/badges/badge-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
@@ -285,7 +286,7 @@ const timezone = z
         return false;
       }
     },
-    { message: "must be a time zone name such as Europe/Bucharest" },
+    { message: `must be a time zone name such as ${CLUB_TIME_ZONE}` },
   );
 
 /**

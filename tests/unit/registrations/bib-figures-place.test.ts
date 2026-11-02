@@ -392,7 +392,7 @@ describe("§804 the picture draws the figures where the row says", () => {
 describe("§804 the drawing version, and the numbers printed so far", () => {
   it("keeps the drawing's version: every number already printed is drawn as it was, and the stamp reads the whole design", () => {
     // The default place draws what the drawing always drew (below, byte for byte), so nothing is raised.
-    expect(BIB_DRAWING_VERSION).toBe(4);
+    expect(BIB_DRAWING_VERSION).toBe(5);
     const stamp = (place: (typeof BIB_PROFILE_FIGURES_PLACES)[number]) => bibPictureStamp([withPlace(place)]);
     expect(new Set(BIB_PROFILE_FIGURES_PLACES.map(stamp)).size).toBe(3);
   });

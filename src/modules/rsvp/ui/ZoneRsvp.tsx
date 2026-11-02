@@ -14,6 +14,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import type { ClubMemberKind } from "../domain/public-member";
 import { zoneRsvpAnchor } from "../domain/zone-outcome";
+import { CLUB_SHORT_NAME } from "@/theme/brand";
 
 /**
  * «Vin!» in the members' zone (§822; the owner, 2026-10-18: «I want the flow to be super easy, also later to integrate with the member
@@ -96,7 +97,7 @@ export default async function ZoneRsvp({ locale, eventId, titleId, going, count,
           </Typography>
           {clubMember === "ACCOUNT" && (
             <Box data-testid="zone-rsvp-member">
-              <GlyphChip glyph="membersOnly" label={t("rsvp.memberFact")} variant="outlined" color="primary" tooltip={t("rsvp.memberFactHelp", { mark: t("rsvp.memberMark") })} />
+              <GlyphChip glyph="membersOnly" label={t("rsvp.memberFact")} variant="outlined" color="primary" tooltip={t("rsvp.memberFactHelp", { mark: t("rsvp.memberMark", { short: CLUB_SHORT_NAME }) })} />
             </Box>
           )}
           <form action={leaveAsMemberAction} aria-labelledby={titleId}>

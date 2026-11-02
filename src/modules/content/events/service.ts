@@ -4,6 +4,7 @@ import { eventTranslations, events, type PublicListClub } from "@/db/schema/even
 import { DEFAULT_PUBLIC_LIST_CLUB } from "@/modules/registrations/domain/public-list-club";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
 import { startHeldBack } from "@/modules/events/domain/dated";
@@ -3009,7 +3010,7 @@ function blankEventRow(now: Date): EditableEvent {
     startsAt: now,
     endsAt: null,
     raceStartsAt: null,
-    timezone: "Europe/Bucharest",
+    timezone: CLUB_TIME_ZONE,
     mapUrl: null,
     latitude: null,
     longitude: null,

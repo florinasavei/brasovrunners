@@ -34,7 +34,7 @@ import { type ClubFacts, clubFactsFromEnv } from "./templates/club-facts";
  * QA's templates to QA's Administrators, production production's.
  *
  * **One look a day, a digest (§775; the owner, 2026-10-15: six releases in a night sent six emails).**
- * The first run at or after 08:00 club time (Europe/Bucharest) looks once; if a template is newer than
+ * The first run at or after 08:00 club time (`CLUB_TIME_ZONE`) looks once; if a template is newer than
  * the ones the last email carried it sends ONE email naming every text whose template is newer, and
  * nothing when nothing changed. A change that lands after the day's look — at 10:00, at 22:30 — waits
  * for the next morning's. The mark is `checkedAt` in this same row — the house keeps its job marks in

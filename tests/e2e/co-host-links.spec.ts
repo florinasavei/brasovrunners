@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead } from "./support/dates";
 
 /**
  * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §344 and §352) — a partner is a
@@ -32,7 +33,7 @@ test("the editor adds a partner with its description and three links, refuses th
 
   // The date and time are MUI pickers since the pickers landed beside the partners (§347): the
   // posted inputs are hidden, so the picker is driven the way a person drives it.
-  await fillDateField(page, "Începutul evenimentului", "2027-06-01");
+  await fillDateField(page, "Începutul evenimentului", ahead("2027-06-01"));
   await fillTimeField(page, "Ora", "09:00");
   await field("event.locationName").fill("Parcul Tractorul");
   await field("event.locationNameEn").fill("Parcul Tractorul");

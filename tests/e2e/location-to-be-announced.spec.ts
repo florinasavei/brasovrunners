@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { editorBox, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead } from "./support/dates";
 
 /**
  * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §328) — the place to be announced, in a browser.
@@ -36,7 +37,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
 
     // The two names side by side from `sm`, stacked on a phone — and never wider than the phone (§362).
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    await fillDateField(page, "Începutul evenimentului", "2027-06-12");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-06-12"));
     await fillTimeField(page, "Ora", "09:00");
 
     // The browser asks for a meeting point in each language until the switch says it is to be

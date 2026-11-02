@@ -2,8 +2,12 @@ import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { defaultFeedbackSettings, FEEDBACK_BRANCHES, RECOMMENDED_VIA } from "@/modules/feedback/domain/branches";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
+import { withClubWords } from "../../helpers/club-words";
+
+// What a page reads: the platform's catalogue with this club's own sentences over it (§887).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §782 (amends §772; the owner, 2026-10-15: «ar trebui în configs să scriu (recomandat)») — Mailgun is
@@ -15,7 +19,7 @@ import ro from "../../../messages/ro.json";
 vi.mock("@/shared/feedback/email-roads-request", () => ({ emailRoadsForThisRequest: async () => ({ groups: { links: "mailgun", confirmations: "mailgun", reminders: "mailgun", announcements: "mailgun", club: "gmail", newsletter: "mailgun" }, gmail: false }) }));
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
-  const messages = (await import("../../../messages/ro.json")).default;
+  const messages = (await import("@/i18n/catalogue")).catalogueOf("ro");
   return {
     getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages: messages as typeof messages, namespace: namespace as "Admin" }),
     getLocale: async () => "ro",
@@ -116,7 +120,7 @@ describe("§782 Mailgun is the recommended road", () => {
     const onGmail = { ...state, safety: { ...state.safety, via: "gmail" } } as FormsState;
     const safety = group(await formsHtml(BOTH, onGmail), "feedback-via-safety");
     expect(safety).not.toContain(caption);
-    expect(safety).toContain(ro.Admin.emails.feedbackForms.via.safetyNote);
+    expect(safety).toContain(withClubWords(ro.Admin.emails.feedbackForms.via.safetyNote));
     // A form moved to Mailgun loses the caption.
     const moved = { ...state, howItWent: { ...state.howItWent, via: "mailgun" } } as FormsState;
     expect(group(await formsHtml(BOTH, moved), "feedback-via-howItWent")).not.toContain(caption);

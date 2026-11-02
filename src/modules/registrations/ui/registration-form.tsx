@@ -58,6 +58,7 @@ import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { countForm } from "@/i18n/count-form";
 import { CLUB_NAME } from "@/theme/brand";
+import { HOME_COUNTRY } from "@/modules/events/domain/place";
 
 /**
  * An optional group, **open by default** since 2026-09-17. It was collapsed to shorten the page
@@ -586,7 +587,7 @@ export async function registrationForm({
               {...field("country")}
               label={t("country")}
               // A blank from an older draft comes back as Romania, as the citizenship does.
-              defaultValue={prefill("country") || "RO"}
+              defaultValue={prefill("country") || HOME_COUNTRY}
               countries={countries}
               words={countrySearchWords}
             />
@@ -623,7 +624,7 @@ export async function registrationForm({
               {...field("nationality")}
               label={t("nationality")}
               // A blank from an older draft comes back as Romania too, never an empty select.
-              defaultValue={prefill("nationality") || "RO"}
+              defaultValue={prefill("nationality") || HOME_COUNTRY}
               countries={countries}
               words={countrySearchWords}
             />

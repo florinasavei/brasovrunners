@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { ahead } from "./support/dates";
 
 /**
  * `DECISIONS.md` §398 — the owner, 2026-09-25: "by default toate evenimentele sunt gratuite".
@@ -51,7 +52,7 @@ test.describe("a new event starts free (§398)", () => {
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };
-    await fillDateField(page, "Începutul evenimentului", "2027-05-09");
+    await fillDateField(page, "Începutul evenimentului", ahead("2027-05-09"));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Parcul Tractorul");

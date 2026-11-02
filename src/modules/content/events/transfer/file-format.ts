@@ -10,6 +10,7 @@ import { DURATION_MAX_MINUTES } from "@/modules/content/events/duration";
 import { fromWallTimeInput, toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { DEFAULT_VOLUNTEERS_ACCESS, VOLUNTEERS_ACCESS } from "@/modules/volunteers/domain/access";
+import { CLUB_SLUG } from "@/theme/brand";
 import { WAITLIST_CHOICES } from "../waitlist-choice";
 
 /**
@@ -33,9 +34,10 @@ import { WAITLIST_CHOICES } from "../waitlist-choice";
 
 /**
  * The `format` every file carries, and the only one this release reads. Hyphenated, not dotted:
- * `docs:check` reads the club's name followed by a dot and a word as the club's own hostname.
+ * `docs:check` reads the club's name followed by a dot and a word as the club's own hostname. The club's slug
+ * (`club/club.json`, §882) and `-event`: byte for byte the format every file exported so far carries.
  */
-export const EVENT_FILE_FORMAT = "brasovrunners-event";
+export const EVENT_FILE_FORMAT = `${CLUB_SLUG}-event`;
 
 /**
  * The version this release writes. A later release that changes the shape or a value's meaning raises

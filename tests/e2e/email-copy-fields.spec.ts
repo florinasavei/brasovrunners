@@ -78,7 +78,7 @@ test.describe("the fields of an email's words, as a legend", () => {
     await openFold(card);
     // Each half its own title, in the subject too (§373, email follow-up).
     await expect(card).toContainText("Detalii actualizate pentru Crosul de toamnă / Updated details for The autumn cross");
-    await expect(card.locator("iframe")).toHaveAttribute("srcdoc", /The meeting point is now: Tâmpa cable-car station\./);
+    await expect(card.locator("iframe")).toHaveAttribute("srcdoc", /The meeting point is now: Central Park entrance\./);
   });
 });
 
@@ -167,7 +167,9 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
       // grew twenty legends in the email follow-up (§373): the press waits for the client.
       await hydrated(page);
       await editor.getByRole("button", { name: "Înlocuiește cu câmpurile" }).click();
-      await expect(main.getByText("Am pus câmpurile în locul valorilor de exemplu și am salvat textul.")).toBeVisible();
+      // The save answers in a fifth of a second, but the page it redirects to is ~2.8 MB of previews the
+      // browser takes over again — measured at 4.1–4.7 s on desktop, at the default 5 s's edge.
+      await expect(main.getByText("Am pus câmpurile în locul valorilor de exemplu și am salvat textul.")).toBeVisible({ timeout: 15_000 });
       await expect(editor.getByTestId("email-copy-samples")).toHaveCount(0);
       await expect(editor.getByLabel("Subiect")).toHaveValue("Anulat: {eventTitle}");
       await expect(editor.locator(".ProseMirror")).toContainText("Înscrierea ta la {eventTitle} a fost anulată.");
