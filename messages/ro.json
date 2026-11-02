@@ -11137,7 +11137,9 @@
   },
   "Identity": {
     "line": "{legalName} ({club}) · CIF {cif}",
-    "lineNoCif": "{legalName} ({club})"
+    "lineNoCif": "{legalName} ({club})",
+    "seat": "Sediul: {address}",
+    "email": "Email: {email}"
   },
   "Legal": {
     "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",

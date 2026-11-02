@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { bareRegistrationNumber, clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
+import { cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { env } from "@/shared/config/env";
 import { CLUB_NAME } from "@/theme/brand";
 
@@ -27,8 +28,11 @@ import { CLUB_NAME } from "@/theme/brand";
  *   «Scrie-ne: <address>». The fold already holds the contact; the identity is its one new line, at
  *   the panel's own size and colour, with no margin of its own.
  *
- * The seat (`CLUB_REGISTERED_ADDRESS`) is not shown: it is a person's address on many a club's
- * certificate, and the owner asked for the name and the CIF. A Server Component, no island.
+ * The `line` shape also shows the seat (`CLUB_REGISTERED_ADDRESS`) and the address the club shows
+ * for contact (§442), each on a line of its own under the name, while set (§NNN): Google for
+ * Nonprofits refused to tie the association to the domain until the site «explicitly displays your
+ * physical street address, and generic email». The privacy notice already printed both; the fold
+ * keeps the name and the CIF alone, beside its own «Scrie-ne». A Server Component, no island.
  */
 type Props = { shape: "line" | "fold" };
 
@@ -63,6 +67,8 @@ export default async function ClubIdentity({ shape }: Props) {
     );
   }
 
+  const seat = clubFactsFromEnv(env).registeredAddress;
+  const emails = await cachedShownContactAddresses();
   return (
     <Typography
       variant="body2"
@@ -71,6 +77,16 @@ export default async function ClubIdentity({ shape }: Props) {
       sx={{ mt: { xs: 3, sm: 4 }, overflowWrap: "anywhere" }}
     >
       {words}
+      {seat && (
+        <Box component="span" data-testid="club-identity-seat" sx={{ display: "block" }}>
+          {t("seat", { address: seat })}
+        </Box>
+      )}
+      {emails.length > 0 && (
+        <Box component="span" data-testid="club-identity-email" sx={{ display: "block" }}>
+          {t("email", { email: emails.join(", ") })}
+        </Box>
+      )}
     </Typography>
   );
 }

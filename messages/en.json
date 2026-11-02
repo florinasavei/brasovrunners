@@ -11137,7 +11137,9 @@
   },
   "Identity": {
     "line": "{legalName} ({club}) · CIF {cif}",
-    "lineNoCif": "{legalName} ({club})"
+    "lineNoCif": "{legalName} ({club})",
+    "seat": "Registered office: {address}",
+    "email": "Email: {email}"
   },
   "Legal": {
     "unavailable": "This document has not been published for this environment yet.",
