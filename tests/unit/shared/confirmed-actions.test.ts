@@ -194,6 +194,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateShownContactAddressAction: [],
   // «Telefon public» (§565): the number every page's footer shows from the next page view.
   updatePublicPhoneAction: [],
+  updateClubIdentityAction: [],
   // «Spune-ne ceva» (§676): which anonymous forms the contact page offers, and who receives each.
   updateFeedbackFormsAction: [],
   // The public pages' background tint (§488): every visitor sees the new colour from the next page view.
