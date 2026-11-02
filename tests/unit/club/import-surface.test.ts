@@ -67,13 +67,31 @@ describe("BR-REQ-101-01: the club's file has one way into the platform (§882)",
     expect(readers.every((file) => file.startsWith("src/modules/legal-documents/"))).toBe(true);
   });
 
-  it("names nothing in the club's folder but club.json, decor.json and legal.json, each through its own door (§884, §885)", () => {
+  it("names nothing in the club's folder but club.json, decor.json, legal.json and its messages, each through its own door (§884, §885, §NNN)", () => {
     const named = FILES.flatMap(({ file, imports }) => imports.filter((specifier) => specifier.startsWith("@club/")).map((specifier) => `${file} → ${specifier}`)).sort();
     expect(named).toEqual([
       "src/club/config.ts → @club/club.json",
       "src/club/decor.ts → @club/decor.json",
+      "src/i18n/catalogue.ts → @club/messages/en.json",
+      "src/i18n/catalogue.ts → @club/messages/ro.json",
       "src/modules/legal-documents/templates/club-facts.ts → @club/legal.json",
     ]);
+  });
+
+  /**
+   * BR-REQ-101-01 (§NNN): the words have one door too. `src/i18n/catalogue.ts` is the only file that imports the platform's
+   * catalogues (`messages/<locale>.json`) or the club's own sentences (`club/messages/<locale>.json`), and merges them: a
+   * reader that took the platform's file straight would say the neutral sentence where this club says its own.
+   */
+  it("and the catalogues, the platform's and the club's, only by src/i18n/catalogue.ts", () => {
+    const catalogue = /(^|\/)messages\/(ro|en)\.json$/;
+    const readers = FILES.filter(({ file, imports }) => file.startsWith("src/") && imports.some((specifier) => catalogue.test(specifier))).map(({ file }) => file);
+    expect(readers).toEqual(["src/i18n/catalogue.ts"]);
+    // and no template literal that names the folder, as the request's configuration did with `import(\`…/messages/${locale}.json\`)`
+    const dynamic = FILES.filter(({ file, full }) => file.startsWith("src/") && file !== "src/i18n/catalogue.ts" && /import\(\s*`[^`]*messages\//.test(readFileSync(full, "utf8")));
+    expect(dynamic.map(({ file }) => file)).toEqual([]);
+    const text = readFileSync(path.join(ROOT, "src/i18n/catalogue.ts"), "utf8");
+    expect(specifiers(text).filter((specifier) => catalogue.test(specifier)).sort()).toEqual(["../../messages/en.json", "../../messages/ro.json", "@club/messages/en.json", "@club/messages/ro.json"]);
   });
 
   /**

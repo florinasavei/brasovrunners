@@ -17,15 +17,24 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
  */
 let currentLocale: "ro" | "en" = "ro";
 let currentRole: StaffRole = "COPYWRITER";
+/** A fork's catalogue: the plan is this club's own (`club/messages`), so without the overlay there is none. */
+let planless = false;
+const withoutPlan = <T,>(messages: T): T => {
+  const copy = structuredClone(messages) as { Admin: { design: { plan?: unknown } } };
+  delete copy.Admin.design.plan;
+  return copy as T;
+};
 
 vi.mock("next-intl/server", async () => {
   const { createFormatter, createTranslator } = await import("next-intl");
-  const ro = (await import("../../../messages/ro.json")).default;
-  const en = (await import("../../../messages/en.json")).default;
+  const { catalogueOf } = await import("@/i18n/catalogue");
+  const ro = catalogueOf("ro");
+  const en = catalogueOf("en");
   return {
     getTranslations: async (arg: string | { namespace: string }) => {
       const namespace = typeof arg === "string" ? arg : arg.namespace;
-      return createTranslator({ locale: currentLocale, messages: currentLocale === "ro" ? ro : en, namespace: namespace as "Admin" });
+      const messages = currentLocale === "ro" ? ro : en;
+      return createTranslator({ locale: currentLocale, messages: planless ? withoutPlan(messages) : messages, namespace: namespace as "Admin" });
     },
     getFormatter: async () => createFormatter({ locale: currentLocale, timeZone: "Europe/Bucharest" }),
     getLocale: async () => currentLocale,
@@ -55,8 +64,11 @@ vi.mock("@/modules/staff-identity/session", () => ({
 }));
 
 const { NextIntlClientProvider } = await import("next-intl");
-const ro = (await import("../../../messages/ro.json")).default;
-const en = (await import("../../../messages/en.json")).default;
+// What the page reads (§NNN): the platform's words with this club's over them; the plan's words are the club's alone.
+const { catalogueOf } = await import("@/i18n/catalogue");
+const ro = catalogueOf("ro");
+const en = catalogueOf("en");
+const roPlan = (await import("@club/messages/ro.json")).default.Admin.design.plan;
 const { default: DesignSystem } = await import("@/modules/design/ui/DesignSystem");
 const { default: DesignSectionLayout } = await import("@/app/[locale]/admin/design/layout");
 const { DESIGN_SECTION_IDS } = await import("@/modules/design/ui/section");
@@ -72,6 +84,7 @@ const { LOOK_PREVIEW_ATTRIBUTE, LOOK_VALUE } = await import("@/theme/look");
 
 afterEach(() => {
   currentLocale = "ro";
+  planless = false;
   currentRole = "COPYWRITER";
 });
 
@@ -103,6 +116,14 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
         expect(markup, `${locale}: heading ${id}`).toContain(words.sections[id]);
       }
     }
+  });
+
+  it("draws no «Planul» link and no plan section for a club whose overlay has no plan (§NNN)", async () => {
+    planless = true;
+    const markup = await page();
+    expect(markup).not.toContain('id="plan"');
+    expect(markup).not.toContain('href="#plan"');
+    for (const id of DESIGN_SECTION_IDS.filter((id) => id !== "plan")) expect(markup, `contents link ${id}`).toContain(`href="#${id}"`);
   });
 
   it("names every colour token, every tint and every asserted pair with its ratio", async () => {
@@ -204,16 +225,16 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
     }
     for (const decision of REDESIGN_DECISIONS) {
       expect(markup).toContain(`data-decision="${decision.id}"`);
-      expect(markup).toContain(ro.Admin.design.plan.decisions[String(decision.id) as "1"].title);
+      expect(markup).toContain(roPlan.decisions[String(decision.id) as "1"].title);
     }
     for (const phase of REDESIGN_PHASES) {
       expect(markup).toContain(`data-phase="${phase.id}"`);
-      expect(markup).toContain(ro.Admin.design.plan.phases[String(phase.id) as "0"].title);
+      expect(markup).toContain(roPlan.phases[String(phase.id) as "0"].title);
     }
     expect(markup).toContain(">docs/REDESIGN.md<");
-    expect(markup).toContain(ro.Admin.design.plan.statuses.default);
-    expect(markup).toContain(ro.Admin.design.plan.statuses.planned);
-    expect(markup).toContain(ro.Admin.design.plan.statuses.decided);
+    expect(markup).toContain(roPlan.statuses.default);
+    expect(markup).toContain(roPlan.statuses.planned);
+    expect(markup).toContain(roPlan.statuses.decided);
   });
 
   it("names no person and no real event in its samples", async () => {

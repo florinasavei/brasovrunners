@@ -1,5 +1,8 @@
-import en from "../../../../messages/en.json";
-import ro from "../../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
+
+// The platform's words with the club's own laid over them (§NNN, `i18n/catalogue.ts`).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * The privacy notice's `{{teamPage}}` (§459): the team page's own quoted title from the catalogue,

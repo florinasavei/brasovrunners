@@ -1,10 +1,14 @@
 import { type ComponentProps, createElement, type ReactElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
 import type { PublicRsvps } from "@/modules/rsvp/rsvp";
 import { CLUB_NAME } from "@/theme/brand";
+import { catalogueOf } from "@/i18n/catalogue";
+import { withClubWords } from "../../helpers/club-words";
+
+// What a page reads: the platform's catalogue with this club's own sentences over it (§NNN).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * §831 (BR-REQ-039-01; amends §812 and §796) — what the pieces draw for the member mark, without a database: the tick on the page's form and what the one-tap
@@ -104,7 +108,7 @@ describe("§831 the tick on the page's form", () => {
     expect(markup).toContain(`Sunt membru al grupului ${CLUB_NAME}`);
     // The «?» is the registration form's own island (`Hint`): its text is the platform's sentence until the club writes its own.
     expect(markup).toContain(ro.Registration.clubMemberDefinition);
-    expect(markup).toContain(ro.Event.rsvp.memberHelp.replace("{mark}", ro.Event.rsvp.memberMark));
+    expect(markup).toContain(ro.Event.rsvp.memberHelp.replace("{mark}", withClubWords(ro.Event.rsvp.memberMark)));
     // Beside the name's tick, not instead of it.
     expect(markup).toContain('name="showName"');
     expect(markup.indexOf('name="showName"')).toBeLessThan(markup.indexOf('name="clubMember"'));
@@ -114,7 +118,7 @@ describe("§831 the tick on the page's form", () => {
     const markup = await box("en");
     expect(markup).toContain(`I am a member of the ${CLUB_NAME} group`);
     expect(markup).toContain(en.Registration.clubMemberDefinition);
-    expect(markup).toContain(en.Event.rsvp.memberHelp.replace("{mark}", en.Event.rsvp.memberMark));
+    expect(markup).toContain(en.Event.rsvp.memberHelp.replace("{mark}", withClubWords(en.Event.rsvp.memberMark, "en")));
   });
 
   it("is not drawn while the notice in force does not describe the mark", async () => {
@@ -167,8 +171,8 @@ describe("§831 what the one-tap island is handed for the tick", () => {
     expect(typeof actions.member).toBe("function");
     expect(labels.memberTick).toBe(`Sunt membru al grupului ${CLUB_NAME}`);
     expect(labels.memberHint).toBe(ro.Registration.clubMemberDefinition);
-    expect(labels.memberOn).toBe(ro.Event.rsvp.memberOutcome.on.replace("{mark}", ro.Event.rsvp.memberMark));
-    expect(labels.memberFactHelp).toBe(ro.Event.rsvp.memberFactHelp.replace("{mark}", ro.Event.rsvp.memberMark));
+    expect(labels.memberOn).toBe(ro.Event.rsvp.memberOutcome.on.replace("{mark}", withClubWords(ro.Event.rsvp.memberMark)));
+    expect(labels.memberFactHelp).toBe(ro.Event.rsvp.memberFactHelp.replace("{mark}", withClubWords(ro.Event.rsvp.memberMark)));
     expect(labels.memberOff).toBe(ro.Event.rsvp.memberOutcome.off);
     expect(labels.memberClosed).toBe(ro.Event.rsvp.memberOutcome.closed);
     expect(labels.memberFact).toBe("Membru");

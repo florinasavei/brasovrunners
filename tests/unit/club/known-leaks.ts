@@ -1,7 +1,8 @@
 /**
  * The club's words still written as a literal, file by file, word by word, with the number of strings that say it (§882) — what `club-literals.test.ts` lets through
- * until the later changes move each to `club/club.json`: the catalogues' and the legal templates' wording, the
- * scripts and the CI's local database name, the sample events. A ratchet: each word is counted in strings, so a new string that says it fails even in a listed file, and a file that says a word
+ * until the later changes move each to `club/club.json`: the scripts and the CI's local database name, the calendar picture's sample months.
+ * The catalogues have no row and never get one again (§NNN): this club's own sentences are `club/messages/*.json`, which the guard does not
+ * scan, and the platform's catalogues say none of its words. A ratchet: each word is counted in strings, so a new string that says it fails even in a listed file, and a file that says a word
  * fewer times fails the test until its count is lowered, and a new one is never added here to make a change pass — read the word from
  * `theme/brand.ts`, `events/domain/place.ts` or `i18n/dates.ts` instead.
  */
@@ -14,35 +15,6 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
   ".github/workflows/e2e-dev-nightly.yml": { Brașov: 4, "Brașov Runners": 4 },
   // the local database's name and role, its container and volume (`brasovrunners-db`, `brasovrunners_pgdata`) stay by design (§886, kept by design: the local database, role, container and package name)
   "docker-compose.yml": { Brașov: 3, "Brașov Runners": 6, brasovrunners: 3 },
-  // the catalogues' wording — moved by the wording change
-  "messages/en.json": {
-    "#NoOneLeftBehind": 1,
-    "#brasovrunners": 1,
-    "BV 123456": 5,
-    BVR: 7,
-    Brașov: 7,
-    "Brașov Runners": 11,
-    "Girl Zone": 12,
-    Poiana: 1,
-    Tâmpa: 1,
-    brasovrunners: 11,
-    Șchei: 1,
-  },
-  // the catalogues' wording — moved by the wording change
-  "messages/ro.json": {
-    "#NoOneLeftBehind": 1,
-    "#brasovrunners": 1,
-    "BV 123456": 5,
-    BVR: 7,
-    Brașov: 6,
-    "Brașov Runners": 11,
-    "Girl Zone": 12,
-    Poiana: 1,
-    "Pădurea Noua": 1,
-    Tâmpa: 1,
-    brasovrunners: 11,
-    Șchei: 1,
-  },
   // the package's name (kept by design, §886) and its description string, left for a later chain
   "package.json": {
     Brașov: 1,
@@ -106,15 +78,4 @@ export const KNOWN_LEAKS: Record<string, Record<string, number>> = {
   "scripts/cloud-setup.sh": { Brașov: 3, "Brașov Runners": 3 },
   // the local database's container (`brasovrunners-db`) stays by design (§886, kept by design: the local database, role, container and package name)
   "scripts/db-reset-local.mjs": { "Brașov Runners": 1, brasovrunners: 1 },
-  // the design page's sample event
-  "src/modules/design/fixtures.ts": { "Piața Sfatului": 1, Titulescu: 2 },
-  // the safety form's name in the relayed message
-  "src/modules/feedback/domain/branches.ts": { "Girl Zone": 1 },
-  // the legal templates' wording — moved by the legal-clauses change
-  "src/modules/legal-documents/templates/tokens.ts": { Titulescu: 2 },
-  // the email preview's sample event
-  "src/modules/notifications/domain/email-sample.ts": {
-    "Livada Poștei": 2,
-    Tâmpa: 4,
-  },
 };
