@@ -12,7 +12,7 @@ import { CLUB_NAME } from "@/theme/brand";
  * §215): one line, «<legal name> (<site name>) · CIF <CIF>», in two shapes — a paragraph at the end
  * of the listing, the «about» pages and the contact page, and a span inside the footer's «Despre
  * club, contact și termeni», where the hotfix (#293) moved it from the block §565 drew under the bar.
- * §NNN: the caller names its place, and «Ce arată site-ul despre asociație» ticks where the name,
+ * §890: the caller names its place, and «Ce arată site-ul despre asociație» ticks where the name,
  * the seat and the email show.
  *
  * Every value here is made up — «Asociația Exemplu», «RO00000000» — and the club's own never
@@ -110,7 +110,7 @@ describe("§565 the identity line", () => {
   });
 });
 
-describe("§NNN each line where it is ticked", () => {
+describe("§890 each line where it is ticked", () => {
   it("shows the seat and the email only in the places ticked for them, and the name only in its own", async () => {
     state.shown = { name: ["contact", "footer"], seat: ["contact"], email: ["contact", "pages"], seatAddress: SHOWN_SEAT } satisfies ClubIdentityShown;
     expect(text(await render("contact"))).toBe(`${LINE} Sediul: ${SHOWN_SEAT} Email: ${EMAIL}`);

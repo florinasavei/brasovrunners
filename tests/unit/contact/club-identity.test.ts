@@ -8,12 +8,12 @@ import {
 } from "@/modules/contact/domain/club-identity";
 
 /**
- * §NNN — «Ce arată site-ul despre asociație»: for each line (the name and CIF, the seat, the email)
+ * §890 — «Ce arată site-ul despre asociație»: for each line (the name and CIF, the seat, the email)
  * the places it is ticked for, and the seat as the club typed it. Nothing stored is the name and the
  * CIF everywhere, as before, and the seat and the email nowhere: the owner would not have his seat
  * forced onto the home page. The address here is made up.
  */
-describe("§NNN what the site shows about the association", () => {
+describe("§890 what the site shows about the association", () => {
   it("defaults to the name and the CIF in all four places, the seat and the email in none, and no seat typed", () => {
     expect(DEFAULT_CLUB_IDENTITY_SHOWN).toEqual({ name: ["home", "contact", "pages", "footer"], seat: [], email: [], seatAddress: null });
     for (const place of CLUB_IDENTITY_PLACES) {

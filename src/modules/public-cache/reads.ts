@@ -1104,7 +1104,7 @@ export async function cachedPublicPhone(): Promise<string | null> {
 }
 
 /**
- * «Ce arată site-ul despre asociație» (§NNN): where the identity line shows the name and CIF, the
+ * «Ce arată site-ul despre asociație» (§890): where the identity line shows the name and CIF, the
  * seat and the email, and the seat as typed — read by `ClubIdentity` on public pages, so cached like
  * the phone. When the database cannot answer, the default: the name and the CIF everywhere, no seat
  * and no email.

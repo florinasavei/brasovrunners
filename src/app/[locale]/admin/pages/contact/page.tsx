@@ -126,7 +126,7 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
       {/* «Telefon public» (§565): optional; the footer's «Contact» shows it only when set. */}
       <PublicPhonePanel locale={locale} state={publicPhone} mayEdit={mayEdit} openWhen={{ primary: true, saved: saved === "publicPhone" }} />
 
-      {/* «Ce arată site-ul despre asociație» (§NNN): where the name and CIF, the seat and the email show — tick boxes. */}
+      {/* «Ce arată site-ul despre asociație» (§890): where the name and CIF, the seat and the email show — tick boxes. */}
       <ClubIdentityPanel
         locale={locale}
         state={clubIdentity}

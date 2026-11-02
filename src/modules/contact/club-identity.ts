@@ -9,7 +9,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { type ClubIdentityShown, clubIdentityShownSchema, DEFAULT_CLUB_IDENTITY_SHOWN } from "./domain/club-identity";
 
 /**
- * «Ce arată site-ul despre asociație» (§NNN): «Telefon public»'s shape (§565) — one
+ * «Ce arată site-ul despre asociație» (§890): «Telefon public»'s shape (§565) — one
  * `platform_settings` row (a key-value store, so no migration) holding the ticks and the seat as
  * the site prints it, written by an Administrator on «Pagini» → «Contact», audited, read by
  * `ClubIdentity` through the public cache.

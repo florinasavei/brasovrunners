@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * «Ce arată site-ul despre asociație» (§NNN): which of the association's facts the identity line
+ * «Ce arată site-ul despre asociație» (§890): which of the association's facts the identity line
  * (`ClubIdentity`) shows, and where — a grid of tick boxes on «Pagini» → «Contact» (the owner,
  * 2026-11-02: «a checkmark», «they should all be configs!») — and the address its «Sediul» line
  * prints, typed in the same card.

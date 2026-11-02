@@ -187,7 +187,7 @@ const WRITES: Record<string, Expected> = {
   },
   // «Telefon public» (§565): the footer's «Contact» on every page.
   "src/modules/contact/public-phone.ts#updatePublicPhone": ["settings"],
-  // «Ce arată site-ul despre asociație» (§NNN): the identity line at the foot of the listing, «Contact», the club's pages and the footer.
+  // «Ce arată site-ul despre asociație» (§890): the identity line at the foot of the listing, «Contact», the club's pages and the footer.
   "src/modules/contact/club-identity.ts#updateClubIdentityShown": ["settings"],
   // «Cine e membru» (§789): the sentence behind the member tick's «?» on the registration and volunteers' forms.
   "src/modules/content/members/member-definition.ts#saveMemberDefinition": ["settings"],

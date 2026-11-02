@@ -108,7 +108,7 @@ export async function updatePublicPhoneAction(_previous: FormOutcome | null, for
 }
 
 /**
- * «Ce arată site-ul despre asociație» (§NNN): for each line — the name and CIF, the seat, the email —
+ * «Ce arată site-ul despre asociație» (§890): for each line — the name and CIF, the seat, the email —
  * the places it is ticked for; a box posts its place under the line's name, an unticked one nothing;
  * and «Adresa afișată pe site», the seat the site prints (empty, none). Administrator at the door,
  * the service asserting it again.
