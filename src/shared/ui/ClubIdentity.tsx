@@ -105,7 +105,7 @@ export default async function ClubIdentity({ place }: Props) {
       variant="body2"
       color="text.secondary"
       data-testid="club-identity-line"
-      sx={{ mt: { xs: 3, sm: 4 }, overflowWrap: "anywhere" }}
+      sx={{ mt: { xs: 5, sm: 7 }, overflowWrap: "anywhere" }}
     >
       {lines}
     </Typography>

@@ -1,0 +1,7 @@
+{
+  "branch": "fix/club-identity-lower",
+  "decisionsTitle": "The association's identity lines a little lower on the page",
+  "decisionsSection": "**The owner, 2026-11-02:** «e ok doar ca vreau sa fie mutate un pic mai jos», on the lines «Ce arată site-ul despre asociație» ticks for the listing, «Contact» and the club's pages.\n\n**Decision.** The paragraph `ClubIdentity` draws at the end of a page keeps its place and its shape, with more room above it — 40 pixels on a phone and 56 from `sm`, instead of 24 and 32 — so it reads as the page's foot, set apart from the content, rather than as the content's last line. The footer's fold copy is unchanged.\n\n**Refused.** A block in or under the footer's bar (§582: the footer stays collapsed), or pulling the paragraph into the watermark's band, where the centred mark and the text would meet on a phone.",
+  "changelogLine": "- **The association's name, seat and email sit a little lower at the foot of the page** — more room between the page's content and those lines. §NNN.",
+  "batchLine": "the association's identity lines a little lower on the page"
+}
