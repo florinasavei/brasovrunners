@@ -18,7 +18,7 @@ import { CLUB_NAME } from "@/theme/brand";
  * repository — public — carries none of the values. Unset (CI, a fresh checkout, the e2e run), the
  * identity renders nothing, in any place.
  *
- * **Where each line shows is the club's choice** (§NNN): «Ce arată site-ul despre asociație» on
+ * **Where each line shows is the club's choice** (§890): «Ce arată site-ul despre asociație» on
  * «Pagini» → «Contact» ticks, for each of three lines — «<legal name> (<site name>) · CIF <CIF>»,
  * «Sediul: <seat>» and «Email: <address>» (the address the club shows for contact, §442) — the places
  * it appears in. The seat is the address typed in the same card («Adresa afișată pe site»: street and

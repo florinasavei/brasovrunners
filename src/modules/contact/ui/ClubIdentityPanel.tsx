@@ -36,7 +36,7 @@ type Props = {
 const FIELD: Record<ClubIdentityItem, string> = { name: "showName", seat: "showSeat", email: "showEmail" };
 
 /**
- * «Ce arată site-ul despre asociație» (§NNN): a grid of real tick boxes — a row per line (the name
+ * «Ce arată site-ul despre asociație» (§890): a grid of real tick boxes — a row per line (the name
  * and CIF, the seat, the email), a box per place (the listing, «Contact», «Echipa» and the club's
  * pages, the footer's fold) — the seat's own box, «Adresa afișată pe site», under its row, and one
  * «Salvează» for all of it behind the §384 confirmation. «Telefon public»'s shape (§565): a Server

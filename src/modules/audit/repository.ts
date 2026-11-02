@@ -470,7 +470,7 @@ export type AuditAction =
   | "shown_contact_address.changed"
   /** «Telefon public»: the number the footer's «Contact» shows, set or cleared (§565); whether one is set, never the number. */
   | "public_phone.changed"
-  /** «Ce arată site-ul despre asociație»: where the name and CIF, the seat and the email show (§NNN); the ticks, never a value. */
+  /** «Ce arată site-ul despre asociație»: where the name and CIF, the seat and the email show (§890); the ticks, never a value. */
   | "club_identity.changed"
   /**
    * «Spune-ne ceva» (§676): which branch was switched on or off, which recipient changed and whether

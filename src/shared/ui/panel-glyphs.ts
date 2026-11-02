@@ -226,7 +226,7 @@ export const PANEL_GLYPHS = {
   contacts: ContactMailIcon,
   shownAddress: AlternateEmailIcon,
   publicPhone: PhoneIcon,
-  // «Ce arată site-ul despre asociație» (§NNN): the association's name, seat and email on the site.
+  // «Ce arată site-ul despre asociație» (§890): the association's name, seat and email on the site.
   clubIdentity: BadgeIcon,
   // «Spune-ne ceva» (§676): the four anonymous forms above the newsletter on «Contact» (§679).
   feedback: FeedbackIcon,

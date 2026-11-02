@@ -7,7 +7,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Ce arată site-ul despre asociație» on «Pagini» → «Contact»: one `platform_settings` row (no
+ * §890 — «Ce arată site-ul despre asociație» on «Pagini» → «Contact»: one `platform_settings` row (no
  * migration), changed by the Administrator alone. The action is pressed as each role: the door asks
  * for `canManageClubSettings` (the session's check, applied to the role here as the real one does),
  * and the service asserts it again behind it.
@@ -43,7 +43,7 @@ function form(ticks: { showName?: string[]; showSeat?: string[]; showEmail?: str
   return data;
 }
 
-describe("§NNN what the site shows about the association: the Administrator's alone", () => {
+describe("§890 what the site shows about the association: the Administrator's alone", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
