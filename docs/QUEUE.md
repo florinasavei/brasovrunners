@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.05` | the club's legal name and CIF at the foot of the listing (§889) |
 | `BR-V4.04` | the internal list (notes) and the official waiting list told apart; one-press «Mută pe lista oficială» and «Oferă-i un loc acum» (§888) |
 | `BR-V4.03` | the platform's words neutral, this club's own sentences in club/messages (§887) |
 | `BR-V4.02` | the club's legal clauses read from club/legal.json, and no approval of a text with a blank (§884) · the club's palette, mountains, logo proportions and wordmark face are its own data (§885) · the club's names leave the scripts and the release workflow (§886) |
