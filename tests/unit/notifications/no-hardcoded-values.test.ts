@@ -368,7 +368,7 @@ describe("§NNN the club's short mark, card example, safety form, slug, bucket a
     );
     expect(asking("bucket")).toEqual(["Admin.tasks.items.mediaStorage.how.2", "Admin.tasks.items.mediaStorage.how.6"]);
     expect(asking("timeZone")).toEqual(["Admin.tasks.items.scheduler.how.0"]);
-    expect(asking("zoneWords")).toEqual(["Admin.editor.boxes.summary.timezone.home"]);
+    expect(asking("zoneWords")).toEqual(["Admin.editor.boxes.summary.timezone.home", "Admin.tasks.emailStalled.deferred"]);
   });
 
   it("hands each call the value from its constant", () => {
@@ -409,6 +409,8 @@ describe("§NNN the club's short mark, card example, safety form, slug, bucket a
       ["src/app/[locale]/admin/tasks/page.tsx", /short: CLUB_SHORT_NAME,\n\s*slug: CLUB_SLUG,\n\s*timeZone: CLUB_TIME_ZONE,\n\s*safetyName: SAFETY_PROGRAMME\[/],
       ["src/app/[locale]/admin/tasks/page.tsx", /bucket: env\.R2_BUCKET \?\? `\$\{CLUB_SLUG\}-media`,/],
       ["src/app/[locale]/admin/tasks/page.tsx", /t\(`items\.\$\{task\.id\}\.title`, howValues\)/],
+      // The stalled email's alert says when the outbox resumes in the club's own zone words, not the overlay's.
+      ["src/app/[locale]/admin/tasks/page.tsx", /t\("emailStalled\.deferred", \{[\s\S]{0,400}?zoneWords: ZONE_WORDS\[locale === "en" \? "en" : "ro"\],\n\s*\}\)/],
     ];
     for (const [file, pattern] of pins) expect(read(file), `${file}: ${pattern}`).toMatch(pattern);
   });

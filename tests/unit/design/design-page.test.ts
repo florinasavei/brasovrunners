@@ -17,6 +17,13 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
  */
 let currentLocale: "ro" | "en" = "ro";
 let currentRole: StaffRole = "COPYWRITER";
+/** A fork's catalogue: the plan is this club's own (`club/messages`), so without the overlay there is none. */
+let planless = false;
+const withoutPlan = <T,>(messages: T): T => {
+  const copy = structuredClone(messages) as { Admin: { design: { plan?: unknown } } };
+  delete copy.Admin.design.plan;
+  return copy as T;
+};
 
 vi.mock("next-intl/server", async () => {
   const { createFormatter, createTranslator } = await import("next-intl");
@@ -26,7 +33,8 @@ vi.mock("next-intl/server", async () => {
   return {
     getTranslations: async (arg: string | { namespace: string }) => {
       const namespace = typeof arg === "string" ? arg : arg.namespace;
-      return createTranslator({ locale: currentLocale, messages: currentLocale === "ro" ? ro : en, namespace: namespace as "Admin" });
+      const messages = currentLocale === "ro" ? ro : en;
+      return createTranslator({ locale: currentLocale, messages: planless ? withoutPlan(messages) : messages, namespace: namespace as "Admin" });
     },
     getFormatter: async () => createFormatter({ locale: currentLocale, timeZone: "Europe/Bucharest" }),
     getLocale: async () => currentLocale,
@@ -76,6 +84,7 @@ const { LOOK_PREVIEW_ATTRIBUTE, LOOK_VALUE } = await import("@/theme/look");
 
 afterEach(() => {
   currentLocale = "ro";
+  planless = false;
   currentRole = "COPYWRITER";
 });
 
@@ -107,6 +116,14 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
         expect(markup, `${locale}: heading ${id}`).toContain(words.sections[id]);
       }
     }
+  });
+
+  it("draws no «Planul» link and no plan section for a club whose overlay has no plan (§NNN)", async () => {
+    planless = true;
+    const markup = await page();
+    expect(markup).not.toContain('id="plan"');
+    expect(markup).not.toContain('href="#plan"');
+    for (const id of DESIGN_SECTION_IDS.filter((id) => id !== "plan")) expect(markup, `contents link ${id}`).toContain(`href="#${id}"`);
   });
 
   it("names every colour token, every tint and every asserted pair with its ratio", async () => {

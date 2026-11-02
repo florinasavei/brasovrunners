@@ -10,7 +10,7 @@ import { getDb } from "@/db/client";
 import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import { countBackofficeStaff } from "@/modules/staff-identity/repository";
-import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatCalendarDay, formatDay, ZONE_WORDS } from "@/i18n/dates";
 import { routing } from "@/i18n/routing";
 import { listPublishedEvents, listUndatedPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
@@ -860,6 +860,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                   resumesAt: email.resumesAt
                     ? formatDay(new Date(email.resumesAt), { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" })
                     : "—",
+                  zoneWords: ZONE_WORDS[locale === "en" ? "en" : "ro"],
                 })}
               </Typography>
             )}

@@ -170,9 +170,6 @@
       }
     },
     "tasks": {
-      "emailStalled": {
-        "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure {resumesAt} (ora României); nimic nu s-a pierdut."
-      },
       "neonPlan": {
         "december": "La revizuirea din decembrie 2026 se poate reveni la Free de aici, fără deploy."
       },

@@ -4318,7 +4318,7 @@
       },
       "emailStalled": {
         "title": "Emails are not going out.",
-        "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves on {resumesAt} (the club's time); nothing is lost.",
+        "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves on {resumesAt} ({zoneWords}); nothing is lost.",
         "failed": "Messages not sent in the last 7 days: {count} — Mailgun's reason: “{reason}”. Once the cause is fixed: «Settings» → «Emails» → «Retry the failed emails».",
         "overdue": "Messages whose turn passed more than 90 minutes ago: {count} — the monitors are not running. See the “Monitors” row below.",
         "notify": "To hear about this without opening the page: a daily cron-job.org monitor on /api/health?deep=1 with failure notifications on — the step in the “Monitors” row."

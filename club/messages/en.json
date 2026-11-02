@@ -170,9 +170,6 @@
       }
     },
     "tasks": {
-      "emailStalled": {
-        "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves on {resumesAt} (Romania time); nothing is lost."
-      },
       "neonPlan": {
         "december": "At the December 2026 review you can return to Free here, with no deployment."
       },
