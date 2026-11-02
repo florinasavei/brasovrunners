@@ -1,6 +1,5 @@
 import { createTranslator } from "next-intl";
-import en from "../../../../messages/en.json";
-import ro from "../../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
 import { CLUB_TIME_ZONE, formatDay, intlLocale } from "@/i18n/dates";
 import type { RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { callInstead, type DeskEmailState, isDeskQrMessage, needsEmailAction } from "../domain/email-state";
@@ -9,7 +8,6 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
 type Lang = "ro" | "en";
 
 const langOf = (locale: string): Lang => (locale === "en" ? "en" : "ro");
-const catalogueOf = (lang: Lang) => (lang === "en" ? en : ro);
 
 /**
  * One translator per language for the whole process: a list of two hundred rows asks for it once, and so

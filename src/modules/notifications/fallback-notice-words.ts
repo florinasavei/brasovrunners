@@ -1,5 +1,8 @@
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
+
+// The platform's words with the club's own laid over them (§887, `i18n/catalogue.ts`).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * The privacy notice's `{{gmailFallback}}` (§622): the switch's own label on «Emailuri», quoted,

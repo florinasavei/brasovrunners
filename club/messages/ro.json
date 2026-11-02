@@ -1,0 +1,258 @@
+{
+  "$club": "brasovrunners",
+  "Home": {
+    "meta": {
+      "title": "{club} — alergări de grup în Brașov",
+      "description": "Alergările de grup ale clubului, turele pe munte și evenimentele speciale, cu următoarea alergare și vremea la start. Întotdeauna gratuite."
+    },
+    "hero": {
+      "headline": "Alergăm împreună prin Brașov",
+      "subline": "Alergări de grup, ture pe munte și evenimente speciale organizate de club — întotdeauna gratuite. Vino la prima alergare, te așteptăm."
+    },
+    "special": {
+      "intro": "Curse, ture pe munte și tot ce nu se repetă în fiecare săptămână."
+    }
+  },
+  "HomeSections": {
+    "why": {
+      "items": {
+        "2": {
+          "title": "Munții de lângă oraș",
+          "body": "Brașovul are trasee la câțiva pași de centru."
+        }
+      }
+    }
+  },
+  "Events": {
+    "intro": "Alergări, ture pe munte și antrenamente organizate de club — întotdeauna gratuite.",
+    "calendar": {
+      "look": {
+        "mottoRest": "împreună în Brașov."
+      }
+    }
+  },
+  "Event": {
+    "safetyRules": {
+      "wildlife": "Animale și vreme: urmezi indicațiile generale de siguranță date de organizator."
+    }
+  },
+  "Newsletter": {
+    "topicHints": {
+      "BIG_EVENTS": "Marile zile ale clubului, de exemplu crosul aniversar: un anunț când apare în calendar, apoi înscrierile și ce se schimbă."
+    }
+  },
+  "Admin": {
+    "editor": {
+      "coordinatesHelp": "Opțional: latitudine, longitudine, de ex. 45.6427, 25.5887 — clic dreapta pe punct în Google Maps. Doar pentru vreme, când linkul hărții nu le conține.",
+      "locationShortHelp": "Un cuvânt sau două, pentru afișul lunii: „Parc”, „Poiana”. În ambele limbi sau în niciuna.",
+      "difficultyScale": {
+        "MEDIUM1": "mediu {level}: alergarea de pe Tâmpa"
+      }
+    },
+    "fontSize": {
+      "sample": "Alergare de grup în Pădurea Noua, sâmbătă la 9:00"
+    },
+    "design": {
+      "look": {
+        "heading": "Alergăm împreună prin Brașov"
+      },
+      "type": {
+        "sample": "Alergăm împreună prin Brașov: pe asfalt, pe munte și prin Șchei."
+      },
+      "plan": {
+        "intro1": "Textul complet al planului, în engleză, e ținut de dispecer în depozit:",
+        "intro2": "Comparația dintre Tema v1 și Tema v2 e acum în capul paginii, la «Tema v2».",
+        "decisionsTitle": "Deciziile clubului",
+        "decisionsNote": "Douăsprezece alegeri; fiecare are implicitul pe care îl construiește dispecerul dacă nimeni nu se opune.",
+        "phasesTitle": "Fazele",
+        "phasesNote": "Fiecare fază pornește când poarta celei dinainte e trecută; fazele 1 și 2 pot merge în paralel.",
+        "number": "Nr.",
+        "decision": "Decizia",
+        "default": "Implicit",
+        "phase": "Faza",
+        "gate": "Poarta",
+        "status": "Stare",
+        "statuses": {
+          "default": "implicit",
+          "decided": "decis",
+          "open": "deschis",
+          "planned": "planificat",
+          "building": "în lucru",
+          "released": "lansat"
+        },
+        "decisions": {
+          "1": {
+            "title": "Culoarea de accent",
+            "default": "Un roz aprins lângă albastrul siglei, sau albastrul, portocaliul ori o culoare aleasă de club în «Tema v2»; emailurile, PDF-urile, numerele și cardurile de distribuire rămân albastre."
+          },
+          "2": {
+            "title": "Fontul titlurilor",
+            "default": "Inter 800 pentru titluri, găzduit de noi, cu ș ț ă â î; textul rămâne Roboto."
+          },
+          "3": {
+            "title": "O pagină principală adevărată",
+            "default": "O pagină principală adevărată la `/ro` și `/en`, la care duce sigla, niciodată o intrare de meniu; se pornește și se oprește în «Aspect» → «Pagina principală»."
+          },
+          "4": {
+            "title": "Cele patru cuvinte din meniu",
+            "default": "«Alergări», «Calendar», «Comunitatea» — o pagină a clubului care leagă echipa, galeria, întrebările și zona membrilor — și «Despre noi»."
+          },
+          "5": {
+            "title": "Unde duce «Vino cu noi»",
+            "default": "La pagina următoarei alergări săptămânale; «Cum funcționează» deschide o pagină a clubului."
+          },
+          "6": {
+            "title": "Fotografiile",
+            "default": "Doar fotografii adevărate ale clubului, din galerie; oamenii dintr-o fotografie de pe prima pagină și-au dat acordul."
+          },
+          "7": {
+            "title": "Blocul Instagram",
+            "default": "O bandă statică de șase poze din galerie, cu un link; fără flux în direct."
+          },
+          "8": {
+            "title": "Banda cu cifre",
+            "default": "Scrise în «Aspect» → «Pagina principală»: data înființării și alergătorii activi; restul calculat din evenimente."
+          },
+          "9": {
+            "title": "Ce înseamnă «Evenimente speciale»",
+            "default": "Tot ce nu e o serie săptămânală; pastila «Ediție specială» își păstrează sensul."
+          },
+          "10": {
+            "title": "Săgeata rotundă de pe carduri",
+            "default": "Niciuna: prima pagină arată chiar cardurile din «Alergări», cu ușa lor cu text, «Descrierea completă a evenimentului»."
+          },
+          "11": {
+            "title": "Iconițele",
+            "default": "Rămâne familia Material plină; aerul mai ușor vine din culoare, grosime și spațiere."
+          },
+          "12": {
+            "title": "Cum se lansează",
+            "default": "În spatele unei singure setări, «Tema v2»: pornită pe QA, oprită în producție până aprobă clubul; Tema v1 e ștearsă la o lansare după comutare."
+          }
+        },
+        "phases": {
+          "0": {
+            "title": "Deciziile și materialele — fără cod",
+            "gate": "Răspunsurile în scris, fotografiile urcate."
+          },
+          "1": {
+            "title": "Tokenii și învelișul public",
+            "gate": "Testele de brand și de fonturi verzi, antetul pe un rând la 320 px, da-ul clubului pe QA."
+          },
+          "2": {
+            "title": "Pozele de copertă pe evenimente și felul evenimentului",
+            "gate": "Testele listei verzi; fiecare alergare săptămânală și cursa au copertă."
+          },
+          "3": {
+            "title": "Pagina principală",
+            "gate": "LCP sub 2,5 s pe un telefon de 320 px, testele rădăcinii rescrise, da-ul clubului pe QA."
+          },
+          "4": {
+            "title": "Calendarul",
+            "gate": "Prima săptămână deasupra pliului la 320 px; filtrele merg fără scripturi."
+          },
+          "5": {
+            "title": "Lista și pagina evenimentului",
+            "gate": "Testele listei și ale evenimentului verzi."
+          },
+          "6": {
+            "title": "Comutarea și curățenia",
+            "gate": "O săptămână în producție fără să fie folosită calea înapoi."
+          }
+        }
+      }
+    },
+    "emails": {
+      "deadlines": {
+        "help": {
+          "rsvpAskHour": "Ora clubului (Brașov) de la care pleacă, în ziua aleasă mai sus; emailul pleacă la prima trecere a jobului după ea. Miezul nopții e 0."
+        }
+      }
+    },
+    "tasks": {
+      "neonPlan": {
+        "december": "La revizuirea din decembrie 2026 se poate reveni la Free de aici, fără deploy."
+      },
+      "freeVerdict": {
+        "paysForUsageMore": "Launch e fără abonament și a fost ales de club pe 22 septembrie 2026."
+      },
+      "services": {
+        "domain": {
+          "more": "Cumpărat pe 16 septembrie 2026 de la ROMARG, pentru un an; ROMARG facturează în lei, cu TVA. .ro nu se mai cumpără."
+        },
+        "neon": {
+          "launch": {
+            "bumpBack": "Drumul înapoi e revizuirea din decembrie 2026: o alegere în „Planul Neon”, fără deploy.",
+            "more": "Monitoarele trezesc baza la 15 minute ziua și o dată pe oră noaptea; mai des ar ține-o trează și plătită. În decembrie clubul poate reveni la Free."
+          }
+        },
+        "zitadel": {
+          "freeGives": "Gratuit: până la 100 de utilizatori activi pe zi, oricâți utilizatori stocați — membrii clubului încap —, organizații nelimitate, 3 furnizori de identitate. Verificat pe 27.09.2026."
+        }
+      },
+      "items": {
+        "liveEmail": {
+          "how": [
+            "În Mailgun: Sending → Domains → „Add new domain”. Numele: {mailDomain}. Regiunea: EU. Nu folosi domeniul principal — el rămâne liber pentru poșta clubului.",
+            "Mailgun îți arată înregistrările DNS de creat: două TXT (SPF și DKIM) și un CNAME (tracking).",
+            "Adaugă-le la ROMARG → cPanel → Zone Editor, exact cum le arată Mailgun, cu numele scurt (fără domeniul repetat).",
+            "Atenție la DKIM: valoarea are peste 255 de caractere și cPanel o taie — scrie-o ca două șiruri între ghilimele, pe un singur rând („k=rsa; p=…prima parte” „…restul”), altfel Mailgun o vede trunchiată.",
+            "Apoi „Verify” în Mailgun — poate dura până la o oră.",
+            "Tot în Mailgun: Sending → API keys → o cheie de trimitere (MAILGUN_API_KEY).",
+            "Sending → Webhooks → copiază „HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) și adaugă webhook-ul {webhookUrl} pentru „Permanent Failure” și „Spam Complaints”.",
+            "Cele două pe care aplicația le folosește (o adresă respinsă apare la masă și pe înscriere). „Delivered” e opțional.",
+            "În Vercel, proiectul de producție → Settings → Environment Variables (sau `vercel env add NUME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY.",
+            "Tot acolo: MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3 și EMAIL_REPLY_TO=o adresă pe care clubul o citește.",
+            "Dacă adresa nu există încă, nu seta EMAIL_REPLY_TO deloc: goală, pornirea o refuză.",
+            "Expeditorul e „{senderName}” <noreply@{mailDomain}> fără altă setare — numele din EMAIL_FROM_NAME, implicit numele clubului.",
+            "Probă pe QA, nu pe producție: producția refuză înscrierile până sunt aprobate textele legale.",
+            "Pe proiectul QA din Vercel pune aceleași MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_API_BASE_URL (modul rămâne allowlist, EMAIL_ALLOWLIST=adresa ta), redeploy, înscrie-te pe QA.",
+            "Emailul vine de la noreply@{mailDomain}. Când merge: pe producție EMAIL_DELIVERY_MODE=live, redeploy. Rândul acesta devine verde."
+          ]
+        }
+      }
+    },
+    "look": {
+      "accent": {
+        "presets": {
+          "blue": {
+            "help": "Albastrul clubului, cel din Tema v1."
+          },
+          "orange": {
+            "help": "Portocaliul clubului. Ziua e mai închis, ca textul să se citească pe el."
+          }
+        }
+      }
+    },
+    "appearance": {
+      "tints": {
+        "faintBlue": {
+          "help": "Albastrul clubului, cam 4 % peste alb."
+        },
+        "lightBlue": {
+          "help": "Albastrul clubului, cam 8 % peste alb."
+        },
+        "blueGrey": {
+          "help": "Un gri rece, înspre albastrul clubului."
+        }
+      }
+    },
+    "badges": {
+      "colours": {
+        "theme": "Portocaliul clubului",
+        "themeOption": "Implicit: portocaliul clubului",
+        "unreadable": "{colour}, care nu se citește: se tipărește portocaliul clubului"
+      }
+    },
+    "clubTodo": {
+      "defaults": {
+        "teamPage": {
+          "text": "Scrie pagina Echipa: Pagini → Echipa → introducerea → «Salvează»; pentru fiecare persoană «Adaugă o persoană» → «Adaugă cardul» → «Pune pe site» → «Publică pagina»."
+        },
+        "faqPage": {
+          "text": "Scrie pagina Întrebări frecvente: Pagini → Întrebări frecvente → întrebările și răspunsurile, în română și engleză, cu «Pe site» bifat la fiecare → «Salvează pagina» → «Publică pagina»."
+        }
+      }
+    }
+  }
+}

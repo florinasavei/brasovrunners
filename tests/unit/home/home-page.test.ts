@@ -26,8 +26,8 @@ vi.mock("@/shared/ui/ButtonLink", () => ({
 }));
 vi.mock("next-intl/server", async () => {
   const { createFormatter, createTranslator } = await import("next-intl");
-  const ro = (await import("../../../messages/ro.json")).default;
-  const en = (await import("../../../messages/en.json")).default;
+  const ro = (await import("@/i18n/catalogue")).catalogueOf("ro");
+  const en = (await import("@/i18n/catalogue")).catalogueOf("en");
   return {
     getTranslations: async (arg: string | { namespace: string }) =>
       createTranslator({ locale: currentLocale, messages: currentLocale === "ro" ? ro : en, namespace: (typeof arg === "string" ? arg : arg.namespace) as "Event" }),
@@ -52,8 +52,8 @@ const { DEFAULT_HOME_PAGE_SETTING, heroLines, parseHomePage, postedPair, splitHe
 const { sampleHome } = await import("@/modules/design/home-fixtures");
 const { default: HomePage } = await import("@/modules/home/ui/HomePage");
 const { default: HomePicture } = await import("@/modules/home/ui/HomePicture");
-const ro = (await import("../../../messages/ro.json")).default;
-const en = (await import("../../../messages/en.json")).default;
+const ro = (await import("@/i18n/catalogue")).catalogueOf("ro");
+const en = (await import("@/i18n/catalogue")).catalogueOf("en");
 
 type Row = { id: string; type: string; title: string; startsAt: Date; eventStatus: string; seriesCadence: string | null };
 let counter = 0;

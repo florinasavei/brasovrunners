@@ -25,8 +25,8 @@ const WORDS = {
     race: "Cursa de probă",
     raceExcerpt: "O cursă montană de probă, cu start din centru. Traseul e marcat.",
     night: "Alergare de seară",
-    place: "Parcul Titulescu, la fântâna arteziană",
-    square: "Piața Sfatului",
+    place: "Parcul Central, la fântâna arteziană",
+    square: "Piața Mare",
     partner: "Partener de probă",
   },
   en: {
@@ -35,8 +35,8 @@ const WORDS = {
     race: "Sample race",
     raceExcerpt: "A sample mountain race starting from the centre. The course is marked.",
     night: "Evening run",
-    place: "Titulescu Park, at the fountain",
-    square: "Council Square",
+    place: "Central Park, at the fountain",
+    square: "Main Square",
     partner: "Sample partner",
   },
 } as const;

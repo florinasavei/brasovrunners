@@ -21,8 +21,8 @@ let currentLocale: "ro" | "en" = "ro";
 
 vi.mock("next-intl/server", async () => {
   const { createFormatter, createTranslator } = await import("next-intl");
-  const ro = (await import("../../../messages/ro.json")).default;
-  const en = (await import("../../../messages/en.json")).default;
+  const ro = (await import("@/i18n/catalogue")).catalogueOf("ro");
+  const en = (await import("@/i18n/catalogue")).catalogueOf("en");
   return {
     getTranslations: async (namespace: string) =>
       createTranslator({ locale: currentLocale, messages: currentLocale === "ro" ? ro : en, namespace: namespace as "Event" }),
@@ -43,8 +43,8 @@ const { default: DifficultyStepField } = await import("@/modules/content/events/
 const { difficultyScaleText, difficultyStepWords } = await import("@/modules/content/events/ui/difficulty-words");
 const { default: ListingFilterPanel } = await import("@/modules/events/ui/ListingFilterPanel");
 const { NO_FILTER } = await import("@/modules/events/domain/listing-filter");
-const ro = (await import("../../../messages/ro.json")).default;
-const en = (await import("../../../messages/en.json")).default;
+const ro = (await import("@/i18n/catalogue")).catalogueOf("ro");
+const en = (await import("@/i18n/catalogue")).catalogueOf("en");
 
 type Words = Parameters<typeof difficultyStepWords>[0];
 

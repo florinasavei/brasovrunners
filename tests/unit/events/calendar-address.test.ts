@@ -1,8 +1,12 @@
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
+import { withClubWords } from "../../helpers/club-words";
+
+// What a page reads: the platform's catalogue with this club's own sentences over it (§887).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * §674 — the calendar's address, to copy, and what to do when Google says it already has it
@@ -23,8 +27,8 @@ let currentLocale: "ro" | "en" = "ro";
 
 vi.mock("next-intl/server", async () => {
   const { createFormatter, createTranslator } = await import("next-intl");
-  const ro = (await import("../../../messages/ro.json")).default;
-  const en = (await import("../../../messages/en.json")).default;
+  const ro = (await import("@/i18n/catalogue")).catalogueOf("ro");
+  const en = (await import("@/i18n/catalogue")).catalogueOf("en");
   return {
     getTranslations: async (namespace: string) =>
       createTranslator({ locale: currentLocale, messages: currentLocale === "ro" ? ro : en, namespace: namespace as "Events" }),
@@ -81,7 +85,7 @@ describe("the calendar page draws the feed's address to copy (§674)", () => {
     expect(address).toMatch(/^https?:\/\//);
     expectAddressBox(html, { id: "calendar-feed-address-head", address, locale });
     const words = catalogues[locale].Events.calendar;
-    for (const hint of [words.googleHintWhy, words.googleHintHow, words.phoneAppHint, words.androidSync]) expect(html).toContain(escape(hint));
+    for (const hint of [words.googleHintWhy, words.googleHintHow, words.phoneAppHint, withClubWords(words.androidSync, locale)]) expect(html).toContain(escape(hint));
     // The two doors stay: the quick-add link works the first time, and the box joins it.
     expect(html).toContain(`>${escape(words.subscribeGoogle)}</a>`);
     expect(html).toContain(`>${escape(words.subscribeApple)}</a>`);
@@ -100,7 +104,7 @@ describe("the calendar page draws the feed's address to copy (§674)", () => {
     const fold = html.slice(html.indexOf("<details"));
     expect(fold).toContain(`${escape(words.feedAddress)}</summary>`);
     expectAddressBox(fold, { id: "calendar-feed-address", address, locale });
-    for (const hint of [words.googleHintWhy, words.googleHintHow, words.phoneAppHint, words.androidSync]) expect(fold).toContain(escape(hint));
+    for (const hint of [words.googleHintWhy, words.googleHintHow, words.phoneAppHint, withClubWords(words.androidSync, locale)]) expect(fold).toContain(escape(hint));
     // The ids differ from the head's: both are in one page's HTML (the head's is hidden from `sm`).
     expect(html).not.toContain('id="calendar-feed-address-head"');
   });

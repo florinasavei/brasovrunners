@@ -9,7 +9,7 @@ import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { zoneRsvpTitleId } from "@/modules/rsvp/domain/zone-outcome";
 import type { PublicRsvps } from "@/modules/rsvp/rsvp";
 import { FOLD_GLYPH_INLINE_SX, PUBLIC_FOLD_SX } from "@/shared/ui/disclosure";
-import { CLUB_NAME } from "@/theme/brand";
+import { CLUB_NAME, CLUB_SHORT_NAME } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 import { RSVP_WHO_ID } from "../rsvp-box";
 
@@ -92,7 +92,7 @@ export default async function RsvpCount({ eventId, rsvps: given, open = false }:
                     {name}
                     {/* The mark is the name's, never a row's of its own: only for a name that is shown (`memberMarks` is parallel to `names`). */}
                     {rsvps.memberMarks?.[index] === true && (
-                      <GlyphChip glyph="membersOnly" label={t("rsvp.memberMark")} srLabel={t("rsvp.memberLabel", { club: CLUB_NAME })} variant="outlined" color="primary" testId="rsvp-member-mark" />
+                      <GlyphChip glyph="membersOnly" label={t("rsvp.memberMark", { short: CLUB_SHORT_NAME })} srLabel={t("rsvp.memberLabel", { club: CLUB_NAME })} variant="outlined" color="primary" testId="rsvp-member-mark" />
                     )}
                   </Box>
                 ))}

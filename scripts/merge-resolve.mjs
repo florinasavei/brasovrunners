@@ -1,15 +1,22 @@
 /**
  * How a batch merge resolves the conflicts every batch has (§535) — the pure half of
  * `yarn batch:merge` (`scripts/merge-branches.mjs`), kept apart so the rules are testable. Only the
- * migrations' journal, the message catalogues and test files are resolved by rule; anything else
+ * migrations' journal, the message catalogues (the platform's and the club's own, `club/messages`, §887) and test
+ * files are resolved by rule; anything else
  * stops the merge for a person.
  */
+
+/**
+ * The message catalogues merged key by key: the platform's, and the club's own sentences laid over them (§887) — the same
+ * JSON shape, so the same rule, and the same duplicate-key sweep after the merges (`merge-branches.mjs`).
+ */
+export const CATALOGUES = ["messages/ro.json", "messages/en.json", "club/messages/ro.json", "club/messages/en.json"];
 
 /** The four kinds of path a batch merge resolves by rule, or null for "stop and ask". */
 export function conflictKind(path) {
   const p = String(path).replace(/\\/g, "/");
   if (p === "src/db/migrations/meta/_journal.json") return "journal";
-  if (p === "messages/ro.json" || p === "messages/en.json") return "catalogue";
+  if (CATALOGUES.includes(p)) return "catalogue";
   if (p.startsWith("tests/") && /\.(ts|tsx|mjs|js)$/.test(p)) return "union";
   return null;
 }

@@ -2,10 +2,13 @@ import { readFileSync } from "node:fs";
 import { type ComponentProps, createElement, type ReactElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
 import { DEFAULT_BADGE_DESIGN } from "@/modules/volunteers/badges/badge-design";
 import type { BadgeRole, BadgeSingleStart } from "@/modules/volunteers/badges/badges";
+import { catalogueOf } from "@/i18n/catalogue";
+
+// What a page reads: the platform's catalogue with this club's own sentences over it (§887).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * §764 — «Ecusoane pentru voluntari», its three cards as the server draws them (BR-REQ-050-02): the designer's

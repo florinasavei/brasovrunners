@@ -107,4 +107,37 @@ changes a text already approved. Values only, never a new `{{field}}`: a field c
 fingerprint.
 
 The region stays Romania for every club: `country` is `"RO"`, the languages `ro` and `en`, the legal
-texts Romanian law, the prices RON. The catalogues' wording is not here yet; a later change moves it.
+texts Romanian law, the prices RON.
+
+## The club's own sentences (§887)
+
+`messages/ro.json` and `messages/en.json` are the platform's catalogues, and they are neutral: a sentence there is
+one every club can live with — «Alergăm împreună», not «Alergăm împreună prin Brașov». This club's own sentences are
+`club/messages/ro.json` and `club/messages/en.json`, an **overlay**: `src/i18n/catalogue.ts`, the only file that
+imports either (`tests/unit/club/import-surface.test.ts`), lays it over the platform's once per process, and every
+page, email and PDF reads the merged catalogue — so Brașov reads exactly what it read before the move. What it holds:
+the home page's title, description, hero and «why» item, the calendar's motto, the listing's and the specials'
+intros, a safety rule, a newsletter hint, the backoffice's examples that name its places, the hue labels, the
+starting list's two lines, the dated history of `/admin/tasks` and the redesign plan of `/admin/design`.
+
+The rules (`tests/unit/club/overlay.test.ts`):
+
+- **A stamp.** The file's first key is `"$club"`, equal to `club.json`'s `slug`; it is checked and taken off before
+  the merge, so an overlay copied from another club's folder fails loudly rather than speaking for this one.
+- **Objects merge, strings and lists replace.** A key the overlay holds replaces the platform's sentence; a list
+  (the steps of a task) replaces the whole list; a namespace merges key by key.
+- **Only what the platform says.** Every key of the overlay is a key of the platform's catalogue, with the same
+  `{arguments}`, in both languages — the overlay says the same thing in the club's words, never a new message. One
+  sub-tree is the club's alone, `Admin.design.plan`: `/admin/design` draws «Planul» only when the overlay has it.
+- **Both languages or neither.** `ro` and `en` hold the same keys.
+- **Values that are facts arrive as arguments**, not as overlay sentences: the short mark (`{short}`), the identity
+  card example (`{idExample}`), the safety form's name (`{safetyName}`), the slug (`{slug}`), the zone (`{timeZone}`,
+  `{zoneWords}`) and the media bucket (`{bucket}`, `R2_BUCKET`) — each from `brand.ts`, `place.ts` or `dates.ts` at
+  the call (`tests/unit/notifications/no-hardcoded-values.test.ts` pins them). A fork with an empty overlay
+  (`{ "$club": "<its slug>" }`) is right from the start: `yarn test:fork` formats every message of the platform's
+  catalogue with a made-up club's values and finds none of this club's words (`tests/fork/words.test.ts`).
+- **The guard does not read it.** `club/` is exempt from the literal check, so this is where the club's names may be
+  written; the platform's catalogues are scanned, and `KNOWN_LEAKS` has no row for them.
+
+A batch merge resolves a conflict in the overlay key by key, as it does the platform's catalogues (`yarn batch:merge`,
+`scripts/merge-resolve.mjs#CATALOGUES`).

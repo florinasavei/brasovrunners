@@ -1,7 +1,10 @@
 import { formatRaceNumber, type RaceNumberFormat } from "@/modules/registrations/domain/race-number";
-import en from "../../../../messages/en.json";
-import ro from "../../../../messages/ro.json";
+import { catalogueOf } from "@/i18n/catalogue";
 import { holdsResultsNameConsent } from "./name-consent";
+
+// The platform's words with the club's own laid over them (§887, `i18n/catalogue.ts`).
+const en = catalogueOf("en");
+const ro = catalogueOf("ro");
 
 /**
  * Whose name a published result carries (§808, extending the public list's rule — §143, §396, §421, §743, BR-REQ-039-01).

@@ -10,6 +10,7 @@ import { readWithLastGood } from "@/modules/resilience/last-good";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { readPublicComing } from "@/modules/rsvp/public-page";
 import { env } from "@/shared/config/env";
+import { CLUB_SHORT_NAME } from "@/theme/brand";
 
 /**
  * The club's calendar feed (`DECISIONS.md` §107): every published event from a month ago to
@@ -73,7 +74,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
     // Every detail the page has, in the description (§159); where registration stands is read against `now`.
     events: events.map((event) => toCalendarEvent(event, known, now, { coming })),
     baseUrl: env.APP_BASE_URL,
-    name: t("calendar.feedName"),
+    name: t("calendar.feedName", { short: CLUB_SHORT_NAME }),
     labels: { locale: known, t },
   });
   return new Response(body, {

@@ -3,6 +3,9 @@ import { ADDRESS_QUERY, type PickerChip, readPickerChip } from "./event-picker";
 import { type AppEnvironment, markSubjectForEnvironment } from "@/infrastructure/email/delivery";
 import { feedbackTags, tagSubject } from "@/modules/notifications/domain/subject-tags";
 import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/domain/canonical-email";
+import { catalogueOf } from "@/i18n/catalogue";
+import { SAFETY_PROGRAMME } from "@/theme/brand";
+import { createTranslator } from "next-intl";
 
 /**
  * «Spune-ne ceva» / "Tell us something" (§676; the owner, 2026-10-08: «I just want to know how my
@@ -676,18 +679,26 @@ export const NO_CONTACT_LINE = "(fără contact lăsat)";
 export const ANONYMOUS_NAME_LINE = "(anonim)";
 
 /**
+ * The relay's own words — its subjects and its footers (§887, out of this file into `Tell.relay`): Romanian whatever the
+ * form's language, like every line of the message, because the reader is the club. The safety form's name in its footer
+ * is the club's own (`SAFETY_PROGRAMME`), an argument of the message.
+ */
+const RELAY = catalogueOf("ro").Tell.relay;
+const relayWords = createTranslator({ locale: "ro", messages: catalogueOf("ro"), namespace: "Tell" });
+
+/**
  * The safety branch's subject words (§676): neutral, so they say nothing of what is inside. The other three name their
  * branch, because the club files them. The tags come before them (§786): `[feedback][girl-zone] Mesaj confidențial de
  * pe site` — the human words stay neutral and the tag names the route, a trade-off the owner accepted: the tag does show
  * on a phone's lock screen, so the person who receives it can hide previews or silence that label (`SETUP.md` §
  * Filtre în Gmail).
  */
-export const SAFETY_SUBJECT = "Mesaj confidențial de pe site";
+export const SAFETY_SUBJECT = RELAY.subject.safety;
 
 const SUBJECT: Readonly<Record<Exclude<FeedbackBranch, "safety">, string>> = {
-  howItWent: "Cum a fost",
-  suggestion: "O sugestie de pe site",
-  complaint: "O reclamație de pe site",
+  howItWent: RELAY.subject.howItWent,
+  suggestion: RELAY.subject.suggestion,
+  complaint: RELAY.subject.complaint,
 };
 
 /**
@@ -780,10 +791,10 @@ export function composeFeedbackEmail(input: FeedbackInput, context: FeedbackCont
         : SUBJECT[input.branch];
   const footer =
     input.branch === "safety"
-      ? "— Trimis prin formularul confidențial „Girl Zone” al site-ului. Site-ul nu a păstrat nimic din el."
+      ? relayWords("relay.footer.safety", { safetyName: SAFETY_PROGRAMME.ro })
       : context.toPerson
-        ? "— Trimis prin formularele „Spune-ne ceva” ale site-ului; cine a scris a ales să afli doar tu. Site-ul nu a păstrat nimic din el."
-        : "— Trimis prin formularele „Spune-ne ceva” ale site-ului. Site-ul nu a păstrat nimic din el.";
+        ? RELAY.footer.toPerson
+        : RELAY.footer.club;
   const text = [
     ...lines.map((entry) => `${entry.label}: ${entry.value}`),
     "",
