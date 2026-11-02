@@ -82,7 +82,7 @@ import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
-import { addToWaitlistAction, bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
+import { addToWaitlistAction, bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, moveReserveEntryAction, sendOutboxNowAction } from "../actions";
 import { resendFamilyEmailAction, resendRegistrationEmailAction } from "../[id]/actions";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
@@ -98,6 +98,7 @@ import {
   clearMemberTicksAction,
   confirmRegistrationNowAction,
   eraseRegistrationFromListAction,
+  offerPlaceAction,
   promoteRegistrationAction,
   setBibPrintedAction,
   setClubMemberDeclaredAction,
@@ -107,7 +108,7 @@ import { previewMemberTickSweep } from "@/modules/registrations/admin-service";
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
-import { givePlaceRefusalAhead, waitlistAddDoorOpen } from "@/modules/registrations/give-place-tip";
+import { givePlaceRefusalAhead, staffOfferIfMadeNow, staffOfferQuestion, waitlistAddDoorOpen } from "@/modules/registrations/give-place-tip";
 import { noFreePlaceValues } from "@/modules/registrations/domain/capacity";
 import { outsideMarkConfirm } from "@/modules/registrations/ui/outside-mark-body";
 import { paperConfirmationText } from "@/modules/registrations/ui/PaperConfirmationTip";
@@ -136,6 +137,9 @@ export const dynamic = "force-dynamic";
 
 /** The id of the bulk form, which lives below the table but owns the checkboxes inside it. */
 const BULK_FORM = "bulk-cancel";
+
+/** Where a one-press entry onto the official waiting list landed (§872, §888): the toasts that open its panel on the way back. */
+const WAITLIST_ENTRY_SAVED: ReadonlySet<string> = new Set(["waitlistAdded", "waitlistPlaced", "registrationOffered", "registrationOfferedRaised"]);
 
 function isRegistrationStatus(value: string | undefined): value is RegistrationStatus {
   return !!value && (registrationStatus.enumValues as readonly string[]).includes(value);
@@ -317,13 +321,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     Why «Dă-i un loc» would be refused, per event on the page (§592): the rows grouped by event,
     one door read each (cached per request), and only where a waiting row offers the verb.
   */
-  const givePlaceWhy = new Map(
-    await Promise.all(
-      [...new Set(canManageRegistrations(actor.role) ? rows.filter((row) => row.status === "WAITLISTED").map((row) => row.eventId) : [])].map(
-        async (id) => [id, await givePlaceRefusalAhead(id)] as const,
-      ),
-    ),
-  );
+  const waitingEvents = [...new Set(canManageRegistrations(actor.role) ? rows.filter((row) => row.status === "WAITLISTED").map((row) => row.eventId) : [])];
+  const givePlaceWhy = new Map(await Promise.all(waitingEvents.map(async (id) => [id, await givePlaceRefusalAhead(id)] as const)));
+  /*
+    «Trimite-i oferta» from the «⋮» (§615, §642, on the list since §888): the question per event on the page —
+    the deadline, a supplementary place, the close — cached per request; null once the event has started, when
+    the item is not drawn.
+  */
+  const offerAhead = new Map(await Promise.all(waitingEvents.map(async (id) => [id, await staffOfferIfMadeNow(id, locale)] as const)));
 
   const basePath = getPathname({ locale, href: "/admin/registrations" });
   /** Only the list-shaping keys travel with a sort link or a page link. */
@@ -1338,34 +1343,40 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       )}
 
       {/*
-        «Lista internă de așteptare» (§854): people who asked to be kept in mind for this event, told nothing,
-        for the roles that keep internal notes. Only on a list about one event: a line is about one.
+        «Lista internă (doar notițe)» (§854, §888): people who asked to be kept in mind for this event, told nothing,
+        for the roles that keep internal notes. Only on a list about one event: a line is about one. Moving a line onto
+        the official list — one press, or the full form — is the Administrator's; the press only while the event takes
+        a vouched entry (the door of «Adaugă pe lista de așteptare»).
       */}
       {filters.eventId && canKeepRegistrationNotes(actor.role) && (
         <ReserveListPanel
           locale={locale}
           eventId={filters.eventId}
           entries={await listReserveEntries(db, actor, filters.eventId)}
-          officialHref={(entryId) => `${getPathname({ locale, href: "/admin/registrations/new" })}?${new URLSearchParams({ eventId: filters.eventId ?? "", reserve: entryId }).toString()}`}
+          fullFormHref={
+            mayManage ? (entryId) => `${getPathname({ locale, href: "/admin/registrations/new" })}?${new URLSearchParams({ eventId: filters.eventId ?? "", reserve: entryId }).toString()}` : undefined
+          }
           addAction={addReserveEntryAction}
           saveNoteAction={saveReserveNoteAction}
           deleteAction={deleteReserveEntryAction}
-          opened={saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveDeleted"}
+          moveAction={mayManage && waitlistAddOpen ? moveReserveEntryAction : undefined}
+          opened={saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveDeleted" || current.from === "reserve"}
         />
       )}
 
       {/*
-        «Adaugă pe lista de așteptare» (§872): the one-press entry onto the official waiting list — the address
-        vouched for by the Administrator, the row through the allocator at once. Administrator only, on a list
-        about one event; the new row shows in the list above in the state it landed in.
+        «Lista oficială de așteptare» (§872, renamed by §888): the one-press entry onto the official waiting list — the
+        address vouched for by the Administrator, the row through the allocator at once, or given a place in the same
+        press («Oferă-i un loc acum»). Administrator only, on a list about one event; the new row shows in the list
+        above in the state it landed in.
       */}
       {filters.eventId && mayManage && waitlistAddOpen && (
         <Panel
           glyph="queue"
           collapsible
-          title={t("waitlistAdd.title")}
+          title={t("waitlistAdd.panelTitle")}
           intro={t("waitlistAdd.intro")}
-          openWhen={{ saved: saved === "waitlistAdded" || saved === "waitlistPlaced" }}
+          openWhen={{ saved: WAITLIST_ENTRY_SAVED.has(saved ?? "") && current.from !== "reserve" }}
           id="registrations-waitlist-add"
           data-testid="registrations-waitlist-add"
         >
@@ -1877,6 +1888,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   hint: paperConfirmationText(t),
                 });
               }
+              const offerForecast = verbs.includes("offerPlace") ? (offerAhead.get(row.eventId) ?? null) : null;
+              if (offerForecast) {
+                // At any moment before the start, after the close too (§642): the tooltip says so, the dialog the rest.
+                items.push({ kind: "submit", icon: "send", label: t("desk.offerPlace"), formId: `offer-${row.id}`, hint: t("registrations.offerAnyTimeHelp") });
+              }
               if (verbs.includes("givePlace")) {
                 // On a full race the item stays, with the refusal's sentence as its tooltip (§592).
                 items.push({ kind: "submit", icon: "place", label: t("desk.givePlace"), formId: `place-${row.id}`, hint: givePlaceWhy.get(row.eventId) ?? undefined });
@@ -1963,6 +1979,25 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       }}
                     >
                       {hidden}
+                    </ActionForm>
+                  )}
+                  {offerForecast && (
+                    <ActionForm
+                      id={`offer-${row.id}`}
+                      action={offerPlaceAction}
+                      hidden
+                      // The queue panel's and the registration page's question, word for word (§642).
+                      confirm={{
+                        title: t("confirm.offerPlaceTitle"),
+                        ...staffOfferQuestion((key, values) => t(key, values), row.registeredName, offerForecast),
+                        ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
+                        road: words.road("links"),
+                        cancelLabel: words.cancel,
+                      }}
+                    >
+                      {hidden}
+                      {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
+                      {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
                     </ActionForm>
                   )}
                   {verbs.includes("givePlace") && (

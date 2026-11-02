@@ -6,6 +6,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ScheduleSendIcon from "@mui/icons-material/ScheduleSend";
 import SendIcon from "@mui/icons-material/Send";
 import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -17,8 +18,9 @@ import FormHelperText from "@mui/material/FormHelperText";
 import FormLabel from "@mui/material/FormLabel";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
+import Typography from "@mui/material/Typography";
 import { useId, useState } from "react";
-import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { emailRoadCookieLine } from "./email-road";
 import { type ConfirmSpec, confirmOnKey } from "./notice";
 
@@ -78,7 +80,12 @@ export default function ConfirmDialog({
   const road = picked.spec === spec ? picked.road : (spec?.road?.current ?? "mailgun");
   if (picked.spec !== spec) setPicked({ spec, road });
   const setRoad = (next: "mailgun" | "gmail") => setPicked({ spec, road: next });
+  // The dialog's own box (§888), unticked again for each new question, as the road is picked again.
+  const [tick, setTick] = useState<{ spec: ConfirmSpec | null; on: boolean }>({ spec, on: false });
+  const ticked = tick.spec === spec && tick.on;
   if (!spec) return null;
+  // A dialog that asks for a tick answers only once it is ticked — Enter included.
+  const mayConfirm = !spec.tick || ticked;
 
   // Either way forward carries the road to the action, as a cookie the request that follows reads once.
   const withRoad = (answer: () => void) => () => {
@@ -108,7 +115,7 @@ export default function ConfirmDialog({
         if (confirmOnKey(event.key, spec.destructive) !== "confirm") return;
         // Before the focused cancel button turns the Enter into its own click.
         event.preventDefault();
-        confirm();
+        if (mayConfirm) confirm();
       }}
       data-testid="confirm-dialog"
     >
@@ -148,6 +155,15 @@ export default function ConfirmDialog({
             </FormHelperText>
           </FormControl>
         )}
+        {spec.tick && (
+          // A rule the press must not assume (§33): the reader ticks it here, and the confirm button waits for it.
+          <FormControlLabel
+            control={<Checkbox checked={ticked} onChange={(_event, on) => setTick({ spec, on })} sx={CHECKBOX_TAP_TARGET} />}
+            label={<Typography variant="body2">{spec.tick.label}</Typography>}
+            sx={{ mt: 1.5, mx: 0, alignItems: "flex-start", "& .MuiFormControlLabel-label": { pt: 1.25 } }}
+            data-testid="confirm-tick"
+          />
+        )}
       </DialogContent>
       {/*
         Two verbs that may be long ("Renunță" and "Anulează înscrierea") in a paper 256 px wide at
@@ -176,6 +192,7 @@ export default function ConfirmDialog({
           // «Trimite acum, fără să aștepte trecerea programată» (§540) wears the send glyph.
           startIcon={spec.choice ? <SendIcon fontSize="small" /> : <CheckIcon fontSize="small" />}
           onClick={confirm}
+          disabled={!mayConfirm}
           sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }}
           data-testid="confirm-dialog-confirm"
         >

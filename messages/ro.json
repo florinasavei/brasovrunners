@@ -1754,6 +1754,7 @@
       },
       "givePlaceNow": "Dă-i un loc acum",
       "givePlaceNowHelp": "Pentru cine nu a apucat să confirme adresa: o garantezi tu, iar persoana primește locul și emailul cu declarația.",
+      "offerAnyTimeHelp": "Oricând până la start, și după închiderea înscrierilor: persoana primește oferta pe email. Pe o cursă plină adaugi un loc suplimentar, după ce confirmi.",
       "placeGiven": "Loc dat; emailul cu declarația a plecat. Termen: {deadline}.",
       "placeGivenRaised": "Loc dat, pe un loc suplimentar: capacitatea e acum {n}. Emailul cu declarația a plecat. Termen: {deadline}.",
       "invitedBy": "Înscriere pe invitație — trimisă de {who}, {when}",
@@ -2097,6 +2098,9 @@
       "createRegistrationVouchBody": "Garantezi adresa {email}: persoana intră acum, la cererea ei, pe lista de așteptare sau, dacă e un loc liber, pe el, fără emailul de confirmare. Primește emailul stării în care ajunge.",
       "waitlistAddTitle": "Adaugi pe lista de așteptare?",
       "waitlistAddBody": "Garantezi adresa {email}, iar persoana intră acum, la cererea ei: pe lista de așteptare sau, dacă e un loc liber, pe el. Primește emailul stării în care ajunge.",
+      "waitlistOfferTitle": "Îi oferi un loc acum?",
+      "waitlistOfferBody": "Garantezi adresa {email}, iar persoana intră acum pe lista oficială și primește un loc: unul liber sau, altfel, o ofertă pe email. Declarația o semnează ea, din email.",
+      "waitlistOfferRaiseConfirm": "Adaugă un loc și oferă-i locul",
       "withdrawConsentTitle": "Ștergi datele bifate?",
       "withdrawConsentBody": "Datele bifate dispar definitiv din înscriere; motivul rămâne în jurnal, fără numele persoanei.",
       "eraseRegistrationTitle": "Ștergi definitiv înscrierea?",
@@ -3653,8 +3657,8 @@
       "offeredFigure": "Oferite",
       "waiting": "În așteptare",
       "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația ({hold}) sau răspunde la o ofertă ({offer}). Libere = locuri − confirmate − rezervate.",
-      "lineTitle": "Lista de așteptare ({count})",
-      "lineTitleLimited": "Lista de așteptare ({count} din {limit})",
+      "lineTitle": "Lista oficială de așteptare ({count})",
+      "lineTitleLimited": "Lista oficială de așteptare ({count} din {limit})",
       "lineEmpty": "Nimeni nu așteaptă. Lista se umple când locurile s-au terminat.",
       "lineNone": "Evenimentul nu are listă de așteptare: când locurile se termină, înscrierile se opresc.",
       "test": "test",
@@ -3664,6 +3668,7 @@
       "joined": "pe listă din {when}",
       "orderSubmitted": "În ordinea trimiterii formularului (locurile se dau de mână).",
       "orderLine": "În ordinea intrării pe listă, ordinea după care oferă sistemul locurile.",
+      "offerAnyTime": "„Trimite-i oferta” merge oricând până la start, și după închiderea înscrierilor; pe o cursă plină adaugă un loc suplimentar, după ce confirmi.",
       "interestTitle": "Adrese care așteaptă anunțul deschiderii: {count}",
       "interestHelp": "Adresele lăsate la „Anunță-mă”: primesc un singur email când se deschid înscrierile. Tastează aici adresa cuiva care nu mai vrea mesajul.",
       "interestEmail": "Adresa de retras",
@@ -8458,13 +8463,15 @@
               ]
             },
             {
-              "title": "Lista internă de așteptare: cine a cerut un loc",
+              "title": "Lista internă (doar notițe): cine a cerut un loc",
               "steps": [
-                "«Înscrieri» → alege evenimentul: sub listă e «Lista internă de așteptare».",
+                "«Înscrieri» → alege evenimentul: sub listă e «Lista internă (doar notițe)».",
                 "Completează «Prenume», «Nume», «Email (opțional)» și, dacă vrei, «Notă internă»; apasă «Adaugă». Persoana nu ocupă loc, nu e în coadă și nu primește niciun email.",
                 "Ai ceva de ținut minte? Scrie în «Notă internă» și apasă «Salvează nota».",
                 "Nu mai e nevoie de ea? Apasă «Șterge» și confirmă; persoanei nu i se trimite nimic.",
-                "Gata să se înscrie? «Trece pe lista oficială» deschide formularul de înscriere cu datele ei; nota trece pe înscriere, iar de acolo e o înscriere obișnuită, cu emailul ei.",
+                "Gata să intre pe lista oficială? Administratorul apasă «Mută pe lista oficială»: fereastra numește adresa și cere bifa «Confirm că această persoană mi-a cerut să o înscriu…». Persoana intră la coadă sau pe un loc liber, cu emailul obișnuit; nota trece pe înscriere, iar rândul dispare.",
+                "«Oferă-i un loc acum» face același lucru și îi dă și un loc: unul liber sau o ofertă pe email. Pe o cursă plină fereastra spune cât devine capacitatea, iar butonul e «Adaugă un loc și oferă-i locul».",
+                "Alte date sau altă limbă? «Formularul complet: alte date, altă limbă» deschide formularul de înscriere cu datele ei.",
                 "Verifică adresa înainte: la înscriere pleacă un email și o adresă greșită nu ajunge la nimeni."
               ]
             },
@@ -11061,8 +11068,8 @@
       }
     },
     "reserve": {
-      "title": "Lista internă de așteptare",
-      "intro": "Cine a cerut un loc, de exemplu pe formularul de contact. Nu e înscris: nu ocupă loc, nu e în coadă și nu primește niciun email. Îl vedeți doar voi.",
+      "title": "Lista internă (doar notițe)",
+      "intro": "Doar notițe despre cine a cerut un loc, de exemplu pe formularul de contact: nu e înscris, nu ocupă loc și nu primește niciun email. Îl vedeți doar voi.",
       "none": "nimeni",
       "count": {
         "one": "{count} persoană",
@@ -11074,7 +11081,11 @@
       "note": "Notă internă",
       "noteHelp": "Doar pentru organizatori; trece pe înscriere odată cu persoana. Nu scrieți date despre sănătate.",
       "saveNote": "Salvează nota",
-      "official": "Trece pe lista oficială",
+      "move": "Mută pe lista oficială",
+      "moveTitle": "Muți pe lista oficială de așteptare?",
+      "noteFollows": "Nota trece pe înscriere, iar rândul dispare de pe lista internă.",
+      "emailForOfficial": "Email pentru lista oficială",
+      "emailForOfficialHelp": "Rândul nu are adresă: scrie-o aici ca să-l muți. Aici îi ajung emailurile.",
       "delete": "Șterge",
       "deleteTitle": "Ștergi persoana de pe lista internă?",
       "deleteBody": "{name} dispare de pe lista internă, cu tot cu notă. Persoanei nu i se trimite nimic.",
@@ -11089,7 +11100,8 @@
     },
     "waitlistAdd": {
       "title": "Adaugă pe lista de așteptare",
-      "intro": "Numele și adresa, o apăsare: garantezi tu adresa, iar persoana intră acum pe lista oficială de așteptare, fără emailul de confirmare.",
+      "panelTitle": "Lista oficială de așteptare",
+      "intro": "Coada adevărată: persoana e înscrisă, primește emailuri și i se oferă un loc când îi vine rândul. Aici o adaugi dintr-o apăsare; garantezi tu adresa.",
       "help": "Garantezi tu adresa: dacă e plin, intră pe ultimul loc și primește emailul „Ești pe lista de așteptare”; dacă e un loc liber, îl primește și semnează declarația din email.",
       "firstName": "Prenume",
       "lastName": "Nume",
@@ -11098,6 +11110,7 @@
       "note": "Notă internă (opțional)",
       "noteHelp": "Doar pentru organizatori; apare pe înscriere. Nu scrieți date despre sănătate.",
       "add": "Adaugă pe lista de așteptare",
+      "offerNow": "Oferă-i un loc acum",
       "longForm": "Formularul complet: alte date, altă limbă"
     }
   },

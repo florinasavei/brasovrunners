@@ -168,3 +168,21 @@ export function staffOfferQuestion(t: Translate, name: string, forecast: StaffOf
     .join(" ");
   return { body, confirmLabel: forecast.raisedTo !== null ? t("confirm.offerPlaceRaiseConfirm") : t("desk.offerPlace") };
 }
+
+/**
+ * «Oferă-i un loc acum»'s dialog (§888): a person entered on the official waiting list with the address vouched
+ * for and given a place in the same press — a free one, or §642's offer — so the question names the address the
+ * emails go to, then, from `staffOfferIfMadeNow`, the supplementary place a full event gets and that registration
+ * has closed, each its own catalogue string; the confirm button names the added place when there is one
+ * («Adaugă un loc și oferă-i locul»). `email` may be the `{email}` the form fills in at the press (§875).
+ */
+export function waitlistOfferQuestion(t: Translate, email: string, forecast: StaffOfferForecast): { body: string; confirmLabel: string } {
+  const body = [
+    t("confirm.waitlistOfferBody", { email }),
+    forecast.raisedTo !== null ? t("confirm.offerPlaceRaise", { n: String(forecast.raisedTo) }) : null,
+    forecast.afterClose ? t("confirm.offerPlaceAfterClose") : null,
+  ]
+    .filter((sentence): sentence is string => sentence !== null)
+    .join(" ");
+  return { body, confirmLabel: forecast.raisedTo !== null ? t("confirm.waitlistOfferRaiseConfirm") : t("waitlistAdd.offerNow") };
+}

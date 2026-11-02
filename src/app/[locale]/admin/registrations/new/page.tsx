@@ -38,7 +38,7 @@ import { routing } from "@/i18n/routing";
 import { noticeDescribesListStates, noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
 import { listEventsAcceptingRegistrations } from "@/modules/registrations/admin-repository";
 import { listStateWords } from "@/modules/registrations/list-state-words";
-import { canKeepRegistrationNotes, canManageRegistrations, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { findReserveEntry } from "@/modules/registrations/reserve-list";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { CLUB_NAME } from "@/theme/brand";
@@ -83,9 +83,9 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   /*
     «Trece pe lista oficială» (§854): the line of the internal list this entry is made from — its name and
     address in the boxes, its id posted so the action carries the note over and removes the line. Only for
-    a role that keeps that list, and only while its event takes entries here.
+    the Administrator, who moves a line (§888), and only while its event takes entries here.
   */
-  const reserveEntry = reserve && canKeepRegistrationNotes(actor.role) ? await findReserveEntry(getDb(), actor, reserve) : undefined;
+  const reserveEntry = reserve && canManageRegistrations(actor.role) ? await findReserveEntry(getDb(), actor, reserve) : undefined;
   const reserveOpen = reserveEntry !== undefined && events.some((event) => event.id === reserveEntry.eventId);
   // The event the form opens on: the one the desk or the list came from, when it takes entries.
   const selectedEventId = events.find((event) => event.id === (reserveOpen ? reserveEntry.eventId : eventId))?.id ?? events[0]?.id ?? "";

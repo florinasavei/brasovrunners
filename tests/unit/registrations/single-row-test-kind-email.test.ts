@@ -42,7 +42,7 @@ describe("§384 a TEST row's dialog names no participant email", () => {
     expect(singleEmailCalls(list).every((call) => call.includes('row.kind === "TEST"'))).toBe(true);
     // The road line (§841) rides inside the same gate: a TEST row is told of no email and of no road.
     const gated = (list.match(/row\.kind === "TEST" \? \{\} : \{ email: words\.email\(1\)(, road: words\.road\("\w+"\))? \}/g) ?? []).length;
-    expect(gated).toBe(5); // resend, resend to the family (§588), row-menu confirm-on-paper, give-a-place, cancel (the special list's question gates its own, in `outsideMarkConfirm`)
+    expect(gated).toBe(6); // resend, resend to the family (§588), row-menu confirm-on-paper, «Trimite-i oferta» (§888), give-a-place, cancel (the special list's question gates its own, in `outsideMarkConfirm`)
   });
 
   it("gates every single-row email line on the registration page", () => {

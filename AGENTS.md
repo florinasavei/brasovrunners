@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.03-2026-11-02 -->
+<!-- PROJECT_BASELINE: BR-V4.04-2026-11-02 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.03-2026-11-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.04-2026-11-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1244,10 +1244,10 @@ Core invariants:
 
 1. one row per event/participant;
 2. unique database constraint;
-3. no place consumed before email confirmation — except an Administrator vouching for the address with «Dă-i un loc acum» (`DECISIONS.md` §637), audited by name, into a counted free place or, on a full race, one supplementary place the press adds, confirmed and audited (`DECISIONS.md` §642), the declaration still the participant's to sign; and except an Administrator vouching for the address at the entry itself with «Direct pe lista de așteptare» (`DECISIONS.md` §872), audited by name, the row then through the ordinary allocator in the entry's own transaction — the back of the waiting list when the event is full, a counted free place when one is free, never a place ahead of anyone, no supplementary place — the declaration still the participant's to sign;
+3. no place consumed before email confirmation — except an Administrator vouching for the address with «Dă-i un loc acum» (`DECISIONS.md` §637), audited by name, into a counted free place or, on a full race, one supplementary place the press adds, confirmed and audited (`DECISIONS.md` §642), the declaration still the participant's to sign; and except an Administrator vouching for the address at the entry itself with «Direct pe lista de așteptare» (`DECISIONS.md` §872), audited by name, the row then through the ordinary allocator in the entry's own transaction — the back of the waiting list when the event is full, a counted free place when one is free, never a place ahead of anyone, no supplementary place — unless «Oferă-i un loc acum» follows it in the same transaction with rule 6's «Trimite-i oferta» (`DECISIONS.md` §888) — the declaration still the participant's to sign;
 4. declaration required before Confirmed;
 5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing, like the rest of its queue (§331); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places — and a registration on «Lista de invitați speciali» (the special guests list; `registrations.outside_capacity`, §643, §647) consumes none, in any state, so no hold of its is released for somebody waiting;
-6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations — the one exception is rule 3's «Dă-i un loc acum», an Administrator's audited press into a counted free place or the one supplementary place it adds (§642), which moves nobody in the line;
+6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations — the one exception is rule 3's «Dă-i un loc acum», an Administrator's audited press into a counted free place or the one supplementary place it adds (§642), which moves nobody in the line — and «Oferă-i un loc acum» (§888), the vouched entry followed by «Trimite-i oferta» for that one person, which gives the newcomer the offer the Administrator may give anyone waiting (§615, §642);
 7. no capacity-changing transaction may let a later registration bypass that queue;
 8. cancellation is idempotent;
 9. self-cancellation allowed before event start, with the participant's reason — one of three answers, and a short text for «Alt motiv» — at every door (`DECISIONS.md` §558);
@@ -1407,7 +1407,8 @@ Rules:
 - scheduled maintenance expires holds and allocates released places;
 - increasing capacity allocates the queue first;
 - the capacity changes in four places only: the event editor's save, and an Administrator's
-  press for one named person on a full event — «Trimite-i oferta» or «Dă-i un loc acum» — which,
+  press for one named person on a full event — «Trimite-i oferta» (also pressed as «Oferă-i un loc acum»,
+  right after a vouched entry in its transaction, §888) or «Dă-i un loc acum» — which,
   when the dialog said so, its button named the added place and the form carried the capacity it
   named (`addPlace`, exactly the locked capacity + 1), adds exactly one supplementary place to that
   one event row under the event lock, in the transaction whose offer or place then occupies it,
@@ -2872,9 +2873,25 @@ BR-REQ-037-05):
      full line refuses the whole entry (§348) and nothing is written. Audited (`registration.address_vouched_on_entry`) under the Administrator's id, beside
      `registration.created_by_staff`. The participant still signs their own declaration, online or on paper.
      The same entry in one press: «Adaugă pe lista de așteptare» (`addToWaitlistAction`, `WaitlistAddForm`)
-     under the queue's line on the event's page and as its own panel on the event's registrations list — a
-     name, an address, an optional internal note (§777) and the relay tick, the tick posted as ticked, the
-     emails in the backoffice's language; the full form stays one link away.
+     under the queue's line on the event's page and as its own panel, «Lista oficială de așteptare», on the
+     event's registrations list — a name, an address, an optional internal note (§777) and the relay tick, the
+     tick posted as ticked, the emails in the backoffice's language; the full form stays one link away.
+   - **From the internal list, and with a place at once** (`DECISIONS.md` §888). On every line of «Lista
+     internă (doar notițe)» (§854) — notes, nobody registered, told or holding a place — the Administrator
+     (`canManageRegistrations`; the Organizer keeps the list's add, note and delete, and the full form's
+     prefill and note carry are the Administrator's too) has two one-press verbs. **«Mută pe lista oficială»**
+     (`moveReserveEntryAction` → `moveReserveEntryToWaitlist`) is the entry above fed from the line, through
+     `enterOnWaitlistByStaff`: the event row locked, then the line, then the vouched entry through the one
+     allocator, the line's note onto the registration (§777) and the line deleted (`event_reserve.moved`), all
+     in one transaction — any refusal writes nothing and the line stays. The address is the line's, or, for a
+     line with none, the one typed beside the buttons; the dialog names it and asks for the relay tick itself
+     (`ConfirmSpec.tick`: a hidden input the confirm fills). **«Oferă-i un loc acum»** — on the line, and as the
+     second button of «Adaugă pe lista de așteptare» — is the same entry followed, in its transaction, by
+     «Trimite-i oferta» below for a row the allocator left `WAITLISTED`: a counted free place, or the one
+     supplementary place its dialog named (`addPlace`), else `SUPPLEMENTARY_PLACE_UNCONFIRMED` and nothing is
+     written; the waiting-list email the entry queued is withdrawn unsent in that transaction, so the person gets
+     one email, the offer. A row the allocator gave a place keeps it. After the start both are refused
+     (`VOUCHED_ENTRY_AFTER_START`). The person still signs their own declaration, from the email.
    - **An offer to a named person** («Trimite-i oferta», `offerPlaceToByStaff`, `DECISIONS.md`
      §615, §642). Administrator only (`canManageRegistrations`). The ordinary offer and its email
      to the waiting-list entry the Administrator picks, at any moment before the start — after the

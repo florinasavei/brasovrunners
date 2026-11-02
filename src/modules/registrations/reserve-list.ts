@@ -4,23 +4,29 @@ import { events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import type { Locale } from "@/i18n/routing";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { canKeepRegistrationNotes } from "@/modules/staff-identity/domain/roles";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
+import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
+import { enterOnWaitlistByStaff, type WaitlistEntryByStaffResult } from "./admin-service";
 import { addRegistrationNote } from "./notes";
+import { lockEventForCapacity } from "./repository";
+import type { StaffPlaceOptions } from "./service";
 
 /**
  * «Lista internă de așteptare» (§854): the people who asked — usually through the contact form — to be kept
  * in mind for one event, written down by the organizers and told nothing. Not a registration: nothing here
  * holds a place, stands in the queue, sends an email or reaches a count; the allocator never reads it.
- * «Trece pe lista oficială» opens the ordinary staff entry prefilled (`createRegistrationByStaff`), and
- * `settleReserveEntry` then carries the entry's note onto the registration as an internal note (§777) and
- * removes the line.
+ * «Mută pe lista oficială» and «Oferă-i un loc acum» (§888) move a line onto the official waiting list in one
+ * press (`moveReserveEntryToWaitlist`); the full form, prefilled, stays one link away, and `settleReserveEntry`
+ * then carries the entry's note onto the registration as an internal note (§777) and removes the line.
  *
- * **Who** — the Organizer and above (`canKeepRegistrationNotes`, the internal notes' own rule), asserted in
- * every function below (BR-REQ-060-01). **The trail** names who, when and which line — never a name, an
- * address or the note's words.
+ * **Who** — the Organizer and above (`canKeepRegistrationNotes`, the internal notes' own rule) add, note and
+ * delete; moving a line is the Administrator's (`canManageRegistrations`, §888). Asserted in every function
+ * below (BR-REQ-060-01). **The trail** names who, when and which line — never a name, an address or the note's
+ * words.
  */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -150,14 +156,92 @@ export async function deleteReserveEntry<T extends Record<string, unknown>>(db: 
   });
 }
 
+/** Moving a line onto the official list is the Administrator's (§888): the Organizer keeps add, note and delete. */
+function assertMayMove(actor: Pick<StaffUser, "role">): void {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not move a line of the internal list onto the official waiting list`);
+  }
+}
+
+export type ReserveMoveInput = {
+  /** The address typed in the dialog's form, read only when the line has none. */
+  email: unknown;
+  /** The relay tick (§33), asked in the dialog. */
+  relayedByParticipantRequest: boolean;
+  /** The backoffice's language: the person's emails leave in it, as from the official list's add form (§872). */
+  locale: Locale;
+  /** «Oferă-i un loc acum»: the offer after the entry, with the capacity its dialog named (§642). Absent: «Mută pe lista oficială». */
+  offerNow?: StaffPlaceOptions | null;
+};
+
+/**
+ * «Mută pe lista oficială» and «Oferă-i un loc acum» on one line (§888; the owner, 2026-11-01: the internal list
+ * is notes, the official one the real queue — one press from the first to the second). The Administrator's
+ * (`canManageRegistrations`, asserted here and again by the entry). One transaction: the event row locked, then
+ * the line — the order an event's delete takes them in — then the line's person entered as the official list's
+ * add form enters one (`enterOnWaitlistByStaff`: the address vouched for, the one allocator, the ordinary email,
+ * no verification email; with `offerNow`, §642's offer when the row is left waiting), the line's note onto the new
+ * registration (§777), and the line removed, audited `event_reserve.moved`. Any refusal writes nothing: the line
+ * stays, with its note. The address is the line's; a line written without one takes the one typed in the dialog's
+ * form, refused naming the box when there is none. A second press on a line already moved finds it gone.
+ */
+export async function moveReserveEntryToWaitlist<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  entryId: string,
+  input: ReserveMoveInput,
+  now: Date,
+): Promise<WaitlistEntryByStaffResult & { eventId: string }> {
+  assertMayKeep(actor);
+  assertMayMove(actor);
+  if (!isUuid(entryId)) throw new DomainError("NOT_FOUND", "the line is not there");
+  const result = await db.transaction(async (tx) => {
+    const [line] = await tx.select({ eventId: eventReserveEntries.eventId }).from(eventReserveEntries).where(eq(eventReserveEntries.id, entryId)).limit(1);
+    if (!line) throw new DomainError("NOT_FOUND", "the line is not there");
+    await lockEventForCapacity(tx, line.eventId);
+    const entry = await lockedEntry(tx, entryId);
+    const email = entry.email ?? trimmed(input.email);
+    if (email === "") throw new DomainError("VALIDATION_ERROR", "the official list needs the person's address", ["email"]);
+    const placed = await enterOnWaitlistByStaff(
+      tx,
+      actor,
+      {
+        eventId: entry.eventId,
+        firstName: entry.firstName,
+        lastName: entry.lastName,
+        email,
+        locale: input.locale,
+        relayedByParticipantRequest: input.relayedByParticipantRequest,
+        note: entry.note,
+        offerNow: input.offerNow ?? null,
+      },
+      now,
+    );
+    await tx.delete(eventReserveEntries).where(eq(eventReserveEntries.id, entry.id));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event_reserve.moved",
+      entityType: "event",
+      entityId: entry.eventId,
+      metadata: { entryId: entry.id, registrationId: placed.registrationId, ...(input.offerNow ? { offerNow: true } : {}) },
+      now,
+    });
+    return { ...placed, eventId: entry.eventId };
+  });
+  // After the commit, as every raise tells the public count (§333).
+  if (result.capacityRaisedTo !== null) revalidatePublicContent("places");
+  return result;
+}
+
 /**
  * After «Trece pe lista oficială» made a registration of the line: its note becomes the registration's
  * internal note (§777) and the line is removed. Nothing happens when the registration is not of the line's
  * event — another event chosen on the form, or a forged one: the note never lands on another event's row —
- * or when the line is already gone.
+ * or when the line is already gone. The Administrator's since §888, as the one-press move.
  */
 export async function settleReserveEntry<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, entryId: string, registrationId: string, now: Date): Promise<void> {
   assertMayKeep(actor);
+  assertMayMove(actor);
   if (!isUuid(entryId) || !isUuid(registrationId)) return;
   const [entry] = await db.select().from(eventReserveEntries).where(eq(eventReserveEntries.id, entryId)).limit(1);
   if (!entry) return;

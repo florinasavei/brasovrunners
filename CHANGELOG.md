@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.04-2026-11-02
+
+- **«Lista internă (doar notițe)» and «Lista oficială de așteptare»** — the two lists on an event's registrations page say in one read which is notes and which is the real queue; each internal line has «Mută pe lista oficială» and «Oferă-i un loc acum» (the Administrator's, the address vouched for, the note carried, the relay tick in the dialog, one supplementary place only when the dialog names it), the official list's add form has «Oferă-i un loc acum» too, and «Trimite-i oferta» is on every waiting row of the list, any time before the start. §888.
 ## BR-V4.03-2026-11-02
 
 - **This club's own sentences live in `club/messages`** — the platform's catalogues are neutral, Brașov's home page, places, history and plan are an overlay merged over them, and the club's mark, card example, safety form, slug and zone arrive as arguments; every page and email reads as before. §887.
