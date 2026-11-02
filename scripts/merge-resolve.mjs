@@ -1,13 +1,13 @@
 /**
  * How a batch merge resolves the conflicts every batch has (§535) — the pure half of
  * `yarn batch:merge` (`scripts/merge-branches.mjs`), kept apart so the rules are testable. Only the
- * migrations' journal, the message catalogues (the platform's and the club's own, `club/messages`, §NNN) and test
+ * migrations' journal, the message catalogues (the platform's and the club's own, `club/messages`, §887) and test
  * files are resolved by rule; anything else
  * stops the merge for a person.
  */
 
 /**
- * The message catalogues merged key by key: the platform's, and the club's own sentences laid over them (§NNN) — the same
+ * The message catalogues merged key by key: the platform's, and the club's own sentences laid over them (§887) — the same
  * JSON shape, so the same rule, and the same duplicate-key sweep after the merges (`merge-branches.mjs`).
  */
 export const CATALOGUES = ["messages/ro.json", "messages/en.json", "club/messages/ro.json", "club/messages/en.json"];

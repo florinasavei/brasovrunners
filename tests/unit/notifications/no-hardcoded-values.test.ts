@@ -290,14 +290,14 @@ describe("§369 the club's name leaves the platform only through the constant", 
 });
 
 /**
- * §NNN — the club's other words arrive as arguments too, so a fork with an empty overlay (`club/messages`) is already
+ * §887 — the club's other words arrive as arguments too, so a fork with an empty overlay (`club/messages`) is already
  * right: its short mark (`{short}`, `brand.ts#CLUB_SHORT_NAME`), its identity card example (`{idExample}`,
  * `place.ts#ID_DOCUMENT_EXAMPLE`), its safety form's name (`{safetyName}`, `brand.ts#SAFETY_PROGRAMME`, in the reader's
  * language), its slug (`{slug}`), its media bucket (`{bucket}`, `R2_BUCKET`) and its zone (`{timeZone}`, `{zoneWords}`,
  * `dates.ts`). next-intl 4 has no default values, and a missing one is quiet on QA and production (§353): each call site
  * is pinned here and hands the value from its one constant.
  */
-describe("§NNN the club's short mark, card example, safety form, slug, bucket and zone arrive as arguments", () => {
+describe("§887 the club's short mark, card example, safety form, slug, bucket and zone arrive as arguments", () => {
   const sources = new Map(sourceFiles(path.join(process.cwd(), "src")).map((file) => [path.relative(process.cwd(), file).split(path.sep).join("/"), readFileSync(file, "utf8")]));
   const read = (file: string) => {
     const text = sources.get(file);

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.02-2026-11-01 -->
+<!-- PROJECT_BASELINE: BR-V4.03-2026-11-02 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.02-2026-11-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.03-2026-11-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -3603,6 +3603,8 @@ When nothing needs changing, the page says "nothing to change" and no audit row 
 37. Given the mountains drawing, then it is `club/decor.json`, read through `src/club/decor.ts` by `MountainMark` and the calendar picture's five canvas files alone — never by `brand.ts`, `config.ts` or a `"use client"` file — its markup and the calendar picture's pixels unchanged (the `yarn calendar:preview` pictures byte-identical), and with no layers nothing is drawn — under `yarn test:fork` too, whose club folder writes `"layers": []` (`tests/unit/club/import-surface.test.ts`, `decor.test.ts`, `tests/fork/palette.test.ts`) (2026-11-01, `DECISIONS.md` §885).
 38. Given the logo's proportions, then the race number, the volunteer badge and the bib designer size the lockup by `LOGO_RATIO` (`LOGO` rounded to three decimals) and both PDFs by its exact height share, every number equal to the one written by hand before, and a square lockup stands inside the race number's band and the badge's header; the wordmark's face is `src/theme/fonts/Wordmark.ttf` beside `Wordmark-LICENSE.txt`, under `--font-wordmark`, with every character of the wordmark in its `cmap`; and `yarn brand:assets` paints the rasters in the palette's colours — the white lockup's email band in `tints.emailBand`, the primary when a club leaves it out — and writes `club/assets.lock.json`, whose colours are the ones read back from the committed PNGs and whose test fails with «run yarn brand:assets» when an SVG source (LF-normalised) or a colour changes without a rebuild (2026-11-01, `DECISIONS.md` §885).
 39. The scripts and the release workflow read the club's hostname labels, Vercel projects and release author from `club/infra.json` and its name and time zone from `club/club.json`; nothing under `src/` imports `infra.json`, and the archive name and the landing date are unchanged (2026-11-01, `DECISIONS.md` §886).
+40. The platform's catalogues (`messages/<locale>.json`) say none of the club's words; the club's own sentences are `club/messages/<locale>.json`, stamped with the club's slug, holding only keys the platform's catalogue has (the redesign plan apart) with the same arguments in both languages, merged over it by `src/i18n/catalogue.ts` — the only file under `src/` that imports either — so that a page, an email and a PDF read the merged words (2026-11-02, `DECISIONS.md` §887).
+41. The club's short mark, identity card example, safety form's name, slug, media bucket and zone reach a message as `{short}`, `{idExample}`, `{safetyName}`, `{slug}`, `{bucket}`, `{timeZone}` and `{zoneWords}`, each passed at its call from `brand.ts`, `place.ts`, `dates.ts` or `R2_BUCKET`; with an empty overlay, no message of the merged catalogue formatted with a made-up club's values says this club's words, and the member mark is the made-up club's (2026-11-02, `DECISIONS.md` §887).
 
 **Verification:** integration `hosting/portability.test.ts`; deployment checklist
 

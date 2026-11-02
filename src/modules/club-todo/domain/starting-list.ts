@@ -1,7 +1,7 @@
 import { catalogueOf } from "@/i18n/catalogue";
 import { CLUB_TODO_MAX_ITEMS, type ClubTodoItem } from "./club-todo";
 
-// The platform's words with the club's own laid over them (§NNN, `i18n/catalogue.ts`).
+// The platform's words with the club's own laid over them (§887, `i18n/catalogue.ts`).
 const en = catalogueOf("en");
 const ro = catalogueOf("ro");
 

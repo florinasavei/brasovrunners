@@ -589,7 +589,7 @@ export function renderContent(
  * One card, the club's name on a blue band above it (§96), holding one language's parts — or
  * two, one under the other with a rule between (§96: "make the email bilingual by default").
  * Inline styles only — mail clients drop stylesheets — and a table-free layout that Gmail,
- * Outlook and Apple Mail all keep. The document's `lang` is the message's own language — the first half's (§NNN):
+ * Outlook and Apple Mail all keep. The document's `lang` is the message's own language — the first half's (§887):
  * «ro» for a Romanian message as before, «en» for one that starts in English.
  */
 function card(blocks: string[][], lang: EmailLocale): string {

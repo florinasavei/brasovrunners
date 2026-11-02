@@ -1,7 +1,7 @@
 /**
  * The club's words still written as a literal, file by file, word by word, with the number of strings that say it (§882) — what `club-literals.test.ts` lets through
  * until the later changes move each to `club/club.json`: the scripts and the CI's local database name, the calendar picture's sample months.
- * The catalogues have no row and never get one again (§NNN): this club's own sentences are `club/messages/*.json`, which the guard does not
+ * The catalogues have no row and never get one again (§887): this club's own sentences are `club/messages/*.json`, which the guard does not
  * scan, and the platform's catalogues say none of its words. A ratchet: each word is counted in strings, so a new string that says it fails even in a listed file, and a file that says a word
  * fewer times fails the test until its count is lowered, and a new one is never added here to make a change pass — read the word from
  * `theme/brand.ts`, `events/domain/place.ts` or `i18n/dates.ts` instead.

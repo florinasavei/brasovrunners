@@ -6,7 +6,7 @@ import { CLUB_NAME } from "@/theme/brand";
 import { catalogueOf } from "@/i18n/catalogue";
 import { withClubWords } from "../../helpers/club-words";
 
-// What a page reads: the platform's catalogue with this club's own sentences over it (§NNN).
+// What a page reads: the platform's catalogue with this club's own sentences over it (§887).
 const en = catalogueOf("en");
 const ro = catalogueOf("ro");
 

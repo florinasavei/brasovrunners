@@ -109,7 +109,7 @@ fingerprint.
 The region stays Romania for every club: `country` is `"RO"`, the languages `ro` and `en`, the legal
 texts Romanian law, the prices RON.
 
-## The club's own sentences (§NNN)
+## The club's own sentences (§887)
 
 `messages/ro.json` and `messages/en.json` are the platform's catalogues, and they are neutral: a sentence there is
 one every club can live with — «Alergăm împreună», not «Alergăm împreună prin Brașov». This club's own sentences are

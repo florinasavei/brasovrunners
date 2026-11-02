@@ -12,7 +12,7 @@ import { shortEmailName } from "./rejected-email-words";
 import { waitlistStandingPhrase } from "./waitlist-position-words";
 import { formatRaceNumber, type RaceNumberFormat } from "@/modules/registrations/domain/race-number";
 
-// The platform's words with the club's own laid over them (§NNN, `i18n/catalogue.ts`).
+// The platform's words with the club's own laid over them (§887, `i18n/catalogue.ts`).
 const en = catalogueOf("en");
 const ro = catalogueOf("ro");
 

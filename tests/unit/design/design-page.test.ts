@@ -64,7 +64,7 @@ vi.mock("@/modules/staff-identity/session", () => ({
 }));
 
 const { NextIntlClientProvider } = await import("next-intl");
-// What the page reads (§NNN): the platform's words with this club's over them; the plan's words are the club's alone.
+// What the page reads (§887): the platform's words with this club's over them; the plan's words are the club's alone.
 const { catalogueOf } = await import("@/i18n/catalogue");
 const ro = catalogueOf("ro");
 const en = catalogueOf("en");
@@ -118,7 +118,7 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
     }
   });
 
-  it("draws no «Planul» link and no plan section for a club whose overlay has no plan (§NNN)", async () => {
+  it("draws no «Planul» link and no plan section for a club whose overlay has no plan (§887)", async () => {
     planless = true;
     const markup = await page();
     expect(markup).not.toContain('id="plan"');

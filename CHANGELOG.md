@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.03-2026-11-02
+
+- **This club's own sentences live in `club/messages`** — the platform's catalogues are neutral, Brașov's home page, places, history and plan are an overlay merged over them, and the club's mark, card example, safety form, slug and zone arrive as arguments; every page and email reads as before. §887.
 ## BR-V4.02-2026-11-01
 
 - **The club's own legal clauses live in `club/legal.json`** — the data protection officer, the mailbox, the photo channels and the prize money are the club's values, written into the platform's templates (Brașov's text and its fingerprint unchanged, so no «Șablon nou» email), and «Aprobă și publică» now refuses a version that still holds a `<PLACEHOLDER>`. §884.

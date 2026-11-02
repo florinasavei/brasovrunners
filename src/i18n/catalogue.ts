@@ -5,7 +5,7 @@ import baseRo from "../../messages/ro.json";
 import { CLUB_SLUG } from "@/theme/brand";
 
 /**
- * The words the platform says, as this club says them (§NNN): the platform's catalogue
+ * The words the platform says, as this club says them (§887): the platform's catalogue
  * (`messages/<locale>.json`, neutral — every club can live with it) with the club's own sentences
  * (`club/messages/<locale>.json`) laid over it. The **only** file under `src/` that imports either
  * (`tests/unit/club/import-surface.test.ts`): the request's configuration (`request.ts`) and every

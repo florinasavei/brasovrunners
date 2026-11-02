@@ -679,7 +679,7 @@ export const NO_CONTACT_LINE = "(fără contact lăsat)";
 export const ANONYMOUS_NAME_LINE = "(anonim)";
 
 /**
- * The relay's own words — its subjects and its footers (§NNN, out of this file into `Tell.relay`): Romanian whatever the
+ * The relay's own words — its subjects and its footers (§887, out of this file into `Tell.relay`): Romanian whatever the
  * form's language, like every line of the message, because the reader is the club. The safety form's name in its footer
  * is the club's own (`SAFETY_PROGRAMME`), an argument of the message.
  */

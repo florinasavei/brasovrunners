@@ -3,7 +3,7 @@ import { catalogueOf } from "@/i18n/catalogue";
 import { CLUB_SHORT_NAME } from "@/theme/brand";
 import { createTranslator } from "next-intl";
 
-// The platform's words with the club's own laid over them (§NNN, `i18n/catalogue.ts`).
+// The platform's words with the club's own laid over them (§887, `i18n/catalogue.ts`).
 const en = catalogueOf("en");
 const ro = catalogueOf("ro");
 
@@ -37,7 +37,7 @@ export function rsvpAskAnswerersClause(locale: string): string {
 /**
  * What `{{rsvpMember}}` becomes (§831): the mark beside a shown name, quoted, in that language — „BVR” / “BVR” — read from the catalogue the chip
  * reads (`Event.rsvp.memberMark`), so the approved sentence names what a visitor sees on «Cine vine»; the mark itself is the club's short
- * name, an argument of the message since §NNN.
+ * name, an argument of the message since §887.
  */
 export function rsvpMemberClause(locale: string): string {
   const mark = createTranslator({ locale: locale === "en" ? "en" : "ro", messages: locale === "en" ? en : ro, namespace: "Event" })("rsvp.memberMark", { short: CLUB_SHORT_NAME });

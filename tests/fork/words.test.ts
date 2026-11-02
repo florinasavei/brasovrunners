@@ -8,7 +8,7 @@ import overlayRo from "../fixtures/fork-club/messages/ro.json";
 import { UPSTREAM_IDENTITY } from "./upstream-identity";
 
 /**
- * BR-REQ-101-01 (§NNN): the platform's catalogues are neutral. Under `yarn test:fork` (`vitest.fork.config.mts`) `@club` is
+ * BR-REQ-101-01 (§887): the platform's catalogues are neutral. Under `yarn test:fork` (`vitest.fork.config.mts`) `@club` is
  * the made-up club, whose overlay is its stamp alone — so the merged catalogue is the platform's, every word of it. Each
  * leaf, formatted with the made-up club's values for the arguments that carry a club's words and a dummy for every other,
  * must say none of this club's words: a sentence of Brașov's left in `messages/` is a sentence a fork would ship.
@@ -18,7 +18,7 @@ const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const upstreamWordsIn = (text: string) =>
   UPSTREAM_IDENTITY.filter((word) => new RegExp(`(?<![\\p{L}\\p{N}])${escape(fold(word))}(?![\\p{L}\\p{N}])`, "u").test(fold(text)));
 
-/** The arguments that carry a club's words (§369, §NNN), as the made-up club gives them. */
+/** The arguments that carry a club's words (§369, §887), as the made-up club gives them. */
 function clubValues(locale: "ro" | "en"): Record<string, string> {
   return {
     club: fork.name,
@@ -55,7 +55,7 @@ function formatted(message: string, locale: "ro" | "en"): string {
   }
 }
 
-describe("BR-REQ-101-01: a fork with an empty overlay reads a neutral catalogue (§NNN)", () => {
+describe("BR-REQ-101-01: a fork with an empty overlay reads a neutral catalogue (§887)", () => {
   it("has an overlay that is the made-up club's stamp and nothing else", () => {
     expect(overlayRo).toEqual({ $club: fork.slug });
   });

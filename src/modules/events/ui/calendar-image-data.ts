@@ -60,7 +60,7 @@ export async function calendarImageProps(
       weekdaysLong: Array.from({ length: 7 }, (_, i) => format.dateTime(new Date(Date.UTC(2024, 0, 1 + i, 12)), { timeZone: "UTC", weekday: "long" })),
       monthName: format.dateTime(new Date(Date.UTC(month.year, month.month - 1, 1, 12)), { timeZone: "UTC", month: "long" }),
       at: t.raw("at") as string,
-      // The club's hashtags from its own file (§NNN), never a catalogue's sentence.
+      // The club's hashtags from its own file (§887), never a catalogue's sentence.
       hashtags: CLUB_HASHTAGS.join(" "),
       recurringTitle: t("recurringTitle"),
       specialTitle: t("specialTitle"),

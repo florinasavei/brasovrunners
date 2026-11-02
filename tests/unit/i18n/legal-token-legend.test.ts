@@ -10,7 +10,7 @@ const ro = catalogueOf("ro");
  * `/admin/legal`'s token legend calls `t()` on every `Admin.legal.tokens.*` message: a bare
  * `{{event}}` is malformed ICU and would throw on the page. Every entry must parse and format
  * through the formatter next-intl uses, with the literal token text quoted as `'{{…}}'` (§523) — and with the club's
- * words `TokenLegend` hands every entry (§NNN): its short mark and its safety form's name.
+ * words `TokenLegend` hands every entry (§887): its short mark and its safety form's name.
  */
 describe("Admin.legal.tokens — every legend entry is well-formed ICU", () => {
   for (const [locale, catalogue] of [

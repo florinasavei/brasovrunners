@@ -28,7 +28,7 @@ import {
 import { catalogueOf } from "@/i18n/catalogue";
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
-// The words a reader sees: the platform's catalogue with this club's own sentences over it (§NNN).
+// The words a reader sees: the platform's catalogue with this club's own sentences over it (§887).
 const en = catalogueOf("en");
 const ro = catalogueOf("ro");
 

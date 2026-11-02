@@ -242,7 +242,7 @@ describe("BR-REQ-101-01: the club's words come from club/club.json, never a lite
     expect(countSaid([`@${fold(CLUB.name).replace(/\s+/g, "")}`])[`${CLUB.name} (apart)`]).toBeUndefined();
   });
 
-  it("lists no catalogue: the platform's words are neutral, and this club's own sentences live in club/messages (§NNN)", () => {
+  it("lists no catalogue: the platform's words are neutral, and this club's own sentences live in club/messages (§887)", () => {
     for (const file of ["messages/ro.json", "messages/en.json"]) {
       expect(KNOWN_LEAKS[file], file).toBeUndefined();
       expect(countSaid(textsOf(file)), file).toEqual({});

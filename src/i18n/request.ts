@@ -15,7 +15,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale,
-    // The platform's words with the club's own laid over them (§NNN, `catalogue.ts`).
+    // The platform's words with the club's own laid over them (§887, `catalogue.ts`).
     messages: catalogueOf(locale),
     // AGENTS.md §3.1: every date and time the site shows is Brașov local time.
     timeZone: CLUB_TIME_ZONE,

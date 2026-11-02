@@ -14,7 +14,7 @@ import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import { catalogueOf } from "@/i18n/catalogue";
 import { withClubWords } from "../../helpers/club-words";
 
-// What a page reads: the platform's catalogue with this club's own sentences over it (§NNN).
+// What a page reads: the platform's catalogue with this club's own sentences over it (§887).
 const en = catalogueOf("en");
 const ro = catalogueOf("ro");
 
@@ -201,7 +201,7 @@ describe("§831 the row on /admin/tasks", () => {
 
 describe("§831 the words of the tick, the mark and the editor's chips, in both catalogues", () => {
   it("says the mark in its own word and its accessible name with the club's name filled from the constant", () => {
-    // The mark is the club's short name, an argument of the message (§NNN).
+    // The mark is the club's short name, an argument of the message (§887).
     expect(ro.Event.rsvp.memberMark).toBe("{short}");
     expect(en.Event.rsvp.memberMark).toBe("{short}");
     expect(withClubWords(ro.Event.rsvp.memberMark)).toBe("BVR");

@@ -39,7 +39,7 @@ const STATUS_GLYPH: Record<DecisionStatus | PhaseStatus, StatusGlyphName> = {
  */
 export default async function PlanSection() {
   const t = await getTranslations("Admin");
-  // The plan's words are a club's own history (§NNN): only an overlay that carries them (`club/messages`) draws the section.
+  // The plan's words are a club's own history (§887): only an overlay that carries them (`club/messages`) draws the section.
   if (!t.has("design.plan.decisionsTitle")) return null;
 
   return (

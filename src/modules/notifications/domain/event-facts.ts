@@ -9,7 +9,7 @@ import { whenTimes } from "@/modules/events/domain/when-times";
 import { orderRoutePills, routePillParts } from "@/modules/events/ui/route-pills";
 import { COLOR } from "@/theme/brand";
 
-// The platform's words with the club's own laid over them (§NNN, `i18n/catalogue.ts`).
+// The platform's words with the club's own laid over them (§887, `i18n/catalogue.ts`).
 const en = catalogueOf("en");
 const ro = catalogueOf("ro");
 

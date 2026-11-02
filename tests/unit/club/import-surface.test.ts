@@ -67,7 +67,7 @@ describe("BR-REQ-101-01: the club's file has one way into the platform (§882)",
     expect(readers.every((file) => file.startsWith("src/modules/legal-documents/"))).toBe(true);
   });
 
-  it("names nothing in the club's folder but club.json, decor.json, legal.json and its messages, each through its own door (§884, §885, §NNN)", () => {
+  it("names nothing in the club's folder but club.json, decor.json, legal.json and its messages, each through its own door (§884, §885, §887)", () => {
     const named = FILES.flatMap(({ file, imports }) => imports.filter((specifier) => specifier.startsWith("@club/")).map((specifier) => `${file} → ${specifier}`)).sort();
     expect(named).toEqual([
       "src/club/config.ts → @club/club.json",
@@ -79,7 +79,7 @@ describe("BR-REQ-101-01: the club's file has one way into the platform (§882)",
   });
 
   /**
-   * BR-REQ-101-01 (§NNN): the words have one door too. `src/i18n/catalogue.ts` is the only file that imports the platform's
+   * BR-REQ-101-01 (§887): the words have one door too. `src/i18n/catalogue.ts` is the only file that imports the platform's
    * catalogues (`messages/<locale>.json`) or the club's own sentences (`club/messages/<locale>.json`), and merges them: a
    * reader that took the platform's file straight would say the neutral sentence where this club says its own.
    */

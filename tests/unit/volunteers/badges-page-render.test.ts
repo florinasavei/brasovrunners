@@ -6,7 +6,7 @@ import { DEFAULT_BADGE_DESIGN } from "@/modules/volunteers/badges/badge-design";
 import type { BadgeRole, BadgeSingleStart } from "@/modules/volunteers/badges/badges";
 import { catalogueOf } from "@/i18n/catalogue";
 
-// What a page reads: the platform's catalogue with this club's own sentences over it (§NNN).
+// What a page reads: the platform's catalogue with this club's own sentences over it (§887).
 const en = catalogueOf("en");
 const ro = catalogueOf("ro");
 

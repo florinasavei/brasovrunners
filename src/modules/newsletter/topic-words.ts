@@ -2,7 +2,7 @@ import type { NewsletterTopic } from "@/db/schema/newsletter";
 import { catalogueOf } from "@/i18n/catalogue";
 import { AUTOMATIC_TOPICS, NEWSLETTER_TOPICS } from "./domain/topics";
 
-// The platform's words with the club's own laid over them (§NNN, `i18n/catalogue.ts`).
+// The platform's words with the club's own laid over them (§887, `i18n/catalogue.ts`).
 const en = catalogueOf("en");
 const ro = catalogueOf("ro");
 

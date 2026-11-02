@@ -5,7 +5,7 @@ import type { ClubTodoItem } from "@/modules/club-todo/domain/club-todo";
 import { withClientWords } from "../../helpers/client-words";
 import { catalogueOf } from "@/i18n/catalogue";
 
-// What a page reads: the platform's catalogue with this club's own sentences over it (§NNN).
+// What a page reads: the platform's catalogue with this club's own sentences over it (§887).
 const ro = catalogueOf("ro");
 
 /**

@@ -7,7 +7,7 @@ import { CLUB } from "@/club/config";
 import { catalogueOf, mergeCatalogue, unstamped } from "@/i18n/catalogue";
 
 /**
- * BR-REQ-101-01 (§NNN): the platform's catalogues (`messages/<locale>.json`) are neutral, and this club's own sentences —
+ * BR-REQ-101-01 (§887): the platform's catalogues (`messages/<locale>.json`) are neutral, and this club's own sentences —
  * its home page, its places, its history, its plan — are `club/messages/<locale>.json`, laid over them by
  * `src/i18n/catalogue.ts`. The overlay may only say again, in the club's words, what the platform already says: every key
  * it holds is a key of the platform's catalogue, with the same arguments, in both languages, under the club's stamp.
@@ -37,7 +37,7 @@ const overlayOnly = (key: string) => OVERLAY_ONLY.some((root) => key === root ||
 const OVERLAY = { ro: unstamped(clubRo, CLUB.slug), en: unstamped(clubEn, CLUB.slug) };
 const BASE = { ro: leaves(baseRo), en: leaves(baseEn) };
 
-describe("BR-REQ-101-01: the club's own sentences overlay the platform's neutral catalogue (§NNN)", () => {
+describe("BR-REQ-101-01: the club's own sentences overlay the platform's neutral catalogue (§887)", () => {
   it("is stamped with this club's slug, and refuses another club's overlay", () => {
     expect((clubRo as Tree).$club).toBe(CLUB.slug);
     expect((clubEn as Tree).$club).toBe(CLUB.slug);
