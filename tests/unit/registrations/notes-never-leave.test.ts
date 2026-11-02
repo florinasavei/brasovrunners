@@ -38,7 +38,7 @@ const READERS = new Set(
     // registration by the action, reads none; the form imports the box's length alone.
     "src/app/[locale]/admin/registrations/actions.ts",
     "src/modules/registrations/ui/WaitlistAddForm.tsx",
-    // The same entry as one transaction (`enterOnWaitlistByStaff`, §NNN): writes that note — or the internal list's,
+    // The same entry as one transaction (`enterOnWaitlistByStaff`, §888): writes that note — or the internal list's,
     // on «Mută pe lista oficială» / «Oferă-i un loc acum» — onto the new registration, reads none.
     "src/modules/registrations/admin-service.ts",
   ].map((file) => path.join(ROOT, file)),

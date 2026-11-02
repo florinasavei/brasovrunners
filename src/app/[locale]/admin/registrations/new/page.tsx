@@ -83,7 +83,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   /*
     «Trece pe lista oficială» (§854): the line of the internal list this entry is made from — its name and
     address in the boxes, its id posted so the action carries the note over and removes the line. Only for
-    the Administrator, who moves a line (§NNN), and only while its event takes entries here.
+    the Administrator, who moves a line (§888), and only while its event takes entries here.
   */
   const reserveEntry = reserve && canManageRegistrations(actor.role) ? await findReserveEntry(getDb(), actor, reserve) : undefined;
   const reserveOpen = reserveEntry !== undefined && events.some((event) => event.id === reserveEntry.eventId);

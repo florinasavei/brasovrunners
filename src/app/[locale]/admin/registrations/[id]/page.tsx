@@ -644,7 +644,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       {/*
         «Trimite-i oferta» (§615): the ordinary offer, by the organizer's choice — the email and the deadline, no
         confirmation. The Administrator's; offered at any moment before the start, after the close too, and on a
-        full event it adds one supplementary place (§642), as the dialog says. Its own block since §NNN, beside
+        full event it adds one supplementary place (§642), as the dialog says. Its own block since §888, beside
         «Dă-i un loc acum» and out of the race-day card, with the sentence that says it works at any time.
       */}
       {registration.status === "WAITLISTED" && mayManage && offerForecast !== null && (

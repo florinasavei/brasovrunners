@@ -104,7 +104,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   createRegistrationAction: [],
   // «Adaugă pe lista de așteptare» (§872): an entry that emails the person, asked first on the queue panel and the registrations list.
   addToWaitlistAction: ["waitlistAddAction"],
-  // «Mută pe lista oficială» / «Oferă-i un loc acum» (§NNN): an entry that emails the person, asked first on each internal-list line, the relay tick in the dialog.
+  // «Mută pe lista oficială» / «Oferă-i un loc acum» (§888): an entry that emails the person, asked first on each internal-list line, the relay tick in the dialog.
   moveReserveEntryAction: ["moveAction"],
   // «Modifică datele» (§645): asks, naming the person and the fields the press changes.
   editRegistrationAnswersAction: [],

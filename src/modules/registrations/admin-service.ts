@@ -714,7 +714,7 @@ export type WaitlistEntryByStaffInput = {
   /** An internal note (§777), already parsed by the caller, written on the registration in the entry's transaction. */
   note?: string | null;
   /**
-   * «Oferă-i un loc acum» (§NNN): after the entry, in the same transaction, a row the allocator left on the
+   * «Oferă-i un loc acum» (§888): after the entry, in the same transaction, a row the allocator left on the
    * waiting list is offered a place as «Trimite-i oferta» offers it (§642) — a counted free place, or the one
    * supplementary place the dialog named (`addPlaceTo`). Absent, the entry is «Adaugă pe lista de așteptare» alone.
    */
@@ -724,7 +724,7 @@ export type WaitlistEntryByStaffInput = {
 export type WaitlistEntryByStaffResult = { registrationId: string; status: RegistrationStatus; capacityRaisedTo: number | null };
 
 /**
- * One press onto the official waiting list (§872, §NNN): «Adaugă pe lista de așteptare», and «Oferă-i un loc
+ * One press onto the official waiting list (§872, §888): «Adaugă pe lista de așteptare», and «Oferă-i un loc
  * acum» beside it — from the official list's add form, or from a line of the internal list (`reserve-list.ts`).
  * The Administrator's alone (`canManageRegistrations`), asserted here before anything is read, and again by the
  * entry and by the offer.

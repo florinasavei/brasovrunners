@@ -47,7 +47,7 @@ describe("BR-REQ-037-05 the verbs a registration row offers", () => {
     }
   });
 
-  // «Trimite-i oferta» from the list's «⋮» (§NNN), as on the queue panel and the registration's page: a waiting row, the Administrator's.
+  // «Trimite-i oferta» from the list's «⋮» (§888), as on the queue panel and the registration's page: a waiting row, the Administrator's.
   it("offers «Trimite-i oferta» on every waiting row, before «Dă-i un loc», and on no other", () => {
     const verbs = rowVerbsFor("WAITLISTED", "ADMIN", { checkedIn: false });
     expect(verbs.indexOf("offerPlace")).toBeGreaterThan(-1);

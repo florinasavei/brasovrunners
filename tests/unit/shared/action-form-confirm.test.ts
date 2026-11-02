@@ -60,7 +60,7 @@ describe("§384 ActionForm asks first", () => {
     expect(source).toMatch(/if \(input instanceof HTMLInputElement\) input\.value = chosen\.value;/);
   });
 
-  it("asks for a tick in the dialog and writes it into the form's hidden input on «yes» alone (§NNN)", () => {
+  it("asks for a tick in the dialog and writes it into the form's hidden input on «yes» alone (§888)", () => {
     expect(source).toMatch(/const ticked = which === "confirm" \? tickAnswer\(pending\.spec\) : null;/);
     expect(source).toMatch(/if \(input instanceof HTMLInputElement\) input\.value = ticked\.value;/);
     const spec = { title: "t", body: "b", confirmLabel: "c", cancelLabel: "x" };

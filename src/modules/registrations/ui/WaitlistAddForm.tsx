@@ -24,7 +24,7 @@ import { staffOfferIfMadeNow, waitlistOfferQuestion } from "../give-place-tip";
  * (`back="event"`, with its own title and help) and inside its own panel on the event's registrations list
  * (the panel carries the title); the page hands the action down only to an Administrator. The full form —
  * every other answer, the person's own language — is one link away. The dialog names the email it sends
- * (§384). Its second button, «Oferă-i un loc acum» (§NNN), posts the same entry with `intent=offer`: the row is
+ * (§384). Its second button, «Oferă-i un loc acum» (§888), posts the same entry with `intent=offer`: the row is
  * given a place in the same press — a free one, or §642's offer — and its own question names the supplementary
  * place a full event gets (`addPlace`, the capacity it names) and the close. Presentation only.
  */

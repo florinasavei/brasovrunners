@@ -106,7 +106,7 @@ vi.mock("@/shared/forms/ActionForm", () => ({ default: () => null }));
 vi.mock("@/shared/forms/recall", () => ({ default: () => null }));
 vi.mock("@/shared/ui/CheckboxField", () => ({ default: () => null }));
 vi.mock("@/shared/ui/GlyphButton", () => ({ default: () => null }));
-// «Oferă-i un loc acum»'s question (§NNN) reads the places: a full race whose next capacity is 151, registration open.
+// «Oferă-i un loc acum»'s question (§888) reads the places: a full race whose next capacity is 151, registration open.
 vi.mock("@/modules/registrations/give-place-tip", async (original) => ({
   ...(await original<typeof import("@/modules/registrations/give-place-tip")>()),
   staffOfferIfMadeNow: async () => ({ deadline: "vin., 20 nov., 10:00", afterClose: false, raisedTo: 151 }),
@@ -143,7 +143,7 @@ describe("BR-REQ-037-05 «Adaugă pe lista de așteptare» asks, naming the addr
     expect(filled.email).toBe("email line");
   });
 
-  it.each(["ro", "en"] as const)("%s: «Oferă-i un loc acum» asks its own question — the typed address, the capacity it becomes, a button naming the added place (§NNN)", async (locale) => {
+  it.each(["ro", "en"] as const)("%s: «Oferă-i un loc acum» asks its own question — the typed address, the capacity it becomes, a button naming the added place (§888)", async (locale) => {
     currentLocale = locale;
     const words = catalogues[locale].Admin;
     const { default: WaitlistAddForm } = await import("@/modules/registrations/ui/WaitlistAddForm");

@@ -5,7 +5,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * §NNN (BR-REQ-037-05, BR-REQ-034-02, BR-REQ-060-01) — the owner, 2026-11-01: the internal list is notes, the
+ * §888 (BR-REQ-037-05, BR-REQ-034-02, BR-REQ-060-01) — the owner, 2026-11-01: the internal list is notes, the
  * official waiting list the real queue, told apart in one read on a phone at 320 px; a line moves from the first
  * to the second in one press («Mută pe lista oficială»), or is offered a place at once («Oferă-i un loc acum»),
  * each dialog naming the address and asking for the relay tick itself.
@@ -104,7 +104,7 @@ async function tickAndConfirm(page: Page, title: string, expected: { address: st
   await expect(dialog).toBeHidden();
 }
 
-test.describe("§NNN the internal list and the official waiting list, told apart; a line moved or offered a place in one press", () => {
+test.describe("§888 the internal list and the official waiting list, told apart; a line moved or offered a place in one press", () => {
   test.describe.configure({ timeout: 90_000 });
 
   test("the Administrator reads the two lists apart, moves one line to the official list and offers the other a supplementary place", async ({ page }) => {

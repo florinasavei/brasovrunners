@@ -17,7 +17,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Mută pe lista oficială» and «Oferă-i un loc acum» (§NNN; BR-REQ-037-05, BR-REQ-034-02, BR-REQ-060-01) — the
+ * «Mută pe lista oficială» and «Oferă-i un loc acum» (§888; BR-REQ-037-05, BR-REQ-034-02, BR-REQ-060-01) — the
  * owner, 2026-11-01: the internal list is notes, the official waiting list the real queue, and a line moves from
  * the first to the second in one press, or is offered a place at once.
  *
@@ -213,7 +213,7 @@ async function refusal(work: Promise<unknown>): Promise<unknown> {
   throw new Error("expected a refusal");
 }
 
-describe("§NNN «Mută pe lista oficială» on a line of the internal list", () => {
+describe("§888 «Mută pe lista oficială» on a line of the internal list", () => {
   it("a free place: the line's person is entered with the address vouched for and gets the declaration email, no verification email; the note follows and the line is gone, in one press", async () => {
     const event = await createEvent(2);
     const entryId = await line(event.id, "Mara");
@@ -286,7 +286,7 @@ describe("§NNN «Mută pe lista oficială» on a line of the internal list", ()
   });
 });
 
-describe("§NNN «Oferă-i un loc acum» on a line of the internal list: the same entry, and §642's offer in the same transaction", () => {
+describe("§888 «Oferă-i un loc acum» on a line of the internal list: the same entry, and §642's offer in the same transaction", () => {
   it("a full event, the supplementary place confirmed by the dialog: one place added and offered to the person in the same press — one email, the offer — audited, the note carried and the line gone", async () => {
     const event = await createEvent(1);
     await confirmedAddress(event, "Ana");
@@ -382,7 +382,7 @@ describe("§NNN «Oferă-i un loc acum» on a line of the internal list: the sam
   });
 });
 
-describe("§NNN the Administrator's alone (BR-REQ-060-01): the Organizer keeps the list's add, note and delete", () => {
+describe("§888 the Administrator's alone (BR-REQ-060-01): the Organizer keeps the list's add, note and delete", () => {
   it("an Organizer's press of either verb is refused by the service, and the line stays; nor does the full form carry the note for them", async () => {
     const event = await createEvent(2);
     const entryId = await line(event.id, "Mara");
@@ -402,7 +402,7 @@ describe("§NNN the Administrator's alone (BR-REQ-060-01): the Organizer keeps t
   });
 });
 
-describe("§NNN «Oferă-i un loc acum» on the official list's add form", () => {
+describe("§888 «Oferă-i un loc acum» on the official list's add form", () => {
   /** The add form as posted by its second button. */
   function offerFromForm(eventId: string, name: string, addPlace?: number): FormData {
     const form = new FormData();

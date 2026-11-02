@@ -170,7 +170,7 @@ export function staffOfferQuestion(t: Translate, name: string, forecast: StaffOf
 }
 
 /**
- * «Oferă-i un loc acum»'s dialog (§NNN): a person entered on the official waiting list with the address vouched
+ * «Oferă-i un loc acum»'s dialog (§888): a person entered on the official waiting list with the address vouched
  * for and given a place in the same press — a free one, or §642's offer — so the question names the address the
  * emails go to, then, from `staffOfferIfMadeNow`, the supplementary place a full event gets and that registration
  * has closed, each its own catalogue string; the confirm button names the added place when there is one

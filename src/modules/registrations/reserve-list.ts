@@ -19,12 +19,12 @@ import type { StaffPlaceOptions } from "./service";
  * «Lista internă de așteptare» (§854): the people who asked — usually through the contact form — to be kept
  * in mind for one event, written down by the organizers and told nothing. Not a registration: nothing here
  * holds a place, stands in the queue, sends an email or reaches a count; the allocator never reads it.
- * «Mută pe lista oficială» and «Oferă-i un loc acum» (§NNN) move a line onto the official waiting list in one
+ * «Mută pe lista oficială» and «Oferă-i un loc acum» (§888) move a line onto the official waiting list in one
  * press (`moveReserveEntryToWaitlist`); the full form, prefilled, stays one link away, and `settleReserveEntry`
  * then carries the entry's note onto the registration as an internal note (§777) and removes the line.
  *
  * **Who** — the Organizer and above (`canKeepRegistrationNotes`, the internal notes' own rule) add, note and
- * delete; moving a line is the Administrator's (`canManageRegistrations`, §NNN). Asserted in every function
+ * delete; moving a line is the Administrator's (`canManageRegistrations`, §888). Asserted in every function
  * below (BR-REQ-060-01). **The trail** names who, when and which line — never a name, an address or the note's
  * words.
  */
@@ -156,7 +156,7 @@ export async function deleteReserveEntry<T extends Record<string, unknown>>(db: 
   });
 }
 
-/** Moving a line onto the official list is the Administrator's (§NNN): the Organizer keeps add, note and delete. */
+/** Moving a line onto the official list is the Administrator's (§888): the Organizer keeps add, note and delete. */
 function assertMayMove(actor: Pick<StaffUser, "role">): void {
   if (!canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not move a line of the internal list onto the official waiting list`);
@@ -175,7 +175,7 @@ export type ReserveMoveInput = {
 };
 
 /**
- * «Mută pe lista oficială» and «Oferă-i un loc acum» on one line (§NNN; the owner, 2026-11-01: the internal list
+ * «Mută pe lista oficială» and «Oferă-i un loc acum» on one line (§888; the owner, 2026-11-01: the internal list
  * is notes, the official one the real queue — one press from the first to the second). The Administrator's
  * (`canManageRegistrations`, asserted here and again by the entry). One transaction: the event row locked, then
  * the line — the order an event's delete takes them in — then the line's person entered as the official list's
@@ -237,7 +237,7 @@ export async function moveReserveEntryToWaitlist<T extends Record<string, unknow
  * After «Trece pe lista oficială» made a registration of the line: its note becomes the registration's
  * internal note (§777) and the line is removed. Nothing happens when the registration is not of the line's
  * event — another event chosen on the form, or a forged one: the note never lands on another event's row —
- * or when the line is already gone. The Administrator's since §NNN, as the one-press move.
+ * or when the line is already gone. The Administrator's since §888, as the one-press move.
  */
 export async function settleReserveEntry<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, entryId: string, registrationId: string, now: Date): Promise<void> {
   assertMayKeep(actor);

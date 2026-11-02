@@ -224,7 +224,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
           {t(order === "SUBMITTED" ? "queue.orderSubmitted" : "queue.orderLine")}
         </Typography>
       )}
-      {/* «Trimite-i oferta» at any time (§642), said where it is pressed (§NNN): after the close too, and on a full race. */}
+      {/* «Trimite-i oferta» at any time (§642), said where it is pressed (§888): after the close too, and on a full race. */}
       {offerForecast && (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="queue-offer-any-time">
           {t("queue.offerAnyTime")}

@@ -80,7 +80,7 @@ export default function ConfirmDialog({
   const road = picked.spec === spec ? picked.road : (spec?.road?.current ?? "mailgun");
   if (picked.spec !== spec) setPicked({ spec, road });
   const setRoad = (next: "mailgun" | "gmail") => setPicked({ spec, road: next });
-  // The dialog's own box (§NNN), unticked again for each new question, as the road is picked again.
+  // The dialog's own box (§888), unticked again for each new question, as the road is picked again.
   const [tick, setTick] = useState<{ spec: ConfirmSpec | null; on: boolean }>({ spec, on: false });
   const ticked = tick.spec === spec && tick.on;
   if (!spec) return null;

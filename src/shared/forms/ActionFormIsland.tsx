@@ -365,7 +365,7 @@ export default function ActionFormIsland({
       const input = element.elements.namedItem(chosen.field);
       if (input instanceof HTMLInputElement) input.value = chosen.value;
     }
-    // A box ticked in the dialog (§NNN): its hidden input carries the tick to the action; the dialog let nothing through unticked.
+    // A box ticked in the dialog (§888): its hidden input carries the tick to the action; the dialog let nothing through unticked.
     const ticked = which === "confirm" ? tickAnswer(pending.spec) : null;
     if (ticked) {
       const input = element.elements.namedItem(ticked.field);

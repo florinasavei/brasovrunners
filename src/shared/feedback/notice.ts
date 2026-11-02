@@ -349,7 +349,7 @@ export type ConfirmSpec = {
    */
   changedFields?: ChangedFields;
   /**
-   * A box the reader ticks in the dialog before its confirm button answers (§NNN): the relay tick of a
+   * A box the reader ticks in the dialog before its confirm button answers (§888): the relay tick of a
    * one-press move from the internal list onto the official waiting list, «Confirm că această persoană mi-a
    * cerut să o înscriu…» (§33, binding). `field` is a hidden input of the form, posted empty as drawn; the
    * confirm writes `on` into it (`tickAnswer`). Without JavaScript there is no dialog, the field posts empty

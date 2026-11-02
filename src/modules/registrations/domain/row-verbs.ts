@@ -33,7 +33,7 @@ export type RowVerb =
   /**
    * «Trimite-i oferta» (§615, §642): the ordinary offer to the waiting-list entry the Administrator picks, at any
    * moment before the start — after the close too, and on a full race with one supplementary place its question
-   * names. On the list's «⋮» since §NNN, as on the queue panel and the registration's page.
+   * names. On the list's «⋮» since §888, as on the queue panel and the registration's page.
    */
   | "offerPlace"
   | "checkIn"

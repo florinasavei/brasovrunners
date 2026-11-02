@@ -22,11 +22,11 @@ import type { ReserveEntryRow } from "../reserve-list";
 const AddressIcon = ACTION_ICONS.emailConfirmation;
 
 /**
- * «Lista internă (doar notițe)» (§854, renamed by §NNN) on one event's registrations list, for the Organizer and
+ * «Lista internă (doar notițe)» (§854, renamed by §888) on one event's registrations list, for the Organizer and
  * above: the people who asked to be kept in mind, told nothing and emailed nothing. Each line: the name, the
  * address when the club has it, the internal note (edited in place) and «Șterge» — the Organizer's three verbs.
  * For the Administrator (`moveAction`, handed down only to that role and only while the event takes a vouched
- * entry), two one-press verbs onto the official waiting list (§NNN): «Mută pe lista oficială» — the official
+ * entry), two one-press verbs onto the official waiting list (§888): «Mută pe lista oficială» — the official
  * list's add form, from the line — and «Oferă-i un loc acum», the same entry with §642's offer; each dialog says
  * the consequence, names the address the emails go to and asks for the relay tick (§33); a line without an
  * address shows a box for it. The full form, prefilled, stays one link away (`fullFormHref`). Below, «Adaugă pe
@@ -147,7 +147,7 @@ export default async function ReserveListPanel({
                     {forecast && forecast.raisedTo !== null && <input type="hidden" name="addPlace" value={forecast.raisedTo} />}
                     <Stack spacing={1} sx={{ alignItems: "flex-start", mt: 1.5 }}>
                       {!entry.email && (
-                        // A line written without an address (§NNN): its box behind a fold that says so — a press with it empty opens it (`revealField`).
+                        // A line written without an address (§888): its box behind a fold that says so — a press with it empty opens it (`revealField`).
                         <Box component="details" sx={{ ...DISCLOSURE_SX, width: "100%" }} data-testid="reserve-move-email">
                           <Box component="summary">
                             <AddressIcon fontSize="small" aria-hidden sx={FOLD_GLYPH_SX} />

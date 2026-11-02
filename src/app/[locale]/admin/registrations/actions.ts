@@ -381,7 +381,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
       onto the new registration, the line removed. Only for a role that keeps the list; the registration
       stands whatever happens here, so a line already gone is no refusal.
     */
-    // Moving a line is the Administrator's since §NNN, in one press or through this form.
+    // Moving a line is the Administrator's since §888, in one press or through this form.
     const reserveEntryId = text(form, "reserveEntryId");
     if (reserveEntryId && created.registrationId && canManageRegistrations(actor.role)) {
       await settleReserveEntry(getDb(), actor, reserveEntryId, created.registrationId, new Date());
@@ -971,12 +971,12 @@ async function backToWaitlistPanel(form: FormData, locale: Locale, eventId: stri
   redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${query.toString()}#registrations-waitlist-add`);
 }
 
-/** «Oferă-i un loc acum» (§NNN): the press's second button, with the capacity its question named (§642). */
+/** «Oferă-i un loc acum» (§888): the press's second button, with the capacity its question named (§642). */
 function offerNowOf(form: FormData): StaffPlaceOptions | null {
   return text(form, "intent") === "offer" ? { addPlaceTo: confirmedCapacityOf(form.get("addPlace")) } : null;
 }
 
-/** The toast after a one-press entry onto the official waiting list (§872, §NNN): where the row landed. */
+/** The toast after a one-press entry onto the official waiting list (§872, §888): where the row landed. */
 function waitlistEntrySaved(entry: WaitlistEntryByStaffResult): { saved: string; count?: string } {
   if (entry.status === "PENDING_DECLARATION") return { saved: "waitlistPlaced" };
   if (entry.status === "WAITLIST_OFFERED") return entry.capacityRaisedTo === null ? { saved: "registrationOffered" } : { saved: "registrationOfferedRaised", count: String(entry.capacityRaisedTo) };
@@ -984,7 +984,7 @@ function waitlistEntrySaved(entry: WaitlistEntryByStaffResult): { saved: string;
 }
 
 /**
- * A refused one-press entry (§872, §NNN): the form comes back as typed (§315), and nothing was written — one
+ * A refused one-press entry (§872, §888): the form comes back as typed (§315), and nothing was written — one
  * transaction. The note's rule names the form's box, not the service's column; this person on the address
  * already, or the address at the club's limit, the full form's sentences (§493); the line full (§348) names no
  * box. The places changed since the page was read (§642): the page is drawn again (`revalidatePath`), so its
@@ -1007,7 +1007,7 @@ function waitlistEntryRefused(error: unknown, form: FormData, page: string): For
 }
 
 /**
- * «Adaugă pe lista de așteptare» (§872) and, its second button, «Oferă-i un loc acum» (§NNN): the one-press form on
+ * «Adaugă pe lista de așteptare» (§872) and, its second button, «Oferă-i un loc acum» (§888): the one-press form on
  * the queue panel and on the registrations list — a name, an address, an optional internal note and the relay tick
  * — posted as the staff entry with «Direct pe lista de așteptare» ticked (`enterOnWaitlistByStaff`): the
  * Administrator's alone (the coarse gate here, the service's own assertion again, BR-REQ-060-01), the address
@@ -1052,7 +1052,7 @@ export async function addToWaitlistAction(_previous: FormOutcome | null, form: F
 }
 
 /**
- * «Mută pe lista oficială» and «Oferă-i un loc acum» on a line of «Lista internă (doar notițe)» (§NNN): the line's
+ * «Mută pe lista oficială» and «Oferă-i un loc acum» on a line of «Lista internă (doar notițe)» (§888): the line's
  * person entered on the official waiting list as the add form enters one, the note following and the line gone,
  * in one transaction (`moveReserveEntryToWaitlist`). The Administrator's alone — the coarse gate here, the
  * service's own assertion again (BR-REQ-060-01); the Organizer keeps the list's add, note and delete. The relay

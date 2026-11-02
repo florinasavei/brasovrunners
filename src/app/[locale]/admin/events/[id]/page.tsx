@@ -1379,7 +1379,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         id="box-queue"
                         title={t("editor.boxes.queue.title")}
                         aside={waiting > 0 ? t("editor.boxes.queue.waiting", { waiting }) : undefined}
-                        // Open on the way back from «Adaugă pe lista de așteptare» (§872) or its «Oferă-i un loc acum» (§NNN), with the new row in the line.
+                        // Open on the way back from «Adaugă pe lista de așteptare» (§872) or its «Oferă-i un loc acum» (§888), with the new row in the line.
                         openWhen={{ saved: saved === "waitlistAdded" || saved === "waitlistPlaced" || saved === "registrationOffered" || saved === "registrationOfferedRaised" }}
                       >
                         <QueuePanel

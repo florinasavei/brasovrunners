@@ -138,7 +138,7 @@ export const dynamic = "force-dynamic";
 /** The id of the bulk form, which lives below the table but owns the checkboxes inside it. */
 const BULK_FORM = "bulk-cancel";
 
-/** Where a one-press entry onto the official waiting list landed (§872, §NNN): the toasts that open its panel on the way back. */
+/** Where a one-press entry onto the official waiting list landed (§872, §888): the toasts that open its panel on the way back. */
 const WAITLIST_ENTRY_SAVED: ReadonlySet<string> = new Set(["waitlistAdded", "waitlistPlaced", "registrationOffered", "registrationOfferedRaised"]);
 
 function isRegistrationStatus(value: string | undefined): value is RegistrationStatus {
@@ -324,7 +324,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const waitingEvents = [...new Set(canManageRegistrations(actor.role) ? rows.filter((row) => row.status === "WAITLISTED").map((row) => row.eventId) : [])];
   const givePlaceWhy = new Map(await Promise.all(waitingEvents.map(async (id) => [id, await givePlaceRefusalAhead(id)] as const)));
   /*
-    «Trimite-i oferta» from the «⋮» (§615, §642, on the list since §NNN): the question per event on the page —
+    «Trimite-i oferta» from the «⋮» (§615, §642, on the list since §888): the question per event on the page —
     the deadline, a supplementary place, the close — cached per request; null once the event has started, when
     the item is not drawn.
   */
@@ -1343,7 +1343,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       )}
 
       {/*
-        «Lista internă (doar notițe)» (§854, §NNN): people who asked to be kept in mind for this event, told nothing,
+        «Lista internă (doar notițe)» (§854, §888): people who asked to be kept in mind for this event, told nothing,
         for the roles that keep internal notes. Only on a list about one event: a line is about one. Moving a line onto
         the official list — one press, or the full form — is the Administrator's; the press only while the event takes
         a vouched entry (the door of «Adaugă pe lista de așteptare»).
@@ -1365,7 +1365,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       )}
 
       {/*
-        «Lista oficială de așteptare» (§872, renamed by §NNN): the one-press entry onto the official waiting list — the
+        «Lista oficială de așteptare» (§872, renamed by §888): the one-press entry onto the official waiting list — the
         address vouched for by the Administrator, the row through the allocator at once, or given a place in the same
         press («Oferă-i un loc acum»). Administrator only, on a list about one event; the new row shows in the list
         above in the state it landed in.
