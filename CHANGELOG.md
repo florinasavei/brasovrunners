@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.07-2026-11-02
+
+- **Less empty room under the association's name, seat and email** at the foot of the page, nearer the footer. §891.
 ## BR-V4.06-2026-11-02
 
 - **The association's name, seat and email on the site, as the club chooses** — «Pagini» → «Contact» → «Ce arată site-ul despre asociație»: tick boxes for where the name and CIF, the seat and the contact email show (the listing, «Contact», «Echipa» and the club's pages, the footer), and a box for the seat as the site prints it (street, town, county — never the full registered address). By default the name and CIF everywhere, the seat and the email nowhere. §890.

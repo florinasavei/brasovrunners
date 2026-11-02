@@ -1,7 +1,0 @@
-{
-  "branch": "fix/club-identity-lower",
-  "decisionsTitle": "Less room under the association's identity lines",
-  "decisionsSection": "**The owner, 2026-11-02:** «e ok doar ca vreau sa fie mutate un pic mai jos», then «deapt eu vreau mai putin spatiu jos», on the lines «Ce arată site-ul despre asociație» ticks for the listing, «Contact» and the club's pages.\n\n**Decision.** The paragraph `ClubIdentity` draws at the end of a page keeps its place, its shape and the room above it; under the look whose watermark ends every public page (§708), it takes back the page's bottom padding and part of the watermark's top room (a negative bottom margin, 24 pixels on a phone and 36 from `sm`), so the lines sit about 20 pixels above the mountain mark instead of 44–56. Without the look there is no watermark, and the page's padding is all that stands between the lines and the footer's bar, so nothing changes there. The footer's fold copy is unchanged.\n\n**Refused.** A block in or under the footer's bar (§582: the footer stays collapsed); less room above every page's watermark, which would change every page for a line some pages show.",
-  "changelogLine": "- **Less empty room under the association's name, seat and email** at the foot of the page, nearer the footer. §NNN.",
-  "batchLine": "less room under the association's identity lines"
-}
