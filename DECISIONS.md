@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.04-2026-11-02 -->
+<!-- PROJECT_BASELINE: BR-V4.05-2026-11-02 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.04-2026-11-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.05-2026-11-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28510,3 +28510,15 @@ Baseline `BR-V4.03-2026-11-02`.
 **Consequences.** `registrations/admin-service.ts` (`enterOnWaitlistByStaff`, `WaitlistEntryByStaffInput`), `registrations/reserve-list.ts` (`moveReserveEntryToWaitlist`, `assertMayMove`, `settleReserveEntry` the Administrator's), `registrations/give-place-tip.ts` (`waitlistOfferQuestion`), `registrations/domain/row-verbs.ts` (`offerPlace`), `admin/registrations/actions.ts` (`moveReserveEntryAction`, `addToWaitlistAction`'s `intent=offer`), `shared/feedback/notice.ts` (`ConfirmSpec.tick`, `tickAnswer`), `shared/feedback/ConfirmDialog.tsx`, `shared/forms/ActionFormIsland.tsx`, `ui/ReserveListPanel.tsx`, `ui/WaitlistAddForm.tsx`, `ui/QueuePanel.tsx`, the registrations list and the registration's page, `admin/registrations/new/page.tsx` (the prefill), `messages/{ro,en}.json` (the «Ghid»'s task «Lista internă (doar notițe): cine a cerut un loc» in the screen's new words); `AGENTS.md` §10.5 rules 3 and 6, §10.6, §15.11; CLAUDE.md's staff-verbs row. Tests: `integration/registrations/internal-list-move-and-offer.test.ts` (new), `unit/registrations/row-verbs.test.ts`, `unit/shared/action-form-confirm.test.ts`, `unit/shared/confirmed-actions.test.ts`, `e2e/internal-list-move-and-offer.spec.ts` (new). The two-connection race on the last place is `concurrency/capacity.test.ts`, unchanged: the offer's path is §642's, under the same lock. No migration, no dependency, no new message type, no new audit action.
 
 Baseline `BR-V4.04-2026-11-02`.
+
+## 889. The club's legal name and CIF in plain sight on the listing
+
+**The owner, 2026-11-02:** Google for Nonprofits refused to activate Google Workspace for the club: «the connection between Asociatia Sportiva Alergatori Cu Jumatate De Norma and <domain> couldn't be verified». «I need to fix this asap! hotfix».
+
+**Why.** The site's first page is the event listing (the root redirects there while «Pagina principală» is off). On it, the association's legal name and CIF were only inside the footer's closed «Despre club» fold (§582), so a reviewer who did not open the fold saw only «Brașov Runners». «Contact», the club's standing pages and «Echipa» already show the same line in plain sight (`ClubIdentity` `line`).
+
+**Decision.** The listing ends with the same `ClubIdentity` line those pages end with: «<legal name> (<site name>) · CIF <CIF>», under the past events, nothing while the legal name is unset. The footer is unchanged — the fold keeps its own copy, and nothing is added to the bar (§582's rule that the footer stays collapsed).
+
+**Refused.** Opening the footer fold by default, or a block under the bar: §565 drew one and the owner removed it the same evening («ai duplicat footerul, arată oribil!!»). A hidden page for Google alone: the line is useful to every visitor and costs one line at the foot of the page.
+
+Baseline `BR-V4.05-2026-11-02`.
