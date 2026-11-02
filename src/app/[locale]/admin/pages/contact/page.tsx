@@ -11,7 +11,9 @@ import { configuredGmailAddress, resolveShownContactAddresses } from "@/modules/
 import { countHeldBack } from "@/modules/contact/held-back";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import { readPublicPhone } from "@/modules/contact/public-phone";
+import { readClubIdentityShown } from "@/modules/contact/club-identity";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
+import ClubIdentityPanel from "@/modules/contact/ui/ClubIdentityPanel";
 import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
 import PublicPhonePanel from "@/modules/contact/ui/PublicPhonePanel";
 import ShownAddressPanel from "@/modules/contact/ui/ShownAddressPanel";
@@ -19,6 +21,7 @@ import { feedbackRoads } from "@/modules/feedback/roads";
 import { readFeedbackSettings } from "@/modules/feedback/settings";
 import FeedbackFormsPanel from "@/modules/feedback/ui/FeedbackFormsPanel";
 import { noticeDescribesFeedbackForms, noticeDescribesFeedbackSafetyGmail } from "@/modules/legal-documents/repository";
+import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import { canManageClubSettings, canReadContent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -58,17 +61,20 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
   const t = await getTranslations("Admin");
   const db = getDb();
   const now = new Date();
-  const [recipients, heldBack, shownAddress, publicPhone, feedbackForms, feedbackNoticeDescribes, safetyGmailDescribed] = await Promise.all([
+  const [recipients, heldBack, shownAddress, publicPhone, clubIdentity, feedbackForms, feedbackNoticeDescribes, safetyGmailDescribed] = await Promise.all([
     readContactRecipients(db),
     countHeldBack(db, now),
     readShownContactAddress(db),
     readPublicPhone(db),
+    readClubIdentityShown(db),
     readFeedbackSettings(db, feedbackRoads()),
     noticeDescribesFeedbackForms(db, now),
     noticeDescribesFeedbackSafetyGmail(db, now),
   ]);
   const mayEdit = canManageClubSettings(actor.role);
   const roads = feedbackRoads();
+  const shownAddresses = resolveShownContactAddresses(shownAddress, env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER);
+  const facts = clubFactsFromEnv(env);
 
   return (
     <Stack spacing={3}>
@@ -78,6 +84,7 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
         {saved === "contactRecipients" && <Alert severity="success">{t("emails.contacts.saved")}</Alert>}
         {saved === "shownContactAddress" && <Alert severity="success">{t("emails.shownAddress.saved")}</Alert>}
         {saved === "publicPhone" && <Alert severity="success">{t("emails.publicPhone.saved")}</Alert>}
+        {saved === "clubIdentity" && <Alert severity="success">{t("emails.clubIdentity.saved")}</Alert>}
         {saved === "feedbackForms" && <Alert severity="success">{t("emails.feedbackForms.saved")}</Alert>}
       </Box>
 
@@ -111,13 +118,22 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
         state={shownAddress}
         mailbox={env.EMAIL_REPLY_TO ?? null}
         configuredGmail={configuredGmailAddress(env.CONTACT_SMTP_USER)}
-        resolved={resolveShownContactAddresses(shownAddress, env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER)}
+        resolved={shownAddresses}
         mayEdit={mayEdit}
         openWhen={{ primary: true, saved: saved === "shownContactAddress" }}
       />
 
       {/* «Telefon public» (§565): optional; the footer's «Contact» shows it only when set. */}
       <PublicPhonePanel locale={locale} state={publicPhone} mayEdit={mayEdit} openWhen={{ primary: true, saved: saved === "publicPhone" }} />
+
+      {/* «Ce arată site-ul despre asociație» (§890): where the name and CIF, the seat and the email show — tick boxes. */}
+      <ClubIdentityPanel
+        locale={locale}
+        state={clubIdentity}
+        valueSet={{ name: Boolean(facts.legalName), seat: clubIdentity.seatAddress !== null, email: shownAddresses.length > 0 }}
+        mayEdit={mayEdit}
+        openWhen={{ primary: true, saved: saved === "clubIdentity" }}
+      />
     </Stack>
   );
 }

@@ -180,8 +180,8 @@ const FOURTH_MARK_FROM = 400;
  * drew a block under the bar for it — the name, the marks again, «Contact» with the address and
  * «Scrie-ne» again — and the owner, the same evening: «ai duplicat footerul, arată oribil!! partea
  * asta trebuie să fie în footerul colapsat!». So the block is gone, and what it added that the
- * footer did not already have is two items of the fold: the identity line (`ClubIdentity`'s
- * `fold`) after the links, and the public phone beside «Scrie-ne». The marks stay on the bar, once.
+ * footer did not already have is two items of the fold: the identity line (`ClubIdentity`
+ * at `place="footer"`) after the links, and the public phone beside «Scrie-ne». The marks stay on the bar, once.
  *
  * ## The language under «Aspectul nou» (§724, amending §722)
  *
@@ -445,7 +445,7 @@ export default async function SiteFooter() {
               {faqAfterContact && <Link href="/faq" data-testid="footer-faq">{footer("faq")}</Link>}
               {/* The club's legal name and CIF (§565), inside the fold after its links (§582, amending §565): one
                   line of the panel, nothing while the legal name is unset. */}
-              <ClubIdentity shape="fold" />
+              <ClubIdentity place="footer" />
               {/* The last line (§480, amending §385): Open-Meteo's credit and the stamp, side by side
                   from `sm` and one under the other on a phone, at the panel's 14 pixels. */}
               <Box

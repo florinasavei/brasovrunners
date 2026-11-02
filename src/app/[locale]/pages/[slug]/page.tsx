@@ -93,7 +93,7 @@ export default async function StandingPage({ params }: Props) {
         <RichText body={page.bodyJson} pictures="prose" />
         {/* The club's legal name and CIF under what the club wrote (§565): a standing page is the
             club talking about itself; nothing while the facts are unset. */}
-        <ClubIdentity shape="line" />
+        <ClubIdentity place="pages" />
       </Box>
     </Container>
   );

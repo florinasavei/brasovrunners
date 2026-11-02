@@ -265,7 +265,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
       {/* The club's legal name and CIF in plain sight on the site's first page, as on «Contact»: Google for
           Nonprofits refused to tie the association to the domain while the listing showed them only in the
           closed footer fold. */}
-      <ClubIdentity shape="line" />
+      <ClubIdentity place="home" />
     </Container>
   );
 }
