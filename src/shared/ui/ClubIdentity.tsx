@@ -6,6 +6,7 @@ import { bareRegistrationNumber, clubFactsFromEnv } from "@/modules/legal-docume
 import { cachedClubIdentityShown, cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { env } from "@/shared/config/env";
 import { CLUB_NAME } from "@/theme/brand";
+import { UNDER_LOOK } from "@/theme/look";
 
 /**
  * The club's legal identity on the site (§565; the owner, 2026-09-29: «on the about pages and
@@ -105,7 +106,9 @@ export default async function ClubIdentity({ place }: Props) {
       variant="body2"
       color="text.secondary"
       data-testid="club-identity-line"
-      sx={{ mt: { xs: 3, sm: 4 }, overflowWrap: "anywhere" }}
+      // Under the look, the page's bottom padding and the watermark's top room are pulled up under the
+      // lines, so they sit near the mountain mark and the footer (the owner: «vreau mai putin spatiu jos»).
+      sx={{ mt: { xs: 3, sm: 4 }, overflowWrap: "anywhere", [UNDER_LOOK]: { mb: { xs: -3, sm: -4.5 } } }}
     >
       {lines}
     </Typography>
