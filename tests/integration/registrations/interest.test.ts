@@ -234,6 +234,29 @@ describe("BR-REQ-011-01 criterion 13 — the interest list and REGISTRATION_OPEN
     expect(await queueRegistrationOpenedMessages(db, OPENS_AT)).toEqual({ queued: 1, dropped: 0 });
   });
 
+  it("§NNN announces nothing while «Înscrieri publice deschise» is unticked, keeps every address, and tells them once it is ticked again", async () => {
+    const event = await seedEvent();
+    await registerInterest(db, event, form("ana@example.ro"), NOW);
+    await registerInterest(db, event, form("ion@example.ro", { locale: "en" }), NOW);
+    // The organizers stop the site before the window opens.
+    await db.update(events).set({ publicRegistrationOpen: false }).where(eq(events.id, event.id));
+
+    // The window opens by its dates: the page says registration is stopped, so nobody is told it opened — and nothing is lost.
+    const opened = await runRegistrationMaintenance(db, OPENS_AT);
+    expect(opened.interestsNotified).toBe(0);
+    expect(opened.errorCount).toBe(0);
+    expect(await queueRegistrationOpenedMessages(db, new Date(OPENS_AT.getTime() + DAY))).toEqual({ queued: 0, dropped: 0 });
+    expect(await outbox()).toHaveLength(0);
+    expect((await rows(event.id)).map((row) => row.deliveryEmail).sort()).toEqual(["ana@example.ro", "ion@example.ro"]);
+
+    // Ticked again while the dates still say open: the next run tells each address once, and lets it go.
+    await db.update(events).set({ publicRegistrationOpen: true }).where(eq(events.id, event.id));
+    const told = await runRegistrationMaintenance(db, new Date(OPENS_AT.getTime() + 2 * DAY));
+    expect(told.interestsNotified).toBe(2);
+    expect((await outbox()).map((row) => row.recipientEmail).sort()).toEqual(["ana@example.ro", "ion@example.ro"]);
+    expect(await rows(event.id)).toHaveLength(0);
+  });
+
   it("renders the message with the event's facts and the registration page as the action, and no token", async () => {
     const event = await seedEvent();
     const [translation] = await db.select().from(eventTranslations).where(and(eq(eventTranslations.eventId, event.id), eq(eventTranslations.locale, "ro")));

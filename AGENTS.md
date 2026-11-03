@@ -1421,7 +1421,7 @@ Rules:
 - «Anunță-mă când rămân N locuri» (`events.places_alert_at`, §NNN) is checked in the transaction of every
   allocator write (`allocateOrWaitlist`, `fillAvailableSpots`, a family's reservation, a send of invitations),
   under its lock: the Administrators are emailed once per crossing — down to N, then 0 — remembered in
-  `places_alert_sent` and re-armed above N. It decides nothing about places;
+  `places_alert_sent` and re-armed above N or by a save that changes N. It decides nothing about places;
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
 - every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
@@ -3158,16 +3158,20 @@ PLACES_ALERT
 allocator write that crossed an event's «Anunță-mă când rămân N locuri», to every Administrator and
 Superadministrator with an address, in their own language: the event's id and the counts in the
 payload, no participant, no token; its one button opens the event's registrations. Once per crossing
-(`events.places_alert_sent`); never by a job of its own.
+(`events.places_alert_sent`), forgotten when the free places climb back above N and by any save that
+changes N — never by a save that keeps it; never by a job of its own.
 
 `DECLARATION_HOLD_EXPIRED` (§638) is queued by `expireStaleHolds` in the transaction that
 releases a lapsed declaration hold to somebody who wanted the place (§10.5), whatever path ran it,
 once per lapsed hold (`registration:<id>:hold-lapsed:<deadline>`: a restarted registration whose
 new hold lapses too is told again, and an older message still queued is withdrawn). It says the deadline that passed, whether
 the place went to the waiting list, and what the person can do now, read at send time: join the
-waiting list, register again, or nothing online — the desk gives free places on the day. No token,
-no «Nu mai pot ajunge»: the registration is over. Not for a hold the start releases, not for a
-cancelled event (§331), and never for a lapsed waiting-list offer, which stays silent.
+waiting list, register again, or nothing online — the desk gives free places on the day. The site's
+door is read as the card reads it (§NNN): «Înscrieri publice deschise» unticked says the organizers
+stopped it, and «Locurile libere le dau doar eu» sends a public entry to the line beside free places, or
+— with a line that takes nobody — says the places left are the organizers'; neither has a button, both
+«scrie-ne». No token, no «Nu mai pot ajunge»: the registration is over. Not for a hold the start
+releases, not for a cancelled event (§331), and never for a lapsed waiting-list offer, which stays silent.
 
 `EVENT_INVITATION` (§647) is queued by an Administrator's send of invitations, and again by
 «Retrimite» (`invitation:<id>:sent:<instant>`, `…:resent:<instant>`), to an address before any
@@ -3254,7 +3258,9 @@ canonical identity), once (`interest:<id>:opened`), the row deleted in the same 
 — the address is kept for nothing else. The event's id rides in the payload; the facts line
 and the ordinary registration page as the action; no token. Never for an event that will
 not open on the site — cancelled, started, moved to another form — whose rows go with no
-message (`DECISIONS.md` §146).
+message (`DECISIONS.md` §146). While «Înscrieri publice deschise» is unticked (§NNN) an open
+window announces nothing and the rows are kept; the first run after it is ticked again, the
+dates still open, tells them (the registrations page's tick wakes the job).
 
 Complete Romanian/English HTML and text templates. Locale/timezone-aware dates and localized URLs. No fragile sentence fragments.
 

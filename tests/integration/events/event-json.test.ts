@@ -463,6 +463,39 @@ describe("import as a new event", () => {
     expect(diffConfigs(read.file.event, file.event).map((change) => change.key)).toContain("publicList.club");
   });
 
+  it("§NNN carries the registration controls — «Locurile libere le dau doar eu», «Înscrieri publice deschise», «Anunță-mă când rămân N locuri» — as a new event and over one, never the alert's memory", async () => {
+    const { event } = await seedRace({ freePlacesByOfferOnly: true, publicRegistrationOpen: false, placesAlertAt: "5" }, {}, false);
+    // The alert already told the Administrators about this event: its memory is the event's own, never the file's.
+    await db.update(events).set({ placesAlertSent: "LOW" }).where(eq(events.id, event.id));
+    const file = await fileOf(event.id);
+    expect(file.event.registration).toMatchObject({ freePlacesByOfferOnly: true, publicRegistrationOpen: false, placesAlertAt: 5 });
+    expect(JSON.stringify(file)).not.toContain("placesAlertSent");
+
+    // As a new event: the same three, the round trip the same configuration but for the slugs.
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    const copy = await reload(created.eventId);
+    expect(copy).toMatchObject({ freePlacesByOfferOnly: true, publicRegistrationOpen: false, placesAlertAt: 5, placesAlertSent: null });
+    const back = await exportEvent(db, { actor: admin, eventId: created.eventId, now: NOW });
+    expect(diffConfigs(back.file.event, file.event).map((change) => change.key).sort()).toEqual(["translations.en.slug", "translations.ro.slug"]);
+
+    // Over an event that has none of them: the diff names each, and the import writes them through the editor's save, audited.
+    const { target: plain } = await seedTarget();
+    const diff = await diffEventImport(db, { actor: admin, file, eventId: plain.id });
+    const keys = diff.changes.map((change) => change.key);
+    for (const key of ["registration.freePlacesByOfferOnly", "registration.publicRegistrationOpen", "registration.placesAlertAt"]) expect(keys).toContain(key);
+    await importEventOver(db, await overInput(file, plain.id));
+    expect(await reload(plain.id)).toMatchObject({ freePlacesByOfferOnly: true, publicRegistrationOpen: false, placesAlertAt: 5 });
+    const trail = await db.select().from(auditLogs).where(and(eq(auditLogs.action, "event.public_registration_changed"), eq(auditLogs.entityId, plain.id)));
+    expect(trail.map((row) => row.metadataJson)).toEqual([{ from: true, to: false }]);
+
+    // A file made before them reads as an event that never touched them: the door open, the tick off, no alert.
+    const old = JSON.parse(JSON.stringify(file)) as { event: { registration: Record<string, unknown> } };
+    for (const key of ["freePlacesByOfferOnly", "publicRegistrationOpen", "placesAlertAt"]) delete old.event.registration[key];
+    const read = readEventFile(JSON.stringify(old));
+    if (!read.ok) throw new Error(`an older file did not read: ${read.refusal} ${read.detail ?? ""}`);
+    expect(read.file.event.registration).toMatchObject({ freePlacesByOfferOnly: false, publicRegistrationOpen: true, placesAlertAt: null });
+  });
+
   it("§764 carries the volunteer badges' design, never a role: as a new event, over one, and from a file made before it", async () => {
     const { event } = await seedRace({}, {}, false);
     const badge = { ...DEFAULT_BADGE_DESIGN, size: "strip100", titleRo: "Crosul", titleEn: "The cross", cutMarks: false };

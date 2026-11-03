@@ -1796,7 +1796,8 @@ export async function saveEventFields<T extends Record<string, unknown>>(
       tx,
       input.eventId,
       input.expectedVersion,
-      { ...eventColumnsFrom(fields, times), updatedByStaffUserId: input.actor.id },
+      // A new N forgets what the alert said for the old one (§NNN).
+      { ...eventColumnsFrom(fields, times), ...placesAlertRearmed(fields.placesAlertAt, current.placesAlertAt), updatedByStaffUserId: input.actor.id },
       now,
     );
     await auditWaitlistAutoOffer(tx, input.actor, current, saved, now);
@@ -2274,7 +2275,14 @@ async function applyToSeries<T extends Record<string, unknown>>(
     if (Object.keys(changes).length > 0 || placeMoved.length > 0 || shortMoved.length > 0) {
       await tx
         .update(events)
-        .set({ ...changes, version: sql`${events.version} + 1`, updatedAt: now, updatedByStaffUserId: input.actor.id })
+        .set({
+          ...changes,
+          // This date's own memory of the alert goes with its old N (§NNN), as on the saved date.
+          ...placesAlertRearmed(changes.placesAlertAt, member.placesAlertAt),
+          version: sql`${events.version} + 1`,
+          updatedAt: now,
+          updatedByStaffUserId: input.actor.id,
+        })
         .where(eq(events.id, member.id));
       touched = true;
       if (input.checkpointsHold) {
@@ -2398,6 +2406,16 @@ async function auditRegistrationControls<T extends Record<string, unknown>>(
     if (to === undefined || to === from) continue;
     await recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: before.id, metadata: { from, to }, now });
   }
+}
+
+/**
+ * «Anunță-mă când rămân N locuri» moved (§NNN): what the alert already said belongs to the old N, so a new N starts
+ * a fresh crossing — a raised N is told at the next allocator write that finds the free places at or under it, and
+ * not only after they climb back above the old one. Only a value that moved: a save that posts the same N keeps the
+ * memory, so saving the editor never sends the same alert twice. Every save path writes it with the N, in the same row.
+ */
+function placesAlertRearmed(posted: number | null | undefined, stored: number | null): { placesAlertSent?: null } {
+  return posted === undefined || posted === stored ? {} : { placesAlertSent: null };
 }
 
 /**
@@ -2856,7 +2874,12 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         tx,
         input.eventId,
         input.expectedVersion as number,
-        { ...eventColumnsFrom(parsedEventFields, times), updatedByStaffUserId: input.actor.id },
+        // A new N forgets what the alert said for the old one (§NNN).
+        {
+          ...eventColumnsFrom(parsedEventFields, times),
+          ...placesAlertRearmed(parsedEventFields.placesAlertAt, current.placesAlertAt),
+          updatedByStaffUserId: input.actor.id,
+        },
         now,
       );
       await auditWaitlistAutoOffer(tx, input.actor, current, savedEvent, now);

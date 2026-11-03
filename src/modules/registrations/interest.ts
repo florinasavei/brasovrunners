@@ -157,6 +157,8 @@ export async function queueRegistrationOpenedMessages<T extends Record<string, u
       publishedAt: events.publishedAt,
       // A members' event's addresses wait (§552, `interestAction`).
       membersOnly: events.membersOnly,
+      // …and so do the addresses of an event whose site door the organizers shut (§NNN): kept, told once it opens again.
+      publicRegistrationOpen: events.publicRegistrationOpen,
     })
     .from(events)
     .innerJoin(registrationInterests, eq(registrationInterests.eventId, events.id));
@@ -165,8 +167,9 @@ export async function queueRegistrationOpenedMessages<T extends Record<string, u
   let dropped = 0;
   for (const event of candidates) {
     // Ahead, or open but not published — taken off the site for a while, so it cannot be
-    // registered on either: the addresses wait for the window, the page to come back, or the
-    // start to pass. One formula with the forecast on `/admin/emails` (`interestAction`, §383).
+    // registered on either — or open behind «Înscrieri publice deschise» unticked (§NNN): the
+    // addresses wait for the window, the page or the door to come back, or the start to pass.
+    // One formula with the forecast on `/admin/emails` (`interestAction`, §383).
     const action = interestAction(event, now);
     if (action === "wait") continue;
     const announce = action === "announce";

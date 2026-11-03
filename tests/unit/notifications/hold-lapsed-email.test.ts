@@ -11,8 +11,9 @@ import ro from "../../../messages/ro.json";
 /**
  * §638 — «Locul tău la {event} a expirat» (the owner, 2026-10-02: «Da, fă emailul pentru cel care pierde
  * locul»): the person whose declaration hold was released to somebody who wanted the place is told the
- * deadline that passed, where the place went, and what they can still do — one of three sentences,
- * decided by the allocator's own rules over the event as it stands at the send.
+ * deadline that passed, where the place went, and what they can still do — one of five sentences,
+ * decided by the allocator's own rules over the event as it stands at the send, and the site's door
+ * as the card reads it (§NNN).
  */
 describe("§638 what a person whose hold lapsed can still do", () => {
   const open = { registrationOpen: true, capacity: 10, occupied: 10, waitlisted: 0, openOffers: 0, waitlistCapacity: null };
@@ -36,6 +37,26 @@ describe("§638 what a person whose hold lapsed can still do", () => {
     // No waiting list at all (a limit of 0), or a line at its limit (§348).
     expect(holdLapsedNext({ ...open, waitlistCapacity: 0 })).toBe("desk");
     expect(holdLapsedNext({ ...open, waitlistCapacity: 2, waitlisted: 1, openOffers: 1 })).toBe("desk");
+  });
+
+  it("§NNN «Înscrieri publice deschise» unticked: shut by the organizers, whatever is free — and the dates still speak first", () => {
+    expect(holdLapsedNext({ ...open, occupied: 8, publicRegistrationOpen: false })).toBe("paused");
+    expect(holdLapsedNext({ ...open, publicRegistrationOpen: false })).toBe("paused");
+    expect(holdLapsedNext({ ...open, registrationOpen: false, publicRegistrationOpen: false })).toBe("desk");
+    // Absent or ticked is the door its dates give it.
+    expect(holdLapsedNext({ ...open, occupied: 8, publicRegistrationOpen: true })).toBe("register");
+  });
+
+  it("§NNN «Locurile libere le dau doar eu»: the line beside free places, or the organizers' places when the line takes nobody", () => {
+    // A public entry joins the line whatever is free: never «register again».
+    expect(holdLapsedNext({ ...open, occupied: 8, freePlacesByOfferOnly: true })).toBe("waitlist");
+    // Free places and no line to join: the organizers give them — not the desk's sentence, not «full».
+    expect(holdLapsedNext({ ...open, occupied: 8, freePlacesByOfferOnly: true, waitlistCapacity: 0 })).toBe("offersOnly");
+    expect(holdLapsedNext({ ...open, occupied: 8, freePlacesByOfferOnly: true, waitlistCapacity: 1, waitlisted: 1 })).toBe("offersOnly");
+    // No place free and no room: the desk, as before.
+    expect(holdLapsedNext({ ...open, freePlacesByOfferOnly: true, waitlistCapacity: 0 })).toBe("desk");
+    // Only where places are counted: on an uncapped event the tick changes nothing.
+    expect(holdLapsedNext({ ...open, capacity: null, freePlacesByOfferOnly: true })).toBe("register");
   });
 });
 
@@ -89,6 +110,19 @@ describe("§638 the DECLARATION_HOLD_EXPIRED email's words", () => {
     expect(mail.text).toContain("Nothing more can be done online. If places are left on the day of the event, the registration desk gives them out.");
     expect(mail.text).not.toContain("Intră pe lista de așteptare:");
     expect(mail.text).not.toContain("Înscrie-te din nou:");
+  });
+
+  it("§NNN with the site's door shut by the organizers: the card's own words and «scrie-ne», in both languages, and no button", () => {
+    const paused = render("ro", { holdLapsedNext: "paused" }, null);
+    expect(paused.text).toContain("Înscrierile pe site sunt oprite acum de organizatori. Dacă mai vrei să vii, scrie-ne din pagina de contact.");
+    expect(paused.text).toContain("Registration on the site has been stopped by the organizers for now. If you still want to come, write to us from the contact page.");
+    const offersOnly = render("en", { holdLapsedNext: "offersOnly" }, null);
+    expect(offersOnly.text).toContain("The organizers hand out the remaining places themselves: you cannot register directly on the site. If you still want to come, write to us from the contact page.");
+    expect(offersOnly.text).toContain("Locurile rămase le dau organizatorii: nu te poți înscrie direct pe site. Dacă mai vrei să vii, scrie-ne din pagina de contact.");
+    for (const mail of [paused, offersOnly]) {
+      expect(mail.text).not.toMatch(/Înscrie-te din nou:|Intră pe lista de așteptare:|Register again:|Join the waiting list:/);
+      expect(mail.text).not.toContain("Online nu se mai poate face nimic");
+    }
   });
 
   it("without a stored deadline it still says the deadline was missed, never a blank", () => {

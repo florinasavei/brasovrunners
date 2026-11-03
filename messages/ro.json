@@ -3567,7 +3567,7 @@
       "waitlistAutoOfferHelpMore": "Le dai din «Coada de înscrieri», cu «Trimite-i oferta», sau, la masă, cu «Dă-i un loc». Cât timp cineva așteaptă, cei noi intră tot pe listă.",
       "freePlacesByOfferOnly": "Locurile libere le dau doar eu",
       "freePlacesByOfferOnlyHelp": "Bifat, cine vine de pe site intră pe lista de așteptare, chiar cu locuri libere, și niciun loc nu pleacă automat, nici cu „Da” mai sus: fiecare loc liber îl dai tu.",
-      "freePlacesByOfferOnlyHelpMore": "Le dai din «Coada de înscrieri», cu «Trimite-i oferta», sau la masă, cu «Dă-i un loc»; înscrierile tale iau un loc liber ca până acum. Cu lista plină, site-ul refuză. Capacitatea nu se schimbă.",
+      "freePlacesByOfferOnlyHelpMore": "Le dai din «Coada de înscrieri», cu «Trimite-i oferta», sau la masă, cu «Dă-i un loc». O înscriere făcută de echipă ia un loc liber doar cât nu așteaptă nimeni. Cu lista plină, site-ul refuză.",
       "placesAlertAt": "Anunță-mă când rămân N locuri",
       "placesAlertAtHelp": "Gol: fără email. Un număr: administratorii primesc un email când locurile libere scad la el, și încă unul când nu mai rămâne niciunul.",
       "placesAlertAtHelpMore": "Câte un email pe prag; altul vine doar după ce locurile libere urcă din nou peste număr.",
@@ -9612,6 +9612,9 @@
             "limit": "Lungimea listei de așteptare"
           },
           "waitlistAutoOffer": "Locurile libere se oferă automat",
+          "freePlacesByOfferOnly": "Locurile libere le dau doar eu",
+          "publicRegistrationOpen": "Înscrieri publice deschise",
+          "placesAlertAt": "Anunță-mă când rămân N locuri",
           "opensAt": "Înscrierile se deschid",
           "opensSoon": "Înscrierile se deschid în curând",
           "closesAt": "Înscrierile se închid",

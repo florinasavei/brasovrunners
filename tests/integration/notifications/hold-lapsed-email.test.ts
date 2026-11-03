@@ -206,6 +206,44 @@ describe("§638 the person whose held place lapses is told by email", () => {
     await expect(renderOutboxMessage(row, db, at)).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
   });
 
+  it("§NNN says what the site's door says: shut by the organizers, or the free places theirs to give — never «te poți înscrie din nou», never a button the page does not draw", async () => {
+    const event = await createEvent({ capacity: 1 });
+    await join(event, "ana@example.ro", NOW);
+    await join(event, "bogdan@example.ro", NOW);
+    await sendHoldEmails(db, NOW);
+    await runRegistrationMaintenance(db, minutes(31));
+    const [row] = await lapsedEmails();
+    const at = minutes(32);
+    // Two more places, free: with the door as it always was, a newcomer would get one — «register again».
+    await db.update(events).set({ capacity: 3 }).where(eq(events.id, event.id));
+    expect((await renderOutboxMessage(row, db, at)).text).toContain("Dacă mai vrei să vii, te poți înscrie din nou: mai sunt locuri libere.");
+
+    // «Înscrieri publice deschise» unticked: the card's «oprite de organizatori», «scrie-ne», and no button.
+    await db.update(events).set({ publicRegistrationOpen: false }).where(eq(events.id, event.id));
+    const paused = await renderOutboxMessage(row, db, at);
+    expect(paused.text).toContain("Înscrierile pe site sunt oprite acum de organizatori. Dacă mai vrei să vii, scrie-ne din pagina de contact.");
+    expect(paused.text).toContain("Registration on the site has been stopped by the organizers for now. If you still want to come, write to us from the contact page.");
+    expect(paused.text).not.toMatch(/Înscrie-te din nou:|Intră pe lista de așteptare:|te poți înscrie din nou/);
+
+    // The door open again, «Locurile libere le dau doar eu» ticked: a public entry joins the line beside the free places.
+    await db.update(events).set({ publicRegistrationOpen: true, freePlacesByOfferOnly: true }).where(eq(events.id, event.id));
+    const line = await renderOutboxMessage(row, db, at);
+    expect(line.text).toContain("Dacă mai vrei să vii, poți intra pe lista de așteptare.");
+    expect(line.text).toMatch(/Intră pe lista de așteptare: \S+/);
+    expect(line.text).not.toContain("te poți înscrie din nou");
+
+    // …and with no waiting list to join: the places left are the organizers' — the card's words, «scrie-ne», no button.
+    await db.update(events).set({ waitlistCapacity: 0 }).where(eq(events.id, event.id));
+    const offersOnly = await renderOutboxMessage(row, db, at);
+    expect(offersOnly.text).toContain("Locurile rămase le dau organizatorii: nu te poți înscrie direct pe site. Dacă mai vrei să vii, scrie-ne din pagina de contact.");
+    expect(offersOnly.text).toContain("The organizers hand out the remaining places themselves: you cannot register directly on the site.");
+    expect(offersOnly.text).not.toMatch(/Înscrie-te din nou:|Intră pe lista de așteptare:/);
+
+    // Outside the window the dates speak first, as on the card: the desk's sentence, whatever the ticks.
+    await db.update(events).set({ registrationClosesAt: minutes(1), publicRegistrationOpen: false }).where(eq(events.id, event.id));
+    expect((await renderOutboxMessage(row, db, at)).text).toContain("Online nu se mai poate face nimic.");
+  });
+
   it("a newcomer's confirmation that releases the hold queues it once — through the line, and on an event with no waiting list", async () => {
     // The line grows by the newcomer and the kept hold goes to them (§160).
     const lined = await createEvent({ capacity: 1 });

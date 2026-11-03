@@ -3567,7 +3567,7 @@
       "waitlistAutoOfferHelpMore": "You hand them out from the “Registration queue” with “Send them the offer”, or at the desk with “Give a place”. While anyone waits, newcomers join the list too.",
       "freePlacesByOfferOnly": "I hand out the free places myself",
       "freePlacesByOfferOnlyHelp": "Ticked, whoever comes from the site joins the waiting list, even with places free, and no place goes out by itself, even on “Yes” above: you give every free place.",
-      "freePlacesByOfferOnlyHelpMore": "From the “Registration queue” with “Send them the offer”, or at the desk with “Give a place”; your own entries take a free place as before. A full list refuses the site. The capacity stays.",
+      "freePlacesByOfferOnlyHelpMore": "From the “Registration queue” with “Send them the offer”, or at the desk with “Give a place”. An entry by the team takes a free place only while nobody waits. A full list refuses the site.",
       "placesAlertAt": "Email me when N places are left",
       "placesAlertAtHelp": "Empty: no email. A number: the administrators get an email when the free places drop to it, and one more when none are left.",
       "placesAlertAtHelpMore": "One email per threshold; another comes only after the free places climb back above the number.",
@@ -9612,6 +9612,9 @@
             "limit": "Waiting-list length"
           },
           "waitlistAutoOffer": "Free places offered automatically",
+          "freePlacesByOfferOnly": "I hand out the free places myself",
+          "publicRegistrationOpen": "Registration open on the site",
+          "placesAlertAt": "Email me when N places are left",
           "opensAt": "Registration opens",
           "opensSoon": "Registration opens soon",
           "closesAt": "Registration closes",

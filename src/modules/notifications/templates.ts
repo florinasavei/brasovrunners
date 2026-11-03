@@ -2141,7 +2141,7 @@ const T = {
       body: (d: TemplateData) => [
         `Locul tău la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **a expirat**: declarația nu a fost semnată la timp.`,
       ],
-      // The button exists only when the form would take the person (`render.ts`): never on «desk».
+      // The button exists only when the form would take the person (`render.ts`): never on «desk», nor while the organizers keep the site shut (§NNN).
       action: (d: TemplateData) => (d.holdLapsedNext === "register" ? "Înscrie-te din nou" : "Intră pe lista de așteptare"),
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
@@ -2530,13 +2530,20 @@ const T = {
      */
     holdLapsed: (deadline: string | undefined, toWaitlist: boolean) =>
       `Termenul pentru semnare a fost ${deadline ?? "depășit"}. ${toWaitlist ? "Altcineva aștepta un loc, așa că locul tău a trecut la lista de așteptare." : "Altcineva a cerut un loc, așa că locul tău a devenit liber."}`,
-    /** …and what the person can do now, by the event as it stands at the send (`holdLapsedNext`). */
+    /**
+     * …and what the person can do now, by the event as it stands at the send (`holdLapsedNext`). A site the
+     * organizers keep shut (§NNN) is said in the card's own words, with «scrie-ne» — the footer's «Scrie-ne» link.
+     */
     holdLapsedNext: (next: HoldLapsedNext) =>
       next === "register"
         ? "Dacă mai vrei să vii, te poți înscrie din nou: mai sunt locuri libere."
         : next === "waitlist"
           ? "Dacă mai vrei să vii, poți intra pe lista de așteptare."
-          : "Online nu se mai poate face nimic. Dacă în ziua evenimentului rămân locuri libere, le dă masa de înscriere.",
+          : next === "paused"
+            ? "Înscrierile pe site sunt oprite acum de organizatori. Dacă mai vrei să vii, scrie-ne din pagina de contact."
+            : next === "offersOnly"
+              ? "Locurile rămase le dau organizatorii: nu te poți înscrie direct pe site. Dacă mai vrei să vii, scrie-ne din pagina de contact."
+              : "Online nu se mai poate face nimic. Dacă în ziua evenimentului rămân locuri libere, le dă masa de înscriere.",
     /** A verification link on an address with others at the event (§588): the one link confirms everybody waiting. */
     verifyCoversFamily: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Pe această adresă sunt înscriși și: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.ro[other.state]})`).join(", ")}. Butonul de mai sus confirmă adresa pentru toți cei care o așteaptă.`,
@@ -3345,7 +3352,11 @@ const T = {
         ? "If you still want to come, you can register again: there are places free."
         : next === "waitlist"
           ? "If you still want to come, you can join the waiting list."
-          : "Nothing more can be done online. If places are left on the day of the event, the registration desk gives them out.",
+          : next === "paused"
+            ? "Registration on the site has been stopped by the organizers for now. If you still want to come, write to us from the contact page."
+            : next === "offersOnly"
+              ? "The organizers hand out the remaining places themselves: you cannot register directly on the site. If you still want to come, write to us from the contact page."
+              : "Nothing more can be done online. If places are left on the day of the event, the registration desk gives them out.",
     verifyCoversFamily: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Also registered on this address: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.en[other.state]})`).join(", ")}. The button above confirms the address for everybody waiting for it.`,
     cancelledOthers: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>

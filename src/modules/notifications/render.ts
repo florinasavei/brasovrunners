@@ -75,8 +75,8 @@ import { readShopSettings } from "@/modules/content/shop/settings";
 import { isUuid } from "@/shared/ids";
 import { events } from "@/db/schema/events";
 import { countEligibleWaitlisted, countOccupied, readWaitlistPosition } from "@/modules/registrations/repository";
-import { computeOccupied, computePublicAvailability } from "@/modules/registrations/domain/capacity";
-import { waitlistHasRoom } from "@/modules/registrations/domain/waitlist";
+import { computeOccupied, hasDirectAvailability } from "@/modules/registrations/domain/capacity";
+import { newcomerJoinsLine, waitlistHasRoom } from "@/modules/registrations/domain/waitlist";
 import type { FamilySitting, PendingFamilyEntry } from "@/db/schema/family-entries";
 import {
   extendHeldVerificationLink,
@@ -1162,7 +1162,8 @@ async function renderRow(
     the date); whether the place went to the waiting list, a fact of the release; and what the person
     can do now, read off the event as it stands at the send (`holdLapsedNext` says why not at the
     queueing). The button is the ordinary registration page — no token (§12.8), and absent from a club
-    copy like every action (§320) — and only when the form would take them.
+    copy like every action (§320) — and only when the form would take them: never while the organizers
+    keep the site's door shut (`paused`, `offersOnly`, §NNN), as the card draws no button then.
   */
   if (row.messageType === "DECLARATION_HOLD_EXPIRED" && registration) {
     const lapsed = await describeLapsedHold(db, row, registration, now);
@@ -1176,7 +1177,7 @@ async function renderRow(
     }
     data.holdLapsedToWaitlist = lapsed.toWaitlist;
     data.holdLapsedNext = lapsed.next;
-    if (lapsed.next !== "desk" && eventDetails?.slug) {
+    if ((lapsed.next === "register" || lapsed.next === "waitlist") && eventDetails?.slug) {
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } } })}`;
     }
   }
@@ -1861,17 +1862,26 @@ function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
 }
 
 /**
- * Whether a newcomer would join the waiting list now (§543): no place by the allocator's own formula,
- * read as the public count reads it (`readPublicAvailability`'s counts), and a line that still takes
- * somebody (§348) — for the family message's «pe lista de așteptare». An uncapped event is never full.
+ * Whether a newcomer would join the waiting list now (§543): the allocator's own decision for a family's
+ * form, a **public** entry (`placeForNewcomer`) — no place by its formula, read as the public count reads
+ * it (`readPublicAvailability`'s counts), or the line first whatever is free: somebody waiting in it (§615),
+ * or «Locurile libere le dau doar eu» (§NNN, `newcomerJoinsLine` on the `public` channel) — and a line that
+ * still takes somebody (§348) — for the family message's «pe lista de așteptare». An uncapped event is never
+ * full, and the tick sends nobody to the line there.
  */
 async function waitlistTakesNewcomer(db: RendererDb, eventId: string, now: Date): Promise<boolean> {
-  const [event] = await db.select({ capacity: events.capacity, waitlistCapacity: events.waitlistCapacity }).from(events).where(eq(events.id, eventId)).limit(1);
+  const [event] = await db
+    .select({ capacity: events.capacity, waitlistCapacity: events.waitlistCapacity, freePlacesByOfferOnly: events.freePlacesByOfferOnly })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
   if (!event || event.capacity === null) return false;
   const counts = await countOccupied(db, eventId, now);
   const waiting = await countEligibleWaitlisted(db, eventId);
-  const full = computePublicAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted: waiting }) === 0;
-  return full && waitlistHasRoom({ waitlistCapacity: event.waitlistCapacity, waitlisted: waiting, openOffers: counts.unexpiredWaitlistOfferedHolds });
+  const queues =
+    newcomerJoinsLine({ waitlisted: waiting, freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel: "public", capacity: event.capacity }) ||
+    !hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted: waiting });
+  return queues && waitlistHasRoom({ waitlistCapacity: event.waitlistCapacity, waitlisted: waiting, openOffers: counts.unexpiredWaitlistOfferedHolds });
 }
 
 /**
@@ -1906,6 +1916,9 @@ async function describeLapsedHold(
       publishedAt: events.publishedAt,
       capacity: events.capacity,
       waitlistCapacity: events.waitlistCapacity,
+      // The site's door as the card reads it (§NNN): shut by the organizers, or the line's whatever is free.
+      publicRegistrationOpen: events.publicRegistrationOpen,
+      freePlacesByOfferOnly: events.freePlacesByOfferOnly,
     })
     .from(events)
     .where(eq(events.id, registration.eventId))
@@ -1924,6 +1937,8 @@ async function describeLapsedHold(
       waitlisted,
       openOffers: counts.unexpiredWaitlistOfferedHolds,
       waitlistCapacity: event.waitlistCapacity,
+      publicRegistrationOpen: event.publicRegistrationOpen,
+      freePlacesByOfferOnly: event.freePlacesByOfferOnly,
     }),
   };
 }

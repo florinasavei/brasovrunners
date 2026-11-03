@@ -165,6 +165,10 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
       capacity: event.capacity,
       waitlist: { choice: waitlistChoiceOf(event.waitlistCapacity), limit: event.waitlistCapacity !== null && event.waitlistCapacity > 0 ? event.waitlistCapacity : null },
       waitlistAutoOffer: event.waitlistAutoOffer,
+      // The registration controls (§NNN), as the editor sets them; the alert's memory is this event's own, never the file's.
+      freePlacesByOfferOnly: event.freePlacesByOfferOnly,
+      publicRegistrationOpen: event.publicRegistrationOpen,
+      placesAlertAt: event.placesAlertAt,
       opensAt: event.registrationOpensAt?.toISOString() ?? null,
       opensSoon: event.registrationOpensSoon,
       closesAt: event.registrationClosesAt?.toISOString() ?? null,

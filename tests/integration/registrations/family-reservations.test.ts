@@ -368,6 +368,26 @@ describe("BR-REQ-034-01 a family sitting reserves every place the moment its for
       ["Ioana Pop", "WAITLISTED"],
     ]);
   });
+
+  it("§NNN with «Locurile libere le dau doar eu» the family reserves nothing beside free places, and the email says each one goes on the waiting list", async () => {
+    const event = await createEvent(50);
+    await db.update(events).set({ freePlacesByOfferOnly: true }).where(eq(events.id, event.id));
+    const { sittingId } = await start(event, "Ana", 0);
+    expect((await send(event, "Mihai", 1, sittingId)).sittingPlace).toBe("waitlist");
+    // The places are the staff's to give: nobody holds one, the count is untouched.
+    expect((await rows()).every((row) => row.holdExpiresAt === null)).toBe(true);
+    expect(await available(event, at(1))).toBe(50);
+
+    await releaseFamilySitting(db, sittingId!, at(2));
+    const { message, secret } = await familyMessage(at(3));
+    // The allocator's own decision for a public entry, said before the press: never silent beside the free places.
+    expect(message.text).toMatch(/Ana Pop, data nașterii [^\n]+ — pe lista de așteptare, după confirmare/);
+    expect(message.text).toMatch(/Mihai Pop, data nașterii [^\n]+ — pe lista de așteptare, după confirmare/);
+    expect(message.text).toMatch(/Mihai Pop, date of birth [^\n]+ — on the waiting list, once confirmed/);
+    const press = await consumeAndConfirmFamilySitting(secret!, { includedKeys: [], fitnessAcknowledged: true }, at(4));
+    if (!press.ok) throw new Error("the press did nothing");
+    expect((await rows()).map((row) => row.status)).toEqual(["WAITLISTED", "WAITLISTED"]);
+  });
 });
 
 describe("BR-REQ-031-01 the page the family's email opens says whether the places still hold (§543, the review of 2026-09-28, round four)", () => {

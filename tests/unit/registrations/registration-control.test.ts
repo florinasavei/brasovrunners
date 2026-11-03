@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { newcomerWouldQueue, offersOnlyShut, registrationCta, type RegistrationCtaInput } from "@/modules/events/domain/registration-cta";
+import { emailSampleFor, placeholdersFilledBy } from "@/modules/notifications/email-copy-fields";
 import { placesAlertSentOf, placesAlertStep } from "@/modules/registrations/domain/places-alert";
 import { publicDoorOpen } from "@/modules/registrations/domain/public-door";
 import { publicNow, publicNowSetting } from "@/modules/registrations/domain/public-now";
@@ -159,5 +160,13 @@ describe("«Anunță-mă când rămân N locuri»: the crossings (§NNN)", () =>
     expect(placesAlertSentOf("FULL")).toBe("FULL");
     expect(placesAlertSentOf(null)).toBeNull();
     expect(placesAlertSentOf("other")).toBeNull();
+  });
+
+  it("its email names the colleague and the event, never a registration's status: the club's text legend and preview say so", () => {
+    const filled = placeholdersFilledBy("PLACES_ALERT");
+    expect(filled).toContain("participantName");
+    expect(filled).toContain("eventTitle");
+    expect(filled).not.toContain("currentStatus");
+    for (const locale of ["ro", "en"] as const) expect(emailSampleFor("PLACES_ALERT", locale).currentStatus).toBeUndefined();
   });
 });

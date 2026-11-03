@@ -127,4 +127,28 @@ describe("§383 when an automatic email is due", () => {
     expect(registrationOpenedDueAt(event, NOW)).toEqual(at(2 * DAY));
     expect(registrationOpenedDueAt({ ...event, editorialStatus: "DRAFT" }, NOW)).toBeNull();
   });
+
+  it("§NNN waits, announcing nothing, while «Înscrieri publice deschise» is unticked — and announces once it is ticked again", () => {
+    const event = {
+      registrationMode: "INTERNAL" as const,
+      eventStatus: "SCHEDULED" as const,
+      editorialStatus: "PUBLISHED",
+      startsAt: at(20 * DAY),
+      registrationOpensAt: at(2 * DAY),
+      registrationOpensSoon: false,
+      registrationClosesAt: null,
+      publishedAt: at(-DAY),
+    };
+    const shut = { ...event, publicRegistrationOpen: false };
+    // Open by its dates, shut by the organizers: the addresses wait, kept — never dropped, never told.
+    expect(interestAction(shut, at(2 * DAY))).toBe("wait");
+    expect(interestAction(shut, at(3 * DAY))).toBe("wait");
+    // …so the forecast on «Emailuri» foresees nothing either.
+    expect(registrationOpenedDueAt(shut, NOW)).toBeNull();
+    // Ticked again, the next run announces; the column's default (absent) is ticked.
+    expect(interestAction({ ...shut, publicRegistrationOpen: true }, at(3 * DAY))).toBe("announce");
+    expect(interestAction(event, at(3 * DAY))).toBe("announce");
+    // Closed by its dates while shut: dropped, as any window that can no longer open.
+    expect(interestAction({ ...shut, registrationClosesAt: at(10 * DAY) }, at(11 * DAY))).toBe("drop");
+  });
 });

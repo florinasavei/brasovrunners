@@ -16,6 +16,7 @@ import { type DeliveryChoice, markedForNow } from "@/modules/notifications/domai
 import { assertRoomToSendNow, clubCopyTypesFor, outboxIdsForKey } from "@/modules/notifications/send-at-once";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
+import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageRegistrations, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -743,7 +744,10 @@ export type WaitlistEntryByStaffResult = { registrationId: string; status: Regis
  * offer's email says everything then, so the waiting-list email the entry queued a moment before is withdrawn
  * in the same transaction, never tried (as §643 withdraws an offer's), and the person gets one email. A row the
  * allocator gave a place, or an offer on the way (§160), keeps it: the ordinary outcome is enough. Then the
- * note. After the start the entry is refused (`VOUCHED_ENTRY_AFTER_START`), a full line refuses it (§348).
+ * note. After the start the entry is refused (`VOUCHED_ENTRY_AFTER_START`). A full line — or a limit of 0 —
+ * refuses an entry without `offerNow` (§348): «Adaugă pe lista de așteptare» and «Mută pe lista oficială» leave
+ * the person waiting, which is what the limit bounds. Never one with `offerNow`, which ends with the person
+ * offered (`thenOffered`, §NNN), so the limit is not asked.
  */
 export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -847,6 +851,8 @@ export async function setPublicRegistrationOpenByStaff<T extends Record<string, 
   });
   // The door is on the event's page, its card and the listing's filter (§333): told after the commit.
   if (changed) revalidatePublicContent("events", "places");
+  // Opened again: the «Anunță-mă» addresses kept while it was shut are the maintenance job's to tell (§146, §334).
+  if (changed && open) wakeJobs("registration-maintenance");
   return changed;
 }
 

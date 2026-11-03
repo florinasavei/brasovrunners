@@ -404,6 +404,34 @@ describe("the calendar file", () => {
     expect(calendarRegistration({ ...base, eventStatus: "COMPLETED" }, register, new Date("2026-10-12T00:00:00.000Z"))).toBeNull();
   });
 
+  it("§NNN says what the page says while «Înscrieri publice deschise» is unticked: stopped by the organizers, and no link to the form", () => {
+    const register = "https://example.test/ro/evenimente/x/inscriere";
+    const base = {
+      registrationMode: "INTERNAL" as const,
+      eventStatus: "SCHEDULED" as const,
+      startsAt: new Date("2026-10-11T06:00:00.000Z"),
+      registrationOpensAt: new Date("2026-10-01T15:00:00.000Z"),
+      registrationOpensSoon: false,
+      registrationClosesAt: null,
+      publishedAt: new Date("2026-09-01T00:00:00.000Z"),
+      externalRegistrationUrl: null,
+      publicRegistrationOpen: false,
+    };
+    // Inside the window: shut by the organizers. Before it and after it, the dates speak, as on the page.
+    expect(calendarRegistration(base, register, new Date("2026-10-02T00:00:00.000Z"))).toEqual({ kind: "PAUSED" });
+    expect(calendarRegistration(base, register, new Date("2026-09-20T00:00:00.000Z"))).toEqual({ kind: "NOT_YET_OPEN", opensAt: base.registrationOpensAt, url: register });
+    expect(calendarRegistration(base, register, new Date("2026-10-11T07:00:00.000Z"))).toEqual({ kind: "CLOSED" });
+    // Ticked again (or never touched): open, with the form's address.
+    expect(calendarRegistration({ ...base, publicRegistrationOpen: true }, register, new Date("2026-10-02T00:00:00.000Z"))).toEqual({ kind: "OPEN", url: register });
+    // The page's own sentence, in each language, with no address after it.
+    const said = calendarDescription({ ...event, timezone: "Europe/Bucharest", registration: { kind: "PAUSED" } }, labelsRo);
+    expect(said).toContain("\n\nÎnscrierile pe site sunt oprite de organizatori.\n\n");
+    expect(said).not.toContain("/inscriere");
+    expect(calendarDescription({ ...event, timezone: "Europe/Bucharest", registration: { kind: "PAUSED" } }, labelsEn)).toContain(
+      "\n\nRegistration on the site has been stopped by the organizers.\n\n",
+    );
+  });
+
   it("moves the stamp when the registration line does — the window's last boundary passed, or the row's own change (§159)", () => {
     const base = {
       registrationMode: "INTERNAL" as const,

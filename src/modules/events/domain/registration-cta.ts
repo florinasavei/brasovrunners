@@ -10,6 +10,7 @@
  * thing the page renders.
  */
 
+import { publicDoorOpen } from "@/modules/registrations/domain/public-door";
 import { startHeldBack } from "./dated";
 import { type RegistrationWindowInput, registrationState } from "./registration-window";
 
@@ -222,7 +223,8 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
 
     case "OPEN": {
       // «Înscrieri publice deschise» unticked (§NNN): the dates say open, the organizers say not on the site.
-      if (event.publicRegistrationOpen === false) return { kind: "PAUSED", reason: "SWITCH" };
+      // The one predicate the server and the calendar feed ask too (`publicDoorOpen`).
+      if (!publicDoorOpen(event)) return { kind: "PAUSED", reason: "SWITCH" };
       /*
         «Arată public numărătoarea» off (§668): no number at all — the free places said as an uncapped
         event's (null), no offer counted, nobody counted as waiting, no room; the state words stay. Applied

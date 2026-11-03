@@ -607,4 +607,33 @@ describe("The editor's save of the registration controls leaves the trail (§NNN
       [admin.id, event.id, { from: false, to: true }],
     ]);
   });
+
+  it("a new N forgets what the alert said for the old one, from either save path, so a raised N is told again; the same N keeps it", async () => {
+    const event = await createEvent(10, { surface: "ASPHALT", declarationDocumentId: declarationId, placesAlertAt: 2 });
+    const remembered = async () => (await db.select({ sent: events.placesAlertSent }).from(events).where(eq(events.id, event.id)))[0].sent;
+    // Ten places, eight taken: two free, at N — the «N or fewer» email to the two Administrators, remembered.
+    for (const name of ["Ana", "Mara", "Ioana", "Dana", "Elena", "Irina", "Oana", "Raluca"]) await staffEntry(event.id, name);
+    expect(await remembered()).toBe("LOW");
+    expect(await alerts()).toHaveLength(2);
+
+    // Saved with the same N: the memory stays, and the next place taken tells nobody again.
+    await editorSave(event.id, { placesAlertAt: "2" });
+    expect(await remembered()).toBe("LOW");
+
+    // N raised to 5 while two are free: forgotten — the next place taken tells the Administrators at the new N.
+    await editorSave(event.id, { placesAlertAt: "5" });
+    expect(await remembered()).toBeNull();
+    await staffEntry(event.id, "Paula");
+    expect(await remembered()).toBe("LOW");
+    const sent = await alerts();
+    expect(sent).toHaveLength(4);
+    // One «N or fewer» email to each Administrator, at the new N.
+    expect(sent.filter((row) => (row.payloadJson as { alertAt: number }).alertAt === 5).map((row) => (row.payloadJson as { stage: string }).stage)).toEqual(["LOW", "LOW"]);
+
+    // The fields-only save does the same: a new N forgets, the same N keeps.
+    await fieldsSave(event.id, { placesAlertAt: "5" });
+    expect(await remembered()).toBe("LOW");
+    await fieldsSave(event.id, { placesAlertAt: "3" });
+    expect(await remembered()).toBeNull();
+  });
 });

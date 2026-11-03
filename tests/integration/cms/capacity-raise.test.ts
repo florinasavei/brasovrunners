@@ -504,4 +504,21 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     expect(await statuses(dates[1].id)).toEqual(["CONFIRMED", "WAITLISTED"]);
     expect(await offersQueued()).toBe(0);
   });
+
+  it("§NNN a series' save that moves «Anunță-mă când rămân N locuri» forgets each date's memory of the alert; the same N keeps it", async () => {
+    const source = await seedEvent(10);
+    await repeatEvent(db, { actor: editor, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-11-01", publish: false }, now: NOW });
+    const ids = [source.id, ...(await db.select({ id: events.id }).from(events).where(eq(events.repeatOf, source.id))).map((row) => row.id)];
+    expect(ids).toHaveLength(4);
+    // Every date at N = 2, each having told the Administrators already.
+    for (const id of ids) await db.update(events).set({ placesAlertAt: 2, placesAlertSent: "LOW" }).where(eq(events.id, id));
+
+    // The same N from this date on: nothing forgotten anywhere.
+    await save(source.id, { placesAlertAt: "2" }, new Date(NOW.getTime() + 30_000), "all");
+    for (const id of ids) expect((await reload(id)).placesAlertSent, id).toBe("LOW");
+
+    // A new N: every date it reaches starts a fresh crossing, the N and the memory written together.
+    await save(source.id, { placesAlertAt: "5" }, new Date(NOW.getTime() + 60_000), "all");
+    for (const id of ids) expect(await reload(id), id).toMatchObject({ placesAlertAt: 5, placesAlertSent: null });
+  });
 });
