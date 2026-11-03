@@ -14,6 +14,9 @@ import { waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
 import { confirmEmail, readPublicPlaces, signDeclaration, submitRegistration } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { signingInput } from "../../helpers/declaration-signing";
+import { completeMissingAnswers } from "@/modules/registrations/complete-answers";
+import { ANSWERS_MISSING, missingAnswers } from "@/modules/registrations/missing-answers";
+import { TYPED_ANSWERS } from "../../helpers/missing-answers";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -214,7 +217,12 @@ describe("§872 «Direct pe lista de așteptare»: the address vouched for at th
     expect((await trailOf(mara.id, "registration.address_vouched_on_entry"))[0].metadataJson).toEqual({ from: "PENDING_EMAIL_CONFIRMATION", to: "PENDING_DECLARATION" });
     expect((await readPublicPlaces(db, { id: event.id, capacity: 2, waitlistCapacity: null }, at(6))).availablePlaces).toBe(0);
 
-    // The signature is the person's, from the email — nothing here signed for them.
+    // The signature is the person's, from the email — nothing here signed for them. The entry wrote a name and an
+    // address: the rest the form requires, the person completes on the same page first (§NNN) — never signed without.
+    const unsigned = await refusal(signDeclaration(db, event, mara.id, await signingInput(db, at(30), "Mara Munteanu"), at(30)));
+    expect(isDomainError(unsigned) && unsigned.fields).toEqual([...missingAnswers({ kitShirt: false }, mara), ANSWERS_MISSING]);
+    expect(missingAnswers({ kitShirt: false }, mara)).toEqual(["birthDate", "city", "sex", "nationality", "phone", "emergencyContactName", "emergencyContactPhone"]);
+    await completeMissingAnswers(db, mara.id, TYPED_ANSWERS, at(30), "DECLARATION");
     const confirmed = await signDeclaration(db, event, mara.id, await signingInput(db, at(30), "Mara Munteanu"), at(30));
     expect(confirmed.status).toBe("CONFIRMED");
     expect(confirmed.bibNumber).not.toBeNull();

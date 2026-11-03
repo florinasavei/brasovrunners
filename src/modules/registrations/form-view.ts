@@ -87,10 +87,7 @@ export function formViewOf(event: RegistrationFormEvent, now: Date): Registratio
     date the submission would be turned back for. Today stays a bound as well, for the event
     absurdly far ahead that would allow a future date.
   */
-  const today = now.toISOString().slice(0, 10);
-  const youngestAllowed = latestBirthDateFor(minAge, eventDay);
-  const latest = youngestAllowed < today ? youngestAllowed : today;
-  const earliest = new Date(Date.UTC(now.getUTCFullYear() - 120, now.getUTCMonth(), now.getUTCDate())).toISOString().slice(0, 10);
+  const birthDate = birthDateBounds(minAge, eventDay, now);
   // The third step of the wizard (§104): "confirm a week before" only while that week is ahead.
   const window = confirmationWindow(event);
   const stepsWindow =
@@ -101,10 +98,10 @@ export function formViewOf(event: RegistrationFormEvent, now: Date): Registratio
     event,
     minAge,
     eventDay,
-    birthDate: { earliest, latest },
+    birthDate,
     hasRules: !isRichTextEmpty(readRichText(event.rulesJson)),
     // A copy saved before the column existed has none, and asks nothing.
-    askShirt: event.kitShirt === true,
+    askShirt: asksShirt(event),
     askHealth: event.askHealthNote === true,
     askMemberBib: event.offersMemberBib === true,
     publishesList: event.participantListVisibility === "NAMES",
@@ -112,6 +109,27 @@ export function formViewOf(event: RegistrationFormEvent, now: Date): Registratio
     costHost: event.costUrl ? costUrlHost(event.costUrl) : null,
     stepsWindow,
   };
+}
+
+/**
+ * «Kit de participare» → «Tricou» (§554): the form asks the size only when the event gives a shirt. One test,
+ * read by the form (`formViewOf`) and by the answers a registration still owes (`missing-answers.ts`, §NNN).
+ */
+export function asksShirt(event: { kitShirt?: boolean | null }): boolean {
+  return event.kitShirt === true;
+}
+
+/**
+ * The birth date's bounds (BR-REQ-031-04 criterion 4, §321): 120 years back, and the latest date that still
+ * reaches the event's minimum age on its own day — or today, for an event absurdly far ahead. The form's box and
+ * the boxes that complete a registration's missing answers (§NNN) draw the same two.
+ */
+export function birthDateBounds(minAge: number, eventDay: string, now: Date): { earliest: string; latest: string } {
+  const today = now.toISOString().slice(0, 10);
+  const youngestAllowed = latestBirthDateFor(minAge, eventDay);
+  const latest = youngestAllowed < today ? youngestAllowed : today;
+  const earliest = new Date(Date.UTC(now.getUTCFullYear() - 120, now.getUTCMonth(), now.getUTCDate())).toISOString().slice(0, 10);
+  return { earliest, latest };
 }
 
 /**

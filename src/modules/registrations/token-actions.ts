@@ -63,6 +63,7 @@ import { isActiveStatus } from "./domain/state-machine";
 import type { CancelReason } from "./domain/cancel-reason";
 import { familyOf } from "./family-marker";
 import type { SignatureTrace } from "@/modules/legal-documents/domain/signature-trace";
+import { completeMissingAnswers, type PostedAnswers } from "./complete-answers";
 
 /**
  * Wiring the email-token boundary (§13.2) to the registration lifecycle (§15).
@@ -323,6 +324,12 @@ export async function consumeAndSignDeclaration(
     trace?: SignatureTrace;
   },
   now: Date,
+  /**
+   * «Completează-ți datele» (§NNN): the answers the page asked above the signature, when it asked any — saved
+   * as the person's own in this same transaction, before the signature that requires them; a refusal of either
+   * rolls back both, and the link is not spent.
+   */
+  answers?: PostedAnswers,
 ) {
   const db = getDb();
 
@@ -341,6 +348,7 @@ export async function consumeAndSignDeclaration(
     if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
     const event = await loadEventForRegistration(tx, registration.eventId);
 
+    if (answers) await completeMissingAnswers(tx, registration.id, answers, now, "DECLARATION");
     const updated = await signDeclaration(tx, event, registration.id, input, now);
     return { ok: true as const, token: consumed.token, registration: updated };
   });
@@ -372,6 +380,8 @@ export async function consumeAndSignFamilyDeclaration(
   registrationId: string,
   input: Parameters<typeof consumeAndSignDeclaration>[1],
   now: Date,
+  /** The step's person's missing answers (§NNN), saved with the signature in one transaction, as on the link's own page. */
+  answers?: PostedAnswers,
 ) {
   const db = getDb();
 
@@ -390,7 +400,12 @@ export async function consumeAndSignFamilyDeclaration(
     return TOKEN_NOT_FOUND;
   }
   const event = await loadEventForRegistration(db, registration.eventId);
-  const updated = await signDeclaration(db, event, registration.id, input, now);
+  const updated = answers
+    ? await db.transaction(async (tx) => {
+        await completeMissingAnswers(tx, registration.id, answers, now, "DECLARATION");
+        return signDeclaration(tx, event, registration.id, input, now);
+      })
+    : await signDeclaration(db, event, registration.id, input, now);
   return { ok: true as const, registration: updated };
 }
 
@@ -642,6 +657,25 @@ export async function readRaceDayContext(secret: string, now: Date) {
     /** Everybody the page manages, the link's own first in the family's order (§547). */
     people,
   };
+}
+
+/**
+ * «Completează-ți datele» from the participant's own manage link (§NNN): the answers the public form requires and
+ * the registration does not hold, saved as the person's own — for a confirmed registration too, whose declaration
+ * stays as it was signed. Read, never spent, as the list switch and «I am here» are (§77): the page must still be
+ * able to cancel. `registrationId` (§547): another person of the page, the same address at the same event
+ * (`managedRegistration`); absent, the link's own. Throttled per presented token like every other press.
+ */
+export async function completeAnswersFromManageLink(secret: string, posted: PostedAnswers, now: Date, registrationId?: string) {
+  const db = getDb();
+  if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
+  const context = await readActionTokenContext(db, { secret, purpose: "MANAGE_REGISTRATION", now });
+  if (!context.ok) return context;
+  const own = await findRegistrationById(db, context.token.registrationId ?? "");
+  const target = own ? await managedRegistration(db, own, registrationId) : null;
+  if (!target) throw new DomainError("NOT_FOUND", "not a registration this link manages");
+  const result = await completeMissingAnswers(db, target.id, posted, now, "MANAGE_LINK");
+  return { ok: true as const, ...result };
 }
 
 /**

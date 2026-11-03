@@ -104,12 +104,13 @@ export default async function ReserveListPanel({
     const questions: ConfirmSpec[] = [];
     if (forecast) {
       const offer = waitlistOfferQuestion((key, values) => t(key, values), email, forecast);
-      questions.push({ ...shared, when: [{ field: "intent", equals: "offer" }], title: t("confirm.waitlistOfferTitle"), body: `${name}: ${offer.body} ${t("reserve.noteFollows")}`, confirmLabel: offer.confirmLabel });
+      // The line holds a name and an address (§888): the rest the form asks, the person types when they sign (§NNN).
+      questions.push({ ...shared, when: [{ field: "intent", equals: "offer" }], title: t("confirm.waitlistOfferTitle"), body: `${name}: ${offer.body} ${t("reserve.noteFollows")} ${t("reserve.detailsAtSigning")}`, confirmLabel: offer.confirmLabel });
     }
     questions.push({
       ...shared,
       title: t("reserve.moveTitle"),
-      body: `${name}: ${t("confirm.waitlistAddBody", { email })} ${t("reserve.noteFollows")}`,
+      body: `${name}: ${t("confirm.waitlistAddBody", { email })} ${t("reserve.noteFollows")} ${t("reserve.detailsAtSigning")}`,
       confirmLabel: t("reserve.move"),
     });
     return questions;

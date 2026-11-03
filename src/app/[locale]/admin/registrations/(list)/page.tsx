@@ -36,7 +36,8 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { declarationAsksMinorToSignByEvent } from "@/modules/legal-documents/repository";
 import { registrationStatus } from "@/db/schema/registrations";
 import { journeyOf } from "@/modules/registrations/domain/journey";
-import { canTransition } from "@/modules/registrations/domain/state-machine";
+import { canTransition, isActiveStatus } from "@/modules/registrations/domain/state-machine";
+import { missingAnswersHeld } from "@/modules/registrations/missing-answers";
 import { formatRaceNumber, printedNumbersACancelWouldVoid, raceNumberOf, raceNumberTextOf } from "@/modules/registrations/domain/race-number";
 import { deriveAllowedResendMessageType, resendEmailGroup } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
@@ -470,6 +471,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
           {/* «Elită» (§897): the bib prints with the name where the number goes — for every role that reads the list. */}
           {row.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="elite-chip" />}
+          {/* «Date lipsă» (§NNN): a registration still standing lacks answers the form requires — the person completes them
+              from their own link, or the Administrator types them; the registration's page says which and how. */}
+          {isActiveStatus(row.status) && missingAnswersHeld(row).length > 0 && (
+            <StatusChip glyph="missingAnswers" color="warning" variant="outlined" label={t("registrations.missingAnswers.chip")} testId="missing-answers-chip" />
+          )}
           {/* Registered from an invitation by email (§737, amending §647): who came in that way, at a glance. */}
           {row.invited && <Chip size="small" variant="outlined" color="info" label={t("registrations.invitedChip")} data-testid="invited-chip" />}
           {/* A family on one address (§543): who else is registered with it, each a link to their row. */}

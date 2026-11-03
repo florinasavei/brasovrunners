@@ -36,6 +36,12 @@ export type AuditAction =
    */
   | "registration.answer_corrected"
   /**
+   * «Completează-ți datele» (§NNN): the person completed, from their own link, the answers the public form
+   * requires and the registration did not hold — no staff actor; `{ fields, via }`, the columns written and the
+   * door (`DECLARATION` or `MANAGE_LINK`), never a value: nothing stood before them, and the values are the row's.
+   */
+  | "registration.answers_completed"
+  /**
    * «Scoate bifa la cele {n}» (§645): one row per sweep of «Bife de membru fără cont de membru»,
    * beside each registration's own `registration.answer_corrected` — `{ count, eventId }`, the event
    * the list was scoped to or null for every event that has not started. Never who.

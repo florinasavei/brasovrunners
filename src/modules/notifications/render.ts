@@ -42,6 +42,7 @@ import { CONFIRMATION_RETRY_LEAST_LEFT_MS, isConfirmationRetry } from "./domain/
 import { type HoldLapsedNext, holdLapsedNext } from "./domain/hold-lapsed";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
+import { missingAnswers } from "@/modules/registrations/missing-answers";
 import { readOrganizerMessagePayload } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
 import { readEmailCopyForSending } from "./email-copy";
@@ -488,6 +489,16 @@ async function renderRow(
   if (row.messageType === "COMPLETE_DECLARATION" && registration && !clubCopy) {
     const others = await awaitingSignatureOnAddress(db, registration.eventId, registration.participantId, registration.id);
     if (others.length > 0) data.familyToSign = others;
+  }
+  /*
+    «Completează-ți datele» (§NNN): a registration that lacks answers the form requires — a staff entry, a line of the
+    internal list moved onto the official one — is asked them on the page this link opens, before the signature. The
+    request to sign and the offer say so, read at send time. The event's T-shirt tick matters only to a row that never
+    answered the size, so it is read only for one. The inbox's alone: a club copy carries no link.
+  */
+  if ((row.messageType === "COMPLETE_DECLARATION" || row.messageType === "WAITLIST_SPOT_OFFER") && registration && !clubCopy) {
+    const [event] = registration.tshirtSize === null ? await db.select({ kitShirt: events.kitShirt }).from(events).where(eq(events.id, registration.eventId)).limit(1) : [];
+    if (missingAnswers({ kitShirt: event?.kitShirt ?? false }, registration).length > 0) data.answersToComplete = true;
   }
   /*
     The verification link proves the inbox, not one person (§588): the message names the address's

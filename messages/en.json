@@ -1529,6 +1529,7 @@
           "hold_moved_by_window": "Signing deadline moved with the changed confirmation window",
           "not_revived_for_outage": "Not revived after the outage: the deadline had passed while the site could not be reached, and the place had been given meanwhile or the claim had already lapsed",
           "answer_corrected": "Answer corrected: {field}",
+          "answers_completed": "Details completed by the participant, from their own link: {fields}",
           "answers_viewed": "Answers opened, with the phone and the emergency contact",
           "note_added": "Internal note added",
           "note_deleted": "Internal note deleted"
@@ -1825,6 +1826,12 @@
           "memberBibWanted": "I want the members' number"
         },
         "memberBibHelp": "Kept only with the member tick, and while the event offers the members' number."
+      },
+      "missingAnswers": {
+        "chip": "Missing details",
+        "hint": "Details the registration form requires are missing.",
+        "line": "Missing: {fields}.",
+        "how": "The person fills them in from their own link, before signing or after: resend the email if they no longer have it. Or you type them in «Change the answers»."
       },
       "memberTick": {
         "clear": "Not a member",
@@ -11185,6 +11192,7 @@
       "move": "Move to the official list",
       "moveTitle": "Move to the official waiting list?",
       "noteFollows": "The note moves onto the registration, and the line leaves the internal list.",
+      "detailsAtSigning": "The person fills in the missing details themselves, such as the birth date or the phone, when they sign the declaration.",
       "emailForOfficial": "Email for the official list",
       "emailForOfficialHelp": "This line has no address: type it here to move it. The emails go here.",
       "eliteNoAddress": "An elite runner? No address needed: “Move to the elite list”.",
@@ -12062,6 +12070,22 @@
       "changed": "Your choice for the results is saved.",
       "failed": "We could not save your choice. Try again.",
       "otherAdult": "Only the person gives the consent to appear by name in the results, from their own registration's link. From here you can only withdraw it."
+    },
+    "complete": {
+      "title": "Complete your details",
+      "titleFor": "Complete the details for {name}",
+      "intro": "The registration form also asks for the details below, and your registration does not have them yet. You fill them in once, here; we keep them like everyone else's.",
+      "declareLead": "Before you sign, <link>fill in the details missing</link> from your registration: they are right above the signature.",
+      "refusedTitle": "Some details still need filling in",
+      "refusedNothingSigned": "Nothing was signed or saved, and your link still works. Fill in the fields below:",
+      "refusedNothingSaved": "Nothing was saved. Fill in the fields below:",
+      "minorSigned": "The birth date makes the person a minor when they registered, and the declaration was signed without a parent or guardian. Write to us and we will sort it out together.",
+      "nameSigned": "The first and last name must make up the name on the signed declaration: {name}.",
+      "save": "Save the details",
+      "saving": "Saving…",
+      "saved": "Done, your details are saved.",
+      "signatureOpen": "You registered as {name}: sign with exactly this name. For a minor, the parent or guardian signs, with the name typed above.",
+      "guardianTypedAbove": "The parent or guardian signs, with the name typed above in the details to complete. If that name is wrong, correct it there and sign with it."
     }
   },
   "Devs": {

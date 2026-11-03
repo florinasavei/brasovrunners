@@ -4,6 +4,7 @@ import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
+import SaveIcon from "@mui/icons-material/Save";
 import UnsubscribeIcon from "@mui/icons-material/Unsubscribe";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -25,8 +26,16 @@ import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import { formatDay } from "@/i18n/dates";
 import { leadPhrase } from "@/modules/deadlines/domain/duration-words";
-import { findEventNotificationDetails } from "@/modules/events/repository";
+import { findEventForRegistrationById, findEventNotificationDetails } from "@/modules/events/repository";
 import { getDb } from "@/db/client";
+import type { ReactNode } from "react";
+import { readAnswersRefusal } from "@/modules/registrations/complete-answers";
+import { dayIn, effectiveMinimumAge } from "@/modules/registrations/domain/age";
+import { readFormDraft } from "@/modules/registrations/form-draft";
+import { birthDateBounds } from "@/modules/registrations/form-view";
+import { answersToAsk } from "@/modules/registrations/missing-answers";
+import { missingAnswersFields } from "@/modules/registrations/ui/MissingAnswersFields";
+import SubmitButton from "@/shared/ui/SubmitButton";
 import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import { isActiveStatus } from "@/modules/registrations/domain/state-machine";
 import {
@@ -51,6 +60,7 @@ import PublicFlash from "@/shared/feedback/PublicFlash";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import {
   cancelRegistrationAction,
+  completeAnswersFromManageAction,
   selfCheckInAction,
   setListConsentFromManageAction,
   setPromoConsentFromManageAction,
@@ -78,6 +88,9 @@ type Props = {
     person?: string;
     /** The box a cancel without its reason named (§558): `kind`, `text` or `long`, under `person`'s cancel. */
     reason?: string;
+    /** «Completează-ți datele»'s outcome (§NNN): 1 saved, 0 refused — then `answersRefused` names the boxes and the rule. */
+    answers?: string;
+    answersRefused?: string;
   }>;
 };
 
@@ -106,7 +119,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, list, withdrawn, promo, results, person, reason } = await searchParams;
+  const { done, invalid, started, here, list, withdrawn, promo, results, person, reason, answers, answersRefused } = await searchParams;
   const t = await getTranslations("Registrations");
   // The words beside every QR (§547): whose it is, their number, the code.
   const qrWords: QrWords = {
@@ -207,6 +220,49 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
           eventType: (await eventTypeOf(getDb(), live.registration.eventId)) ?? "",
         })
       : null;
+  /*
+    «Completează-ți datele» (§NNN): for each person still registered whose registration lacks an answer the public
+    form requires, a card with only those boxes and a save button — a confirmed one too, its declaration untouched.
+    The event is read only when somebody owes an answer; a complete page reads and draws nothing more.
+  */
+  const owing = people.filter((one) => isActiveStatus(one.status) && answersToAsk(one.missingAnswers, one.declarationMethod !== null).fields.length > 0);
+  const answersEvent = live && owing.length > 0 ? await findEventForRegistrationById(getDb(), live.registration.eventId) : undefined;
+  const answersRefusal = answers === "0" ? readAnswersRefusal(answersRefused) : null;
+  const answersDraft = answersRefusal ? await readFormDraft() : null;
+  const completeCards = new Map<string, ReactNode>(
+    answersEvent
+      ? await Promise.all(
+          owing.map(async (one) => {
+            const minAge = effectiveMinimumAge(answersEvent.minAge);
+            const eventDay = dayIn(answersEvent.startsAt, answersEvent.timezone);
+            // The refusal and the draft are the person's the press named; every other card starts clean.
+            const refusedHere = answersRefusal && answeredFor === one.id ? answersRefusal : null;
+            const card = await missingAnswersFields({
+              ...answersToAsk(one.missingAnswers, one.declarationMethod !== null),
+              locale,
+              birthDate: { ...birthDateBounds(minAge, eventDay, new Date()), eventDay, minAge },
+              minorOn: one.answersWrittenAt.toISOString(),
+              invalid: refusedHere?.invalid ?? new Set(),
+              refusal: { tooYoung: refusedHere?.tooYoung === true, emergencySame: refusedHere?.emergencySame === true },
+              draft: refusedHere ? answersDraft : null,
+              idPrefix: family ? `${one.id.slice(0, 8)}-` : "",
+              heading: family ? t("complete.titleFor", { name: one.registeredName }) : t("complete.title"),
+              headingLevel: family ? "h3" : "h2",
+              refused: refusedHere
+                ? {
+                    note: t("complete.refusedNothingSaved"),
+                    sentences: [
+                      ...(refusedHere.minorSigned ? [t("complete.minorSigned")] : []),
+                      ...(refusedHere.nameSigned ? [t("complete.nameSigned", { name: one.registeredName })] : []),
+                    ],
+                  }
+                : null,
+            });
+            return [one.id, card] as const;
+          }),
+        )
+      : [],
+  );
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -347,6 +403,30 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                         {t("manage.signedPaper")}
                       </Typography>
                     ) : null}
+                    {!family && <Divider sx={{ mt: 3 }} />}
+                  </Box>
+                )}
+
+                {/*
+                  «Completează-ți datele» (§NNN): only the boxes still missing, the public form's own, and one save — read
+                  through the manage link, never spent; saved as the person's own. `#answers` is where the press lands.
+                */}
+                {answered && answers === "1" && (
+                  <Alert severity="success" sx={{ mb: 2 }} id="answers" data-testid="manage-answers-saved">
+                    {t("complete.saved")}
+                  </Alert>
+                )}
+                {completeCards.has(one.id) && (
+                  <Box component="form" action={completeAnswersFromManageAction} id={answered && answers !== "1" ? "answers" : undefined} sx={{ mb: 2 }} data-testid="manage-complete-answers">
+                    <input type="hidden" name="locale" value={locale} />
+                    <input type="hidden" name="token" value={token} />
+                    <input type="hidden" name="registrationId" value={one.id} />
+                    {completeCards.get(one.id)}
+                    <Box sx={{ mt: 2 }}>
+                      <SubmitButton label={t("complete.save")} pendingLabel={t("complete.saving")} size="medium">
+                        <SaveIcon />
+                      </SubmitButton>
+                    </Box>
                     {!family && <Divider sx={{ mt: 3 }} />}
                   </Box>
                 )}
