@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
@@ -14,18 +15,15 @@ import {
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
-import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
-import { isBulkMessage } from "@/modules/notifications/domain/bulk";
-import { pauseIsRecent } from "@/modules/notifications/domain/hourly-pace";
-import { leavesNow } from "@/modules/notifications/domain/send-at-once";
-import { emailLeavesWords, outboxRowLeavesAt, outboxRowOverdue } from "@/modules/notifications/domain/email-wait";
-import { EMAIL_HEALTH_THRESHOLDS } from "@/modules/notifications/health";
+import { departureOf } from "@/modules/notifications/domain/departure";
 import type { OutboxDelivery } from "@/modules/notifications/outbox-delivery";
+import { departureContextOf, departureWords } from "@/modules/notifications/ui/departure-words";
 import type { OutboxQueue, QueuedMessage } from "@/modules/notifications/queue";
 import type { EmailVolumeToday } from "@/modules/notifications/volume";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 import TickButton from "@/shared/ui/TickButton";
 import { stopWords } from "@/modules/notifications/ui/stop-words";
 
@@ -55,6 +53,11 @@ type Props = {
    * dialog's live count, read with the page. 0 draws no button.
    */
   failedRetryable?: number;
+  /**
+   * «Vezi ce a plecat azi»: the address of «Emailuri azi», resolved by the page for the roles that may open it
+   * (the Administrator and the Superadministrator); absent, no link.
+   */
+  journalHref?: string;
 };
 
 /**
@@ -99,7 +102,7 @@ export function stopHeadline(
  * message do not fit a table at 320 pixels, and a table that scrolls sideways is worse than a
  * paragraph (the same reasoning §196 applied to the one place a table is unavoidable).
  */
-export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit, delivery, now, mayEditTiming, openWhen, failedRetryable = 0 }: Props) {
+export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit, delivery, now, mayEditTiming, openWhen, failedRetryable = 0, journalHref }: Props) {
   const t = await getTranslations("Admin");
   const stop = stopHeadline(volume, now, locale, (key, values) => t(key, values));
   // While Gmail carries for a stopped Mailgun (§622), Mailgun's day does not stop «Trimite acum».
@@ -122,45 +125,14 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
   ];
 
   /*
-    One row's departure, in words (§529). A row being sent is "now"; a row that spent its retries
-    goes nowhere on its own; a waiting row leaves at the outbox job's first real run at or after its
-    own turn — and when that turn is further back than health's `overdue` allows, it is late, said
-    in red: the estimate would otherwise read as a promise the scheduler is not keeping. A newsletter
-    held for the allowance's reserve (§445) is the reserve working, as health counts it, never late.
+    One row's departure, in words (§529): the one judgement the queue, «Emailuri azi» and the toast share
+    (`domain/departure.ts`). A row being sent is "now"; a row that spent its retries goes nowhere on its own; a
+    waiting row leaves at the outbox job's first real run at or after its own turn — and when that turn is
+    further back than health's `overdue` allows, it is late, said in red: the estimate would otherwise read as a
+    promise the scheduler is not keeping.
   */
-  const leaves = (row: QueuedMessage): { text: string; late: boolean } => {
-    if (row.status === "PROCESSING") return { text: t("emails.queue.leaves.sending"), late: false };
-    if (row.status === "FAILED") return { text: t("emails.queue.leaves.never"), late: false };
-    // A press sent it now, past the scheduled pass (§540): it leaves after that press's response —
-    // `emailLeavesWords`' own `leavesNow`, the instant null — never at the round the rest waits for.
-    if (leavesNow(row, now)) return { text: t(`emails.queue.leaves.${emailLeavesWords(null, now, locale).key}`), late: false };
-    const dueAt = row.nextAttemptAt ?? row.createdAt;
-    // Late by health's own number (§98, §447): `overdueCadenceMinutes` is the cadence `/api/health`
-    // adds to its ninety minutes, the planned interval included — one judgement, two screens (§529).
-    // Since §605, as health counts it too: a Mailgun-road row is not late while Mailgun's hour binds
-    // (a Gmail row never waits for it), and a row Mailgun paused recently is late once it has waited
-    // past the allowance since it was queued (unless its pause runs past the hour, a deferral); a row
-    // whose pause mark is older is judged like any other waiting row.
-    const overdueSince = (at: Date) =>
-      outboxRowOverdue({ now, dueAt: at, overdueAfterMs: EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS, intervalMinutes: delivery.overdueCadenceMinutes });
-    const late =
-      !isBulkMessage(row.messageType) &&
-      (pauseIsRecent(row, now)
-        ? overdueSince(row.createdAt) && row.nextAttemptAt !== null && row.nextAttemptAt.getTime() <= now.getTime() + EMAIL_HEALTH_THRESHOLDS.DEFERRED_BEYOND_MS
-        : !(volume.hourPaceHolds && row.onMailgunRoad) && overdueSince(dueAt));
-    const leavesAt = outboxRowLeavesAt({ dueAt, nextTickAt, intervalMinutes: runInterval, pingerMinutesAt: (instant) => pingerCadenceMinutes(instant) });
-    // The departure in the words the screen after the registration form uses for the same message
-    // (`emailLeavesWords`, §536): «10:15» today, the short day with its «la» and hour otherwise.
-    const at = emailLeavesWords(leavesAt, now, locale).at;
-    // A family sitting's hold (§519): a turn in the future and no attempt made yet — not a retry,
-    // not the newsletter's reserve. It says the hold's end and the round after it.
-    if (row.nextAttemptAt && row.nextAttemptAt.getTime() > now.getTime() && row.familyHeld) {
-      return { text: t("emails.queue.leaves.held", { until: when.format(row.nextAttemptAt), at }), late: false };
-    }
-    return { text: late
-        ? t(mayEdit ? "emails.queue.leaves.late" : "emails.queue.leaves.lateAskAdmin", { at })
-        : t("emails.queue.leaves.at", { at }), late };
-  };
+  const departureContext = departureContextOf({ now, delivery, volume });
+  const leaves = (row: QueuedMessage): { text: string; late: boolean } => departureWords(departureOf(row, departureContext), { now, locale, mayEdit, t: (key, values) => t(key, values) });
 
   /*
     What «Trimite acum» sends and what it leaves (§529): the claim's own rule — the due rows go, within
@@ -362,6 +334,15 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
       {queue.total > queue.rows.length && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {t("emails.queue.more", { count: queue.total - queue.rows.length })}
+        </Typography>
+      )}
+
+      {/* «Emailuri azi»: what left today and what waits, with the names, grouped by the press that sent it. */}
+      {journalHref && (
+        <Typography variant="body2" sx={{ mt: 1.5 }}>
+          <Link href={journalHref} sx={{ ...TAP_TARGET, display: "inline-flex", alignItems: "center" }} data-testid="outbox-journal-link">
+            {t("emails.today.queueLink")}
+          </Link>
         </Typography>
       )}
     </Panel>

@@ -2225,8 +2225,10 @@ email_outbox
 - recipient_email
 - payload_json
 - idempotency_key UNIQUE
-- requested_by_staff_user_id null
+- requested_by_staff_user_id null   who pressed: every staff press's rows (the press scope, below), and a service's own
 - is_manual_resend boolean DEFAULT false
+- cause null                   what queued it: a staff press's or a job's closed token (notifications/domain/press-causes.ts)
+- press_id null                one id per press or job run: every row that press queued carries it
 - status PENDING|PROCESSING|SENT|FAILED|BOUNCED|COMPLAINED
 - attempt_count
 - next_attempt_at null
@@ -2248,7 +2250,17 @@ INDEX(status, next_attempt_at, created_at)
 INDEX(registration_id, created_at)
 INDEX(provider_message_id) WHERE provider_message_id IS NOT NULL
 INDEX(participant_id)
+INDEX(press_id) WHERE press_id IS NOT NULL
 ```
+
+**What queued a row.** Every staff press that can queue an email runs its whole body inside its email press scope
+(`notifications/press.ts#inEmailPress`, `AsyncLocalStorage`), and so do the two job routes and the drains that do
+the outbox job's work after a response; `enqueueEmail`, the club's copies and the relay stamp each row with the
+scope's `cause`, its `press_id` and its actor as `requested_by_staff_user_id` (a requester the service names wins).
+A public flow opens no scope: its rows carry none. The scope labels rows and never decides whether or when one
+leaves. «Setări» → «Emailuri» → «Emailuri azi» (`notifications/journal.ts`) lists the day's rows by press, with
+the names, for the Administrator and the Superadministrator alone; `tests/unit/shared/emailing-presses.test.ts`
+holds every emailing press to its scope.
 
 Each deliberate resend gets a new row/idempotency key. Every message type names whom it is written
 for — the participant, the club's own mailboxes, the staff or the public

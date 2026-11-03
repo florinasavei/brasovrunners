@@ -1,4 +1,5 @@
 import { answerJobPing } from "@/modules/jobs/ping";
+import { inEmailPress } from "@/modules/notifications/press";
 
 /**
  * The email outbox job (AGENTS.md §16.1, §16.2). The request that queues a message drains the
@@ -17,23 +18,27 @@ import { answerJobPing } from "@/modules/jobs/ping";
  * club (`docs/PLATFORM.md`, limit 1 of the four).
  */
 export async function POST(request: Request): Promise<Response> {
-  return answerJobPing(request, "email-outbox", async (db, now) => {
-    // Imported here, not above: a ping that answers from the cache never loads the sender.
-    const [{ processOutboxBatch }, { createOutboxRenderer }, { createOutboxSender }, { processRelayBatch }, { createRelayRoads }] = await Promise.all([
-      import("@/modules/notifications/outbox"),
-      import("@/modules/notifications/render"),
-      import("@/modules/notifications/outbox-sender"),
-      import("@/modules/notifications/relay"),
-      import("@/modules/notifications/relay-roads"),
-    ]);
-    // The club's road per group and the Reply-To it chose to show, read once for the batch (§442);
-    // Gmail's cap and pace from the database before each Gmail message.
-    const { sender, route, roads, replyTo } = await createOutboxSender(db);
-    // One renderer per batch: each event's words are read once for it (§373, email follow-up).
-    const summary = await processOutboxBatch(db, { sender, route, roads, render: createOutboxRenderer({ replyTo }), now });
-    // A visitor’s message that the after-response drain could not finish — a retry, a road that was down, a notice —
-    // is the relay’s, claimed apart from the notifications above (§778).
-    const relay = await processRelayBatch(db, { roads: () => createRelayRoads(db), now });
-    return { summary: { ...summary, relay }, failed: false };
-  });
+  // The notices this run queues about a road that is down (`relay.ts#queueNotice`) carry the job's cause and the
+  // run's id (`notifications/press.ts`): «Emailuri azi» shows them as «automat».
+  return answerJobPing(request, "email-outbox", (db, now) =>
+    inEmailPress("job.emailOutbox", async () => {
+      // Imported here, not above: a ping that answers from the cache never loads the sender.
+      const [{ processOutboxBatch }, { createOutboxRenderer }, { createOutboxSender }, { processRelayBatch }, { createRelayRoads }] = await Promise.all([
+        import("@/modules/notifications/outbox"),
+        import("@/modules/notifications/render"),
+        import("@/modules/notifications/outbox-sender"),
+        import("@/modules/notifications/relay"),
+        import("@/modules/notifications/relay-roads"),
+      ]);
+      // The club's road per group and the Reply-To it chose to show, read once for the batch (§442);
+      // Gmail's cap and pace from the database before each Gmail message.
+      const { sender, route, roads, replyTo } = await createOutboxSender(db);
+      // One renderer per batch: each event's words are read once for it (§373, email follow-up).
+      const summary = await processOutboxBatch(db, { sender, route, roads, render: createOutboxRenderer({ replyTo }), now });
+      // A visitor’s message that the after-response drain could not finish — a retry, a road that was down, a notice —
+      // is the relay’s, claimed apart from the notifications above (§778).
+      const relay = await processRelayBatch(db, { roads: () => createRelayRoads(db), now });
+      return { summary: { ...summary, relay }, failed: false };
+    }),
+  );
 }

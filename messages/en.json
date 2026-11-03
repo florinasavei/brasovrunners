@@ -7344,7 +7344,8 @@
           "sending": "Being sent now.",
           "never": "Will not leave on its own: every attempt is spent.",
           "held": "Held until {until}: a family is still signing. Then leaves on the next round: {at} (estimated).",
-          "leavesNow": "Leaves now, without waiting for the scheduled round."
+          "leavesNow": "Leaves now, without waiting for the scheduled round.",
+          "reset": "Leaves once Mailgun resumes: {at} (estimated)."
         },
         "lastError": "The provider's last answer: {error}",
         "manual": "Sent again by hand",
@@ -7385,6 +7386,120 @@
           "pending": "Putting them back…",
           "done": "Failed emails put back in the queue: {count}."
         }
+      },
+      "causes": {
+        "registrations": {
+          "resend": "Resend the email",
+          "reminder": "Send the reminder",
+          "familyResend": "Resend to the family",
+          "givePlaceNow": "Give them a place now",
+          "offer": "Send them the offer",
+          "confirmPaper": "Confirm on paper",
+          "givePlace": "Give a place",
+          "setBib": "A race number given by hand",
+          "specialGuests": "The special guests list",
+          "cancel": "Cancel the registration",
+          "bulkCancel": "Cancel the ticked registrations",
+          "erase": "Erase the registration",
+          "bulkErase": "Erase the ticked registrations",
+          "create": "A registration entered by the team",
+          "waitlistAdd": "Add to the waiting list",
+          "offerNow": "Offer them a place now",
+          "reserveMove": "Move to the official list",
+          "invite": "Send invitations",
+          "invitationResend": "Resend the invitation",
+          "invitationWithdraw": "Withdraw the invitation",
+          "invitationsErase": "Erase the person's invitations"
+        },
+        "events": {
+          "save": "Save the event",
+          "thanks": "Send the thank-you",
+          "declarationResendAll": "Resend the declaration to everyone who has not signed",
+          "participantMessage": "Message to the participants",
+          "testRegistrations": "Add test registrations",
+          "importOver": "Import over the event"
+        },
+        "volunteers": {
+          "add": "Add the volunteer",
+          "edit": "Edit the volunteer",
+          "state": "The volunteer's state",
+          "assign": "Give a role",
+          "unassign": "Take a role back",
+          "agreementLink": "Send the agreement link",
+          "agreementPaper": "Agreement signed on paper",
+          "guardianLink": "Send the parent's link",
+          "guardianPaper": "The parent's agreement, signed on paper",
+          "invite": "Send the volunteer invitations",
+          "invitationResend": "Resend the volunteer invitation"
+        },
+        "club": {
+          "newsletter": "Send the newsletter",
+          "staffInvite": "Add to the team",
+          "membersInvite": "Add the members",
+          "staffReinvite": "Resend the team invitation",
+          "shopPaid": "Mark the order paid",
+          "shopOrderForMember": "An order for a member"
+        },
+        "job": {
+          "registrationMaintenance": "the registrations' upkeep",
+          "emailOutbox": "sending the emails"
+        }
+      },
+      "today": {
+        "title": "Today's emails",
+        "intro": "Every email of today, with the name and the address, grouped by the press that sent it.",
+        "tabLink": "Today's emails: what left and what waits, by name",
+        "queueLink": "See what left today",
+        "counts": "Sent: {sent} · Waiting: {waiting} · Failed: {failed}",
+        "repeatsTitle": "Got the same email more than once today:",
+        "repeat": "{who} — “{type}”, {times}",
+        "times": {
+          "one": "once today",
+          "few": "{count} times today",
+          "other": "{count} times today"
+        },
+        "dayCount": {
+          "one": "1 email today",
+          "few": "{count} emails today",
+          "other": "{count} emails today"
+        },
+        "people": {
+          "one": "1 person",
+          "few": "{count} people",
+          "other": "{count} people"
+        },
+        "lines": {
+          "one": "1 email",
+          "few": "{count} emails",
+          "other": "{count} emails"
+        },
+        "waitingTitle": "Waiting now",
+        "waitingNone": "No email is waiting.",
+        "departedTitle": "Sent today",
+        "departedNone": "No email has left today.",
+        "press": {
+          "by": "{at} · {cause} · by {by}",
+          "cause": "{at} · {cause}",
+          "byOnly": "{at} · by {by}",
+          "job": "{at} · automatic: {cause}",
+          "site": "From the site"
+        },
+        "type": "“{type}”",
+        "typeAt": "“{type}” · {event}",
+        "toMany": "“{type}” to {people}",
+        "test": "Test",
+        "status": {
+          "sentToday": "Left at {at}",
+          "sentOn": "Left {at}",
+          "waiting": "Waiting",
+          "captured": "Reached nobody (QA)",
+          "failed": "Failed",
+          "refused": "Refused"
+        },
+        "club": "+ {count} to the club's mailboxes",
+        "clubLine": "{address} — “{type}” — {state}",
+        "more": "And {count} more, older, not shown here.",
+        "footnote": "An email still waiting may be withdrawn before it leaves: it then disappears from here, because it never left. The emails Zitadel sends do not go through our queue."
       },
       "copy": {
         "title": "The message's words ({lang}) — the default ones",

@@ -52,6 +52,7 @@ import { sendEventThanks } from "@/modules/notifications/event-mail";
 import { BULK_RESEND_CLOSED, BULK_RESEND_LIMITED, resendDeclarationToAllPending } from "@/modules/registrations/admin-service";
 import { DELIVERY_CHOICE_FIELD, deliveryChoiceOf } from "@/modules/notifications/domain/send-at-once";
 import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
+import { inEmailPress } from "@/modules/notifications/press";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import {
   inviteZitadelUser,
@@ -698,84 +699,88 @@ export async function bulkDeleteEventsAction(form: FormData): Promise<void> {
  * went through redirects to the editor with its banner, as it always has.
  */
 export async function saveEventAndTranslationsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const eventId = text(form, "eventId");
-  const path = editorPath(locale, eventId);
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("events.save", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const eventId = text(form, "eventId");
+    const path = editorPath(locale, eventId);
 
-  let outcome: {
-    error?: string;
-    saved?: string;
-    applied?: string;
-    offered?: string;
-    announced?: string;
-    notice?: string;
-    queued?: string;
-    moved?: string;
-    movedTo?: string;
-    movedSent?: string;
-  };
-  try {
-    const actor = await requireStaff();
-    const editsEventRow = text(form, "event.expectedVersion") !== "";
-    // Which dates of the series (§130, §134): the dates ticked in the editor's header, or a
-    // preset word; absent elsewhere. Ticks win — they are what the organizer sees.
-    const ticked = form.getAll("dates").filter((value): value is string => typeof value === "string" && value !== "");
-    const scope = text(form, "scope");
-
-    const { appliedTo, offered, placeAnnounced, holdsMoved, notice } = await saveEventAndTranslations(getDb(), {
-      actor,
-      eventId,
-      fields: editsEventRow ? eventFieldsFrom(form) : undefined,
-      expectedVersion: editsEventRow ? Number(text(form, "event.expectedVersion")) : undefined,
-      translations: routing.locales
-        .map((contentLocale) => translationFieldsFrom(form, contentLocale))
-        .filter((entry) => entry !== undefined),
-      acknowledgeLiveEdit: form.get("acknowledgeLiveEdit") === "on",
-      scope: ticked.length > 0 ? { ids: ticked } : SERIES_EDIT_SCOPES.includes(scope as (typeof SERIES_EDIT_SCOPES)[number]) ? (scope as SeriesEditScope) : "this",
-      /*
-        "Anunță participanții despre schimbare" and its note, and the cancellation's reason and
-        its "tell them" box (§331). Read as posted and judged by the service — the role, the
-        reason required on a cancellation, the five hundred characters, both languages or
-        neither (§354, bilingual everywhere) — so a replayed POST meets the same rules as the
-        page. An unticked box posts nothing, which is "no". The note and the reason are one box
-        per language; the cancellation is there when either of its boxes was drawn.
-      */
-      notice: { notify: form.get("notice.notify") === "on", note: { ro: text(form, "notice.noteRo"), en: text(form, "notice.noteEn") } },
-      cancellation:
-        form.has("cancel.reasonRo") || form.has("cancel.reasonEn")
-          ? { reason: { ro: text(form, "cancel.reasonRo"), en: text(form, "cancel.reasonEn") }, notify: form.get("cancel.notify") === "on" }
-          : undefined,
-      // The Locul box ran in the browser (§362): its English name is the organizer's as it stands.
-      placeNamesAsTyped: form.get(PLACE_NAMES_AS_TYPED_FIELD) === "1",
-    });
-    // A raised capacity's offers (§147) ride on the same banner as a number; absent when none.
-    // So does what the participants were told (§331): the kind and the count, never who.
-    outcome = {
-      ...(appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" }),
-      offered: offered > 0 ? String(offered) : undefined,
-      // The reserved places the window's move carried (§665): how many, to when, whether they were emailed — a count and an instant, never who.
-      ...(holdsMoved.moved > 0
-        ? {
-            moved: String(holdsMoved.moved),
-            movedTo: holdsMoved.to?.toISOString(),
-            movedSent: holdsMoved.queued > 0 ? "1" : undefined,
-          }
-        : {}),
-      // The save that announced the place (§328): the banner says it is public now. A flag, never
-      // the place itself — nothing typed goes in a URL. When the organizer also told the
-      // participants, the notice's own banner says so, and "nobody was written to" would be false.
-      announced: placeAnnounced && notice?.kind !== "update" ? "1" : undefined,
-      ...(notice?.kind === "update" ? { notice: "update", queued: String(notice.queued) } : {}),
-      ...(notice?.kind === "nothingToTell" ? { notice: "none" } : {}),
-      ...(notice?.kind === "cancelled" ? { notice: notice.notified ? "cancelled" : "cancelledQuiet", queued: String(notice.queued) } : {}),
-      // An event with no registrations here had no box to untick: its own sentence, not "unticked".
-      ...(notice?.kind === "cancelledNobodyToTell" ? { notice: "cancelledNobody" } : {}),
+    let outcome: {
+      error?: string;
+      saved?: string;
+      applied?: string;
+      offered?: string;
+      announced?: string;
+      notice?: string;
+      queued?: string;
+      moved?: string;
+      movedTo?: string;
+      movedSent?: string;
     };
-  } catch (error) {
-    return { ...refused(error, form, { fieldNames: eventFormFieldNames }), ...hiddenListOutcome(error, locale), ...(await savedCheckpointsOutcome(error, locale)) };
-  }
+    try {
+      const actor = await requireStaff();
+      press.by(actor.id);
+      const editsEventRow = text(form, "event.expectedVersion") !== "";
+      // Which dates of the series (§130, §134): the dates ticked in the editor's header, or a
+      // preset word; absent elsewhere. Ticks win — they are what the organizer sees.
+      const ticked = form.getAll("dates").filter((value): value is string => typeof value === "string" && value !== "");
+      const scope = text(form, "scope");
 
-  return backTo(path, outcome);
+      const { appliedTo, offered, placeAnnounced, holdsMoved, notice } = await saveEventAndTranslations(getDb(), {
+        actor,
+        eventId,
+        fields: editsEventRow ? eventFieldsFrom(form) : undefined,
+        expectedVersion: editsEventRow ? Number(text(form, "event.expectedVersion")) : undefined,
+        translations: routing.locales
+          .map((contentLocale) => translationFieldsFrom(form, contentLocale))
+          .filter((entry) => entry !== undefined),
+        acknowledgeLiveEdit: form.get("acknowledgeLiveEdit") === "on",
+        scope: ticked.length > 0 ? { ids: ticked } : SERIES_EDIT_SCOPES.includes(scope as (typeof SERIES_EDIT_SCOPES)[number]) ? (scope as SeriesEditScope) : "this",
+        /*
+          "Anunță participanții despre schimbare" and its note, and the cancellation's reason and
+          its "tell them" box (§331). Read as posted and judged by the service — the role, the
+          reason required on a cancellation, the five hundred characters, both languages or
+          neither (§354, bilingual everywhere) — so a replayed POST meets the same rules as the
+          page. An unticked box posts nothing, which is "no". The note and the reason are one box
+          per language; the cancellation is there when either of its boxes was drawn.
+        */
+        notice: { notify: form.get("notice.notify") === "on", note: { ro: text(form, "notice.noteRo"), en: text(form, "notice.noteEn") } },
+        cancellation:
+          form.has("cancel.reasonRo") || form.has("cancel.reasonEn")
+            ? { reason: { ro: text(form, "cancel.reasonRo"), en: text(form, "cancel.reasonEn") }, notify: form.get("cancel.notify") === "on" }
+            : undefined,
+        // The Locul box ran in the browser (§362): its English name is the organizer's as it stands.
+        placeNamesAsTyped: form.get(PLACE_NAMES_AS_TYPED_FIELD) === "1",
+      });
+      // A raised capacity's offers (§147) ride on the same banner as a number; absent when none.
+      // So does what the participants were told (§331): the kind and the count, never who.
+      outcome = {
+        ...(appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" }),
+        offered: offered > 0 ? String(offered) : undefined,
+        // The reserved places the window's move carried (§665): how many, to when, whether they were emailed — a count and an instant, never who.
+        ...(holdsMoved.moved > 0
+          ? {
+              moved: String(holdsMoved.moved),
+              movedTo: holdsMoved.to?.toISOString(),
+              movedSent: holdsMoved.queued > 0 ? "1" : undefined,
+            }
+          : {}),
+        // The save that announced the place (§328): the banner says it is public now. A flag, never
+        // the place itself — nothing typed goes in a URL. When the organizer also told the
+        // participants, the notice's own banner says so, and "nobody was written to" would be false.
+        announced: placeAnnounced && notice?.kind !== "update" ? "1" : undefined,
+        ...(notice?.kind === "update" ? { notice: "update", queued: String(notice.queued) } : {}),
+        ...(notice?.kind === "nothingToTell" ? { notice: "none" } : {}),
+        ...(notice?.kind === "cancelled" ? { notice: notice.notified ? "cancelled" : "cancelledQuiet", queued: String(notice.queued) } : {}),
+        // An event with no registrations here had no box to untick: its own sentence, not "unticked".
+        ...(notice?.kind === "cancelledNobodyToTell" ? { notice: "cancelledNobody" } : {}),
+      };
+    } catch (error) {
+      return { ...refused(error, form, { fieldNames: eventFormFieldNames }), ...hiddenListOutcome(error, locale), ...(await savedCheckpointsOutcome(error, locale)) };
+    }
+
+    return backTo(path, outcome);
+  });
 }
 
 /**
@@ -1118,19 +1123,23 @@ export async function deleteEliteEntryAction(_previous: FormOutcome | null, form
  * from another tab is exactly what the owner asked forms to stop making people do.
  */
 export async function sendEventThanksAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const eventId = text(form, "eventId");
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("events.thanks", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const eventId = text(form, "eventId");
 
-  let outcome: { error?: string; saved?: string; recipients?: string };
-  try {
-    const actor = await requireStaff();
-    const result = await sendEventThanks(getDb(), actor, { eventId, url: text(form, "url") }, new Date());
-    // The real rows (§30): the number the dialog stated, never the test rows written to beside them.
-    outcome = { saved: "thanksSent", recipients: String(result.real) };
-  } catch (error) {
-    return refused(error, form);
-  }
-  return backTo(editorPath(locale, eventId), outcome);
+    let outcome: { error?: string; saved?: string; recipients?: string };
+    try {
+      const actor = await requireStaff();
+      press.by(actor.id);
+      const result = await sendEventThanks(getDb(), actor, { eventId, url: text(form, "url") }, new Date());
+      // The real rows (§30): the number the dialog stated, never the test rows written to beside them.
+      outcome = { saved: "thanksSent", recipients: String(result.real) };
+    } catch (error) {
+      return refused(error, form);
+    }
+    return backTo(editorPath(locale, eventId), outcome);
+  });
 }
 
 /**
@@ -1141,26 +1150,30 @@ export async function sendEventThanksAction(_previous: FormOutcome | null, form:
  * said before the press (§592).
  */
 export async function resendDeclarationToAllAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const eventId = text(form, "eventId");
-  let outcome: Record<string, string>;
-  try {
-    const actor = await requireStaffCapability(canManageRegistrations);
-    const result = await resendDeclarationToAllPending(getDb(), actor, eventId, new Date());
-    outcome = {
-      saved: "declarationResent",
-      queued: String(result.queued),
-      recent: String(result.skippedRecent),
-      limited: String(result.skippedLimited),
-      testQueued: String(result.test.queued),
-    };
-  } catch (error) {
-    if (!isDomainError(error)) throw error;
-    outcome = {
-      error: error.fields.includes(BULK_RESEND_CLOSED) ? "BULK_RESEND_CLOSED" : error.fields.includes(BULK_RESEND_LIMITED) ? "BULK_RESEND_LIMITED" : error.code,
-    };
-  }
-  return backTo(`${editorPath(locale, eventId)}`, outcome);
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("events.declarationResendAll", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const eventId = text(form, "eventId");
+    let outcome: Record<string, string>;
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      const result = await resendDeclarationToAllPending(getDb(), actor, eventId, new Date());
+      outcome = {
+        saved: "declarationResent",
+        queued: String(result.queued),
+        recent: String(result.skippedRecent),
+        limited: String(result.skippedLimited),
+        testQueued: String(result.test.queued),
+      };
+    } catch (error) {
+      if (!isDomainError(error)) throw error;
+      outcome = {
+        error: error.fields.includes(BULK_RESEND_CLOSED) ? "BULK_RESEND_CLOSED" : error.fields.includes(BULK_RESEND_LIMITED) ? "BULK_RESEND_LIMITED" : error.code,
+      };
+    }
+    return backTo(`${editorPath(locale, eventId)}`, outcome);
+  });
 }
 
 export async function deleteEventAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -1226,30 +1239,34 @@ export async function hardDeleteEventAction(_previous: FormOutcome | null, form:
 
 /** Test rows through the real queue (§30). A refused count comes back as typed (§315). */
 export async function addTestRegistrationsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const eventId = text(form, "eventId");
-  const path = editorPath(locale, eventId);
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("events.testRegistrations", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const eventId = text(form, "eventId");
+    const path = editorPath(locale, eventId);
 
-  let stoppedAt: number | null = null;
-  try {
-    const actor = await requireStaffCapability(canManageTestRegistrations);
-    const result = await addTestRegistrations(getDb(), actor, {
-      eventId,
-      count: Number(text(form, "count")),
-      locale,
-    });
-    if (result.stoppedAtWaitlistLimit) stoppedAt = result.created;
-  } catch (error) {
-    // The places and the waiting list full before the first row (§348): said as such, the count
-    // still in its box — the marker is a rule about the event, not a box the summary could name.
-    const full = waitlistRefusalCode(error);
-    const refusal = refused(error, form);
-    return full ? { ...refusal, error: full, fields: [] } : refusal;
-  }
+    let stoppedAt: number | null = null;
+    try {
+      const actor = await requireStaffCapability(canManageTestRegistrations);
+      press.by(actor.id);
+      const result = await addTestRegistrations(getDb(), actor, {
+        eventId,
+        count: Number(text(form, "count")),
+        locale,
+      });
+      if (result.stoppedAtWaitlistLimit) stoppedAt = result.created;
+    } catch (error) {
+      // The places and the waiting list full before the first row (§348): said as such, the count
+      // still in its box — the marker is a rule about the event, not a box the summary could name.
+      const full = waitlistRefusalCode(error);
+      const refusal = refused(error, form);
+      return full ? { ...refusal, error: full, fields: [] } : refusal;
+    }
 
-  // Stopped part-way at the waiting list's limit (§348): how many went in, and why the rest did not.
-  if (stoppedAt !== null) return backTo(path, { saved: "testRegistrationsStopped", created: String(stoppedAt) });
-  return backTo(path, { saved: "testRegistrationsAdded" });
+    // Stopped part-way at the waiting list's limit (§348): how many went in, and why the rest did not.
+    if (stoppedAt !== null) return backTo(path, { saved: "testRegistrationsStopped", created: String(stoppedAt) });
+    return backTo(path, { saved: "testRegistrationsAdded" });
+  });
 }
 
 export async function removeTestRegistrationsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -1351,45 +1368,49 @@ export async function eraseGroupRunDeclarationsAction(_previous: FormOutcome | n
 
 /** Adding a person (§123); a member may get a level in the same step (§811, §817). A refused address or name comes back in its box (§315). */
 export async function inviteStaffAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const path = getPathname({ locale, href: "/admin/staff" });
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("club.staffInvite", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const path = getPathname({ locale, href: "/admin/staff" });
 
-  let outcome: Record<string, string | undefined>;
-  let toast: Record<string, string | undefined>;
-  try {
-    // The coarse gate first, so a non-Administrator never reaches the service; the service
-    // asserts it again for callers that are not this action.
-    const actor = await requireStaffCapability(canManageStaff);
-    // «Nivel» (§811, §817): chosen under the role «Membru»; «—» posts nothing. The service refuses a level on any other
-    // role, a hidden one and an unknown id, naming the box.
-    const tierId = text(form, "tierId").trim();
-    const member = await inviteStaffUser(
-      getDb(),
-      actor,
-      {
-        email: text(form, "email"),
-        displayName: text(form, "displayName"),
-        role: text(form, "role") as StaffRole,
-        preferredLocale: toLocale(form.get("preferredLocale")),
-      },
-      { tierId: tierId === "" ? null : tierId },
-    );
-    // The allowlist row exists; now the account and its invitation, where Zitadel is the
-    // provider and a key is set (§123). Locally the switcher is the provider: nothing to send.
-    const invite =
-      env.STAFF_AUTH_MODE === "provider"
-        ? await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
-        : ({ kind: "unconfigured" } as const);
-    outcome = { saved: "invited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
-    // Without Zitadel as the provider the allowlist row is the whole verb, and "added to the team"
-    // is true: the toast says so. Under the provider `unconfigured` means no key, and the banner
-    // says why nobody was invited — no green tick (`notice.ts`, PROVIDER_DONE).
-    toast = env.STAFF_AUTH_MODE === "provider" ? outcome : { saved: "invited" };
-  } catch (error) {
-    return refused(error, form);
-  }
+    let outcome: Record<string, string | undefined>;
+    let toast: Record<string, string | undefined>;
+    try {
+      // The coarse gate first, so a non-Administrator never reaches the service; the service
+      // asserts it again for callers that are not this action.
+      const actor = await requireStaffCapability(canManageStaff);
+      press.by(actor.id);
+      // «Nivel» (§811, §817): chosen under the role «Membru»; «—» posts nothing. The service refuses a level on any other
+      // role, a hidden one and an unknown id, naming the box.
+      const tierId = text(form, "tierId").trim();
+      const member = await inviteStaffUser(
+        getDb(),
+        actor,
+        {
+          email: text(form, "email"),
+          displayName: text(form, "displayName"),
+          role: text(form, "role") as StaffRole,
+          preferredLocale: toLocale(form.get("preferredLocale")),
+        },
+        { tierId: tierId === "" ? null : tierId },
+      );
+      // The allowlist row exists; now the account and its invitation, where Zitadel is the
+      // provider and a key is set (§123). Locally the switcher is the provider: nothing to send.
+      const invite =
+        env.STAFF_AUTH_MODE === "provider"
+          ? await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
+          : ({ kind: "unconfigured" } as const);
+      outcome = { saved: "invited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
+      // Without Zitadel as the provider the allowlist row is the whole verb, and "added to the team"
+      // is true: the toast says so. Under the provider `unconfigured` means no key, and the banner
+      // says why nobody was invited — no green tick (`notice.ts`, PROVIDER_DONE).
+      toast = env.STAFF_AUTH_MODE === "provider" ? outcome : { saved: "invited" };
+    } catch (error) {
+      return refused(error, form);
+    }
 
-  return backTo(path, outcome, toast);
+    return backTo(path, outcome, toast);
+  });
 }
 
 /**
@@ -1406,91 +1427,99 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
  * failed addresses retries their accounts, with no second row and no second platform invitation.
  */
 export async function inviteMembersAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const path = getPathname({ locale, href: "/admin/staff" });
-  const rows = parseMemberRows(text(form, "members"));
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("club.membersInvite", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const path = getPathname({ locale, href: "/admin/staff" });
+    const rows = parseMemberRows(text(form, "members"));
 
-  let outcome: Record<string, string | undefined>;
-  let toast: Record<string, string | undefined>;
-  try {
-    const actor = await requireStaffCapability(canManageStaff);
-    // «Nivel» (§811): one level for every member this press adds; none by default.
-    const tierId = text(form, "tierId").trim();
-    const { added, existing } = await inviteMembers(getDb(), actor, {
-      rows,
-      preferredLocale: toLocale(form.get("preferredLocale")),
-      tierId: tierId === "" ? null : tierId,
-    });
-    const lines: MemberAccountLine[] =
-      env.STAFF_AUTH_MODE === "provider"
-        ? await createMemberAccounts([...added, ...existing], (member) =>
-            inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale }),
+    let outcome: Record<string, string | undefined>;
+    let toast: Record<string, string | undefined>;
+    try {
+      const actor = await requireStaffCapability(canManageStaff);
+      press.by(actor.id);
+      // «Nivel» (§811): one level for every member this press adds; none by default.
+      const tierId = text(form, "tierId").trim();
+      const { added, existing } = await inviteMembers(getDb(), actor, {
+        rows,
+        preferredLocale: toLocale(form.get("preferredLocale")),
+        tierId: tierId === "" ? null : tierId,
+      });
+      const lines: MemberAccountLine[] =
+        env.STAFF_AUTH_MODE === "provider"
+          ? await createMemberAccounts([...added, ...existing], (member) =>
+              inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale }),
+            )
+          : [];
+      const counts = countAccountLines(lines);
+      const report = await recordAuditEvent(getDb(), {
+        actorStaffUserId: actor.id,
+        action: "staff.members_invited",
+        entityType: "staff_user",
+        entityId: null,
+        metadata: { added: added.length, existing: existing.length, ...(tierId !== "" ? { tierId } : {}), ...counts, accounts: lines },
+        now: new Date(),
+      });
+      outcome = {
+        saved: "membersInvited",
+        count: String(added.length),
+        ...(existing.length > 0 ? { retried: String(existing.length) } : {}),
+        ...(counts.failed > 0 ? { failed: String(counts.failed) } : {}),
+        ...(lines.length > 0 ? { report } : {}),
+      };
+      // A green tick only when every account exists; otherwise the banner and the report say which did not.
+      toast = counts.failed > 0 ? {} : outcome;
+    } catch (error) {
+      const refusal = refused(error, form);
+      if (refusal.error === "VALIDATION_ERROR") {
+        const invalid = invalidAddresses(rows.map((row) => row.email));
+        if (invalid.length > 0) return { ...refusal, error: "INVALID_ADDRESSES", errorValues: { addresses: invalid.join(", ") } };
+        if (rows.length > MEMBER_ROWS_MAX) return { ...refusal, error: "TOO_MANY_ADDRESSES", errorValues: { max: String(MEMBER_ROWS_MAX) } };
+      }
+      if (refusal.error === "CONFLICT") {
+        const onTeam = (
+          await findStaffUsersAmong(
+            getDb(),
+            rows.map((row) => row.email),
           )
-        : [];
-    const counts = countAccountLines(lines);
-    const report = await recordAuditEvent(getDb(), {
-      actorStaffUserId: actor.id,
-      action: "staff.members_invited",
-      entityType: "staff_user",
-      entityId: null,
-      metadata: { added: added.length, existing: existing.length, ...(tierId !== "" ? { tierId } : {}), ...counts, accounts: lines },
-      now: new Date(),
-    });
-    outcome = {
-      saved: "membersInvited",
-      count: String(added.length),
-      ...(existing.length > 0 ? { retried: String(existing.length) } : {}),
-      ...(counts.failed > 0 ? { failed: String(counts.failed) } : {}),
-      ...(lines.length > 0 ? { report } : {}),
-    };
-    // A green tick only when every account exists; otherwise the banner and the report say which did not.
-    toast = counts.failed > 0 ? {} : outcome;
-  } catch (error) {
-    const refusal = refused(error, form);
-    if (refusal.error === "VALIDATION_ERROR") {
-      const invalid = invalidAddresses(rows.map((row) => row.email));
-      if (invalid.length > 0) return { ...refusal, error: "INVALID_ADDRESSES", errorValues: { addresses: invalid.join(", ") } };
-      if (rows.length > MEMBER_ROWS_MAX) return { ...refusal, error: "TOO_MANY_ADDRESSES", errorValues: { max: String(MEMBER_ROWS_MAX) } };
-    }
-    if (refusal.error === "CONFLICT") {
-      const onTeam = (
-        await findStaffUsersAmong(
-          getDb(),
-          rows.map((row) => row.email),
         )
-      )
-        .filter((row) => isBackofficeRole(row.role))
-        .map((row) => row.email);
-      if (onTeam.length > 0) return { ...refusal, error: "MEMBERS_ON_TEAM", errorValues: { addresses: onTeam.join(", ") } };
+          .filter((row) => isBackofficeRole(row.role))
+          .map((row) => row.email);
+        if (onTeam.length > 0) return { ...refusal, error: "MEMBERS_ON_TEAM", errorValues: { addresses: onTeam.join(", ") } };
+      }
+      return refusal;
     }
-    return refusal;
-  }
 
-  return backTo(path, outcome, toast);
+    return backTo(path, outcome, toast);
+  });
 }
 
 /** The invitation again, for somebody whose first one is lost (§123). */
 export async function resendStaffInviteAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const path = getPathname({ locale, href: "/admin/staff" });
-  let outcome: Record<string, string | undefined>;
-  // The toast's sentence: «pleacă acum» when the press sent it past the scheduled pass (§540).
-  let toast: Record<string, string | undefined> | undefined;
-  try {
-    const actor = await requireStaffCapability(canManageStaff);
-    // The platform's own invitation again (§141), then Zitadel's password link where the key is set (§123).
-    // «Trimite acum» or «Pune la coadă» (§540): the dialog's answer, the queue when none was offered.
-    const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
-    const member = await resendStaffInvitation(getDb(), actor, text(form, "email"), new Date(), delivery);
-    const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(member.email) : ({ kind: "unconfigured" } as const);
-    outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
-    // The provider's answer rides along: a failed or unconfigured Zitadel invite holds the green toast back (§171, §288).
-    if (delivery === "now") toast = { ...outcome, saved: "reinvitedNow" };
-  } catch (error) {
-    // A «now» the day's allowance cannot hold says so in its own sentence (§80, §540).
-    outcome = isDomainError(error) ? { error: sendNowRefusalCode(error) } : outcomeOf(error);
-  }
-  return backTo(path, outcome, toast);
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("club.staffReinvite", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const path = getPathname({ locale, href: "/admin/staff" });
+    let outcome: Record<string, string | undefined>;
+    // The toast's sentence: «pleacă acum» when the press sent it past the scheduled pass (§540).
+    let toast: Record<string, string | undefined> | undefined;
+    try {
+      const actor = await requireStaffCapability(canManageStaff);
+      press.by(actor.id);
+      // The platform's own invitation again (§141), then Zitadel's password link where the key is set (§123).
+      // «Trimite acum» or «Pune la coadă» (§540): the dialog's answer, the queue when none was offered.
+      const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
+      const member = await resendStaffInvitation(getDb(), actor, text(form, "email"), new Date(), delivery);
+      const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(member.email) : ({ kind: "unconfigured" } as const);
+      outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
+      // The provider's answer rides along: a failed or unconfigured Zitadel invite holds the green toast back (§171, §288).
+      if (delivery === "now") toast = { ...outcome, saved: "reinvitedNow" };
+    } catch (error) {
+      // A «now» the day's allowance cannot hold says so in its own sentence (§80, §540).
+      outcome = isDomainError(error) ? { error: sendNowRefusalCode(error) } : outcomeOf(error);
+    }
+    return backTo(path, outcome, toast);
+  });
 }
 
 /**

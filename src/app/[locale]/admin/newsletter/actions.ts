@@ -10,6 +10,7 @@ import { parseSubscriberListQuery, subscriberListParams } from "@/modules/newsle
 import { type NewsletterPreview, previewNewsletter } from "@/modules/newsletter/preview";
 import { sendNewsletter, unsubscribeNewsletterSubscriber, withdrawNewsletterAddress } from "@/modules/newsletter/service";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
+import { inEmailPress } from "@/modules/notifications/press";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
@@ -29,32 +30,36 @@ function localeOf(form: FormData): Locale {
  * toast say which it was.
  */
 export async function sendNewsletterAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = localeOf(form);
-  const path = getPathname({ locale, href: "/admin/newsletter" });
-  const posted = (name: string) => (typeof form.get(name) === "string" ? String(form.get(name)) : "");
-  let outcome: string;
-  try {
-    const actor = await requireStaff();
-    const result = await sendNewsletter(
-      getDb(),
-      actor,
-      {
-        topic: posted("topic"),
-        subject: { ro: posted("subjectRo"), en: posted("subjectEn") },
-        // The two rich editors' hidden boxes (§550): each language's document as JSON.
-        body: { ro: posted("newsletterBodyRo"), en: posted("newsletterBodyEn") },
-        sendId: posted("sendId"),
-      },
-      new Date(),
-    );
-    if (result.kind === "nobody") return refused(new DomainError("VALIDATION_ERROR", "nobody is subscribed to this topic yet", ["topic"]), form);
-    outcome = result.kind === "queued" ? `saved=newsletterSent&recipients=${result.recipients}` : "saved=newsletterDuplicate";
-    await flashOutcome(result.kind === "queued" ? { saved: "newsletterSent", recipients: String(result.recipients) } : { saved: "newsletterDuplicate" });
-  } catch (error) {
-    return refused(error, form);
-  }
-  revalidatePath(path);
-  redirect(`${path}?${outcome}#admin-alert`);
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("club.newsletter", async (press) => {
+    const locale = localeOf(form);
+    const path = getPathname({ locale, href: "/admin/newsletter" });
+    const posted = (name: string) => (typeof form.get(name) === "string" ? String(form.get(name)) : "");
+    let outcome: string;
+    try {
+      const actor = await requireStaff();
+      press.by(actor.id);
+      const result = await sendNewsletter(
+        getDb(),
+        actor,
+        {
+          topic: posted("topic"),
+          subject: { ro: posted("subjectRo"), en: posted("subjectEn") },
+          // The two rich editors' hidden boxes (§550): each language's document as JSON.
+          body: { ro: posted("newsletterBodyRo"), en: posted("newsletterBodyEn") },
+          sendId: posted("sendId"),
+        },
+        new Date(),
+      );
+      if (result.kind === "nobody") return refused(new DomainError("VALIDATION_ERROR", "nobody is subscribed to this topic yet", ["topic"]), form);
+      outcome = result.kind === "queued" ? `saved=newsletterSent&recipients=${result.recipients}` : "saved=newsletterDuplicate";
+      await flashOutcome(result.kind === "queued" ? { saved: "newsletterSent", recipients: String(result.recipients) } : { saved: "newsletterDuplicate" });
+    } catch (error) {
+      return refused(error, form);
+    }
+    revalidatePath(path);
+    redirect(`${path}?${outcome}#admin-alert`);
+  });
 }
 
 /**

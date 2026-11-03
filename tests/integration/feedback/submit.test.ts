@@ -911,6 +911,8 @@ describe("§676 «Spune-ne ceva»", () => {
       payloadJson,
       idempotencyKey: "t:thanks",
       requestedByStaffUserId: null,
+      cause: null,
+      pressId: null,
       isManualResend: false,
       status: "PROCESSING" as const,
       attemptCount: 1,

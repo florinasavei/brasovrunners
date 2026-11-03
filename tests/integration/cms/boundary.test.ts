@@ -240,6 +240,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/settings/costs",
       "/admin/settings/deadlines",
       "/admin/settings/emails",
+      // «Emailuri azi»: the day's emails with the names, under «Emailuri» — the Administrator's, by hand.
+      "/admin/settings/emails/today",
       "/admin/settings/platform",
       // «Magazin» (§687): the members' shop, its own section; since §697 a product list with «Comenzi» and
       // «Setări» as tabs and one page per product, each written here by hand.

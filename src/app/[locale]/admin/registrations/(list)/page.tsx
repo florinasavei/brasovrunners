@@ -6,6 +6,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
+import MuiLink from "@mui/material/Link";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -1466,6 +1467,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Typography>
         )}
       </Stack>
+      {/* «Emailuri azi»: what left today and what waits, with the names — the Administrator's, like this panel's button. */}
+      {mayManage && (
+        <Typography variant="body2" sx={{ mt: 1.5 }}>
+          <MuiLink href={getPathname({ locale, href: "/admin/settings/emails/today" })} sx={{ ...TAP_TARGET, display: "inline-flex", alignItems: "center" }} data-testid="outbox-journal-link">
+            {t("emails.today.queueLink")}
+          </MuiLink>
+        </Typography>
+      )}
       </Panel>
 
       {/*

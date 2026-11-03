@@ -118,6 +118,8 @@ describe("BR-REQ-080-01 the reminder's weather follows «Vremea» (§666)", () =
     payloadJson: {},
     idempotencyKey: `test:${id}`,
     requestedByStaffUserId: null,
+    cause: null,
+    pressId: null,
     isManualResend: false,
     status: "PROCESSING",
     attemptCount: 1,

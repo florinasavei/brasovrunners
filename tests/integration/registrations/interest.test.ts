@@ -248,6 +248,8 @@ describe("BR-REQ-011-01 criterion 13 — the interest list and REGISTRATION_OPEN
         payloadJson: { eventId: event.id },
         idempotencyKey: "interest:x:opened",
         requestedByStaffUserId: null,
+        cause: null,
+        pressId: null,
         isManualResend: false,
         status: "PROCESSING",
         attemptCount: 1,

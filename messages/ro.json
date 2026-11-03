@@ -7344,7 +7344,8 @@
           "sending": "Se trimite acum.",
           "never": "Nu mai pleacă singur: toate încercările s-au consumat.",
           "held": "Ținut până {until}: o familie încă semnează. Apoi pleacă la trecerea următoare: {at} (estimat).",
-          "leavesNow": "Pleacă acum, fără să aștepte trecerea programată."
+          "leavesNow": "Pleacă acum, fără să aștepte trecerea programată.",
+          "reset": "Pleacă după ce Mailgun reia: {at} (estimat)."
         },
         "lastError": "Ultimul răspuns al furnizorului: {error}",
         "manual": "Retrimis manual",
@@ -7385,6 +7386,120 @@
           "pending": "Se pun înapoi…",
           "done": "Emailuri eșuate puse înapoi în coadă: {count}."
         }
+      },
+      "causes": {
+        "registrations": {
+          "resend": "Retrimite emailul",
+          "reminder": "Trimite reminderul",
+          "familyResend": "Retrimite familiei",
+          "givePlaceNow": "Dă-i un loc acum",
+          "offer": "Trimite-i oferta",
+          "confirmPaper": "Confirmă pe hârtie",
+          "givePlace": "Dă-i un loc",
+          "setBib": "Numărul de concurs dat de mână",
+          "specialGuests": "Lista de invitați speciali",
+          "cancel": "Anulează înscrierea",
+          "bulkCancel": "Anulează înscrierile bifate",
+          "erase": "Șterge definitiv înscrierea",
+          "bulkErase": "Șterge definitiv înscrierile bifate",
+          "create": "Înscriere adăugată de echipă",
+          "waitlistAdd": "Adaugă pe lista de așteptare",
+          "offerNow": "Oferă-i un loc acum",
+          "reserveMove": "Mută pe lista oficială",
+          "invite": "Trimite invitații",
+          "invitationResend": "Retrimite invitația",
+          "invitationWithdraw": "Retrage invitația",
+          "invitationsErase": "Șterge invitațiile persoanei"
+        },
+        "events": {
+          "save": "Salvează evenimentul",
+          "thanks": "Trimite mulțumirile",
+          "declarationResendAll": "Retrimite declarația tuturor care nu au semnat",
+          "participantMessage": "Mesaj către participanți",
+          "testRegistrations": "Adaugă înscrieri de test",
+          "importOver": "Importă peste eveniment"
+        },
+        "volunteers": {
+          "add": "Adaugă voluntarul",
+          "edit": "Modifică voluntarul",
+          "state": "Starea voluntarului",
+          "assign": "Dă-i un rol",
+          "unassign": "Ia-i rolul",
+          "agreementLink": "Trimite linkul contractului",
+          "agreementPaper": "Contract semnat pe hârtie",
+          "guardianLink": "Trimite linkul părintelui",
+          "guardianPaper": "Acordul părintelui, semnat pe hârtie",
+          "invite": "Trimite invitațiile de voluntar",
+          "invitationResend": "Retrimite invitația de voluntar"
+        },
+        "club": {
+          "newsletter": "Trimite newsletterul",
+          "staffInvite": "Adaugă în echipă",
+          "membersInvite": "Adaugă membrii",
+          "staffReinvite": "Retrimite invitația în echipă",
+          "shopPaid": "Marchează comanda plătită",
+          "shopOrderForMember": "Comandă pentru un membru"
+        },
+        "job": {
+          "registrationMaintenance": "întreținerea înscrierilor",
+          "emailOutbox": "trimiterea emailurilor"
+        }
+      },
+      "today": {
+        "title": "Emailuri azi",
+        "intro": "Fiecare email de azi, cu numele și adresa, grupat după apăsarea care l-a trimis.",
+        "tabLink": "Emailuri azi: ce a plecat și ce așteaptă, cu numele",
+        "queueLink": "Vezi ce a plecat azi",
+        "counts": "Plecate: {sent} · Așteaptă: {waiting} · Eșuate: {failed}",
+        "repeatsTitle": "Au primit același email de mai multe ori azi:",
+        "repeat": "{who} — „{type}”, {times}",
+        "times": {
+          "one": "o dată azi",
+          "few": "de {count} ori azi",
+          "other": "de {count} de ori azi"
+        },
+        "dayCount": {
+          "one": "1 email azi",
+          "few": "{count} emailuri azi",
+          "other": "{count} de emailuri azi"
+        },
+        "people": {
+          "one": "1 persoană",
+          "few": "{count} persoane",
+          "other": "{count} de persoane"
+        },
+        "lines": {
+          "one": "1 email",
+          "few": "{count} emailuri",
+          "other": "{count} de emailuri"
+        },
+        "waitingTitle": "Așteaptă acum",
+        "waitingNone": "Nu așteaptă niciun email.",
+        "departedTitle": "Au plecat azi",
+        "departedNone": "Niciun email nu a plecat azi.",
+        "press": {
+          "by": "{at} · {cause} · de {by}",
+          "cause": "{at} · {cause}",
+          "byOnly": "{at} · de {by}",
+          "job": "{at} · automat: {cause}",
+          "site": "De pe site"
+        },
+        "type": "„{type}”",
+        "typeAt": "„{type}” · {event}",
+        "toMany": "„{type}” către {people}",
+        "test": "Test",
+        "status": {
+          "sentToday": "A plecat la {at}",
+          "sentOn": "A plecat {at}",
+          "waiting": "Așteaptă",
+          "captured": "Nu a ajuns la nimeni (QA)",
+          "failed": "Eșuat",
+          "refused": "Refuzat"
+        },
+        "club": "+ {count} pentru căsuțele clubului",
+        "clubLine": "{address} — „{type}” — {state}",
+        "more": "Și încă {count}, mai vechi, neafișate aici.",
+        "footnote": "Un email care așteaptă poate fi retras înainte să plece: dispare de aici, fiindcă n-a plecat. Emailurile trimise de Zitadel nu trec prin coada noastră."
       },
       "copy": {
         "title": "Textul mesajului ({lang}) — cel implicit",
