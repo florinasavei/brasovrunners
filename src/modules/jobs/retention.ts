@@ -196,7 +196,7 @@ export type PruneCounts = {
   volunteerInvitations: number;
   /** A race's results rows deleted with its registrations, three years after the race (§808). */
   results: number;
-  /** A race's elite list, its names gone with its registrations, three years after the race (§NNN). */
+  /** A race's elite list, its names gone with its registrations, three years after the race (§895). */
   eliteEntries: number;
   /** Answers «Vin!» gone: thirty days after the event, seven unconfirmed, a cancelled event's at once (§811). */
   rsvps: number;
@@ -714,7 +714,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   });
 
   /*
-    A race's elite list (§NNN): a name the club typed to print on a bib, and the number it gave it — not a registration,
+    A race's elite list (§895): a name the club typed to print on a bib, and the number it gave it — not a registration,
     yet a real person's name. It goes by the race's registrations' clock: three years after the race, with the results
     above. The race's own row stays, so this is the only thing that takes the names before an event is deleted. No page
     shows them, so no cache needs telling.

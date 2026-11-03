@@ -1077,7 +1077,7 @@ async function backToEliteCard(locale: Locale, eventId: string, saved: "eliteAdd
 }
 
 /**
- * «Adaugă pe lista de elită» on the bib card's «Elită — doar numele pe BIB» (§NNN): one name, and a number when
+ * «Adaugă pe lista de elită» on the bib card's «Elită — doar numele pe BIB» (§895): one name, and a number when
  * the club typed one — printed on a bib, never a registration. The Administrator's (`canManageRegistrations`),
  * asked here at the door and again in the service (BR-REQ-060-01). A refusal keeps what was typed (§315); the
  * form is detached from the event's save form (`BibPrint.tsx#EliteBibForms`), so it posts nothing of the event.
@@ -1097,7 +1097,7 @@ export async function addEliteEntryAction(_previous: FormOutcome | null, form: F
   return backToEliteCard(locale, eventId, "eliteAdded");
 }
 
-/** «Șterge» on one line of the elite list (§NNN), behind the question that names it; the Administrator's. */
+/** «Șterge» on one line of the elite list (§895), behind the question that names it; the Administrator's. */
 export async function deleteEliteEntryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");

@@ -162,7 +162,7 @@ export const PANEL_GLYPHS = {
   bibProfile: TerrainIcon,
   bibFooter: VerticalAlignBottomIcon,
   bibMembers: CardMembershipIcon,
-  // «Elită» (§NNN): the race's elite runners, printed by name — a medal, the designer's section and the print card's list alike.
+  // «Elită» (§895): the race's elite runners, printed by name — a medal, the designer's section and the print card's list alike.
   bibElite: MilitaryTechIcon,
   print: PrintIcon,
   startList: GroupsIcon,

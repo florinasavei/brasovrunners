@@ -14,7 +14,7 @@ import { BIB_PICTURE_PRINT_DPI, bibProfilePictureExample, bibProfilePictureRatio
  *
  * The panel is seven folds, top to bottom as the number prints — «Antet», «Numărul», «Numele», «Profilul și
  * urgențele» (one block above the bottom band, wherever the sponsors go), «Subsol și sponsori», «Membrii», and «Elită»
- * (§NNN) for the elite bibs — each a heading with its glyph and a closed line, closed
+ * (§895) for the elite bibs — each a heading with its glyph and a closed line, closed
  * until opened; every field sits in the section it prints in, every picture place is a named sub-card
  * with its «Calitate» row inside it. Rendered as the server draws it, in both languages.
  */
@@ -98,7 +98,7 @@ describe("§759 the bib designer in named sections", () => {
     const order = SECTIONS.map((name) => html.indexOf(`data-testid="bib-section-${name}"`));
     expect(order.every((at) => at > -1)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
-    // «Elită» (§NNN) last: what the elite bibs carry besides the name.
+    // «Elită» (§895) last: what the elite bibs carry besides the name.
     const titles = ["Antet", "Numărul", "Numele", "Profilul și urgențele", "Subsol și sponsori", "Membrii", "Elită"];
     const glyphs = ["VerticalAlignTopIcon", "NumbersIcon", "BadgeIcon", "TerrainIcon", "VerticalAlignBottomIcon", "CardMembershipIcon", "MilitaryTechIcon"];
     SECTIONS.forEach((name, index) => {

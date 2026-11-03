@@ -240,7 +240,7 @@ export const BIB_LAYOUT = {
   stubWidth: 40,
   stubSize: 11,
   /**
-   * An elite bib (§NNN): the runner's name where the number goes, bold, as large as the number's area and the
+   * An elite bib (§895): the runner's name where the number goes, bold, as large as the number's area and the
    * card's width allow up to `eliteNameMaxSize` points (times the club's «Mărimea cifrelor»), on one line while
    * one line reaches `eliteNameOneLineMin` points, else on two (`bibEliteLayout`) — shrunk to fit, never cut. With
    * «Număr pe BIB-urile de elită» ticked and a number on the line, the number under the name at `eliteNumberSize`
@@ -585,7 +585,7 @@ export function bibNumberFit(digits: string, scale: number, areaHeight: number):
 }
 
 /**
- * An elite bib's name and number (§NNN), laid out once for both renderers: the lines' tops and the number's,
+ * An elite bib's name and number (§895), laid out once for both renderers: the lines' tops and the number's,
  * from the top of the number's area (`bibNumberArea` with no name strip), in points.
  */
 export type BibEliteLayout = {
@@ -598,7 +598,7 @@ export type BibEliteLayout = {
 };
 
 /**
- * Where an elite bib draws the name (§NNN; the owner: «where the big number goes it draws the NAME, large and
+ * Where an elite bib draws the name (§895; the owner: «where the big number goes it draws the NAME, large and
  * bold»): across the card less its inset, in the number's area, centred.
  *
  * - **One line** while the whole name fits the width and the height at `eliteNameOneLineMin` points or more — a

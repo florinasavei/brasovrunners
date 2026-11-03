@@ -6,7 +6,7 @@ import { addEliteEntry } from "@/modules/registrations/elite-list";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Elită — doar numele pe BIB» (§NNN; BR-REQ-038-01, BR-REQ-060-01): the sheet `GET /api/admin/events/<id>/bibs?elite=1`
+ * «Elită — doar numele pe BIB» (§895; BR-REQ-038-01, BR-REQ-060-01): the sheet `GET /api/admin/events/<id>/bibs?elite=1`
  * prints every name on the event's elite list, the file named `…-elite.pdf`, for the roles that read the bibs — the
  * Organizer and the Administrators — and nobody else; the preview's `elite=1` draws one elite bib with a sample name.
  */
@@ -24,7 +24,7 @@ vi.mock("@/modules/staff-identity/session", () => ({
 const { GET: sheet } = await import("@/app/api/admin/events/[id]/bibs/route");
 const { GET: preview } = await import("@/app/api/admin/events/[id]/bibs/preview/route");
 
-describe("§NNN the elite sheet's route", () => {
+describe("§895 the elite sheet's route", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let eventId: string;

@@ -23,9 +23,9 @@ export const BIB_ASSIGN_FORM = "bib-assign";
 export const BIB_DOWNLOAD_FORM = "bib-download";
 /** The print of the desk's spares (§444): a POST that reserves them, then the sheet. */
 export const BIB_SPARES_FORM = "bib-spares";
-/** «Adaugă pe lista de elită» (§NNN): a detached form beside the save form (`EliteBibForms`). */
+/** «Adaugă pe lista de elită» (§895): a detached form beside the save form (`EliteBibForms`). */
 export const BIB_ELITE_ADD_FORM = "bib-elite-add";
-/** Each elite line's «Șterge» (§NNN): one small form per line beside the save form, asked first (`BibPrintForms`). */
+/** Each elite line's «Șterge» (§895): one small form per line beside the save form, asked first (`BibPrintForms`). */
 export function bibEliteDeleteForm(entryId: string): string {
   return `bib-elite-delete-${entryId}`;
 }
@@ -46,13 +46,13 @@ type Props = {
    * number the next print would reserve — the number the confirmation names.
    */
   spares?: SpareCard | null;
-  /** «Elită — doar numele pe BIB» (§NNN): the race's elite list, its sheet and its sample; absent where no bib prints. */
+  /** «Elită — doar numele pe BIB» (§895): the race's elite list, its sheet and its sample; absent where no bib prints. */
   elite?: EliteCard | null;
   /** Back from the elite card's add or delete (`?saved=eliteAdded|eliteDeleted`): this card and the elite fold open by themselves. */
   eliteSaved?: boolean;
 };
 
-/** What the elite section shows (§NNN), read by the page (`elite-list.ts#listEliteEntries`). */
+/** What the elite section shows (§895), read by the page (`elite-list.ts#listEliteEntries`). */
 export type EliteCard = {
   /** The names in the order typed, with the number the club gave each, if any. */
   entries: ReadonlyArray<{ id: string; name: string; bibNumber: number | null }>;
@@ -146,7 +146,7 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
 }
 
 /**
- * «Elită — doar numele pe BIB» (§NNN; the owner, 2026-11-03, «Listă separată»): the race's elite runners as a list
+ * «Elită — doar numele pe BIB» (§895; the owner, 2026-11-03, «Listă separată»): the race's elite runners as a list
  * of names, each printed with the **name where the number goes** — not registrations: no place, no email, no
  * declaration, no count. Beside the spares, a level-5 fold of the print card, closed, how many on its closed line.
  *
@@ -252,7 +252,7 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
 }
 
 /**
- * The detached form behind «Adaugă pe lista de elită» (§NNN): its state wraps the event's save form, its `<form>`
+ * The detached form behind «Adaugă pe lista de elită» (§895): its state wraps the event's save form, its `<form>`
  * stands right after it (`DetachedActionForm`, as «Puncte pe traseu» does, §763) — HTML forms cannot nest — so the
  * add posts its two boxes and none of the event's, and a refusal keeps them. Only for the Administrator on an
  * event that prints bibs; otherwise the save form alone.
@@ -375,7 +375,7 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
           </Panel>
         )}
         {spares && <SpareBibsSection spares={spares} mayReserve={mayAssign} />}
-        {/* «Elită» (§NNN) beside the spares: names printed as bibs, never registrations. */}
+        {/* «Elită» (§895) beside the spares: names printed as bibs, never registrations. */}
         {elite && <EliteBibsSection elite={elite} mayEdit={mayAssign} saved={eliteSaved} />}
         {/* Every bib as it will print, on its own page (§94): drawn on request. */}
         {total > 0 && (
@@ -420,7 +420,7 @@ export async function BibPrintForms({
   /** `reserveSpareBibsAction` (§444), with the first number the question names; absent, no form. */
   sparesAction?: ActionFormAction;
   sparesFrom?: number | null;
-  /** `deleteEliteEntryAction` (§NNN), and the lines it may delete — one small form each; absent, none. */
+  /** `deleteEliteEntryAction` (§895), and the lines it may delete — one small form each; absent, none. */
   eliteDeleteAction?: ActionFormAction;
   eliteEntries?: ReadonlyArray<{ id: string; name: string }>;
   cancelLabel: string;

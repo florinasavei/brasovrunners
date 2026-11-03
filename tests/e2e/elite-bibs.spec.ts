@@ -5,7 +5,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 
 /**
- * §NNN, BR-REQ-038-01, BR-REQ-060-01 — «Elită — doar numele pe BIB» (the owner, 2026-11-03, «Listă separată»): the race's
+ * §895, BR-REQ-038-01, BR-REQ-060-01 — «Elită — doar numele pe BIB» (the owner, 2026-11-03, «Listă separată»): the race's
  * elite runners as a list of names under «Alocare și tipărire», printed with the name where the number goes. Not
  * registrations.
  *
@@ -77,7 +77,7 @@ async function openEliteCard(page: Page): Promise<Locator> {
   return card;
 }
 
-test.describe("§NNN «Elită — doar numele pe BIB»", () => {
+test.describe("§895 «Elită — doar numele pe BIB»", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("the Administrator adds, is refused a number already used, saves the event without posting a name, and deletes", async ({ page }) => {

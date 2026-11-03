@@ -11,7 +11,7 @@ import { bibNumberInUse } from "./bibs";
 import { isSpareNumber, spareBandOf } from "./domain/spare-bibs";
 
 /**
- * «Elită — doar numele pe BIB» (§NNN; the owner, 2026-11-03, choosing «Listă separată»): a race's elite runners
+ * «Elită — doar numele pe BIB» (§895; the owner, 2026-11-03, choosing «Listă separată»): a race's elite runners
  * as a list of names, printed as bibs with the name where the number usually is (`bibs-pdf.ts`, `bib-image.tsx`).
  *
  * **Not registrations.** No participant, no address, no declaration, no place, no queue, no email: nothing here

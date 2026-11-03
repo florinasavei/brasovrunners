@@ -90,7 +90,7 @@ export function seriesBounds(band: { start: number; hiddenStart: number | null }
  * once on this database (the maintenance job), so a number shown before this release is never
  * drawn for somebody else in the minutes between the deploy and that run.
  *
- * And the numbers the club typed on «Elită — doar numele pe BIB» (§NNN): an elite bib can print its
+ * And the numbers the club typed on «Elită — doar numele pe BIB» (§895): an elite bib can print its
  * line's number, so a draw, the desk's box, a suggestion and a print of spares treat it as worn, and
  * no runner is handed the number an elite runner wears. Only the numbers are read — never a name, and
  * the lines are in no count. `addEliteEntry` refuses the other way round, under the same event lock.
@@ -672,7 +672,7 @@ export async function reserveSpareBibs<T extends Record<string, unknown>>(
 
 /**
  * Whether a number typed at the desk is somebody's already (§444): worn by another registration of
- * this event — a cancelled one's included, retired — on a line of its elite list (§NNN), or retired by
+ * this event — a cancelled one's included, retired — on a line of its elite list (§895), or retired by
  * an erasure or a replacement by hand (§311, §548). The unique index catches a registration's only.
  */
 export async function bibNumberInUse<T extends Record<string, unknown>>(

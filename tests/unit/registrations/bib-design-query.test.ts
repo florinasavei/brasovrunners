@@ -73,7 +73,7 @@ const EVERYTHING_OFF: BibDesign = {
   emergencyUpsideDown: false,
   showDistance: true,
   numberStubs: true,
-  // The elite bibs' two ticks (§NNN): on, each the other way from its default (off).
+  // The elite bibs' two ticks (§895): on, each the other way from its default (off).
   eliteNumber: true,
   eliteSponsors: true,
   // The members' bib (§664): on, the whole card (§695), a colour, both pictures with their crops and a
@@ -126,7 +126,7 @@ describe("§249 the design on the wire: encode, then parse", () => {
     expect(url.searchParams.get("locale")).toBe("ro");
   });
 
-  it("§NNN asks for an elite bib with `elite=1`, and the ordinary address never carries it", () => {
+  it("§895 asks for an elite bib with `elite=1`, and the ordinary address never carries it", () => {
     const elite = new URL(bibPreviewUrl({ eventId: "evt-1", locale: "ro", number: "7", colour: "", design: EVERYTHING_OFF, elite: true }), "http://localhost");
     expect(elite.searchParams.get("elite")).toBe("1");
     expect(bibDesignFromQuery(elite.searchParams)).toEqual(EVERYTHING_OFF);
@@ -325,7 +325,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       emergencyUpsideDown: false,
       showDistance: false,
       numberStubs: false,
-      // Nothing posted for «Elită» (§NNN): the name alone, no sponsors' band.
+      // Nothing posted for «Elită» (§895): the name alone, no sponsors' band.
       eliteNumber: false,
       eliteSponsors: false,
       headerImageSrc: null,

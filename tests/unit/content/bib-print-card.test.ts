@@ -112,7 +112,7 @@ describe("§759 «De la» and «Până la» belong to the PDF", () => {
   });
 });
 
-describe("§NNN «Elită — doar numele pe BIB» beside the spares", () => {
+describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
   const elite = {
     entries: [
       { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", name: "Eliud Kipchoge", bibNumber: 7 },

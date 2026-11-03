@@ -12,7 +12,7 @@ import { bibEliteElement, renderBibImage } from "@/modules/registrations/bib-ima
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 
 /**
- * «Elită — doar numele pe BIB» (§NNN; BR-REQ-038-01) — the owner, 2026-11-03: the race's elite runners printed as
+ * «Elită — doar numele pe BIB» (§895; BR-REQ-038-01) — the owner, 2026-11-03: the race's elite runners printed as
  * named bibs, the NAME where the number usually is; the number only with «Număr pe BIB-urile de elită» ticked and a
  * number on the line, the sponsors' band only with «Banda de sponsori pe BIB-urile de elită» ticked; both ticks off
  * by default, so every stored design reads as it did. The sheet and the picture lay the name out through the one
@@ -55,7 +55,7 @@ async function drawnStrings(run: () => Promise<unknown>): Promise<string[]> {
   }
 }
 
-describe("§NNN the two design ticks", () => {
+describe("§895 the two design ticks", () => {
   it("are off by default, and a design stored before them reads off and otherwise unchanged", () => {
     expect(DEFAULT_BIB_DESIGN.eliteNumber).toBe(false);
     expect(DEFAULT_BIB_DESIGN.eliteSponsors).toBe(false);
@@ -92,7 +92,7 @@ describe("§NNN the two design ticks", () => {
   });
 });
 
-describe("§NNN the name where the number goes", () => {
+describe("§895 the name where the number goes", () => {
   const area = bibNumberArea({ footer: BIB_LAYOUT.footerHeight, name: 0, sponsors: 0, stripe: 0, extras: 0 });
 
   it("fits any name on at most two lines, inside the card's width and the area's height, never cut", () => {
@@ -133,7 +133,7 @@ describe("§NNN the name where the number goes", () => {
   });
 });
 
-describe("§NNN the elite sheet", () => {
+describe("§895 the elite sheet", () => {
   it("prints every elite line, two A5 bibs to an A4 page or one per page", async () => {
     expect(pages(await sheet())).toBe(2);
     expect(pages(await sheet({ layout: "one" }))).toBe(3);
@@ -191,7 +191,7 @@ describe("§NNN the elite sheet", () => {
   });
 });
 
-describe("§NNN the elite bib's picture", () => {
+describe("§895 the elite bib's picture", () => {
   it("draws the layout's lines at their tops, and the number only when the layout has one", () => {
     const area = 250;
     const withNumber = bibElite("Maria-Magdalena Ștefănescu-Popovici", { area, scale: 1, number: true });

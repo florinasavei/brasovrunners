@@ -3,7 +3,7 @@ import { type BibEliteLayout, bibEliteLayout } from "./bib-geometry";
 import { bibTitleWidth } from "./bib-header";
 
 /**
- * An elite bib (§NNN): one name of the race's «Elită» list (`elite-list.ts`), printed where the number goes —
+ * An elite bib (§895): one name of the race's «Elită» list (`elite-list.ts`), printed where the number goes —
  * and, beside it, what the club's design says. Decided here once so the sheet (`bibs-pdf.ts`) and the picture
  * (`bib-image.tsx`) cannot drift; where everything sits is `bib-geometry.ts#bibEliteLayout`.
  */

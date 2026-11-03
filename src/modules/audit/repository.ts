@@ -521,7 +521,7 @@ export type AuditAction =
   | "event_reserve.deleted"
   | "event_reserve.moved"
   /**
-   * «Elită — doar numele pe BIB» (§NNN), entity `event`: a name written onto the race's elite list, or deleted from it.
+   * «Elită — doar numele pe BIB» (§895), entity `event`: a name written onto the race's elite list, or deleted from it.
    * The metadata is the line's id only — never the name or its number: the line is a name to print, not a person's file.
    */
   | "event_elite.added"

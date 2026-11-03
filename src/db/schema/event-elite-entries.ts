@@ -3,13 +3,13 @@ import { sql } from "drizzle-orm";
 import { events } from "./events";
 import { staffUsers } from "./staff-users";
 
-/** The longest name an elite bib carries (§NNN): two lines of the bib's largest type still hold it, shrunk, never cut. */
+/** The longest name an elite bib carries (§895): two lines of the bib's largest type still hold it, shrunk, never cut. */
 export const ELITE_NAME_MAX = 80;
 /** The widest number a bib draws: five digits, as `bib-design-query.ts#bibNumberFromQuery` reads one. */
 export const ELITE_NUMBER_MAX = 99_999;
 
 /**
- * «Elită — doar numele pe BIB» (§NNN; the owner, 2026-11-03, «Listă separată»): the race's elite runners, a
+ * «Elită — doar numele pe BIB» (§895; the owner, 2026-11-03, «Listă separată»): the race's elite runners, a
  * name per line, printed as bibs that carry the **name where the number usually is** — the number only when
  * the design ticks «Număr pe BIB-urile de elită» and the line has one.
  *
