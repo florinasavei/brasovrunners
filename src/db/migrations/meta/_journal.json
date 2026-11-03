@@ -1261,6 +1261,13 @@
       "when": 1793711465149,
       "tag": "0184_registration_elite",
       "breakpoints": true
+    },
+    {
+      "idx": 180,
+      "version": "7",
+      "when": 1793721045643,
+      "tag": "0187_volunteer_has_kit",
+      "breakpoints": true
     }
   ]
 }

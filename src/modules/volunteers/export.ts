@@ -54,6 +54,7 @@ export function volunteerExportHeader(t: Words): VolunteerCsvHeader {
     guardianName: column("guardianName"),
     guardianEmail: column("guardianEmail"),
     guardianConsent: column("guardianConsent"),
+    hasKit: column("hasKit"),
   };
 }
 
@@ -119,6 +120,8 @@ export function volunteerExport(data: VolunteerExportData, locale: Locale, t: Wo
     guardianName: person.guardianName,
     guardianEmail: person.guardianEmail,
     guardianConsent: isVolunteerMinor(person.age) ? yesNo(person.guardianAcceptedAt !== null) : "",
+    // «Are kit» (§904): the organizers' own mark, for whoever packs the kits from the file.
+    hasKit: yesNo(person.hasKit),
   }));
 
   // «Alte roluri» names the roles outside every category, but only beside roles that have one (`groupsNeedHeadings`).

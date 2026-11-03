@@ -738,9 +738,13 @@ export default async function VolunteersCard({
     );
   };
 
+  // «Cu kit» (§904; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit»): the people the organizers ticked «Are kit» on, the
+  // cancelled left out — the «Voluntari» screen's own figure in its own words, said on the card's closed line once there is any.
+  const withKit = volunteers.filter((volunteer) => volunteer.hasKit && volunteer.state !== "CANCELLED").length;
+  const kitLine = withKit > 0 ? [t("volunteers.screen.summaryKit", { count: String(withKit) })] : [];
   const aside =
     roles.length === 0
-      ? t("volunteers.summaryNone")
+      ? [t("volunteers.summaryNone"), ...kitLine].join(" · ")
       : [
           // «3 din 10», «3 din 10 + roluri fără număr»; with no numbered role at all, only the people in the roles without one (§784).
           numbered.length > 0
@@ -748,6 +752,7 @@ export default async function VolunteersCard({
             : t("volunteers.summaryOnlyNoNumber", { taken: String(withoutNumber.reduce((sum, standing) => sum + standing.taken, 0)) }),
           ...(waitingForRole > 0 ? [t("volunteers.summaryUnassigned", { count: String(waitingForRole) })] : []),
           ...(pending > 0 ? [t("volunteers.summaryPending", { count: String(pending) })] : []),
+          ...kitLine,
         ].join(" · ");
 
   return (
