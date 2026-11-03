@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.09-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.10-2026-11-03 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.09-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.10-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28570,3 +28570,13 @@ Baseline `BR-V4.08-2026-11-03`.
 **Decision.** A desk spare (§444) is drawn with its empty line for the name and nothing under it, on the PDF and on the editor's preview. The line is what the desk writes on; the mark told the runner, the photographer and the results desk something none of them needs, and set the walk-up runners apart from the others on their own chest. The drawing keeps its optional `blankMark` (the routes no longer pass one), so the layout and its tests are unchanged.
 
 Baseline `BR-V4.09-2026-11-03`.
+
+## 894. Square copies of the white lockup, for a channel's watermark and avatar
+
+**The owner, 2026-11-03:** «I need to add padding to the logos and make them square so I can add them to youtube and so on, as a watermark», then, of the files made by hand: «put them in the repo, with all the others».
+
+**Decision.** `yarn brand:assets` also writes `public/brand/square/`, from `public/brand/logo-white.svg` (already one of the lock's sources, §885): the source inside a padded square, clipped to a crop, as an SVG and as PNGs — 150 × 150 with alpha (YouTube's video watermark asks for 150 × 150), 800 × 800 with alpha, and 800 × 800 on the club's band (`tints.emailBand`, the colour behind the white lockup everywhere else) for an avatar. Twice: the whole lockup (10 % padding), and its drawing alone — the mountains above the wordmark (6 %) — which still reads at 150 pixels where «BRASOV RUNNERS» does not. Built by the script rather than committed by hand, so a changed source or palette rebuilds them with the rest; the crop is in the source's own units and is this lockup's.
+
+**Refused.** Recolouring the logo for a light video (the logo stays as the club drew it); a separate script for one set of files.
+
+Baseline `BR-V4.10-2026-11-03`.
