@@ -676,11 +676,12 @@ test.describe("§754 volunteers for a race", () => {
       // --- The Administrator: «De repartizat», one press, «1 din 1» ----------------------------
       await page.goto(`/ro/admin/events/${event.id}`);
       await hydrated(page);
-      // Somebody waits for a role and an answer: the card opens by itself, and its closed line counts them.
-      await expect(card.locator("xpath=self::details")).toHaveAttribute("open", "");
+      // Somebody waits for a role and an answer: the card stays closed (the owner, 2026-11-03), and its closed line counts them.
+      await expect(card.locator("xpath=self::details")).not.toHaveAttribute("open", "");
       await expect(card.locator("summary").first()).toContainText("0 din 3");
       await expect(card.locator("summary").first()).toContainText("1 de repartizat");
       await expect(card.locator("summary").first()).toContainText("1 de confirmat");
+      await openFold(card);
       const unassigned = page.getByTestId("volunteer-unassigned");
       await expect(unassigned).toContainText("De repartizat");
       const row = unassigned.getByTestId("volunteer-row");

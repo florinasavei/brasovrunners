@@ -762,7 +762,9 @@ export default async function VolunteersCard({
       id="box-volunteers"
       title={t("volunteers.title")}
       aside={aside}
-      openWhen={{ attention: pending > 0 || waitingForRole > 0 }}
+      // Closed even with people to place or confirm: the closed line already counts them (the owner, 2026-11-03: «trebuie să fie colapsată»).
+      // A refusal from its own forms opens it, so the sentence saying why is in view.
+      openWhen={{ refused: Boolean(error) }}
       data-testid="event-volunteers"
     >
       <Stack spacing={2}>
