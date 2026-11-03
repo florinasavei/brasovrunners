@@ -757,7 +757,7 @@ export default async function VolunteersCard({
       id="box-volunteers"
       title={t("volunteers.title")}
       aside={aside}
-      openWhen={{ attention: pending > 0 || waitingForRole > 0 }}
+      // Closed even with people to place or confirm: the closed line already counts them (the owner, 2026-11-03: «trebuie să fie colapsată»).
       data-testid="event-volunteers"
     >
       <Stack spacing={2}>

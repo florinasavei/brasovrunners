@@ -1,0 +1,7 @@
+{
+  "branch": "fix/volunteers-fold-closed",
+  "decisionsTitle": "«Voluntari» in the event editor stays closed until opened",
+  "decisionsSection": "**The owner, 2026-11-03,** of the event editor's «Voluntari» drawn open: «trebuie să fie colapsată asta cu voluntarii!». The card opened by itself whenever somebody waited for a role or for confirmation (`openWhen.attention`), which on a race with volunteers coming in is always — a long card open in the middle of the editor.\n\n**Decision.** The card is closed on arrival like every other fold of the editor; its closed line already says how many wait for a role and how many to confirm («4 de repartizat · 6 de confirmat»). A press inside it still comes back to `#box-volunteers`, which opens it, so the result of a press stays in view.",
+  "changelogLine": "- **«Voluntari» closed by default in the event editor** — the closed line counts who waits for a role or for confirmation; it opens when pressed, and after a press inside it. §NNN.",
+  "batchLine": "«Voluntari» closed by default"
+}
