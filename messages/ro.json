@@ -6755,7 +6755,6 @@
       "sparesReadOnly": "Doar un administrator rezervă numere noi.",
       "sparesReserved": "Rezervate numerele {from}–{to}. Descarcă foaia și tipărește-o.",
       "sparesDownloadRange": "Descarcă foaia {from}–{to} (PDF)",
-      "spareMark": "înscris la fața locului",
       "eliteTitle": "Elită — doar numele pe BIB",
       "eliteNone": "nicio persoană",
       "eliteCount": {

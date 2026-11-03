@@ -6755,7 +6755,6 @@
       "sparesReadOnly": "Only an administrator reserves new numbers.",
       "sparesReserved": "Numbers {from}–{to} reserved. Download the sheet and print it.",
       "sparesDownloadRange": "Download the sheet {from}–{to} (PDF)",
-      "spareMark": "on-the-spot entry",
       "eliteTitle": "Elite — the name only on the bib",
       "eliteNone": "nobody",
       "eliteCount": {

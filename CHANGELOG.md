@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.10-2026-11-03
+
+- **Square logos for YouTube and the other channels** — `public/brand/square/`: the white lockup and its mountains alone, padded, as SVG, a 150 × 150 watermark and 800 × 800 avatars, built by `yarn brand:assets`. §894.
+## BR-V4.09-2026-11-03
+
+- **Spare bibs without «înscris la fața locului»** — only the empty line for the name, on the PDF and the preview. §893.
 ## BR-V4.08-2026-11-03
 
 - **«Locuri» under «Cine s-a înscris»** — for a race with a capacity: places taken and free, the official and internal waiting lists, how many can be let in with no place added, how many places it takes for everybody else, and the total if everybody comes. §892.

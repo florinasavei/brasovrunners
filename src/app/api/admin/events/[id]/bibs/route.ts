@@ -161,8 +161,6 @@ export async function GET(
     ...(await loadBibExtras(await withBibCheckpoints(db, id, event, event.design), event.design, locale)),
     // The members' label when the club typed none (§664), in the sheet's language.
     ...(anyMember && admin ? { memberLabelDefault: admin("bibs.memberLabelDefault", { club: CLUB_NAME }) } : {}),
-    // Under a spare's empty line (§444), in the sheet's language.
-    ...(spares && admin ? { blankMark: admin("bibs.spareMark") } : {}),
   });
 
   // The elite sheet is the list alone (§NNN): no range, no part, no «unprinted» in its name.

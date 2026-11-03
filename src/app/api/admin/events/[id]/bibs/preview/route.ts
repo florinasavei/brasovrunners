@@ -126,7 +126,6 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       ...(elite ? { elite } : {}),
       // `blank=1` draws a desk spare (§444): the empty line the name is written on at the desk.
       registeredName: url.searchParams.get("blank") === "1" ? null : SAMPLE_NAME,
-      ...(url.searchParams.get("blank") === "1" ? { blankMark: (await getTranslations({ locale, namespace: "Admin" }))("bibs.spareMark") } : {}),
       eventTitle: event.title,
       eventDate,
       // As the form holds it, not as the row does: the preview follows the unsaved select too.
