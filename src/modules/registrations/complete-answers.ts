@@ -19,7 +19,7 @@ import { ANSWERS_MISSING, answersToAsk, missingAnswers } from "./missing-answers
 import * as repo from "./repository";
 
 /**
- * «Completează-ți datele» (§NNN): the person completes, from their own link, the answers the public form
+ * «Completează-ți datele» (§905): the person completes, from their own link, the answers the public form
  * requires and their registration does not hold (`missing-answers.ts`) — on the declaration's page before the
  * signature, in the signature's own transaction, and on the manage page after it.
  *
@@ -175,7 +175,7 @@ export function planAnswerCompletion(
 }
 
 /**
- * The registration as a press of the declaration's page would sign it (§NNN): the answers a refused press typed,
+ * The registration as a press of the declaration's page would sign it (§905): the answers a refused press typed,
  * through the one planner the press runs (`planAnswerCompletion`) — a guardian a minor's birth date brought, the
  * name of record two names composed — so the page asks for the signature the server will check (§108, §314), and
  * the text above it names the same declarant. Null when nothing was typed, or when what was typed would be refused

@@ -20,7 +20,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-037-05 criteria 23–27, BR-REQ-033-02 (§NNN; the owner, 2026-11-03: «am avut un bug când am trimis oferta
+ * BR-REQ-037-05 criteria 23–27, BR-REQ-033-02 (§905; the owner, 2026-11-03: «am avut un bug când am trimis oferta
  * că oamenii nu aveau unde să își completeze datele lor, nume, data nașterii, etc.»).
  *
  * A registration a staff member entered with a name and an address — or a line of the internal list moved onto

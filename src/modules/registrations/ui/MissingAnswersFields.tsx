@@ -45,14 +45,14 @@ export type MissingAnswersFieldsInput = {
   /** The heading's level: a section of its own page, or a person's card. */
   headingLevel?: "h2" | "h3";
   /**
-   * A refused press (§NNN): the summary at the top of the boxes — what was not recorded, a link to each box named,
+   * A refused press (§905): the summary at the top of the boxes — what was not recorded, a link to each box named,
    * and the rule's own sentence when one refused (a minor's date under a signed declaration, a name of record).
    */
   refused?: { note: string; sentences: readonly string[] } | null;
 };
 
 /**
- * **«Completează-ți datele» (§NNN)** — the answers a registration still owes, drawn with the public form's own
+ * **«Completează-ți datele» (§905)** — the answers a registration still owes, drawn with the public form's own
  * boxes, labels, bounds and browser checks (`registration-form.tsx`): the birth date typed day first with its
  * echo, the country pickers on Romania, the telephone with its country, the emergency contact who must be
  * somebody else, «Feminin» / «Masculin», the T-shirt with «Fără tricou», the guardian shown by a minor's date.

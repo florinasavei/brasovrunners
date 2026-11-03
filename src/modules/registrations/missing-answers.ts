@@ -6,7 +6,7 @@ import { REGISTRATION_FORM_FIELDS } from "./form-errors";
 import { asksShirt } from "./form-view";
 
 /**
- * «Completează-ți datele» (§NNN; the owner, 2026-11-03: «am avut un bug când am trimis oferta că oamenii
+ * «Completează-ți datele» (§905; the owner, 2026-11-03: «am avut un bug când am trimis oferta că oamenii
  * nu aveau unde să își completeze datele lor, nume, data nașterii, etc.»): the answers the public
  * registration form requires that a registration does not hold — a staff entry's (`staffRegistrationSubmissionSchema`
  * relaxes the birth date, the sex, the citizenship, the city, the telephone and the emergency contact), a line of

@@ -325,7 +325,7 @@ export async function consumeAndSignDeclaration(
   },
   now: Date,
   /**
-   * «Completează-ți datele» (§NNN): the answers the page asked above the signature, when it asked any — saved
+   * «Completează-ți datele» (§905): the answers the page asked above the signature, when it asked any — saved
    * as the person's own in this same transaction, before the signature that requires them; a refusal of either
    * rolls back both, and the link is not spent.
    */
@@ -380,7 +380,7 @@ export async function consumeAndSignFamilyDeclaration(
   registrationId: string,
   input: Parameters<typeof consumeAndSignDeclaration>[1],
   now: Date,
-  /** The step's person's missing answers (§NNN), saved with the signature in one transaction, as on the link's own page. */
+  /** The step's person's missing answers (§905), saved with the signature in one transaction, as on the link's own page. */
   answers?: PostedAnswers,
 ) {
   const db = getDb();
@@ -660,7 +660,7 @@ export async function readRaceDayContext(secret: string, now: Date) {
 }
 
 /**
- * «Completează-ți datele» from the participant's own manage link (§NNN): the answers the public form requires and
+ * «Completează-ți datele» from the participant's own manage link (§905): the answers the public form requires and
  * the registration does not hold, saved as the person's own — for a confirmed registration too, whose declaration
  * stays as it was signed. Read, never spent, as the list switch and «I am here» are (§77): the page must still be
  * able to cancel. `registrationId` (§547): another person of the page, the same address at the same event

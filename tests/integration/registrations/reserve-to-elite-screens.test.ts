@@ -10,7 +10,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Mută pe lista de elită» on the registrations list (§NNN; BR-REQ-037-05, BR-REQ-060-01), as drawn: on every line of
+ * «Mută pe lista de elită» on the registrations list (§903; BR-REQ-037-05, BR-REQ-060-01), as drawn: on every line of
  * «Lista internă (doar notițe)», with an address or without, the Administrator gets the button — the elite glyph,
  * 44 pixels — behind a question that names the person and says what does not happen; under a line's «Email pentru
  * lista oficială» the same role reads that an elite runner needs no address; back from the move, the panel opens on
@@ -164,7 +164,7 @@ function lineOf(drawn: ReactElement<Props>[], name: string): ReactElement<Props>
   return elements(line);
 }
 
-describe("§NNN «Mută pe lista de elită» on the internal list, as drawn", () => {
+describe("§903 «Mută pe lista de elită» on the internal list, as drawn", () => {
   it("gives the Administrator the button on every line, with an address or without: the elite glyph, 44 pixels, asked first", async () => {
     state.actor = await staff("ADMIN");
     const { props, drawn } = await reservePanel({ eventId });

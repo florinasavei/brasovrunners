@@ -7,7 +7,7 @@ import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/
 import type { PublicVolunteerRole, VolunteerItem, VolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — «Are kit» (the owner, 2026-11-03: «ar trebui să număr pe header câți au kit, deci trebuie încă un field de „are kit"») as the
+ * §904 — «Are kit» (the owner, 2026-11-03: «ar trebui să număr pe header câți au kit, deci trebuie încă un field de „are kit"») as the
  * event editor's «Voluntari» card draws it: a `CheckboxField` in «Adaugă un voluntar» (off) and in a person's «Modifică» (as saved),
  * drawn whatever the privacy notice names — it is the club's own mark, not the person's answer; the chip «Are kit» on a ticked person's
  * row; «Cu kit: N» on the card's closed line — the ticked who are not cancelled, said once there is any; never a box of the public form;
@@ -203,7 +203,7 @@ const closedLineOf = (page: string) => /<summary[\s\S]*?<\/summary>/.exec(page)?
 /** One person's block on the card: from their row to the next row (or the end). */
 const rowOf = (page: string, id: string) => new RegExp(`data-volunteer-id="${id}"[\\s\\S]*?(?=data-testid="volunteer-row"|$)`).exec(page)?.[0] ?? "";
 
-describe("§NNN «Are kit» in the card's forms", () => {
+describe("§904 «Are kit» in the card's forms", () => {
   it("is a box of «Adaugă un voluntar», off, with its words and its one help line", async () => {
     const add = addFormOf(await drawCard({ volunteers: [] }));
     expect(add).toContain("Are kit");
@@ -242,7 +242,7 @@ describe("§NNN «Are kit» in the card's forms", () => {
   });
 });
 
-describe("§NNN «Cu kit: N» on the card's closed line", () => {
+describe("§904 «Cu kit: N» on the card's closed line", () => {
   it("counts the ticked who are not cancelled, beside the card's other figures", async () => {
     const page = await drawCard({ volunteers: [person({ hasKit: true }), person({ hasKit: true, state: "REGISTERED" }), person({ hasKit: true, state: "CANCELLED", roleIds: [] }), person({})] });
     // «0 din 3 · 1 de confirmat · Cu kit: 2»: the card's own figures first, the kits last.
@@ -261,7 +261,7 @@ describe("§NNN «Cu kit: N» on the card's closed line", () => {
   });
 });
 
-describe("§NNN «Toate datele unei persoane» lists «Are kit» among what is kept about an offer", () => {
+describe("§904 «Toate datele unei persoane» lists «Are kit» among what is kept about an offer", () => {
   it("adds «Are kit» to the offer's line when the row holds it, and nothing when it does not", async () => {
     const base = { age: null, dateOfBirth: null, sex: null, city: null, volunteeredBefore: false, clubMember: false, shirtSize: null, guardianName: null, guardianEmail: null, guardianAcceptedAt: null, guardianMethod: null };
     locale = "ro";

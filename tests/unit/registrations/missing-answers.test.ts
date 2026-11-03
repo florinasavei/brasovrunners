@@ -16,7 +16,7 @@ import { ANSWERS_MISSING, answersToAsk, type AnswersOnRow, missingAnswers, missi
 import { TYPED_ANSWERS } from "../../helpers/missing-answers";
 
 /**
- * BR-REQ-037-05 criterion 23 (§NNN) — «Completează-ți datele», the rules that need no database: which answers a
+ * BR-REQ-037-05 criterion 23 (§905) — «Completează-ți datele», the rules that need no database: which answers a
  * registration still owes is read off the public form's own schema (never a second list), each answer judged on
  * its own, what the event asks (the T-shirt) and the door the row came in by; and what the person's completion
  * writes or refuses.

@@ -36,7 +36,7 @@ export type AuditAction =
    */
   | "registration.answer_corrected"
   /**
-   * «Completează-ți datele» (§NNN): the person completed, from their own link, the answers the public form
+   * «Completează-ți datele» (§905): the person completed, from their own link, the answers the public form
    * requires and the registration did not hold — no staff actor; `{ fields, via }`, the columns written and the
    * door (`DECLARATION` or `MANAGE_LINK`), never a value: nothing stood before them, and the values are the row's.
    */
@@ -527,7 +527,7 @@ export type AuditAction =
   /**
    * «Lista internă de așteptare» (§854), entity `event`: a person written down, their note saved, the line
    * deleted, or moved to the official list (`registrationId` the registration it became) or onto the elite list
-   * (`eliteEntryId` the elite line it became, §NNN). The metadata is ids only — never a name, an address or the
+   * (`eliteEntryId` the elite line it became, §903). The metadata is ids only — never a name, an address or the
    * note's words.
    */
   | "event_reserve.added"
@@ -537,7 +537,7 @@ export type AuditAction =
   /**
    * «Elită — doar numele pe BIB» (§895), entity `event`: a name written onto the race's elite list, or deleted from it.
    * The metadata is the line's id only — never the name or its number: the line is a name to print, not a person's file;
-   * a line moved there from the internal list also names the internal line's id (`reserveEntryId`, §NNN).
+   * a line moved there from the internal list also names the internal line's id (`reserveEntryId`, §903).
    */
   | "event_elite.added"
   | "event_elite.deleted"

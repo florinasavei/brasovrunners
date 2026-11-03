@@ -12,7 +12,7 @@ import { createRace, registerRunner, type Runner } from "../../helpers/results";
  * «Kituri de pregătit» (the owner, 2026-10-29): one event's real registrations holding a place now —
  * the special guests among them — by T-shirt size, plus its open invitations before their deadline.
  * Never the waiting list, a cancelled or expired row, a test row, or an answered, withdrawn or lapsed invitation.
- * Since §NNN one more line, «Plus voluntari cu kit: N» — the event's volunteers ticked «Are kit», the cancelled left out —
+ * Since §904 one more line, «Plus voluntari cu kit: N» — the event's volunteers ticked «Are kit», the cancelled left out —
  * never added to the kits' own figure.
  */
 const NOW = new Date("2026-11-01T10:00:00.000Z");
@@ -32,7 +32,7 @@ async function drawn(kits: Awaited<ReturnType<typeof countKits>>, volunteers?: n
   return renderToStaticMarkup(await KitCount({ kits, volunteers })).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/** A volunteer the club typed by name (§865), in a state, ticked «Are kit» or not (§NNN). */
+/** A volunteer the club typed by name (§865), in a state, ticked «Are kit» or not (§904). */
 async function volunteer(eventId: string, state: "REGISTERED" | "CONFIRMED" | "CANCELLED", hasKit: boolean) {
   await db.insert(eventVolunteers).values({ eventId, name: "Vlad Test", source: "STAFF", state, hasKit });
 }
@@ -102,7 +102,7 @@ describe("«Kituri de pregătit»", () => {
     expect(text).not.toContain("Tricouri");
   });
 
-  it("§NNN adds «Plus voluntari cu kit: N» — the event's volunteers ticked «Are kit», not cancelled — and never counts them in the kits", async () => {
+  it("§904 adds «Plus voluntari cu kit: N» — the event's volunteers ticked «Are kit», not cancelled — and never counts them in the kits", async () => {
     const race = await createRace(db, { kitShirt: true });
     const other = await createRace(db, { kitShirt: true });
     await runner(race.id, "M");

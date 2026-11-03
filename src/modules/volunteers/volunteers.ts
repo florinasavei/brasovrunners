@@ -176,7 +176,7 @@ export type VolunteerItem = {
   clubMember: boolean;
   /** «Vreau să apar pe lista publică a voluntarilor» (§821): the person's own tick (or the organizers' record of it) — the card's «Vrea pe lista publică». */
   listOptIn: boolean;
-  /** «Are kit» (§NNN): the organizers' own mark that the person gets the volunteers' kit — what the screen's «Cu kit: N» counts. */
+  /** «Are kit» (§904): the organizers' own mark that the person gets the volunteers' kit — what the screen's «Cu kit: N» counts. */
   hasKit: boolean;
   shirtSize: Exclude<RegistrationTshirtSize, "NONE"> | null;
   createdAt: Date;
@@ -1506,7 +1506,7 @@ export type VolunteerRequest =
   | { kind: "assign"; eventId: string; id: string; roleId: unknown }
   /** «Ia-i rolul …» (§837): one role given is taken back; the person's other roles stand. */
   | { kind: "unassign"; eventId: string; id: string; roleId: unknown }
-  /** «Are kit» ticked or cleared on the «Voluntari» list's row (§NNN): the form posts the state it wants, never a toggle. */
+  /** «Are kit» ticked or cleared on the «Voluntari» list's row (§904): the form posts the state it wants, never a toggle. */
   | { kind: "setKit"; eventId: string; id: string; hasKit: boolean }
   | { kind: "delete"; eventId: string; id: string };
 
@@ -1537,7 +1537,7 @@ function staffInputOf(fields: Record<string, unknown>, eventDay: string, keptAge
     volunteeredBefore: fields.volunteeredBefore === true,
     clubMember: fields.clubMember === true,
     listOptIn: fields.listOptIn === true,
-    // «Are kit» (§NNN): the organizers' own mark, true only when posted.
+    // «Are kit» (§904): the organizers' own mark, true only when posted.
     hasKit: fields.hasKit === true,
   });
   if (!parsed.success) {
@@ -1842,7 +1842,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           // «Vreau să apar pe lista publică a voluntarilor» (§821), recorded by the staff member (the audit row names them) under the notice in force.
           listOptIn: input.listOptIn,
           listOptInNoticeVersion: input.listOptIn ? (listNotice?.version ?? null) : null,
-          // «Are kit» (§NNN): the organizers' own mark, whatever the notice says — it is the club's logistics, not the person's answer.
+          // «Are kit» (§904): the organizers' own mark, whatever the notice says — it is the club's logistics, not the person's answer.
           hasKit: input.hasKit,
           // A size only while the event gives a shirt (§765); a stale form posting one for an event without is ignored.
           shirtSize: event.shirts ? input.shirtSize : null,
@@ -1933,7 +1933,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     }
 
     if (request.kind === "setKit") {
-      // «Are kit» (§NNN): the organizers' own mark, one press on the list's row. The state it wants, so a second press saves the same;
+      // «Are kit» (§904): the organizers' own mark, one press on the list's row. The state it wants, so a second press saves the same;
       // audited as every other change of a person's boxes, naming the box and never anything typed. Nobody is told: it is the club's packing.
       // Only a real `true` ticks: anything else a forged request carries clears, never a truthy string read as yes.
       const wanted = request.hasKit === true;
@@ -2027,7 +2027,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       phone: input.phone,
       note: input.note,
       listOptIn: listNext,
-      // «Are kit» (§NNN): the organizers' own mark, saved whatever the notice in force names — no answer of the person's.
+      // «Are kit» (§904): the organizers' own mark, saved whatever the notice in force names — no answer of the person's.
       hasKit: input.hasKit,
       ...nextAnswers,
     };
@@ -2138,7 +2138,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     }
     return { changed: true, volunteer: { id: current.id, hasAddress: next.email !== null } };
   });
-  // «Are kit» is shown on no public page (§NNN): its press leaves the public cache as it was.
+  // «Are kit» is shown on no public page (§904): its press leaves the public cache as it was.
   if (result.changed && request.kind !== "setKit") revalidatePublicContent("places");
   return result;
 }

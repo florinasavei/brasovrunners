@@ -34,11 +34,11 @@ export type VolunteerAdminFilters = {
   role?: string;
   /** «Caută după nume»: the folded `LIKE` of `name-search.ts`. */
   search?: string;
-  /** «Are kit» (§NNN): only the people ticked (`true`), only the ones not (`false`), or everyone (absent). */
+  /** «Are kit» (§904): only the people ticked (`true`), only the ones not (`false`), or everyone (absent). */
   kit?: boolean;
 };
 
-/** `?kit=` as the list's address carries it (§NNN): «yes», «no», or nothing — anything else is no filter. */
+/** `?kit=` as the list's address carries it (§904): «yes», «no», or nothing — anything else is no filter. */
 export function kitFilterOf(value: string | undefined): boolean | undefined {
   return value === "yes" ? true : value === "no" ? false : undefined;
 }
@@ -159,7 +159,7 @@ export type VolunteerAdminSummary = {
   byState: Record<VolunteerState, number>;
   /** «De repartizat»: «Înscris» and «Confirmat» with no role given (§761) — the cancelled wait for nothing. */
   unassigned: number;
-  /** «Cu kit» (§NNN): «Înscris» and «Confirmat» the organizers ticked «Are kit» on — a cancelled person is handed nothing. */
+  /** «Cu kit» (§904): «Înscris» and «Confirmat» the organizers ticked «Are kit» on — a cancelled person is handed nothing. */
   withKit: number;
 };
 
@@ -194,7 +194,7 @@ export async function summariseVolunteersForAdmin<T extends Record<string, unkno
 }
 
 /**
- * «Plus voluntari cu kit» under the registrations' «Kituri de pregătit» (§NNN): one event's volunteers the organizers ticked «Are kit» on,
+ * «Plus voluntari cu kit» under the registrations' «Kituri de pregătit» (§904): one event's volunteers the organizers ticked «Are kit» on,
  * the cancelled left out — the same figure as the «Voluntari» screen's «Cu kit», for one event. A count of its own: `countKits` and every
  * export keep counting the registrations alone.
  */
@@ -246,7 +246,7 @@ export async function findVolunteerForAdmin<T extends Record<string, unknown>>(
 /**
  * A role's words as the list names it alone (§774): its own name and its category's, in both languages — the category null for a role
  * under none. Ready for `roleLabel`, which says «Direcționare (Traseu)»: one name may stand in several categories, and the name alone
- * printed the same word twice for a person who offered both (§NNN).
+ * printed the same word twice for a person who offered both (§904).
  */
 export type RoleNameWords = { nameRo: string; nameEn: string; categoryRo: string | null; categoryEn: string | null };
 
@@ -292,7 +292,7 @@ export async function listRolesWithCounts<T extends Record<string, unknown>>(
 
 /**
  * The words of some roles, whatever their events: the list's «Roluri date» and «S-a oferit pentru» cells, one read per page — each role
- * with its category's words (§NNN), so «Direcționare» under «Start / Sosire» and under «Traseu» read as two roles, as on the card.
+ * with its category's words (§904), so «Direcționare» under «Start / Sosire» and under «Traseu» read as two roles, as on the card.
  */
 export async function listRoleNames<T extends Record<string, unknown>>(db: Database<T>, roleIds: readonly string[]): Promise<Map<string, RoleNameWords>> {
   if (roleIds.length === 0) return new Map();

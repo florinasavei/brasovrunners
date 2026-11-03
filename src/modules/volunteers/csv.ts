@@ -21,7 +21,7 @@ import { csvCell } from "@/modules/registrations/csv";
  *
  * Since §865 the address and the telephone cells are empty for a person the club typed without them: no column moves.
  *
- * Since §NNN one more, last: «Are kit», the organizers' own mark, as the reader's yes and no. Appended, so no earlier column moves.
+ * Since §904 one more, last: «Are kit», the organizers' own mark, as the reader's yes and no. Appended, so no earlier column moves.
  */
 
 export type VolunteerCsvRow = {
@@ -54,7 +54,7 @@ export type VolunteerCsvRow = {
   guardianName: string | null;
   guardianEmail: string | null;
   guardianConsent: string;
-  /** «Are kit» (§NNN): «Da» / «Nu» in the reader's words. */
+  /** «Are kit» (§904): «Da» / «Nu» in the reader's words. */
   hasKit: string;
 };
 

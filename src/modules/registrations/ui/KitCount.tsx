@@ -9,7 +9,7 @@ import { SHIRT_SIZES } from "../domain/kit";
  * everyone holding a place now plus the open invitations, and — when the event gives a T-shirt
  * («Kit de participare») — how many of each size, the invited counted as a size not known yet.
  *
- * `volunteers` is the event's volunteers the organizers ticked «Are kit» on (§NNN), the cancelled left out:
+ * `volunteers` is the event's volunteers the organizers ticked «Are kit» on (§904), the cancelled left out:
  * one more line, «Plus voluntari cu kit: N», said only when there is any. It is never added to the title's
  * figure, which stays the registrations' and the invitations' (`countKits`, and every export, unchanged).
  */

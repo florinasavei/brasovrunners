@@ -98,7 +98,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const stateFilter = isVolunteerState(state) ? state : undefined;
   // A role of the chosen event, or «De repartizat»; anything else in the address is no filter.
   const roleFilter = role === UNASSIGNED || (role && isUuid(role)) ? role : undefined;
-  // «Are kit» (§NNN): «yes» or «no»; anything else in the address is no filter.
+  // «Are kit» (§904): «yes» or «no»; anything else in the address is no filter.
   const kitFilter = kitFilterOf(kit);
   const filters: VolunteerAdminFilters = {
     eventId: eventFilter.eventId,
@@ -117,7 +117,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     filters.eventId ? listRolesWithCounts(db, filters.eventId) : Promise.resolve([]),
     getTranslations("Admin"),
   ]);
-  // The words of every role the page's rows name, given or offered — one read, whatever their events — each with its category's (§NNN):
+  // The words of every role the page's rows name, given or offered — one read, whatever their events — each with its category's (§904):
   // «Direcționare (Traseu)», as the card and the person's page say it, so a name standing in two categories is never printed twice alike.
   const roleNames = await listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]);
   const roleName = (id: string) => {
@@ -166,7 +166,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   );
 
   /**
-   * «Are kit» on the row (§NNN; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit»): the house's one-press tick (`TickButton`,
+   * «Are kit» on the row (§904; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit»): the house's one-press tick (`TickButton`,
    * §766) — a submit drawn as the checkbox, `role="checkbox"` and `aria-checked`, the words beside it — in a plain form that posts the state
    * it wants (`hasKit=1|0`), never a toggle; it works with scripts off and comes back to this page of the list. The service asks for the role.
    */
@@ -227,7 +227,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       render: (row) => (row.choiceIds.length > 0 ? <span data-testid="volunteer-offered">{namesOf(row.choiceIds).join(", ")}</span> : <span aria-hidden>—</span>),
     },
     {
-      // «Are kit» (§NNN): the tick itself, one press; «Cu kit» above counts the ticked who are not cancelled.
+      // «Are kit» (§904): the tick itself, one press; «Cu kit» above counts the ticked who are not cancelled.
       key: "kit",
       label: t("volunteers.screen.columnKit"),
       render: kitTick,
@@ -313,7 +313,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
 
       {/*
         How the scope stands (§246's shape): everyone first, then each state, then how many wait for a role and how many
-        get a kit (§NNN) — every pill a filter (§626). The counts ignore the state, the role and the kit filters, so the
+        get a kit (§904) — every pill a filter (§626). The counts ignore the state, the role and the kit filters, so the
         strip never empties to the one number somebody filtered to.
       */}
       <Panel glyph="volunteers" title={t("volunteers.screen.summaryTitle")} aside={scopeEvent ? t("volunteers.screen.summaryScopeEvent", { event: scopeEvent.title ?? scopeEvent.id }) : t("volunteers.screen.summaryScopeAll")} data-testid="volunteers-summary">
@@ -324,7 +324,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           )}
           {(summary.unassigned > 0 || roleFilter === UNASSIGNED) &&
             pill({ role: UNASSIGNED }, t("volunteers.screen.summaryUnassigned", { count: summary.unassigned }), roleFilter === UNASSIGNED)}
-          {/* «Cu kit» (§NNN; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit»): the ticked who are not cancelled, always said — a nought too. */}
+          {/* «Cu kit» (§904; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit»): the ticked who are not cancelled, always said — a nought too. */}
           {pill({ kit: "yes" }, t("volunteers.screen.summaryKit", { count: summary.withKit }), kitFilter === true)}
         </Stack>
         {scopeEvent && (
@@ -403,13 +403,13 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
                 <MenuItem value={UNASSIGNED}>{t("volunteers.screen.summaryUnassigned", { count: summary.unassigned })}</MenuItem>
                 {eventRoles.map((eventRole) => (
                   <MenuItem key={eventRole.id} value={eventRole.id}>
-                    {/* With its category (§NNN): «Direcționare (Traseu) · 2», never two lines that read the same. */}
+                    {/* With its category (§904): «Direcționare (Traseu) · 2», never two lines that read the same. */}
                     {`${roleLabel(eventRole, locale)} · ${eventRole.given}`}
                   </MenuItem>
                 ))}
               </TextField>
             )}
-            {/* «Are kit» (§NNN): the ticked, the others, or everyone — the «Cu kit» pill above sets the first. */}
+            {/* «Are kit» (§904): the ticked, the others, or everyone — the «Cu kit» pill above sets the first. */}
             <TextField select name="kit" label={t("volunteers.screen.kitFilter")} defaultValue={kitFilter === undefined ? "" : kit} sx={{ minWidth: 200 }} data-testid="volunteers-filter-kit">
               <MenuItem value="">{t("volunteers.screen.kitAll")}</MenuItem>
               <MenuItem value="yes">{t("volunteers.screen.kitYes")}</MenuItem>

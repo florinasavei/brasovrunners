@@ -120,7 +120,7 @@ export function volunteerExport(data: VolunteerExportData, locale: Locale, t: Wo
     guardianName: person.guardianName,
     guardianEmail: person.guardianEmail,
     guardianConsent: isVolunteerMinor(person.age) ? yesNo(person.guardianAcceptedAt !== null) : "",
-    // «Are kit» (§NNN): the organizers' own mark, for whoever packs the kits from the file.
+    // «Are kit» (§904): the organizers' own mark, for whoever packs the kits from the file.
     hasKit: yesNo(person.hasKit),
   }));
 

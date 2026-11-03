@@ -8,7 +8,7 @@ import { isUuid } from "@/shared/ids";
 /*
   How a volunteer's verb reads its form and where it comes back to (§754, §839): the language of the page, a posted box, the
   event, and the way back — the editor's «Voluntari» card, or the «Voluntari» screen's page the form came from. Shared by the
-  card's Server Actions (`volunteer-actions.ts`) and the screen's own (`admin/volunteers/actions.ts`, «Are kit», §NNN). A plain
+  card's Server Actions (`volunteer-actions.ts`) and the screen's own (`admin/volunteers/actions.ts`, «Are kit», §904). A plain
   module, never a "use server" file: none of these is a verb a browser may call.
 */
 

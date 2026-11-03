@@ -29,7 +29,7 @@ import { readVolunteersAccess, VOLUNTEER_INVITATION_BATCH_MAX, VOLUNTEER_INVITAT
 import { resendVolunteerInvitation, sendVolunteerInvitations, withdrawVolunteerInvitation } from "@/modules/volunteers/invitations";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, keptValuesOf, refused } from "@/shared/forms/outcome";
-// The form's language, its boxes, its event and the way back (§839): shared with the «Voluntari» screen's own verb (§NNN).
+// The form's language, its boxes, its event and the way back (§839): shared with the «Voluntari» screen's own verb (§904).
 import { backToCard, eventIdOf, field, localeOf } from "./volunteer-return";
 
 /*
@@ -70,7 +70,7 @@ const staffFields = (form: FormData) => ({
   clubMember: form.get("clubMember") === "on",
   // «Vreau să apar pe lista publică a voluntarilor» (§821): the organizers' record of the person's own tick, true only when posted.
   listOptIn: form.get("listOptIn") === "on",
-  // «Are kit» (§NNN): the organizers' own mark, true only when posted.
+  // «Are kit» (§904): the organizers' own mark, true only when posted.
   hasKit: form.get("hasKit") === "on",
 });
 

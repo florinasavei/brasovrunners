@@ -198,7 +198,7 @@ describe("§754 submitVolunteerAction's redirects", () => {
     expect(await people()).toHaveLength(1);
   });
 
-  it("§NNN never takes «Are kit» from the public form: a forged box is ignored, the offer kept unticked", async () => {
+  it("§904 never takes «Are kit» from the public form: a forged box is ignored, the offer kept unticked", async () => {
     await seedEvent(true);
     const url = await pressed(post({ hasKit: "on" }));
     expect(url.searchParams.get("volunteer")).toBe("1");

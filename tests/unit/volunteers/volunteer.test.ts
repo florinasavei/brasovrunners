@@ -544,7 +544,7 @@ describe("§754 the CSV", () => {
     // §773: the date of birth the age came from is beside it, `YYYY-MM-DD`, and empty for a row from before.
     expect(csv.split("\r\n")[0].includes("Data,Vârsta,Data nașterii,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou")).toBe(true);
     // §768: the parent or guardian of a volunteer under eighteen, appended after the T-shirt: name, address, and the consent as «Da» / «Nu».
-    // §NNN: «Are kit», the organizers' own mark, appended after them as «Da» / «Nu» — no earlier column moves.
+    // §904: «Are kit», the organizers' own mark, appended after them as «Da» / «Nu» — no earlier column moves.
     expect(csv.split("\r\n")[0].endsWith("Mărime tricou,Părinte sau tutore,Email părinte sau tutore,Acordul părintelui,Are kit")).toBe(true);
     expect(lines[1].endsWith('2026-10-13T10:00:00.000Z,34,1992-03-12,Female,"Brașov, centru",Da,Nu,M,Maria Popescu,maria@example.test,Nu,Da')).toBe(true);
   });

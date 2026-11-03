@@ -64,7 +64,7 @@ export type ManagedPerson = {
   /** How the latest declaration was accepted — online (a signed PDF was emailed) or on paper at the desk (§67); null when none. */
   declarationMethod: "EMAIL_LINK" | "PAPER" | null;
   /**
-   * «Completează-ți datele» (§NNN): the answers the public form requires of this person that the row does not hold
+   * «Completează-ți datele» (§905): the answers the public form requires of this person that the row does not hold
    * (`missing-answers.ts`), in the form's order — the names only, never a value; empty for a complete registration.
    */
   missingAnswers: MissingAnswer[];
@@ -101,7 +101,7 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
       resultsNameConsent: registrations.resultsNameConsent,
       resultsConsentVersion: registrations.resultsConsentVersion,
       birthDate: registrations.birthDate,
-      // What `missingAnswers` reads (§NNN): the answers themselves never leave this function.
+      // What `missingAnswers` reads (§905): the answers themselves never leave this function.
       source: registrations.source,
       answersWrittenAt: registrations.answersWrittenAt,
       firstName: registrations.firstName,
@@ -125,7 +125,7 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
       ),
     );
   const ids = rows.map((row) => row.id);
-  // Whether the event asks the T-shirt, for the answers the form owes (§NNN): one primary-key read, and only for a
+  // Whether the event asks the T-shirt, for the answers the form owes (§905): one primary-key read, and only for a
   // row that never answered the size — every row the form wrote holds one, «Fără tricou» included.
   const [event] = rows.some((row) => row.tshirtSize === null)
     ? await db.select({ kitShirt: events.kitShirt }).from(events).where(eq(events.id, own.eventId)).limit(1)

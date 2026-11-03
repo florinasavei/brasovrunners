@@ -149,7 +149,7 @@ export async function setResultsNameConsentFromManageAction(form: FormData): Pro
 }
 
 /**
- * «Completează-ți datele» from the participant's own link (§NNN), per person like the switches above: the token
+ * «Completează-ți datele» from the participant's own link (§905), per person like the switches above: the token
  * read, never spent; only the answers the public form requires and the registration does not hold, each through
  * the form's own rule, written as the person's own with one audit row. A refusal names the boxes in the URL —
  * names only (§14.5) — and keeps what was typed, sealed, for the page it lands on.

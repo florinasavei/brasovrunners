@@ -94,7 +94,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       trace: readSignatureTrace(await headers()),
     };
     /*
-      «Completează-ți datele» (§NNN): the answers the page asked above the signature, read by the public form's own
+      «Completează-ți datele» (§905): the answers the page asked above the signature, read by the public form's own
       mapping — only when the page drew them, so a complete registration's press is what it always was. The
       service saves them as the person's own in the signature's transaction, and keeps only the missing ones.
     */
@@ -167,7 +167,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     const full = waitlistRefusalOf(error);
     if (full) redirect(`${path}?full=${full === NO_WAITLIST ? "closed" : "1"}`);
     /*
-      An answer the form requires, left empty or refused by the form's own rule (§NNN): its own refusal, at the
+      An answer the form requires, left empty or refused by the form's own rule (§905): its own refusal, at the
       boxes — the URL carries their names and the rule's marker, never what was typed (§14.5), and what was typed
       comes back sealed, the answers with it. Nothing was saved or signed and the link was not spent: the answers
       and the signature are one transaction. Asked first, because a refusal of the answers names none of the
@@ -322,7 +322,7 @@ function declarationDraftOf(form: FormData): Record<string, string> {
     "minorTypedName",
     // The offers-and-benefits box (§562) comes back as it was ticked after a refusal.
     "promoConsent",
-    // The answers the page asked above the signature (§NNN), so a refusal of either leaves nothing to retype.
+    // The answers the page asked above the signature (§905), so a refusal of either leaves nothing to retype.
     ...ANSWER_DRAFT_FIELDS,
   ]) {
     const value = form.get(name);

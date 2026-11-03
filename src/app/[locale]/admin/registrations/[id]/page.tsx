@@ -151,7 +151,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   if (!registration) notFound();
   // «Membru (verificat)» / «Membru (declarat)» (§662), as on the list's row.
   const membership = membershipOf({ declared: registration.clubMemberDeclared, verified: registration.memberVerified });
-  // «Date lipsă» (§NNN): the answers the form requires and this registration does not hold — only while it still stands.
+  // «Date lipsă» (§905): the answers the form requires and this registration does not hold — only while it still stands.
   const owedAnswers = isActiveStatus(registration.status) ? missingAnswersHeld(registration) : [];
   // The members' race number (§664): «Număr de membru» when the row will print one, «cerut, neverificat» when it asked
   // and its address is no member account's — the sheet then prints the ordinary bib.
@@ -373,7 +373,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const answerWords = (field: string) =>
     (EDITABLE_ANSWERS as readonly string[]).includes(field) || field === "listSocials" ? tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME }) : field;
   const trailLabel = (action: string, metadata: unknown): string => {
-    // «Completează-ți datele» (§NNN): the person's own completion names its fields in words, never a value.
+    // «Completează-ți datele» (§905): the person's own completion names its fields in words, never a value.
     if (action === "registration.answers_completed") {
       const fields = (metadata as { fields?: unknown } | null)?.fields;
       const named = Array.isArray(fields) ? fields.filter((field): field is string => typeof field === "string" && field !== "registeredName") : [];
@@ -502,7 +502,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.outsideCapacity && <HiddenListChip label={tr("registrations.outside.chip")} hint={tr("registrations.outside.hint")} testId="outside-chip" />}
         {/* «Elită» (§897): the bib prints with the name where the number goes; marked and unmarked from the list's «⋮». */}
         {registration.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={tr("registrations.elite.chip")} testId="elite-chip" />}
-        {/* «Date lipsă» (§NNN): the list's chip; which answers, and how they are completed, is the line under the address. */}
+        {/* «Date lipsă» (§905): the list's chip; which answers, and how they are completed, is the line under the address. */}
         {owedAnswers.length > 0 && <StatusChip glyph="missingAnswers" color="warning" variant="outlined" label={tr("registrations.missingAnswers.chip")} testId="missing-answers-chip" />}
         <FamilyChip
           label={tr("registrations.familyChip")}
@@ -537,7 +537,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         </Box>
       )}
       {/*
-        «Date lipsă» (§NNN): which answers the form requires that this registration does not hold, and how they are
+        «Date lipsă» (§905): which answers the form requires that this registration does not hold, and how they are
         completed — by the person from their own link (the declaration's, or the manage page's after it), or by the
         Administrator through «Modifică datele». Read by every role; the «how» is the Administrator's to act on.
       */}

@@ -17,7 +17,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { readSheet } from "../../helpers/xlsx";
 
 /**
- * §NNN — «Are kit» (the owner, 2026-11-03: «ar trebui să număr pe header câți au kit, deci trebuie încă un field de „are kit"»), and
+ * §904 — «Are kit» (the owner, 2026-11-03: «ar trebui să număr pe header câți au kit, deci trebuie încă un field de „are kit"»), and
  * the role names the «Voluntari» list printed twice, from a real database:
  *
  * - the list's row carries the house's one-press tick (`TickButton` in a plain form posting the state it wants); the Organizer and the
@@ -236,7 +236,7 @@ const kitAudits = async (id: string) =>
   (await db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.edited"))).filter((row) => (row.metadataJson as { volunteerId?: string }).volunteerId === id);
 const firstPage = { limit: 25, offset: 0, sort: "since" as VolunteerSortKey, dir: "asc" as const };
 
-describe("«Are kit» on the list's row (§NNN)", () => {
+describe("«Are kit» on the list's row (§904)", () => {
   it("is the house's one-press tick: a submit drawn as the checkbox, its state in aria-checked, posting the state it wants and coming back to this page", async () => {
     const page = await listPage();
     expect(page).toContain(">Kit<");
@@ -299,7 +299,7 @@ describe("«Are kit» on the list's row (§NNN)", () => {
   });
 });
 
-describe("«Are kit» in «Modifică», in «Adaugă un voluntar de mână» and in a person's data (§NNN)", () => {
+describe("«Are kit» in «Modifică», in «Adaugă un voluntar de mână» and in a person's data (§904)", () => {
   it("is a box of the person's «Modifică», ticked as saved, beside the chip «Are kit»", async () => {
     const page = await personPage(people.dan);
     const box = /<input\b[^>]*\bname="hasKit"[^>]*>/.exec(page)?.[0] ?? "";
@@ -353,7 +353,7 @@ describe("«Are kit» in «Modifică», in «Adaugă un voluntar de mână» and
   });
 });
 
-describe("«Cu kit: N» on the «Voluntari» strip, and the filter (§NNN)", () => {
+describe("«Cu kit: N» on the «Voluntari» strip, and the filter (§904)", () => {
   it("counts the ticked who are not cancelled, for the event in scope or every event, blind to the filters", async () => {
     // Dan; Eva is cancelled, Mara is the run's.
     expect((await summariseVolunteersForAdmin(db, { eventId: raceId })).withKit).toBe(1);
@@ -399,7 +399,7 @@ describe("«Cu kit: N» on the «Voluntari» strip, and the filter (§NNN)", () 
   });
 });
 
-describe("«Are kit» in the event's files (§NNN)", () => {
+describe("«Are kit» in the event's files (§904)", () => {
   it("is the CSV's last column and a column of the spreadsheet beside the T-shirt, «Da» / «Nu» in the reader's words", async () => {
     const csv = await (await eventFile(new Request(`http://localhost/api/admin/events/${raceId}/volunteers?lang=ro`), { params: Promise.resolve({ id: raceId }) })).text();
     const lines = csv.split("\r\n");
@@ -418,7 +418,7 @@ describe("«Are kit» in the event's files (§NNN)", () => {
   });
 });
 
-describe("a role standing in two categories is named with its category, each once (§NNN)", () => {
+describe("a role standing in two categories is named with its category, each once (§904)", () => {
   it("reads each row's links once — two choices and one role are two and one — and the words of each role with its category's", async () => {
     const rows = await listVolunteersForAdmin(db, { eventId: raceId }, firstPage, "ro");
     const ana = rows.find((row) => row.id === people.ana);

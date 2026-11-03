@@ -17,11 +17,11 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
  * «Salvează nota» and «Șterge». The coarse gate here (`canKeepRegistrationNotes`) and the service's own
  * (BR-REQ-060-01). A refusal keeps what was typed (§315); a success returns to the panel, open. Nothing
  * typed goes in the URL or the flash, and nothing is ever sent to the person. A fourth, the Administrator's
- * alone: «Mută pe lista de elită» (§NNN), below.
+ * alone: «Mută pe lista de elită» (§903), below.
  */
 
 /**
- * A line whose name cannot print on a bib (§NNN): its own sentence, since no box of the move's form holds the name.
+ * A line whose name cannot print on a bib (§903): its own sentence, since no box of the move's form holds the name.
  * Not exported: a "use server" file exports async functions only.
  */
 const RESERVE_ELITE_NAME = "RESERVE_ELITE_NAME";
@@ -77,7 +77,7 @@ export async function deleteReserveEntryAction(_previous: FormOutcome | null, fo
 }
 
 /**
- * «Mută pe lista de elită» on a line (§NNN): the line's name onto the race's elite list (§895) — printed on a bib,
+ * «Mută pe lista de elită» on a line (§903): the line's name onto the race's elite list (§895) — printed on a bib,
  * nobody registered, emailed or seated — and the line gone, in one transaction (`moveReserveEntryToElite`). The
  * Administrator's alone: the coarse gate here, the service's own assertion again (BR-REQ-060-01); the Organizer
  * keeps the list's add, note and delete. Asked first on the line, naming the person. A name too long for a bib is

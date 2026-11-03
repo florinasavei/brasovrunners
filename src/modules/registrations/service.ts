@@ -3352,7 +3352,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     }
 
     /*
-      «Completează-ți datele» (§NNN): no signature while the registration lacks an answer the public form
+      «Completează-ți datele» (§905): no signature while the registration lacks an answer the public form
       requires of this person (`missing-answers.ts`) — a staff entry, a line of the internal list moved onto the
       official one. The page asks the missing ones above the signature and saves them in this same transaction,
       as the person's own (`complete-answers.ts`); a press that left one empty, or a caller that posted none, is

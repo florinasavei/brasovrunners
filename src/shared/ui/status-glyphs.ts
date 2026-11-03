@@ -118,9 +118,9 @@ export const STATUS_GLYPHS = {
   checkedIn: HowToRegIcon,
   // «Elită» on a registration (§897): the medal the elite card and the «⋮»'s «Marchează ca elită» wear.
   elite: MilitaryTechIcon,
-  // «Are kit» on a volunteer (§NNN): the hanger the event editor's «Kit de participare» panel wears (`panel-glyphs.ts#kit`).
+  // «Are kit» on a volunteer (§904): the hanger the event editor's «Kit de participare» panel wears (`panel-glyphs.ts#kit`).
   kit: CheckroomIcon,
-  // «Date lipsă» on a registration (§NNN): answers the form requires that the row does not hold — the late form.
+  // «Date lipsă» on a registration (§905): answers the form requires that the row does not hold — the late form.
   missingAnswers: AssignmentLateIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 

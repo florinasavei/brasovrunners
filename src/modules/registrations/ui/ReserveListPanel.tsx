@@ -34,7 +34,7 @@ const AddressIcon = ACTION_ICONS.emailConfirmation;
  * lista internă». Presentation only: the page reads the rows and hands in the actions.
  *
  * And for the Administrator alone (`eliteMoveAction`), on every line, address or none: «Mută pe lista de elită»
- * (§NNN) — the name onto the race's elite list (§895), printed on a bib, nobody registered — asked first, the
+ * (§903) — the name onto the race's elite list (§895), printed on a bib, nobody registered — asked first, the
  * dialog naming the person and saying what does not happen (no registration, place, email or declaration in the
  * app) and that the internal note is not kept. Under a line's «Email pentru lista oficială», the same role reads
  * that an elite runner needs no address. Back from the move (`eliteCardHref`), the panel's first line links to
@@ -64,7 +64,7 @@ export default async function ReserveListPanel({
   deleteAction: ActionFormAction;
   /** «Mută pe lista oficială» and «Oferă-i un loc acum»: absent, no line carries them. */
   moveAction?: ActionFormAction;
-  /** «Mută pe lista de elită» (§NNN), the Administrator's: absent, no line carries it, nor the no-address line. */
+  /** «Mută pe lista de elită» (§903), the Administrator's: absent, no line carries it, nor the no-address line. */
   eliteMoveAction?: ActionFormAction;
   /** The list's own query (filters, sort, page), posted by «Mută pe lista de elită» so the press comes back to the same list. */
   listQuery?: string;
@@ -104,7 +104,7 @@ export default async function ReserveListPanel({
     const questions: ConfirmSpec[] = [];
     if (forecast) {
       const offer = waitlistOfferQuestion((key, values) => t(key, values), email, forecast);
-      // The line holds a name and an address (§888): the rest the form asks, the person types when they sign (§NNN).
+      // The line holds a name and an address (§888): the rest the form asks, the person types when they sign (§905).
       questions.push({ ...shared, when: [{ field: "intent", equals: "offer" }], title: t("confirm.waitlistOfferTitle"), body: `${name}: ${offer.body} ${t("reserve.noteFollows")} ${t("reserve.detailsAtSigning")}`, confirmLabel: offer.confirmLabel });
     }
     questions.push({
@@ -119,7 +119,7 @@ export default async function ReserveListPanel({
   return (
     <Panel glyph="queue" collapsible title={t("reserve.title")} intro={t("reserve.intro")} aside={aside} openWhen={{ saved: opened }} id="registrations-reserve" data-testid="registrations-reserve">
       <Stack spacing={3}>
-        {/* Back from «Mută pe lista de elită» (§NNN): where the name is now, one press away — a plain link, so the editor's fold opens from `#bib-elite`. */}
+        {/* Back from «Mută pe lista de elită» (§903): where the name is now, one press away — a plain link, so the editor's fold opens from `#bib-elite`. */}
         {eliteCardHref && (
           <Alert severity="success" data-testid="reserve-moved-to-elite">
             <Box component="p" sx={{ m: 0 }}>
@@ -222,7 +222,7 @@ export default async function ReserveListPanel({
                     </GlyphButton>
                   )}
                   {eliteMoveAction && (
-                    // «Mută pe lista de elită» (§NNN): with or without an address — the elite list asks for none.
+                    // «Mută pe lista de elită» (§903): with or without an address — the elite list asks for none.
                     <ActionForm
                       action={eliteMoveAction}
                       messages={refusal}

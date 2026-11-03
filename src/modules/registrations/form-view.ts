@@ -113,7 +113,7 @@ export function formViewOf(event: RegistrationFormEvent, now: Date): Registratio
 
 /**
  * «Kit de participare» → «Tricou» (§554): the form asks the size only when the event gives a shirt. One test,
- * read by the form (`formViewOf`) and by the answers a registration still owes (`missing-answers.ts`, §NNN).
+ * read by the form (`formViewOf`) and by the answers a registration still owes (`missing-answers.ts`, §905).
  */
 export function asksShirt(event: { kitShirt?: boolean | null }): boolean {
   return event.kitShirt === true;
@@ -122,7 +122,7 @@ export function asksShirt(event: { kitShirt?: boolean | null }): boolean {
 /**
  * The birth date's bounds (BR-REQ-031-04 criterion 4, §321): 120 years back, and the latest date that still
  * reaches the event's minimum age on its own day — or today, for an event absurdly far ahead. The form's box and
- * the boxes that complete a registration's missing answers (§NNN) draw the same two.
+ * the boxes that complete a registration's missing answers (§905) draw the same two.
  */
 export function birthDateBounds(minAge: number, eventDay: string, now: Date): { earliest: string; latest: string } {
   const today = now.toISOString().slice(0, 10);

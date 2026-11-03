@@ -293,7 +293,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? countKits(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
     // «Locuri» (the owner, 2026-11-03): taken, free, both lists, how many can be let in — one event with a capacity only.
     filters.eventId ? readPlaceOutlook(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
-    // «Plus voluntari cu kit» (§NNN): the event's volunteers ticked «Are kit», a figure of its own beside the kits — `countKits` is untouched.
+    // «Plus voluntari cu kit» (§904): the event's volunteers ticked «Are kit», a figure of its own beside the kits — `countKits` is untouched.
     filters.eventId ? countVolunteersWithKit(db, filters.eventId) : Promise.resolve(0),
   ]);
 
@@ -471,7 +471,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
           {/* «Elită» (§897): the bib prints with the name where the number goes — for every role that reads the list. */}
           {row.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="elite-chip" />}
-          {/* «Date lipsă» (§NNN): a registration still standing lacks answers the form requires — the person completes them
+          {/* «Date lipsă» (§905): a registration still standing lacks answers the form requires — the person completes them
               from their own link, or the Administrator types them; the registration's page says which and how. */}
           {isActiveStatus(row.status) && missingAnswersHeld(row).length > 0 && (
             <StatusChip glyph="missingAnswers" color="warning" variant="outlined" label={t("registrations.missingAnswers.chip")} testId="missing-answers-chip" />
@@ -1363,7 +1363,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         «Lista internă (doar notițe)» (§854, §888): people who asked to be kept in mind for this event, told nothing,
         for the roles that keep internal notes. Only on a list about one event: a line is about one. Moving a line onto
         the official list — one press, or the full form — is the Administrator's; the press only while the event takes
-        a vouched entry (the door of «Adaugă pe lista de așteptare»). «Mută pe lista de elită» (§NNN) is the
+        a vouched entry (the door of «Adaugă pe lista de așteptare»). «Mută pe lista de elită» (§903) is the
         Administrator's too, on every line and at any time — the elite list is no queue — and comes back to this list
         as it is, the panel open on the link to the editor's elite card.
       */}

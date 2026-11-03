@@ -390,7 +390,7 @@ export async function VolunteerPersonFields({ person, context }: { person: Volun
           </CheckboxField>
         </Box>
       )}
-      {/* «Are kit» (§NNN; the owner, 2026-11-03: «trebuie încă un field de „are kit"»): the organizers' own mark, drawn whatever the notice in force
+      {/* «Are kit» (§904; the owner, 2026-11-03: «trebuie încă un field de „are kit"»): the organizers' own mark, drawn whatever the notice in force
           names — it is the club's packing, not the person's answer — and on no public form. The «Voluntari» list's row ticks it in one press too. */}
       <Box data-testid="volunteer-kit-field">
         <CheckboxField name="hasKit" defaultChecked={person?.hasKit ?? false} help={t("volunteers.person.hasKitHelp")}>
@@ -797,7 +797,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
           {person.listOptIn && <StatusChip glyph="wantsList" variant="outlined" label={t("volunteers.chips.wantsList")} testId="volunteer-on-list" />}
           {person.volunteeredBefore && <StatusChip glyph="experience" variant="outlined" label={t("volunteers.chips.before")} testId="volunteer-before" />}
           {person.clubMember && <StatusChip glyph="club" variant="outlined" label={t("volunteers.chips.club", { club: CLUB_NAME })} testId="volunteer-club" />}
-          {/* «Are kit» (§NNN): the organizers' own mark, beside the person's own claims — set in «Modifică» below, or by one press on the list. */}
+          {/* «Are kit» (§904): the organizers' own mark, beside the person's own claims — set in «Modifică» below, or by one press on the list. */}
           {person.hasKit && <StatusChip glyph="kit" variant="outlined" label={t("volunteers.chips.kit")} testId="volunteer-kit" />}
         </Stack>
       )}

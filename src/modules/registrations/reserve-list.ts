@@ -24,7 +24,7 @@ import type { StaffPlaceOptions } from "./service";
  * «Mută pe lista oficială» and «Oferă-i un loc acum» (§888) move a line onto the official waiting list in one
  * press (`moveReserveEntryToWaitlist`); the full form, prefilled, stays one link away, and `settleReserveEntry`
  * then carries the entry's note onto the registration as an internal note (§777) and removes the line.
- * «Mută pe lista de elită» (§NNN) takes a line the other way, onto no list of registrations at all: its name onto
+ * «Mută pe lista de elită» (§903) takes a line the other way, onto no list of registrations at all: its name onto
  * the race's elite list (§895), printed on a bib, nobody registered (`moveReserveEntryToElite`).
  *
  * **Who** — the Organizer and above (`canKeepRegistrationNotes`, the internal notes' own rule) add, note and
@@ -271,7 +271,7 @@ export async function settleReserveEntry<T extends Record<string, unknown>>(db: 
 }
 
 /**
- * «Mută pe lista de elită» on one line (§NNN; the owner, 2026-11-03, of an elite runner written on the internal
+ * «Mută pe lista de elită» on one line (§903; the owner, 2026-11-03, of an elite runner written on the internal
  * list without an address: «având în vedere că e elită, nu trebuie să-i pun email»): the line's name onto the
  * race's elite list (§895) — printed on a bib where the number goes — and the line off the internal list. **Not a
  * registration**: no participant, no place, no queue, no email, no declaration, so no address is asked and the

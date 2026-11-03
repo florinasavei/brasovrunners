@@ -491,7 +491,7 @@ async function renderRow(
     if (others.length > 0) data.familyToSign = others;
   }
   /*
-    «Completează-ți datele» (§NNN): a registration that lacks answers the form requires — a staff entry, a line of the
+    «Completează-ți datele» (§905): a registration that lacks answers the form requires — a staff entry, a line of the
     internal list moved onto the official one — is asked them on the page this link opens, before the signature. The
     request to sign and the offer say so, read at send time. The event's T-shirt tick matters only to a row that never
     answered the size, so it is read only for one. The inbox's alone: a club copy carries no link.

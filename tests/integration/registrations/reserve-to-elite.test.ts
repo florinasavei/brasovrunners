@@ -16,7 +16,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Mută pe lista de elită» (§NNN; BR-REQ-037-05, BR-REQ-060-01) — the owner, 2026-11-03, of an elite runner written
+ * «Mută pe lista de elită» (§903; BR-REQ-037-05, BR-REQ-060-01) — the owner, 2026-11-03, of an elite runner written
  * on the internal list without an address: «având în vedere că e elită, nu trebuie să-i pun email». A line of «Lista
  * internă (doar notițe)» (§854) moves onto the race's elite list (§895) in one press: its first and last name become
  * a name printed on a bib, with no number, and the line is deleted — in one transaction, audited by ids. Nobody is
@@ -121,7 +121,7 @@ async function refusal(work: Promise<unknown>): Promise<unknown> {
   throw new Error("expected a refusal");
 }
 
-describe("§NNN «Mută pe lista de elită» on a line of the internal list", () => {
+describe("§903 «Mută pe lista de elită» on a line of the internal list", () => {
   it("writes the line's name onto the elite list with no number and deletes the line, in one press: nobody registered, emailed or seated", async () => {
     // The name as it prints: trimmed, the inner spaces collapsed (`parseEliteEntry`).
     const entryId = await line("  Mara ", "Munteanu   Pop");

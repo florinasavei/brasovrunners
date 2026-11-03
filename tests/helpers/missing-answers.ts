@@ -1,5 +1,5 @@
 /**
- * «Completează-ți datele» (§NNN): the answers a staff entry or a moved internal-list line lacks, as a person types
+ * «Completează-ți datele» (§905): the answers a staff entry or a moved internal-list line lacks, as a person types
  * them in the boxes the declaration's page or the manage page draws — the shape `readPostedAnswers` hands the service.
  * An adult's birth date, a city, a telephone, and an emergency contact who is somebody else.
  */

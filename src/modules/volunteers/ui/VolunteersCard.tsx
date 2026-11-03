@@ -738,7 +738,7 @@ export default async function VolunteersCard({
     );
   };
 
-  // «Cu kit» (§NNN; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit»): the people the organizers ticked «Are kit» on, the
+  // «Cu kit» (§904; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit»): the people the organizers ticked «Are kit» on, the
   // cancelled left out — the «Voluntari» screen's own figure in its own words, said on the card's closed line once there is any.
   const withKit = volunteers.filter((volunteer) => volunteer.hasKit && volunteer.state !== "CANCELLED").length;
   const kitLine = withKit > 0 ? [t("volunteers.screen.summaryKit", { count: String(withKit) })] : [];

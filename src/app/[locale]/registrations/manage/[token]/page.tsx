@@ -88,7 +88,7 @@ type Props = {
     person?: string;
     /** The box a cancel without its reason named (§558): `kind`, `text` or `long`, under `person`'s cancel. */
     reason?: string;
-    /** «Completează-ți datele»'s outcome (§NNN): 1 saved, 0 refused — then `answersRefused` names the boxes and the rule. */
+    /** «Completează-ți datele»'s outcome (§905): 1 saved, 0 refused — then `answersRefused` names the boxes and the rule. */
     answers?: string;
     answersRefused?: string;
   }>;
@@ -221,7 +221,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
         })
       : null;
   /*
-    «Completează-ți datele» (§NNN): for each person still registered whose registration lacks an answer the public
+    «Completează-ți datele» (§905): for each person still registered whose registration lacks an answer the public
     form requires, a card with only those boxes and a save button — a confirmed one too, its declaration untouched.
     The event is read only when somebody owes an answer; a complete page reads and draws nothing more.
   */
@@ -408,7 +408,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 )}
 
                 {/*
-                  «Completează-ți datele» (§NNN): only the boxes still missing, the public form's own, and one save — read
+                  «Completează-ți datele» (§905): only the boxes still missing, the public form's own, and one save — read
                   through the manage link, never spent; saved as the person's own. `#answers` is where the press lands.
                 */}
                 {answered && answers === "1" && (

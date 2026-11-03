@@ -151,7 +151,7 @@ type Props = {
   /**
    * `reason`: the box a «Renunț» without its reason named (§558) — `kind`, `text` or `long`. `answers`: beside
    * `invalid=answers`, the boxes of «Completează-ți datele» a press left empty or the form's rule refused, and the
-   * rule's marker (§NNN) — names only, read through `readAnswersRefusal`.
+   * rule's marker (§905) — names only, read through `readAnswersRefusal`.
    */
   searchParams: Promise<{ done?: string; invalid?: string; changed?: string; full?: string; reminder?: string; reason?: string; answers?: string }>;
 };
@@ -366,7 +366,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   */
   const acceptRefused = signing && invalid === "accept";
   /*
-    `invalid=answers` is «Completează-ți datele» refused (§NNN): an answer the form requires left empty, or one its
+    `invalid=answers` is «Completează-ți datele» refused (§905): an answer the form requires left empty, or one its
     rule refused — said at the boxes, with the kept draft, never as the generic sentence.
   */
   const answersRefusal = signing && invalid === "answers" ? readAnswersRefusal(answersParam) : null;
@@ -512,7 +512,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   */
   const draft = nameRefused || documentRefused || acceptRefused || answersRefusal !== null ? await readFormDraft() : null;
   /*
-    «Completează-ți datele» (§NNN): the answers the public form requires of this person that the registration does
+    «Completează-ți datele» (§905): the answers the public form requires of this person that the registration does
     not hold — a staff entry, a line of the internal list moved onto the official one. Asked first, above the
     signature, with the form's own boxes, and saved with it in one transaction; the signature is refused while any
     is missing. A complete registration reads nothing more and draws nothing more.
@@ -682,7 +682,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             </Alert>
           )}
           {/*
-            «Completează-ți datele» (§NNN), said before the declaration's text: the boxes are above the signature,
+            «Completează-ți datele» (§905), said before the declaration's text: the boxes are above the signature,
             and nobody should reach the end of a page of legal text to learn that something is still asked of them.
           */}
           {owed.length > 0 && (
@@ -767,7 +767,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               )}
               {refusedBoxes.includes("typedName") && (
                 <Box sx={{ mt: 0.5 }}>
-                  {/* A guardian typed above, not yet saved (§NNN): corrected in its own box, never by cancelling. */}
+                  {/* A guardian typed above, not yet saved (§905): corrected in its own box, never by cancelling. */}
                   {guardianTypedAbove
                     ? t("complete.guardianTypedAbove")
                     : signsForMinor !== null
@@ -817,7 +817,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               <input type="hidden" name="documentId" value={declaration?.id ?? ""} />
               <input type="hidden" name="contentSha256" value={declaration?.contentSha256 ?? ""} />
               {/*
-                «Completează-ți datele» (§NNN), first in the form: only the answers missing, with the public form's
+                «Completează-ți datele» (§905), first in the form: only the answers missing, with the public form's
                 own boxes, saved with the signature in one transaction — a refusal of either keeps what was typed.
               */}
               {owed.length > 0 && formEvent && registration &&
@@ -908,7 +908,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                     />
                   )}
                   {/*
-                    While the birth date or the guardian is still asked above (§NNN), whose name signs is not known
+                    While the birth date or the guardian is still asked above (§905), whose name signs is not known
                     yet: the box matches no name while typing and says both cases; the server checks the signature
                     against the row the answers leave, and a refusal comes back with the person decided (`signer`).
                   */}

@@ -14,7 +14,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { TYPED_ANSWERS } from "../../helpers/missing-answers";
 
 /**
- * BR-REQ-037-05 criteria 25–26 (§NNN) — «Date lipsă» in the backoffice: a registration still standing that lacks answers
+ * BR-REQ-037-05 criteria 25–26 (§905) — «Date lipsă» in the backoffice: a registration still standing that lacks answers
  * the public form requires wears the chip on the registrations list's row and on its own page, for every role that reads
  * them; the page says which answers, in words, and — to the Administrator — how they are completed: by the person from
  * their own link, or typed through «Modifică datele». A complete registration, a cancelled one, and one completed since

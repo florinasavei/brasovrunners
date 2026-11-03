@@ -136,7 +136,7 @@ describe("the volunteers' spreadsheet, «formatat frumos» (§846)", () => {
     // The header's fill and words: the club's deep blue, white.
     expect(styles).toContain(argb(SHEET_FRAME.header));
     expect(styles).toContain(argb(SHEET_FRAME.headerInk));
-    // One event: no «Eveniment» column; the filter covers the header and the four people, twenty-one columns wide («Are kit», §NNN, the last added).
+    // One event: no «Eveniment» column; the filter covers the header and the four people, twenty-one columns wide («Are kit», §904, the last added).
     const { rows } = readSheet(buffer);
     expect(rows[0][0]).toBe(words.csvColumns.name);
     expect(rows).toHaveLength(5);

@@ -218,7 +218,7 @@ describe("§872 «Direct pe lista de așteptare»: the address vouched for at th
     expect((await readPublicPlaces(db, { id: event.id, capacity: 2, waitlistCapacity: null }, at(6))).availablePlaces).toBe(0);
 
     // The signature is the person's, from the email — nothing here signed for them. The entry wrote a name and an
-    // address: the rest the form requires, the person completes on the same page first (§NNN) — never signed without.
+    // address: the rest the form requires, the person completes on the same page first (§905) — never signed without.
     const unsigned = await refusal(signDeclaration(db, event, mara.id, await signingInput(db, at(30), "Mara Munteanu"), at(30)));
     expect(isDomainError(unsigned) && unsigned.fields).toEqual([...missingAnswers({ kitShirt: false }, mara), ANSWERS_MISSING]);
     expect(missingAnswers({ kitShirt: false }, mara)).toEqual(["birthDate", "city", "sex", "nationality", "phone", "emergencyContactName", "emergencyContactPhone"]);

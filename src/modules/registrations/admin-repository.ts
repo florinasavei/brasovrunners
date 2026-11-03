@@ -175,7 +175,7 @@ export type RegistrationListRow = {
 } & AnswersForChip;
 
 /**
- * What «Date lipsă» reads (§NNN, `missing-answers.ts`), beside the answers the row already carries: the answers
+ * What «Date lipsă» reads (§905, `missing-answers.ts`), beside the answers the row already carries: the answers
  * themselves where the list may show them, and for the telephone and the emergency contact only whether one is
  * held (`answerHeldSql`) — the list never reads either (§322).
  */
@@ -190,7 +190,7 @@ export type AnswersForChip = {
   emergencyContactPhoneHeld: boolean;
 };
 
-/** Whether an answer is there, never the answer (§322, §NNN): a blank is none, as the form reads it. */
+/** Whether an answer is there, never the answer (§322, §905): a blank is none, as the form reads it. */
 function answerHeldSql(column: AnyPgColumn): SQL<boolean> {
   return sql<boolean>`(nullif(btrim(${column}), '') is not null)`.mapWith(Boolean);
 }
@@ -547,7 +547,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       cancelReason: registrations.cancelReason,
       expiredAt: registrations.expiredAt,
       expiryReason: registrations.expiryReason,
-      // «Date lipsă» (§NNN): the answers it reads, the telephone and the emergency contact only as "held".
+      // «Date lipsă» (§905): the answers it reads, the telephone and the emergency contact only as "held".
       ...ANSWERS_FOR_CHIP,
     })
     .from(registrations)
@@ -899,7 +899,7 @@ export type RegistrationDetail = {
   resultsNameConsent: boolean;
   /** For the link to everything held about this person (§322): the identity it is looked up by. */
   participantCanonicalEmail: string;
-  /** «Date lipsă» (§NNN): the two names, the birth date and the citizenship it reads beside `AnswersForChip`. */
+  /** «Date lipsă» (§905): the two names, the birth date and the citizenship it reads beside `AnswersForChip`. */
   firstName: string | null;
   lastName: string | null;
   birthDate: string | null;
@@ -992,7 +992,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       holdsHealthNote: sql<boolean>`(${registrations.healthNotes} IS NOT NULL OR ${registrations.healthConsentAt} IS NOT NULL)`.mapWith(Boolean),
       resultsNameConsent: registrations.resultsNameConsent,
       participantCanonicalEmail: participants.canonicalEmail,
-      // «Date lipsă» (§NNN): the answers it reads, the telephone and the emergency contact only as "held".
+      // «Date lipsă» (§905): the answers it reads, the telephone and the emergency contact only as "held".
       firstName: registrations.firstName,
       lastName: registrations.lastName,
       birthDate: registrations.birthDate,

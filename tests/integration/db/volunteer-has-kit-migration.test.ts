@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0187_volunteer_has_kit` (§NNN; the owner, 2026-11-03: «trebuie încă un field de „are kit"»), proven on real PostgreSQL
+ * Migration `0187_volunteer_has_kit` (§904; the owner, 2026-11-03: «trebuie încă un field de „are kit"»), proven on real PostgreSQL
  * (PGlite): one column on the event's volunteers, `has_kit`, a boolean, not null, false by default — so every row from before reads
  * «no kit» and a row written without it too — and nothing else; the file only expands.
  */

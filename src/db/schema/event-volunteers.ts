@@ -267,7 +267,7 @@ export const eventVolunteers = pgTable(
      */
     listOptInNoticeVersion: integer("list_opt_in_notice_version"),
     /**
-     * «Are kit» (§NNN; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit, deci trebuie încă un field de „are kit"»): the
+     * «Are kit» (§904; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit, deci trebuie încă un field de „are kit"»): the
      * organizers' own mark that the person gets the volunteers' kit — ticked on the «Voluntari» list's row, in «Modifică» or in «Adaugă un
      * voluntar de mână», never on the public form. The club's logistics, not something the person said: it is counted on the screen's
      * header («Cu kit: N», the cancelled left out) and beside the registrations' «Kituri de pregătit». Off by default.

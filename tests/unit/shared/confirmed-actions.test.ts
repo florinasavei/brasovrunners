@@ -108,7 +108,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   addToWaitlistAction: ["waitlistAddAction"],
   // «Mută pe lista oficială» / «Oferă-i un loc acum» (§888): an entry that emails the person, asked first on each internal-list line, the relay tick in the dialog.
   moveReserveEntryAction: ["moveAction"],
-  // «Mută pe lista de elită» (§NNN): the line gone and its note with it, asked first on each internal-list line, naming the person; handed to the panel as `eliteMoveAction`.
+  // «Mută pe lista de elită» (§903): the line gone and its note with it, asked first on each internal-list line, naming the person; handed to the panel as `eliteMoveAction`.
   moveReserveEntryToEliteAction: ["eliteMoveAction"],
   // «Modifică datele» (§645): asks, naming the person and the fields the press changes.
   editRegistrationAnswersAction: [],
@@ -298,7 +298,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Marchează ca elită» / «Nu mai e elită» (§897): how one registration's bib prints, nothing else of it.
   setRegistrationEliteAction:
     "a mark on how one registration's bib prints, undone from the same menu; it tells nobody and changes no state, place, number or count",
-  // «Are kit» on a row of the «Voluntari» list (§NNN): the organizers' own mark of who gets the volunteers' kit, a one-press tick.
+  // «Are kit» on a row of the «Voluntari» list (§904): the organizers' own mark of who gets the volunteers' kit, a one-press tick.
   setVolunteerKitAction:
     "a mark on the club's packing for one volunteer, undone by the same tick; it tells nobody and changes no state, role or count but «Cu kit»",
   addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",
