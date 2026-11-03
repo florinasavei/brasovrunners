@@ -12065,7 +12065,9 @@
       "nameSigned": "The first and last name must make up the name on the signed declaration: {name}.",
       "save": "Save the details",
       "saving": "Saving…",
-      "saved": "Done, your details are saved."
+      "saved": "Done, your details are saved.",
+      "signatureOpen": "You registered as {name}: sign with exactly this name. For a minor, the parent or guardian signs, with the name typed above.",
+      "guardianTypedAbove": "The parent or guardian signs, with the name typed above in the details to complete. If that name is wrong, correct it there and sign with it."
     }
   },
   "Devs": {

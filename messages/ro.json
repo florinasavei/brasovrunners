@@ -12065,7 +12065,9 @@
       "nameSigned": "Prenumele și numele trebuie să formeze numele din declarația semnată: {name}.",
       "save": "Salvează datele",
       "saving": "Se salvează…",
-      "saved": "Gata, datele tale sunt salvate."
+      "saved": "Gata, datele tale sunt salvate.",
+      "signatureOpen": "Te-ai înscris ca {name}: semnează cu exact acest nume. Pentru un minor semnează părintele sau tutorele, cu numele scris mai sus.",
+      "guardianTypedAbove": "Semnează părintele sau tutorele, cu numele scris mai sus la datele de completat. Dacă numele e greșit, corectează-l acolo și semnează cu el."
     }
   },
   "Devs": {

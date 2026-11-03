@@ -1450,6 +1450,7 @@ V1 internal registration requires approved declaration version.
 - deterministic content SHA-256 over canonical serialized JSON;
 - participant sees exact version;
 - acceptance requires explicit checkbox + typed full name, which must be the declarant's own — the registered name, or the parent's or guardian's for a minor — compared after folding case, whitespace, diacritics, typographic punctuation and invisible characters, and refused otherwise before anything is recorded (`DECISIONS.md` §314);
+- acceptance requires the registration to hold every answer the public form requires of that person (`registrations/missing-answers.ts`, read off the form's own schema) — a staff entry or a line of the internal list moved onto the official one holds a name and an address, so the declaration's page asks the rest above the signature and saves them as the person's own in the signature's transaction; `signDeclaration` refuses any signature while one is missing, naming them. Never filled in by default and never by staff for the person; after a confirmation the manage link completes them, the declaration untouched (`DECISIONS.md` §NNN);
 - acceptance stores version/hash/locale/name/server timestamp;
 - no raw IP/user-agent stored by default — the one exception is the trace of an **electronic** signature (§771, the owner, 2026-10-14): the caller's IP address and browser at the moment the typed name was posted (`declaration_acceptances.ip` / `user_agent`, and the same on a group run's declaration and on the volunteer agreement's and its guardian's acceptance), written only at an electronic acceptance (the race's email link, a group run's page, the volunteer's form or link, the guardian's link) — never with `PAPER`, whatever the caller passes (`signature-trace.ts#traceColumns`) —, read from the request's headers by the action (`readSignatureTrace`, never a form box), kept as long as the row and deleted with it, printed small under the signature of the PDF, listed in «Toate datele unei persoane», and named in the privacy notice's template (the declaration's, the group run's and the volunteers' paragraphs);
 - staff cannot sign on participant's behalf;
@@ -2779,8 +2780,9 @@ BR-REQ-037-05):
    form calls, with `source = STAFF` and the organizer's id. Identical allocator, identical
    event-row lock, identical position in the queue, identical `PENDING_EMAIL_CONFIRMATION`
    start. The participant receives the ordinary verification email and signs the declaration
-   from their own link: nothing here can reach CONFIRMED, because §10.8 says nobody signs a
-   declaration for somebody else. The organizer must confirm on the form that they are relaying
+   from their own link — completing there first the answers the public form requires and the
+   entry left out (§10.8, `DECISIONS.md` §NNN): nothing here can reach CONFIRMED, because §10.8
+   says nobody signs a declaration for somebody else. The organizer must confirm on the form that they are relaying
    a request; the service refuses the whole registration without it.
 2. **Correcting the answers the person typed (2026-10-02, `DECISIONS.md` §645, widening the
    name-only correction).** «Datele înscrierii» → «Modifică datele»: an Administrator

@@ -20,7 +20,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-037-05 criteria 23–25, BR-REQ-033-02 (§NNN; the owner, 2026-11-03: «am avut un bug când am trimis oferta
+ * BR-REQ-037-05 criteria 23–27, BR-REQ-033-02 (§NNN; the owner, 2026-11-03: «am avut un bug când am trimis oferta
  * că oamenii nu aveau unde să își completeze datele lor, nume, data nașterii, etc.»).
  *
  * A registration a staff member entered with a name and an address — or a line of the internal list moved onto
@@ -271,7 +271,7 @@ async function completions(id: string) {
   return db.select().from(auditLogs).where(and(eq(auditLogs.entityId, id), eq(auditLogs.action, "registration.answers_completed")));
 }
 
-async function tokenUsed(secret: string): Promise<boolean> {
+async function linkSpent(secret: string): Promise<boolean> {
   const tokens = await db.select({ usedAt: emailActionTokens.usedAt }).from(emailActionTokens);
   return tokens.some((token) => token.usedAt !== null) && secret.length > 0;
 }
@@ -310,7 +310,7 @@ describe("BR-REQ-037-05 criterion 23: the declaration's page asks the missing an
     expect(refusal.code).toBe("VALIDATION_ERROR");
     expect(refusal.fields).toEqual(["birthDate", "city", "sex", "nationality", "phone", "emergencyContactName", "emergencyContactPhone", ANSWERS_MISSING]);
     expect((await rowOf(row.id)).status).toBe("PENDING_DECLARATION");
-    expect(await tokenUsed(secret)).toBe(false);
+    expect(await linkSpent(secret)).toBe(false);
     expect(await db.select().from(declarationAcceptances)).toEqual([]);
 
     // The page's own press without the boxes lands on them, named.
@@ -326,7 +326,7 @@ describe("BR-REQ-037-05 criterion 23: the declaration's page asks the missing an
     expect(to).toMatch(/\?invalid=answers&answers=city%2CanswersMissing#complete-details$/);
     expect(await rowOf(row.id)).toMatchObject({ status: "PENDING_DECLARATION", birthDate: null, phone: null });
     expect(await completions(row.id)).toEqual([]);
-    expect(await tokenUsed(secret)).toBe(false);
+    expect(await linkSpent(secret)).toBe(false);
 
     const html = await declarePage(secret, { invalid: "answers", answers: "city,answersMissing" });
     expect(html).toContain('data-testid="complete-answers-refused"');
@@ -377,6 +377,49 @@ describe("BR-REQ-037-05 criterion 23: the declaration's page asks the missing an
     expect(await rowOf(row.id)).toMatchObject({ status: "CONFIRMED", birthDate: "2010-03-01", guardianName: "Ion Munteanu" });
   });
 
+  it("while the birth date is asked, the signature names nobody to match yet and says whose name it takes in either case", async () => {
+    const row = await registration("PENDING_DECLARATION");
+    const secret = await link(row.id, "COMPLETE_DECLARATION");
+    for (const [locale, catalogue] of [
+      ["ro", ro],
+      ["en", en],
+    ] as const) {
+      const html = await declarePage(secret, {}, locale);
+      // Under the box, both cases: the registered name, and a minor's parent or guardian typed above.
+      expect(html).toContain(catalogue.Registrations.complete.signatureOpen.replace("{name}", "Mara Munteanu"));
+      // Not «Mara must sign personally»: the birth date typed above may yet make her a minor, whose parent signs.
+      expect(html).not.toContain(catalogue.Registrations.declare.signPersonally.replace("{participant}", "Mara Munteanu"));
+    }
+  });
+
+  it("a parent who signs with the minor's name is refused, and the page then asks the guardian typed above, named — the next press signs", async () => {
+    const row = await registration("PENDING_DECLARATION");
+    const secret = await link(row.id, "COMPLETE_DECLARATION");
+    const minor = { ...TYPED_BOXES, birthDate: "01.03.2010", guardianName: "Ion Munteanu" };
+    // The child's name as the signature: the answers make a minor, whose declarant is the guardian (§108).
+    expect(await redirectOf(signDeclarationAction(await declarationForm(secret, minor)))).toMatch(/\?invalid=name#/);
+    expect(await rowOf(row.id)).toMatchObject({ status: "PENDING_DECLARATION", birthDate: null, guardianName: null });
+    expect(await completions(row.id)).toEqual([]);
+    expect(await linkSpent(secret)).toBe(false);
+
+    const html = await declarePage(secret, { invalid: "name" });
+    // The box now wants the guardian's name, in bold, and the summary says where that name is corrected — above, not by cancelling.
+    expect(html).toContain("<strong>Ion Munteanu</strong>");
+    expect(html).toContain(ro.Registrations.complete.guardianTypedAbove);
+    expect(html).not.toContain(ro.Registrations.complete.signatureOpen.replace("{name}", "Mara Munteanu"));
+    // Every answer comes back, the guardian with them.
+    expect(html).toContain('value="Ion Munteanu"');
+    expect(html).toContain('value="01.03.2010"');
+
+    const form = await declarationForm(secret, minor);
+    form.set("typedName", "Ion Munteanu");
+    expect(await redirectOf(signDeclarationAction(form))).toMatch(/\?done=confirmed/);
+    expect(await rowOf(row.id)).toMatchObject({ status: "CONFIRMED", birthDate: "2010-03-01", guardianName: "Ion Munteanu" });
+  });
+
+});
+
+describe("BR-REQ-037-05 criterion 26: the emails that open the signature say the details are asked there", () => {
   it("the offer of a freed place says it in the email, and the request to sign of a complete registration does not", async () => {
     const owing = await registration("WAITLIST_OFFERED");
     await db.update(registrations).set({ holdExpiresAt: new Date(Date.now() + DAY), offerCreatedAt: new Date() }).where(eq(registrations.id, owing.id));
@@ -452,7 +495,7 @@ describe("BR-REQ-037-05 criterion 24: the manage page completes a confirmed regi
     // The declaration is the one signed on paper: nothing was added or changed.
     expect(await db.select().from(declarationAcceptances).where(eq(declarationAcceptances.registrationId, row.id))).toHaveLength(1);
     // The manage link was read, never spent: the page still cancels.
-    expect(await tokenUsed(secret)).toBe(false);
+    expect(await linkSpent(secret)).toBe(false);
 
     const after = await managePage(secret, { answers: "1", person: row.id });
     expect(after).toContain('data-testid="manage-answers-saved"');
@@ -469,7 +512,7 @@ describe("BR-REQ-037-05 criterion 24: the manage page completes a confirmed regi
   });
 });
 
-describe("BR-REQ-037-05 criterion 25: «Date lipsă» in the backoffice, and a complete registration sees no change anywhere", () => {
+describe("BR-REQ-037-05 criteria 25 and 27: «Date lipsă» in the backoffice, and a complete registration sees no change anywhere", () => {
   it("marks the staff entry's row and page until the person completes it", async () => {
     const row = await registration("PENDING_DECLARATION");
     const listed = async () => (await listRegistrationsForAdmin(db, { eventId })).find((candidate) => candidate.id === row.id);
@@ -496,6 +539,9 @@ describe("BR-REQ-037-05 criterion 25: «Date lipsă» in the backoffice, and a c
     const html = await declarePage(secret);
     expect(html).not.toContain('data-testid="complete-answers');
     expect(html).not.toContain('name="answersAsked"');
+    // The signature as it always was: the person's own name to match, and the line that they sign personally.
+    expect(html).not.toContain(ro.Registrations.complete.signatureOpen.replace("{name}", "Mara Munteanu"));
+    expect(html).toContain(ro.Registrations.declare.signPersonally.replace("{participant}", "Mara Munteanu"));
     const listedRow = (await listRegistrationsForAdmin(db, { eventId })).find((candidate) => candidate.id === row.id);
     expect(listedRow && missingAnswersHeld(listedRow)).toEqual([]);
 

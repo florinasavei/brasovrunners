@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type { Registration } from "@/db/schema/registrations";
 import { EDITABLE_ANSWERS, EMERGENCY_SAME, GUARDIAN_SIGNED } from "@/modules/registrations/answers";
-import { answersRefusalParam, NAME_SIGNED, planAnswerCompletion, readAnswersRefusal } from "@/modules/registrations/complete-answers";
+import {
+  answersRefusalParam,
+  completionContext,
+  draftAnswers,
+  NAME_SIGNED,
+  planAnswerCompletion,
+  readAnswersRefusal,
+  registrationAfterCompletion,
+} from "@/modules/registrations/complete-answers";
+import { expectedSignatures } from "@/modules/registrations/domain/signature-name";
 import { anotherPersonSubmissionSchema, registrationSubmissionSchema, staffRegistrationSubmissionSchema, UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ANSWERS_MISSING, answersToAsk, type AnswersOnRow, missingAnswers, missingAnswersHeld } from "@/modules/registrations/missing-answers";
 import { TYPED_ANSWERS } from "../../helpers/missing-answers";
@@ -203,6 +212,53 @@ describe("BR-REQ-037-05 criterion 23: the person's completion", () => {
     const older = { ...row, ...complete, source: "STAFF", firstName: null, lastName: null, registeredName: "Mara Munteanu" } as unknown as Registration;
     expect(refusalOf(() => planAnswerCompletion(older, { firstName: "Maria", lastName: "Munteanu" }, { ...context, declarationSigned: true }))).toEqual(["firstName", "lastName", NAME_SIGNED]);
     expect(planAnswerCompletion(older, { firstName: "Mara", lastName: "Munteanu" }, { ...context, declarationSigned: true })?.nameChange).toBeNull();
+  });
+});
+
+describe("BR-REQ-037-05 criterion 23: who signs follows the answers typed above the signature (§108, §314)", () => {
+  /** The boxes as a refused press kept them (`form-draft.ts`): the birth date day first, the telephones as country and digits. */
+  const kept = {
+    birthDate: "11.05.1990",
+    sex: "FEMALE",
+    nationality: "RO",
+    city: "Sibiu",
+    phoneCountry: "RO",
+    phone: "0712345678",
+    emergencyContactName: "Ion Pop",
+    emergencyContactPhoneCountry: "RO",
+    emergencyContactPhone: "0722345678",
+  };
+
+  it("reads a kept draft by the public form's own mapping, and nothing without one", () => {
+    expect(draftAnswers(kept, "ro")).toMatchObject({ birthDate: "1990-05-11", phone: "+40712345678", emergencyContactPhone: "+40722345678", city: "Sibiu" });
+    expect(draftAnswers(null, "ro")).toBeNull();
+  });
+
+  it("a minor's birth date and a guardian make the guardian the declarant the signature is checked against", () => {
+    const after = registrationAfterCompletion(row, draftAnswers({ ...kept, birthDate: "01.03.2010", guardianName: "Ion Munteanu" }, "ro"), context);
+    expect(after).toMatchObject({ birthDate: "2010-03-01", guardianName: "Ion Munteanu", registeredName: "Mara Munteanu" });
+    expect(after && expectedSignatures(after, { minorSigns: false })).toEqual({ typedName: "Ion Munteanu", minorTypedName: null });
+    expect(after && expectedSignatures(after, { minorSigns: true })).toEqual({ typedName: "Ion Munteanu", minorTypedName: "Mara Munteanu" });
+  });
+
+  it("an adult's answers keep the person as the declarant; nothing typed, or answers the press would refuse, leave the row to go by", () => {
+    const adult = registrationAfterCompletion(row, draftAnswers(kept, "ro"), context);
+    expect(adult && expectedSignatures(adult, { minorSigns: true })).toEqual({ typedName: "Mara Munteanu", minorTypedName: null });
+    expect(registrationAfterCompletion(row, null, context)).toBeNull();
+    expect(registrationAfterCompletion(row, draftAnswers({ ...kept, birthDate: "01.03.2010" }, "ro"), context)).toBeNull();
+    expect(registrationAfterCompletion(row, draftAnswers({ ...kept, city: "" }, "ro"), context)).toBeNull();
+  });
+
+  it("judges by the event's own row, as the write does: its day in its zone, its minimum age, the T-shirt, the members' bib", () => {
+    const event = { kitShirt: true, startsAt: new Date("2026-11-20T23:30:00.000Z"), timezone: "Europe/Bucharest", minAge: 16, bibDesign: null };
+    expect(completionContext(event, context.now, true)).toEqual({
+      kitShirt: true,
+      eventDay: "2026-11-21",
+      minAge: 16,
+      now: context.now,
+      declarationSigned: true,
+      memberBibOffered: false,
+    });
   });
 });
 

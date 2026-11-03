@@ -125,8 +125,11 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
       ),
     );
   const ids = rows.map((row) => row.id);
-  // Whether the event asks the T-shirt, for the answers the form owes (§NNN): one primary-key read.
-  const [event] = await db.select({ kitShirt: events.kitShirt }).from(events).where(eq(events.id, own.eventId)).limit(1);
+  // Whether the event asks the T-shirt, for the answers the form owes (§NNN): one primary-key read, and only for a
+  // row that never answered the size — every row the form wrote holds one, «Fără tricou» included.
+  const [event] = rows.some((row) => row.tshirtSize === null)
+    ? await db.select({ kitShirt: events.kitShirt }).from(events).where(eq(events.id, own.eventId)).limit(1)
+    : [];
   const methods = new Map<string, "EMAIL_LINK" | "PAPER">();
   if (ids.length > 0) {
     const acceptances = await db

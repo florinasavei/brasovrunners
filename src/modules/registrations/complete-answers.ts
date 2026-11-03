@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import type { events } from "@/db/schema/events";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
@@ -94,8 +95,24 @@ export function readPostedAnswers(form: FormData, locale: Locale): PostedAnswers
   return Object.fromEntries(EDITABLE_ANSWERS.filter((field) => field in values).map((field) => [field, values[field]]));
 }
 
-function typed(value: unknown): string | undefined {
+/** A box that holds something: named `filled`, never `t…`, which the catalogue checker reads as a lookup. */
+function filled(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() !== "" ? value : undefined;
+}
+
+/** The event's facts a completion is judged by: the day and minimum age, the T-shirt, the members' bib (§664). */
+export type CompletionEvent = Pick<typeof events.$inferSelect, "kitShirt" | "startsAt" | "timezone" | "minAge" | "bibDesign">;
+
+/** `planAnswerCompletion`'s context from the event's row — one reading for the page that previews and the write. */
+export function completionContext(event: CompletionEvent, now: Date, declarationSigned: boolean): Parameters<typeof planAnswerCompletion>[2] {
+  return {
+    kitShirt: event.kitShirt,
+    eventDay: dayIn(event.startsAt, event.timezone ?? CLUB_TIME_ZONE),
+    minAge: event.minAge,
+    now,
+    declarationSigned,
+    memberBibOffered: readBibDesign(event.bibDesign).member.enabled,
+  };
 }
 
 /**
@@ -115,13 +132,13 @@ export function planAnswerCompletion(
 
   const changes: Record<string, string> = {};
   for (const field of fields) {
-    const value = typed(posted[field]);
+    const value = filled(posted[field]);
     if (value !== undefined) changes[field] = value;
   }
   // The guardian beside a missing birth date (§108): kept only when the date typed makes a minor on the day the
   // row was written, as the form keeps one — an adult's typed guardian is ignored, never refused.
   if (guardianIfMinor) {
-    const guardian = typed(posted.guardianName);
+    const guardian = filled(posted.guardianName);
     const birthDate = changes.birthDate;
     if (guardian !== undefined && typeof birthDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(birthDate) && isMinorOn(birthDate, current.answersWrittenAt)) {
       changes.guardianName = guardian;
@@ -158,6 +175,50 @@ export function planAnswerCompletion(
 }
 
 /**
+ * The registration as a press of the declaration's page would sign it (§NNN): the answers a refused press typed,
+ * through the one planner the press runs (`planAnswerCompletion`) — a guardian a minor's birth date brought, the
+ * name of record two names composed — so the page asks for the signature the server will check (§108, §314), and
+ * the text above it names the same declarant. Null when nothing was typed, or when what was typed would be refused
+ * anyway: the page then has only the row to go by.
+ */
+export function registrationAfterCompletion(
+  current: Registration,
+  kept: PostedAnswers | null,
+  context: Parameters<typeof planAnswerCompletion>[2],
+): Registration | null {
+  if (kept === null) return null;
+  try {
+    const plan = planAnswerCompletion(current, kept, context);
+    return plan ? { ...current, ...plan.set } : null;
+  } catch (error) {
+    if (isDomainError(error)) return null;
+    throw error;
+  }
+}
+
+/** A kept draft (`form-draft.ts`) read as the boxes posted it, by the public form's own mapping (`readPostedAnswers`). */
+export function draftAnswers(draft: Readonly<Record<string, string>> | null, locale: Locale): PostedAnswers | null {
+  if (draft === null) return null;
+  const form = new FormData();
+  for (const [name, value] of Object.entries(draft)) form.set(name, value);
+  return readPostedAnswers(form, locale);
+}
+
+/**
+ * Whether the registration has a declaration acceptance, online or on paper (§67): its guardian and its name of
+ * record are then the signed text's (`answers.ts#GUARDIAN_SIGNED`). One read for the page that draws the boxes and
+ * the write that judges them, so the two never disagree about which boxes a minor's birth date brings.
+ */
+export async function declarationSignedFor<T extends Record<string, unknown>>(db: Database<T>, registrationId: string): Promise<boolean> {
+  const [signed] = await db
+    .select({ id: declarationAcceptances.id })
+    .from(declarationAcceptances)
+    .where(eq(declarationAcceptances.registrationId, registrationId))
+    .limit(1);
+  return signed !== undefined;
+}
+
+/**
  * The completion, written: under the event's lock (the lock `submitRegistration` and «Modifică datele» take, so a
  * completed name and a new runner on the same address cannot both find the name free, §389), the row read again
  * under it, only a registration that still stands, only the changed columns, and one audit row with no staff
@@ -182,19 +243,7 @@ export async function completeMissingAnswers<T extends Record<string, unknown>>(
     // A cancelled or lapsed registration owes nothing: its answers are kept as they were.
     if (!isActiveStatus(current.status)) throw new DomainError("CONFLICT", `a ${current.status} registration is not completed`);
 
-    const [signed] = await tx
-      .select({ id: declarationAcceptances.id })
-      .from(declarationAcceptances)
-      .where(eq(declarationAcceptances.registrationId, current.id))
-      .limit(1);
-    const plan = planAnswerCompletion(current, posted, {
-      kitShirt: event.kitShirt,
-      eventDay: dayIn(event.startsAt, event.timezone ?? CLUB_TIME_ZONE),
-      minAge: event.minAge,
-      now,
-      declarationSigned: signed !== undefined,
-      memberBibOffered: readBibDesign(event.bibDesign).member.enabled,
-    });
+    const plan = planAnswerCompletion(current, posted, completionContext(event, now, await declarationSignedFor(tx, current.id)));
     if (!plan) return { completed: [] };
     if (plan.nameChange) {
       // Two people on one address are told apart by their names (§389), as «Modifică datele» asks.

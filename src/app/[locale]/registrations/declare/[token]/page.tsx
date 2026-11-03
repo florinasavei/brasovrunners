@@ -31,7 +31,13 @@ import { cachedDeadlines, cachedPromotionalMaterialsOffered, cachedPromotionalMa
 import { fillIn } from "@/shared/forms/fill-in";
 import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues, minimumAgeMergeValue } from "@/modules/legal-documents/domain/merge-fields";
 import { dayIn, effectiveMinimumAge } from "@/modules/registrations/domain/age";
-import { readAnswersRefusal } from "@/modules/registrations/complete-answers";
+import {
+  completionContext,
+  declarationSignedFor,
+  draftAnswers,
+  readAnswersRefusal,
+  registrationAfterCompletion,
+} from "@/modules/registrations/complete-answers";
 import { birthDateBounds } from "@/modules/registrations/form-view";
 import { answersToAsk, COMPLETE_ANSWERS_ID, missingAnswers } from "@/modules/registrations/missing-answers";
 import { missingAnswersFields } from "@/modules/registrations/ui/MissingAnswersFields";
@@ -494,22 +500,6 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     minor's name whenever a parent signs, alone or beside them: the parent's box speaks of them.
   */
   const minorSigns = signingText ? asksForMinorSignature(signingText.body) : false;
-  const expected = registration ? expectedSignatures(registration, { minorSigns }) : null;
-  const expectedName = expected?.typedName ?? null;
-  const minorName = expected?.minorTypedName ?? null;
-  const signsForMinor = registration?.guardianName ? registration.registeredName : null;
-  const contactHref = getPathname({ locale, href: "/contact" });
-  /*
-    Where a parent whose own name was mistyped goes (§314, found in review): "Înscrierile mele",
-    to cancel and register again. The club's «Modifică datele» (§645) corrects the names and, only
-    while no declaration is signed, the guardian (`answers.ts#GUARDIAN_SIGNED`) — a correction that
-    waits on somebody at the club — so the minor's sentence still sends the parent to the path that
-    needs nobody, and promises no correction.
-  */
-  const myRegistrationsHref = getPathname({ locale, href: "/registrations/mine" });
-  // "Reply to the email" only where a reply reaches somebody (the emails' own footer, §96).
-  // The Reply-To in force (§442): the mailbox, the club's Gmail, or both.
-  const canReply = (await cachedShownContactAddresses()).length > 0;
   /*
     What the refused press had typed, brought back sealed by the action (§314) and read only for
     the refusals that keep it, a name's or a document's (§330) — a stale draft never fills a form
@@ -527,9 +517,45 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     signature, with the form's own boxes, and saved with it in one transaction; the signature is refused while any
     is missing. A complete registration reads nothing more and draws nothing more.
   */
-  const formEvent = formBelow && registration ? await findEventForRegistrationById(db, registration.eventId) : undefined;
+  // The event's row only when something may be owed: an answer whatever the event, or a T-shirt size never given.
+  const mayOwe = formBelow && registration ? registration.tshirtSize === null || missingAnswers({}, registration).length > 0 : false;
+  const formEvent = mayOwe && registration ? await findEventForRegistrationById(db, registration.eventId) : undefined;
   const owed = formEvent && registration ? missingAnswers(formEvent, registration) : [];
-  const answersAsked = answersToAsk(owed, false);
+  // Signed before (a declaration on paper, an older acceptance): the boxes the write will judge by (`answers.ts#GUARDIAN_SIGNED`).
+  const signedBefore = owed.length > 0 && registration ? await declarationSignedFor(db, registration.id) : false;
+  const answersAsked = answersToAsk(owed, signedBefore);
+  /*
+    Who signs follows the answers (§108, §314): a minor's birth date typed above brings a parent or guardian, who
+    signs as the declarant. After a refused press the kept answers say who, through the planner the press runs
+    (`registrationAfterCompletion`), so the boxes below, the text's declarant and the server's check are one person.
+    Before anything is typed, while the birth date or the guardian is still asked, nobody can know it yet: the
+    signature then names no person to match while typing (`signerOpen`), says whose name it takes in either case,
+    and the server checks it against the row the answers leave.
+  */
+  const afterPress =
+    owed.length > 0 && registration && formEvent
+      ? registrationAfterCompletion(registration, draftAnswers(draft, locale), completionContext(formEvent, now, signedBefore))
+      : null;
+  const signer = afterPress ?? registration;
+  const signerOpen = afterPress === null && (answersAsked.guardianIfMinor || answersAsked.fields.includes("guardianName"));
+  const expected = signer ? expectedSignatures(signer, { minorSigns }) : null;
+  const expectedName = expected?.typedName ?? null;
+  const minorName = expected?.minorTypedName ?? null;
+  const signsForMinor = signer?.guardianName ? signer.registeredName : null;
+  // The declarant is a guardian the boxes above brought, not one the row holds: still the person's to correct there.
+  const guardianTypedAbove = signsForMinor !== null && !registration?.guardianName;
+  const contactHref = getPathname({ locale, href: "/contact" });
+  /*
+    Where a parent whose own name was mistyped goes (§314, found in review): "Înscrierile mele",
+    to cancel and register again. The club's «Modifică datele» (§645) corrects the names and, only
+    while no declaration is signed, the guardian (`answers.ts#GUARDIAN_SIGNED`) — a correction that
+    waits on somebody at the club — so the minor's sentence still sends the parent to the path that
+    needs nobody, and promises no correction.
+  */
+  const myRegistrationsHref = getPathname({ locale, href: "/registrations/mine" });
+  // "Reply to the email" only where a reply reaches somebody (the emails' own footer, §96).
+  // The Reply-To in force (§442): the mailbox, the club's Gmail, or both.
+  const canReply = (await cachedShownContactAddresses()).length > 0;
   const completeLink = (chunks: ReactNode) => <MuiLink href={`#${COMPLETE_ANSWERS_ID}`}>{chunks}</MuiLink>;
   const draftKind = (value: string | undefined) => ID_DOCUMENT_TYPES.find((kind) => kind === value) ?? "ID_CARD";
   const documentKinds = ID_DOCUMENT_TYPES.map((kind) => ({ kind, label: t(`declare.idDocumentTypes.${kind}`) }));
@@ -685,9 +711,10 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             body={declaration.body}
             /* The blanks, passed rather than pre-merged, so the filled-in parts render bold (§225). */
             values={{
-              participant: registration?.registeredName,
-              ...(registration ? declarantValues(registration.registeredName, registration.guardianName, locale) : {}),
-              ...(registration ? identityDocumentValues(registration.guardianName, {}) : {}),
+              // The declarant the signature below is checked against (`signer`): the row's, or the one its answers bring.
+              participant: signer?.registeredName,
+              ...(signer ? declarantValues(signer.registeredName, signer.guardianName, locale) : {}),
+              ...(signer ? identityDocumentValues(signer.guardianName, {}) : {}),
               event: eventDetails?.title,
               eventDate: eventDetails
                 ? formatDay(eventDetails.startsAt, { locale, timeZone: eventDetails.timezone, style: "long", position: "inline" })
@@ -740,9 +767,12 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               )}
               {refusedBoxes.includes("typedName") && (
                 <Box sx={{ mt: 0.5 }}>
-                  {signsForMinor !== null
-                    ? t.rich(canReply ? "declare.signatureNameWrongForMinorReply" : "declare.signatureNameWrongForMinor", { contact, mine })
-                    : t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact })}
+                  {/* A guardian typed above, not yet saved (§NNN): corrected in its own box, never by cancelling. */}
+                  {guardianTypedAbove
+                    ? t("complete.guardianTypedAbove")
+                    : signsForMinor !== null
+                      ? t.rich(canReply ? "declare.signatureNameWrongForMinorReply" : "declare.signatureNameWrongForMinor", { contact, mine })
+                      : t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact })}
                 </Box>
               )}
             </Alert>
@@ -804,7 +834,16 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   refusal: { tooYoung: answersRefusal?.tooYoung === true, emergencySame: answersRefusal?.emergencySame === true },
                   draft,
                   heading: familyCurrent ? t("complete.titleFor", { name: registration.registeredName }) : t("complete.title"),
-                  refused: answersRefusal ? { note: t("complete.refusedNothingSigned"), sentences: [] } : null,
+                  // The rule's own sentence beside the boxes, as on the manage page: a declaration signed before names its declarant.
+                  refused: answersRefusal
+                    ? {
+                        note: t("complete.refusedNothingSigned"),
+                        sentences: [
+                          ...(answersRefusal.minorSigned ? [t("complete.minorSigned")] : []),
+                          ...(answersRefusal.nameSigned ? [t("complete.nameSigned", { name: registration.registeredName })] : []),
+                        ],
+                      }
+                    : null,
                 }))}
               {/* The box names the liability paragraph, so its limits are accepted expressly (§418, Civil Code art. 1203). */}
               {/* The glyph leads the words, as on every box of the form's «Acorduri» (§570 round 2). */}
@@ -851,7 +890,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                     page says whose signature it wants. Not for a minor — the parent signs there,
                     and the box below already says so.
                   */}
-                  {signsForMinor === null && expectedName !== null && (
+                  {!signerOpen && signsForMinor === null && expectedName !== null && (
                     <Typography>{t("declare.signPersonally", { participant: expectedName })}</Typography>
                   )}
                   {needsDocuments && (
@@ -868,18 +907,24 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                       refused={refusedDocuments.includes("idDocument")}
                     />
                   )}
+                  {/*
+                    While the birth date or the guardian is still asked above (§NNN), whose name signs is not known
+                    yet: the box matches no name while typing and says both cases; the server checks the signature
+                    against the row the answers leave, and a refusal comes back with the person decided (`signer`).
+                  */}
                   <SignatureField
                     id="typedName"
                     name="typedName"
                     signer={signsForMinor !== null ? "guardian" : "self"}
                     label={boxLabel("typedName")}
-                    expectedName={expectedName}
+                    expectedName={signerOpen ? null : expectedName}
                     participantName={signsForMinor}
                     contactHref={contactHref}
                     myRegistrationsHref={myRegistrationsHref}
                     canReply={canReply}
                     defaultValue={draft?.typedName}
                     refused={nameRefused}
+                    help={signerOpen && registration ? t("complete.signatureOpen", { name: registration.registeredName }) : undefined}
                   />
                 </>
               ) : (
