@@ -1,0 +1,7 @@
+{
+  "branch": "fix/offer-stays-on-list",
+  "decisionsTitle": "«Trimite-i oferta» from the registrations list comes back to the list",
+  "decisionsSection": "**The owner, 2026-11-03:** «nu îmi place că pagina face redirect după ce trimit oferta». Pressed from a row's «⋮» on «Înscrieri», «Trimite-i oferta» sent the browser to that registration's own page, and the list — its filter on the waiting list, its page — had to be found again for the next offer.\n\n**Decision.** The list's offer form posts the list's query (`listQuery`, the row's page and every filter, §747's shape), and `offerPlaceAction` goes back to the list with the outcome, as «Pune pe lista de invitați speciali» from the same menu already does. From the event's «Coada de înscrieri» and from the registration's page the press comes back where it came from, unchanged.",
+  "changelogLine": "- **«Trimite-i oferta» from the list stays on the list** — the page and the filters kept, the toast there; no jump to the registration's page. §NNN.",
+  "batchLine": "«Trimite-i oferta» from the list stays on the list"
+}
