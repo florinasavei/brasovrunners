@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.12-2026-11-03
+
+- **«Trimite-i oferta» from the list stays on the list** — the page and the filters kept, the toast there; no jump to the registration's page. §896.
 ## BR-V4.11-2026-11-03
 
 - **«Elită» on the race numbers** — a list of the race's elite runners under «Alocare și tipărire», printed as bibs with the name where the number goes (`bibs?elite=1`); the number and the sponsors' band only when ticked in «Cum arată numărul de concurs» → «Elită». Names, not registrations: no place, no email, no count. A typed number must be free at the race — not a registration's, a spare's or another elite line's — and is then drawn for nobody else. §895.

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.11-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.12-2026-11-03 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.11-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.12-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28602,3 +28602,11 @@ Baseline `BR-V4.10-2026-11-03`.
 - **A staff-signed declaration** for an elite runner. The declaration is the person's: staff record a paper one the participant signed, never sign one (`AGENTS.md` §15.11).
 
 Baseline `BR-V4.11-2026-11-03`.
+
+## 896. «Trimite-i oferta» from the registrations list comes back to the list
+
+**The owner, 2026-11-03:** «nu îmi place că pagina face redirect după ce trimit oferta». Pressed from a row's «⋮» on «Înscrieri», «Trimite-i oferta» sent the browser to that registration's own page, and the list — its filter on the waiting list, its page — had to be found again for the next offer.
+
+**Decision.** The list's offer form posts the list's query (`listQuery`, the row's page and every filter, §747's shape), and `offerPlaceAction` goes back to the list with the outcome, as «Pune pe lista de invitați speciali» from the same menu already does. From the event's «Coada de înscrieri» and from the registration's page the press comes back where it came from, unchanged.
+
+Baseline `BR-V4.12-2026-11-03`.
