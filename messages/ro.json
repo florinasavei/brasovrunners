@@ -6745,7 +6745,6 @@
       "sparesReadOnly": "Doar un administrator rezervă numere noi.",
       "sparesReserved": "Rezervate numerele {from}–{to}. Descarcă foaia și tipărește-o.",
       "sparesDownloadRange": "Descarcă foaia {from}–{to} (PDF)",
-      "spareMark": "înscris la fața locului",
       "helpMore": "Numerele se dau în ordinea confirmării și nu se dau de două ori. Foaia are două numere A5 pe o pagină A4; un singur număr se descarcă de pe pagina înscrierii.",
       "memberLabelDefault": "Membru {club}",
       "profileStart": "Start",

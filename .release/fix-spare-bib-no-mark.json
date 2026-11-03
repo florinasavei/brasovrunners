@@ -1,0 +1,7 @@
+{
+  "branch": "fix/spare-bib-no-mark",
+  "decisionsTitle": "A spare bib carries no «înscris la fața locului» mark",
+  "decisionsSection": "**The owner, 2026-11-03**, on the printed spares: «On the BIB's I do not want to say \"înscris la fața locului\" for the blank ones».\n\n**Decision.** A desk spare (§444) is drawn with its empty line for the name and nothing under it, on the PDF and on the editor's preview. The line is what the desk writes on; the mark told the runner, the photographer and the results desk something none of them needs, and set the walk-up runners apart from the others on their own chest. The drawing keeps its optional `blankMark` (the routes no longer pass one), so the layout and its tests are unchanged.",
+  "changelogLine": "- **Spare bibs without «înscris la fața locului»** — only the empty line for the name, on the PDF and the preview. §NNN.",
+  "batchLine": "spare bibs without the «înscris la fața locului» mark"
+}
