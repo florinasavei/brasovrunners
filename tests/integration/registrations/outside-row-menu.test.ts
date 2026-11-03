@@ -261,3 +261,17 @@ describe("BR-REQ-037-07: the list's «⋮» and the special guests list (§747)"
     expect(await db.select({ id: events.id }).from(events).where(eq(events.id, race.id))).toHaveLength(1);
   });
 });
+
+describe("«Trimite-i oferta» from the list's «⋮» comes back to the list, not to the registration's page", () => {
+  it("posts the list's query, its page and filters kept", async () => {
+    const race = await createRace("Crosul", false);
+    state.actor = await staff("ADMIN");
+    const waiting = await register(race.id, { status: "WAITLISTED" });
+    const tree = await listPage({ eventId: race.id, status: "WAITLISTED" });
+    const offer = cellOf(tree, waiting).find((element) => element.props.id === `offer-${waiting}`);
+    expect(offer?.props.action).toBe(actions.offerPlaceAction);
+    const query = new URLSearchParams(String(elements(offer).find((element) => element.props.name === "listQuery")?.props.value));
+    expect(query.get("eventId")).toBe(race.id);
+    expect(query.get("status")).toBe("WAITLISTED");
+  });
+});
