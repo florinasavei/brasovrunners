@@ -1,0 +1,7 @@
+{
+  "branch": "fix/volunteer-callout-under-start-list",
+  "decisionsTitle": "«Căutăm voluntari» right under «Cine vine» on the event page",
+  "decisionsSection": "**The owner, 2026-11-03,** of the race's page: «partea de „vreau să fiu voluntar” ar trebui să fie mai sus un pic, fix sub „Cine vine”». The callout (§754, §768) stood after the route, the checkpoints, the links and the programme — far down a race's page, where nobody looking for a way to help reads.\n\n**Decision.** «Căutăm voluntari: …» with «Vreau să fiu voluntar», and «Voluntarii» (§821) right after it as before, move to just under «Cine vine (N)» — itself under the registration card (§825). Nothing else changes: the same conditions draw them (a visit's page, the volunteers' page answering, never a members' event or the preview), and a turn-up event's two closed bars stay the last thing on the page.",
+  "changelogLine": "- **«Căutăm voluntari» under «Cine vine»** — on the event page the volunteers' line and button stand right under the start list, no longer after the programme. §NNN.",
+  "batchLine": "«Căutăm voluntari» under «Cine vine»"
+}
