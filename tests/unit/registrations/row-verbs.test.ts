@@ -338,3 +338,36 @@ describe("BR-REQ-037-07 the special guests list's one predicate (§648)", () => 
     expect(specialListVerb("CONFIRMED", "MODERATOR", { onList: false, enabled: true })).toBeNull();
   });
 });
+
+/**
+ * §NNN (the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând») — «Marchează ca elită» / «Nu mai
+ * e elită» on the row: how the bib prints and nothing else, so every state offers it, and only to the Administrator.
+ */
+describe("§NNN the elite mark on the row", () => {
+  it("is offered to the Administrator in every state, one of the two words by the row's own mark, above the erase", () => {
+    for (const status of ALL) {
+      for (const role of ["ADMIN", "SUPERADMIN"] as const) {
+        const unmarked = rowVerbsFor(status, role, { checkedIn: false, elite: false });
+        expect(unmarked, `${role}/${status}`).toContain("eliteMark");
+        expect(unmarked, `${role}/${status}`).not.toContain("eliteUnmark");
+        const marked = rowVerbsFor(status, role, { checkedIn: false, elite: true });
+        expect(marked, `${role}/${status}`).toContain("eliteUnmark");
+        expect(marked, `${role}/${status}`).not.toContain("eliteMark");
+        expect(marked.at(-1), `${role}/${status}`).toBe("erase");
+      }
+    }
+  });
+
+  it("is never offered to a role that may not manage registrations — the Organizer reads the chip — nor without the row's mark", () => {
+    for (const role of ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV"] as const) {
+      for (const status of ALL) {
+        for (const elite of [false, true]) {
+          const verbs = rowVerbsFor(status, role, { checkedIn: false, elite });
+          expect(verbs, `${role}/${status}/${elite}`).not.toContain("eliteMark");
+          expect(verbs, `${role}/${status}/${elite}`).not.toContain("eliteUnmark");
+        }
+      }
+    }
+    expect(rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false })).not.toContain("eliteMark");
+  });
+});

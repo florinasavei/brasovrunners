@@ -33,8 +33,8 @@ const PART_SUFFIX: Record<BibSheetPart, string> = { all: "", members: "-members"
  * nothing else (`AGENTS.md` §19.2). `from` and `to` bound the numbers printed, for a reprint;
  * `only=unprinted` is the club's weekly job — the people who registered after the last sheet
  * went to the printer (§264). Omitted, every assigned number. `spares=1` prints the desk's free
- * spares instead, blank (§444); `elite=1` the event's «Elită» list, the name where the number goes (§895,
- * `-elite` in the file's name). The members' bibs print first, on pages of their own (§681);
+ * spares instead, blank (§444); `elite=1` the event's «Elită» list and the registrations marked «Elită», the name
+ * where the number goes (§895, §NNN; `-elite` in the file's name). The members' bibs print first, on pages of their own (§681);
  * `part=members` prints only theirs and `part=others` every bib but theirs — anything else, or
  * nothing, is the whole sheet, never an error.
  *
@@ -91,8 +91,10 @@ export async function GET(
   const spares = url.searchParams.get("spares") === "1";
   /*
     «Elită — doar numele pe BIB» (§895): every name on the event's elite list, each printed with the name where the
-    number goes — no registration, no range, no part, no members' pile. Read by the same roles as the sheet (the
-    list's own rule, `elite-list.ts`, asked again below). A GET that writes nothing, like every other mode here.
+    number goes — no range, no part, no members' pile — and after them every registration an Administrator marked
+    «Elită» (§NNN) that the ordinary sheet prints, drawn the same way, so one download is every elite bib of the race.
+    Read by the same roles as the sheet (the list's own rule, `elite-list.ts`, asked again below). A GET that writes
+    nothing, like every other mode here. The ordinary sheet draws a marked registration as an elite bib too.
   */
   const elite = url.searchParams.get("elite") === "1";
   /*
@@ -110,7 +112,7 @@ export async function GET(
   const now = new Date();
   const eliteEntries = elite ? (await listEliteEntries(db, actor, id)).map(({ name, bibNumber }) => ({ name, bibNumber })) : null;
   const rows: BibSheetRow[] = elite
-    ? []
+    ? await listBibs(db, id, { elite: true })
     : spares
       ? (await freeSpareBibNumbers(db, id)).free
           .filter((number) => (from === undefined || number >= from) && (to === undefined || number <= to))
@@ -163,7 +165,7 @@ export async function GET(
     ...(anyMember && admin ? { memberLabelDefault: admin("bibs.memberLabelDefault", { club: CLUB_NAME }) } : {}),
   });
 
-  // The elite sheet is the list alone (§895): no range, no part, no «unprinted» in its name.
+  // The elite sheet is the list and the marked registrations (§895, §NNN): no range, no part, no «unprinted» in its name.
   const suffix = elite
     ? `-elite${layout === "one" ? "-one-per-page" : ""}`
     : `${spares ? "-spares" : ""}${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only && !spares ? "-unprinted" : ""}${PART_SUFFIX[part]}${layout === "one" ? "-one-per-page" : ""}`;

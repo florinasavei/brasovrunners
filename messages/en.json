@@ -1159,6 +1159,11 @@
         "infoKeeps": "They keep the declaration and the number; the public list shows them only with «Show special guests on the public list» ticked, the count only with «Count the special guests too».",
         "infoNot": "An ordinary participant does not go here."
       },
+      "elite": {
+        "chip": "Elite",
+        "mark": "Mark as elite",
+        "unmark": "No longer elite"
+      },
       "export": "Download CSV",
       "personLink": "Everything held about a person",
       "personThis": "Everything held about this person",
@@ -1516,6 +1521,8 @@
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
           "address_vouched_on_entry": "Address vouched for by the team at the entry; a place or the waiting list at once (“Straight onto the waiting list”)",
           "outside_capacity_changed": "Put on the special guests list, or taken off it",
+          "elite_marked": "Marked as elite: the bib prints the name where the number goes",
+          "elite_unmarked": "No longer elite: the bib prints the number again",
           "deadline_moved_for_outage": "Deadline moved: the site could not be reached, the clock stood still",
           "hold_moved_by_window": "Signing deadline moved with the changed confirmation window",
           "not_revived_for_outage": "Not revived after the outage: the deadline had passed while the site could not be reached, and the place had been given meanwhile or the claim had already lapsed",
@@ -6778,6 +6785,8 @@
       "eliteDownload": "Download the elite bibs ({count})",
       "eliteSampleAlt": "An elite bib: the name where the number goes",
       "eliteSampleCaption": "How an elite bib prints, with the saved design and a sample name.",
+      "eliteRegistered": "registered",
+      "eliteRegisteredHelp": "A registered runner is marked from the registrations list: «⋮» → «Mark as elite». They stay registered, with their place and number, and appear here once confirmed.",
       "helpMore": "Numbers are given in order of confirmation and are never given twice. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page.",
       "memberLabelDefault": "{club} member",
       "profileStart": "Start",
@@ -13238,6 +13247,8 @@
       "reserveDeleted": "The person was removed from the internal list.",
       "eliteAdded": "The name is on the elite list. It is not a registration, and nothing was sent.",
       "eliteDeleted": "The name was deleted from the elite list.",
+      "eliteMarked": "Marked as elite: their bib prints the name where the number goes. The registration stays as it is.",
+      "eliteUnmarked": "No longer elite: their bib prints the number again.",
       "waitlistAdded": "The person is on the waiting list; the email is queued.",
       "waitlistPlaced": "A place was free: the person got it, and the declaration email is queued."
     },

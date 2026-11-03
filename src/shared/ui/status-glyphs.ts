@@ -21,6 +21,7 @@ import HowToRegIcon from "@mui/icons-material/HowToReg";
 import LinkIcon from "@mui/icons-material/Link";
 import LockClockIcon from "@mui/icons-material/LockClock";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import MilitaryTechIcon from "@mui/icons-material/MilitaryTech";
 import NoAccountsIcon from "@mui/icons-material/NoAccounts";
 import PostAddIcon from "@mui/icons-material/PostAdd";
 import MarkEmailUnreadIcon from "@mui/icons-material/MarkEmailUnread";
@@ -113,6 +114,8 @@ export const STATUS_GLYPHS = {
   test: ScienceIcon,
   // «Prezent la …» on the desk's row: the person-with-tick the «Marchează prezent» verb wears.
   checkedIn: HowToRegIcon,
+  // «Elită» on a registration (§NNN): the medal the elite card and the «⋮»'s «Marchează ca elită» wear.
+  elite: MilitaryTechIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;

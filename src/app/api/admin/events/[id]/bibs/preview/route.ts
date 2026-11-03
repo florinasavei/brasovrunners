@@ -155,6 +155,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       kind: registrations.kind,
       status: registrations.status,
       memberBibWanted: registrations.memberBibWanted,
+      elite: registrations.elite,
       canonicalEmail: participants.canonicalEmail,
     })
     .from(registrations)
@@ -172,11 +173,16 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     canonical address is a member account's (§662) — `bibs.ts#listBibs`'s rule, asked of one row. The
     member set is read only when the first two hold.
   */
+  /*
+    A registration marked «Elită» (§NNN) draws as the sheet prints it: an elite bib (§895) — its name where the number
+    goes, its own number under it only as the design ticks — and never the members' design.
+  */
   const member =
-    event.design.member.enabled && row.memberBibWanted && (await memberCanonicalEmails(db)).has(row.canonicalEmail);
+    !row.elite && event.design.member.enabled && row.memberBibWanted && (await memberCanonicalEmails(db)).has(row.canonicalEmail);
   const image = await renderBibImage({
     bibNumber: row.bibNumber,
     registeredName: row.registeredName,
+    ...(row.elite ? { elite: { name: row.registeredName, bibNumber: row.bibNumber } } : {}),
     member,
     ...(member ? { memberLabelDefault: await memberLabelDefault() } : {}),
     eventTitle: event.title,

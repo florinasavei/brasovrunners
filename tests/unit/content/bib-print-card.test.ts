@@ -170,6 +170,29 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
     expect(block(await render({ elite }, "en"), "bib-elite")).toContain("Elite — the name only on the bib");
   });
 
+  // §NNN: a registration marked «Elită» on the registrations list prints on the same sheet, so the card lists it.
+  it("lists the registrations marked «Elită» read-only, «înscris», in its count and its sheet's, and says where they are marked", async () => {
+    const registered = [{ id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Ana Pop", bibNumber: 12 }];
+    const card = block(await render({ elite: { ...elite, registered } }), "bib-elite");
+    const line = block(card, "bib-elite-registered");
+    expect(line).toContain("Ana Pop");
+    expect(line).toContain("înscris");
+    expect(line).toContain("nr. 12");
+    // Read-only: no delete of its own, only the list's two.
+    expect(line).not.toContain("bib-elite-delete-");
+    expect(card.match(/data-testid="DeleteIcon"/g)).toHaveLength(2);
+    expect(card).toContain("3 nume");
+    expect(block(card, "bib-elite-download")).toContain("Descarcă BIB-urile de elită (3)");
+    expect(block(card, "bib-elite-registered-help")).toContain("«Marchează ca elită»");
+    // A marked registration alone is still something to print: no «empty» line, the sheet offered.
+    const alone = block(await render({ elite: { ...elite, entries: [], registered } }), "bib-elite");
+    expect(alone).not.toContain('data-testid="bib-elite-empty"');
+    expect(alone).toContain("1 nume");
+    expect(alone).toContain('data-testid="bib-elite-download"');
+    // In English too.
+    expect(block(await render({ elite: { ...elite, registered } }, "en"), "bib-elite-registered")).toContain("registered");
+  });
+
   it("opens itself and the print card on the way back from its own add or delete, and is closed otherwise", async () => {
     // `?saved=eliteAdded|eliteDeleted` (`actions.ts#backToEliteCard`): a soft navigation the hash opener never sees.
     const opened = await render({ elite, eliteSaved: true });

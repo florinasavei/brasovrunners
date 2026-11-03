@@ -701,8 +701,11 @@ export async function isEventSpareNumber<T extends Record<string, unknown>>(
  * One bib of the sheet. `member` is whether it prints the members' design (§664): the event offers
  * it, the person asked («Vreau numărul de membru»), and the address is a member account's (§662) —
  * all three, never the tick alone. The number is the same number either way.
+ *
+ * `elite` (§NNN): an Administrator marked the registration «Elită», so its bib prints as an elite bib — the name where
+ * the number goes (§895's drawing) — and never the members' design: an elite row's `member` is false.
  */
-export type BibRow = { id: string; bibNumber: number; registeredName: string; member: boolean };
+export type BibRow = { id: string; bibNumber: number; registeredName: string; member: boolean; elite: boolean };
 
 /**
  * Whether a row prints the members' bib, as one SQL condition over a registration joined to its
@@ -720,9 +723,10 @@ function memberBibPrinted(members: readonly string[]): SQL<boolean> {
  *
  * A range is for a reprint — "numbers 1 to 50 again" — and `only: "unprinted"` is the club's
  * actual weekly job: people registered after the last sheet went to the printer, and those are
- * the bibs to print now. Both together are allowed and mean what they say.
+ * the bibs to print now. Both together are allowed and mean what they say. `elite` (§NNN) is the registrations an
+ * Administrator marked «Elită» — the ones the elite sheet (`bibs?elite=1`) prints beside the race's elite list.
  */
-export type BibScope = { from?: number; to?: number; only?: "unprinted" };
+export type BibScope = { from?: number; to?: number; only?: "unprinted"; elite?: true };
 
 /**
  * The scope as one `WHERE`, so the list, the count and the marking cannot drift apart.
@@ -742,6 +746,7 @@ const bibScopeWhere = (eventId: string, scope: BibScope) =>
     scope.from !== undefined ? sql`${registrations.bibNumber} >= ${scope.from}` : undefined,
     scope.to !== undefined ? sql`${registrations.bibNumber} <= ${scope.to}` : undefined,
     scope.only === "unprinted" ? isNull(registrations.bibPrintedAt) : undefined,
+    scope.elite ? eq(registrations.elite, true) : undefined,
   );
 
 /**
@@ -762,13 +767,15 @@ export async function listBibs<T extends Record<string, unknown>>(
       bibNumber: registrations.bibNumber,
       registeredName: registrations.registeredName,
       member: memberBibPrinted(members),
+      elite: registrations.elite,
     })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))
     .innerJoin(participants, eq(participants.id, registrations.participantId))
     .where(bibScopeWhere(eventId, scope))
     .orderBy(asc(registrations.bibNumber));
-  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName, member: row.member === true }));
+  // An elite bib is never the members' design (§895, §NNN): the mark wins over the members' pile.
+  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName, member: row.member === true && !row.elite, elite: row.elite }));
 }
 
 /**

@@ -26,7 +26,10 @@ export function bibPictureStamp(parts: unknown): string {
   return fnv1a(JSON.stringify([BIB_DRAWING_VERSION, parts]) ?? "");
 }
 
-/** The address of one registration's bib picture, stamped with what it is drawn from. */
-export function bibPictureSrc(input: { eventId: string; registrationId: string; locale: string; stamp: string; member?: boolean }): string {
-  return `/api/admin/events/${input.eventId}/bibs/preview?registration=${input.registrationId}&locale=${input.locale}${input.member ? "&m=1" : ""}&v=${input.stamp}`;
+/**
+ * The address of one registration's bib picture, stamped with what it is drawn from. `m=1` and `e=1` — a member's bib
+ * (§664), an elite one (§NNN) — are read by nobody: a mark set or cleared is a new address, never the hour-old picture.
+ */
+export function bibPictureSrc(input: { eventId: string; registrationId: string; locale: string; stamp: string; member?: boolean; elite?: boolean }): string {
+  return `/api/admin/events/${input.eventId}/bibs/preview?registration=${input.registrationId}&locale=${input.locale}${input.member ? "&m=1" : ""}${input.elite ? "&e=1" : ""}&v=${input.stamp}`;
 }

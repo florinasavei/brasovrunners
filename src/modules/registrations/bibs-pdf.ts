@@ -86,6 +86,12 @@ export type BibSheetRow = {
    * print. Drawn only while the design's members' switch is on; a spare is never a member's.
    */
   member?: boolean;
+  /**
+   * «Elită» (§NNN): a registration an Administrator marked, drawn as an elite bib (§895) — the name in the number's
+   * place, the row's own number under it and the sponsors' row only as the design ticks them — never the members'
+   * design. Its number stays its own: only the drawing changes.
+   */
+  elite?: boolean;
 };
 
 /** One bib the sheet draws: a runner's (or a desk spare's) row, or an elite line (§895). `member` is the paging's (§681). */
@@ -94,10 +100,11 @@ type SheetItem = { kind: "bib"; row: BibSheetRow; member?: boolean } | { kind: "
 export type BibSheetInput = {
   rows: readonly BibSheetRow[];
   /**
-   * «Elită — doar numele pe BIB» (§895): when given, the sheet prints these elite bibs instead of `rows` — each
-   * the race's header, the **name where the number goes** (`bib-geometry.ts#bibEliteLayout`), the number under it
-   * and the sponsors' row only as the design ticks them (`bib-elite.ts#bibEliteParts`), the extras and the small
-   * print as on any bib. Never a name line, a blank mark or the members' design.
+   * «Elită — doar numele pe BIB» (§895): when given, the sheet is the elite sheet — these elite bibs first, in the
+   * order typed, then every row of `rows` drawn as an elite bib too (the registrations an Administrator marked «Elită»,
+   * §NNN) — each the race's header, the **name where the number goes** (`bib-geometry.ts#bibEliteLayout`), the number
+   * under it and the sponsors' row only as the design ticks them (`bib-elite.ts#bibEliteParts`), the extras and the
+   * small print as on any bib. Never a name line, a blank mark or the members' design.
    */
   elite?: readonly BibEliteEntry[];
   eventTitle: string;
@@ -924,16 +931,27 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const perPage = input.layout === "one" ? 1 : 2;
   // The places on one page, upper half first (or the one centred place with `one`).
   const slots = bibSheetSlots(perPage, input.layout);
+  /*
+    A registration marked «Elită» (§NNN) is an elite item like a line of the list: its name where the number goes, its
+    own number under it only as the design ticks — the same drawing, never a second one — and never a member's bib.
+    A row with no name (a desk spare) is never one.
+  */
+  const eliteOf = (row: BibSheetRow): SheetItem | null =>
+    row.registeredName === null ? null : { kind: "elite", entry: { name: row.registeredName, bibNumber: row.bibNumber }, member: false };
   // The members' pile first, on pages of its own, while the event offers their bib (§681). The elite sheet (§895)
-  // is its list alone, in the order the club typed it, two to a page — no member's bib is ever among it.
+  // is its list, in the order the club typed it, then the marked registrations (§NNN), two to a page — no member's bib is ever among it.
   const pages: BibSheetPage<SheetItem>[] = input.elite
     ? sheetPages(
-        input.elite.map((entry): SheetItem => ({ kind: "elite", entry, member: false })),
+        [
+          ...input.elite.map((entry): SheetItem => ({ kind: "elite", entry, member: false })),
+          ...input.rows.map(eliteOf).filter((item): item is SheetItem => item !== null),
+        ],
         { layout: input.layout, membersOn: false },
       )
-    : sheetPages(input.rows, { part: input.part, layout: input.layout, membersOn: design.member.enabled }).map((page) =>
-        page.map((row): SheetItem | null => (row === null ? null : { kind: "bib", row, member: row.member })),
-      );
+    : sheetPages(
+        input.rows.map((row) => (row.elite ? { ...row, member: false } : row)),
+        { part: input.part, layout: input.layout, membersOn: design.member.enabled },
+      ).map((page) => page.map((row): SheetItem | null => (row === null ? null : ((row.elite ? eliteOf(row) : null) ?? { kind: "bib", row, member: row.member }))));
   pages.forEach((page) => {
     // Every page opens with its cut — a blank lower half included — and its bibs in order.
     doc.addPage();

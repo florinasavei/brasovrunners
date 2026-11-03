@@ -468,8 +468,17 @@ export const registrations = pgTable(
      * and nothing else: no email, no page, no count the club is given.
      */
     bibPrintedAt: timestamp("bib_printed_at", { withTimezone: true }),
+    /**
+     * «Elită» (§NNN; the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând», choosing «Rămâne
+     * înscris»): this registration's bib prints as an elite bib — the name where the number goes (§895,
+     * `bib-elite.ts`), its own number under it and the sponsors' row only as the design ticks them. Set and cleared
+     * by an Administrator at any time and in any state (`elite-mark.ts`), audited. It belongs to the printed bib and
+     * nothing else: never read by the allocator, a count, a state, the number's draw or an email — the registration
+     * stays exactly what it was.
+     */
+    elite: boolean("elite").notNull().default(false),
 
-    submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
+    submittedAt:timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
     /**
      * When the email link of this cycle lapses unconfirmed (§377): written when the registration
      * enters `PENDING_EMAIL_CONFIRMATION` — the first submission and a restart alike — from the

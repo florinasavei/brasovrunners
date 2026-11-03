@@ -490,6 +490,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.kind === "TEST" && <StatusChip glyph="test" color="warning" label={tr("registrations.testKind")} />}
         {/* On the hidden list (§643, §647): read by every role that reads this page. */}
         {registration.outsideCapacity && <HiddenListChip label={tr("registrations.outside.chip")} hint={tr("registrations.outside.hint")} testId="outside-chip" />}
+        {/* «Elită» (§NNN): the bib prints with the name where the number goes; marked and unmarked from the list's «⋮». */}
+        {registration.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={tr("registrations.elite.chip")} testId="elite-chip" />}
         <FamilyChip
           label={tr("registrations.familyChip")}
           members={family.map((member) => ({

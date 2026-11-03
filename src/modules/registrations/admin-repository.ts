@@ -63,6 +63,8 @@ export type RegistrationListRow = {
   kind: RegistrationKind;
   /** «În afara locurilor» (§643): seated outside the event's places — the row's chip and the export's column. */
   outsideCapacity: boolean;
+  /** «Elită» (§NNN): the bib prints as an elite bib — the row's chip and the «⋮»'s mark or unmark. */
+  elite: boolean;
   /** «Folosește lista de invitați speciali» of the row's event (§647): the «⋮» offers «Pune pe listă» only while it is on (§747). */
   eventHiddenListEnabled: boolean;
   /** Registered through an invitation by email (§737): the list marks it «Invitat». */
@@ -452,6 +454,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       status: registrations.status,
       kind: registrations.kind,
       outsideCapacity: registrations.outsideCapacity,
+      elite: registrations.elite,
       eventHiddenListEnabled: events.hiddenListEnabled,
       // Registered through an invitation by email (§737, amending §647): the list's «Invitat» mark.
       invited: sql<boolean>`exists (select 1 from ${eventInvitations} i where i."accepted_registration_id" = ${registrations}."id")`.mapWith(Boolean),
@@ -742,6 +745,8 @@ export type RegistrationDetail = {
   kind: RegistrationKind;
   /** «În afara locurilor» (§643): read by every role that reads the page, changed by the Administrator only. */
   outsideCapacity: boolean;
+  /** «Elită» (§NNN): the bib prints as an elite bib — the page's chip, for every role that reads it. */
+  elite: boolean;
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
   source: RegistrationSource;
   registeredName: string;
@@ -888,6 +893,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       status: registrations.status,
       kind: registrations.kind,
       outsideCapacity: registrations.outsideCapacity,
+      elite: registrations.elite,
       source: registrations.source,
       registeredName: registrations.registeredName,
       participantEmail: participants.deliveryEmail,
@@ -1175,6 +1181,8 @@ export type DeskRegistration = {
    * browser kept for the cache hour.
    */
   bibStamp: string;
+  /** «Elită» (§NNN): the bib prints as an elite bib — part of the picture's address, so a mark is a fresh picture. */
+  elite: boolean;
   /**
    * Whether the settled number is on paper (§264), and when the row left the live states
    * (§311). Together they are what the desk says in red about a cancelled or expired runner
@@ -1217,6 +1225,7 @@ const DESK_COLUMNS = {
   // How the event writes it (§735): «007» when its bib says «007».
   raceNumberFormat: RACE_NUMBER_FORMAT,
   bibStamp: BIB_STAMP,
+  elite: registrations.elite,
   bibPrintedAt: registrations.bibPrintedAt,
   cancelledAt: registrations.cancelledAt,
   expiredAt: registrations.expiredAt,
