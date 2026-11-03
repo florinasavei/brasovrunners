@@ -652,7 +652,7 @@ export async function readPlaceOutlook<T extends Record<string, unknown>>(db: Da
     countOutsideCapacity(db, eventId),
     db.select({ total: count() }).from(eventReserveEntries).where(eq(eventReserveEntries.eventId, eventId)),
   ]);
-  return placeOutlook({ capacity: event.capacity, occupied: computeOccupied(counts), waiting, internal: internal?.total ?? 0, outside });
+  return placeOutlook({ capacity: event.capacity, occupied: computeOccupied(counts), confirmed: counts.confirmed, waiting, internal: internal?.total ?? 0, outside });
 }
 
 /** How many times the form was filled again for one registration, and when last (§312). */
