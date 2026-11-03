@@ -224,7 +224,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       key: "offered",
       label: t("volunteers.person.offeredFor"),
       hideBelow: "md",
-      render: (row) => (row.choiceIds.length > 0 ? namesOf(row.choiceIds).join(", ") : <span aria-hidden>—</span>),
+      render: (row) => (row.choiceIds.length > 0 ? <span data-testid="volunteer-offered">{namesOf(row.choiceIds).join(", ")}</span> : <span aria-hidden>—</span>),
     },
     {
       // «Are kit» (§NNN): the tick itself, one press; «Cu kit» above counts the ticked who are not cancelled.

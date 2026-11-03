@@ -1925,9 +1925,11 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     if (request.kind === "setKit") {
       // «Are kit» (§NNN): the organizers' own mark, one press on the list's row. The state it wants, so a second press saves the same;
       // audited as every other change of a person's boxes, naming the box and never anything typed. Nobody is told: it is the club's packing.
-      if (current.hasKit === request.hasKit) return { changed: false, volunteer: summary };
-      await tx.update(eventVolunteers).set({ hasKit: request.hasKit, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
-      await audit("volunteer.edited", { volunteerId: current.id, fields: ["hasKit"], hasKit: request.hasKit, assignedRoleIds: heldRoleIds });
+      // Only a real `true` ticks: anything else a forged request carries clears, never a truthy string read as yes.
+      const wanted = request.hasKit === true;
+      if (current.hasKit === wanted) return { changed: false, volunteer: summary };
+      await tx.update(eventVolunteers).set({ hasKit: wanted, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
+      await audit("volunteer.edited", { volunteerId: current.id, fields: ["hasKit"], hasKit: wanted, assignedRoleIds: heldRoleIds });
       return { changed: true, volunteer: summary };
     }
 

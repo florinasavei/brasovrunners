@@ -198,6 +198,13 @@ describe("§754 submitVolunteerAction's redirects", () => {
     expect(await people()).toHaveLength(1);
   });
 
+  it("§NNN never takes «Are kit» from the public form: a forged box is ignored, the offer kept unticked", async () => {
+    await seedEvent(true);
+    const url = await pressed(post({ hasKit: "on" }));
+    expect(url.searchParams.get("volunteer")).toBe("1");
+    expect((await people()).map((row) => row.hasKit)).toEqual([false]);
+  });
+
   it("sends a post to a form that is closed (CONFLICT) to the event's own page, where the box is gone — never to the volunteers' page, which would answer 404", async () => {
     await seedEvent(false);
     const url = await pressed(post());

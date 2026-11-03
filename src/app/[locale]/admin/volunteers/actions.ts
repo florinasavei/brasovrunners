@@ -4,7 +4,8 @@ import { getDb } from "@/db/client";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { isDomainError } from "@/shared/errors/domain-error";
-import { backToCard, eventIdOf, field } from "../events/[id]/volunteer-return";
+// The form's boxes, its event and the way back (§839), as the event card's verbs read them.
+import { backToCard, eventIdOf, field } from "@/app/[locale]/admin/events/[id]/volunteer-return";
 
 /**
  * «Are kit» on a row of the «Voluntari» list (§NNN; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit, deci trebuie

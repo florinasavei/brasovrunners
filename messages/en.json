@@ -5535,7 +5535,6 @@
       "summaryNone": "No roles yet",
       "summaryPending": "{count} to confirm",
       "summaryUnassigned": "{count} to place",
-      "summaryKit": "With a kit: {count}",
       "standing": "{taken} of {needed}",
       "standingNoNumber": "{taken} · no limit",
       "offer": {

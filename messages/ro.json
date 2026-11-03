@@ -5535,7 +5535,6 @@
       "summaryNone": "Încă niciun rol",
       "summaryPending": "{count} de confirmat",
       "summaryUnassigned": "{count} de repartizat",
-      "summaryKit": "Cu kit: {count}",
       "standing": "{taken} din {needed}",
       "standingNoNumber": "{taken} · fără număr",
       "offer": {

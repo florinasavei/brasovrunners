@@ -296,6 +296,9 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Marchează ca elită» / «Nu mai e elită» (§897): how one registration's bib prints, nothing else of it.
   setRegistrationEliteAction:
     "a mark on how one registration's bib prints, undone from the same menu; it tells nobody and changes no state, place, number or count",
+  // «Are kit» on a row of the «Voluntari» list (§NNN): the organizers' own mark of who gets the volunteers' kit, a one-press tick.
+  setVolunteerKitAction:
+    "a mark on the club's packing for one volunteer, undone by the same tick; it tells nobody and changes no state, role or count but «Cu kit»",
   addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",
   hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",

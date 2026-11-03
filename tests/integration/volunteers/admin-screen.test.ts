@@ -285,6 +285,8 @@ describe("the list's repository (§839)", () => {
       byState: { REGISTERED: 2, CONFIRMED: 1, CANCELLED: 1 },
       // Dana alone: Mihai holds a role, and a cancelled person waits for nothing anyway.
       unassigned: 1,
+      // «Cu kit» (§NNN): nobody ticked «Are kit» yet.
+      withKit: 0,
     });
     expect((await summariseVolunteersForAdmin(db, {})).total).toBe(5);
     // «Ana Pop», «Dana Ionescu» and «Ștefan Tănase»: the folded «tanase» holds «ana» too.
@@ -313,7 +315,8 @@ describe("the list's repository (§839)", () => {
     expect(await findVolunteerForAdmin(db, "00000000-0000-4000-8000-000000000000", "ro")).toBeNull();
 
     const roleNames = await listRoleNames(db, [waterId, marshalId]);
-    expect(roleNames.get(waterId)).toEqual({ nameRo: "Punct de apă", nameEn: "Water point" });
+    // With its category's words (§NNN): none here, so the name alone.
+    expect(roleNames.get(waterId)).toEqual({ nameRo: "Punct de apă", nameEn: "Water point", categoryRo: null, categoryEn: null });
     expect(roleNames.get(marshalId)?.nameEn).toBe("Marshal");
     expect((await listRoleNames(db, [])).size).toBe(0);
 
