@@ -2031,6 +2031,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       }}
                     >
                       {hidden}
+                      {/* The press comes back to this list, its page and filters kept, not to the registration's page. */}
+                      <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                       {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
                       {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
                     </ActionForm>
