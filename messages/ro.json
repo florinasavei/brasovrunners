@@ -1133,7 +1133,8 @@
         "who": "Au acum un loc, cu invitații speciali: {registrations} · Invitații fără răspuns: {invitations}. Lista de așteptare nu intră.",
         "shirts": "Tricouri — {sizes}",
         "noShirt": "fără tricou: {count}",
-        "unknownSize": "mărime încă necunoscută (invitații): {count}"
+        "unknownSize": "mărime încă necunoscută (invitații): {count}",
+        "volunteers": "Plus voluntari cu kit: {count}"
       },
       "places": {
         "title": "Locuri libere acum: {free} din {capacity}",
@@ -5683,7 +5684,9 @@
         "birthDateHelpMinors": "Opțional. Cel puțin {age} în ziua evenimentului. Sub 18 ani, trece mai jos și părintele sau tutorele.",
         "listOptIn": "Vrea să apară pe lista publică a voluntarilor",
         "listOptInHelp": "Bifează doar dacă persoana ți-a spus că vrea, de preferat în scris. Numele tău rămâne în jurnal. Dacă lista e publică, pagina arată numele și rolul dat, după ce o confirmi.",
-        "listOptInOff": "Nota în vigoare nu descrie lista publică: nu se mai poate bifa. Poți doar s-o debifezi."
+        "listOptInOff": "Nota în vigoare nu descrie lista publică: nu se mai poate bifa. Poți doar s-o debifezi.",
+        "hasKit": "Are kit",
+        "hasKitHelp": "Bifează dacă persoana primește kitul de voluntar. Se numără sus, la „Cu kit”, și lângă „Kituri de pregătit” la înscrieri."
       },
       "states": {
         "REGISTERED": "Înscris",
@@ -5752,7 +5755,8 @@
         "shirtSize": "Mărime tricou",
         "guardianName": "Părinte sau tutore",
         "guardianEmail": "Email părinte sau tutore",
-        "guardianConsent": "Acordul părintelui"
+        "guardianConsent": "Acordul părintelui",
+        "hasKit": "Are kit"
       },
       "sheet": {
         "people": "Voluntari",
@@ -5856,6 +5860,7 @@
         "summaryScopeAll": "toate evenimentele",
         "summaryTotal": "Voluntari: {count} (toate stările, anulați incluși)",
         "summaryUnassigned": "De repartizat: {count}",
+        "summaryKit": "Cu kit: {count}",
         "summaryScopeHelp": "Numerele de mai sus sunt doar pentru evenimentul selectat.",
         "summaryScopeAllLink": "Arată toate evenimentele",
         "filtersInUse": "filtre active",
@@ -5866,9 +5871,14 @@
         "searchHelp": "Caută după nume, cu sau fără diacritice — în toate evenimentele, dacă nu alegi unul.",
         "stateAll": "Toate stările",
         "roleAll": "Toate rolurile",
+        "kitFilter": "Are kit",
+        "kitAll": "Toți, cu kit sau fără",
+        "kitYes": "Da, are kit",
+        "kitNo": "Nu are kit",
+        "columnKit": "Kit",
         "filter": "Filtrează",
         "searchEverywhere": "Caut în toate evenimentele — alege unul ca să restrângi.",
-        "tableCaption": "Voluntari, cu stare, rolurile date, rolurile oferite, eveniment și data ofertei",
+        "tableCaption": "Voluntari, cu stare, rolurile date, rolurile oferite, kit, eveniment și data ofertei",
         "empty": "Nu s-a oferit încă nimeni.",
         "emptyFiltered": "Niciun voluntar nu corespunde filtrelor. Șterge filtrele ca să-i vezi pe toți.",
         "eventCard": "Rolurile și setările evenimentului",
@@ -5879,7 +5889,8 @@
       "chips": {
         "before": "A mai fost voluntar",
         "club": "Din grupul {club}",
-        "wantsList": "Vrea pe lista publică"
+        "wantsList": "Vrea pe lista publică",
+        "kit": "Are kit"
       },
       "yes": "Da",
       "no": "Nu",
@@ -13009,6 +13020,8 @@
       "volunteerReopened": "Voluntar înapoi la înscris.",
       "volunteerDeleted": "Voluntar șters.",
       "volunteerUnchanged": "Era deja așa; nimic de schimbat.",
+      "volunteerKitOn": "Bifat: are kit. Se numără la „Cu kit”.",
+      "volunteerKitOff": "Debifat: nu mai are kit.",
       "eventTodoDone": "Bifat. Rândul e la „Gata”.",
       "eventTodoReopened": "Debifat: rândul e din nou de făcut.",
       "eventTodoDeleted": "Rând șters de pe lista evenimentului.",

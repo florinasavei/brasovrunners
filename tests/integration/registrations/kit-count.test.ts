@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { eventInvitations } from "@/db/schema/event-invitations";
+import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { participants } from "@/db/schema/participants";
 import { registrations, type RegistrationTshirtSize } from "@/db/schema/registrations";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -11,6 +12,8 @@ import { createRace, registerRunner, type Runner } from "../../helpers/results";
  * «Kituri de pregătit» (the owner, 2026-10-29): one event's real registrations holding a place now —
  * the special guests among them — by T-shirt size, plus its open invitations before their deadline.
  * Never the waiting list, a cancelled or expired row, a test row, or an answered, withdrawn or lapsed invitation.
+ * Since §NNN one more line, «Plus voluntari cu kit: N» — the event's volunteers ticked «Are kit», the cancelled left out —
+ * never added to the kits' own figure.
  */
 const NOW = new Date("2026-11-01T10:00:00.000Z");
 const DAY = 24 * 3_600_000;
@@ -22,10 +25,16 @@ vi.mock("@/db/client", () => ({ getDb: () => db }));
 vi.mock("next-intl/server", async () => (await import("../../helpers/intl-server")).intlServerMock);
 
 const { countKits } = await import("@/modules/registrations/admin-repository");
+const { countVolunteersWithKit } = await import("@/modules/volunteers/admin-list");
 const { default: KitCount } = await import("@/modules/registrations/ui/KitCount");
 
-async function drawn(kits: Awaited<ReturnType<typeof countKits>>): Promise<string> {
-  return renderToStaticMarkup(await KitCount({ kits })).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+async function drawn(kits: Awaited<ReturnType<typeof countKits>>, volunteers?: number): Promise<string> {
+  return renderToStaticMarkup(await KitCount({ kits, volunteers })).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/** A volunteer the club typed by name (§865), in a state, ticked «Are kit» or not (§NNN). */
+async function volunteer(eventId: string, state: "REGISTERED" | "CONFIRMED" | "CANCELLED", hasKit: boolean) {
+  await db.insert(eventVolunteers).values({ eventId, name: "Vlad Test", source: "STAFF", state, hasKit });
 }
 
 beforeAll(async () => {
@@ -91,5 +100,29 @@ describe("«Kituri de pregătit»", () => {
     const text = await drawn(kits);
     expect(text).toContain("Kituri de pregătit: 0");
     expect(text).not.toContain("Tricouri");
+  });
+
+  it("§NNN adds «Plus voluntari cu kit: N» — the event's volunteers ticked «Are kit», not cancelled — and never counts them in the kits", async () => {
+    const race = await createRace(db, { kitShirt: true });
+    const other = await createRace(db, { kitShirt: true });
+    await runner(race.id, "M");
+    await volunteer(race.id, "CONFIRMED", true);
+    await volunteer(race.id, "REGISTERED", true);
+    // Not in it: a cancelled volunteer, one nobody ticked, another event's.
+    await volunteer(race.id, "CANCELLED", true);
+    await volunteer(race.id, "REGISTERED", false);
+    await volunteer(other.id, "CONFIRMED", true);
+
+    // The kits' own figure, as before: the registrations and the invitations alone.
+    const kits = await countKits(db, race.id, NOW);
+    expect(kits).toEqual({ kitShirt: true, bySize: { M: 1 }, registrations: 1, invitations: 0 });
+    const volunteers = await countVolunteersWithKit(db, race.id);
+    expect(volunteers).toBe(2);
+    const text = await drawn(kits, volunteers);
+    expect(text).toContain("Kituri de pregătit: 1");
+    expect(text).toContain("Plus voluntari cu kit: 2");
+    // Nobody ticked: no line at all.
+    expect(await drawn(kits, 0)).not.toContain("voluntari");
+    expect(await drawn(kits)).not.toContain("voluntari");
   });
 });

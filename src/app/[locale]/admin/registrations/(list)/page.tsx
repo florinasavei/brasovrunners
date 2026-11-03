@@ -44,6 +44,7 @@ import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import KitCount from "@/modules/registrations/ui/KitCount";
+import { countVolunteersWithKit } from "@/modules/volunteers/admin-list";
 import PlaceOutlook from "@/modules/registrations/ui/PlaceOutlook";
 import RowDeadlineCell from "@/modules/registrations/ui/RowDeadlineCell";
 import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
@@ -249,7 +250,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const featuredEvent = events.find((event) => event.featured) ?? null;
 
   const deadlinesNow = new Date();
-  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places] = await Promise.all([
+  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, volunteerKits] = await Promise.all([
     listRegistrationsForAdmin(
       db,
       filters,
@@ -291,6 +292,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? countKits(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
     // «Locuri» (the owner, 2026-11-03): taken, free, both lists, how many can be let in — one event with a capacity only.
     filters.eventId ? readPlaceOutlook(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
+    // «Plus voluntari cu kit» (§NNN): the event's volunteers ticked «Are kit», a figure of its own beside the kits — `countKits` is untouched.
+    filters.eventId ? countVolunteersWithKit(db, filters.eventId) : Promise.resolve(0),
   ]);
 
   // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
@@ -1278,7 +1281,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
       </SummaryStrip>
       {places && <PlaceOutlook outlook={places} spaceAbove={1.5} />}
-      {kits && <KitCount kits={kits} spaceAbove={1.5} />}
+      {kits && <KitCount kits={kits} volunteers={volunteerKits} spaceAbove={1.5} />}
       {/*
         «Când pierde lumea locul?» (§635; the owner, 2026-10-02): until when the people of this event
         keep their place, and what a passed deadline does — right under the counts, and only when the list

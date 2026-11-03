@@ -515,17 +515,17 @@ describe("§765 the CSV and the card's list carry the answers", () => {
     await press(actions.switchVolunteersShirtsAction, form({ on: "1" }));
     await post(
       actions.addVolunteerAction,
-      form({ ...PERSON, roleIds: [role.id], assignedRoleIds: [role.id], birthDate: aged(34), sex: "FEMALE", city: "Brașov, centru", volunteeredBefore: "on", shirtSize: "M" }),
+      form({ ...PERSON, roleIds: [role.id], assignedRoleIds: [role.id], birthDate: aged(34), sex: "FEMALE", city: "Brașov, centru", volunteeredBefore: "on", shirtSize: "M", hasKit: "on" }),
     );
     await post(actions.addVolunteerAction, form({ ...PERSON, name: "Ion Test", email: "ion@example.test", roleIds: [role.id], assignedRoleIds: [role.id] }));
     const text = await (await get()).text();
     const lines = text.split("\r\n");
-    // §768: the parent or guardian's three columns are appended after the T-shirt, empty for an adult.
-    expect(lines[0].endsWith("Data,Vârsta,Data nașterii,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou,Părinte sau tutore,Email părinte sau tutore,Acordul părintelui")).toBe(true);
+    // §768: the parent or guardian's three columns are appended after the T-shirt, empty for an adult; §NNN: «Are kit» after them, «Da» / «Nu».
+    expect(lines[0].endsWith("Data,Vârsta,Data nașterii,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou,Părinte sau tutore,Email părinte sau tutore,Acordul părintelui,Are kit")).toBe(true);
     const maria = lines.find((line) => line.includes("Maria Test")) ?? "";
-    expect(maria).toContain(`,34,${aged(34)},Female,"Brașov, centru",Da,Nu,M,,,`);
+    expect(maria).toContain(`,34,${aged(34)},Female,"Brașov, centru",Da,Nu,M,,,,Da`);
     const ion = lines.find((line) => line.includes("Ion Test")) ?? "";
-    expect(ion).toMatch(/,,,,,Nu,Nu,,,,$/);
+    expect(ion).toMatch(/,,,,,Nu,Nu,,,,,Nu$/);
     expect(await (await get("en")).text()).toContain(`,34,${aged(34)},Female,"Brașov, centru",Yes,No,M`);
   });
 

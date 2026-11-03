@@ -3,6 +3,7 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CheckroomIcon from "@mui/icons-material/Checkroom";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
@@ -116,6 +117,8 @@ export const STATUS_GLYPHS = {
   checkedIn: HowToRegIcon,
   // «Elită» on a registration (§897): the medal the elite card and the «⋮»'s «Marchează ca elită» wear.
   elite: MilitaryTechIcon,
+  // «Are kit» on a volunteer (§NNN): the hanger the event editor's «Kit de participare» panel wears (`panel-glyphs.ts#kit`).
+  kit: CheckroomIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;
