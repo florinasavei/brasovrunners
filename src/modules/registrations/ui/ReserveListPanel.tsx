@@ -195,7 +195,7 @@ export default async function ReserveListPanel({
                           />
                         </Box>
                       )}
-                      {/* An elite runner needs no address (§NNN): said in sight, beside the fold rather than inside it — the owner asked
+                      {/* An elite runner needs no address: said in sight, beside the fold rather than inside it — the owner asked
                           for a warning, and a closed fold hides one. */}
                       {!entry.email && eliteMoveAction && (
                         <Typography variant="body2" color="text.secondary" data-testid="reserve-elite-no-address">
