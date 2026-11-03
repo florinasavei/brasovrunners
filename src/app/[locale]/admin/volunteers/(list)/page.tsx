@@ -8,6 +8,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { addVolunteerAction, setVolunteerStateAction } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
+import { setVolunteerKitAction } from "@/app/[locale]/admin/volunteers/actions";
 import { getDb } from "@/db/client";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -20,6 +21,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import {
   countVolunteersForAdmin,
+  kitFilterOf,
   listEventsWithVolunteers,
   listRoleNames,
   listRolesWithCounts,
@@ -31,7 +33,7 @@ import {
   type VolunteerAdminRow,
   type VolunteerSortKey,
 } from "@/modules/volunteers/admin-list";
-import { VOLUNTEER_STATES, type VolunteerState } from "@/modules/volunteers/domain/volunteer";
+import { roleLabel, VOLUNTEER_STATES, type VolunteerState } from "@/modules/volunteers/domain/volunteer";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
 import { shortText, STATE_CHIP, VolunteerPersonFields, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -42,6 +44,7 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import StatusChip from "@/shared/ui/StatusChip";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import TickButton from "@/shared/ui/TickButton";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -79,7 +82,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   if (!canManageVolunteers(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, state, role, q, volunteerError } = current;
+  const { eventId, state, role, q, kit, volunteerError } = current;
   const query = parseListQuery(current, {
     sortable: VOLUNTEER_SORT_KEYS,
     // Newest offers first: the person somebody is asking about has usually just signed up.
@@ -95,27 +98,31 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const stateFilter = isVolunteerState(state) ? state : undefined;
   // A role of the chosen event, or «De repartizat»; anything else in the address is no filter.
   const roleFilter = role === UNASSIGNED || (role && isUuid(role)) ? role : undefined;
+  // «Are kit» (§NNN): «yes» or «no»; anything else in the address is no filter.
+  const kitFilter = kitFilterOf(kit);
   const filters: VolunteerAdminFilters = {
     eventId: eventFilter.eventId,
     state: stateFilter,
     role: roleFilter,
     search: q || undefined,
+    kit: kitFilter,
   };
 
   const [rows, total, summary, eventRoles, t] = await Promise.all([
     listVolunteersForAdmin(db, filters, { limit: query.limit, offset: query.offset, sort: query.sort as VolunteerSortKey, dir: query.dir }, locale),
     countVolunteersForAdmin(db, filters),
-    // Blind to the state and the role (§246's rule): the strip says how the scope stands, and its pills set those two.
+    // Blind to the state, the role and the kit (§246's rule): the strip says how the scope stands, and its pills set those filters.
     summariseVolunteersForAdmin(db, { eventId: filters.eventId, search: filters.search }),
     // The role select, with one event chosen: its roles and how many hold each.
     filters.eventId ? listRolesWithCounts(db, filters.eventId) : Promise.resolve([]),
     getTranslations("Admin"),
   ]);
-  // The names of every role the page's rows name, given or offered — one read, whatever their events.
+  // The words of every role the page's rows name, given or offered — one read, whatever their events — each with its category's (§NNN):
+  // «Direcționare (Traseu)», as the card and the person's page say it, so a name standing in two categories is never printed twice alike.
   const roleNames = await listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]);
   const roleName = (id: string) => {
-    const names = roleNames.get(id);
-    return names ? (locale === "en" ? names.nameEn : names.nameRo) : null;
+    const words = roleNames.get(id);
+    return words ? roleLabel(words, locale) : null;
   };
   const namesOf = (ids: readonly string[]) => ids.map(roleName).filter((name): name is string => name !== null);
 
@@ -126,6 +133,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     state: stateFilter,
     role: roleFilter,
     q,
+    kit: kitFilter === undefined ? undefined : kit,
     sort: current.sort,
     dir: current.dir,
     page: current.page,
@@ -134,7 +142,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
   // A press on a row comes back to this page of the list, every filter kept (§839), so the row's new chip is in view.
   const returnTo = buildListHref(basePath, listParams, { page: current.page });
-  const hasFilters = Boolean(eventId || stateFilter || roleFilter || q);
+  const hasFilters = Boolean(eventId || stateFilter || roleFilter || q || kitFilter !== undefined);
   const autoScopedToFeatured = !hasFilters && eventFilter.eventId !== undefined;
   const scopeEvent = events.find((event) => event.id === filters.eventId) ?? null;
   // «Adaugă un voluntar de mână» for the event in scope (§862): the context a person's page reads, coming back to this page of the list.
@@ -154,6 +162,22 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       <input type="hidden" name="volunteerId" value={row.id} />
       <input type="hidden" name="state" value={next} />
       <GlyphSubmitButton icon={icon} label={label} pendingLabel={label} ariaLabel={`${label}: ${shortText(row.name)}`} variant="outlined" />
+    </Box>
+  );
+
+  /**
+   * «Are kit» on the row (§NNN; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit»): the house's one-press tick (`TickButton`,
+   * §766) — a submit drawn as the checkbox, `role="checkbox"` and `aria-checked`, the words beside it — in a plain form that posts the state
+   * it wants (`hasKit=1|0`), never a toggle; it works with scripts off and comes back to this page of the list. The service asks for the role.
+   */
+  const kitTick = (row: VolunteerAdminRow) => (
+    <Box component="form" action={setVolunteerKitAction} data-testid="volunteer-kit-form">
+      {hidden(row)}
+      <input type="hidden" name="volunteerId" value={row.id} />
+      <input type="hidden" name="hasKit" value={row.hasKit ? "0" : "1"} />
+      <TickButton checked={row.hasKit} aria-label={`${t("volunteers.person.hasKit")}: ${shortText(row.name)}`} data-testid="volunteer-kit-tick">
+        {t("volunteers.person.hasKit")}
+      </TickButton>
     </Box>
   );
 
@@ -203,6 +227,12 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       render: (row) => (row.choiceIds.length > 0 ? namesOf(row.choiceIds).join(", ") : <span aria-hidden>—</span>),
     },
     {
+      // «Are kit» (§NNN): the tick itself, one press; «Cu kit» above counts the ticked who are not cancelled.
+      key: "kit",
+      label: t("volunteers.screen.columnKit"),
+      render: kitTick,
+    },
+    {
       key: "event",
       label: t("nav.events"),
       sortable: true,
@@ -232,11 +262,12 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   ];
 
   /** A pill of the strip: a link to this list with the filter in the address; pressing the one in force clears it (§626). */
-  const pill = (patch: { state?: VolunteerState; role?: string }, label: string, active: boolean) => (
+  const pill = (patch: { state?: VolunteerState; role?: string; kit?: "yes" }, label: string, active: boolean) => (
     <ChipLink
       href={buildListHref(basePath, listParams, {
         state: "state" in patch ? (active ? undefined : patch.state) : undefined,
         role: "role" in patch ? (active ? undefined : patch.role) : undefined,
+        kit: "kit" in patch ? (active ? undefined : patch.kit) : undefined,
       })}
       label={label}
       active={active}
@@ -281,18 +312,20 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       </Stack>
 
       {/*
-        How the scope stands (§246's shape): everyone first, then each state, then how many wait for a role — every
-        pill a filter (§626). The counts ignore the state and the role filters, so the strip never empties to the one
-        number somebody filtered to.
+        How the scope stands (§246's shape): everyone first, then each state, then how many wait for a role and how many
+        get a kit (§NNN) — every pill a filter (§626). The counts ignore the state, the role and the kit filters, so the
+        strip never empties to the one number somebody filtered to.
       */}
       <Panel glyph="volunteers" title={t("volunteers.screen.summaryTitle")} aside={scopeEvent ? t("volunteers.screen.summaryScopeEvent", { event: scopeEvent.title ?? scopeEvent.id }) : t("volunteers.screen.summaryScopeAll")} data-testid="volunteers-summary">
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
-          {pill({ state: undefined, role: undefined }, t("volunteers.screen.summaryTotal", { count: summary.total }), !stateFilter && !roleFilter)}
+          {pill({ state: undefined, role: undefined }, t("volunteers.screen.summaryTotal", { count: summary.total }), !stateFilter && !roleFilter && kitFilter === undefined)}
           {VOLUNTEER_STATES.filter((value) => summary.byState[value] > 0 || stateFilter === value).map((value) =>
             pill({ state: value }, `${t(`volunteers.states.${value}`)}: ${summary.byState[value]}`, stateFilter === value),
           )}
           {(summary.unassigned > 0 || roleFilter === UNASSIGNED) &&
             pill({ role: UNASSIGNED }, t("volunteers.screen.summaryUnassigned", { count: summary.unassigned }), roleFilter === UNASSIGNED)}
+          {/* «Cu kit» (§NNN; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit»): the ticked who are not cancelled, always said — a nought too. */}
+          {pill({ kit: "yes" }, t("volunteers.screen.summaryKit", { count: summary.withKit }), kitFilter === true)}
         </Stack>
         {scopeEvent && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
@@ -370,11 +403,18 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
                 <MenuItem value={UNASSIGNED}>{t("volunteers.screen.summaryUnassigned", { count: summary.unassigned })}</MenuItem>
                 {eventRoles.map((eventRole) => (
                   <MenuItem key={eventRole.id} value={eventRole.id}>
-                    {`${locale === "en" ? eventRole.nameEn : eventRole.nameRo} · ${eventRole.given}`}
+                    {/* With its category (§NNN): «Direcționare (Traseu) · 2», never two lines that read the same. */}
+                    {`${roleLabel(eventRole, locale)} · ${eventRole.given}`}
                   </MenuItem>
                 ))}
               </TextField>
             )}
+            {/* «Are kit» (§NNN): the ticked, the others, or everyone — the «Cu kit» pill above sets the first. */}
+            <TextField select name="kit" label={t("volunteers.screen.kitFilter")} defaultValue={kitFilter === undefined ? "" : kit} sx={{ minWidth: 200 }} data-testid="volunteers-filter-kit">
+              <MenuItem value="">{t("volunteers.screen.kitAll")}</MenuItem>
+              <MenuItem value="yes">{t("volunteers.screen.kitYes")}</MenuItem>
+              <MenuItem value="no">{t("volunteers.screen.kitNo")}</MenuItem>
+            </TextField>
             <Stack direction="row" spacing={1} sx={{ pt: 1, flexWrap: "wrap", gap: 1 }}>
               <GlyphButton icon="filter" type="submit" variant="contained" sx={TAP_TARGET}>
                 {t("volunteers.screen.filter")}

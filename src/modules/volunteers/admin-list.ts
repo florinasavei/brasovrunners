@@ -1,7 +1,7 @@
 import { and, asc, count, desc, eq, exists, gt, inArray, isNull, notExists, or, type SQL, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { nameMatches } from "@/db/name-search";
-import { eventVolunteerRoleAssignments, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteerCategories, eventVolunteerRoleAssignments, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import type { Database } from "@/db/types";
@@ -34,7 +34,14 @@ export type VolunteerAdminFilters = {
   role?: string;
   /** «Caută după nume»: the folded `LIKE` of `name-search.ts`. */
   search?: string;
+  /** «Are kit» (§NNN): only the people ticked (`true`), only the ones not (`false`), or everyone (absent). */
+  kit?: boolean;
 };
+
+/** `?kit=` as the list's address carries it (§NNN): «yes», «no», or nothing — anything else is no filter. */
+export function kitFilterOf(value: string | undefined): boolean | undefined {
+  return value === "yes" ? true : value === "no" ? false : undefined;
+}
 
 /** A row of the list: the card's item, with the event it belongs to named in the reader's language. */
 export type VolunteerAdminRow = VolunteerItem & {
@@ -72,6 +79,7 @@ function whereOf(filters: VolunteerAdminFilters): SQL | undefined {
   }
   const term = filters.search?.trim();
   if (term) parts.push(nameMatches(eventVolunteers.name, term));
+  if (filters.kit !== undefined) parts.push(eq(eventVolunteers.hasKit, filters.kit));
   return parts.length > 0 ? and(...parts) : undefined;
 }
 
@@ -151,31 +159,51 @@ export type VolunteerAdminSummary = {
   byState: Record<VolunteerState, number>;
   /** «De repartizat»: «Înscris» and «Confirmat» with no role given (§761) — the cancelled wait for nothing. */
   unassigned: number;
+  /** «Cu kit» (§NNN): «Înscris» and «Confirmat» the organizers ticked «Are kit» on — a cancelled person is handed nothing. */
+  withKit: number;
 };
 
 /**
- * The strip's figures (§246's shape): by state, and how many wait for a role. Blind to the state and role filters on purpose — the
- * strip says how the scope stands, and its pills are what set those two filters. One grouped query and one count.
+ * The strip's figures (§246's shape): by state, how many wait for a role and how many get a kit. Blind to the state, role and kit
+ * filters on purpose — the strip says how the scope stands, and its pills are what set those filters. One grouped query and one count.
  */
 export async function summariseVolunteersForAdmin<T extends Record<string, unknown>>(
   db: Database<T>,
   filters: Pick<VolunteerAdminFilters, "eventId" | "search">,
 ): Promise<VolunteerAdminSummary> {
   const scope = whereOf({ eventId: filters.eventId, search: filters.search });
+  // By state and by the kit's tick at once: the states' figures add the two halves, «Cu kit» reads the ticked half of the active states.
   const grouped = await db
-    .select({ state: eventVolunteers.state, n: count() })
+    .select({ state: eventVolunteers.state, hasKit: eventVolunteers.hasKit, n: count() })
     .from(eventVolunteers)
     .innerJoin(events, eq(events.id, eventVolunteers.eventId))
     .where(scope)
-    .groupBy(eventVolunteers.state);
+    .groupBy(eventVolunteers.state, eventVolunteers.hasKit);
   const byState = Object.fromEntries(VOLUNTEER_STATES.map((state) => [state, 0])) as Record<VolunteerState, number>;
-  for (const row of grouped) byState[row.state] = row.n;
+  let withKit = 0;
+  for (const row of grouped) {
+    byState[row.state] += row.n;
+    if (row.hasKit && row.state !== "CANCELLED") withKit += row.n;
+  }
   const [waiting] = await db
     .select({ n: count() })
     .from(eventVolunteers)
     .innerJoin(events, eq(events.id, eventVolunteers.eventId))
     .where(and(scope, noRoleGiven(), sql`${eventVolunteers.state} <> 'CANCELLED'`));
-  return { total: grouped.reduce((sum, row) => sum + row.n, 0), byState, unassigned: waiting?.n ?? 0 };
+  return { total: grouped.reduce((sum, row) => sum + row.n, 0), byState, unassigned: waiting?.n ?? 0, withKit };
+}
+
+/**
+ * «Plus voluntari cu kit» under the registrations' «Kituri de pregătit» (§NNN): one event's volunteers the organizers ticked «Are kit» on,
+ * the cancelled left out — the same figure as the «Voluntari» screen's «Cu kit», for one event. A count of its own: `countKits` and every
+ * export keep counting the registrations alone.
+ */
+export async function countVolunteersWithKit<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
+  const [row] = await db
+    .select({ n: count() })
+    .from(eventVolunteers)
+    .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.hasKit, true), sql`${eventVolunteers.state} <> 'CANCELLED'`));
+  return row?.n ?? 0;
 }
 
 /** The tab's figure (§839): how many offers still wait for an answer — «Înscris» on an event not yet over. */
@@ -215,17 +243,26 @@ export async function findVolunteerForAdmin<T extends Record<string, unknown>>(
   return { ...item, eventTitle: found.eventTitle, eventStartsAt: found.event.startsAt, eventDateToBeAnnounced: found.event.dateToBeAnnounced, event: found.event };
 }
 
-/** The roles of one event the list's role select offers, in the club's order, with how many people each was given. */
+/**
+ * A role's words as the list names it alone (§774): its own name and its category's, in both languages — the category null for a role
+ * under none. Ready for `roleLabel`, which says «Direcționare (Traseu)»: one name may stand in several categories, and the name alone
+ * printed the same word twice for a person who offered both (§NNN).
+ */
+export type RoleNameWords = { nameRo: string; nameEn: string; categoryRo: string | null; categoryEn: string | null };
+
+/** The roles of one event the list's role select offers, in the club's order, with their category's words and how many people each was given. */
 export async function listRolesWithCounts<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-): Promise<Array<{ id: string; nameRo: string; nameEn: string; categoryId: string | null; needed: number | null; given: number }>> {
+): Promise<Array<RoleNameWords & { id: string; categoryId: string | null; needed: number | null; given: number }>> {
   const rows = await db
     .select({
       id: eventVolunteerRoles.id,
       nameRo: eventVolunteerRoles.nameRo,
       nameEn: eventVolunteerRoles.nameEn,
       categoryId: eventVolunteerRoles.categoryId,
+      categoryRo: eventVolunteerCategories.nameRo,
+      categoryEn: eventVolunteerCategories.nameEn,
       needed: eventVolunteerRoles.needed,
       position: eventVolunteerRoles.position,
       createdAt: eventVolunteerRoles.createdAt,
@@ -237,20 +274,38 @@ export async function listRolesWithCounts<T extends Record<string, unknown>>(
       )`,
     })
     .from(eventVolunteerRoles)
+    // At most one category per role (its primary key): the join adds its words, never a row.
+    .leftJoin(eventVolunteerCategories, eq(eventVolunteerCategories.id, eventVolunteerRoles.categoryId))
     .where(eq(eventVolunteerRoles.eventId, eventId))
     .orderBy(asc(eventVolunteerRoles.position), asc(eventVolunteerRoles.createdAt), asc(eventVolunteerRoles.id));
-  return rows.map((row) => ({ id: row.id, nameRo: row.nameRo, nameEn: row.nameEn, categoryId: row.categoryId, needed: row.needed, given: row.given }));
+  return rows.map((row) => ({
+    id: row.id,
+    nameRo: row.nameRo,
+    nameEn: row.nameEn,
+    categoryId: row.categoryId,
+    categoryRo: row.categoryRo,
+    categoryEn: row.categoryEn,
+    needed: row.needed,
+    given: row.given,
+  }));
 }
 
-/** The names of some roles, whatever their events: the list's «Roluri date» and «S-a oferit pentru» cells, one read per page. */
-export async function listRoleNames<T extends Record<string, unknown>>(
-  db: Database<T>,
-  roleIds: readonly string[],
-): Promise<Map<string, { nameRo: string; nameEn: string }>> {
+/**
+ * The words of some roles, whatever their events: the list's «Roluri date» and «S-a oferit pentru» cells, one read per page — each role
+ * with its category's words (§NNN), so «Direcționare» under «Start / Sosire» and under «Traseu» read as two roles, as on the card.
+ */
+export async function listRoleNames<T extends Record<string, unknown>>(db: Database<T>, roleIds: readonly string[]): Promise<Map<string, RoleNameWords>> {
   if (roleIds.length === 0) return new Map();
   const rows = await db
-    .select({ id: eventVolunteerRoles.id, nameRo: eventVolunteerRoles.nameRo, nameEn: eventVolunteerRoles.nameEn })
+    .select({
+      id: eventVolunteerRoles.id,
+      nameRo: eventVolunteerRoles.nameRo,
+      nameEn: eventVolunteerRoles.nameEn,
+      categoryRo: eventVolunteerCategories.nameRo,
+      categoryEn: eventVolunteerCategories.nameEn,
+    })
     .from(eventVolunteerRoles)
+    .leftJoin(eventVolunteerCategories, eq(eventVolunteerCategories.id, eventVolunteerRoles.categoryId))
     .where(inArray(eventVolunteerRoles.id, [...roleIds]));
-  return new Map(rows.map((row) => [row.id, { nameRo: row.nameRo, nameEn: row.nameEn }]));
+  return new Map(rows.map((row) => [row.id, { nameRo: row.nameRo, nameEn: row.nameEn, categoryRo: row.categoryRo, categoryEn: row.categoryEn }]));
 }

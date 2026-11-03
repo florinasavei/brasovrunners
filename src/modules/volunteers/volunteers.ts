@@ -176,6 +176,8 @@ export type VolunteerItem = {
   clubMember: boolean;
   /** «Vreau să apar pe lista publică a voluntarilor» (§821): the person's own tick (or the organizers' record of it) — the card's «Vrea pe lista publică». */
   listOptIn: boolean;
+  /** «Are kit» (§NNN): the organizers' own mark that the person gets the volunteers' kit — what the screen's «Cu kit: N» counts. */
+  hasKit: boolean;
   shirtSize: Exclude<RegistrationTshirtSize, "NONE"> | null;
   createdAt: Date;
   updatedAt: Date;
@@ -324,6 +326,7 @@ function volunteerItemOf(joined: VolunteerRowJoined, choiceIds: string[], roleId
     volunteeredBefore: row.volunteeredBefore,
     clubMember: row.clubMember,
     listOptIn: row.listOptIn,
+    hasKit: row.hasKit,
     shirtSize: row.shirtSize === null || row.shirtSize === "NONE" ? null : row.shirtSize,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -1503,6 +1506,8 @@ export type VolunteerRequest =
   | { kind: "assign"; eventId: string; id: string; roleId: unknown }
   /** «Ia-i rolul …» (§837): one role given is taken back; the person's other roles stand. */
   | { kind: "unassign"; eventId: string; id: string; roleId: unknown }
+  /** «Are kit» ticked or cleared on the «Voluntari» list's row (§NNN): the form posts the state it wants, never a toggle. */
+  | { kind: "setKit"; eventId: string; id: string; hasKit: boolean }
   | { kind: "delete"; eventId: string; id: string };
 
 /**
@@ -1532,6 +1537,8 @@ function staffInputOf(fields: Record<string, unknown>, eventDay: string, keptAge
     volunteeredBefore: fields.volunteeredBefore === true,
     clubMember: fields.clubMember === true,
     listOptIn: fields.listOptIn === true,
+    // «Are kit» (§NNN): the organizers' own mark, true only when posted.
+    hasKit: fields.hasKit === true,
   });
   if (!parsed.success) {
     throw new DomainError("VALIDATION_ERROR", parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "), refusedFields(parsed.error));
@@ -1825,6 +1832,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           // «Vreau să apar pe lista publică a voluntarilor» (§821), recorded by the staff member (the audit row names them) under the notice in force.
           listOptIn: input.listOptIn,
           listOptInNoticeVersion: input.listOptIn ? (listNotice?.version ?? null) : null,
+          // «Are kit» (§NNN): the organizers' own mark, whatever the notice says — it is the club's logistics, not the person's answer.
+          hasKit: input.hasKit,
           // A size only while the event gives a shirt (§765); a stale form posting one for an event without is ignored.
           shirtSize: event.shirts ? input.shirtSize : null,
           // The parent or guardian of a person under eighteen (§768): their name, and the address when the organizer has one.
@@ -1842,7 +1851,13 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (!row) throw alreadyListed();
       await writeChoices(row.id, input.choiceIds);
       if (input.assignedRoleIds.length > 0) await writeLinks(eventVolunteerRoleAssignments, row.id, input.assignedRoleIds);
-      await audit("volunteer.added", { volunteerId: row.id, assignedRoleIds: input.assignedRoleIds, roleIds: input.choiceIds, ...(input.listOptIn ? { listOptIn: true } : {}) });
+      await audit("volunteer.added", {
+        volunteerId: row.id,
+        assignedRoleIds: input.assignedRoleIds,
+        roleIds: input.choiceIds,
+        ...(input.listOptIn ? { listOptIn: true } : {}),
+        ...(input.hasKit ? { hasKit: true } : {}),
+      });
       // Nothing for a row with no address (§865): `queueRoleAssigned` queues no row at all.
       await queueRoleAssigned(tx, row, input.assignedRoleIds, actor.id, now);
       return { changed: true, volunteer: { id: row.id, hasAddress: row.email !== null } };
@@ -1904,6 +1919,15 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       await tx.update(eventVolunteers).set({ updatedAt: now }).where(eq(eventVolunteers.id, current.id));
       await audit("volunteer.assigned", { volunteerId: current.id, roleId: assigned, assignedRoleIds: next, from: heldRoleIds });
       await queueRoleAssigned(tx, current, next, actor.id, now);
+      return { changed: true, volunteer: summary };
+    }
+
+    if (request.kind === "setKit") {
+      // «Are kit» (§NNN): the organizers' own mark, one press on the list's row. The state it wants, so a second press saves the same;
+      // audited as every other change of a person's boxes, naming the box and never anything typed. Nobody is told: it is the club's packing.
+      if (current.hasKit === request.hasKit) return { changed: false, volunteer: summary };
+      await tx.update(eventVolunteers).set({ hasKit: request.hasKit, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
+      await audit("volunteer.edited", { volunteerId: current.id, fields: ["hasKit"], hasKit: request.hasKit, assignedRoleIds: heldRoleIds });
       return { changed: true, volunteer: summary };
     }
 
@@ -1991,6 +2015,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       phone: input.phone,
       note: input.note,
       listOptIn: listNext,
+      // «Are kit» (§NNN): the organizers' own mark, saved whatever the notice in force names — no answer of the person's.
+      hasKit: input.hasKit,
       ...nextAnswers,
     };
     const before = {
@@ -2006,6 +2032,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       clubMember: current.clubMember,
       shirtSize: current.shirtSize,
       listOptIn: current.listOptIn,
+      hasKit: current.hasKit,
     };
     const choicesBefore = (
       await tx.select({ roleId: eventVolunteerRoleChoices.roleId }).from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.volunteerId, current.id))
@@ -2099,7 +2126,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     }
     return { changed: true, volunteer: { id: current.id, hasAddress: next.email !== null } };
   });
-  if (result.changed) revalidatePublicContent("places");
+  // «Are kit» is shown on no public page (§NNN): its press leaves the public cache as it was.
+  if (result.changed && request.kind !== "setKit") revalidatePublicContent("places");
   return result;
 }
 

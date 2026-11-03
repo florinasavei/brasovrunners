@@ -1,0 +1,1 @@
+ALTER TABLE "event_volunteers" ADD COLUMN "has_kit" boolean DEFAULT false NOT NULL;

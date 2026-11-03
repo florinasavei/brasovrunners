@@ -1133,7 +1133,8 @@
         "who": "Holding a place now, special guests included: {registrations} · Invitations unanswered: {invitations}. The waiting list is not counted.",
         "shirts": "T-shirts — {sizes}",
         "noShirt": "no T-shirt: {count}",
-        "unknownSize": "size not known yet (invitations): {count}"
+        "unknownSize": "size not known yet (invitations): {count}",
+        "volunteers": "Plus volunteers with a kit: {count}"
       },
       "places": {
         "title": "Places free now: {free} of {capacity}",
@@ -5534,6 +5535,7 @@
       "summaryNone": "No roles yet",
       "summaryPending": "{count} to confirm",
       "summaryUnassigned": "{count} to place",
+      "summaryKit": "With a kit: {count}",
       "standing": "{taken} of {needed}",
       "standingNoNumber": "{taken} · no limit",
       "offer": {
@@ -5683,7 +5685,9 @@
         "birthDateHelpMinors": "Optional. At least {age} old on the day of the event. Under 18, add the parent or guardian below.",
         "listOptIn": "Wants to appear on the public list of volunteers",
         "listOptInHelp": "Tick only if the person told you they want to, preferably in writing. Your name stays in the log. If the list is public, the page shows the name and given role once you confirm them.",
-        "listOptInOff": "The notice in force does not describe the public list: it cannot be ticked any more. You can only untick it."
+        "listOptInOff": "The notice in force does not describe the public list: it cannot be ticked any more. You can only untick it.",
+        "hasKit": "Has a kit",
+        "hasKitHelp": "Tick if the person gets the volunteer kit. Counted at the top, under “With a kit”, and beside “Kits to prepare” on the registrations."
       },
       "states": {
         "REGISTERED": "Registered",
@@ -5752,7 +5756,8 @@
         "shirtSize": "T-shirt size",
         "guardianName": "Parent or guardian",
         "guardianEmail": "Parent or guardian email",
-        "guardianConsent": "Parent's consent"
+        "guardianConsent": "Parent's consent",
+        "hasKit": "Has a kit"
       },
       "sheet": {
         "people": "Volunteers",
@@ -5856,6 +5861,7 @@
         "summaryScopeAll": "every event",
         "summaryTotal": "Volunteers: {count} (every state, cancelled included)",
         "summaryUnassigned": "To place: {count}",
+        "summaryKit": "With a kit: {count}",
         "summaryScopeHelp": "The figures above are for the selected event only.",
         "summaryScopeAllLink": "Show every event",
         "filtersInUse": "filters on",
@@ -5866,9 +5872,14 @@
         "searchHelp": "Search by name, with or without Romanian diacritics — across every event unless you choose one.",
         "stateAll": "All states",
         "roleAll": "All roles",
+        "kitFilter": "Has a kit",
+        "kitAll": "Everyone, kit or not",
+        "kitYes": "Yes, has a kit",
+        "kitNo": "No kit",
+        "columnKit": "Kit",
         "filter": "Filter",
         "searchEverywhere": "Searching every event — choose one to narrow it down.",
-        "tableCaption": "Volunteers, with state, roles given, roles offered, event and date offered",
+        "tableCaption": "Volunteers, with state, roles given, roles offered, kit, event and date offered",
         "empty": "Nobody has offered yet.",
         "emptyFiltered": "No volunteer matches these filters. Clear them to see all of them.",
         "eventCard": "The event's roles and settings",
@@ -5879,7 +5890,8 @@
       "chips": {
         "before": "Volunteered before",
         "club": "From the {club} group",
-        "wantsList": "Wants to be on the public list"
+        "wantsList": "Wants to be on the public list",
+        "kit": "Has a kit"
       },
       "yes": "Yes",
       "no": "No",
@@ -13009,6 +13021,8 @@
       "volunteerReopened": "Volunteer back to registered.",
       "volunteerDeleted": "Volunteer deleted.",
       "volunteerUnchanged": "It was already so; nothing to change.",
+      "volunteerKitOn": "Ticked: has a kit. Counted under “With a kit”.",
+      "volunteerKitOff": "Cleared: no kit any more.",
       "eventTodoDone": "Ticked. The row is under “Done”.",
       "eventTodoReopened": "Unticked: the row is to do again.",
       "eventTodoDeleted": "Row deleted from the event's list.",
