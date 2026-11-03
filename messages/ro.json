@@ -6787,6 +6787,7 @@
       "eliteSampleCaption": "Așa se tipărește un BIB de elită, cu designul salvat și un nume de probă.",
       "eliteRegistered": "înscris",
       "eliteRegisteredHelp": "Un alergător înscris se marchează din lista de înscrieri: «⋮» → «Marchează ca elită». Rămâne înscris, cu locul și numărul lui, și apare aici de când e confirmat.",
+      "eliteRegisteredOnce": "Foaia obișnuită îi tipărește și ea, tot ca BIB-uri de elită: tipărește-i dintr-o singură foaie, nu din amândouă.",
       "helpMore": "Numerele se dau în ordinea confirmării și nu se dau de două ori. Foaia are două numere A5 pe o pagină A4; un singur număr se descarcă de pe pagina înscrierii.",
       "memberLabelDefault": "Membru {club}",
       "profileStart": "Start",

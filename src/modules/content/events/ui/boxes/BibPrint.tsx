@@ -181,6 +181,12 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
         <Typography variant="body2" color="text.secondary" data-testid="bib-elite-registered-help">
           {t("bibs.eliteRegisteredHelp")}
         </Typography>
+        {/* The ordinary sheet prints a marked registration too, elite-style (§NNN): said only while there is one. */}
+        {registered.length > 0 ? (
+          <Typography variant="body2" color="text.secondary" data-testid="bib-elite-registered-once">
+            {t("bibs.eliteRegisteredOnce")}
+          </Typography>
+        ) : null}
         {count === 0 ? (
           <Typography variant="body2" color="text.secondary" data-testid="bib-elite-empty">
             {t("bibs.eliteEmpty")}

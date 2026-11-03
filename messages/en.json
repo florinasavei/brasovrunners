@@ -6787,6 +6787,7 @@
       "eliteSampleCaption": "How an elite bib prints, with the saved design and a sample name.",
       "eliteRegistered": "registered",
       "eliteRegisteredHelp": "A registered runner is marked from the registrations list: «⋮» → «Mark as elite». They stay registered, with their place and number, and appear here once confirmed.",
+      "eliteRegisteredOnce": "The ordinary sheet prints them too, as elite bibs: print them from one sheet, not both.",
       "helpMore": "Numbers are given in order of confirmation and are never given twice. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page.",
       "memberLabelDefault": "{club} member",
       "profileStart": "Start",

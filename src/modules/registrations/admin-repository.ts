@@ -271,12 +271,13 @@ function memberVerifiedOf(members: readonly string[]): SQL<boolean> {
 /**
  * The members' race number asked for and not verified (§664), in the bibs sheet's own scope: a real row
  * with a number (`bibs.ts#bibScopeWhere`), that wants it, at an event that offers it, whose address is no
- * member account's — so the list the bibs page links to counts what its line counts. The event's switch
+ * member account's and not marked «Elită» (an elite bib is never the ordinary one, §NNN) — so the list the bibs
+ * page links to counts what its line counts. The event's switch
  * is read through its own `EXISTS`, never through the caller's joins: the summary and the count select
  * no `events`, and a condition naming it there failed the whole page.
  */
 function memberBibAskedUnverified(members: readonly string[]): SQL {
-  return sql`(${registrations.memberBibWanted} and ${registrations.kind} = 'REAL' and ${registrations.bibNumber} is not null and exists (select 1 from ${events} where ${events.id} = ${registrations.eventId} and ${OFFERS_MEMBER_BIB}) and not ${memberVerifiedOf(members)})`;
+  return sql`(${registrations.memberBibWanted} and ${registrations.kind} = 'REAL' and ${registrations.bibNumber} is not null and exists (select 1 from ${events} where ${events.id} = ${registrations.eventId} and ${OFFERS_MEMBER_BIB}) and not ${registrations.elite} and not ${memberVerifiedOf(members)})`;
 }
 
 /** The member accounts' canonical addresses for one query: the caller's, or read now. */

@@ -7,8 +7,8 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { countKits, readPlaceOutlook, summariseRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
-import { countBibs, listBibs } from "@/modules/registrations/bibs";
+import { countKits, countRegistrationsForAdmin, readPlaceOutlook, summariseRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
+import { countBibs, countUnverifiedMemberBibs, listBibs } from "@/modules/registrations/bibs";
 import { addEliteEntry } from "@/modules/registrations/elite-list";
 import { setRegistrationElite } from "@/modules/registrations/elite-mark";
 import { resolveDisplayName } from "@/modules/registrations/names";
@@ -348,6 +348,23 @@ describe("§NNN a marked registration's bib", () => {
     expect(pages(Buffer.from(await (await get("locale=ro&elite=1&layout=one")).arrayBuffer()))).toBe(3);
     // The ordinary sheet still prints all three confirmed runners, the marked two elite-style.
     expect(pages(Buffer.from(await (await get("locale=ro")).arrayBuffer()))).toBe(2);
+  });
+
+  it("leaves the bibs page's «unverified members» line and the list it links to: an elite bib is never the ordinary one", async () => {
+    const admin = await as("ADMIN");
+    await db.update(events).set({ bibDesign: { member: { enabled: true, bandColour: "#6a1b9a", label: "Membru BVR" } } }).where(eq(events.id, eventId));
+    const ana = await runner("Ana Pop", "CONFIRMED", 12);
+    await runner("Ion Ionescu", "CONFIRMED", 13);
+    await db.update(registrations).set({ memberBibWanted: true });
+    const askedFilter = { eventId, memberBibAsked: true };
+    expect(await countUnverifiedMemberBibs(db, eventId)).toBe(2);
+    expect(await countRegistrationsForAdmin(db, askedFilter)).toBe(2);
+
+    await setRegistrationElite(db, admin, ana, true, NOW);
+    expect(await countUnverifiedMemberBibs(db, eventId)).toBe(1);
+    expect(await countRegistrationsForAdmin(db, askedFilter)).toBe(1);
+    await setRegistrationElite(db, admin, ana, false, later(1));
+    expect(await countUnverifiedMemberBibs(db, eventId)).toBe(2);
   });
 
   it("draws the registration's picture elite-style, never the members' design, under its own picture address", async () => {

@@ -780,7 +780,8 @@ export async function listBibs<T extends Record<string, unknown>>(
 
 /**
  * The bibs that asked for the members' design and will print the ordinary one (§664): confirmed
- * real rows with a number whose address is no member account's — the bibs page's one line before
+ * real rows with a number whose address is no member account's, not marked «Elită» (whose bib is the elite one,
+ * §NNN) — the bibs page's one line before
  * printing, so an Administrator adds them on «Echipa» first if they are members. Zero while the
  * event does not offer the members' bib.
  */
@@ -795,6 +796,8 @@ export async function countUnverifiedMemberBibs<T extends Record<string, unknown
       and(
         bibScopeWhere(eventId, {}),
         eq(registrations.memberBibWanted, true),
+        // A registration marked «Elită» prints the elite bib, never the ordinary one (§NNN): not this line's to warn of.
+        eq(registrations.elite, false),
         OFFERS_MEMBER_BIB,
         members.length > 0 ? notInArray(participants.canonicalEmail, members) : undefined,
       ),

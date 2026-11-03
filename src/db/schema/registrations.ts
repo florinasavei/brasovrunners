@@ -478,7 +478,7 @@ export const registrations = pgTable(
      */
     elite: boolean("elite").notNull().default(false),
 
-    submittedAt:timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
     /**
      * When the email link of this cycle lapses unconfirmed (§377): written when the registration
      * enters `PENDING_EMAIL_CONFIRMATION` — the first submission and a restart alike — from the

@@ -184,6 +184,9 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
     expect(card).toContain("3 nume");
     expect(block(card, "bib-elite-download")).toContain("Descarcă BIB-urile de elită (3)");
     expect(block(card, "bib-elite-registered-help")).toContain("«Marchează ca elită»");
+    // The ordinary sheet prints them too, elite-style: one line says so while there is one, so nobody prints them twice.
+    expect(block(card, "bib-elite-registered-once")).toContain(ro.Admin.bibs.eliteRegisteredOnce);
+    expect(block(await render({ elite }), "bib-elite")).not.toContain('data-testid="bib-elite-registered-once"');
     // A marked registration alone is still something to print: no «empty» line, the sheet offered.
     const alone = block(await render({ elite: { ...elite, entries: [], registered } }), "bib-elite");
     expect(alone).not.toContain('data-testid="bib-elite-empty"');
