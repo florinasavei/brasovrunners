@@ -114,8 +114,16 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     */
     const member = url.searchParams.get("member") === "1";
     const drawn = member ? { ...design, member: { ...design.member, enabled: true } } : design;
+    const sampleNumber = bibNumberFromQuery(url.searchParams.get("number")) ?? event.bibStartNumber;
+    /*
+      `elite=1` draws an elite bib (§895) — the «Elită» card's sample: the placeholder name where the number goes, the
+      sample number under it only while «Număr pe BIB-urile de elită» is ticked. Never a name from the list: the sample
+      draws nobody, so the gate stays the one every staff role passes.
+    */
+    const elite = url.searchParams.get("elite") === "1" ? { name: SAMPLE_NAME, bibNumber: sampleNumber } : undefined;
     const image = await renderBibImage({
-      bibNumber: bibNumberFromQuery(url.searchParams.get("number")) ?? event.bibStartNumber,
+      bibNumber: sampleNumber,
+      ...(elite ? { elite } : {}),
       // `blank=1` draws a desk spare (§444): the empty line the name is written on at the desk.
       registeredName: url.searchParams.get("blank") === "1" ? null : SAMPLE_NAME,
       eventTitle: event.title,

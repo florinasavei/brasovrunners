@@ -132,7 +132,7 @@ test.describe("§664 the members' number, designed in the panel", () => {
     await openEditorBox(page, "Participare, înscrieri și regulament");
     await openEditorBox(page, "Numere de concurs (BIB)");
     await openFold(page.getByTestId("bib-design"));
-    // «Membrii» (§759), the designer's last section.
+    // «Membrii» (§759), the section before «Elită» (§895), the designer's last.
     await openFold(page.getByTestId("bib-section-members"));
 
     const members = page.getByTestId("bib-design-member");
@@ -203,8 +203,8 @@ test.describe("§750 §759 the designer's sections: header, footer, the profile 
     await openFold(panel);
     const preview = page.getByTestId("bib-design-preview").locator("img");
 
-    // Six named sections, each closed with its heading in sight until opened.
-    for (const title of ["Antet", "Numărul", "Numele", "Profilul și urgențele", "Subsol și sponsori", "Membrii"]) {
+    // Seven named sections, each closed with its heading in sight until opened — «Elită» (§895) the last.
+    for (const title of ["Antet", "Numărul", "Numele", "Profilul și urgențele", "Subsol și sponsori", "Membrii", "Elită"]) {
       await expect(panel.getByRole("heading", { name: new RegExp(`^${title}`), level: 5 })).toBeVisible();
     }
 

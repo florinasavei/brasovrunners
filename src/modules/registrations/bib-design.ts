@@ -497,6 +497,14 @@ export const bibDesignSchema = z
     showDistance: z.boolean().catch(false),
     /** «Numărul și pe capete» (§750): the number again, small, at both ends of the sponsors' row — tear-off stubs. */
     numberStubs: z.boolean().catch(false),
+    /**
+     * «Număr pe BIB-urile de elită» (§895): an elite bib (`elite-list.ts`) prints the name where the number
+     * goes; ticked, the line's number too, smaller, under the name — when the line has one. Off by default, so
+     * every design saved before this key existed reads off.
+     */
+    eliteNumber: z.boolean().catch(false),
+    /** «Banda de sponsori pe BIB-urile de elită» (§895): the sponsors' row on the elite bibs as on the others; off by default. */
+    eliteSponsors: z.boolean().catch(false),
     /** The members' race number (§664): off, or the members' own header and label. */
     member: bibMemberSchemaWithDefault,
   })
@@ -547,6 +555,8 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   emergencyUpsideDown: true,
   showDistance: false,
   numberStubs: false,
+  eliteNumber: false,
+  eliteSponsors: false,
   member: DEFAULT_BIB_MEMBER_DESIGN,
 };
 

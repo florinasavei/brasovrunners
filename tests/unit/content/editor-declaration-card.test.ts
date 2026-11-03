@@ -92,7 +92,8 @@ describe("§448 the declaration card sits with «Regulamentul» (in one card sin
     expect(body.indexOf("{rules}")).toBeGreaterThan(-1);
     expect(body.indexOf("{rules}")).toBeLessThan(body.indexOf("{declarationCard}"));
     expect(body.indexOf("{declarationCard}")).toBeLessThan(body.indexOf("{programme}"));
-    expect(box).toContain("openWhen={{ attention: line.missing }}");
+    // …and back from a press on the race numbers' card inside it (§895, «Elită»), so the card is in sight again.
+    expect(box).toContain("openWhen={{ attention: line.missing, saved: bibPrintSaved }}");
     // «Regulamentul» is a level-3 card of its own now, the declaration no longer inside it.
     const text = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/TextBoxes.tsx"), "utf8");
     const rulesCard = text.slice(text.indexOf("export async function RulesBox"), text.indexOf("export async function AddressBox"));

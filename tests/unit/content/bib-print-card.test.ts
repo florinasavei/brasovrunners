@@ -111,3 +111,71 @@ describe("§759 «De la» and «Până la» belong to the PDF", () => {
     expect(await render({ total: 0 })).not.toContain('data-testid="bib-print-range"');
   });
 });
+
+describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
+  const elite = {
+    entries: [
+      { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", name: "Eliud Kipchoge", bibNumber: 7 },
+      { id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", name: "Faith Kipyegon", bibNumber: null },
+    ],
+    previewSrc: "/api/admin/events/11111111-1111-4111-8111-111111111111/bibs/preview?sample=1&locale=ro&elite=1",
+    downloadHref: "/api/admin/events/11111111-1111-4111-8111-111111111111/bibs?locale=ro&elite=1",
+  };
+
+  it("is a closed fold with how many on its closed line, the names with their numbers, the sheet and a sample", async () => {
+    const html = await render({ elite });
+    const card = block(html, "bib-elite");
+    expect(card.startsWith("<details")).toBe(true);
+    expect(card.slice(0, card.indexOf(">"))).not.toMatch(/\bopen\b/);
+    expect(card).toMatch(/data-testid="MilitaryTechIcon"[\s\S]*?Elită — doar numele pe BIB/);
+    expect(card).toContain("2 nume");
+    expect(card).toContain("Eliud Kipchoge");
+    expect(card).toContain("nr. 7");
+    expect(card).toContain("Faith Kipyegon");
+    // The sheet: a link-button with its glyph, 44 pixels tall, the count in its words.
+    const download = block(card, "bib-elite-download");
+    expect(download).toContain(`href="${elite.downloadHref.replace(/&/g, "&amp;")}"`);
+    expect(download).toContain('data-testid="PictureAsPdfIcon"');
+    expect(download).toContain("Descarcă BIB-urile de elită (2)");
+    // One elite bib as it prints, from the preview route's `elite=1`.
+    expect(block(card, "bib-elite-sample")).toContain(elite.previewSrc.replace(/&/g, "&amp;"));
+    // Not a registration: the card says so.
+    expect(card).toContain("Nu sunt înscrieri");
+  });
+
+  it("gives the Administrator the add form and each line's «Șterge», every control naming a form outside the save form", async () => {
+    const card = block(await render({ elite }), "bib-elite");
+    expect(card).toMatch(/<input[^>]*name="eliteName"[^>]*form="bib-elite-add"|<input[^>]*form="bib-elite-add"[^>]*name="eliteName"/);
+    expect(card).toMatch(/<input[^>]*name="eliteNumber"[^>]*form="bib-elite-add"|<input[^>]*form="bib-elite-add"[^>]*name="eliteNumber"/);
+    expect(card).toContain("Adaugă pe lista de elită");
+    for (const entry of elite.entries) expect(card).toContain(`form="bib-elite-delete-${entry.id}"`);
+    expect(card.match(/data-testid="DeleteIcon"/g)).toHaveLength(2);
+  });
+
+  it("is read-only for the Organizer: no add, no delete, the sheet still hers", async () => {
+    const card = block(await render({ elite, mayAssign: false }), "bib-elite");
+    expect(card).not.toContain('name="eliteName"');
+    expect(card).not.toContain("bib-elite-delete-");
+    expect(card).toContain(ro.Admin.bibs.eliteReadOnly);
+    expect(card).toContain('data-testid="bib-elite-download"');
+  });
+
+  it("says the list is empty, offers no sheet, and is not drawn where no bib prints", async () => {
+    const empty = block(await render({ elite: { ...elite, entries: [] } }), "bib-elite");
+    expect(empty).toContain("nicio persoană");
+    expect(empty).toContain('data-testid="bib-elite-empty"');
+    expect(empty).not.toContain('data-testid="bib-elite-download"');
+    expect(await render({ elite: null })).not.toContain('data-testid="bib-elite"');
+    // In English too.
+    expect(block(await render({ elite }, "en"), "bib-elite")).toContain("Elite — the name only on the bib");
+  });
+
+  it("opens itself and the print card on the way back from its own add or delete, and is closed otherwise", async () => {
+    // `?saved=eliteAdded|eliteDeleted` (`actions.ts#backToEliteCard`): a soft navigation the hash opener never sees.
+    const opened = await render({ elite, eliteSaved: true });
+    expect(opened).toMatch(/<details[^>]*data-testid="bib-print"[^>]*open=""/);
+    expect(opened).toMatch(/<details[^>]*data-testid="bib-elite"[^>]*open=""/);
+    const closed = await render({ elite });
+    expect(closed).not.toMatch(/<details[^>]*data-testid="bib-elite"[^>]*open=""/);
+  });
+});

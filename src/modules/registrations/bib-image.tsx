@@ -35,6 +35,7 @@ import {
   BIB_MARGIN,
   BIB_TEXT_ASCENT,
   BIB_TEXT_LINE,
+  type BibEliteLayout,
   type BibHeaderLayout,
   bibEmergencyFit,
   bibExtrasHeight,
@@ -45,6 +46,7 @@ import {
   bibProfileRowHeight,
   bibStubScale,
 } from "./bib-geometry";
+import { type BibEliteEntry, bibElite, bibEliteParts } from "./bib-elite";
 import { bibHeader } from "./bib-header";
 import { formatRaceNumber } from "./domain/race-number";
 
@@ -129,6 +131,12 @@ type BibImageInput = {
   emergencyLabel?: string;
   /** «21K» for the header's badge (§750), from `bib-extras.ts`; drawn only while the design's tick is on. */
   distanceBadge?: string | null;
+  /**
+   * An elite bib (§895), as the sheet prints one: the race's header, the **name where the number goes**
+   * (`bib-geometry.ts#bibEliteLayout`), the line's number under it and the sponsors' row only as the design ticks
+   * them (`bib-elite.ts#bibEliteParts`). `bibNumber` and `registeredName` are then not drawn; never the members' design.
+   */
+  elite?: BibEliteEntry;
 };
 
 /** One picture as the renderer takes it: something `next/og` can load, and its size in pixels. */
@@ -410,6 +418,44 @@ function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePic
   );
 }
 
+/**
+ * An elite bib's name in the number's place (§895), at the sheet's points: the number's area as a box of its own
+ * (`flex: 1`, the height the same rows leave it as on the paper), each line `bibEliteLayout` chose absolute at its
+ * top, centred across the card at the line's own height (`BIB_TEXT_LINE`), bold, never wrapped — the layout measured
+ * it never narrower than Satori sets it, so the box's width is only a safety net, as the header's is. The line's
+ * number under it at its own size when the layout has one. Exported so the test reads the markup.
+ */
+export function bibEliteElement(layout: BibEliteLayout, digits: string, ink: string) {
+  const line = (key: string, text: string, top: number, size: number, testId: string) => (
+    <div
+      key={key}
+      data-testid={testId}
+      style={{
+        display: "flex",
+        position: "absolute",
+        left: 0,
+        width: px(BIB_CARD.width),
+        top: px(top),
+        justifyContent: "center",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        fontSize: px(size),
+        fontWeight: 700,
+        lineHeight: `${px(BIB_TEXT_LINE * size)}px`,
+        color: ink,
+      }}
+    >
+      {text}
+    </div>
+  );
+  return (
+    <div data-testid="bib-elite" style={{ display: "flex", flex: 1, position: "relative" }}>
+      {layout.lines.map((entry, index) => line(`name-${index}`, entry.text, entry.top, layout.size, "bib-elite-name"))}
+      {layout.number && digits ? line("number", digits, layout.number.top, layout.number.size, "bib-elite-number") : null}
+    </div>
+  );
+}
+
 /** Half a circle, for what the runner reads looking down at the chest (§750, §759). */
 const TURNED = { transform: "rotate(180deg)" } as const;
 
@@ -464,10 +510,14 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const { width, height } = BIB_IMAGE;
   const L = BIB_LAYOUT;
   const design = input.design ?? DEFAULT_BIB_DESIGN;
-  // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever.
-  const digits = formatRaceNumber(input.bibNumber, design.numberFormat);
-  // The members' header (§664) only while the switch is on; everything under it is the one design.
-  const asMember = input.member === true && design.member.enabled;
+  // An elite bib (§895): the name where the number goes; the number and the sponsors' row only as the design ticks them.
+  const elite = input.elite ? { entry: input.elite, ...bibEliteParts(design, input.elite) } : null;
+  // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever. An elite bib's own number, or none.
+  const digits = elite ? (elite.number !== null ? formatRaceNumber(elite.number, design.numberFormat) : "") : formatRaceNumber(input.bibNumber, design.numberFormat);
+  // The members' header (§664) only while the switch is on; everything under it is the one design. Never on an elite bib.
+  const asMember = elite === null && input.member === true && design.member.enabled;
+  // An elite bib has no name strip: its name is in the number's place.
+  const showName = elite === null && design.showName;
   const band = asMember ? bibMemberBandColour(design.member, input.bandColour) : bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
   const memberLabel = asMember ? bibMemberLabel(design.member, input.memberLabelDefault ?? "") : "";
@@ -496,8 +546,8 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   });
   const sponsorsAtBottom = design.sponsorPlace === "bottom";
   const badge = design.showDistance ? (input.distanceBadge ?? null) : null;
-  // The stubs (§750) are why the sponsors' row exists with no picture.
-  const stubs = design.numberStubs;
+  // The stubs (§750) are why the sponsors' row exists with no picture; on an elite bib only with its row and a number (§895).
+  const stubs = elite ? elite.stubs : design.numberStubs;
   // A picture the club uploaded (§249): the one the route read (§560), or — when the caller read
   // none — the design's own address made absolute; the band when there is none.
   const pictureOf = (slot: BibPictureSlot, src: string | null): BibImagePicture | null => {
@@ -527,7 +577,8 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         })()
     : pictureOf("header", design.headerImageSrc);
   const headerCrop = asMember ? design.member.headerImageCrop : design.headerImageCrop;
-  const sponsors = pictureOf("sponsors", design.sponsorImageSrc);
+  // The sponsors' strip, on an elite bib only with «Banda de sponsori pe BIB-urile de elită» (§895).
+  const sponsors = elite && !elite.sponsors ? null : pictureOf("sponsors", design.sponsorImageSrc);
   // Told which header this picture draws, as the sheet is (§317).
   const footerLines = bibImageFooterLines(input, header !== null);
   const footerHeight = L.footerHeight + Math.max(0, footerLines.length - 1) * BIB_FOOTER_LINE.lineHeight;
@@ -539,7 +590,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   // under the band leave it — the sheet's rule — then to pixels (§249, §750).
   const numberArea = bibNumberArea({
     footer: footerHeight,
-    name: design.showName ? L.nameBlock : 0,
+    name: showName ? L.nameBlock : 0,
     sponsors: sponsorRow,
     stripe: stripe ? L.memberStripeHeight : 0,
     extras: bibExtrasHeight(profileRow !== null, emergency !== null, bibFiguresBelow(profileRow)),
@@ -567,7 +618,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
    * The name, above the number or below it — and nowhere when the club switched it off — in the
    * strip the sheet gives it, at the sheet's size, cut with "…" where the sheet cuts it.
    */
-  const name = design.showName ? (
+  const name = showName ? (
     <div
       style={{
         display: "flex",
@@ -815,21 +866,25 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         {/* The member mark (§750; its shape the club's, §759), the sheet's at the sheet's points. */}
         {markDrawn ? bibMemberMarkElement(markShape, ink, markShape === "logo" ? await clubLogo() : null) : null}
         {design.namePosition === "above" ? name : null}
-        {/* The number, centred on what the card has left, as the sheet centres it. */}
-        <div
-          style={{
-            display: "flex",
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: numberSize,
-            fontWeight: 700,
-            color: ink,
-            lineHeight: 1,
-          }}
-        >
-          {digits}
-        </div>
+        {/* The number, centred on what the card has left, as the sheet centres it — or, on an elite bib (§895), the name in its place. */}
+        {elite ? (
+          bibEliteElement(bibElite(elite.entry.name, { area: numberArea, scale: numberScaleFactor(design), number: elite.number !== null }), digits, ink)
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: numberSize,
+              fontWeight: 700,
+              color: ink,
+              lineHeight: 1,
+            }}
+          >
+            {digits}
+          </div>
+        )}
         {design.namePosition === "below" ? name : null}
         {bibExtrasBlock({ row: profileRow, picture: profilePicture, emergency, turn, ink })}
         {/* A member's card's stripe (§695): its foot on the background's foot, the label in capitals. */}

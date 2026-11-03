@@ -321,6 +321,10 @@ export default async function BibDesignPanel({
   const membersAside = design.member.enabled
     ? words(t("editor.bibDesign.sectionSummary.membersOn"), design.member.mark && t(`editor.bibDesign.member.markShapes.${design.member.markShape}`))
     : t("editor.bibDesign.sectionSummary.membersOff");
+  // «Elită» (§895): what the elite bibs carry besides the name; neither ticked is the name alone.
+  const eliteAside =
+    words(design.eliteNumber && t("editor.bibDesign.sectionSummary.eliteNumber"), design.eliteSponsors && t("editor.bibDesign.sectionSummary.eliteSponsors")) ||
+    t("editor.bibDesign.sectionSummary.eliteNameOnly");
 
   return (
     <Panel glyph="bibDesign" collapsible level={4} id="box-bib-design" title={t("editor.bibDesign.title")} aside={summary} data-testid="bib-design">
@@ -806,6 +810,22 @@ export default async function BibDesignPanel({
               </OnlyWhenTicked>
             </Stack>
           </Box>
+        </Panel>
+
+        {/* «Elită» (§895): the race's elite runners print with the name where the number goes (the print card's
+            «Elită — doar numele pe BIB»); these two ticks say what else their bibs carry. Both off by default. */}
+        <Panel glyph="bibElite" collapsible level={5} title={t("editor.bibDesign.sections.elite")} aside={eliteAside} data-testid="bib-section-elite">
+          <Stack spacing={1.5}>
+            <Typography variant="caption" color="text.secondary">
+              {t("editor.bibDesign.eliteIntro")}
+            </Typography>
+            <CheckboxField name="event.bibDesign.eliteNumber" defaultChecked={design.eliteNumber} help={t("editor.bibDesign.eliteNumberHelp")}>
+              {t("editor.bibDesign.eliteNumber")}
+            </CheckboxField>
+            <CheckboxField name="event.bibDesign.eliteSponsors" defaultChecked={design.eliteSponsors} help={t("editor.bibDesign.eliteSponsorsHelp")}>
+              {t("editor.bibDesign.eliteSponsors")}
+            </CheckboxField>
+          </Stack>
         </Panel>
 
         {eventId && (

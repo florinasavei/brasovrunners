@@ -212,6 +212,8 @@ export const FIELD_LABELS = [
   "bib.design.emergencyUpsideDown",
   "bib.design.numberStubs",
   "bib.design.sponsorPlace",
+  "bib.design.eliteNumber",
+  "bib.design.eliteSponsors",
   "bib.design.member.enabled",
   "bib.design.member.style",
   "bib.design.member.bandColour",

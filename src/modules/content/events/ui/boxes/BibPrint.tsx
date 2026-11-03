@@ -2,10 +2,18 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
+import { getLocale, getTranslations } from "next-intl/server";
+import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
+import { countForm } from "@/i18n/count-form";
+import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
+import DetachedActionForm, { DetachedFields, DetachedForm } from "@/shared/forms/DetachedActionForm";
+import RecallField from "@/shared/forms/recall";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import TipSpan from "@/shared/ui/TipSpan";
@@ -15,6 +23,12 @@ export const BIB_ASSIGN_FORM = "bib-assign";
 export const BIB_DOWNLOAD_FORM = "bib-download";
 /** The print of the desk's spares (§444): a POST that reserves them, then the sheet. */
 export const BIB_SPARES_FORM = "bib-spares";
+/** «Adaugă pe lista de elită» (§895): a detached form beside the save form (`EliteBibForms`). */
+export const BIB_ELITE_ADD_FORM = "bib-elite-add";
+/** Each elite line's «Șterge» (§895): one small form per line beside the save form, asked first (`BibPrintForms`). */
+export function bibEliteDeleteForm(entryId: string): string {
+  return `bib-elite-delete-${entryId}`;
+}
 
 type Props = {
   eventId: string;
@@ -32,6 +46,20 @@ type Props = {
    * number the next print would reserve — the number the confirmation names.
    */
   spares?: SpareCard | null;
+  /** «Elită — doar numele pe BIB» (§895): the race's elite list, its sheet and its sample; absent where no bib prints. */
+  elite?: EliteCard | null;
+  /** Back from the elite card's add or delete (`?saved=eliteAdded|eliteDeleted`): this card and the elite fold open by themselves. */
+  eliteSaved?: boolean;
+};
+
+/** What the elite section shows (§895), read by the page (`elite-list.ts#listEliteEntries`). */
+export type EliteCard = {
+  /** The names in the order typed, with the number the club gave each, if any. */
+  entries: ReadonlyArray<{ id: string; name: string; bibNumber: number | null }>;
+  /** The sample elite bib: the preview route with `elite=1` and the stored design (`bib-design-query.ts#bibPreviewUrl`). */
+  previewSrc: string;
+  /** The sheet of every elite bib: the bibs route with `elite=1`. */
+  downloadHref: string;
 };
 
 /** What the spares' section shows (§444), read by the page from `bibs.ts#spareCardState`. */
@@ -118,6 +146,146 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
 }
 
 /**
+ * «Elită — doar numele pe BIB» (§895; the owner, 2026-11-03, «Listă separată»): the race's elite runners as a list
+ * of names, each printed with the **name where the number goes** — not registrations: no place, no email, no
+ * declaration, no count. Beside the spares, a level-5 fold of the print card, closed, how many on its closed line.
+ *
+ * The list (each name, its number when it has one), the sheet «Descarcă BIB-urile de elită (N)» and a sample
+ * of one elite bib drawn with the saved design (the preview route's `elite=1`) are every reader's of the bibs
+ * (the Organizer and above); «Adaugă» and «Șterge» are the Administrator's (`mayEdit`, asserted again by the
+ * actions and the service). The card sits inside the event's save form, so its boxes and buttons name forms that
+ * stand beside it (`EliteBibForms`, `BibPrintForms`): «Salvează» never posts a name, and a refused add keeps what
+ * was typed, said right above the boxes.
+ */
+async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; mayEdit: boolean; saved: boolean }) {
+  const t = await getTranslations("Admin");
+  const locale = await getLocale();
+  const count = elite.entries.length;
+  const aside = count === 0 ? t("bibs.eliteNone") : t(`bibs.eliteCount.${countForm(count, locale)}`, { count });
+  return (
+    <Panel glyph="bibElite" collapsible level={5} id="bib-elite" title={t("bibs.eliteTitle")} aside={aside} openWhen={{ saved }} data-testid="bib-elite">
+      <Stack spacing={1.5}>
+        <Typography variant="body2" color="text.secondary">
+          {t("bibs.eliteHelp")}
+        </Typography>
+        {count === 0 ? (
+          <Typography variant="body2" color="text.secondary" data-testid="bib-elite-empty">
+            {t("bibs.eliteEmpty")}
+          </Typography>
+        ) : (
+          <Stack component="ol" spacing={0.5} sx={{ m: 0, pl: 3 }} data-testid="bib-elite-list">
+            {elite.entries.map((entry) => (
+              <Box key={entry.id} component="li" data-testid="bib-elite-entry">
+                <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1 }}>
+                  <Typography sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>{entry.name}</Typography>
+                  {entry.bibNumber !== null && (
+                    <Typography variant="body2" color="text.secondary">
+                      {t("bibs.eliteNumberShown", { number: entry.bibNumber })}
+                    </Typography>
+                  )}
+                  {mayEdit && (
+                    // The question is the line's own form (`BibPrintForms`, §384); this button only submits it.
+                    <GlyphButton icon="delete" type="submit" form={bibEliteDeleteForm(entry.id)} variant="text" color="error" size="small" sx={{ minHeight: 44 }}>
+                      {t("bibs.eliteDelete")}
+                    </GlyphButton>
+                  )}
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        )}
+        {mayEdit ? (
+          <DetachedFields form={BIB_ELITE_ADD_FORM}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { xs: "stretch", sm: "flex-start" } }} data-testid="bib-elite-add">
+              <RecallField
+                name="eliteName"
+                label={t("bibs.eliteName")}
+                helperText={t("bibs.eliteNameHelp", { max: ELITE_NAME_MAX })}
+                required
+                fullWidth
+                size="small"
+                slotProps={{ htmlInput: { maxLength: ELITE_NAME_MAX, autoComplete: "off" } }}
+              />
+              <RecallField
+                name="eliteNumber"
+                label={t("bibs.eliteNumber")}
+                helperText={t("bibs.eliteNumberHelp")}
+                size="small"
+                slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", maxLength: 5, autoComplete: "off" } }}
+                sx={{ width: { sm: 200 }, flexShrink: 0 }}
+              />
+              <Box sx={{ flexShrink: 0 }}>
+                <GlyphSubmitButton label={t("bibs.eliteAdd")} pendingLabel={t("bibs.eliteAdding")} icon="add" />
+              </Box>
+            </Stack>
+          </DetachedFields>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            {t("bibs.eliteReadOnly")}
+          </Typography>
+        )}
+        {count > 0 && (
+          <Box>
+            <GlyphButton icon="pdf" href={elite.downloadHref} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="bib-elite-download">
+              {t("bibs.eliteDownload", { count })}
+            </GlyphButton>
+          </Box>
+        )}
+        {/* One elite bib as it prints, with the saved design and a sample name — never a name of the list. */}
+        <Box component="figure" sx={{ m: 0, maxWidth: 320 }} data-testid="bib-elite-sample">
+          <Box
+            component="img"
+            src={elite.previewSrc}
+            alt={t("bibs.eliteSampleAlt")}
+            width={BIB_IMAGE.width}
+            height={BIB_IMAGE.height}
+            loading="lazy"
+            sx={{ width: "100%", height: "auto", display: "block", border: 1, borderColor: "divider" }}
+          />
+          <Typography component="figcaption" variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+            {t("bibs.eliteSampleCaption")}
+          </Typography>
+        </Box>
+      </Stack>
+    </Panel>
+  );
+}
+
+/**
+ * The detached form behind «Adaugă pe lista de elită» (§895): its state wraps the event's save form, its `<form>`
+ * stands right after it (`DetachedActionForm`, as «Puncte pe traseu» does, §763) — HTML forms cannot nest — so the
+ * add posts its two boxes and none of the event's, and a refusal keeps them. Only for the Administrator on an
+ * event that prints bibs; otherwise the save form alone.
+ */
+export async function EliteBibForms({
+  locale,
+  eventId,
+  mayEdit,
+  eliteAddAction,
+  children,
+}: {
+  locale: string;
+  eventId: string;
+  mayEdit: boolean;
+  /** `addEliteEntryAction`, handed down by the page that owns the actions. */
+  eliteAddAction: ActionFormAction;
+  children: ReactNode;
+}) {
+  if (!mayEdit) return children;
+  const t = await getTranslations("Admin");
+  const messages = await refusalMessages({ eliteName: t("bibs.eliteName"), eliteNumber: t("bibs.eliteNumber") });
+  return (
+    <DetachedActionForm id={BIB_ELITE_ADD_FORM} action={eliteAddAction} scope="bib-elite" messages={messages}>
+      {children}
+      <DetachedForm id={BIB_ELITE_ADD_FORM}>
+        <input type="hidden" name="uiLocale" value={locale} />
+        <input type="hidden" name="eventId" value={eventId} />
+      </DetachedForm>
+    </DetachedActionForm>
+  );
+}
+
+/**
  * Sub-sub-card 8.4.2, "Alocare și tipărire" (§350), edit only: the race numbers given out and the
  * sheet to print — the one card for race numbers now holds what they look like and whether they
  * exist, where it used to be a section below the page.
@@ -129,7 +297,7 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
  * form, as its siblings (`BibPrintForms`). "Salvează" never posts them, and they never post the
  * event. The line at the top says so.
  */
-export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyTest, attention, spares = null }: Props) {
+export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyTest, attention, spares = null, elite = null, eliteSaved = false }: Props) {
   const t = await getTranslations("Admin");
   // What «Alocă numerele» does, then when it is needed — two lines, one tooltip (`TOOLTIP_TEXT_SX` keeps the break).
   const assignWords = `${t("bibs.assignHelp")}\n${t("bibs.assignHelpMore")}`;
@@ -140,7 +308,7 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
       id="box-bib-print"
       title={t("editor.boxes.bibPrint.title")}
       aside={total > 0 ? t("bibs.helpSome", { total }) : undefined}
-      openWhen={{ attention }}
+      openWhen={{ attention, saved: eliteSaved }}
       data-testid="bib-print"
     >
       <Stack spacing={1.5}>
@@ -207,6 +375,8 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
           </Panel>
         )}
         {spares && <SpareBibsSection spares={spares} mayReserve={mayAssign} />}
+        {/* «Elită» (§895) beside the spares: names printed as bibs, never registrations. */}
+        {elite && <EliteBibsSection elite={elite} mayEdit={mayAssign} saved={eliteSaved} />}
         {/* Every bib as it will print, on its own page (§94): drawn on request. */}
         {total > 0 && (
           <Box>
@@ -238,6 +408,8 @@ export async function BibPrintForms({
   assignAction,
   sparesAction,
   sparesFrom = null,
+  eliteDeleteAction,
+  eliteEntries = [],
   cancelLabel,
 }: {
   eventId: string;
@@ -248,6 +420,9 @@ export async function BibPrintForms({
   /** `reserveSpareBibsAction` (§444), with the first number the question names; absent, no form. */
   sparesAction?: ActionFormAction;
   sparesFrom?: number | null;
+  /** `deleteEliteEntryAction` (§895), and the lines it may delete — one small form each; absent, none. */
+  eliteDeleteAction?: ActionFormAction;
+  eliteEntries?: ReadonlyArray<{ id: string; name: string }>;
   cancelLabel: string;
 }) {
   const t = await getTranslations("Admin");
@@ -284,6 +459,28 @@ export async function BibPrintForms({
           <input type="hidden" name="expectFrom" value={sparesFrom} />
         </ActionForm>
       )}
+      {mayAssign &&
+        eliteDeleteAction &&
+        eliteEntries.map((entry) => (
+          // Deleting a name asks first (§384), naming it; the card's «Șterge» on its line only submits this form.
+          <ActionForm
+            key={entry.id}
+            id={bibEliteDeleteForm(entry.id)}
+            action={eliteDeleteAction}
+            hidden
+            confirm={{
+              title: t("bibs.eliteDeleteTitle"),
+              body: t("bibs.eliteDeleteBody", { name: entry.name }),
+              confirmLabel: t("bibs.eliteDelete"),
+              cancelLabel,
+              destructive: true,
+            }}
+          >
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="eventId" value={eventId} />
+            <input type="hidden" name="entryId" value={entry.id} />
+          </ActionForm>
+        ))}
       <form id={BIB_DOWNLOAD_FORM} action={`/api/admin/events/${eventId}/bibs`} method="get" hidden>
         <input type="hidden" name="locale" value={locale} />
       </form>
