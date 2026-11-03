@@ -16,6 +16,7 @@ import {
   listVolunteerRoles,
   listVolunteers,
   readPublicVolunteerRoles,
+  ROLE_EMAIL_SETTLE_MINUTES,
   setAcceptsVolunteers,
   setVolunteersShowCounts,
   volunteerStandings,
@@ -532,6 +533,22 @@ describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role
     await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleIds: [] }));
     await expect(render(third)).rejects.toThrow(/roles were changed/);
     expect(await told()).toHaveLength(3);
+  });
+
+  it("holds the roles' email back, so three roles given one after another leave as one email naming all three (2026-11-03)", async () => {
+    const water = await addRole();
+    const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
+    const desk = await addRole({ nameRo: "Masă", nameEn: "Desk" });
+    const maria = await addPerson(water.id, { roleIds: [water.id], assignedRoleIds: [] });
+    for (const role of [water, finish, desk]) await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: role.id }));
+    const rows = await told();
+    expect(rows).toHaveLength(3);
+    // None may leave at its press: each waits for the next press, which would make it stale.
+    for (const row of rows) expect(row.nextAttemptAt!.getTime() - row.createdAt.getTime()).toBe(ROLE_EMAIL_SETTLE_MINUTES * 60_000);
+    // The first two name roles changed since and are withdrawn at the send; only the last one leaves, naming all three.
+    await expect(render(rows[0])).rejects.toThrow(/roles were changed/);
+    await expect(render(rows[1])).rejects.toThrow(/roles were changed/);
+    expect((await render(rows[2])).text).toContain("Roluri: Punct de apă, Sosire, Masă");
   });
 
   it("refuses a role of another event or no role, a person of another event, and a cancelled person — reopen first", async () => {

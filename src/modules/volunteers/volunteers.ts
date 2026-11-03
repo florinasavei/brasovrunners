@@ -1634,6 +1634,12 @@ function sameIds(a: readonly string[], b: readonly string[]): boolean {
  * kept, the address corrected — or typed into a row that had none) or `reopened` (a cancelled person back with roles).
  * Never to a row with no address (§865): nothing is queued at all — no outbox row, not even a withdrawn one; the person is
  * on the list only and the organizers tell them themselves.
+ *
+ * It waits `ROLE_EMAIL_SETTLE_MINUTES` before it may leave (`notBefore`): roles are given seconds apart, one press each, and a
+ * message sent at once could not be withdrawn by the next press — a volunteer given three roles got three emails, the first
+ * naming one role, the second two, the third all three (2026-11-03: «am primit un mail pentru primul rol, apoi mail cu primul
+ * și al doilea rol și apoi un mail cu toate 3»). Held back, every message but the last finds the roles changed and is
+ * withdrawn, and the person gets one email naming them all — sent by the next drain after the wait.
  */
 async function queueRoleAssigned<T extends Record<string, unknown>>(
   tx: Transaction<T>,
@@ -1655,8 +1661,12 @@ async function queueRoleAssigned<T extends Record<string, unknown>>(
     idempotencyKey: `volunteer:${volunteer.id}:assigned:${sorted.join("+")}:${why}:${now.getTime()}`,
     requestedByStaffUserId: actorId,
     now,
+    notBefore: new Date(now.getTime() + ROLE_EMAIL_SETTLE_MINUTES * 60_000),
   });
 }
+
+/** How long the roles' email waits for the next press before it may leave (`queueRoleAssigned`). */
+export const ROLE_EMAIL_SETTLE_MINUTES = 2;
 
 /**
  * One change to one event's volunteers, by one staff member: enter one by hand, change what was typed
