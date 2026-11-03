@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V4.14-2026-11-03 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V4.15-2026-11-03 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline: one release at a time;
  *   2. waits for the batch PR's checks to settle (§426), stops unless green, merges it into `qa`
@@ -227,9 +227,14 @@ function releaseChangesMigrations() {
   return diff.stdout.trim().length > 0;
 }
 
-/** The newest qa commit that touched a migration: the push migrate.yml ran on for qa. Null when git cannot say. */
+/**
+ * The newest qa commit that touched a migration: the push migrate.yml ran on for qa. Null when git cannot say.
+ * `--first-parent`: a pull request lands on qa as a merge commit, and that merge is what was pushed and what
+ * migrate.yml ran on — without it git names the feature branch's own commit, which no qa push ever carried, and
+ * the release stopped on «no migrate.yml run for qa» although qa had migrated (2026-11-03, #633, #635, #637).
+ */
 function qaMigrationCommit() {
-  const log = spawnSync("git", ["log", "-1", "--format=%H", "origin/qa", "--", "src/db/migrations"], { encoding: "utf8" });
+  const log = spawnSync("git", ["log", "-1", "--first-parent", "--format=%H", "origin/qa", "--", "src/db/migrations"], { encoding: "utf8" });
   return log.status === 0 && log.stdout.trim() ? log.stdout.trim() : null;
 }
 
