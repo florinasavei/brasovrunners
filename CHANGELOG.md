@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.17-2026-11-03
+
+- **One email per volunteer for several roles** — roles given one after another now leave as a single email naming them all, sent a few minutes after the last one, instead of one email per role. §901.
 ## BR-V4.16-2026-11-03
 
 - **«Voluntari» closed by default in the event editor** — the closed line counts who waits for a role or for confirmation; it opens when pressed, and after a press inside it. §900.

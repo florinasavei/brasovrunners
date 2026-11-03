@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.16-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.17-2026-11-03 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.16-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.17-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28659,3 +28659,15 @@ Baseline `BR-V4.15-2026-11-03`.
 **Decision.** The card is closed on arrival like every other fold of the editor; its closed line already says how many wait for a role and how many to confirm («4 de repartizat · 6 de confirmat»). A press inside it still comes back to `#box-volunteers`, which opens it, so the result of a press stays in view.
 
 Baseline `BR-V4.16-2026-11-03`.
+
+## 901. A volunteer given several roles gets one email naming them all
+
+**2026-11-03,** a volunteer to the owner: «Am primit 3 mail-uri ca voluntar… am primit un mail pentru primul rol, apoi mail cu primul și al doilea rol și apoi un mail cu toate 3», and: «de ce nu poți fixa să trimită doar un mail cu toate». The owner: «e un mail pentru fiecare acțiune, e cam overkill». In the outbox: four volunteers had been sent 13 role emails in bursts, each press seconds after the one before.
+
+**Why.** Each «Dă-i rolul …» / «Dă-i și rolul …» queues `VOLUNTEER_ROLE_ASSIGNED` naming the roles that stand (§761, §837), and a message whose roles changed since is withdrawn at the send (`render.ts`) — but the message was due at once, and the drain after the press sent it before the next press could make it stale.
+
+**Decision.** The roles' email is queued with `notBefore` two minutes after the press (`ROLE_EMAIL_SETTLE_MINUTES`). Roles given within that time leave as one message: every earlier one finds the roles changed and is withdrawn, and the last one, naming them all, goes with the next drain — the next email-queuing press or the pinger, within a quarter of an hour by day. Nobody waits for it on a page (`email-delay.ts` already lists it as not waited for), so the wait shows as no delay anywhere.
+
+**Refused.** A separate «Trimite emailul cu rolurile» button (one more press to forget); a longer wait (the roles are given seconds apart, measured in the outbox).
+
+Baseline `BR-V4.17-2026-11-03`.
