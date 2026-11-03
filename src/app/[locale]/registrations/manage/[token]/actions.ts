@@ -9,7 +9,10 @@ import { setListConsentFromManageLink } from "@/modules/registrations/list-conse
 import { parseCancelReason } from "@/modules/registrations/domain/cancel-reason";
 import { setPromoConsentFromManageLink } from "@/modules/registrations/promo-consent";
 import { setResultsNameConsentFromManageLink } from "@/modules/registrations/results-consent";
-import { checkInSelf, consumeAndCancel } from "@/modules/registrations/token-actions";
+import { checkInSelf, completeAnswersFromManageLink, consumeAndCancel } from "@/modules/registrations/token-actions";
+import { answersRefusalParam, readPostedAnswers } from "@/modules/registrations/complete-answers";
+import { clearFormDraft, stashDraftValues } from "@/modules/registrations/form-draft";
+import { ANSWER_DRAFT_FIELDS } from "@/modules/registrations/missing-answers";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashPublic } from "@/shared/feedback/flash";
 
@@ -143,6 +146,46 @@ export async function setResultsNameConsentFromManageAction(form: FormData): Pro
     if (isDomainError(error)) redirect(`${path}?results=0${who}#results`);
     throw error;
   }
+}
+
+/**
+ * «Completează-ți datele» from the participant's own link (§905), per person like the switches above: the token
+ * read, never spent; only the answers the public form requires and the registration does not hold, each through
+ * the form's own rule, written as the person's own with one audit row. A refusal names the boxes in the URL —
+ * names only (§14.5) — and keeps what was typed, sealed, for the page it lands on.
+ */
+export async function completeAnswersFromManageAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const person = personOf(form);
+  const path = getPathname({ locale, href: { pathname: "/registrations/manage/[token]", params: { token } } });
+  const who = person ? `&person=${encodeURIComponent(person)}` : "";
+
+  try {
+    const result = await completeAnswersFromManageLink(token, readPostedAnswers(form, locale), new Date(), person);
+    if (!result.ok) redirect(`${path}?invalid=1`);
+    await clearFormDraft(path);
+    redirect(`${path}?answers=1${who}#answers`);
+  } catch (error) {
+    const refused = isDomainError(error) && error.code === "VALIDATION_ERROR" ? answersRefusalParam(error.fields) : null;
+    if (refused) {
+      await stashDraftValues(answerDraftOf(form), path);
+      redirect(`${path}?answers=0&answersRefused=${encodeURIComponent(refused)}${who}#answers`);
+    }
+    // A person the link does not manage, or a registration that no longer stands: nothing was written.
+    if (isDomainError(error)) redirect(`${path}?invalid=1`);
+    throw error;
+  }
+}
+
+/** What a refused «Completează-ți datele» brings back (§142): the answers' boxes and nothing else — never the token. */
+function answerDraftOf(form: FormData): Record<string, string> {
+  const draft: Record<string, string> = {};
+  for (const name of ANSWER_DRAFT_FIELDS) {
+    const value = form.get(name);
+    if (typeof value === "string" && value !== "") draft[name] = value;
+  }
+  return draft;
 }
 
 /**

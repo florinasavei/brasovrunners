@@ -266,6 +266,13 @@ export const eventVolunteers = pgTable(
      * tick the organizers record later must not overwrite it. Null while `list_opt_in` is off.
      */
     listOptInNoticeVersion: integer("list_opt_in_notice_version"),
+    /**
+     * «Are kit» (§904; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit, deci trebuie încă un field de „are kit"»): the
+     * organizers' own mark that the person gets the volunteers' kit — ticked on the «Voluntari» list's row, in «Modifică» or in «Adaugă un
+     * voluntar de mână», never on the public form. The club's logistics, not something the person said: it is counted on the screen's
+     * header («Cu kit: N», the cancelled left out) and beside the registrations' «Kituri de pregătit». Off by default.
+     */
+    hasKit: boolean("has_kit").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     /** The staff member who entered the row; null for the public form, and after that account is removed. */

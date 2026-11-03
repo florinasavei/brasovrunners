@@ -20,6 +20,8 @@ import { csvCell } from "@/modules/registrations/csv";
  * «Acordul părintelui» as the reader's yes and no (empty for an adult: nothing was asked).
  *
  * Since §865 the address and the telephone cells are empty for a person the club typed without them: no column moves.
+ *
+ * Since §904 one more, last: «Are kit», the organizers' own mark, as the reader's yes and no. Appended, so no earlier column moves.
  */
 
 export type VolunteerCsvRow = {
@@ -52,6 +54,8 @@ export type VolunteerCsvRow = {
   guardianName: string | null;
   guardianEmail: string | null;
   guardianConsent: string;
+  /** «Are kit» (§904): «Da» / «Nu» in the reader's words. */
+  hasKit: string;
 };
 
 export type VolunteerCsvHeader = {
@@ -75,11 +79,12 @@ export type VolunteerCsvHeader = {
   guardianName: string;
   guardianEmail: string;
   guardianConsent: string;
+  hasKit: string;
 };
 
 export function buildVolunteersCsv(header: VolunteerCsvHeader, rows: readonly VolunteerCsvRow[]): string {
   const lines = [
-    [header.role, header.choices, header.name, header.email, header.phone, header.state, header.source, header.message, header.note, header.signedUpAt, header.age, header.dateOfBirth, header.sex, header.city, header.volunteeredBefore, header.clubMember, header.shirtSize, header.guardianName, header.guardianEmail, header.guardianConsent]
+    [header.role, header.choices, header.name, header.email, header.phone, header.state, header.source, header.message, header.note, header.signedUpAt, header.age, header.dateOfBirth, header.sex, header.city, header.volunteeredBefore, header.clubMember, header.shirtSize, header.guardianName, header.guardianEmail, header.guardianConsent, header.hasKit]
       .map(csvCell)
       .join(","),
     ...rows.map((row) =>
@@ -104,6 +109,7 @@ export function buildVolunteersCsv(header: VolunteerCsvHeader, rows: readonly Vo
         row.guardianName ?? "",
         row.guardianEmail ?? "",
         row.guardianConsent,
+        row.hasKit,
       ]
         .map(csvCell)
         .join(","),

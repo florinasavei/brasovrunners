@@ -46,7 +46,8 @@ import { fieldId } from "@/shared/forms/outcome";
 import { formatRaceNumber, raceNumberTextOf } from "@/modules/registrations/domain/race-number";
 import { memberBibOf } from "@/modules/registrations/domain/member-bib";
 import { canResendReminder, deriveAllowedResendMessageType, resendEmailGroup } from "@/modules/registrations/domain/resend";
-import { canTransition, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
+import { canTransition, isActiveStatus, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
+import { missingAnswersHeld } from "@/modules/registrations/missing-answers";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
@@ -150,6 +151,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   if (!registration) notFound();
   // «Membru (verificat)» / «Membru (declarat)» (§662), as on the list's row.
   const membership = membershipOf({ declared: registration.clubMemberDeclared, verified: registration.memberVerified });
+  // «Date lipsă» (§905): the answers the form requires and this registration does not hold — only while it still stands.
+  const owedAnswers = isActiveStatus(registration.status) ? missingAnswersHeld(registration) : [];
   // The members' race number (§664): «Număr de membru» when the row will print one, «cerut, neverificat» when it asked
   // and its address is no member account's — the sheet then prints the ordinary bib.
   const memberBib = memberBibOf({ offered: registration.eventOffersMemberBib, wanted: registration.memberBibWanted, verified: registration.memberVerified });
@@ -367,11 +370,18 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     recorded reads (§322) — so the trail is not a way round the record.
   */
   const emergencyOpen = emergency !== null || answers !== null;
+  const answerWords = (field: string) =>
+    (EDITABLE_ANSWERS as readonly string[]).includes(field) || field === "listSocials" ? tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME }) : field;
   const trailLabel = (action: string, metadata: unknown): string => {
+    // «Completează-ți datele» (§905): the person's own completion names its fields in words, never a value.
+    if (action === "registration.answers_completed") {
+      const fields = (metadata as { fields?: unknown } | null)?.fields;
+      const named = Array.isArray(fields) ? fields.filter((field): field is string => typeof field === "string" && field !== "registeredName") : [];
+      return tr("registrations.audit.registration.answers_completed", { fields: named.map(answerWords).join(", ") });
+    }
     if (action !== "registration.answer_corrected") return tr(`registrations.audit.${action}`, auditLabelValues(metadata));
     const field = String((metadata as { field?: unknown } | null)?.field ?? "");
-    const known = (EDITABLE_ANSWERS as readonly string[]).includes(field) || field === "listSocials";
-    return tr("registrations.audit.registration.answer_corrected", { field: known ? tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME }) : field });
+    return tr("registrations.audit.registration.answer_corrected", { field: answerWords(field) });
   };
   const trailMetadata = (action: string, metadata: unknown): Record<string, unknown> => {
     const shown = { ...((metadata ?? {}) as Record<string, unknown>) };
@@ -492,6 +502,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.outsideCapacity && <HiddenListChip label={tr("registrations.outside.chip")} hint={tr("registrations.outside.hint")} testId="outside-chip" />}
         {/* «Elită» (§897): the bib prints with the name where the number goes; marked and unmarked from the list's «⋮». */}
         {registration.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={tr("registrations.elite.chip")} testId="elite-chip" />}
+        {/* «Date lipsă» (§905): the list's chip; which answers, and how they are completed, is the line under the address. */}
+        {owedAnswers.length > 0 && <StatusChip glyph="missingAnswers" color="warning" variant="outlined" label={tr("registrations.missingAnswers.chip")} testId="missing-answers-chip" />}
         <FamilyChip
           label={tr("registrations.familyChip")}
           members={family.map((member) => ({
@@ -523,6 +535,17 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             {emailWords.todo}
           </Typography>
         </Box>
+      )}
+      {/*
+        «Date lipsă» (§905): which answers the form requires that this registration does not hold, and how they are
+        completed — by the person from their own link (the declaration's, or the manage page's after it), or by the
+        Administrator through «Modifică datele». Read by every role; the «how» is the Administrator's to act on.
+      */}
+      {owedAnswers.length > 0 && (
+        <Alert severity="warning" icon={false} data-testid="missing-answers-line">
+          <Box>{tr("registrations.missingAnswers.line", { fields: owedAnswers.map((field) => tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME })).join(", ") })}</Box>
+          <Box sx={{ mt: 0.5 }}>{mayManage ? tr("registrations.missingAnswers.how") : tr("registrations.missingAnswers.hint")}</Box>
+        </Alert>
       )}
       {/* From an invitation by email (§647): who sent it and when, read by every role that reads this page. */}
       {invitedBy && (

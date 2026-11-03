@@ -36,7 +36,8 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { declarationAsksMinorToSignByEvent } from "@/modules/legal-documents/repository";
 import { registrationStatus } from "@/db/schema/registrations";
 import { journeyOf } from "@/modules/registrations/domain/journey";
-import { canTransition } from "@/modules/registrations/domain/state-machine";
+import { canTransition, isActiveStatus } from "@/modules/registrations/domain/state-machine";
+import { missingAnswersHeld } from "@/modules/registrations/missing-answers";
 import { formatRaceNumber, printedNumbersACancelWouldVoid, raceNumberOf, raceNumberTextOf } from "@/modules/registrations/domain/race-number";
 import { deriveAllowedResendMessageType, resendEmailGroup } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
@@ -44,6 +45,7 @@ import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import KitCount from "@/modules/registrations/ui/KitCount";
+import { countVolunteersWithKit } from "@/modules/volunteers/admin-list";
 import PlaceOutlook from "@/modules/registrations/ui/PlaceOutlook";
 import RowDeadlineCell from "@/modules/registrations/ui/RowDeadlineCell";
 import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
@@ -74,7 +76,7 @@ import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
 import ReserveListPanel from "@/modules/registrations/ui/ReserveListPanel";
 import WaitlistAddForm from "@/modules/registrations/ui/WaitlistAddForm";
 import { listReserveEntries } from "@/modules/registrations/reserve-list";
-import { addReserveEntryAction, deleteReserveEntryAction, saveReserveNoteAction } from "../reserve-actions";
+import { addReserveEntryAction, deleteReserveEntryAction, moveReserveEntryToEliteAction, saveReserveNoteAction } from "../reserve-actions";
 import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -249,7 +251,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const featuredEvent = events.find((event) => event.featured) ?? null;
 
   const deadlinesNow = new Date();
-  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places] = await Promise.all([
+  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, volunteerKits] = await Promise.all([
     listRegistrationsForAdmin(
       db,
       filters,
@@ -291,6 +293,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? countKits(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
     // «Locuri» (the owner, 2026-11-03): taken, free, both lists, how many can be let in — one event with a capacity only.
     filters.eventId ? readPlaceOutlook(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
+    // «Plus voluntari cu kit» (§904): the event's volunteers ticked «Are kit», a figure of its own beside the kits — `countKits` is untouched.
+    filters.eventId ? countVolunteersWithKit(db, filters.eventId) : Promise.resolve(0),
   ]);
 
   // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
@@ -467,6 +471,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
           {/* «Elită» (§897): the bib prints with the name where the number goes — for every role that reads the list. */}
           {row.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="elite-chip" />}
+          {/* «Date lipsă» (§905): a registration still standing lacks answers the form requires — the person completes them
+              from their own link, or the Administrator types them; the registration's page says which and how. */}
+          {isActiveStatus(row.status) && missingAnswersHeld(row).length > 0 && (
+            <StatusChip glyph="missingAnswers" color="warning" variant="outlined" label={t("registrations.missingAnswers.chip")} testId="missing-answers-chip" />
+          )}
           {/* Registered from an invitation by email (§737, amending §647): who came in that way, at a glance. */}
           {row.invited && <Chip size="small" variant="outlined" color="info" label={t("registrations.invitedChip")} data-testid="invited-chip" />}
           {/* A family on one address (§543): who else is registered with it, each a link to their row. */}
@@ -1278,7 +1287,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
       </SummaryStrip>
       {places && <PlaceOutlook outlook={places} spaceAbove={1.5} />}
-      {kits && <KitCount kits={kits} spaceAbove={1.5} />}
+      {kits && <KitCount kits={kits} volunteers={volunteerKits} spaceAbove={1.5} />}
       {/*
         «Când pierde lumea locul?» (§635; the owner, 2026-10-02): until when the people of this event
         keep their place, and what a passed deadline does — right under the counts, and only when the list
@@ -1354,7 +1363,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         «Lista internă (doar notițe)» (§854, §888): people who asked to be kept in mind for this event, told nothing,
         for the roles that keep internal notes. Only on a list about one event: a line is about one. Moving a line onto
         the official list — one press, or the full form — is the Administrator's; the press only while the event takes
-        a vouched entry (the door of «Adaugă pe lista de așteptare»).
+        a vouched entry (the door of «Adaugă pe lista de așteptare»). «Mută pe lista de elită» (§903) is the
+        Administrator's too, on every line and at any time — the elite list is no queue — and comes back to this list
+        as it is, the panel open on the link to the editor's elite card.
       */}
       {filters.eventId && canKeepRegistrationNotes(actor.role) && (
         <ReserveListPanel
@@ -1368,7 +1379,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           saveNoteAction={saveReserveNoteAction}
           deleteAction={deleteReserveEntryAction}
           moveAction={mayManage && waitlistAddOpen ? moveReserveEntryAction : undefined}
-          opened={saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveDeleted" || current.from === "reserve"}
+          eliteMoveAction={mayManage ? moveReserveEntryToEliteAction : undefined}
+          listQuery={listQueryString}
+          eliteCardHref={
+            mayManage && saved === "reserveMovedToElite"
+              ? `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: filters.eventId } } })}#bib-elite`
+              : undefined
+          }
+          opened={saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveDeleted" || saved === "reserveMovedToElite" || current.from === "reserve"}
         />
       )}
 

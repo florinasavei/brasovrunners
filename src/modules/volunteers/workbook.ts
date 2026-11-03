@@ -106,6 +106,8 @@ function peopleColumns(header: VolunteerCsvHeader, words: VolunteerSheetWords, w
     { header: header.volunteeredBefore, width: 12, cell: (row) => ({ ...text(row.volunteeredBefore), align: "center" }) },
     { header: header.clubMember, width: 12, cell: (row) => ({ ...text(row.clubMember), align: "center" }) },
     { header: header.shirtSize, width: 10, cell: (row) => ({ ...text(row.shirtSize), align: "center" }) },
+    // «Are kit» (§904): beside the T-shirt's size, what whoever packs the kits reads together.
+    { header: header.hasKit, width: 9, cell: (row) => ({ ...text(row.hasKit), align: "center" }) },
     { header: header.guardianName, width: 22, cell: (row) => text(row.guardianName) },
     { header: header.guardianEmail, width: 28, cell: (row) => text(row.guardianEmail) },
     { header: header.guardianConsent, width: 11, cell: (row) => ({ ...text(row.guardianConsent), align: "center" }) },

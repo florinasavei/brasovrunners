@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.19` | an internal-list line moves onto the elite list, no address asked (§903) · «Are kit» on a volunteer, counted as «Cu kit»; the list names a role with its category (§904) · the person completes, from their own link, the answers a staff entry left out (§905) |
 | `BR-V4.18` | «Trimite-i oferta» from the list stays on the list (§902) |
 | `BR-V4.17` | one email per volunteer for several roles (§901) |
 | `BR-V4.16` | «Voluntari» closed by default (§900) |

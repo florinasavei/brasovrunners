@@ -206,6 +206,8 @@ export type PersonData = {
     listOptIn: boolean;
     /** The privacy notice version the list tick was given under (§821); null with no tick. */
     listOptInNoticeVersion: number | null;
+    /** «Are kit» (§904): the organizers' mark that the person gets the volunteers' kit — a column of the row like any other (art. 15 GDPR). */
+    hasKit: boolean;
     shirtSize: (typeof eventVolunteers.$inferSelect)["shirtSize"];
     privacyNoticeVersion: number | null;
     createdAt: Date;
@@ -487,6 +489,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
       clubMember: eventVolunteers.clubMember,
       listOptIn: eventVolunteers.listOptIn,
       listOptInNoticeVersion: eventVolunteers.listOptInNoticeVersion,
+      hasKit: eventVolunteers.hasKit,
       shirtSize: eventVolunteers.shirtSize,
       privacyNoticeVersion: eventVolunteers.privacyNoticeVersion,
       createdAt: eventVolunteers.createdAt,

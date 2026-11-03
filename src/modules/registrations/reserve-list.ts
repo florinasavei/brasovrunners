@@ -1,4 +1,5 @@
 import { and, asc, eq } from "drizzle-orm";
+import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventReserveEntries, RESERVE_EMAIL_MAX, RESERVE_NAME_MAX, RESERVE_NOTE_MAX } from "@/db/schema/event-reserve-entries";
 import { events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
@@ -11,6 +12,7 @@ import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staf
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { enterOnWaitlistByStaff, type WaitlistEntryByStaffResult } from "./admin-service";
+import { parseEliteEntry } from "./elite-list";
 import { addRegistrationNote } from "./notes";
 import { lockEventForCapacity } from "./repository";
 import type { StaffPlaceOptions } from "./service";
@@ -22,6 +24,8 @@ import type { StaffPlaceOptions } from "./service";
  * «Mută pe lista oficială» and «Oferă-i un loc acum» (§888) move a line onto the official waiting list in one
  * press (`moveReserveEntryToWaitlist`); the full form, prefilled, stays one link away, and `settleReserveEntry`
  * then carries the entry's note onto the registration as an internal note (§777) and removes the line.
+ * «Mută pe lista de elită» (§903) takes a line the other way, onto no list of registrations at all: its name onto
+ * the race's elite list (§895), printed on a bib, nobody registered (`moveReserveEntryToElite`).
  *
  * **Who** — the Organizer and above (`canKeepRegistrationNotes`, the internal notes' own rule) add, note and
  * delete; moving a line is the Administrator's (`canManageRegistrations`, §888). Asserted in every function
@@ -263,5 +267,65 @@ export async function settleReserveEntry<T extends Record<string, unknown>>(db: 
       metadata: { entryId: entry.id, registrationId: registration.id },
       now,
     });
+  });
+}
+
+/**
+ * «Mută pe lista de elită» on one line (§903; the owner, 2026-11-03, of an elite runner written on the internal
+ * list without an address: «având în vedere că e elită, nu trebuie să-i pun email»): the line's name onto the
+ * race's elite list (§895) — printed on a bib where the number goes — and the line off the internal list. **Not a
+ * registration**: no participant, no place, no queue, no email, no declaration, so no address is asked and the
+ * declaration rule stays whole (an elite line is a name to print and nothing else). The Administrator's, as
+ * writing the elite list and moving a line are (`canManageRegistrations`; asserted here and again at the action's
+ * door, BR-REQ-060-01).
+ *
+ * One transaction: the event row locked as `addEliteEntry` locks it (the lock every draw takes, `AGENTS.md`
+ * §10.6), then the line — the order an event's delete takes them in — then the elite line written with the line's
+ * first and last name through `parseEliteEntry` (trimmed, inner spaces collapsed, 1 to `ELITE_NAME_MAX`
+ * characters; a longer name is refused naming `name`, and nothing is written) and **no number** (the editor's
+ * card is where a number is given, with its checks), and the line deleted. The note is not carried — an elite
+ * line has none — and the address, if any, goes with the line. The trail: `event_elite.added` for the new line
+ * and `event_reserve.moved` for the old one, ids only. A second press on a line already moved finds it gone.
+ */
+export async function moveReserveEntryToElite<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  entryId: string,
+  now: Date,
+): Promise<{ eventId: string; eliteEntryId: string }> {
+  assertMayKeep(actor);
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not move a line of the internal list onto the elite list`);
+  }
+  if (!isUuid(entryId)) throw new DomainError("NOT_FOUND", "the line is not there");
+  return db.transaction(async (tx) => {
+    const [line] = await tx.select({ eventId: eventReserveEntries.eventId }).from(eventReserveEntries).where(eq(eventReserveEntries.id, entryId)).limit(1);
+    if (!line) throw new DomainError("NOT_FOUND", "the line is not there");
+    const event = await lockEventForCapacity(tx, line.eventId);
+    if (!event) throw new DomainError("NOT_FOUND", "no such event");
+    const entry = await lockedEntry(tx, entryId);
+    const { name } = parseEliteEntry({ name: `${entry.firstName} ${entry.lastName}`, bibNumber: null });
+    const [elite] = await tx
+      .insert(eventEliteEntries)
+      .values({ eventId: entry.eventId, name, bibNumber: null, createdByStaffUserId: actor.id, createdAt: now })
+      .returning({ id: eventEliteEntries.id });
+    await tx.delete(eventReserveEntries).where(eq(eventReserveEntries.id, entry.id));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event_elite.added",
+      entityType: "event",
+      entityId: entry.eventId,
+      metadata: { entryId: elite.id, reserveEntryId: entry.id },
+      now,
+    });
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event_reserve.moved",
+      entityType: "event",
+      entityId: entry.eventId,
+      metadata: { entryId: entry.id, eliteEntryId: elite.id },
+      now,
+    });
+    return { eventId: entry.eventId, eliteEntryId: elite.id };
   });
 }
