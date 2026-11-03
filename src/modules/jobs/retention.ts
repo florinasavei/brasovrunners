@@ -3,6 +3,7 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { eventInvitations } from "@/db/schema/event-invitations";
+import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventResults } from "@/db/schema/event-results";
 import { eventRsvpAsks, eventRsvps, rsvpAskRefusals, rsvpRefuseTokens } from "@/db/schema/event-rsvps";
 import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
@@ -195,6 +196,8 @@ export type PruneCounts = {
   volunteerInvitations: number;
   /** A race's results rows deleted with its registrations, three years after the race (§808). */
   results: number;
+  /** A race's elite list, its names gone with its registrations, three years after the race (§895). */
+  eliteEntries: number;
   /** Answers «Vin!» gone: thirty days after the event, seven unconfirmed, a cancelled event's at once (§811). */
   rsvps: number;
   /** The «Vii?» marks of events thirty days over (§818): a row of an event and a count, nothing personal. */
@@ -227,6 +230,7 @@ export const PRUNE_STEPS = [
   "invitations",
   "volunteers",
   "event-results",
+  "event-elite-entries",
   "rsvps",
   "rsvp-ask-refusals",
   "person-sessions",
@@ -309,6 +313,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     volunteers: 0,
     volunteerInvitations: 0,
     results: 0,
+    eliteEntries: 0,
     rsvps: 0,
     rsvpAsks: 0,
     rsvpAskRefusals: 0,
@@ -709,6 +714,18 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   });
 
   /*
+    A race's elite list (§895): a name the club typed to print on a bib, and the number it gave it — not a registration,
+    yet a real person's name. It goes by the race's registrations' clock: three years after the race, with the results
+    above. The race's own row stays, so this is the only thing that takes the names before an event is deleted. No page
+    shows them, so no cache needs telling.
+  */
+  await step("event-elite-entries", async (tx) => {
+    const over = tx.select({ id: events.id }).from(events).where(lt(events.startsAt, yearsBefore(now, RETENTION.registrationsYearsAfterEvent)));
+    const deleted = await tx.delete(eventEliteEntries).where(inArray(eventEliteEntries.eventId, over)).returning({ id: eventEliteEntries.id });
+    counts.eliteEntries = deleted.length;
+  });
+
+  /*
     The answer «Vin!» (§811): an address and, if the person ticked it, a name — kept to count and show who comes, and for nothing else.
     Three windows, one statement (`event_rsvp_tokens` go with their answer, `on delete cascade`): thirty days after the event's end (its
     start when it has none), seven days after the typing for an answer whose address never used the emailed link, and at once — at the next
@@ -820,6 +837,7 @@ export function totalPruned(counts: PruneCounts): number {
     counts.volunteers +
     counts.volunteerInvitations +
     counts.results +
+    counts.eliteEntries +
     counts.rsvps +
     counts.rsvpAsks +
     counts.rsvpAskRefusals +

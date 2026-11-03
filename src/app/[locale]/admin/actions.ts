@@ -72,6 +72,7 @@ import {
 import { env } from "@/shared/config/env";
 import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
+import { addEliteEntry, deleteEliteEntry } from "@/modules/registrations/elite-list";
 import { hiddenListRefusalOf, SPARES_BEFORE_HIDDEN_LIST } from "@/modules/registrations/domain/hidden-list";
 import { formatCalendarDay } from "@/i18n/dates";
 import { getTranslations } from "next-intl/server";
@@ -1062,6 +1063,52 @@ export async function reserveSpareBibsAction(_previous: FormOutcome | null, form
     outcome = isDomainError(error) && error.fields.includes(SPARES_BEFORE_HIDDEN_LIST) ? { error: SPARES_BEFORE_HIDDEN_LIST } : outcomeOf(error);
   }
   return backTo(editorPath(locale, eventId), outcome);
+}
+
+/**
+ * Back to the «Elită» card, open, with the toast's word in the flash cookie (§384). `saved` rides in the address too: the
+ * page opens the card and every fold around it from it (`openWhen.saved`, as the queue's «Adaugă pe lista de așteptare»
+ * does), because a redirect to the same page is a soft navigation that `OpenFoldFromHash` never sees; `#bib-elite` then
+ * only scrolls to it.
+ */
+async function backToEliteCard(locale: Locale, eventId: string, saved: "eliteAdded" | "eliteDeleted"): Promise<never> {
+  await flashOutcome({ saved });
+  redirect(`${editorPath(locale, eventId)}?${new URLSearchParams({ saved })}#bib-elite`);
+}
+
+/**
+ * «Adaugă pe lista de elită» on the bib card's «Elită — doar numele pe BIB» (§895): one name, and a number when
+ * the club typed one — printed on a bib, never a registration. The Administrator's (`canManageRegistrations`),
+ * asked here at the door and again in the service (BR-REQ-060-01). A refusal keeps what was typed (§315); the
+ * form is detached from the event's save form (`BibPrint.tsx#EliteBibForms`), so it posts nothing of the event.
+ */
+export async function addEliteEntryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await addEliteEntry(getDb(), actor, eventId, { name: form.get("eliteName"), bibNumber: form.get("eliteNumber") }, new Date());
+  } catch (error) {
+    // The service names `name` and `bibNumber`; the card's boxes are `eliteName` and `eliteNumber` (they share the editor's page).
+    const refusal = refused(error, form, { fieldNames: (domain) => domain.fields.map((field) => (field === "name" ? "eliteName" : field === "bibNumber" ? "eliteNumber" : field)) });
+    // A number somebody at the event already has, or a desk spare: its own sentence, not «somebody else saved».
+    return refusal.error === "CONFLICT" && refusal.fields.includes("eliteNumber") ? { ...refusal, error: "ELITE_NUMBER_TAKEN" } : refusal;
+  }
+  return backToEliteCard(locale, eventId, "eliteAdded");
+}
+
+/** «Șterge» on one line of the elite list (§895), behind the question that names it; the Administrator's. */
+export async function deleteEliteEntryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await deleteEliteEntry(getDb(), actor, text(form, "entryId"), new Date());
+  } catch (error) {
+    // The line was already gone, or the role changed: said in the editor's banner, as the bib card's other presses are.
+    return backTo(editorPath(locale, eventId), outcomeOf(error));
+  }
+  return backToEliteCard(locale, eventId, "eliteDeleted");
 }
 
 /**

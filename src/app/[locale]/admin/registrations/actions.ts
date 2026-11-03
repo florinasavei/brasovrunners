@@ -28,6 +28,7 @@ import {
   type WaitlistEntryByStaffResult,
 } from "@/modules/registrations/admin-service";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
+import { setRegistrationElite } from "@/modules/registrations/elite-mark";
 import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modules/registrations/declaration-hold";
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain/age";
@@ -540,6 +541,30 @@ export async function setClubMemberDeclaredAction(_previous: FormOutcome | null,
     outcome = isDomainError(error) && error.fields.includes(ANSWERS_UNCHANGED) ? { error: "ANSWERS_UNCHANGED" } : outcomeOf(error);
   }
   return backToList(locale, text(form, "listQuery"), outcome);
+}
+
+/**
+ * «Marchează ca elită» / «Nu mai e elită» (§897) from the list's «⋮»: the registration's bib prints as an elite bib,
+ * or as it did — at any time and in any state, nothing else of the registration touched (`elite-mark.ts`). The
+ * Administrator's: the coarse gate here, the service asserts it again (BR-REQ-060-01). It asks nothing (§384): it
+ * tells nobody and the same menu undoes it. Back to the list as it stands; from a form without `listQuery`, to the
+ * registration's own page.
+ */
+export async function setRegistrationEliteAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+  const elite = text(form, "elite") === "1";
+
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await setRegistrationElite(getDb(), actor, registrationId, elite, new Date());
+    outcome = elite ? { saved: "eliteMarked" } : { saved: "eliteUnmarked" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome);
+  return backTo(detailPath(locale, registrationId), outcome);
 }
 
 /**

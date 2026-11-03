@@ -124,7 +124,7 @@ describe("§760 «Participare, înscrieri și regulament»: cards 6 and 9 in one
   });
 
   it("is the card at #box-registration, which opens itself while the declaration is missing, and wears the outline", () => {
-    expect(body).toMatch(/id="box-registration"[\s\S]*openWhen=\{\{ attention: line\.missing \}\}[\s\S]*tone=\{risk \? "risk" : "default"\}/);
+    expect(body).toMatch(/id="box-registration"[\s\S]*openWhen=\{\{ attention: line\.missing, saved: bibPrintSaved \}\}[\s\S]*tone=\{risk \? "risk" : "default"\}/);
     // The page hands it the languages, for the programme's and the rules' texts.
     expect(EDIT).toMatch(/<RegistrationBox\s+\{\.\.\.box\}\s+heading=\{flow\.headings\.registration\}\s+risk=\{risk\}\s+languages=\{languages\}/);
     expect(CREATE).toContain("<RegistrationBox {...box} heading={flow.headings.registration} languages={languages}");

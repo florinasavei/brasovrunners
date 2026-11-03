@@ -87,6 +87,13 @@ export type AuditAction =
    */
   | "registration.bibs_printed"
   | "registration.bibs_unprinted"
+  /**
+   * «Marchează ca elită» / «Nu mai e elită» (§897): an Administrator marked this registration's bib to print as an
+   * elite bib, or took the mark off. The metadata is the new value alone (`{ elite }`) — never a name or a number:
+   * the mark changes how the bib prints and nothing of the registration.
+   */
+  | "registration.elite_marked"
+  | "registration.elite_unmarked"
   /** Confirmed at the desk: address vouched for, declaration on paper (BR-REQ-037-07). */
   | "registration.confirmed_by_staff"
   /** Given a place ahead of the queue, into a free one (BR-REQ-037-07). */
@@ -520,6 +527,12 @@ export type AuditAction =
   | "event_reserve.note_saved"
   | "event_reserve.deleted"
   | "event_reserve.moved"
+  /**
+   * «Elită — doar numele pe BIB» (§895), entity `event`: a name written onto the race's elite list, or deleted from it.
+   * The metadata is the line's id only — never the name or its number: the line is a name to print, not a person's file.
+   */
+  | "event_elite.added"
+  | "event_elite.deleted"
   /**
    * An event's volunteers (§754), entity `event`: the switch «Primește voluntari», a role added, changed,
    * moved or removed (the club's own words), and a volunteer entered, changed, confirmed, cancelled,

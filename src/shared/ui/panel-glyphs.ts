@@ -50,6 +50,7 @@ import MailIcon from "@mui/icons-material/Mail";
 import ManageHistoryIcon from "@mui/icons-material/ManageHistory";
 import MapIcon from "@mui/icons-material/Map";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import MilitaryTechIcon from "@mui/icons-material/MilitaryTech";
 import NewspaperIcon from "@mui/icons-material/Newspaper";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import NotesIcon from "@mui/icons-material/Subject";
@@ -161,6 +162,8 @@ export const PANEL_GLYPHS = {
   bibProfile: TerrainIcon,
   bibFooter: VerticalAlignBottomIcon,
   bibMembers: CardMembershipIcon,
+  // «Elită» (§895): the race's elite runners, printed by name — a medal, the designer's section and the print card's list alike.
+  bibElite: MilitaryTechIcon,
   print: PrintIcon,
   startList: GroupsIcon,
   // «Lista de invitați speciali» (§647), a fold of «Lista publică a participanților»: the incognito the

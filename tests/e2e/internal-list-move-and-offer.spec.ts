@@ -116,7 +116,7 @@ test.describe("§888 the internal list and the official waiting list, told apart
     await hydrated(page);
 
     // One read: the internal list says it is notes; the official one says it is the queue.
-    const internal = page.getByTestId("registrations-reserve");
+    const internal = page.locator("#main").getByTestId("registrations-reserve");
     await openFold(internal);
     await expect(internal.getByRole("heading", { name: /Lista internă \(doar notițe\)/ })).toBeVisible();
     await expect(internal).toContainText("Doar notițe");
@@ -136,7 +136,7 @@ test.describe("§888 the internal list and the official waiting list, told apart
     await move.click();
     await tickAndConfirm(page, "Muți pe lista oficială de așteptare?", { address: `mara-${tag}@test.invalid`, button: "Mută pe lista oficială" });
     await page.waitForURL(/from=reserve/);
-    await expect(page.getByTestId("registrations-reserve").getByTestId("reserve-entry").filter({ hasText: "Mara" })).toHaveCount(0);
+    await expect(page.locator("#main").getByTestId("registrations-reserve").getByTestId("reserve-entry").filter({ hasText: "Mara" })).toHaveCount(0);
     const mara = await registrationOf(seeded.eventId, "Mara");
     expect(mara.status).toBe("WAITLISTED");
     expect(mara.vouched).not.toBeNull();
@@ -145,7 +145,7 @@ test.describe("§888 the internal list and the official waiting list, told apart
 
     // «Oferă-i un loc acum» on the full race: the dialog names the capacity it becomes, and its button the added place.
     await hydrated(page);
-    const lucaLine = page.getByTestId("registrations-reserve").getByTestId("reserve-entry").filter({ hasText: "Luca" });
+    const lucaLine = page.locator("#main").getByTestId("registrations-reserve").getByTestId("reserve-entry").filter({ hasText: "Luca" });
     await lucaLine.getByTestId("reserve-offer").click();
     await tickAndConfirm(page, "Îi oferi un loc acum?", { address: `luca-${tag}@test.invalid`, button: "Adaugă un loc și oferă-i locul", says: "capacitatea devine 2" });
     await page.waitForURL(/saved=registrationOfferedRaised/);
@@ -153,7 +153,7 @@ test.describe("§888 the internal list and the official waiting list, told apart
     expect(luca.status).toBe("WAITLIST_OFFERED");
     expect(luca.notes).toBe("1");
     expect(await capacityOf(seeded.eventId)).toBe(2);
-    await expect(page.getByTestId("registrations-reserve").getByTestId("reserve-entry")).toHaveCount(0);
+    await expect(page.locator("#main").getByTestId("registrations-reserve").getByTestId("reserve-entry")).toHaveCount(0);
 
     // «Trimite-i oferta» is on Mara's waiting row of the list, any time before the start.
     await hydrated(page);
@@ -169,7 +169,7 @@ test.describe("§888 the internal list and the official waiting list, told apart
 
     await signIn(page, "Dev Moderator");
     await page.goto(`/ro/admin/registrations?eventId=${seeded.eventId}`);
-    const internal = page.getByTestId("registrations-reserve");
+    const internal = page.locator("#main").getByTestId("registrations-reserve");
     await openFold(internal);
     await expect(internal.getByTestId("reserve-entry")).toHaveCount(2);
     await expect(internal.getByTestId("reserve-note-form")).toHaveCount(2);

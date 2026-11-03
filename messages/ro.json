@@ -1136,13 +1136,14 @@
         "unknownSize": "mărime încă necunoscută (invitații): {count}"
       },
       "places": {
-        "title": "Locuri ocupate: {occupied} din {capacity} · Libere: {free}",
-        "lists": "Lista oficială de așteptare: {waiting} · Lista internă (doar notițe): {internal} · Invitați speciali (nu ocupă loc): {outside}",
-        "letIn": "Poți da drumul acum la {count} fără locuri în plus — de pe lista oficială: {fromWaiting} («Trimite-i oferta»), de pe lista internă: {fromInternal} («Oferă-i un loc acum»).",
+        "title": "Locuri libere acum: {free} din {capacity}",
+        "taken": "Ocupate {occupied}: {confirmed} confirmați și {held} care își țin locul până semnează (declarație de semnat sau ofertă activă).",
+        "takenConfirmed": "Ocupate {occupied}, toate confirmate.",
+        "waiting": "Așteaptă un loc: {count} — pe lista oficială {waiting}, pe lista internă {internal}.",
         "nobodyWaits": "Nu așteaptă nimeni pe liste.",
-        "raisesRest": "Pentru restul de pe liste ({count}), fiecare ofertă adaugă un loc: capacitatea ar ajunge la {capacity}.",
-        "raisesAll": "Nu e niciun loc liber: pentru cei de pe liste ({count}), fiecare ofertă adaugă un loc — capacitatea ar ajunge la {capacity}.",
-        "total": "Total dacă intră toți: {count} — locurile ocupate, invitații speciali și ambele liste."
+        "letIn": "Locurile libere merg întâi la lista oficială («Trimite-i oferta»), apoi la cea internă («Oferă-i un loc acum»).",
+        "raises": "Ca să intre toți cei care așteaptă, capacitatea ar trebui să ajungă la {capacity} (+{count}); fiecare ofertă adaugă locul ei, după ce confirmi.",
+        "total": "Invitați speciali: {outside} (nu ocupă loc). Oameni la start dacă intră toți: {count}."
       },
       "outside": {
         "pill": "Invitați speciali: {count}",
@@ -1158,6 +1159,11 @@
         "infoFor": "Pentru organizatori, voluntari, pacemakeri și sportivi invitați: sunt la start fără să ocupe unul dintre locurile anunțate.",
         "infoKeeps": "Păstrează declarația și numărul; pe lista publică apar doar cu «Arată invitații speciali pe lista publică» bifat, în numărătoare doar cu «Numără și invitații speciali».",
         "infoNot": "Un participant obișnuit nu se pune aici."
+      },
+      "elite": {
+        "chip": "Elită",
+        "mark": "Marchează ca elită",
+        "unmark": "Nu mai e elită"
       },
       "export": "Descarcă CSV",
       "personLink": "Toate datele unei persoane",
@@ -1516,6 +1522,8 @@
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
           "address_vouched_on_entry": "Adresă garantată de echipă la înscriere; loc sau lista de așteptare pe loc («Direct pe lista de așteptare»)",
           "outside_capacity_changed": "Pus pe lista de invitați speciali sau scos de pe ea",
+          "elite_marked": "Marcat ca elită: BIB-ul se tipărește cu numele în locul numărului",
+          "elite_unmarked": "Nu mai e elită: BIB-ul se tipărește din nou cu numărul",
           "deadline_moved_for_outage": "Termen mutat: site-ul nu a putut fi accesat, ceasul a stat pe loc",
           "hold_moved_by_window": "Termenul semnării mutat după fereastra de confirmare schimbată",
           "not_revived_for_outage": "Nereluat după întreruperea site-ului: termenul trecuse cât nu putea fi accesat, iar locul fusese dat între timp sau cererea expirase deja",
@@ -2292,7 +2300,8 @@
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care îl putem completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete.",
       "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",
       "SAMPLE_VALUES_IN_EMAIL": "Textul conține valori de exemplu, nu câmpuri: {found}. Folosește câmpurile în locul lor.",
-      "BIB_NUMBER_TAKEN": "Numărul acesta e deja al altcuiva la acest eveniment: dat, rezervat sau al unei înscrieri șterse. Alege alt număr din cutie și încearcă din nou.",
+      "BIB_NUMBER_TAKEN": "Numărul acesta e deja al altcuiva la acest eveniment: dat, rezervat, pe lista de elită sau al unei înscrieri șterse. Alege alt număr din cutie și încearcă din nou.",
+      "ELITE_NUMBER_TAKEN": "Numărul acesta e deja folosit la eveniment: al unei înscrieri, al altui nume de elită sau o rezervă a mesei. Scrie alt număr sau lasă căsuța goală.",
       "WALK_IN_BIB_TAKEN": "Persoana e înscrisă, dar numărul tocmai l-a dat altcineva, deci e neconfirmată. Caut-o în listă și apasă „Confirmă aici” cu alt număr.",
       "STAFF_ALREADY_ON_ADDRESS": "Persoana aceasta este deja înscrisă la eveniment cu această adresă de email. Caut-o în lista înscrierilor; pentru altă persoană, scrie numele ei.",
       "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană.",
@@ -2872,6 +2881,11 @@
         "showDistanceHelp": "Bifat: o insignă în colțul din dreapta al antetului cu distanța evenimentului în kilometri întregi, ca 21K. Debifat: fără insignă. Nu se desenează peste o imagine din antet.",
         "numberStubs": "Numărul și pe capetele subsolului",
         "numberStubsHelp": "Bifat: numărul din nou, mic, la cele două capete ale rândului cu sponsori, pentru talonul care se rupe; imaginea sponsorilor îi face loc. Debifat: rândul ca până acum.",
+        "eliteIntro": "Pe BIB-urile de elită se tipărește numele alergătorului în locul numărului. Lista e în «Alocare și tipărire» → «Elită — doar numele pe BIB».",
+        "eliteNumber": "Număr pe BIB-urile de elită",
+        "eliteNumberHelp": "Bifat: sub nume se tipărește și numărul alergătorului, mai mic, dacă i-ai dat unul pe listă. Debifat: doar numele.",
+        "eliteSponsors": "Banda de sponsori pe BIB-urile de elită",
+        "eliteSponsorsHelp": "Bifat: banda cu sponsori, ca pe celelalte numere. Debifat: fără ea, iar numele are mai mult loc.",
         "noPicture": "Fără imagine",
         "picture": {
           "choose": "Încarcă o imagine",
@@ -2958,7 +2972,8 @@
           "name": "Numele",
           "footer": "Subsol și sponsori",
           "profile": "Profilul și urgențele",
-          "members": "Membrii"
+          "members": "Membrii",
+          "elite": "Elită"
         },
         "sectionSummary": {
           "headerPicture": "imagine în locul benzii",
@@ -2975,7 +2990,10 @@
           "gpxMissing": "Desenat din GPX — evenimentul nu are GPX",
           "nothing": "nimic",
           "membersOn": "activ",
-          "membersOff": "oprit"
+          "membersOff": "oprit",
+          "eliteNameOnly": "doar numele",
+          "eliteNumber": "cu număr",
+          "eliteSponsors": "cu sponsori"
         },
         "profileSource": "De unde vine profilul",
         "profileSources": {
@@ -6745,6 +6763,32 @@
       "sparesReadOnly": "Doar un administrator rezervă numere noi.",
       "sparesReserved": "Rezervate numerele {from}–{to}. Descarcă foaia și tipărește-o.",
       "sparesDownloadRange": "Descarcă foaia {from}–{to} (PDF)",
+      "eliteTitle": "Elită — doar numele pe BIB",
+      "eliteNone": "nicio persoană",
+      "eliteCount": {
+        "one": "{count} nume",
+        "few": "{count} nume",
+        "other": "{count} de nume"
+      },
+      "eliteHelp": "Numele lor se tipărește mare, în locul numărului. Nu sunt înscrieri: nu ocupă loc, nu primesc emailuri și nu intră în nicio listă sau numărătoare.",
+      "eliteEmpty": "Niciun nume pe listă.",
+      "eliteName": "Numele de pe BIB",
+      "eliteNameHelp": "Cum se tipărește, cel mult {max} de caractere. Se micșorează cât să încapă, pe un rând sau două.",
+      "eliteNumber": "Număr (opțional)",
+      "eliteNumberHelp": "Se tipărește sub nume doar cu «Număr pe BIB-urile de elită» bifat. Doar un număr liber, care apoi nu se mai dă nimănui.",
+      "eliteNumberShown": "nr. {number}",
+      "eliteAdd": "Adaugă pe lista de elită",
+      "eliteAdding": "Se adaugă…",
+      "eliteDelete": "Șterge",
+      "eliteDeleteTitle": "Ștergi numele de pe lista de elită?",
+      "eliteDeleteBody": "{name} nu se mai tipărește pe BIB-urile de elită. Nu se trimite nimic nimănui.",
+      "eliteReadOnly": "Doar un administrator adaugă sau șterge nume.",
+      "eliteDownload": "Descarcă BIB-urile de elită ({count})",
+      "eliteSampleAlt": "Un BIB de elită: numele în locul numărului",
+      "eliteSampleCaption": "Așa se tipărește un BIB de elită, cu designul salvat și un nume de probă.",
+      "eliteRegistered": "înscris",
+      "eliteRegisteredHelp": "Un alergător înscris se marchează din lista de înscrieri: «⋮» → «Marchează ca elită». Rămâne înscris, cu locul și numărul lui, și apare aici de când e confirmat.",
+      "eliteRegisteredOnce": "Foaia obișnuită îi tipărește și ea, tot ca BIB-uri de elită: tipărește-i dintr-o singură foaie, nu din amândouă.",
       "helpMore": "Numerele se dau în ordinea confirmării și nu se dau de două ori. Foaia are două numere A5 pe o pagină A4; un singur număr se descarcă de pe pagina înscrierii.",
       "memberLabelDefault": "Membru {club}",
       "profileStart": "Start",
@@ -9552,6 +9596,8 @@
             "emergencyUpsideDown": "Număr: telefonul întors",
             "numberStubs": "Număr: numărul la capetele subsolului",
             "sponsorPlace": "Număr: locul benzii sponsorilor",
+            "eliteNumber": "Număr: numărul pe BIB-urile de elită",
+            "eliteSponsors": "Număr: banda sponsorilor pe BIB-urile de elită",
             "member": {
               "enabled": "Număr de membru: activ",
               "style": "Număr de membru: stilul",
@@ -13201,6 +13247,10 @@
       "reserveAdded": "Persoana e pe lista internă. Nu i s-a trimis nimic.",
       "reserveNoteSaved": "Nota a fost salvată.",
       "reserveDeleted": "Persoana a fost ștearsă de pe lista internă.",
+      "eliteAdded": "Numele e pe lista de elită. Nu e o înscriere și nu s-a trimis nimic.",
+      "eliteDeleted": "Numele a fost șters de pe lista de elită.",
+      "eliteMarked": "Marcat ca elită: BIB-ul lui se tipărește cu numele în locul numărului. Înscrierea rămâne neschimbată.",
+      "eliteUnmarked": "Nu mai e elită: BIB-ul lui se tipărește din nou cu numărul.",
       "waitlistAdded": "Persoana e pe lista de așteptare; emailul e pus la coadă.",
       "waitlistPlaced": "Era un loc liber: persoana l-a primit, iar emailul cu declarația e pus la coadă."
     },

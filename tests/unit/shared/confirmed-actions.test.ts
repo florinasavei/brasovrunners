@@ -77,6 +77,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   assignBibNumbersAction: ["assignAction"],
   // The desk's spares reserved by a print (§444): handed to the bib card's forms as `sparesAction`.
   reserveSpareBibsAction: ["sparesAction"],
+  // A name deleted from the race's elite list (§895), from its line: handed to the bib card's forms as `eliteDeleteAction`, asked naming it.
+  deleteEliteEntryAction: ["eliteDeleteAction"],
   sendEventThanksAction: [],
   sendParticipantMessageAction: [],
   // The newsletter (§445): the send asks per topic, naming how many receive it; removing an
@@ -244,6 +246,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
  * worked; the server asserts every rule as before (BR-REQ-060-01).
  */
 export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
+  // «Adaugă pe lista de elită» (§895), as the internal list's «Adaugă» (§854): a name written down to print on a bib.
+  addEliteEntryAction: "writes one name onto the race's elite list, undone by its «Șterge» (which asks); it registers nobody, sends nothing and changes no count",
   previewEventDraftAction: "writes nothing and tells nobody: it draws the unsaved event's card and page (§579)",
   saveEventResultsAction: "an editorial save of a race's results, undone by saving the old times again; it tells nobody, and on a ranking already public it edits the page like a save of a published page — making it public and a row's delete ask",
   // «Categorii de vârstă» (§850): a setting of the race's results, undone by typing the old ages again; it tells nobody and re-ranks what the next save would re-rank anyway.
@@ -289,6 +293,9 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   updateLegalVersionAction: "a draft, never in force until approved, which asks",
   markBibsPrintedAction: "a mark for the club's own pile of bibs, undone by the same button",
   setBibPrintedAction: "a mark for the club's own pile of bibs, undone by the same button",
+  // «Marchează ca elită» / «Nu mai e elită» (§897): how one registration's bib prints, nothing else of it.
+  setRegistrationEliteAction:
+    "a mark on how one registration's bib prints, undone from the same menu; it tells nobody and changes no state, place, number or count",
   addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",
   hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",

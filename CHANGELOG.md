@@ -8,6 +8,21 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.15-2026-11-03
+
+- **Releases with a migration no longer stop on «no migrate.yml run for qa»** — the release looks for qa's migration run on the merge commit qa was pushed, not on the feature branch's commit. §899.
+## BR-V4.14-2026-11-03
+
+- **«Căutăm voluntari» under «Cine vine»** — on the event page the volunteers' line and button stand right under the start list, no longer after the programme. §898.
+## BR-V4.13-2026-11-03
+
+- **«Elită» on a registration** — an Administrator marks or unmarks any registration as elite from the registrations list's «⋮», at any time and in any state; its bib then prints with the name where the number goes (its own number and the sponsors only as the design ticks them), the runner stays registered with their place and number, nobody is emailed, and the elite sheet prints them after the list. §897.
+## BR-V4.12-2026-11-03
+
+- **«Locuri» answers first** — «Locuri libere acum: N din capacitate», then the places taken (confirmed, and holding one until they sign), who waits, where the free places go and the capacity it would take to let everybody in. §896.
+## BR-V4.11-2026-11-03
+
+- **«Elită» on the race numbers** — a list of the race's elite runners under «Alocare și tipărire», printed as bibs with the name where the number goes (`bibs?elite=1`); the number and the sponsors' band only when ticked in «Cum arată numărul de concurs» → «Elită». Names, not registrations: no place, no email, no count. A typed number must be free at the race — not a registration's, a spare's or another elite line's — and is then drawn for nobody else. §895.
 ## BR-V4.10-2026-11-03
 
 - **Square logos for YouTube and the other channels** — `public/brand/square/`: the white lockup and its mountains alone, padded, as SVG, a 150 × 150 watermark and 800 × 800 avatars, built by `yarn brand:assets`. §894.

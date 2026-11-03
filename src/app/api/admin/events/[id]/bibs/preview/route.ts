@@ -114,8 +114,16 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     */
     const member = url.searchParams.get("member") === "1";
     const drawn = member ? { ...design, member: { ...design.member, enabled: true } } : design;
+    const sampleNumber = bibNumberFromQuery(url.searchParams.get("number")) ?? event.bibStartNumber;
+    /*
+      `elite=1` draws an elite bib (§895) — the «Elită» card's sample: the placeholder name where the number goes, the
+      sample number under it only while «Număr pe BIB-urile de elită» is ticked. Never a name from the list: the sample
+      draws nobody, so the gate stays the one every staff role passes.
+    */
+    const elite = url.searchParams.get("elite") === "1" ? { name: SAMPLE_NAME, bibNumber: sampleNumber } : undefined;
     const image = await renderBibImage({
-      bibNumber: bibNumberFromQuery(url.searchParams.get("number")) ?? event.bibStartNumber,
+      bibNumber: sampleNumber,
+      ...(elite ? { elite } : {}),
       // `blank=1` draws a desk spare (§444): the empty line the name is written on at the desk.
       registeredName: url.searchParams.get("blank") === "1" ? null : SAMPLE_NAME,
       eventTitle: event.title,
@@ -147,6 +155,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       kind: registrations.kind,
       status: registrations.status,
       memberBibWanted: registrations.memberBibWanted,
+      elite: registrations.elite,
       canonicalEmail: participants.canonicalEmail,
     })
     .from(registrations)
@@ -164,11 +173,16 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     canonical address is a member account's (§662) — `bibs.ts#listBibs`'s rule, asked of one row. The
     member set is read only when the first two hold.
   */
+  /*
+    A registration marked «Elită» (§897) draws as the sheet prints it: an elite bib (§895) — its name where the number
+    goes, its own number under it only as the design ticks — and never the members' design.
+  */
   const member =
-    event.design.member.enabled && row.memberBibWanted && (await memberCanonicalEmails(db)).has(row.canonicalEmail);
+    !row.elite && event.design.member.enabled && row.memberBibWanted && (await memberCanonicalEmails(db)).has(row.canonicalEmail);
   const image = await renderBibImage({
     bibNumber: row.bibNumber,
     registeredName: row.registeredName,
+    ...(row.elite ? { elite: { name: row.registeredName, bibNumber: row.bibNumber } } : {}),
     member,
     ...(member ? { memberLabelDefault: await memberLabelDefault() } : {}),
     eventTitle: event.title,

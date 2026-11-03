@@ -58,7 +58,7 @@ describe("«Locuri»", () => {
     await internalLines(other.id, 1);
 
     // 3 test rows take places too (§12.6: the allocator ignores `kind`), so 10 of 10 are taken.
-    expect(await readPlaceOutlook(db, race.id, NOW)).toMatchObject({ capacity: 10, occupied: 10, free: 0, waiting: 4, internal: 2, outside: 2, raises: 6, totalIfAll: 18 });
+    expect(await readPlaceOutlook(db, race.id, NOW)).toMatchObject({ capacity: 10, occupied: 10, confirmed: 9, held: 1, free: 0, waiting: 4, internal: 2, outside: 2, raises: 6, totalIfAll: 18 });
   });
 
   it("draws the free places going to the official list first, then the internal list, then the places to add", async () => {
@@ -69,11 +69,14 @@ describe("«Locuri»", () => {
     await runners(race.id, 1, { outsideCapacity: true });
 
     const text = await drawn(race.id);
-    expect(text).toContain("Locuri ocupate: 5 din 10 · Libere: 5");
-    expect(text).toContain("Lista oficială de așteptare: 4 · Lista internă (doar notițe): 3 · Invitați speciali (nu ocupă loc): 1");
-    expect(text).toContain("Poți da drumul acum la 5 fără locuri în plus — de pe lista oficială: 4 («Trimite-i oferta»), de pe lista internă: 1 («Oferă-i un loc acum»).");
-    expect(text).toContain("Pentru restul de pe liste (2), fiecare ofertă adaugă un loc: capacitatea ar ajunge la 12.");
-    expect(text).toContain("Total dacă intră toți: 13");
+    // The answer first: the places free now (the owner, 2026-11-03: «nu înțeleg exact câte locuri mai pot să dau»).
+    expect(text.indexOf("Locuri libere acum: 5 din 10")).toBeGreaterThan(-1);
+    expect(text.indexOf("Locuri libere acum")).toBeLessThan(text.indexOf("Ocupate"));
+    expect(text).toContain("Ocupate 5, toate confirmate.");
+    expect(text).toContain("Așteaptă un loc: 7 — pe lista oficială 4, pe lista internă 3.");
+    expect(text).toContain("Locurile libere merg întâi la lista oficială («Trimite-i oferta»), apoi la cea internă («Oferă-i un loc acum»).");
+    expect(text).toContain("Ca să intre toți cei care așteaptă, capacitatea ar trebui să ajungă la 12 (+2)");
+    expect(text).toContain("Invitați speciali: 1 (nu ocupă loc). Oameni la start dacă intră toți: 13.");
   });
 
   it("says when no place is free, and when nobody waits", async () => {
@@ -81,13 +84,14 @@ describe("«Locuri»", () => {
     await runners(full.id, 2);
     await runners(full.id, 1, { status: "WAITLISTED" });
     const fullText = await drawn(full.id);
-    expect(fullText).toContain("Nu e niciun loc liber: pentru cei de pe liste (1), fiecare ofertă adaugă un loc — capacitatea ar ajunge la 3.");
-    expect(fullText).not.toContain("Poți da drumul");
+    expect(fullText).toContain("Locuri libere acum: 0 din 2");
+    expect(fullText).toContain("capacitatea ar trebui să ajungă la 3 (+1)");
+    expect(fullText).not.toContain("Locurile libere merg");
 
     const calm = await createRace(db, { capacity: 5 });
     await runners(calm.id, 1);
     expect(await drawn(calm.id)).toContain("Nu așteaptă nimeni pe liste.");
-    expect(await drawn(calm.id)).not.toContain("fiecare ofertă adaugă");
+    expect(await drawn(calm.id)).not.toContain("ar trebui să ajungă");
   });
 
   it("has nothing to say for an event with no capacity", async () => {

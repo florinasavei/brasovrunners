@@ -1,5 +1,6 @@
 import { and, asc, eq, gt, inArray, isNotNull, isNull, notInArray, type SQL, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
@@ -88,6 +89,11 @@ export function seriesBounds(band: { start: number; hiddenStart: number | null }
  * once a registration is confirmed. It is read here only until `releaseLegacyHeldNumbers` has run
  * once on this database (the maintenance job), so a number shown before this release is never
  * drawn for somebody else in the minutes between the deploy and that run.
+ *
+ * And the numbers the club typed on «Elită — doar numele pe BIB» (§895): an elite bib can print its
+ * line's number, so a draw, the desk's box, a suggestion and a print of spares treat it as worn, and
+ * no runner is handed the number an elite runner wears. Only the numbers are read — never a name, and
+ * the lines are in no count. `addEliteEntry` refuses the other way round, under the same event lock.
  */
 async function wornNumbers<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -104,6 +110,11 @@ async function wornNumbers<T extends Record<string, unknown>>(
     if (row.number !== null) taken.add(row.number);
     if (row.legacy !== null) taken.add(row.legacy);
   }
+  const elite = await db
+    .select({ number: eventEliteEntries.bibNumber })
+    .from(eventEliteEntries)
+    .where(and(eq(eventEliteEntries.eventId, eventId), isNotNull(eventEliteEntries.bibNumber)));
+  for (const row of elite) if (row.number !== null) taken.add(row.number);
   return taken;
 }
 
@@ -661,8 +672,8 @@ export async function reserveSpareBibs<T extends Record<string, unknown>>(
 
 /**
  * Whether a number typed at the desk is somebody's already (§444): worn by another registration of
- * this event — a cancelled one's included, retired — or retired by an erasure or a replacement by
- * hand (§311, §548). The unique index catches a worn one only.
+ * this event — a cancelled one's included, retired — on a line of its elite list (§895), or retired by
+ * an erasure or a replacement by hand (§311, §548). The unique index catches a registration's only.
  */
 export async function bibNumberInUse<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -690,8 +701,11 @@ export async function isEventSpareNumber<T extends Record<string, unknown>>(
  * One bib of the sheet. `member` is whether it prints the members' design (§664): the event offers
  * it, the person asked («Vreau numărul de membru»), and the address is a member account's (§662) —
  * all three, never the tick alone. The number is the same number either way.
+ *
+ * `elite` (§897): an Administrator marked the registration «Elită», so its bib prints as an elite bib — the name where
+ * the number goes (§895's drawing) — and never the members' design: an elite row's `member` is false.
  */
-export type BibRow = { id: string; bibNumber: number; registeredName: string; member: boolean };
+export type BibRow = { id: string; bibNumber: number; registeredName: string; member: boolean; elite: boolean };
 
 /**
  * Whether a row prints the members' bib, as one SQL condition over a registration joined to its
@@ -709,9 +723,10 @@ function memberBibPrinted(members: readonly string[]): SQL<boolean> {
  *
  * A range is for a reprint — "numbers 1 to 50 again" — and `only: "unprinted"` is the club's
  * actual weekly job: people registered after the last sheet went to the printer, and those are
- * the bibs to print now. Both together are allowed and mean what they say.
+ * the bibs to print now. Both together are allowed and mean what they say. `elite` (§897) is the registrations an
+ * Administrator marked «Elită» — the ones the elite sheet (`bibs?elite=1`) prints beside the race's elite list.
  */
-export type BibScope = { from?: number; to?: number; only?: "unprinted" };
+export type BibScope = { from?: number; to?: number; only?: "unprinted"; elite?: true };
 
 /**
  * The scope as one `WHERE`, so the list, the count and the marking cannot drift apart.
@@ -731,6 +746,7 @@ const bibScopeWhere = (eventId: string, scope: BibScope) =>
     scope.from !== undefined ? sql`${registrations.bibNumber} >= ${scope.from}` : undefined,
     scope.to !== undefined ? sql`${registrations.bibNumber} <= ${scope.to}` : undefined,
     scope.only === "unprinted" ? isNull(registrations.bibPrintedAt) : undefined,
+    scope.elite ? eq(registrations.elite, true) : undefined,
   );
 
 /**
@@ -751,18 +767,21 @@ export async function listBibs<T extends Record<string, unknown>>(
       bibNumber: registrations.bibNumber,
       registeredName: registrations.registeredName,
       member: memberBibPrinted(members),
+      elite: registrations.elite,
     })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))
     .innerJoin(participants, eq(participants.id, registrations.participantId))
     .where(bibScopeWhere(eventId, scope))
     .orderBy(asc(registrations.bibNumber));
-  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName, member: row.member === true }));
+  // An elite bib is never the members' design (§895, §897): the mark wins over the members' pile.
+  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName, member: row.member === true && !row.elite, elite: row.elite }));
 }
 
 /**
  * The bibs that asked for the members' design and will print the ordinary one (§664): confirmed
- * real rows with a number whose address is no member account's — the bibs page's one line before
+ * real rows with a number whose address is no member account's, not marked «Elită» (whose bib is the elite one,
+ * §897) — the bibs page's one line before
  * printing, so an Administrator adds them on «Echipa» first if they are members. Zero while the
  * event does not offer the members' bib.
  */
@@ -777,6 +796,8 @@ export async function countUnverifiedMemberBibs<T extends Record<string, unknown
       and(
         bibScopeWhere(eventId, {}),
         eq(registrations.memberBibWanted, true),
+        // A registration marked «Elită» prints the elite bib, never the ordinary one (§897): not this line's to warn of.
+        eq(registrations.elite, false),
         OFFERS_MEMBER_BIB,
         members.length > 0 ? notInArray(participants.canonicalEmail, members) : undefined,
       ),

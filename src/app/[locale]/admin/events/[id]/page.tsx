@@ -17,7 +17,7 @@ import { eventPageTodos } from "@/modules/content/events/domain/page-todos";
 import { resultsRowFor } from "@/modules/results/public-page";
 import { eventCheckpointContext, listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import { offerableProposals } from "@/modules/event-checkpoints/domain/gpx-waypoints";
-import { canEditCheckpoints } from "@/modules/event-checkpoints/domain/checkpoint";
+import { canEditCheckpoints, checkpointsStampPart } from "@/modules/event-checkpoints/domain/checkpoint";
 import { loadGpxWaypoints } from "@/modules/event-checkpoints/gpx-file";
 import { readRouteElevation } from "@/modules/routes/elevation/read";
 import { readRouteGpx } from "@/modules/events/domain/route-gpx";
@@ -46,7 +46,7 @@ import { givePlaceDoorOpen } from "@/modules/registrations/domain/give-place-doo
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
 import { type ScopeDate, SeriesPickDates, SeriesScopeBox, SeriesScopeProvider } from "@/modules/content/events/ui/SeriesScope";
 import { editionNote, ruleSentence } from "@/modules/events/ui/series-sentence";
-import { BibPrintCard, BibPrintForms } from "@/modules/content/events/ui/boxes/BibPrint";
+import { BibPrintCard, BibPrintForms, EliteBibForms } from "@/modules/content/events/ui/boxes/BibPrint";
 import { riskMark } from "@/modules/content/events/ui/boxes/box-kit";
 import CourseBox from "@/modules/content/events/ui/boxes/CourseBox";
 import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
@@ -125,7 +125,11 @@ import InfoTip from "@/shared/ui/InfoTip";
 import { previewDeclarationResend } from "@/modules/registrations/bulk-resend";
 import { countAddressRefusingMail } from "@/modules/registrations/email-state";
 import { previewWindowHolds } from "@/modules/registrations/window-holds";
-import { countBibs, spareCardState } from "@/modules/registrations/bibs";
+import { countBibs, listBibs, spareCardState } from "@/modules/registrations/bibs";
+import { readBibDesign } from "@/modules/registrations/bib-design";
+import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
+import { bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
+import { listEliteEntries } from "@/modules/registrations/elite-list";
 import { countRsvpsForAdmin, listRsvpsForAdmin } from "@/modules/rsvp/rsvp";
 import { SPARE_BIBS_PER_PRINT, spareRangeOfQuery } from "@/modules/registrations/domain/spare-bibs";
 import { countInterests } from "@/modules/registrations/interest";
@@ -142,7 +146,9 @@ import { showsGroupRunDeclarationsFold } from "@/modules/group-run-declarations/
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import {
+  addEliteEntryAction,
   addTestRegistrationsAction,
+  deleteEliteEntryAction,
   deleteEventAction,
   assignBibNumbersAction,
   reserveSpareBibsAction,
@@ -252,6 +258,14 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const spares = spareState
     ? { band: spareState.band, free: spareState.free, nextFrom: spareState.candidates[0] ?? null, perPrint: SPARE_BIBS_PER_PRINT }
     : null;
+  /*
+    «Elită — doar numele pe BIB» (§895), beside the spares and only where they are (an event that prints bibs, a role
+    that reads them): the names, read here; the card's object waits for the checkpoints below (its sample's `v=`). Not
+    registrations, so nothing above counts them.
+  */
+  const eliteEntries = bibCounts ? await listEliteEntries(db, staffUser, event.id) : null;
+  // The registrations marked «Elită» (§897) that the elite sheet prints beside the list: read-only lines of its card.
+  const eliteRegistered = bibCounts ? await listBibs(db, event.id, { elite: true }) : null;
   // The range the print just reserved, for its banner (§444) — only two real numbers from the address.
   const reservedRange = saved === "sparesReserved" ? spareRangeOfQuery(spareFrom, spareTo) : null;
 
@@ -404,6 +418,30 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // The same GPX's elevation profile (§802), for the card's preview «Așa apare pe pagină»: the saved file, read from the store (kept in this process by the file's key), a file the store cannot give left out.
   const profileKey = readRouteGpx(event.routeGpx)?.key ?? null;
   const checkpointsProfile = profileKey ? await readRouteElevation(profileKey).catch(() => null) : null;
+  /*
+    The elite card (§895): its names, the sheet's address and a sample elite bib drawn with the saved design — stamped
+    with the saved checkpoints as the designer's own sample is (`BibDesignPanel`, `v=`), so a changed strip of
+    checkpoints is never an hour-old cached picture here.
+  */
+  const elite = eliteEntries
+    ? {
+        entries: eliteEntries,
+        registered: (eliteRegistered ?? []).map((row) => ({ id: row.id, name: row.registeredName, bibNumber: row.bibNumber })),
+        previewSrc: bibPreviewUrl({
+          eventId: event.id,
+          locale,
+          number: String(event.bibStartNumber),
+          colour: event.bibColour,
+          design: readBibDesign(event.bibDesign),
+          elite: true,
+          version: checkpoints.length > 0 ? bibPictureStamp(checkpointsStampPart(checkpoints)) : undefined,
+        }),
+        downloadHref: `/api/admin/events/${event.id}/bibs?${new URLSearchParams({ locale, elite: "1" })}`,
+      }
+    : null;
+  const mayEditElite = elite !== null && canManageRegistrations(staffUser.role);
+  // Back from the elite card's add or delete (`actions.ts#backToEliteCard`): the card and every fold around it open.
+  const eliteSaved = elite !== null && (saved === "eliteAdded" || saved === "eliteDeleted");
   // The service offers the same list by the same function, so the `pick` indexes the preview posts mean the same rows.
   const gpxPlaced = gpxWaypoints ? offerableProposals(gpxWaypoints.proposals, checkpointRouteKm) : null;
   const checkpointsGpx =
@@ -888,7 +926,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved &&
-            !["bibsAssigned", "sparesReserved", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased", "groupRunDeclarationsErased", "declarationResent"].includes(saved) &&
+            !["bibsAssigned", "sparesReserved", "eliteAdded", "eliteDeleted", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased", "groupRunDeclarationsErased", "declarationResent"].includes(saved) &&
             !(saved === "created" && (created || notPublished)) &&
             !(saved === "event" && offered) && <Alert severity="success">{t("saved")}</Alert>}
           {/* The save that announced the place (§328): public from now on, and nobody was told. */}
@@ -1081,6 +1119,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 form, so neither save posts the other's boxes.
               */}
               <CheckpointForms locale={locale} eventId={event.id} mayEdit={canEditCheckpoints(staffUser.role)}>
+              {/* «Adaugă pe lista de elită» (§895), a card of the bibs inside the save form: detached the same way. */}
+              <EliteBibForms locale={locale} eventId={event.id} mayEdit={mayEditElite} eliteAddAction={addEliteEntryAction}>
               {/* Settings and texts: one form, one save — and a refusal that keeps every box (§315). */}
               <ActionForm action={saveEventAndTranslationsAction} messages={refusal} confirm={saveConfirm} id="event-save-form" data-testid="event-save-form">
                 <input type="hidden" name="uiLocale" value={locale} />
@@ -1147,6 +1187,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     clubDeadlines={deadlines}
                     rsvpAsk={rsvpAsk}
                     windowHolds={windowHolds}
+                    bibPrintSaved={eliteSaved}
                     bibPrint={
                       bibCounts ? (
                         <BibPrintCard
@@ -1157,6 +1198,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                           onlyTest={registered.total > 0 && registered.test === registered.total}
                           attention={bibCounts.unprinted > 0 && withinRaceWeek(event, now, deadlines)}
                           spares={spares}
+                          elite={elite}
+                          eliteSaved={eliteSaved}
                         />
                       ) : null
                     }
@@ -1235,9 +1278,22 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   )}
                 </Stack>
               </ActionForm>
+              </EliteBibForms>
               </CheckpointForms>
-              {/* The bib card's two immediate actions post these, never the save above (hidden: no place in the column). */}
-              {bibCounts && <BibPrintForms eventId={event.id} locale={locale} mayAssign={canManageRegistrations(staffUser.role)} assignAction={assignBibNumbersAction} sparesAction={reserveSpareBibsAction} sparesFrom={spares?.nextFrom ?? null} cancelLabel={words.cancel} />}
+              {/* The bib card's immediate actions post these, never the save above (hidden: no place in the column). */}
+              {bibCounts && (
+                <BibPrintForms
+                  eventId={event.id}
+                  locale={locale}
+                  mayAssign={canManageRegistrations(staffUser.role)}
+                  assignAction={assignBibNumbersAction}
+                  sparesAction={reserveSpareBibsAction}
+                  sparesFrom={spares?.nextFrom ?? null}
+                  eliteDeleteAction={deleteEliteEntryAction}
+                  eliteEntries={eliteEntries ?? []}
+                  cancelLabel={words.cancel}
+                />
+              )}
             </EditorMainColumn>
           }
           below={
