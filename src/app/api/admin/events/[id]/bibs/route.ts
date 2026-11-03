@@ -149,8 +149,6 @@ export async function GET(
     ...(await loadBibExtras(await withBibCheckpoints(db, id, event, event.design), event.design, locale)),
     // The members' label when the club typed none (§664), in the sheet's language.
     ...(anyMember && admin ? { memberLabelDefault: admin("bibs.memberLabelDefault", { club: CLUB_NAME }) } : {}),
-    // Under a spare's empty line (§444), in the sheet's language.
-    ...(spares && admin ? { blankMark: admin("bibs.spareMark") } : {}),
   });
 
   const suffix = `${spares ? "-spares" : ""}${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only && !spares ? "-unprinted" : ""}${PART_SUFFIX[part]}${layout === "one" ? "-one-per-page" : ""}`;
