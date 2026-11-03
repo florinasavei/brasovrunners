@@ -56,6 +56,11 @@ type Props = {
 export type EliteCard = {
   /** The names in the order typed, with the number the club gave each, if any. */
   entries: ReadonlyArray<{ id: string; name: string; bibNumber: number | null }>;
+  /**
+   * The registrations an Administrator marked «Elită» (§897) whose bib the sheet prints — confirmed, with their number
+   * (`bibs.ts#listBibs` with `elite`). Read-only here: marked and unmarked from the registrations list's «⋮».
+   */
+  registered?: ReadonlyArray<{ id: string; name: string; bibNumber: number }>;
   /** The sample elite bib: the preview route with `elite=1` and the stored design (`bib-design-query.ts#bibPreviewUrl`). */
   previewSrc: string;
   /** The sheet of every elite bib: the bibs route with `elite=1`. */
@@ -156,11 +161,16 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
  * actions and the service). The card sits inside the event's save form, so its boxes and buttons name forms that
  * stand beside it (`EliteBibForms`, `BibPrintForms`): «Salvează» never posts a name, and a refused add keeps what
  * was typed, said right above the boxes.
+ *
+ * Under the names, read-only, the registrations an Administrator marked «Elită» on the registrations list (§897) —
+ * each «înscris», with its number — since the same sheet prints them: in the closed line's count and the download's.
  */
 async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; mayEdit: boolean; saved: boolean }) {
   const t = await getTranslations("Admin");
   const locale = await getLocale();
-  const count = elite.entries.length;
+  // The registrations marked «Elită» (§897) print on the same sheet, so they are in its count and its closed line.
+  const registered = elite.registered ?? [];
+  const count = elite.entries.length + registered.length;
   const aside = count === 0 ? t("bibs.eliteNone") : t(`bibs.eliteCount.${countForm(count, locale)}`, { count });
   return (
     <Panel glyph="bibElite" collapsible level={5} id="bib-elite" title={t("bibs.eliteTitle")} aside={aside} openWhen={{ saved }} data-testid="bib-elite">
@@ -168,6 +178,15 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
         <Typography variant="body2" color="text.secondary">
           {t("bibs.eliteHelp")}
         </Typography>
+        <Typography variant="body2" color="text.secondary" data-testid="bib-elite-registered-help">
+          {t("bibs.eliteRegisteredHelp")}
+        </Typography>
+        {/* The ordinary sheet prints a marked registration too, elite-style (§897): said only while there is one. */}
+        {registered.length > 0 ? (
+          <Typography variant="body2" color="text.secondary" data-testid="bib-elite-registered-once">
+            {t("bibs.eliteRegisteredOnce")}
+          </Typography>
+        ) : null}
         {count === 0 ? (
           <Typography variant="body2" color="text.secondary" data-testid="bib-elite-empty">
             {t("bibs.eliteEmpty")}
@@ -189,6 +208,20 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
                       {t("bibs.eliteDelete")}
                     </GlyphButton>
                   )}
+                </Stack>
+              </Box>
+            ))}
+            {/* A registration marked «Elită» (§897): read here, never deleted here — the mark is the registrations list's. */}
+            {registered.map((entry) => (
+              <Box key={entry.id} component="li" data-testid="bib-elite-registered">
+                <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1 }}>
+                  <Typography sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>{entry.name}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("bibs.eliteRegistered")}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("bibs.eliteNumberShown", { number: entry.bibNumber })}
+                  </Typography>
                 </Stack>
               </Box>
             ))}

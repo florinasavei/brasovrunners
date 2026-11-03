@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.13` | «Elită» on a registration: an Administrator marks any runner elite at any time, only the bib changes (§897) |
 | `BR-V4.12` | «Locuri» says the places free first (§896) |
 | `BR-V4.11` | «Elită» — named bibs for the race's elite runners, not registrations (§895) |
 | `BR-V4.10` | square logos for a channel's watermark and avatar (§894) |
