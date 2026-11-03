@@ -1,7 +1,0 @@
-{
-  "branch": "fix/ship-migration-first-parent",
-  "decisionsTitle": "The release reads qa's migration run from the merge commit qa was pushed",
-  "decisionsSection": "**2026-11-03:** three releases in a row (#633, #635, #637) stopped on «no migrate.yml run for qa on <commit>» although `migrate.yml` had run on qa and succeeded. `scripts/ship.mjs#qaMigrationCommit` asked git for the newest qa commit touching `src/db/migrations`, and git's history simplification answered with the feature branch's own commit — but a pull request lands on qa as a merge commit, and that merge is the push `migrate.yml` ran on, so the run was looked for on a commit no qa push carried. The suggested way out, «run migrate for qa from Actions», could not help either: the lookup reads push runs only.\n\n**Decision.** `git log --first-parent`: the newest commit on qa's own line that touched a migration — the merge — whose push run is the one that migrated qa.",
-  "changelogLine": "- **Releases with a migration no longer stop on «no migrate.yml run for qa»** — the release looks for qa's migration run on the merge commit qa was pushed, not on the feature branch's commit. §NNN.",
-  "batchLine": "the release finds qa's migration run on the merge commit"
-}
