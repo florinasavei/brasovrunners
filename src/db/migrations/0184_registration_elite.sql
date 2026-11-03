@@ -1,0 +1,1 @@
+ALTER TABLE "registrations" ADD COLUMN "elite" boolean DEFAULT false NOT NULL;

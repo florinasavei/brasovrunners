@@ -54,6 +54,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   // «Mută pe lista oficială» / «Oferă-i un loc acum» on the internal list (§888): imported by the list page.
   moveReserveEntryAction: vi.fn(),
   setOutsideCapacityAction: vi.fn(),
+  setRegistrationEliteAction: vi.fn(),
   resendRegistrationEmailAction: vi.fn(),
   givePlaceNowAction: vi.fn(),
   bulkCancelRegistrationsAction: vi.fn(),

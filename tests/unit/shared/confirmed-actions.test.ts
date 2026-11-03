@@ -293,6 +293,9 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   updateLegalVersionAction: "a draft, never in force until approved, which asks",
   markBibsPrintedAction: "a mark for the club's own pile of bibs, undone by the same button",
   setBibPrintedAction: "a mark for the club's own pile of bibs, undone by the same button",
+  // «Marchează ca elită» / «Nu mai e elită» (§897): how one registration's bib prints, nothing else of it.
+  setRegistrationEliteAction:
+    "a mark on how one registration's bib prints, undone from the same menu; it tells nobody and changes no state, place, number or count",
   addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",
   hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",
