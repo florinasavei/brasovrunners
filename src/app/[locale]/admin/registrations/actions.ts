@@ -214,6 +214,8 @@ export async function offerPlaceAction(_previous: FormOutcome | null, form: Form
     // one place added (no path writes one) keeps §589's sentence. Either way nothing was written.
     outcome = supplementaryPlaceRefusalOutcome(error) ?? noFreePlaceOutcome(error) ?? outcomeOf(error);
   }
+  // From the list's «⋮» the form carries the list's query: back to the list, as it stands (§747).
+  if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome as Record<string, string>);
   return backToDesk(form, locale, registrationId, outcome);
 }
 
