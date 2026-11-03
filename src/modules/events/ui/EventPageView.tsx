@@ -285,6 +285,19 @@ export default async function EventPageView({
           the preview (§579): the list reads the public cache, and a draft has nobody on it. */}
       {dated && !membersOnly && visit && <StartList event={dated} page={visit.lista} />}
 
+      {/* «Căutăm voluntari: …» and «Vreau să fiu voluntar» (§754, §768), right under «Cine vine» (the owner, 2026-11-03: «ar trebui
+          să fie mai sus un pic, fix sub cine vine»; it was after the programme): one line and one button to the volunteers' own
+          page — the form is no longer here. A visit's page only, and only where that page would answer 200 (the page decides,
+          from the one read both share) — the preview before saving reads no public cache and takes no name. */}
+      {visit?.volunteers && !membersOnly && <VolunteerCallout slug={slug} roleNames={visit.volunteers.roleNames} clubOnly={visit.volunteers.clubOnly === true} />}
+
+      {/* «Voluntarii» (§821), right after: a fold closed on arrival like «Condiții de participare», the names and roles of the confirmed volunteers who
+          ticked «Vreau să apar pe lista publică a voluntarilor» — only where the club made the list public and the notice in force describes it (the card
+          asks, from the public cache, and draws nothing otherwise). A visit's page only; never on a members' event, never in the preview before saving. */}
+      {visit?.volunteersList && !membersOnly && (
+        <VolunteersList eventId={event.id} locale={locale} startsAt={event.startsAt} offerOpen={visit.volunteersList.offerOpen} now={now} />
+      )}
+
       {/* "Tell me when registration opens" (§146), under the date, only while the window is ahead
           and the notice that describes it is approved. A corrected address is timed from the
           render the person is correcting, not from the redirect. */}
@@ -396,19 +409,6 @@ export default async function EventPageView({
 
       {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}
       <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />
-
-      {/* «Căutăm voluntari: …» and «Vreau să fiu voluntar» (§754, §768), after the programme and before the rules: one line
-          and one button to the volunteers' own page — the form is no longer here. A visit's page only, and only where that
-          page would answer 200 (the page decides, from the one read both share) — the preview before saving reads no
-          public cache and takes no name. */}
-      {visit?.volunteers && !membersOnly && <VolunteerCallout slug={slug} roleNames={visit.volunteers.roleNames} clubOnly={visit.volunteers.clubOnly === true} />}
-
-      {/* «Voluntarii» (§821), right after: a fold closed on arrival like «Condiții de participare», the names and roles of the confirmed volunteers who
-          ticked «Vreau să apar pe lista publică a voluntarilor» — only where the club made the list public and the notice in force describes it (the card
-          asks, from the public cache, and draws nothing otherwise). A visit's page only; never on a members' event, never in the preview before saving. */}
-      {visit?.volunteersList && !membersOnly && (
-        <VolunteersList eventId={event.id} locale={locale} startsAt={event.startsAt} offerOpen={visit.volunteersList.offerOpen} now={now} />
-      )}
 
       {/*
         «Condiții de participare» / "Participation rules" (§498; the owner, 2026-09-27): the

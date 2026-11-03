@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.13-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.14-2026-11-03 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.13-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.14-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28635,3 +28635,11 @@ Baseline `BR-V4.12-2026-11-03`.
 - **A question before the press.** The mark tells nobody and the same menu undoes it (§384), as the printing mark (§264).
 
 Baseline `BR-V4.13-2026-11-03`.
+
+## 898. «Căutăm voluntari» right under «Cine vine» on the event page
+
+**The owner, 2026-11-03,** of the race's page: «partea de „vreau să fiu voluntar” ar trebui să fie mai sus un pic, fix sub „Cine vine”». The callout (§754, §768) stood after the route, the checkpoints, the links and the programme — far down a race's page, where nobody looking for a way to help reads.
+
+**Decision.** «Căutăm voluntari: …» with «Vreau să fiu voluntar», and «Voluntarii» (§821) right after it as before, move to just under «Cine vine (N)» — itself under the registration card (§825). Nothing else changes: the same conditions draw them (a visit's page, the volunteers' page answering, never a members' event or the preview), and a turn-up event's two closed bars stay the last thing on the page.
+
+Baseline `BR-V4.14-2026-11-03`.
