@@ -62,6 +62,13 @@ export type RowVerb =
   | "outsideMark"
   | "outsideUnmark"
   /**
+   * «Marchează ca elită» / «Nu mai e elită» (§897): the registration's bib prints as an elite bib (§895's drawing), or
+   * as it did. The Administrator's, in every state — it changes no state, place, number or count, only how the bib
+   * prints. Offered only where the row's mark is known (`options.elite`); which of the two is the row's own mark.
+   */
+  | "eliteMark"
+  | "eliteUnmark"
+  /**
    * Erase the registration, and the person behind it when it was their last (BR-REQ-037-06, §180).
    *
    * Last, always, and the only verb here that offers itself in *every* state. That is the point
@@ -95,7 +102,7 @@ export function specialListVerb(
 export function rowVerbsFor(
   status: RegistrationStatus,
   role: StaffRole,
-  options: { checkedIn: boolean; bib?: { settled: boolean; printed: boolean }; outside?: { onList: boolean; enabled: boolean } },
+  options: { checkedIn: boolean; bib?: { settled: boolean; printed: boolean }; outside?: { onList: boolean; enabled: boolean }; elite?: boolean },
 ): RowVerb[] {
   /*
     The desk's own verbs are every staff session's (§103). `canManageRegistrations` is what
@@ -149,6 +156,9 @@ export function rowVerbsFor(
   const special = options.outside ? specialListVerb(status, role, options.outside) : null;
   if (special === "unmark") verbs.push("outsideUnmark");
   else if (special === "mark") verbs.push("outsideMark");
+
+  // The elite mark (§897): how the bib prints, nothing else — so every state offers it, like the member tick.
+  if (mayManage && options.elite !== undefined) verbs.push(options.elite ? "eliteUnmark" : "eliteMark");
 
   // Cancelling releases the place through the allocator and leaves an audit row (§67, §88).
   if (mayManage && canTransition(status, "CANCELLED")) verbs.push("cancel");

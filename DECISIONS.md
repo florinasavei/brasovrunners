@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.11-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.15-2026-11-03 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.11-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.15-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28602,3 +28602,52 @@ Baseline `BR-V4.10-2026-11-03`.
 - **A staff-signed declaration** for an elite runner. The declaration is the person's: staff record a paper one the participant signed, never sign one (`AGENTS.md` §15.11).
 
 Baseline `BR-V4.11-2026-11-03`.
+
+## 896. «Locuri» says the places free first, then why
+
+**The owner, 2026-11-03,** of «Locuri» as first drawn: «nu prea are așa sens statistica asta… pentru că nu înțeleg exact câte locuri mai pot să dau». The answer — how many places are free — was the end of the first line, after the places taken, and «Poți da drumul acum la …» mixed the free places with the lists' split.
+
+**Decision.** The first line is the answer: «Locuri libere acum: N din capacitate». Then why, one fact a line: the places taken, split into the confirmed and those holding a place until they sign (a declaration to sign, a live offer, a family's or an invitation's hold — `occupied − confirmed`); who waits, the two lists' total and each; where the free places go (the official list first, «Trimite-i oferta», then the internal one, «Oferă-i un loc acum»); the capacity it would take to let in everybody waiting; the special guests and the people at the start if everybody comes. The arithmetic is unchanged (`domain/place-outlook.ts`), with `confirmed` and `held` added.
+
+Baseline `BR-V4.12-2026-11-03`.
+
+## 897. «Marchează ca elită»: an Administrator marks any registration elite at any time, and only its bib changes
+
+**The owner, 2026-11-03:** «ar trebui să pot marca pe cineva ca elită oricând» — a registered runner, too, should print an elite bib (§895: the name where the number goes). Asked what happens to the registration of a runner so marked, he chose **«Rămâne înscris»**: the person stays registered, with their place, their declaration and their race number; only how the bib prints changes.
+
+**Decision.**
+
+- **A mark on the registration**, `registrations.elite` — a boolean, not null, false by default (migration 0184, expand only), so every existing registration reads unmarked. It belongs to the printed bib and nothing else.
+- **Who and when.** The Administrator (`canManageRegistrations`), asserted at the door of `setRegistrationEliteAction` (`requireStaffCapability`) and again in `elite-mark.ts#setRegistrationElite` (BR-REQ-060-01); the Organizer reads the chip and the elite card's lines and changes nothing (§289); Tehnic and the volunteer get neither. **At any time and in any state** — before, on and after the race day, a waiting, pending, cancelled or expired registration too: no date gate and no state gate, because a bib may be reprinted on the morning and the club learns who the elite are when it learns it. A restart of the registration keeps the mark, as it keeps the number and the printed mark: it is a fact about the runner's bib, not a seat.
+- **Where.** The registrations list's «⋮» (`row-verbs.ts`: `eliteMark` / `eliteUnmark`, every state, the Administrator only): «Marchează ca elită» or, on a marked row, «Nu mai e elită», each with the medal the elite card wears (`elite` in `action-icons.ts`, `bibElite` in `panel-glyphs.ts`). It asks nothing (§384): it tells nobody, moves no place or number, and the same menu undoes it — listed `NOT_CONFIRMED` with that reason. The press comes back to the list as it stood, with the toast «Marcat ca elită: BIB-ul lui se tipărește cu numele în locul numărului. Înscrierea rămâne neschimbată.» A marked registration wears «Elită» (a `StatusChip`, the same medal) on the list and on its own page, for every role that reads them.
+- **What it changes: how the bib prints, with §895's drawing and no second one.** `bibs.ts#listBibs` carries `elite`, and `bibs-pdf.ts` turns a marked row into an elite item: the name where the number goes (`bib-geometry.ts#bibEliteLayout`, one line or two, never cut), its **own race number** under it only with «Număr pe BIB-urile de elită» ticked (`eliteNumber`), the sponsors' band only with «Banda de sponsori pe BIB-urile de elită» ticked (`eliteSponsors`), never the members' design (a marked row's `member` is false, so it never sits on the members' pages, §681). Everywhere the bib is drawn: the ordinary sheet, its ranges and parts, the registration's own one-bib download (`from=to`, `layout=one`), the bibs page's grid and the desk's picture — the preview route draws a marked row through `renderBibImage`'s `elite`, and `bibPictureSrc` adds `e=1`, so a mark set or cleared is a new picture address, never the browser's hour-old one. For the same reason a marked row that asked for the members' bib is off the bibs page's line of members' bibs that will print the ordinary one, and off the list that line links to (`bibs.ts#countUnverifiedMemberBibs`, `admin-repository.ts#memberBibAskedUnverified`, §664): its bib is the elite one, so that line has nothing to warn of.
+- **What it never changes.** The state, the place, the queue and the allocator (no event lock, no line served), the race number — it stays assigned, never freed and never drawn again — the printed mark, the declaration, the public list, the export, and every count: `countOccupied`, the kits, `summariseRegistrationsForAdmin`, `readPlaceOutlook`, `countBibs` and the sheet's numbers read the same across marks and unmarks (a test holds them). No email: nothing reaches the outbox.
+- **The elite sheet** `bibs?elite=1` prints the separate list first, in the order typed, then every marked registration the ordinary sheet prints — confirmed, real, with its number, lowest first — so one download is every elite bib of the race. A marked registration not yet confirmed has no bib and joins the sheet when it is confirmed. The ordinary sheet still prints a marked registration, elite-style, so a club that prints everything at once loses nobody. The elite sheet, like the list's names, reads no `only=unprinted` and no printed mark, so a club that downloads both prints that bib twice — the card says so (below), and the one sheet to use is the club's choice.
+- **The elite card** («Elită — doar numele pe BIB», §895) lists the marked registrations under the names, read-only — the name, «înscris» / «registered», «nr. N», no delete — and counts them in its closed line and in «Descarcă BIB-urile de elită (N)». Its help says where they come from: «Un alergător înscris se marchează din lista de înscrieri: «⋮» → «Marchează ca elită». Rămâne înscris, cu locul și numărul lui, și apare aici de când e confirmat.» While at least one is listed, a line under it says the ordinary sheet prints them too: «Foaia obișnuită îi tipărește și ea, tot ca BIB-uri de elită: tipărește-i dintr-o singură foaie, nu din amândouă.»
+- **The trail** — `registration.elite_marked` / `registration.elite_unmarked`, entity the registration, metadata `{ elite }`: the registration's id and the new value, never a name or a number. A press that finds the mark already as asked (a stale list, a colleague first) writes nothing and no row.
+- **The rule documents** name it beside the seven staff verbs of `AGENTS.md` §15.11 and in CLAUDE.md's staff row: the Administrator's, audited, changing only how the bib prints.
+- **Seen in a browser** (`tests/e2e/elite-bibs.spec.ts`, at 320 px and on a desktop), because the «⋮» is a client menu submitting a hidden form: the Administrator marks a confirmed runner from the list, the chip appears, the elite card lists them «înscris» with their number, says the ordinary sheet prints them too, and its sheet counts them, and the same menu takes the mark off — run on both projects before the branch landed.
+
+**Refused.**
+
+- **«Mutat pe lista de elită»** — cancelling the registration and copying the name onto the separate elite list (§895). The owner chose «Rămâne înscris»: cancelling would release the place through the allocator and offer it to the line, send the cancellation email, retire a number the runner may already wear, and take the signed declaration out of the race's live records — all to change how one bib prints.
+- **A second elite layout for registrations.** What an elite bib carries is decided once (`bib-elite.ts`) and laid out once (`bibEliteLayout`), for the list's names and the marked registrations alike.
+- **A question before the press.** The mark tells nobody and the same menu undoes it (§384), as the printing mark (§264).
+
+Baseline `BR-V4.13-2026-11-03`.
+
+## 898. «Căutăm voluntari» right under «Cine vine» on the event page
+
+**The owner, 2026-11-03,** of the race's page: «partea de „vreau să fiu voluntar” ar trebui să fie mai sus un pic, fix sub „Cine vine”». The callout (§754, §768) stood after the route, the checkpoints, the links and the programme — far down a race's page, where nobody looking for a way to help reads.
+
+**Decision.** «Căutăm voluntari: …» with «Vreau să fiu voluntar», and «Voluntarii» (§821) right after it as before, move to just under «Cine vine (N)» — itself under the registration card (§825). Nothing else changes: the same conditions draw them (a visit's page, the volunteers' page answering, never a members' event or the preview), and a turn-up event's two closed bars stay the last thing on the page.
+
+Baseline `BR-V4.14-2026-11-03`.
+
+## 899. The release reads qa's migration run from the merge commit qa was pushed
+
+**2026-11-03:** three releases in a row (#633, #635, #637) stopped on «no migrate.yml run for qa on <commit>» although `migrate.yml` had run on qa and succeeded. `scripts/ship.mjs#qaMigrationCommit` asked git for the newest qa commit touching `src/db/migrations`, and git's history simplification answered with the feature branch's own commit — but a pull request lands on qa as a merge commit, and that merge is the push `migrate.yml` ran on, so the run was looked for on a commit no qa push carried. The suggested way out, «run migrate for qa from Actions», could not help either: the lookup reads push runs only.
+
+**Decision.** `git log --first-parent`: the newest commit on qa's own line that touched a migration — the merge — whose push run is the one that migrated qa.
+
+Baseline `BR-V4.15-2026-11-03`.

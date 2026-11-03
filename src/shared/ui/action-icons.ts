@@ -46,6 +46,7 @@ import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import MilitaryTechIcon from "@mui/icons-material/MilitaryTech";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
@@ -219,6 +220,8 @@ export type ActionIconName =
   | "print"
   | "markPrinted"
   | "markUnprinted"
+  // «Marchează ca elită» / «Nu mai e elită» on a registration's «⋮» (§897): the medal the elite card wears (`panel-glyphs.ts#bibElite`, §895).
+  | "elite"
   // Files and mail. Sending an email again — a registration's, a staff invitation, a password
   // reset — is one verb and one glyph, the envelope going back out (§318).
   | "spreadsheet"
@@ -339,6 +342,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   print: PrintIcon,
   markPrinted: DoneAllIcon,
   markUnprinted: RemoveDoneIcon,
+  elite: MilitaryTechIcon,
 
   spreadsheet: GridOnIcon,
   download: DownloadIcon,

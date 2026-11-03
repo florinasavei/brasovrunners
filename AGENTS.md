@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.11-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.15-2026-11-03 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.11-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.15-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2913,7 +2913,7 @@ BR-REQ-037-05):
      a phone is a CONTRIBUTOR and the desk is their whole backoffice. The desk shows a name, a
      state and a number, never an address. **The list, the export and the race numbers are the
      Organizer's too since §289** (`canReadRegistrations`, a set that excludes DEV); cancel,
-     erase, rename, resend and the printing mark stay Administrator-only
+     erase, rename, resend, the printing mark and the elite mark (§897) stay Administrator-only
      (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
    - **One thing the Organizer writes, and it is not the registration (§777).** An internal note on a
      registration («Note interne», `registration_notes`): the Organizer, the Administrator and the
@@ -2984,6 +2984,14 @@ sentences a staff member tells a person who asks where their registration stands
 registration's language — reads nothing beyond the page's own query and stores nothing:
 no audit row, no address, no link (only the expiry of the one the state waits on), shown alike to
 every role that reads the page and never at the desk.
+
+Beside the seven too, and a write that governs none of what they do: **the elite mark** («Marchează ca elită» /
+«Nu mai e elită» on the list's «⋮», 2026-11-03, `DECISIONS.md` §897). The Administrator's (`canManageRegistrations`,
+asserted by `setRegistrationEliteAction` and `elite-mark.ts`; the Organizer reads the «Elită» chip, Tehnic nothing), at
+any time and in any state, audited (`registration.elite_marked` / `registration.elite_unmarked`, the new value only). It
+changes only how the registration's bib prints — an elite bib, the name where the number goes (§895) — and never the
+state, the place, the race number, a count, the queue or the outbox: no allocator call and no email, like the printing
+mark (§264).
 
 ---
 

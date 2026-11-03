@@ -52,6 +52,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   confirmRegistrationNowAction: vi.fn(),
   promoteRegistrationAction: vi.fn(),
   setOutsideCapacityAction: vi.fn(),
+  setRegistrationEliteAction: vi.fn(),
   setClubMemberDeclaredAction: vi.fn(),
   clearMemberTicksAction: vi.fn(),
 }));

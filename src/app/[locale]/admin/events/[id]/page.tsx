@@ -125,7 +125,7 @@ import InfoTip from "@/shared/ui/InfoTip";
 import { previewDeclarationResend } from "@/modules/registrations/bulk-resend";
 import { countAddressRefusingMail } from "@/modules/registrations/email-state";
 import { previewWindowHolds } from "@/modules/registrations/window-holds";
-import { countBibs, spareCardState } from "@/modules/registrations/bibs";
+import { countBibs, listBibs, spareCardState } from "@/modules/registrations/bibs";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
@@ -264,6 +264,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     registrations, so nothing above counts them.
   */
   const eliteEntries = bibCounts ? await listEliteEntries(db, staffUser, event.id) : null;
+  // The registrations marked «Elită» (§897) that the elite sheet prints beside the list: read-only lines of its card.
+  const eliteRegistered = bibCounts ? await listBibs(db, event.id, { elite: true }) : null;
   // The range the print just reserved, for its banner (§444) — only two real numbers from the address.
   const reservedRange = saved === "sparesReserved" ? spareRangeOfQuery(spareFrom, spareTo) : null;
 
@@ -424,6 +426,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const elite = eliteEntries
     ? {
         entries: eliteEntries,
+        registered: (eliteRegistered ?? []).map((row) => ({ id: row.id, name: row.registeredName, bibNumber: row.bibNumber })),
         previewSrc: bibPreviewUrl({
           eventId: event.id,
           locale,
