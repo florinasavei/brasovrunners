@@ -23,7 +23,18 @@ const state = vi.hoisted(() => ({
   refusal: null as Error | null,
   draft: null as Record<string, string> | null,
   // The event's count (§587: the join form's words); null, as before, for every other case.
-  availability: null as null | { available: number; capacity: number; waitlistRoom: number | null; waitlistCapacity: number | null; waiting?: number; waitlistCountPublic?: boolean; participantCountPublic?: boolean },
+  availability: null as null | {
+    available: number;
+    capacity: number;
+    waitlistRoom: number | null;
+    waitlistCapacity: number | null;
+    waiting?: number;
+    waitlisted?: number;
+    waitlistCountPublic?: boolean;
+    participantCountPublic?: boolean;
+  },
+  // The organizers' two switches on the event's row (§NNN); nothing, as before, for every other case.
+  eventOver: {} as { publicRegistrationOpen?: boolean; freePlacesByOfferOnly?: boolean },
   sitting: null as null | {
     sittingId: string | null;
     seed?: null;
@@ -78,7 +89,7 @@ vi.mock("@/db/client", () => ({
 vi.mock("@/modules/events/repository", () => ({
   findPublishedEventBySlug: async () => {
     if (state.refusal) throw Object.assign(new Error("Failed query: select … from events"), { cause: state.refusal });
-    return EVENT;
+    return { ...EVENT, ...state.eventOver };
   },
 }));
 vi.mock("@/modules/diagnostics/budget-level", () => ({
@@ -103,7 +114,7 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedListStatesDisclosed: async () => false,
   cachedPublicAvailability: async () => state.availability,
   cachedDeadlines: async () => ({ offerHours: 36 }),
-  cachedPublishedEventBySlug: async () => EVENT,
+  cachedPublishedEventBySlug: async () => ({ ...EVENT, ...state.eventOver }),
 }));
 vi.mock("@/modules/registrations/form-draft", () => ({
   readFormDraft: async () => state.draft,
@@ -164,6 +175,7 @@ beforeEach(() => {
   state.refusal = null;
   state.draft = null;
   state.availability = null;
+  state.eventOver = {};
   state.sitting = null;
   forgetLastGood();
   resetBreaker();
@@ -349,5 +361,70 @@ describe("§587 the join form says the event page's message once, above the form
     const open = await render();
     expect(open).not.toContain('data-testid="registration-waitlist-notice"');
     expect(open).not.toContain('data-testid="registration-full-notice"');
+  });
+
+  it("§615 with places free and somebody waiting, the lead is the card's «Locurile se dau din lista de așteptare», never «s-au ocupat»", async () => {
+    state.availability = { available: 3, capacity: 10, waitlistRoom: 4, waitlistCapacity: 5, waiting: 1, waitlisted: 1 };
+    const html = await render();
+    expect(html).toContain('data-testid="registration-waitlist-notice"');
+    expect(html).toContain(ro.Event.cta.fromWaitlist);
+    expect(html).not.toContain("s-au ocupat");
+    expect(html).toContain(ro.Event.cta.fullJoin);
+  });
+});
+
+/**
+ * §NNN — the organizers' door on the register page (the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»):
+ * «Înscrieri publice deschise» unticked, or a press the server refused for it, says the event page's own sentence and
+ * the way back instead of the form; «Locurile libere le dau doar eu» with places free and no line to join says its
+ * own words; with room in the line it is the join form, led by the card's words and never «s-au ocupat».
+ */
+describe("§NNN the organizers' door on the register page", () => {
+  it("unticked «Înscrieri publice deschise»: the event page's sentence and the way back, never the form", async () => {
+    state.eventOver = { publicRegistrationOpen: false };
+    state.availability = { available: 3, capacity: 10, waitlistRoom: null, waitlistCapacity: null };
+    const html = await render();
+    expect(html).toContain('data-testid="registration-paused"');
+    expect(html).toContain(ro.Event.cta.paused);
+    expect(html).toContain(ro.Registration.pausedBack);
+    expect(html).not.toContain('name="firstName"');
+  });
+
+  it("a press the server refused for it lands on the same sentence, though the cached row still said open", async () => {
+    state.availability = { available: 3, capacity: 10, waitlistRoom: null, waitlistCapacity: null };
+    const html = await render({ error: "VALIDATION_ERROR", fields: "publicRegistrationPaused" });
+    expect(html).toContain('data-testid="registration-paused"');
+    expect(html).toContain(ro.Event.cta.paused);
+    expect(html).not.toContain('name="firstName"');
+  });
+
+  it("«Locurile libere le dau doar eu» with places free and no line to join: its own words, no form", async () => {
+    state.eventOver = { freePlacesByOfferOnly: true };
+    state.availability = { available: 3, capacity: 10, waitlistRoom: null, waitlistCapacity: 0 };
+    const none = await render();
+    expect(none).toContain('data-testid="registration-paused"');
+    expect(none).toContain(ro.Event.cta.pausedOffersOnly);
+    expect(none).not.toContain("s-au ocupat");
+    expect(none).not.toContain('name="firstName"');
+
+    state.availability = { available: 3, capacity: 10, waitlistRoom: 0, waitlistCapacity: 4, waiting: 4, waitlisted: 4 };
+    expect(await render()).toContain(ro.Event.cta.pausedOffersOnly);
+  });
+
+  it("«Locurile libere le dau doar eu» with room in the line: the join form, led by the card's words", async () => {
+    state.eventOver = { freePlacesByOfferOnly: true };
+    state.availability = { available: 3, capacity: 10, waitlistRoom: 5, waitlistCapacity: 5, waiting: 0, waitlisted: 0 };
+    const html = await render();
+    expect(html).not.toContain('data-testid="registration-paused"');
+    expect(html).toContain('data-testid="registration-waitlist-notice"');
+    expect(html).toContain(ro.Event.cta.fromWaitlist);
+    expect(html).not.toContain("s-au ocupat");
+    expect(html).toContain('name="firstName"');
+
+    // Unticked, the same free places are the button's: no notice above the form.
+    state.eventOver = {};
+    const open = await render();
+    expect(open).not.toContain('data-testid="registration-waitlist-notice"');
+    expect(open).toContain('name="firstName"');
   });
 });

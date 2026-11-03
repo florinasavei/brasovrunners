@@ -1289,6 +1289,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       {places ? (
         <PlaceOutlook
           outlook={places}
+          locale={locale}
           spaceAbove={1.5}
           door={
             publicDoor && filters.eventId

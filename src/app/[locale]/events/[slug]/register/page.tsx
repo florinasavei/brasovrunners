@@ -259,6 +259,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   // `waiting` null: the club keeps the line's count private (§634), and the title says no number.
   // `capacity` null: the event says no public number at all (§668), and the title names no capacity.
   let fullCounts: { capacity: number | null; waiting: number | null } | null = null;
+  // Places free, given from the line (§615, §NNN): the join form's lead says so, as the card does — never «s-au ocupat».
+  let fromWaitlist = false;
   /*
     The organizers shut the site's door (§NNN): «Înscrieri publice deschise» unticked — read off the page's own row,
     or from a press the server refused for it while the row was cached open — or, below, the free places theirs to
@@ -276,6 +278,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       else if (places && newcomerWouldQueue({ availablePlaces: places.available, waitlisted: places.waitlisted, waiting: places.waiting, freePlacesByOfferOnly: offersOnly })) {
         fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : "WAITLIST";
         if (fullNotice === "WAITLIST") {
+          fromWaitlist = places.available > 0;
           offerHours = (await cachedDeadlines()).offerHours;
           // «Arată public numărătoarea» (§668): off in the row or the entry, no capacity and no count — the door's rule.
           const numbers = publicNumbersShown(event) && publicNumbersShown(places);
@@ -659,6 +662,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             resting,
             fullNotice,
             fullCounts,
+            fromWaitlist,
             offerHours,
             action: submitRegistrationAction,
             /*

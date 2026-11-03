@@ -66,15 +66,19 @@ export type OfferOnlyInput = {
   freePlacesByOfferOnly?: boolean;
   /** Who is entering (§NNN); absent is the staff's, which the switch never touches. */
   channel?: EntryChannel;
+  /** `events.capacity` (§NNN): null is uncapped — nothing scarce to give, so the switch sends nobody to the line. */
+  capacity?: number | null;
 };
 
 /**
  * «Locurile libere le dau doar eu» (§NNN): a public entry joins the line whatever is free, as it does while
  * anybody waits (§615) — the free places are the staff's to give. A staff entry is never touched. Only who a
- * free place is for: the capacity formula is untouched, so the switch can give fewer places, never more.
+ * free place is for: the capacity formula is untouched, so the switch can give fewer places, never more. Only
+ * where places are counted, too: on an uncapped event (a duplicate or a series date that copied the tick, a cap
+ * lifted while it stayed on) nothing is scarce, and every entry takes its place as before.
  */
 export function publicEntryQueues(input: OfferOnlyInput): boolean {
-  return input.freePlacesByOfferOnly === true && input.channel === "public";
+  return input.freePlacesByOfferOnly === true && input.channel === "public" && input.capacity !== null;
 }
 
 /**

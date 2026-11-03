@@ -1139,7 +1139,34 @@
       },
       "places": {
         "title": "Places free now: {free} of {capacity}",
-        "taken": "Taken {occupied}: {confirmed} confirmed and {held} holding their place until they sign (a declaration or a live offer).",
+        "taken": "Taken {occupied}: {confirmed} confirmed and {held} — {kinds}.",
+        "held": {
+          "one": "{count} holding their place until they sign",
+          "few": "{count} holding their place until they sign",
+          "other": "{count} holding their place until they sign"
+        },
+        "heldKinds": {
+          "declaration": {
+            "one": "{count} declaration",
+            "few": "{count} declarations",
+            "other": "{count} declarations"
+          },
+          "offered": {
+            "one": "{count} offer",
+            "few": "{count} offers",
+            "other": "{count} offers"
+          },
+          "invited": {
+            "one": "{count} invitation",
+            "few": "{count} invitations",
+            "other": "{count} invitations"
+          },
+          "family": {
+            "one": "{count} family reservation",
+            "few": "{count} family reservations",
+            "other": "{count} family reservations"
+          }
+        },
         "takenConfirmed": "Taken {occupied}, all confirmed.",
         "waiting": "Waiting for a place: {count} — {waiting} on the official list, {internal} on the internal list.",
         "nobodyWaits": "Nobody is waiting on either list.",
@@ -1167,6 +1194,7 @@
           "COMPLETED": "the event is over",
           "NOT_HERE": "the event takes no registration on this site"
         },
+        "offersOnly": "With «I hand out the free places myself», no place goes out by itself: you give every free place.",
         "setting": "Change it in the editor"
       },
       "publicDoor": {

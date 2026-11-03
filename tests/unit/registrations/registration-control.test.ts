@@ -45,6 +45,13 @@ describe("who a free place is for (§NNN)", () => {
     expect(newcomerJoinsLine({ waitlisted: 1, channel: "staff" })).toBe(true);
   });
 
+  it("only where places are counted: on an uncapped event the tick sends nobody to the line", () => {
+    expect(publicEntryQueues({ freePlacesByOfferOnly: true, channel: "public", capacity: null })).toBe(false);
+    expect(publicEntryQueues({ freePlacesByOfferOnly: true, channel: "public", capacity: 10 })).toBe(true);
+    expect(newcomerJoinsLine({ waitlisted: 0, freePlacesByOfferOnly: true, channel: "public", capacity: null })).toBe(false);
+    expect(newcomerJoinsLine({ waitlisted: 0, freePlacesByOfferOnly: true, channel: "public", capacity: 10 })).toBe(true);
+  });
+
   it("the tick wins over «Da»: no place goes out by itself while the free places are the staff's to give", () => {
     expect(offersOnItsOwn({ waitlistAutoOffer: true, freePlacesByOfferOnly: false, capacity: 10 })).toBe(true);
     expect(offersOnItsOwn({ waitlistAutoOffer: true, freePlacesByOfferOnly: true, capacity: 10 })).toBe(false);

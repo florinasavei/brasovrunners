@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { isValidElement, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
@@ -13,6 +14,7 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { PUBLIC_REGISTRATION_PAUSED } from "@/modules/registrations/domain/public-door";
 import { NO_WAITLIST } from "@/modules/registrations/domain/waitlist";
 import { isDomainError } from "@/shared/errors/domain-error";
+import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -28,8 +30,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * - «Oferă-i un loc acum» ends with the person offered, so the waiting list's limit — 0 included — never refuses it;
  *   «Adaugă pe lista de așteptare» alone still honours it;
  * - «Anunță-mă când rămân N locuri» emails the Administrators once per crossing, re-armed above N;
- * - «Pe site acum» says each state the public card's predicate draws;
- * - the editor's own save of the three settings leaves the trail, from → to, once per change.
+ * - «Pe site acum» says each state the public card's predicate draws, and hands the Administrator a real tick whose
+ *   save asks first — one question to close, another to open (its element tree walked, as a Server Component's);
+ * - the editor's own save of the three settings leaves the trail, from → to, once per change, from both save paths.
  *
  * The two-connection race on the last place is `tests/concurrency/capacity.test.ts`; the switch only ever narrows
  * who takes a free place, so it adds no new way to pass the capacity.
@@ -56,8 +59,22 @@ const { cancelRegistrationByStaff, enterOnWaitlistByStaff, offerPlaceByStaff, se
 const { addReserveEntry, moveReserveEntryToWaitlist } = await import("@/modules/registrations/reserve-list");
 const { readPublicDoor } = await import("@/modules/registrations/public-now");
 const { readWaitlistPosition } = await import("@/modules/registrations/repository");
-const { saveEventAndTranslations } = await import("@/modules/content/events/service");
+const { saveEventAndTranslations, saveEventFields } = await import("@/modules/content/events/service");
 const { default: PublicNowLine } = await import("@/modules/registrations/ui/PublicNowLine");
+
+type Props = Record<string, unknown> & { children?: ReactNode };
+
+/** Every element under `node`, depth first: a Server Component's tree, read without a browser. */
+function elements(node: ReactNode, acc: ReactElement<Props>[] = []): ReactElement<Props>[] {
+  if (Array.isArray(node)) {
+    for (const child of node) elements(child as ReactNode, acc);
+    return acc;
+  }
+  if (!isValidElement<Props>(node)) return acc;
+  acc.push(node);
+  elements(node.props.children, acc);
+  return acc;
+}
 
 const NOW = new Date();
 const STARTS = new Date(NOW.getTime() + 30 * 24 * 3_600_000);
@@ -439,17 +456,66 @@ describe("«Pe site acum» (§NNN)", () => {
     expect(html).toContain("Înscrierile pe site sunt oprite de un Administrator.");
     expect(html).not.toContain("registrations-public-door-form");
   });
+
+  it("hands the Administrator a real tick and its own save, which asks first: one question to close, another to open", async () => {
+    const event = await createEvent(5);
+    const action = vi.fn();
+    const drawn = async (listQuery: string) => {
+      const door = await readPublicDoor(db, event.id, NOW);
+      if (!door) throw new Error("no door");
+      return elements(await PublicNowLine({ door, eventId: event.id, locale: "ro", listQuery, publicDoorAction: action }));
+    };
+    const all = await drawn("eventId=1");
+    const form = all.find((element) => element.props.scope === "public-door");
+    expect(form?.props.action).toBe(action);
+    // The question is chosen by the box as it is pressed: unticked closes, ticked opens — each in its own words.
+    expect(form?.props.confirm).toEqual([
+      {
+        when: [{ field: "publicRegistrationOpen", notEquals: "on" }],
+        title: ro.Admin.confirm.publicDoorCloseTitle,
+        body: ro.Admin.confirm.publicDoorCloseBody,
+        confirmLabel: ro.Admin.confirm.publicDoorCloseConfirm,
+        cancelLabel: ro.Admin.confirm.cancel,
+      },
+      {
+        when: [{ field: "publicRegistrationOpen", equals: "on" }],
+        title: ro.Admin.confirm.publicDoorOpenTitle,
+        body: ro.Admin.confirm.publicDoorOpenBody,
+        confirmLabel: ro.Admin.confirm.publicDoorOpenConfirm,
+        cancelLabel: ro.Admin.confirm.cancel,
+      },
+    ]);
+    // A real tick box, ticked as the row stands — never a toggle button — and its own save, with a glyph.
+    expect(all.find((element) => element.props.name === "publicRegistrationOpen")?.props).toMatchObject({ defaultChecked: true, children: ro.Admin.registrations.publicDoor.label });
+    expect(all.find((element) => element.props["data-testid"] === "registrations-public-door-save")?.props).toMatchObject({ icon: "save", type: "submit" });
+    // What the action reads: the language, the event and the list to come back to.
+    const hidden = all.filter((element) => element.type === "input" && element.props.type === "hidden").map((element) => [element.props.name, element.props.value]);
+    expect(Object.fromEntries(hidden)).toEqual({ uiLocale: "ro", eventId: event.id, listQuery: "eventId=1" });
+
+    // The tick off on the row: drawn unticked, so the press that saves it ticked is the opening one.
+    await db.update(events).set({ publicRegistrationOpen: false }).where(eq(events.id, event.id));
+    expect((await drawn("")).find((element) => element.props.name === "publicRegistrationOpen")?.props.defaultChecked).toBe(false);
+  });
+
+  it("says, while «Locurile libere le dau doar eu» is on, that no place goes out by itself — and nothing of it otherwise", async () => {
+    const note = ro.Admin.registrations.publicNow.offersOnly;
+    // «Da» on the line, the tick on: the place is the staff's to give all the same (option a).
+    const offersOnly = await createEvent(5, { freePlacesByOfferOnly: true, waitlistAutoOffer: true, waitlistCapacity: 20 });
+    expect(await line(offersOnly.id)).toContain(note);
+    const shut = await createEvent(5, { freePlacesByOfferOnly: true, waitlistCapacity: 0 });
+    expect(await line(shut.id)).toContain(note);
+    expect(await line((await createEvent(5, { waitlistAutoOffer: true })).id)).not.toContain(note);
+    // Uncapped, the tick means nothing, so nothing is said of it.
+    expect(await line((await createEvent(null, { freePlacesByOfferOnly: true })).id)).not.toContain(note);
+  });
 });
 
 describe("The editor's save of the registration controls leaves the trail (§NNN)", () => {
-  /** The editor's form for the row as posted (as `cms/capacity-raise.test.ts` posts it), with the changes given. */
-  async function editorSave(eventId: string, changes: Record<string, unknown>) {
+  /** The editor's fields for the row as posted (as `cms/capacity-raise.test.ts` posts them), with the changes given. */
+  async function editorFields(eventId: string, changes: Record<string, unknown>) {
     const [row] = await db.select().from(events).where(eq(events.id, eventId));
-    const ro = (await db.select().from(eventTranslations).where(eq(eventTranslations.eventId, eventId))).find((t) => t.locale === "ro");
-    if (!ro) throw new Error("no ro translation");
-    return saveEventAndTranslations(db, {
-      actor: admin,
-      eventId,
+    return {
+      row,
       fields: {
         type: row.type,
         eventStatus: row.eventStatus,
@@ -477,12 +543,36 @@ describe("The editor's save of the registration controls leaves the trail (§NNN
         externalRegistrationUrl: "",
         ...changes,
       },
+    };
+  }
+
+  /** The editor's one save of the fields and the translations (`saveEventAndTranslations`). */
+  async function editorSave(eventId: string, changes: Record<string, unknown>) {
+    const { row, fields } = await editorFields(eventId, changes);
+    const translation = (await db.select().from(eventTranslations).where(eq(eventTranslations.eventId, eventId))).find((t) => t.locale === "ro");
+    if (!translation) throw new Error("no ro translation");
+    return saveEventAndTranslations(db, {
+      actor: admin,
+      eventId,
+      fields,
       expectedVersion: row.version,
-      translations: [{ translationId: ro.id, expectedVersion: ro.version, fields: { slug: ro.slug, title: ro.title, excerpt: ro.excerpt ?? "", seoTitle: "", seoDescription: "" } }],
+      translations: [
+        {
+          translationId: translation.id,
+          expectedVersion: translation.version,
+          fields: { slug: translation.slug, title: translation.title, excerpt: translation.excerpt ?? "", seoTitle: "", seoDescription: "" },
+        },
+      ],
       acknowledgeLiveEdit: true,
       scope: "this",
       now: NOW,
     });
+  }
+
+  /** The fields-only save (`saveEventFields`): the editor's other path to the same columns. */
+  async function fieldsSave(eventId: string, changes: Record<string, unknown>) {
+    const { row, fields } = await editorFields(eventId, changes);
+    return saveEventFields(db, { actor: admin, eventId, fields, expectedVersion: row.version, now: NOW });
   }
 
   it("unticking «Înscrieri publice deschise» in the editor writes one row, from → to; a save that moves nothing writes none", async () => {
@@ -504,5 +594,17 @@ describe("The editor's save of the registration controls leaves the trail (§NNN
     expect((await trail("event.free_places_by_offer_only_changed")).map((row) => row.metadataJson)).toEqual([{ from: false, to: true }]);
     expect((await trail("event.places_alert_changed")).map((row) => row.metadataJson)).toEqual([{ from: null, to: 3 }]);
     expect(await trail("event.public_registration_changed")).toEqual([]);
+  });
+
+  it("the fields-only save leaves the same trail: the door unticked, then ticked again, one row each", async () => {
+    const event = await createEvent(10, { surface: "ASPHALT", declarationDocumentId: declarationId });
+    await fieldsSave(event.id, { publicRegistrationOpen: false });
+    await fieldsSave(event.id, { publicRegistrationOpen: false });
+    await fieldsSave(event.id, { publicRegistrationOpen: true });
+    const rows = await trail("event.public_registration_changed");
+    expect(rows.map((row) => [row.actorStaffUserId, row.entityId, row.metadataJson])).toEqual([
+      [admin.id, event.id, { from: true, to: false }],
+      [admin.id, event.id, { from: false, to: true }],
+    ]);
   });
 });

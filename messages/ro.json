@@ -1139,7 +1139,34 @@
       },
       "places": {
         "title": "Locuri libere acum: {free} din {capacity}",
-        "taken": "Ocupate {occupied}: {confirmed} confirmați și {held} care își țin locul până semnează (declarație de semnat sau ofertă activă).",
+        "taken": "Ocupate {occupied}: {confirmed} confirmați și {held} — {kinds}.",
+        "held": {
+          "one": "{count} care își ține locul până semnează",
+          "few": "{count} care își țin locul până semnează",
+          "other": "{count} care își țin locul până semnează"
+        },
+        "heldKinds": {
+          "declaration": {
+            "one": "{count} declarație",
+            "few": "{count} declarații",
+            "other": "{count} de declarații"
+          },
+          "offered": {
+            "one": "{count} ofertă",
+            "few": "{count} oferte",
+            "other": "{count} de oferte"
+          },
+          "invited": {
+            "one": "{count} invitație",
+            "few": "{count} invitații",
+            "other": "{count} de invitații"
+          },
+          "family": {
+            "one": "{count} rezervare de familie",
+            "few": "{count} rezervări de familie",
+            "other": "{count} de rezervări de familie"
+          }
+        },
         "takenConfirmed": "Ocupate {occupied}, toate confirmate.",
         "waiting": "Așteaptă un loc: {count} — pe lista oficială {waiting}, pe lista internă {internal}.",
         "nobodyWaits": "Nu așteaptă nimeni pe liste.",
@@ -1167,6 +1194,7 @@
           "COMPLETED": "evenimentul s-a încheiat",
           "NOT_HERE": "evenimentul nu primește înscrieri pe acest site"
         },
+        "offersOnly": "Cu «Locurile libere le dau doar eu», niciun loc nu pleacă automat: fiecare loc liber îl dai tu.",
         "setting": "Schimbă în editor"
       },
       "publicDoor": {

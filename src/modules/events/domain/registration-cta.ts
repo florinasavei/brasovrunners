@@ -72,7 +72,7 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
  * alone (§587) — or the event's free places are the staff's to give («Locurile libere le dau doar eu»). The
  * allocator's own rule for a public entry (`newcomerJoinsLine`), said once for the door, the register page and
  * «Pe site acum» on the registrations page. The tick only counts where places are counted: on an uncapped event
- * (`availablePlaces` null) nothing is scarce, and the allocator ignores it there too (`withLockedRow`).
+ * (`availablePlaces` null) nothing is scarce, and the allocator ignores it there too (`publicEntryQueues`).
  */
 function publicEntryJoinsLine(event: { availablePlaces: number | null; waitlisted?: number; waiting?: number; freePlacesByOfferOnly?: boolean | null }): boolean {
   return (event.freePlacesByOfferOnly === true && event.availablePlaces !== null) || (event.waitlisted ?? event.waiting ?? 0) > 0;

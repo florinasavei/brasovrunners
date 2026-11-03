@@ -16,6 +16,15 @@ export type PlaceOutlookCounts = {
   occupied: number;
   /** Of those, the confirmed (`OccupiedCounts.confirmed`: never a special guest). */
   confirmed: number;
+  /**
+   * The rest of `occupied`, by what holds each place until somebody signs (§NNN; the production review of
+   * 2026-11-03: «13 = 9 declarații + 2 oferte + 2 invitații»), as `capacity.ts#placesTaken` names them from the
+   * same count: a declaration to sign, an offer still open, an invitation not yet answered, a family's reservation.
+   */
+  declaration: number;
+  offered: number;
+  invited: number;
+  family: number;
   /** The official waiting list: `WAITLISTED`, never a row outside the places. */
   waiting: number;
   /** The lines of «Lista internă (doar notițe)». */
@@ -24,10 +33,13 @@ export type PlaceOutlookCounts = {
   outside: number;
 };
 
+/** The kinds of a held place, in the order «Locuri» says them; each said only when it holds a place. */
+export const HELD_KINDS = ["declaration", "offered", "invited", "family"] as const satisfies ReadonlyArray<keyof PlaceOutlookCounts>;
+
 export type PlaceOutlook = PlaceOutlookCounts & {
   /** The places nobody holds; 0 when the capacity was lowered under the places taken. */
   free: number;
-  /** The places taken by somebody who has not signed yet: a declaration to sign, an offer, a family's or an invitation's hold. */
+  /** The places taken by somebody who has not signed yet: the four kinds above, together. */
   held: number;
   /** How many of the official waiting list the free places take. */
   fromWaiting: number;

@@ -3,6 +3,7 @@ import { events } from "@/db/schema/events";
 import type { Database } from "@/db/types";
 import { registrationCta } from "@/modules/events/domain/registration-cta";
 import { publicNow, type PublicNow } from "./domain/public-now";
+import { publicEntryQueues } from "./domain/waitlist";
 import { readPublicPlaces } from "./service";
 
 /** «Pe site acum» (§NNN) for one event, and the tick it may be changed with. */
@@ -12,6 +13,12 @@ export type PublicDoor = {
   open: boolean;
   /** Whether the event takes its registration on this site at all: the tick means nothing otherwise. */
   internal: boolean;
+  /**
+   * «Locurile libere le dau doar eu» in force (§NNN): ticked, on an event of this site with a capacity — the
+   * allocator's own rule (`publicEntryQueues`). Then no place goes out by itself either (`offersOnItsOwn`), and the
+   * line says so under its sentence: every free place is the staff's to give.
+   */
+  offersOnly: boolean;
 };
 
 /**
@@ -56,9 +63,11 @@ export async function readPublicDoor<T extends Record<string, unknown>>(db: Data
     },
     now,
   );
+  const internal = event.registrationMode === "INTERNAL";
   return {
     now: publicNow(cta, { waiting: places.waiting, waitlistCapacity: event.capacity === null ? null : event.waitlistCapacity }),
     open: event.publicRegistrationOpen,
-    internal: event.registrationMode === "INTERNAL",
+    internal,
+    offersOnly: internal && publicEntryQueues({ freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel: "public", capacity: event.capacity }),
   };
 }

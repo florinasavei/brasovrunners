@@ -251,9 +251,7 @@ function withLockedRow(
     startsAt: locked.startsAt,
     eventStatus: locked.eventStatus,
     waitlistCapacity: locked.waitlistCapacity,
-    // Only where places are counted: an uncapped event has nothing scarce to give, so the tick — copied by a duplicate
-    // or a series, or left on after the cap was lifted — sends nobody to the line there.
-    freePlacesByOfferOnly: locked.freePlacesByOfferOnly && locked.capacity !== null,
+    freePlacesByOfferOnly: locked.freePlacesByOfferOnly,
   };
 }
 
@@ -450,9 +448,10 @@ async function placeForNewcomer<T extends Record<string, unknown>>(
     «Locurile libere le dau doar eu» (§NNN) is the same rule with one more reason: on an event that ticks
     it, a public entry joins the line whatever is free — the free places are the staff's to give — read
     off the locked row (`withLockedRow`), on the entry's channel, never on `kind`. The formula still says
-    what is free; the switch only ever says «not for this entry», so it cannot seat anybody past it.
+    what is free; the switch only ever says «not for this entry», so it cannot seat anybody past it. On an
+    uncapped event it says nothing at all (`publicEntryQueues`): nothing is scarce there.
   */
-  const lineFirst = newcomerJoinsLine({ waitlisted: eligibleWaitlisted, freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel });
+  const lineFirst = newcomerJoinsLine({ waitlisted: eligibleWaitlisted, freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel, capacity: event.capacity });
   return {
     free: !lineFirst && hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted }),
     counts,
@@ -894,13 +893,14 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
       With no lapsed hold there is nothing to release and the refusal stands; a refusal after a
       release takes the release back with it, like everything else in the transaction.
     */
-    if (counts.lapsedDeclarationHolds > 0 && !publicEntryQueues({ freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel })) {
+    const offerOnly = { freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel, capacity: event.capacity };
+    if (counts.lapsedDeclarationHolds > 0 && !publicEntryQueues(offerOnly)) {
       await repo.expireStaleHolds(db, event, now, { wanting: 1 });
       const after = await repo.countOccupied(db, event.id, now);
       // Never past somebody waiting (§615): a full line with people waiting in it refuses, as above.
       // Nor a public entry while the free places are the staff's to give (§NNN): it is refused like a full race.
       direct =
-        !newcomerJoinsLine({ waitlisted: eligibleWaitlisted, freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel }) &&
+        !newcomerJoinsLine({ waitlisted: eligibleWaitlisted, ...offerOnly }) &&
         hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(after), eligibleWaitlisted });
     }
     if (!direct) throw waitlistFullError(event.waitlistCapacity);
@@ -1329,7 +1329,7 @@ async function assertWaitlistCanTakeOneMore<T extends Record<string, unknown>>(
   // Somebody waiting: a newcomer joins the line whatever is free (`newcomerJoinsLine`), and the line is full.
   // The same for a public entry while the free places are the staff's to give (§NNN).
   if (
-    !newcomerJoinsLine({ waitlisted, freePlacesByOfferOnly: row.freePlacesByOfferOnly, channel }) &&
+    !newcomerJoinsLine({ waitlisted, freePlacesByOfferOnly: row.freePlacesByOfferOnly, channel, capacity: row.capacity }) &&
     hasDirectAvailability({ capacity: row.capacity, occupied, eligibleWaitlisted: waitlisted })
   ) {
     return;

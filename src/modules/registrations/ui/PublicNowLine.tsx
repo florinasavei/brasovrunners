@@ -63,6 +63,12 @@ export default async function PublicNowLine({
           {t("registrations.publicNow.setting")}
         </GlyphButton>
       </Stack>
+      {/* «Locurile libere le dau doar eu» (§NNN): nothing goes out by itself either, whatever «Da» says — said here, where he looks. */}
+      {door.offersOnly && (
+        <Typography variant="body2" color="text.secondary" data-testid="registrations-public-now-offers-only">
+          {t("registrations.publicNow.offersOnly")}
+        </Typography>
+      )}
       {door.internal &&
         (publicDoorAction ? (
           <ActionForm

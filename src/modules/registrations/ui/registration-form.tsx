@@ -267,6 +267,11 @@ export type RegistrationFormInput = {
    * capacity null when the event says no public number (§668).
    */
   fullCounts: { capacity: number | null; waiting: number | null } | null;
+  /**
+   * For `WAITLIST`: places are free, and given from the line — somebody waits (§615), or «Locurile libere le dau
+   * doar eu» (§NNN). The lead is the card's own «Locurile se dau din lista de așteptare», never «s-au ocupat».
+   */
+  fromWaitlist?: boolean;
   /** For `WAITLIST`: the club's offer window («Termene», `offerHours`, §377); null says no offer sentence. */
   offerHours: number | null;
   /** The family sitting's next form (§519): who was sent so far, above the form. */
@@ -303,6 +308,7 @@ export async function registrationForm({
   resting,
   fullNotice,
   fullCounts,
+  fromWaitlist = false,
   offerHours,
   familyIntro,
   action,
@@ -388,7 +394,13 @@ export async function registrationForm({
       )}
       {fullNotice === "WAITLIST" ? (
         <Alert severity="info" sx={{ mb: 2 }} data-testid="registration-waitlist-notice">
-          <AlertTitle>{fullCounts ? fullThanksPhrase(tEvent, locale, fullCounts.capacity, fullCounts.waiting) : tEvent("cta.fullLead")}</AlertTitle>
+          <AlertTitle>
+            {fromWaitlist
+              ? tEvent("cta.fromWaitlist")
+              : fullCounts
+                ? fullThanksPhrase(tEvent, locale, fullCounts.capacity, fullCounts.waiting)
+                : tEvent("cta.fullLead")}
+          </AlertTitle>
           <Typography variant="body2">{tEvent("cta.fullJoin")}</Typography>
           {offerHours !== null && (
             <Typography variant="body2" sx={{ mt: 0.5 }}>
