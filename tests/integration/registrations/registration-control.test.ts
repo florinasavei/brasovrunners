@@ -334,6 +334,12 @@ describe("The waiting list's emails say what the allocator does (§NNN)", () => 
     ro: "La Crosul, locurile le dau organizatorii, pe rând: te-am trecut pe lista de așteptare și îți scriem când îți putem da un loc.",
     en: "At The cross, the organizers give out the places one at a time: we have put you on the waiting list and will write to you when we can give you a place.",
   };
+  /** The promise after «este complet momentan»: a notice when a place frees up, or the organizers' word. */
+  const autoPromise = { ro: "Te vom anunța dacă se eliberează un loc.", en: "We'll let you know if a place opens up." };
+  const byHandPromise = {
+    ro: "Locurile le dau organizatorii, pe rând: îți scriem când îți putem da un loc.",
+    en: "The organizers give out the places one at a time: we will write to you when we can give you a place.",
+  };
 
   it("WAITLIST_JOINED: sent to the line by the tick, the person is told the organizers give the places — never «este complet»", async () => {
     // Beside free places: the event is not full.
@@ -357,9 +363,12 @@ describe("The waiting list's emails say what the allocator does (§NNN)", () => 
     expect((await staffEntry(event.id, "Mara")).status).toBe("PENDING_DECLARATION");
     expect((await publicEntry(event, "Ana")).status).toBe("WAITLISTED");
     const full = await sent("Ana", "WAITLIST_JOINED");
-    expect(full).toContain("Crosul este complet momentan, așa că te-am adăugat pe lista de așteptare.");
-    expect(full).toContain("The cross is full right now, so we added you to the waiting list.");
-    expect(full).not.toContain("locurile le dau organizatorii");
+    // Full is true, but with «Nu» no freed place reaches anybody by itself: the organizers' promise, never «Te vom anunța…».
+    expect(full).toContain(`Crosul este complet momentan, așa că te-am adăugat pe lista de așteptare. ${byHandPromise.ro}`);
+    expect(full).toContain(`The cross is full right now, so we added you to the waiting list. ${byHandPromise.en}`);
+    expect(full).not.toContain(autoPromise.ro);
+    expect(full).not.toContain(autoPromise.en);
+    expect(full).not.toContain(byHand.ro);
     // The place is freed; with «Nu» nobody is offered it by itself. The same message, rendered now, says who gives it.
     await cancelRegistrationByStaff(db, admin, (await rowOf("Mara")).id, "", NOW);
     expect((await rowOf("Ana")).status).toBe("WAITLISTED");
@@ -367,6 +376,17 @@ describe("The waiting list's emails say what the allocator does (§NNN)", () => 
     expect(freed).toContain(byHand.ro);
     expect(freed).toContain(byHand.en);
     expect(freed).not.toContain("este complet");
+  });
+
+  it("WAITLIST_JOINED: full with «Da» and the tick off, a freed place goes to the line by itself — the promise that says so", async () => {
+    const event = await createEvent(1, { waitlistAutoOffer: true });
+    expect((await staffEntry(event.id, "Mara")).status).toBe("PENDING_DECLARATION");
+    expect((await publicEntry(event, "Ana")).status).toBe("WAITLISTED");
+    const full = await sent("Ana", "WAITLIST_JOINED");
+    expect(full).toContain(`Crosul este complet momentan, așa că te-am adăugat pe lista de așteptare. ${autoPromise.ro}`);
+    expect(full).toContain(`The cross is full right now, so we added you to the waiting list. ${autoPromise.en}`);
+    expect(full).not.toContain(byHandPromise.ro);
+    expect(full).not.toContain(byHandPromise.en);
   });
 
   it("WAITLIST_SPOT_OFFER: after the deadline the place passes on by itself only while places go out by themselves", async () => {

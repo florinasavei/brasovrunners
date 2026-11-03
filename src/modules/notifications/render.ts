@@ -526,6 +526,7 @@ async function renderRow(
     // A resend rendered after the person left the list says nothing of a standing it no longer has.
     if (row.isManualResend && standing) data.waitlistResent = true;
     // Not full, the organizers' places (§NNN): the tick, or a place nobody holds beside the line — never «este complet».
+    // Full with «Nu», the promise after «este complet» is the organizers' too, read off the standing's `autoOffer` above.
     if (standing && (await waitlistByHand(db, registration.eventId, now))) data.waitlistByHand = true;
   }
   /*

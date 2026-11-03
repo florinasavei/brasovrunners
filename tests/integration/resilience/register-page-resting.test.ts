@@ -457,4 +457,24 @@ describe("§NNN the organizers' door on the register page", () => {
     expect(auto).toContain("Când se eliberează un loc, primești un email și ai 36 de ore să confirmi — altfel locul trece mai departe.");
     expect(auto).not.toContain("Locurile le dau organizatorii");
   });
+
+  it("the join sentence above the form keeps the offer line's rule: «te anunțăm…» only while a freed place reaches the line by itself", async () => {
+    const full = { available: 0, capacity: 10, waitlistRoom: 4, waitlistCapacity: 5, waiting: 1, waitlisted: 1 };
+    const cases = [
+      // The tick beside free places, and on a full event over «Da»; «Nu» on a full one: the organizers' words.
+      { over: { freePlacesByOfferOnly: true }, availability: { available: 3, capacity: 10, waitlistRoom: 5, waitlistCapacity: 5, waiting: 0, waitlisted: 0 }, byItself: false },
+      { over: { freePlacesByOfferOnly: true, waitlistAutoOffer: true }, availability: full, byItself: false },
+      { over: { waitlistAutoOffer: false }, availability: full, byItself: false },
+      // «Da», the tick off: a freed place reaches the line by itself.
+      { over: { waitlistAutoOffer: true }, availability: full, byItself: true },
+    ];
+    for (const { over, availability, byItself } of cases) {
+      state.eventOver = over;
+      state.availability = availability;
+      const html = await render();
+      expect(html, JSON.stringify(over)).toContain('data-testid="registration-waitlist-join"');
+      expect(html).toContain(byItself ? ro.Event.cta.fullJoin : ro.Event.cta.fullJoinByHand);
+      expect(html).not.toContain(byItself ? ro.Event.cta.fullJoinByHand : ro.Event.cta.fullJoin);
+    }
+  });
 });

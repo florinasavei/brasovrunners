@@ -213,6 +213,24 @@ describe("§641 the resend of a waiting row", () => {
     expect(message.text).not.toContain("este complet");
   });
 
+  it("§NNN full with «Nu», the resend promises the organizers' word, never a notice when a place frees up", async () => {
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, eventId));
+    // The one place held: the event is full — and with «Nu» a freed place reaches nobody by itself.
+    await person("CONFIRMED", null);
+    const mine = await person("WAITLISTED", at(-2));
+    await resendRegistrationMessage(db, admin(), mine.id, NOW);
+    const [row] = await outboxOf(mine.id);
+    const message = await renderOutboxMessage(row, db, NOW);
+    expect(message.text).toContain(
+      "Îți retrimitem emailul: ești în continuare pe lista de așteptare la Crosul Tâmpei. Locurile le dau organizatorii, pe rând: îți scriem când îți putem da un loc.",
+    );
+    expect(message.text).toContain(
+      "We are sending this again: you are still on the waiting list for The Tâmpa cross. The organizers give out the places one at a time: we will write to you when we can give you a place.",
+    );
+    expect(message.text).not.toContain("Te vom anunța dacă se eliberează un loc.");
+    expect(message.text).not.toContain("We'll let you know if a place opens up.");
+  });
+
   it("says the standing of the moment it is sent: two people ahead gone, the resend says the new place", async () => {
     const cancels = await person("WAITLISTED", at(-4));
     const offered = await person("WAITLISTED", at(-3));

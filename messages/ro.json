@@ -503,6 +503,7 @@
         "other": "{count} de locuri oferite din lista de așteptare"
       },
       "fullJoin": "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.",
+      "fullJoinByHand": "Intră pe lista de așteptare — organizatorii îți scriu pe email când îți pot da un loc.",
       "fullOffer": "Când se eliberează un loc, primești un email și ai {hours} să confirmi — altfel locul trece mai departe.",
       "fullOfferByHand": "Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email și ai {hours} să confirmi.",
       "waitlistFull": "Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.",
@@ -7512,6 +7513,7 @@
           }
         },
         "machinery": "Butonul, linkul din el, codul QR, atașamentele, salutul și semnătura rămân cele implicite: ele duc token-uri și fișiere, nu cuvinte.",
+        "followsSettings": "Textul implicit se schimbă după «Locurile din lista de așteptare se alocă automat» și «Locurile libere le dau doar eu»; un text salvat aici îl înlocuiește, oricum ar fi setate.",
         "samplesTitle": "Textul salvat conține valori de exemplu, nu câmpuri",
         "samplePairWhere": "„{value}” — {where}; în locul ei: {replacement}",
         "samplesHelp": "Fiecare participant ar primi exact aceste cuvinte. „Înlocuiește cu câmpurile” pune câmpul potrivit în locul fiecărei valori și salvează textul.",

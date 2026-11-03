@@ -112,6 +112,17 @@ export function waitlistOfferPhrase(say: Say, locale: string, offerHours: number
 }
 
 /**
+ * "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc." (§587): what the waiting list does, under
+ * the full event's lead on the page and the listing card, and in the join form's notice — by the same rule as the offer
+ * sentence above (`byItself`, `registration-cta.ts#offersByItself`, §NNN). With «Nu», or «Locurile libere le dau doar eu»,
+ * a freed place reaches nobody by itself, so nobody is emailed when one frees up: «Intră pe lista de așteptare —
+ * organizatorii îți scriu pe email când îți pot da un loc.»
+ */
+export function waitlistJoinPhrase(say: Say, byItself: boolean): string {
+  return say(byItself ? "cta.fullJoin" : "cta.fullJoinByHand");
+}
+
+/**
  * "42 de participanți confirmați — 39 cu numele afișat": the start list's own total, above it.
  *
  * `confirmed` is every confirmed, real registration of the event and `named` those of them who

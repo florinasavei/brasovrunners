@@ -22,7 +22,7 @@ import type { ReactNode } from "react";
 import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { fullThanksPhrase, waitlistOfferPhrase } from "@/modules/events/ui/counted-phrases";
+import { fullThanksPhrase, waitlistJoinPhrase, waitlistOfferPhrase } from "@/modules/events/ui/counted-phrases";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { memberBibTickedAtFirst } from "@/modules/registrations/domain/member-bib";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
@@ -274,7 +274,8 @@ export type RegistrationFormInput = {
   fromWaitlist?: boolean;
   /**
    * For `WAITLIST`: the club's offer window («Termene», `offerHours`, §377), and whether a place goes to the line by itself
-   * (`registration-cta.ts#offersByItself`, §NNN) — else the organizers' words; null says no offer sentence.
+   * (`registration-cta.ts#offersByItself`, §NNN) — else the organizers' words, in the join sentence and the offer
+   * sentence alike; null says no offer sentence, and the join sentence reads as «Da», the setting's default.
    */
   offer: { hours: number; byItself: boolean } | null;
   /** The family sitting's next form (§519): who was sent so far, above the form. */
@@ -404,7 +405,10 @@ export async function registrationForm({
                 ? fullThanksPhrase(tEvent, locale, fullCounts.capacity, fullCounts.waiting)
                 : tEvent("cta.fullLead")}
           </AlertTitle>
-          <Typography variant="body2">{tEvent("cta.fullJoin")}</Typography>
+          {/* What the list does, by the offer line's own rule (§NNN): «te anunțăm…» only while a freed place reaches it by itself. */}
+          <Typography variant="body2" data-testid="registration-waitlist-join">
+            {waitlistJoinPhrase(tEvent, offer?.byItself ?? true)}
+          </Typography>
           {offer !== null && (
             <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="registration-waitlist-offer">
               {waitlistOfferPhrase(tEvent, locale, offer.hours, offer.byItself)}

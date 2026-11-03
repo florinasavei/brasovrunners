@@ -2,7 +2,7 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { confirmedPhrase, fillPhrase, startListHeadline, waitlistOfferPhrase, waitlistRoomPhrase } from "@/modules/events/ui/counted-phrases";
+import { confirmedPhrase, fillPhrase, startListHeadline, waitlistJoinPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "@/modules/events/ui/counted-phrases";
 
 /**
  * §346 — the two counted sentences an event page can show, assembled from the real catalogues.
@@ -169,6 +169,17 @@ describe("§587 waitlistOfferPhrase — how an offer works, with the club's own 
     expect(enByHand).toBe("The organizers give out the places one at a time: when they can give you one, you get an email and 24 hours to confirm.");
     expect(enByHand).not.toContain("frees up");
     expect(enByHand).not.toContain("passes on");
+  });
+
+  it("§NNN the join sentence by the same rule: «te anunțăm…» only while a freed place reaches the line by itself", () => {
+    expect(waitlistJoinPhrase(translator("ro"), true)).toBe("Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.");
+    expect(waitlistJoinPhrase(translator("en"), true)).toBe("Join the waiting list — we email you when a place frees up.");
+    const roByHand = waitlistJoinPhrase(translator("ro"), false);
+    expect(roByHand).toBe("Intră pe lista de așteptare — organizatorii îți scriu pe email când îți pot da un loc.");
+    expect(roByHand).not.toContain("se eliberează");
+    const enByHand = waitlistJoinPhrase(translator("en"), false);
+    expect(enByHand).toBe("Join the waiting list — the organizers email you when they can give you a place.");
+    expect(enByHand).not.toContain("frees up");
   });
 
   it("stays under 200 characters at the longest window the club may set", () => {

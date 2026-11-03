@@ -14,7 +14,7 @@ import { cachedDeadlines, cachedStartListCounts } from "@/modules/public-cache/r
 import { hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
 import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import { offersByItself } from "../domain/registration-cta";
-import { fillPhrase, fullThanksPhrase, offeredPhrase, waitingPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
+import { fillPhrase, fullThanksPhrase, offeredPhrase, waitingPhrase, waitlistJoinPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
 import { type PreviewDoor, readRegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { doorButtonLabel } from "./RegistrationDoorButton";
 
@@ -169,7 +169,8 @@ export default async function RegistrationCta({
             {fullThanksPhrase(t, locale, fill?.capacity ?? null, cta.waiting)}
           </Typography>
           <Typography variant="body1" component="p">
-            {t("cta.fullJoin")}
+            {/* What the list does, true whether or not a place reaches it by itself (§NNN): the offer line's rule below. */}
+            {waitlistJoinPhrase(t, offersByItself(event, 0))}
           </Typography>
         </Box>
 

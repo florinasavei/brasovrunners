@@ -6,7 +6,8 @@ import { openRegistrationClosing, registrationState } from "../domain/registrati
 import type { PublicEvent } from "../repository";
 import { GROUP_GAP, LINE_GAP, ROW_ICON_SX } from "./card-layout";
 import { countForm } from "@/i18n/count-form";
-import { fullThanksPhrase, openLinePhrases, waitlistRoomPhrase } from "./counted-phrases";
+import { fullThanksPhrase, openLinePhrases, waitlistJoinPhrase, waitlistRoomPhrase } from "./counted-phrases";
+import { offersByItself } from "../domain/registration-cta";
 import type { RegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { type ButtonCta, doorButtonLabel, hasDoorButton } from "./RegistrationDoorButton";
 
@@ -30,8 +31,9 @@ export type CardRegistrationLine = {
   detailWraps?: boolean;
   /**
    * A full event with a waiting list (§587): what the list does, on a line of its own under the
-   * lead — "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc." Absent
-   * in every other state.
+   * lead — "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.", or, while
+   * no place reaches the list by itself (§NNN), "… — organizatorii îți scriu pe email când îți pot da
+   * un loc." Absent in every other state.
    */
   note?: string;
   /**
@@ -169,7 +171,8 @@ export function cardRegistrationLine(
         ...quiet,
         lead,
         leadParts: { before: "", fact: lead, after: "" },
-        note: say("cta.fullJoin"),
+        // What the list does, as the page says it (§NNN): «te anunțăm…» only while a freed place reaches it by itself.
+        note: waitlistJoinPhrase(say, offersByItself(event, 0)),
         // The room a capped list has left, as the page's door says it (§594, §348); a list with no limit says nothing.
         ...(cta.waitlistRoom !== null ? { roomLine: waitlistRoomPhrase(say, locale, cta.waitlistRoom) } : {}),
         ...(closesText ? { quietLine: openUntil } : {}),

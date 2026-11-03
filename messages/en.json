@@ -503,6 +503,7 @@
         "other": "{count} places offered from the waiting list"
       },
       "fullJoin": "Join the waiting list — we email you when a place frees up.",
+      "fullJoinByHand": "Join the waiting list — the organizers email you when they can give you a place.",
       "fullOffer": "When a place frees up, you get an email and {hours} to confirm — then it passes on.",
       "fullOfferByHand": "The organizers give out the places one at a time: when they can give you one, you get an email and {hours} to confirm.",
       "waitlistFull": "All places are taken and the waiting list is full — sorry.",
@@ -7512,6 +7513,7 @@
           }
         },
         "machinery": "The button, the link inside it, the QR code, the attachments, the greeting and the sign-off stay the default ones: they carry tokens and files, not words.",
+        "followsSettings": "The default text follows «Places from the waiting list are allocated automatically» and «I hand out the free places myself»; a text saved here replaces it, however they are set.",
         "samplesTitle": "The saved text holds sample values, not fields",
         "samplePairWhere": "“{value}” — {where}; in its place: {replacement}",
         "samplesHelp": "Every participant would receive exactly these words. “Replace with the fields” puts the right field in place of each value and saves the text.",

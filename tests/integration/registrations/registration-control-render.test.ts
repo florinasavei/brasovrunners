@@ -242,4 +242,28 @@ describe("§NNN how an offer works, on the full event's door", () => {
     locale = "en";
     expect(await offerLine()).toContain(auto.en);
   });
+
+  it("the join sentence keeps the same rule, on the page and the card: «te anunțăm…» only while a freed place reaches the line by itself", async () => {
+    const cases = [
+      { settings: { freePlacesByOfferOnly: true, waitlistAutoOffer: true }, byItself: false },
+      { settings: { waitlistAutoOffer: false }, byItself: false },
+      { settings: { waitlistAutoOffer: true }, byItself: true },
+    ];
+    for (const { settings, byItself } of cases) {
+      await resetTables(db);
+      for (const [lang, words] of [["ro", ro], ["en", en]] as const) {
+        locale = lang;
+        if (lang === "ro") await take((await publish(settings)).id, 20);
+        const said = byItself ? words.Event.cta.fullJoin : words.Event.cta.fullJoinByHand;
+        const unsaid = byItself ? words.Event.cta.fullJoinByHand : words.Event.cta.fullJoin;
+        const html = await page();
+        expect(html, `${lang} ${JSON.stringify(settings)}`).toContain('data-testid="registration-waitlist-message"');
+        expect(text(html)).toContain(said);
+        expect(text(html)).not.toContain(unsaid);
+        const card = await cardLine();
+        expect(card).toContain(said);
+        expect(card).not.toContain(unsaid);
+      }
+    }
+  });
 });

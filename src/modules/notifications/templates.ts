@@ -1259,7 +1259,9 @@ export type TemplateData = {
    * `WAITLIST_JOINED` (§NNN): the person waits for the organizers to give out the places, not because every place is
    * held — «Locurile libere le dau doar eu» is in force, or a place nobody holds stands beside the line (`render.ts#waitlistByHand`,
    * the allocator's rule read at render time). The message then says the organizers give the places one at a time and
-   * never «este complet»: the event is not full. Absent: every place is held, and the event is full.
+   * never «este complet»: the event is not full. Absent: every place is held, and the event is full — and the promise
+   * after «este complet momentan» is still the organizers' while no place reaches the line by itself («Nu»: the
+   * standing's `autoOffer` false, `templates.ts#organizersGiveThePlaces`).
    */
   waitlistByHand?: boolean;
   /**
@@ -1696,14 +1698,16 @@ const T = {
       /*
         Full, or the organizers' places (§NNN): while «Locurile libere le dau doar eu» is in force, or a place nobody
         holds stands beside the line, the event is not full — the person waits for the organizers to give the places,
-        so it says that, never «este complet» (`waitlistByHand`, read at render time by the allocator's rule).
+        so it says that, never «este complet» (`waitlistByHand`, read at render time by the allocator's rule). Full
+        with «Nu», «este complet» stays true, but no freed place reaches anybody by itself: the promise is the
+        organizers' too, never «Te vom anunța dacă se eliberează un loc.» (`organizersGiveThePlaces`).
       */
       body: (d: TemplateData) => [
         d.waitlistResent
-          ? `Îți retrimitem emailul: ești în continuare **pe lista de așteptare** la ${d.eventTitle ?? "eveniment"}. ${d.waitlistByHand ? "Locurile le dau organizatorii, pe rând: îți scriem când îți putem da un loc." : "Te vom anunța dacă se eliberează un loc."}`
+          ? `Îți retrimitem emailul: ești în continuare **pe lista de așteptare** la ${d.eventTitle ?? "eveniment"}. ${organizersGiveThePlaces(d) ? "Locurile le dau organizatorii, pe rând: îți scriem când îți putem da un loc." : "Te vom anunța dacă se eliberează un loc."}`
           : d.waitlistByHand
             ? `La ${d.eventTitle ?? "eveniment"}, locurile le dau organizatorii, pe rând: te-am trecut **pe lista de așteptare** și îți scriem când îți putem da un loc.`
-            : `${d.eventTitle ?? "Evenimentul"} este complet momentan, așa că te-am adăugat **pe lista de așteptare**. Te vom anunța dacă se eliberează un loc.`,
+            : `${d.eventTitle ?? "Evenimentul"} este complet momentan, așa că te-am adăugat **pe lista de așteptare**. ${organizersGiveThePlaces(d) ? "Locurile le dau organizatorii, pe rând: îți scriem când îți putem da un loc." : "Te vom anunța dacă se eliberează un loc."}`,
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
@@ -2691,10 +2695,10 @@ const T = {
       subject: "You're on the waiting list",
       body: (d: TemplateData) => [
         d.waitlistResent
-          ? `We are sending this again: you are still on **the waiting list** for ${d.eventTitle ?? "the event"}. ${d.waitlistByHand ? "The organizers give out the places one at a time: we will write to you when we can give you a place." : "We'll let you know if a place opens up."}`
+          ? `We are sending this again: you are still on **the waiting list** for ${d.eventTitle ?? "the event"}. ${organizersGiveThePlaces(d) ? "The organizers give out the places one at a time: we will write to you when we can give you a place." : "We'll let you know if a place opens up."}`
           : d.waitlistByHand
             ? `At ${d.eventTitle ?? "the event"}, the organizers give out the places one at a time: we have put you on **the waiting list** and will write to you when we can give you a place.`
-            : `${d.eventTitle ?? "The event"} is full right now, so we added you to **the waiting list**. We'll let you know if a place opens up.`,
+            : `${d.eventTitle ?? "The event"} is full right now, so we added you to **the waiting list**. ${organizersGiveThePlaces(d) ? "The organizers give out the places one at a time: we will write to you when we can give you a place." : "We'll let you know if a place opens up."}`,
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
@@ -3574,6 +3578,18 @@ function participantsPhrase(locale: EmailLocale, count: number): string {
   const form = countForm(count, locale);
   if (locale === "ro") return form === "one" ? "un participant" : form === "few" ? `${count} participanți` : `${count} de participanți`;
   return form === "one" ? "one participant" : `${count} participants`;
+}
+
+/**
+ * Whether `WAITLIST_JOINED` promises the organizers' word rather than a notice when a place frees up (§NNN): no place
+ * reaches the line by itself — «Nu», or «Locurile libere le dau doar eu» in force: the standing's `autoOffer`, the
+ * allocator's own `offersOnItsOwn` read with the person's place in the line (`readWaitlistPosition`), the fact the
+ * position sentence below is worded by — or the person waits beside a place nobody holds (`waitlistByHand`). The event
+ * may still be «complet momentan», but «Te vom anunța dacă se eliberează un loc.» would promise a notice no freed place
+ * sends. Read only while the person still waits: with no standing, nothing is said of the line and the promise stays.
+ */
+function organizersGiveThePlaces(d: TemplateData): boolean {
+  return d.waitlistByHand === true || d.waitlistStanding?.autoOffer === false;
 }
 
 /**
