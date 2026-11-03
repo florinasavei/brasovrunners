@@ -2,6 +2,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
+import AssignmentLateIcon from "@mui/icons-material/AssignmentLate";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
@@ -116,6 +117,8 @@ export const STATUS_GLYPHS = {
   checkedIn: HowToRegIcon,
   // «Elită» on a registration (§897): the medal the elite card and the «⋮»'s «Marchează ca elită» wear.
   elite: MilitaryTechIcon,
+  // «Date lipsă» on a registration (§NNN): answers the form requires that the row does not hold — the late form.
+  missingAnswers: AssignmentLateIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;

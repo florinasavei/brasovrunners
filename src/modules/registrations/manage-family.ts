@@ -1,5 +1,6 @@
 import { and, desc, eq, inArray, or } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import { events } from "@/db/schema/events";
 import { ACTIVE_REGISTRATION_STATUSES, type Registration, registrations, type RegistrationStatus } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { isUuid } from "@/shared/ids";
@@ -8,6 +9,7 @@ import { compareFamilyOrder, withFamilyRank } from "./domain/family-sitting";
 import { sittingOrderFor } from "./family-sitting";
 import type { WaitlistStanding } from "./domain/waitlist-standing";
 import { findRegistrationById, readWaitlistPosition } from "./repository";
+import { type MissingAnswer, missingAnswers } from "./missing-answers";
 
 /**
  * «Gestionează înscrierea» per person (§547, amending §77 and §471; the owner, 2026-09-28, walking a
@@ -61,6 +63,13 @@ export type ManagedPerson = {
   anotherAdult: boolean;
   /** How the latest declaration was accepted — online (a signed PDF was emailed) or on paper at the desk (§67); null when none. */
   declarationMethod: "EMAIL_LINK" | "PAPER" | null;
+  /**
+   * «Completează-ți datele» (§NNN): the answers the public form requires of this person that the row does not hold
+   * (`missing-answers.ts`), in the form's order — the names only, never a value; empty for a complete registration.
+   */
+  missingAnswers: MissingAnswer[];
+  /** When the answers were written (§654): the day a guardian is owed against, for the box that asks one. */
+  answersWrittenAt: Date;
   /** The registration the link itself names. */
   own: boolean;
   /**
@@ -92,6 +101,20 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
       resultsNameConsent: registrations.resultsNameConsent,
       resultsConsentVersion: registrations.resultsConsentVersion,
       birthDate: registrations.birthDate,
+      // What `missingAnswers` reads (§NNN): the answers themselves never leave this function.
+      source: registrations.source,
+      answersWrittenAt: registrations.answersWrittenAt,
+      firstName: registrations.firstName,
+      lastName: registrations.lastName,
+      sex: registrations.sex,
+      nationality: registrations.nationality,
+      country: registrations.country,
+      city: registrations.city,
+      phone: registrations.phone,
+      emergencyContactName: registrations.emergencyContactName,
+      emergencyContactPhone: registrations.emergencyContactPhone,
+      guardianName: registrations.guardianName,
+      tshirtSize: registrations.tshirtSize,
     })
     .from(registrations)
     .where(
@@ -102,6 +125,8 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
       ),
     );
   const ids = rows.map((row) => row.id);
+  // Whether the event asks the T-shirt, for the answers the form owes (§NNN): one primary-key read.
+  const [event] = await db.select({ kitShirt: events.kitShirt }).from(events).where(eq(events.id, own.eventId)).limit(1);
   const methods = new Map<string, "EMAIL_LINK" | "PAPER">();
   if (ids.length > 0) {
     const acceptances = await db
@@ -132,6 +157,8 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
     birthDate: row.birthDate,
     anotherAdult: anotherAdultOnTheLink(own, row, now),
     declarationMethod: methods.get(row.id) ?? null,
+    missingAnswers: missingAnswers({ kitShirt: event?.kitShirt ?? false }, row),
+    answersWrittenAt: row.answersWrittenAt,
     own: row.id === own.id,
     waitlistStanding: standings.get(row.id) ?? null,
   }));

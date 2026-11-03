@@ -23,14 +23,18 @@ import { CLUB_TIME_ZONE, formatDateInWords, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { CLUB_LOCALITY, ID_DOCUMENT_EXAMPLE } from "@/modules/events/domain/place";
-import { findEventNotificationDetails } from "@/modules/events/repository";
+import { findEventForRegistrationById, findEventNotificationDetails } from "@/modules/events/repository";
 import { findEventDeclaration } from "@/modules/legal-documents/repository";
 import { DEADLINE_RULES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { leadPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines, cachedPromotionalMaterialsOffered, cachedPromotionalMaterialsShared, cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { fillIn } from "@/shared/forms/fill-in";
 import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues, minimumAgeMergeValue } from "@/modules/legal-documents/domain/merge-fields";
-import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
+import { dayIn, effectiveMinimumAge } from "@/modules/registrations/domain/age";
+import { readAnswersRefusal } from "@/modules/registrations/complete-answers";
+import { birthDateBounds } from "@/modules/registrations/form-view";
+import { answersToAsk, COMPLETE_ANSWERS_ID, missingAnswers } from "@/modules/registrations/missing-answers";
+import { missingAnswersFields } from "@/modules/registrations/ui/MissingAnswersFields";
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 import { listSocialsMergeValues } from "@/modules/registrations/list-socials-words";
 import { listNumbersMergeValues } from "@/modules/registrations/list-number-words";
@@ -138,8 +142,12 @@ async function familyDoneHref(eventId: string, locale: "ro" | "en"): Promise<str
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  /** `reason`: the box a «Renunț» without its reason named (§558) — `kind`, `text` or `long`. */
-  searchParams: Promise<{ done?: string; invalid?: string; changed?: string; full?: string; reminder?: string; reason?: string }>;
+  /**
+   * `reason`: the box a «Renunț» without its reason named (§558) — `kind`, `text` or `long`. `answers`: beside
+   * `invalid=answers`, the boxes of «Completează-ți datele» a press left empty or the form's rule refused, and the
+   * rule's marker (§NNN) — names only, read through `readAnswersRefusal`.
+   */
+  searchParams: Promise<{ done?: string; invalid?: string; changed?: string; full?: string; reminder?: string; reason?: string; answers?: string }>;
 };
 
 /**
@@ -181,7 +189,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, changed, full, reminder, reason } = await searchParams;
+  const { done, invalid, changed, full, reminder, reason, answers: answersParam } = await searchParams;
   const t = await getTranslations("Registrations");
   // "Opens in a new tab", said once for every legal link, in the form's own catalogue.
   const formCopy = await getTranslations("Registration");
@@ -351,7 +359,12 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     below was written for it and said it a screen away from the box.
   */
   const acceptRefused = signing && invalid === "accept";
-  const pressFailed = signing && Boolean(invalid) && !nameRefused && !documentRefused && !acceptRefused;
+  /*
+    `invalid=answers` is «Completează-ți datele» refused (§NNN): an answer the form requires left empty, or one its
+    rule refused — said at the boxes, with the kept draft, never as the generic sentence.
+  */
+  const answersRefusal = signing && invalid === "answers" ? readAnswersRefusal(answersParam) : null;
+  const pressFailed = signing && Boolean(invalid) && !nameRefused && !documentRefused && !acceptRefused && invalid !== "answers";
 
   /**
    * Which event, and by when — the two facts BR-REQ-041-01 criterion 3 and AGENTS.md §18.5
@@ -507,7 +520,17 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     succeeds clears it (`signDeclarationAction`); whoever can open this path holds the link that
     signs anyway, so an island whose only job is deleting it would not earn its JavaScript.
   */
-  const draft = nameRefused || documentRefused || acceptRefused ? await readFormDraft() : null;
+  const draft = nameRefused || documentRefused || acceptRefused || answersRefusal !== null ? await readFormDraft() : null;
+  /*
+    «Completează-ți datele» (§NNN): the answers the public form requires of this person that the registration does
+    not hold — a staff entry, a line of the internal list moved onto the official one. Asked first, above the
+    signature, with the form's own boxes, and saved with it in one transaction; the signature is refused while any
+    is missing. A complete registration reads nothing more and draws nothing more.
+  */
+  const formEvent = formBelow && registration ? await findEventForRegistrationById(db, registration.eventId) : undefined;
+  const owed = formEvent && registration ? missingAnswers(formEvent, registration) : [];
+  const answersAsked = answersToAsk(owed, false);
+  const completeLink = (chunks: ReactNode) => <MuiLink href={`#${COMPLETE_ANSWERS_ID}`}>{chunks}</MuiLink>;
   const draftKind = (value: string | undefined) => ID_DOCUMENT_TYPES.find((kind) => kind === value) ?? "ID_CARD";
   const documentKinds = ID_DOCUMENT_TYPES.map((kind) => ({ kind, label: t(`declare.idDocumentTypes.${kind}`) }));
   const contact = (chunks: ReactNode) => <MuiLink href={contactHref}>{chunks}</MuiLink>;
@@ -632,6 +655,15 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               )}
             </Alert>
           )}
+          {/*
+            «Completează-ți datele» (§NNN), said before the declaration's text: the boxes are above the signature,
+            and nobody should reach the end of a page of legal text to learn that something is still asked of them.
+          */}
+          {owed.length > 0 && (
+            <Alert severity="warning" sx={{ mb: 3 }} data-testid="complete-answers-lead">
+              {t.rich("complete.declareLead", { link: completeLink })}
+            </Alert>
+          )}
 
           {/*
             The text with its blanks filled for this person and this event (§95): the name they
@@ -754,6 +786,26 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   (BR-REQ-033-02 criterion 6). */}
               <input type="hidden" name="documentId" value={declaration?.id ?? ""} />
               <input type="hidden" name="contentSha256" value={declaration?.contentSha256 ?? ""} />
+              {/*
+                «Completează-ți datele» (§NNN), first in the form: only the answers missing, with the public form's
+                own boxes, saved with the signature in one transaction — a refusal of either keeps what was typed.
+              */}
+              {owed.length > 0 && formEvent && registration &&
+                (await missingAnswersFields({
+                  ...answersAsked,
+                  locale,
+                  birthDate: {
+                    ...birthDateBounds(effectiveMinimumAge(formEvent.minAge), dayIn(formEvent.startsAt, formEvent.timezone), now),
+                    eventDay: dayIn(formEvent.startsAt, formEvent.timezone),
+                    minAge: effectiveMinimumAge(formEvent.minAge),
+                  },
+                  minorOn: registration.answersWrittenAt.toISOString(),
+                  invalid: answersRefusal?.invalid ?? new Set(),
+                  refusal: { tooYoung: answersRefusal?.tooYoung === true, emergencySame: answersRefusal?.emergencySame === true },
+                  draft,
+                  heading: familyCurrent ? t("complete.titleFor", { name: registration.registeredName }) : t("complete.title"),
+                  refused: answersRefusal ? { note: t("complete.refusedNothingSigned"), sentences: [] } : null,
+                }))}
               {/* The box names the liability paragraph, so its limits are accepted expressly (§418, Civil Code art. 1203). */}
               {/* The glyph leads the words, as on every box of the form's «Acorduri» (§570 round 2). */}
               <CheckboxField
