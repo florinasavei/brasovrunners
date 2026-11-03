@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.16` | «Voluntari» closed by default (§900) |
 | `BR-V4.15` | the release finds qa's migration run on the merge commit (§899) |
 | `BR-V4.14` | «Căutăm voluntari» under «Cine vine» (§898) |
 | `BR-V4.13` | «Elită» on a registration: an Administrator marks any runner elite at any time, only the bib changes (§897) |
