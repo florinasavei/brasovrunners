@@ -2892,6 +2892,13 @@ BR-REQ-037-05):
      written; the waiting-list email the entry queued is withdrawn unsent in that transaction, so the person gets
      one email, the offer. A row the allocator gave a place keeps it. After the start both are refused
      (`VOUCHED_ENTRY_AFTER_START`). The person still signs their own declaration, from the email.
+     A third verb on the line, the Administrator's too, enters nobody: **«Mută pe lista de elită»**
+     (`moveReserveEntryToEliteAction` → `moveReserveEntryToElite`, `DECISIONS.md` §NNN) writes the line's name
+     onto the race's elite list (§895) — printed on a bib where the number goes; no participant, place, queue,
+     email or declaration, so no address is asked and §10.8 stays whole — and deletes the line, in one
+     transaction under the event row's lock (the one `addEliteEntry` takes). The name is stored as the elite
+     list stores one (`parseEliteEntry`; longer than `ELITE_NAME_MAX`, refused and nothing written), with no
+     number and without the note. Audited `event_elite.added` and `event_reserve.moved`, ids only.
    - **An offer to a named person** («Trimite-i oferta», `offerPlaceToByStaff`, `DECISIONS.md`
      §615, §642). Administrator only (`canManageRegistrations`). The ordinary offer and its email
      to the waiting-list entry the Administrator picks, at any moment before the start — after the

@@ -520,8 +520,9 @@ export type AuditAction =
   | "event_todo.deleted"
   /**
    * «Lista internă de așteptare» (§854), entity `event`: a person written down, their note saved, the line
-   * deleted, or moved to the official list (`registrationId` the registration it became). The metadata is
-   * the line's id only — never a name, an address or the note's words.
+   * deleted, or moved to the official list (`registrationId` the registration it became) or onto the elite list
+   * (`eliteEntryId` the elite line it became, §NNN). The metadata is ids only — never a name, an address or the
+   * note's words.
    */
   | "event_reserve.added"
   | "event_reserve.note_saved"
@@ -529,7 +530,8 @@ export type AuditAction =
   | "event_reserve.moved"
   /**
    * «Elită — doar numele pe BIB» (§895), entity `event`: a name written onto the race's elite list, or deleted from it.
-   * The metadata is the line's id only — never the name or its number: the line is a name to print, not a person's file.
+   * The metadata is the line's id only — never the name or its number: the line is a name to print, not a person's file;
+   * a line moved there from the internal list also names the internal line's id (`reserveEntryId`, §NNN).
    */
   | "event_elite.added"
   | "event_elite.deleted"

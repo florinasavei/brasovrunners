@@ -108,6 +108,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   addToWaitlistAction: ["waitlistAddAction"],
   // «Mută pe lista oficială» / «Oferă-i un loc acum» (§888): an entry that emails the person, asked first on each internal-list line, the relay tick in the dialog.
   moveReserveEntryAction: ["moveAction"],
+  // «Mută pe lista de elită» (§NNN): the line gone and its note with it, asked first on each internal-list line, naming the person; handed to the panel as `eliteMoveAction`.
+  moveReserveEntryToEliteAction: ["eliteMoveAction"],
   // «Modifică datele» (§645): asks, naming the person and the fields the press changes.
   editRegistrationAnswersAction: [],
   // «Nu e membru» / «E membru» from the list's ⋮ and the sweep «Scoate bifa la cele {n}» (§645): each names whom it changes.
