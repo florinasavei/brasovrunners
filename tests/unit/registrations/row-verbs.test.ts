@@ -340,10 +340,10 @@ describe("BR-REQ-037-07 the special guests list's one predicate (§648)", () => 
 });
 
 /**
- * §NNN (the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând») — «Marchează ca elită» / «Nu mai
+ * §897 (the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând») — «Marchează ca elită» / «Nu mai
  * e elită» on the row: how the bib prints and nothing else, so every state offers it, and only to the Administrator.
  */
-describe("§NNN the elite mark on the row", () => {
+describe("§897 the elite mark on the row", () => {
   it("is offered to the Administrator in every state, one of the two words by the row's own mark, above the erase", () => {
     for (const status of ALL) {
       for (const role of ["ADMIN", "SUPERADMIN"] as const) {

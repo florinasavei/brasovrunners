@@ -11,7 +11,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând») — the registrations list's «⋮»
+ * §897 (the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând») — the registrations list's «⋮»
  * offers «Marchează ca elită» or «Nu mai e elită» by the row's own mark, with the medal, to the Administrator in every
  * state, from a hidden form that asks nothing and comes back to the list; the Organizer gets neither. A marked row
  * wears «Elită» on the list and on the registration's page, for every role that reads them. What is shown is a courtesy
@@ -193,7 +193,7 @@ beforeEach(async () => {
   state.locale = "ro";
 });
 
-describe("§NNN the elite mark on the registrations list", () => {
+describe("§897 the elite mark on the registrations list", () => {
   it("offers «Marchează ca elită» or «Nu mai e elită» by the row's own mark, with the medal, in every state", async () => {
     const race = await createRace();
     state.actor = await staff("ADMIN");

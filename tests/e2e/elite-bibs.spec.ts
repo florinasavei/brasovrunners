@@ -15,7 +15,7 @@ import { openEditorBox, openFold } from "./support/fold";
  * land back on the card with its fold open (`#bib-elite`) and the toast; a number already on the list is refused on its
  * box with what was typed kept; «Salvează» on the event posts nothing of the card — its required name box empty does not
  * block the save, and no line is added or doubled; the delete asks first, naming the person. As the Organizer: the list
- * and its sheet, never the add box or a delete. And a registered runner marked «Elită» (§NNN) from the registrations
+ * and its sheet, never the add box or a delete. And a registered runner marked «Elită» (§897) from the registrations
  * list's «⋮» — a client menu submitting a hidden form — wears the chip, is listed «înscris» on the card and counted in
  * its sheet, and comes off from the same menu.
  *
@@ -57,7 +57,7 @@ async function seedRace(tag: string): Promise<string> {
   });
 }
 
-/** A confirmed runner of the race, wearing `bibNumber` — a registration, for the elite mark (§NNN). */
+/** A confirmed runner of the race, wearing `bibNumber` — a registration, for the elite mark (§897). */
 async function seedRunner(eventId: string, tag: string, name: string, bibNumber: number): Promise<string> {
   return withDatabase(async (client) => {
     const email = `elite-mark-${tag}@test.invalid`;
@@ -184,7 +184,7 @@ test.describe("§895 «Elită — doar numele pe BIB»", () => {
     expect(await eliteLines(eventId)).toEqual([]);
   });
 
-  // §NNN (the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând», «Rămâne înscris»).
+  // §897 (the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând», «Rămâne înscris»).
   test("the Administrator marks a registered runner elite from the list's «⋮» and unmarks them; the elite card lists them «înscris»", async ({ page }) => {
     const tag = `${test.info().project.name}-mark-${Date.now().toString(36)}`;
     const eventId = await seedRace(tag);

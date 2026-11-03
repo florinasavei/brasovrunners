@@ -178,7 +178,7 @@ export default async function EventBibsPage({ params }: Props) {
                   no longer do either. `m=1` is read by nobody: the route answers a row's picture
                   with an hour's cache, and a member added on «Echipa» must change the address the
                   grid asks, or it shows the ordinary bib the sheet no longer prints (§664). `e=1` the same for the
-                  elite mark (§NNN): marked or unmarked, the picture is the sheet's. */}
+                  elite mark (§897): marked or unmarked, the picture is the sheet's. */}
               <Box
                 component="img"
                 src={bibPictureSrc({ eventId: id, registrationId: bib.id, locale, stamp: pictureStamp, member: bib.member, elite: bib.elite })}

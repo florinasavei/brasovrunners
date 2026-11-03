@@ -7,7 +7,7 @@ import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { bibPictureSrc } from "@/modules/registrations/domain/bib-stamp";
 
 /**
- * §NNN (the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând», «Rămâne înscris») — a registration
+ * §897 (the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând», «Rămâne înscris») — a registration
  * marked «Elită» prints with §895's elite drawing, not a second one: the name where the number goes, its own race
  * number under it only with «Număr pe BIB-urile de elită», the sponsors' row only with «Banda de sponsori pe
  * BIB-urile de elită», never the members' design — on the ordinary sheet and on the elite sheet after the list.
@@ -32,7 +32,7 @@ const rows = [
 ];
 const pages = (pdf: Buffer) => pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length ?? 0;
 
-describe("§NNN a marked registration on the ordinary sheet", () => {
+describe("§897 a marked registration on the ordinary sheet", () => {
   it("draws the name in the number's place with no name strip, and the number only when ticked", async () => {
     const plain = await drawn(() => renderBibSheet({ ...base, rows, design: { ...DEFAULT_BIB_DESIGN, numberFormat: "pad3" } }));
     expect(plain.filter((run) => run.text === "Ana Pop")).toEqual([{ text: "Ana Pop", width: undefined }]);
@@ -72,7 +72,7 @@ describe("§NNN a marked registration on the ordinary sheet", () => {
   });
 });
 
-describe("§NNN the elite sheet", () => {
+describe("§897 the elite sheet", () => {
   it("prints the list's names first, then the marked registrations, each an elite bib", async () => {
     const elite = [{ name: "Eliud Kipchoge", bibNumber: null }];
     const marked = [{ bibNumber: 7, registeredName: "Ana Pop", elite: true }];
@@ -86,7 +86,7 @@ describe("§NNN the elite sheet", () => {
   });
 });
 
-describe("§NNN the picture's address", () => {
+describe("§897 the picture's address", () => {
   it("changes with the mark, so a browser never keeps the hour-old picture", () => {
     const input = { eventId: "e", registrationId: "r", locale: "ro", stamp: "s" };
     expect(bibPictureSrc(input)).toBe("/api/admin/events/e/bibs/preview?registration=r&locale=ro&v=s");

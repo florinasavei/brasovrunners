@@ -170,7 +170,7 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
     expect(block(await render({ elite }, "en"), "bib-elite")).toContain("Elite — the name only on the bib");
   });
 
-  // §NNN: a registration marked «Elită» on the registrations list prints on the same sheet, so the card lists it.
+  // §897: a registration marked «Elită» on the registrations list prints on the same sheet, so the card lists it.
   it("lists the registrations marked «Elită» read-only, «înscris», in its count and its sheet's, and says where they are marked", async () => {
     const registered = [{ id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Ana Pop", bibNumber: 12 }];
     const card = block(await render({ elite: { ...elite, registered } }), "bib-elite");

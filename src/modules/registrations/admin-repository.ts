@@ -63,7 +63,7 @@ export type RegistrationListRow = {
   kind: RegistrationKind;
   /** «În afara locurilor» (§643): seated outside the event's places — the row's chip and the export's column. */
   outsideCapacity: boolean;
-  /** «Elită» (§NNN): the bib prints as an elite bib — the row's chip and the «⋮»'s mark or unmark. */
+  /** «Elită» (§897): the bib prints as an elite bib — the row's chip and the «⋮»'s mark or unmark. */
   elite: boolean;
   /** «Folosește lista de invitați speciali» of the row's event (§647): the «⋮» offers «Pune pe listă» only while it is on (§747). */
   eventHiddenListEnabled: boolean;
@@ -271,7 +271,7 @@ function memberVerifiedOf(members: readonly string[]): SQL<boolean> {
 /**
  * The members' race number asked for and not verified (§664), in the bibs sheet's own scope: a real row
  * with a number (`bibs.ts#bibScopeWhere`), that wants it, at an event that offers it, whose address is no
- * member account's and not marked «Elită» (an elite bib is never the ordinary one, §NNN) — so the list the bibs
+ * member account's and not marked «Elită» (an elite bib is never the ordinary one, §897) — so the list the bibs
  * page links to counts what its line counts. The event's switch
  * is read through its own `EXISTS`, never through the caller's joins: the summary and the count select
  * no `events`, and a condition naming it there failed the whole page.
@@ -746,7 +746,7 @@ export type RegistrationDetail = {
   kind: RegistrationKind;
   /** «În afara locurilor» (§643): read by every role that reads the page, changed by the Administrator only. */
   outsideCapacity: boolean;
-  /** «Elită» (§NNN): the bib prints as an elite bib — the page's chip, for every role that reads it. */
+  /** «Elită» (§897): the bib prints as an elite bib — the page's chip, for every role that reads it. */
   elite: boolean;
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
   source: RegistrationSource;
@@ -1182,7 +1182,7 @@ export type DeskRegistration = {
    * browser kept for the cache hour.
    */
   bibStamp: string;
-  /** «Elită» (§NNN): the bib prints as an elite bib — part of the picture's address, so a mark is a fresh picture. */
+  /** «Elită» (§897): the bib prints as an elite bib — part of the picture's address, so a mark is a fresh picture. */
   elite: boolean;
   /**
    * Whether the settled number is on paper (§264), and when the row left the live states

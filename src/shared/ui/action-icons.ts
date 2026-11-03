@@ -220,7 +220,7 @@ export type ActionIconName =
   | "print"
   | "markPrinted"
   | "markUnprinted"
-  // «Marchează ca elită» / «Nu mai e elită» on a registration's «⋮» (§NNN): the medal the elite card wears (`panel-glyphs.ts#bibElite`, §895).
+  // «Marchează ca elită» / «Nu mai e elită» on a registration's «⋮» (§897): the medal the elite card wears (`panel-glyphs.ts#bibElite`, §895).
   | "elite"
   // Files and mail. Sending an email again — a registration's, a staff invitation, a password
   // reset — is one verb and one glyph, the envelope going back out (§318).

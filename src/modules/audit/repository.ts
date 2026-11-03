@@ -88,7 +88,7 @@ export type AuditAction =
   | "registration.bibs_printed"
   | "registration.bibs_unprinted"
   /**
-   * «Marchează ca elită» / «Nu mai e elită» (§NNN): an Administrator marked this registration's bib to print as an
+   * «Marchează ca elită» / «Nu mai e elită» (§897): an Administrator marked this registration's bib to print as an
    * elite bib, or took the mark off. The metadata is the new value alone (`{ elite }`) — never a name or a number:
    * the mark changes how the bib prints and nothing of the registration.
    */

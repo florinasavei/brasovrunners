@@ -18,7 +18,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Marchează ca elită» / «Nu mai e elită» (§NNN; the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită
+ * «Marchează ca elită» / «Nu mai e elită» (§897; the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită
  * oricând», choosing «Rămâne înscris»; BR-REQ-060-01) — an Administrator marks a registration elite at any time and in
  * any state, and its bib prints elite-style (§895's drawing): the name where the number goes, its own number under it
  * only with «Număr pe BIB-urile de elită». Nothing else of the registration moves — no state, place, number, count or
@@ -162,7 +162,7 @@ async function redirectOf(run: Promise<unknown>): Promise<string> {
 
 const eliteOf = async (id: string) => (await db.select({ elite: registrations.elite }).from(registrations).where(eq(registrations.id, id)))[0].elite;
 
-describe("§NNN the elite mark on a registration", () => {
+describe("§897 the elite mark on a registration", () => {
   it("is off on every registration until an Administrator marks it, and comes off as freely", async () => {
     const admin = await staff("ADMIN");
     const ana = await runner("Ana Pop", "CONFIRMED", 12);
@@ -249,7 +249,7 @@ describe("§NNN the elite mark on a registration", () => {
   });
 });
 
-describe("§NNN «Marchează ca elită» from the list's «⋮»", () => {
+describe("§897 «Marchează ca elită» from the list's «⋮»", () => {
   it("marks and unmarks for the Administrator and comes back to the list as it stood", async () => {
     await as("ADMIN");
     const ana = await runner("Ana Pop", "CONFIRMED", 12);
@@ -286,7 +286,7 @@ async function drawnTexts(run: () => Promise<unknown>): Promise<{ text: string; 
 
 const pages = (pdf: Buffer) => pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length ?? 0;
 
-describe("§NNN a marked registration's bib", () => {
+describe("§897 a marked registration's bib", () => {
   const get = (query: string) => sheet(new Request(`http://localhost/api/admin/events/${eventId}/bibs?${query}`), { params: Promise.resolve({ id: eventId }) });
 
   it("prints elite-style on the ordinary sheet — its name in the number's place, its number only with «Număr pe BIB-urile de elită»", async () => {

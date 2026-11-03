@@ -544,7 +544,7 @@ export async function setClubMemberDeclaredAction(_previous: FormOutcome | null,
 }
 
 /**
- * «Marchează ca elită» / «Nu mai e elită» (§NNN) from the list's «⋮»: the registration's bib prints as an elite bib,
+ * «Marchează ca elită» / «Nu mai e elită» (§897) from the list's «⋮»: the registration's bib prints as an elite bib,
  * or as it did — at any time and in any state, nothing else of the registration touched (`elite-mark.ts`). The
  * Administrator's: the coarse gate here, the service asserts it again (BR-REQ-060-01). It asks nothing (§384): it
  * tells nobody and the same menu undoes it. Back to the list as it stands; from a form without `listQuery`, to the

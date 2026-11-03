@@ -34,7 +34,7 @@ const PART_SUFFIX: Record<BibSheetPart, string> = { all: "", members: "-members"
  * `only=unprinted` is the club's weekly job — the people who registered after the last sheet
  * went to the printer (§264). Omitted, every assigned number. `spares=1` prints the desk's free
  * spares instead, blank (§444); `elite=1` the event's «Elită» list and the registrations marked «Elită», the name
- * where the number goes (§895, §NNN; `-elite` in the file's name). The members' bibs print first, on pages of their own (§681);
+ * where the number goes (§895, §897; `-elite` in the file's name). The members' bibs print first, on pages of their own (§681);
  * `part=members` prints only theirs and `part=others` every bib but theirs — anything else, or
  * nothing, is the whole sheet, never an error.
  *
@@ -92,7 +92,7 @@ export async function GET(
   /*
     «Elită — doar numele pe BIB» (§895): every name on the event's elite list, each printed with the name where the
     number goes — no range, no part, no members' pile — and after them every registration an Administrator marked
-    «Elită» (§NNN) that the ordinary sheet prints, drawn the same way, so one download is every elite bib of the race.
+    «Elită» (§897) that the ordinary sheet prints, drawn the same way, so one download is every elite bib of the race.
     Read by the same roles as the sheet (the list's own rule, `elite-list.ts`, asked again below). A GET that writes
     nothing, like every other mode here. The ordinary sheet draws a marked registration as an elite bib too.
   */
@@ -165,7 +165,7 @@ export async function GET(
     ...(anyMember && admin ? { memberLabelDefault: admin("bibs.memberLabelDefault", { club: CLUB_NAME }) } : {}),
   });
 
-  // The elite sheet is the list and the marked registrations (§895, §NNN): no range, no part, no «unprinted» in its name.
+  // The elite sheet is the list and the marked registrations (§895, §897): no range, no part, no «unprinted» in its name.
   const suffix = elite
     ? `-elite${layout === "one" ? "-one-per-page" : ""}`
     : `${spares ? "-spares" : ""}${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only && !spares ? "-unprinted" : ""}${PART_SUFFIX[part]}${layout === "one" ? "-one-per-page" : ""}`;

@@ -114,7 +114,7 @@ export const STATUS_GLYPHS = {
   test: ScienceIcon,
   // «Prezent la …» on the desk's row: the person-with-tick the «Marchează prezent» verb wears.
   checkedIn: HowToRegIcon,
-  // «Elită» on a registration (§NNN): the medal the elite card and the «⋮»'s «Marchează ca elită» wear.
+  // «Elită» on a registration (§897): the medal the elite card and the «⋮»'s «Marchează ca elită» wear.
   elite: MilitaryTechIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 

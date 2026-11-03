@@ -465,7 +465,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.kind === "TEST" && <StatusChip glyph="test" color="warning" label={t("registrations.testKind")} />}
           {/* On the hidden list (§643, §647): counted in no place, for every role that reads the list. */}
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
-          {/* «Elită» (§NNN): the bib prints with the name where the number goes — for every role that reads the list. */}
+          {/* «Elită» (§897): the bib prints with the name where the number goes — for every role that reads the list. */}
           {row.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="elite-chip" />}
           {/* Registered from an invitation by email (§737, amending §647): who came in that way, at a glance. */}
           {row.invited && <Chip size="small" variant="outlined" color="info" label={t("registrations.invitedChip")} data-testid="invited-chip" />}
@@ -1871,7 +1871,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 bib: { settled: row.bibNumber !== null, printed: row.bibPrintedAt !== null },
                 // The special guests list (§648, §747): the registration page's predicate, in `rowVerbsFor`.
                 outside: { onList: row.outsideCapacity, enabled: row.eventHiddenListEnabled },
-                // The elite mark (§NNN): the row's own mark decides which of the two words.
+                // The elite mark (§897): the row's own mark decides which of the two words.
                 elite: row.elite,
               });
               const hidden = (
@@ -1943,7 +1943,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               if (verbs.includes("outsideUnmark")) {
                 items.push({ kind: "submit", icon: "hiddenList", label: t("registrations.outside.unmark"), formId: `outside-${row.id}` });
               }
-              // «Marchează ca elită» / «Nu mai e elită» (§NNN): how the bib prints, nothing else; the toast says so after the press.
+              // «Marchează ca elită» / «Nu mai e elită» (§897): how the bib prints, nothing else; the toast says so after the press.
               if (verbs.includes("eliteMark")) {
                 items.push({ kind: "submit", icon: "elite", label: t("registrations.elite.mark"), formId: `elite-${row.id}` });
               }

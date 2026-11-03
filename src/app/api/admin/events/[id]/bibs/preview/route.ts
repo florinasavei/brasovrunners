@@ -174,7 +174,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     member set is read only when the first two hold.
   */
   /*
-    A registration marked «Elită» (§NNN) draws as the sheet prints it: an elite bib (§895) — its name where the number
+    A registration marked «Elită» (§897) draws as the sheet prints it: an elite bib (§895) — its name where the number
     goes, its own number under it only as the design ticks — and never the members' design.
   */
   const member =

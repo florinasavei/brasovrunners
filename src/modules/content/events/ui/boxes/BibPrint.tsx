@@ -57,7 +57,7 @@ export type EliteCard = {
   /** The names in the order typed, with the number the club gave each, if any. */
   entries: ReadonlyArray<{ id: string; name: string; bibNumber: number | null }>;
   /**
-   * The registrations an Administrator marked «Elită» (§NNN) whose bib the sheet prints — confirmed, with their number
+   * The registrations an Administrator marked «Elită» (§897) whose bib the sheet prints — confirmed, with their number
    * (`bibs.ts#listBibs` with `elite`). Read-only here: marked and unmarked from the registrations list's «⋮».
    */
   registered?: ReadonlyArray<{ id: string; name: string; bibNumber: number }>;
@@ -162,13 +162,13 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
  * stand beside it (`EliteBibForms`, `BibPrintForms`): «Salvează» never posts a name, and a refused add keeps what
  * was typed, said right above the boxes.
  *
- * Under the names, read-only, the registrations an Administrator marked «Elită» on the registrations list (§NNN) —
+ * Under the names, read-only, the registrations an Administrator marked «Elită» on the registrations list (§897) —
  * each «înscris», with its number — since the same sheet prints them: in the closed line's count and the download's.
  */
 async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; mayEdit: boolean; saved: boolean }) {
   const t = await getTranslations("Admin");
   const locale = await getLocale();
-  // The registrations marked «Elită» (§NNN) print on the same sheet, so they are in its count and its closed line.
+  // The registrations marked «Elită» (§897) print on the same sheet, so they are in its count and its closed line.
   const registered = elite.registered ?? [];
   const count = elite.entries.length + registered.length;
   const aside = count === 0 ? t("bibs.eliteNone") : t(`bibs.eliteCount.${countForm(count, locale)}`, { count });
@@ -181,7 +181,7 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
         <Typography variant="body2" color="text.secondary" data-testid="bib-elite-registered-help">
           {t("bibs.eliteRegisteredHelp")}
         </Typography>
-        {/* The ordinary sheet prints a marked registration too, elite-style (§NNN): said only while there is one. */}
+        {/* The ordinary sheet prints a marked registration too, elite-style (§897): said only while there is one. */}
         {registered.length > 0 ? (
           <Typography variant="body2" color="text.secondary" data-testid="bib-elite-registered-once">
             {t("bibs.eliteRegisteredOnce")}
@@ -211,7 +211,7 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
                 </Stack>
               </Box>
             ))}
-            {/* A registration marked «Elită» (§NNN): read here, never deleted here — the mark is the registrations list's. */}
+            {/* A registration marked «Elită» (§897): read here, never deleted here — the mark is the registrations list's. */}
             {registered.map((entry) => (
               <Box key={entry.id} component="li" data-testid="bib-elite-registered">
                 <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1 }}>

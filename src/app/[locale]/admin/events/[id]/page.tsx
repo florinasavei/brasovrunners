@@ -264,7 +264,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     registrations, so nothing above counts them.
   */
   const eliteEntries = bibCounts ? await listEliteEntries(db, staffUser, event.id) : null;
-  // The registrations marked «Elită» (§NNN) that the elite sheet prints beside the list: read-only lines of its card.
+  // The registrations marked «Elită» (§897) that the elite sheet prints beside the list: read-only lines of its card.
   const eliteRegistered = bibCounts ? await listBibs(db, event.id, { elite: true }) : null;
   // The range the print just reserved, for its banner (§444) — only two real numbers from the address.
   const reservedRange = saved === "sparesReserved" ? spareRangeOfQuery(spareFrom, spareTo) : null;

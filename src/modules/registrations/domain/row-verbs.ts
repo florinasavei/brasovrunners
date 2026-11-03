@@ -62,7 +62,7 @@ export type RowVerb =
   | "outsideMark"
   | "outsideUnmark"
   /**
-   * «Marchează ca elită» / «Nu mai e elită» (§NNN): the registration's bib prints as an elite bib (§895's drawing), or
+   * «Marchează ca elită» / «Nu mai e elită» (§897): the registration's bib prints as an elite bib (§895's drawing), or
    * as it did. The Administrator's, in every state — it changes no state, place, number or count, only how the bib
    * prints. Offered only where the row's mark is known (`options.elite`); which of the two is the row's own mark.
    */
@@ -157,7 +157,7 @@ export function rowVerbsFor(
   if (special === "unmark") verbs.push("outsideUnmark");
   else if (special === "mark") verbs.push("outsideMark");
 
-  // The elite mark (§NNN): how the bib prints, nothing else — so every state offers it, like the member tick.
+  // The elite mark (§897): how the bib prints, nothing else — so every state offers it, like the member tick.
   if (mayManage && options.elite !== undefined) verbs.push(options.elite ? "eliteUnmark" : "eliteMark");
 
   // Cancelling releases the place through the allocator and leaves an audit row (§67, §88).

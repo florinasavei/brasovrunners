@@ -8,7 +8,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /**
- * «Marchează ca elită» / «Nu mai e elită» (§NNN; the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită
+ * «Marchează ca elită» / «Nu mai e elită» (§897; the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită
  * oricând», and asked what happens to the registration, «Rămâne înscris»): a registration whose bib prints as an elite
  * bib — the name where the number goes, laid out and drawn by the elite list's own code (§895: `bib-elite.ts`,
  * `bib-geometry.ts#bibEliteLayout`, `bibs-pdf.ts`, `bib-image.tsx`), its own race number under the name only with

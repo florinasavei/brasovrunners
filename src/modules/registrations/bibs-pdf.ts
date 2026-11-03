@@ -87,7 +87,7 @@ export type BibSheetRow = {
    */
   member?: boolean;
   /**
-   * «Elită» (§NNN): a registration an Administrator marked, drawn as an elite bib (§895) — the name in the number's
+   * «Elită» (§897): a registration an Administrator marked, drawn as an elite bib (§895) — the name in the number's
    * place, the row's own number under it and the sponsors' row only as the design ticks them — never the members'
    * design. Its number stays its own: only the drawing changes.
    */
@@ -102,7 +102,7 @@ export type BibSheetInput = {
   /**
    * «Elită — doar numele pe BIB» (§895): when given, the sheet is the elite sheet — these elite bibs first, in the
    * order typed, then every row of `rows` drawn as an elite bib too (the registrations an Administrator marked «Elită»,
-   * §NNN) — each the race's header, the **name where the number goes** (`bib-geometry.ts#bibEliteLayout`), the number
+   * §897) — each the race's header, the **name where the number goes** (`bib-geometry.ts#bibEliteLayout`), the number
    * under it and the sponsors' row only as the design ticks them (`bib-elite.ts#bibEliteParts`), the extras and the
    * small print as on any bib. Never a name line, a blank mark or the members' design.
    */
@@ -932,14 +932,14 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   // The places on one page, upper half first (or the one centred place with `one`).
   const slots = bibSheetSlots(perPage, input.layout);
   /*
-    A registration marked «Elită» (§NNN) is an elite item like a line of the list: its name where the number goes, its
+    A registration marked «Elită» (§897) is an elite item like a line of the list: its name where the number goes, its
     own number under it only as the design ticks — the same drawing, never a second one — and never a member's bib.
     A row with no name (a desk spare) is never one.
   */
   const eliteOf = (row: BibSheetRow): SheetItem | null =>
     row.registeredName === null ? null : { kind: "elite", entry: { name: row.registeredName, bibNumber: row.bibNumber }, member: false };
   // The members' pile first, on pages of its own, while the event offers their bib (§681). The elite sheet (§895)
-  // is its list, in the order the club typed it, then the marked registrations (§NNN), two to a page — no member's bib is ever among it.
+  // is its list, in the order the club typed it, then the marked registrations (§897), two to a page — no member's bib is ever among it.
   const pages: BibSheetPage<SheetItem>[] = input.elite
     ? sheetPages(
         [

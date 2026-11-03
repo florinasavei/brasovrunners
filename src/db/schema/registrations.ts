@@ -469,7 +469,7 @@ export const registrations = pgTable(
      */
     bibPrintedAt: timestamp("bib_printed_at", { withTimezone: true }),
     /**
-     * «Elită» (§NNN; the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând», choosing «Rămâne
+     * «Elită» (§897; the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând», choosing «Rămâne
      * înscris»): this registration's bib prints as an elite bib — the name where the number goes (§895,
      * `bib-elite.ts`), its own number under it and the sponsors' row only as the design ticks them. Set and cleared
      * by an Administrator at any time and in any state (`elite-mark.ts`), audited. It belongs to the printed bib and
