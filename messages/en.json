@@ -2872,6 +2872,11 @@
         "showDistanceHelp": "Ticked: a badge in the header's right corner with the event's distance in whole kilometres, like 21K. Unticked: no badge. Not drawn over a header picture.",
         "numberStubs": "The number on the foot's two ends",
         "numberStubsHelp": "Ticked: the number again, small, at both ends of the sponsors' row, for a tear-off stub; the sponsors' picture makes room. Unticked: the row as it is.",
+        "eliteIntro": "The elite bibs carry the runner's name where the number goes. The list is in «Allocate and print» → «Elite — the name only on the bib».",
+        "eliteNumber": "Number on the elite bibs",
+        "eliteNumberHelp": "Ticked: the runner's number is printed under the name too, smaller, when you gave them one on the list. Unticked: the name alone.",
+        "eliteSponsors": "Sponsors' band on the elite bibs",
+        "eliteSponsorsHelp": "Ticked: the sponsors' band, as on the other numbers. Unticked: none, and the name has more room.",
         "noPicture": "No picture",
         "picture": {
           "choose": "Upload a picture",
@@ -2958,7 +2963,8 @@
           "name": "The name",
           "footer": "Footer and sponsors",
           "profile": "Profile and emergencies",
-          "members": "Members"
+          "members": "Members",
+          "elite": "Elite"
         },
         "sectionSummary": {
           "headerPicture": "a picture instead of the band",
@@ -2975,7 +2981,10 @@
           "gpxMissing": "Drawn from the GPX — the event has none",
           "nothing": "nothing",
           "membersOn": "on",
-          "membersOff": "off"
+          "membersOff": "off",
+          "eliteNameOnly": "the name only",
+          "eliteNumber": "with the number",
+          "eliteSponsors": "with sponsors"
         },
         "profileSource": "Where the profile comes from",
         "profileSources": {
@@ -6746,6 +6755,29 @@
       "sparesReserved": "Numbers {from}–{to} reserved. Download the sheet and print it.",
       "sparesDownloadRange": "Download the sheet {from}–{to} (PDF)",
       "spareMark": "on-the-spot entry",
+      "eliteTitle": "Elite — the name only on the bib",
+      "eliteNone": "nobody",
+      "eliteCount": {
+        "one": "{count} name",
+        "few": "{count} names",
+        "other": "{count} names"
+      },
+      "eliteHelp": "Their name prints large, where the number goes. They are not registrations: they take no place, get no email and are in no list or count.",
+      "eliteEmpty": "No names on the list.",
+      "eliteName": "Name on the bib",
+      "eliteNameHelp": "As it prints, at most {max} characters. It shrinks to fit, on one line or two.",
+      "eliteNumber": "Number (optional)",
+      "eliteNumberHelp": "Printed under the name only with «Number on the elite bibs» ticked.",
+      "eliteNumberShown": "no. {number}",
+      "eliteAdd": "Add to the elite list",
+      "eliteAdding": "Adding…",
+      "eliteDelete": "Delete",
+      "eliteDeleteTitle": "Delete the name from the elite list?",
+      "eliteDeleteBody": "{name} is no longer printed on the elite bibs. Nothing is sent to anyone.",
+      "eliteReadOnly": "Only an administrator adds or deletes names.",
+      "eliteDownload": "Download the elite bibs ({count})",
+      "eliteSampleAlt": "An elite bib: the name where the number goes",
+      "eliteSampleCaption": "How an elite bib prints, with the saved design and a sample name.",
       "helpMore": "Numbers are given in order of confirmation and are never given twice. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page.",
       "memberLabelDefault": "{club} member",
       "profileStart": "Start",
@@ -9553,6 +9585,8 @@
             "emergencyUpsideDown": "Bib: phone upside down",
             "numberStubs": "Bib: number on the footer's ends",
             "sponsorPlace": "Bib: sponsors' band place",
+            "eliteNumber": "Bib: the number on the elite bibs",
+            "eliteSponsors": "Bib: the sponsors' band on the elite bibs",
             "member": {
               "enabled": "Member's bib: on",
               "style": "Member's bib: style",
@@ -13202,6 +13236,8 @@
       "reserveAdded": "The person is on the internal list. Nothing was sent to them.",
       "reserveNoteSaved": "The note was saved.",
       "reserveDeleted": "The person was removed from the internal list.",
+      "eliteAdded": "The name is on the elite list. It is not a registration, and nothing was sent.",
+      "eliteDeleted": "The name was deleted from the elite list.",
       "waitlistAdded": "The person is on the waiting list; the email is queued.",
       "waitlistPlaced": "A place was free: the person got it, and the declaration email is queued."
     },

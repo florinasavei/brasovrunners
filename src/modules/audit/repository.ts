@@ -521,6 +521,12 @@ export type AuditAction =
   | "event_reserve.deleted"
   | "event_reserve.moved"
   /**
+   * «Elită — doar numele pe BIB» (§NNN), entity `event`: a name written onto the race's elite list, or deleted from it.
+   * The metadata is the line's id only — never the name or its number: the line is a name to print, not a person's file.
+   */
+  | "event_elite.added"
+  | "event_elite.deleted"
+  /**
    * An event's volunteers (§754), entity `event`: the switch «Primește voluntari», a role added, changed,
    * moved or removed (the club's own words), and a volunteer entered, changed, confirmed, cancelled,
    * deleted or signed up on the page (`volunteer.signed_up`, no actor). The metadata holds ids, the roles'

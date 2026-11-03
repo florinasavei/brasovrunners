@@ -239,6 +239,17 @@ export const BIB_LAYOUT = {
    */
   stubWidth: 40,
   stubSize: 11,
+  /**
+   * An elite bib (§NNN): the runner's name where the number goes, bold, as large as the number's area and the
+   * card's width allow up to `eliteNameMaxSize` points (times the club's «Mărimea cifrelor»), on one line while
+   * one line reaches `eliteNameOneLineMin` points, else on two (`bibEliteLayout`) — shrunk to fit, never cut. With
+   * «Număr pe BIB-urile de elită» ticked and a number on the line, the number under the name at `eliteNumberSize`
+   * points bold, `eliteNumberGap` below the name's last line.
+   */
+  eliteNameMaxSize: 110,
+  eliteNameOneLineMin: 48,
+  eliteNumberSize: 40,
+  eliteNumberGap: 4,
 } as const;
 
 /**
@@ -571,6 +582,67 @@ export function bibNumberFit(digits: string, scale: number, areaHeight: number):
   const byHeight = areaHeight / BIB_DIGIT.height;
   const byWidth = (BIB_CARD.width - 2 * BIB_LAYOUT.inset) / (Math.max(1, digits.length) * BIB_DIGIT.advance);
   return Math.max(12, Math.floor(Math.min(bibNumberPoints(digits, scale), byHeight, byWidth)));
+}
+
+/**
+ * An elite bib's name and number (§NNN), laid out once for both renderers: the lines' tops and the number's,
+ * from the top of the number's area (`bibNumberArea` with no name strip), in points.
+ */
+export type BibEliteLayout = {
+  /** The name's size, the same on both lines. */
+  size: number;
+  /** One line, or two split at a space — never a word broken, never a «…». */
+  lines: BibHeaderLine[];
+  /** The number's line under the name, or `null`: not asked for, or the line has none. */
+  number: { size: number; top: number } | null;
+};
+
+/**
+ * Where an elite bib draws the name (§NNN; the owner: «where the big number goes it draws the NAME, large and
+ * bold»): across the card less its inset, in the number's area, centred.
+ *
+ * - **One line** while the whole name fits the width and the height at `eliteNameOneLineMin` points or more — a
+ *   name reads best unbroken — at the largest size, to half a point, up to `eliteNameMaxSize` × the club's scale.
+ * - **Else two lines**, split at a space: the split that lets the name be largest (the more even one on a tie),
+ *   when that is larger than the one line would be. A single word wider than the card stays one line and shrinks
+ *   until it fits: **never cut**, never a word broken.
+ * - Every size is the largest at which the lines fit the card less its inset and, with the number's line when
+ *   drawn, the area's height.
+ * - **The number**, when `number` is asked, is one line of `eliteNumberSize` points under the name, `eliteNumberGap`
+ *   below its last line; the name gives it that room.
+ * - **The place:** the whole block — the lines and the number — centred on the area's height.
+ *
+ * `measure` is the bold type's width in ems (`bib-header.ts#bibTitleWidth`), never narrower than pdfkit or Satori
+ * sets a line, so a line that fits here fits on the paper and in the picture.
+ */
+export function bibEliteLayout(name: string, options: { area: number; scale: number; number: boolean }, measure: (text: string) => number): BibEliteLayout {
+  const L = BIB_LAYOUT;
+  const width = BIB_CARD.width - 2 * L.inset;
+  const numberRoom = options.number ? BIB_TEXT_LINE * L.eliteNumberSize + L.eliteNumberGap : 0;
+  const nameRoom = Math.max(0, options.area - numberRoom);
+  const cap = L.eliteNameMaxSize * options.scale;
+  const words = name.trim().split(/\s+/u).filter(Boolean);
+  /** The largest size, to half a point, at which these lines fit the width and the room. */
+  const sized = (lines: string[]) => {
+    const widest = Math.max(...lines.map((line) => measure(line)));
+    const fits = Math.min(cap, widest > 0 ? width / widest : cap, nameRoom / (lines.length * BIB_TEXT_LINE));
+    return { size: Math.floor(fits * 2) / 2, lines, widest };
+  };
+  let chosen = sized([words.join(" ")]);
+  if (chosen.size < L.eliteNameOneLineMin) {
+    for (let split = 1; split < words.length; split++) {
+      const two = sized([words.slice(0, split).join(" "), words.slice(split).join(" ")]);
+      const better = two.size > chosen.size || (two.size === chosen.size && chosen.lines.length === 2 && two.widest < chosen.widest);
+      if (better) chosen = two;
+    }
+  }
+  const lineHeight = BIB_TEXT_LINE * chosen.size;
+  const top = (options.area - (chosen.lines.length * lineHeight + numberRoom)) / 2;
+  return {
+    size: chosen.size,
+    lines: chosen.lines.map((text, index) => ({ text, top: top + index * lineHeight })),
+    number: options.number ? { size: L.eliteNumberSize, top: top + chosen.lines.length * lineHeight + L.eliteNumberGap } : null,
+  };
 }
 
 /**

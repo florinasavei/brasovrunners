@@ -105,6 +105,9 @@ export type BibDesignFormValues = {
   emergencyUpsideDown: boolean;
   showDistance: boolean;
   numberStubs: boolean;
+  /** «Număr pe BIB-urile de elită» and «Banda de sponsori pe BIB-urile de elită» (§NNN): both off by default. */
+  eliteNumber: boolean;
+  eliteSponsors: boolean;
   /** The members' race number (§664): its switch, its header and its label, as posted. */
   member: BibMemberFormValues;
 };
@@ -151,6 +154,8 @@ const SWITCHES = [
   "emergencyUpsideDown",
   "showDistance",
   "numberStubs",
+  "eliteNumber",
+  "eliteSponsors",
 ] as const;
 const CHOICES = ["numberScale", "numberFormat", "namePosition", "sponsorPlace", "profileSource", "profileFiguresPlace", "profileOrientation"] as const;
 /** The pictures' addresses; the profile's is never cropped, so it has no crop beside it (§759). */
@@ -213,6 +218,8 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     emergencyUpsideDown: field("emergencyUpsideDown") === "on",
     showDistance: field("showDistance") === "on",
     numberStubs: field("numberStubs") === "on",
+    eliteNumber: field("eliteNumber") === "on",
+    eliteSponsors: field("eliteSponsors") === "on",
     member: {
       enabled: field("member.enabled") === "on",
       style: field("member.style")?.trim() || "band",
@@ -359,6 +366,8 @@ export function bibPreviewUrl(input: {
   design: BibDesignFormValues;
   /** Draw a member's bib (§664): the members' header and label over the same sample. */
   member?: boolean;
+  /** Draw an elite bib (§NNN): a sample name where the number goes, the number under it only when `eliteNumber` is ticked. */
+  elite?: boolean;
   /**
    * A stamp of what the sample is drawn from that is not in the form — the route's saved checkpoints
    * (§757) — so saving them is a new address (`v=`), as the bibs page's pictures carry theirs. The
@@ -369,6 +378,7 @@ export function bibPreviewUrl(input: {
   const params = new URLSearchParams({ sample: "1", locale: input.locale });
   if (input.version) params.set("v", input.version);
   if (input.member) params.set("member", "1");
+  if (input.elite) params.set("elite", "1");
   if (input.number?.trim()) params.set("number", input.number.trim());
   if (input.colour?.trim()) params.set("colour", input.colour.trim());
   bibDesignSearchParams(input.design, params);

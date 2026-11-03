@@ -73,6 +73,9 @@ const EVERYTHING_OFF: BibDesign = {
   emergencyUpsideDown: false,
   showDistance: true,
   numberStubs: true,
+  // The elite bibs' two ticks (§NNN): on, each the other way from its default (off).
+  eliteNumber: true,
+  eliteSponsors: true,
   // The members' bib (§664): on, the whole card (§695), a colour, both pictures with their crops and a
   // label with a diacritic and an ampersand.
   member: {
@@ -121,6 +124,17 @@ describe("§249 the design on the wire: encode, then parse", () => {
     expect(url.searchParams.has("number")).toBe(false);
     expect(url.searchParams.has("colour")).toBe(false);
     expect(url.searchParams.get("locale")).toBe("ro");
+  });
+
+  it("§NNN asks for an elite bib with `elite=1`, and the ordinary address never carries it", () => {
+    const elite = new URL(bibPreviewUrl({ eventId: "evt-1", locale: "ro", number: "7", colour: "", design: EVERYTHING_OFF, elite: true }), "http://localhost");
+    expect(elite.searchParams.get("elite")).toBe("1");
+    expect(bibDesignFromQuery(elite.searchParams)).toEqual(EVERYTHING_OFF);
+    const plain = new URL(bibPreviewUrl({ eventId: "evt-1", locale: "ro", number: "7", colour: "", design: DEFAULT_BIB_DESIGN }), "http://localhost");
+    expect(plain.searchParams.has("elite")).toBe(false);
+    // The two ticks travel as every switch does, off by default.
+    expect(plain.searchParams.get("eliteNumber")).toBe("0");
+    expect(plain.searchParams.get("eliteSponsors")).toBe("0");
   });
 
   it("draws the platform's design from a query that says nothing", () => {
@@ -311,6 +325,9 @@ describe("§249 the form, read the same way for the save and for the preview", (
       emergencyUpsideDown: false,
       showDistance: false,
       numberStubs: false,
+      // Nothing posted for «Elită» (§NNN): the name alone, no sponsors' band.
+      eliteNumber: false,
+      eliteSponsors: false,
       headerImageSrc: null,
       sponsorImageSrc: OURS,
       // No crop posted (§560): each picture as the bib drew it before crops.

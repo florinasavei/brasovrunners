@@ -2872,6 +2872,11 @@
         "showDistanceHelp": "Bifat: o insignă în colțul din dreapta al antetului cu distanța evenimentului în kilometri întregi, ca 21K. Debifat: fără insignă. Nu se desenează peste o imagine din antet.",
         "numberStubs": "Numărul și pe capetele subsolului",
         "numberStubsHelp": "Bifat: numărul din nou, mic, la cele două capete ale rândului cu sponsori, pentru talonul care se rupe; imaginea sponsorilor îi face loc. Debifat: rândul ca până acum.",
+        "eliteIntro": "Pe BIB-urile de elită se tipărește numele alergătorului în locul numărului. Lista e în «Alocare și tipărire» → «Elită — doar numele pe BIB».",
+        "eliteNumber": "Număr pe BIB-urile de elită",
+        "eliteNumberHelp": "Bifat: sub nume se tipărește și numărul alergătorului, mai mic, dacă i-ai dat unul pe listă. Debifat: doar numele.",
+        "eliteSponsors": "Banda de sponsori pe BIB-urile de elită",
+        "eliteSponsorsHelp": "Bifat: banda cu sponsori, ca pe celelalte numere. Debifat: fără ea, iar numele are mai mult loc.",
         "noPicture": "Fără imagine",
         "picture": {
           "choose": "Încarcă o imagine",
@@ -2958,7 +2963,8 @@
           "name": "Numele",
           "footer": "Subsol și sponsori",
           "profile": "Profilul și urgențele",
-          "members": "Membrii"
+          "members": "Membrii",
+          "elite": "Elită"
         },
         "sectionSummary": {
           "headerPicture": "imagine în locul benzii",
@@ -2975,7 +2981,10 @@
           "gpxMissing": "Desenat din GPX — evenimentul nu are GPX",
           "nothing": "nimic",
           "membersOn": "activ",
-          "membersOff": "oprit"
+          "membersOff": "oprit",
+          "eliteNameOnly": "doar numele",
+          "eliteNumber": "cu număr",
+          "eliteSponsors": "cu sponsori"
         },
         "profileSource": "De unde vine profilul",
         "profileSources": {
@@ -6746,6 +6755,29 @@
       "sparesReserved": "Rezervate numerele {from}–{to}. Descarcă foaia și tipărește-o.",
       "sparesDownloadRange": "Descarcă foaia {from}–{to} (PDF)",
       "spareMark": "înscris la fața locului",
+      "eliteTitle": "Elită — doar numele pe BIB",
+      "eliteNone": "nicio persoană",
+      "eliteCount": {
+        "one": "{count} nume",
+        "few": "{count} nume",
+        "other": "{count} de nume"
+      },
+      "eliteHelp": "Numele lor se tipărește mare, în locul numărului. Nu sunt înscrieri: nu ocupă loc, nu primesc emailuri și nu intră în nicio listă sau numărătoare.",
+      "eliteEmpty": "Niciun nume pe listă.",
+      "eliteName": "Numele de pe BIB",
+      "eliteNameHelp": "Cum se tipărește, cel mult {max} de caractere. Se micșorează cât să încapă, pe un rând sau două.",
+      "eliteNumber": "Număr (opțional)",
+      "eliteNumberHelp": "Se tipărește sub nume doar cu «Număr pe BIB-urile de elită» bifat.",
+      "eliteNumberShown": "nr. {number}",
+      "eliteAdd": "Adaugă pe lista de elită",
+      "eliteAdding": "Se adaugă…",
+      "eliteDelete": "Șterge",
+      "eliteDeleteTitle": "Ștergi numele de pe lista de elită?",
+      "eliteDeleteBody": "{name} nu se mai tipărește pe BIB-urile de elită. Nu se trimite nimic nimănui.",
+      "eliteReadOnly": "Doar un administrator adaugă sau șterge nume.",
+      "eliteDownload": "Descarcă BIB-urile de elită ({count})",
+      "eliteSampleAlt": "Un BIB de elită: numele în locul numărului",
+      "eliteSampleCaption": "Așa se tipărește un BIB de elită, cu designul salvat și un nume de probă.",
       "helpMore": "Numerele se dau în ordinea confirmării și nu se dau de două ori. Foaia are două numere A5 pe o pagină A4; un singur număr se descarcă de pe pagina înscrierii.",
       "memberLabelDefault": "Membru {club}",
       "profileStart": "Start",
@@ -9553,6 +9585,8 @@
             "emergencyUpsideDown": "Număr: telefonul întors",
             "numberStubs": "Număr: numărul la capetele subsolului",
             "sponsorPlace": "Număr: locul benzii sponsorilor",
+            "eliteNumber": "Număr: numărul pe BIB-urile de elită",
+            "eliteSponsors": "Număr: banda sponsorilor pe BIB-urile de elită",
             "member": {
               "enabled": "Număr de membru: activ",
               "style": "Număr de membru: stilul",
@@ -13202,6 +13236,8 @@
       "reserveAdded": "Persoana e pe lista internă. Nu i s-a trimis nimic.",
       "reserveNoteSaved": "Nota a fost salvată.",
       "reserveDeleted": "Persoana a fost ștearsă de pe lista internă.",
+      "eliteAdded": "Numele e pe lista de elită. Nu e o înscriere și nu s-a trimis nimic.",
+      "eliteDeleted": "Numele a fost șters de pe lista de elită.",
       "waitlistAdded": "Persoana e pe lista de așteptare; emailul e pus la coadă.",
       "waitlistPlaced": "Era un loc liber: persoana l-a primit, iar emailul cu declarația e pus la coadă."
     },

@@ -12,8 +12,9 @@ import { BIB_PICTURE_PRINT_DPI, bibProfilePictureExample, bibProfilePictureRatio
  * BR-REQ-038-01, §759 (amending §750) — the bib designer in named sections. The owner, 2026-10-13, of
  * «Cum arată numărul de concurs»: «Aici am nevoie de separatoare și iconițe, că nu mai înțeleg nimic...».
  *
- * The panel is six folds, top to bottom as the number prints — «Antet», «Numărul», «Numele», «Profilul și
- * urgențele» (one block above the bottom band, wherever the sponsors go), «Subsol și sponsori», «Membrii» — each a heading with its glyph and a closed line, closed
+ * The panel is seven folds, top to bottom as the number prints — «Antet», «Numărul», «Numele», «Profilul și
+ * urgențele» (one block above the bottom band, wherever the sponsors go), «Subsol și sponsori», «Membrii», and «Elită»
+ * (§NNN) for the elite bibs — each a heading with its glyph and a closed line, closed
  * until opened; every field sits in the section it prints in, every picture place is a named sub-card
  * with its «Calitate» row inside it. Rendered as the server draws it, in both languages.
  */
@@ -54,7 +55,7 @@ async function render(design: BibDesign = DEFAULT_BIB_DESIGN, language: "ro" | "
   return new Response(stream).text();
 }
 
-const SECTIONS = ["header", "number", "name", "profile", "footer", "members"] as const;
+const SECTIONS = ["header", "number", "name", "profile", "footer", "members", "elite"] as const;
 
 /** One section's markup: from its `<details>` to the next section's (or the panel's last line). */
 function section(html: string, name: (typeof SECTIONS)[number]): string {
@@ -92,13 +93,14 @@ function hiddenAround(html: string, needle: string): boolean {
 }
 
 describe("§759 the bib designer in named sections", () => {
-  it("draws six folds in the order the number prints, each closed, with a glyph and a closed line", async () => {
+  it("draws seven folds in the order the number prints, each closed, with a glyph and a closed line", async () => {
     const html = await render();
     const order = SECTIONS.map((name) => html.indexOf(`data-testid="bib-section-${name}"`));
     expect(order.every((at) => at > -1)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
-    const titles = ["Antet", "Numărul", "Numele", "Profilul și urgențele", "Subsol și sponsori", "Membrii"];
-    const glyphs = ["VerticalAlignTopIcon", "NumbersIcon", "BadgeIcon", "TerrainIcon", "VerticalAlignBottomIcon", "CardMembershipIcon"];
+    // «Elită» (§NNN) last: what the elite bibs carry besides the name.
+    const titles = ["Antet", "Numărul", "Numele", "Profilul și urgențele", "Subsol și sponsori", "Membrii", "Elită"];
+    const glyphs = ["VerticalAlignTopIcon", "NumbersIcon", "BadgeIcon", "TerrainIcon", "VerticalAlignBottomIcon", "CardMembershipIcon", "MilitaryTechIcon"];
     SECTIONS.forEach((name, index) => {
       const part = section(html, name);
       // A fold of its own, closed until opened (§336), its heading one level under the designer's.
@@ -113,6 +115,7 @@ describe("§759 the bib designer in named sections", () => {
     expect(section(html, "footer")).toContain("fără bandă cu sponsori");
     expect(section(html, "profile")).toContain("nimic");
     expect(section(html, "members")).toContain("oprit");
+    expect(section(html, "elite")).toContain("doar numele");
   });
 
   it("puts every field in the section it prints in", async () => {
@@ -140,6 +143,7 @@ describe("§759 the bib designer in named sections", () => {
         "event.bibDesign.emergencyUpsideDown",
       ],
       members: ["event.bibDesign.member.enabled", "event.bibDesign.member.style", "event.bibDesign.member.label", "event.bibDesign.member.mark", "event.bibDesign.member.markShape"],
+      elite: ["event.bibDesign.eliteNumber", "event.bibDesign.eliteSponsors"],
     };
     for (const name of SECTIONS) {
       const part = section(html, name);
@@ -369,7 +373,7 @@ describe("§759 the bib designer in named sections", () => {
 
   it("is the same panel in English, every section named in English", async () => {
     const html = await render(DEFAULT_BIB_DESIGN, "en");
-    const titles = ["Header", "The number", "The name", "Profile and emergencies", "Footer and sponsors", "Members"];
+    const titles = ["Header", "The number", "The name", "Profile and emergencies", "Footer and sponsors", "Members", "Elite"];
     SECTIONS.forEach((name, index) => expect(section(html, name)).toMatch(new RegExp(`<h5[^>]*>[\\s\\S]*?${titles[index]}`)));
     expect(section(html, "profile")).toContain("Show the distance and the elevation gain");
     expect(section(html, "profile")).toContain("Turned, for the runner to read");

@@ -27,6 +27,7 @@ import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import { registrationInterests } from "@/db/schema/registration-interests";
 import { registrationNotes } from "@/db/schema/registration-notes";
 import { eventReserveEntries } from "@/db/schema/event-reserve-entries";
+import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { newsletterSends, newsletterSubscribers, newsletterTokens } from "@/db/schema/newsletter";
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
@@ -159,6 +160,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(registrationNotes);
   // The internal waiting list (§854) cascades from its event; emptied here like the event's other children.
   await db.delete(eventReserveEntries);
+  // The elite list (§NNN) cascades from its event too; emptied here likewise.
+  await db.delete(eventEliteEntries);
   await db.delete(registrations);
   // The "tell me when registration opens" addresses (§146) cascade from their event; deleted
   // first for the same reason as the translations above.

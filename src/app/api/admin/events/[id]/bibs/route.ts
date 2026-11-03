@@ -8,6 +8,7 @@ import { routing } from "@/i18n/routing";
 import { shownContactAddresses } from "@/modules/contact/shown-address";
 import { type BibSheetPart, type BibSheetRow, renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { bibEventDate, findEventForBibs, freeSpareBibNumbers, listBibs } from "@/modules/registrations/bibs";
+import { listEliteEntries } from "@/modules/registrations/elite-list";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { loadBibExtras, withBibCheckpoints } from "@/modules/registrations/bib-extras";
@@ -32,7 +33,8 @@ const PART_SUFFIX: Record<BibSheetPart, string> = { all: "", members: "-members"
  * nothing else (`AGENTS.md` §19.2). `from` and `to` bound the numbers printed, for a reprint;
  * `only=unprinted` is the club's weekly job — the people who registered after the last sheet
  * went to the printer (§264). Omitted, every assigned number. `spares=1` prints the desk's free
- * spares instead, blank (§444). The members' bibs print first, on pages of their own (§681);
+ * spares instead, blank (§444); `elite=1` the event's «Elită» list, the name where the number goes (§NNN,
+ * `-elite` in the file's name). The members' bibs print first, on pages of their own (§681);
  * `part=members` prints only theirs and `part=others` every bib but theirs — anything else, or
  * nothing, is the whole sheet, never an error.
  *
@@ -88,6 +90,12 @@ export async function GET(
   */
   const spares = url.searchParams.get("spares") === "1";
   /*
+    «Elită — doar numele pe BIB» (§NNN): every name on the event's elite list, each printed with the name where the
+    number goes — no registration, no range, no part, no members' pile. Read by the same roles as the sheet (the
+    list's own rule, `elite-list.ts`, asked again below). A GET that writes nothing, like every other mode here.
+  */
+  const elite = url.searchParams.get("elite") === "1";
+  /*
     Which bibs go into the file (§681): the members' pile alone, to print on other card, or every
     bib but theirs; anything else is the whole sheet with the members' pages first. A download
     marks nothing printed, whole or part: the mark is the club's own press on the registrations
@@ -100,11 +108,14 @@ export async function GET(
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
   const now = new Date();
-  const rows: BibSheetRow[] = spares
-    ? (await freeSpareBibNumbers(db, id)).free
-        .filter((number) => (from === undefined || number >= from) && (to === undefined || number <= to))
-        .map((bibNumber) => ({ bibNumber, registeredName: null }))
-    : await listBibs(db, id, { from, to, only });
+  const eliteEntries = elite ? (await listEliteEntries(db, actor, id)).map(({ name, bibNumber }) => ({ name, bibNumber })) : null;
+  const rows: BibSheetRow[] = elite
+    ? []
+    : spares
+      ? (await freeSpareBibNumbers(db, id)).free
+          .filter((number) => (from === undefined || number >= from) && (to === undefined || number <= to))
+          .map((bibNumber) => ({ bibNumber, registeredName: null }))
+      : await listBibs(db, id, { from, to, only });
 
   /*
     The club's own pictures, fetched here rather than inside the renderer (§249).
@@ -130,6 +141,7 @@ export async function GET(
 
   const pdf = await renderBibSheet({
     rows,
+    ...(eliteEntries ? { elite: eliteEntries } : {}),
     eventTitle: event.title,
     // Empty while the date is to be announced later (§545): never the provisional day on paper.
     eventDate: bibEventDate(event, locale),
@@ -153,7 +165,10 @@ export async function GET(
     ...(spares && admin ? { blankMark: admin("bibs.spareMark") } : {}),
   });
 
-  const suffix = `${spares ? "-spares" : ""}${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only && !spares ? "-unprinted" : ""}${PART_SUFFIX[part]}${layout === "one" ? "-one-per-page" : ""}`;
+  // The elite sheet is the list alone (§NNN): no range, no part, no «unprinted» in its name.
+  const suffix = elite
+    ? `-elite${layout === "one" ? "-one-per-page" : ""}`
+    : `${spares ? "-spares" : ""}${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only && !spares ? "-unprinted" : ""}${PART_SUFFIX[part]}${layout === "one" ? "-one-per-page" : ""}`;
   return new Response(new Uint8Array(pdf), {
     status: 200,
     headers: {

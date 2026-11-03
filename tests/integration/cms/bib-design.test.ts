@@ -175,9 +175,11 @@ describe("§249 the bib's design, saved and read back", () => {
     // Nor the sponsors' place, the profile and the emergency phone (§750): they read «Jos de tot», off and none.
     // Nor the profile's source, picture, figures and orientation, the phone's label and second number (§759).
     // Nor where the figures stand (§804, amended): the strip's right.
+    // Nor the elite bibs' two ticks (§NNN): off, the name alone.
     const footerKeys = [
       "showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member", "numberFormat", "sponsorPlace", "showProfile", "showEmergency", "emergencyPhone", "emergencyUpsideDown", "showDistance", "numberStubs", "showCheckpoints", "showCheckpointTimes", "showProfileScale",
       "profileSource", "profileImageSrc", "showProfileFigures", "profileFiguresPlace", "profileOrientation", "emergencyLabel", "emergencyPhoneLabel", "emergencyPhone2", "emergencyPhone2Label",
+      "eliteNumber", "eliteSponsors",
     ];
     const before = Object.fromEntries(
       Object.entries({ ...DEFAULT_BIB_DESIGN, numberScale: "large" }).filter(([key]) => !footerKeys.includes(key)),

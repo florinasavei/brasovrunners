@@ -40,6 +40,7 @@ import {
   bibProfileRowHeight,
   bibStubScale,
 } from "./bib-geometry";
+import { type BibEliteEntry, bibElite, bibEliteParts } from "./bib-elite";
 import { bibHeader } from "./bib-header";
 import type { BibRow } from "./bibs";
 import { formatRaceNumber } from "./domain/race-number";
@@ -87,8 +88,18 @@ export type BibSheetRow = {
   member?: boolean;
 };
 
+/** One bib the sheet draws: a runner's (or a desk spare's) row, or an elite line (§NNN). `member` is the paging's (§681). */
+type SheetItem = { kind: "bib"; row: BibSheetRow; member?: boolean } | { kind: "elite"; entry: BibEliteEntry; member: false };
+
 export type BibSheetInput = {
   rows: readonly BibSheetRow[];
+  /**
+   * «Elită — doar numele pe BIB» (§NNN): when given, the sheet prints these elite bibs instead of `rows` — each
+   * the race's header, the **name where the number goes** (`bib-geometry.ts#bibEliteLayout`), the number under it
+   * and the sponsors' row only as the design ticks them (`bib-elite.ts#bibEliteParts`), the extras and the small
+   * print as on any bib. Never a name line, a blank mark or the members' design.
+   */
+  elite?: readonly BibEliteEntry[];
   eventTitle: string;
   /** Already formatted in the event's zone and the sheet's language. */
   eventDate: string;
@@ -351,10 +362,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const frame: [number, number] = [box.width, box.height];
     doc.image(picture, x, y, { ...(drawing.kind === "cover" ? { cover: frame } : { fit: frame }), align: "center", valign: "center" });
   };
-  /** The strip of sponsors takes this much above the small print, when there is one. */
-  // The row is also there, for its two stubs, with the number repeated and no picture (§750).
+  // The number repeated at the sponsors' row's two ends (§750); each bib decides its row's height (`drawBib`).
   const stubs = design.numberStubs;
-  const sponsorHeight = sponsorPicture || stubs ? L.sponsorHeight : 0;
   const badge = design.showDistance ? (input.distanceBadge ?? null) : null;
   // The same on every bib of the sheet, so laid out once (§317), and told which header the sheet
   // really draws. A second line takes its height from the number's area, never from the small
@@ -432,13 +441,24 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   });
 
   /** One bib, in its A5 box: everything inside the white margin, nothing across the cut. */
-  const drawBib = (row: BibSheetRow, slot: BibSlot) => {
+  const drawBib = (item: SheetItem, slot: BibSlot) => {
     const left = slot.x + BIB_MARGIN;
     const top = slot.y + BIB_MARGIN;
     const bottom = top + BIB_CARD.height;
+    const row = item.kind === "bib" ? item.row : null;
+    // An elite bib (§NNN): the name where the number goes; the number and the sponsors' row only as the design ticks them.
+    const elite = item.kind === "elite" ? { entry: item.entry, ...bibEliteParts(design, item.entry) } : null;
+    const asMember = row?.member === true;
     // The members' design only while the switch is on (§664): their header, or their whole card (§695).
-    const card = row.member === true ? memberCard : null;
-    const header = row.member === true && design.member.enabled ? memberHeader : eventHeader;
+    const card = asMember ? memberCard : null;
+    const header = asMember && design.member.enabled ? memberHeader : eventHeader;
+    /*
+      The strip of sponsors takes this much above the small print, when there is one; the row is also there, for its
+      two stubs, with the number repeated and no picture (§750). An elite bib has it only with its tick (§NNN).
+    */
+    const rowPicture = elite && !elite.sponsors ? null : sponsorPicture;
+    const rowStubs = elite ? elite.stubs : stubs;
+    const sponsorHeight = rowPicture || rowStubs ? L.sponsorHeight : 0;
     const footerLines = card ? card.footer.lines : header.footer.lines;
     const footerHeight = card ? card.footer.height : header.footer.height;
     // Everything above the sponsors' strip and the small print: a member's card's background (§695).
@@ -562,7 +582,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       box into the mark's and filled in the number's ink; the club's logo is the blue lockup, fitted whole
       in its wider box and never recoloured — on a member's card its own white ground is its plate.
     */
-    const markDrawn = row.member === true && design.member.enabled && design.member.mark;
+    const markDrawn = asMember && design.member.enabled && design.member.mark;
     if (markDrawn) {
       const markLeft = left + L.inset;
       const markTop = top + L.bandHeight + L.memberMarkTop;
@@ -591,10 +611,17 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       shorter than its line and still fit; the picture centres it the same way, and a number that
       hugged the band here would be a preview of a different bib (§338).
     */
-    const nameBlock = design.showName ? L.nameBlock : 0;
-    const nameAbove = design.showName && design.namePosition === "above";
-    // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever.
-    const digits = formatRaceNumber(row.bibNumber, design.numberFormat);
+    // An elite bib has no name strip (§NNN): its name is in the number's place.
+    const showName = elite === null && design.showName;
+    const nameBlock = showName ? L.nameBlock : 0;
+    const nameAbove = showName && design.namePosition === "above";
+    // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever. An elite bib's own number, or none.
+    const digits =
+      item.kind === "bib"
+        ? formatRaceNumber(item.row.bibNumber, design.numberFormat)
+        : elite && elite.number !== null
+          ? formatRaceNumber(elite.number, design.numberFormat)
+          : "";
     // The foot of everything above the sponsors' strip and the small print: the number's region (§750).
     const regionFoot = bottom - footerHeight - sponsorHeight;
     // «Jos de tot» (§750): the strip is the card's last row under the small print; «Deasupra subsolului», above it.
@@ -612,8 +639,9 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       printed one would. `stripTop` is the strip's top; the name is set `nameTop` into it.
     */
     const nameReserve = bibNameReserve(markDrawn ? markBox.width : null, nameAbove);
+    const registeredName = row?.registeredName ?? null;
     const drawName = (stripTop: number) => {
-      if (row.registeredName === null) {
+      if (registeredName === null) {
         const lineY = stripTop + L.blankLineTop;
         const lineLeft = left + (BIB_CARD.width - L.blankLineWidth) / 2;
         doc
@@ -640,7 +668,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         .font("bold")
         .fontSize(L.nameSize)
         .fillColor(ink)
-        .text(row.registeredName, left + L.inset + nameReserve, stripTop + L.nameTop, {
+        .text(registeredName, left + L.inset + nameReserve, stripTop + L.nameTop, {
           width: BIB_CARD.width - 2 * (L.inset + nameReserve),
           align: "center",
           lineBreak: false,
@@ -650,16 +678,33 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
 
     if (nameAbove) drawName(top + L.bandHeight);
 
-    doc.font("bold").fontSize(numberSize).fillColor(ink);
-    const numberHeight = doc.heightOfString(digits, { width: BIB_CARD.width, lineBreak: false });
-    doc.text(digits, left, numberTop + (numberArea - numberHeight) / 2, {
-      width: BIB_CARD.width,
-      align: "center",
-      lineBreak: false,
-    });
+    if (elite) {
+      /*
+        An elite bib (§NNN): the name in the number's place, bold, at the size and on the lines `bibEliteLayout`
+        chose — each line centred by hand and handed to pdfkit with no width, so it cannot wrap or cut (§317's
+        lesson); the measure is never narrower than pdfkit sets the line. The number under it only when ticked and set.
+      */
+      const layout = bibElite(elite.entry.name, { area: numberArea, scale: numberScaleFactor(design), number: elite.number !== null });
+      doc.font("bold").fontSize(layout.size).fillColor(ink);
+      for (const line of layout.lines) {
+        doc.text(line.text, left + (BIB_CARD.width - doc.widthOfString(line.text)) / 2, numberTop + line.top, { lineBreak: false });
+      }
+      if (layout.number && digits) {
+        doc.font("bold").fontSize(layout.number.size).fillColor(ink);
+        doc.text(digits, left + (BIB_CARD.width - doc.widthOfString(digits)) / 2, numberTop + layout.number.top, { lineBreak: false });
+      }
+    } else {
+      doc.font("bold").fontSize(numberSize).fillColor(ink);
+      const numberHeight = doc.heightOfString(digits, { width: BIB_CARD.width, lineBreak: false });
+      doc.text(digits, left, numberTop + (numberArea - numberHeight) / 2, {
+        width: BIB_CARD.width,
+        align: "center",
+        lineBreak: false,
+      });
+    }
 
     // The name under the number, large enough to read at a finish line.
-    if (design.showName && !nameAbove) drawName(regionFoot - stripeHeight - extrasHeight - L.nameBlock);
+    if (showName && !nameAbove) drawName(regionFoot - stripeHeight - extrasHeight - L.nameBlock);
 
     /*
       The route's profile (§750): a row of its own under the name, `profileHeight` points, so it cannot
@@ -783,23 +828,23 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
 
     // The sponsors' strip above the small print (§249): the club's crop in the strip's shape, or
     // the whole picture with its own proportion kept (§560).
-    if (sponsorPicture) {
+    if (rowPicture) {
       // With the stubs the picture is scaled whole, about its centre, to what is left between them (§750).
-      const scale = bibStubScale(stubs);
+      const scale = bibStubScale(rowStubs);
       doc.save();
-      if (stubs) {
+      if (rowStubs) {
         const centreX = left + BIB_CARD.width / 2;
         const centreY = sponsorTop + L.sponsorTop + L.sponsorPicture / 2;
         doc.translate(centreX, centreY).scale(scale).translate(-centreX, -centreY);
       }
-      drawPicture("sponsors", sponsorPicture, left + L.inset, sponsorTop + L.sponsorTop);
+      drawPicture("sponsors", rowPicture, left + L.inset, sponsorTop + L.sponsorTop);
       doc.restore();
     }
     /*
       The number repeated on the footer's two ends (§750), the owner's tear-off stubs: small and bold at
       each end of the sponsors' row, inside the inset, in the body ink on the paper's white.
     */
-    if (stubs) {
+    if (rowStubs) {
       doc.font("bold").fontSize(L.stubSize).fillColor(COLOR.ink);
       const stubWidth = doc.widthOfString(digits);
       const stubHeight = doc.heightOfString(digits, { lineBreak: false });
@@ -879,15 +924,23 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const perPage = input.layout === "one" ? 1 : 2;
   // The places on one page, upper half first (or the one centred place with `one`).
   const slots = bibSheetSlots(perPage, input.layout);
-  // The members' pile first, on pages of its own, while the event offers their bib (§681).
-  const pages = sheetPages(input.rows, { part: input.part, layout: input.layout, membersOn: design.member.enabled });
+  // The members' pile first, on pages of its own, while the event offers their bib (§681). The elite sheet (§NNN)
+  // is its list alone, in the order the club typed it, two to a page — no member's bib is ever among it.
+  const pages: BibSheetPage<SheetItem>[] = input.elite
+    ? sheetPages(
+        input.elite.map((entry): SheetItem => ({ kind: "elite", entry, member: false })),
+        { layout: input.layout, membersOn: false },
+      )
+    : sheetPages(input.rows, { part: input.part, layout: input.layout, membersOn: design.member.enabled }).map((page) =>
+        page.map((row): SheetItem | null => (row === null ? null : { kind: "bib", row, member: row.member })),
+      );
   pages.forEach((page) => {
     // Every page opens with its cut — a blank lower half included — and its bibs in order.
     doc.addPage();
     if (perPage === 2) drawCut();
-    page.forEach((row, index) => {
-      if (row === null) return;
-      drawBib(row, slots[index]);
+    page.forEach((item, index) => {
+      if (item === null) return;
+      drawBib(item, slots[index]);
       if (perPage === 1) drawTrimGuide(slots[index]);
     });
   });
