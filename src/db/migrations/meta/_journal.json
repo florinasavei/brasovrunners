@@ -1258,6 +1258,13 @@
     {
       "idx": 179,
       "version": "7",
+      "when": 1793711465149,
+      "tag": "0184_registration_elite",
+      "breakpoints": true
+    },
+    {
+      "idx": 180,
+      "version": "7",
       "when": 1793715406323,
       "tag": "0185_registration_control",
       "breakpoints": true

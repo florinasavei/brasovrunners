@@ -1,8 +1,8 @@
 # Vibecoding this repo — the one page to read before asking an AI to change anything
 
-<!-- PROJECT_BASELINE: BR-V4.12-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.14-2026-11-03 -->
 
-**Baseline `BR-V4.12-2026-11-03`**
+**Baseline `BR-V4.14-2026-11-03`**
 
 The owner's word for how this platform is built: an AI agent writes, the owner reads and
 merges. This page is the short version of everything an agent trips over. `CLAUDE.md` is the
@@ -80,6 +80,7 @@ One line a row: the thing, then where it starts. Each row's why, the files besid
 | A race number | `src/modules/registrations/bib-geometry.ts`, `bib-header.ts` |
 | The bib designer «Cum arată numărul de concurs» | `src/modules/content/events/ui/BibDesignPanel.tsx`, `panel-glyphs.ts` |
 | A race's elite bibs, names printed where the number goes | `src/modules/registrations/elite-list.ts`, `bib-elite.ts` |
+| A registration marked «Elită», its bib printed elite-style | `src/modules/registrations/elite-mark.ts`, `bibs-pdf.ts` |
 | An event as a JSON file | `src/modules/content/events/transfer/`, `file-format.ts` |
 | An event's «De făcut pentru pagina evenimentului» | `src/modules/content/events/domain/page-todos.ts`, `src/modules/event-todos/` |
 | A race's results | `src/db/schema/event-results.ts`, `src/modules/results/results.ts` |

@@ -87,6 +87,13 @@ export type AuditAction =
    */
   | "registration.bibs_printed"
   | "registration.bibs_unprinted"
+  /**
+   * «Marchează ca elită» / «Nu mai e elită» (§897): an Administrator marked this registration's bib to print as an
+   * elite bib, or took the mark off. The metadata is the new value alone (`{ elite }`) — never a name or a number:
+   * the mark changes how the bib prints and nothing of the registration.
+   */
+  | "registration.elite_marked"
+  | "registration.elite_unmarked"
   /** Confirmed at the desk: address vouched for, declaration on paper (BR-REQ-037-07). */
   | "registration.confirmed_by_staff"
   /** Given a place ahead of the queue, into a free one (BR-REQ-037-07). */

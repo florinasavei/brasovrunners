@@ -15,7 +15,9 @@ import { openEditorBox, openFold } from "./support/fold";
  * land back on the card with its fold open (`#bib-elite`) and the toast; a number already on the list is refused on its
  * box with what was typed kept; «Salvează» on the event posts nothing of the card — its required name box empty does not
  * block the save, and no line is added or doubled; the delete asks first, naming the person. As the Organizer: the list
- * and its sheet, never the add box or a delete.
+ * and its sheet, never the add box or a delete. And a registered runner marked «Elită» (§897) from the registrations
+ * list's «⋮» — a client menu submitting a hidden form — wears the chip, is listed «înscris» on the card and counted in
+ * its sheet, and comes off from the same menu.
  *
  * The race is written straight into the database — the setup, not the subject — one per project and test, so the two
  * projects never share a row.
@@ -53,6 +55,30 @@ async function seedRace(tag: string): Promise<string> {
     ]);
     return rows[0].id;
   });
+}
+
+/** A confirmed runner of the race, wearing `bibNumber` — a registration, for the elite mark (§897). */
+async function seedRunner(eventId: string, tag: string, name: string, bibNumber: number): Promise<string> {
+  return withDatabase(async (client) => {
+    const email = `elite-mark-${tag}@test.invalid`;
+    const { rows: participantRows } = await client.query<{ id: string }>(
+      `INSERT INTO participants (delivery_email, normalized_email, canonical_email, canonicalization_version, default_name)
+       VALUES ($1, $1, $1, 1, $2) RETURNING id`,
+      [email, name],
+    );
+    const { rows } = await client.query<{ id: string }>(
+      `INSERT INTO registrations (event_id, participant_id, status, locale, registered_name, display_name,
+         privacy_notice_version, privacy_acknowledged_at, results_name_consent, results_consent_version, list_opt_out, confirmed_at, bib_number)
+       VALUES ($1, $2, 'CONFIRMED', 'ro', $3, $3, 1, now(), false, 1, true, now(), $4)
+       RETURNING id`,
+      [eventId, participantRows[0].id, name, bibNumber],
+    );
+    return rows[0].id;
+  });
+}
+
+async function eliteMarkOf(registrationId: string): Promise<boolean> {
+  return withDatabase(async (client) => (await client.query<{ elite: boolean }>(`SELECT elite FROM registrations WHERE id = $1`, [registrationId])).rows[0].elite);
 }
 
 async function eliteLines(eventId: string): Promise<{ name: string; bib_number: number | null }[]> {
@@ -156,6 +182,64 @@ test.describe("§895 «Elită — doar numele pe BIB»", () => {
     await expect(page.getByTestId("bib-elite")).toHaveAttribute("open", "");
     await expect(page.getByTestId("bib-elite").getByTestId("bib-elite-empty")).toBeVisible();
     expect(await eliteLines(eventId)).toEqual([]);
+  });
+
+  // §897 (the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând», «Rămâne înscris»).
+  test("the Administrator marks a registered runner elite from the list's «⋮» and unmarks them; the elite card lists them «înscris»", async ({ page }) => {
+    const tag = `${test.info().project.name}-mark-${Date.now().toString(36)}`;
+    const eventId = await seedRace(tag);
+    const name = `Ana Elita ${tag}`;
+    const registrationId = await seedRunner(eventId, tag, name, 21);
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/registrations?eventId=${eventId}`);
+    await hydrated(page);
+    // Read inside #main: the list streams, and a copy beside it can stand there for a moment.
+    const main = page.locator("#main");
+    await expect(main.getByTestId("elite-chip")).toHaveCount(0);
+
+    await main.getByRole("button", { name: `Acțiuni pentru ${name}` }).click();
+    const mark = page.getByRole("menuitem", { name: "Marchează ca elită" });
+    // A thumb's target with its glyph (BR-REQ-041-01 criterion 6, §521); polled, the menu grows in.
+    await expect.poll(async () => (await mark.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(mark.locator("svg")).toHaveCount(1);
+    await expect(page.getByRole("menuitem", { name: "Nu mai e elită" })).toHaveCount(0);
+    // It asks nothing (§384): the press is the mark.
+    await mark.click();
+    await expect(page).toHaveURL(/[?&]saved=eliteMarked/, { timeout: 30_000 });
+    await expect(page.getByTestId("toast-live")).toContainText("Marcat ca elită", { timeout: 30_000 });
+    await expect(page).toHaveURL(new RegExp(`eventId=${eventId}`));
+    await hydrated(page);
+    // The row is drawn twice (table and phone list), each with its chip.
+    await expect(page.locator("#main").getByTestId("elite-chip").first()).toContainText("Elită");
+    expect(await eliteMarkOf(registrationId)).toBe(true);
+
+    // The elite card lists them, read-only, and counts them in its sheet.
+    await page.goto(`/ro/admin/events/${eventId}`);
+    await hydrated(page);
+    const card = await openEliteCard(page);
+    await expect(card.getByTestId("bib-elite-registered")).toHaveCount(1);
+    await expect(card.getByTestId("bib-elite-registered")).toContainText(name);
+    await expect(card.getByTestId("bib-elite-registered")).toContainText("înscris");
+    await expect(card.getByTestId("bib-elite-registered")).toContainText("nr. 21");
+    await expect(card.getByTestId("bib-elite-registered").getByRole("button")).toHaveCount(0);
+    // The ordinary sheet prints them too, elite-style: the card says so, so nobody prints that bib twice.
+    await expect(card.getByTestId("bib-elite-registered-once")).toContainText("tipărește-i dintr-o singură foaie");
+    const download = card.getByTestId("bib-elite-download");
+    await expect(download).toContainText("Descarcă BIB-urile de elită (1)");
+    const sheet = await page.request.get((await download.getAttribute("href")) as string);
+    expect(sheet.status()).toBe(200);
+    expect(sheet.headers()["content-type"]).toBe("application/pdf");
+
+    // And off again, from the same menu.
+    await page.goto(`/ro/admin/registrations?eventId=${eventId}`);
+    await hydrated(page);
+    await page.locator("#main").getByRole("button", { name: `Acțiuni pentru ${name}` }).click();
+    await expect(page.getByRole("menuitem", { name: "Marchează ca elită" })).toHaveCount(0);
+    await page.getByRole("menuitem", { name: "Nu mai e elită" }).click();
+    await expect(page).toHaveURL(/[?&]saved=eliteUnmarked/, { timeout: 30_000 });
+    await hydrated(page);
+    await expect(page.locator("#main").getByTestId("elite-chip")).toHaveCount(0);
+    expect(await eliteMarkOf(registrationId)).toBe(false);
   });
 
   test("the Organizer reads the list and its sheet, and has no add box and no delete", async ({ page }) => {

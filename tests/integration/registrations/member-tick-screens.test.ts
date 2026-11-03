@@ -81,6 +81,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   setBibNumberAction: vi.fn(),
   withdrawConsentAction: vi.fn(),
   setOutsideCapacityAction: vi.fn(),
+  setRegistrationEliteAction: vi.fn(),
   declarationHoldAction: vi.fn(),
   // The member tick and its sweep (§645).
   setClubMemberDeclaredAction: vi.fn(),

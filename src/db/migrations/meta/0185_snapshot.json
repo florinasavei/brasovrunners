@@ -1,6 +1,6 @@
 {
   "id": "3635061f-c924-4b0a-a4f7-20235c463d67",
-  "prevId": "0b7c6aa6-be2e-40c2-abc7-1420480ce4e3",
+  "prevId": "0135e84b-cb04-4a3c-ac61-2d6e2c63453c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -8930,6 +8930,13 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "elite": {
+          "name": "elite",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "submitted_at": {
           "name": "submitted_at",

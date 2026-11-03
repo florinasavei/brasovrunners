@@ -1191,6 +1191,11 @@
         "infoKeeps": "Păstrează declarația și numărul; pe lista publică apar doar cu «Arată invitații speciali pe lista publică» bifat, în numărătoare doar cu «Numără și invitații speciali».",
         "infoNot": "Un participant obișnuit nu se pune aici."
       },
+      "elite": {
+        "chip": "Elită",
+        "mark": "Marchează ca elită",
+        "unmark": "Nu mai e elită"
+      },
       "export": "Descarcă CSV",
       "personLink": "Toate datele unei persoane",
       "personThis": "Toate datele acestei persoane",
@@ -1548,6 +1553,8 @@
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
           "address_vouched_on_entry": "Adresă garantată de echipă la înscriere; loc sau lista de așteptare pe loc («Direct pe lista de așteptare»)",
           "outside_capacity_changed": "Pus pe lista de invitați speciali sau scos de pe ea",
+          "elite_marked": "Marcat ca elită: BIB-ul se tipărește cu numele în locul numărului",
+          "elite_unmarked": "Nu mai e elită: BIB-ul se tipărește din nou cu numărul",
           "deadline_moved_for_outage": "Termen mutat: site-ul nu a putut fi accesat, ceasul a stat pe loc",
           "hold_moved_by_window": "Termenul semnării mutat după fereastra de confirmare schimbată",
           "not_revived_for_outage": "Nereluat după întreruperea site-ului: termenul trecuse cât nu putea fi accesat, iar locul fusese dat între timp sau cererea expirase deja",
@@ -6826,6 +6833,9 @@
       "eliteDownload": "Descarcă BIB-urile de elită ({count})",
       "eliteSampleAlt": "Un BIB de elită: numele în locul numărului",
       "eliteSampleCaption": "Așa se tipărește un BIB de elită, cu designul salvat și un nume de probă.",
+      "eliteRegistered": "înscris",
+      "eliteRegisteredHelp": "Un alergător înscris se marchează din lista de înscrieri: «⋮» → «Marchează ca elită». Rămâne înscris, cu locul și numărul lui, și apare aici de când e confirmat.",
+      "eliteRegisteredOnce": "Foaia obișnuită îi tipărește și ea, tot ca BIB-uri de elită: tipărește-i dintr-o singură foaie, nu din amândouă.",
       "helpMore": "Numerele se dau în ordinea confirmării și nu se dau de două ori. Foaia are două numere A5 pe o pagină A4; un singur număr se descarcă de pe pagina înscrierii.",
       "memberLabelDefault": "Membru {club}",
       "profileStart": "Start",
@@ -13294,6 +13304,8 @@
       "reserveDeleted": "Persoana a fost ștearsă de pe lista internă.",
       "eliteAdded": "Numele e pe lista de elită. Nu e o înscriere și nu s-a trimis nimic.",
       "eliteDeleted": "Numele a fost șters de pe lista de elită.",
+      "eliteMarked": "Marcat ca elită: BIB-ul lui se tipărește cu numele în locul numărului. Înscrierea rămâne neschimbată.",
+      "eliteUnmarked": "Nu mai e elită: BIB-ul lui se tipărește din nou cu numărul.",
       "waitlistAdded": "Persoana e pe lista de așteptare; emailul e pus la coadă.",
       "waitlistPlaced": "Era un loc liber: persoana l-a primit, iar emailul cu declarația e pus la coadă."
     },

@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.14-2026-11-03
+
+- **«Căutăm voluntari» under «Cine vine»** — on the event page the volunteers' line and button stand right under the start list, no longer after the programme. §898.
+## BR-V4.13-2026-11-03
+
+- **«Elită» on a registration** — an Administrator marks or unmarks any registration as elite from the registrations list's «⋮», at any time and in any state; its bib then prints with the name where the number goes (its own number and the sponsors only as the design ticks them), the runner stays registered with their place and number, nobody is emailed, and the elite sheet prints them after the list. §897.
 ## BR-V4.12-2026-11-03
 
 - **«Locuri» answers first** — «Locuri libere acum: N din capacitate», then the places taken (confirmed, and holding one until they sign), who waits, where the free places go and the capacity it would take to let everybody in. §896.
