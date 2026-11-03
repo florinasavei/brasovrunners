@@ -18,7 +18,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Elită — doar numele pe BIB» (§NNN; BR-REQ-038-01, BR-REQ-060-01) — the owner, 2026-11-03, «Listă separată»: the
+ * «Elită — doar numele pe BIB» (§895; BR-REQ-038-01, BR-REQ-060-01) — the owner, 2026-11-03, «Listă separată»: the
  * race's elite runners as names printed on bibs, the name where the number goes. Not registrations: nothing here
  * registers anybody, emails anybody or reaches any count. Read from a real database (PGlite, the same migrations as Neon).
  */
@@ -88,7 +88,7 @@ async function failureOf(operation: Promise<unknown>) {
   throw new Error("expected a DomainError");
 }
 
-describe("§NNN the race's elite list", () => {
+describe("§895 the race's elite list", () => {
   it("keeps names in the order typed, with an optional number, and registers, emails and tells nobody", async () => {
     const race = await createRace();
     const admin = await staff("ADMIN");

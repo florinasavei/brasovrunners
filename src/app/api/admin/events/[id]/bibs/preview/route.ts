@@ -116,7 +116,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     const drawn = member ? { ...design, member: { ...design.member, enabled: true } } : design;
     const sampleNumber = bibNumberFromQuery(url.searchParams.get("number")) ?? event.bibStartNumber;
     /*
-      `elite=1` draws an elite bib (§NNN) — the «Elită» card's sample: the placeholder name where the number goes, the
+      `elite=1` draws an elite bib (§895) — the «Elită» card's sample: the placeholder name where the number goes, the
       sample number under it only while «Număr pe BIB-urile de elită» is ticked. Never a name from the list: the sample
       draws nobody, so the gate stays the one every staff role passes.
     */

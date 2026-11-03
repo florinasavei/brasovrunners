@@ -88,13 +88,13 @@ export type BibSheetRow = {
   member?: boolean;
 };
 
-/** One bib the sheet draws: a runner's (or a desk spare's) row, or an elite line (§NNN). `member` is the paging's (§681). */
+/** One bib the sheet draws: a runner's (or a desk spare's) row, or an elite line (§895). `member` is the paging's (§681). */
 type SheetItem = { kind: "bib"; row: BibSheetRow; member?: boolean } | { kind: "elite"; entry: BibEliteEntry; member: false };
 
 export type BibSheetInput = {
   rows: readonly BibSheetRow[];
   /**
-   * «Elită — doar numele pe BIB» (§NNN): when given, the sheet prints these elite bibs instead of `rows` — each
+   * «Elită — doar numele pe BIB» (§895): when given, the sheet prints these elite bibs instead of `rows` — each
    * the race's header, the **name where the number goes** (`bib-geometry.ts#bibEliteLayout`), the number under it
    * and the sponsors' row only as the design ticks them (`bib-elite.ts#bibEliteParts`), the extras and the small
    * print as on any bib. Never a name line, a blank mark or the members' design.
@@ -446,7 +446,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const top = slot.y + BIB_MARGIN;
     const bottom = top + BIB_CARD.height;
     const row = item.kind === "bib" ? item.row : null;
-    // An elite bib (§NNN): the name where the number goes; the number and the sponsors' row only as the design ticks them.
+    // An elite bib (§895): the name where the number goes; the number and the sponsors' row only as the design ticks them.
     const elite = item.kind === "elite" ? { entry: item.entry, ...bibEliteParts(design, item.entry) } : null;
     const asMember = row?.member === true;
     // The members' design only while the switch is on (§664): their header, or their whole card (§695).
@@ -454,7 +454,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const header = asMember && design.member.enabled ? memberHeader : eventHeader;
     /*
       The strip of sponsors takes this much above the small print, when there is one; the row is also there, for its
-      two stubs, with the number repeated and no picture (§750). An elite bib has it only with its tick (§NNN).
+      two stubs, with the number repeated and no picture (§750). An elite bib has it only with its tick (§895).
     */
     const rowPicture = elite && !elite.sponsors ? null : sponsorPicture;
     const rowStubs = elite ? elite.stubs : stubs;
@@ -611,7 +611,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       shorter than its line and still fit; the picture centres it the same way, and a number that
       hugged the band here would be a preview of a different bib (§338).
     */
-    // An elite bib has no name strip (§NNN): its name is in the number's place.
+    // An elite bib has no name strip (§895): its name is in the number's place.
     const showName = elite === null && design.showName;
     const nameBlock = showName ? L.nameBlock : 0;
     const nameAbove = showName && design.namePosition === "above";
@@ -680,7 +680,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
 
     if (elite) {
       /*
-        An elite bib (§NNN): the name in the number's place, bold, at the size and on the lines `bibEliteLayout`
+        An elite bib (§895): the name in the number's place, bold, at the size and on the lines `bibEliteLayout`
         chose — each line centred by hand and handed to pdfkit with no width, so it cannot wrap or cut (§317's
         lesson); the measure is never narrower than pdfkit sets the line. The number under it only when ticked and set.
       */
@@ -924,7 +924,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const perPage = input.layout === "one" ? 1 : 2;
   // The places on one page, upper half first (or the one centred place with `one`).
   const slots = bibSheetSlots(perPage, input.layout);
-  // The members' pile first, on pages of its own, while the event offers their bib (§681). The elite sheet (§NNN)
+  // The members' pile first, on pages of its own, while the event offers their bib (§681). The elite sheet (§895)
   // is its list alone, in the order the club typed it, two to a page — no member's bib is ever among it.
   const pages: BibSheetPage<SheetItem>[] = input.elite
     ? sheetPages(

@@ -321,7 +321,7 @@ export default async function BibDesignPanel({
   const membersAside = design.member.enabled
     ? words(t("editor.bibDesign.sectionSummary.membersOn"), design.member.mark && t(`editor.bibDesign.member.markShapes.${design.member.markShape}`))
     : t("editor.bibDesign.sectionSummary.membersOff");
-  // «Elită» (§NNN): what the elite bibs carry besides the name; neither ticked is the name alone.
+  // «Elită» (§895): what the elite bibs carry besides the name; neither ticked is the name alone.
   const eliteAside =
     words(design.eliteNumber && t("editor.bibDesign.sectionSummary.eliteNumber"), design.eliteSponsors && t("editor.bibDesign.sectionSummary.eliteSponsors")) ||
     t("editor.bibDesign.sectionSummary.eliteNameOnly");
@@ -812,7 +812,7 @@ export default async function BibDesignPanel({
           </Box>
         </Panel>
 
-        {/* «Elită» (§NNN): the race's elite runners print with the name where the number goes (the print card's
+        {/* «Elită» (§895): the race's elite runners print with the name where the number goes (the print card's
             «Elită — doar numele pe BIB»); these two ticks say what else their bibs carry. Both off by default. */}
         <Panel glyph="bibElite" collapsible level={5} title={t("editor.bibDesign.sections.elite")} aside={eliteAside} data-testid="bib-section-elite">
           <Stack spacing={1.5}>

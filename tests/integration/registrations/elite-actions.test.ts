@@ -8,7 +8,7 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Elită — doar numele pe BIB» (§NNN; BR-REQ-060-01): the bib card's two presses — «Adaugă pe lista de elită» and a
+ * «Elită — doar numele pe BIB» (§895; BR-REQ-060-01): the bib card's two presses — «Adaugă pe lista de elită» and a
  * line's «Șterge» — are the Administrator's, asserted at the door of each Server Action (and again in the service);
  * the Organizer and Tehnic are refused and nothing is written. A refused add keeps what was typed and names the
  * card's own box; a success lands back on the card, open, and leaves its row in the trail.
@@ -83,7 +83,7 @@ async function outcomeOf(run: Promise<unknown>): Promise<{ redirect: string } | 
   }
 }
 
-describe("§NNN the elite list's Server Actions", () => {
+describe("§895 the elite list's Server Actions", () => {
   it("adds for the Administrator, lands on the card open, and leaves an audit row with the line's id only", async () => {
     await as("ADMIN");
     const done = await outcomeOf(addEliteEntryAction(null, form({ eliteName: " Eliud  Kipchoge ", eliteNumber: "7" })));

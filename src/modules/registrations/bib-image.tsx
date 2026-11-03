@@ -132,7 +132,7 @@ type BibImageInput = {
   /** «21K» for the header's badge (§750), from `bib-extras.ts`; drawn only while the design's tick is on. */
   distanceBadge?: string | null;
   /**
-   * An elite bib (§NNN), as the sheet prints one: the race's header, the **name where the number goes**
+   * An elite bib (§895), as the sheet prints one: the race's header, the **name where the number goes**
    * (`bib-geometry.ts#bibEliteLayout`), the line's number under it and the sponsors' row only as the design ticks
    * them (`bib-elite.ts#bibEliteParts`). `bibNumber` and `registeredName` are then not drawn; never the members' design.
    */
@@ -419,7 +419,7 @@ function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePic
 }
 
 /**
- * An elite bib's name in the number's place (§NNN), at the sheet's points: the number's area as a box of its own
+ * An elite bib's name in the number's place (§895), at the sheet's points: the number's area as a box of its own
  * (`flex: 1`, the height the same rows leave it as on the paper), each line `bibEliteLayout` chose absolute at its
  * top, centred across the card at the line's own height (`BIB_TEXT_LINE`), bold, never wrapped — the layout measured
  * it never narrower than Satori sets it, so the box's width is only a safety net, as the header's is. The line's
@@ -510,7 +510,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const { width, height } = BIB_IMAGE;
   const L = BIB_LAYOUT;
   const design = input.design ?? DEFAULT_BIB_DESIGN;
-  // An elite bib (§NNN): the name where the number goes; the number and the sponsors' row only as the design ticks them.
+  // An elite bib (§895): the name where the number goes; the number and the sponsors' row only as the design ticks them.
   const elite = input.elite ? { entry: input.elite, ...bibEliteParts(design, input.elite) } : null;
   // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever. An elite bib's own number, or none.
   const digits = elite ? (elite.number !== null ? formatRaceNumber(elite.number, design.numberFormat) : "") : formatRaceNumber(input.bibNumber, design.numberFormat);
@@ -546,7 +546,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   });
   const sponsorsAtBottom = design.sponsorPlace === "bottom";
   const badge = design.showDistance ? (input.distanceBadge ?? null) : null;
-  // The stubs (§750) are why the sponsors' row exists with no picture; on an elite bib only with its row and a number (§NNN).
+  // The stubs (§750) are why the sponsors' row exists with no picture; on an elite bib only with its row and a number (§895).
   const stubs = elite ? elite.stubs : design.numberStubs;
   // A picture the club uploaded (§249): the one the route read (§560), or — when the caller read
   // none — the design's own address made absolute; the band when there is none.
@@ -577,7 +577,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         })()
     : pictureOf("header", design.headerImageSrc);
   const headerCrop = asMember ? design.member.headerImageCrop : design.headerImageCrop;
-  // The sponsors' strip, on an elite bib only with «Banda de sponsori pe BIB-urile de elită» (§NNN).
+  // The sponsors' strip, on an elite bib only with «Banda de sponsori pe BIB-urile de elită» (§895).
   const sponsors = elite && !elite.sponsors ? null : pictureOf("sponsors", design.sponsorImageSrc);
   // Told which header this picture draws, as the sheet is (§317).
   const footerLines = bibImageFooterLines(input, header !== null);
@@ -866,7 +866,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         {/* The member mark (§750; its shape the club's, §759), the sheet's at the sheet's points. */}
         {markDrawn ? bibMemberMarkElement(markShape, ink, markShape === "logo" ? await clubLogo() : null) : null}
         {design.namePosition === "above" ? name : null}
-        {/* The number, centred on what the card has left, as the sheet centres it — or, on an elite bib (§NNN), the name in its place. */}
+        {/* The number, centred on what the card has left, as the sheet centres it — or, on an elite bib (§895), the name in its place. */}
         {elite ? (
           bibEliteElement(bibElite(elite.entry.name, { area: numberArea, scale: numberScaleFactor(design), number: elite.number !== null }), digits, ink)
         ) : (

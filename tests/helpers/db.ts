@@ -160,7 +160,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(registrationNotes);
   // The internal waiting list (§854) cascades from its event; emptied here like the event's other children.
   await db.delete(eventReserveEntries);
-  // The elite list (§NNN) cascades from its event too; emptied here likewise.
+  // The elite list (§895) cascades from its event too; emptied here likewise.
   await db.delete(eventEliteEntries);
   await db.delete(registrations);
   // The "tell me when registration opens" addresses (§146) cascade from their event; deleted

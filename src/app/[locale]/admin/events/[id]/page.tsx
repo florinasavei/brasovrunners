@@ -259,7 +259,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     ? { band: spareState.band, free: spareState.free, nextFrom: spareState.candidates[0] ?? null, perPrint: SPARE_BIBS_PER_PRINT }
     : null;
   /*
-    «Elită — doar numele pe BIB» (§NNN), beside the spares and only where they are (an event that prints bibs, a role
+    «Elită — doar numele pe BIB» (§895), beside the spares and only where they are (an event that prints bibs, a role
     that reads them): the names, read here; the card's object waits for the checkpoints below (its sample's `v=`). Not
     registrations, so nothing above counts them.
   */
@@ -417,7 +417,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const profileKey = readRouteGpx(event.routeGpx)?.key ?? null;
   const checkpointsProfile = profileKey ? await readRouteElevation(profileKey).catch(() => null) : null;
   /*
-    The elite card (§NNN): its names, the sheet's address and a sample elite bib drawn with the saved design — stamped
+    The elite card (§895): its names, the sheet's address and a sample elite bib drawn with the saved design — stamped
     with the saved checkpoints as the designer's own sample is (`BibDesignPanel`, `v=`), so a changed strip of
     checkpoints is never an hour-old cached picture here.
   */
@@ -1116,7 +1116,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 form, so neither save posts the other's boxes.
               */}
               <CheckpointForms locale={locale} eventId={event.id} mayEdit={canEditCheckpoints(staffUser.role)}>
-              {/* «Adaugă pe lista de elită» (§NNN), a card of the bibs inside the save form: detached the same way. */}
+              {/* «Adaugă pe lista de elită» (§895), a card of the bibs inside the save form: detached the same way. */}
               <EliteBibForms locale={locale} eventId={event.id} mayEdit={mayEditElite} eliteAddAction={addEliteEntryAction}>
               {/* Settings and texts: one form, one save — and a refusal that keeps every box (§315). */}
               <ActionForm action={saveEventAndTranslationsAction} messages={refusal} confirm={saveConfirm} id="event-save-form" data-testid="event-save-form">

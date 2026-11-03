@@ -173,7 +173,7 @@ export default async function RegistrationBox({
   /** Sub-sub-card 8.4.2, edit only, drawn by the page (it posts forms of its own). */
   bibPrint?: ReactNode;
   /**
-   * The page is back from a press inside `bibPrint` (§NNN: «Elită»'s add or delete): this box and the race numbers' card
+   * The page is back from a press inside `bibPrint` (§895: «Elită»'s add or delete): this box and the race numbers' card
    * open by themselves (`openWhen.saved`), so the card the reader pressed in is in sight again.
    */
   bibPrintSaved?: boolean;

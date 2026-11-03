@@ -105,7 +105,7 @@ export type BibDesignFormValues = {
   emergencyUpsideDown: boolean;
   showDistance: boolean;
   numberStubs: boolean;
-  /** «Număr pe BIB-urile de elită» and «Banda de sponsori pe BIB-urile de elită» (§NNN): both off by default. */
+  /** «Număr pe BIB-urile de elită» and «Banda de sponsori pe BIB-urile de elită» (§895): both off by default. */
   eliteNumber: boolean;
   eliteSponsors: boolean;
   /** The members' race number (§664): its switch, its header and its label, as posted. */
@@ -366,7 +366,7 @@ export function bibPreviewUrl(input: {
   design: BibDesignFormValues;
   /** Draw a member's bib (§664): the members' header and label over the same sample. */
   member?: boolean;
-  /** Draw an elite bib (§NNN): a sample name where the number goes, the number under it only when `eliteNumber` is ticked. */
+  /** Draw an elite bib (§895): a sample name where the number goes, the number under it only when `eliteNumber` is ticked. */
   elite?: boolean;
   /**
    * A stamp of what the sample is drawn from that is not in the form — the route's saved checkpoints
