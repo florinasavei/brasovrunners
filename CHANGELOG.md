@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.08-2026-11-03
+
+- **«Locuri» under «Cine s-a înscris»** — for a race with a capacity: places taken and free, the official and internal waiting lists, how many can be let in with no place added, how many places it takes for everybody else, and the total if everybody comes. §892.
 ## BR-V4.07-2026-11-02
 
 - **Less empty room under the association's name, seat and email** at the foot of the page, nearer the footer. §891.
