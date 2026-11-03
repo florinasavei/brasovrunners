@@ -62,6 +62,7 @@ One line a row: the thing, then where it starts. Each row's why, the files besid
 | A file a route hands out for saving | `src/shared/http/content-disposition.ts`, `tests/unit/design/download-names.test.ts` |
 | The rules of registration | `src/modules/registrations/service.ts` |
 | What staff may do to a registration | `src/modules/registrations/admin-service.ts` |
+| Answers a registration still owes | `registrations/missing-answers.ts` |
 | Internal notes on a registration | `src/db/schema/registration-notes.ts`, `src/modules/registrations/notes.ts` |
 | The statistics under the registrations Excel | `src/modules/registrations/statistics.ts`, `registrations/domain/club-runner.ts#isClubRunner` |
 | What «Sunt membru al grupului» means | `src/modules/content/members/member-definition.ts`, `app/[locale]/admin/pages/members/DefinitionCard.tsx` |
