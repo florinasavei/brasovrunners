@@ -19,7 +19,18 @@ import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { escapeLike, foldedName, foldTerm } from "@/db/name-search";
 import { alias } from "drizzle-orm/pg-core";
-import { awaitingItsFirstEmail, familyEmailQueued, familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
+import {
+  awaitingItsFirstEmail,
+  countEligibleWaitlisted,
+  countOccupied,
+  countOutsideCapacity,
+  familyEmailQueued,
+  familyReservationHolds,
+  offerAwaitingItsFirstEmail,
+} from "./repository";
+import { computeOccupied } from "./domain/capacity";
+import { placeOutlook, type PlaceOutlook } from "./domain/place-outlook";
+import { eventReserveEntries } from "@/db/schema/event-reserve-entries";
 import { promoListed } from "./sponsor-list";
 import { healthNoteShown } from "./domain/health-note";
 import { memberCanonicalEmails } from "./member-ticks";
@@ -625,6 +636,23 @@ export async function countKits<T extends Record<string, unknown>>(db: Database<
     kits.registrations += row.total;
   }
   return kits;
+}
+
+/**
+ * «Locuri» (the owner, 2026-11-03): one event's capacity, the places the allocator counts as taken, its
+ * official waiting list, the lines of its internal list and its special guests, as `placeOutlook` reads
+ * them. Null for an event with no capacity — nothing to let anyone into. Blind to every filter but the event.
+ */
+export async function readPlaceOutlook<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<PlaceOutlook | null> {
+  const [event] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, eventId)).limit(1);
+  if (!event || event.capacity === null) return null;
+  const [counts, waiting, outside, [internal]] = await Promise.all([
+    countOccupied(db, eventId, now),
+    countEligibleWaitlisted(db, eventId),
+    countOutsideCapacity(db, eventId),
+    db.select({ total: count() }).from(eventReserveEntries).where(eq(eventReserveEntries.eventId, eventId)),
+  ]);
+  return placeOutlook({ capacity: event.capacity, occupied: computeOccupied(counts), waiting, internal: internal?.total ?? 0, outside });
 }
 
 /** How many times the form was filled again for one registration, and when last (§312). */

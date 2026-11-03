@@ -1135,6 +1135,15 @@
         "noShirt": "no T-shirt: {count}",
         "unknownSize": "size not known yet (invitations): {count}"
       },
+      "places": {
+        "title": "Places taken: {occupied} of {capacity} · Free: {free}",
+        "lists": "Official waiting list: {waiting} · Internal list (notes only): {internal} · Special guests, outside the places: {outside}",
+        "letIn": "You can let in {count} now with no place added — from the official list: {fromWaiting} («Send them the offer»), from the internal list: {fromInternal} («Offer them a place now»).",
+        "nobodyWaits": "Nobody is waiting on either list.",
+        "raisesRest": "For the rest of the lists ({count}), each offer adds a place: the capacity would reach {capacity}.",
+        "raisesAll": "No place is free: for those on the lists ({count}), each offer adds a place — the capacity would reach {capacity}.",
+        "total": "Total if everybody comes: {count} — the places taken, the special guests and both lists."
+      },
       "outside": {
         "pill": "Special guests: {count}",
         "chip": "Special guest",
