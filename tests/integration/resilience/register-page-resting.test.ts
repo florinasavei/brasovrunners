@@ -33,8 +33,8 @@ const state = vi.hoisted(() => ({
     waitlistCountPublic?: boolean;
     participantCountPublic?: boolean;
   },
-  // The organizers' two switches on the event's row (§NNN); nothing, as before, for every other case.
-  eventOver: {} as { publicRegistrationOpen?: boolean; freePlacesByOfferOnly?: boolean },
+  // The organizers' two switches on the event's row (§NNN), and «Da»/«Nu» beside them; nothing, as before, for every other case.
+  eventOver: {} as { publicRegistrationOpen?: boolean; freePlacesByOfferOnly?: boolean; waitlistAutoOffer?: boolean },
   sitting: null as null | {
     sittingId: string | null;
     seed?: null;
@@ -426,5 +426,35 @@ describe("§NNN the organizers' door on the register page", () => {
     const open = await render();
     expect(open).not.toContain('data-testid="registration-waitlist-notice"');
     expect(open).toContain('name="firstName"');
+  });
+
+  it("how an offer works follows the allocator's gate: the organizers' words while no place reaches the line by itself", async () => {
+    const byHandWords = "Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email și ai 36 de ore să confirmi.";
+    // The tick, places free beside a line with room: nothing frees itself to anybody, so never «Când se eliberează un loc».
+    state.eventOver = { freePlacesByOfferOnly: true };
+    state.availability = { available: 3, capacity: 10, waitlistRoom: 5, waitlistCapacity: 5, waiting: 0, waitlisted: 0 };
+    const ticked = await render();
+    expect(ticked).toContain('data-testid="registration-waitlist-offer"');
+    expect(ticked).toContain(byHandWords);
+    expect(ticked).not.toContain("Când se eliberează un loc");
+
+    // The tick on a full event wins over «Da»: the same words.
+    state.eventOver = { freePlacesByOfferOnly: true, waitlistAutoOffer: true };
+    state.availability = { available: 0, capacity: 10, waitlistRoom: 4, waitlistCapacity: 5, waiting: 1, waitlisted: 1 };
+    const tickedFull = await render();
+    expect(tickedFull).toContain(byHandWords);
+    expect(tickedFull).not.toContain("Când se eliberează un loc");
+
+    // «Nu», full: the organizers give every freed place.
+    state.eventOver = { waitlistAutoOffer: false };
+    const byHand = await render();
+    expect(byHand).toContain(byHandWords);
+    expect(byHand).not.toContain("Când se eliberează un loc");
+
+    // «Da», the tick off: a freed place reaches the line by itself — the sentence that says so, and not the organizers'.
+    state.eventOver = { waitlistAutoOffer: true };
+    const auto = await render();
+    expect(auto).toContain("Când se eliberează un loc, primești un email și ai 36 de ore să confirmi — altfel locul trece mai departe.");
+    expect(auto).not.toContain("Locurile le dau organizatorii");
   });
 });

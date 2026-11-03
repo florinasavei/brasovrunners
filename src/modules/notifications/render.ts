@@ -74,9 +74,9 @@ import { shopOrders } from "@/db/schema/shop";
 import { readShopSettings } from "@/modules/content/shop/settings";
 import { isUuid } from "@/shared/ids";
 import { events } from "@/db/schema/events";
-import { countEligibleWaitlisted, countOccupied, readWaitlistPosition } from "@/modules/registrations/repository";
+import { countEligibleWaitlisted, countOccupied, offersWaitlistAutomatically, readWaitlistPosition } from "@/modules/registrations/repository";
 import { computeOccupied, hasDirectAvailability } from "@/modules/registrations/domain/capacity";
-import { newcomerJoinsLine, waitlistHasRoom } from "@/modules/registrations/domain/waitlist";
+import { newcomerJoinsLine, publicEntryQueues, waitlistHasRoom } from "@/modules/registrations/domain/waitlist";
 import type { FamilySitting, PendingFamilyEntry } from "@/db/schema/family-entries";
 import {
   extendHeldVerificationLink,
@@ -514,6 +514,16 @@ async function renderRow(
     // An Administrator's resend (§641) opens with «still on the waiting list», never «we added you» (§654).
     // A resend rendered after the person left the list says nothing of a standing it no longer has.
     if (row.isManualResend && standing) data.waitlistResent = true;
+    // Not full, the organizers' places (§NNN): the tick, or a place nobody holds beside the line — never «este complet».
+    if (standing && (await waitlistByHand(db, registration.eventId, now))) data.waitlistByHand = true;
+  }
+  /*
+    What happens to an offered place after its deadline (§NNN), read now, as the line is: it passes to the next person
+    by itself only while places go out by themselves (`offersWaitlistAutomatically`, the allocator's own gate) — with
+    «Nu», or «Locurile libere le dau doar eu», the organizers give it, and the message says so.
+  */
+  if (row.messageType === "WAITLIST_SPOT_OFFER" && registration) {
+    data.offerPassesOnItsOwn = await offersWaitlistAutomatically(db, registration.eventId);
   }
   /*
     One cancellation email per person (§547): whether the person held a place or waited in line —
@@ -1882,6 +1892,29 @@ async function waitlistTakesNewcomer(db: RendererDb, eventId: string, now: Date)
     newcomerJoinsLine({ waitlisted: waiting, freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel: "public", capacity: event.capacity }) ||
     !hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted: waiting });
   return queues && waitlistHasRoom({ waitlistCapacity: event.waitlistCapacity, waitlisted: waiting, openOffers: counts.unexpiredWaitlistOfferedHolds });
+}
+
+/**
+ * Whether a person in the line waits for the organizers to give out the places rather than because every place is held
+ * (§NNN), for `WAITLIST_JOINED`'s words — the allocator's rule, read at render time as every fact of the message is:
+ *
+ * - «Locurile libere le dau doar eu» in force (`publicEntryQueues` on the `public` channel): a public entry joins the line
+ *   whatever is free, and no place goes out by itself (`offersOnItsOwn`) — the organizers give each one;
+ * - or a place nobody holds beside the line: the capacity formula's own count with the line's claim left aside
+ *   (`hasDirectAvailability`, no one waiting) — «Nu», or after the close, when no offer goes out by itself either. An
+ *   uncapped event is never full.
+ *
+ * Either way «este complet momentan» would be false. Otherwise every place is held: the event is full.
+ */
+async function waitlistByHand(db: RendererDb, eventId: string, now: Date): Promise<boolean> {
+  const [event] = await db
+    .select({ capacity: events.capacity, freePlacesByOfferOnly: events.freePlacesByOfferOnly })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
+  if (!event) return false;
+  if (publicEntryQueues({ freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel: "public", capacity: event.capacity })) return true;
+  return hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(await countOccupied(db, eventId, now)), eligibleWaitlisted: 0 });
 }
 
 /**

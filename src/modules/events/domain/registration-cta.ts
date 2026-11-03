@@ -11,6 +11,7 @@
  */
 
 import { publicDoorOpen } from "@/modules/registrations/domain/public-door";
+import { offersOnItsOwn } from "@/modules/registrations/domain/waitlist";
 import { startHeldBack } from "./dated";
 import { type RegistrationWindowInput, registrationState } from "./registration-window";
 
@@ -96,6 +97,18 @@ export function offersOnlyShut(places: {
     places.availablePlaces > 0 &&
     (places.waitlistCapacity === 0 || places.waitlistRoom === 0)
   );
+}
+
+/**
+ * Whether a place goes to the waiting list by itself on this event (§615, §NNN), for what the door and the join form say
+ * of an offer: «Locurile din lista de așteptare se alocă automat» on, and «Locurile libere le dau doar eu» not in force —
+ * the allocator's own `offersOnItsOwn`, read off the public row, with the door's count standing in for the capacity as
+ * `publicEntryJoinsLine` reads it (`availablePlaces` null on an uncapped event, where the tick means nothing). False, every
+ * offer is the organizers' to make, so «Când se eliberează un loc, primești un email…» would promise what no place does by
+ * itself. A row read without the setting — a copy cached before it — reads as «Da», the column's default.
+ */
+export function offersByItself(event: { waitlistAutoOffer?: boolean | null; freePlacesByOfferOnly?: boolean | null }, availablePlaces: number | null): boolean {
+  return offersOnItsOwn({ waitlistAutoOffer: event.waitlistAutoOffer !== false, freePlacesByOfferOnly: event.freePlacesByOfferOnly === true, capacity: availablePlaces });
 }
 
 /**

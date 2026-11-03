@@ -13,6 +13,7 @@ import type { PublicEventPage } from "../repository";
 import { cachedDeadlines, cachedStartListCounts } from "@/modules/public-cache/reads";
 import { hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
 import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
+import { offersByItself } from "../domain/registration-cta";
 import { fillPhrase, fullThanksPhrase, offeredPhrase, waitingPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
 import { type PreviewDoor, readRegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { doorButtonLabel } from "./RegistrationDoorButton";
@@ -190,8 +191,9 @@ export default async function RegistrationCta({
           </Typography>
         )}
 
+        {/* «Nu», or «Locurile libere le dau doar eu» (§NNN): no place reaches the line by itself — the organizers' words. No place is free here. */}
         <Typography variant="body2" color="text.secondary" data-testid="waitlist-offer">
-          {waitlistOfferPhrase(t, locale, offerHours)}
+          {waitlistOfferPhrase(t, locale, offerHours, offersByItself(event, 0))}
         </Typography>
       </Stack>
     );

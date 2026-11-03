@@ -147,18 +147,34 @@ describe("§348 waitlistRoomPhrase — the room a capped waiting list has left",
 describe("§587 waitlistOfferPhrase — how an offer works, with the club's own hours", () => {
   it("says the offer window the club set, in the site's hour words", () => {
     const ro = translator("ro");
-    expect(waitlistOfferPhrase(ro, "ro", 24)).toBe(
+    expect(waitlistOfferPhrase(ro, "ro", 24, true)).toBe(
       "Când se eliberează un loc, primești un email și ai 24 de ore să confirmi — altfel locul trece mai departe.",
     );
-    expect(waitlistOfferPhrase(ro, "ro", 12)).toContain("ai 12 ore să confirmi");
-    expect(waitlistOfferPhrase(ro, "ro", 48)).toContain("ai 48 de ore să confirmi");
+    expect(waitlistOfferPhrase(ro, "ro", 12, true)).toContain("ai 12 ore să confirmi");
+    expect(waitlistOfferPhrase(ro, "ro", 48, true)).toContain("ai 48 de ore să confirmi");
     const en = translator("en");
-    expect(waitlistOfferPhrase(en, "en", 24)).toBe("When a place frees up, you get an email and 24 hours to confirm — then it passes on.");
-    expect(waitlistOfferPhrase(en, "en", 6)).toContain("6 hours to confirm");
+    expect(waitlistOfferPhrase(en, "en", 24, true)).toBe("When a place frees up, you get an email and 24 hours to confirm — then it passes on.");
+    expect(waitlistOfferPhrase(en, "en", 6, true)).toContain("6 hours to confirm");
+  });
+
+  it("§NNN while no place reaches the line by itself, says the organizers give the places — never «când se eliberează»", () => {
+    const ro = translator("ro");
+    const byHand = waitlistOfferPhrase(ro, "ro", 24, false);
+    expect(byHand).toBe("Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email și ai 24 de ore să confirmi.");
+    expect(byHand).not.toContain("Când se eliberează");
+    expect(byHand).not.toContain("trece mai departe");
+    expect(waitlistOfferPhrase(ro, "ro", 12, false)).toContain("ai 12 ore să confirmi");
+    const en = translator("en");
+    const enByHand = waitlistOfferPhrase(en, "en", 24, false);
+    expect(enByHand).toBe("The organizers give out the places one at a time: when they can give you one, you get an email and 24 hours to confirm.");
+    expect(enByHand).not.toContain("frees up");
+    expect(enByHand).not.toContain("passes on");
   });
 
   it("stays under 200 characters at the longest window the club may set", () => {
-    for (const locale of ["ro", "en"] as const) expect(waitlistOfferPhrase(translator(locale), locale, 72).length).toBeLessThanOrEqual(200);
+    for (const locale of ["ro", "en"] as const) {
+      for (const byItself of [true, false]) expect(waitlistOfferPhrase(translator(locale), locale, 72, byItself).length).toBeLessThanOrEqual(200);
+    }
   });
 });
 

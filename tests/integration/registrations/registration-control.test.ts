@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { isValidElement, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -61,6 +61,7 @@ const { readPublicDoor } = await import("@/modules/registrations/public-now");
 const { readWaitlistPosition } = await import("@/modules/registrations/repository");
 const { saveEventAndTranslations, saveEventFields } = await import("@/modules/content/events/service");
 const { default: PublicNowLine } = await import("@/modules/registrations/ui/PublicNowLine");
+const { renderOutboxMessage } = await import("@/modules/notifications/render");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
@@ -318,6 +319,77 @@ describe("«Locurile libere le dau doar eu» (§NNN)", () => {
     // The next allocator write fills the line first (`fillAvailableSpots`), then seats the newcomer.
     expect((await staffEntry(event.id, "Mara")).status).toBe("PENDING_DECLARATION");
     expect((await rowOf("Ana")).status).toBe("WAITLIST_OFFERED");
+  });
+});
+
+describe("The waiting list's emails say what the allocator does (§NNN)", () => {
+  /** The one message of this type queued for the person, rendered as it would leave now: both halves, as text. */
+  async function sent(name: string, messageType: "WAITLIST_JOINED" | "WAITLIST_SPOT_OFFER"): Promise<string> {
+    const registration = await rowOf(name);
+    const [row] = await db.select().from(emailOutbox).where(and(eq(emailOutbox.registrationId, registration.id), eq(emailOutbox.messageType, messageType)));
+    if (!row) throw new Error(`no ${messageType} queued for ${name}`);
+    return (await renderOutboxMessage(row, db, NOW)).text;
+  }
+  const byHand = {
+    ro: "La Crosul, locurile le dau organizatorii, pe rând: te-am trecut pe lista de așteptare și îți scriem când îți putem da un loc.",
+    en: "At The cross, the organizers give out the places one at a time: we have put you on the waiting list and will write to you when we can give you a place.",
+  };
+
+  it("WAITLIST_JOINED: sent to the line by the tick, the person is told the organizers give the places — never «este complet»", async () => {
+    // Beside free places: the event is not full.
+    const event = await createEvent(3, { freePlacesByOfferOnly: true, waitlistAutoOffer: true });
+    expect((await publicEntry(event, "Ana")).status).toBe("WAITLISTED");
+    const beside = await sent("Ana", "WAITLIST_JOINED");
+    expect(beside).toContain(byHand.ro);
+    expect(beside).toContain(byHand.en);
+    expect(beside).not.toContain("este complet");
+    expect(beside).not.toContain("is full");
+
+    // Every place held, the tick still in force: no place goes out by itself — still the organizers' words.
+    const full = await createEvent(1, { freePlacesByOfferOnly: true });
+    expect((await staffEntry(full.id, "Mara")).status).toBe("PENDING_DECLARATION");
+    expect((await publicEntry(full, "Ioana")).status).toBe("WAITLISTED");
+    expect(await sent("Ioana", "WAITLIST_JOINED")).toContain(byHand.ro);
+  });
+
+  it("WAITLIST_JOINED: «este complet» only while every place is held — a place freed beside the line under «Nu» is not «full»", async () => {
+    const event = await createEvent(1);
+    expect((await staffEntry(event.id, "Mara")).status).toBe("PENDING_DECLARATION");
+    expect((await publicEntry(event, "Ana")).status).toBe("WAITLISTED");
+    const full = await sent("Ana", "WAITLIST_JOINED");
+    expect(full).toContain("Crosul este complet momentan, așa că te-am adăugat pe lista de așteptare.");
+    expect(full).toContain("The cross is full right now, so we added you to the waiting list.");
+    expect(full).not.toContain("locurile le dau organizatorii");
+    // The place is freed; with «Nu» nobody is offered it by itself. The same message, rendered now, says who gives it.
+    await cancelRegistrationByStaff(db, admin, (await rowOf("Mara")).id, "", NOW);
+    expect((await rowOf("Ana")).status).toBe("WAITLISTED");
+    const freed = await sent("Ana", "WAITLIST_JOINED");
+    expect(freed).toContain(byHand.ro);
+    expect(freed).toContain(byHand.en);
+    expect(freed).not.toContain("este complet");
+  });
+
+  it("WAITLIST_SPOT_OFFER: after the deadline the place passes on by itself only while places go out by themselves", async () => {
+    // The tick: the Administrator's offer; after its deadline the organizers give the place again.
+    const ticked = await createEvent(2, { freePlacesByOfferOnly: true, waitlistAutoOffer: true });
+    expect((await publicEntry(ticked, "Ana")).status).toBe("WAITLISTED");
+    expect((await offerPlaceByStaff(db, admin, (await rowOf("Ana")).id, NOW, {})).status).toBe("WAITLIST_OFFERED");
+    const byHandOffer = await sent("Ana", "WAITLIST_SPOT_OFFER");
+    expect(byHandOffer).toContain("după acest termen, organizatorii pot da locul altcuiva.");
+    expect(byHandOffer).toContain("after that, the organizers may give the place to someone else.");
+    expect(byHandOffer).not.toContain("trece la următorul");
+    expect(byHandOffer).not.toContain("passes to the next person");
+
+    // «Da», the tick off: the freed place is offered by itself, and after its deadline passes to the next in line.
+    const auto = await createEvent(1, { waitlistAutoOffer: true });
+    expect((await staffEntry(auto.id, "Mara")).status).toBe("PENDING_DECLARATION");
+    expect((await publicEntry(auto, "Ioana")).status).toBe("WAITLISTED");
+    await cancelRegistrationByStaff(db, admin, (await rowOf("Mara")).id, "", NOW);
+    expect((await rowOf("Ioana")).status).toBe("WAITLIST_OFFERED");
+    const passes = await sent("Ioana", "WAITLIST_SPOT_OFFER");
+    expect(passes).toContain("după acest termen, locul trece la următorul de pe lista de așteptare.");
+    expect(passes).toContain("after that, the place passes to the next person on the waiting list.");
+    expect(passes).not.toContain("organizatorii pot da locul altcuiva");
   });
 });
 

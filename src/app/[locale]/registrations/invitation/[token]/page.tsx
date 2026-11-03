@@ -202,7 +202,7 @@ export default async function InvitationPage({ params, searchParams }: Props) {
         resting: false,
         fullNotice: null,
         fullCounts: null,
-        offerHours: null,
+        offer: null,
         action: acceptInvitationAction,
       })}
       <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>

@@ -180,6 +180,8 @@ describe("§641 the resend of a waiting row", () => {
   });
 
   it("§654 opens by saying it is sent again and «still on the waiting list», never «we added you», in both halves", async () => {
+    // The one place held: the event is full, as the allocator leaves it while somebody waits (a place nobody holds is not «full», §NNN).
+    await person("CONFIRMED", null);
     const mine = await person("WAITLISTED", at(-2));
     await resendRegistrationMessage(db, admin(), mine.id, NOW);
     const [row] = await outboxOf(mine.id);
@@ -192,6 +194,23 @@ describe("§641 the resend of a waiting row", () => {
     // The rest of the email is the first send's: the promise and the standing of the moment.
     expect(message.text).toContain("Te vom anunța dacă se eliberează un loc.");
     expect(message.text).toContain("erai singura persoană pe lista de așteptare.");
+  });
+
+  it("§NNN with «Locurile libere le dau doar eu» in force, the resend says the organizers give the places, never the old promise", async () => {
+    await db.update(events).set({ freePlacesByOfferOnly: true }).where(eq(events.id, eventId));
+    await person("CONFIRMED", null);
+    const mine = await person("WAITLISTED", at(-2));
+    await resendRegistrationMessage(db, admin(), mine.id, NOW);
+    const [row] = await outboxOf(mine.id);
+    const message = await renderOutboxMessage(row, db, NOW);
+    expect(message.text).toContain(
+      "Îți retrimitem emailul: ești în continuare pe lista de așteptare la Crosul Tâmpei. Locurile le dau organizatorii, pe rând: îți scriem când îți putem da un loc.",
+    );
+    expect(message.text).toContain(
+      "We are sending this again: you are still on the waiting list for The Tâmpa cross. The organizers give out the places one at a time: we will write to you when we can give you a place.",
+    );
+    expect(message.text).not.toContain("Te vom anunța dacă se eliberează un loc.");
+    expect(message.text).not.toContain("este complet");
   });
 
   it("says the standing of the moment it is sent: two people ahead gone, the resend says the new place", async () => {

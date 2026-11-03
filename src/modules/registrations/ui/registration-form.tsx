@@ -272,8 +272,11 @@ export type RegistrationFormInput = {
    * doar eu» (§NNN). The lead is the card's own «Locurile se dau din lista de așteptare», never «s-au ocupat».
    */
   fromWaitlist?: boolean;
-  /** For `WAITLIST`: the club's offer window («Termene», `offerHours`, §377); null says no offer sentence. */
-  offerHours: number | null;
+  /**
+   * For `WAITLIST`: the club's offer window («Termene», `offerHours`, §377), and whether a place goes to the line by itself
+   * (`registration-cta.ts#offersByItself`, §NNN) — else the organizers' words; null says no offer sentence.
+   */
+  offer: { hours: number; byItself: boolean } | null;
   /** The family sitting's next form (§519): who was sent so far, above the form. */
   familyIntro?: ReactNode;
   /** The Server Action the form posts to; absent in a preview, which posts nothing. */
@@ -309,7 +312,7 @@ export async function registrationForm({
   fullNotice,
   fullCounts,
   fromWaitlist = false,
-  offerHours,
+  offer,
   familyIntro,
   action,
   preview,
@@ -402,9 +405,9 @@ export async function registrationForm({
                 : tEvent("cta.fullLead")}
           </AlertTitle>
           <Typography variant="body2">{tEvent("cta.fullJoin")}</Typography>
-          {offerHours !== null && (
-            <Typography variant="body2" sx={{ mt: 0.5 }}>
-              {waitlistOfferPhrase(tEvent, locale, offerHours)}
+          {offer !== null && (
+            <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="registration-waitlist-offer">
+              {waitlistOfferPhrase(tEvent, locale, offer.hours, offer.byItself)}
             </Typography>
           )}
         </Alert>

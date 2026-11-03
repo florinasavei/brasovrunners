@@ -205,3 +205,41 @@ describe("§NNN «Locurile libere le dau doar eu»", () => {
     expect(await cardLine()).toContain(ro.Event.cta.register);
   });
 });
+
+describe("§NNN how an offer works, on the full event's door", () => {
+  /** The door's «how an offer works» line, in words. */
+  async function offerLine(): Promise<string> {
+    const html = await page();
+    const open = /<[^<>]*\bdata-testid="waitlist-offer"[^>]*>/.exec(html);
+    if (!open) throw new Error("no offer line");
+    return text(html.slice(open.index, html.indexOf("</p>", open.index))).trim();
+  }
+  const auto = { ro: "Când se eliberează un loc", en: "When a place frees up" };
+  const byHand = { ro: "Locurile le dau organizatorii, pe rând", en: "The organizers give out the places one at a time" };
+
+  it("while no place reaches the line by itself — the tick, whatever «Da» says, or «Nu» — says the organizers give them, in both languages", async () => {
+    for (const settings of [{ freePlacesByOfferOnly: true, waitlistAutoOffer: true }, { waitlistAutoOffer: false }]) {
+      await resetTables(db);
+      locale = "ro";
+      const event = await publish(settings);
+      await take(event.id, 20);
+      const line = await offerLine();
+      expect(line).toContain(byHand.ro);
+      expect(line).not.toContain(auto.ro);
+      locale = "en";
+      const enLine = await offerLine();
+      expect(enLine).toContain(byHand.en);
+      expect(enLine).not.toContain(auto.en);
+    }
+  });
+
+  it("with «Da» and the tick off, a freed place reaches the line by itself: the sentence that says so", async () => {
+    const event = await publish({ waitlistAutoOffer: true });
+    await take(event.id, 20);
+    const line = await offerLine();
+    expect(line).toContain(auto.ro);
+    expect(line).not.toContain(byHand.ro);
+    locale = "en";
+    expect(await offerLine()).toContain(auto.en);
+  });
+});

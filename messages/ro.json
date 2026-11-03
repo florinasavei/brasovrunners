@@ -504,6 +504,7 @@
       },
       "fullJoin": "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.",
       "fullOffer": "Când se eliberează un loc, primești un email și ai {hours} să confirmi — altfel locul trece mai departe.",
+      "fullOfferByHand": "Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email și ai {hours} să confirmi.",
       "waitlistFull": "Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.",
       "fullNoWaitlist": "Locurile s-au ocupat, iar acest eveniment nu are listă de așteptare.",
       "paused": "Înscrierile pe site sunt oprite de organizatori.",

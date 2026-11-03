@@ -224,6 +224,9 @@ const PUBLIC_COLUMNS = {
   // (`registrationCta`) — shut by the organizers, or the line's whatever is free. The server decides again under the lock.
   publicRegistrationOpen: events.publicRegistrationOpen,
   freePlacesByOfferOnly: events.freePlacesByOfferOnly,
+  // «Locurile din lista de așteptare se alocă automat» (§615): with the tick above, whether a place goes to the line by
+  // itself — what the door and the join form say of an offer (`registration-cta.ts#offersByItself`, §NNN).
+  waitlistAutoOffer: events.waitlistAutoOffer,
   // «Kit de participare» → «Tricou» (§554): whether the registration form asks the T-shirt size.
   kitShirt: events.kitShirt,
   // «Condiții de participare» → «Informații medicale» (§557): whether the form asks the health note.

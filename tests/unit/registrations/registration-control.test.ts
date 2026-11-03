@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { newcomerWouldQueue, offersOnlyShut, registrationCta, type RegistrationCtaInput } from "@/modules/events/domain/registration-cta";
+import { newcomerWouldQueue, offersByItself, offersOnlyShut, registrationCta, type RegistrationCtaInput } from "@/modules/events/domain/registration-cta";
 import { emailSampleFor, placeholdersFilledBy } from "@/modules/notifications/email-copy-fields";
 import { placesAlertSentOf, placesAlertStep } from "@/modules/registrations/domain/places-alert";
 import { publicDoorOpen } from "@/modules/registrations/domain/public-door";
@@ -103,6 +103,23 @@ describe("the public card's door (§NNN)", () => {
     expect(offersOnlyShut({ availablePlaces: 0, freePlacesByOfferOnly: true, waitlistCapacity: 0 })).toBe(false);
     expect(offersOnlyShut({ availablePlaces: null, freePlacesByOfferOnly: true, waitlistCapacity: 0 })).toBe(false);
     expect(offersOnlyShut({ availablePlaces: 2, waitlistCapacity: 0 })).toBe(false);
+  });
+
+  it("what the door and the join form say of an offer follows the allocator's own gate: «Da» and the tick off", () => {
+    // «Da», the tick off: a place reaches the line by itself — «Când se eliberează un loc, primești un email…».
+    expect(offersByItself({ waitlistAutoOffer: true, freePlacesByOfferOnly: false }, 0)).toBe(true);
+    // A copy cached before the setting reads as «Da», the column's default.
+    expect(offersByItself({}, 0)).toBe(true);
+    // «Nu», or the tick (whatever «Da» says): the organizers give every place — their words.
+    expect(offersByItself({ waitlistAutoOffer: false }, 0)).toBe(false);
+    expect(offersByItself({ waitlistAutoOffer: true, freePlacesByOfferOnly: true }, 0)).toBe(false);
+    expect(offersByItself({ waitlistAutoOffer: true, freePlacesByOfferOnly: true }, 3)).toBe(false);
+    // The allocator's own statement of it, where places are counted.
+    for (const event of [{ waitlistAutoOffer: true, freePlacesByOfferOnly: false }, { waitlistAutoOffer: false, freePlacesByOfferOnly: false }, { waitlistAutoOffer: true, freePlacesByOfferOnly: true }]) {
+      expect(offersByItself(event, 2)).toBe(offersOnItsOwn({ ...event, capacity: 10 }));
+    }
+    // On an uncapped event the tick means nothing, as for the allocator.
+    expect(offersByItself({ waitlistAutoOffer: true, freePlacesByOfferOnly: true }, null)).toBe(true);
   });
 });
 

@@ -504,6 +504,7 @@
       },
       "fullJoin": "Join the waiting list — we email you when a place frees up.",
       "fullOffer": "When a place frees up, you get an email and {hours} to confirm — then it passes on.",
+      "fullOfferByHand": "The organizers give out the places one at a time: when they can give you one, you get an email and {hours} to confirm.",
       "waitlistFull": "All places are taken and the waiting list is full — sorry.",
       "fullNoWaitlist": "All places are taken, and this event has no waiting list.",
       "paused": "Registration on the site has been stopped by the organizers.",

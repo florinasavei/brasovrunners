@@ -24,7 +24,7 @@ import {
 } from "@/modules/public-cache/reads";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
-import { newcomerWouldQueue, offersOnlyShut, publicNumbersShown, waitlistCountShown } from "@/modules/events/domain/registration-cta";
+import { newcomerWouldQueue, offersByItself, offersOnlyShut, publicNumbersShown, waitlistCountShown } from "@/modules/events/domain/registration-cta";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
 import { PUBLIC_REGISTRATION_PAUSED } from "@/modules/registrations/domain/public-door";
 import { formatDay } from "@/i18n/dates";
@@ -255,7 +255,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     who arrived from «Intră pe lista de așteptare».
   */
   let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | "WAITLIST" | null = null;
-  let offerHours: number | null = null;
+  // How an offer works: the club's offer window, and whether a place reaches the line by itself — else the organizers' words (§NNN).
+  let offer: { hours: number; byItself: boolean } | null = null;
   // `waiting` null: the club keeps the line's count private (§634), and the title says no number.
   // `capacity` null: the event says no public number at all (§668), and the title names no capacity.
   let fullCounts: { capacity: number | null; waiting: number | null } | null = null;
@@ -279,7 +280,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : "WAITLIST";
         if (fullNotice === "WAITLIST") {
           fromWaitlist = places.available > 0;
-          offerHours = (await cachedDeadlines()).offerHours;
+          offer = { hours: (await cachedDeadlines()).offerHours, byItself: offersByItself(event, places.available) };
           // «Arată public numărătoarea» (§668): off in the row or the entry, no capacity and no count — the door's rule.
           const numbers = publicNumbersShown(event) && publicNumbersShown(places);
           fullCounts = {
@@ -663,7 +664,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             fullNotice,
             fullCounts,
             fromWaitlist,
-            offerHours,
+            offer,
             action: submitRegistrationAction,
             /*
               The next person of a family sitting (§519): who was sent so far, that nothing waiting is
