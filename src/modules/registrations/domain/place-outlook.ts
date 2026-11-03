@@ -14,6 +14,8 @@ export type PlaceOutlookCounts = {
   capacity: number;
   /** The places the allocator counts as taken (`computeOccupied`). */
   occupied: number;
+  /** Of those, the confirmed (`OccupiedCounts.confirmed`: never a special guest). */
+  confirmed: number;
   /** The official waiting list: `WAITLISTED`, never a row outside the places. */
   waiting: number;
   /** The lines of «Lista internă (doar notițe)». */
@@ -25,6 +27,8 @@ export type PlaceOutlookCounts = {
 export type PlaceOutlook = PlaceOutlookCounts & {
   /** The places nobody holds; 0 when the capacity was lowered under the places taken. */
   free: number;
+  /** The places taken by somebody who has not signed yet: a declaration to sign, an offer, a family's or an invitation's hold. */
+  held: number;
   /** How many of the official waiting list the free places take. */
   fromWaiting: number;
   /** How many lines of the internal list the places left after the waiting list take. */
@@ -42,6 +46,7 @@ export function placeOutlook(counts: PlaceOutlookCounts): PlaceOutlook {
   return {
     ...counts,
     free,
+    held: counts.occupied - counts.confirmed,
     fromWaiting,
     fromInternal,
     raises: counts.waiting - fromWaiting + (counts.internal - fromInternal),

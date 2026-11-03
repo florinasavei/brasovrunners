@@ -1,0 +1,7 @@
+{
+  "branch": "fix/places-clearer",
+  "decisionsTitle": "«Locuri» says the places free first, then why",
+  "decisionsSection": "**The owner, 2026-11-03,** of «Locuri» as first drawn: «nu prea are așa sens statistica asta… pentru că nu înțeleg exact câte locuri mai pot să dau». The answer — how many places are free — was the end of the first line, after the places taken, and «Poți da drumul acum la …» mixed the free places with the lists' split.\n\n**Decision.** The first line is the answer: «Locuri libere acum: N din capacitate». Then why, one fact a line: the places taken, split into the confirmed and those holding a place until they sign (a declaration to sign, a live offer, a family's or an invitation's hold — `occupied − confirmed`); who waits, the two lists' total and each; where the free places go (the official list first, «Trimite-i oferta», then the internal one, «Oferă-i un loc acum»); the capacity it would take to let in everybody waiting; the special guests and the people at the start if everybody comes. The arithmetic is unchanged (`domain/place-outlook.ts`), with `confirmed` and `held` added.",
+  "changelogLine": "- **«Locuri» answers first** — «Locuri libere acum: N din capacitate», then the places taken (confirmed, and holding one until they sign), who waits, where the free places go and the capacity it would take to let everybody in. §NNN.",
+  "batchLine": "«Locuri» says the places free first"
+}
