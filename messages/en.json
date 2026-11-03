@@ -6745,7 +6745,6 @@
       "sparesReadOnly": "Only an administrator reserves new numbers.",
       "sparesReserved": "Numbers {from}–{to} reserved. Download the sheet and print it.",
       "sparesDownloadRange": "Download the sheet {from}–{to} (PDF)",
-      "spareMark": "on-the-spot entry",
       "helpMore": "Numbers are given in order of confirmation and are never given twice. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page.",
       "memberLabelDefault": "{club} member",
       "profileStart": "Start",
