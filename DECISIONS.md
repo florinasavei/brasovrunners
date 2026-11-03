@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.08-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.09-2026-11-03 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.08-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.09-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28562,3 +28562,11 @@ A line of the internal list counts as one person: it is the one the move or the 
 **Refused.** A count of people on the internal list from its notes («+ partener»): a note is free text, and the line is what the club can act on. Putting the free places on the public page: the public line already says how many are left.
 
 Baseline `BR-V4.08-2026-11-03`.
+
+## 893. A spare bib carries no «înscris la fața locului» mark
+
+**The owner, 2026-11-03**, on the printed spares: «On the BIB's I do not want to say "înscris la fața locului" for the blank ones».
+
+**Decision.** A desk spare (§444) is drawn with its empty line for the name and nothing under it, on the PDF and on the editor's preview. The line is what the desk writes on; the mark told the runner, the photographer and the results desk something none of them needs, and set the walk-up runners apart from the others on their own chest. The drawing keeps its optional `blankMark` (the routes no longer pass one), so the layout and its tests are unchanged.
+
+Baseline `BR-V4.09-2026-11-03`.
