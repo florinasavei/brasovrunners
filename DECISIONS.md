@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.14-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.16-2026-11-03 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.14-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.16-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28643,3 +28643,19 @@ Baseline `BR-V4.13-2026-11-03`.
 **Decision.** «Căutăm voluntari: …» with «Vreau să fiu voluntar», and «Voluntarii» (§821) right after it as before, move to just under «Cine vine (N)» — itself under the registration card (§825). Nothing else changes: the same conditions draw them (a visit's page, the volunteers' page answering, never a members' event or the preview), and a turn-up event's two closed bars stay the last thing on the page.
 
 Baseline `BR-V4.14-2026-11-03`.
+
+## 899. The release reads qa's migration run from the merge commit qa was pushed
+
+**2026-11-03:** three releases in a row (#633, #635, #637) stopped on «no migrate.yml run for qa on <commit>» although `migrate.yml` had run on qa and succeeded. `scripts/ship.mjs#qaMigrationCommit` asked git for the newest qa commit touching `src/db/migrations`, and git's history simplification answered with the feature branch's own commit — but a pull request lands on qa as a merge commit, and that merge is the push `migrate.yml` ran on, so the run was looked for on a commit no qa push carried. The suggested way out, «run migrate for qa from Actions», could not help either: the lookup reads push runs only.
+
+**Decision.** `git log --first-parent`: the newest commit on qa's own line that touched a migration — the merge — whose push run is the one that migrated qa.
+
+Baseline `BR-V4.15-2026-11-03`.
+
+## 900. «Voluntari» in the event editor stays closed until opened
+
+**The owner, 2026-11-03,** of the event editor's «Voluntari» drawn open: «trebuie să fie colapsată asta cu voluntarii!». The card opened by itself whenever somebody waited for a role or for confirmation (`openWhen.attention`), which on a race with volunteers coming in is always — a long card open in the middle of the editor.
+
+**Decision.** The card is closed on arrival like every other fold of the editor; its closed line already says how many wait for a role and how many to confirm («4 de repartizat · 6 de confirmat»). A press inside it still comes back to `#box-volunteers`, which opens it, so the result of a press stays in view.
+
+Baseline `BR-V4.16-2026-11-03`.
