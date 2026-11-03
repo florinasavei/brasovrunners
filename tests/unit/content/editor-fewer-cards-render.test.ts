@@ -295,8 +295,13 @@ describe("§799 «Condiții de participare» inside «Regulamentul»", () => {
       "event.waitlistCountPublic.present", "event.waitlistMode", "event.waitlistPublic", "translations.en.checklist", "translations.en.rules",
       "translations.en.schedule", "translations.ro.checklist", "translations.ro.rules", "translations.ro.schedule",
     ];
+    // The registration controls added since (§NNN): the public door's tick, who a free place is for, the places alert.
+    const added = [
+      "event.freePlacesByOfferOnly", "event.freePlacesByOfferOnly.present", "event.placesAlertAt",
+      "event.publicRegistrationOpen", "event.publicRegistrationOpen.present",
+    ];
     const markup = await registration({ ...RACE, declarationDocumentId: declarations[0].id } as EditableEvent);
-    expect([...postedNames(markup)].sort()).toEqual(before);
+    expect([...postedNames(markup)].sort()).toEqual([...before, ...added].sort());
   });
 });
 

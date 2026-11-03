@@ -162,6 +162,11 @@ export const emailMessageType = pgEnum("email_message_type", [
   // only — the club's line, the roles offered, the event's facts and the single-use link to the volunteers' page (minted at the send; only
   // its hash is kept, on the invitation's row, §12.8). To an address the club typed, about no registration; the invitation's id in the payload.
   "VOLUNTEER_INVITATION",
+  // «Mai sunt N locuri la …» / «Toate locurile s-au ocupat la …» (§NNN): an event's «Anunță-mă când rămân N
+  // locuri» crossed — to every active Administrator and Superadministrator with an address, once per crossing,
+  // queued in the transaction of the allocator write that crossed it. The event's id and the counts in the
+  // payload; no participant, no registration, no token — the button opens the event's registrations.
+  "PLACES_ALERT",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

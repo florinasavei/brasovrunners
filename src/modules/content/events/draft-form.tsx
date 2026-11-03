@@ -66,6 +66,8 @@ function closedDoorSentence(tEvent: (key: string, values?: Record<string, string
   if (cta.kind === "CANCELLED") return tEvent("cta.cancelled");
   if (cta.kind === "COMPLETED") return tEvent("cta.completed");
   if (cta.kind === "CLOSED") return tEvent("cta.closed");
+  // The organizers shut the site's door (§NNN): the event page's own sentence.
+  if (cta.kind === "PAUSED") return tEvent(cta.reason === "SWITCH" ? "cta.paused" : "cta.pausedOffersOnly");
   if (cta.kind === "NOT_YET_OPEN") {
     return cta.opensAt === null
       ? tEvent("cta.opensSoon")

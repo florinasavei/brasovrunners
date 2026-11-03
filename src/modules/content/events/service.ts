@@ -639,6 +639,11 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Locurile din lista de așteptare se alocă automat» (§615), by the same discipline: a caller that
     // did not post the select writes nothing, so no save changes who hands out the places by omission.
     ...(fields.waitlistAutoOffer === undefined ? {} : { waitlistAutoOffer: fields.waitlistAutoOffer }),
+    // «Locurile libere le dau doar eu», «Înscrieri publice deschise» and «Anunță-mă când rămân N locuri» (§NNN), by the
+    // same discipline: a caller that did not post them writes nothing, so no save opens a door or stops an alert by omission.
+    ...(fields.freePlacesByOfferOnly === undefined ? {} : { freePlacesByOfferOnly: fields.freePlacesByOfferOnly }),
+    ...(fields.publicRegistrationOpen === undefined ? {} : { publicRegistrationOpen: fields.publicRegistrationOpen }),
+    ...(fields.placesAlertAt === undefined ? {} : { placesAlertAt: fields.placesAlertAt }),
     // «Informații medicale» (§557), by the same discipline: a caller that did not post the card
     // writes nothing, so no save switches the health note on or off by not mentioning it.
     ...(fields.askHealthNote === undefined ? {} : { askHealthNote: fields.askHealthNote }),
@@ -1956,6 +1961,11 @@ const SERIES_COLUMNS = [
   // date of the series offer its places on its own, or leave them to the organizer. No lock and no
   // offer when it moves — switching it on offers nothing until a place is next freed or added.
   "waitlistAutoOffer",
+  // Who a free place is for, the public door, and the places alert (§NNN), like the places themselves: «from this
+  // date» gives every later date the same control. The alert's memory (`placesAlertSent`) is each date's own.
+  "freePlacesByOfferOnly",
+  "publicRegistrationOpen",
+  "placesAlertAt",
   // The race kit (§554), like the headlamp once did (§382): "from this date" gives every later date
   // of the series the same T-shirt question.
   "kitShirt",
@@ -2272,6 +2282,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
       if (changes.waitlistAutoOffer !== undefined) {
         await auditWaitlistAutoOffer(tx, input.actor, member, { id: member.id, waitlistAutoOffer: changes.waitlistAutoOffer }, now);
       }
+      // The registration controls (§NNN): each change on the trail, from → to, who and when.
+      await auditRegistrationControls(tx, input.actor, member, changes, now);
       if (changes.waitlistCountPublic !== undefined) {
         await auditWaitlistCountPublic(tx, input.actor, member, { id: member.id, waitlistCountPublic: changes.waitlistCountPublic }, now);
       }
@@ -2361,6 +2373,29 @@ async function auditWaitlistAutoOffer<T extends Record<string, unknown>>(
     metadata: { from: before.waitlistAutoOffer, to: after.waitlistAutoOffer },
     now,
   });
+}
+
+/**
+ * The trail of the registration controls (§NNN): «Înscrieri publice deschise», «Locurile libere le dau doar eu» and
+ * «Anunță-mă când rămân N locuri» — who changed which, on which date, from and to, in the save's transaction, only
+ * for a value that moved. Each decides who may enter or who is told, so the trail says who decided it.
+ */
+async function auditRegistrationControls<T extends Record<string, unknown>>(
+  tx: Database<T> | Transaction<T>,
+  actor: Actor,
+  before: { id: string; publicRegistrationOpen: boolean; freePlacesByOfferOnly: boolean; placesAlertAt: number | null },
+  changes: { publicRegistrationOpen?: boolean; freePlacesByOfferOnly?: boolean; placesAlertAt?: number | null },
+  now: Date,
+): Promise<void> {
+  const moved = [
+    { action: "event.public_registration_changed" as const, from: before.publicRegistrationOpen, to: changes.publicRegistrationOpen },
+    { action: "event.free_places_by_offer_only_changed" as const, from: before.freePlacesByOfferOnly, to: changes.freePlacesByOfferOnly },
+    { action: "event.places_alert_changed" as const, from: before.placesAlertAt, to: changes.placesAlertAt },
+  ];
+  for (const { action, from, to } of moved) {
+    if (to === undefined || to === from) continue;
+    await recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: before.id, metadata: { from, to }, now });
+  }
 }
 
 /**
@@ -3078,6 +3113,9 @@ function blankEventRow(now: Date): EditableEvent {
     capacity: null,
     waitlistCapacity: null,
     waitlistAutoOffer: true,
+    freePlacesByOfferOnly: false,
+    placesAlertAt: null,
+    placesAlertSent: null,
     confirmationOpensDaysBefore: 7,
     confirmationDeadlineDaysBefore: 2,
     reminderHoursBefore: null,
@@ -3086,6 +3124,7 @@ function blankEventRow(now: Date): EditableEvent {
     registrationOpensAt: null,
     registrationOpensSoon: false,
     registrationClosesAt: null,
+    publicRegistrationOpen: true,
     kitShirt: false,
     askHealthNote: false,
     declarationDocumentId: null,
@@ -3728,6 +3767,10 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     waitlistCapacity: source.waitlistCapacity,
     // Who hands out a freed place goes with the places (§615): a copy, and every date of a series.
     waitlistAutoOffer: source.waitlistAutoOffer,
+    // The registration controls (§NNN) travel with the duplicate; the alert's memory starts empty.
+    freePlacesByOfferOnly: source.freePlacesByOfferOnly,
+    publicRegistrationOpen: source.publicRegistrationOpen,
+    placesAlertAt: source.placesAlertAt,
     // The race kit goes with the race (§554): a copy, and every date of a series, give the same shirt.
     kitShirt: source.kitShirt,
     // What the race number looks like goes with the race (§560): the band's colour and the club's

@@ -1020,6 +1020,11 @@ export type TemplateData = {
    */
   unreachableWindow?: UnreachableWindowFacts;
   /**
+   * «Anunță-mă când rămân N locuri» (§NNN): which crossing (`LOW`, the free places down to the club's N; `FULL`, none
+   * left), the free places and the capacity counted under the lock that crossed it, and the N itself.
+   */
+  placesAlert?: { stage: "LOW" | "FULL"; free: number; capacity: number; alertAt: number };
+  /**
    * The members' shop's order (§683), from the order's own copy at the send: the bold line, the
    * payment words and the note, each half in its own language (`shop-order-words.ts`).
    */
@@ -2072,6 +2077,16 @@ const T = {
       ],
       action: "Deschide «Voluntari»",
     },
+    // «Anunță-mă când rămân N locuri» (§NNN): to the Administrators, once per crossing — the free places and what to do.
+    placesAlert: {
+      subject: (d: TemplateData) =>
+        d.placesAlert?.stage === "FULL"
+          ? `Toate locurile s-au ocupat la ${d.eventTitle ?? "eveniment"}`
+          : `Locurile se împuținează la ${d.eventTitle ?? "eveniment"}`,
+      facts: (d: TemplateData) => placesAlertFacts("ro", d),
+      body: (d: TemplateData) => placesAlertBody("ro", d),
+      action: "Deschide înscrierile",
+    },
     // The role the organizers gave a volunteer (§761): one short message naming it — nothing to press.
     volunteerRoleAssigned: {
       subject: (d: TemplateData) => `Rolul tău de voluntar la ${d.eventTitle ?? "eveniment"}`,
@@ -2917,6 +2932,15 @@ const T = {
       ],
       action: "Open «Volunteers»",
     },
+    placesAlert: {
+      subject: (d: TemplateData) =>
+        d.placesAlert?.stage === "FULL"
+          ? `Every place is taken at ${d.eventTitle ?? "the event"}`
+          : `Places are running out at ${d.eventTitle ?? "the event"}`,
+      facts: (d: TemplateData) => placesAlertFacts("en", d),
+      body: (d: TemplateData) => placesAlertBody("en", d),
+      action: "Open the registrations",
+    },
     volunteerRoleAssigned: {
       subject: (d: TemplateData) => `Your volunteer role at ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
@@ -3424,7 +3448,46 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   VOLUNTEER_ROLE_ASSIGNED: "volunteerRoleAssigned",
   VOLUNTEER_GUARDIAN_REQUEST: "volunteerGuardianRequest",
   VOLUNTEER_INVITATION: "volunteerInvitation",
+  PLACES_ALERT: "placesAlert",
 };
+
+/**
+ * The alert's bold line (§NNN): the free places of the capacity and the club's N, counted under the lock that
+ * crossed it — «Locuri libere: 3 din 10 · pragul tău: 5». The counts are this line's, never fields of the words
+ * below, so a club text for the message (§359) never stores a sample number. Nothing without the payload's facts.
+ */
+function placesAlertFacts(locale: "ro" | "en", d: TemplateData): { line: string; links: [] } | undefined {
+  const alert = d.placesAlert;
+  if (!alert) return undefined;
+  return locale === "ro"
+    ? { line: `Locuri libere: ${alert.free} din ${alert.capacity} · pragul tău: ${alert.alertAt}`, links: [] }
+    : { line: `Free places: ${alert.free} of ${alert.capacity} · your threshold: ${alert.alertAt}`, links: [] };
+}
+
+/**
+ * The alert's paragraphs (§NNN), each half in its own language: what happened, the settings that give the
+ * Administrator the door, and the one-email-per-threshold rule — never a person's name, nothing of a registration.
+ */
+function placesAlertBody(locale: "ro" | "en", d: TemplateData): string[] {
+  const full = d.placesAlert?.stage === "FULL";
+  const event = d.eventTitle ?? (locale === "ro" ? "eveniment" : "the event");
+  if (locale === "ro") {
+    return [
+      full
+        ? `Toate locurile de la ${event} sunt ocupate: cine se înscrie de acum pe site intră pe lista de așteptare, dacă evenimentul are una.`
+        : `Locurile libere de la ${event} au scăzut la pragul ales în «Anunță-mă când rămân N locuri»; cât a mai rămas e scris mai sus.`,
+      "Din pagina înscrierilor, la «Locuri», vezi ce vede acum publicul pe site și poți opri înscrierile publice cu o bifă; în editorul evenimentului poți bifa «Locurile libere le dau doar eu» sau mări numărul de locuri.",
+      "Primești câte un singur email la fiecare prag; altul vine doar după ce locurile libere urcă din nou peste prag.",
+    ];
+  }
+  return [
+    full
+      ? `All places at ${event} are taken: from now on, whoever registers on the site joins the waiting list, if the event has one.`
+      : `The free places at ${event} have dropped to the threshold set in «Email me when N places are left»; how many are left is written above.`,
+    "On the registrations page, under «Places», you can see what the public sees on the site right now and stop registration from the site with one tick; in the event's editor you can tick «I hand out the free places myself» or raise the number of places.",
+    "You get one email per threshold; another comes only after the free places climb back above it.",
+  ];
+}
 
 /** The newsletter's three messages (§445) and «Vii mâine la …?» (§818): to a subscriber's address, never about a registration. */
 const NEWSLETTER_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["NEWSLETTER_CONFIRM", "NEWSLETTER", "NEW_EVENT_ALERT", "RSVP_ASK"]);
@@ -4105,7 +4168,9 @@ export function buildTemplateContent(
         messageType === "SHOP_ORDER_PAID" ||
         messageType === "SHOP_ORDER_CLUB_NOTICE" ||
         // …nor the organizers' notice of a volunteer's sign-up (§754): to colleagues, its one link is its button.
-        messageType === "VOLUNTEER_CLUB_NOTICE"
+        messageType === "VOLUNTEER_CLUB_NOTICE" ||
+        // …nor the Administrators' places alert (§NNN): to colleagues, its one link is its button.
+        messageType === "PLACES_ALERT"
       ) {
         return own.length > 0 ? own : undefined;
       }

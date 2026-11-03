@@ -1254,6 +1254,13 @@
       "when": 1793701600688,
       "tag": "0183_event_elite_entries",
       "breakpoints": true
+    },
+    {
+      "idx": 179,
+      "version": "7",
+      "when": 1793715406323,
+      "tag": "0185_registration_control",
+      "breakpoints": true
     }
   ]
 }

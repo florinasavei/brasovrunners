@@ -24,6 +24,7 @@ import {
   setBibNumberByStaff,
   editRegistrationAnswers,
   setOutsideCapacity,
+  setPublicRegistrationOpenByStaff,
   withdrawOptionalData,
   type WaitlistEntryByStaffResult,
 } from "@/modules/registrations/admin-service";
@@ -538,6 +539,27 @@ export async function setClubMemberDeclaredAction(_previous: FormOutcome | null,
     outcome = { saved: ticked ? "memberTickSet" : "memberTickCleared" };
   } catch (error) {
     outcome = isDomainError(error) && error.fields.includes(ANSWERS_UNCHANGED) ? { error: "ANSWERS_UNCHANGED" } : outcomeOf(error);
+  }
+  return backToList(locale, text(form, "listQuery"), outcome);
+}
+
+/**
+ * «Înscrieri publice deschise» beside «Locuri» (§NNN): the tick posted as it stands — ticked opens the site's door,
+ * unticked closes it — through the service, which asserts the Administrator again, writes the one event row with its
+ * trail and tells the public pages. The coarse gate here (BR-REQ-060-01); the Organizer is never handed the form.
+ * Back to the same list, with the outcome; a tick that already said the same writes nothing and says so.
+ */
+export async function setPublicRegistrationOpenAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const open = form.get("publicRegistrationOpen") === "on";
+
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    const changed = await setPublicRegistrationOpenByStaff(getDb(), actor, text(form, "eventId"), open, new Date());
+    outcome = { saved: changed ? (open ? "publicRegistrationOpened" : "publicRegistrationPaused") : "publicRegistrationUnchanged" };
+  } catch (error) {
+    outcome = outcomeOf(error);
   }
   return backToList(locale, text(form, "listQuery"), outcome);
 }

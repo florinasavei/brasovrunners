@@ -331,6 +331,14 @@ export type AuditAction =
    */
   | "event.waitlist_auto_offer_changed"
   /**
+   * The registration controls (§NNN), from and to, on every date a save changed them — and «Înscrieri publice
+   * deschise» from the registrations page's own tick too (`metadata.from`/`to`, `via: "registrations"`):
+   * the public door, who a free place is for, and the places alert's N (null is off).
+   */
+  | "event.public_registration_changed"
+  | "event.free_places_by_offer_only_changed"
+  | "event.places_alert_changed"
+  /**
    * One supplementary place added by «Trimite-i oferta» on a full event (§642): the capacity from and
    * to, the Administrator (the actor), the event (the entity) and the registration offered the place
    * (`registrationId`, an id, never a name) — written in the transaction that makes the offer, under

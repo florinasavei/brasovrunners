@@ -34,6 +34,8 @@ const CLUB_MAIL: readonly EmailMessageType[] = [
   "LEGAL_TEMPLATES_CHANGED",
   "UNREACHABLE_WINDOW_OPENED",
   "UNREACHABLE_WINDOW_CLOSED",
+  // «Anunță-mă când rămân N locuri» (§NNN): to the Administrators.
+  "PLACES_ALERT",
   // The members' shop (§683): a member's account and the club's mailbox; the notice names the shop.
   "SHOP_ORDER_PLACED",
   "SHOP_ORDER_PAID",

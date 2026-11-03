@@ -1085,6 +1085,12 @@ Rules:
 - absent open means after eligible publication;
 - absent close means event start;
 - cancelled/completed cannot accept registration;
+- «Înscrieri publice deschise» (`events.public_registration_open`, on by default; `DECISIONS.md` §NNN) unticked:
+  the public form and its emailed link for another person are refused on the server — off the caller's row
+  and again under the event lock — whatever the window says, and the site shows no button; every staff
+  door is untouched (the staff entry, the desk, «Trimite-i oferta», «Dă-i un loc», «Oferă-i un loc acum»,
+  «Mută pe lista oficială», «Adaugă pe lista de așteptare», the invitations), and a registration already
+  sent goes on. Set in the editor's «Perioada de înscriere» and beside «Locuri» by an Administrator, audited;
 - requested locale translation must be published;
 - internal event references approved declaration template version;
 - an event may belong to a race (`race_id`); a race groups child events that share name,
@@ -1400,6 +1406,20 @@ Rules:
   that reaches its place by another route — the public form's confirmation, a staff entry, the desk, a
   restart, «Dă-i un loc acum» — takes the invitation's place over in the same way and marks it accepted,
   so no place stays held in the name of somebody already seated;
+- «Locurile libere le dau doar eu» (`events.free_places_by_offer_only`, off by default; `DECISIONS.md` §NNN): one
+  condition in the allocator's opening (`placeForNewcomer`), on the entry's channel and never on `kind` — a
+  **public** entry (the public form, its link for another person, a family's form, a restart through it, and
+  the address confirmation of a row the public form wrote) joins the waiting list beside a free place, as when
+  somebody waits (§615), or is refused like a full race when the line takes nobody (§348); every staff verb
+  is as before. The formula is untouched: the switch only ever narrows who takes a free place, so it can never
+  seat one too many. The line's automatic offer (`waitlist_auto_offer`) is unchanged by it;
+- the waiting list's limit (§348) is asked only of a registration that would stay in the line: «Oferă-i un loc
+  acum», whose row is offered a place in the same transaction, is never refused by it, 0 included (§NNN);
+  «Adaugă pe lista de așteptare» and «Mută pe lista oficială», which leave the person waiting, still are;
+- «Anunță-mă când rămân N locuri» (`events.places_alert_at`, §NNN) is checked in the transaction of every
+  allocator write (`allocateOrWaitlist`, `fillAvailableSpots`, a family's reservation, a send of invitations),
+  under its lock: the Administrators are emailed once per crossing — down to N, then 0 — remembered in
+  `places_alert_sent` and re-armed above N. It decides nothing about places;
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
 - every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
@@ -3121,7 +3141,14 @@ EVENT_UPDATE_NOTICE
 EVENT_CANCELLED
 DECLARATION_HOLD_EXPIRED
 EVENT_INVITATION
+PLACES_ALERT
 ```
+
+`PLACES_ALERT` (§NNN) is queued by `places-alert.ts#watchPlacesAlert`, in the transaction of the
+allocator write that crossed an event's «Anunță-mă când rămân N locuri», to every Administrator and
+Superadministrator with an address, in their own language: the event's id and the counts in the
+payload, no participant, no token; its one button opens the event's registrations. Once per crossing
+(`events.places_alert_sent`); never by a job of its own.
 
 `DECLARATION_HOLD_EXPIRED` (§638) is queued by `expireStaleHolds` in the transaction that
 releases a lapsed declaration hold to somebody who wanted the place (§10.5), whatever path ran it,

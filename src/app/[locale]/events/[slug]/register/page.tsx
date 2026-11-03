@@ -26,6 +26,7 @@ import { findCurrentApprovedDocument } from "@/modules/legal-documents/repositor
 import { isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
 import { newcomerWouldQueue, publicNumbersShown, waitlistCountShown } from "@/modules/events/domain/registration-cta";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
+import { PUBLIC_REGISTRATION_PAUSED } from "@/modules/registrations/domain/public-door";
 import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
@@ -258,10 +259,20 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   // `waiting` null: the club keeps the line's count private (§634), and the title says no number.
   // `capacity` null: the event says no public number at all (§668), and the title names no capacity.
   let fullCounts: { capacity: number | null; waiting: number | null } | null = null;
-  if (!submitted && !error && !resting) {
+  /*
+    The organizers shut the site's door (§NNN): «Înscrieri publice deschise» unticked — read off the page's own row,
+    or from a press the server refused for it while the row was cached open — or, below, the free places theirs to
+    give with a waiting list that takes nobody. The page then says so instead of the form.
+  */
+  let pausedReason: "SWITCH" | "OFFERS_ONLY" | null =
+    event.publicRegistrationOpen === false || refusedMarkers.includes(PUBLIC_REGISTRATION_PAUSED) ? "SWITCH" : null;
+  const offersOnly = event.freePlacesByOfferOnly === true;
+  if (!submitted && !error && !resting && pausedReason === null) {
     try {
       const places = await cachedPublicAvailability(event.id, now);
-      if (places && newcomerWouldQueue({ availablePlaces: places.available, waitlisted: places.waitlisted, waiting: places.waiting })) {
+      // «Locurile libere le dau doar eu» (§NNN): places free, and no line to join — nothing a visitor can do here.
+      if (places && offersOnly && places.available > 0 && (places.waitlistCapacity === 0 || places.waitlistRoom === 0)) pausedReason = "OFFERS_ONLY";
+      else if (places && newcomerWouldQueue({ availablePlaces: places.available, waitlisted: places.waitlisted, waiting: places.waiting, freePlacesByOfferOnly: offersOnly })) {
         fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : "WAITLIST";
         if (fullNotice === "WAITLIST") {
           offerHours = (await cachedDeadlines()).offerHours;
@@ -477,6 +488,20 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               : undefined
           }
         />
+      ) : pausedReason ? (
+        /*
+          The organizers shut the site's door (§NNN): the event page's own sentence and the way back, never the form —
+          the server refuses it anyway. Also what a press refused for it lands on (`PUBLIC_REGISTRATION_PAUSED`).
+        */
+        <Alert severity="info" sx={{ mb: 2 }} data-testid="registration-paused" id={ERROR_SUMMARY_ID} tabIndex={-1}>
+          {tEvent(pausedReason === "SWITCH" ? "cta.paused" : "cta.pausedOffersOnly")}{" "}
+          <MuiLink
+            href={getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } })}
+            sx={{ display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight }}
+          >
+            {t("pausedBack")}
+          </MuiLink>
+        </Alert>
       ) : (
         <>
           {/*

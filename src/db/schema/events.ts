@@ -772,6 +772,27 @@ export const events = pgTable(
      */
     waitlistAutoOffer: boolean("waitlist_auto_offer").notNull().default(true),
     /**
+     * «Locurile libere le dau doar eu» (§NNN): off by default — every event before the column, unchanged.
+     * On, a registration from the **public** form never takes a free place: it joins the official
+     * waiting list in its order even beside a free place, or is refused like a full race when the list
+     * has no room (a limit reached, or 0). Free places are given by the staff's verbs alone — the staff
+     * entry, the desk, «Trimite-i oferta», «Dă-i un loc», «Oferă-i un loc acum» — and, while
+     * `waitlist_auto_offer` is on, by the line's own automatic offer, unchanged. One condition inside the
+     * one allocator, on the entry's channel (`placeForNewcomer`'s `channel`), never on `kind`; the
+     * capacity formula is untouched, so it can only ever give fewer places, never one too many.
+     */
+    freePlacesByOfferOnly: boolean("free_places_by_offer_only").notNull().default(false),
+    /**
+     * «Anunță-mă când rămân N locuri» (§NNN): null is off, the default. Set, the Administrators are emailed
+     * (`PLACES_ALERT`, through the outbox) when the free places drop to N or fewer, and again when they
+     * reach 0 — once per crossing, remembered in `places_alert_sent`, and re-armed when places free up
+     * above N. Checked after every allocator write in the request that wrote it (`places-alert.ts`),
+     * never by a job of its own.
+     */
+    placesAlertAt: integer("places_alert_at"),
+    /** What the alert above already said for the current crossing: null nothing, `LOW` the «N or fewer», `FULL` the «0». */
+    placesAlertSent: text("places_alert_sent"),
+    /**
      * The participation window (`DECISIONS.md` §104): for an event further away than
      * `confirmation_opens_days_before`, a registration that clears email verification keeps its
      * place until `confirmation_deadline_days_before` the start, and the declaration — the
@@ -831,6 +852,17 @@ export const events = pgTable(
      */
     registrationOpensSoon: boolean("registration_opens_soon").notNull().default(false),
     registrationClosesAt: timestamp("registration_closes_at", { withTimezone: true }),
+    /**
+     * «Înscrieri publice deschise» (§NNN; the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»):
+     * the public form's own door, beside the dates. On by default — every event before the column keeps
+     * the door its dates give it. Off, the site's button goes at once whatever the dates say, the public
+     * form and the emailed link for another person are refused on the server (`submitRegistration`, under
+     * the event's lock too), and every staff verb keeps working: the staff entry, the desk, «Trimite-i
+     * oferta», «Dă-i un loc», «Oferă-i un loc acum», «Mută pe lista oficială», «Adaugă pe lista de
+     * așteptare» and the invitations. A registration already sent goes on as it would have. Audited
+     * (`event.public_registration_changed`). Only an internal registration reads it.
+     */
+    publicRegistrationOpen: boolean("public_registration_open").notNull().default(true),
 
     /**
      * «Kit de participare» → «Tricou» (§554; the owner, 2026-09-29: «doar dacă e bifat tricoul să
@@ -1091,6 +1123,11 @@ export const events = pgTable(
      * Null is no limit. The form says the same bound; this is for the seed and the script.
      */
     check("events_waitlist_capacity_non_negative", sql`${t.waitlistCapacity} IS NULL OR ${t.waitlistCapacity} >= 0`),
+
+    /** «Anunță-mă când rămân N locuri» (§NNN): a count of places, nought («only when full») or more; null is off. */
+    check("events_places_alert_at_non_negative", sql`${t.placesAlertAt} IS NULL OR ${t.placesAlertAt} >= 0`),
+    /** What the alert already sent (§NNN): nothing, the «N or fewer», or the «0». */
+    check("events_places_alert_sent_known", sql`${t.placesAlertSent} IS NULL OR ${t.placesAlertSent} IN ('LOW', 'FULL')`),
 
     /**
      * A minimum age a person can have (§329): zero to ninety-nine. Since §515 the form refuses

@@ -48,8 +48,33 @@ export function waitlistLength(input: Pick<WaitlistInput, "waitlisted" | "openOf
  * and a newcomer after a raise past the line would be offered a place instead of holding one — for
  * no one's benefit. `kind` is in no condition (§30): only the count.
  */
-export function newcomerJoinsLine(input: Pick<WaitlistInput, "waitlisted">): boolean {
-  return input.waitlisted > 0;
+export function newcomerJoinsLine(input: Pick<WaitlistInput, "waitlisted"> & OfferOnlyInput): boolean {
+  return input.waitlisted > 0 || publicEntryQueues(input);
+}
+
+/**
+ * How a registration reached the allocator (§NNN): `public` — the public form, its emailed link for another
+ * person, a verified runner's restart through it, a family sitting's form, and the address confirmation of a
+ * registration the public form wrote — or `staff`: a staff entry (vouched or confirmed by its email), the
+ * desk, «Dă-i un loc», «Trimite-i oferta», «Oferă-i un loc acum», an invitation, «Pe lista de invitați
+ * speciali», and a late signature keeping the place it was given. Never `kind` (§30).
+ */
+export type EntryChannel = "public" | "staff";
+
+export type OfferOnlyInput = {
+  /** `events.free_places_by_offer_only` («Locurile libere le dau doar eu», §NNN); absent is off. */
+  freePlacesByOfferOnly?: boolean;
+  /** Who is entering (§NNN); absent is the staff's, which the switch never touches. */
+  channel?: EntryChannel;
+};
+
+/**
+ * «Locurile libere le dau doar eu» (§NNN): a public entry joins the line whatever is free, as it does while
+ * anybody waits (§615) — the free places are the staff's to give. A staff entry is never touched. Only who a
+ * free place is for: the capacity formula is untouched, so the switch can give fewer places, never more.
+ */
+export function publicEntryQueues(input: OfferOnlyInput): boolean {
+  return input.freePlacesByOfferOnly === true && input.channel === "public";
 }
 
 /**

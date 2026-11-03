@@ -71,7 +71,8 @@ export type SummaryWords = {
     external: string;
     externalUnnamed: string;
   };
-  window: { range: string; fromPublication: string; soon: string; untilStart: string };
+  /** `paused` (§NNN): «Înscrieri publice deschise» unticked, said before the dates. */
+  window: { range: string; fromPublication: string; soon: string; untilStart: string; paused: string };
   conditions: { noDeclaration: string };
   /** The minimum age, in «Regulamentul»'s closed line (§505): "vârsta minimă {age}", or none. */
   age: { from: string; none: string };
@@ -416,7 +417,7 @@ export function registrationSummary(
 }
 
 type WindowEvent = Pick<EditableEvent, "registrationOpensAt" | "registrationClosesAt" | "timezone"> &
-  Partial<Pick<EditableEvent, "registrationOpensSoon">>;
+  Partial<Pick<EditableEvent, "registrationOpensSoon" | "publicRegistrationOpen">>;
 
 /**
  * Sub-card 8.1: `Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59`, or `De la publicare – până
@@ -431,7 +432,9 @@ export function registrationWindowSummary(words: SummaryWords, event: WindowEven
       ? summaryDateTime(event.registrationOpensAt, event.timezone, locale)
       : words.window.fromPublication;
   const to = event?.registrationClosesAt ? summaryDateTime(event.registrationClosesAt, event.timezone, locale, "continues") : words.window.untilStart;
-  return fillIn(words.window.range, { from, to });
+  const range = fillIn(words.window.range, { from, to });
+  // «Înscrieri publice deschise» unticked (§NNN): the closed line says the site's door is shut, before the dates.
+  return event?.publicRegistrationOpen === false ? `${words.window.paused} · ${range}` : range;
 }
 
 /**

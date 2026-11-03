@@ -65,6 +65,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   bulkDeleteRegistrationsAction: vi.fn(),
   markBibsPrintedAction: vi.fn(),
   sendOutboxNowAction: vi.fn(),
+  setPublicRegistrationOpenAction: vi.fn(),
   // The registration's own page (§635's timeline).
   cancelRegistrationAction: vi.fn(),
   checkInAction: vi.fn(),

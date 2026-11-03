@@ -361,6 +361,8 @@ async function renderRow(
     row.messageType === "VOLUNTEER_ROLE_ASSIGNED" ||
     row.messageType === "VOLUNTEER_GUARDIAN_REQUEST" ||
     row.messageType === "VOLUNTEER_INVITATION" ||
+    // The Administrators' places alert (§NNN): about an event's places, nobody's registration.
+    row.messageType === "PLACES_ALERT" ||
     bulkRecipients !== null
       ? (row.payloadJson as { eventId?: unknown } | null)?.eventId
       : undefined;
@@ -861,6 +863,24 @@ async function renderRow(
     button is «Versiune nouă» (`/admin/legal/new`) in the recipient's language, from `APP_BASE_URL`
     (AGENTS.md §8); the backoffice's sign-in decides who may open it.
   */
+  /*
+    «Anunță-mă când rămân N locuri» (§NNN), to an Administrator or a Superadministrator: the crossing and its counts are
+    in the payload, as the allocator's write counted them under the lock — no participant, no token. The event is named
+    from the payload's id above. The one button opens the event's registrations, where «Locuri» says what the public
+    sees now, from `APP_BASE_URL` (AGENTS.md §8); the sign-in decides who may open it.
+  */
+  if (row.messageType === "PLACES_ALERT") {
+    const payload = (row.payloadJson ?? {}) as { displayName?: unknown; stage?: unknown; free?: unknown; capacity?: unknown; alertAt?: unknown };
+    data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
+    const whole = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? Math.max(Math.trunc(value), 0) : 0);
+    data.placesAlert = {
+      stage: payload.stage === "FULL" ? "FULL" : "LOW",
+      free: whole(payload.free),
+      capacity: whole(payload.capacity),
+      alertAt: whole(payload.alertAt),
+    };
+    if (eventId) payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/registrations", query: { eventId } } })}`;
+  }
   if (row.messageType === "LEGAL_TEMPLATES_CHANGED") {
     const payload = (row.payloadJson ?? {}) as { displayName?: unknown; keys?: unknown };
     data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";

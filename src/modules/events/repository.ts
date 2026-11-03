@@ -220,6 +220,10 @@ const PUBLIC_COLUMNS = {
   registrationOpensAt: events.registrationOpensAt,
   registrationOpensSoon: events.registrationOpensSoon,
   registrationClosesAt: events.registrationClosesAt,
+  // «Înscrieri publice deschise» and «Locurile libere le dau doar eu» (§NNN): the door the page draws
+  // (`registrationCta`) — shut by the organizers, or the line's whatever is free. The server decides again under the lock.
+  publicRegistrationOpen: events.publicRegistrationOpen,
+  freePlacesByOfferOnly: events.freePlacesByOfferOnly,
   // «Kit de participare» → «Tricou» (§554): whether the registration form asks the T-shirt size.
   kitShirt: events.kitShirt,
   // «Condiții de participare» → «Informații medicale» (§557): whether the form asks the health note.

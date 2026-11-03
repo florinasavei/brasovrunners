@@ -506,6 +506,8 @@
       "fullOffer": "When a place frees up, you get an email and {hours} to confirm — then it passes on.",
       "waitlistFull": "All places are taken and the waiting list is full — sorry.",
       "fullNoWaitlist": "All places are taken, and this event has no waiting list.",
+      "paused": "Registration on the site has been stopped by the organizers.",
+      "pausedOffersOnly": "The organizers hand out the remaining places themselves: you cannot register directly on the site.",
       "waitlistRoom": {
         "one": "{count} place left on the waiting list",
         "few": "{count} places left on the waiting list",
@@ -1144,6 +1146,35 @@
         "letIn": "The free places go to the official list first («Send them the offer»), then to the internal list («Offer them a place now»).",
         "raises": "To let in everybody waiting, the capacity would have to reach {capacity} (+{count}); each offer adds its own place, once you confirm.",
         "total": "Special guests: {outside} (take no place). People at the start if everybody comes: {count}."
+      },
+      "publicNow": {
+        "direct": "On the site now: the «Register» button — the first to come takes a free place.",
+        "waitlistLimited": {
+          "one": "On the site now: «Join the waiting list» — {waiting} of {limit} place on the list.",
+          "few": "On the site now: «Join the waiting list» — {waiting} of {limit} places on the list.",
+          "other": "On the site now: «Join the waiting list» — {waiting} of {limit} places on the list."
+        },
+        "waitlistUnlimited": "On the site now: «Join the waiting list» — {waiting} on the list, no limit.",
+        "closed": "On the site now: registration is closed — {reason}.",
+        "reasons": {
+          "NOT_YET_OPEN": "the registration period has not started",
+          "WINDOW_CLOSED": "the registration period is over",
+          "SWITCH": "the «Registration open on the site» tick is off",
+          "OFFERS_ONLY": "you hand out the free places yourself, and the waiting list takes nobody more",
+          "WAITLIST_FULL": "the places are taken and the waiting list is full",
+          "NO_WAITLIST": "the places are taken and the event has no waiting list",
+          "CANCELLED": "the event is cancelled",
+          "COMPLETED": "the event is over",
+          "NOT_HERE": "the event takes no registration on this site"
+        },
+        "setting": "Change it in the editor"
+      },
+      "publicDoor": {
+        "label": "Registration open on the site",
+        "save": "Save",
+        "help": "Unticked, the button on the site disappears at once, whatever the dates say; everything the team does keeps working.",
+        "readOnlyOn": "Registration on the site is open (only an Administrator can stop it).",
+        "readOnlyOff": "Registration on the site has been stopped by an Administrator."
       },
       "outside": {
         "pill": "Special guests: {count}",
@@ -2107,6 +2138,12 @@
       "createRegistrationBody": "The person is registered for the event on their behalf, at their request, and receives the email for the next step.",
       "createRegistrationVouchBody": "You vouch for the address {email}: the person enters now, at their request, onto the waiting list or a free place; no confirmation email, but the email for the state they land in.",
       "waitlistAddTitle": "Add to the waiting list?",
+      "publicDoorCloseTitle": "Stop registration on the site?",
+      "publicDoorCloseBody": "The button on the site disappears at once and the public form takes nobody, whatever the dates say. The team can still enter people, offer places and take people at the desk.",
+      "publicDoorCloseConfirm": "Stop registration",
+      "publicDoorOpenTitle": "Open registration on the site again?",
+      "publicDoorOpenBody": "The button comes back on the site at once, if the registration period is open.",
+      "publicDoorOpenConfirm": "Open registration",
       "waitlistAddBody": "You vouch for the address {email}, and the person enters now, at their request: onto the waiting list or, when a place is free, onto it. They get the email for the state they land in.",
       "waitlistOfferTitle": "Offer them a place now?",
       "waitlistOfferBody": "You vouch for the address {email}, and the person joins the official list now and gets a place: a free one or, otherwise, an offer by email. They sign the declaration themselves, from it.",
@@ -2569,6 +2606,9 @@
       "waitlistCapacityHelp": "Lowered below how many already wait, it removes nobody; it just takes no one new. Empty or 0: the list becomes unlimited.",
       "registrationOpensAt": "Registration opens",
       "registrationOpensSoon": "Registration opens soon (no date yet)",
+      "publicRegistrationOpen": "Registration open on the site",
+      "publicRegistrationOpenHelp": "Unticked, the button on the site disappears at once, whatever the dates say, and the public form refuses everyone. What the team does keeps working.",
+      "publicRegistrationOpenHelpMore": "Still working: an entry by an organizer, the race-day desk, «Send them the offer», «Give a place», «Offer them a place now», «Move to the official list» and the invitations.",
       "registrationOpensSoonHelp": "Ticked, the page says “Registration opens soon” and the form stays closed. Untick it to open: the people who asked to be told get the email.",
       "kitShirt": "T-shirt",
       "kitShirtHelp": "When ticked, the form asks for the T-shirt size.",
@@ -3325,7 +3365,8 @@
             "range": "{from} – {to}",
             "fromPublication": "From publication",
             "soon": "Opens soon",
-            "untilStart": "until the start"
+            "untilStart": "until the start",
+            "paused": "stopped on the site"
           },
           "conditions": {
             "noDeclaration": "Declaration missing — required for registration on the site"
@@ -3489,6 +3530,12 @@
       "waitlistAutoOfferNo": "No",
       "waitlistAutoOfferHelp": "On “Yes”, a freed or added place is offered at once, by email and with a deadline, to the first on the waiting list. On “No”, places stay free until you hand them out.",
       "waitlistAutoOfferHelpMore": "You hand them out from the “Registration queue” with “Send them the offer”, or at the desk with “Give a place”. While anyone waits, newcomers join the list too.",
+      "freePlacesByOfferOnly": "I hand out the free places myself",
+      "freePlacesByOfferOnlyHelp": "Ticked, whoever registers on the site joins the waiting list, in order, even with places free — or is refused when the list is full. You give the free places.",
+      "freePlacesByOfferOnlyHelpMore": "With automatic allocation on „Yes”, a free place still goes to the first on the list by itself; choose „No” to give them yourself. The capacity does not change: no extra place is taken.",
+      "placesAlertAt": "Email me when N places are left",
+      "placesAlertAtHelp": "Empty: no email. A number: the administrators get an email when the free places drop to it, and one more when none are left.",
+      "placesAlertAtHelpMore": "One email per threshold; another comes only after the free places climb back above the number.",
       "waitlistCountPublic": "Show publicly how many are waiting",
       "waitlistCountPublicHelp": "Ticked: the card, the page and each person on the list learn how many are waiting. Unticked: only that there is a list and how to join it; the club sees the number in the backoffice.",
       "hiddenListTitle": "Special guests list",
@@ -7034,6 +7081,7 @@
         "VOLUNTEER_ROLE_ASSIGNED": "Your volunteer role",
         "VOLUNTEER_GUARDIAN_REQUEST": "Your consent for a young volunteer",
         "VOLUNTEER_INVITATION": "Invitation to volunteer",
+        "PLACES_ALERT": "Few places left",
         "RSVP_CONFIRM": "Confirm you're coming (“I'm coming!”)",
         "RSVP_ASK": "Coming tomorrow? (“I'm coming” / “I'm not coming”)"
       },
@@ -7106,6 +7154,7 @@
         "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role or change their roles, from the event's «Volunteers» card: a short message naming their roles, the date and the place. Nothing to press.",
         "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers, or an organizer presses “Send the parent's link”: the agreement and the link where the parent accepts it in their own name.",
         "VOLUNTEER_INVITATION": "When an organizer or an administrator sends invitations from the «Volunteers» card of an event whose volunteers are by invitation only, and on “Send again”. A personal link to the volunteers' page.",
+        "PLACES_ALERT": "When the free places drop to the threshold in «Email me when N places are left», and once more when none are left: to every Administrator. The button opens the registrations.",
         "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page: “Yes, I'm coming” counts them, “I'm not coming” takes it back. The page's “not coming any more” sends only the withdraw link.",
         "RSVP_ASK": "{askDays} before the start, from {askHour}: {askWho}. “I'm coming”, then “Yes, I'm coming”, counts them; “I'm not coming” does not. Answered: skipped."
       },
@@ -7153,6 +7202,7 @@
         "VOLUNTEER_ROLE_ASSIGNED": "when the organizers give or change the roles",
         "VOLUNTEER_GUARDIAN_REQUEST": "when a volunteer under 18 offers",
         "VOLUNTEER_INVITATION": "when the club invites someone to volunteer",
+        "PLACES_ALERT": "when the places drop to the threshold, to the administrators",
         "RSVP_CONFIRM": "when someone says “I'm coming!”, to their address",
         "RSVP_ASK": "{askDays} before, from {askHour}, {askWhoShort}"
       },
@@ -7946,6 +7996,7 @@
         "VOLUNTEER_ROLE_ASSIGNED": "The roles given and the event's date and place are added by themselves, however you write the text. The message has no link that does anything.",
         "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old.",
         "VOLUNTEER_INVITATION": "The event, the roles wanted and the club's message are added by themselves. The link is for the invited person only, works once, and a new one replaces the old.",
+        "PLACES_ALERT": "The free places, the capacity and the threshold are added by themselves, however you write the text. One email per threshold; another comes only after the places climb back above it.",
         "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link.",
         "RSVP_ASK": "Once per event, unless unticked in the editor. Ticked after the window opened, it goes on the next run; ticked only on its own day, it does not. What has not left by the midnight before is dropped."
       },
@@ -11635,7 +11686,8 @@
       "notYou": "Not expecting this invitation? Ignore it or write to us:"
     },
     "memberBibWanted": "I want the members' number",
-    "memberBibWantedHelp": "The same number, in the same order; only the look differs. The club prints it only if your address is a {club} member's."
+    "memberBibWantedHelp": "The same number, in the same order; only the look differs. The club prints it only if your address is a {club} member's.",
+    "pausedBack": "Back to the event"
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
@@ -13143,6 +13195,9 @@
       "invitationWithdrawn": "Invitation withdrawn; the place was released.",
       "memberTickCleared": "Member tick cleared.",
       "memberTickSet": "Member tick set.",
+      "publicRegistrationOpened": "Registration on the site is open again.",
+      "publicRegistrationPaused": "Registration on the site is stopped. The team can still enter people.",
+      "publicRegistrationUnchanged": "The tick already said so; nothing changed.",
       "memberTicksCleared": {
         "one": "Member tick cleared on {count} registration.",
         "few": "Member tick cleared on {count} registrations.",

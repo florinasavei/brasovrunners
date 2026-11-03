@@ -219,6 +219,18 @@ export default async function RegistrationCta({
     );
   }
 
+  /*
+    The organizers shut the site's door (§NNN): «Înscrieri publice deschise» unticked, or the free places theirs to
+    give with nothing to join. A sentence and no button, as above — a button would lead to a form the server refuses.
+  */
+  if (cta.kind === "PAUSED") {
+    return (
+      <Typography variant="body1" data-testid="registration-paused" sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, fontWeight: 500 }}>
+        {cta.reason === "SWITCH" ? t("cta.paused") : t("cta.pausedOffersOnly")}
+      </Typography>
+    );
+  }
+
   const sentence =
     cta.kind === "CANCELLED"
       ? t("cta.cancelled")
