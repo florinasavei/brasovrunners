@@ -18,7 +18,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { escapeLike, foldedName, foldTerm } from "@/db/name-search";
-import { alias } from "drizzle-orm/pg-core";
+import { alias, type AnyPgColumn } from "drizzle-orm/pg-core";
 import {
   awaitingItsFirstEmail,
   countEligibleWaitlisted,
@@ -173,6 +173,39 @@ export type RegistrationListRow = {
   cancelReason: string | null;
   expiredAt: Date | null;
   expiryReason: string | null;
+} & AnswersForChip;
+
+/**
+ * What «Date lipsă» reads (§905, `missing-answers.ts`), beside the answers the row already carries: the answers
+ * themselves where the list may show them, and for the telephone and the emergency contact only whether one is
+ * held (`answerHeldSql`) — the list never reads either (§322).
+ */
+export type AnswersForChip = {
+  sex: RegistrationSex | null;
+  nationality: string | null;
+  tshirtSize: RegistrationTshirtSize | null;
+  eventKitShirt: boolean;
+  answersWrittenAt: Date;
+  phoneHeld: boolean;
+  emergencyContactNameHeld: boolean;
+  emergencyContactPhoneHeld: boolean;
+};
+
+/** Whether an answer is there, never the answer (§322, §905): a blank is none, as the form reads it. */
+function answerHeldSql(column: AnyPgColumn): SQL<boolean> {
+  return sql<boolean>`(nullif(btrim(${column}), '') is not null)`.mapWith(Boolean);
+}
+
+/** The columns `AnswersForChip` names, for the list's and the page's one query. */
+const ANSWERS_FOR_CHIP = {
+  sex: registrations.sex,
+  nationality: registrations.nationality,
+  tshirtSize: registrations.tshirtSize,
+  eventKitShirt: events.kitShirt,
+  answersWrittenAt: registrations.answersWrittenAt,
+  phoneHeld: answerHeldSql(registrations.phone),
+  emergencyContactNameHeld: answerHeldSql(registrations.emergencyContactName),
+  emergencyContactPhoneHeld: answerHeldSql(registrations.emergencyContactPhone),
 };
 
 export type RegistrationListFilters = {
@@ -515,6 +548,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       cancelReason: registrations.cancelReason,
       expiredAt: registrations.expiredAt,
       expiryReason: registrations.expiryReason,
+      // «Date lipsă» (§905): the answers it reads, the telephone and the emergency contact only as "held".
+      ...ANSWERS_FOR_CHIP,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
@@ -866,7 +901,11 @@ export type RegistrationDetail = {
   resultsNameConsent: boolean;
   /** For the link to everything held about this person (§322): the identity it is looked up by. */
   participantCanonicalEmail: string;
-};
+  /** «Date lipsă» (§905): the two names, the birth date and the citizenship it reads beside `AnswersForChip`. */
+  firstName: string | null;
+  lastName: string | null;
+  birthDate: string | null;
+} & AnswersForChip;
 
 const checkedInBy = alias(staffUsers, "checked_in_by");
 const emailConfirmedBy = alias(staffUsers, "email_confirmed_by");
@@ -956,6 +995,15 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       holdsHealthNote: sql<boolean>`(${registrations.healthNotes} IS NOT NULL OR ${registrations.healthConsentAt} IS NOT NULL)`.mapWith(Boolean),
       resultsNameConsent: registrations.resultsNameConsent,
       participantCanonicalEmail: participants.canonicalEmail,
+      // «Date lipsă» (§905): the answers it reads, the telephone and the emergency contact only as "held".
+      firstName: registrations.firstName,
+      lastName: registrations.lastName,
+      birthDate: registrations.birthDate,
+      nationality: ANSWERS_FOR_CHIP.nationality,
+      answersWrittenAt: ANSWERS_FOR_CHIP.answersWrittenAt,
+      phoneHeld: ANSWERS_FOR_CHIP.phoneHeld,
+      emergencyContactNameHeld: ANSWERS_FOR_CHIP.emergencyContactNameHeld,
+      emergencyContactPhoneHeld: ANSWERS_FOR_CHIP.emergencyContactPhoneHeld,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))

@@ -136,12 +136,12 @@ describe("the volunteers' spreadsheet, «formatat frumos» (§846)", () => {
     // The header's fill and words: the club's deep blue, white.
     expect(styles).toContain(argb(SHEET_FRAME.header));
     expect(styles).toContain(argb(SHEET_FRAME.headerInk));
-    // One event: no «Eveniment» column; the filter covers the header and the four people, twenty columns wide.
+    // One event: no «Eveniment» column; the filter covers the header and the four people, twenty-one columns wide («Are kit», §904, the last added).
     const { rows } = readSheet(buffer);
     expect(rows[0][0]).toBe(words.csvColumns.name);
     expect(rows).toHaveLength(5);
-    expect(sheet).toMatch(/<\/sheetData><autoFilter ref="A1:T5"\/>/);
-    expect(parts.get("xl/workbook.xml")).toContain(`<definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">'Voluntari'!$A$1:$T$5</definedName>`);
+    expect(sheet).toMatch(/<\/sheetData><autoFilter ref="A1:U5"\/>/);
+    expect(parts.get("xl/workbook.xml")).toContain(`<definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">'Voluntari'!$A$1:$U$5</definedName>`);
     // Printed, the header repeats on every page.
     expect(parts.get("xl/workbook.xml")).toContain(`<definedName name="_xlnm.Print_Titles" localSheetId="0">'Voluntari'!$1:$1</definedName>`);
     // The header and the name stay on screen.
@@ -158,7 +158,7 @@ describe("the volunteers' spreadsheet, «formatat frumos» (§846)", () => {
 
     // A tint per state, by a rule over the row's own «Stare» cell — so a state changed in the file recolours its row.
     for (const word of [words.states.CONFIRMED, words.states.REGISTERED, words.states.CANCELLED]) expect(sheet).toContain(`<formula>$B2="${word}"</formula>`);
-    expect(sheet).toContain('sqref="A2:T5"');
+    expect(sheet).toContain('sqref="A2:U5"');
     for (const tint of [SHEET_TINT.success, SHEET_TINT.warning, SHEET_TINT.neutral]) expect(styles).toContain(argb(tint));
   });
 
@@ -224,7 +224,7 @@ describe("«Descarcă Excel: toate evenimentele» (§846)", () => {
     ]);
     // The header, the event and the name stay on screen; the filter is one column wider.
     expect(unzip(buffer).get("xl/worksheets/sheet1.xml")).toMatch(/<pane [^>]*xSplit="2"/);
-    expect(unzip(buffer).get("xl/worksheets/sheet1.xml")).toContain('<autoFilter ref="A1:U6"/>');
+    expect(unzip(buffer).get("xl/worksheets/sheet1.xml")).toContain('<autoFilter ref="A1:V6"/>');
     // «Pe roluri»: each event's roles, each with its total.
     const roles = readSheet(buffer, 2).rows.slice(1);
     expect(roles.map((row) => [row[0], row[1]])).toEqual([
@@ -252,7 +252,7 @@ describe("«Descarcă Excel: toate evenimentele» (§846)", () => {
     await db.delete(eventVolunteers);
     const buffer = await bytes(await allEvents("lang=ro"));
     expect(readSheet(buffer).rows).toHaveLength(1);
-    expect(unzip(buffer).get("xl/worksheets/sheet1.xml")).toContain('<autoFilter ref="A1:U1"/>');
+    expect(unzip(buffer).get("xl/worksheets/sheet1.xml")).toContain('<autoFilter ref="A1:V1"/>');
     // The roles still say what each event needs.
     expect(readSheet(buffer, 2).rows.slice(1).map((row) => row[1])).toEqual(["Marcaj", words.sheet.total, "Punct de apă", "Sosire", "Ajutor", words.sheet.total]);
 

@@ -390,6 +390,13 @@ export async function VolunteerPersonFields({ person, context }: { person: Volun
           </CheckboxField>
         </Box>
       )}
+      {/* «Are kit» (§904; the owner, 2026-11-03: «trebuie încă un field de „are kit"»): the organizers' own mark, drawn whatever the notice in force
+          names — it is the club's packing, not the person's answer — and on no public form. The «Voluntari» list's row ticks it in one press too. */}
+      <Box data-testid="volunteer-kit-field">
+        <CheckboxField name="hasKit" defaultChecked={person?.hasKit ?? false} help={t("volunteers.person.hasKitHelp")}>
+          {t("volunteers.person.hasKit")}
+        </CheckboxField>
+      </Box>
       <RecallField
         name="note"
         label={t("volunteers.person.note")}
@@ -784,12 +791,14 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
       </Stack>
       {/* What the person said about themselves (§765), small: two chips — «a mai fost voluntar» and the club's group, the person's own claims, in words and a glyph —
           and one line of the rest in the row's details. Nothing for a person who said nothing. */}
-      {(person.volunteeredBefore || person.clubMember || person.listOptIn) && (
+      {(person.volunteeredBefore || person.clubMember || person.listOptIn || person.hasKit) && (
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5, mt: 0.5 }} data-testid="volunteer-claims">
           {/* «Vrea pe lista publică» (§821): the person wants to appear — named on the event's page only once confirmed, while the club's list is public and the notice describes it. */}
           {person.listOptIn && <StatusChip glyph="wantsList" variant="outlined" label={t("volunteers.chips.wantsList")} testId="volunteer-on-list" />}
           {person.volunteeredBefore && <StatusChip glyph="experience" variant="outlined" label={t("volunteers.chips.before")} testId="volunteer-before" />}
           {person.clubMember && <StatusChip glyph="club" variant="outlined" label={t("volunteers.chips.club", { club: CLUB_NAME })} testId="volunteer-club" />}
+          {/* «Are kit» (§904): the organizers' own mark, beside the person's own claims — set in «Modifică» below, or by one press on the list. */}
+          {person.hasKit && <StatusChip glyph="kit" variant="outlined" label={t("volunteers.chips.kit")} testId="volunteer-kit" />}
         </Stack>
       )}
       {(() => {

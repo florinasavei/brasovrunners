@@ -33,6 +33,8 @@ import { readSignatureTrace } from "@/modules/legal-documents/domain/signature-t
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashPublic } from "@/shared/feedback/flash";
 import { idDocumentFrom } from "@/modules/registrations/id-document-input";
+import { answersRefusalParam, readPostedAnswers } from "@/modules/registrations/complete-answers";
+import { ANSWER_DRAFT_FIELDS, ANSWERS_ASKED_FIELD, COMPLETE_ANSWERS_ID } from "@/modules/registrations/missing-answers";
 
 export async function signDeclarationAction(form: FormData): Promise<void> {
   const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
@@ -91,9 +93,15 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       // The IP address and browser of this press (§771), from the request itself — the electronic signature's trace.
       trace: readSignatureTrace(await headers()),
     };
+    /*
+      «Completează-ți datele» (§905): the answers the page asked above the signature, read by the public form's own
+      mapping — only when the page drew them, so a complete registration's press is what it always was. The
+      service saves them as the person's own in the signature's transaction, and keeps only the missing ones.
+    */
+    const answers = form.get(ANSWERS_ASKED_FIELD) === "1" ? readPostedAnswers(form, locale) : undefined;
     const result = familyRegistrationId
-      ? await consumeAndSignFamilyDeclaration(token, pass, familyRegistrationId, input, now)
-      : await consumeAndSignDeclaration(token, input, now);
+      ? await consumeAndSignFamilyDeclaration(token, pass, familyRegistrationId, input, now, answers)
+      : await consumeAndSignDeclaration(token, input, now, answers);
 
     if (!result.ok) redirect(`${path}?invalid=1`);
     // Signed: a draft kept by an earlier refused press has nothing left to fill in.
@@ -158,6 +166,18 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     */
     const full = waitlistRefusalOf(error);
     if (full) redirect(`${path}?full=${full === NO_WAITLIST ? "closed" : "1"}`);
+    /*
+      An answer the form requires, left empty or refused by the form's own rule (§905): its own refusal, at the
+      boxes — the URL carries their names and the rule's marker, never what was typed (§14.5), and what was typed
+      comes back sealed, the answers with it. Nothing was saved or signed and the link was not spent: the answers
+      and the signature are one transaction. Asked first, because a refusal of the answers names none of the
+      signature's boxes.
+    */
+    const answersRefused = isDomainError(error) && error.code === "VALIDATION_ERROR" ? answersRefusalParam(error.fields) : null;
+    if (answersRefused) {
+      await stashDraftValues(declarationDraftOf(form), path);
+      redirect(`${path}?invalid=answers&answers=${encodeURIComponent(answersRefused)}#${COMPLETE_ANSWERS_ID}`);
+    }
     /*
       The signature is not the declarant's name (§314) — its own refusal, never the generic one.
 
@@ -302,6 +322,8 @@ function declarationDraftOf(form: FormData): Record<string, string> {
     "minorTypedName",
     // The offers-and-benefits box (§562) comes back as it was ticked after a refusal.
     "promoConsent",
+    // The answers the page asked above the signature (§905), so a refusal of either leaves nothing to retype.
+    ...ANSWER_DRAFT_FIELDS,
   ]) {
     const value = form.get(name);
     if (typeof value === "string" && value !== "") draft[name] = value;

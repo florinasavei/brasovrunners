@@ -1306,6 +1306,11 @@ export type TemplateData = {
    */
   minorSigns?: boolean;
   /**
+   * On a declaration request or a freed place's offer (§905): the registration lacks answers the form requires, and
+   * the page the link opens asks them before the signature — one sentence says so.
+   */
+  answersToComplete?: boolean;
+  /**
    * A group run's declaration signed by a minor beside a parent (§769, §330's two signatures): the minor's name.
    * `participantName` is then the parent's or guardian's, the declarant, and both messages say both signed.
    */
@@ -2601,6 +2606,8 @@ const T = {
       both
         ? `Declarația o semnați amândoi, tu ca părinte sau tutore și ${participant}, fiecare cu actul lui de identitate; țineți-le pe amândouă la îndemână.`
         : `Declarația o semnezi tu, ca părinte sau tutore, pentru ${participant}.`,
+    /** The registration lacks answers the form requires (§905): the page the link opens asks them first. */
+    answersToComplete: "Pe pagina din link îți completezi mai întâi datele care lipsesc din înscrierea ta, apoi semnezi.",
     /** A group run's signer's copy (§419): the document masked, and the way out for a declaration one did not sign. */
     groupRunMasked: "În copia ta, seria și numărul actului de identitate apar mascate, pentru siguranță: adresa de e-mail nu a fost verificată înainte de trimitere.",
     groupRunNotYou: (contactUrl?: string) =>
@@ -3407,6 +3414,7 @@ const T = {
       both
         ? `You both sign the declaration, you as parent or guardian and ${participant}, each with your own identity document; keep both to hand.`
         : `You sign the declaration as parent or guardian for ${participant}.`,
+    answersToComplete: "On the page the link opens you first fill in the details missing from your registration, then sign.",
     groupRunMasked: "In your copy, your identity document's series and number are masked, for safety: the email address was not verified before sending.",
     groupRunNotYou: (contactUrl?: string) =>
       `If you did not sign this declaration, write to us from the contact page${contactUrl ? ` (${contactUrl})` : ""} and we will delete it.`,
@@ -4043,6 +4051,8 @@ export function buildTemplateContent(
       ...(guardianName && (messageType === "COMPLETE_DECLARATION" || messageType === "WAITLIST_SPOT_OFFER")
         ? [copy.minorSigners(data.participantName, data.minorSigns === true)]
         : []),
+      // The answers the page asks before the signature (§905), a fact of this registration — after the body whoever wrote it.
+      ...(data.answersToComplete === true && (messageType === "COMPLETE_DECLARATION" || messageType === "WAITLIST_SPOT_OFFER") ? [copy.answersToComplete] : []),
       /*
         The family's other declarations (§471): that the one link signs them all, one after the other
         — a fact of this send, after the body whoever wrote it, and only when the renderer found some.

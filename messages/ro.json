@@ -1136,7 +1136,8 @@
         "who": "Au acum un loc, cu invitații speciali: {registrations} · Invitații fără răspuns: {invitations}. Lista de așteptare nu intră.",
         "shirts": "Tricouri — {sizes}",
         "noShirt": "fără tricou: {count}",
-        "unknownSize": "mărime încă necunoscută (invitații): {count}"
+        "unknownSize": "mărime încă necunoscută (invitații): {count}",
+        "volunteers": "Plus voluntari cu kit: {count}"
       },
       "places": {
         "title": "Locuri libere acum: {free} din {capacity}",
@@ -1588,6 +1589,7 @@
           "hold_moved_by_window": "Termenul semnării mutat după fereastra de confirmare schimbată",
           "not_revived_for_outage": "Nereluat după întreruperea site-ului: termenul trecuse cât nu putea fi accesat, iar locul fusese dat între timp sau cererea expirase deja",
           "answer_corrected": "Răspuns corectat: {field}",
+          "answers_completed": "Date completate de participant, din linkul propriu: {fields}",
           "answers_viewed": "Datele înscrierii deschise, cu telefonul și persoana de contact",
           "note_added": "Notă internă adăugată",
           "note_deleted": "Notă internă ștearsă"
@@ -1884,6 +1886,12 @@
           "memberBibWanted": "Vreau numărul de membru"
         },
         "memberBibHelp": "Se păstrează doar cu bifa de membru și cât timp evenimentul oferă numărul membrilor."
+      },
+      "missingAnswers": {
+        "chip": "Date lipsă",
+        "hint": "Lipsesc date pe care formularul de înscriere le cere.",
+        "line": "Lipsesc: {fields}.",
+        "how": "Persoana le completează singură din linkul ei, înainte de semnătură sau după: retrimite-i emailul dacă nu-l mai are. Sau le scrii tu din «Modifică datele»."
       },
       "memberTick": {
         "clear": "Nu e membru",
@@ -2368,6 +2376,7 @@
       "SAMPLE_VALUES_IN_EMAIL": "Textul conține valori de exemplu, nu câmpuri: {found}. Folosește câmpurile în locul lor.",
       "BIB_NUMBER_TAKEN": "Numărul acesta e deja al altcuiva la acest eveniment: dat, rezervat, pe lista de elită sau al unei înscrieri șterse. Alege alt număr din cutie și încearcă din nou.",
       "ELITE_NUMBER_TAKEN": "Numărul acesta e deja folosit la eveniment: al unei înscrieri, al altui nume de elită sau o rezervă a mesei. Scrie alt număr sau lasă căsuța goală.",
+      "RESERVE_ELITE_NAME": "Numele are peste {max} de caractere și nu încape pe BIB. Scrie-l mai scurt în editorul evenimentului, la „Elită — doar numele pe BIB”.",
       "WALK_IN_BIB_TAKEN": "Persoana e înscrisă, dar numărul tocmai l-a dat altcineva, deci e neconfirmată. Caut-o în listă și apasă „Confirmă aici” cu alt număr.",
       "STAFF_ALREADY_ON_ADDRESS": "Persoana aceasta este deja înscrisă la eveniment cu această adresă de email. Caut-o în lista înscrierilor; pentru altă persoană, scrie numele ei.",
       "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană.",
@@ -5759,7 +5768,9 @@
         "birthDateHelpMinors": "Opțional. Cel puțin {age} în ziua evenimentului. Sub 18 ani, trece mai jos și părintele sau tutorele.",
         "listOptIn": "Vrea să apară pe lista publică a voluntarilor",
         "listOptInHelp": "Bifează doar dacă persoana ți-a spus că vrea, de preferat în scris. Numele tău rămâne în jurnal. Dacă lista e publică, pagina arată numele și rolul dat, după ce o confirmi.",
-        "listOptInOff": "Nota în vigoare nu descrie lista publică: nu se mai poate bifa. Poți doar s-o debifezi."
+        "listOptInOff": "Nota în vigoare nu descrie lista publică: nu se mai poate bifa. Poți doar s-o debifezi.",
+        "hasKit": "Are kit",
+        "hasKitHelp": "Bifează dacă persoana primește kitul de voluntar. Se numără sus, la „Cu kit”, și lângă „Kituri de pregătit” la înscrieri."
       },
       "states": {
         "REGISTERED": "Înscris",
@@ -5828,7 +5839,8 @@
         "shirtSize": "Mărime tricou",
         "guardianName": "Părinte sau tutore",
         "guardianEmail": "Email părinte sau tutore",
-        "guardianConsent": "Acordul părintelui"
+        "guardianConsent": "Acordul părintelui",
+        "hasKit": "Are kit"
       },
       "sheet": {
         "people": "Voluntari",
@@ -5932,6 +5944,7 @@
         "summaryScopeAll": "toate evenimentele",
         "summaryTotal": "Voluntari: {count} (toate stările, anulați incluși)",
         "summaryUnassigned": "De repartizat: {count}",
+        "summaryKit": "Cu kit: {count}",
         "summaryScopeHelp": "Numerele de mai sus sunt doar pentru evenimentul selectat.",
         "summaryScopeAllLink": "Arată toate evenimentele",
         "filtersInUse": "filtre active",
@@ -5942,9 +5955,14 @@
         "searchHelp": "Caută după nume, cu sau fără diacritice — în toate evenimentele, dacă nu alegi unul.",
         "stateAll": "Toate stările",
         "roleAll": "Toate rolurile",
+        "kitFilter": "Are kit",
+        "kitAll": "Toți, cu kit sau fără",
+        "kitYes": "Da, are kit",
+        "kitNo": "Nu are kit",
+        "columnKit": "Kit",
         "filter": "Filtrează",
         "searchEverywhere": "Caut în toate evenimentele — alege unul ca să restrângi.",
-        "tableCaption": "Voluntari, cu stare, rolurile date, rolurile oferite, eveniment și data ofertei",
+        "tableCaption": "Voluntari, cu stare, rolurile date, rolurile oferite, kit, eveniment și data ofertei",
         "empty": "Nu s-a oferit încă nimeni.",
         "emptyFiltered": "Niciun voluntar nu corespunde filtrelor. Șterge filtrele ca să-i vezi pe toți.",
         "eventCard": "Rolurile și setările evenimentului",
@@ -5955,7 +5973,8 @@
       "chips": {
         "before": "A mai fost voluntar",
         "club": "Din grupul {club}",
-        "wantsList": "Vrea pe lista publică"
+        "wantsList": "Vrea pe lista publică",
+        "kit": "Are kit"
       },
       "yes": "Da",
       "no": "Nu",
@@ -11256,8 +11275,15 @@
       "move": "Mută pe lista oficială",
       "moveTitle": "Muți pe lista oficială de așteptare?",
       "noteFollows": "Nota trece pe înscriere, iar rândul dispare de pe lista internă.",
+      "detailsAtSigning": "Datele care lipsesc, ca data nașterii sau telefonul, persoana le completează singură când semnează declarația.",
       "emailForOfficial": "Email pentru lista oficială",
       "emailForOfficialHelp": "Rândul nu are adresă: scrie-o aici ca să-l muți. Aici îi ajung emailurile.",
+      "eliteNoAddress": "Alergător de elită? Nu-i trebuie adresă: „Mută pe lista de elită”.",
+      "moveToElite": "Mută pe lista de elită",
+      "moveToEliteTitle": "Muți pe lista de elită?",
+      "moveToEliteBody": "{name}: nu e o înscriere — niciun loc, niciun email, nicio declarație în aplicație. Pe BIB se tipărește numele. Nota internă nu se păstrează, iar rândul dispare de pe lista internă.",
+      "movedToElite": "Numele e pe lista de elită și se tipărește pe BIB. Nu e o înscriere și nu s-a trimis nimic.",
+      "eliteCardLink": "Deschide lista de elită",
       "delete": "Șterge",
       "deleteTitle": "Ștergi persoana de pe lista internă?",
       "deleteBody": "{name} dispare de pe lista internă, cu tot cu notă. Persoanei nu i se trimite nimic.",
@@ -12128,6 +12154,22 @@
       "changed": "Am salvat alegerea ta pentru clasament.",
       "failed": "Nu am putut salva alegerea. Încearcă din nou.",
       "otherAdult": "Acordul de a apărea cu numele în clasament îl dă doar persoana, din linkul înscrierii ei. De aici îl poți doar retrage."
+    },
+    "complete": {
+      "title": "Completează-ți datele",
+      "titleFor": "Completează datele pentru {name}",
+      "intro": "Formularul de înscriere cere și datele de mai jos, iar înscrierea ta nu le are încă. Le completezi o singură dată, aici; le păstrăm ca pe ale tuturor celor înscriși.",
+      "declareLead": "Înainte de semnătură, <link>completează datele care lipsesc</link> din înscrierea ta: le găsești chiar deasupra semnăturii.",
+      "refusedTitle": "Mai sunt date de completat",
+      "refusedNothingSigned": "Nu am semnat și nu am salvat nimic, iar linkul tău funcționează în continuare. Completează câmpurile de mai jos:",
+      "refusedNothingSaved": "Nu am salvat nimic. Completează câmpurile de mai jos:",
+      "minorSigned": "Data nașterii arată o persoană minoră la înscriere, iar declarația e semnată fără părinte sau tutore. Scrie-ne și rezolvăm împreună.",
+      "nameSigned": "Prenumele și numele trebuie să formeze numele din declarația semnată: {name}.",
+      "save": "Salvează datele",
+      "saving": "Se salvează…",
+      "saved": "Gata, datele tale sunt salvate.",
+      "signatureOpen": "Te-ai înscris ca {name}: semnează cu exact acest nume. Pentru un minor semnează părintele sau tutorele, cu numele scris mai sus.",
+      "guardianTypedAbove": "Semnează părintele sau tutorele, cu numele scris mai sus la datele de completat. Dacă numele e greșit, corectează-l acolo și semnează cu el."
     }
   },
   "Devs": {
@@ -13093,6 +13135,8 @@
       "volunteerReopened": "Voluntar înapoi la înscris.",
       "volunteerDeleted": "Voluntar șters.",
       "volunteerUnchanged": "Era deja așa; nimic de schimbat.",
+      "volunteerKitOn": "Bifat: are kit. Se numără la „Cu kit”.",
+      "volunteerKitOff": "Debifat: nu mai are kit.",
       "eventTodoDone": "Bifat. Rândul e la „Gata”.",
       "eventTodoReopened": "Debifat: rândul e din nou de făcut.",
       "eventTodoDeleted": "Rând șters de pe lista evenimentului.",
@@ -13334,6 +13378,7 @@
       "reserveAdded": "Persoana e pe lista internă. Nu i s-a trimis nimic.",
       "reserveNoteSaved": "Nota a fost salvată.",
       "reserveDeleted": "Persoana a fost ștearsă de pe lista internă.",
+      "reserveMovedToElite": "Numele a trecut pe lista de elită.",
       "eliteAdded": "Numele e pe lista de elită. Nu e o înscriere și nu s-a trimis nimic.",
       "eliteDeleted": "Numele a fost șters de pe lista de elită.",
       "eliteMarked": "Marcat ca elită: BIB-ul lui se tipărește cu numele în locul numărului. Înscrierea rămâne neschimbată.",

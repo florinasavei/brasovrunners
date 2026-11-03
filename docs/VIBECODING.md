@@ -1,8 +1,8 @@
 # Vibecoding this repo — the one page to read before asking an AI to change anything
 
-<!-- PROJECT_BASELINE: BR-V4.18-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.19-2026-11-03 -->
 
-**Baseline `BR-V4.18-2026-11-03`**
+**Baseline `BR-V4.19-2026-11-03`**
 
 The owner's word for how this platform is built: an AI agent writes, the owner reads and
 merges. This page is the short version of everything an agent trips over. `CLAUDE.md` is the
@@ -62,6 +62,7 @@ One line a row: the thing, then where it starts. Each row's why, the files besid
 | A file a route hands out for saving | `src/shared/http/content-disposition.ts`, `tests/unit/design/download-names.test.ts` |
 | The rules of registration; who may enter from the site; the places alert | `src/modules/registrations/service.ts`, `domain/public-door.ts`, `places-alert.ts` |
 | What staff may do to a registration | `src/modules/registrations/admin-service.ts` |
+| Answers a registration still owes | `src/modules/registrations/missing-answers.ts` |
 | Internal notes on a registration | `src/db/schema/registration-notes.ts`, `src/modules/registrations/notes.ts` |
 | The statistics under the registrations Excel | `src/modules/registrations/statistics.ts`, `registrations/domain/club-runner.ts#isClubRunner` |
 | What «Sunt membru al grupului» means | `src/modules/content/members/member-definition.ts`, `app/[locale]/admin/pages/members/DefinitionCard.tsx` |

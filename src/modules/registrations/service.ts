@@ -81,6 +81,7 @@ import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmission } from "./domain/family";
 import { registrationNameKey } from "./domain/name-key";
 import { planAnswerEdit } from "./answers";
+import { ANSWERS_MISSING, missingAnswers } from "./missing-answers";
 import { forgetRegisteredBadgeCount } from "./nav-count";
 import { currentAddressCap } from "./address-cap";
 import { familyEntryFields, insertFamilyEntry, liveSittingEntries, personOfEntry, replaceFamilyEntry } from "./family-entries";
@@ -3458,6 +3459,18 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     if (!before) throw new DomainError("NOT_FOUND", "no such registration");
     if (before.status !== "PENDING_DECLARATION" && before.status !== "WAITLIST_OFFERED") {
       throw new DomainError("CONFLICT", `a declaration cannot be signed from status ${before.status}`);
+    }
+
+    /*
+      «Completează-ți datele» (§905): no signature while the registration lacks an answer the public form
+      requires of this person (`missing-answers.ts`) — a staff entry, a line of the internal list moved onto the
+      official one. The page asks the missing ones above the signature and saves them in this same transaction,
+      as the person's own (`complete-answers.ts`); a press that left one empty, or a caller that posted none, is
+      refused here naming them, before anything is written or the hold is touched. Never filled in by default.
+    */
+    const owed = missingAnswers({ kitShirt: lockedEvent.kitShirt }, before);
+    if (owed.length > 0) {
+      throw new DomainError("VALIDATION_ERROR", `the registration lacks answers the form requires: ${owed.join(", ")}`, [...owed, ANSWERS_MISSING]);
     }
 
     /*
