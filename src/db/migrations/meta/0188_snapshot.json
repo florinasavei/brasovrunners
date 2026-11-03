@@ -1,6 +1,6 @@
 {
   "id": "3635061f-c924-4b0a-a4f7-20235c463d67",
-  "prevId": "0135e84b-cb04-4a3c-ac61-2d6e2c63453c",
+  "prevId": "60f2c92b-6555-4f69-af1e-31856c5d7972",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3656,6 +3656,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "has_kit": {
+          "name": "has_kit",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
