@@ -104,5 +104,37 @@ for (const { source, target, width, background, canvas, fill } of lockOnly ? [] 
   console.log(`${path.basename(target)}: ${w}x${h}, alpha ${hasAlpha ? "yes" : "no"}, ${(png.byteLength / 1024).toFixed(1)} KiB`);
 }
 
+/*
+  Square copies of the white lockup, in `public/brand/square/` (the owner, 2026-11-03: «I need to add padding to the
+  logos and make them square so I can add them to youtube and so on, as a watermark»): the source inside a padded
+  square, clipped to its crop, as an SVG and as PNGs — 150 × 150 with alpha (a video watermark), 800 × 800 with alpha,
+  and 800 × 800 on the club's band (`tints.emailBand`, an avatar). Twice: the whole lockup, and its drawing alone —
+  the mountains above the wordmark, `crop` in the source's own units — which still reads at 150 pixels where the
+  words do not.
+*/
+const SQUARES = [
+  { name: "logo-white-square", crop: null, pad: 0.1 },
+  { name: "logo-white-mountains-square", crop: "60 906 2880 850", pad: 0.06 },
+];
+for (const { name, crop, pad } of lockOnly ? [] : SQUARES) {
+  const text = (await readFile(path.join(root, "public/brand/logo-white.svg"), "utf8")).replace(/<\?xml[^>]*>/, "");
+  const box = crop ?? text.match(/viewBox="([^"]+)"/)[1];
+  const [, , w, h] = box.split(/\s+/).map(Number);
+  const side = 1000;
+  const scale = (side * (1 - 2 * pad)) / Math.max(w, h);
+  const inner = text
+    .replace(/viewBox="[^"]+"/, `viewBox="${box}"`)
+    .replace(/<svg\b/, `<svg x="${(side - w * scale) / 2}" y="${(side - h * scale) / 2}" width="${w * scale}" height="${h * scale}"`);
+  const square = `<svg xmlns="http://www.w3.org/2000/svg" width="${side}" height="${side}" viewBox="0 0 ${side} ${side}">${inner}</svg>\n`;
+  await writeFile(path.join(root, `public/brand/square/${name}.svg`), square);
+  for (const [suffix, size, background] of [["-150", 150, null], ["-800", 800, null], ["-800-on-band", 800, colours.emailBand]]) {
+    const raster = sharp(Buffer.from(square), { density: 300 }).resize(size, size);
+    if (background) raster.flatten({ background });
+    const png = await raster.png({ compressionLevel: 9 }).toBuffer();
+    await writeFile(path.join(root, `public/brand/square/${name}${suffix}.png`), png);
+    console.log(`${name}${suffix}.png: ${size}x${size}, ${(png.byteLength / 1024).toFixed(1)} KiB`);
+  }
+}
+
 await writeFile(path.join(root, "club/assets.lock.json"), `${JSON.stringify(brandAssetsLock(root), null, 2)}\n`);
 console.log("club/assets.lock.json: the sources and colours the rasters were built from");

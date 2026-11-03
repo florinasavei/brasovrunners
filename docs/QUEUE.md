@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.10` | square logos for a channel's watermark and avatar (§894) |
 | `BR-V4.09` | spare bibs without the «înscris la fața locului» mark (§893) |
 | `BR-V4.08` | «Locuri»: places free and how many can still be let in (§892) |
 | `BR-V4.07` | less room under the association's identity lines (§891) |
