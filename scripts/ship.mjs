@@ -227,9 +227,14 @@ function releaseChangesMigrations() {
   return diff.stdout.trim().length > 0;
 }
 
-/** The newest qa commit that touched a migration: the push migrate.yml ran on for qa. Null when git cannot say. */
+/**
+ * The newest qa commit that touched a migration: the push migrate.yml ran on for qa. Null when git cannot say.
+ * `--first-parent`: a pull request lands on qa as a merge commit, and that merge is what was pushed and what
+ * migrate.yml ran on — without it git names the feature branch's own commit, which no qa push ever carried, and
+ * the release stopped on «no migrate.yml run for qa» although qa had migrated (2026-11-03, #633, #635, #637).
+ */
 function qaMigrationCommit() {
-  const log = spawnSync("git", ["log", "-1", "--format=%H", "origin/qa", "--", "src/db/migrations"], { encoding: "utf8" });
+  const log = spawnSync("git", ["log", "-1", "--first-parent", "--format=%H", "origin/qa", "--", "src/db/migrations"], { encoding: "utf8" });
   return log.status === 0 && log.stdout.trim() ? log.stdout.trim() : null;
 }
 
