@@ -1135,6 +1135,15 @@
         "noShirt": "fără tricou: {count}",
         "unknownSize": "mărime încă necunoscută (invitații): {count}"
       },
+      "places": {
+        "title": "Locuri ocupate: {occupied} din {capacity} · Libere: {free}",
+        "lists": "Lista oficială de așteptare: {waiting} · Lista internă (doar notițe): {internal} · Invitați speciali (nu ocupă loc): {outside}",
+        "letIn": "Poți da drumul acum la {count} fără locuri în plus — de pe lista oficială: {fromWaiting} («Trimite-i oferta»), de pe lista internă: {fromInternal} («Oferă-i un loc acum»).",
+        "nobodyWaits": "Nu așteaptă nimeni pe liste.",
+        "raisesRest": "Pentru restul de pe liste ({count}), fiecare ofertă adaugă un loc: capacitatea ar ajunge la {capacity}.",
+        "raisesAll": "Nu e niciun loc liber: pentru cei de pe liste ({count}), fiecare ofertă adaugă un loc — capacitatea ar ajunge la {capacity}.",
+        "total": "Total dacă intră toți: {count} — locurile ocupate, invitații speciali și ambele liste."
+      },
       "outside": {
         "pill": "Invitați speciali: {count}",
         "chip": "Invitat special",

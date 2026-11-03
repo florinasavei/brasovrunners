@@ -34,7 +34,7 @@ waiting on.
 | **Mailgun** | **Foundation** since 2026-10-01 ($35 a month); Basic advised for November once the probation is lifted, Free from December | Transactional email, the delivery webhook, and Zitadel's SMTP | app.mailgun.com | Created 2026-09-05; live on the verified `mail.` subdomain, EU region |
 | **GitHub** | Free (public repository) | Code, Actions: `docs-check`, `migrate`, `scheduled-jobs` | github.com | Live, under the maintainer's personal account |
 | **Domain registrar** | ROMARG, one `.com` for one year | `<domain>` and its DNS, edited in ROMARG's Zone Editor — a `.com` first, a `.ro` a year later (`DECISIONS.md` §55) | ROMARG client area | **`.com` registered 2026-09-16, DNS live**, renews 2027-09-16; the invoice amount is still to be recorded below. `.ro` not registered. `.com` registry wholesale $10.26/year, **$10.97 from 2026-11-01** (Verisign, checked 2026-09-16); the registrar charges more and adds VAT |
-| **Team mail** | *provider not chosen* — a nonprofit grant from **Google** (applied 2026-09-16, pending) or **Microsoft**; **Zoho Mail** only if neither is granted | Team mailboxes on `<domain>`, and a shared `contact@` — never application mail, which stays on a subdomain (`SETUP.md` §26, `DECISIONS.md` §56) | — | **Not created.** No entitlements quoted for either grant until one is granted (§1.2). Zoho free plan checked 2026-09-16: up to 5 users, 5 GB each, one domain, web access only — its paid tier is why it is the fallback rather than the plan |
+| **Team mail** | **Google Workspace, Nonprofits edition, on trial** since 2026-11-02 (no card on the account: at the trial's end, about 2026-11-15, it suspends rather than bills); the club's own offer goes to whichever of **Google** and **Microsoft** grants the nonprofit status first (the owner, 2026-11-02); **Zoho Mail** only if neither is granted | Team mailboxes on `<domain>`, and a shared `contact@` — never application mail, which stays on a subdomain (`SETUP.md` §26, `DECISIONS.md` §56) | admin.google.com | **MX, SPF and DKIM on Google** (2026-11-02); the `mail.` subdomain is Mailgun's and is never touched. Until a grant decides, the other provider gets only its verification TXT. § Nonprofit offers below. Zoho free plan checked 2026-09-16: up to 5 users, 5 GB each, one domain, web access only — its paid tier is why it is the fallback rather than the plan |
 | **Cloudflare R2** | *no account* | Media, when a non-developer needs to upload — the photo gallery the owner asked for on 2026-09-17 | — | **Not signed up.** Next: `SETUP.md` §32 is the ten-minute procedure. Free for the club's size (below), with one catch: Cloudflare asks for a **payment method on file to enable R2**, even on the free plan; nothing is charged inside the allowance |
 
 Hostnames: `SETUP.md` §26, which is the only file allowed to name one.
@@ -844,6 +844,36 @@ lawyer and the six checks above; (4) the December decision on Hobby against the 
 **To read the numbers again:** `/devs` → «Configurație» (the two cards and the deployments line);
 `yarn db:sizes --env qa` or `--env production` (asks Neon: about five minutes of compute); `yarn idle:measure`;
 Vercel's Usage page. Quote a figure here only with its date.
+
+## Nonprofit offers — what the club can claim (2026-11-02)
+
+The club is an ONG, and the providers' nonprofit programmes verify it through **Goodstack**, which
+checks that the site shows the association's legal name, its street address and a generic email
+(Google for Nonprofits asked for both on 2026-11-02; «Contact» shows them, ticked on «Pagini» →
+«Contact» → «Ce arată site-ul despre asociație», `DECISIONS.md` §890). What is on offer, what it
+would replace, and where it stands. Amounts as listed on the date in brackets; read the offer again
+before relying on one.
+
+| Offer | What it gives | What it would replace | State |
+| --- | --- | --- | --- |
+| **Google for Nonprofits** | Workspace for Nonprofits, Ad Grants, the YouTube Nonprofit Program; Google Cloud credits for organisations hosting their own tools (no amount published — read in the account once verified); Maps Platform credits from $250 a month (2026-11-02) | Team mail (above); possibly the database | Applied; the Workspace trial runs; Goodstack asked for the address and the email, now on «Contact»; YouTube applied 2026-11-02 |
+| **Microsoft Nonprofits** | Microsoft 365 nonprofit offers; the **Azure Grant**, $2,000 of Azure credits a year (Goodstack's offer page, 2026-11-02) | Team mail, if granted first; possibly the database | Signing up 2026-11-02; the Azure Grant not yet applied for — applying costs nothing |
+| **Claude for Nonprofits** | The Team plan at a nonprofit price, verified through Goodstack — $8 per user a month for a standard seat as Anthropic's nonprofit tutorial lists it (2026-11-02); premium seats (the ones with Claude Code) priced separately | The owner's own subscription for the club's AI-assisted development and the volunteers' writing | Not applied. Check the premium seat's price and usage limits against the plan in use before switching: this repository's work runs on Claude Code |
+| **Jira** | 100% off, up to 25 users | Nothing — the club's work lives in `/admin/tasks` and on GitHub | Not wanted |
+
+**Mail goes to one provider.** Whichever of Google and Microsoft grants first gets the MX, SPF,
+DKIM (and, for Microsoft, autodiscover); the other's records are removed. Never split mail across
+two, and never move `mail.` — application mail is Mailgun's whatever the team uses.
+
+**Cloud credits are a database move, not a setting.** Neon cost $5.59 for September and $11.27 for
+October (both projects, Launch). Azure Database for PostgreSQL or Google Cloud SQL inside a grant
+would save that — about $60–130 a year — at the price of a migration: the data, `db:migrate:env`,
+`db:sizes`, `idle:measure`, the Neon readers behind `/devs` and `/admin/tasks`, the restore
+rehearsal, and the CU-hour limits that stand in for a budget today. Not before the 21 November race.
+At the December review (§ Subscriptions above) the choice is **one** of Neon Free, Azure or Google
+Cloud, by what each grant gives and for how long — never the database split across providers. A
+grant is renewed every year: one that lapses either bills a card on file or stops what runs on it,
+so the renewal date goes on `/admin/tasks` the day one is taken.
 
 ## Cost
 

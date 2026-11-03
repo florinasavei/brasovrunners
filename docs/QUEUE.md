@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.08` | «Locuri»: places free and how many can still be let in (§892) |
 | `BR-V4.07` | less room under the association's identity lines (§891) |
 | `BR-V4.06` | tick boxes for where the association's name, seat and email show, and the seat typed for the site (§890) |
 | `BR-V4.05` | the club's legal name and CIF at the foot of the listing (§889) |
