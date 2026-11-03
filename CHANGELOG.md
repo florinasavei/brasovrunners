@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.16-2026-11-03
+
+- **«Voluntari» closed by default in the event editor** — the closed line counts who waits for a role or for confirmation; it opens when pressed, and after a press inside it. §900.
 ## BR-V4.15-2026-11-03
 
 - **Releases with a migration no longer stop on «no migrate.yml run for qa»** — the release looks for qa's migration run on the merge commit qa was pushed, not on the feature branch's commit. §899.

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.15-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.16-2026-11-03 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.15-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.16-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28651,3 +28651,11 @@ Baseline `BR-V4.14-2026-11-03`.
 **Decision.** `git log --first-parent`: the newest commit on qa's own line that touched a migration — the merge — whose push run is the one that migrated qa.
 
 Baseline `BR-V4.15-2026-11-03`.
+
+## 900. «Voluntari» in the event editor stays closed until opened
+
+**The owner, 2026-11-03,** of the event editor's «Voluntari» drawn open: «trebuie să fie colapsată asta cu voluntarii!». The card opened by itself whenever somebody waited for a role or for confirmation (`openWhen.attention`), which on a race with volunteers coming in is always — a long card open in the middle of the editor.
+
+**Decision.** The card is closed on arrival like every other fold of the editor; its closed line already says how many wait for a role and how many to confirm («4 de repartizat · 6 de confirmat»). A press inside it still comes back to `#box-volunteers`, which opens it, so the result of a press stays in view.
+
+Baseline `BR-V4.16-2026-11-03`.
