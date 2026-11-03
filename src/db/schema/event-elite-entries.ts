@@ -20,7 +20,11 @@ export const ELITE_NUMBER_MAX = 99_999;
  *
  * Read by whoever reads the registrations (`canReadRegistrations`: the Organizer and above), written by the
  * Administrator (`canManageRegistrations`), asserted in `elite-list.ts`. **Deleted with the event**
- * (`ON DELETE CASCADE`); the trail names the line's id, never the name.
+ * (`ON DELETE CASCADE`), and three years after the race at the latest, with its registrations
+ * (`jobs/retention.ts`, step `event-elite-entries`); the trail names the line's id, never the name.
+ *
+ * A line's number is one person's: refused when the event already has it on somebody or among the
+ * desk's spares, and read as worn by every draw (`bibs.ts#wornNumbers`) so no runner is given it.
  */
 export const eventEliteEntries = pgTable(
   "event_elite_entries",

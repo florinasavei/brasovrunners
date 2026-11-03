@@ -7,6 +7,8 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
+import { bibNumberInUse } from "./bibs";
+import { isSpareNumber, spareBandOf } from "./domain/spare-bibs";
 
 /**
  * «Elită — doar numele pe BIB» (§NNN; the owner, 2026-11-03, choosing «Listă separată»): a race's elite runners
@@ -16,7 +18,7 @@ import { isUuid } from "@/shared/ids";
  * reaches the allocator or any count — «Locuri», the kits, the registrations' summary and export, the sponsors'
  * list, the desk, the results. That is why the declaration rule stays whole: a registration still needs the
  * person's own signed declaration, and an elite line is a name to print, nothing else. A name and an optional
- * number are all it stores.
+ * number are all it stores. The one thing of it the race numbers read is that number, as worn (`addEliteEntry`).
  *
  * **Who** — the Organizer and above read the list and download its sheet (`canReadRegistrations`, the bibs'
  * own rule, §289); the Administrator adds and deletes (`canManageRegistrations`). Asserted in every function
@@ -77,14 +79,31 @@ export async function listEliteEntries<T extends Record<string, unknown>>(db: Da
   return rows.map((row) => ({ id: row.id, eventId: row.eventId, name: row.name, bibNumber: row.bibNumber, createdAt: row.createdAt }));
 }
 
-/** «Adaugă pe lista de elită»: one name, one event — nobody registered, nobody told. */
+/**
+ * «Adaugă pe lista de elită»: one name, one event — nobody registered, nobody told.
+ *
+ * **A number is one person's.** A typed number is refused (`CONFLICT` on `bibNumber`, shown on «Număr
+ * (opțional)») when the event already has it on somebody — a registration's, a cancelled one's included, an
+ * erased or replaced one's (`bibs.ts#bibNumberInUse`), or another elite line's — or when it is one of the desk's
+ * reserved spares (§444), printed blank for a walk-in. The other way round, every draw reads the elite numbers
+ * as worn (`bibs.ts#wornNumbers`), so a later confirmation, «Alocă numerele», the desk's box and a print of spares
+ * never hand one out. Under the event row's lock, the one every draw takes (§10.6), so a confirmation cannot
+ * reach the same number between the check and the insert.
+ */
 export async function addEliteEntry<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string, input: EliteEntryInput, now: Date): Promise<{ id: string }> {
   assertMayWrite(actor);
   const values = parseEliteEntry(input);
   if (!isUuid(eventId)) throw new DomainError("NOT_FOUND", "no such event");
   return db.transaction(async (tx) => {
-    const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, eventId)).limit(1);
+    const [event] = await tx
+      .select({ id: events.id, walkInBibStart: events.walkInBibStart, walkInBibCount: events.walkInBibCount })
+      .from(events)
+      .where(eq(events.id, eventId))
+      .for("update");
     if (!event) throw new DomainError("NOT_FOUND", "no such event");
+    if (values.bibNumber !== null && (isSpareNumber(spareBandOf(event), values.bibNumber) || (await bibNumberInUse(tx, { eventId, number: values.bibNumber })))) {
+      throw new DomainError("CONFLICT", `number ${values.bibNumber} is already somebody's at this event, or a desk spare`, ["bibNumber"]);
+    }
     const [row] = await tx
       .insert(eventEliteEntries)
       .values({ eventId, ...values, createdByStaffUserId: actor.id, createdAt: now })

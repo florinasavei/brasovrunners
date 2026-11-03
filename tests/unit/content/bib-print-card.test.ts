@@ -169,4 +169,13 @@ describe("§NNN «Elită — doar numele pe BIB» beside the spares", () => {
     // In English too.
     expect(block(await render({ elite }, "en"), "bib-elite")).toContain("Elite — the name only on the bib");
   });
+
+  it("opens itself and the print card on the way back from its own add or delete, and is closed otherwise", async () => {
+    // `?saved=eliteAdded|eliteDeleted` (`actions.ts#backToEliteCard`): a soft navigation the hash opener never sees.
+    const opened = await render({ elite, eliteSaved: true });
+    expect(opened).toMatch(/<details[^>]*data-testid="bib-print"[^>]*open=""/);
+    expect(opened).toMatch(/<details[^>]*data-testid="bib-elite"[^>]*open=""/);
+    const closed = await render({ elite });
+    expect(closed).not.toMatch(/<details[^>]*data-testid="bib-elite"[^>]*open=""/);
+  });
 });

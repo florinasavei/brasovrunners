@@ -1065,10 +1065,15 @@ export async function reserveSpareBibsAction(_previous: FormOutcome | null, form
   return backTo(editorPath(locale, eventId), outcome);
 }
 
-/** Back to the «Elită» card, open (`#bib-elite` opens the folds around it), with the toast's word in the flash cookie (§384). */
-async function backToEliteCard(locale: Locale, eventId: string, saved: string): Promise<never> {
+/**
+ * Back to the «Elită» card, open, with the toast's word in the flash cookie (§384). `saved` rides in the address too: the
+ * page opens the card and every fold around it from it (`openWhen.saved`, as the queue's «Adaugă pe lista de așteptare»
+ * does), because a redirect to the same page is a soft navigation that `OpenFoldFromHash` never sees; `#bib-elite` then
+ * only scrolls to it.
+ */
+async function backToEliteCard(locale: Locale, eventId: string, saved: "eliteAdded" | "eliteDeleted"): Promise<never> {
   await flashOutcome({ saved });
-  redirect(`${editorPath(locale, eventId)}#bib-elite`);
+  redirect(`${editorPath(locale, eventId)}?${new URLSearchParams({ saved })}#bib-elite`);
 }
 
 /**
@@ -1085,7 +1090,9 @@ export async function addEliteEntryAction(_previous: FormOutcome | null, form: F
     await addEliteEntry(getDb(), actor, eventId, { name: form.get("eliteName"), bibNumber: form.get("eliteNumber") }, new Date());
   } catch (error) {
     // The service names `name` and `bibNumber`; the card's boxes are `eliteName` and `eliteNumber` (they share the editor's page).
-    return refused(error, form, { fieldNames: (refusal) => refusal.fields.map((field) => (field === "name" ? "eliteName" : field === "bibNumber" ? "eliteNumber" : field)) });
+    const refusal = refused(error, form, { fieldNames: (domain) => domain.fields.map((field) => (field === "name" ? "eliteName" : field === "bibNumber" ? "eliteNumber" : field)) });
+    // A number somebody at the event already has, or a desk spare: its own sentence, not «somebody else saved».
+    return refusal.error === "CONFLICT" && refusal.fields.includes("eliteNumber") ? { ...refusal, error: "ELITE_NUMBER_TAKEN" } : refusal;
   }
   return backToEliteCard(locale, eventId, "eliteAdded");
 }

@@ -8,7 +8,8 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { countKits, readPlaceOutlook, summariseRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
-import { countBibs, listBibs } from "@/modules/registrations/bibs";
+import { assignBibNumbers, bibNumberInUse, countBibs, listBibs, suggestFreeBibNumbers } from "@/modules/registrations/bibs";
+import { pruneExpiredRows } from "@/modules/jobs/retention";
 import { addEliteEntry, deleteEliteEntry, listEliteEntries, parseEliteEntry } from "@/modules/registrations/elite-list";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import { countOccupied } from "@/modules/registrations/repository";
@@ -33,12 +34,12 @@ beforeAll(async () => {
 afterAll(async () => close());
 beforeEach(async () => resetTables(db));
 
-async function createRace(): Promise<string> {
+async function createRace(startsAt = new Date("2099-11-21T08:00:00.000Z")): Promise<string> {
   const [event] = await db
     .insert(events)
     .values({
       type: "RACE",
-      startsAt: new Date("2099-11-21T08:00:00.000Z"),
+      startsAt,
       registrationMode: "INTERNAL",
       editorialStatus: "PUBLISHED",
       publishedAt: NOW,
@@ -54,8 +55,8 @@ async function staff(role: StaffRole): Promise<StaffUser> {
   return user;
 }
 
-/** A confirmed runner with a number, so every count below has something real to say. */
-async function confirmedRunner(eventId: string, email: string, bibNumber: number): Promise<void> {
+/** A confirmed runner with a number (or none yet, for «Alocă numerele»), so every count below has something real to say. */
+async function confirmedRunner(eventId: string, email: string, bibNumber: number | null): Promise<void> {
   const [participant] = await db
     .insert(participants)
     .values({ deliveryEmail: email, normalizedEmail: email, canonicalEmail: email, canonicalizationVersion: 2, defaultName: "Ana Pop", preferredLocale: "ro" })
@@ -194,9 +195,59 @@ describe("§NNN the race's elite list", () => {
     expect(before.summary.real).toBe(1);
 
     for (let index = 0; index < 5; index += 1) {
-      await addEliteEntry(db, admin, race, { name: `Elită ${index + 1}`, bibNumber: String(index + 1) }, later(index));
+      // Numbers nobody at the race has: the runner wears 1, and a number is one person's (below).
+      await addEliteEntry(db, admin, race, { name: `Elită ${index + 1}`, bibNumber: String(index + 101) }, later(index));
     }
     expect(await db.select().from(eventEliteEntries)).toHaveLength(5);
     expect(await counts()).toEqual(before);
+  });
+
+  it("never shares a number: refused when somebody at the race has it or it is a desk spare, and skipped by every later draw", async () => {
+    const race = await createRace();
+    const admin = await staff("ADMIN");
+    await confirmedRunner(race, "ana@example.org", 1);
+    // The desk's spares, 50 to 54 (§444): printed blank, for a walk-in.
+    await db.update(events).set({ walkInBibStart: 50, walkInBibCount: 5 }).where(eq(events.id, race));
+    await addEliteEntry(db, admin, race, { name: "Faith Kipyegon", bibNumber: "2" }, NOW);
+
+    // A registration's number, another elite line's and a desk spare: each refused on the number's box, nothing written.
+    for (const number of ["1", "2", "52"]) {
+      const refusal = await failureOf(addEliteEntry(db, admin, race, { name: "Eliud Kipchoge", bibNumber: number }, later(1)));
+      expect([refusal.code, refusal.fields], number).toEqual(["CONFLICT", ["bibNumber"]]);
+    }
+    // Without a number the same name goes in: only the number is one person's.
+    await addEliteEntry(db, admin, race, { name: "Eliud Kipchoge", bibNumber: "" }, later(2));
+    expect((await listEliteEntries(db, admin, race)).map((row) => row.bibNumber)).toEqual([2, null]);
+    expect((await db.select().from(auditLogs)).map((row) => row.action)).toEqual(["event_elite.added", "event_elite.added"]);
+
+    // The other way round: a confirmed runner with no number yet, then «Alocă numerele» — 2 is the elite runner's, so 3.
+    await confirmedRunner(race, "ion@example.org", null);
+    expect(await assignBibNumbers(db, { actor: admin, eventId: race, now: later(3) })).toMatchObject({ assigned: 1 });
+    const worn = (await db.select({ number: registrations.bibNumber }).from(registrations)).map((row) => row.number);
+    expect(worn.sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual([1, 3]);
+    // The desk's box and its suggestions say the same.
+    expect(await bibNumberInUse(db, { eventId: race, number: 2 })).toBe(true);
+    expect(await suggestFreeBibNumbers(db, race, 1, 2)).toEqual([4, 5]);
+
+    // Deleted, the line's number is nobody's again.
+    const [faith] = await db.select().from(eventEliteEntries).where(eq(eventEliteEntries.bibNumber, 2));
+    await deleteEliteEntry(db, admin, faith.id, later(4));
+    expect(await bibNumberInUse(db, { eventId: race, number: 2 })).toBe(false);
+  });
+
+  it("goes three years after the race, with its registrations; a race still ahead keeps its names, and the events stay", async () => {
+    const admin = await staff("ADMIN");
+    const old = await createRace(new Date("2026-11-21T08:00:00.000Z"));
+    const ahead = await createRace();
+    await addEliteEntry(db, admin, old, { name: "Eliud Kipchoge", bibNumber: "7" }, NOW);
+    await addEliteEntry(db, admin, ahead, { name: "Faith Kipyegon", bibNumber: "" }, NOW);
+
+    // Two years and a half after the old race: nothing goes yet.
+    expect((await pruneExpiredRows(db, new Date("2029-05-21T08:00:00.000Z"))).eliteEntries).toBe(0);
+    const swept = await pruneExpiredRows(db, new Date("2029-11-22T08:00:00.000Z"));
+    expect(swept.failures).toEqual([]);
+    expect(swept.eliteEntries).toBe(1);
+    expect((await db.select().from(eventEliteEntries)).map((row) => [row.eventId, row.name])).toEqual([[ahead, "Faith Kipyegon"]]);
+    expect(await db.select({ id: events.id }).from(events)).toHaveLength(2);
   });
 });

@@ -48,6 +48,8 @@ type Props = {
   spares?: SpareCard | null;
   /** «Elită — doar numele pe BIB» (§NNN): the race's elite list, its sheet and its sample; absent where no bib prints. */
   elite?: EliteCard | null;
+  /** Back from the elite card's add or delete (`?saved=eliteAdded|eliteDeleted`): this card and the elite fold open by themselves. */
+  eliteSaved?: boolean;
 };
 
 /** What the elite section shows (§NNN), read by the page (`elite-list.ts#listEliteEntries`). */
@@ -155,13 +157,13 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
  * stand beside it (`EliteBibForms`, `BibPrintForms`): «Salvează» never posts a name, and a refused add keeps what
  * was typed, said right above the boxes.
  */
-async function EliteBibsSection({ elite, mayEdit }: { elite: EliteCard; mayEdit: boolean }) {
+async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; mayEdit: boolean; saved: boolean }) {
   const t = await getTranslations("Admin");
   const locale = await getLocale();
   const count = elite.entries.length;
   const aside = count === 0 ? t("bibs.eliteNone") : t(`bibs.eliteCount.${countForm(count, locale)}`, { count });
   return (
-    <Panel glyph="bibElite" collapsible level={5} id="bib-elite" title={t("bibs.eliteTitle")} aside={aside} data-testid="bib-elite">
+    <Panel glyph="bibElite" collapsible level={5} id="bib-elite" title={t("bibs.eliteTitle")} aside={aside} openWhen={{ saved }} data-testid="bib-elite">
       <Stack spacing={1.5}>
         <Typography variant="body2" color="text.secondary">
           {t("bibs.eliteHelp")}
@@ -295,7 +297,7 @@ export async function EliteBibForms({
  * form, as its siblings (`BibPrintForms`). "Salvează" never posts them, and they never post the
  * event. The line at the top says so.
  */
-export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyTest, attention, spares = null, elite = null }: Props) {
+export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyTest, attention, spares = null, elite = null, eliteSaved = false }: Props) {
   const t = await getTranslations("Admin");
   // What «Alocă numerele» does, then when it is needed — two lines, one tooltip (`TOOLTIP_TEXT_SX` keeps the break).
   const assignWords = `${t("bibs.assignHelp")}\n${t("bibs.assignHelpMore")}`;
@@ -306,7 +308,7 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
       id="box-bib-print"
       title={t("editor.boxes.bibPrint.title")}
       aside={total > 0 ? t("bibs.helpSome", { total }) : undefined}
-      openWhen={{ attention }}
+      openWhen={{ attention, saved: eliteSaved }}
       data-testid="bib-print"
     >
       <Stack spacing={1.5}>
@@ -374,7 +376,7 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
         )}
         {spares && <SpareBibsSection spares={spares} mayReserve={mayAssign} />}
         {/* «Elită» (§NNN) beside the spares: names printed as bibs, never registrations. */}
-        {elite && <EliteBibsSection elite={elite} mayEdit={mayAssign} />}
+        {elite && <EliteBibsSection elite={elite} mayEdit={mayAssign} saved={eliteSaved} />}
         {/* Every bib as it will print, on its own page (§94): drawn on request. */}
         {total > 0 && (
           <Box>

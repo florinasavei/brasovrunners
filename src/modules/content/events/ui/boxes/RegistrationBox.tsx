@@ -130,6 +130,7 @@ export default async function RegistrationBox({
   waiting = 0,
   bibCounts,
   bibPrint,
+  bibPrintSaved = false,
   locale,
   now,
   clubDeadlines,
@@ -171,6 +172,11 @@ export default async function RegistrationBox({
   bibCounts?: { total: number; unprinted: number } | null;
   /** Sub-sub-card 8.4.2, edit only, drawn by the page (it posts forms of its own). */
   bibPrint?: ReactNode;
+  /**
+   * The page is back from a press inside `bibPrint` (§NNN: «Elită»'s add or delete): this box and the race numbers' card
+   * open by themselves (`openWhen.saved`), so the card the reader pressed in is in sight again.
+   */
+  bibPrintSaved?: boolean;
   locale: string;
 }) {
   const t = await getTranslations("Admin");
@@ -615,7 +621,7 @@ export default async function RegistrationBox({
                       bibCounts ? { allocated: bibCounts.total, unprinted: bibCounts.unprinted } : null,
                       event ? spareBandOf(event) : null,
                     )}
-                    openWhen={{ attention: Boolean(bibCounts && bibCounts.unprinted > 0 && event && now && withinRaceWeek(event, now, clubDeadlines)) }}
+                    openWhen={{ attention: Boolean(bibCounts && bibCounts.unprinted > 0 && event && now && withinRaceWeek(event, now, clubDeadlines)), saved: bibPrintSaved }}
                   >
                     <Stack spacing={2}>
                       {/* The band's colour (§173) is the designer's «Antet» now (§759), with the rest of the header. */}
@@ -650,7 +656,7 @@ export default async function RegistrationBox({
       id="box-registration"
       title={heading ?? t("editor.boxes.registration.title")}
       aside={summary}
-      openWhen={{ attention: line.missing }}
+      openWhen={{ attention: line.missing, saved: bibPrintSaved }}
       tone={risk ? "risk" : "default"}
     >
       {risk && <RiskLine>{t("editor.risk.registration")}</RiskLine>}

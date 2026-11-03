@@ -87,7 +87,7 @@ describe("§NNN the elite list's Server Actions", () => {
   it("adds for the Administrator, lands on the card open, and leaves an audit row with the line's id only", async () => {
     await as("ADMIN");
     const done = await outcomeOf(addEliteEntryAction(null, form({ eliteName: " Eliud  Kipchoge ", eliteNumber: "7" })));
-    expect(done).toEqual({ redirect: "/ro/admin/events/x#bib-elite" });
+    expect(done).toEqual({ redirect: "/ro/admin/events/x?saved=eliteAdded#bib-elite" });
     const [line] = await db.select().from(eventEliteEntries);
     expect([line.name, line.bibNumber, line.eventId]).toEqual(["Eliud Kipchoge", 7, eventId]);
     const trail = await db.select().from(auditLogs);
@@ -100,6 +100,15 @@ describe("§NNN the elite list's Server Actions", () => {
     const refused = await outcomeOf(addEliteEntryAction(null, form({ eliteName: "  ", eliteNumber: "abc" })));
     expect(refused).toMatchObject({ returned: { error: "VALIDATION_ERROR", fields: ["eliteName", "eliteNumber"], values: { eliteName: ["  "], eliteNumber: ["abc"] } } });
     expect(await db.select().from(eventEliteEntries)).toHaveLength(0);
+  });
+
+  it("says a number another line already carries in its own words, on «Număr (opțional)», and keeps both boxes", async () => {
+    const admin = await as("ADMIN");
+    await db.insert(eventEliteEntries).values({ eventId, name: "Faith Kipyegon", bibNumber: 7, createdByStaffUserId: admin.id });
+    const refused = await outcomeOf(addEliteEntryAction(null, form({ eliteName: "Eliud Kipchoge", eliteNumber: "7" })));
+    expect(refused).toMatchObject({ returned: { error: "ELITE_NUMBER_TAKEN", fields: ["eliteNumber"], values: { eliteName: ["Eliud Kipchoge"], eliteNumber: ["7"] } } });
+    expect((await db.select().from(eventEliteEntries)).map((row) => row.name)).toEqual(["Faith Kipyegon"]);
+    expect(await db.select().from(auditLogs)).toHaveLength(0);
   });
 
   it.each<StaffRole>(["MODERATOR", "DEV"])("refuses %s at the door: nothing added, nothing deleted, nothing in the trail", async (role) => {
@@ -117,7 +126,7 @@ describe("§NNN the elite list's Server Actions", () => {
   it("deletes for the Administrator, lands on the card, and a second press finds the line gone", async () => {
     const admin = await as("ADMIN");
     const [line] = await db.insert(eventEliteEntries).values({ eventId, name: "Faith Kipyegon", bibNumber: 2, createdByStaffUserId: admin.id }).returning();
-    expect(await outcomeOf(deleteEliteEntryAction(null, form({ entryId: line.id })))).toEqual({ redirect: "/ro/admin/events/x#bib-elite" });
+    expect(await outcomeOf(deleteEliteEntryAction(null, form({ entryId: line.id })))).toEqual({ redirect: "/ro/admin/events/x?saved=eliteDeleted#bib-elite" });
     expect(await db.select().from(eventEliteEntries)).toHaveLength(0);
     expect((await db.select().from(auditLogs)).map((row) => [row.action, row.metadataJson])).toEqual([["event_elite.deleted", { entryId: line.id }]]);
     expect(await outcomeOf(deleteEliteEntryAction(null, form({ entryId: line.id })))).toEqual({ redirect: "/ro/admin/events/x?error=NOT_FOUND#admin-alert" });
