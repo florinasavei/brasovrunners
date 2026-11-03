@@ -26,6 +26,7 @@ import {
   countOutsideCapacity,
   familyEmailQueued,
   familyReservationHolds,
+  lineOffersOnItsOwn,
   offerAwaitingItsFirstEmail,
 } from "./repository";
 import { computeOccupied } from "./domain/capacity";
@@ -931,7 +932,8 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       // «Ce îi spui» (§654): the event's clock, whether it is cancelled, the line's two settings and numbers, the live link.
       eventTimezone: events.timezone,
       eventCancelled: sql<boolean>`(${events.eventStatus} = 'CANCELLED')`.mapWith(Boolean),
-      waitlistAutoOffer: events.waitlistAutoOffer,
+      // Whether the places go out by themselves (§615), «Locurile libere le dau doar eu» included (§NNN).
+      waitlistAutoOffer: lineOffersOnItsOwn(),
       waitlistCountPublic: events.waitlistCountPublic,
       participantCountPublic: events.participantCountPublic,
       waitlistPosition: waitlistPositionOfRow,
@@ -1725,7 +1727,8 @@ export async function readPlaceDeadlines<T extends Record<string, unknown>>(
       confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
       capacity: events.capacity,
       waitlistCapacity: events.waitlistCapacity,
-      waitlistAutoOffer: events.waitlistAutoOffer,
+      // «Termene» says who gives a freed place (§615); «Locurile libere le dau doar eu» makes it the staff (§NNN).
+      waitlistAutoOffer: lineOffersOnItsOwn(),
       held: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and not ${registrations.outsideCapacity})::int`,
       heldPast: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and not ${registrations.outsideCapacity} and ${registrations.holdExpiresAt} <= ${now} and not ${awaitingItsFirstEmail()})::int`,
       awaitingEmail: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION')::int`,

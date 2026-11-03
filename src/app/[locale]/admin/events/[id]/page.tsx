@@ -43,6 +43,7 @@ import { eventMergeValues } from "@/modules/registrations/signed-declaration";
 import { listStaffUsers } from "@/modules/staff-identity/repository";
 import { dayIn } from "@/modules/registrations/domain/age";
 import { givePlaceDoorOpen } from "@/modules/registrations/domain/give-place-door";
+import { offersOnItsOwn } from "@/modules/registrations/domain/waitlist";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
 import { type ScopeDate, SeriesPickDates, SeriesScopeBox, SeriesScopeProvider } from "@/modules/content/events/ui/SeriesScope";
 import { editionNote, ruleSentence } from "@/modules/events/ui/series-sentence";
@@ -1440,7 +1441,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       >
                         <QueuePanel
                           db={db}
-                          event={{ id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity, timezone: event.timezone, waitlistAutoOffer: event.waitlistAutoOffer }}
+                          event={{ id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity, timezone: event.timezone, waitlistAutoOffer: offersOnItsOwn(event) }}
                           waiting={waiting}
                           now={now}
                           offerAction={canManageRegistrations(staffUser.role) ? offerPlaceAction : undefined}

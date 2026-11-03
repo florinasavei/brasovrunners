@@ -24,7 +24,7 @@ import {
 } from "@/modules/public-cache/reads";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
-import { newcomerWouldQueue, publicNumbersShown, waitlistCountShown } from "@/modules/events/domain/registration-cta";
+import { newcomerWouldQueue, offersOnlyShut, publicNumbersShown, waitlistCountShown } from "@/modules/events/domain/registration-cta";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
 import { PUBLIC_REGISTRATION_PAUSED } from "@/modules/registrations/domain/public-door";
 import { formatDay } from "@/i18n/dates";
@@ -270,8 +270,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   if (!submitted && !error && !resting && pausedReason === null) {
     try {
       const places = await cachedPublicAvailability(event.id, now);
-      // «Locurile libere le dau doar eu» (§NNN): places free, and no line to join — nothing a visitor can do here.
-      if (places && offersOnly && places.available > 0 && (places.waitlistCapacity === 0 || places.waitlistRoom === 0)) pausedReason = "OFFERS_ONLY";
+      // «Locurile libere le dau doar eu» (§NNN): places free, and no line to join — the door's own predicate.
+      const asked = places && { availablePlaces: places.available, freePlacesByOfferOnly: offersOnly, waitlistCapacity: places.waitlistCapacity, waitlistRoom: places.waitlistRoom };
+      if (asked && offersOnlyShut(asked)) pausedReason = "OFFERS_ONLY";
       else if (places && newcomerWouldQueue({ availablePlaces: places.available, waitlisted: places.waitlisted, waiting: places.waiting, freePlacesByOfferOnly: offersOnly })) {
         fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : "WAITLIST";
         if (fullNotice === "WAITLIST") {

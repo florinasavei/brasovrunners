@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { newcomerWouldQueue, registrationCta, type RegistrationCtaInput } from "@/modules/events/domain/registration-cta";
+import { newcomerWouldQueue, offersOnlyShut, registrationCta, type RegistrationCtaInput } from "@/modules/events/domain/registration-cta";
 import { placesAlertSentOf, placesAlertStep } from "@/modules/registrations/domain/places-alert";
 import { publicDoorOpen } from "@/modules/registrations/domain/public-door";
 import { publicNow, publicNowSetting } from "@/modules/registrations/domain/public-now";
-import { newcomerJoinsLine, publicEntryQueues } from "@/modules/registrations/domain/waitlist";
+import { newcomerJoinsLine, offersOnItsOwn, publicEntryQueues } from "@/modules/registrations/domain/waitlist";
 
 /**
  * The Administrator's control over the site's door (§NNN), the pure halves: who a free place is for, the door the
@@ -45,6 +45,14 @@ describe("who a free place is for (§NNN)", () => {
     expect(newcomerJoinsLine({ waitlisted: 1, channel: "staff" })).toBe(true);
   });
 
+  it("the tick wins over «Da»: no place goes out by itself while the free places are the staff's to give", () => {
+    expect(offersOnItsOwn({ waitlistAutoOffer: true, freePlacesByOfferOnly: false, capacity: 10 })).toBe(true);
+    expect(offersOnItsOwn({ waitlistAutoOffer: true, freePlacesByOfferOnly: true, capacity: 10 })).toBe(false);
+    expect(offersOnItsOwn({ waitlistAutoOffer: false, freePlacesByOfferOnly: false, capacity: 10 })).toBe(false);
+    // Uncapped, the tick means nothing: a cap lifted while people wait offers them the places as «Da» says (§147).
+    expect(offersOnItsOwn({ waitlistAutoOffer: true, freePlacesByOfferOnly: true, capacity: null })).toBe(true);
+  });
+
   it("the public door is open unless the row says false", () => {
     expect(publicDoorOpen({ publicRegistrationOpen: false })).toBe(false);
     expect(publicDoorOpen({ publicRegistrationOpen: true })).toBe(true);
@@ -67,11 +75,26 @@ describe("the public card's door (§NNN)", () => {
     expect(newcomerWouldQueue({ availablePlaces: 5 })).toBe(false);
   });
 
+  it("an uncapped event ignores the tick: nothing is scarce, so the button stays «Înscrie-te»", () => {
+    expect(registrationCta(open({ availablePlaces: null, freePlacesByOfferOnly: true }), NOW)).toMatchObject({ kind: "OPEN", fromWaitlist: false });
+    expect(newcomerWouldQueue({ availablePlaces: null, freePlacesByOfferOnly: true })).toBe(false);
+    expect(registrationCta(open({ availablePlaces: null, freePlacesByOfferOnly: true, waitlistCapacity: 0 }), NOW)).toMatchObject({ kind: "OPEN" });
+  });
+
   it("free places the organizers' alone with a line that takes nobody: shut in its own words, not «full»", () => {
     expect(registrationCta(open({ freePlacesByOfferOnly: true, waitlistCapacity: 0 }), NOW)).toEqual({ kind: "PAUSED", reason: "OFFERS_ONLY" });
     expect(registrationCta(open({ freePlacesByOfferOnly: true, waitlistCapacity: 3, waitlistRoom: 0, waitlisted: 3, waiting: 3 }), NOW)).toEqual({ kind: "PAUSED", reason: "OFFERS_ONLY" });
     // With no free place it is the ordinary full race.
     expect(registrationCta(open({ freePlacesByOfferOnly: true, availablePlaces: 0, waitlistCapacity: 0 }), NOW)).toEqual({ kind: "FULL_NO_WAITLIST" });
+  });
+
+  it("the register page asks the door's own predicate for that shut door", () => {
+    expect(offersOnlyShut({ availablePlaces: 2, freePlacesByOfferOnly: true, waitlistCapacity: 0 })).toBe(true);
+    expect(offersOnlyShut({ availablePlaces: 2, freePlacesByOfferOnly: true, waitlistCapacity: 5, waitlistRoom: 0 })).toBe(true);
+    expect(offersOnlyShut({ availablePlaces: 2, freePlacesByOfferOnly: true, waitlistCapacity: 5, waitlistRoom: 1 })).toBe(false);
+    expect(offersOnlyShut({ availablePlaces: 0, freePlacesByOfferOnly: true, waitlistCapacity: 0 })).toBe(false);
+    expect(offersOnlyShut({ availablePlaces: null, freePlacesByOfferOnly: true, waitlistCapacity: 0 })).toBe(false);
+    expect(offersOnlyShut({ availablePlaces: 2, waitlistCapacity: 0 })).toBe(false);
   });
 });
 

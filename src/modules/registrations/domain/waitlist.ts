@@ -78,6 +78,20 @@ export function publicEntryQueues(input: OfferOnlyInput): boolean {
 }
 
 /**
+ * Whether the line is offered the free places on its own (§615, §NNN): «Locurile din lista de așteptare se alocă
+ * automat» on, and «Locurile libere le dau doar eu» off. The tick wins over «Da»: its words are «only I give the free
+ * places», so while it is on no place goes out by itself — not to a newcomer, and not to the first in the line either,
+ * who would otherwise be the public entrant the tick sent there a moment ago. Every free place is then the staff's to
+ * give («Trimite-i oferta», «Dă-i un loc», «Oferă-i un loc acum»), as with «Nu». Only where places are counted:
+ * on an uncapped event the tick means nothing, and a cap lifted while people wait offers them the places as «Da»
+ * says (§147). The SQL form for the readers that say it is `repository.ts#lineOffersOnItsOwn`; both read the same
+ * three columns.
+ */
+export function offersOnItsOwn(event: { waitlistAutoOffer: boolean; freePlacesByOfferOnly: boolean; capacity: number | null }): boolean {
+  return event.waitlistAutoOffer && !(event.freePlacesByOfferOnly && event.capacity !== null);
+}
+
+/**
  * How many more the waiting list takes, or `null` when it has no limit.
  *
  * Never below nought. A limit lowered under the length of the line removes nobody — the people

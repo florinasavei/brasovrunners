@@ -1412,7 +1412,9 @@ Rules:
   the address confirmation of a row the public form wrote) joins the waiting list beside a free place, as when
   somebody waits (§615), or is refused like a full race when the line takes nobody (§348); every staff verb
   is as before. The formula is untouched: the switch only ever narrows who takes a free place, so it can never
-  seat one too many. The line's automatic offer (`waitlist_auto_offer`) is unchanged by it;
+  seat one too many. While it is on, nothing is offered by itself either, whatever `waitlist_auto_offer` says
+  (`domain/waitlist.ts#offersOnItsOwn`, read by `fillAvailableSpots`' one gate): every free place is the staff's
+  to give. On an uncapped event the switch changes nothing;
 - the waiting list's limit (§348) is asked only of a registration that would stay in the line: «Oferă-i un loc
   acum», whose row is offered a place in the same transaction, is never refused by it, 0 included (§NNN);
   «Adaugă pe lista de așteptare» and «Mută pe lista oficială», which leave the person waiting, still are;

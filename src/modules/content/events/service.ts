@@ -1800,6 +1800,8 @@ export async function saveEventFields<T extends Record<string, unknown>>(
       now,
     );
     await auditWaitlistAutoOffer(tx, input.actor, current, saved, now);
+    // The registration controls (§NNN): each one that moved, from → to — the saved row carries all three.
+    await auditRegistrationControls(tx, input.actor, current, saved, now);
     await auditWaitlistCountPublic(tx, input.actor, current, saved, now);
     await auditHiddenList(tx, input.actor, current, saved, now);
     await auditPublicListClub(tx, input.actor, current, saved, now);
@@ -2858,6 +2860,8 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         now,
       );
       await auditWaitlistAutoOffer(tx, input.actor, current, savedEvent, now);
+      // The registration controls (§NNN): each one that moved, from → to — the saved row carries all three.
+      await auditRegistrationControls(tx, input.actor, current, savedEvent, now);
       await auditWaitlistCountPublic(tx, input.actor, current, savedEvent, now);
       await auditHiddenList(tx, input.actor, current, savedEvent, now);
       await auditPublicListClub(tx, input.actor, current, savedEvent, now);

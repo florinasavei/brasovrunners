@@ -71,10 +71,30 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
  * it — a person with no place yet, or, in a cache entry written before the halves were counted, the line's length
  * alone (§587) — or the event's free places are the staff's to give («Locurile libere le dau doar eu»). The
  * allocator's own rule for a public entry (`newcomerJoinsLine`), said once for the door, the register page and
- * «Pe site acum» on the registrations page.
+ * «Pe site acum» on the registrations page. The tick only counts where places are counted: on an uncapped event
+ * (`availablePlaces` null) nothing is scarce, and the allocator ignores it there too (`withLockedRow`).
  */
-function publicEntryJoinsLine(event: { waitlisted?: number; waiting?: number; freePlacesByOfferOnly?: boolean | null }): boolean {
-  return event.freePlacesByOfferOnly === true || (event.waitlisted ?? event.waiting ?? 0) > 0;
+function publicEntryJoinsLine(event: { availablePlaces: number | null; waitlisted?: number; waiting?: number; freePlacesByOfferOnly?: boolean | null }): boolean {
+  return (event.freePlacesByOfferOnly === true && event.availablePlaces !== null) || (event.waitlisted ?? event.waiting ?? 0) > 0;
+}
+
+/**
+ * «Locurile libere le dau doar eu» with places free and no line to join — a waiting list of 0, or a full one (§NNN):
+ * nothing a visitor can do, so the site's door is shut in its own words (`PAUSED`, `OFFERS_ONLY`). The one statement
+ * of it, for the door and the register page alike. Never on an uncapped event (`availablePlaces` null).
+ */
+export function offersOnlyShut(places: {
+  availablePlaces: number | null;
+  freePlacesByOfferOnly?: boolean | null;
+  waitlistCapacity?: number | null;
+  waitlistRoom?: number | null;
+}): boolean {
+  return (
+    places.freePlacesByOfferOnly === true &&
+    places.availablePlaces !== null &&
+    places.availablePlaces > 0 &&
+    (places.waitlistCapacity === 0 || places.waitlistRoom === 0)
+  );
 }
 
 /**
@@ -238,9 +258,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       // nothing to join, and a button would lead to a form that refuses at the end of it — with
       // places free too, since a newcomer is not given one past the line (§615).
       // Places free, given by the organizers alone, and no room in the line (§NNN): not «full» — shut, in its own words.
-      if (event.freePlacesByOfferOnly === true && event.availablePlaces !== 0 && (event.waitlistCapacity === 0 || event.waitlistRoom === 0)) {
-        return { kind: "PAUSED", reason: "OFFERS_ONLY" };
-      }
+      if (offersOnlyShut(event)) return { kind: "PAUSED", reason: "OFFERS_ONLY" };
       if (event.waitlistCapacity === 0) return { kind: "FULL_NO_WAITLIST" };
       if (event.waitlistRoom === 0) return { kind: "WAITLIST_FULL" };
       // Places free while somebody is in the line (§615): open, through the line's door.

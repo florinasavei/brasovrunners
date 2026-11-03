@@ -9,6 +9,7 @@ import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { PUBLIC_REGISTRATION_PAUSED } from "@/modules/registrations/domain/public-door";
 import { NO_WAITLIST } from "@/modules/registrations/domain/waitlist";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -22,11 +23,13 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *   under the lock — while every staff verb keeps working, and is set from the registrations page by an
  *   Administrator alone, audited;
  * - «Locurile libere le dau doar eu» sends a public entry to the waiting list beside a free place (or refuses it
- *   like a full race when the list takes nobody), while a staff entry still takes the free place;
+ *   like a full race when the list takes nobody), while a staff entry still takes the free place; and while it is on
+ *   no place is offered by itself, «Da» or not — the staff give every one;
  * - «Oferă-i un loc acum» ends with the person offered, so the waiting list's limit — 0 included — never refuses it;
  *   «Adaugă pe lista de așteptare» alone still honours it;
  * - «Anunță-mă când rămân N locuri» emails the Administrators once per crossing, re-armed above N;
- * - «Pe site acum» says each state the public card's predicate draws.
+ * - «Pe site acum» says each state the public card's predicate draws;
+ * - the editor's own save of the three settings leaves the trail, from → to, once per change.
  *
  * The two-connection race on the last place is `tests/concurrency/capacity.test.ts`; the switch only ever narrows
  * who takes a free place, so it adds no new way to pass the capacity.
@@ -52,6 +55,8 @@ const { confirmEmail, submitRegistration } = await import("@/modules/registratio
 const { cancelRegistrationByStaff, enterOnWaitlistByStaff, offerPlaceByStaff, setPublicRegistrationOpenByStaff } = await import("@/modules/registrations/admin-service");
 const { addReserveEntry, moveReserveEntryToWaitlist } = await import("@/modules/registrations/reserve-list");
 const { readPublicDoor } = await import("@/modules/registrations/public-now");
+const { readWaitlistPosition } = await import("@/modules/registrations/repository");
+const { saveEventAndTranslations } = await import("@/modules/content/events/service");
 const { default: PublicNowLine } = await import("@/modules/registrations/ui/PublicNowLine");
 
 const NOW = new Date();
@@ -62,6 +67,7 @@ let close: () => Promise<void>;
 let admin: StaffUser;
 let superadmin: StaffUser;
 let organizer: StaffUser;
+let declarationId: string;
 
 type EventInput = Parameters<typeof submitRegistration>[1];
 
@@ -77,7 +83,8 @@ beforeEach(async () => {
     { locale: "en", title: "Document", body: { sections: [{ paragraphs: ["p"] }] } },
   ];
   for (const key of ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const) {
-    await insertLegalDocumentVersion(db, { key, version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(pair), translations: pair, now: NOW });
+    const id = await insertLegalDocumentVersion(db, { key, version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(pair), translations: pair, now: NOW });
+    if (key === "EVENT_DECLARATION") declarationId = id;
   }
   [admin] = await db.insert(staffUsers).values({ email: "admin@example.ro", displayName: "Admin", role: "ADMIN", preferredLocale: "ro" }).returning();
   [superadmin] = await db.insert(staffUsers).values({ email: "super@example.ro", displayName: "Super", role: "SUPERADMIN", preferredLocale: "en" }).returning();
@@ -262,14 +269,38 @@ describe("«Locurile libere le dau doar eu» (§NNN)", () => {
     expect((await staffEntry(event.id, "Mara")).status).toBe("PENDING_DECLARATION");
   });
 
+  it("on an uncapped event the tick means nothing: nothing is scarce, so a public entry takes its place", async () => {
+    const event = await createEvent(null, { freePlacesByOfferOnly: true, waitlistAutoOffer: true });
+    expect((await publicEntry(event, "Ana")).status).toBe("PENDING_DECLARATION");
+  });
+
   it("unticked, a public entry takes a free place as before", async () => {
     const event = await createEvent(2);
     expect((await publicEntry(event, "Ana")).status).toBe("PENDING_DECLARATION");
   });
 
-  it("with automatic offers on, the line's own offer still gives the place — unchanged (§615)", async () => {
+  it("wins over automatic offers: the public entry waits beside the free places, and nothing is offered by itself", async () => {
+    // «Da» on the line (§615) — the tick still says «only I give the free places»: no offer to the stranger the tick
+    // sent to the line a moment ago (the owner's incident), and the line's sentence promises no automatic offer.
     const event = await createEvent(2, { freePlacesByOfferOnly: true, waitlistAutoOffer: true });
-    expect((await publicEntry(event, "Ana")).status).toBe("WAITLIST_OFFERED");
+    expect((await staffEntry(event.id, "Mara")).status).toBe("PENDING_DECLARATION");
+    expect((await publicEntry(event, "Ana")).status).toBe("WAITLISTED");
+    expect((await readWaitlistPosition(db, (await rowOf("Ana")).id))?.autoOffer).toBe(false);
+    // A place freed is not offered by itself either: two free now, Ana still waits.
+    await cancelRegistrationByStaff(db, admin, (await rowOf("Mara")).id, "", NOW);
+    expect((await rowOf("Ana")).status).toBe("WAITLISTED");
+    // The staff give it: «Trimite-i oferta», counted, nothing added.
+    expect((await offerPlaceByStaff(db, admin, (await rowOf("Ana")).id, NOW, {})).status).toBe("WAITLIST_OFFERED");
+    expect(await capacityOf(event.id)).toBe(2);
+  });
+
+  it("unticked again, «Da» offers the line the free places by itself once more (§615)", async () => {
+    const event = await createEvent(2, { freePlacesByOfferOnly: true, waitlistAutoOffer: true });
+    expect((await publicEntry(event, "Ana")).status).toBe("WAITLISTED");
+    await db.update(events).set({ freePlacesByOfferOnly: false }).where(eq(events.id, event.id));
+    // The next allocator write fills the line first (`fillAvailableSpots`), then seats the newcomer.
+    expect((await staffEntry(event.id, "Mara")).status).toBe("PENDING_DECLARATION");
+    expect((await rowOf("Ana")).status).toBe("WAITLIST_OFFERED");
   });
 });
 
@@ -410,3 +441,68 @@ describe("«Pe site acum» (§NNN)", () => {
   });
 });
 
+describe("The editor's save of the registration controls leaves the trail (§NNN)", () => {
+  /** The editor's form for the row as posted (as `cms/capacity-raise.test.ts` posts it), with the changes given. */
+  async function editorSave(eventId: string, changes: Record<string, unknown>) {
+    const [row] = await db.select().from(events).where(eq(events.id, eventId));
+    const ro = (await db.select().from(eventTranslations).where(eq(eventTranslations.eventId, eventId))).find((t) => t.locale === "ro");
+    if (!ro) throw new Error("no ro translation");
+    return saveEventAndTranslations(db, {
+      actor: admin,
+      eventId,
+      fields: {
+        type: row.type,
+        eventStatus: row.eventStatus,
+        timezone: row.timezone,
+        startsAtWallTime: toWallTimeInput(row.startsAt, row.timezone),
+        endsAtWallTime: toWallTimeInput(row.endsAt, row.timezone),
+        raceStartsAtWallTime: "",
+        locationName: row.locationName ?? "",
+        locationAddress: "",
+        surface: row.surface,
+        difficulty: null,
+        costType: null,
+        mapUrl: "",
+        routeUrl: "",
+        distanceMeters: "",
+        elevationGainMeters: "",
+        featured: false,
+        registrationMode: row.registrationMode,
+        participantListVisibility: "HIDDEN" as const,
+        capacity: row.capacity === null ? "" : String(row.capacity),
+        registrationOpensAtWallTime: toWallTimeInput(row.registrationOpensAt, row.timezone),
+        registrationClosesAtWallTime: toWallTimeInput(row.registrationClosesAt, row.timezone),
+        declarationDocumentId: row.declarationDocumentId ?? "",
+        externalProvider: "",
+        externalRegistrationUrl: "",
+        ...changes,
+      },
+      expectedVersion: row.version,
+      translations: [{ translationId: ro.id, expectedVersion: ro.version, fields: { slug: ro.slug, title: ro.title, excerpt: ro.excerpt ?? "", seoTitle: "", seoDescription: "" } }],
+      acknowledgeLiveEdit: true,
+      scope: "this",
+      now: NOW,
+    });
+  }
+
+  it("unticking «Înscrieri publice deschise» in the editor writes one row, from → to; a save that moves nothing writes none", async () => {
+    const event = await createEvent(10, { surface: "ASPHALT", declarationDocumentId: declarationId });
+    await editorSave(event.id, { publicRegistrationOpen: false });
+    const [saved] = await db.select().from(events).where(eq(events.id, event.id));
+    expect(saved.publicRegistrationOpen).toBe(false);
+    const rows = await trail("event.public_registration_changed");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ actorStaffUserId: admin.id, entityType: "event", entityId: event.id, metadataJson: { from: true, to: false } });
+
+    await editorSave(event.id, { publicRegistrationOpen: false });
+    expect(await trail("event.public_registration_changed")).toHaveLength(1);
+  });
+
+  it("«Locurile libere le dau doar eu» and «Anunță-mă când rămân N locuri» each leave their own row", async () => {
+    const event = await createEvent(10, { surface: "ASPHALT", declarationDocumentId: declarationId });
+    await editorSave(event.id, { freePlacesByOfferOnly: true, placesAlertAt: "3" });
+    expect((await trail("event.free_places_by_offer_only_changed")).map((row) => row.metadataJson)).toEqual([{ from: false, to: true }]);
+    expect((await trail("event.places_alert_changed")).map((row) => row.metadataJson)).toEqual([{ from: null, to: 3 }]);
+    expect(await trail("event.public_registration_changed")).toEqual([]);
+  });
+});

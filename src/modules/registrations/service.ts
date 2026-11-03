@@ -251,7 +251,9 @@ function withLockedRow(
     startsAt: locked.startsAt,
     eventStatus: locked.eventStatus,
     waitlistCapacity: locked.waitlistCapacity,
-    freePlacesByOfferOnly: locked.freePlacesByOfferOnly,
+    // Only where places are counted: an uncapped event has nothing scarce to give, so the tick — copied by a duplicate
+    // or a series, or left on after the cap was lifted — sends nobody to the line there.
+    freePlacesByOfferOnly: locked.freePlacesByOfferOnly && locked.capacity !== null,
   };
 }
 
