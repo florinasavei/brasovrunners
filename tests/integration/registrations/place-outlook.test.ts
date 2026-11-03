@@ -70,7 +70,7 @@ describe("«Locuri»", () => {
 
     const text = await drawn(race.id);
     expect(text).toContain("Locuri ocupate: 5 din 10 · Libere: 5");
-    expect(text).toContain("Lista oficială de așteptare: 4 · Lista internă (doar notițe): 3 · Invitați speciali, în afara locurilor: 1");
+    expect(text).toContain("Lista oficială de așteptare: 4 · Lista internă (doar notițe): 3 · Invitați speciali (nu ocupă loc): 1");
     expect(text).toContain("Poți da drumul acum la 5 fără locuri în plus — de pe lista oficială: 4 («Trimite-i oferta»), de pe lista internă: 1 («Oferă-i un loc acum»).");
     expect(text).toContain("Pentru restul de pe liste (2), fiecare ofertă adaugă un loc: capacitatea ar ajunge la 12.");
     expect(text).toContain("Total dacă intră toți: 13");
