@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.07-2026-11-02 -->
+<!-- PROJECT_BASELINE: BR-V4.08-2026-11-03 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.07-2026-11-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.08-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28544,3 +28544,21 @@ Baseline `BR-V4.06-2026-11-02`.
 **Refused.** A block in or under the footer's bar (§582: the footer stays collapsed); less room above every page's watermark, which would change every page for a line some pages show.
 
 Baseline `BR-V4.07-2026-11-02`.
+
+## 892. «Locuri»: how many places are free and how many can still be let in
+
+**The owner, 2026-11-03**, after counting the race by hand from the strip's pills and asking twice «care e totalul și la câte locuri mai putem da drumul?»: «fă niște update-uri pe site să văd mai clar asta, nu să mă uit eu de fiecare dată».
+
+**Decision.** Under «Cine s-a înscris», when the list is about one event with a capacity, a block «Locuri» comes before «Kituri de pregătit»:
+
+- «Locuri ocupate: N din C · Libere: F» — N is the allocator's own count (`computeOccupied`: the confirmed, the declarations to sign, the live offers, a family's reservations, the counted invitations), so F is the number of places the allocator would give now; the special guests (§643) are beside it, never in it.
+- the official waiting list (`WAITLISTED`, never a row outside the places), the lines of «Lista internă (doar notițe)» and the special guests, each with its count;
+- «Poți da drumul acum la X fără locuri în plus» — the free places go to the official waiting list first, in its order («Trimite-i oferta»), then to the internal list's lines («Oferă-i un loc acum», §888);
+- for everybody left on the two lists, one supplementary place each — what «Trimite-i oferta» and «Oferă-i un loc acum» add on a full race (§642) — and the capacity it would reach;
+- «Total dacă intră toți»: the places taken, the special guests and both lists.
+
+A line of the internal list counts as one person: it is the one the move or the offer enters. The arithmetic is pure (`domain/place-outlook.ts`) and the reader is one event's counts, read only when the list is about that event (§68). Every role that reads the list sees it; the buttons it names stay the Administrator's.
+
+**Refused.** A count of people on the internal list from its notes («+ partener»): a note is free text, and the line is what the club can act on. Putting the free places on the public page: the public line already says how many are left.
+
+Baseline `BR-V4.08-2026-11-03`.
