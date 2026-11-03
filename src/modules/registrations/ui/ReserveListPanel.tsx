@@ -1,3 +1,4 @@
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -31,6 +32,13 @@ const AddressIcon = ACTION_ICONS.emailConfirmation;
  * the consequence, names the address the emails go to and asks for the relay tick (§33); a line without an
  * address shows a box for it. The full form, prefilled, stays one link away (`fullFormHref`). Below, «Adaugă pe
  * lista internă». Presentation only: the page reads the rows and hands in the actions.
+ *
+ * And for the Administrator alone (`eliteMoveAction`), on every line, address or none: «Mută pe lista de elită»
+ * (§NNN) — the name onto the race's elite list (§895), printed on a bib, nobody registered — asked first, the
+ * dialog naming the person and saying what does not happen (no registration, place, email or declaration in the
+ * app) and that the internal note is not kept. Under a line's «Email pentru lista oficială», the same role reads
+ * that an elite runner needs no address. Back from the move (`eliteCardHref`), the panel's first line links to
+ * the editor's elite card.
  */
 export default async function ReserveListPanel({
   locale,
@@ -41,6 +49,9 @@ export default async function ReserveListPanel({
   saveNoteAction,
   deleteAction,
   moveAction,
+  eliteMoveAction,
+  listQuery,
+  eliteCardHref,
   opened,
 }: {
   locale: string;
@@ -53,6 +64,12 @@ export default async function ReserveListPanel({
   deleteAction: ActionFormAction;
   /** «Mută pe lista oficială» and «Oferă-i un loc acum»: absent, no line carries them. */
   moveAction?: ActionFormAction;
+  /** «Mută pe lista de elită» (§NNN), the Administrator's: absent, no line carries it, nor the no-address line. */
+  eliteMoveAction?: ActionFormAction;
+  /** The list's own query (filters, sort, page), posted by «Mută pe lista de elită» so the press comes back to the same list. */
+  listQuery?: string;
+  /** Back from «Mută pe lista de elită»: the editor's elite card (`/admin/events/[id]#bib-elite`), linked at the top. */
+  eliteCardHref?: string;
   opened: boolean;
 }) {
   const t = await getTranslations("Admin");
@@ -101,6 +118,17 @@ export default async function ReserveListPanel({
   return (
     <Panel glyph="queue" collapsible title={t("reserve.title")} intro={t("reserve.intro")} aside={aside} openWhen={{ saved: opened }} id="registrations-reserve" data-testid="registrations-reserve">
       <Stack spacing={3}>
+        {/* Back from «Mută pe lista de elită» (§NNN): where the name is now, one press away — a plain link, so the editor's fold opens from `#bib-elite`. */}
+        {eliteCardHref && (
+          <Alert severity="success" data-testid="reserve-moved-to-elite">
+            <Box component="p" sx={{ m: 0 }}>
+              {t("reserve.movedToElite")}
+            </Box>
+            <GlyphButton icon="elite" href={eliteCardHref} color="inherit" variant="text" size="small" sx={{ minHeight: 44, mt: 0.5 }} data-testid="reserve-elite-card">
+              {t("reserve.eliteCardLink")}
+            </GlyphButton>
+          </Alert>
+        )}
         {entries.length === 0 ? (
           <Typography variant="body2" color="text.secondary" data-testid="reserve-empty">
             {t("reserve.empty")}
@@ -164,6 +192,12 @@ export default async function ReserveListPanel({
                             size="small"
                             slotProps={{ htmlInput: { maxLength: RESERVE_EMAIL_MAX } }}
                           />
+                          {/* An elite runner needs no address (§NNN): not under the box's own help, which a refusal replaces. */}
+                          {eliteMoveAction && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="reserve-elite-no-address">
+                              {t("reserve.eliteNoAddress")}
+                            </Typography>
+                          )}
                         </Box>
                       )}
                       <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
@@ -184,6 +218,28 @@ export default async function ReserveListPanel({
                     <GlyphButton icon="addPerson" href={fullFormHref(entry.id)} variant="text" size="small" sx={{ minHeight: 44 }} data-testid="reserve-full-form">
                       {t("waitlistAdd.longForm")}
                     </GlyphButton>
+                  )}
+                  {eliteMoveAction && (
+                    // «Mută pe lista de elită» (§NNN): with or without an address — the elite list asks for none.
+                    <ActionForm
+                      action={eliteMoveAction}
+                      messages={refusal}
+                      confirm={{
+                        title: t("reserve.moveToEliteTitle"),
+                        body: t("reserve.moveToEliteBody", { name: `${entry.firstName} ${entry.lastName}` }),
+                        confirmLabel: t("reserve.moveToElite"),
+                        cancelLabel: words.cancel,
+                      }}
+                      scope={`reserve-elite-${entry.id}`}
+                      data-testid="reserve-elite-form"
+                    >
+                      <input type="hidden" name="uiLocale" value={locale} />
+                      <input type="hidden" name="entryId" value={entry.id} />
+                      <input type="hidden" name="listQuery" value={listQuery ?? ""} />
+                      <GlyphButton icon="elite" type="submit" variant="text" size="small" sx={{ minHeight: 44 }} data-testid="reserve-elite">
+                        {t("reserve.moveToElite")}
+                      </GlyphButton>
+                    </ActionForm>
                   )}
                   <ActionForm
                     action={deleteAction}

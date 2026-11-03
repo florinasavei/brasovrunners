@@ -74,7 +74,7 @@ import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
 import ReserveListPanel from "@/modules/registrations/ui/ReserveListPanel";
 import WaitlistAddForm from "@/modules/registrations/ui/WaitlistAddForm";
 import { listReserveEntries } from "@/modules/registrations/reserve-list";
-import { addReserveEntryAction, deleteReserveEntryAction, saveReserveNoteAction } from "../reserve-actions";
+import { addReserveEntryAction, deleteReserveEntryAction, moveReserveEntryToEliteAction, saveReserveNoteAction } from "../reserve-actions";
 import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -1354,7 +1354,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         «Lista internă (doar notițe)» (§854, §888): people who asked to be kept in mind for this event, told nothing,
         for the roles that keep internal notes. Only on a list about one event: a line is about one. Moving a line onto
         the official list — one press, or the full form — is the Administrator's; the press only while the event takes
-        a vouched entry (the door of «Adaugă pe lista de așteptare»).
+        a vouched entry (the door of «Adaugă pe lista de așteptare»). «Mută pe lista de elită» (§NNN) is the
+        Administrator's too, on every line and at any time — the elite list is no queue — and comes back to this list
+        as it is, the panel open on the link to the editor's elite card.
       */}
       {filters.eventId && canKeepRegistrationNotes(actor.role) && (
         <ReserveListPanel
@@ -1368,7 +1370,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           saveNoteAction={saveReserveNoteAction}
           deleteAction={deleteReserveEntryAction}
           moveAction={mayManage && waitlistAddOpen ? moveReserveEntryAction : undefined}
-          opened={saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveDeleted" || current.from === "reserve"}
+          eliteMoveAction={mayManage ? moveReserveEntryToEliteAction : undefined}
+          listQuery={listQueryString}
+          eliteCardHref={
+            mayManage && saved === "reserveMovedToElite"
+              ? `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: filters.eventId } } })}#bib-elite`
+              : undefined
+          }
+          opened={saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveDeleted" || saved === "reserveMovedToElite" || current.from === "reserve"}
         />
       )}
 
