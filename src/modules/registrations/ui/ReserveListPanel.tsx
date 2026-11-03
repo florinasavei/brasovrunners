@@ -192,13 +192,14 @@ export default async function ReserveListPanel({
                             size="small"
                             slotProps={{ htmlInput: { maxLength: RESERVE_EMAIL_MAX } }}
                           />
-                          {/* An elite runner needs no address (§NNN): not under the box's own help, which a refusal replaces. */}
-                          {eliteMoveAction && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="reserve-elite-no-address">
-                              {t("reserve.eliteNoAddress")}
-                            </Typography>
-                          )}
                         </Box>
+                      )}
+                      {/* An elite runner needs no address (§NNN): said in sight, beside the fold rather than inside it — the owner asked
+                          for a warning, and a closed fold hides one. */}
+                      {!entry.email && eliteMoveAction && (
+                        <Typography variant="body2" color="text.secondary" data-testid="reserve-elite-no-address">
+                          {t("reserve.eliteNoAddress")}
+                        </Typography>
                       )}
                       <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
                         <GlyphButton icon="waiting" type="submit" name="intent" value="move" variant="contained" size="small" sx={{ minHeight: 44 }} data-testid="reserve-move">

@@ -301,7 +301,7 @@ export async function moveReserveEntryToElite<T extends Record<string, unknown>>
   return db.transaction(async (tx) => {
     const [line] = await tx.select({ eventId: eventReserveEntries.eventId }).from(eventReserveEntries).where(eq(eventReserveEntries.id, entryId)).limit(1);
     if (!line) throw new DomainError("NOT_FOUND", "the line is not there");
-    const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, line.eventId)).for("update");
+    const event = await lockEventForCapacity(tx, line.eventId);
     if (!event) throw new DomainError("NOT_FOUND", "no such event");
     const entry = await lockedEntry(tx, entryId);
     const { name } = parseEliteEntry({ name: `${entry.firstName} ${entry.lastName}`, bibNumber: null });

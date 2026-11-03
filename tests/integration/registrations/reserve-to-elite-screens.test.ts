@@ -179,7 +179,7 @@ describe("§NNN «Mută pe lista de elită» on the internal list, as drawn", ()
       expect((button.props.sx as { minHeight: number }).minHeight).toBe(44);
       // The question names the person and says what does not happen; no email is announced, since none is sent.
       const confirm = form.props.confirm as Confirm;
-      expect(confirm.title).toBe("Îl muți pe lista de elită?");
+      expect(confirm.title).toBe("Muți pe lista de elită?");
       expect(confirm.body.startsWith(`${name}: nu e o înscriere`)).toBe(true);
       for (const said of ["niciun loc", "niciun email", "nicio declarație în aplicație", "Pe BIB se tipărește numele", "Nota internă nu se păstrează"]) expect(confirm.body).toContain(said);
       expect(confirm.confirmLabel).toBe("Mută pe lista de elită");
@@ -195,13 +195,12 @@ describe("§NNN «Mută pe lista de elită» on the internal list, as drawn", ()
   it("tells the Administrator, under a line's «Email pentru lista oficială», that an elite runner needs no address", async () => {
     state.actor = await staff("ADMIN");
     const { drawn } = await reservePanel({ eventId });
-    const [fold] = byTestId(lineOf(drawn, "Ion Ionescu"), "reserve-move-email");
-    const inside = elements(fold);
-    const box = inside.findIndex((element) => element.props.name === "email");
-    const [warning] = byTestId(inside, "reserve-elite-no-address");
+    const line = lineOf(drawn, "Ion Ionescu");
+    const [fold] = byTestId(line, "reserve-move-email");
+    const [warning] = byTestId(line, "reserve-elite-no-address");
     expect(words(warning)).toBe("Alergător de elită? Nu-i trebuie adresă: „Mută pe lista de elită”.");
-    // Under the box, not its helper text, which a refusal replaces.
-    expect(inside.indexOf(warning)).toBeGreaterThan(box);
+    // In sight, beside the address's closed fold rather than inside it (the owner asked for a warning; a closed fold hides one).
+    expect(byTestId(elements(fold), "reserve-elite-no-address")).toHaveLength(0);
     // A line with an address has no such box, and no such line.
     expect(byTestId(lineOf(drawn, "Ana Pop"), "reserve-elite-no-address")).toHaveLength(0);
     expect(en.Admin.reserve.eliteNoAddress).toBe("An elite runner? No address needed: “Move to the elite list”.");
