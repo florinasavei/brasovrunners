@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.11-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.12-2026-11-03 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.11-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.12-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28602,3 +28602,11 @@ Baseline `BR-V4.10-2026-11-03`.
 - **A staff-signed declaration** for an elite runner. The declaration is the person's: staff record a paper one the participant signed, never sign one (`AGENTS.md` §15.11).
 
 Baseline `BR-V4.11-2026-11-03`.
+
+## 896. «Locuri» says the places free first, then why
+
+**The owner, 2026-11-03,** of «Locuri» as first drawn: «nu prea are așa sens statistica asta… pentru că nu înțeleg exact câte locuri mai pot să dau». The answer — how many places are free — was the end of the first line, after the places taken, and «Poți da drumul acum la …» mixed the free places with the lists' split.
+
+**Decision.** The first line is the answer: «Locuri libere acum: N din capacitate». Then why, one fact a line: the places taken, split into the confirmed and those holding a place until they sign (a declaration to sign, a live offer, a family's or an invitation's hold — `occupied − confirmed`); who waits, the two lists' total and each; where the free places go (the official list first, «Trimite-i oferta», then the internal one, «Oferă-i un loc acum»); the capacity it would take to let in everybody waiting; the special guests and the people at the start if everybody comes. The arithmetic is unchanged (`domain/place-outlook.ts`), with `confirmed` and `held` added.
+
+Baseline `BR-V4.12-2026-11-03`.
