@@ -61,7 +61,7 @@ import { DECLARATION_ACCEPT_BOX_ID, DECLARATION_ERROR_SUMMARY_ID } from "@/modul
 import UntickedBoxSummary from "@/modules/registrations/ui/UntickedBoxSummary";
 import { countEligibleWaitlisted, findRegistrationById, offersWaitlistAutomatically } from "@/modules/registrations/repository";
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
-import { deadlineReleaseArmedFor, releaseTakesHold } from "@/modules/registrations/domain/unsigned-release";
+import { releaseDeadlineOfHold } from "@/modules/registrations/domain/unsigned-release";
 import { declarantValues, identityDocumentValues } from "@/modules/registrations/signed-declaration";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
@@ -101,7 +101,7 @@ import {
   passFitsLink,
   readFamilySigningPass,
 } from "@/modules/registrations/family-signing";
-import { spentLinkHasFamilyLeft, spentLinkOffersByItself } from "@/modules/registrations/token-actions";
+import { spentLinkHasFamilyLeft, spentLinkOffersByItself, spentLinkReleaseMoment } from "@/modules/registrations/token-actions";
 import FamilySigningSteps from "@/modules/registrations/ui/FamilySigningSteps";
 
 /**
@@ -456,9 +456,31 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     ? { ...movedOn, step: stepForSpentLink(movedOn.message), eventTitle: ownLocale?.title ?? null, eventSlug: ownLocale?.slug ?? null }
     : null;
   const notice = spent ?? movedOnNotice;
-  // The form renders only when neither the family's «nobody left» card nor the refusal notice takes its place.
-  const formBelow = !(familyMode && !familyCurrent && passSteps && walking) && !(blocked || !declaration || movedOnNotice);
+  /*
+    «Eliberează singur locurile nesemnate la termen» (§NNN): a hold the release will take is told that the place goes at
+    the deadline, even with nobody waiting — never that it stays theirs until the start — and, once the release's own
+    deadline has come, that it is being released rather than still theirs. The rule the declaration's email words it by
+    (`releaseDeadlineOfHold`), off the same event row; the moment named is always the release's deadline, which a hold
+    taken inside the window may end before (the review's nit).
+  */
+  const releaseAt =
+    registration?.status === "PENDING_DECLARATION" && eventDetails !== undefined ? releaseDeadlineOfHold(eventDetails, registration) : null;
+  const releasedAtDeadline = releaseAt !== null;
+  const beingReleased = releaseAt !== null && releaseAt.getTime() <= now.getTime();
+  const releaseMoment = releaseAt && eventDetails ? { at: releaseAt, timeZone: eventDetails.timezone } : null;
+  /*
+    The form renders only when neither the family's «nobody left» card nor the refusal notice takes its place — nor a place
+    being released at the deadline (the review's nit): its press would be refused by design, so the page says the place
+    is no longer held and draws nothing to press.
+  */
+  const formBelow = !(familyMode && !familyCurrent && passSteps && walking) && !(blocked || !declaration || movedOnNotice) && !beingReleased;
   const journeyStep = familyMode && !familyCurrent ? ("done" as const) : notice ? notice.step : ("declare" as const);
+  /*
+    The strip's declaration step says the release's deadline instead of the paper at the desk (§NNN): this hold's own,
+    or — on a spent link, whose registration this page does not read — the one the link names.
+  */
+  const journeyRelease =
+    journeyStep !== "declare" || formBelow || !spent ? releaseMoment : await spentLinkReleaseMoment(token, ["COMPLETE_DECLARATION", "WAITLIST_OFFER"], now);
 
   /**
    * An absolute local time, and deliberately no countdown.
@@ -495,16 +517,13 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     registration.status === "PENDING_DECLARATION" &&
     registration.holdExpiresAt <= new Date() &&
     (await countEligibleWaitlisted(db, registration.eventId)) === 0;
-  /*
-    «Eliberează singur locurile nesemnate la termen» (§NNN): a hold the release will take is told that the place goes at
-    the deadline, even with nobody waiting — never that it stays theirs until the start — and, once the release's own
-    deadline has come, that it is being released rather than still theirs. The rule the declaration's email words it by
-    (`releaseTakesHold`), off the same event row.
-  */
-  const releasedAtDeadline =
-    registration?.status === "PENDING_DECLARATION" && eventDetails !== undefined && releaseTakesHold(eventDetails, registration);
-  const releaseAt = releasedAtDeadline && eventDetails ? deadlineReleaseArmedFor(eventDetails) : null;
-  const beingReleased = releaseAt !== null && releaseAt.getTime() <= now.getTime();
+  // The release's deadline as the page says an instant (§NNN), and whether this hold ends before it (a place taken inside the window).
+  const releaseDeadline =
+    releaseAt && eventDetails
+      ? formatDay(releaseAt, { locale, timeZone: eventDetails.timezone, style: "long", withTime: true, position: "inline" })
+      : undefined;
+  const heldBeforeRelease =
+    releaseAt !== null && registration?.holdExpiresAt != null && registration.holdExpiresAt.getTime() < releaseAt.getTime();
 
   /*
     The text the signature binds to (§330): the version above, in the registration's language —
@@ -644,9 +663,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
         // «Mai jos» only where the form is below (the render's own condition, below); a spent or moved-on link points at the
         // email it came in, and a refused link with no notice has no journey to show (§614).
         formBelow ? (
-          <RegistrationJourney current="declare" declaration="onThisPage" />
+          <RegistrationJourney current="declare" declaration="onThisPage" release={journeyRelease} />
         ) : notice ? (
-          <RegistrationJourney current="declare" declaration="emailReceived" />
+          <RegistrationJourney current="declare" declaration="emailReceived" release={journeyRelease} />
         ) : null
       ) : (
         journeyStep && <RegistrationJourney current={journeyStep} />
@@ -666,6 +685,16 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             </Alert>
           )}
         </>
+      ) : beingReleased ? (
+        /*
+          The release's deadline has come and its run has not yet reached this hold (§NNN): the place is no longer held, a
+          press would be refused by design, so the page says so and draws no form — what the link answers once the run
+          has released it, said a few minutes early.
+        */
+        <Alert severity="warning" role="status" sx={{ mb: 3 }} data-testid="declare-being-released">
+          {eventDetails && <div>{t("declare.event", { event: eventDetails.title })}</div>}
+          <div>{t("declare.deadlineReleasing", { deadline: releaseDeadline ?? "" })}</div>
+        </Alert>
       ) : (
         <>
           {/*
@@ -713,15 +742,16 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               {eventDetails && <div>{t("declare.event", { event: eventDetails.title })}</div>}
               {deadline && (
                 <div>
-                  {beingReleased
-                    ? t("declare.deadlineReleasing", { deadline })
-                    : deadlinePassed
-                      ? t("declare.deadlinePassed", { deadline })
-                      : deadlineAtStart
-                        ? t("declare.deadlineAtStart", { deadline })
-                        : releasedAtDeadline
-                          ? t("declare.deadlineReleased", { deadline })
-                          : t("declare.deadline", { deadline })}
+                  {/* The release names its own deadline (§NNN), and the hold's only when it ends before it. */}
+                  {deadlinePassed
+                    ? t("declare.deadlinePassed", { deadline })
+                    : deadlineAtStart
+                      ? t("declare.deadlineAtStart", { deadline })
+                      : releasedAtDeadline && releaseDeadline
+                        ? heldBeforeRelease
+                          ? t("declare.deadlineReleasedLater", { deadline, release: releaseDeadline })
+                          : t("declare.deadlineReleased", { deadline: releaseDeadline })
+                        : t("declare.deadline", { deadline })}
                 </div>
               )}
             </Alert>

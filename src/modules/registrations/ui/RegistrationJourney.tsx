@@ -1,8 +1,10 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
+import type { ReleaseMoment } from "@/modules/registrations/domain/unsigned-release";
 
 /**
  * Where a runner is in the registration journey, and what happens next.
@@ -37,12 +39,18 @@ const ORDER: readonly JourneyStep[] = ["details", "confirm", "declare"];
  */
 export type DeclarationWhere = "emailJustSent" | "emailHeldUntil" | "onThisPage" | "emailReceived";
 
-/** `declaration` is required at the third step and has no meaning at any other: the type says so. */
+/**
+ * `declaration` is required at the third step and has no meaning at any other: the type says so.
+ *
+ * `release` is «Eliberează singur locurile nesemnate la termen»'s deadline when it will take this place (§NNN; the page
+ * asks `releaseDeadlineOfHold`, or `spentLinkReleaseMoment` after a press): the step then says to sign online by it and
+ * that the place goes then — never «sau pe hârtie la masa de înscrieri în ziua cursei», which the release makes false.
+ */
 export type RegistrationJourneyProps =
-  | { current: Exclude<JourneyStep, "declare">; declaration?: never; opens?: never }
-  | { current: "declare"; declaration: Exclude<DeclarationWhere, "emailHeldUntil">; opens?: never }
+  | { current: Exclude<JourneyStep, "declare">; declaration?: never; opens?: never; release?: never }
+  | { current: "declare"; declaration: Exclude<DeclarationWhere, "emailHeldUntil">; opens?: never; release?: ReleaseMoment | null }
   /** `opens` is the phrase for «{opens} înainte de start», built with `daysPhrase` as CheckYourEmail builds it. */
-  | { current: "declare"; declaration: "emailHeldUntil"; opens: string };
+  | { current: "declare"; declaration: "emailHeldUntil"; opens: string; release?: ReleaseMoment | null };
 
 export default async function RegistrationJourney(props: RegistrationJourneyProps) {
   const { current } = props;
@@ -56,11 +64,16 @@ export default async function RegistrationJourney(props: RegistrationJourneyProp
   */
   const waitMinutes = current === "declare" ? await cachedEmailWaitMinutes(new Date()) : null;
   const opens = props.opens ?? "";
+  const locale = await getLocale();
+  // The release's deadline in the event's clock, as the signing page says its own deadline (§NNN).
+  const release = props.release
+    ? formatDay(props.release.at, { locale, timeZone: props.release.timeZone, style: "long", withTime: true, position: "inline" })
+    : null;
   const now =
     props.current === "declare"
       ? waitMinutes !== null
-        ? t(`now.declareScheduled.${props.declaration}`, { wait: minutesPhrase(await getLocale(), waitMinutes), opens })
-        : t(`now.declare.${props.declaration}`, { opens })
+        ? t(`now.${release ? "declareScheduledReleased" : "declareScheduled"}.${props.declaration}`, { wait: minutesPhrase(locale, waitMinutes), opens, release: release ?? "" })
+        : t(`now.${release ? "declareReleased" : "declare"}.${props.declaration}`, { opens, release: release ?? "" })
       : t(`now.${props.current}`);
 
   return (

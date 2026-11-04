@@ -15,7 +15,7 @@ import { enqueueEmail } from "@/modules/notifications/outbox";
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { DomainError } from "@/shared/errors/domain-error";
-import { releaseTakesHold } from "./domain/unsigned-release";
+import { releaseDeadlineOfHold } from "./domain/unsigned-release";
 import type { WaitlistStanding } from "./domain/waitlist-standing";
 import { findRegistrationById, readWaitlistPosition } from "./repository";
 import { checkIn, type EventForRegistration, looksLikeSpam, unregister } from "./service";
@@ -97,10 +97,10 @@ export type MyRegistration = {
    */
   holdExpiresAt: Date | null;
   /**
-   * «Eliberează singur locurile nesemnate la termen» (§NNN) will take this place at its deadline (`releaseTakesHold`):
-   * «confirmă până» then says the place goes there, never a paper on race day.
+   * The deadline at which «Eliberează singur locurile nesemnate la termen» (§NNN) will take this place
+   * (`releaseDeadlineOfHold`), or null: «confirmă până» then says the place goes at it, never a paper on race day.
    */
-  releasesAtDeadline: boolean;
+  releaseDeadline: Date | null;
   /** The race number, given at the confirmation (§87, §548); shown through `raceNumberOf`. */
   bibNumber: number | null;
   /** How the event writes the number (§735): «007» when its bib says «007». */
@@ -212,12 +212,13 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
   );
   return rows.map(({ listOptOut, eventStatus, outsideCapacity, capacity, confirmationOpensDaysBefore, confirmationDeadlineDaysBefore, releaseUnsignedAtDeadline, unsignedReleasedFor, ...row }) => ({
     ...row,
-    releasesAtDeadline:
-      row.status === "PENDING_DECLARATION" &&
-      releaseTakesHold(
-        { capacity, eventStatus, startsAt: row.eventStartsAt, confirmationOpensDaysBefore, confirmationDeadlineDaysBefore, releaseUnsignedAtDeadline, unsignedReleasedFor },
-        { holdExpiresAt: row.holdExpiresAt, outsideCapacity },
-      ),
+    releaseDeadline:
+      row.status !== "PENDING_DECLARATION"
+        ? null
+        : releaseDeadlineOfHold(
+            { capacity, eventStatus, startsAt: row.eventStartsAt, confirmationOpensDaysBefore, confirmationDeadlineDaysBefore, releaseUnsignedAtDeadline, unsignedReleasedFor },
+            { holdExpiresAt: row.holdExpiresAt, outsideCapacity },
+          ),
     waitlistStanding: standings.get(row.id) ?? null,
     listed: !listOptOut,
     eventCancelled: eventStatus === "CANCELLED",

@@ -47,7 +47,7 @@ import { eventInvitations } from "@/db/schema/event-invitations";
 import { invitationOpen } from "./invitation-repository";
 import { PLACE_HOLDING_STATUSES } from "./domain/state-machine";
 import type { RaceNumberFormat } from "./domain/race-number";
-import { releaseTakesHold } from "./domain/unsigned-release";
+import { releaseDeadlineOfHold } from "./domain/unsigned-release";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -861,8 +861,8 @@ export type RegistrationDetail = {
   eventTimezone: string;
   /** The event is cancelled: «Ce îi spui» says the cancellation rather than a deadline (§654). */
   eventCancelled: boolean;
-  /** «Eliberează singur locurile nesemnate la termen» (§NNN) will take this place at its deadline (`releaseTakesHold`). */
-  releasesAtDeadline: boolean;
+  /** The deadline at which «Eliberează singur locurile nesemnate la termen» (§NNN) will take this place (`releaseDeadlineOfHold`), or null. */
+  releaseDeadline: Date | null;
   /** «Ofertele din lista de așteptare pleacă automat» (§615) and «Arată public câți așteaptă» (§634), for the waiting sentence. */
   waitlistAutoOffer: boolean;
   waitlistCountPublic: boolean;
@@ -1058,7 +1058,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
 
   if (!row) return undefined;
   const { releaseRules, ...detail } = row;
-  return { ...detail, releasesAtDeadline: detail.status === "PENDING_DECLARATION" && releaseTakesHold(releaseRules, detail) };
+  return { ...detail, releaseDeadline: detail.status === "PENDING_DECLARATION" ? releaseDeadlineOfHold(releaseRules, detail) : null };
 }
 
 /**

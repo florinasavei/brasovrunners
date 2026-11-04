@@ -6,6 +6,7 @@ import { waitlistCountShown } from "@/modules/events/domain/registration-cta";
 import { formatDeadlineInSentence } from "@/modules/notifications/domain/deadline-in-sentence";
 import type { RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { confirmationDueMoment } from "../domain/hold-deadlines";
+import { confirmByKey } from "../domain/unsigned-release";
 import { callInstead, type RegistrationEmailState } from "../domain/email-state";
 import { rowDeadlineOf } from "../domain/row-deadline";
 import { shortEmailName } from "./rejected-email-words";
@@ -27,8 +28,8 @@ export type TellFacts = {
   eventStartsAt: Date;
   eventTimezone: string;
   eventCancelled: boolean;
-  /** «Eliberează singur locurile nesemnate la termen» (§NNN) takes the held place at its deadline: «confirmă până» says so. */
-  releasesAtDeadline?: boolean;
+  /** The deadline at which «Eliberează singur locurile nesemnate la termen» (§NNN) takes the held place: «confirmă până» says so. */
+  releaseDeadline?: Date | null;
   waitlistAutoOffer: boolean;
   waitlistCountPublic: boolean;
   /** «Arată public numărătoarea» (§668), the parent of the switch above (§669): required, so no caller can leave the line's length said by forgetting it. */
@@ -127,10 +128,11 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
       break;
     case "PENDING_DECLARATION":
       if (deadline?.kind === "hold") {
-        // The participant's page's own sentence, the release's when it will take the place (§NNN).
+        // The participant's page's own sentence, the release's when it will take the place (§NNN), naming its deadline.
         lines.push(
-          say(facts.releasesAtDeadline ? "mine.confirmByReleased" : "mine.confirmBy", {
+          say(confirmByKey(deadline.at, facts.releaseDeadline ?? null), {
             due: confirmationDueMoment(locale, { at: deadline.at, startsAt: facts.eventStartsAt }, at(deadline.at)),
+            release: facts.releaseDeadline ? at(facts.releaseDeadline) : "",
           }),
         );
       } else lines.push(ours("kept"));

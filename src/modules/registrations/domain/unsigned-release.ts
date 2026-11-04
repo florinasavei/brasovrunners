@@ -53,6 +53,39 @@ export function releaseTakesHold(rules: DeadlineReleaseRules, hold: { holdExpire
 }
 
 /**
+ * The moment the armed release takes this hold — its deadline, when `releaseTakesHold` — or null. The instant every
+ * sentence about the release names: a hold may end before it (a place taken inside the window, on the club's minutes),
+ * kept past its own end while nobody waits (§160), but the release runs at the deadline, never at the hold's end.
+ */
+export function releaseDeadlineOfHold(rules: DeadlineReleaseRules, hold: { holdExpiresAt: Date | null; outsideCapacity?: boolean | null }): Date | null {
+  return releaseTakesHold(rules, hold) ? deadlineReleaseArmedFor(rules) : null;
+}
+
+/**
+ * The release's deadline for a hold given now at this event — armed and still ahead — or null: what a page says when it
+ * knows the event but not the hold (a family's link names the address's registration, not the person just entered). A
+ * hold given before the deadline ends by it, except one given on the club's minutes so close to it that they reach past:
+ * that one is told to sign online by the deadline though the release would leave it — never offered the desk wrongly.
+ */
+export function releaseDeadlineForNewHold(rules: DeadlineReleaseRules, now: Date): Date | null {
+  const deadline = deadlineReleaseArmedFor(rules);
+  return deadline && now.getTime() < deadline.getTime() ? deadline : null;
+}
+
+/** An instant and the event's clock it is said in: what the journey's strip names as the release's deadline (§NNN). */
+export type ReleaseMoment = { at: Date; timeZone: string };
+
+/**
+ * Which «confirmă până» sentence a held place reads — «Înregistrările mele» and «Ce îi spui» (§NNN): today's, with the
+ * paper at the desk, while the release leaves it; the release's, «până atunci», when the hold ends at its deadline; and
+ * both instants when the hold ends before it, so the moment said for the release is always the release's.
+ */
+export function confirmByKey(holdEnds: Date, releaseDeadline: Date | null): "mine.confirmBy" | "mine.confirmByReleased" | "mine.confirmByReleasedLater" {
+  if (!releaseDeadline) return "mine.confirmBy";
+  return holdEnds.getTime() < releaseDeadline.getTime() ? "mine.confirmByReleasedLater" : "mine.confirmByReleased";
+}
+
+/**
  * The deadline the release must run for now — armed, the deadline reached and the start still ahead — or null. The
  * one question `expireStaleHolds` asks under the event's lock before it decides which lapsed holds go.
  */

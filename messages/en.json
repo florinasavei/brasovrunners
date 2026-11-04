@@ -11735,6 +11735,18 @@
           "onThisPage": "One step left: read and sign the declaration below — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
           "emailReceived": "One step left: read and sign the declaration from the email you received — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most."
         },
+        "declareReleased": {
+          "emailJustSent": "One step left: read and sign the declaration online, from the email we have just sent you. Your place is held, but if you do not sign by {release}, it is released. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "emailHeldUntil": "Your place is held. We ask for the declaration by email {opens} before the start — you sign it then, online, by {release}: if you do not sign by then, the place is released; once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "onThisPage": "One step left: read and sign the declaration below, online. Your place is held, but if you do not sign by {release}, it is released. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "emailReceived": "One step left: read and sign the declaration online, from the email you received. Your place is held, but if you do not sign by {release}, it is released. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest."
+        },
+        "declareScheduledReleased": {
+          "emailJustSent": "One step left: read and sign the declaration online, from the email on its way to you — it leaves within {wait} at the most. Your place is held, but if you do not sign by {release}, it is released. Once you sign, we email you the signed declaration (PDF) and your race number.",
+          "emailHeldUntil": "Your place is held. We ask for the declaration by email {opens} before the start — you sign it then, online, by {release}: if you do not sign by then, the place is released; once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+          "onThisPage": "One step left: read and sign the declaration below, online. Your place is held, but if you do not sign by {release}, it is released. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+          "emailReceived": "One step left: read and sign the declaration online, from the email you received. Your place is held, but if you do not sign by {release}, it is released. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most."
+        },
         "done": "Your registration is confirmed. See you at the start!"
       }
     },
@@ -12015,6 +12027,7 @@
       "deadlinePassed": "The deadline, {deadline}, has passed, but the place is still yours: sign now and the registration is complete.",
       "deadlineReleased": "Your place is held until {deadline}. If you do not sign by then, the place is released, even if nobody is waiting — the registration is complete only with the signed declaration.",
       "deadlineReleasing": "The deadline, {deadline}, has passed: the places of those who did not sign are released, so the place is no longer held for you.",
+      "deadlineReleasedLater": "Your place is held until {deadline}; if somebody is waiting, it may then pass on. If you do not sign by {release}, the place is released, even if nobody is waiting — the registration is complete only with the signed declaration.",
       "idDocument": "Identity document (series and number)",
       "idDocumentHelp": "Your identity card (e.g. “{idExample}”) or passport; the kit is collected against it. Deleted seven days after the event, masked in the club's copy; we keep no copy of the document.",
       "idDocumentPlaceholder": "{idExample}",
@@ -12141,6 +12154,7 @@
       "runner": "Registered: {name}",
       "confirmBy": "Confirm by signing the declaration, from the registration email, by {due}. Or on paper, at the registration desk, on race day.",
       "confirmByReleased": "Confirm by signing the declaration, from the registration email, by {due}. If you do not sign by then, the place is released.",
+      "confirmByReleasedLater": "Confirm by signing the declaration, from the registration email, by {due}. If you do not sign by {release}, the place is released.",
       "familySign": {
         "body": "At {event}, the declarations of {names} are waiting for a signature. You can sign them all here, one after the other.",
         "action": "Sign the declarations"

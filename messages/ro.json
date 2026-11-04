@@ -11735,6 +11735,18 @@
           "onThisPage": "Mai rămâne un pas: citește și semnează declarația mai jos — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
           "emailReceived": "Mai rămâne un pas: citește și semnează declarația din emailul pe care l-ai primit — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}."
         },
+        "declareReleased": {
+          "emailJustSent": "Mai rămâne un pas: citește și semnează online declarația din emailul pe care tocmai ți l-am trimis. Locul tău este rezervat, dar dacă nu semnezi până {release}, se eliberează. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "emailHeldUntil": "Locul tău este rezervat. Declarația ți-o cerem pe email cu {opens} înainte de start — o semnezi atunci, online, până {release}: dacă nu semnezi până atunci, locul se eliberează; după ce semnezi, îți trimitem declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "onThisPage": "Mai rămâne un pas: citește și semnează online declarația mai jos. Locul tău este rezervat, dar dacă nu semnezi până {release}, se eliberează. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "emailReceived": "Mai rămâne un pas: citește și semnează online declarația din emailul pe care l-ai primit. Locul tău este rezervat, dar dacă nu semnezi până {release}, se eliberează. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră."
+        },
+        "declareScheduledReleased": {
+          "emailJustSent": "Mai rămâne un pas: citește și semnează online declarația din emailul care pleacă spre tine în cel mult {wait}. Locul tău este rezervat, dar dacă nu semnezi până {release}, se eliberează. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs.",
+          "emailHeldUntil": "Locul tău este rezervat. Declarația ți-o cerem pe email cu {opens} înainte de start — o semnezi atunci, online, până {release}: dacă nu semnezi până atunci, locul se eliberează; după ce semnezi, îți trimitem declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+          "onThisPage": "Mai rămâne un pas: citește și semnează online declarația mai jos. Locul tău este rezervat, dar dacă nu semnezi până {release}, se eliberează. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+          "emailReceived": "Mai rămâne un pas: citește și semnează online declarația din emailul pe care l-ai primit. Locul tău este rezervat, dar dacă nu semnezi până {release}, se eliberează. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}."
+        },
         "done": "Înscrierea ta este confirmată. Ne vedem la start!"
       }
     },
@@ -11974,6 +11986,7 @@
       "deadlinePassed": "Termenul, {deadline}, a trecut, dar locul este încă al tău: semnează acum și înscrierea e completă.",
       "deadlineReleased": "Locul tău este rezervat până {deadline}. Dacă nu semnezi până atunci, locul se eliberează, chiar dacă nu așteaptă nimeni — înscrierea e completă doar cu declarația semnată.",
       "deadlineReleasing": "Termenul, {deadline}, a trecut: locurile celor care n-au semnat se eliberează, așa că locul nu mai este rezervat pentru tine.",
+      "deadlineReleasedLater": "Locul tău este rezervat până {deadline}; dacă așteaptă cineva, după aceea poate trece mai departe. Dacă nu semnezi până {release}, locul se eliberează, chiar dacă nu așteaptă nimeni — înscrierea e completă doar cu declarația semnată.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
       "idDocument": "Act de identitate (seria și numărul)",
       "idDocumentHelp": "Cartea de identitate (de ex. „{idExample}”) sau pașaportul; kitul se ridică pe baza lui. Se șterge la șapte zile după eveniment, e mascată în copia clubului; nu păstrăm o copie.",
@@ -12141,6 +12154,7 @@
       "runner": "Înscris: {name}",
       "confirmBy": "Confirmă semnând declarația, din emailul de înscriere, până {due}. Sau pe hârtie, la masa de înscrieri, în ziua cursei.",
       "confirmByReleased": "Confirmă semnând declarația, din emailul de înscriere, până {due}. Dacă nu semnezi până atunci, locul se eliberează.",
+      "confirmByReleasedLater": "Confirmă semnând declarația, din emailul de înscriere, până {due}. Dacă nu semnezi până {release}, locul se eliberează.",
       "familySign": {
         "body": "La {event} așteaptă semnătura declarațiile pentru: {names}. Le poți semna aici pe toate, una după alta.",
         "action": "Semnează declarațiile"

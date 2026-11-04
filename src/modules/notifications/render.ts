@@ -6,7 +6,7 @@ import { participants } from "@/db/schema/participants";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
-import { releaseTakesHold } from "@/modules/registrations/domain/unsigned-release";
+import { releaseDeadlineOfHold } from "@/modules/registrations/domain/unsigned-release";
 import { eventDay, howItWentOpen, howItWentUrl } from "@/modules/feedback/links";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
@@ -603,9 +603,17 @@ async function renderRow(
         /*
           «Eliberează singur locurile nesemnate la termen» (§NNN): a hold the release will take — due by its armed deadline
           — is told the place goes then, instead of being promised a place kept while nobody asks and a paper on race day.
-          Never a special guest's: the release leaves it, so its message keeps today's words.
+          Never a special guest's: the release leaves it, so its message keeps today's words. The moment named is the
+          release's deadline, each half in its own words; a hold that ends before it (a place taken inside the window)
+          keeps its own instant for the waiting list, said apart.
         */
-        data.releasesAtDeadline = releaseTakesHold(eventDetails, { holdExpiresAt: holdEndsAt, outsideCapacity: registration.outsideCapacity });
+        const releaseAt = releaseDeadlineOfHold(eventDetails, { holdExpiresAt: holdEndsAt, outsideCapacity: registration.outsideCapacity });
+        data.releasesAtDeadline = releaseAt !== null;
+        if (releaseAt) {
+          data.releaseDeadlineFormatted = formatDeadlineInSentence(releaseAt, holdZone, locale);
+          data.releaseDeadlineFormattedOther = formatDeadlineInSentence(releaseAt, holdZone, otherLocale(locale));
+          data.holdEndsBeforeRelease = holdEndsAt.getTime() < releaseAt.getTime();
+        }
       }
     }
     /*

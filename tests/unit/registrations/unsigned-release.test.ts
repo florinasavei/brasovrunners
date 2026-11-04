@@ -3,10 +3,13 @@ import { lineOffersMade } from "@/modules/notifications/domain/automatic-sends";
 import { emailSampleFor } from "@/modules/notifications/email-copy-fields";
 import { renderBilingual, type TemplateData } from "@/modules/notifications/templates";
 import {
+  confirmByKey,
   type DeadlineReleaseRules,
   deadlineReleaseArmedFor,
   deadlineReleaseDue,
   deadlineReleaseWakeAt,
+  releaseDeadlineForNewHold,
+  releaseDeadlineOfHold,
   windowDeadlineOf,
 } from "@/modules/registrations/domain/unsigned-release";
 import en from "../../../messages/en.json";
@@ -62,6 +65,27 @@ describe("BR-REQ-033-01 the release's deadline, as pure rules (§NNN)", () => {
     expect(deadlineReleaseWakeAt(rules(), new Date(DEADLINE.getTime() + 1))).toBeNull();
     expect(deadlineReleaseWakeAt(rules({ releaseUnsignedAtDeadline: false }), NOW)).toBeNull();
   });
+
+  it("the moment said for the release is its deadline, whenever the hold it takes ends (the review's nit)", () => {
+    const earlier = new Date(DEADLINE.getTime() - DAY);
+    expect(releaseDeadlineOfHold(rules(), { holdExpiresAt: DEADLINE })).toEqual(DEADLINE);
+    expect(releaseDeadlineOfHold(rules(), { holdExpiresAt: earlier })).toEqual(DEADLINE);
+    // Never a special guest's, never a hold past the deadline, never with the switch off.
+    expect(releaseDeadlineOfHold(rules(), { holdExpiresAt: DEADLINE, outsideCapacity: true })).toBeNull();
+    expect(releaseDeadlineOfHold(rules(), { holdExpiresAt: new Date(DEADLINE.getTime() + 1) })).toBeNull();
+    expect(releaseDeadlineOfHold(rules({ releaseUnsignedAtDeadline: false }), { holdExpiresAt: DEADLINE })).toBeNull();
+    // «confirmă până»: today's, the release's, or both instants when the hold ends before the release.
+    expect(confirmByKey(DEADLINE, null)).toBe("mine.confirmBy");
+    expect(confirmByKey(DEADLINE, DEADLINE)).toBe("mine.confirmByReleased");
+    expect(confirmByKey(earlier, DEADLINE)).toBe("mine.confirmByReleasedLater");
+  });
+
+  it("a hold given now at the event: the release's deadline while it is ahead, nothing once it has come or with the switch off", () => {
+    expect(releaseDeadlineForNewHold(rules(), NOW)).toEqual(DEADLINE);
+    expect(releaseDeadlineForNewHold(rules(), DEADLINE)).toBeNull();
+    expect(releaseDeadlineForNewHold(rules({ releaseUnsignedAtDeadline: false }), NOW)).toBeNull();
+    expect(releaseDeadlineForNewHold(rules({ unsignedReleasedFor: DEADLINE }), NOW)).toBeNull();
+  });
 });
 
 describe("§NNN the forecast's offers follow the allocator's: by itself, and into the site's room only", () => {
@@ -89,12 +113,20 @@ describe("BR-REQ-080-01 the release's words in the emails (§NNN)", () => {
   const render = (type: "COMPLETE_DECLARATION" | "UNSIGNED_RELEASED", locale: "ro" | "en", extra: Partial<TemplateData>) =>
     renderBilingual(type, locale, { ...emailSampleFor(type, locale), ...extra }, "https://example.test/ro/admin/registrations");
 
-  it("the declaration's message says the place goes at the deadline — never kept while nobody asks, nor a paper on race day", () => {
+  it("the declaration's message says the place goes at the release's deadline — never kept while nobody asks, nor a paper on race day", () => {
     const sample = emailSampleFor("COMPLETE_DECLARATION", "ro");
-    const on = render("COMPLETE_DECLARATION", "ro", { releasesAtDeadline: true, confirmLater: true });
-    expect(on.text).toContain(`Dacă nu semnezi până ${sample.holdExpiresAtFormatted}, locul se eliberează și nu mai este rezervat pentru tine.`);
-    expect(on.text).toContain(`If you do not sign by ${sample.holdExpiresAtFormattedOther}, the place is released and no longer held for you.`);
+    const release = { releaseDeadlineFormatted: "joi, 19 noiembrie, 10:00", releaseDeadlineFormattedOther: "Thursday 19 November, 10:00" };
+    const on = render("COMPLETE_DECLARATION", "ro", { releasesAtDeadline: true, confirmLater: true, ...release });
+    // The release's own deadline (the review's nit), each half in its own words — never the hold's instant for the release.
+    expect(on.text).toContain("Dacă nu semnezi până joi, 19 noiembrie, 10:00, locul se eliberează și nu mai este rezervat pentru tine.");
+    expect(on.text).toContain("If you do not sign by Thursday 19 November, 10:00, the place is released and no longer held for you.");
+    expect(on.text).not.toContain(`Dacă nu semnezi până ${sample.holdExpiresAtFormatted}`);
     expect(on.text).not.toContain("pe hârtie la masa de înscrieri");
+    // A hold that ends before the release's deadline (a place taken inside the window): its own instant, for the waiting list.
+    const earlier = render("COMPLETE_DECLARATION", "ro", { releasesAtDeadline: true, confirmLater: true, holdEndsBeforeRelease: true, ...release });
+    expect(earlier.text).toContain(`Dacă se formează lista de așteptare, locul îți este ținut până ${sample.holdExpiresAtFormatted}. Dacă nu semnezi până joi, 19 noiembrie, 10:00, locul se eliberează`);
+    expect(earlier.text).toContain(`If a waiting list forms, the place is held for you until ${sample.holdExpiresAtFormattedOther}. If you do not sign by Thursday 19 November, 10:00, the place is released`);
+    expect(earlier.text).not.toContain("pe hârtie la masa de înscrieri");
     // The switch off: the words as before.
     const off = render("COMPLETE_DECLARATION", "ro", { releasesAtDeadline: false, confirmLater: true });
     expect(off.text).toContain("semnezi declarația pe hârtie la masa de înscrieri");

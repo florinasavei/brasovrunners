@@ -10,6 +10,8 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type Registration, registrations } from "@/db/schema/registrations";
+import { formatDay } from "@/i18n/dates";
+import { formatDeadlineInSentence } from "@/modules/notifications/domain/deadline-in-sentence";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -24,8 +26,10 @@ import ro from "../../../messages/ro.json";
  *
  * The signing page says the place goes at the deadline even with nobody waiting while the switch is on — never that it
  * stays theirs until the start — and, once the deadline has come and the release not yet run, that it is being released
- * rather than still theirs; a special guest's hold and the switch off keep today's words. «Înregistrările mele» and
- * «Ce îi spui» read the same rule (`releaseTakesHold`). A press that is itself the deadline's release saves nothing of
+ * rather than still theirs, with no form to press; a special guest's hold and the switch off keep today's words. The
+ * moment said for the release is always the release's deadline — the page's sentence, the journey's strip, the
+ * declaration's email, «Înregistrările mele» and «Ce îi spui» (`releaseDeadlineOfHold`) — and a hold that ends before it
+ * keeps its own instant, said apart. A press that is itself the deadline's release saves nothing of
  * its own — no answer of «Completează-ți datele», no «Vreau să primesc oferte și beneficii», no signature — while the
  * release, its emails and the spent link commit, and the page then says the place is no longer held.
  *
@@ -81,9 +85,16 @@ vi.mock("@/i18n/navigation", async (importOriginal) => {
     Link: ({ href, children }: { href: unknown; children: ReactNode }) => createElement("a", { href: typeof href === "string" ? href : "#" }, children),
   };
 });
-// Two async Server Components that read the request (the toast cookie, the journey's strip); neither is under test.
+// Two async Server Components that read the request (the toast cookie, the journey's strip): the toast is not under test,
+// and the strip is a stand-in that says which release's deadline the page gave it (its words: `journey-release.test.ts`).
 vi.mock("@/shared/feedback/PublicFlash", () => ({ default: () => null }));
-vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
+vi.mock("@/modules/registrations/ui/RegistrationJourney", async () => {
+  const { createElement } = await import("react");
+  return {
+    default: ({ declaration, release }: { declaration?: string; release?: { at: Date } | null }) =>
+      createElement("div", { "data-testid": "journey", "data-declaration": declaration ?? "none", "data-release": release ? release.at.toISOString() : "none" }),
+  };
+});
 // The spent link's notice is an async Server Component: a stand-in that says which state it was given.
 vi.mock("@/modules/registrations/ui/ActionLinkNotice", async () => {
   const { createElement } = await import("react");
@@ -96,6 +107,7 @@ const { default: DeclarePage } = await import("@/app/[locale]/registrations/decl
 const { listActiveRegistrationsForParticipant } = await import("@/modules/registrations/my-registrations");
 const { findRegistrationDetailForAdmin } = await import("@/modules/registrations/admin-repository");
 const { whatToTell } = await import("@/modules/registrations/ui/tell-words");
+const { renderOutboxMessage } = await import("@/modules/notifications/render");
 
 let participantId: string;
 
@@ -212,9 +224,7 @@ async function declarePage(secret: string, locale: "ro" | "en" = "ro"): Promise<
   return drawn((await DeclarePage({ params: Promise.resolve({ locale, token: secret }), searchParams: Promise.resolve({}) })) as ReactElement, locale);
 }
 
-/** A sentence of the catalogue up to its first placeholder: what the page prints before the instant. */
-const lead = (sentence: string) => sentence.split("{")[0];
-/** …and after its last one. */
+/** A sentence of the catalogue after its last placeholder: what the page prints after the instant. */
 const tail = (sentence: string) => sentence.slice(sentence.lastIndexOf("}") + 1);
 
 /** The boxes as a person types them (`complete-missing-answers.test.ts`): the telephones as country and digits. */
@@ -276,10 +286,31 @@ describe("BR-REQ-033-02 the signing page follows «Eliberează singur locurile n
       const released = await declarePage(releasedSecret, locale);
       expect(released).toContain(tail(words.deadlineReleased));
       expect(released).not.toContain(tail(words.deadline));
+      // The journey's strip is given the release's deadline, so it never offers the paper at the desk (the review's should-fix).
+      expect(released).toContain(`data-declaration="onThisPage" data-release="${armed.deadline.toISOString()}"`);
       for (const kept of [await declarePage(guestSecret, locale), await declarePage(offSecret, locale)]) {
         expect(kept).toContain(tail(words.deadline));
         expect(kept).not.toContain(tail(words.deadlineReleased));
+        expect(kept).toContain('data-declaration="onThisPage" data-release="none"');
       }
+    }
+  });
+
+  it("a hold that ends before the release's deadline names the release's deadline for the release, and its own for the hold (ro, en)", async () => {
+    const armed = await race(30);
+    // A place taken inside the window, on the club's minutes: its hold ends a day before the release runs.
+    const holdEnds = new Date(armed.deadline.getTime() - DAY);
+    const secret = await link((await held(armed.id, holdEnds)).id);
+    for (const [locale, catalogue] of [
+      ["ro", ro],
+      ["en", en],
+    ] as const) {
+      const words = catalogue.Registrations.declare;
+      const page = await declarePage(secret, locale);
+      const said = (instant: Date) => formatDay(instant, { locale, timeZone: "Europe/Bucharest", style: "long", withTime: true, position: "inline" });
+      expect(page).toContain(words.deadlineReleasedLater.replace("{deadline}", said(holdEnds)).replace("{release}", said(armed.deadline)));
+      expect(page).not.toContain(tail(words.deadlineReleased));
+      expect(page).toContain(`data-release="${armed.deadline.toISOString()}"`);
     }
   });
 
@@ -287,18 +318,33 @@ describe("BR-REQ-033-02 the signing page follows «Eliberează singur locurile n
     const armed = await race(1);
     const off = await race(1, false);
     const armedSecret = await link((await held(armed.id, armed.deadline)).id);
+    // A hold that ended an hour before the release's deadline: the sentence names the release's, never the hold's.
+    const earlier = new Date(armed.deadline.getTime() - 60 * 60_000);
+    const earlierSecret = await link((await held(armed.id, earlier, { participantId: await person("ana@example.ro") })).id);
     const offSecret = await link((await held(off.id, off.deadline)).id);
     for (const [locale, catalogue] of [
       ["ro", ro],
       ["en", en],
     ] as const) {
       const words = catalogue.Registrations.declare;
-      const releasing = await declarePage(armedSecret, locale);
-      expect(releasing).toContain(lead(words.deadlineReleasing));
-      expect(releasing).toContain(tail(words.deadlineReleasing));
-      expect(releasing).not.toContain(tail(words.deadlinePassed));
-      // Nobody waits and the switch is off (§160): the place is still theirs, as before.
-      expect(await declarePage(offSecret, locale)).toContain(tail(words.deadlinePassed));
+      const said = (instant: Date) => formatDay(instant, { locale, timeZone: "Europe/Bucharest", style: "long", withTime: true, position: "inline" });
+      for (const secret of [armedSecret, earlierSecret]) {
+        const releasing = await declarePage(secret, locale);
+        expect(releasing).toContain(words.deadlineReleasing.replace("{deadline}", said(armed.deadline)));
+        expect(releasing).not.toContain(tail(words.deadlinePassed));
+        // No form to press: its press would be refused by design (the review's nit) — and no strip pointing at one.
+        expect(releasing).toContain('data-testid="declare-being-released"');
+        expect(releasing).not.toContain('name="typedName"');
+        expect(releasing).not.toContain('data-testid="declaration-sign"');
+        expect(releasing).not.toContain('name="accepted"');
+        expect(releasing).not.toContain('data-testid="journey"');
+      }
+      expect(await declarePage(earlierSecret, locale)).not.toContain(said(earlier));
+      // Nobody waits and the switch is off (§160): the place is still theirs, as before, and the form is there.
+      const kept = await declarePage(offSecret, locale);
+      expect(kept).toContain(tail(words.deadlinePassed));
+      expect(kept).toContain('name="typedName"');
+      expect(kept).not.toContain('data-testid="declare-being-released"');
     }
   });
 });
@@ -343,8 +389,8 @@ describe("BR-REQ-037-01 «Înregistrările mele» and «Ce îi spui» say the pl
     const guest = await held(armed.id, armed.deadline, { outsideCapacity: true });
     const kept = await held(off.id, off.deadline);
 
-    const mine = new Map((await listActiveRegistrationsForParticipant(db, participantId, "ro", new Date())).map((item) => [item.id, item.releasesAtDeadline]));
-    expect(Object.fromEntries([released, guest, kept].map((item) => [item.id, mine.get(item.id)]))).toEqual({ [released.id]: true, [guest.id]: false, [kept.id]: false });
+    const mine = new Map((await listActiveRegistrationsForParticipant(db, participantId, "ro", new Date())).map((item) => [item.id, item.releaseDeadline]));
+    expect(Object.fromEntries([released, guest, kept].map((item) => [item.id, mine.get(item.id)]))).toEqual({ [released.id]: armed.deadline, [guest.id]: null, [kept.id]: null });
 
     for (const [locale, catalogue] of [
       ["ro", ro],
@@ -353,13 +399,62 @@ describe("BR-REQ-037-01 «Înregistrările mele» and «Ce îi spui» say the pl
       const words = catalogue.Registrations.mine;
       const detail = await findRegistrationDetailForAdmin(db, released.id);
       if (!detail) throw new Error("no detail");
-      expect(detail.releasesAtDeadline).toBe(true);
+      expect(detail.releaseDeadline).toEqual(armed.deadline);
       const lines = whatToTell(locale, detail, new Date()).join(" ");
       expect(lines).toContain(tail(words.confirmByReleased));
       expect(lines).not.toContain(tail(words.confirmBy));
       const keptDetail = await findRegistrationDetailForAdmin(db, kept.id);
       if (!keptDetail) throw new Error("no detail");
       expect(whatToTell(locale, keptDetail, new Date()).join(" ")).toContain(tail(words.confirmBy));
+    }
+  });
+
+  it("the declaration's email names the release's deadline for the release, and the hold's own instant only for the waiting list (the review's nit)", async () => {
+    const armed = await race(30);
+    const holdEnds = new Date(armed.deadline.getTime() - DAY);
+    for (const [ends, earlier] of [
+      [armed.deadline, false],
+      [holdEnds, true],
+    ] as const) {
+      await db.delete(emailOutbox);
+      await db.delete(registrations);
+      const row = await held(armed.id, ends);
+      const [queued] = await db
+        .insert(emailOutbox)
+        .values({ participantId, registrationId: row.id, messageType: "COMPLETE_DECLARATION", locale: "ro", recipientEmail: "mara@example.ro", payloadJson: {}, idempotencyKey: `declare-${row.id}` })
+        .returning();
+      const message = await renderOutboxMessage({ ...queued, status: "PROCESSING", attemptCount: 1, lockedAt: new Date() }, db, new Date());
+      const release = { ro: formatDeadlineInSentence(armed.deadline, "Europe/Bucharest", "ro"), en: formatDeadlineInSentence(armed.deadline, "Europe/Bucharest", "en") };
+      expect(message.text).toContain(`Dacă nu semnezi până ${release.ro}, locul se eliberează și nu mai este rezervat pentru tine.`);
+      expect(message.text).toContain(`If you do not sign by ${release.en}, the place is released and no longer held for you.`);
+      expect(message.text).not.toContain("pe hârtie la masa de înscrieri");
+      const holdSaid = { ro: formatDeadlineInSentence(holdEnds, "Europe/Bucharest", "ro"), en: formatDeadlineInSentence(holdEnds, "Europe/Bucharest", "en") };
+      if (earlier) {
+        expect(message.text).toContain(`Dacă se formează lista de așteptare, locul îți este ținut până ${holdSaid.ro}.`);
+        expect(message.text).toContain(`If a waiting list forms, the place is held for you until ${holdSaid.en}.`);
+        expect(message.text).not.toContain(`Dacă nu semnezi până ${holdSaid.ro}`);
+      } else {
+        expect(message.text).not.toContain("Dacă se formează lista de așteptare");
+      }
+    }
+  });
+
+  it("a hold that ends before the release's deadline: «confirmă până» its own instant, the release at the release's deadline (the review's nit)", async () => {
+    const armed = await race(30);
+    const holdEnds = new Date(armed.deadline.getTime() - DAY);
+    const earlier = await held(armed.id, holdEnds);
+    const [item] = await listActiveRegistrationsForParticipant(db, participantId, "ro", new Date());
+    expect(item.releaseDeadline).toEqual(armed.deadline);
+    for (const [locale, catalogue] of [
+      ["ro", ro],
+      ["en", en],
+    ] as const) {
+      const said = (instant: Date) => formatDay(instant, { locale, timeZone: "Europe/Bucharest", style: "long", withTime: true, position: "inline" });
+      const detail = await findRegistrationDetailForAdmin(db, earlier.id);
+      if (!detail) throw new Error("no detail");
+      const lines = whatToTell(locale, detail, new Date()).join(" ");
+      expect(lines).toContain(catalogue.Registrations.mine.confirmByReleasedLater.replace("{due}", said(holdEnds)).replace("{release}", said(armed.deadline)));
+      expect(lines).not.toContain(tail(catalogue.Registrations.mine.confirmByReleased));
     }
   });
 });
