@@ -3,6 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { createTranslator, NextIntlClientProvider } from "next-intl";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventVolunteerRoleAssignments, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
@@ -455,6 +456,42 @@ describe("the person's page (§839)", () => {
     // The verbs are there, open: the state's, «Modifică» and «Șterge voluntarul».
     expect(page).toContain('data-testid="volunteer-status"');
     expect(page).toContain(">Șterge voluntarul<");
+  });
+
+  it("folds the volunteer's «Emailuri» for the Administrator, newest first with its tries, and none for the Organizer (§915)", async () => {
+    await db.insert(emailOutbox).values([
+      {
+        messageType: "VOLUNTEER_ROLE_ASSIGNED",
+        locale: "ro",
+        recipientEmail: "stefan.t.nase@example.test",
+        payloadJson: { volunteerId: people.stefan },
+        idempotencyKey: "k:stefan-role",
+        status: "SENT",
+        attemptCount: 2,
+        cause: "volunteers.assign",
+        pressId: "00000000-0000-4000-8000-0000000000aa",
+        requestedByStaffUserId: staff.ADMIN?.id,
+        createdAt: new Date("2026-10-20T07:00:00.000Z"),
+        sentAt: new Date("2026-10-20T07:05:00.000Z"),
+        recipientCount: 1,
+      },
+      // Another volunteer's email: never on Ștefan's page.
+      { messageType: "VOLUNTEER_RECEIVED", locale: "ro", recipientEmail: "ana.pop@example.test", payloadJson: { volunteerId: people.ana }, idempotencyKey: "k:ana-received" },
+    ]);
+    const page = await personPage(people.stefan);
+    expect(page).toContain('data-testid="volunteer-emails"');
+    expect(page).toMatch(/<details[^>]*data-testid="volunteer-emails"/);
+    expect(page).not.toMatch(/<details open=""[^>]*data-testid="volunteer-emails"/);
+    expect(page).toContain("1 email · ultimul: „Rolul tău de voluntar” — a plecat");
+    expect(page).toContain("2 încercări");
+    expect(page).toContain("Dă-i un rol · de Ana Admin");
+    expect(page.match(/data-testid="email-history-row"/g)).toHaveLength(1);
+
+    state.actor = staff.MODERATOR;
+    const organizers = await personPage(people.stefan);
+    expect(organizers).toContain("Ștefan Tănase");
+    expect(organizers).not.toContain('data-testid="volunteer-emails"');
+    expect(organizers).not.toContain('data-testid="email-history-row"');
   });
 
   it("is a 404 for a guessed id, an unknown one, and the Tehnic role", async () => {

@@ -7816,6 +7816,30 @@
         "more": "And {count} more, older, not shown here.",
         "footnote": "An email still waiting may be withdrawn before it leaves: it then disappears from here, because it never left. The emails Zitadel sends do not go through our queue."
       },
+      "history": {
+        "title": "Emails",
+        "titleTries": "Tries and who sent them",
+        "summary": "{count} · latest: “{type}” — {state}",
+        "summaryNone": "no emails",
+        "none": "No email yet.",
+        "last": {
+          "sentToday": "left at {at}",
+          "sentOn": "left {at}",
+          "waiting": "waiting",
+          "failed": "failed",
+          "refused": "refused",
+          "captured": "reached nobody (QA)"
+        },
+        "site": "{at} · from the site",
+        "unrecorded": "{at} · who sent it was not recorded",
+        "tries": {
+          "one": "{count} try",
+          "few": "{count} tries",
+          "other": "{count} tries"
+        },
+        "triesNone": "not tried yet",
+        "nextTry": "next try: {at}"
+      },
       "copy": {
         "title": "The message's words ({lang}) — the default ones",
         "editedTitle": "The message's words ({lang}) — written by the club",
