@@ -60,6 +60,8 @@ export type ResultWords = {
   noPlace: string;
   /** «fără loc» on a line whose saved result has none — a runner who dropped out, did not start or was disqualified. */
   noPlaceSettled: string;
+  /** «în afara clasamentului» in place of a position: an elite the Administrator left out of the ranking (§910). */
+  outOfRanking: string;
 };
 
 /** The boxes of a line, as strings, exactly as the form would post them. */
@@ -75,6 +77,8 @@ export type RegisteredLine = {
   place: PlaceView | null;
   /** A result is stored for this number: the line offers «Șterge». */
   hasResult: boolean;
+  /** An elite left out of the ranking (§910): no position, «în afara clasamentului» in its place, and off the public results. */
+  outOfRanking?: boolean;
 };
 
 export type TypedLine = {
@@ -85,6 +89,8 @@ export type TypedLine = {
   publicLine: string;
   place: PlaceView | null;
   hasResult: boolean;
+  /** A separate-list elite's line left out of the ranking (§910), recognised by its number or its name: «în afara clasamentului». */
+  outOfRanking?: boolean;
 };
 
 /** The one delete form of the page (`ActionForm`, `id` below): a line's «Șterge» names it with `form=` and posts the number as its own value. */
@@ -219,15 +225,20 @@ function LineBox({
 
 /**
  * The place cell: «3» and, under it, the position by sex and by category; or a quiet «fără loc» — «încă» only for a line with no result
- * yet (`settled` false): a saved Abandon, Neprezentat or Descalificat will never have one.
+ * yet (`settled` false): a saved Abandon, Neprezentat or Descalificat will never have one. An elite hors concours (§910) says «în afara
+ * clasamentului» instead, whatever its result: it is placed nowhere and moves nobody.
  */
-function PlaceCell({ place, words, settled }: { place: PlaceView | null; words: ResultWords; settled: boolean }) {
+function PlaceCell({ place, words, settled, outOfRanking = false }: { place: PlaceView | null; words: ResultWords; settled: boolean; outOfRanking?: boolean }) {
   return (
     <Box sx={{ gridColumn: { xs: "1 / -1", md: "auto" }, minWidth: 0, minHeight: { md: 44 }, display: "flex", alignItems: { md: "center" }, gap: 1, flexWrap: "wrap" }} data-testid="result-place">
       <Typography variant="caption" sx={{ ...CAPTION_SX, mb: 0 }} className={CAPTION_CLASS} aria-hidden="true">
         {words.place}:
       </Typography>
-      {place ? (
+      {outOfRanking ? (
+        <Typography component="span" variant="caption" sx={{ fontWeight: 600 }} data-testid="result-out-of-ranking">
+          {words.outOfRanking}
+        </Typography>
+      ) : place ? (
         <>
           <Typography component="span" variant="body1" sx={{ fontWeight: 700 }}>
             {place.overall}
@@ -299,7 +310,7 @@ export function RegisteredResultLines({ lines, words }: { lines: readonly Regist
                 </Typography>
               </Box>
             </Box>
-            <PlaceCell place={line.place} words={words} settled={line.hasResult} />
+            <PlaceCell place={line.place} words={words} settled={line.hasResult} outOfRanking={line.outOfRanking} />
             <CommonBoxes rowKey={`r[${line.bibNumber}]`} values={line.values} words={words} runner={runner} />
             {line.hasResult && (
               <Box sx={{ gridColumn: "1 / -1" }}>
@@ -378,7 +389,7 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
                   </Typography>
                 )}
               </Box>
-              <PlaceCell place={line?.place ?? null} words={words} settled={line?.hasResult === true} />
+              <PlaceCell place={line?.place ?? null} words={words} settled={line?.hasResult === true} outOfRanking={line?.outOfRanking === true} />
               <CommonBoxes rowKey={key} values={initial} words={words} runner={runner} />
               {/* «Șterge» removes the stored result of the number the line was drawn with, whatever has been typed in the box since. */}
               {line?.hasResult && Number(initial.bib) > 0 && (

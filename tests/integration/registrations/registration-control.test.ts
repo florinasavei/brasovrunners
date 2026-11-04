@@ -32,6 +32,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * - «Anunță-mă când rămân N locuri» emails the Administrators once per crossing, re-armed above N;
  * - «Pe site acum» says each state the public card's predicate draws, and hands the Administrator a real tick whose
  *   save asks first — one question to close, another to open (its element tree walked, as a Server Component's);
+ *   shut by that tick, the Administrator's line says only «înscrierile sunt oprite» and links to no editor, the tick
+ *   «Înscrierile pe site sunt deschise» right under it with a help that follows the state saved;
  * - the editor's own save of the three settings leaves the trail, from → to, once per change, from both save paths.
  *
  * The two-connection race on the last place is `tests/concurrency/capacity.test.ts`; the switch only ever narrows
@@ -591,6 +593,62 @@ describe("«Pe site acum» (§906)", () => {
     // The tick off on the row: drawn unticked, so the press that saves it ticked is the opening one.
     await db.update(events).set({ publicRegistrationOpen: false }).where(eq(events.id, event.id));
     expect((await drawn("")).find((element) => element.props.name === "publicRegistrationOpen")?.props.defaultChecked).toBe(false);
+  });
+
+  describe("shut by the tick, with the tick drawn under it (the owner, 2026-11-04: the setting offered twice on one line)", () => {
+    /** The Administrator's line and tick, as a tree: the sentence, the editor's link, the tick and its help. */
+    async function administrators(eventId: string) {
+      const door = await readPublicDoor(db, eventId, NOW);
+      if (!door) throw new Error("no door");
+      const all = elements(await PublicNowLine({ door, eventId, locale: "ro", listQuery: "", publicDoorAction: vi.fn() }));
+      const byTestId = (id: string) => all.find((element) => element.props["data-testid"] === id);
+      return {
+        sentence: byTestId("registrations-public-now-line")?.props.children,
+        editorLink: byTestId("registrations-public-now-setting"),
+        tick: all.find((element) => element.props.name === "publicRegistrationOpen")?.props,
+        help: byTestId("registrations-public-door-help")?.props.children,
+      };
+    }
+
+    it("says only that registration is stopped, links to no editor, and the tick under it says how to open it again", async () => {
+      const paused = await createEvent(5, { publicRegistrationOpen: false });
+      const drawn = await administrators(paused.id);
+      expect(drawn.sentence).toBe("Pe site acum: înscrierile sunt oprite.");
+      expect(drawn.editorLink).toBeUndefined();
+      expect(drawn.tick).toMatchObject({ defaultChecked: false, children: "Înscrierile pe site sunt deschise" });
+      expect(drawn.help).toBe("Bifează și apasă «Salvează» ca să le redeschizi.");
+    });
+
+    it("open, the tick's help says how to stop it, and the line keeps the editor's link", async () => {
+      const open = await createEvent(5);
+      const drawn = await administrators(open.id);
+      expect(drawn.sentence).toBe("Pe site acum: butonul «Înscrie-te» — primul venit ia un loc liber.");
+      expect(drawn.editorLink?.props.href).toBe(`/ro/admin/events/${open.id}#box-places-control`);
+      expect(drawn.tick).toMatchObject({ defaultChecked: true, children: "Înscrierile pe site sunt deschise" });
+      expect(drawn.help).toBe("Debifează și apasă «Salvează» ca să le oprești; tot ce face echipa merge mai departe.");
+    });
+
+    it("shut by anything else — the dates, the tick off as well — keeps the reason and the editor, where that changes", async () => {
+      const over = await createEvent(5, { publicRegistrationOpen: false, registrationClosesAt: new Date(NOW.getTime() - 60_000) });
+      const drawn = await administrators(over.id);
+      expect(drawn.sentence).toBe("Pe site acum: înscrierile sunt închise — perioada de înscriere s-a încheiat.");
+      expect(drawn.editorLink?.props.href).toBe(`/ro/admin/events/${over.id}#box-registration-window`);
+      const shut = await createEvent(5, { freePlacesByOfferOnly: true, waitlistCapacity: 0 });
+      const offersOnly = await administrators(shut.id);
+      expect(offersOnly.sentence).toContain("locurile libere le dai doar tu");
+      expect(offersOnly.editorLink?.props.href).toBe(`/ro/admin/events/${shut.id}#box-places-control`);
+    });
+
+    it("the Organizer, who is handed no tick, keeps the reason and the editor's link, and reads the state", async () => {
+      const paused = await createEvent(5, { publicRegistrationOpen: false });
+      const door = await readPublicDoor(db, paused.id, NOW);
+      if (!door) throw new Error("no door");
+      const html = renderToStaticMarkup(await PublicNowLine({ door, eventId: paused.id, locale: "ro", listQuery: "" }));
+      expect(html).toContain("bifa «Înscrieri publice deschise» e scoasă");
+      expect(html).not.toContain("înscrierile sunt oprite.");
+      expect(html).toContain("registrations-public-now-setting");
+      expect(html).toContain("Înscrierile pe site sunt oprite de un Administrator.");
+    });
   });
 
   it("says, while «Locurile libere le dau doar eu» is on, that no place goes out by itself — and nothing of it otherwise", async () => {

@@ -677,7 +677,7 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
         eq(registrations.eventId, eventId),
         eq(registrations.status, "CONFIRMED"),
         eq(registrations.kind, "REAL"),
-        eq(registrations.listOptOut, false),
+        namedOnPublicList(),
         offThePublicListUnlessShown(options.hiddenShown),
       ),
     )
@@ -689,6 +689,21 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
   // The gated spreads widen Drizzle's inferred row to an index signature; the select above is
   // exactly `PublicStartListRow`'s keys, the two socials and the number present only when asked for.
   return (rows as unknown as PublicStartListRow[]).map((row) => ({ ...row, clubName: club.shown(row.clubName) }));
+}
+
+/**
+ * Whether a registration's name may stand on a public list (§143; §910): the person ticked «Vreau să apar» (`list_opt_out` false)
+ * **and** no Administrator unticked «Apare pe site» on it while it is marked «Elită» (`elite_hidden_from_site`). The club's tick only
+ * ever hides: there is no condition here under which a staff mark shows a name its owner did not tick. Every public list query
+ * takes this one condition, so the list, its counts and its pages cannot disagree about who is named.
+ */
+function namedOnPublicList(): SQL {
+  return sql`(${registrations.listOptOut} = false and not (${registrations.elite} and ${registrations.eliteHiddenFromSite}))`;
+}
+
+/** The other side of `namedOnPublicList` (§186, §910): a confirmed row that is a «Participant (nume ascuns)» — unticked, or hidden by the club's elite tick. */
+function unnamedOnPublicList(): SQL {
+  return sql`(${registrations.listOptOut} = true or (${registrations.elite} and ${registrations.eliteHiddenFromSite}))`;
 }
 
 /**
@@ -722,7 +737,7 @@ export async function countPublicStartList<T extends Record<string, unknown>>(
         eq(registrations.eventId, eventId),
         eq(registrations.status, "CONFIRMED"),
         eq(registrations.kind, "REAL"),
-        eq(registrations.listOptOut, false),
+        namedOnPublicList(),
         offThePublicListUnlessShown(hiddenShown),
       ),
     );
@@ -752,7 +767,7 @@ export async function countAnonymousStartListEntries<T extends Record<string, un
         eq(registrations.eventId, eventId),
         eq(registrations.status, "CONFIRMED"),
         eq(registrations.kind, "REAL"),
-        eq(registrations.listOptOut, true),
+        unnamedOnPublicList(),
         // A runner seated outside the places (§643) appears only as a ticked runner does: unticked, not at all.
         eq(registrations.outsideCapacity, false),
       ),
@@ -780,7 +795,7 @@ export async function countOutsideOnPublicStartList<T extends Record<string, unk
         eq(registrations.eventId, eventId),
         eq(registrations.status, "CONFIRMED"),
         eq(registrations.kind, "REAL"),
-        eq(registrations.listOptOut, false),
+        namedOnPublicList(),
         eq(registrations.outsideCapacity, true),
       ),
     );
@@ -875,7 +890,7 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
         eq(registrations.eventId, eventId),
         inArray(registrations.status, publicOtherStatuses(includeWaitlisted)),
         eq(registrations.kind, "REAL"),
-        eq(registrations.listOptOut, false),
+        namedOnPublicList(),
         gte(registrations.privacyNoticeVersion, firstStatesNoticeVersion),
         offThePublicListUnlessShown(options.hiddenShown),
       ),
@@ -917,7 +932,7 @@ export async function countPublicStartListOthers<T extends Record<string, unknow
         eq(registrations.eventId, eventId),
         inArray(registrations.status, publicOtherStatuses(includeWaitlisted)),
         eq(registrations.kind, "REAL"),
-        eq(registrations.listOptOut, false),
+        namedOnPublicList(),
         gte(registrations.privacyNoticeVersion, firstStatesNoticeVersion),
         offThePublicListUnlessShown(hiddenShown),
       ),

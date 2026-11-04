@@ -85,3 +85,13 @@ export function placeOutlook(counts: PlaceOutlookCounts): PlaceOutlook {
     totalIfAll: counts.occupied + counts.outside + counts.waiting + counts.internal,
   };
 }
+
+/**
+ * «Oameni la start dacă intră toți», with the race's separate elite list (§895) — names, not registrations, so outside
+ * every place above and every list, but each at the start (the owner, 2026-11-04: «aș vrea să mă asigur că număr și
+ * elitele»). A registered runner marked «Elită» is a registration, in `totalIfAll` already: never counted twice. The page
+ * reads the list's length for its «Elite» fold; `totalIfAll` stays the places' own sum.
+ */
+export function peopleAtStartIfAll(outlook: Pick<PlaceOutlook, "totalIfAll">, elites: number): number {
+  return outlook.totalIfAll + elites;
+}

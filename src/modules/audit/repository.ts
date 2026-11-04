@@ -100,6 +100,15 @@ export type AuditAction =
    */
   | "registration.elite_marked"
   | "registration.elite_unmarked"
+  /**
+   * The two ticks of a registration marked «Elită» (§910): «Apare în clasament» (`_in_results` / `_out_of_results`) and
+   * «Apare pe site» (`_on_site` / `_off_site`), as the Administrator set them. A staff tick only hides: ticked, the person's
+   * own ticks decide. The metadata is the new value alone (`{ inResults }` or `{ onSite }`) — never a name or a number.
+   */
+  | "registration.elite_in_results"
+  | "registration.elite_out_of_results"
+  | "registration.elite_on_site"
+  | "registration.elite_off_site"
   /** Confirmed at the desk: address vouched for, declaration on paper (BR-REQ-037-07). */
   | "registration.confirmed_by_staff"
   /** Given a place ahead of the queue, into a free one (BR-REQ-037-07). */
@@ -570,6 +579,15 @@ export type AuditAction =
    */
   | "event_elite.added"
   | "event_elite.deleted"
+  /**
+   * A line's two ticks (§910), entity `event`: «Apare în clasament» (`in_results` / `out_of_results`) and «Apare pe site»
+   * (`on_site` / `off_site`). The metadata is the line's id and the tick's new value (`{ entryId, inResults }` or
+   * `{ entryId, onSite }`) — never the name or its number.
+   */
+  | "event_elite.in_results"
+  | "event_elite.out_of_results"
+  | "event_elite.on_site"
+  | "event_elite.off_site"
   /**
    * An event's volunteers (§754), entity `event`: the switch «Primește voluntari», a role added, changed,
    * moved or removed (the club's own words), and a volunteer entered, changed, confirmed, cancelled,
