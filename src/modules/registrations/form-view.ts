@@ -3,6 +3,7 @@ import { costUrlHost } from "@/modules/events/domain/cost";
 import type { PublicEventPage } from "@/modules/events/repository";
 import { dayIn, effectiveMinimumAge, latestBirthDateFor } from "./domain/age";
 import { confirmationWindow } from "./domain/hold-deadlines";
+import { windowDeadlineOf } from "./domain/unsigned-release";
 
 /** The anchor a field is reached by from the error summary. Prefixed so it cannot collide. */
 export const fieldId = (name: string) => `f-${name}`;
@@ -36,7 +37,7 @@ export type RegistrationFormEvent = Pick<
   | "confirmationDeadlineDaysBefore"
   | "reminderHoursBefore"
 > &
-  Partial<Pick<PublicEventPage, "offersMemberBib">> & { startsAt: Date };
+  Partial<Pick<PublicEventPage, "offersMemberBib" | "releasesUnsignedAtDeadline">> & { startsAt: Date };
 
 /**
  * Which boxes the form draws for this event, and the bounds its boxes enforce — everything the
@@ -67,8 +68,11 @@ export type RegistrationFormView = {
   listShowsWaitlist: boolean;
   /** The host a runner recognises in the cost's link (§343), or null. */
   costHost: string | null;
-  /** The participation window's days while it is still ahead (§104), for the five steps. */
-  stepsWindow: { opensDays: number; deadlineDays: number } | null;
+  /**
+   * The participation window's days while it is still ahead (§104), for the five steps — and `releases`, whether
+   * «Eliberează singur locurile nesemnate la termen» (§914) takes an unsigned place at its deadline.
+   */
+  stepsWindow: { opensDays: number; deadlineDays: number; releases: boolean } | null;
 };
 
 /**
@@ -92,7 +96,11 @@ export function formViewOf(event: RegistrationFormEvent, now: Date): Registratio
   const window = confirmationWindow(event);
   const stepsWindow =
     window && window.opensAt.getTime() > now.getTime()
-      ? { opensDays: event.confirmationOpensDaysBefore, deadlineDays: event.confirmationDeadlineDaysBefore }
+      ? {
+          opensDays: event.confirmationOpensDaysBefore,
+          deadlineDays: event.confirmationDeadlineDaysBefore,
+          releases: event.releasesUnsignedAtDeadline === true && windowDeadlineOf(event) !== null,
+        }
       : null;
   return {
     event,

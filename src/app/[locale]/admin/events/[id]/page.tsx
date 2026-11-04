@@ -44,6 +44,8 @@ import { listStaffUsers } from "@/modules/staff-identity/repository";
 import { dayIn } from "@/modules/registrations/domain/age";
 import { givePlaceDoorOpen } from "@/modules/registrations/domain/give-place-door";
 import { offersOnItsOwn } from "@/modules/registrations/domain/waitlist";
+import { placeSettingsOf } from "@/modules/content/events/domain/place-changes";
+import { placeChangeWords } from "@/modules/content/events/ui/place-change-words";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
 import { type ScopeDate, SeriesPickDates, SeriesScopeBox, SeriesScopeProvider } from "@/modules/content/events/ui/SeriesScope";
 import { editionNote, ruleSentence } from "@/modules/events/ui/series-sentence";
@@ -117,7 +119,7 @@ import { clubNightEvent } from "@/modules/events/night-event";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import MailLine from "@/shared/feedback/MailLine";
-import type { ConfirmAlso, ConfirmSpec, FormCondition } from "@/shared/feedback/notice";
+import type { ConfirmAlso, ConfirmSpec, FormCondition, PlaceChangeSpec } from "@/shared/feedback/notice";
 import { raiseMailLines, windowMailLines } from "@/modules/content/events/save-mail";
 import { WINDOW_SEND_EMAIL_FIELD } from "@/shared/forms/send-email";
 import { DEFAULT_CONFIRMATION_DEADLINE_DAYS, DEFAULT_CONFIRMATION_OPENS_DAYS, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
@@ -146,7 +148,7 @@ import { countEligibleWaitlisted, countOccupied, countOutsideCapacity, countRegi
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import { readPlaceDeadlines } from "@/modules/registrations/admin-repository";
-import { noFreePlaceValues, type PlacesTaken } from "@/modules/registrations/domain/capacity";
+import { noFreePlaceValues, type PlacesTaken, placesTaken as placesTakenOf } from "@/modules/registrations/domain/capacity";
 import GroupRunDeclarationsPanel from "@/modules/group-run-declarations/ui/GroupRunDeclarationsPanel";
 import { listGroupRunDeclarations } from "@/modules/group-run-declarations/repository";
 import { showsGroupRunDeclarationsFold } from "@/modules/group-run-declarations/domain";
@@ -348,6 +350,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const occupiedCounts =
     internal && event.capacity !== null && canReadRegistrations(staffUser.role) ? await countOccupied(db, event.id, now) : null;
   const placesTaken = occupiedCounts === null ? null : computeOccupied(occupiedCounts);
+  // …and by what (§914): the capacity's help says how low a save may go, as the save refuses under the lock.
+  const heldPlaces =
+    occupiedCounts === null || event.capacity === null ? null : { occupied: computeOccupied(occupiedCounts), ...placesTakenOf(event.capacity, occupiedCounts) };
   // Seated «În afara locurilor» (§643): beside the occupied places, which leave them out; read only where those are said.
   const outsideCount = occupiedCounts === null ? 0 : await countOutsideCapacity(db, event.id);
   // Invitations still waiting for an answer (§647): «invitații în așteptare: N» beside the counts.
@@ -768,6 +773,31 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     return undefined;
   };
   /*
+    The place settings' summary (§914): the loaded settings, the numbers the pages read — the places taken
+    (`computeOccupied`), the people waiting, whether the dates let the public in — and the words, for a saved event this
+    site registers, to whoever may save its settings. Worked out in the browser at the press (`domain/place-changes.ts`).
+  */
+  const placeChanges: PlaceChangeSpec | null =
+    internal && maySaveSettings && event.eventStatus === "SCHEDULED"
+      ? {
+          before: placeSettingsOf(event),
+          facts: {
+            occupied: placesTaken ?? computeOccupied(await countOccupied(db, event.id, now)),
+            waiting,
+            datesOpen: registrationState(event, now) === "OPEN",
+            startsAt: event.startsAt.getTime(),
+            now: now.getTime(),
+            releasedFor: event.unsignedReleasedFor?.getTime() ?? null,
+            zone: event.timezone,
+            locale,
+          },
+          words: await placeChangeWords(),
+          only: true,
+        }
+      : null;
+  // On the editor's other save dialogs, the same lines below their own body.
+  const placeLines = placeChanges ? { placeChanges: { ...placeChanges, only: false } } : {};
+  /*
     What else a save emails (the design «telling the owner about every email a staff press sends», slice 3; its Critic
     corrections 2 and 3), each said only when the form as posted makes it true, as the save itself decides it:
 
@@ -833,6 +863,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             also: [...(mail.also ?? []), { text: windowSkipped, when: [{ field: WINDOW_SEND_EMAIL_FIELD, equals: "off" }] }],
             confirmLabel: t("editor.save"),
             cancelLabel: words.cancel,
+            ...placeLines,
           };
         })
       : [];
@@ -864,6 +895,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             confirmLabel: t("editor.save"),
             cancelLabel: words.cancel,
             destructive: true,
+            ...placeLines,
           },
           {
             when: [{ field: "event.eventStatus", equals: "CANCELLED" }],
@@ -872,6 +904,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             confirmLabel: t("editor.save"),
             cancelLabel: words.cancel,
             destructive: true,
+            ...placeLines,
           },
         ]
       : []),
@@ -886,6 +919,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       })(),
       confirmLabel: t("editor.save"),
       cancelLabel: words.cancel,
+      ...placeLines,
     },
     // «Salvezi și oferi locurile noi?»: the offers alone, and the window's emails beside them when the window moved too.
     ...(raiseWhen && raiseMail
@@ -898,10 +932,17 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             also: [...(raiseMail.also ?? []), ...windowLines],
             confirmLabel: t("editor.save"),
             cancelLabel: words.cancel,
+            ...placeLines,
           },
         ]
       : []),
     ...windowSpecs,
+    /*
+      «Controlul înscrierilor e foarte sensibil» (§914): a save that changes a place setting first says each change «before →
+      after» and what it does — the offers a raise emails, the site's button, the release at the deadline — and an unchanged
+      save asks nothing. Last, and with no `when`: it asks only through its lines (`resolvePlaceChanges`).
+    */
+    ...(placeChanges ? [{ title: t("confirm.places.title"), body: t("confirm.places.intro"), confirmLabel: t("editor.save"), cancelLabel: t("confirm.places.back"), placeChanges }] : []),
   ];
 
   return (
@@ -1307,6 +1348,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     languages={languages}
                     declarations={declarations}
                     waiting={waiting}
+                    placesTaken={maySaveSettings ? heldPlaces : null}
                     bibCounts={bibCounts}
                     rsvp={{ counts: rsvpCounts, rows: rsvpRows }}
                     locale={locale}

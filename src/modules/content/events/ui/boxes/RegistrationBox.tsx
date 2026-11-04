@@ -19,6 +19,9 @@ import { readBibDesign } from "@/modules/registrations/bib-design";
 import type { RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { spareBandOf } from "@/modules/registrations/domain/spare-bibs";
+import { announcedCapacity, keptOf, lineRoom } from "@/modules/registrations/domain/kept-places";
+import { windowDeadlineOf } from "@/modules/registrations/domain/unsigned-release";
+import { offersOnItsOwn } from "@/modules/registrations/domain/waitlist";
 import {
   confirmationDueAtStart,
   confirmationWindow,
@@ -35,7 +38,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import InfoTip from "@/shared/ui/InfoTip";
 import Panel from "@/shared/ui/Panel";
 import { type EventFieldName, eventInputConstraints } from "../../constraints";
-import { waitlistLimitSchema } from "../../fields";
+import { placesChangeReasonSchema, waitlistLimitSchema } from "../../fields";
 import { WAITLIST_CHOICES, waitlistChoiceOf } from "../../waitlist-choice";
 import BibDesignPanel from "../BibDesignPanel";
 import { BIB_COLOURS } from "@/theme/brand";
@@ -131,6 +134,7 @@ export default async function RegistrationBox({
   languages,
   declarations,
   waiting = 0,
+  placesTaken = null,
   bibCounts,
   bibPrint,
   bibPrintSaved = false,
@@ -173,6 +177,12 @@ export default async function RegistrationBox({
   declarations: readonly DeclarationOption[];
   /** How many wait for a place (§147); the create form has nobody. */
   waiting?: number;
+  /**
+   * Who holds the places now (§914), the allocator's own counts read by the page — the occupied places and by what — so
+   * the capacity's help says how low it may go before the press, as the save refuses under the lock. Null on the create
+   * form, and for a role that reads no registrations.
+   */
+  placesTaken?: { occupied: number; confirmed: number; declaration: number; offered: number; invited: number; family: number } | null;
   /** How many asked «Anunță-mă» while registration is not open yet (§451), for the role that reads them; null otherwise. */
   interests?: number | null;
   bibCounts?: { total: number; unprinted: number } | null;
@@ -238,6 +248,12 @@ export default async function RegistrationBox({
           .filter(Boolean)
           .join(" ");
   const askTicked = event?.rsvpAskEnabled ?? true;
+  /*
+    The kept places already given (§914): the places taken beyond the site's announced ones (`lineRoom` below nought). A
+    raise first makes them up — they stay the club's — so only the places beyond them reach the line by themselves.
+  */
+  const keptBeyondSite =
+    event && placesTaken && event.capacity !== null ? Math.max(-(lineRoom({ capacity: event.capacity, placesKeptForClub: event.placesKeptForClub, occupied: placesTaken.occupied }) ?? 0), 0) : 0;
   const storedReminder = event?.reminderHoursBefore ?? null;
   const reminderChoices = [
     ...EVENT_REMINDER_CHOICES,
@@ -269,6 +285,17 @@ export default async function RegistrationBox({
       ? t("editor.boxes.confirmation.datesAtStart", values)
       : t("editor.boxes.confirmation.dates", values);
   })();
+
+  /*
+    «Eliberează singur locurile nesemnate la termen» (§914): the saved deadline it acts at, said as a date and time — or
+    that it does nothing on this event — then what unticked means, and that it ran, when it has.
+  */
+  const releaseDeadline = event && event.capacity !== null && typedStartOrNull(event) ? windowDeadlineOf(event) : null;
+  const releaseHelp = [
+    releaseDeadline ? t("editor.releaseUnsignedHelp", { deadline: summaryDateTime(releaseDeadline, zone, locale, "inline") }) : t("editor.releaseUnsignedNoEffect"),
+    t("editor.releaseUnsignedHelpUnticked"),
+    ...(event?.unsignedReleasedFor ? [t("editor.releaseUnsignedRan", { deadline: summaryDateTime(event.unsignedReleasedFor, zone, locale, "inline") })] : []),
+  ].join(" ");
 
   /*
     What the save does to the places the window already gave (§665): moves those held to another
@@ -395,11 +422,24 @@ export default async function RegistrationBox({
                     <RecallField
                       name="event.capacity"
                       label={t("editor.capacity")}
-                      helperText={
-                        waiting > 0
-                          ? `${t("editor.capacityHelp")} ${t("editor.capacityWaiting", { waiting, offer: hoursPhrase(locale, clubDeadlines.offerHours) })}`
-                          : t("editor.capacityHelp")
-                      }
+                      helperText={[
+                        t("editor.capacityHelp"),
+                        /*
+                          Who holds the places now (§914): the save refuses under them, so the help says how low it goes. And
+                          what a raise does for the people waiting — offered at once only while the places go out by
+                          themselves (`offersOnItsOwn`); on «Nu» or the tick, they wait for the staff.
+                        */
+                        ...(placesTaken ? [t("editor.placesTaken", placesTaken)] : []),
+                        ...(waiting > 0
+                          ? [
+                              event && !offersOnItsOwn(event)
+                                ? t("editor.capacityWaitingByHand", { waiting })
+                                : keptBeyondSite > 0
+                                  ? t("editor.capacityWaitingKeptInUse", { waiting, beyond: keptBeyondSite, offer: hoursPhrase(locale, clubDeadlines.offerHours) })
+                                  : t("editor.capacityWaiting", { waiting, offer: hoursPhrase(locale, clubDeadlines.offerHours) }),
+                            ]
+                          : []),
+                      ].join(" ")}
                       defaultValue={event?.capacity ?? ""}
                       {...box("capacity", { inputMode: "numeric" })}
                       sx={{ flex: 1 }}
@@ -440,6 +480,22 @@ export default async function RegistrationBox({
                   </Stack>
 
                   {/*
+                    «De ce schimbi locurile? (opțional)» (§914): kept on «Istoric capacitate»'s row of a save that moves the
+                    capacity or the places kept for the club, and nowhere else. Only on a saved event: a new one's first row
+                    needs no reason.
+                  */}
+                  {event && (
+                    <RecallField
+                      name="event.placesChangeReason"
+                      label={t("editor.placesChangeReason")}
+                      helperText={t("editor.placesChangeReasonHelp")}
+                      defaultValue=""
+                      {...textFieldConstraints(htmlConstraints(placesChangeReasonSchema))}
+                      fullWidth
+                    />
+                  )}
+
+                  {/*
                     Who hands out a freed or added place (§615): the line, at once («Da», the default
                     and every event before it), or the organizer, from «Coada de înscrieri» with
                     «Trimite-i oferta» and at the desk with «Dă-i un loc» («Nu»). Under the capacity,
@@ -476,6 +532,24 @@ export default async function RegistrationBox({
                       {t("editor.freePlacesByOfferOnly")}
                     </CheckboxField>
                     <BoxNote more={t("editor.freePlacesByOfferOnlyHelpMore")}>{t("editor.freePlacesByOfferOnlyHelp")}</BoxNote>
+                    {/*
+                      «Locuri păstrate pentru club» (§914): of the places, how many the site never gives — an empty box is 0. The
+                      line under it says what the site announces now, from the saved row, when places are kept.
+                    */}
+                    <RecallField
+                      name="event.placesKeptForClub"
+                      label={t("editor.placesKeptForClub")}
+                      helperText={t("editor.placesKeptForClubHelp")}
+                      helpMore={t("editor.placesKeptForClubHelpMore")}
+                      defaultValue={event?.placesKeptForClub ? event.placesKeptForClub : ""}
+                      {...box("placesKeptForClub", { inputMode: "numeric" })}
+                      sx={{ width: { sm: 320 } }}
+                    />
+                    {event && event.capacity !== null && keptOf(event) > 0 && (
+                      <Typography variant="body2" color="text.secondary" data-testid="places-kept-announced">
+                        {t("editor.placesKeptAnnounced", { announced: announcedCapacity(event) ?? event.capacity, capacity: event.capacity })}
+                      </Typography>
+                    )}
                     <RecallField
                       name="event.placesAlertAt"
                       label={t("editor.placesAlertAt")}
@@ -570,6 +644,16 @@ export default async function RegistrationBox({
                         />
                       )}
                       <BoxNote more={t("editor.confirmationWindowHelpMore", { hold })}>{t("editor.confirmationWindowHelp")}</BoxNote>
+                      {/*
+                        «Eliberează singur locurile nesemnate la termen» (§914): under the deadline it acts at. A real tick
+                        with its marker, off by default; the help names the saved deadline, or says it has no effect here
+                        (a deadline at the start, no limit on the places), and that it ran when it has.
+                      */}
+                      <input type="hidden" name="event.releaseUnsignedAtDeadline.present" value="1" />
+                      <CheckboxField name="event.releaseUnsignedAtDeadline" defaultChecked={event?.releaseUnsignedAtDeadline ?? false}>
+                        {t("editor.releaseUnsignedAtDeadline")}
+                      </CheckboxField>
+                      <BoxNote more={t("editor.releaseUnsignedHelpMore")}>{releaseHelp}</BoxNote>
                     </Stack>
                   </Panel>
 

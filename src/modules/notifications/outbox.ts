@@ -137,6 +137,11 @@ export type EnqueueEmailParams = {
    * changes. The club's copies of the message wait with it. Absent: due at once.
    */
   notBefore?: Date;
+  /**
+   * No club copy of this message (§914), whatever the club's list says: the club is told of it another way — the
+   * Administrators' one summary of a deadline's release (`UNSIGNED_RELEASED`) stands for the person's messages it caused.
+   */
+  noClubCopy?: boolean;
 };
 
 /**
@@ -246,7 +251,7 @@ async function enqueueClubCopies<T extends Record<string, unknown>>(
 ): Promise<void> {
   // Never a message to an address nobody has confirmed, nor one of a bulk send — that gets one copy
   // per send (`enqueueBulkClubCopies`) — however the club's list reads (§419).
-  if (!params.registrationId || !isCopiedPerMessage(params.messageType) || isClubCopy(params.payload)) return;
+  if (params.noClubCopy || !params.registrationId || !isCopiedPerMessage(params.messageType) || isClubCopy(params.payload)) return;
   const recipients = clubCopyRecipients(params.recipientEmail, participantMessageBcc(await readClubNotices(tx)));
   if (recipients.length === 0) return;
   const [registration] = await tx

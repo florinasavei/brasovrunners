@@ -64,6 +64,8 @@ const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(
   "UNREACHABLE_WINDOW_CLOSED",
   // «Anunță-mă când rămân N locuri» (§906): to the Administrators; nobody on a public page waits for it.
   "PLACES_ALERT",
+  // The deadline release's summary (§914): to the Administrators; nobody on a public page waits for it.
+  "UNSIGNED_RELEASED",
   // An invitation (§647): sent by an Administrator's press, to somebody who is on no page waiting for it.
   "EVENT_INVITATION",
   // The members' shop (§683): the zone shows the order itself, whatever the email; nobody on a public page waits.

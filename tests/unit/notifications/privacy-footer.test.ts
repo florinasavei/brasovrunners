@@ -36,6 +36,8 @@ const CLUB_MAIL: readonly EmailMessageType[] = [
   "UNREACHABLE_WINDOW_CLOSED",
   // «Anunță-mă când rămân N locuri» (§906): to the Administrators.
   "PLACES_ALERT",
+  // The deadline release's summary (§914): to the Administrators.
+  "UNSIGNED_RELEASED",
   // The members' shop (§683): a member's account and the club's mailbox; the notice names the shop.
   "SHOP_ORDER_PLACED",
   "SHOP_ORDER_PAID",

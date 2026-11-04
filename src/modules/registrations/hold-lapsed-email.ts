@@ -47,13 +47,19 @@ export function holdLapsedIdempotencyKey(registrationId: string, holdExpiresAt: 
  * what the person can do now — is read when the message is rendered (`render.ts`), after the
  * transaction's own offer has been made.
  *
+ * `atDeadline` (§914) is the participation window's deadline when the release was «Eliberează singur locurile
+ * nesemnate la termen»'s own: the message then says that deadline and that the unsigned places were released, and
+ * is copied to no club address — the Administrators get one summary of the release instead (`UNSIGNED_RELEASED`),
+ * never one copy per person. A family on one address gets one message per person released, as for any release.
+ *
  * One read of the released people's delivery addresses, then one insert per message: no per-row read.
  */
 export async function queueHoldLapsedEmails<T extends Record<string, unknown>>(
   tx: Transaction<T>,
-  params: { eventId: string; released: readonly ReleasedHold[]; toWaitlist: boolean; now: Date },
+  params: { eventId: string; released: readonly ReleasedHold[]; toWaitlist: boolean; atDeadline?: Date | null; now: Date },
 ): Promise<void> {
   const { eventId, released, toWaitlist, now } = params;
+  const atDeadline = params.atDeadline ?? null;
   if (released.length === 0) return;
   const ids = [...new Set(released.map((row) => row.participantId))];
   const addresses = await tx
@@ -76,7 +82,11 @@ export async function queueHoldLapsedEmails<T extends Record<string, unknown>>(
         // The deadline the message states (§377), as the row carried it at the release.
         ...(hold.holdExpiresAt ? { deadline: hold.holdExpiresAt.toISOString() } : {}),
         toWaitlist,
+        // The deadline's own release (§914): the window's deadline, which the message states.
+        ...(atDeadline ? { atDeadline: atDeadline.toISOString() } : {}),
       },
+      // The club hears of a deadline's release once, in the Administrators' summary (§914).
+      ...(atDeadline ? { noClubCopy: true } : {}),
       // A hold with no deadline is never released as lapsed (`lapsedDeclarationHoldsToRelease`); the
       // instant of the release stands in, which is as unique, since a hold is released once.
       idempotencyKey: holdLapsedIdempotencyKey(hold.id, hold.holdExpiresAt ?? now),

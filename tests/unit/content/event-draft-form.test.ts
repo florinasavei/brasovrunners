@@ -289,7 +289,11 @@ describe("§579 amended — formViewOf, what the form takes from the event", () 
     expect(view.birthDate.latest).toBe("2008-11-21");
     expect(view.birthDate.earliest).toBe("1906-10-01");
     // A week before the race is still ahead: the steps say «confirm a week before».
-    expect(view.stepsWindow).toEqual({ opensDays: 7, deadlineDays: 2 });
+    expect(view.stepsWindow).toEqual({ opensDays: 7, deadlineDays: 2, releases: false });
+    // «Eliberează singur locurile nesemnate la termen» (§914): the steps say the release, never on a deadline at the start.
+    const released = { releasesUnsignedAtDeadline: true } as Partial<Draft>;
+    expect(formViewOf(draft(released) as never, NOW).stepsWindow).toEqual({ opensDays: 7, deadlineDays: 2, releases: true });
+    expect(formViewOf(draft({ ...released, confirmationDeadlineDaysBefore: 0 } as Partial<Draft>) as never, NOW).stepsWindow).toEqual({ opensDays: 7, deadlineDays: 0, releases: false });
   });
 
   it("§628 names the waiting-list stage under the tick only where the published list shows it", () => {

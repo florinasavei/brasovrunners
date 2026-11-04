@@ -27,6 +27,7 @@ import { fieldId, formViewOf } from "@/modules/registrations/form-view";
 import { type InvitationLink, isRefusedKind, readInvitationLink, type RefusedKind } from "@/modules/registrations/invitations";
 import { registrationFacts, registrationForm } from "@/modules/registrations/ui/registration-form";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
+import { spentLinkReleaseMoment } from "@/modules/registrations/token-actions";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import { cachedListSocialsDisclosed, cachedListStatesDisclosed, cachedMemberDefinition, cachedPromotionalMaterialsOffered, cachedPromotionalMaterialsShared, cachedRefusalDisclosed } from "@/modules/public-cache/reads";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
@@ -90,7 +91,8 @@ export default async function InvitationPage({ params, searchParams }: Props) {
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("invitation.doneTitle")}
         </Typography>
-        <RegistrationJourney current="declare" declaration="emailJustSent" />
+        {/* The release at the deadline will take the place just held (§914): its deadline, never the paper at the desk. */}
+        <RegistrationJourney current="declare" declaration="emailJustSent" release={await spentLinkReleaseMoment(token, ["ACCEPT_INVITATION"], new Date())} />
         <Stack spacing={2}>
           <Alert severity="success" data-testid="invitation-accepted">
             {t("invitation.done")}

@@ -1,3 +1,5 @@
+import { freeSplit } from "./kept-places";
+
 /**
  * «Locuri» under the registrations list's counts, for one event with a capacity (the owner, 2026-11-03:
  * «fă niște update-uri pe site să văd mai clar asta, nu să mă uit eu de fiecare dată» — how many places
@@ -31,6 +33,13 @@ export type PlaceOutlookCounts = {
   internal: number;
   /** Seated «Pe lista de invitați speciali» with a place outside the capacity (§643). */
   outside: number;
+  /**
+   * «Locuri păstrate pentru club» (§914): of the capacity, the places the site never gives. Optional, 0 when absent —
+   * a caller from before it reads as nothing kept.
+   */
+  kept?: number;
+  /** «Locurile libere le dau doar eu» in force (§906): the free places split says «le dai doar tu» for the site's part. */
+  offersOnly?: boolean;
 };
 
 /** The kinds of a held place, in the order «Locuri» says them; each said only when it holds a place. */
@@ -39,6 +48,14 @@ export const HELD_KINDS = ["declaration", "offered", "invited", "family"] as con
 export type PlaceOutlook = PlaceOutlookCounts & {
   /** The places nobody holds; 0 when the capacity was lowered under the places taken. */
   free: number;
+  /**
+   * `free` split in two (§914, `kept-places.ts#freeSplit`): the site's own free places — what a visitor can still take —
+   * and the kept ones nobody holds, the staff's to give. They add up to `free`; with nothing kept, `publicFree` is
+   * `free` and `keptFree` 0. «Libere: 12 — 2 pe site, 10 păstrate pentru club». Present when the counts carried
+   * `kept` (the reader always does); a caller from before it reads the plain free places.
+   */
+  publicFree?: number;
+  keptFree?: number;
   /** The places taken by somebody who has not signed yet: the four kinds above, together. */
   held: number;
   /** How many of the official waiting list the free places take. */
@@ -53,11 +70,14 @@ export type PlaceOutlook = PlaceOutlookCounts & {
 
 export function placeOutlook(counts: PlaceOutlookCounts): PlaceOutlook {
   const free = Math.max(counts.capacity - counts.occupied, 0);
+  // Who may give the free places is not where they go (§914): `fromWaiting` and `raises` stay on the whole capacity.
+  const split = counts.kept === undefined ? {} : freeSplit({ capacity: counts.capacity, placesKeptForClub: counts.kept, occupied: counts.occupied });
   const fromWaiting = Math.min(counts.waiting, free);
   const fromInternal = Math.min(counts.internal, free - fromWaiting);
   return {
     ...counts,
     free,
+    ...split,
     held: counts.occupied - counts.confirmed,
     fromWaiting,
     fromInternal,

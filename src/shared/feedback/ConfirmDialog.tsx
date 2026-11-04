@@ -5,6 +5,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import ScheduleSendIcon from "@mui/icons-material/ScheduleSend";
 import SendIcon from "@mui/icons-material/Send";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import Dialog from "@mui/material/Dialog";
@@ -139,6 +140,16 @@ export default function ConfirmDialog({
       <DialogTitle id={titleId}>{spec.title}</DialogTitle>
       <DialogContent>
         <DialogContentText id={descriptionId}>{spec.body}</DialogContentText>
+        {spec.lines && spec.lines.length > 0 && (
+          // One fact a line (§914): each place setting the save changes, then what it does.
+          <Box component="ul" sx={{ mt: 1, mb: 0, pl: 2.5 }} data-testid="confirm-lines">
+            {spec.lines.map((line, index) => (
+              <Typography component="li" variant="body2" key={index} sx={{ mb: 0.5 }}>
+                {line}
+              </Typography>
+            ))}
+          </Box>
+        )}
         {spec.email && (
           <DialogContentText sx={{ mt: 1.5, fontWeight: 600, color: "text.primary" }} data-testid="confirm-email">
             {spec.email}

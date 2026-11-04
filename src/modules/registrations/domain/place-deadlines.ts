@@ -3,6 +3,7 @@ import { formatDay } from "@/i18n/dates";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { hoursPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { confirmationDueAtStart, confirmationDueWords, confirmationWindow } from "./hold-deadlines";
+import { deadlineReleaseArmedFor, windowDeadlineOf } from "./unsigned-release";
 
 /**
  * «Când pierde lumea locul? Trebuie să apară asta in back-office» (§635; the owner, 2026-10-02): when
@@ -23,8 +24,10 @@ import { confirmationDueAtStart, confirmationDueWords, confirmationWindow } from
  *   offered to the first in line in the same transaction (`fillAvailableSpots`); with «Nu», or after
  *   the close, it stays free for «Trimite-i oferta» (before the close and after it, §642) or the desk's «Dă-i un loc».
  *   With no waiting list (a limit of 0) the one who wants it is a newcomer with no other free place
- *   (§348). An uncapped event never releases one. At the start every unsigned hold goes. Nothing is
- *   emailed when a hold is released (no message type is queued for it);
+ *   (§348). An uncapped event never releases one. At the start every unsigned hold goes. The person
+ *   whose hold is released before the start is told (`DECLARATION_HOLD_EXPIRED`, §638);
+ * - with «Eliberează singur locurile nesemnate la termen» (§914), at the window's deadline every counted
+ *   unsigned hold lapsed by then goes at once, whoever waits, and nobody is given those places by itself;
  * - the first email's link lives `confirmationHours` from when it leaves; until then the registration
  *   holds no place — a family's reservation excepted (§543) — and then it expires;
  * - a waiting-list offer lives `offerHours` from when its email leaves (§520), capped by the close
@@ -51,6 +54,9 @@ export type PlaceDeadlineEvent = {
   waitlistCapacity: number | null;
   /** «Locurile din lista de așteptare se alocă automat» (§615). */
   waitlistAutoOffer: boolean;
+  /** «Eliberează singur locurile nesemnate la termen» (§914) and the deadline it last ran for; absent reads as off. */
+  releaseUnsignedAtDeadline?: boolean;
+  unsignedReleasedFor?: Date | null;
 };
 
 /** Real registrations only, by the state whose deadline they wait on. */
@@ -116,6 +122,25 @@ export function placeDeadlineSentences(input: {
       if (open) say("held", "holdNow", { hold: minutesPhrase(locale, deadlines.holdMinutes) });
     }
     if (counts.heldPast > 0) say("held", `heldPast.${counted(counts.heldPast)}`, { count: counts.heldPast });
+    /*
+      «Eliberează singur locurile nesemnate la termen» (§914): armed, the deadline it releases at; run for the window's
+      deadline in force, that it did — then a hold past its own deadline follows §160 again, said below.
+    */
+    const release = {
+      capacity: event.capacity,
+      eventStatus: event.eventStatus,
+      startsAt: event.startsAt,
+      confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
+      confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,
+      releaseUnsignedAtDeadline: event.releaseUnsignedAtDeadline === true,
+      unsignedReleasedFor: event.unsignedReleasedFor ?? null,
+    };
+    const armedFor = deadlineReleaseArmedFor(release);
+    const windowDeadline = windowDeadlineOf(release);
+    if (armedFor && now < event.startsAt) say("held", "releaseAtDeadline", { due: when(armedFor) });
+    else if (release.releaseUnsignedAtDeadline && windowDeadline && release.unsignedReleasedFor?.getTime() === windowDeadline.getTime()) {
+      say("held", "releasedAtDeadline", { due: when(windowDeadline) });
+    }
     // What a passed deadline does (§160) — not while every deadline is the start itself.
     const someDeadlineBeforeStart = !(window && now < window.opensAt && dueAtStart) || counts.heldPast > 0;
     if (someDeadlineBeforeStart) {

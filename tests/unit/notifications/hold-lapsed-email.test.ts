@@ -65,18 +65,18 @@ describe("§638 the DECLARATION_HOLD_EXPIRED email's words", () => {
   const render = (locale: "ro" | "en", extra: Partial<TemplateData>, action: string | null = ACTION) =>
     renderBilingual("DECLARATION_HOLD_EXPIRED", locale, { ...emailSampleFor("DECLARATION_HOLD_EXPIRED", locale), ...extra }, action ?? undefined);
 
-  it("says the place expired, the deadline that passed, and that it went to the waiting list — in both languages", () => {
+  it("says the place expired, the deadline that passed, and that it was released for somebody waiting (§914: true on «Nu» too) — in both languages", () => {
     const mail = render("ro", { holdLapsedToWaitlist: true, holdLapsedNext: "waitlist" });
     const sample = emailSampleFor("DECLARATION_HOLD_EXPIRED", "ro");
     expect(mail.subject.startsWith(`Locul pentru ${sample.participantName} la ${sample.eventTitle} a expirat`)).toBe(true);
     expect(mail.text).toContain("a expirat: declarația nu a fost semnată la timp.");
     expect(mail.text).toContain(`Termenul pentru semnare a fost ${sample.holdExpiresAtFormatted}.`);
-    expect(mail.text).toContain("Altcineva aștepta un loc, așa că locul tău a trecut la lista de așteptare.");
+    expect(mail.text).toContain("Altcineva aștepta un loc, așa că locul tău a fost eliberat.");
     expect(mail.text).toContain("Dacă mai vrei să vii, poți intra pe lista de așteptare.");
     expect(mail.text).toContain(`Intră pe lista de așteptare: ${ACTION}`);
     // The English half, in its own words and its own date.
     expect(mail.text).toContain(`The deadline to sign was ${sample.holdExpiresAtFormattedOther}.`);
-    expect(mail.text).toContain("Somebody was waiting for a place, so yours went to the waiting list.");
+    expect(mail.text).toContain("Somebody was waiting for a place, so yours has been released.");
     expect(mail.text).toContain("If you still want to come, you can join the waiting list.");
     // No cancel button: the registration is over (§558), and no manage link either.
     expect(CANNOT_COME_MESSAGES.has("DECLARATION_HOLD_EXPIRED")).toBe(false);
@@ -123,6 +123,20 @@ describe("§638 the DECLARATION_HOLD_EXPIRED email's words", () => {
       expect(mail.text).not.toMatch(/Înscrie-te din nou:|Intră pe lista de așteptare:|Register again:|Join the waiting list:/);
       expect(mail.text).not.toContain("Online nu se mai poate face nimic");
     }
+  });
+
+  it("§914 released at «Eliberează singur locurile nesemnate la termen»'s deadline: the window's deadline and the release, in both languages", () => {
+    const sample = emailSampleFor("DECLARATION_HOLD_EXPIRED", "ro");
+    const mail = render("ro", { holdLapsedAtDeadline: true, holdLapsedToWaitlist: false, holdLapsedNext: "waitlist" });
+    expect(mail.text).toContain(
+      `Termenul pentru semnarea declarației a fost ${sample.holdExpiresAtFormatted}. Locurile celor care nu semnaseră până atunci au fost eliberate, așa că locul tău nu mai este rezervat.`,
+    );
+    expect(mail.text).toContain(
+      `The deadline to sign the declaration was ${sample.holdExpiresAtFormattedOther}. The places of those who had not signed by then were released, so your place is no longer held.`,
+    );
+    // Never the sentence of a release somebody asked for.
+    expect(mail.text).not.toContain("Altcineva");
+    expect(mail.text).not.toContain("Somebody");
   });
 
   it("without a stored deadline it still says the deadline was missed, never a blank", () => {

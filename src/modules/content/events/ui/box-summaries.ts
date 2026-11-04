@@ -12,6 +12,7 @@ import { readRouteGpx } from "@/modules/events/domain/route-gpx";
 import { readRouteMaps } from "@/modules/events/domain/route-maps";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
+import { keptOf } from "@/modules/registrations/domain/kept-places";
 import { eventDurationMinutes } from "../duration";
 import type { EditableEvent } from "../repository";
 import { storedTextValue } from "./publish-check";
@@ -62,6 +63,8 @@ export type SummaryWords = {
     internal: string;
     places: CountWords;
     unlimited: string;
+    /** «Locuri păstrate pentru club» (§914): «păstrate pentru club: 10», said only when places are kept. */
+    keptForClub: string;
     declaration: string;
     noDeclaration: string;
     listHidden: string;
@@ -372,7 +375,7 @@ type RegistrationEvent = Pick<
   EditableEvent,
   "type" | "registrationMode" | "capacity" | "minAge" | "declarationDocumentId" | "participantListVisibility" | "externalProvider" | "costType"
 > &
-  Partial<Pick<EditableEvent, "waitlistPublic">>;
+  Partial<Pick<EditableEvent, "waitlistPublic" | "placesKeptForClub">>;
 
 /**
  * The cost select's own starting value (§398; the owner: "by default toate evenimentele sunt
@@ -406,6 +409,8 @@ export function registrationSummary(
   return join(words, [
     words.registration.internal,
     event?.capacity === null || event?.capacity === undefined ? words.registration.unlimited : counted(words.registration.places, event.capacity, options.locale),
+    // The places kept for the club (§914), beside the places they are part of; nothing when none are.
+    ...(event && keptOf(event) > 0 ? [fillIn(words.registration.keptForClub, { count: keptOf(event) })] : []),
     options.declarationVersion !== null ? fillIn(words.registration.declaration, { version: options.declarationVersion }) : words.registration.noDeclaration,
     // The waiting list public too (§628) is a disclosure of its own, said where the list is (§760).
     event?.participantListVisibility === "NAMES"

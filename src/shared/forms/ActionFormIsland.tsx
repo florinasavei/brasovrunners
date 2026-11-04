@@ -17,6 +17,7 @@ import {
   resolveBodyCount,
   resolveChangedFields,
   resolveEmailCount,
+  resolvePlaceChanges,
   tickAnswer,
 } from "@/shared/feedback/notice";
 import { useToast } from "@/shared/feedback/toast-context";
@@ -364,13 +365,16 @@ export default function ActionFormIsland({
       return typeof value === "string" ? value : null;
     });
     if (!named) return unasked();
-    event.preventDefault();
     const valueOf = (field: string) => {
       const value = data.get(field);
       return typeof value === "string" ? value : null;
     };
+    // The event editor's place settings (§914): each change and what it does; none changed, a dialog only for them asks nothing.
+    const placed = resolvePlaceChanges(named, valueOf);
+    if (!placed) return unasked();
+    event.preventDefault();
     // A series save's email line, summed over the dates ticked at this press (§384); the lines of a typed list counted.
-    const counted = resolveEmailCount(named, valuesOf);
+    const counted = resolveEmailCount(placed, valuesOf);
     // The quieter lines true of this press alone: the offers a raised capacity sends, the window's re-sent links.
     const said = resolveAlso(counted, valueOf);
     // A typed value named in the sentence (§511): «Limita nouă: 100 ore-CU.», «Pleacă 1 email către {firstName} {lastName}…».

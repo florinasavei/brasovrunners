@@ -88,6 +88,8 @@ const NOT_A_BOX = new Set([
   // «Înscrieri publice deschise» and «Locurile libere le dau doar eu» (§906): ticks with their markers, both answers valid.
   "publicRegistrationOpen",
   "freePlacesByOfferOnly",
+  // «Eliberează singur locurile nesemnate la termen» (§914): a tick with its marker, both answers valid.
+  "releaseUnsignedAtDeadline",
 ]);
 
 describe("the event form's constraints are the schema's (§315)", () => {

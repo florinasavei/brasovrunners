@@ -306,7 +306,8 @@ describe("§888 «Oferă-i un loc acum» on a line of the internal list: the sam
     // §642's trail: who raised it, from, to and for which registration; and who offered.
     const [raised] = await trail("event.capacity_raised_for_offer");
     expect(raised.actorStaffUserId).toBe(admin.id);
-    expect(raised.metadataJson).toEqual({ from: 1, to: 2, registrationId: mara.id });
+    // …with «Istoric capacitate»'s fields (§914): the row's version, the places taken and the press — the move's offer.
+    expect(raised.metadataJson).toEqual({ from: 1, to: 2, registrationId: mara.id, version: expect.any(Number), occupied: 1, via: "moveAndOffer" });
     expect((await trail("registration.offered_by_staff")).map((row) => row.entityId)).toEqual([mara.id]);
     expect((await trail("event_reserve.moved"))[0].metadataJson).toEqual({ entryId, registrationId: mara.id, offerNow: true });
     expect(await notesOf(mara.id)).toEqual([NOTE]);

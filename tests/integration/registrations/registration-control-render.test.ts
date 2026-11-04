@@ -206,6 +206,41 @@ describe("§906 «Locurile libere le dau doar eu»", () => {
   });
 });
 
+describe("BR-REQ-034-01 «Locuri păstrate pentru club» on the event page and the card (§914)", () => {
+  it("announces the capacity less the kept places, names no reserve, and reads full once only the kept places are left", async () => {
+    const event = await publish({ capacity: 20, placesKeptForClub: 5, waitlistAutoOffer: true });
+    await take(event.id, 10);
+    // The places the site announces: 15, never the 20 of the capacity.
+    const open = text(await page());
+    expect(open).toContain(ro.Event.cta.register);
+    expect(open).toMatch(/din 15 locuri/);
+    expect(open).not.toMatch(/din 20/);
+    expect(open).not.toContain("păstrate pentru club");
+    const card = await cardLine();
+    expect(card).toMatch(/din 15\b/);
+    expect(card).not.toMatch(/din 20/);
+
+    // The site's 15 taken, 5 kept places nobody holds: the page and the card read full and open the waiting list.
+    await take(event.id, 5);
+    const full = text(await page());
+    expect(full).toContain(ro.Event.cta.joinWaitingList);
+    expect(full).not.toContain(ro.Event.cta.register);
+    expect(full).toContain("Toate cele 15 locuri s-au ocupat");
+    expect(full).not.toMatch(/\b20\b/);
+    expect(full).not.toContain("păstrate pentru club");
+    // With places kept, a freed place may stay the club's: the organizers' words, never «te anunțăm», even on «Da».
+    expect(full).toContain(ro.Event.cta.fullJoinByHand);
+    expect(full).not.toContain(ro.Event.cta.fullJoin);
+    expect(await cardLine()).toContain(ro.Event.cta.fullJoinByHand);
+
+    locale = "en";
+    const enFull = text(await page());
+    expect(enFull).toContain(en.Event.cta.fullJoinByHand);
+    expect(enFull).not.toContain(en.Event.cta.fullJoin);
+    expect(enFull).not.toMatch(/\b20\b/);
+  });
+});
+
 describe("§906 how an offer works, on the full event's door", () => {
   /** The door's «how an offer works» line, in words. */
   async function offerLine(): Promise<string> {

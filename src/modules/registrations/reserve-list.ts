@@ -217,7 +217,8 @@ export async function moveReserveEntryToWaitlist<T extends Record<string, unknow
         locale: input.locale,
         relayedByParticipantRequest: input.relayedByParticipantRequest,
         note: entry.note,
-        offerNow: input.offerNow ?? null,
+        // The offer's raise, if any, is the move's in «Istoric capacitate» (§914).
+        offerNow: input.offerNow ? { ...input.offerNow, via: "moveAndOffer" } : null,
       },
       now,
     );

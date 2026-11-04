@@ -1175,6 +1175,8 @@
       },
       "places": {
         "title": "Places free now: {free} of {capacity}",
+        "split": "Of these, on the site: {publicFree}; kept for the club: {keptFree} of {kept}, which only you give.",
+        "splitOffersOnly": "You give them all, with «I hand out the free places myself»; kept for the club: {keptFree} of {kept}.",
         "taken": "Taken {occupied}: {confirmed} confirmed and {held} — {kinds}.",
         "held": {
           "one": "{count} holding their place until they sign",
@@ -1233,6 +1235,11 @@
           "NOT_HERE": "the event takes no registration on this site"
         },
         "offersOnly": "With «I hand out the free places myself», no place goes out by itself: you give every free place.",
+        "keptLeft": {
+          "one": "The site reads full: only the place kept for the club is left.",
+          "few": "The site reads full: only the {count} places kept for the club are left.",
+          "other": "The site reads full: only the {count} places kept for the club are left."
+        },
         "setting": "Change it in the editor"
       },
       "publicDoor": {
@@ -1869,6 +1876,8 @@
         "releaseClosed": "Past the deadline a place is not lost by itself: it is freed only when someone waiting has no other free place; registration has closed: «Send them the offer», or «Give a place» at the desk.",
         "releaseNoList": "Past the deadline a place is not lost by itself: it is released only when someone new asks for it and no other place is free.",
         "releaseNever": "Past the deadline a place is not lost: the event has no limit of places.",
+        "releaseAtDeadline": "On {due}, the places of all who have not signed are released, each gets an email and nobody gets them automatically: from then on you alone give them.",
+        "releasedAtDeadline": "On {due}, the unsigned places were released; from then on you alone give the free places.",
         "atStart": "At the start, whoever has not signed loses the place; at the desk they can be confirmed on paper, if a place is still free.",
         "emailLink": {
           "one": "One person has not confirmed their address yet: the link is valid for {hours} from when the email leaves, then the registration expires; until then it holds no place.",
@@ -2220,6 +2229,39 @@
       "bulkArchiveBody": "They disappear from the site in both languages. You can bring them back later, one at a time.",
       "saveNoticeTitle": "Save and tell the participants?",
       "saveNoticeBody": "The changes are saved, and the participants receive “Details updated”, each in their language — if the place, the start or the programme changed, the event was reinstated, or you wrote a note.",
+      "places": {
+        "title": "Check what changes in the places",
+        "intro": "This save changes:",
+        "line": "{label}: {from} → {to}.",
+        "back": "Back",
+        "empty": "empty",
+        "unlimited": "unlimited",
+        "ticked": "ticked",
+        "unticked": "unticked",
+        "effects": {
+          "belowTaken": "{occupied} places are already taken: you cannot go below them, so the save will be refused.",
+          "keptAbove": "The places kept for the club would be more than the {capacity} places: the save will be refused.",
+          "uncapped": "Unlimited places: everybody who registers gets a place, and the waiting list is no longer used.",
+          "free": "Places announced on the site: {announced}. Free after the save: {free} of {capacity}.",
+          "freeSplit": "Places announced on the site: {announced}, that is {capacity} less {kept} kept for the club. Free after the save: {free} of {capacity} — {site} on the site, {keptFree} kept for the club.",
+          "offers": "{waiting} are on the waiting list: the first {count} each get an offer by email, at once or within minutes.",
+          "nobodyAuto": "{waiting} are on the waiting list: nobody gets a place automatically, you give the free places.",
+          "doorDirect": "On the site, the button is “Register”: the first to come takes a place.",
+          "doorWaitlist": "On the site, the button is “Join the waiting list”.",
+          "doorFull": "The site shows full and there is no waiting list: nobody can register from the site.",
+          "doorListFull": "The site shows full and the waiting list is full: nobody can register from the site.",
+          "doorOffersOnly": "The site shows no button: you alone give the free places and there is no waiting list.",
+          "doorShut": "The form on the site is closed: only you register people, from the backoffice.",
+          "datesClosed": "The registration period is not open now: the button appears on the site only when it opens.",
+          "releaseAt": "On {deadline}, the places of those who have not signed are released and each gets an email; from then on you alone give the free places.",
+          "releasePassed": "The declaration deadline has passed: the unsigned places are released within minutes and each person gets an email.",
+          "releaseNoEffect": "The tick has no effect: the declaration deadline is at the start or the places are unlimited.",
+          "releaseOff": "The unsigned places are no longer released at the deadline: they stay theirs until somebody asks or until the start.",
+          "releaseRan": "The release has already run: moving the deadline brings nobody back and sets up a new release at the new deadline.",
+          "alertOn": "The administrators get an email when the free places drop to {count}; there are {free} now.",
+          "alertOff": "No more email when the places run low."
+        }
+      },
       "cancelEventTitle": "Cancel “{title}”?",
       "cancelEventBody": "It shows as cancelled on the site, registration no longer opens and existing registrations stay on record. The participants receive “Event cancelled” with your reason.",
       "cancelEventQuietBody": "It shows as cancelled on the site, registration no longer opens and existing registrations stay on record. The participants are not told.",
@@ -2515,6 +2557,10 @@
       "NO_WAITLIST": "Every place is taken and the event has no waiting list, so nothing changed.",
       "WALK_IN_LEFT_UNCONFIRMED": "The person is entered, but the last place just went, so they are unconfirmed and got no email. Confirm them on paper once a place frees up.",
       "NO_FREE_PLACE": "The race is full: places {capacity}, confirmed {confirmed}, declarations to sign {declaration}, offered {offered}, reserved for families {family}, invited {invited}. Raise the capacity first.",
+      "CAPACITY_BELOW_TAKEN": "The places cannot be fewer than those taken now, {occupied}: confirmed {confirmed}, to sign {declaration}, offered {offered}, invited {invited}, reserved for families {family}. Nothing was saved.",
+      "CAPACITY_BELOW_TAKEN_DATED": "On {date}, the places cannot be fewer than those taken, {occupied}: confirmed {confirmed}, to sign {declaration}, offered {offered}, invited {invited}, families {family}. Nothing was saved.",
+      "PLACES_KEPT_ABOVE_CAPACITY": "«Places kept for the club» cannot be more than the number of places. Nothing was saved.",
+      "PLACES_KEPT_ABOVE_CAPACITY_DATED": "On {date}, «Places kept for the club» would be more than that date's number of places. Nothing was saved, on any date.",
       "SUPPLEMENTARY_PLACE_UNCONFIRMED": "Nothing was changed: the places changed since you opened the page, and the question did not say this supplementary place would be added. Press again: the question now says what the capacity becomes.",
       "NO_RECIPIENTS": "Nothing was sent: nobody is in the chosen group right now. Choose another group.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nothing was sent: {names} is not a field we can fill in this message. The fields you can use are listed under the boxes.",
@@ -2787,6 +2833,9 @@
       "capacity": "Capacity",
       "capacityHelp": "Leave empty for unlimited. It cannot be lowered below the places already taken.",
       "capacityWaiting": "On the waiting list: {waiting}. If you raise the number, the new places are offered at once, in order, {offer} each.",
+      "capacityWaitingByHand": "On the waiting list: {waiting}. New places are not offered by themselves: you give them from «Registrations».",
+      "capacityWaitingKeptInUse": "On the waiting list: {waiting}. You already gave {beyond} kept places: on a raise, the first {beyond} new places stay the club's; only those beyond are offered at once, {offer} each.",
+      "placesTaken": "Taken now: {occupied} — confirmed {confirmed}, to sign {declaration}, offered {offered}, invited {invited}, reserved for families {family}. You cannot go below {occupied}.",
       "waitlistMode": "Waiting list",
       "waitlistModeHelp": "What happens once the places are taken.",
       "waitlistModeTip": "Unlimited: anyone may join the list once the places are taken. Limited: at most this many people. No waiting list: a full event turns everyone away.",
@@ -3547,6 +3596,7 @@
               "other": "{count} places"
             },
             "unlimited": "unlimited places",
+            "keptForClub": "kept for the club: {count}",
             "declaration": "declaration v{version}",
             "noDeclaration": "declaration missing",
             "listHidden": "public list off",
@@ -3712,6 +3762,12 @@
       },
       "participantListHelpMore": "Everyone else shows as “Participant (name hidden)”. The save is refused while no approved privacy notice that describes the list is in force.",
       "confirmationWindowHelpMore": "After the deadline, the place goes to the next in line only if someone is waiting. Whoever registers after the window opens, or when the first number is 0, has {hold} to sign.",
+      "releaseUnsignedAtDeadline": "Release the unsigned places at the deadline",
+      "releaseUnsignedHelp": "On {deadline}, the places of those who have not signed the declaration are released, and nobody gets them automatically: from then on you alone give the free places.",
+      "releaseUnsignedHelpUnticked": "Unticked: an unsigned place is kept until somebody asks for it or until the start.",
+      "releaseUnsignedHelpMore": "Each person gets an email, the administrators just one. Once per deadline. It takes unsigned places you gave too; never special guests, offers or invitations not yet accepted.",
+      "releaseUnsignedNoEffect": "No effect on this event: the declaration deadline is at the start or the places are unlimited.",
+      "releaseUnsignedRan": "The release ran for the deadline {deadline}.",
       "declarationKinds": {
         "EVENT_DECLARATION": "Mountain event",
         "EVENT_DECLARATION_ROAD": "Road or park event"
@@ -3730,6 +3786,12 @@
       "placesAlertAt": "Email me when N places are left",
       "placesAlertAtHelp": "Empty: no email. A number: the administrators get an email when the free places drop to it, and one more when none are left.",
       "placesAlertAtHelpMore": "One email per threshold; another comes only after the free places climb back above the number.",
+      "placesKeptForClub": "Places kept for the club",
+      "placesKeptForClubHelp": "How many places the site never gives: it takes registrations until only these are left, then reads full or opens the waiting list. Empty or 0: all are on the site.",
+      "placesKeptForClubHelpMore": "Given by you, with no extra place while one is left: «Offer them a place now», «Send them the offer», an invitation. Never to the list by itself; one freed while the site is full stays the club's.",
+      "placesKeptAnnounced": "The site shows {announced} of {capacity} now.",
+      "placesChangeReason": "Why are you changing the places? (optional)",
+      "placesChangeReasonHelp": "Shown in «Capacity history», only when the places change. Write no names.",
       "waitlistCountPublic": "Show publicly how many are waiting",
       "waitlistCountPublicHelp": "Ticked: the card, the page and each person on the list learn how many are waiting. Unticked: only that there is a list and how to join it; the club sees the number in the backoffice.",
       "hiddenListTitle": "Special guests list",
@@ -7311,6 +7373,7 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "Your consent for a young volunteer",
         "VOLUNTEER_INVITATION": "Invitation to volunteer",
         "PLACES_ALERT": "Few places left",
+        "UNSIGNED_RELEASED": "The unsigned places were released at the deadline",
         "RSVP_CONFIRM": "Confirm you're coming (“I'm coming!”)",
         "RSVP_ASK": "Coming tomorrow? (“I'm coming” / “I'm not coming”)"
       },
@@ -7384,6 +7447,7 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers, or an organizer presses “Send the parent's link”: the agreement and the link where the parent accepts it in their own name.",
         "VOLUNTEER_INVITATION": "When an organizer or an administrator sends invitations from the «Volunteers» card of an event whose volunteers are by invitation only, and on “Send again”. A personal link to the volunteers' page.",
         "PLACES_ALERT": "When the free places drop to the threshold in «Email me when N places are left», and once more when none are left: to every Administrator. The button opens the registrations.",
+        "UNSIGNED_RELEASED": "At the declaration deadline, on an event with «Release the unsigned places at the deadline» ticked: to every Administrator, once per deadline — how many were released and who gives them now.",
         "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page: “Yes, I'm coming” counts them, “I'm not coming” takes it back. The page's “not coming any more” sends only the withdraw link.",
         "RSVP_ASK": "{askDays} before the start, from {askHour}: {askWho}. “I'm coming”, then “Yes, I'm coming”, counts them; “I'm not coming” does not. Answered: skipped."
       },
@@ -7432,6 +7496,7 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "when a volunteer under 18 offers",
         "VOLUNTEER_INVITATION": "when the club invites someone to volunteer",
         "PLACES_ALERT": "when the places drop to the threshold, to the administrators",
+        "UNSIGNED_RELEASED": "at the declaration deadline, to the administrators",
         "RSVP_CONFIRM": "when someone says “I'm coming!”, to their address",
         "RSVP_ASK": "{askDays} before, from {askHour}, {askWhoShort}"
       },
@@ -8115,7 +8180,8 @@
           "lastCall": "the last call to sign, to those who have not signed yet",
           "participation": "the participation confirmation opens, to those who have not signed yet",
           "nextInLine": "a held place lapses; it goes to the next on the waiting list",
-          "holdLapsed": "a held place lapses; to the one who did not sign, that it went to somebody else",
+          "holdLapsed": "a held place lapses; to the one who did not sign, that it is no longer held",
+          "unsignedReleased": "the declaration deadline: the unsigned places are released; one email to each Administrator",
           "registrationOpened": "registration opens, to the addresses left on the event's page",
           "newEventAlert": "the new-event announcement, to the subscribers of its topics",
           "newsletter": "the newsletter, to the topic's subscribers",
@@ -8342,6 +8408,7 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old.",
         "VOLUNTEER_INVITATION": "The event, the roles wanted and the club's message are added by themselves. The link is for the invited person only, works once, and a new one replaces the old.",
         "PLACES_ALERT": "The free places, the capacity and the threshold are added by themselves, however you write the text. One email per threshold; another comes only after the places climb back above it.",
+        "UNSIGNED_RELEASED": "The deadline, the places released, the free ones, the capacity and the waiting list are added by themselves, however you write the text. One email per deadline.",
         "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link.",
         "RSVP_ASK": "Once per event, unless unticked in the editor. Ticked after the window opened, it goes on the next run; ticked only on its own day, it does not. What has not left by the midnight before is dropped."
       },
@@ -9928,6 +9995,8 @@
           "freePlacesByOfferOnly": "I hand out the free places myself",
           "publicRegistrationOpen": "Registration open on the site",
           "placesAlertAt": "Email me when N places are left",
+          "placesKeptForClub": "Places kept for the club",
+          "releaseUnsignedAtDeadline": "Release the unsigned places at the deadline",
           "opensAt": "Registration opens",
           "opensSoon": "Registration opens soon",
           "closesAt": "Registration closes",
@@ -11826,7 +11895,8 @@
         "declare": {
           "title": "Sign the declaration",
           "body": "From that same email: read it and type your name — online, or on paper at the registration desk on race day.",
-          "bodyLater": "The place is yours. We ask for the declaration {opens} before the start, online or on paper at the registration desk; you can sign earlier too."
+          "bodyLater": "The place is yours. We ask for the declaration {opens} before the start, online or on paper at the registration desk; you can sign earlier too.",
+          "bodyLaterReleased": "The place is yours. We ask for the declaration {opens} before the start and you sign it online; you can sign earlier too. If you do not sign by {due}, the place is released."
         },
         "confirmed": {
           "title": "You are in",
@@ -11979,7 +12049,8 @@
         "body": "From that same email, sign it online or on paper at the registration desk on race day. Your place is held for {hold}; if there is a waiting list, it then goes to the next in line.",
         "bodyByHand": "From that same email, sign it online or on paper at the registration desk on race day. Your place is held for {hold}; if there is a waiting list, the organizers may then give it to someone else.",
         "bodyLater": "The race is free, so we ask for a confirmation: {opens} before the start you get an email and sign the declaration, online or on paper at the registration desk. You can sign earlier too. If there is a waiting list, the place is held until {due}.",
-        "bodyLaterAtStart": "The race is free, so we ask for a confirmation: sign the declaration from the registration email any time before the start, online or on paper at the registration desk. We remind you {opens} before. The place does not lapse before the start."
+        "bodyLaterAtStart": "The race is free, so we ask for a confirmation: sign the declaration from the registration email any time before the start, online or on paper at the registration desk. We remind you {opens} before. The place does not lapse before the start.",
+        "bodyLaterReleased": "The race is free, so we ask for a confirmation: {opens} before the start you get an email and sign the declaration online. You can sign earlier too. If you do not sign by {due}, the place is released, even if nobody is waiting."
       },
       "confirmed": {
         "title": "You are in",
@@ -12024,6 +12095,18 @@
           "emailHeldUntil": "Your place is held. We ask for the declaration by email {opens} before the start — you sign it then, online or on paper at the registration desk; once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
           "onThisPage": "One step left: read and sign the declaration below — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
           "emailReceived": "One step left: read and sign the declaration from the email you received — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most."
+        },
+        "declareReleased": {
+          "emailJustSent": "One step left: read and sign the declaration online, from the email we have just sent you. Your place is held, but if you do not sign by {release}, it is released. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "emailHeldUntil": "Your place is held. We ask for the declaration by email {opens} before the start — you sign it then, online, by {release}: if you do not sign by then, the place is released; once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "onThisPage": "One step left: read and sign the declaration below, online. Your place is held, but if you do not sign by {release}, it is released. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "emailReceived": "One step left: read and sign the declaration online, from the email you received. Your place is held, but if you do not sign by {release}, it is released. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest."
+        },
+        "declareScheduledReleased": {
+          "emailJustSent": "One step left: read and sign the declaration online, from the email on its way to you — it leaves within {wait} at the most. Your place is held, but if you do not sign by {release}, it is released. Once you sign, we email you the signed declaration (PDF) and your race number.",
+          "emailHeldUntil": "Your place is held. We ask for the declaration by email {opens} before the start — you sign it then, online, by {release}: if you do not sign by then, the place is released; once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+          "onThisPage": "One step left: read and sign the declaration below, online. Your place is held, but if you do not sign by {release}, it is released. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+          "emailReceived": "One step left: read and sign the declaration online, from the email you received. Your place is held, but if you do not sign by {release}, it is released. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most."
         },
         "done": "Your registration is confirmed. See you at the start!"
       }
@@ -12303,6 +12386,9 @@
       "deadline": "Your place is held until {deadline}. With no waiting list it stays yours after that, until the start — but the registration is complete only with the signed declaration.",
       "deadlineAtStart": "Your place is held until the start, {deadline}: it does not lapse before. The registration is complete only with the signed declaration.",
       "deadlinePassed": "The deadline, {deadline}, has passed, but the place is still yours: sign now and the registration is complete.",
+      "deadlineReleased": "Your place is held until {deadline}. If you do not sign by then, the place is released, even if nobody is waiting — the registration is complete only with the signed declaration.",
+      "deadlineReleasing": "The deadline, {deadline}, has passed: the places of those who did not sign are released, so the place is no longer held for you.",
+      "deadlineReleasedLater": "Your place is held until {deadline}; if somebody is waiting, it may then pass on. If you do not sign by {release}, the place is released, even if nobody is waiting — the registration is complete only with the signed declaration.",
       "idDocument": "Identity document (series and number)",
       "idDocumentHelp": "Your identity card (e.g. “{idExample}”) or passport; the kit is collected against it. Deleted seven days after the event, masked in the club's copy; we keep no copy of the document.",
       "idDocumentPlaceholder": "{idExample}",
@@ -12428,6 +12514,8 @@
       "eventCancelled": "There is nothing you need to do: your registration stays with us as a record, with the status above.",
       "runner": "Registered: {name}",
       "confirmBy": "Confirm by signing the declaration, from the registration email, by {due}. Or on paper, at the registration desk, on race day.",
+      "confirmByReleased": "Confirm by signing the declaration, from the registration email, by {due}. If you do not sign by then, the place is released.",
+      "confirmByReleasedLater": "Confirm by signing the declaration, from the registration email, by {due}. If you do not sign by {release}, the place is released.",
       "familySign": {
         "body": "At {event}, the declarations of {names} are waiting for a signature. You can sign them all here, one after the other.",
         "action": "Sign the declarations"
