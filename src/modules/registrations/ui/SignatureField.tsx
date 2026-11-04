@@ -5,6 +5,7 @@ import TextField from "@mui/material/TextField";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { signatureNameMatches } from "../domain/signature-name";
+import { type NameBoxIds, useNameTypedAbove } from "./use-name-typed-above";
 
 /**
  * The signature box on the declaration: the name typed in a hand (§86), and — since §314 — the
@@ -59,6 +60,15 @@ import { signatureNameMatches } from "../domain/signature-name";
  * The box's `label` comes from the page, which names the same box with the same words in its
  * refusal summary: the two cannot drift apart ("Semnătura părintelui sau tutorelui" beside the
  * minor's box, the words an adult's box always had when the parent signs alone).
+ *
+ * ## A name the person checks above (§NNN)
+ *
+ * On a staff row not yet signed the page draws the name the club typed in the form's two name boxes,
+ * for the person to correct before signing (`nameFrom`, their ids). The participant's name this box
+ * speaks of — the one it wants from an adult or a minor, the minor's in a parent's hint — is then
+ * what those boxes hold as it is typed (`useNameTypedAbove`), composed as the server composes the
+ * name the press checks the signature against; and its way out, when the name is wrong, is to
+ * correct it there rather than to write to the club. Until the island arrives, the page's name.
  */
 export type Signer = "self" | "minor" | "guardian";
 
@@ -76,6 +86,7 @@ export default function SignatureField({
   refused,
   help,
   required = true,
+  nameFrom,
 }: {
   id: string;
   /** What the box posts: `typedName` for the declarant (adult or parent), `minorTypedName` for the minor (§330). */
@@ -111,23 +122,40 @@ export default function SignatureField({
    * block a browser with scripts off shows to every signer: there the server asks for it, and names the box.
    */
   required?: boolean;
+  /**
+   * The ids of the two name boxes the page draws above for the person to check (§NNN): the participant's name this
+   * box speaks of follows them as they are typed. Absent: the name the page passed, fixed.
+   */
+  nameFrom?: NameBoxIds;
 }) {
   const t = useTranslations("Registrations");
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState(defaultValue ?? "");
   const [touched, setTouched] = useState(false);
+  /*
+    The name typed above (§NNN), when the page draws it: an adult's or a minor's box wants it — never in place of no
+    name at all, which is a signer the boxes above have still to decide — and a parent's box names the minor by it.
+  */
+  const typedAbove = useNameTypedAbove(nameFrom);
+  const above = nameFrom !== undefined;
+  const wanted = signer !== "guardian" && expectedName !== null && typedAbove !== null ? typedAbove : expectedName;
+  const participant = signer === "guardian" && typedAbove !== null ? typedAbove : participantName;
 
   const mismatch =
-    expectedName !== null && value.trim() !== "" && !signatureNameMatches(value, expectedName);
+    wanted !== null && value.trim() !== "" && !signatureNameMatches(value, wanted);
   // Plain, for the browser's bubble only: `setCustomValidity` cannot carry markup.
   const mismatchSentence =
-    expectedName === null
+    wanted === null
       ? ""
       : signer === "guardian"
-        ? t("declare.signatureMismatchForMinor", { name: expectedName })
+        ? t("declare.signatureMismatchForMinor", { name: wanted })
         : signer === "minor"
-          ? t("declare.minorSignatureMismatch", { name: expectedName })
-          : t("declare.signatureMismatch", { name: expectedName });
+          ? above
+            ? t("declare.minorSignatureMismatchAbove", { name: wanted })
+            : t("declare.minorSignatureMismatch", { name: wanted })
+          : above
+            ? t("declare.signatureMismatchAbove", { name: wanted })
+            : t("declare.signatureMismatch", { name: wanted });
 
   /*
     The refusal the browser enforces, judged on what the box actually holds — read from the DOM
@@ -138,10 +166,10 @@ export default function SignatureField({
   */
   useEffect(() => {
     const input = inputRef.current;
-    if (!input || expectedName === null) return;
-    const wrong = input.value.trim() !== "" && !signatureNameMatches(input.value, expectedName);
+    if (!input || wanted === null) return;
+    const wrong = input.value.trim() !== "" && !signatureNameMatches(input.value, wanted);
     input.setCustomValidity(wrong ? mismatchSentence : "");
-  }, [value, expectedName, mismatchSentence]);
+  }, [value, wanted, mismatchSentence]);
 
   const showError = mismatch && (touched || Boolean(refused));
 
@@ -153,33 +181,46 @@ export default function SignatureField({
     — an adult's, or a minor's in their own box (§330) — is one the club corrects ("Corectează
     numele") and the same link then signs; a guardian's is not — no staff verb edits it
     (`AGENTS.md` §15.11) — so the parent is told what actually works: cancel, and register the
-    minor again with the right name.
+    minor again with the right name. A name the page draws above for the person to check (§NNN)
+    is corrected there, by the person, and nobody else.
   */
   const wrongNameSentence =
     signer === "guardian"
       ? t.rich(canReply ? "declare.signatureNameWrongForMinorReply" : "declare.signatureNameWrongForMinor", { contact, mine })
       : signer === "minor"
-        ? t.rich(canReply ? "declare.minorNameWrongReply" : "declare.minorNameWrong", { contact })
-        : t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact });
+        ? above
+          ? t("complete.minorNameTypedAbove")
+          : t.rich(canReply ? "declare.minorNameWrongReply" : "declare.minorNameWrong", { contact })
+        : above
+          ? t("complete.nameTypedAbove")
+          : t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact });
 
   // The same sentence as the bubble's, with the name in bold, for under the box.
   const mismatchUnderBox =
-    expectedName === null
+    wanted === null
       ? null
       : signer === "guardian"
-        ? t.rich("declare.signatureMismatchForMinorRich", { name: expectedName, strong })
+        ? t.rich("declare.signatureMismatchForMinorRich", { name: wanted, strong })
         : signer === "minor"
-          ? t.rich("declare.minorSignatureMismatchRich", { name: expectedName, strong })
-          : t.rich("declare.signatureMismatchRich", { name: expectedName, strong });
+          ? above
+            ? t.rich("declare.minorSignatureMismatchAboveRich", { name: wanted, strong })
+            : t.rich("declare.minorSignatureMismatchRich", { name: wanted, strong })
+          : above
+            ? t.rich("declare.signatureMismatchAboveRich", { name: wanted, strong })
+            : t.rich("declare.signatureMismatchRich", { name: wanted, strong });
 
   const hint =
-    expectedName === null
+    wanted === null
       ? (help ?? t("declare.typedNameHelp"))
       : signer === "guardian"
-        ? t.rich("declare.typedNameHelpForMinor", { name: expectedName, participant: participantName ?? "", strong })
+        ? t.rich("declare.typedNameHelpForMinor", { name: wanted, participant: participant ?? "", strong })
         : signer === "minor"
-          ? t.rich("declare.minorTypedNameHelp", { name: expectedName, strong })
-          : t.rich("declare.typedNameHelpWithName", { name: expectedName, strong });
+          ? above
+            ? t.rich("declare.minorTypedNameHelpAbove", { name: wanted, strong })
+            : t.rich("declare.minorTypedNameHelp", { name: wanted, strong })
+          : above
+            ? t.rich("declare.typedNameHelpAbove", { name: wanted, strong })
+            : t.rich("declare.typedNameHelpWithName", { name: wanted, strong });
 
   return (
     <TextField

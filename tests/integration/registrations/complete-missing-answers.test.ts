@@ -14,6 +14,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { registrationNameKey } from "@/modules/registrations/domain/name-key";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { TYPED_ANSWERS } from "../../helpers/missing-answers";
 import en from "../../../messages/en.json";
@@ -98,6 +99,7 @@ const { findRegistrationDetailForAdmin, listRegistrationsForAdmin } = await impo
 const { missingAnswersHeld, ANSWERS_MISSING } = await import("@/modules/registrations/missing-answers");
 const { enqueueEmail, processOutboxBatch } = await import("@/modules/notifications/outbox");
 const { createOutboxRenderer } = await import("@/modules/notifications/render");
+const { addReserveEntry, moveReserveEntryToWaitlist } = await import("@/modules/registrations/reserve-list");
 
 let eventId: string;
 let participantId: string;
@@ -248,6 +250,11 @@ async function failureOf(work: Promise<unknown>): Promise<{ code?: string; field
   throw new Error("expected a refusal");
 }
 
+/** One input of a drawn page, by the name it posts. */
+function inputOf(html: string, name: string): string {
+  return new RegExp(`<input[^>]*name="${name}"[^>]*>`).exec(html)?.[0] ?? "";
+}
+
 function drawn(page: ReactElement, locale: "ro" | "en" = "ro"): string {
   return renderToStaticMarkup(createElement(NextIntlClientProvider, { locale, messages: locale === "ro" ? ro : en } as unknown as ComponentProps<typeof NextIntlClientProvider>, page));
 }
@@ -292,9 +299,12 @@ describe("BR-REQ-037-05 criterion 23: the declaration's page asks the missing an
       for (const box of ["birthDate", "city", "sex", "nationality", "phone", "emergencyContactName", "emergencyContactPhone"]) {
         expect(html, box).toContain(`name="${box}"`);
       }
-      // The answers the row holds are never asked again.
-      expect(html).not.toContain('name="firstName"');
-      expect(html).not.toContain('name="lastName"');
+      // The answers the row holds are never asked again (the country, on Romania)…
+      expect(html).not.toContain('name="country"');
+      // …but a staff row's name is drawn, prefilled with what the club typed, for the person to check (§NNN).
+      expect(inputOf(html, "firstName")).toContain('value="Mara"');
+      expect(inputOf(html, "lastName")).toContain('value="Munteanu"');
+      expect(html).toContain(catalogue.Registrations.complete.nameCheck);
       // The boxes come before the signature.
       expect(html.indexOf('data-testid="complete-answers"')).toBeLessThan(html.indexOf('name="typedName"'));
     }
@@ -378,7 +388,9 @@ describe("BR-REQ-037-05 criterion 23: the declaration's page asks the missing an
   });
 
   it("while the birth date is asked, the signature names nobody to match yet and says whose name it takes in either case", async () => {
-    const row = await registration("PENDING_DECLARATION");
+    // A public row written before the birth date was asked: its name is the one it was registered under.
+    const row = await registration("PENDING_DECLARATION", PUBLIC_ANSWERS);
+    await db.update(registrations).set({ birthDate: null }).where(eq(registrations.id, row.id));
     const secret = await link(row.id, "COMPLETE_DECLARATION");
     for (const [locale, catalogue] of [
       ["ro", ro],
@@ -388,6 +400,20 @@ describe("BR-REQ-037-05 criterion 23: the declaration's page asks the missing an
       // Under the box, both cases: the registered name, and a minor's parent or guardian typed above.
       expect(html).toContain(catalogue.Registrations.complete.signatureOpen.replace("{name}", "Mara Munteanu"));
       // Not «Mara must sign personally»: the birth date typed above may yet make her a minor, whose parent signs.
+      expect(html).not.toContain(catalogue.Registrations.declare.signPersonally.replace("{participant}", "Mara Munteanu"));
+    }
+  });
+
+  it("a staff row's name is checked above (§NNN): the open signature points at the name typed there, naming none", async () => {
+    const row = await registration("PENDING_DECLARATION");
+    const secret = await link(row.id, "COMPLETE_DECLARATION");
+    for (const [locale, catalogue] of [
+      ["ro", ro],
+      ["en", en],
+    ] as const) {
+      const html = await declarePage(secret, {}, locale);
+      expect(html).toContain(catalogue.Registrations.complete.signatureOpenName);
+      expect(html).not.toContain(catalogue.Registrations.complete.signatureOpen.replace("{name}", "Mara Munteanu"));
       expect(html).not.toContain(catalogue.Registrations.declare.signPersonally.replace("{participant}", "Mara Munteanu"));
     }
   });
@@ -550,5 +576,191 @@ describe("BR-REQ-037-05 criteria 25 and 27: «Date lipsă» in the backoffice, a
     const manage = await managePage(await link(row.id, "MANAGE_REGISTRATION"));
     expect(manage).not.toContain('data-testid="manage-complete-answers"');
     expect(manage).not.toContain('data-testid="complete-answers');
+  });
+});
+
+/**
+ * §NNN (BR-REQ-037-05; the owner, 2026-11-04, of the people he offers places to: «… își pot completa toate datele gen
+ * nume complet, DOB, oraș») — the name the club typed is the person's to check before they sign: a
+ * staff row not yet signed draws it on the declaration's and the offer's page in the form's own two name boxes,
+ * prefilled, and the one press saves it corrected with the answers and signs with it.
+ */
+describe("BR-REQ-037-05: the name the club typed, checked and corrected by the person before signing", () => {
+  /** What the page posts for «Sebi Sebi» once the person corrected the name and typed the answers the line never had. */
+  const SEBASTIAN = { ...TYPED_BOXES, firstName: "Sebastian", lastName: "Popescu" };
+
+  /** The words inside a message's `<link>`: what a drawn lead shows of it in one piece. */
+  const linkWords = (message: string) => /<link>(.*?)<\/link>/.exec(message)?.[1] ?? message;
+
+  /**
+   * «Sebi Sebi», a line of the internal list with an address and nothing else, offered a place on a full race with
+   * «Oferă-i un loc acum» (§888): a staff row owing every answer — and the offer's own link.
+   */
+  async function sebiOffered(): Promise<{ row: Registration; secret: string }> {
+    const [admin] = await db.insert(staffUsers).values({ email: "admin@example.ro", displayName: "Admin", role: "ADMIN" }).returning();
+    await db.update(events).set({ capacity: 1 }).where(eq(events.id, eventId));
+    await registration("CONFIRMED", PUBLIC_ANSWERS);
+    const now = new Date();
+    const line = await addReserveEntry(db, admin, eventId, { firstName: "Sebi", lastName: "Sebi", email: "sebi@example.ro", note: null }, now);
+    const moved = await moveReserveEntryToWaitlist(db, admin, line.id, { email: null, relayedByParticipantRequest: true, locale: "ro", offerNow: { addPlaceTo: 2 } }, now);
+    const row = await rowOf(moved.registrationId);
+    const secret = (await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "WAITLIST_OFFER", expiresAt: new Date(now.getTime() + 2 * DAY), now })).secret;
+    return { row, secret };
+  }
+
+  async function signedWith(secret: string, answers: Record<string, string>, typedName: string): Promise<string> {
+    const form = await declarationForm(secret, answers);
+    form.set("typedName", typedName);
+    return redirectOf(signDeclarationAction(form));
+  }
+
+  it("the offer's page draws the name the club typed, prefilled and first, with the answers the line never had — in both languages", async () => {
+    const { row, secret } = await sebiOffered();
+    expect(row).toMatchObject({ source: "STAFF", status: "WAITLIST_OFFERED", registeredName: "Sebi Sebi", displayName: "Sebi Sebi", birthDate: null, city: null });
+    for (const [locale, catalogue] of [
+      ["ro", ro],
+      ["en", en],
+    ] as const) {
+      const html = await declarePage(secret, {}, locale);
+      expect(html).toContain('data-testid="complete-name-check"');
+      expect(html).toContain(catalogue.Registrations.complete.nameCheck);
+      expect(inputOf(html, "firstName")).toContain('value="Sebi"');
+      expect(inputOf(html, "lastName")).toContain('value="Sebi"');
+      expect(inputOf(html, "firstName")).toContain("required");
+      for (const box of ["birthDate", "city", "sex", "phone", "emergencyContactName"]) expect(html, box).toContain(`name="${box}"`);
+      expect(html.indexOf('name="firstName"')).toBeLessThan(html.indexOf('name="birthDate"'));
+      // The lead before the text says the name is checked there too.
+      expect(html).toContain(linkWords(catalogue.Registrations.complete.declareLeadName));
+      // While the birth date is asked, the signature names nobody yet and points at the name typed above.
+      expect(html).toContain(catalogue.Registrations.complete.signatureOpenName);
+    }
+  });
+
+  it("one press saves the corrected name with the answers and signs with it: the name of record, its key and the list's name follow; audited as the person's, by field names", async () => {
+    const { row, secret } = await sebiOffered();
+    expect(await signedWith(secret, SEBASTIAN, "Sebastian Popescu")).toMatch(/\?done=confirmed/);
+    expect(await rowOf(row.id)).toMatchObject({
+      status: "CONFIRMED",
+      firstName: "Sebastian",
+      lastName: "Popescu",
+      registeredName: "Sebastian Popescu",
+      nameKey: registrationNameKey("Sebastian Popescu"),
+      displayName: "Sebastian Popescu",
+      birthDate: TYPED_ANSWERS.birthDate,
+      city: TYPED_ANSWERS.city,
+    });
+    const [acceptance] = await db.select().from(declarationAcceptances).where(eq(declarationAcceptances.registrationId, row.id));
+    expect(acceptance.typedName).toBe("Sebastian Popescu");
+    const [trail] = await completions(row.id);
+    expect(trail).toMatchObject({ actorStaffUserId: null, participantId: row.participantId });
+    expect(trail.metadataJson).toEqual({
+      fields: ["firstName", "lastName", "displayName", "birthDate", "sex", "nationality", "city", "phone", "emergencyContactName", "emergencyContactPhone", "registeredName"],
+      via: "DECLARATION",
+    });
+    expect(JSON.stringify(trail.metadataJson)).not.toMatch(/Sebastian|Popescu|Sebi/);
+    // The backoffice reads the name as now stored, and a name is never «Date lipsă».
+    const detail = await findRegistrationDetailForAdmin(db, row.id);
+    expect(detail?.registeredName).toBe("Sebastian Popescu");
+    expect(detail && missingAnswersHeld(detail)).toEqual([]);
+  });
+
+  it("signing with the club's name after correcting it is refused — nothing saved, signed or spent — and the page then wants the corrected name, kept", async () => {
+    const { row, secret } = await sebiOffered();
+    expect(await signedWith(secret, SEBASTIAN, "Sebi Sebi")).toMatch(/\?invalid=name#/);
+    expect(await rowOf(row.id)).toMatchObject({ status: "WAITLIST_OFFERED", registeredName: "Sebi Sebi", firstName: "Sebi", birthDate: null });
+    expect(await completions(row.id)).toEqual([]);
+    expect(await linkSpent(secret)).toBe(false);
+    expect(await db.select().from(declarationAcceptances)).toEqual([]);
+
+    const html = await declarePage(secret, { invalid: "name" });
+    expect(inputOf(html, "firstName")).toContain('value="Sebastian"');
+    expect(inputOf(html, "lastName")).toContain('value="Popescu"');
+    // The box wants the corrected name, in bold, and the way out is above — never «write to us, the club corrects it».
+    expect(html).toContain("<strong>Sebastian Popescu</strong>");
+    expect(html).toContain(ro.Registrations.complete.nameTypedAbove);
+    expect(html).not.toContain("clubul îl corectează");
+
+    expect(await signedWith(secret, SEBASTIAN, "Sebastian Popescu")).toMatch(/\?done=confirmed/);
+    expect(await rowOf(row.id)).toMatchObject({ status: "CONFIRMED", registeredName: "Sebastian Popescu" });
+  });
+
+  it("a press refused for another answer keeps the name as typed", async () => {
+    const { row, secret } = await sebiOffered();
+    const withoutCity = Object.fromEntries(Object.entries(SEBASTIAN).filter(([name]) => name !== "city"));
+    expect(await signedWith(secret, withoutCity, "Sebastian Popescu")).toMatch(/\?invalid=answers&answers=city%2CanswersMissing#complete-details$/);
+    expect(await rowOf(row.id)).toMatchObject({ registeredName: "Sebi Sebi", city: null });
+    const html = await declarePage(secret, { invalid: "answers", answers: "city,answersMissing" });
+    expect(inputOf(html, "firstName")).toContain('value="Sebastian"');
+    expect(inputOf(html, "lastName")).toContain('value="Popescu"');
+  });
+
+  it("a staff row holding every answer: the name alone — its own heading and lead, no intro; left as typed nothing is written, corrected it is", async () => {
+    const row = await registration("PENDING_DECLARATION", { ...PUBLIC_ANSWERS, source: "STAFF" });
+    const secret = await link(row.id, "COMPLETE_DECLARATION");
+    for (const [locale, catalogue] of [
+      ["ro", ro],
+      ["en", en],
+    ] as const) {
+      const html = await declarePage(secret, {}, locale);
+      expect(html).toContain(catalogue.Registrations.complete.nameTitle);
+      expect(html).toContain(linkWords(catalogue.Registrations.complete.nameLead));
+      expect(html).not.toContain(catalogue.Registrations.complete.intro);
+      expect(html).not.toContain('name="birthDate"');
+      expect(inputOf(html, "lastName")).toContain('value="Munteanu"');
+    }
+    // The signature box asks for the name typed above, by name.
+    expect(await declarePage(secret)).toContain("<strong>Mara Munteanu</strong>");
+
+    expect(await signedWith(secret, { firstName: "Mara", lastName: "Munteanu" }, "Mara Munteanu")).toMatch(/\?done=confirmed/);
+    expect(await rowOf(row.id)).toMatchObject({ status: "CONFIRMED", registeredName: "Mara Munteanu" });
+    expect(await completions(row.id)).toEqual([]);
+  });
+
+  it("the name alone, corrected: written and audited — a list name chosen apart from it stays", async () => {
+    const row = await registration("PENDING_DECLARATION", { ...PUBLIC_ANSWERS, source: "STAFF" });
+    const secret = await link(row.id, "COMPLETE_DECLARATION");
+    expect(await signedWith(secret, { firstName: "Mara", lastName: "Munteanu-Pop" }, "Mara Munteanu-Pop")).toMatch(/\?done=confirmed/);
+    expect(await rowOf(row.id)).toMatchObject({ status: "CONFIRMED", lastName: "Munteanu-Pop", registeredName: "Mara Munteanu-Pop", displayName: "Mara M." });
+    const [trail] = await completions(row.id);
+    expect(trail.metadataJson).toEqual({ fields: ["lastName", "registeredName"], via: "DECLARATION" });
+  });
+
+  it("a public row draws no name boxes — even beside an answer to complete — and its press never moves the name", async () => {
+    const row = await registration("PENDING_DECLARATION", PUBLIC_ANSWERS);
+    await db.update(registrations).set({ city: null }).where(eq(registrations.id, row.id));
+    const secret = await link(row.id, "COMPLETE_DECLARATION");
+    const html = await declarePage(secret);
+    expect(html).toContain('name="city"');
+    expect(html).not.toContain('name="firstName"');
+    expect(html).not.toContain('data-testid="complete-name-check"');
+    expect(await signedWith(secret, { city: "Sibiu", firstName: "Altcineva", lastName: "Altfel" }, "Mara Munteanu")).toMatch(/\?done=confirmed/);
+    expect(await rowOf(row.id)).toMatchObject({ registeredName: "Mara Munteanu", firstName: "Mara", city: "Sibiu" });
+  });
+
+  it("a signed staff row: the manage page draws no name boxes, and its press never moves the name", async () => {
+    const row = await registration("CONFIRMED");
+    const document = await findCurrentApprovedDocument(db, "EVENT_DECLARATION", "ro", new Date());
+    const [desk] = await db.insert(staffUsers).values({ email: "desk@example.ro", displayName: "Desk", role: "MEMBER" }).returning();
+    await db.insert(declarationAcceptances).values({
+      registrationId: row.id,
+      legalDocumentId: document?.id ?? "",
+      declarationVersion: 1,
+      contentSha256: document?.contentSha256 ?? "",
+      locale: "ro",
+      typedName: "Mara Munteanu",
+      method: "PAPER",
+      attestedByStaffUserId: desk.id,
+      acceptedAt: new Date(),
+    });
+    const secret = await link(row.id, "MANAGE_REGISTRATION");
+    const page = await managePage(secret);
+    expect(page).toContain('data-testid="manage-complete-answers"');
+    expect(page).not.toContain('name="firstName"');
+    expect(page).not.toContain('data-testid="complete-name-check"');
+
+    const form = new FormData();
+    for (const [name, value] of Object.entries({ ...SEBASTIAN, locale: "ro", token: secret, registrationId: row.id })) form.set(name, value);
+    expect(await redirectOf(completeAnswersFromManageAction(form))).toMatch(/\?answers=1&person=.+#answers$/);
+    expect(await rowOf(row.id)).toMatchObject({ registeredName: "Mara Munteanu", firstName: "Mara", city: TYPED_ANSWERS.city });
   });
 });

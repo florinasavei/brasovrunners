@@ -11277,7 +11277,7 @@
       "move": "Mută pe lista oficială",
       "moveTitle": "Muți pe lista oficială de așteptare?",
       "noteFollows": "Nota trece pe înscriere, iar rândul dispare de pe lista internă.",
-      "detailsAtSigning": "Datele care lipsesc, ca data nașterii sau telefonul, persoana le completează singură când semnează declarația.",
+      "detailsAtSigning": "Când semnează declarația, persoana își verifică numele complet și completează singură datele lipsă, ca data nașterii sau telefonul.",
       "emailForOfficial": "Email pentru lista oficială",
       "emailForOfficialHelp": "Rândul nu are adresă: scrie-o aici ca să-l muți. Aici îi ajung emailurile.",
       "eliteNoAddress": "Alergător de elită? Nu-i trebuie adresă: „Mută pe lista de elită”.",
@@ -11806,6 +11806,7 @@
       "title": "Declarație pe proprie răspundere",
       "accept": "Am citit și accept declarația de mai sus, inclusiv, în mod expres, limitarea răspunderii organizatorului în limitele permise de lege.",
       "signPersonally": "Declarația trebuie semnată personal de {participant}. Dacă această adresă de email nu este a sa, trimiteți-i linkul sau dați-i telefonul: nimeni nu semnează în locul altui adult.",
+      "signPersonallyNameAbove": "Declarația trebuie semnată personal de persoana înscrisă, cu numele complet de mai sus. Dacă această adresă de email nu este a sa, trimiteți-i linkul: nimeni nu semnează în locul altui adult.",
       "typedName": "Scrie numele complet ca semnătură",
       "privacyLink": "Nota de confidențialitate",
       "doneConfirmed": "Înscrierea a fost confirmată.",
@@ -11867,6 +11868,12 @@
       "minorSignatureMismatchRich": "Semnătura minorului trebuie să fie exact numele cu care a fost înscris: <strong>{name}</strong>.",
       "minorNameWrong": "Dacă numele minorului de la înscriere este greșit, <contact>scrie-ne</contact>: clubul îl corectează, iar apoi semnați din același link.",
       "minorNameWrongReply": "Dacă numele minorului de la înscriere este greșit, răspunde la emailul primit sau <contact>scrie-ne</contact>: clubul îl corectează, iar apoi semnați din același link.",
+      "typedNameHelpAbove": "Semnezi cu numele complet de mai sus: <strong>{name}</strong> — scrie exact acest nume. Apare ca semnătură.",
+      "minorTypedNameHelpAbove": "Semnează și minorul, cu numele lui complet de mai sus: <strong>{name}</strong> — scrie exact acest nume. Apare ca semnătură.",
+      "signatureMismatchAbove": "Semnătura trebuie să fie exact numele complet de mai sus: {name}.",
+      "signatureMismatchAboveRich": "Semnătura trebuie să fie exact numele complet de mai sus: <strong>{name}</strong>.",
+      "minorSignatureMismatchAbove": "Semnătura minorului trebuie să fie exact numele lui complet de mai sus: {name}.",
+      "minorSignatureMismatchAboveRich": "Semnătura minorului trebuie să fie exact numele lui complet de mai sus: <strong>{name}</strong>.",
       "idDocumentTypes": {
         "ID_CARD": "Carte de identitate",
         "PASSPORT": "Pașaport",
@@ -12171,7 +12178,15 @@
       "saving": "Se salvează…",
       "saved": "Gata, datele tale sunt salvate.",
       "signatureOpen": "Te-ai înscris ca {name}: semnează cu exact acest nume. Pentru un minor semnează părintele sau tutorele, cu numele scris mai sus.",
-      "guardianTypedAbove": "Semnează părintele sau tutorele, cu numele scris mai sus la datele de completat. Dacă numele e greșit, corectează-l acolo și semnează cu el."
+      "guardianTypedAbove": "Semnează părintele sau tutorele, cu numele scris mai sus la datele de completat. Dacă numele e greșit, corectează-l acolo și semnează cu el.",
+      "nameTitle": "Verifică-ți numele",
+      "nameTitleFor": "Verifică numele pentru {name}",
+      "nameCheck": "Verifică-ți numele complet, ca în actul de identitate: cu el semnezi declarația și apare pe numărul de concurs.",
+      "nameLead": "Înainte de semnătură, <link>verifică-ți numele complet</link>: îl găsești chiar deasupra semnăturii.",
+      "declareLeadName": "Înainte de semnătură, <link>verifică-ți numele complet și completează datele care lipsesc</link> din înscrierea ta: le găsești chiar deasupra semnăturii.",
+      "signatureOpenName": "Semnează cu numele complet scris mai sus, exact cum apare acolo. Pentru un minor semnează părintele sau tutorele, cu numele lui scris mai sus.",
+      "nameTypedAbove": "Numele cu care semnezi e cel scris mai sus, la datele tale: dacă e greșit, corectează-l acolo și semnează cu el.",
+      "minorNameTypedAbove": "Numele minorului e cel scris mai sus, la datele lui: dacă e greșit, corectează-l acolo și semnează cu el."
     }
   },
   "Devs": {
