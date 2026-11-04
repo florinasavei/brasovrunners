@@ -2343,19 +2343,25 @@
         },
         "audience": {
           "participants": "each participant",
-          "confirmed": "each confirmed participant",
           "subscribers": "each subscriber",
           "invited": "each person invited",
           "ticked": "each person ticked",
           "unsigned": "each person who has not signed yet",
           "present": "each person marked present",
-          "newAddresses": "each new address on the list",
           "volunteerAddresses": "each address on the list without an open invitation already",
           "memberAddresses": "each address on the list",
           "firstWaiting": "the first on the waiting list",
           "held": "each person with a place held for the declaration"
         },
         "none": "No email goes to {name}.",
+        "toOrNothing": "1 email goes to {name}: “{type}” — or none, if they join the waiting list.",
+        "toAddressOrNothing": "1 email goes to {name} ({address}): “{type}” — or none, if they join the waiting list.",
+        "noneType": "No “{type}” email goes.",
+        "optOut": "Send the email",
+        "refusalTells": "A refusal tells the person its ground, in “Registration cancelled”: so that email always goes.",
+        "windowSkipped": "With the box unticked, those whose deadline moves later are not sent it again; those whose deadline moves earlier still are.",
+        "alertOptOut": "Announce it to the newsletter's subscribers",
+        "alertOff": "The newsletter's subscribers are not told of this event, now or later.",
         "noneMany": "The people erased receive no email.",
         "club": {
           "one": "And {count} email to the club's mailboxes.",
@@ -2398,6 +2404,8 @@
       "opening": "When you untick it and save, those who asked “Let me know” get “Registration is open” at the job's next pass.",
       "openingCount": "When you untick it and save, those who asked “Let me know” ({count}) get “Registration is open” at the job's next pass.",
       "window": "Each held place whose deadline moves is sent “Sign the declaration” again, with the new deadline.",
+      "windowOptOut": "Send “Sign the declaration” again",
+      "windowOptOutHelp": "You may untick it: whoever's deadline moves later is not sent it again; a deadline moved earlier is always sent.",
       "reminder": "The reminder leaves by itself, to each confirmed participant; if you lengthen the lead or move the start earlier, the job sends it at its next pass to the events now within reach."
     },
     "errors": {
@@ -2532,7 +2540,8 @@
       "RESULT_BIB_UNKNOWN": "Number {bib} has no confirmed registration. Its time: {time} — write it down and enter it under «Results», under “Runners who did not register”.",
       "RESULT_ALREADY_FINISHED": "Number {bib} has already finished, at {time}. A correction is made under «Results».",
       "RESULT_FINISH_NOT_STARTED": "The race has not started yet: a finish cannot be before the start.",
-      "RESULT_FINISH_CLOSED": "The start was more than a day ago: the times are entered under «Results»."
+      "RESULT_FINISH_CLOSED": "The start was more than a day ago: the times are entered under «Results».",
+      "REFUSAL_NEEDS_EMAIL": "Nothing was cancelled: the club's refusal always goes with the email that tells the person its ground."
     },
     "editor": {
       "draftPreview": {
@@ -2841,6 +2850,7 @@
         "other": "The save moved {count} reserved places to each date's new deadline."
       },
       "holdsMovedSent": "The window is already open, so each of them gets the declaration email again, with the new deadline.",
+      "holdsMovedSkipped": "The box was unticked: the declaration email went again only to those whose deadline moved earlier.",
       "placeAnnouncedLive": "The location is announced: it shows on the page, the cards, the calendar and in emails from now on. Those registered get no separate email about it.",
       "placeAnnouncedDraft": "The location is announced: it will show on every page once the event is published. Nobody is emailed about it.",
       "scope": {
@@ -3816,6 +3826,12 @@
       "membersInvite": "Add the members",
       "membersInviting": "Adding…",
       "membersInvited": "Members added: {count}. The invitations are on their way.",
+      "membersAdded": "Members added: {count}.",
+      "inviteOptOut": "Send the invitation now",
+      "inviteOptOutOff": "No invitation goes to {name} and Zitadel is not asked: you send it later, with “Resend the invitation”.",
+      "membersOptOut": "Send the invitations now",
+      "membersOptOutOff": "No invitation goes and Zitadel is not asked: you send them later, each with “Resend the invitation”.",
+      "inviteNotSent": "No invitation went and Zitadel was not asked: send it whenever you like, with “Resend the invitation” beside each person.",
       "membersInviteFailed": "Members added: {count}, the invitations are on their way — but for {failed} of them the sign-in account could not be made. Press “Add the members” again with their addresses to retry.",
       "membersRetried": "Already members: {retried} — only their account was tried again.",
       "membersOutcome": {
@@ -13666,7 +13682,10 @@
         "other": "Also, {count} emails to other people."
       },
       "roles": "If the roles are no longer the same by then, the email is withdrawn.",
-      "zitadel": "Zitadel sends the password link separately, now."
+      "zitadel": "Zitadel sends the password link separately, now.",
+      "skipped": "The email did not go: you unticked “Send…”.",
+      "alertLater": "The newsletter's subscribers get the announcement at the job's next pass.",
+      "alertSkipped": "The newsletter's subscribers are not told: you unticked the box."
     },
     "via": {
       "mailgun": "Leaves by Mailgun.",

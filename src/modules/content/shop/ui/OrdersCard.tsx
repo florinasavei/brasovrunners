@@ -427,9 +427,11 @@ function OrderVerbs({
 }) {
   // «Marchează plătită» tells the member, at their account's address — none while the shop's switch is off, and none when the
   // account is gone (`moveOrderByClub`): the dialog no longer promises an email that is never queued. The other verbs send nothing.
+  // «Trimite emailul» under it (the design «telling the owner about every email a staff press sends», slice 4): a payment taken
+  // by hand from a member standing there need not be emailed too; unticked, the order is marked paid and nothing is queued.
   const paidMail =
     emailMembers && order.memberEmail !== null
-      ? mail.mail({ to: showEmail ? { name: order.memberName, address: order.memberEmail } : order.memberName, type: "SHOP_ORDER_PAID" })
+      ? mail.mail({ to: showEmail ? { name: order.memberName, address: order.memberEmail } : order.memberName, type: "SHOP_ORDER_PAID", optOut: true })
       : mail.noMail(order.memberName);
   const verbs: OrderVerb[] = clubVerbsFor(order.status);
   if (verbs.length === 0) return null;

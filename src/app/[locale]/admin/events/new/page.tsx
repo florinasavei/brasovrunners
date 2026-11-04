@@ -155,8 +155,10 @@ export default async function NewEventPage({ params, searchParams }: Props) {
           when: [{ field: THEN_FIELD, equals: THEN_PUBLISH }],
           title: t("confirm.createPublishTitle"),
           body: t("confirm.publishBody"),
-          // The job announces a new event to the newsletter's subscribers at its next pass (§445), one a day at most.
-          also: [words.line("alertMaybe")],
+          // The job announces a new event to the newsletter's subscribers at its next pass (§445), one a day at most — unless
+          // «Anunță abonații newsletterului» is unticked (slice 4): the event goes live and is never announced.
+          also: [{ ...words.line("alertMaybe"), withEmail: true }],
+          ...words.alertOptOut(),
           confirmLabel: t("editor.createAndPublish"),
           cancelLabel: words.cancel,
         },

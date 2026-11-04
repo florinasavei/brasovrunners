@@ -256,7 +256,7 @@ export default function EventImportPanel({
     }
   };
 
-  const form =(count: number, forms: Record<"one" | "few" | "other", string>) => fill(forms[countForm(count, locale)], { count });
+  const form = (count: number, forms: Record<"one" | "few" | "other", string>) => fill(forms[countForm(count, locale)], { count });
 
   const valueOf = (value: ChangeValue): string => {
     switch (value.type) {

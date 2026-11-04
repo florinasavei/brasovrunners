@@ -174,8 +174,8 @@ export default function ConfirmDialog({
         )}
         {/* What else the press sends, quieter (the design «telling the owner about every email a staff press sends», slice 3):
             the club's mailboxes as a count, the freed place's offer, Zitadel's own email — each line as the builder worded it. */}
-        {spec.also?.map((line) => (
-          <DialogContentText key={line.text} variant="body2" sx={{ mt: 1 }} data-testid="confirm-also">
+        {spec.also?.map((line, index) => (
+          <DialogContentText key={`${index}:${line.text}`} variant="body2" sx={{ mt: 1 }} data-testid="confirm-also">
             {line.text}
           </DialogContentText>
         ))}

@@ -2343,19 +2343,25 @@
         },
         "audience": {
           "participants": "fiecare participant",
-          "confirmed": "fiecare participant confirmat",
           "subscribers": "fiecare abonat",
           "invited": "fiecare persoană invitată",
           "ticked": "fiecare persoană bifată",
           "unsigned": "fiecare persoană care nu a semnat încă",
           "present": "fiecare persoană marcată prezentă",
-          "newAddresses": "fiecare adresă nouă din listă",
           "volunteerAddresses": "fiecare adresă din listă care nu are deja o invitație deschisă",
           "memberAddresses": "fiecare adresă din listă",
           "firstWaiting": "primii de pe lista de așteptare",
           "held": "fiecare persoană cu un loc ținut pentru declarație"
         },
         "none": "Nu pleacă niciun email către {name}.",
+        "toOrNothing": "Pleacă 1 email către {name}: „{type}” — sau niciunul, dacă intră pe lista de așteptare.",
+        "toAddressOrNothing": "Pleacă 1 email către {name} ({address}): „{type}” — sau niciunul, dacă intră pe lista de așteptare.",
+        "noneType": "Nu pleacă niciun email „{type}”.",
+        "optOut": "Trimite emailul",
+        "refusalTells": "Refuzul îi spune persoanei motivul, în „Înscriere anulată”: de aceea emailul pleacă întotdeauna.",
+        "windowSkipped": "Cu caseta debifată, nu-l mai primesc cei al căror termen se mută mai târziu; cei cu termenul mutat mai devreme îl primesc oricum.",
+        "alertOptOut": "Anunță abonații newsletterului",
+        "alertOff": "Abonații newsletterului nu primesc anunțul acestui eveniment, nici acum, nici mai târziu.",
         "noneMany": "Persoanele șterse nu primesc niciun email.",
         "club": {
           "one": "Și {count} email pentru căsuțele clubului.",
@@ -2398,6 +2404,8 @@
       "opening": "Când debifezi și salvezi, cei de la „Anunță-mă” primesc „Înscrierile s-au deschis”, la următoarea trecere a jobului.",
       "openingCount": "Când debifezi și salvezi, cei de la „Anunță-mă” ({count}) primesc „Înscrierile s-au deschis”, la următoarea trecere a jobului.",
       "window": "Fiecare loc ținut a cărui dată limită se mută primește din nou „Semnează declarația”, cu termenul nou.",
+      "windowOptOut": "Trimite din nou „Semnează declarația”",
+      "windowOptOutHelp": "Poți debifa: cine are termenul mutat mai târziu nu-l mai primește; un termen mutat mai devreme se trimite oricum.",
       "reminder": "Reminderul pleacă singur, către fiecare participant confirmat; dacă lungești termenul sau muți startul mai devreme, jobul îl trimite la următoarea trecere evenimentelor intrate acum în termen."
     },
     "errors": {
@@ -2532,7 +2540,8 @@
       "RESULT_BIB_UNKNOWN": "Numărul {bib} nu are o înscriere confirmată. Timpul lui: {time} — notează-l și scrie-l la «Clasament», la „Alergători neînscriși”.",
       "RESULT_ALREADY_FINISHED": "Numărul {bib} e deja sosit, la {time}. O corectură se face la «Clasament».",
       "RESULT_FINISH_NOT_STARTED": "Cursa nu a început încă: o sosire nu poate fi înainte de start.",
-      "RESULT_FINISH_CLOSED": "Startul a fost cu mai mult de o zi în urmă: timpii se scriu la «Clasament»."
+      "RESULT_FINISH_CLOSED": "Startul a fost cu mai mult de o zi în urmă: timpii se scriu la «Clasament».",
+      "REFUSAL_NEEDS_EMAIL": "Nu s-a anulat nimic: refuzul clubului pleacă întotdeauna cu emailul care îi spune persoanei motivul."
     },
     "editor": {
       "draftPreview": {
@@ -2841,6 +2850,7 @@
         "other": "Salvarea a mutat {count} de locuri rezervate la termenul nou al fiecărei date."
       },
       "holdsMovedSent": "Fereastra e deja deschisă, așa că fiecare primește din nou emailul cu declarația și termenul nou.",
+      "holdsMovedSkipped": "Caseta era debifată: emailul cu declarația a plecat din nou doar celor al căror termen s-a mutat mai devreme.",
       "placeAnnouncedLive": "Locația e anunțată: apare pe pagină, pe carduri, în calendar și în emailurile de acum încolo. Cei înscriși nu primesc un email separat despre ea.",
       "placeAnnouncedDraft": "Locația e anunțată: va apărea pe toate paginile când evenimentul e publicat. Nimeni nu primește un email despre ea.",
       "scope": {
@@ -3816,6 +3826,12 @@
       "membersInvite": "Adaugă membrii",
       "membersInviting": "Se adaugă…",
       "membersInvited": "Membri adăugați: {count}. Invitațiile sunt pe drum.",
+      "membersAdded": "Membri adăugați: {count}.",
+      "inviteOptOut": "Trimite invitația acum",
+      "inviteOptOutOff": "Nu pleacă nicio invitație către {name} și Zitadel nu e întrebat: o trimiți mai târziu, cu „Retrimite invitația”.",
+      "membersOptOut": "Trimite invitațiile acum",
+      "membersOptOutOff": "Nu pleacă nicio invitație și Zitadel nu e întrebat: le trimiți mai târziu, fiecăruia cu „Retrimite invitația”.",
+      "inviteNotSent": "Nu a plecat nicio invitație și Zitadel nu a fost întrebat: o trimiți când vrei, cu „Retrimite invitația” din dreptul fiecăruia.",
       "membersInviteFailed": "Membri adăugați: {count}, invitațiile sunt pe drum — dar pentru {failed} dintre ei contul de autentificare nu s-a putut face. Apasă din nou „Adaugă membrii” cu adresele lor ca să reîncerci.",
       "membersRetried": "Erau deja membri: {retried} — li s-a reîncercat doar contul.",
       "membersOutcome": {
@@ -13666,7 +13682,10 @@
         "other": "În plus, {count} de emailuri către alte persoane."
       },
       "roles": "Dacă până atunci rolurile nu mai sunt aceleași, emailul se retrage.",
-      "zitadel": "Zitadel trimite separat, acum, linkul pentru parolă."
+      "zitadel": "Zitadel trimite separat, acum, linkul pentru parolă.",
+      "skipped": "Emailul nu a plecat: ai debifat „Trimite…”.",
+      "alertLater": "Abonații newsletterului primesc anunțul la următoarea trecere a jobului.",
+      "alertSkipped": "Abonații newsletterului nu primesc anunțul: ai debifat caseta."
     },
     "via": {
       "mailgun": "Pleacă prin Mailgun.",

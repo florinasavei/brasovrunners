@@ -81,17 +81,18 @@ const COUNT_PARAMETERS = [
 const KEY = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
 
 /**
- * The sentences whose number is not the first counting parameter present, and the other numbers
- * a sentence names. A series save that also told its participants carries `applied` (the dates)
- * and `queued` (the emails): "Salvat pe {count} date ale seriei" counts `applied`, and the
- * notified sentence counts `queued` and names the dates as `{dates}`.
+ * The sentences whose number is not the first counting parameter present — or that count nothing —, and the other
+ * numbers a sentence names. A series save carries `applied` (the dates): "Salvat pe {count} date ale seriei" counts it.
+ * The notice's sentences count nothing since the mail line says how many emails left (the design «telling the owner
+ * about every email a staff press sends», slice 2): «Salvat; participanții sunt anunțați.», the series' naming its dates
+ * as `{dates}` — so no `queued` is read for them, and an entry without `count` takes no fallback count.
  */
 const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Record<string, string>> }>> = {
   eventSeries: { count: "applied" },
-  eventNotified: { count: "queued" },
-  eventCancelled: { count: "queued" },
-  eventSeriesNotified: { count: "queued", values: { dates: "applied" } },
-  eventSeriesCancelled: { count: "queued", values: { dates: "applied" } },
+  eventNotified: {},
+  eventCancelled: {},
+  eventSeriesNotified: { values: { dates: "applied" } },
+  eventSeriesCancelled: { values: { dates: "applied" } },
   // A press of the older pictures' button (§430): how many got their ladder, and how many are left.
   picturesLaddered: { count: "count", values: { left: "left" } },
   picturesLadderedFailed: { count: "count", values: { left: "left", failed: "failed" } },
@@ -208,7 +209,8 @@ export function noticeOf(outcome: Readonly<Record<string, string | number | unde
   if (testCount !== undefined && testCount !== "0") key = "registrationsCancelledTest";
   const sentence = SENTENCES[key];
   const values: Record<string, string> = {};
-  const counted = sentence?.count ?? COUNT_PARAMETERS.find((name) => numberOf(name) !== undefined);
+  // A sentence listed here counts what it names, or nothing; any other counts the first counting parameter present.
+  const counted = sentence ? sentence.count : COUNT_PARAMETERS.find((name) => numberOf(name) !== undefined);
   const count = counted ? numberOf(counted) : undefined;
   if (count !== undefined) values.count = count;
   for (const [placeholder, name] of Object.entries(sentence?.values ?? {})) {

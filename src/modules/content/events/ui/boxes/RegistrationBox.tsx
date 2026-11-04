@@ -24,7 +24,9 @@ import {
   confirmationWindow,
   DEFAULT_CONFIRMATION_DEADLINE_DAYS,
   DEFAULT_CONFIRMATION_OPENS_DAYS,
+  participationWindowOpen,
 } from "@/modules/registrations/domain/hold-deadlines";
+import { WINDOW_SEND_EMAIL_FIELD } from "@/shared/forms/send-email";
 import { REGISTRATION_MODE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { htmlConstraints, textFieldConstraints } from "@/shared/forms/constraints";
 import MailLine from "@/shared/feedback/MailLine";
@@ -272,6 +274,13 @@ export default async function RegistrationBox({
     What the save does to the places the window already gave (§665): moves those held to another
     window's instant now, or — when they all hold this one — says a changed window will move them.
   */
+  // Whether the save's move sends anything now (`moveWindowHolds`): only inside an open window, never on a cancelled event.
+  const windowSends =
+    windowHolds !== null &&
+    event !== null &&
+    now !== undefined &&
+    event.eventStatus !== "CANCELLED" &&
+    participationWindowOpen(event.startsAt, event.confirmationOpensDaysBefore ?? DEFAULT_CONFIRMATION_OPENS_DAYS, now);
   const windowHoldsLine = (() => {
     if (!windowHolds) return null;
     const due = summaryDateTime(windowHolds.to, zone, locale, "inline");
@@ -548,7 +557,18 @@ export default async function RegistrationBox({
                         </Typography>
                       )}
                       {/* The places the window moves are sent the declaration again, with the new deadline (`moveWindowHolds`). */}
-                      {windowHoldsLine && <MailLine text={t("mailLine.window")} data-testid="confirmation-mail" />}
+                      {/*
+                        «Trimite din nou „Semnează declarația”» (the design «telling the owner about every email a staff press sends», slice 4),
+                        offered only while a move sends — the window open, the event not cancelled; its own field, apart from the save's other
+                        emails. Unticked, a deadline moved later is not sent again; one moved earlier still is (`windowEmailSkippable`).
+                      */}
+                      {windowHoldsLine && (
+                        <MailLine
+                          text={t("mailLine.window")}
+                          {...(windowSends ? { also: [t("mailLine.windowOptOutHelp")], optOut: { label: t("mailLine.windowOptOut"), field: WINDOW_SEND_EMAIL_FIELD } } : {})}
+                          data-testid="confirmation-mail"
+                        />
+                      )}
                       <BoxNote more={t("editor.confirmationWindowHelpMore", { hold })}>{t("editor.confirmationWindowHelp")}</BoxNote>
                     </Stack>
                   </Panel>

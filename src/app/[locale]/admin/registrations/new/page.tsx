@@ -182,7 +182,8 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             mail: {
               ordinary: words.mail({ to: "{firstName} {lastName}", type: "VERIFY_REGISTRATION_EMAIL", or: "COMPLETE_DECLARATION" }),
               vouched: words.mail({ to: "{firstName} {lastName}", type: "WAITLIST_JOINED", or: "COMPLETE_DECLARATION" }),
-              fastTrack: words.mail({ to: "{firstName} {lastName}", type: "REGISTRATION_CONFIRMED", confirms: true }),
+              // On a full race the fast track puts the person on the waiting list and sends nothing: «or none».
+              fastTrack: words.mail({ to: "{firstName} {lastName}", type: "REGISTRATION_CONFIRMED", confirms: true, orNothing: true }),
             },
             confirmLabel: t("registrations.create"),
             cancelLabel: words.cancel,

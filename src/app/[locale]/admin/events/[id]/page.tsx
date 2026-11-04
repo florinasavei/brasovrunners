@@ -118,6 +118,8 @@ import { isStorageConfigured } from "@/modules/media/storage";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import MailLine from "@/shared/feedback/MailLine";
 import type { ConfirmAlso, ConfirmSpec, FormCondition } from "@/shared/feedback/notice";
+import { raiseMailLines, windowMailLines } from "@/modules/content/events/save-mail";
+import { WINDOW_SEND_EMAIL_FIELD } from "@/shared/forms/send-email";
 import { DEFAULT_CONFIRMATION_DEADLINE_DAYS, DEFAULT_CONFIRMATION_OPENS_DAYS, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import ActionForm from "@/shared/forms/ActionForm";
 import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
@@ -183,7 +185,7 @@ import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provis
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; moved?: string; movedTo?: string; movedSent?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string; mine?: string; todos?: string; todoError?: string; todoSaved?: string; volunteerError?: string; checkpointsGpx?: string } & Partial<Record<keyof PlacesTaken, string>>>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; moved?: string; movedTo?: string; movedSent?: string; movedSkipped?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string; mine?: string; todos?: string; todoError?: string; todoSaved?: string; volunteerError?: string; checkpointsGpx?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -236,7 +238,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
   if (!isUuid(id)) notFound();
   const query = await searchParams;
-  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued, from: spareFrom, to: spareTo, erased, recent, limited, testQueued, moved, movedTo, movedSent } = query;
+  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued, from: spareFrom, to: spareTo, erased, recent, limited, testQueued, moved, movedTo, movedSent, movedSkipped } = query;
   // What the save told the participants (§331), matched against the words there are — the query
   // string is typed by anybody, and it reaches `t("editor.notice.<x>")`.
   const noticeOutcome = (["update", "none", "cancelled", "cancelledQuiet", "cancelledNobody"] as const).find((kind) => kind === noticeParam);
@@ -301,7 +303,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 due: formatDay(movedInstant, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" }),
               })
             : t(`editor.holdsMovedSeries.${countForm(movedCount, locale)}`, { count: movedCount })
-        }${movedSent === "1" ? ` ${t("editor.holdsMovedSent")}` : ""}`
+        }${movedSkipped === "1" ? ` ${t("editor.holdsMovedSkipped")}` : movedSent === "1" ? ` ${t("editor.holdsMovedSent")}` : ""}`
       : null;
   // What the window's move does on the next save (§665), from the move's own rules on the stored window.
   const windowHolds = internal ? await previewWindowHolds(db, event, now, deadlines.holdMinutes) : null;
@@ -747,7 +749,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         ...base,
         title: t("confirm.publishTitle", { title: heading }),
         body: t("confirm.publishBody"),
-        ...(alertAudience !== null ? { also: [words.line("alertLater", { count: alertAudience })] } : {}),
+        // «Anunță abonații newsletterului» beside it (slice 4), only while an alert would go: unticked, the event is never announced.
+        ...(alertAudience !== null ? { also: [{ ...words.line("alertLater", { count: alertAudience }), withEmail: true }], ...words.alertOptOut() } : {}),
       };
     }
     if (to === "DRAFT" && live) return { ...base, title: t("confirm.unpublishTitle", { title: heading }), body: t("confirm.unpublishBody"), destructive: true };
@@ -784,42 +787,59 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       : null;
   const raiseMail = raiseWhen ? words.mail({ to: { upTo: waiting, audience: "firstWaiting" }, type: "WAITLIST_SPOT_OFFER" }) : null;
   const startBoxes = startBoxValues(event.startsAt, event.timezone);
-  const windowMoved: FormCondition = {
-    anyOf: [
-      { field: "event.confirmationOpensDaysBefore", notEquals: String(event.confirmationOpensDaysBefore ?? DEFAULT_CONFIRMATION_OPENS_DAYS) },
-      { field: "event.confirmationDeadlineDaysBefore", notEquals: String(event.confirmationDeadlineDaysBefore ?? DEFAULT_CONFIRMATION_DEADLINE_DAYS) },
-      { field: "event.startsAtDate", notEquals: startBoxes.date },
-      { field: "event.startsAtTime", notEquals: startBoxes.time },
-    ],
-  };
+  // The window's four boxes as stored: the window's two days, the start's day and hour.
+  const windowBoxes = [
+    { field: "event.confirmationOpensDaysBefore", stored: String(event.confirmationOpensDaysBefore ?? DEFAULT_CONFIRMATION_OPENS_DAYS) },
+    { field: "event.confirmationDeadlineDaysBefore", stored: String(event.confirmationDeadlineDaysBefore ?? DEFAULT_CONFIRMATION_DEADLINE_DAYS) },
+    { field: "event.startsAtDate", stored: startBoxes.date },
+    { field: "event.startsAtTime", stored: startBoxes.time },
+  ];
+  const windowMoved: FormCondition = { anyOf: windowBoxes.map(({ field, stored }) => ({ field, notEquals: stored })) };
+  const windowUnmoved: FormCondition[] = windowBoxes.map(({ field, stored }) => ({ field, equals: stored }));
   // Before the window opens a move sends nothing (`moveWindowHolds`): the window's own ask says the new deadline on its day.
   const windowOpenNow = participationWindowOpen(event.startsAt, event.confirmationOpensDaysBefore ?? DEFAULT_CONFIRMATION_OPENS_DAYS, now);
-  const holdsMoved = windowHolds !== null && windowOpenNow && event.eventStatus !== "CANCELLED" ? windowHolds.moveNow + windowHolds.atWindow : 0;
+  const windowSends = windowOpenNow && event.eventStatus !== "CANCELLED";
+  const holdsMoved = windowHolds !== null && windowSends ? windowHolds.moveNow + windowHolds.atWindow : 0;
   const windowMail = (count: number) => words.mail({ to: { upTo: count, audience: "held" }, type: "COMPLETE_DECLARATION", also: [words.line("windowResend")] });
+  /*
+    «Trimite din nou „Semnează declarația”» unticked beside «Fereastra de confirmare» (slice 4): the count stays «cel mult» —
+    a deadline moved earlier, or a move that is the job's own last call or ask, is still sent (`windowEmailSkippable`) —
+    and a line says who is not sent it again.
+  */
+  const windowSkipped = words.line("windowSkipped").text;
   // Every save moves the places held to another instant; the window's own move only when the window does (`previewWindowHolds`).
   const windowSpecs: ConfirmSpec[] =
     holdsMoved > 0 && windowHolds
       ? [
           ...(windowHolds.atWindow > 0 ? [{ when: [windowMoved], count: holdsMoved }] : []),
           ...(windowHolds.moveNow > 0 ? [{ count: windowHolds.moveNow }] : []),
-        ].map(({ when, count }) => ({
-          ...(when ? { when } : {}),
-          title: t("confirm.saveWindowTitle"),
-          body: t("confirm.saveWindowBody"),
-          ...windowMail(count),
-          confirmLabel: t("editor.save"),
-          cancelLabel: words.cancel,
-        }))
+        ].map(({ when, count }) => {
+          const mail = windowMail(count);
+          return {
+            ...(when ? { when } : {}),
+            title: t("confirm.saveWindowTitle"),
+            body: t("confirm.saveWindowBody"),
+            ...mail,
+            also: [...(mail.also ?? []), { text: windowSkipped, when: [{ field: WINDOW_SEND_EMAIL_FIELD, equals: "off" }] }],
+            confirmLabel: t("editor.save"),
+            cancelLabel: words.cancel,
+          };
+        })
       : [];
-  /** The lines a higher question carries for what the save sends besides: the offers, then the window's emails. */
-  const alsoSent = (): ConfirmAlso[] => [
-    ...(raiseWhen && raiseMail?.email ? [{ text: raiseMail.email, when: raiseWhen }] : []),
-    ...(holdsMoved > 0 && windowHolds
-      ? windowHolds.moveNow > 0
-        ? [{ text: windowMail(windowHolds.moveNow).email ?? "" }]
-        : [{ text: windowMail(holdsMoved).email ?? "", when: [windowMoved] }]
-      : []),
-  ];
+  /*
+    The lines a higher question carries for what the save sends besides (`save-mail.ts`): the offers with their club count,
+    then the window's emails — counted as the window's own question counts them: both kinds of held places once a box
+    moved, the ones held to another instant alone while none did.
+  */
+  const raiseLines: ConfirmAlso[] = raiseMailLines(raiseMail, raiseWhen);
+  const windowLines: ConfirmAlso[] = windowMailLines({
+    holds: windowHolds,
+    open: windowSends,
+    moved: windowMoved,
+    unmoved: windowUnmoved,
+    line: (count) => windowMail(count).email ?? "",
+    skipped: windowSkipped,
+  });
   const saveConfirm: ConfirmSpec[] = [
     ...(event.eventStatus !== "CANCELLED"
       ? [
@@ -851,7 +871,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       body: t("confirm.saveNoticeBody"),
       ...(() => {
         const notice = noticeMail("EVENT_UPDATE_NOTICE");
-        const more = alsoSent();
+        const more = [...raiseLines, ...windowLines];
         return { ...notice, ...(notice.also || more.length > 0 ? { also: [...(notice.also ?? []), ...more] } : {}) };
       })(),
       confirmLabel: t("editor.save"),
@@ -865,7 +885,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             title: t("confirm.saveRaiseTitle"),
             body: t("confirm.saveRaiseBody"),
             ...raiseMail,
-            also: [...(raiseMail.also ?? []), ...alsoSent().slice(1)],
+            also: [...(raiseMail.also ?? []), ...windowLines],
             confirmLabel: t("editor.save"),
             cancelLabel: words.cancel,
           },

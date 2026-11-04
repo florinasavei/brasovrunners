@@ -51,7 +51,7 @@ describe("§384 ConfirmDialog", () => {
   });
 
   it("says what else the press sends after the road, quieter, each line as the builder worded it (the design «telling the owner about every email a staff press sends», slice 3)", () => {
-    expect(source).toMatch(/\{spec\.also\?\.map\(\(line\) => \([\s\S]*?variant="body2"[\s\S]*?data-testid="confirm-also"/);
+    expect(source).toMatch(/\{spec\.also\?\.map\(\(line, index\) => \([\s\S]*?key=\{`\$\{index\}:\$\{line\.text\}`\}[\s\S]*?variant="body2"[\s\S]*?data-testid="confirm-also"/);
     // After the road's block, so the road speaks of the bold email line above it.
     expect(source.indexOf('data-testid="confirm-also"')).toBeGreaterThan(source.indexOf('data-testid="confirm-road-why"'));
   });

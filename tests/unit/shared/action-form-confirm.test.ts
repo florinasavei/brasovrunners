@@ -26,11 +26,12 @@ describe("§384 ActionForm asks first", () => {
   it("gates the submit event and stops the action with preventDefault when a question matches", () => {
     expect(source).toMatch(/<form ref=\{form\} action=\{formAction\}[^>]*onSubmit=\{onSubmit\}>/);
     expect(source).toMatch(/const spec = pickConfirm\(confirm, \(field\) => \{/);
-    expect(source).toMatch(/if \(!spec\) return;[\s\S]*?event\.preventDefault\(\);/);
+    // A press let through unasked sends the person's email (slice 4): `unasked` sets every «Trimite emailul» back to `on`.
+    expect(source).toMatch(/if \(!spec\) return unasked\(\);[\s\S]*?event\.preventDefault\(\);/);
     // A body that counts the ticks (§532): with none ticked nothing is asked, and the server refuses.
-    expect(source).toMatch(/const ticked = resolveBodyCount\(spec, valuesOf\);\s*if \(!ticked\) return;/);
+    expect(source).toMatch(/const ticked = resolveBodyCount\(spec, valuesOf\);\s*if \(!ticked\) return unasked\(\);/);
     // A body naming the fields the press changes (§645): none moved, the press goes through unasked.
-    expect(source).toMatch(/const named = resolveChangedFields\(ticked, [\s\S]*?\}\);\s*if \(!named\) return;\s*event\.preventDefault\(\);/);
+    expect(source).toMatch(/const named = resolveChangedFields\(ticked, [\s\S]*?\}\);\s*if \(!named\) return unasked\(\);\s*event\.preventDefault\(\);/);
     // A series save's email line is summed over the dates ticked at this press, then asked (§384).
     expect(source).toMatch(/const counted = resolveEmailCount\(named, valuesOf\);/);
     // The quieter lines true of this press alone (the design «telling the owner about every email a staff press sends», slice 3):
@@ -51,21 +52,22 @@ describe("§384 ActionForm asks first", () => {
   });
 
   it("draws the one ConfirmDialog only while a question is asked", () => {
-    expect(source).toMatch(/\{asking && \(\s*<ConfirmDialog\s+spec=\{asking\.spec\}\s+open\s+onCancel=\{cancelAsking\}\s+onConfirm=\{\(\) => answer\("confirm"\)\}/);
+    expect(source).toMatch(/\{asking && \(\s*<ConfirmDialog\s+spec=\{asking\.spec\}\s+open\s+onCancel=\{cancelAsking\}\s+onConfirm=\{\(given\) => answer\("confirm", given\)\}/);
     // «Anulează» closes the question and tells the form, so a control that changed first shows the stored state (§647).
     expect(source).toMatch(/const cancelAsking = \(\) => \{\s*setAsking\(null\);\s*form\.current\?\.dispatchEvent\(new Event\(CONFIRM_CANCEL_EVENT\)\);\s*\};/);
     expect(source).not.toContain("@mui/material/Dialog");
   });
 
   it("offers a two-way question's quiet answer beside the primary one, and sets the hidden field before sending (§540)", () => {
-    expect(source).toMatch(/alternative=\{asking\.spec\.choice \? \{ label: asking\.spec\.choice\.alternativeLabel, onClick: \(\) => answer\("alternative"\) \} : null\}/);
+    expect(source).toMatch(/alternative=\{asking\.spec\.choice \? \{ label: asking\.spec\.choice\.alternativeLabel, onClick: \(given\) => answer\("alternative", given\) \} : null\}/);
     expect(source).toMatch(/const chosen = choiceAnswer\(pending\.spec, which\);/);
-    expect(source).toMatch(/if \(input instanceof HTMLInputElement\) input\.value = chosen\.value;/);
+    expect(source).toMatch(/if \(chosen\) write\(chosen\.field, chosen\.value\);/);
+    expect(source).toMatch(/const write = \(field: string, value: string\) => \{\s*const input = element\.elements\.namedItem\(field\);\s*if \(input instanceof HTMLInputElement\) input\.value = value;\s*\};/);
   });
 
   it("asks for a tick in the dialog and writes it into the form's hidden input on «yes» alone (§888)", () => {
     expect(source).toMatch(/const ticked = which === "confirm" \? tickAnswer\(pending\.spec\) : null;/);
-    expect(source).toMatch(/if \(input instanceof HTMLInputElement\) input\.value = ticked\.value;/);
+    expect(source).toMatch(/if \(ticked\) write\(ticked\.field, ticked\.value\);/);
     const spec = { title: "t", body: "b", confirmLabel: "c", cancelLabel: "x" };
     expect(tickAnswer({ ...spec, tick: { field: "relayedByParticipantRequest", label: "Confirm…" } })).toEqual({ field: "relayedByParticipantRequest", value: "on" });
     expect(tickAnswer(spec)).toBeNull();
@@ -74,6 +76,14 @@ describe("§384 ActionForm asks first", () => {
     expect(dialog).toMatch(/const mayConfirm = !spec\.tick \|\| ticked;/);
     expect(dialog).toMatch(/if \(mayConfirm\) confirm\(\);/);
     expect(dialog).toMatch(/onClick=\{confirm\}\s*disabled=\{!mayConfirm\}/);
+  });
+
+  it("posts «Trimite emailul» `on` unless this press's question was answered with the box unticked (the design «telling the owner about every email a staff press sends», slice 4)", () => {
+    // Drawn `on` — as posted without JavaScript, which asks nothing — one hidden input per field the form's questions offer.
+    expect(source).toMatch(/const optOutFields = useMemo\(\(\) => emailOptOutFields\(confirm\), \[confirm\]\);/);
+    expect(source).toMatch(/\{optOutFields\.map\(\(field\) => \(\s*<input key=\{field\} type="hidden" name=\{field\} defaultValue="on" \/>/);
+    // Every answer resets them all to `on` first, then writes this question's box: a dialog without the box never sends an earlier untick.
+    expect(source).toMatch(/for \(const field of optOutFields\) write\(field, "on"\);\s*const optedOut = emailOptOutAnswer\(pending\.spec, given\.emailOff\);\s*if \(optedOut\) write\(optedOut\.field, optedOut\.value\);/);
   });
 
   it("hands a returned notice to the toast provider from an effect, and never a refusal", () => {

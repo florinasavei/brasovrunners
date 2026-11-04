@@ -203,6 +203,53 @@ describe("confirmWords — a press that writes to nobody, and the quieter lines"
   });
 });
 
+describe("«Trimite emailul» in the builder (the design «telling the owner about every email a staff press sends», slice 4)", () => {
+  it("draws the box with its usual words and field, the person's off line — and marks the club's count as the email's own", async () => {
+    const words = await confirmWords();
+    const mail = words.mail({ to: "Ana Pop", type: "BIB_ASSIGNED", optOut: true });
+    expect(mail.emailOptOut).toEqual({ field: "sendEmail", label: "Trimite emailul", offLine: "Nu pleacă niciun email către Ana Pop." });
+    // Unticked, the club's copies go with the email they copy; the next in line's offer is the page's line, never marked.
+    expect(mail.also?.every((line) => line.withEmail === true)).toBe(true);
+    expect(words.nextInLineMaybe().withEmail).toBeUndefined();
+    // No box where the press does not offer it.
+    expect(words.mail({ to: "Ana Pop", type: "BIB_ASSIGNED" }).emailOptOut).toBeUndefined();
+  });
+
+  it("takes a press's own words for the box — the colleague's invitation — and the count's off line names the email", async () => {
+    const words = await confirmWords();
+    const invite = words.mail({ to: { name: "{displayName}", address: "{email}" }, type: "STAFF_INVITATION", optOut: { label: "Trimite invitația acum", offLine: "Nimic către {displayName}." } });
+    expect(invite.emailOptOut).toEqual({ field: "sendEmail", label: "Trimite invitația acum", offLine: "Nimic către {displayName}." });
+    const bulk = words.mailCount({ field: "registrationId", counts: { a: 1 }, type: "REGISTRATION_CANCELLED", audience: "ticked", optOut: true });
+    expect(bulk.emailOptOut?.offLine).toBe("Nu pleacă niciun email „Înscriere anulată”.");
+  });
+
+  it("offers the publication's own box, «Anunță abonații newsletterului», in both languages", async () => {
+    for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {
+      state.locale = locale;
+      const words = await confirmWords();
+      expect(words.alertOptOut().emailOptOut).toEqual({ field: "sendEmail", label: catalogue.Admin.confirm.mail.alertOptOut, offLine: catalogue.Admin.confirm.mail.alertOff });
+      expect(words.optOutLabel).toBe(catalogue.Admin.confirm.mail.optOut);
+    }
+  });
+});
+
+describe("a confirmation the allocator may still turn into a place on the waiting list says «or none» (BR-REQ-037-07)", () => {
+  it("names the email «or none», and the club's count «cel mult»", async () => {
+    const words = await confirmWords();
+    const maybe = words.mail({ to: "Ana Pop", type: "REGISTRATION_CONFIRMED", confirms: true, orNothing: true });
+    expect(maybe.email).toBe("Pleacă 1 email către Ana Pop: „Înscriere confirmată (cu QR și număr)” — sau niciunul, dacă intră pe lista de așteptare.");
+    expect(texts(maybe.also)).toEqual(["Și cel mult 6 emailuri pentru căsuțele clubului."]);
+    // A place held for the declaration, or an offer: the certain line.
+    const certain = words.mail({ to: "Ana Pop", type: "REGISTRATION_CONFIRMED", confirms: true });
+    expect(certain.email).toBe("Pleacă 1 email către Ana Pop: „Înscriere confirmată (cu QR și număr)”.");
+    expect(texts(certain.also)).toEqual(["Și 6 emailuri pentru căsuțele clubului."]);
+    state.locale = "en";
+    expect((await confirmWords()).mail({ to: "Ana Pop", type: "REGISTRATION_CONFIRMED", confirms: true, orNothing: true }).email).toBe(
+      "1 email goes to Ana Pop: “Registration confirmed (with QR and number)” — or none, if they join the waiting list.",
+    );
+  });
+});
+
 describe("the dialog's quieter lines follow the form as posted", () => {
   const base: ConfirmSpec = { title: "t", body: "b", confirmLabel: "c", cancelLabel: "x" };
   const posted = (fields: Record<string, string>) => (field: string) => (field in fields ? fields[field] : null);

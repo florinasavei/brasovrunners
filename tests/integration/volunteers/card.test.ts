@@ -953,3 +953,35 @@ describe("§835 «Arată butonul „Vreau să fiu voluntar” pe pagina evenimen
     expect(await shown()).toBe(true);
   });
 });
+
+describe("«Trimite emailul» unticked beside the roles and the forms (the design «telling the owner about every email a staff press sends», slice 4)", () => {
+  const roleEmails = () => db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "VOLUNTEER_ROLE_ASSIGNED"));
+  const skippedRows = async () => (await trail()).filter((row) => (row.metadataJson as { emailSkipped?: boolean }).emailSkipped === true).map((row) => row.action);
+
+  it("adds a person with a role, gives and takes roles from the block's one form, and edits the address: every change made, none of it emailed, each trail row saying emailSkipped", async () => {
+    const water = await addRole();
+    const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
+    // The MailLine's box unticked posts its hidden «off» alone.
+    const maria = await addPerson(water.id, { roleIds: [water.id, finish.id], sendEmail: "off" });
+    expect(maria).toMatchObject({ roleIds: [water.id] });
+    // «Dă-i alt rol»: the button posts an empty role, the select its own (`otherRoleId`).
+    expect(await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: "", otherRoleId: finish.id, sendEmail: "off" }))).not.toContain("volunteerError");
+    // «Ia-i rolul …» through the same form's other action.
+    expect(await press(actions.unassignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id, sendEmail: "off" }))).not.toContain("volunteerError");
+    expect((await listVolunteers(db, eventId))[0]).toMatchObject({ roleIds: [finish.id] });
+    expect(
+      await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id, finish.id], assignedRoleIds: [finish.id], email: "maria.noua@example.test", sendEmail: "off" })),
+    ).toBe("redirected");
+    expect(await roleEmails()).toEqual([]);
+    expect(await skippedRows()).toEqual(["volunteer.added", "volunteer.assigned", "volunteer.unassigned", "volunteer.edited"]);
+  });
+
+  it("ticked — the box drawn ticked posts «on» before its hidden «off» — tells the person as ever, and a form that posts no box sends too", async () => {
+    const water = await addRole();
+    const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
+    const maria = await addPerson(water.id, { roleIds: [water.id, finish.id], sendEmail: ["on", "off"] });
+    expect(await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: finish.id }))).not.toContain("volunteerError");
+    expect((await roleEmails()).map((row) => (row.payloadJson as { roleIds: string[] }).roleIds.length)).toEqual([1, 2]);
+    expect(await skippedRows()).toEqual([]);
+  });
+});

@@ -114,7 +114,7 @@ import {
 import { previewMemberTickSweep } from "@/modules/registrations/admin-service";
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
-import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
+import { mayEndWaitlisted, rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import { givePlaceRefusalAhead, staffOfferIfMadeNow, staffOfferQuestion, waitlistAddDoorOpen } from "@/modules/registrations/give-place-tip";
 import { noFreePlaceValues } from "@/modules/registrations/domain/capacity";
 import { outsideMarkConfirm } from "@/modules/registrations/ui/outside-mark-body";
@@ -2058,7 +2058,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                             ? t("registrations.confirmOnPaperBodyMinor", { guardian: row.guardianName })
                             : t("registrations.confirmOnPaperBody"),
                         // The confirmation, and the club's archive and «cineva a confirmat» (§244, §245); nothing when it lands on the waiting list.
-                        ...words.mail({ to: row.registeredName, type: "REGISTRATION_CONFIRMED", confirms: true, test: row.kind === "TEST" }),
+                        ...words.mail({ to: row.registeredName, type: "REGISTRATION_CONFIRMED", confirms: true, orNothing: mayEndWaitlisted(row.status, row.eventStartsAt, new Date()), test: row.kind === "TEST" }),
                         confirmLabel: t("desk.confirmOnPaper"),
                         cancelLabel: words.cancel,
                       }}

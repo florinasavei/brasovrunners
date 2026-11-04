@@ -1,8 +1,12 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { auditLogs } from "@/db/schema/audit-logs";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
+import { newsletterSends, newsletterSubscribers } from "@/db/schema/newsletter";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createEvent, createEventAndPublish, publishEvent, transitionEvent } from "@/modules/content/events/service";
+import { queueNewEventAlerts } from "@/modules/newsletter/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -153,5 +157,62 @@ describe("BR-REQ-051-01 «Publică» from a draft in one press (§423)", () => {
     expect(isDomainError(refusal) && refusal.code).toBe("FORBIDDEN");
     const row = await rowOf(draft.id);
     expect([row.editorialStatus, row.version]).toEqual(["DRAFT", draft.version]);
+  });
+
+  /*
+    «Anunță abonații newsletterului» (the design «telling the owner about every email a staff press sends», slice 4): unticked at
+    the publication, the event is marked seen for the job's new-event alert in the publication's own transaction — the
+    `newsletter_sends` row with no recipients the job already writes for an event nobody would hear of — and one
+    `event.new_event_alert_skipped` row says who chose so. The job then never announces it; a publication that does not say
+    is announced as ever.
+  */
+  describe("«Anunță abonații newsletterului» unticked (slice 4)", () => {
+    const sendsOf = (eventId: string) => db.select().from(newsletterSends).where(eq(newsletterSends.eventId, eventId));
+    const skipTrail = (eventId: string) =>
+      db.select().from(auditLogs).where(and(eq(auditLogs.entityId, eventId), eq(auditLogs.action, "event.new_event_alert_skipped")));
+
+    beforeEach(async () => {
+      // A confirmed subscriber of the races' topic: whoever the job announces a race to.
+      await db.insert(newsletterSubscribers).values({
+        deliveryEmail: "big@example.org",
+        canonicalEmail: "big@example.org",
+        canonicalizationVersion: 1,
+        locale: "ro",
+        topics: ["BIG_EVENTS"],
+        privacyNoticeVersion: 1,
+        confirmedAt: NOW,
+      });
+    });
+
+    it("«Publică»: the race goes live, marked seen and audited, and the job announces only the one published without the untick", async () => {
+      const quiet = await createEvent(db, { actor: admin, fields: complete("tacuta", { type: "RACE" }), now: NOW });
+      await publishEvent(db, { actor: admin, eventId: quiet.id, expectedVersion: quiet.version, now: NOW, announce: false });
+      expect((await rowOf(quiet.id)).editorialStatus).toBe("PUBLISHED");
+      expect((await sendsOf(quiet.id)).map((row) => [row.kind, row.recipients])).toEqual([["EVENT_ALERT", 0]]);
+      expect((await skipTrail(quiet.id)).map((row) => [row.actorStaffUserId, row.metadataJson])).toEqual([[admin.id, { emailSkipped: true }]]);
+
+      const told = await createEvent(db, { actor: admin, fields: complete("anuntata", { type: "RACE" }), now: NOW });
+      await publishEvent(db, { actor: admin, eventId: told.id, expectedVersion: told.version, now: NOW });
+      expect(await sendsOf(told.id)).toEqual([]);
+      expect(await skipTrail(told.id)).toEqual([]);
+
+      // The job's pass: the second race to its subscriber; the first, never — not today, not two days on.
+      expect(await queueNewEventAlerts(db, NOW)).toBe(1);
+      const alerts = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "NEW_EVENT_ALERT"));
+      expect(alerts.map((row) => (row.payloadJson as { eventId: string }).eventId).filter(Boolean)).toEqual([told.id]);
+      expect(await queueNewEventAlerts(db, new Date(NOW.getTime() + 2 * 24 * 60 * 60_000))).toBe(0);
+      expect((await sendsOf(quiet.id)).map((row) => row.recipients)).toEqual([0]);
+    });
+
+    it("«Creează și publică»: the new event is marked seen once it is live — and a create that stayed a draft marks nothing", async () => {
+      const created = await createEventAndPublish(db, { actor: admin, fields: complete("noua", { type: "RACE" }), publish: true, announce: false, now: NOW });
+      expect(created.published).toBe(true);
+      expect((await sendsOf(created.event.id)).map((row) => row.recipients)).toEqual([0]);
+      expect(await skipTrail(created.event.id)).toHaveLength(1);
+
+      const draft = await createEventAndPublish(db, { actor: admin, fields: complete("ciorna", { type: "RACE" }), publish: false, announce: false, now: NOW });
+      expect(await sendsOf(draft.event.id)).toEqual([]);
+      expect(await queueNewEventAlerts(db, NOW)).toBe(0);
+    });
   });
 });

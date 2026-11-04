@@ -16,8 +16,8 @@ import { isJobCause, PRESS_CAUSE_NAMES, type PressCause } from "@/modules/notifi
  * `press` to, or through the listed press it delegates to. An action that opens a scope and is not listed fails
  * too, as does a scope opened anywhere a person is not pressing a staff button. Slice 2 adds that every press flashes
  * through the one call that reads what it sent; slice 3 that every element posting a press says its email before it is
- * pressed, through the one builder or a `MailLine` (the last `describe` below); slice 4 will add which presses offer
- * «Trimite emailul».
+ * pressed, through the one builder or a `MailLine` (the third `describe` below); slice 4 which presses offer «Trimite
+ * emailul», read by the one parser and handed to their service (the last).
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -138,7 +138,8 @@ describe("every emailing press runs inside its email press scope", () => {
     expect(body).toMatch(OPENS);
     for (const cause of press.causes) expect(body, `${name}: "${cause}"`).toContain(`"${cause}"`);
     if (press.actor === "named") expect(body, `${name} names its actor`).toMatch(/\bpress\.by\(\s*\w+(\.actor)?\.id\s*\)/);
-    else if (press.actor === "helper") expect(body, `${name} hands the press to the helper that names the actor`).toMatch(/,\s*press\)/);
+    // The helper may take «Trimite emailul» after the press (slice 4): `runVolunteer(request, press, sendEmail)`.
+    else if (press.actor === "helper") expect(body, `${name} hands the press to the helper that names the actor`).toMatch(/,\s*press(?:,\s*sendEmail)?\)/);
     else expect(body, `${name} delegates`).toContain(`${press.actor.delegatesTo}(`);
   });
 
@@ -218,8 +219,13 @@ describe("every emailing press runs inside its email press scope", () => {
 /** A call of the one builder's email words. */
 const BUILDER = /\.(?:mail|mailCount|noMail|noMailMany)\(/;
 
-/** The presses whose before-notice is a `MailLine` beside a row of buttons rather than inside each form (the design's section 2). */
-const BESIDE: ReadonlySet<string> = new Set(["assignVolunteerAction", "unassignVolunteerAction"]);
+/**
+ * The presses whose before-notice is a `MailLine` beside a row of buttons rather than inside each form (the design's section 2).
+ * Since slice 4 a volunteer's roles block is one form holding its line and its «Trimite emailul»: «Dă-i rolul …» posts the
+ * form's own action, so its line is inside its form; «Ia-i rolul …» posts its own button's `formAction` in the same form, the
+ * one press still found beside the line.
+ */
+const BESIDE: ReadonlySet<string> = new Set(["unassignVolunteerAction"]);
 
 /** The presses an island calls in code: the file, and what it must draw before the call. */
 const CALLED_IN_CODE: Readonly<Record<string, { file: string; before: RegExp }>> = {
@@ -439,5 +445,57 @@ describe("every emailing press says its email before it is pressed (slice 3)", (
     // confirmations' road for the links' email); `road: words.road(…)` beside an email line is that pairing again.
     const byHand = tsxFiles("src").filter((file) => /\broad:\s*(?:words|dialog)\.road\(/.test(read(file)));
     expect(byHand).toEqual([]);
+  });
+});
+
+/**
+ * Slice 4 — «Trimite emailul» (the design's section 4, as its Critic corrections and the owner's call amend it): the presses
+ * that offer the box, each reading it through the one parser (`shared/forms/send-email.ts#sendEmailOf`) and handing it to
+ * its service, which keeps back only the person's own email — never the offer to the next in line, the club's archive or
+ * notices. No other action reads the box: not a resend, an offer, a declaration to sign, the copy of a document the person
+ * signed (the desk's paper confirmation, the volunteer's paper contract), an invitation to an event or the newsletter.
+ */
+const OPT_OUT_PRESSES: Readonly<Record<string, { file: string; passes: RegExp }>> = {
+  setBibNumberAction: { file: REGISTRATIONS, passes: /setBibNumberByStaff\([^;]*\{ sendEmail \}\)/ },
+  cancelRegistrationAction: { file: REGISTRATIONS, passes: /cancelRegistrationByStaff\([^;]*\bsendEmail,/ },
+  bulkCancelRegistrationsAction: { file: REGISTRATIONS, passes: /bulkCancelRegistrationsByStaff\([^;]*\{ sendEmail \}\)/ },
+  // The editor's window: its own field, apart from the save's other emails.
+  saveEventAndTranslationsAction: { file: ADMIN, passes: /windowSendEmail: sendEmailOf\(form, WINDOW_SEND_EMAIL_FIELD\)/ },
+  // «Anunță abonații newsletterului»: the publications, which mark the event seen for the job's alert.
+  transitionEventAction: { file: ADMIN, passes: /publishEvent\(getDb\(\), \{ \.\.\.move, announce \}\)/ },
+  createEventAction: { file: ADMIN, passes: /publish: text\(form, THEN_FIELD\) === THEN_PUBLISH,\s*announce,/ },
+  bulkPublishEventsAction: { file: ADMIN, passes: /if \(!announce\) await skipNewEventAlert\(/ },
+  addVolunteerAction: { file: VOLUNTEERS, passes: /runVolunteer\([^;]*, press, sendEmail\)/ },
+  editVolunteerAction: { file: VOLUNTEERS, passes: /runVolunteer\([^;]*, press, sendEmail\)/ },
+  setVolunteerStateAction: { file: VOLUNTEERS, passes: /runVolunteer\([^;]*, press, sendEmail\)/ },
+  assignVolunteerAction: { file: VOLUNTEERS, passes: /runVolunteer\([^;]*, press, sendEmail\)/ },
+  unassignVolunteerAction: { file: VOLUNTEERS, passes: /runVolunteer\([^;]*, press, sendEmail\)/ },
+  recordPaperVolunteerGuardianAction: { file: VOLUNTEERS, passes: /recordPaperVolunteerGuardian\([^;]*\{ sendEmail \},?\s*\)/ },
+  inviteStaffAction: { file: ADMIN, passes: /\{ tierId: [^}]*, sendEmail \}/ },
+  inviteMembersAction: { file: ADMIN, passes: /inviteMembers\([^;]*\bsendEmail,/ },
+  moveShopOrderAction: { file: SHOP, passes: /moveOrderByClub\(getDb\(\), \{ actor, orderId, verb, sendEmail \}\)/ },
+};
+
+/** The parser, called: `sendEmailOf(form)` or `sendEmailOf(form, WINDOW_SEND_EMAIL_FIELD)`. */
+const READS_BOX = /\bsendEmailOf\(/;
+
+describe("«Trimite emailul» reaches only the presses that offer it, and their service (slice 4)", () => {
+  it.each(Object.entries(OPT_OUT_PRESSES))("%s reads the box through the one parser and hands it to its service", (name, press) => {
+    const body = exportedFunctions(press.file).get(name);
+    expect(body, `${name} in ${press.file}`).toBeDefined();
+    expect(body).toMatch(READS_BOX);
+    expect(body).toMatch(press.passes);
+  });
+
+  it("is read by no other action — never a resend, an offer, a declaration to sign or a signed document's copy", () => {
+    const listed = new Set(Object.keys(OPT_OUT_PRESSES));
+    const stray: string[] = [];
+    for (const file of sourceFiles("src/app").filter((candidate) => candidate.endsWith(".ts"))) {
+      for (const [name, body] of exportedFunctions(file)) if (READS_BOX.test(body) && !listed.has(name)) stray.push(`${file}#${name}`);
+    }
+    expect(stray).toEqual([]);
+    for (const never of ["confirmRegistrationNowAction", "promoteRegistrationAction", "recordPaperVolunteerAgreementAction", "offerPlaceAction", "givePlaceNowAction"]) {
+      expect(listed.has(never), never).toBe(false);
+    }
   });
 });

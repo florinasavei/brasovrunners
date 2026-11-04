@@ -435,7 +435,12 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {/* «Adaugă mai mulți membri» (§524): how many, and how many accounts the provider refused. */}
         {saved === "membersInvited" && (
           <Alert severity={failed ? "warning" : "success"} data-testid="staff-members-report">
-            {failed ? t("staff.membersInviteFailed", { count: count ?? "0", failed }) : t("staff.membersInvited", { count: count ?? "0" })}
+            {/* Unticked «Trimite invitațiile acum» (slice 4): added, and no invitation is on its way — the info line above says so. */}
+            {failed
+              ? t("staff.membersInviteFailed", { count: count ?? "0", failed })
+              : mailSkipped === "1"
+                ? t("staff.membersAdded", { count: count ?? "0" })
+                : t("staff.membersInvited", { count: count ?? "0" })}
             {retried && ` ${t("staff.membersRetried", { retried })}`}
             {reportLines.length > 0 && (
               <Box component="ul" sx={{ m: 0, mt: 1, pl: 2.5 }}>

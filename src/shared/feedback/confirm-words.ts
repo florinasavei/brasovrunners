@@ -14,13 +14,11 @@ import type { ConfirmAlso, ConfirmRoad, ConfirmSpec, EmailCount } from "./notice
  */
 export type MailAudience =
   | "participants"
-  | "confirmed"
   | "subscribers"
   | "invited"
   | "ticked"
   | "unsigned"
   | "present"
-  | "newAddresses"
   | "volunteerAddresses"
   | "memberAddresses"
   | "firstWaiting"
@@ -52,6 +50,12 @@ export type MailInput = {
   test?: boolean;
   /** The press confirms a registration: the declaration's archive copy and «cineva a confirmat» go to the club too (§244, §245). */
   confirms?: boolean;
+  /**
+   * The press may end with the person on the waiting list and nothing sent (`confirmByStaff` on a row whose address was never
+   * confirmed or whose hold lapsed, the staff entry's fast track on a full race): the line says the email «or none», and the
+   * club's count «cel mult». A person only.
+   */
+  orNothing?: boolean;
   /** What else the press sets off, said after the club's line: the next in line's offer, Zitadel's own email. */
   also?: readonly ConfirmAlso[];
   /**
@@ -159,14 +163,14 @@ export async function confirmWords() {
     return { emailOptOut: { field: given.field ?? SEND_EMAIL_FIELD, label: given.label ?? t("confirm.mail.optOut"), offLine: given.offLine ?? offLine } };
   };
 
-  const mail = ({ to, type, or, test, confirms, also, optOut }: MailInput): ConfirmMail => {
+  const mail = ({ to, type, or, test, confirms, orNothing, also, optOut }: MailInput): ConfirmMail => {
     const what = typeName(type);
     const extra = also ?? [];
     const noneOfType = () => t("confirm.mail.noneType", { type: what });
     if (typeof to === "string" || "name" in to) {
       const values: Record<string, string> = typeof to === "string" ? { name: to, type: what } : { name: to.name, address: to.address, type: what };
       if (or !== undefined) values.alt = typeName(or);
-      const email = t(`confirm.mail.${typeof to === "string" ? "to" : "toAddress"}${or !== undefined ? "Either" : ""}`, values);
+      const email = t(`confirm.mail.${typeof to === "string" ? "to" : "toAddress"}${or !== undefined ? "Either" : orNothing ? "OrNothing" : ""}`, values);
       // One email: its own copies and, on a confirmation, the archive and «cineva a confirmat»; with two possible outcomes
       // (`or` — the second never a confirmation), the larger count, said «cel mult» when the two differ.
       const first = copiesEach(type, copies) + (confirms ? copies.archive + copies.notices : 0);
@@ -174,7 +178,7 @@ export async function confirmWords() {
       return {
         email,
         ...roadOf(type, or),
-        also: [...(test ? [testLine] : clubLine(Math.max(first, second), first !== second)), ...extra],
+        also: [...(test ? [testLine] : clubLine(Math.max(first, second), first !== second || orNothing === true)), ...extra],
         ...optOutOf(optOut, t("confirm.mail.none", { name: values.name })),
       };
     }
@@ -239,11 +243,11 @@ export async function confirmWords() {
     /** A quiet line in the builder's voice, for what a press sends besides its email: Zitadel's own, the job's later. */
     line: (key: MailLineKey, values?: Record<string, string | number>): ConfirmAlso => ({ text: t(`confirm.mail.${key}`, values) }),
     /**
-     * «Trimite emailul» on a question whose email is a quieter line rather than the bold one (slice 4): a publication,
-     * whose new-event alert the job sends later — the box, and the bold line said while it is unticked. The lines that
-     * belong to the email are marked `withEmail` by the page.
+     * «Anunță abonații newsletterului» on a publication (slice 4): its email is a quieter line — the new-event alert the
+     * job sends later (`alertLater`, `alertMaybe`, which the page marks `withEmail`) — so the box comes with the bold line
+     * said while it is unticked: the subscribers are not told of this event, ever.
      */
-    optOut: (given: Exclude<MailOptOut, true>, offLine: string): Pick<ConfirmSpec, "emailOptOut"> => optOutOf(given, offLine),
+    alertOptOut: (): Pick<ConfirmSpec, "emailOptOut"> => optOutOf({ label: t("confirm.mail.alertOptOut") }, t("confirm.mail.alertOff")),
   };
 }
 

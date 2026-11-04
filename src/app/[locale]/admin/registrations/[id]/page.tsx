@@ -16,7 +16,7 @@ import { emailMessageType } from "@/db/schema/email-outbox";
 import { registrationStatus } from "@/db/schema/registrations";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { specialListVerb } from "@/modules/registrations/domain/row-verbs";
+import { mayEndWaitlisted, specialListVerb } from "@/modules/registrations/domain/row-verbs";
 import { outsideMarkConfirm } from "@/modules/registrations/ui/outside-mark-body";
 import { noFreePlaceValues, type PlacesTaken } from "@/modules/registrations/domain/capacity";
 import { listAuditTrail, listPartnerShares } from "@/modules/audit/repository";
@@ -717,8 +717,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 confirm={{
                   title: tr("desk.confirmOnPaper"),
                   body: registration.guardianName && minorSigns ? tr("registrations.confirmOnPaperBodyMinor", { guardian: registration.guardianName }) : tr("registrations.confirmOnPaperBody"),
-                  // The confirmation, and the club's archive and «cineva a confirmat» (§244, §245); nothing when it lands on the waiting list.
-                  ...words.mail({ to: registration.registeredName, type: "REGISTRATION_CONFIRMED", confirms: true, test: registration.kind === "TEST" }),
+                  // The confirmation, and the club's archive and «cineva a confirmat» (§244, §245); nothing when it lands on the waiting list,
+                  // which only a row the allocator still places can (`mayEndWaitlisted`).
+                  ...words.mail({
+                    to: registration.registeredName,
+                    type: "REGISTRATION_CONFIRMED",
+                    confirms: true,
+                    orNothing: mayEndWaitlisted(registration.status, registration.eventStartsAt, new Date()),
+                    test: registration.kind === "TEST",
+                  }),
                   confirmLabel: tr("desk.confirmHere"),
                   cancelLabel: words.cancel,
                 }}
@@ -1640,7 +1647,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   ...(holdsAPlace(registration.status) && !registration.outsideCapacity ? [words.nextInLineMaybe()] : []),
                   ...(optOut ? [] : [words.line("refusalTells")]),
                 ],
-                optOut,
+                ...(optOut ? { optOut: true as const } : {}),
               }),
               confirmLabel: tr("registrations.cancelAction"),
               cancelLabel: words.cancel,

@@ -117,15 +117,15 @@ describe("§384 the notice a redirect's outcome becomes", () => {
     expect(noticeOf({ saved: "eventsArchived", archived: "Ana" })?.values).toBeUndefined();
   });
 
-  it("an event save counts what it says: the dates for a series, the emails when it told anyone (§331)", () => {
+  it("an event save counts what it says: the dates for a series; the notice's sentence counts no email — the mail line does (§331, slice 2)", () => {
     expect(noticeOf({ saved: "eventSeries", applied: "4" })).toEqual({ kind: "success", key: "eventSeries", values: { count: "4" } });
     expect(noticeOf({ saved: "eventSeries", applied: "4", notice: "update", queued: "37" })).toEqual({
       kind: "success",
       key: "eventSeriesNotified",
-      values: { count: "37", dates: "4" },
+      values: { dates: "4" },
     });
-    expect(noticeOf({ saved: "event", notice: "update", queued: "12" })).toEqual({ kind: "success", key: "eventNotified", values: { count: "12" } });
-    expect(noticeOf({ saved: "event", notice: "cancelled", queued: "9" })).toEqual({ kind: "success", key: "eventCancelled", values: { count: "9" } });
+    expect(noticeOf({ saved: "event", notice: "update", queued: "12" })).toEqual({ kind: "success", key: "eventNotified" });
+    expect(noticeOf({ saved: "event", notice: "cancelled", queued: "9" })).toEqual({ kind: "success", key: "eventCancelled" });
     expect(noticeOf({ saved: "eventSeries", applied: "3", notice: "cancelled", queued: "20" })?.key).toBe("eventSeriesCancelled");
     expect(noticeOf({ saved: "event", notice: "cancelledQuiet", queued: "0" })?.key).toBe("eventCancelledQuiet");
     expect(noticeOf({ saved: "event", notice: "cancelledNobody" })?.key).toBe("eventCancelledQuiet");

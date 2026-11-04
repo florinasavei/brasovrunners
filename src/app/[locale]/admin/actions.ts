@@ -29,6 +29,8 @@ import { raceStartWallTime } from "@/modules/content/events/race-start";
 import { type DraftPreview, renderEventDraftPreview } from "@/modules/content/events/draft-preview";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { mailSkippedOf, sendEmailOf, WINDOW_SEND_EMAIL_FIELD } from "@/shared/forms/send-email";
+import { previewEventAlertAudience } from "@/modules/newsletter/service";
+import { skipNewEventAlert } from "@/modules/newsletter/alert-skip";
 import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
 import { nightOverrideFromChoice } from "@/modules/events/domain/night";
 import { eq } from "drizzle-orm";
@@ -535,20 +537,40 @@ export async function transitionEventAction(_previous: FormOutcome | null, form:
   const path = editorPath(locale, eventId);
 
   let outcome: { error?: string; saved?: string };
+  // What the toast adds about the new-event alert (`alertOutcome`); the page's banner never reads it.
+  let alert: { alert?: "later" | "skipped" } = {};
+  // «Anunță abonații newsletterului» in «Publică»'s question (the design «telling the owner about every email a staff press
+  // sends», slice 4): unticked, the event goes live and the job never announces it. Offered only while an alert would go.
+  const announce = sendEmailOf(form);
   try {
     const actor = await requireStaff();
     const to = text(form, "to") as EditorialStatus;
     const move = { actor, eventId, expectedVersion: Number(text(form, "expectedVersion")) };
     // «Publică» is one press from a draft too (§423), as «Creează și publică» is: the service
     // walks the review step itself, for a role that may publish, or refuses before anything moves.
-    if (to === "PUBLISHED") await publishEvent(getDb(), move);
+    if (to === "PUBLISHED") alert = await alertOutcome(await publishEvent(getDb(), { ...move, announce }), announce);
     else await transitionEvent(getDb(), { ...move, to });
     outcome = { saved: text(form, "to") };
   } catch (error) {
     outcome = outcomeOf(error);
   }
 
-  return backTo(path, outcome);
+  return backTo(path, outcome, { ...outcome, ...alert });
+}
+
+/**
+ * What a publication's toast says of the new-event alert (slice 4; `mail-line.ts`'s `mailAlert`): `skipped` when
+ * «Anunță abonații newsletterului» was unticked, `later` when the job's next pass announces the event to somebody
+ * (`previewEventAlertAudience`, the question's own count), nothing otherwise. A read that fails says nothing: the toast
+ * is a courtesy, the publication stands.
+ */
+async function alertOutcome(event: Parameters<typeof previewEventAlertAudience>[1], announce: boolean): Promise<{ alert?: "later" | "skipped" }> {
+  if (!announce) return { alert: "skipped" };
+  try {
+    return (await previewEventAlertAudience(getDb(), event, new Date())) !== null ? { alert: "later" } : {};
+  } catch {
+    return {};
+  }
 }
 
 /**
@@ -620,6 +642,8 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
 
   let published = 0;
   let failed = 0;
+  // One «Anunță abonații newsletterului» for the batch (slice 4): unticked, none of the events published is ever announced.
+  const announce = sendEmailOf(form);
   try {
     const actor = await requireStaff();
     const db = getDb();
@@ -638,7 +662,11 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
             expectedVersion = again.version;
           }
         }
-        await transitionEvent(db, { actor, eventId, expectedVersion, to: "PUBLISHED" });
+        // The publication and, unticked, its alert marked seen in one transaction: the job never finds it live and unmarked.
+        await db.transaction(async (tx) => {
+          await transitionEvent(tx, { actor, eventId, expectedVersion, to: "PUBLISHED" });
+          if (!announce) await skipNewEventAlert(tx, { actorStaffUserId: actor.id, eventId, now: new Date() });
+        });
         published += 1;
       } catch (error) {
         if (!isDomainError(error)) throw error;
@@ -649,7 +677,7 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
     return backTo(listPath, outcomeOf(error));
   }
 
-  await flashOutcome({ saved: "eventsPublished", published: String(published), failed: String(failed) });
+  await flashOutcome({ saved: "eventsPublished", published: String(published), failed: String(failed), ...(!announce && published > 0 ? { alert: "skipped" } : {}) });
   redirect(`${listPath}${glue}saved=eventsPublished&published=${published}&failed=${failed}#admin-alert`);
 }
 
@@ -724,6 +752,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
       moved?: string;
       movedTo?: string;
       movedSent?: string;
+      movedSkipped?: string;
     };
     try {
       const actor = await requireStaff();
@@ -759,6 +788,9 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
             : undefined,
         // The Locul box ran in the browser (§362): its English name is the organizer's as it stands.
         placeNamesAsTyped: form.get(PLACE_NAMES_AS_TYPED_FIELD) === "1",
+        // «Trimite din nou „Semnează declarația”» beside «Fereastra de confirmare» (slice 4): its own field, apart from the
+        // save's other emails; absent — no window line drawn — it sends.
+        windowSendEmail: sendEmailOf(form, WINDOW_SEND_EMAIL_FIELD),
       });
       // A raised capacity's offers (§147) ride on the same banner as a number; absent when none.
       // So does what the participants were told (§331): the kind and the count, never who.
@@ -771,6 +803,8 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
               moved: String(holdsMoved.moved),
               movedTo: holdsMoved.to?.toISOString(),
               movedSent: holdsMoved.queued > 0 ? "1" : undefined,
+              // Kept back by the box (slice 4): the banner says who was not sent the declaration again.
+              movedSkipped: holdsMoved.skipped > 0 ? "1" : undefined,
             }
           : {}),
         // The save that announced the place (§328): the banner says it is public now. A flag, never
@@ -850,7 +884,10 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
   const locale = toLocale(form.get("uiLocale"));
 
   let outcome: { saved: string; created?: string; notPublished?: string };
+  let alert: { alert?: "later" | "skipped" } = {};
   let createdId: string;
+  // «Anunță abonații newsletterului» in «Creează și publică»'s question (slice 4): unticked, the new event is never announced.
+  const announce = sendEmailOf(form);
   try {
     const actor = await requireStaff();
 
@@ -884,6 +921,7 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
           : undefined,
       // The second button's marker: "create and publish". The service asks the role itself.
       publish: text(form, THEN_FIELD) === THEN_PUBLISH,
+      announce,
       repeat: repeats
         ? {
             cadence: cadence as RepeatCadence,
@@ -896,6 +934,7 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
         : null,
     });
     createdId = result.event.id;
+    if (result.published) alert = await alertOutcome(result.event, announce);
     outcome = {
       saved: result.published ? "createdPublished" : "created",
       created: result.repeated > 0 ? String(result.repeated) : undefined,
@@ -909,7 +948,7 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
     return { ...refused(error, form, { fieldNames: eventFormFieldNames }), ...hiddenListOutcome(error, locale) };
   }
 
-  return backTo(editorPath(locale, createdId), outcome);
+  return backTo(editorPath(locale, createdId), outcome, { ...outcome, ...alert });
 }
 
 export async function duplicateEventAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -1485,7 +1524,8 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
       outcome = {
         saved: "membersInvited",
         count: String(added.length),
-        ...(existing.length > 0 ? { retried: String(existing.length) } : {}),
+        // An address already a member is tried again only when the press writes to people: unticked, nothing was asked.
+        ...(existing.length > 0 && sendEmail ? { retried: String(existing.length) } : {}),
         ...(counts.failed > 0 ? { failed: String(counts.failed) } : {}),
         ...(lines.length > 0 ? { report } : {}),
         ...mailSkippedOf(sendEmail),
@@ -1547,8 +1587,11 @@ export async function resendStaffInviteAction(_previous: FormOutcome | null, for
           : ({ kind: "unconfigured" } as const);
       outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
       // The provider's answer rides along: a failed or unconfigured Zitadel invite holds the green toast back (§171, §288),
-      // and an info toast says what the club's own invitation was and when it leaves (`PROVIDER_FAILED_TOASTS`).
-      if (!providerDone(invite.kind)) toast = { saved: "reinvitedProviderFailed" };
+      // and an info toast says what the club's own invitation was and when it leaves (`PROVIDER_FAILED_TOASTS`). Without
+      // Zitadel as the provider there is no account to fail — the switcher signs people in — so the toast is the act's own,
+      // as `inviteStaffAction`'s is.
+      if (env.STAFF_AUTH_MODE !== "provider") toast = delivery === "now" ? { saved: "reinvitedNow" } : { saved: "reinvited" };
+      else if (!providerDone(invite.kind)) toast = { saved: "reinvitedProviderFailed" };
       else if (delivery === "now") toast = { ...outcome, saved: "reinvitedNow" };
     } catch (error) {
       // A «now» the day's allowance cannot hold says so in its own sentence (§80, §540).

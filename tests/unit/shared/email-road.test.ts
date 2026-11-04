@@ -75,9 +75,9 @@ describe("§841 the dialog's road line", () => {
   });
 
   it("starts from the group's setting, not from the recommendation — the club's choice stands until the reader moves it", () => {
-    expect(dialog).toContain('const road = picked.spec === spec ? picked.road : (spec?.road?.current ?? "mailgun");');
+    expect(dialog).toContain('const road = picked.spec === asked ? picked.road : (asked?.road?.current ?? "mailgun");');
     // A new question starts afresh, even in a dialog kept mounted between two of them.
-    expect(dialog).toContain("if (picked.spec !== spec) setPicked({ spec, road });");
+    expect(dialog).toContain("if (picked.spec !== asked) setPicked({ spec: asked, road });");
   });
 });
 

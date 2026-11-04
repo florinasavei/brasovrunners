@@ -25,6 +25,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { isUuid } from "@/shared/ids";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
+import { mailSkippedOf, sendEmailOf } from "@/shared/forms/send-email";
 
 /**
  * «Magazin»'s writes (§683, §687, §690, §697), the codes' shape (§552): a refused product, picture or
