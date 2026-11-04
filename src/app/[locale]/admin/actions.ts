@@ -813,7 +813,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
         // «Trimite din nou „Semnează declarația”» beside «Fereastra de confirmare» (slice 4): its own field, apart from the
         // save's other emails; absent — no window line drawn — it sends.
         windowSendEmail: sendEmailOf(form, WINDOW_SEND_EMAIL_FIELD),
-      // «De ce schimbi locurile? (opțional)» (§NNN): kept only on the history row of a save that moves the places.
+        // «De ce schimbi locurile? (opțional)» (§NNN): kept only on the history row of a save that moves the places.
         placesChangeReason: editsEventRow ? text(form, "event.placesChangeReason") : null,
       });
       // A raised capacity's offers (§147) ride on the same banner as a number; absent when none.
