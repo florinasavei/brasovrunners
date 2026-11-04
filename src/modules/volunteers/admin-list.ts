@@ -194,9 +194,9 @@ export async function summariseVolunteersForAdmin<T extends Record<string, unkno
 }
 
 /**
- * «Plus voluntari cu kit» under the registrations' «Kituri de pregătit» (§904): one event's volunteers the organizers ticked «Are kit» on,
- * the cancelled left out — the same figure as the «Voluntari» screen's «Cu kit», for one event. A count of its own: `countKits` and every
- * export keep counting the registrations alone.
+ * The volunteers in the registrations' «Kituri de pregătit» (§904; its title's «+ N voluntari» since 2026-11-04): one event's volunteers
+ * the organizers ticked «Are kit» on, the cancelled left out — the same figure as the «Voluntari» screen's «Cu kit», for one event. A
+ * count of its own: `countKits` and every export keep counting the registrations alone.
  */
 export async function countVolunteersWithKit<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
   const [row] = await db
@@ -206,20 +206,38 @@ export async function countVolunteersWithKit<T extends Record<string, unknown>>(
   return row?.n ?? 0;
 }
 
-/** The tab's figure (§839): how many offers still wait for an answer — «Înscris» on an event not yet over. */
-export async function countVolunteersAwaiting<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {
+/** The «Voluntari» tab's figures: everyone still in, and how many of them wait for the organizers. */
+export type VolunteerTabCounts = {
+  /** «Înscris» and «Confirmat» — the cancelled left out — on the events not cancelled and not yet over: the badge. */
+  active: number;
+  /**
+   * Of those, the ones the organizers have to act on — «de confirmat sau de repartizat»: an offer nobody has answered yet
+   * («Înscris»), or a person with no role given («De repartizat», §761) — each counted once, whichever applies: the small chip.
+   */
+  toAct: number;
+};
+
+/**
+ * The tab's figures, read like «Înscrieri»'s (the owner, 2026-11-04, of «Voluntari 2» beside a race with nine volunteers: a
+ * wrong total): the badge is everyone still in at the events ahead, and the chip beside it how many of them need the
+ * organizers. Until then the badge was the unanswered offers alone (§839). One query, both figures.
+ */
+export async function countVolunteersForTab<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<VolunteerTabCounts> {
   const [row] = await db
-    .select({ n: count() })
+    .select({
+      active: count(),
+      toAct: sql<number>`count(*) filter (where ${eventVolunteers.state} = 'REGISTERED' or ${noRoleGiven()})`.mapWith(Number),
+    })
     .from(eventVolunteers)
     .innerJoin(events, eq(events.id, eventVolunteers.eventId))
     .where(
       and(
-        eq(eventVolunteers.state, "REGISTERED"),
+        sql`${eventVolunteers.state} <> 'CANCELLED'`,
         sql`${events.eventStatus} <> 'CANCELLED'`,
         or(isNull(events.startsAt), gt(sql`coalesce(${events.endsAt}, ${events.startsAt})`, now)),
       ),
     );
-  return row?.n ?? 0;
+  return { active: row?.active ?? 0, toAct: row?.toAct ?? 0 };
 }
 
 /** One person by id, with the event they belong to — null for an id nobody has. */

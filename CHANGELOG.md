@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.22-2026-11-04
+
+- **The kits, the elites, the site's tick and «Voluntari», counted as they read** — «Kituri de pregătit: 188 — 179 de alergători + 9 voluntari», the separate elite list among the runners and linked to its card; an «Elite» fold on the registrations list with the separate list and the registrations marked «Elită»; the same elites among «Locuri»'s people at the start and beside the bibs («+ 2 BIB-uri de elită»); shut by its tick, «Pe site acum» says «înscrierile sunt oprite» above the one tick «Înscrierile pe site sunt deschise»; the «Voluntari» tab counts everyone still in, with a pill for those to confirm or place. §909.
+- **An elite's «Apare în clasament» and «Apare pe site»** — two ticks of the Administrator's on every elite: on the elite card, the registrations list's «⋮» and the registration's page. Unticked, «Apare în clasament» runs the elite hors concours — off the public results and out of everybody's places, still on «Clasament» marked «în afara clasamentului»; a name of the elite list ticked «Apare pe site», with the person's agreement, shows under «Elitele cursei» on the event page while its list is on; on a registered elite the tick only hides. §910.
 ## BR-V4.21-2026-11-04
 
 - **The person checks the name the club typed before signing** — on the declaration's and the offer's page of a registration the club entered (a staff entry, an internal-list line moved or offered a place), the full name comes first in the form's own boxes, prefilled, under «Verifică-ți numele complet, ca în actul de identitate…»; one press saves the corrected name with the missing details and signs with it, the signature box following the name as it is typed, and the race number prints it. Never on a public registration, never after the signature; the internal list's two dialogs say so. §907.

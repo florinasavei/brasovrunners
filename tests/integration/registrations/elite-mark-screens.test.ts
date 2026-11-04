@@ -68,6 +68,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   withdrawConsentAction: vi.fn(),
   setOutsideCapacityAction: vi.fn(),
   setRegistrationEliteAction: vi.fn(),
+  setRegistrationEliteTickAction: vi.fn(),
   declarationHoldAction: vi.fn(),
   setClubMemberDeclaredAction: vi.fn(),
   clearMemberTicksAction: vi.fn(),
@@ -84,7 +85,7 @@ const { default: AdminTable } = await import("@/modules/staff-identity/ui/AdminT
 const actions = await import("@/app/[locale]/admin/registrations/actions");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
-type MenuItem = { label: string; icon: string; formId?: string; hint?: string };
+type MenuItem = { label: string; icon: string; formId?: string; hint?: string; checked?: boolean };
 type Column = { key: string; render: (row: unknown) => ReactNode };
 
 /** Every element under `node`, depth first. */
@@ -263,5 +264,77 @@ describe("§897 the elite mark on the registrations list", () => {
     const page = (id: string) => RegistrationDetailPage({ params: Promise.resolve({ locale: "ro", id }), searchParams: Promise.resolve({}) } as never);
     expect(eliteChip(elements(await page(marked)))?.props.label).toBe("Elită");
     expect(eliteChip(elements(await page(plain)))).toBeUndefined();
+  });
+});
+
+describe("§910 an elite's two ticks on the list's «⋮» and on the registration's page", () => {
+  const tickItems = (tree: ReactNode, id: string) => menuItems(tree, id).filter((item) => item.formId === `elite-results-${id}` || item.formId === `elite-site-${id}`);
+  const formOf = (tree: ReactNode, formId: string) => cellOf(tree, formId.replace(/^elite-(results|site)-/, "")).find((element) => element.props.id === formId);
+  const field = (form: ReactElement<Props> | undefined, name: string) => elements(form).find((element) => element.props.name === name)?.props.value;
+
+  it("offers the Administrator, on a marked row only, «Apare în clasament» and «Apare pe site» as ticks, each posting the other state and asking nothing", async () => {
+    const race = await createRace();
+    state.actor = await staff("ADMIN");
+    const plain = await register(race.id);
+    const hidden = await register(race.id, { elite: true, eliteHiddenFromSite: true });
+    const tree = await listPage({ eventId: race.id });
+
+    expect(tickItems(tree, plain)).toEqual([]);
+    expect(tickItems(tree, hidden).map((item) => [item.label, item.checked])).toEqual([
+      ["Apare în clasament", true],
+      ["Apare pe site", false],
+    ]);
+    // Each says what it hides behind its tooltip (a thumb reads the same on the registration's page).
+    expect(tickItems(tree, hidden).every((item) => typeof item.hint === "string" && item.hint.length > 0)).toBe(true);
+    const results = formOf(tree, `elite-results-${hidden}`);
+    const site = formOf(tree, `elite-site-${hidden}`);
+    for (const form of [results, site]) {
+      expect(form?.props.action).toBe(actions.setRegistrationEliteTickAction);
+      // §384: it tells nobody, only hides, and the same tick undoes it — no question.
+      expect(form?.props.confirm).toBeUndefined();
+      expect(field(form, "registrationId")).toBe(hidden);
+      expect(String(field(form, "listQuery"))).toContain(`eventId=${race.id}`);
+    }
+    expect([field(results, "tick"), field(results, "on")]).toEqual(["inResults", "0"]);
+    expect([field(site, "tick"), field(site, "on")]).toEqual(["onSite", "1"]);
+  });
+
+  it("offers the Organizer no tick on the list", async () => {
+    const race = await createRace();
+    const marked = await register(race.id, { elite: true });
+    state.actor = await staff("MODERATOR");
+    const tree = await listPage({ eventId: race.id });
+    expect(tickItems(tree, marked)).toEqual([]);
+    expect(formOf(tree, `elite-results-${marked}`)).toBeUndefined();
+  });
+
+  it("draws the registration's «Elită» card while marked: the Administrator's ticks in forms, the Organizer's disabled", async () => {
+    const race = await createRace();
+    const marked = await register(race.id, { elite: true, eliteHiddenFromResults: true });
+    const plain = await register(race.id);
+    const page = (id: string) => RegistrationDetailPage({ params: Promise.resolve({ locale: "ro", id }), searchParams: Promise.resolve({}) } as never);
+    const ticksOf = (nodes: ReactElement<Props>[]) => nodes.filter((element) => typeof element.props["data-testid"] === "string" && /^elite-tick-(inResults|onSite)$/.test(element.props["data-testid"] as string));
+
+    state.actor = await staff("ADMIN");
+    const admin = elements(await page(marked));
+    expect(admin.some((element) => element.props["data-testid"] === "elite-ticks")).toBe(true);
+    expect(ticksOf(admin).map((element) => [element.props["data-testid"], element.props.checked, element.props.disabled])).toEqual([
+      ["elite-tick-inResults", false, undefined],
+      ["elite-tick-onSite", true, undefined],
+    ]);
+    const forms = admin.filter((element) => element.props.action === actions.setRegistrationEliteTickAction);
+    expect(forms.map((form) => [field(form, "tick"), field(form, "on"), field(form, "registrationId")])).toEqual([
+      ["inResults", "1", marked],
+      ["onSite", "0", marked],
+    ]);
+
+    state.actor = await staff("MODERATOR");
+    const organizer = elements(await page(marked));
+    expect(ticksOf(organizer).map((element) => [element.props.checked, element.props.disabled])).toEqual([
+      [false, true],
+      [true, true],
+    ]);
+    expect(organizer.some((element) => element.props.action === actions.setRegistrationEliteTickAction)).toBe(false);
+    expect(elements(await page(plain)).some((element) => element.props["data-testid"] === "elite-ticks")).toBe(false);
   });
 });

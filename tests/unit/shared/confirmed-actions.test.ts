@@ -309,6 +309,13 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Marchează ca elită» / «Nu mai e elită» (§897): how one registration's bib prints, nothing else of it.
   setRegistrationEliteAction:
     "a mark on how one registration's bib prints, undone from the same menu; it tells nobody and changes no state, place, number or count",
+  // «Apare în clasament» / «Apare pe site» (§910): an elite's two ticks, the TickButton pattern — each undone by the same tick.
+  setEliteEntryTickAction:
+    "one of an elite line's two ticks, undone by the same tick; it tells nobody and moves no place — putting a name on the site asks first, naming the person, since only their agreement allows it",
+  setRegisteredEliteTickAction:
+    "one of a marked registration's two ticks from the elite card, undone by the same tick; it tells nobody and only ever hides — ticked, the person's own ticks decide",
+  setRegistrationEliteTickAction:
+    "one of a marked registration's two ticks from the list's «⋮» or its page, undone by the same tick; it tells nobody and only ever hides — ticked, the person's own ticks decide",
   // «Are kit» on a row of the «Voluntari» list (§904): the organizers' own mark of who gets the volunteers' kit, a one-press tick.
   setVolunteerKitAction:
     "a mark on the club's packing for one volunteer, undone by the same tick; it tells nobody and changes no state, role or count but «Cu kit»",

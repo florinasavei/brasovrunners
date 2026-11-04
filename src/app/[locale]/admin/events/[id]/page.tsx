@@ -135,6 +135,7 @@ import { readBibDesign } from "@/modules/registrations/bib-design";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
 import { listEliteEntries } from "@/modules/registrations/elite-list";
+import { listEliteTicks } from "@/modules/registrations/elite-mark";
 import { countRsvpsForAdmin, listRsvpsForAdmin } from "@/modules/rsvp/rsvp";
 import { SPARE_BIBS_PER_PRINT, spareRangeOfQuery } from "@/modules/registrations/domain/spare-bibs";
 import { countInterests } from "@/modules/registrations/interest";
@@ -159,6 +160,8 @@ import {
   assignBibNumbersAction,
   reserveSpareBibsAction,
   sendEventThanksAction,
+  setEliteEntryTickAction,
+  setRegisteredEliteTickAction,
   duplicateEventAction,
   eraseGroupRunDeclarationAction,
   eraseGroupRunDeclarationsAction,
@@ -270,8 +273,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     registrations, so nothing above counts them.
   */
   const eliteEntries = bibCounts ? await listEliteEntries(db, staffUser, event.id) : null;
-  // The registrations marked «Elită» (§897) that the elite sheet prints beside the list: read-only lines of its card.
+  // The registrations marked «Elită» (§897) that the elite sheet prints beside the list: lines of its card, with their two ticks (§910).
   const eliteRegistered = bibCounts ? await listBibs(db, event.id, { elite: true }) : null;
+  const eliteRegisteredTicks = eliteRegistered && eliteRegistered.length > 0 ? await listEliteTicks(db, staffUser, event.id) : null;
   // The range the print just reserved, for its banner (§444) — only two real numbers from the address.
   const reservedRange = saved === "sparesReserved" ? spareRangeOfQuery(spareFrom, spareTo) : null;
 
@@ -432,7 +436,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const elite = eliteEntries
     ? {
         entries: eliteEntries,
-        registered: (eliteRegistered ?? []).map((row) => ({ id: row.id, name: row.registeredName, bibNumber: row.bibNumber })),
+        // A marked registration's ticks are ticked unless the club hid it (§910): the sheet's rows and the ticks are one event's, read a moment apart.
+        registered: (eliteRegistered ?? []).map((row) => ({
+          id: row.id,
+          name: row.registeredName,
+          bibNumber: row.bibNumber,
+          ...(eliteRegisteredTicks?.get(row.id) ?? { inResults: true, onSite: true }),
+        })),
         previewSrc: bibPreviewUrl({
           eventId: event.id,
           locale,
@@ -446,8 +456,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       }
     : null;
   const mayEditElite = elite !== null && canManageRegistrations(staffUser.role);
-  // Back from the elite card's add or delete (`actions.ts#backToEliteCard`): the card and every fold around it open.
-  const eliteSaved = elite !== null && (saved === "eliteAdded" || saved === "eliteDeleted");
+  // Back from the elite card's add, delete or tick (`actions.ts#backToEliteCard`): the card and every fold around it open.
+  const eliteSaved = elite !== null && (saved === "eliteAdded" || saved === "eliteDeleted" || saved === "eliteTicked");
   // The service offers the same list by the same function, so the `pick` indexes the preview posts mean the same rows.
   const gpxPlaced = gpxWaypoints ? offerableProposals(gpxWaypoints.proposals, checkpointRouteKm) : null;
   const checkpointsGpx =
@@ -1043,7 +1053,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved &&
-            !["bibsAssigned", "sparesReserved", "eliteAdded", "eliteDeleted", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased", "groupRunDeclarationsErased", "declarationResent"].includes(saved) &&
+            !["bibsAssigned", "sparesReserved", "eliteAdded", "eliteDeleted", "eliteTicked", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased", "groupRunDeclarationsErased", "declarationResent"].includes(saved) &&
             !(saved === "created" && (created || notPublished)) &&
             !(saved === "event" && offered) && <Alert severity="success">{t("saved")}</Alert>}
           {/* The save that announced the place (§328): public from now on, and nobody was told. */}
@@ -1409,6 +1419,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   sparesFrom={spares?.nextFrom ?? null}
                   eliteDeleteAction={deleteEliteEntryAction}
                   eliteEntries={eliteEntries ?? []}
+                  eliteTickAction={setEliteEntryTickAction}
+                  eliteRegisteredTickAction={setRegisteredEliteTickAction}
+                  eliteRegistered={elite?.registered ?? []}
                   cancelLabel={words.cancel}
                 />
               )}
