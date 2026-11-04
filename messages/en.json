@@ -11192,7 +11192,7 @@
       "move": "Move to the official list",
       "moveTitle": "Move to the official waiting list?",
       "noteFollows": "The note moves onto the registration, and the line leaves the internal list.",
-      "detailsAtSigning": "The person fills in the missing details themselves, such as the birth date or the phone, when they sign the declaration.",
+      "detailsAtSigning": "When they sign the declaration, the person checks their full name and fills in the missing details themselves, such as the birth date or the phone.",
       "emailForOfficial": "Email for the official list",
       "emailForOfficialHelp": "This line has no address: type it here to move it. The emails go here.",
       "eliteNoAddress": "An elite runner? No address needed: “Move to the elite list”.",
@@ -11821,6 +11821,12 @@
       "minorSignatureMismatchRich": "The minor's signature must be exactly the name they were registered under: <strong>{name}</strong>.",
       "minorNameWrong": "If the minor's name given at registration is wrong, <contact>write to us</contact>: the club corrects it, and you then sign from the same link.",
       "minorNameWrongReply": "If the minor's name given at registration is wrong, reply to the email you received or <contact>write to us</contact>: the club corrects it, and you then sign from the same link.",
+      "typedNameHelpAbove": "You sign with the full name above: <strong>{name}</strong> — type exactly this name. It appears as a signature.",
+      "minorTypedNameHelpAbove": "The minor signs too, with their full name above: <strong>{name}</strong> — type exactly this name. It appears as a signature.",
+      "signatureMismatchAbove": "The signature must be exactly the full name above: {name}.",
+      "signatureMismatchAboveRich": "The signature must be exactly the full name above: <strong>{name}</strong>.",
+      "minorSignatureMismatchAbove": "The minor's signature must be exactly their full name above: {name}.",
+      "minorSignatureMismatchAboveRich": "The minor's signature must be exactly their full name above: <strong>{name}</strong>.",
       "idDocumentTypes": {
         "ID_CARD": "Identity card",
         "PASSPORT": "Passport",
@@ -12085,7 +12091,15 @@
       "saving": "Saving…",
       "saved": "Done, your details are saved.",
       "signatureOpen": "You registered as {name}: sign with exactly this name. For a minor, the parent or guardian signs, with the name typed above.",
-      "guardianTypedAbove": "The parent or guardian signs, with the name typed above in the details to complete. If that name is wrong, correct it there and sign with it."
+      "guardianTypedAbove": "The parent or guardian signs, with the name typed above in the details to complete. If that name is wrong, correct it there and sign with it.",
+      "nameTitle": "Check your name",
+      "nameTitleFor": "Check the name for {name}",
+      "nameCheck": "Check your full name, as on your identity document: you sign the declaration with it, and it is printed on your race number.",
+      "nameLead": "Before you sign, <link>check your full name</link>: it is right above the signature.",
+      "declareLeadName": "Before you sign, <link>check your full name and fill in the details missing</link> from your registration: they are right above the signature.",
+      "signatureOpenName": "Sign with the full name typed above, exactly as it is there. For a minor, the parent or guardian signs, with their name typed above.",
+      "nameTypedAbove": "The name you sign with is the one typed above, in your details: if it is wrong, correct it there and sign with it.",
+      "minorNameTypedAbove": "The minor's name is the one typed above, in their details: if it is wrong, correct it there and sign with it."
     }
   },
   "Devs": {

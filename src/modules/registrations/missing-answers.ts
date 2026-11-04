@@ -160,15 +160,37 @@ export function missingAnswersHeld(row: HeldReading): MissingAnswer[] {
   );
 }
 
+/** The public form's two name boxes (BR-REQ-031-04): the name of record is composed from them. */
+export const NAME_ANSWERS: readonly MissingAnswer[] = ["firstName", "lastName"];
+
+/**
+ * «Verifică-ți numele complet» (§NNN; the owner, 2026-11-04, of the people he offers places to: «… își pot completa
+ * toate datele gen nume complet, DOB, oraș»): whether the declaration's page — the offer's too —
+ * draws the name the club typed for the person to check and correct before they sign. A staff row's (`source =
+ * STAFF`: a staff entry, a line of the internal list moved or offered a place, a vouched entry), while no declaration
+ * is signed. Never a public row's — the person typed it on the form — and never under a signed declaration, online or
+ * on paper: the signed text names its declarant, so the name of record is then fixed (`complete-answers.ts#NAME_SIGNED`).
+ * Not an owed answer: the row always holds a name, so nothing here is «Date lipsă».
+ */
+export function asksNameCheck(registration: Pick<AnswersOnRow, "source">, declarationSigned: boolean): boolean {
+  return registration.source === "STAFF" && !declarationSigned;
+}
+
 /**
  * The boxes a person's own page draws to complete them: the missing answers, and the guardian beside a missing
  * birth date — shown by the date typed, as on the form (`GuardianForMinor`). Never the guardian under a signed
  * declaration, online or on paper: the signed text names its declarant (`answers.ts#GUARDIAN_SIGNED`), and only a
- * new declaration changes who that is.
+ * new declaration changes who that is. With `nameCheck` (`asksNameCheck`, the declaration's page only), the two name
+ * boxes as well, first, as the form asks them (§NNN).
  */
-export function answersToAsk(missing: readonly MissingAnswer[], declarationSigned: boolean): { fields: MissingAnswer[]; guardianIfMinor: boolean } {
+export function answersToAsk(
+  missing: readonly MissingAnswer[],
+  declarationSigned: boolean,
+  nameCheck = false,
+): { fields: MissingAnswer[]; guardianIfMinor: boolean } {
+  const asked = declarationSigned ? missing.filter((field) => field !== "guardianName") : [...missing];
   return {
-    fields: declarationSigned ? missing.filter((field) => field !== "guardianName") : [...missing],
+    fields: nameCheck && !declarationSigned ? FORM_ORDER.filter((field) => asked.includes(field) || NAME_ANSWERS.includes(field)) : asked,
     guardianIfMinor: missing.includes("birthDate") && !missing.includes("guardianName") && !declarationSigned,
   };
 }
