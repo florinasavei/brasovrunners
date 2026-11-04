@@ -32,6 +32,11 @@ export type Rankable = {
   sex: SexChoice | null;
   /** The age on the event's day (`ageOnRaceDay`), or null without a birth date. */
   ageOnRaceDay: number | null;
+  /**
+   * An elite the Administrator left out of the ranking (§NNN, `hors-concours.ts`): no position of its own, and counted in nobody
+   * else's — the others are ranked as if it had not run. Absent or false, an ordinary result.
+   */
+  outOfRanking?: boolean;
 };
 
 /** What the ranking says of one result: three positions among the finishers and the category they were counted in. */
@@ -41,6 +46,8 @@ export type Ranked = {
   positionCategory: number | null;
   /** The sex and band, `FEMALE:from30`; null without both answers (`categoryKeyOf`). */
   categoryKey: string | null;
+  /** Set only on a row that runs hors concours (§NNN): no positions, left off every public list. */
+  outOfRanking?: true;
 };
 
 /**
@@ -61,9 +68,14 @@ function positionsOf(sorted: readonly Rankable[]): Map<number, number> {
   return positions;
 }
 
-/** The finishers of a group, fastest first, the bib breaking an exact tie only so the order is stable. */
+/** A result that is placed: finished with a time, and not hors concours (§NNN). */
+function placed(row: Rankable): boolean {
+  return row.status === "FINISHED" && row.gunTimeMs !== null && row.outOfRanking !== true;
+}
+
+/** The placed finishers of a group, fastest first, the bib breaking an exact tie only so the order is stable. */
 function byTime(rows: readonly Rankable[]): Rankable[] {
-  return rows.filter((row) => row.status === "FINISHED" && row.gunTimeMs !== null).sort((a, b) => (a.gunTimeMs ?? 0) - (b.gunTimeMs ?? 0) || a.bibNumber - b.bibNumber);
+  return rows.filter(placed).sort((a, b) => (a.gunTimeMs ?? 0) - (b.gunTimeMs ?? 0) || a.bibNumber - b.bibNumber);
 }
 
 /**
@@ -72,7 +84,8 @@ function byTime(rows: readonly Rankable[]): Rankable[] {
  * (`DNF`, `DNS`, `DSQ`) has no position at all; a finisher without a sex has no position by sex and none by
  * category, one without a birth date has an overall and a sex position and no category — the Excel's footer says
  * «Fără categorie» for the same rows (§787), and nothing is guessed. The bands are the race's own (`starts`, §850), the
- * platform's when it chose none.
+ * platform's when it chose none. A row hors concours (`outOfRanking`, §NNN) is placed nowhere and moves nobody: it keeps its
+ * category and carries `outOfRanking`.
  */
 export function rankResults(rows: readonly Rankable[], starts: readonly number[] = DEFAULT_AGE_BAND_STARTS): Map<number, Ranked> {
   const finishers = byTime(rows);
@@ -96,13 +109,14 @@ export function rankResults(rows: readonly Rankable[], starts: readonly number[]
 
   const ranked = new Map<number, Ranked>();
   for (const row of rows) {
-    const finished = row.status === "FINISHED" && row.gunTimeMs !== null;
+    const finished = placed(row);
     ranked.set(row.bibNumber, {
       positionOverall: finished ? (overall.get(row.bibNumber) ?? null) : null,
       positionSex: finished ? (bySex.get(row.bibNumber) ?? null) : null,
       positionCategory: finished ? (byCategory.get(row.bibNumber) ?? null) : null,
       // The category is what the runner is, finished or not: a DNF still belongs to «F, 30-39» in the club's own tally.
       categoryKey: categoryKeyOf(row.sex, row.ageOnRaceDay, starts),
+      ...(row.outOfRanking === true ? { outOfRanking: true as const } : {}),
     });
   }
   return ranked;

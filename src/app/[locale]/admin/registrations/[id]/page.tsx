@@ -65,6 +65,8 @@ import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import InfoTip from "@/shared/ui/InfoTip";
 import StatusChip from "@/shared/ui/StatusChip";
+import QuietHelp from "@/shared/ui/QuietHelp";
+import TickButton from "@/shared/ui/TickButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { env } from "@/shared/config/env";
@@ -79,6 +81,7 @@ import {
   promoteRegistrationAction,
   setBibNumberAction,
   setOutsideCapacityAction,
+  setRegistrationEliteTickAction,
   withdrawConsentAction,
   declarationHoldAction,
 } from "../actions";
@@ -950,6 +953,50 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 0, overflowWrap: "anywhere" }}>
               {tr("registrations.outside.help")}
             </Typography>
+          </Stack>
+        </Panel>
+      )}
+
+      {/*
+        «Elită: clasament și site» (§NNN; the owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe site»): drawn while the
+        registration is marked «Elită» (§897), for every role that reads the page; the two ticks are the Administrator's — the house's
+        `TickButton`, each in a form posting the state it wants — and read-only, the same boxes disabled, for the others. They ask
+        nothing (§384): they tell nobody, only ever hide, and the same tick undoes them. The help says what each hides.
+      */}
+      {registration.elite && (
+        <Panel glyph="bibElite" level={3} title={tr("registrations.elite.title")} data-testid="elite-ticks">
+          <Stack spacing={0.5} sx={{ minWidth: 0, maxWidth: "100%" }}>
+            {(
+              [
+                ["inResults", !registration.eliteHiddenFromResults],
+                ["onSite", !registration.eliteHiddenFromSite],
+              ] as const
+            ).map(([tick, shown]) =>
+              mayManage ? (
+                <ActionForm key={tick} action={setRegistrationEliteTickAction} data-testid={`elite-tick-form-${tick}`}>
+                  {deskHidden}
+                  <input type="hidden" name="tick" value={tick} />
+                  <input type="hidden" name="on" value={shown ? "0" : "1"} />
+                  <TickButton checked={shown} data-testid={`elite-tick-${tick}`}>
+                    {tr(`registrations.elite.${tick}`)}
+                  </TickButton>
+                </ActionForm>
+              ) : (
+                <TickButton key={tick} checked={shown} disabled data-testid={`elite-tick-${tick}`}>
+                  {tr(`registrations.elite.${tick}`)}
+                </TickButton>
+              ),
+            )}
+            {/* One sentence said, what each tick hides behind the «?» (§511). */}
+            <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 0, overflowWrap: "anywhere" }} data-testid="elite-ticks-help">
+              {tr("registrations.elite.help")}{" "}
+              <QuietHelp text={[tr("registrations.elite.inResultsHelp"), tr("registrations.elite.onSiteHint")].join("\n")} size={14} testId="elite-ticks-more" />
+            </Typography>
+            {!mayManage && (
+              <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 0 }}>
+                {tr("registrations.elite.readOnly")}
+              </Typography>
+            )}
           </Stack>
         </Panel>
       )}

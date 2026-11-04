@@ -16,6 +16,7 @@ import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
+import TickButton from "@/shared/ui/TickButton";
 import TipSpan from "@/shared/ui/TipSpan";
 
 /** The two small forms the card's controls belong to, by id (`form="…"`). */
@@ -28,6 +29,16 @@ export const BIB_ELITE_ADD_FORM = "bib-elite-add";
 /** Each elite line's «Șterge» (§895): one small form per line beside the save form, asked first (`BibPrintForms`). */
 export function bibEliteDeleteForm(entryId: string): string {
   return `bib-elite-delete-${entryId}`;
+}
+/** The two ticks of a line (§NNN), «Apare în clasament» and «Apare pe site»: one small form per tick, beside the save form. */
+export type EliteTickName = "inResults" | "onSite";
+/** A tick of a line of the separate list (`setEliteEntryTickAction`). */
+export function bibEliteTickForm(entryId: string, tick: EliteTickName): string {
+  return `bib-elite-tick-${tick}-${entryId}`;
+}
+/** A tick of a registered runner's line (`setRegisteredEliteTickAction`). */
+export function bibEliteRegisteredTickForm(registrationId: string, tick: EliteTickName): string {
+  return `bib-elite-registered-tick-${tick}-${registrationId}`;
 }
 
 type Props = {
@@ -52,15 +63,23 @@ type Props = {
   eliteSaved?: boolean;
 };
 
+/**
+ * A line's two ticks (§NNN): «Apare în clasament» (`inResults`: unticked, the result runs hors concours) and «Apare pe site»
+ * (`onSite`). On a list line, ticked shows the name under «Elitele cursei»; on a registered line, unticked hides the runner and
+ * ticked leaves their own ticks to decide.
+ */
+export type EliteTicks = { inResults: boolean; onSite: boolean };
+
 /** What the elite section shows (§895), read by the page (`elite-list.ts#listEliteEntries`). */
 export type EliteCard = {
-  /** The names in the order typed, with the number the club gave each, if any. */
-  entries: ReadonlyArray<{ id: string; name: string; bibNumber: number | null }>;
+  /** The names in the order typed, with the number the club gave each, if any, and the line's two ticks (§NNN). */
+  entries: ReadonlyArray<{ id: string; name: string; bibNumber: number | null } & EliteTicks>;
   /**
    * The registrations an Administrator marked «Elită» (§897) whose bib the sheet prints — confirmed, with their number
-   * (`bibs.ts#listBibs` with `elite`). Read-only here: marked and unmarked from the registrations list's «⋮».
+   * (`bibs.ts#listBibs` with `elite`), and their two ticks (§NNN, `elite-mark.ts#listEliteTicks`). Marked and unmarked from the
+   * registrations list's «⋮»; the ticks are the card's too.
    */
-  registered?: ReadonlyArray<{ id: string; name: string; bibNumber: number }>;
+  registered?: ReadonlyArray<{ id: string; name: string; bibNumber: number } & EliteTicks>;
   /** The sample elite bib: the preview route with `elite=1` and the stored design (`bib-design-query.ts#bibPreviewUrl`). */
   previewSrc: string;
   /** The sheet of every elite bib: the bibs route with `elite=1`. */
@@ -151,6 +170,34 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
 }
 
 /**
+ * A line's two ticks (§NNN; the owner, 2026-11-04: «per elite, two ticks: „Apare în clasament” and „Apare pe site”»): the house's
+ * `TickButton` — a submit drawn as the checkbox, posting through `form=` the small form that carries the state it wants (`BibPrintForms`),
+ * because the card stands inside the event's save form. For whoever only reads the card (the Organizer), the same boxes, disabled:
+ * they see each line's state and change nothing (§289).
+ */
+function EliteTickButtons({
+  ticks,
+  formOf,
+  mayEdit,
+  labels,
+}: {
+  ticks: EliteTicks;
+  formOf: (tick: EliteTickName) => string;
+  mayEdit: boolean;
+  labels: Record<EliteTickName, string>;
+}) {
+  return (
+    <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 1.5 }} data-testid="bib-elite-ticks">
+      {(["inResults", "onSite"] as const).map((tick) => (
+        <TickButton key={tick} checked={ticks[tick]} form={mayEdit ? formOf(tick) : undefined} disabled={!mayEdit} data-testid={`bib-elite-tick-${tick}`}>
+          {labels[tick]}
+        </TickButton>
+      ))}
+    </Stack>
+  );
+}
+
+/**
  * «Elită — doar numele pe BIB» (§895; the owner, 2026-11-03, «Listă separată»): the race's elite runners as a list
  * of names, each printed with the **name where the number goes** — not registrations: no place, no email, no
  * declaration, no count. Beside the spares, a level-5 fold of the print card, closed, how many on its closed line.
@@ -162,8 +209,12 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
  * stand beside it (`EliteBibForms`, `BibPrintForms`): «Salvează» never posts a name, and a refused add keeps what
  * was typed, said right above the boxes.
  *
- * Under the names, read-only, the registrations an Administrator marked «Elită» on the registrations list (§897) —
- * each «înscris», with its number — since the same sheet prints them: in the closed line's count and the download's.
+ * Under the names, the registrations an Administrator marked «Elită» on the registrations list (§897) — each «înscris»,
+ * with its number — since the same sheet prints them: in the closed line's count and the download's.
+ *
+ * Every line, a name of the list or a marked registration, carries the two ticks (§NNN, `EliteTickButtons`): «Apare în
+ * clasament» and «Apare pe site», the Administrator's to change; the help under the list says what each does and that a
+ * name goes on the site only with the person's agreement.
  */
 async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; mayEdit: boolean; saved: boolean }) {
   const t = await getTranslations("Admin");
@@ -172,6 +223,7 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
   const registered = elite.registered ?? [];
   const count = elite.entries.length + registered.length;
   const aside = count === 0 ? t("bibs.eliteNone") : t(`bibs.eliteCount.${countForm(count, locale)}`, { count });
+  const tickLabels: Record<EliteTickName, string> = { inResults: t("bibs.eliteInResults"), onSite: t("bibs.eliteOnSite") };
   return (
     <Panel glyph="bibElite" collapsible level={5} id="bib-elite" title={t("bibs.eliteTitle")} aside={aside} openWhen={{ saved }} data-testid="bib-elite">
       <Stack spacing={1.5}>
@@ -209,9 +261,10 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
                     </GlyphButton>
                   )}
                 </Stack>
+                <EliteTickButtons ticks={entry} formOf={(tick) => bibEliteTickForm(entry.id, tick)} mayEdit={mayEdit} labels={tickLabels} />
               </Box>
             ))}
-            {/* A registration marked «Elită» (§897): read here, never deleted here — the mark is the registrations list's. */}
+            {/* A registration marked «Elită» (§897): never deleted here — the mark is the registrations list's; its two ticks are the card's too (§NNN). */}
             {registered.map((entry) => (
               <Box key={entry.id} component="li" data-testid="bib-elite-registered">
                 <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1 }}>
@@ -223,9 +276,20 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
                     {t("bibs.eliteNumberShown", { number: entry.bibNumber })}
                   </Typography>
                 </Stack>
+                <EliteTickButtons ticks={entry} formOf={(tick) => bibEliteRegisteredTickForm(entry.id, tick)} mayEdit={mayEdit} labels={tickLabels} />
               </Box>
             ))}
           </Stack>
+        )}
+        {/*
+          What the two ticks do (§NNN), once for every line: the agreement the site tick needs, said; what each tick does and a
+          registered runner's own ticks, behind the «?» (the owner's rule: one sentence, the rest behind «?», §511).
+        */}
+        {count > 0 && (
+          <Typography variant="caption" color="text.secondary" component="p" sx={{ m: 0, overflowWrap: "anywhere" }} data-testid="bib-elite-ticks-help">
+            {t("bibs.eliteTicksHelp")}{" "}
+            <QuietHelp text={[t("bibs.eliteInResultsHelp"), t("bibs.eliteOnSiteHelp"), t("bibs.eliteRegisteredSiteHelp")].join("\n")} size={14} testId="bib-elite-ticks-more" />
+          </Typography>
         )}
         {mayEdit ? (
           <DetachedFields form={BIB_ELITE_ADD_FORM}>
@@ -443,6 +507,9 @@ export async function BibPrintForms({
   sparesFrom = null,
   eliteDeleteAction,
   eliteEntries = [],
+  eliteTickAction,
+  eliteRegisteredTickAction,
+  eliteRegistered = [],
   cancelLabel,
 }: {
   eventId: string;
@@ -455,10 +522,25 @@ export async function BibPrintForms({
   sparesFrom?: number | null;
   /** `deleteEliteEntryAction` (§895), and the lines it may delete — one small form each; absent, none. */
   eliteDeleteAction?: ActionFormAction;
-  eliteEntries?: ReadonlyArray<{ id: string; name: string }>;
+  /** The list's lines, with their two ticks (§NNN): the delete's question names the line, each tick's form posts the state it wants. */
+  eliteEntries?: ReadonlyArray<{ id: string; name: string } & EliteTicks>;
+  /** `setEliteEntryTickAction` (§NNN): two small forms per list line; absent, none. */
+  eliteTickAction?: ActionFormAction;
+  /** `setRegisteredEliteTickAction` (§NNN), and the marked registrations it ticks — two small forms each; absent, none. */
+  eliteRegisteredTickAction?: ActionFormAction;
+  eliteRegistered?: ReadonlyArray<{ id: string; name: string } & EliteTicks>;
   cancelLabel: string;
 }) {
   const t = await getTranslations("Admin");
+  /** The hidden fields of a tick's form: which tick, and the state it should stand in after the press — the other one than drawn. */
+  const tickFields = (tick: EliteTickName, current: boolean) => (
+    <>
+      <input type="hidden" name="uiLocale" value={locale} />
+      <input type="hidden" name="eventId" value={eventId} />
+      <input type="hidden" name="tick" value={tick} />
+      <input type="hidden" name="on" value={current ? "0" : "1"} />
+    </>
+  );
   return (
     <>
       {mayAssign && (
@@ -514,6 +596,42 @@ export async function BibPrintForms({
             <input type="hidden" name="entryId" value={entry.id} />
           </ActionForm>
         ))}
+      {/*
+        The two ticks of each list line (§NNN): a small form per tick, posting the state it wants. «Apare în clasament» asks nothing
+        (§384: it tells nobody and the same tick undoes it); putting a name on the site asks first, naming the person, because it is
+        only the person's agreement that allows it — taking it off asks nothing.
+      */}
+      {mayAssign &&
+        eliteTickAction &&
+        eliteEntries.flatMap((entry) =>
+          (["inResults", "onSite"] as const).map((tick) => (
+            <ActionForm
+              key={`${tick}-${entry.id}`}
+              id={bibEliteTickForm(entry.id, tick)}
+              action={eliteTickAction}
+              hidden
+              confirm={
+                tick === "onSite" && !entry.onSite
+                  ? { title: t("bibs.eliteOnSiteTitle"), body: t("bibs.eliteOnSiteBody", { name: entry.name }), confirmLabel: t("bibs.eliteOnSite"), cancelLabel }
+                  : undefined
+              }
+            >
+              {tickFields(tick, entry[tick])}
+              <input type="hidden" name="entryId" value={entry.id} />
+            </ActionForm>
+          )),
+        )}
+      {/* A marked registration's two ticks (§NNN): they only ever hide, so neither asks — the same tick undoes it. */}
+      {mayAssign &&
+        eliteRegisteredTickAction &&
+        eliteRegistered.flatMap((entry) =>
+          (["inResults", "onSite"] as const).map((tick) => (
+            <ActionForm key={`${tick}-${entry.id}`} id={bibEliteRegisteredTickForm(entry.id, tick)} action={eliteRegisteredTickAction} hidden>
+              {tickFields(tick, entry[tick])}
+              <input type="hidden" name="registrationId" value={entry.id} />
+            </ActionForm>
+          )),
+        )}
       <form id={BIB_DOWNLOAD_FORM} action={`/api/admin/events/${eventId}/bibs`} method="get" hidden>
         <input type="hidden" name="locale" value={locale} />
       </form>

@@ -27,7 +27,8 @@ export type ResultsCsvHeader = {
 };
 
 export type ResultsCsvRow = {
-  position: number | null;
+  /** The overall position — or, for an elite hors concours (§NNN), the words «în afara clasamentului» where it would be. */
+  position: number | string | null;
   positionSex: number | null;
   positionCategory: number | null;
   bib: number;
@@ -45,7 +46,7 @@ export type ResultsCsvRow = {
 };
 
 export function buildResultsCsv(header: ResultsCsvHeader, rows: readonly ResultsCsvRow[]): string {
-  const number = (value: number | null) => (value === null ? "" : String(value));
+  const number = (value: number | string | null) => (value === null ? "" : String(value));
   const lines = [
     [header.position, header.positionSex, header.positionCategory, header.bib, header.name, header.sex, header.category, header.status, header.time, header.chip, header.note].map(csvCell).join(","),
     ...rows.map((row) =>

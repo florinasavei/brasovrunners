@@ -427,6 +427,11 @@
       "noteStatesNamesOnly": "A name is shown only for those who ticked “I want to appear on the participants & results list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
       "noteStatesNoWaitlistNamesOnly": "A name is shown only for those who ticked “I want to appear on the participants & results list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet appear only if they ticked it, with the registration's stage beside the name; the waiting list is not public for this event, and a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
       "othersLead": "Also listed by name:",
+      "elites": {
+        "title": "The race's elite runners",
+        "number": "no. {number}",
+        "note": "Elite runners invited by the club, shown with their agreement. They are not registrations and are not counted in the list above."
+      },
       "pendingCount": {
         "one": "{count} registered, awaiting confirmation",
         "few": "{count} registered, awaiting confirmation",
@@ -1226,7 +1231,14 @@
       "elite": {
         "chip": "Elite",
         "mark": "Mark as elite",
-        "unmark": "No longer elite"
+        "unmark": "No longer elite",
+        "inResults": "In the results",
+        "onSite": "On the site",
+        "onSiteHint": "Unticked, the name does not show on the site: not under «Who's coming», not in the results. Ticked, their own “I want to appear” tick decides.",
+        "title": "Elite: results and site",
+        "help": "The club's ticks only hide: ticked, the person's own ticks decide.",
+        "inResultsHelp": "Unticked, the result is not in the public results and takes nobody's place; on «Results» it stays, marked «out of the results».",
+        "readOnly": "Only an administrator changes the ticks."
       },
       "export": "Download CSV",
       "personLink": "Everything held about a person",
@@ -1587,6 +1599,10 @@
           "outside_capacity_changed": "Put on the special guests list, or taken off it",
           "elite_marked": "Marked as elite: the bib prints the name where the number goes",
           "elite_unmarked": "No longer elite: the bib prints the number again",
+          "elite_in_results": "Elite: «In the results» ticked — the result is ranked again",
+          "elite_out_of_results": "Elite: «In the results» unticked — out of the results",
+          "elite_on_site": "Elite: «On the site» ticked — on the site as the person's own ticks allow",
+          "elite_off_site": "Elite: «On the site» unticked — the name no longer shows on the site",
           "deadline_moved_for_outage": "Deadline moved: the site could not be reached, the clock stood still",
           "hold_moved_by_window": "Signing deadline moved with the changed confirmation window",
           "not_revived_for_outage": "Not revived after the outage: the deadline had passed while the site could not be reached, and the place had been given meanwhile or the claim had already lapsed",
@@ -2379,6 +2395,7 @@
       "SAMPLE_VALUES_IN_EMAIL": "The text contains sample values, not fields: {found}. Use the fields in their place.",
       "BIB_NUMBER_TAKEN": "That number is already somebody's at this event: given, held, on the elite list, or worn by an erased registration. Pick another number from the box and try again.",
       "ELITE_NUMBER_TAKEN": "That number is already used at this event: a registration's, another elite name's, or one of the desk's spares. Type another number or leave the box empty.",
+      "ELITE_NOT_MARKED": "The registration is no longer marked elite, so its elite ticks no longer change. Nothing was written.",
       "RESERVE_ELITE_NAME": "The name is longer than {max} characters and does not fit on a bib. Type it shorter in the event's editor, under “Elite — the name only on the bib”.",
       "WALK_IN_BIB_TAKEN": "The person is entered, but somebody just gave that number away, so they are unconfirmed. Find them in the list and press “Confirm here” with another number.",
       "STAFF_ALREADY_ON_ADDRESS": "This person is already registered for the event with this email address. Look them up in the registrations list; for another person, type their name.",
@@ -6868,7 +6885,7 @@
         "few": "{count} names",
         "other": "{count} names"
       },
-      "eliteHelp": "Their name prints large, where the number goes. They are not registrations: they take no place, get no email and are in no list or count.",
+      "eliteHelp": "Their name prints large, where the number goes. They are not registrations: they take no place, get no email and are in no count; the event page shows them only with «On the site» ticked.",
       "eliteEmpty": "No names on the list.",
       "eliteName": "Name on the bib",
       "eliteNameHelp": "As it prints, at most {max} characters. It shrinks to fit, on one line or two.",
@@ -6887,6 +6904,14 @@
       "eliteRegistered": "registered",
       "eliteRegisteredHelp": "A registered runner is marked from the registrations list: «⋮» → «Mark as elite». They stay registered, with their place and number, and appear here once confirmed.",
       "eliteRegisteredOnce": "The ordinary sheet prints them too, as elite bibs: print them from one sheet, not both.",
+      "eliteInResults": "In the results",
+      "eliteOnSite": "On the site",
+      "eliteTicksHelp": "Tick «On the site» only with the person's agreement.",
+      "eliteInResultsHelp": "«In the results» unticked: the result is not in the public results and takes nobody's place; on «Results» it stays, marked «out of the results».",
+      "eliteOnSiteHelp": "«On the site» ticked: the name and the number show on the event page, under «The race's elite runners», while its public list is on.",
+      "eliteRegisteredSiteHelp": "On a registered runner, «On the site» only hides: unticked, they show as “Participant (name hidden)”; ticked, their own ticks decide.",
+      "eliteOnSiteTitle": "Show the name on the event page?",
+      "eliteOnSiteBody": "{name} shows under «The race's elite runners» on the event page while its public list is on. Tick it only if the person agreed.",
       "helpMore": "Numbers are given in order of confirmation and are never given twice. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page.",
       "memberLabelDefault": "{club} member",
       "profileStart": "Start",
@@ -11119,8 +11144,10 @@
       "present": "Present",
       "publicLine": {
         "named": "On the site: with the name",
-        "anonymous": "On the site: {label}"
+        "anonymous": "On the site: {label}",
+        "outOfRanking": "On the site: not shown — an elite out of the results"
       },
+      "outOfRanking": "out of the results",
       "nameless": "No name: the registration was erased. The result stays, nameless.",
       "addRow": "Add a runner who did not register",
       "typedRow": "Unregistered runner",
@@ -13419,6 +13446,7 @@
       "eliteDeleted": "The name was deleted from the elite list.",
       "eliteMarked": "Marked as elite: their bib prints the name where the number goes. The registration stays as it is.",
       "eliteUnmarked": "No longer elite: their bib prints the number again.",
+      "eliteTicked": "The elite tick was saved. Nothing was sent to anyone.",
       "waitlistAdded": "The person is on the waiting list; the email is queued.",
       "waitlistPlaced": "A place was free: the person got it, and the declaration email is queued."
     },

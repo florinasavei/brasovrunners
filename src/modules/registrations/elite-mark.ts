@@ -2,8 +2,10 @@ import { and, eq, ne } from "drizzle-orm";
 import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
-import { recordAuditEvent } from "@/modules/audit/repository";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { type AuditAction, recordAuditEvent } from "@/modules/audit/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
+import { rerankEventResults } from "@/modules/results/results";
+import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
@@ -24,6 +26,14 @@ import { isUuid } from "@/shared/ids";
  * the Organizer reads the chip and the elite card, Tehnic nothing. **The trail** — `registration.elite_marked` or
  * `registration.elite_unmarked` on the registration, its metadata the new value alone. A press that finds the mark
  * already as asked (a stale list, a colleague first) writes nothing and no row.
+ *
+ * **The elite's two ticks (§NNN; the owner, 2026-11-04).** On a marked registration the Administrator may untick
+ * «Apare în clasament» — its result runs hors concours: out of the public results and of everybody's positions — and
+ * «Apare pe site» — the public «Cine vine» reads it as one that did not tick «Vreau să apar». **A staff tick only ever
+ * hides**: ticked is no override at all, and the person's own ticks decide (`registrations.elite_hidden_from_*`), so
+ * nobody is shown whom their own consent does not show. The ticks have effect only while the mark is on — the mark
+ * taken off leaves them inert, the mark put back finds them as they were — which is why a mark put on or taken off
+ * ranks the results again and tells the public pages when either is set.
  */
 type Actor = Pick<StaffUser, "id" | "role">;
 
@@ -39,17 +49,17 @@ export async function setRegistrationElite<T extends Record<string, unknown>>(
   }
   if (!isUuid(registrationId)) throw new DomainError("NOT_FOUND", "no such registration");
 
-  return db.transaction(async (tx) => {
+  const outcome = await db.transaction(async (tx) => {
     // One statement: the mark changes only where it says otherwise, so a second press is a no-op and writes no row.
     const [changed] = await tx
       .update(registrations)
       .set({ elite, updatedAt: now })
       .where(and(eq(registrations.id, registrationId), ne(registrations.elite, elite)))
-      .returning({ id: registrations.id });
+      .returning({ id: registrations.id, eventId: registrations.eventId, hiddenFromResults: registrations.eliteHiddenFromResults, hiddenFromSite: registrations.eliteHiddenFromSite });
     if (!changed) {
       const [exists] = await tx.select({ id: registrations.id }).from(registrations).where(eq(registrations.id, registrationId)).limit(1);
       if (!exists) throw new DomainError("NOT_FOUND", "no such registration");
-      return { changed: false };
+      return { changed: false, public: false };
     }
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
@@ -59,6 +69,89 @@ export async function setRegistrationElite<T extends Record<string, unknown>>(
       metadata: { elite },
       now,
     });
-    return { changed: true };
+    // The two ticks (§NNN) count only under the mark: a hidden result returns to the ranking, or leaves it again.
+    if (changed.hiddenFromResults) await rerankEventResults(tx, changed.eventId);
+    return { changed: true, public: changed.hiddenFromResults || changed.hiddenFromSite };
   });
+  if (outcome.public) revalidatePublicContent("events", "places");
+  return { changed: outcome.changed };
+}
+
+/** The two ticks of a marked registration (§NNN), by the names the forms post. */
+export const REGISTRATION_ELITE_TICKS = ["inResults", "onSite"] as const;
+export type RegistrationEliteTick = (typeof REGISTRATION_ELITE_TICKS)[number];
+
+export function isRegistrationEliteTick(value: unknown): value is RegistrationEliteTick {
+  return typeof value === "string" && (REGISTRATION_ELITE_TICKS as readonly string[]).includes(value);
+}
+
+/** The trail's word for a tick and the state it now stands in. */
+function tickAction(tick: RegistrationEliteTick, shown: boolean): AuditAction {
+  if (tick === "inResults") return shown ? "registration.elite_in_results" : "registration.elite_out_of_results";
+  return shown ? "registration.elite_on_site" : "registration.elite_off_site";
+}
+
+/**
+ * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§NNN): `shown` is the tick as it should now stand —
+ * false hides (out of the ranking; off the public «Cine vine» by name), true takes the club's hide away and leaves the person's own
+ * ticks to decide, exactly as before the mark. Nothing here can show a runner their own ticks do not show.
+ *
+ * The Administrator's (FORBIDDEN otherwise). A registration that is not there is NOT_FOUND; one that is not marked «Elită» is refused
+ * (`ELITE_NOT_MARKED`: the ticks are an elite's — a stale menu, a colleague who took the mark off). A press that finds the tick as asked
+ * writes nothing and no row. Otherwise one statement, one audit row on the registration with the new value alone (`{ inResults }` or
+ * `{ onSite }`), the stored results ranked again in the same transaction for «Apare în clasament», and the public pages told after it.
+ * No state, place, number, count or email moves.
+ */
+export async function setRegistrationEliteTick<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  registrationId: string,
+  tick: RegistrationEliteTick,
+  shown: boolean,
+  now: Date,
+): Promise<{ changed: boolean; eventId: string }> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not change an elite's ticks`);
+  }
+  if (!isRegistrationEliteTick(tick)) throw new DomainError("VALIDATION_ERROR", "no such tick on an elite", ["tick"]);
+  if (!isUuid(registrationId)) throw new DomainError("NOT_FOUND", "no such registration");
+
+  const outcome = await db.transaction(async (tx) => {
+    const [current] = await tx
+      .select({ id: registrations.id, eventId: registrations.eventId, elite: registrations.elite, hiddenFromResults: registrations.eliteHiddenFromResults, hiddenFromSite: registrations.eliteHiddenFromSite })
+      .from(registrations)
+      .where(eq(registrations.id, registrationId))
+      .for("update");
+    if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+    if (!current.elite) throw new DomainError("ELITE_NOT_MARKED", "the registration is not marked elite");
+    const hidden = tick === "inResults" ? current.hiddenFromResults : current.hiddenFromSite;
+    if (hidden === !shown) return { changed: false, eventId: current.eventId };
+    await tx
+      .update(registrations)
+      .set(tick === "inResults" ? { eliteHiddenFromResults: !shown, updatedAt: now } : { eliteHiddenFromSite: !shown, updatedAt: now })
+      .where(eq(registrations.id, current.id));
+    await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: tickAction(tick, shown), entityType: "registration", entityId: current.id, metadata: { [tick]: shown }, now });
+    if (tick === "inResults") await rerankEventResults(tx, current.eventId);
+    return { changed: true, eventId: current.eventId };
+  });
+  if (outcome.changed) revalidatePublicContent("events", "places");
+  return outcome;
+}
+
+/** A marked registration's two ticks as the card and the menu draw them: ticked unless the club hid it (§NNN). */
+export type EliteTicks = { inResults: boolean; onSite: boolean };
+
+/**
+ * The two ticks of every registration of an event marked «Elită» (§NNN), by registration — for the elite card's lines, which read
+ * the sheet's rows (`listBibs`) and need nothing else of them. Whoever reads the registrations (`canReadRegistrations`): the Organizer
+ * sees them, the Administrator ticks them. Test rows are never marked on a sheet, and are left out like everywhere a count is read.
+ */
+export async function listEliteTicks<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string): Promise<Map<string, EliteTicks>> {
+  if (!canReadRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not read an event's elites`);
+  if (!isUuid(eventId)) return new Map();
+  const rows = await db
+    .select({ id: registrations.id, hiddenFromResults: registrations.eliteHiddenFromResults, hiddenFromSite: registrations.eliteHiddenFromSite })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, eventId), eq(registrations.elite, true), eq(registrations.kind, "REAL")));
+  return new Map(rows.map((row) => [row.id, { inResults: !row.hiddenFromResults, onSite: !row.hiddenFromSite }]));
 }
