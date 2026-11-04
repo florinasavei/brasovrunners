@@ -104,7 +104,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
 
   const current = await searchParams;
   const { error, saved, invite, reason, account, count, failed, retried, report, mailSkipped } = current;
-  /** «Trimite invitația acum» unticked (slice 4): `mailSkipped` carries how many invitations it kept back, none for a press that added nobody. */
+  /** «Trimite invitația acum» unticked (slice 4): `mailSkipped` is there, whatever count it carries — `0` when the press added nobody new. */
   const invitationsKept = mailSkippedCount(mailSkipped) !== null;
   /** Whichever of the three account verbs was pressed (§171) — they share their four answers. */
   const accountVerb = saved === "passwordReset" || saved === "accountDeactivated" || saved === "accountReactivated";

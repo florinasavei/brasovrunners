@@ -1,6 +1,6 @@
 {
   "id": "e2ecddc7-5a28-430d-9cae-28b5c2a81420",
-  "prevId": "3635061f-c924-4b0a-a4f7-20235c463d67",
+  "prevId": "816c5cd1-1ccd-4657-a682-bcf639f13699",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1244,6 +1244,20 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "in_results": {
+          "name": "in_results",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "on_site": {
+          "name": "on_site",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_by_staff_user_id": {
           "name": "created_by_staff_user_id",
@@ -8968,6 +8982,20 @@
         },
         "elite": {
           "name": "elite",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "elite_hidden_from_results": {
+          "name": "elite_hidden_from_results",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "elite_hidden_from_site": {
+          "name": "elite_hidden_from_site",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
