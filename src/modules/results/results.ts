@@ -86,7 +86,10 @@ type RegisteredRunner = {
   displayName: string;
   sex: SexChoice | null;
   birthDate: string | null;
-  /** The «Vreau să apar pe lista de participanți & rezultate» tick (`list_opt_out` false). */
+  /**
+   * The «Vreau să apar pe lista de participanți & rezultate» tick (`list_opt_out` false) — read as unticked while an Administrator
+   * unticked «Apare pe site» on the registration marked «Elită» (§NNN, `tickedForTheSite`).
+   */
   ticked: boolean;
   checkedIn: boolean;
   status: string;
@@ -104,6 +107,16 @@ type RegisteredRunner = {
  * `domain/hors-concours.ts`), read with them so every list ranked from them leaves out the same rows.
  */
 type Runners = { byBib: Map<number, RegisteredRunner>; byRegistration: Map<string, RegisteredRunner>; out: OutOfRanking };
+
+/**
+ * Whether the published results may read the person's own list tick as given (§NNN): their «Vreau să apar» — and no Administrator
+ * unticked «Apare pe site» on the registration while it is marked «Elită». That tick only ever hides: unticked, the runner is
+ * «Participant #bib» wherever the ranking still counts them, as one who did not tick; ticked, the person's own answer decides, as before.
+ * The public start list reads the same two columns (`registrations/repository.ts#namedOnPublicList`).
+ */
+function tickedForTheSite(row: { listOptOut: boolean | null; elite: boolean | null; eliteHiddenFromSite: boolean | null }): boolean {
+  return row.listOptOut === false && !(row.elite === true && row.eliteHiddenFromSite === true);
+}
 
 type EventFacts = {
   id: string;
@@ -198,6 +211,8 @@ async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Data
         sex: registrations.sex,
         birthDate: registrations.birthDate,
         listOptOut: registrations.listOptOut,
+        elite: registrations.elite,
+        eliteHiddenFromSite: registrations.eliteHiddenFromSite,
         checkedInAt: registrations.checkedInAt,
         status: registrations.status,
         outsideCapacity: registrations.outsideCapacity,
@@ -217,7 +232,8 @@ async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Data
       displayName: row.displayName,
       sex: sexShown(row.sex),
       birthDate: row.birthDate,
-      ticked: !row.listOptOut,
+      // The person's own tick — read as unticked while the club unticked «Apare pe site» on a marked elite (§NNN): a staff tick only hides.
+      ticked: tickedForTheSite(row),
       checkedIn: row.checkedInAt !== null,
       status: row.status,
       outsideCapacity: row.outsideCapacity,
@@ -1163,6 +1179,8 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       registrationId: eventResults.registrationId,
       registeredName: registrations.displayName,
       listOptOut: registrations.listOptOut,
+      elite: registrations.elite,
+      eliteHiddenFromSite: registrations.eliteHiddenFromSite,
       registrationStatus: registrations.status,
       outsideCapacity: registrations.outsideCapacity,
       noticeVersion: registrations.privacyNoticeVersion,
@@ -1190,7 +1208,8 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       bibNumber: row.bibNumber,
       name: publicResultName({
         registered,
-        ticked: row.listOptOut === false,
+        // The person's own tick, read as unticked under the club's «Apare pe site» unticked on a marked elite (§NNN).
+        ticked: tickedForTheSite(row),
         displayName: row.registeredName,
         confirmed: row.registrationStatus === "CONFIRMED",
         hidden: row.outsideCapacity === true && !hiddenShown,

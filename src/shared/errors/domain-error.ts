@@ -86,7 +86,9 @@ export type DomainErrorCode =
   // A member tier deleted while a discount code is for that tier alone (§811): an empty limit means every member, so the code would open to all.
   | "MEMBER_TIER_IN_CODES"
   // A legal version approved while a `<PLACEHOLDER>` still stands in its text (§884): a club fact or a club choice nobody typed.
-  | "LEGAL_PLACEHOLDERS_LEFT";
+  | "LEGAL_PLACEHOLDERS_LEFT"
+  // «Apare în clasament» / «Apare pe site» on a registration no longer marked «Elită» (§NNN): a stale menu, or a colleague took the mark off first.
+  | "ELITE_NOT_MARKED";
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

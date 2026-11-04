@@ -115,8 +115,8 @@ describe("§759 «De la» and «Până la» belong to the PDF", () => {
 describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
   const elite = {
     entries: [
-      { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", name: "Eliud Kipchoge", bibNumber: 7 },
-      { id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", name: "Faith Kipyegon", bibNumber: null },
+      { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", name: "Eliud Kipchoge", bibNumber: 7, inResults: true, onSite: false },
+      { id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", name: "Faith Kipyegon", bibNumber: null, inResults: false, onSite: true },
     ],
     previewSrc: "/api/admin/events/11111111-1111-4111-8111-111111111111/bibs/preview?sample=1&locale=ro&elite=1",
     downloadHref: "/api/admin/events/11111111-1111-4111-8111-111111111111/bibs?locale=ro&elite=1",
@@ -172,7 +172,7 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
 
   // §897: a registration marked «Elită» on the registrations list prints on the same sheet, so the card lists it.
   it("lists the registrations marked «Elită» read-only, «înscris», in its count and its sheet's, and says where they are marked", async () => {
-    const registered = [{ id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Ana Pop", bibNumber: 12 }];
+    const registered = [{ id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Ana Pop", bibNumber: 12, inResults: true, onSite: true }];
     const card = block(await render({ elite: { ...elite, registered } }), "bib-elite");
     const line = block(card, "bib-elite-registered");
     expect(line).toContain("Ana Pop");
@@ -194,6 +194,43 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
     expect(alone).toContain('data-testid="bib-elite-download"');
     // In English too.
     expect(block(await render({ elite: { ...elite, registered } }, "en"), "bib-elite-registered")).toContain("registered");
+  });
+
+  // §NNN: per elite, «Apare în clasament» and «Apare pe site» — the house's tick, posting a form beside the save form.
+  it("draws each line's two ticks as the Administrator's ticks, each naming its own small form, and says what they do", async () => {
+    const registered = [{ id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Ana Pop", bibNumber: 12, inResults: false, onSite: true }];
+    const card = block(await render({ elite: { ...elite, registered } }), "bib-elite");
+    const [kipchoge, kipyegon] = elite.entries;
+    const tickOf = (html: string, form: string) => new RegExp(`<button[^>]*form="${form}"[^>]*>`).exec(html)?.[0] ?? "";
+    // A real tick, never a toggle button: role="checkbox", the state in aria-checked, the box glyph.
+    expect(tickOf(card, `bib-elite-tick-inResults-${kipchoge.id}`)).toMatch(/role="checkbox"[^>]*aria-checked="true"|aria-checked="true"[^>]*role="checkbox"/);
+    expect(tickOf(card, `bib-elite-tick-onSite-${kipchoge.id}`)).toContain('aria-checked="false"');
+    expect(tickOf(card, `bib-elite-tick-inResults-${kipyegon.id}`)).toContain('aria-checked="false"');
+    expect(tickOf(card, `bib-elite-tick-onSite-${kipyegon.id}`)).toContain('aria-checked="true"');
+    // The registered line's ticks post their own form, by registration.
+    expect(tickOf(card, `bib-elite-registered-tick-inResults-${registered[0].id}`)).toContain('aria-checked="false"');
+    expect(tickOf(card, `bib-elite-registered-tick-onSite-${registered[0].id}`)).toContain('aria-checked="true"');
+    expect(card.match(/data-testid="bib-elite-ticks"/g)).toHaveLength(3);
+    expect(card).toContain("Apare în clasament");
+    expect(card).toContain("Apare pe site");
+    // The help: the agreement the site needs, and that a registered runner's tick only hides.
+    const help = block(card, "bib-elite-ticks-help");
+    expect(help).toContain("bifează doar cu acordul persoanei");
+    expect(help).toContain("doar ascunde");
+    // In English too.
+    const english = block(await render({ elite: { ...elite, registered } }, "en"), "bib-elite");
+    expect(english).toContain("In the results");
+    expect(english).toContain("On the site");
+  });
+
+  it("shows the Organizer the ticks as they stand, disabled and posting nowhere", async () => {
+    const card = block(await render({ elite, mayAssign: false }), "bib-elite");
+    expect(card.match(/data-testid="bib-elite-ticks"/g)).toHaveLength(2);
+    expect(card).not.toContain("bib-elite-tick-inResults-");
+    expect(card).not.toContain("bib-elite-tick-onSite-");
+    const ticks = [...card.matchAll(/<button[^>]*role="checkbox"[^>]*>/g)].map((match) => match[0]);
+    expect(ticks).toHaveLength(4);
+    for (const tick of ticks) expect(tick).toMatch(/\sdisabled(=""|\s|>)/);
   });
 
   it("opens itself and the print card on the way back from its own add or delete, and is closed otherwise", async () => {

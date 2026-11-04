@@ -157,6 +157,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     agreedHelp: t("results.agreedHelp"),
     noPlace: t("results.noPlace"),
     noPlaceSettled: t("results.noPlaceSettled"),
+    outOfRanking: t("results.outOfRanking"),
   };
   // The category in the Excel footer's own words (§787), under the race's own bands (§850): the template «{sex}, {band}» read raw, filled by the label.
   const statisticsWord = (statisticsKey: string) => t.raw(`registrations.statistics.${statisticsKey}`) as string;
@@ -171,6 +172,9 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     if (result.positionCategory !== null && result.categoryKey !== null) parts.push(t("results.place.category", { category: categoryLabel(result.categoryKey), position: String(result.positionCategory) }));
     return { overall: String(result.positionOverall), detail: parts.join(" · ") };
   };
+  // What the published results say of a line (§808): by name, «Participant #bib», or — an elite hors concours (§NNN) — nothing at all.
+  const publicLineOf = (runner: ResultRunner, anonymousLabel: string) =>
+    runner.outOfRanking ? t("results.publicLine.outOfRanking") : runner.named ? t("results.publicLine.named") : t("results.publicLine.anonymous", { label: anonymousLabel });
   const valuesOf = (runner: ResultRunner) => ({
     time: formatResultTime(runner.result?.gunTimeMs),
     // A runner with no result yet shows the blank status; one with a result shows it — the line is saved exactly as drawn.
@@ -184,11 +188,12 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     name: runner.name ?? "",
     present: runner.checkedIn,
     // What the published list would say of the runner — `publicResultName`'s own answer (the tick, a confirmed registration, a notice that
-    // described the results), never a guess from the tick alone.
-    publicLine: runner.named ? t("results.publicLine.named") : t("results.publicLine.anonymous", { label: anonymousResultLabel(locale, runner.bibNumber, event.raceNumberFormat) }),
+    // described the results), never a guess from the tick alone; an elite out of the ranking (§NNN) is not on it at all.
+    publicLine: publicLineOf(runner, anonymousResultLabel(locale, runner.bibNumber, event.raceNumberFormat)),
     values: valuesOf(runner),
     place: placeOf(runner),
     hasResult: runner.result !== null,
+    outOfRanking: runner.outOfRanking,
   }));
   const typed: TypedLine[] = view.typed.map((runner) => ({
     values: {
@@ -200,9 +205,10 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     },
     agreed: runner.nameAgreed === true,
     // The registered lines' caption, from the same answer (`publicResultName`): a tick saved while no notice describes the results names nobody yet.
-    publicLine: runner.named ? t("results.publicLine.named") : t("results.publicLine.anonymous", { label: anonymousResultLabel(locale, runner.bibNumber) }),
+    publicLine: publicLineOf(runner, anonymousResultLabel(locale, runner.bibNumber)),
     place: placeOf(runner),
     hasResult: true,
+    outOfRanking: runner.outOfRanking,
   }));
 
   // ---- The refusal summary's labels, by the unindexed name of a box (`fieldLabelOf`) ------------------------------

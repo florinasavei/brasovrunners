@@ -32,6 +32,7 @@ const words: ResultWords = {
   agreedHelp: "Bifezi doar dacă persoana ți-a spus-o.",
   noPlace: "fără loc încă",
   noPlaceSettled: "fără loc",
+  outOfRanking: "în afara clasamentului",
 };
 const stored = (agreed: boolean, bib: string, name: string): TypedLine => ({
   values: { bib, name, sex: "", birthDate: "", time: "0:42:00", status: "FINISHED", chip: "", note: "" },
@@ -70,5 +71,16 @@ describe("§810 the typed line's tick, before and after a refusal", () => {
     const posted = { "n[0].bib": ["900"], "n[0].name": [""], "n[0].agreed": ["on"] };
     const html = draw([], posted);
     expect(isChecked(tick(html, "n[0].agreed"))).toBe(true);
+  });
+});
+
+describe("§NNN an elite's line out of the ranking says so where its place would be", () => {
+  it("draws «în afara clasamentului» instead of a position or «fără loc», and only on that line", () => {
+    const html = draw([{ ...stored(false, "7", "Eliud Kipchoge"), outOfRanking: true }, stored(false, "901", "Maria Pop")], null);
+    expect(html.match(/data-testid="result-out-of-ranking"/g) ?? []).toHaveLength(1);
+    const [first, second] = html.split('data-testid="typed-line"').slice(1);
+    expect(first).toContain("în afara clasamentului");
+    expect(first).not.toContain("fără loc");
+    expect(second).not.toContain("în afara clasamentului");
   });
 });

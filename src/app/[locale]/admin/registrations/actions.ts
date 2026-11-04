@@ -29,7 +29,7 @@ import {
   type WaitlistEntryByStaffResult,
 } from "@/modules/registrations/admin-service";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
-import { setRegistrationElite } from "@/modules/registrations/elite-mark";
+import { isRegistrationEliteTick, setRegistrationElite, setRegistrationEliteTick } from "@/modules/registrations/elite-mark";
 import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modules/registrations/declaration-hold";
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain/age";
@@ -563,6 +563,32 @@ export async function setRegistrationEliteAction(_previous: FormOutcome | null, 
     const actor = await requireStaffCapability(canManageRegistrations);
     await setRegistrationElite(getDb(), actor, registrationId, elite, new Date());
     outcome = elite ? { saved: "eliteMarked" } : { saved: "eliteUnmarked" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome);
+  return backTo(detailPath(locale, registrationId), outcome);
+}
+
+/**
+ * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§NNN), from the list's «⋮» or the registration's own page:
+ * `tick` names which, `on` the state it should now stand in — a submit posting the state it wants. A staff tick only ever hides
+ * (`elite-mark.ts#setRegistrationEliteTick`): ticked, the person's own ticks decide. The Administrator's: the coarse gate here, the
+ * service asserts it again (BR-REQ-060-01). It asks nothing (§384): it tells nobody and the same tick undoes it. Back to the list as it
+ * stands; from the registration's page (no `listQuery`), to that page.
+ */
+export async function setRegistrationEliteTickAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+  const tick = text(form, "tick");
+  const on = text(form, "on") === "1";
+
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    if (!isRegistrationEliteTick(tick)) throw new DomainError("VALIDATION_ERROR", "no such tick on an elite", ["tick"]);
+    await setRegistrationEliteTick(getDb(), actor, registrationId, tick, on, new Date());
+    outcome = { saved: "eliteTicked" };
   } catch (error) {
     outcome = outcomeOf(error);
   }
