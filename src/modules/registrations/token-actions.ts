@@ -31,7 +31,7 @@ import {
   unregister,
 } from "./service";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
-import { findRegistrationById, findRegistrationsByEventAndParticipant } from "./repository";
+import { findRegistrationById, findRegistrationsByEventAndParticipant, offersWaitlistAutomatically } from "./repository";
 import {
   confirmFamilyEntry,
   declineFamilyEntry,
@@ -146,6 +146,13 @@ export type SpentRegistrationLink = {
   eventTitle: string | null;
   /** For the "ask for it again" and "register again" links; both fall back to the listing. */
   eventSlug: string | null;
+  /**
+   * Beside `next: "NONE"` alone — the person waits in the line (§NNN): whether a place reaches the waiting list by itself
+   * at the event, the allocator's own `offersOnItsOwn` read off the event row (`offersWaitlistAutomatically`). False
+   * («Nu», or «Locurile libere le dau doar eu»): the organizers give each place, and the page says they write when they
+   * can give one. Absent on every other state, where nobody waits.
+   */
+  byItself?: boolean;
 };
 
 /**
@@ -216,6 +223,8 @@ export async function readSpentRegistrationLink(
       */
       eventTitle: event?.locale === locale ? event.title : null,
       eventSlug: event?.locale === locale ? event.slug : null,
+      // Somebody in the line is told who gives the places (§NNN): one row more, read for them alone.
+      ...(view.next === "NONE" ? { byItself: await offersWaitlistAutomatically(tx, registration.eventId) } : {}),
     };
   });
 }
@@ -302,6 +311,34 @@ export async function readConfirmedOnAddress(secret: string, now: Date): Promise
 }
 
 const CONFIRMED_ON_ADDRESS: ReadonlySet<string> = new Set(["PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED", "CONFIRMED"]);
+
+/**
+ * Whether a place reaches the waiting list by itself at the event a spent link names (§NNN): the allocator's own
+ * `offersOnItsOwn`, read off the event row as the emails read it when they are rendered (`offersWaitlistAutomatically`).
+ * For the pages after a press that say what comes next — the address confirmed, the declaration signed (either outcome),
+ * another person on the address entered. False («Nu», or «Locurile libere le dau doar eu»): the organizers give each
+ * place, and the page says they write when they can give one, never «when a place frees up».
+ *
+ * `purposes` are the ones the page presents the link under; the first the link was spent under names the event. Read-only,
+ * on the GET after the press (§12.8), like `readConfirmedOnAddress`.
+ *
+ * A link that names nothing readable — no spent token under those purposes, a registration erased since — answers false,
+ * the organizers' words, as `offersWaitlistAutomatically` answers for an event row it cannot find: those words promise
+ * no notice, so they hold whatever the settings, while today's would promise one only «Da» sends — and a promise
+ * nobody keeps is worse than none.
+ */
+export async function spentLinkOffersByItself(secret: string, purposes: readonly EmailActionTokenPurpose[], now: Date): Promise<boolean> {
+  const db = getDb();
+  for (const purpose of purposes) {
+    const registrationId = (await readSpentActionTokenScope(db, { secret, purpose, now }))?.registrationId;
+    if (!registrationId) continue;
+    return inReadOnlyTransaction(db, async (tx) => {
+      const registration = await findRegistrationById(tx, registrationId);
+      return registration ? offersWaitlistAutomatically(tx, registration.eventId) : false;
+    });
+  }
+  return false;
+}
 
 export async function consumeAndSignDeclaration(
   secret: string,

@@ -133,7 +133,10 @@ vi.mock("@/i18n/navigation", () => ({
 // The async parts not about the outage (see above).
 vi.mock("@/modules/registrations/ui/EmailDeliveryNotice", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
-vi.mock("@/modules/registrations/ui/RegistrationSteps", () => ({ default: () => null }));
+// The steps stand in as what the page asked them to say of the waiting list (§NNN), the rest of them being theirs.
+vi.mock("@/modules/registrations/ui/RegistrationSteps", () => ({
+  default: ({ byItself }: { byItself: boolean }) => createElement("div", { "data-testid": "registration-steps", "data-by-itself": byItself ? "yes" : "no" }),
+}));
 // The short screen after the first form (§536) is CheckYourEmail's own, given the offer's data.
 vi.mock("@/modules/registrations/ui/CheckYourEmail", () => ({
   default: ({ offer }: { offer?: { atOnce: boolean } }) =>
@@ -475,6 +478,31 @@ describe("§906 the organizers' door on the register page", () => {
       expect(html, JSON.stringify(over)).toContain('data-testid="registration-waitlist-join"');
       expect(html).toContain(byItself ? ro.Event.cta.fullJoin : ro.Event.cta.fullJoinByHand);
       expect(html).not.toContain(byItself ? ro.Event.cta.fullJoinByHand : ro.Event.cta.fullJoin);
+    }
+  });
+});
+
+/**
+ * §NNN — the five steps' waiting list, folded above the form, by the same rule as the join sentence: whatever the
+ * places say right now, the page asks the steps for the organizers' words while no place reaches the line by itself
+ * («Nu», or «Locurile libere le dau doar eu»), and for today's with «Da» — a copy cached before the settings is «Da».
+ * The words themselves, in both languages, are `tests/unit/deadlines/registration-steps.test.ts`.
+ */
+describe("§NNN the steps' waiting list on the register page", () => {
+  it("is the organizers' with «Nu» or the tick, today's with «Da»", async () => {
+    const cases = [
+      { over: {}, byItself: "yes" },
+      { over: { waitlistAutoOffer: true }, byItself: "yes" },
+      { over: { waitlistAutoOffer: false }, byItself: "no" },
+      { over: { freePlacesByOfferOnly: true }, byItself: "no" },
+      { over: { freePlacesByOfferOnly: true, waitlistAutoOffer: true }, byItself: "no" },
+    ];
+    for (const { over, byItself } of cases) {
+      state.eventOver = over;
+      for (const availability of [null, { available: 0, capacity: 10, waitlistRoom: 4, waitlistCapacity: 5, waiting: 1, waitlisted: 1 }]) {
+        state.availability = availability;
+        expect(await render(), JSON.stringify({ over, availability })).toContain(`data-testid="registration-steps" data-by-itself="${byItself}"`);
+      }
     }
   });
 });

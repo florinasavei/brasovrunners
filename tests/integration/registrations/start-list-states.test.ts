@@ -453,6 +453,35 @@ describe("§632 the title counts everyone with a place on a capped event", () =>
   });
 });
 
+/**
+ * §NNN — the waiting list's legend sentence says who gives the place, read off the event's row by the one rule
+ * (`offersByItself`): «the first gets an offer» only with «Da» and «Locurile libere le dau doar eu» off; «Nu», or
+ * the tick whatever «Da» says, and the organizers give each place. The same rows, the same notice, both languages.
+ */
+describe("§NNN the waiting list's legend says who gives the places", () => {
+  it("«Da» keeps the first's offer; «Nu», or the tick over «Da», says the organizers give each place", async () => {
+    await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
+    const event = await mixedEvent();
+    const legend = { ro: ro.Event.startList.legend, en: en.Event.startList.legend };
+    // The club's offer window, unset: 24 hours (`DEADLINE_RULES`), as the sentence says it.
+    const offer = { ro: "24 de ore", en: "24 hours" };
+    for (const [settings, byHand] of [
+      [{ waitlistAutoOffer: true, freePlacesByOfferOnly: false }, false],
+      [{ waitlistAutoOffer: false, freePlacesByOfferOnly: false }, true],
+      [{ waitlistAutoOffer: true, freePlacesByOfferOnly: true }, true],
+    ] as const) {
+      for (const lang of ["ro", "en"] as const) {
+        locale = lang;
+        const html = renderToStaticMarkup(await StartList({ event: { ...event, ...settings } }));
+        const auto = legend[lang].waitlisted.replace("{offer}", offer[lang]);
+        const hand = legend[lang].waitlistedByHand.replace("{offer}", offer[lang]);
+        expect(html, `${JSON.stringify(settings)} ${lang}`).toContain(byHand ? hand : auto);
+        expect(html, `${JSON.stringify(settings)} ${lang}`).not.toContain(byHand ? auto : hand);
+      }
+    }
+  });
+});
+
 describe("§396 the marker check the backoffice reads", () => {
   it("is off with no notice, off with an older one, on with the platform's, off again if the next version drops it", async () => {
     expect(await noticeDescribesListStates(db, NOW)).toBe(false);

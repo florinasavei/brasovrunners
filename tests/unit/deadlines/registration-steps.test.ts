@@ -10,12 +10,18 @@ import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
  */
 const deadlines = { confirmationHours: 12, holdMinutes: 60, offerHours: 6, reminderHours: 48, selfCheckinHours: 24, raceWeekDays: 7, seriesHorizonDays: 56 };
 
+// The page's language: Română unless a case says otherwise.
+const lang = vi.hoisted(() => ({ current: "ro" as "ro" | "en" }));
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
-  const messages = (await import("../../../messages/ro.json")).default;
+  const catalogues = {
+    ro: (await import("../../../messages/ro.json")).default,
+    en: (await import("../../../messages/en.json")).default,
+  };
   return {
-    getLocale: async () => "ro",
-    getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages, namespace: namespace as "Registration" }),
+    getLocale: async () => lang.current,
+    getTranslations: async (namespace: string) =>
+      createTranslator({ locale: lang.current, messages: catalogues[lang.current] as typeof catalogues.ro, namespace: namespace as "Registration" }),
   };
 });
 // Whether a second runner may be registered on one address yet (§389, `family-gate.ts`).
@@ -33,8 +39,9 @@ vi.mock("@/modules/public-cache/reads", () => ({
 
 const { default: RegistrationSteps } = await import("@/modules/registrations/ui/RegistrationSteps");
 
-async function render(props: Parameters<typeof RegistrationSteps>[0]): Promise<string> {
-  return renderToStaticMarkup((await RegistrationSteps(props)) as ReactElement).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+/** The steps as a page draws them; a place reaches the waiting list by itself («Da») unless a case says otherwise. */
+async function render(props: Partial<Parameters<typeof RegistrationSteps>[0]>): Promise<string> {
+  return renderToStaticMarkup((await RegistrationSteps({ byItself: true, ...props })) as ReactElement).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 }
 
 describe("§377 the five steps say the club's numbers", () => {
@@ -150,3 +157,96 @@ describe("§636 the fold says the club may refuse, behind the terms in force", (
     for (const word of words.en) expect(en.Registration.steps.refusal.body).toContain(word);
   });
 });
+
+/**
+ * §NNN — the waiting list's step says who gives the places. While no place reaches the line by itself («Nu», or
+ * «Locurile libere le dau doar eu»: `byItself` false, which every caller reads through `offersByItself`), the
+ * organizers' words — never «Când se eliberează un loc», nor an order of registration the organizers do not keep;
+ * «Da» keeps today's sentence. Both languages, with the club's offer window in either.
+ */
+describe("§NNN the waiting list's step says who gives the places", () => {
+  beforeEach(() => {
+    lang.current = "ro";
+  });
+
+  it("«Da»: a freed place is offered in order, in Română and English", async () => {
+    expect(await render({ byItself: true })).toContain(
+      "Intri pe lista de așteptare, în ordinea înscrierii. Când se eliberează un loc, primești un email cu oferta și ai 6 ore să semnezi declarația.",
+    );
+    lang.current = "en";
+    expect(await render({ byItself: true })).toContain(
+      "You join the waiting list, in order of registration. When a place frees up, you get an offer by email and 6 hours to sign the declaration.",
+    );
+  });
+
+  it("«Nu» or the tick: the organizers give the places, in Română and English", async () => {
+    const ro = await render({ byItself: false });
+    expect(ro).toContain(
+      "Intri pe lista de așteptare. Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email cu oferta și ai 6 ore să semnezi declarația.",
+    );
+    expect(ro).not.toContain("Când se eliberează un loc");
+    expect(ro).not.toContain("în ordinea înscrierii");
+    lang.current = "en";
+    const en = await render({ byItself: false });
+    expect(en).toContain(
+      "You join the waiting list. The organizers give out the places one at a time: when they can give you one, you get an offer by email and 6 hours to sign the declaration.",
+    );
+    expect(en).not.toContain("When a place frees up");
+    expect(en).not.toContain("in order of registration");
+  });
+
+  it("is in both catalogues, under 200 characters with the longest offer window", async () => {
+    const ro = (await import("../../../messages/ro.json")).default;
+    const en = (await import("../../../messages/en.json")).default;
+    for (const catalogue of [ro, en]) {
+      expect(catalogue.Registration.steps.waitingList.bodyByHand.replace("{offer}", "167 de ore").length).toBeLessThan(200);
+    }
+  });
+
+  /*
+    The declaration's step ends on what a lapsed hold does with a waiting list (the review of this branch): «apoi trece
+    la următorul» only while a place reaches the line by itself — with «Nu» or the tick the place stays free for the
+    organizers' «Trimite-i oferta» (`Admin.registrations.placeDeadlines.releaseManual`), so they may give it.
+  */
+  it("the declaration's step: «Da» passes a lapsed hold to the next in line, «Nu» or the tick leave the place to the organizers (ro, en)", async () => {
+    expect(await declarationStep({ byItself: true })).toBe(
+      "Din același email, o semnezi online sau pe hârtie, la masa de înscrieri în ziua cursei. Locul e ținut o oră; dacă e listă de așteptare, apoi trece la următorul.",
+    );
+    expect(await declarationStep({ byItself: false })).toBe(
+      "Din același email, o semnezi online sau pe hârtie, la masa de înscrieri în ziua cursei. Locul e ținut o oră; dacă e listă de așteptare, organizatorii îl pot da apoi altcuiva.",
+    );
+    lang.current = "en";
+    expect(await declarationStep({ byItself: true })).toBe(
+      "From that same email, sign it online or on paper at the registration desk on race day. Your place is held for one hour; if there is a waiting list, it then goes to the next in line.",
+    );
+    expect(await declarationStep({ byItself: false })).toBe(
+      "From that same email, sign it online or on paper at the registration desk on race day. Your place is held for one hour; if there is a waiting list, the organizers may then give it to someone else.",
+    );
+  });
+
+  it("with a participation window the declaration's step speaks of the hold alone: the same words whoever gives the places (ro, en)", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      lang.current = locale;
+      // A deadline before the start (`bodyLater`) and one at the start (`bodyLaterAtStart`).
+      for (const window of [
+        { opensDays: 10, deadlineDays: 2 },
+        { opensDays: 7, deadlineDays: 0 },
+      ]) {
+        const auto = await declarationStep({ byItself: true, window });
+        expect(await declarationStep({ byItself: false, window }), `${locale}, ${window.deadlineDays} days`).toBe(auto);
+        expect(auto).not.toMatch(/trece la următorul|organizatorii|next in line|organizers/);
+      }
+    }
+  });
+});
+
+/** The third step as drawn — what stands between its title and the fourth's — without the markup. */
+async function declarationStep(props: Partial<Parameters<typeof RegistrationSteps>[0]>): Promise<string> {
+  const catalogue = lang.current === "ro" ? (await import("../../../messages/ro.json")).default : (await import("../../../messages/en.json")).default;
+  const { declaration, confirmed } = catalogue.Registration.steps;
+  const html = await render(props);
+  const from = html.indexOf(`3. ${declaration.title}`);
+  const to = html.indexOf(`4. ${confirmed.title}`);
+  if (from < 0 || to < from) throw new Error("the declaration's step is not between the second and the fourth");
+  return html.slice(from + `3. ${declaration.title}`.length, to).replace(/<[^>]+>/g, "");
+}

@@ -443,7 +443,8 @@
         "confirmed": "a semnat declarația (online sau pe hârtie la masa de înscrieri) și are locul.",
         "pendingWindow": "are loc păstrat, declarația nesemnată. Se cere la înscriere și cu {opens} înainte; se semnează până {due}, altfel pierde locul.",
         "pendingHold": "are loc păstrat {hold} de la înscriere, până semnează declarația; altfel locul se eliberează.",
-        "waitlisted": "nu are încă loc. Când se eliberează unul, primul primește o ofertă pe email și are {offer} ca să semneze declarația."
+        "waitlisted": "nu are încă loc. Când se eliberează unul, primul primește o ofertă pe email și are {offer} ca să semneze declarația.",
+        "waitlistedByHand": "nu are încă loc. Locurile le dau organizatorii, pe rând: cine primește o ofertă pe email are {offer} ca să semneze declarația."
       },
       "captionStatesNoWaitlist": "Întâi participanții confirmați — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă.",
       "captionStatesNumbersNoWaitlist": "Întâi participanții confirmați, cu numărul de concurs — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă.",
@@ -1940,6 +1941,7 @@
         "linkLapsed": "Linkul din emailul de confirmare a expirat, așa că adresa nu e confirmată și nu îți ținem niciun loc.",
         "kept": "Termenul de semnare a trecut, dar încă îți păstrăm locul: semnează declarația din email cât mai repede.",
         "WAITLISTED": "Te vom anunța dacă se eliberează un loc.",
+        "waitlistedByHand": "Locurile le dau organizatorii, pe rând: îți scriem când îți putem da un loc.",
         "offer": "S-a eliberat un loc pentru tine. Este al tău dacă semnezi declarația pe propria răspundere până {due}.",
         "offerQueued": "Ți-am oferit un loc; emailul cu oferta e pe drum, iar termenul de semnare se socotește de când pleacă.",
         "offerLapsed": "Termenul ofertei a trecut, așa că locul nu mai e ținut pentru tine.",
@@ -11538,6 +11540,7 @@
       "declaration": {
         "title": "Semnezi declarația",
         "body": "Din același email, o semnezi online sau pe hârtie, la masa de înscrieri în ziua cursei. Locul e ținut {hold}; dacă e listă de așteptare, apoi trece la următorul.",
+        "bodyByHand": "Din același email, o semnezi online sau pe hârtie, la masa de înscrieri în ziua cursei. Locul e ținut {hold}; dacă e listă de așteptare, organizatorii îl pot da apoi altcuiva.",
         "bodyLater": "Cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația, online sau pe hârtie la masa de înscrieri. Poți semna și mai devreme. Dacă e listă de așteptare, locul e ținut până {due}.",
         "bodyLaterAtStart": "Cursa e gratuită, așa că îți cerem o confirmare: semnezi declarația din emailul de înscriere oricând până la start, online sau pe hârtie la masa de înscrieri. Îți amintim cu {opens} înainte. Locul nu expiră înainte de start."
       },
@@ -11552,7 +11555,8 @@
       },
       "waitingList": {
         "title": "Dacă nu mai sunt locuri",
-        "body": "Intri pe lista de așteptare, în ordinea înscrierii. Când se eliberează un loc, primești un email cu oferta și ai {offer} să semnezi declarația."
+        "body": "Intri pe lista de așteptare, în ordinea înscrierii. Când se eliberează un loc, primești un email cu oferta și ai {offer} să semnezi declarația.",
+        "bodyByHand": "Intri pe lista de așteptare. Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email cu oferta și ai {offer} să semnezi declarația."
       },
       "family": {
         "title": "Înscrii pe altcineva cu aceeași adresă?",
@@ -11791,10 +11795,12 @@
       "done": "Adresa de email a fost confirmată.",
       "doneTitle": "Adresa a fost confirmată",
       "doneWaitlist": "Ești pe lista de așteptare. Dacă se eliberează un loc, îți scriem pe email cu ce ai de făcut.",
+      "doneWaitlistByHand": "Ești pe lista de așteptare. Locurile le dau organizatorii, pe rând: când îți pot da unul, îți scriem pe email cu ce ai de făcut.",
       "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic.",
       "waitlistFull": "Locurile și lista de așteptare sunt pline: adresa nu e confirmată și nu ți-am rezervat nimic. Linkul e valabil {confirmation} de când a plecat primul email; dacă se eliberează un loc pe listă, redeschide-l.",
       "noWaitlist": "Toate locurile s-au ocupat și nu e listă de așteptare: adresa nu e confirmată și nu ți-am rezervat nimic. Linkul e valabil {confirmation} de când a plecat primul email; dacă se eliberează un loc, redeschide-l.",
       "doneFor": "Adresa e confirmată pentru:",
+      "nextWaitlistedByHand": "pe lista de așteptare: primește un email când organizatorii îi pot da un loc",
       "next": {
         "PENDING_DECLARATION": "semnează declarația din emailul care vine acum",
         "WAITLIST_OFFERED": "are un loc oferit: semnează declarația din email",
@@ -11829,9 +11835,19 @@
         "Cu {reminder} înainte de start primești un reminder cu ora, locul, ce să aduci și, dacă a fost alocat, numărul de concurs.",
         "Dacă nu mai poți veni, anulezi din linkul din email: locul tău merge la cineva de pe lista de așteptare."
       ],
+      "nextConfirmedByHand": [
+        "Primești acum emailul de confirmare, cu codul QR și codul tău de acces — păstrează-l pentru ziua cursei.",
+        "Cu {reminder} înainte de start primești un reminder cu ora, locul, ce să aduci și, dacă a fost alocat, numărul de concurs.",
+        "Dacă nu mai poți veni, anulezi din linkul din email: organizatorii pot da locul tău cuiva de pe lista de așteptare."
+      ],
       "nextWaitlisted": [
         "Ești pe lista de așteptare; dacă se eliberează un loc, primești un email cu un link de confirmare.",
         "Linkul are termen; dacă nu confirmi la timp, locul merge mai departe.",
+        "Poți renunța oricând din emailul primit."
+      ],
+      "nextWaitlistedByHand": [
+        "Ești pe lista de așteptare. Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email cu un link de confirmare.",
+        "Linkul are termen; dacă nu confirmi la timp, organizatorii pot da locul altcuiva.",
         "Poți renunța oricând din emailul primit."
       ],
       "pressFailed": "Nu am putut înregistra semnătura. Încearcă din nou — linkul tău este în regulă.",
@@ -11908,6 +11924,7 @@
           "number": "Număr de concurs: {number}",
           "noNumber": "Număr de concurs: încă fără număr",
           "waitlisted": "Pe lista de așteptare: primește un email dacă se eliberează un loc.",
+          "waitlistedByHand": "Pe lista de așteptare: primește un email când organizatorii îi pot da un loc.",
           "later": "Mai târziu: semnează din linkul primit pe email pentru această persoană.",
           "closed": "Nu mai așteaptă semnătura.",
           "cancelled": "Înscrierea a fost anulată, iar locul s-a eliberat."
@@ -12048,6 +12065,7 @@
       "registerAgainHelp": "Dacă te răzgândești, te poți înscrie din nou de pe pagina evenimentului.",
       "registerAgainAction": "Vezi evenimentul",
       "waitHelp": "Nu trebuie să faci nimic acum. Dacă se eliberează un loc, primești un email cu un link de confirmare.",
+      "waitHelpByHand": "Nu trebuie să faci nimic acum. Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email cu un link de confirmare.",
       "CONFIRM_EMAIL": {
         "title": "Mai e un pas: confirmarea adresei",
         "body": "Linkul acesta s-a folosit deja, dar înscrierea ta încă așteaptă confirmarea adresei de email."
@@ -12091,6 +12109,7 @@
       "doneTitle": "Persoana este înscrisă",
       "done": "Gata. Emailul cu declarația de semnat pentru această persoană vine pe adresa ta: fiecare persoană își semnează singură declarația și primește propriul cod QR.",
       "doneWaitlist": "Persoana este pe lista de așteptare. Când se eliberează un loc, primești un email pe adresa ta.",
+      "doneWaitlistByHand": "Persoana este pe lista de așteptare. Locurile le dau organizatorii, pe rând: când îi pot da unul, primești un email pe adresa ta.",
       "alreadyOnAddress": "Nu am înscris-o: o persoană cu același nume sau cu aceeași dată a nașterii este deja înscrisă cu această adresă. Pentru altcineva, trimite din nou formularul cu numele complet și data nașterii acelei persoane.",
       "atCap": "Nu am înscris-o: pe o adresă de email se pot înscrie cel mult {people} la un eveniment, iar adresa aceasta le are deja. Pentru încă o persoană, folosește adresa ei de email. Linkul rămâne valabil dacă se eliberează un loc pe adresă.",
       "fitnessMissing": "Bifează mai întâi că persoana își declară singură, la semnare, starea de sănătate.",

@@ -50,6 +50,14 @@ type Props = {
    */
   reminderHoursBefore?: number | null;
   /**
+   * Whether a place reaches the waiting list by itself on this event (§NNN): `registration-cta.ts#offersByItself`, the
+   * allocator's own rule read off the event's row, asked by every caller — so no page can forget it. False («Nu», or
+   * «Locurile libere le dau doar eu»): the waiting list's step says the organizers give the places, never «when a place
+   * frees up», and no order of registration either, since they choose; and the declaration's step, that the organizers
+   * may give a lapsed hold's place to someone else, never that it passes to the next in line.
+   */
+  byItself: boolean;
+  /**
    * The club's deadlines and whether the family flow is on, read by the caller — the editor's
    * preview before saving (§579), which reads them from the database and never through the public
    * cache. Absent everywhere a visitor reads: the data cache's, as above.
@@ -77,7 +85,7 @@ async function refusalDisclosed(): Promise<boolean> {
   }
 }
 
-export default async function RegistrationSteps({ folded = false, window = null, reminderHoursBefore = null, settings }: Props) {
+export default async function RegistrationSteps({ folded = false, window = null, reminderHoursBefore = null, byItself, settings }: Props) {
   const t = await getTranslations("Registration");
   const locale = await getLocale();
   const [deadlines, familyOpen, refusalOn] = settings
@@ -94,21 +102,33 @@ export default async function RegistrationSteps({ folded = false, window = null,
     // "cu 2 zile înainte de start" / "la start" (§407): the one helper decides which.
     due: confirmationDueWords(locale, window?.deadlineDays ?? 0),
   };
+  /*
+    The third step's last clause says what a lapsed hold does with a waiting list (§NNN): «apoi trece la următorul»
+    only while a place reaches the line by itself — else the place stays free for the organizers to give. With a
+    window, the clause speaks only of the hold (`bodyLater`, `bodyLaterAtStart`), true either way.
+  */
   const stepBody = (key: string) =>
     key === "declaration" && window
       ? confirmationDueAtStart({ days: window.deadlineDays })
         ? t("steps.declaration.bodyLaterAtStart", values)
         : t("steps.declaration.bodyLater", values)
-      : key === "confirmed" && reminderHours === 0
-        ? t("steps.confirmed.bodyNoReminder")
-        : t(`steps.${key}.body`, values);
+      : key === "declaration" && !byItself
+        ? t("steps.declaration.bodyByHand", values)
+        : key === "confirmed" && reminderHours === 0
+          ? t("steps.confirmed.bodyNoReminder")
+          : t(`steps.${key}.body`, values);
 
   const list = (
     <StepList>
       {STEPS.map(({ key, Icon }, index) => (
         <StepItem key={key} icon={<Icon fontSize="small" />} title={`${index + 1}. ${t(`steps.${key}.title`)}`} body={stepBody(key)} />
       ))}
-      <StepItem tone="quiet" icon={<HourglassTopIcon fontSize="small" />} title={t("steps.waitingList.title")} body={t("steps.waitingList.body", values)} />
+      <StepItem
+        tone="quiet"
+        icon={<HourglassTopIcon fontSize="small" />}
+        title={t("steps.waitingList.title")}
+        body={byItself ? t("steps.waitingList.body", values) : t("steps.waitingList.bodyByHand", values)}
+      />
       {/*
         A family on one address (§389; the owner: "document this … then that person can receive up
         to 4 QR codes"): the one way to add a second runner is to send the form again, and the next
