@@ -1139,7 +1139,9 @@
         "shirts": "Tricouri — {sizes}",
         "noShirt": "fără tricou: {count}",
         "unknownSize": "mărime încă necunoscută (invitații): {count}",
-        "volunteers": "Plus voluntari cu kit: {count}"
+        "volunteers": "Plus voluntari cu kit: {count}",
+        "elites": "Plus elite din lista separată: {count}",
+        "total": "Total de pregătit: {count}"
       },
       "places": {
         "title": "Locuri libere acum: {free} din {capacity}",

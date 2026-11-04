@@ -1139,7 +1139,9 @@
         "shirts": "T-shirts — {sizes}",
         "noShirt": "no T-shirt: {count}",
         "unknownSize": "size not known yet (invitations): {count}",
-        "volunteers": "Plus volunteers with a kit: {count}"
+        "volunteers": "Plus volunteers with a kit: {count}",
+        "elites": "Plus elites on the separate list: {count}",
+        "total": "Total to prepare: {count}"
       },
       "places": {
         "title": "Places free now: {free} of {capacity}",

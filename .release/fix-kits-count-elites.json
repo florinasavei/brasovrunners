@@ -1,0 +1,7 @@
+{
+  "branch": "fix/kits-count-elites",
+  "decisionsTitle": "«Kituri de pregătit» counts the separate elite list, and says one total",
+  "decisionsSection": "**The owner, 2026-11-04,** of «Kituri de pregătit: 178»: «E corect nr. asta? 178? Cu tot cu Ingrid și cu Silviu Stoica? Aș vrea să mă asigur că număr și elitele». Silviu Stoica, registered and marked «Elită», was among the 178; Ingrid, on the separate elite list (§895) — names, not registrations, in no count by design — was not, though she runs and takes a kit.\n\n**Decision.** Under the kits' title, beside «Plus voluntari cu kit: N» (§904), one more line «Plus elite din lista separată: N» — the event's elite lines, read by `elite-list.ts#countEliteEntries` — and, once either line is drawn, «Total de pregătit: N»: the registrations, the open invitations, the elite lines and the volunteers with a kit, the number to order said once. The title's figure stays the registrations' and the invitations' (`countKits`, every export unchanged); a registered runner marked «Elită» is already in it and is not counted twice. The places stay untouched: an elite line still holds none.",
+  "changelogLine": "- **The elites in «Kituri de pregătit»** — a line «Plus elite din lista separată: N» beside the volunteers' and one «Total de pregătit», so the kits to order count every runner at the start; a registered elite is counted once. §NNN.",
+  "batchLine": "the separate elite list counted in the kits"
+}

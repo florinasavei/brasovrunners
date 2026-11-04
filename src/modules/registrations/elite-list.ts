@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, count, eq } from "drizzle-orm";
 import { ELITE_NAME_MAX, ELITE_NUMBER_MAX, eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -65,6 +65,17 @@ export function parseEliteEntry(input: EliteEntryInput): { name: string; bibNumb
     throw new DomainError("VALIDATION_ERROR", `a name of 1 to ${ELITE_NAME_MAX} characters, and no number or one from 1 to ${ELITE_NUMBER_MAX}`, refused);
   }
   return { name, bibNumber: number };
+}
+
+/**
+ * How many names one event's elite list holds — «Kituri de pregătit» adds them on a line of their own
+ * (the owner, 2026-11-04: «aș vrea să mă asigur că număr și elitele»): an elite line is no registration
+ * and holds no place, but its runner is at the start and takes a kit. The caller already gates the page.
+ */
+export async function countEliteEntries<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
+  if (!isUuid(eventId)) return 0;
+  const [row] = await db.select({ total: count() }).from(eventEliteEntries).where(eq(eventEliteEntries.eventId, eventId));
+  return row?.total ?? 0;
 }
 
 /** One event's elite list, in the order the club typed it. */

@@ -12,8 +12,13 @@ import { SHIRT_SIZES } from "../domain/kit";
  * `volunteers` is the event's volunteers the organizers ticked «Are kit» on (§904), the cancelled left out:
  * one more line, «Plus voluntari cu kit: N», said only when there is any. It is never added to the title's
  * figure, which stays the registrations' and the invitations' (`countKits`, and every export, unchanged).
+ *
+ * `elites` is the event's separate elite list (§895): names, not registrations, so in no count — but each
+ * runs and takes a kit (the owner, 2026-11-04: «aș vrea să mă asigur că număr și elitele»). One more line,
+ * «Plus elite din lista separată: N»; a registered runner marked «Elită» is already in the title's figure.
+ * Once either line is drawn, «Total de pregătit» adds the three, so the number to order is said once.
  */
-export default async function KitCount({ kits, volunteers = 0, spaceAbove = 0 }: { kits: Kits; volunteers?: number; spaceAbove?: number }) {
+export default async function KitCount({ kits, volunteers = 0, elites = 0, spaceAbove = 0 }: { kits: Kits; volunteers?: number; elites?: number; spaceAbove?: number }) {
   const t = await getTranslations("Admin");
   const shirts = [
     ...SHIRT_SIZES.filter((size) => kits.bySize[size]).map((size) => `${size}: ${kits.bySize[size]}`),
@@ -33,9 +38,19 @@ export default async function KitCount({ kits, volunteers = 0, spaceAbove = 0 }:
           {t("registrations.kits.shirts", { sizes: shirts.join(" · ") })}
         </Typography>
       )}
+      {elites > 0 && (
+        <Typography variant="body2" color="text.secondary" data-testid="registrations-kits-elites">
+          {t("registrations.kits.elites", { count: elites })}
+        </Typography>
+      )}
       {volunteers > 0 && (
         <Typography variant="body2" color="text.secondary" data-testid="registrations-kits-volunteers">
           {t("registrations.kits.volunteers", { count: volunteers })}
+        </Typography>
+      )}
+      {(elites > 0 || volunteers > 0) && (
+        <Typography variant="body2" sx={{ fontWeight: 600 }} data-testid="registrations-kits-total">
+          {t("registrations.kits.total", { count: kits.registrations + kits.invitations + elites + volunteers })}
         </Typography>
       )}
     </Box>

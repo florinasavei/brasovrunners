@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { participants } from "@/db/schema/participants";
@@ -26,10 +27,11 @@ vi.mock("next-intl/server", async () => (await import("../../helpers/intl-server
 
 const { countKits } = await import("@/modules/registrations/admin-repository");
 const { countVolunteersWithKit } = await import("@/modules/volunteers/admin-list");
+const { countEliteEntries } = await import("@/modules/registrations/elite-list");
 const { default: KitCount } = await import("@/modules/registrations/ui/KitCount");
 
-async function drawn(kits: Awaited<ReturnType<typeof countKits>>, volunteers?: number): Promise<string> {
-  return renderToStaticMarkup(await KitCount({ kits, volunteers })).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+async function drawn(kits: Awaited<ReturnType<typeof countKits>>, volunteers?: number, elites?: number): Promise<string> {
+  return renderToStaticMarkup(await KitCount({ kits, volunteers, elites })).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
 /** A volunteer the club typed by name (§865), in a state, ticked «Are kit» or not (§904). */
@@ -124,5 +126,34 @@ describe("«Kituri de pregătit»", () => {
     // Nobody ticked: no line at all.
     expect(await drawn(kits, 0)).not.toContain("voluntari");
     expect(await drawn(kits)).not.toContain("voluntari");
+  });
+
+  it("adds «Plus elite din lista separată: N» and one «Total de pregătit» — an elite line holds no place but runs and takes a kit (2026-11-04)", async () => {
+    const race = await createRace(db, { kitShirt: true });
+    const other = await createRace(db, { kitShirt: true });
+    await runner(race.id, "M");
+    await runner(race.id, "L");
+    await volunteer(race.id, "CONFIRMED", true);
+    await db.insert(eventEliteEntries).values([
+      { eventId: race.id, name: "Ana Elita" },
+      { eventId: other.id, name: "Alt Eveniment" },
+    ]);
+
+    // The kits' own figure stays the registrations' (a registered runner marked «Elită» is one of them).
+    const kits = await countKits(db, race.id, NOW);
+    expect(kits.registrations).toBe(2);
+    const elites = await countEliteEntries(db, race.id);
+    expect(elites).toBe(1);
+    const text = await drawn(kits, 1, elites);
+    expect(text).toContain("Kituri de pregătit: 2");
+    expect(text).toContain("Plus elite din lista separată: 1");
+    expect(text).toContain("Plus voluntari cu kit: 1");
+    expect(text).toContain("Total de pregătit: 4");
+    // Nothing added: neither line nor total.
+    const plain = await drawn(kits, 0, 0);
+    expect(plain).not.toContain("elite");
+    expect(plain).not.toContain("Total de pregătit");
+    // An elite list alone still brings the total.
+    expect(await drawn(kits, 0, 1)).toContain("Total de pregătit: 3");
   });
 });

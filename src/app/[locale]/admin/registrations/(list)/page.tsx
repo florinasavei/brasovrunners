@@ -46,6 +46,7 @@ import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import KitCount from "@/modules/registrations/ui/KitCount";
 import { countVolunteersWithKit } from "@/modules/volunteers/admin-list";
+import { countEliteEntries } from "@/modules/registrations/elite-list";
 import PlaceOutlook from "@/modules/registrations/ui/PlaceOutlook";
 import PublicNowLine from "@/modules/registrations/ui/PublicNowLine";
 import { readPublicDoor } from "@/modules/registrations/public-now";
@@ -253,7 +254,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const featuredEvent = events.find((event) => event.featured) ?? null;
 
   const deadlinesNow = new Date();
-  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits] = await Promise.all([
+  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits, eliteKits] = await Promise.all([
     listRegistrationsForAdmin(
       db,
       filters,
@@ -299,6 +300,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? readPublicDoor(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
     // «Plus voluntari cu kit» (§904): the event's volunteers ticked «Are kit», a figure of its own beside the kits — `countKits` is untouched.
     filters.eventId ? countVolunteersWithKit(db, filters.eventId) : Promise.resolve(0),
+    filters.eventId ? countEliteEntries(db, filters.eventId) : Promise.resolve(0),
   ]);
 
   // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
@@ -1319,7 +1321,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           />
         )
       )}
-      {kits && <KitCount kits={kits} volunteers={volunteerKits} spaceAbove={1.5} />}
+      {kits && <KitCount kits={kits} volunteers={volunteerKits} elites={eliteKits} spaceAbove={1.5} />}
       {/*
         «Când pierde lumea locul?» (§635; the owner, 2026-10-02): until when the people of this event
         keep their place, and what a passed deadline does — right under the counts, and only when the list
