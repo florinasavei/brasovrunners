@@ -1,7 +1,7 @@
 import { confirmationWindow } from "./hold-deadlines";
 
 /**
- * «Eliberează singur locurile nesemnate la termen» (§NNN; the owner, 2026-11-04, for the 21 November race: at the
+ * «Eliberează singur locurile nesemnate la termen» (§914; the owner, 2026-11-04, for the 21 November race: at the
  * declaration's deadline the places of those who have not signed go back, and nobody is given them by itself), as pure
  * rules over the event's row.
  *
@@ -72,11 +72,11 @@ export function releaseDeadlineForNewHold(rules: DeadlineReleaseRules, now: Date
   return deadline && now.getTime() < deadline.getTime() ? deadline : null;
 }
 
-/** An instant and the event's clock it is said in: what the journey's strip names as the release's deadline (§NNN). */
+/** An instant and the event's clock it is said in: what the journey's strip names as the release's deadline (§914). */
 export type ReleaseMoment = { at: Date; timeZone: string };
 
 /**
- * Which «confirmă până» sentence a held place reads — «Înregistrările mele» and «Ce îi spui» (§NNN): today's, with the
+ * Which «confirmă până» sentence a held place reads — «Înregistrările mele» and «Ce îi spui» (§914): today's, with the
  * paper at the desk, while the release leaves it; the release's, «până atunci», when the hold ends at its deadline; and
  * both instants when the hold ends before it, so the moment said for the release is always the release's.
  */

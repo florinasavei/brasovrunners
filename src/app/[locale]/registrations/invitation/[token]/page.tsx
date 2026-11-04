@@ -91,7 +91,7 @@ export default async function InvitationPage({ params, searchParams }: Props) {
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("invitation.doneTitle")}
         </Typography>
-        {/* The release at the deadline will take the place just held (§NNN): its deadline, never the paper at the desk. */}
+        {/* The release at the deadline will take the place just held (§914): its deadline, never the paper at the desk. */}
         <RegistrationJourney current="declare" declaration="emailJustSent" release={await spentLinkReleaseMoment(token, ["ACCEPT_INVITATION"], new Date())} />
         <Stack spacing={2}>
           <Alert severity="success" data-testid="invitation-accepted">

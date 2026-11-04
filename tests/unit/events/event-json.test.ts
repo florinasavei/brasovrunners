@@ -101,9 +101,9 @@ function sampleConfig(): EventConfig {
       freePlacesByOfferOnly: false,
       publicRegistrationOpen: true,
       placesAlertAt: null,
-      // «Locuri păstrate pentru club» (§NNN): none kept, the default a file without it reads.
+      // «Locuri păstrate pentru club» (§914): none kept, the default a file without it reads.
       placesKeptForClub: 0,
-      // «Eliberează singur locurile nesemnate la termen» (§NNN): off, the default a file without it reads.
+      // «Eliberează singur locurile nesemnate la termen» (§914): off, the default a file without it reads.
       releaseUnsignedAtDeadline: false,
       opensAt: null,
       opensSoon: false,
@@ -133,7 +133,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V4.25-2026-11-04" },
+    exportedFrom: { environment: "production", baseline: "BR-V4.26-2026-11-04" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     // The volunteers' categories and roles (§774): none in the sample; the round trip with some is in the integration test.
@@ -262,7 +262,7 @@ describe("the event file's reader", () => {
     expect(readEventFile(JSON.stringify(bad)).ok).toBe(false);
   });
 
-  it("§NNN writes «Locuri păstrate pentru club» only when places are kept, and reads it back as it was", () => {
+  it("§914 writes «Locuri păstrate pentru club» only when places are kept, and reads it back as it was", () => {
     const file = sampleFile();
     // Nothing kept, as every event before it: not written, so the release before it still reads the file; read back as 0.
     const plain = serializeEventFile(file);

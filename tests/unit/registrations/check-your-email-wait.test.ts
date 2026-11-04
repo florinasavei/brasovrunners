@@ -192,10 +192,10 @@ describe("§536 the short screen after the first form", () => {
 });
 
 /**
- * «Eliberează singur locurile nesemnate la termen» (§NNN): with a participation window ahead, the declaration's step says
+ * «Eliberează singur locurile nesemnate la termen» (§914): with a participation window ahead, the declaration's step says
  * when it is asked — and, while the release is on, that an unsigned place goes at the deadline, with no paper on race day.
  */
-describe("§NNN the screen after the form says the release at the deadline", () => {
+describe("§914 the screen after the form says the release at the deadline", () => {
   async function declareStep(window: { opensDays: number; deadlineDays?: number; releases?: boolean }): Promise<string> {
     const element = (await CheckYourEmail({
       eventTitle: "Crosul Tâmpei",

@@ -236,9 +236,9 @@ export const eventConfigSchema = z
         publicRegistrationOpen: z.boolean().default(true),
         /** «Anunță-mă când rămân N locuri» (§906): a file made before it existed has none: off (null). Written only when it is set. */
         placesAlertAt: z.number().int().min(0).max(100_000).nullable().default(null),
-        /** «Locuri păstrate pentru club» (§NNN): a file made before it existed has none: 0. Written only when it is above 0. */
+        /** «Locuri păstrate pentru club» (§914): a file made before it existed has none: 0. Written only when it is above 0. */
         placesKeptForClub: z.number().int().min(0).max(100_000).default(0),
-        /** «Eliberează singur locurile nesemnate la termen» (§NNN): a file made before it existed has none: off. Written only when on. */
+        /** «Eliberează singur locurile nesemnate la termen» (§914): a file made before it existed has none: off. Written only when on. */
         releaseUnsignedAtDeadline: z.boolean().default(false),
         opensAt: instant.nullable(),
         opensSoon: z.boolean(),
@@ -466,8 +466,8 @@ export function upgradeCheckpoints(file: EventFile): { file: EventFile; notes: F
  * and its `listPublic` (§821), written only when it is **on**; and its `buttonShown` (§835), written only when it is **off**.
  * The registration controls (§906) likewise: `freePlacesByOfferOnly` only when **on**, `publicRegistrationOpen` only when **off**,
  * `placesAlertAt` only when **set** — an event that never touched them makes a file the release before them still reads.
- * `placesKeptForClub` (§NNN) too: written only when places are kept, so an event that keeps none makes the same file as before;
- * and `releaseUnsignedAtDeadline` (§NNN) only when **on**.
+ * `placesKeptForClub` (§914) too: written only when places are kept, so an event that keeps none makes the same file as before;
+ * and `releaseUnsignedAtDeadline` (§914) only when **on**.
  */
 const WRITTEN_ONLY_WHEN_NOT: ReadonlyMap<string, unknown> = new Map<string, unknown>([
   ["onProfile", true],

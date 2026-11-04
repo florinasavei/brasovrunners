@@ -26,7 +26,7 @@ import { deadlineReleaseArmedFor, windowDeadlineOf } from "./unsigned-release";
  *   With no waiting list (a limit of 0) the one who wants it is a newcomer with no other free place
  *   (§348). An uncapped event never releases one. At the start every unsigned hold goes. The person
  *   whose hold is released before the start is told (`DECLARATION_HOLD_EXPIRED`, §638);
- * - with «Eliberează singur locurile nesemnate la termen» (§NNN), at the window's deadline every counted
+ * - with «Eliberează singur locurile nesemnate la termen» (§914), at the window's deadline every counted
  *   unsigned hold lapsed by then goes at once, whoever waits, and nobody is given those places by itself;
  * - the first email's link lives `confirmationHours` from when it leaves; until then the registration
  *   holds no place — a family's reservation excepted (§543) — and then it expires;
@@ -54,7 +54,7 @@ export type PlaceDeadlineEvent = {
   waitlistCapacity: number | null;
   /** «Locurile din lista de așteptare se alocă automat» (§615). */
   waitlistAutoOffer: boolean;
-  /** «Eliberează singur locurile nesemnate la termen» (§NNN) and the deadline it last ran for; absent reads as off. */
+  /** «Eliberează singur locurile nesemnate la termen» (§914) and the deadline it last ran for; absent reads as off. */
   releaseUnsignedAtDeadline?: boolean;
   unsignedReleasedFor?: Date | null;
 };
@@ -123,7 +123,7 @@ export function placeDeadlineSentences(input: {
     }
     if (counts.heldPast > 0) say("held", `heldPast.${counted(counts.heldPast)}`, { count: counts.heldPast });
     /*
-      «Eliberează singur locurile nesemnate la termen» (§NNN): armed, the deadline it releases at; run for the window's
+      «Eliberează singur locurile nesemnate la termen» (§914): armed, the deadline it releases at; run for the window's
       deadline in force, that it did — then a hold past its own deadline follows §160 again, said below.
     */
     const release = {

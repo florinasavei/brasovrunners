@@ -188,7 +188,7 @@ export async function addSupplementaryPlace<T extends Record<string, unknown>>(
 }
 
 /**
- * `addSupplementaryPlace` with the row's new version beside the capacity (§NNN): the order «Istoric capacitate» reads
+ * `addSupplementaryPlace` with the row's new version beside the capacity (§914): the order «Istoric capacitate» reads
  * the changes in, whatever the clock said. The one statement both return from.
  */
 export async function addSupplementaryPlaceVersioned<T extends Record<string, unknown>>(
@@ -206,7 +206,7 @@ export async function addSupplementaryPlaceVersioned<T extends Record<string, un
 }
 
 /**
- * The event's rules a place is decided by (§615, §906, §NNN), as they stand on the row: the capacity, «Locuri
+ * The event's rules a place is decided by (§615, §906, §914), as they stand on the row: the capacity, «Locuri
  * păstrate pentru club», «Locurile libere le dau doar eu», «Locurile din lista de așteptare se alocă automat» and the
  * waiting list's length. One primary-key read inside the caller's transaction, after the caller locked the row — so
  * the answer is the row's under the lock, whatever copy of the event the caller carries (a fixture's partial row, the
@@ -219,7 +219,7 @@ export type PlaceRules = {
   waitlistAutoOffer: boolean;
   waitlistCapacity: number | null;
   /*
-    «Eliberează singur locurile nesemnate la termen» (§NNN): the switch, its memory and what its deadline is read from —
+    «Eliberează singur locurile nesemnate la termen» (§914): the switch, its memory and what its deadline is read from —
     the start, the status and the participation window — as the row has them under the lock (`domain/unsigned-release.ts`).
   */
   eventStatus: string;
@@ -252,7 +252,7 @@ export async function readPlaceRules<T extends Record<string, unknown>>(db: Data
 }
 
 /**
- * Whether a person may be **told** that a freed place reaches the line by itself (§615, §906, §NNN): «Da», «Locurile
+ * Whether a person may be **told** that a freed place reaches the line by itself (§615, §906, §914): «Da», «Locurile
  * libere le dau doar eu» off (`domain/waitlist.ts#offersOnItsOwn`) — and no place kept for the club
  * (`kept-places.ts#offerWordsByItself`): with K > 0 a place freed while the site's places are taken stays the club's,
  * so the words are the organizers' («le dau organizatorii, pe rând»). For the sentences alone — the allocator's own
@@ -264,7 +264,7 @@ export async function offersWaitlistAutomatically<T extends Record<string, unkno
 }
 
 /**
- * `offersWaitlistAutomatically` as a column (§615, §906, §NNN): the line is offered the free places on its own — «Da»
+ * `offersWaitlistAutomatically` as a column (§615, §906, §914): the line is offered the free places on its own — «Da»
  * and «Locurile libere le dau doar eu» off — and no place is kept for the club. For the readers that tell a person or
  * the staff whether the places go out by themselves, so no sentence promises an offer the allocator will not make.
  */
@@ -275,7 +275,7 @@ export function lineOffersOnItsOwn(): SQL<boolean> {
 }
 
 /**
- * `domain/unsigned-release.ts#deadlineReleaseDue` in SQL (§NNN), for the job's choice of events: the switch on, a
+ * `domain/unsigned-release.ts#deadlineReleaseDue` in SQL (§914), for the job's choice of events: the switch on, a
  * scheduled capped event, a participation window whose deadline is before the start (`opens > deadline > 0` days),
  * that deadline reached, the start still ahead, and the release not yet run for this deadline. Days are counted as
  * `n * interval '24 hours'`, as `confirmationWindow` counts them — never `'1 day'`, which a DST change bends by an hour.
@@ -1441,7 +1441,7 @@ export type EventForExpiry = {
  * would leave them "the event is full" for a place nobody is holding. The guard against dead
  * offers lives in `fillAvailableSpots` alone.
  *
- * «Locuri păstrate pentru club» (§NNN): the waiting list, and a public newcomer, want the **site's** places — the
+ * «Locuri păstrate pentru club» (§914): the waiting list, and a public newcomer, want the **site's** places — the
  * room they are measured on is `capacity − K − occupied` (`kept-places.ts#lineRoom`), clamped at nought as `free`
  * always was, so no input releases more holds than people want places. A staff newcomer (`wantingChannel: "staff"`,
  * the desk's walk-in, «Dă-i un loc acum») keeps the whole capacity, as every staff verb does. A public newcomer is never
@@ -1449,7 +1449,7 @@ export type EventForExpiry = {
  * the club's again, not theirs. Read off the row (`readPlaceRules`), so a caller's copy without the column — the
  * maintenance job's — counts the same. With K at 0 every number here is today's.
  *
- * «Eliberează singur locurile nesemnate la termen» (§NNN): once the participation window's deadline is reached on an
+ * «Eliberează singur locurile nesemnate la termen» (§914): once the participation window's deadline is reached on an
  * event with the box ticked (`domain/unsigned-release.ts#deadlineReleaseDue`, read off the locked row), every lapsed
  * hold that holds a counted place goes at once, whether or not anybody waits — still never a hold outside the places
  * or one whose first email is queued — and `atDeadline` names the deadline, so the caller completes the release (the
@@ -1482,7 +1482,7 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
 
   if (over) return { ids: lapsed.map((row) => row.id), atDeadline: null };
 
-  // The deadline's own release (§NNN), before any rule of §160's: every counted lapsed hold, whoever waits.
+  // The deadline's own release (§914), before any rule of §160's: every counted lapsed hold, whoever waits.
   const rules = await readPlaceRules(db, event.id);
   const atDeadline = rules ? deadlineReleaseDue(rules, now) : null;
   if (atDeadline) return { ids: lapsed.map((row) => row.id), atDeadline };
@@ -1497,7 +1497,7 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
   const staffWants = wanting > 0 && wantingChannel === "staff";
   const kept = { capacity: event.capacity, placesKeptForClub: staffWants ? 0 : (rules?.placesKeptForClub ?? 0), occupied };
   const room = lineRoom(kept) ?? 0;
-  // The club's kept places in use (§NNN): a public newcomer wants nothing a release could give them.
+  // The club's kept places in use (§914): a public newcomer wants nothing a release could give them.
   const waiting = inLine + (wantingChannel === "public" && keptPlacesInUse(kept) ? 0 : wanting);
   if (waiting === 0) return none;
   // Shared with the forecast (`notifications/domain/automatic-sends.ts` and `forecast.ts`), so
@@ -1520,7 +1520,7 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
  *
  * `wanting` counts a newcomer the waiting list has no room for as one more person wanting a
  * place (§348) — `allocateOrWaitlist` and «Dă-i un loc acum» pass it; every other caller wants the default.
- * `wantingChannel` says how that newcomer came (§NNN): `public` is measured on the site's places
+ * `wantingChannel` says how that newcomer came (§914): `public` is measured on the site's places
  * (`capacity − K`), `staff` — the default — on the whole capacity, as every staff verb is.
  *
  * A declaration hold released here queues its one «Locul tău … a expirat» (§638,
@@ -1528,7 +1528,7 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
  * path that releases one comes through here, so every one of them tells the person. A lapsed offer
  * stays silent (§331).
  *
- * Returns the declaration holds released and, when this sweep was the deadline's own release (§NNN), that
+ * Returns the declaration holds released and, when this sweep was the deadline's own release (§914), that
  * deadline — so a signature arriving after it (`signDeclaration`) is told its place went, rather than being given
  * the place back by a re-allocation.
  */
@@ -1615,7 +1615,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
       quiet (§331), and a hold that lapses with the start is the end of the event's registration,
       not a place taken by somebody else.
 
-      At the deadline's own release (§NNN) the message says so — the deadline that passed and that the unsigned places
+      At the deadline's own release (§914) the message says so — the deadline that passed and that the unsigned places
       were released — and is copied to no club address: the Administrators get the one summary instead
       (`completeDeadlineRelease`), never one copy per person released.
     */
@@ -1631,7 +1631,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
     }
   }
   /*
-    The deadline's release completes in the same transaction (§NNN): its memory, the tick, the trail, the one summary —
+    The deadline's release completes in the same transaction (§914): its memory, the tick, the trail, the one summary —
     with the places after it, the line, and the real holds it left unsigned, counted here under the lock.
   */
   if (atDeadline) {
@@ -1755,7 +1755,7 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
   // An invitation past its deadline (§647): the sweep stamps it and offers its place to the line.
   for (const eventId of await eventsWithLapsedInvitations(db, now)) due.add(eventId);
   /*
-    «Eliberează singur locurile nesemnate la termen» (§NNN): an event whose participation window's deadline has come with
+    «Eliberează singur locurile nesemnate la termen» (§914): an event whose participation window's deadline has come with
     the release not yet run for it — with **no** «somebody waits» condition: the release frees the unsigned places
     whoever waits, and runs once (its memory column), so the job locks such an event on one run, not on every run.
   */
@@ -1782,7 +1782,7 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
     `fillAvailableSpots` would offer nothing — so the sweep does not select it, rather than locking it
     on every run to do nothing.
 
-    And only a free place **of the site** (§NNN): `occupied < capacity − K`. A kept place nobody holds is the club's
+    And only a free place **of the site** (§914): `occupied < capacity − K`. A kept place nobody holds is the club's
     to give, never the line's by itself (`fillAvailableSpots` offers only `capacity − K − occupied`), so an event
     whose only free places are kept is not locked on every run for nothing either.
   */

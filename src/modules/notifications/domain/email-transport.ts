@@ -85,7 +85,7 @@ export const EMAIL_GROUP_OF: Readonly<Record<Exclude<EmailMessageType, RelayMess
   UNREACHABLE_WINDOW_CLOSED: "club",
   // «Anunță-mă când rămân N locuri» (§906): to the club's own people, as the notices above.
   PLACES_ALERT: "club",
-  // The deadline release's summary (§NNN): to the club's own people, as the alert above.
+  // The deadline release's summary (§914): to the club's own people, as the alert above.
   UNSIGNED_RELEASED: "club",
   // The members' shop (§683): the member's two answer their own order, as a runner's confirmation does;
   // the club's notice goes to the club's own mailbox.

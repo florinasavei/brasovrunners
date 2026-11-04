@@ -91,12 +91,12 @@ describe("RegistrationJourney, the declaration step (§614)", () => {
 });
 
 /*
-  «Eliberează singur locurile nesemnate la termen» (§NNN; the review's should-fix): while the release will take the place,
+  «Eliberează singur locurile nesemnate la termen» (§914; the review's should-fix): while the release will take the place,
   every one of the step's sentences — the four places, with and without the scheduled delivery, both languages — says to
   sign online by the release's deadline and that the place goes then, and none offers the paper at the desk on race day.
   The pages pass the deadline (`journey-release.test.ts` renders each of them); without it, today's words.
 */
-describe("RegistrationJourney, the declaration step with the release at the deadline (§NNN)", () => {
+describe("RegistrationJourney, the declaration step with the release at the deadline (§914)", () => {
   const RELEASE = new Date("2026-11-19T08:00:00.000Z");
   const said = (locale: "ro" | "en") => formatDay(RELEASE, { locale, timeZone: "Europe/Bucharest", style: "long", withTime: true, position: "inline" });
   const DESK = { ro: /pe hârtie|masa de înscrieri/, en: /on paper|registration desk/ } as const;

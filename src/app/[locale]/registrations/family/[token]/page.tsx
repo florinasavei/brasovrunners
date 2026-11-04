@@ -82,7 +82,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
       the event the spent link names (the address's registration there).
     */
     const byItself = done === "waitlist" ? await spentLinkOffersByItself(token, ["REGISTER_ANOTHER_PERSON"], new Date()) : true;
-    // The release at the deadline will take the place just held (§NNN): the strip names its deadline, never the paper at the desk.
+    // The release at the deadline will take the place just held (§914): the strip names its deadline, never the paper at the desk.
     const release = done === "declare" ? await spentLinkReleaseMoment(token, ["REGISTER_ANOTHER_PERSON"], new Date()) : null;
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -125,7 +125,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
       not confirmed and nobody registered, so the page says that, never «the registrations are made».
     */
     const nobodyJoined = nobody === "1";
-    // The declarations wait on this event: the release at its deadline (§NNN) says when, in place of the paper at the desk.
+    // The declarations wait on this event: the release at its deadline (§914) says when, in place of the paper at the desk.
     const release = !nobodyJoined && wizard === "1" ? await spentLinkReleaseMoment(token, ["REGISTER_ANOTHER_PERSON"], new Date()) : null;
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>

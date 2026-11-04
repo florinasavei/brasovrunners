@@ -125,7 +125,7 @@ export type PreviewDoor = { door: RegistrationDoor; word: string };
  * a preview must neither fill nor read, and with no page lifetime to hold (a preview is no page the
  * CDN keeps). An event not saved yet has nobody registered: its counts are nought.
  *
- * The draft's «Locuri păstrate pentru club» (§NNN) too: the places line says the announced capacity, as the saved
+ * The draft's «Locuri păstrate pentru club» (§914) too: the places line says the announced capacity, as the saved
  * page will. Absent, it is read off the saved row.
  */
 export async function draftRegistrationDoor<T extends Record<string, unknown>>(

@@ -329,7 +329,7 @@ export default async function EventPageView({
                   ? {
                       opensDays: event.confirmationOpensDaysBefore,
                       deadlineDays: event.confirmationDeadlineDaysBefore,
-                      // «Eliberează singur locurile nesemnate la termen» (§NNN): the unsigned place goes at the deadline.
+                      // «Eliberează singur locurile nesemnate la termen» (§914): the unsigned place goes at the deadline.
                       releases: event.releasesUnsignedAtDeadline === true && windowDeadlineOf(dated) !== null,
                     }
                   : null;

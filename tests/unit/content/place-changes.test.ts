@@ -12,7 +12,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * «Controlul înscrierilor e foarte sensibil» (§NNN; the owner, 2026-11-04; BR-REQ-050-02): before the event editor's
+ * «Controlul înscrierilor e foarte sensibil» (§914; the owner, 2026-11-04; BR-REQ-050-02): before the event editor's
  * save commits a change to a place setting, ActionForm's one confirm says each change «before → after» and what it does,
  * from the numbers the page read on the server — what the site will announce, the free places on the site and kept for
  * the club, whether offers will be emailed, a lowering under the places taken — and an unchanged save asks nothing.
@@ -73,7 +73,7 @@ const EN = wordsOf(en as unknown as Catalogue);
 const lines = (after: Partial<PlaceSettings>, facts: Partial<PlaceFacts> = {}, words = RO, before: PlaceSettings = RACE) =>
   placeChangeLines(before, { ...before, ...after }, { ...FACTS, ...facts }, words);
 
-describe("BR-REQ-050-02 the place settings' summary before the editor's save (§NNN)", () => {
+describe("BR-REQ-050-02 the place settings' summary before the editor's save (§914)", () => {
   it("an unchanged save asks nothing", () => {
     expect(lines({})).toBeNull();
     expect(lines({}, {}, EN)).toBeNull();
@@ -156,7 +156,7 @@ describe("BR-REQ-050-02 the place settings' summary before the editor's save (§
   });
 });
 
-describe("§NNN the summary inside ActionForm's one confirm, from the form as posted", () => {
+describe("§914 the summary inside ActionForm's one confirm, from the form as posted", () => {
   const form = (values: Record<string, string>) => (field: string) => (field in values ? values[field] : null);
   const posted = {
     "event.registrationMode": "INTERNAL",

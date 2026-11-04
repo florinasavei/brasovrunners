@@ -95,7 +95,7 @@ export function hasDirectAvailability(input: AvailabilityInput): boolean {
  * whenever free is 0, which is the case this formula and the forecast both cover: a lapse is only
  * ever released to a queue at all when something is waiting for it.
  *
- * With «Locuri păstrate pentru club» (§NNN) the caller passes as `free` the room the waiting people would be given
+ * With «Locuri păstrate pentru club» (§914) the caller passes as `free` the room the waiting people would be given
  * from: the site's places for the line and a public newcomer (`max(capacity − K − occupied, 0)`), the whole capacity
  * for a staff newcomer — clamped at nought like before, so no input releases more holds than people want places.
  * With K at 0 both are today's `free`.
@@ -139,7 +139,7 @@ export class NoFreePlaceError extends DomainError {
 }
 
 /**
- * «Locuri» lowered under the places already taken (AGENTS.md §10.6, BR-REQ-034-02 criterion 3; §NNN): refused, and
+ * «Locuri» lowered under the places already taken (AGENTS.md §10.6, BR-REQ-034-02 criterion 3; §914): refused, and
  * said with the allocator's own counts under the event lock — how many are taken, and by what — so the editor reads
  * why instead of «Verifică datele introduse». Names the `capacity` box; on another date of a series (a scoped save)
  * the date too, in the event's zone. Nothing is written by the refusal: the whole save is one transaction.
@@ -168,7 +168,7 @@ export class CapacityBelowTakenError extends DomainError {
 }
 
 /**
- * The editor's sentence for that refusal (§NNN): the code — `_DATED` for another date of a series — and the numbers as
+ * The editor's sentence for that refusal (§914): the code — `_DATED` for another date of a series — and the numbers as
  * strings, the date filled by the caller in its own language. Null for any other error.
  */
 export function capacityBelowTakenRefusalOf(error: unknown): { code: string; values: Record<string, string>; date: string | null } | null {

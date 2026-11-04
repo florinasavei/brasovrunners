@@ -15,7 +15,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { sendHoldEmails } from "../../helpers/outbox";
 
 /**
- * «Locuri păstrate pentru club» (§NNN; BR-REQ-034-01, BR-REQ-034-02, BR-REQ-035-01) on a real database: a threshold on the
+ * «Locuri păstrate pentru club» (§914; BR-REQ-034-01, BR-REQ-034-02, BR-REQ-035-01) on a real database: a threshold on the
  * entry's channel inside the one allocator. A public entry takes a place only while fewer than `capacity − K` are taken,
  * the waiting list's automatic offers fill only up to that number, and every staff verb keeps the whole capacity — a kept
  * place given with no supplementary place while one is free. The capacity formula is untouched and `kind` is in no
@@ -192,7 +192,7 @@ const raises = (eventId: string) =>
     .where(and(eq(auditLogs.entityId, eventId), eq(auditLogs.entityType, "event")))
     .then((rows) => rows.filter((row) => row.action.startsWith("event.capacity_raised")));
 
-describe("BR-REQ-034-01 kept places in the allocator: the public stops at capacity − K, the staff keep the whole (§NNN)", () => {
+describe("BR-REQ-034-01 kept places in the allocator: the public stops at capacity − K, the staff keep the whole (§914)", () => {
   it("capacity 10, K 3: seven public places, then the waiting list — and a staff entry still takes a kept place while nobody waits", async () => {
     const event = await createEvent(10, 3);
     for (const name of ["Ana", "Bia", "Cora", "Dana", "Ema", "Fana", "Gina"]) {
@@ -326,7 +326,7 @@ describe("BR-REQ-034-01 kept places in the allocator: the public stops at capaci
   });
 });
 
-describe("BR-REQ-034-01 the door says «a place» exactly when the allocator gives one, kept places included (§NNN)", () => {
+describe("BR-REQ-034-01 the door says «a place» exactly when the allocator gives one, kept places included (§914)", () => {
   /** Rows as the allocator would have left them: `held` confirmed, `lapsed` declaration holds past their deadline, `waiting` in the line. */
   async function seat(eventId: string, held: number, lapsed: number, waiting: number) {
     const rows = [
@@ -387,7 +387,7 @@ describe("BR-REQ-034-01 the door says «a place» exactly when the allocator giv
   });
 });
 
-describe("BR-REQ-034-01 kept places on the public count, «Pe site acum» and «Locuri» (§NNN)", () => {
+describe("BR-REQ-034-01 kept places on the public count, «Pe site acum» and «Locuri» (§914)", () => {
   async function line(eventId: string): Promise<string> {
     const door = await readPublicDoor(db, eventId, NOW);
     if (!door) throw new Error("no door");

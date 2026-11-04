@@ -406,7 +406,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 item.holdExpiresAt &&
                 item.holdExpiresAt.getTime() > now.getTime() && (
                   <Typography variant="body2" sx={{ mb: 1.5 }} data-testid="my-registration-confirm-by">
-                    {/* The release at the deadline (§NNN): the place goes then — its deadline named — never a paper on race day. */}
+                    {/* The release at the deadline (§914): the place goes then — its deadline named — never a paper on race day. */}
                     {t(confirmByKey(item.holdExpiresAt, item.releaseDeadline), {
                       due: confirmationDueMoment(
                         locale,

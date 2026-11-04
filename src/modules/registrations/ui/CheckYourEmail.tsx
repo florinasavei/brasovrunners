@@ -48,7 +48,7 @@ type Props = {
    * The participation window (§104) when it is still ahead: the declaration step then says how
    * many days before the start the confirmation is asked. Only that number is read here; the
    * deadline is `RegistrationSteps`'s longer telling, so the caller may pass its object as is —
-   * except while «Eliberează singur locurile nesemnate la termen» is on (`releases`, §NNN): then the
+   * except while «Eliberează singur locurile nesemnate la termen» is on (`releases`, §914): then the
    * step names the deadline too, since an unsigned place goes there, and drops the paper on race day.
    */
   window: { opensDays: number; deadlineDays?: number; releases?: boolean } | null;

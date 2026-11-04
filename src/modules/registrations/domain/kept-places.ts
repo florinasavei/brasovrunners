@@ -2,7 +2,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import type { EntryChannel } from "./waitlist";
 
 /**
- * «Locuri păstrate pentru club» (§NNN; the owner, 2026-11-04: the site registers until capacity − kept, the rest
+ * «Locuri păstrate pentru club» (§914; the owner, 2026-11-04: the site registers until capacity − kept, the rest
  * he gives himself), as pure rules over numbers a caller already has.
  *
  * **A threshold on the entry's channel, never a second capacity formula.** Of the event's capacity, K places are
@@ -33,7 +33,7 @@ export function keptOf(event: KeptPlacesEvent): number {
 }
 
 /**
- * The capacity an entry is measured against (§NNN): `capacity − K` for a public entry and for the line's automatic
+ * The capacity an entry is measured against (§914): `capacity − K` for a public entry and for the line's automatic
  * offers, the whole capacity for every staff verb. Null stays null — an uncapped event has nothing to keep.
  */
 export function capacityForEntry(event: KeptPlacesEvent & { channel: EntryChannel }): number | null {
@@ -41,13 +41,13 @@ export function capacityForEntry(event: KeptPlacesEvent & { channel: EntryChanne
   return event.channel === "public" ? event.capacity - keptOf(event) : event.capacity;
 }
 
-/** The places the site announces (§NNN): `capacity − K` — «N înscriși din 165 de locuri». Null when uncapped. */
+/** The places the site announces (§914): `capacity − K` — «N înscriși din 165 de locuri». Null when uncapped. */
 export function announcedCapacity(event: KeptPlacesEvent): number | null {
   return capacityForEntry({ ...event, channel: "public" });
 }
 
 /**
- * The site's room (§NNN): `capacity − K − occupied`, **not clamped** — below nought once the club has given kept
+ * The site's room (§914): `capacity − K − occupied`, **not clamped** — below nought once the club has given kept
  * places, by how many of them are in use. Null on an uncapped event.
  */
 export function lineRoom(event: KeptPlacesEvent & { occupied: number }): number | null {
@@ -56,7 +56,7 @@ export function lineRoom(event: KeptPlacesEvent & { occupied: number }): number 
 }
 
 /**
- * Whether the club's kept places are in use (§NNN): K > 0 and more places taken than the site announces
+ * Whether the club's kept places are in use (§914): K > 0 and more places taken than the site announces
  * (`lineRoom` below nought). Then a lapsed hold released for a **public** newcomer would only give the club its place
  * back, never them one — so none is (`repository.ts#lapsedDeclarationHoldsToRelease`), and the public count does not
  * read the lapsed holds as free (`waitlist.ts#occupiedForNewcomer`). Always false with nothing kept.
@@ -66,7 +66,7 @@ export function keptPlacesInUse(event: KeptPlacesEvent & { occupied: number }): 
 }
 
 /**
- * The free places split in two (§NNN, «Locuri»): those the site still gives — `max(capacity − K − occupied, 0)` — and
+ * The free places split in two (§914, «Locuri»): those the site still gives — `max(capacity − K − occupied, 0)` — and
  * the kept ones nobody holds — `min(K, max(capacity − occupied, 0))`. The two add up to the free places,
  * `max(capacity − occupied, 0)`, whatever the numbers. Both 0 on an uncapped event.
  */
@@ -78,7 +78,7 @@ export function freeSplit(event: KeptPlacesEvent & { occupied: number }): { publ
 }
 
 /**
- * The words' own question (§NNN): whether a place freed beside the line reaches it by itself. Only with no place kept:
+ * The words' own question (§914): whether a place freed beside the line reaches it by itself. Only with no place kept:
  * with K > 0, a place freed while `capacity − K` or more are taken stays the club's, so «Te vom anunța dacă se
  * eliberează un loc» and «locul trece la următorul» would promise what the allocator does only sometimes — the
  * organizers' words («le dau organizatorii, pe rând») are the true ones. Never the allocator's gate, which stays
@@ -89,7 +89,7 @@ export function offerWordsByItself(offersOnItsOwn: boolean, event: KeptPlacesEve
 }
 
 /**
- * «Locuri păstrate pentru club» above the capacity (§NNN): refused, naming the box — on another date of a series (a
+ * «Locuri păstrate pentru club» above the capacity (§914): refused, naming the box — on another date of a series (a
  * scoped save) the date too, in the event's zone. The database's CHECK says the same; this says it in the editor's
  * words before anything is written. Nothing is written by the refusal: the whole save is one transaction.
  */

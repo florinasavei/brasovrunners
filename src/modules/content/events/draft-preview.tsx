@@ -103,7 +103,7 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
   const view = previewPageOf(draft.event, draft.translations[input.locale]);
   const tEvent = await getTranslations({ locale: input.locale, namespace: "Event" });
   const previewDoor = {
-    // The draft's «Locuri păstrate pentru club» too (§NNN): the places line says the number the saved page will.
+    // The draft's «Locuri păstrate pentru club» too (§914): the places line says the number the saved page will.
     door: await draftRegistrationDoor(
       db,
       view,

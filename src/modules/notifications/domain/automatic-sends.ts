@@ -457,7 +457,7 @@ export function nextInLineOffers(input: {
 }
 
 /**
- * The offers above the line is actually made (§NNN): none while it is not offered places by itself — «Nu», or
+ * The offers above the line is actually made (§914): none while it is not offered places by itself — «Nu», or
  * «Locurile libere le dau doar eu» (`domain/waitlist.ts#offersOnItsOwn`) — and, with places kept for the club, none
  * until the places taken beyond the site's are made up: `offerFreedPlaces` offers only `max(capacity − K − occupied,
  * 0)`, so the first `beyondSite` = `max(occupied − (capacity − K), 0)` releases free a place that stays the club's.

@@ -686,7 +686,7 @@ export function renderBilingual(
     ...(data.eventStartsAtFormattedOther ? { eventStartsAtFormatted: data.eventStartsAtFormattedOther } : {}),
     // Every date of the second half in its own language (§349), not only the event's.
     ...(data.holdExpiresAtFormattedOther ? { holdExpiresAtFormatted: data.holdExpiresAtFormattedOther } : {}),
-    // The release's deadline (§NNN), likewise.
+    // The release's deadline (§914), likewise.
     ...(data.releaseDeadlineFormattedOther ? { releaseDeadlineFormatted: data.releaseDeadlineFormattedOther } : {}),
     // A family's reservations, in the second half's own words (§543).
     ...(data.familyReservedUntilFormattedOther ? { familyReservedUntilFormatted: data.familyReservedUntilFormattedOther } : {}),
@@ -1027,7 +1027,7 @@ export type TemplateData = {
    */
   placesAlert?: { stage: "LOW" | "FULL"; free: number; capacity: number; alertAt: number };
   /**
-   * «Eliberează singur locurile nesemnate la termen» (§NNN): the participation window's deadline the release ran for, in
+   * «Eliberează singur locurile nesemnate la termen» (§914): the participation window's deadline the release ran for, in
    * each language's words; the real registrations it released and, apart, the test ones; the holds still unsigned it left
    * (a special guest's, one whose first email is still queued, one whose own deadline is later); the places after it — free
    * of the capacity, and the people waiting — and whether it ticked «Locurile libere le dau doar eu». Counted in the
@@ -1303,14 +1303,14 @@ export type TemplateData = {
    * (`domain/hold-lapsed.ts`). The deadline that passed is `holdExpiresAtFormatted`.
    */
   holdLapsedToWaitlist?: boolean;
-  /** The release was «Eliberează singur locurile nesemnate la termen»'s own (§NNN): the sentence says the deadline released every unsigned place. */
+  /** The release was «Eliberează singur locurile nesemnate la termen»'s own (§914): the sentence says the deadline released every unsigned place. */
   holdLapsedAtDeadline?: boolean;
   /**
    * The declaration's message (§104, §665): the hold is one «Eliberează singur locurile nesemnate la termen» takes at its
-   * deadline (§NNN) — so the message says the place goes then, never that it is kept while nobody asks for it.
+   * deadline (§914) — so the message says the place goes then, never that it is kept while nobody asks for it.
    */
   releasesAtDeadline?: boolean;
-  /** The release's deadline (§NNN), each half in its own words: the moment the declaration's message names for the release. */
+  /** The release's deadline (§914), each half in its own words: the moment the declaration's message names for the release. */
   releaseDeadlineFormatted?: string;
   releaseDeadlineFormattedOther?: string;
   /** The hold ends before the release's deadline (a place taken inside the window): its own instant is said for the waiting list. */
@@ -2151,7 +2151,7 @@ const T = {
       body: (d: TemplateData) => placesAlertBody("ro", d),
       action: "Deschide înscrierile",
     },
-    // «Eliberează singur locurile nesemnate la termen» (§NNN): to the Administrators, once per deadline — what was released and what now.
+    // «Eliberează singur locurile nesemnate la termen» (§914): to the Administrators, once per deadline — what was released and what now.
     unsignedReleased: {
       subject: (d: TemplateData) =>
         (d.unsignedReleased?.released ?? 0) > 0
@@ -3565,7 +3565,7 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
 };
 
 /**
- * The deadline release's bold line (§NNN): what it released, the free places of the capacity after it and the people
+ * The deadline release's bold line (§914): what it released, the free places of the capacity after it and the people
  * waiting — «Eliberate: 12 · libere acum: 14 din 175 · pe lista de așteptare: 20» — then, only when there are any, the
  * holds still unsigned it left and the test registrations it released (never in production). The counts are this line's,
  * never fields of the words below, so a club text for the message (§359) never stores a sample number.
@@ -3593,7 +3593,7 @@ function unsignedReleasedFacts(locale: "ro" | "en", d: TemplateData): { line: st
 }
 
 /**
- * The deadline release's paragraphs (§NNN), each half in its own language: what happened at the deadline, that each
+ * The deadline release's paragraphs (§914), each half in its own language: what happened at the deadline, that each
  * person released was told, the holds it left and why, and who gives the free places from now — never a person's name,
  * nothing of a registration.
  */
@@ -4366,7 +4366,7 @@ export function buildTemplateContent(
         messageType === "VOLUNTEER_CLUB_NOTICE" ||
         // …nor the Administrators' places alert (§906): to colleagues, its one link is its button.
         messageType === "PLACES_ALERT" ||
-        // …nor the deadline release's summary (§NNN), for the same reason.
+        // …nor the deadline release's summary (§914), for the same reason.
         messageType === "UNSIGNED_RELEASED"
       ) {
         return own.length > 0 ? own : undefined;

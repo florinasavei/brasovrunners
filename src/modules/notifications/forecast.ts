@@ -56,8 +56,8 @@ import { planConfirmationRetriesFrom } from "./confirmation-retry";
  * closes (§160, AGENTS.md §10.5, §420), the «Locul tău … a expirat» to the person whose declaration
  * hold that lapse releases, before the start (§638 — never for a lapsed offer, §331) — the offers only as the
  * allocator makes them: by itself («Da», «Locurile libere le dau doar eu» off) and, with places kept for the club,
- * only into the site's room (§NNN) — at «Eliberează singur locurile nesemnate la termen»'s deadline every counted
- * unsigned hold lapsed by then, with the Administrators' one summary and no offer (§NNN),
+ * only into the site's room (§914) — at «Eliberează singur locurile nesemnate la termen»'s deadline every counted
+ * unsigned hold lapsed by then, with the Administrators' one summary and no offer (§914),
  * "registration is open" to the addresses left on the
  * event's page (§146), and the verification email re-sent to whoever has not confirmed (§653). No race number is sent on its own since §548: it rides on the confirmation.
  *
@@ -86,7 +86,7 @@ export type AutomaticSend =
   | "nextInLine"
   // The person whose declaration hold a lapse releases to somebody waiting (§638).
   | "holdLapsed"
-  // «Eliberează singur locurile nesemnate la termen» (§NNN): the Administrators' one summary at the window's deadline.
+  // «Eliberează singur locurile nesemnate la termen» (§914): the Administrators' one summary at the window's deadline.
   | "unsignedReleased"
   | "registrationOpened"
   // The verification email re-sent by itself, to whoever has not confirmed the address yet (§653).
@@ -141,7 +141,7 @@ const TYPE_OF: Record<AutomaticSend, EmailMessageType> = {
 const RUN_ORDER: AutomaticSend[] = [
   // The release queues its message before the place is offered on (`expireStaleHolds`, then `fillAvailableSpots`).
   "holdLapsed",
-  // The deadline's release queues its summary after the people's messages, in the same transaction (§NNN).
+  // The deadline's release queues its summary after the people's messages, in the same transaction (§914).
   "unsignedReleased",
   "nextInLine",
   "reminder",
@@ -204,7 +204,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       eventId: events.id,
       startsAt: events.startsAt,
       registrationClosesAt: events.registrationClosesAt,
-      // Who the line is offered places by (§615, §906) and the places kept for the club (§NNN): `offerFreedPlaces`' gate and room.
+      // Who the line is offered places by (§615, §906) and the places kept for the club (§914): `offerFreedPlaces`' gate and room.
       capacity: events.capacity,
       placesKeptForClub: events.placesKeptForClub,
       waitlistAutoOffer: events.waitlistAutoOffer,
@@ -245,7 +245,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
   // (`max(holdExpiresAt, now)`, never before the job's next run).
   const consumedByNextInLine = new Map<string, Date>();
   /*
-    «Eliberează singur locurile nesemnate la termen» (§NNN): the events whose release is armed for a deadline in the
+    «Eliberează singur locurile nesemnate la termen» (§914): the events whose release is armed for a deadline in the
     horizon (`domain/unsigned-release.ts#deadlineReleaseArmedFor`), each at the job's run for it — the deadline, or the
     next run when it has passed and the release has not run yet — while the start is still ahead. Few rows: only the
     events with the box ticked.
@@ -285,7 +285,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       const waiting = line.filter((row) => row.eventId === eventId);
       const first = rows[0];
       /*
-        The line is offered a freed place only as `offerFreedPlaces` offers it (§NNN): by itself («Da», the tick off), and
+        The line is offered a freed place only as `offerFreedPlaces` offers it (§914): by itself («Da», the tick off), and
         with places kept for the club only once the places taken beyond the site's are made up — read off the places
         taken now, only where places are kept (with none kept, nothing is ever taken beyond the site's).
       */
@@ -325,7 +325,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       }
       if (deadlineAt) {
         /*
-          The deadline's own release (§NNN): every counted hold lapsed by then and not already released goes at that run,
+          The deadline's own release (§914): every counted hold lapsed by then and not already released goes at that run,
           whoever waits — each declaration hold's person told — and none of those places is offered: the run ticks
           «Locurile libere le dau doar eu». A hold lapsing after it follows §160 for whoever still waits, offering nobody.
         */
@@ -340,7 +340,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
     }
   }
   /*
-    The deadline's summary (§NNN): one `UNSIGNED_RELEASED` to each Administrator and Superadministrator with an address,
+    The deadline's summary (§914): one `UNSIGNED_RELEASED` to each Administrator and Superadministrator with an address,
     at the release — only for an event that has somebody still to sign now, as the release emails only when it released
     a hold or left one unsigned (`unsigned-release.ts#completeDeadlineRelease`).
   */

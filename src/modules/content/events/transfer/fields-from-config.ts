@@ -132,9 +132,9 @@ export function eventFieldsFromConfig(context: PostedFieldsContext): Record<stri
     freePlacesByOfferOnly: config.registration.freePlacesByOfferOnly,
     publicRegistrationOpen: config.registration.publicRegistrationOpen,
     placesAlertAt: asNumber(config.registration.placesAlertAt),
-    // «Locuri păstrate pentru club» (§NNN): the box as the editor posts it, judged against the file's places by the save.
+    // «Locuri păstrate pentru club» (§914): the box as the editor posts it, judged against the file's places by the save.
     placesKeptForClub: asNumber(config.registration.placesKeptForClub),
-    // «Eliberează singur locurile nesemnate la termen» (§NNN): the tick as the editor posts it.
+    // «Eliberează singur locurile nesemnate la termen» (§914): the tick as the editor posts it.
     releaseUnsignedAtDeadline: config.registration.releaseUnsignedAtDeadline,
     askHealthNote: config.registration.askHealthNote,
     rsvpEnabled: config.registration.rsvpEnabled,

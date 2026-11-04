@@ -348,7 +348,7 @@ export async function spentLinkOffersByItself(secret: string, purposes: readonly
 }
 
 /**
- * When «Eliberează singur locurile nesemnate la termen» (§NNN) will take the place a page after a press speaks of — the
+ * When «Eliberează singur locurile nesemnate la termen» (§914) will take the place a page after a press speaks of — the
  * journey's strip then says to sign online by that deadline, never the paper at the desk on race day — or null.
  *
  * The person's own registration where the link names it — the address confirmed, the declaration's or the offer's link,
@@ -458,7 +458,7 @@ export async function consumeAndSignDeclaration(
     const event = await loadEventForRegistration(tx, registration.eventId);
 
     if (answers) {
-      // The deadline's release before the answers (§NNN): a press it releases saves none of them.
+      // The deadline's release before the answers (§914): a press it releases saves none of them.
       const released = await releasedAtDeadlineFirst(tx, event, registration.id, now);
       if (released) return { ok: true as const, token: consumed.token, registration: released };
       await completeMissingAnswers(tx, registration.id, answers, now, "DECLARATION");
@@ -516,7 +516,7 @@ export async function consumeAndSignFamilyDeclaration(
   const event = await loadEventForRegistration(db, registration.eventId);
   const updated = answers
     ? await db.transaction(async (tx) => {
-        // The deadline's release before the answers (§NNN), as on the link's own page.
+        // The deadline's release before the answers (§914), as on the link's own page.
         const released = await releasedAtDeadlineFirst(tx, event, registration.id, now);
         if (released) return released;
         await completeMissingAnswers(tx, registration.id, answers, now, "DECLARATION");

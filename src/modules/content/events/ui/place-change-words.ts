@@ -26,7 +26,7 @@ const EFFECT_KEYS: readonly PlaceEffectKey[] = [
 ];
 
 /**
- * The words of the place settings' summary (§NNN), translated on the server and handed to the browser as strings with
+ * The words of the place settings' summary (§914), translated on the server and handed to the browser as strings with
  * their `{name}`s (`t.raw`): the browser fills them at the press (`domain/place-changes.ts#placeChangeLines`). Each
  * setting is named by the editor's own label, so the summary says the box the reader just changed.
  */

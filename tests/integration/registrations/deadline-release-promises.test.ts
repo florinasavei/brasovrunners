@@ -21,7 +21,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * «Eliberează singur locurile nesemnate la termen» (§NNN; BR-REQ-033-01, BR-REQ-033-02, BR-REQ-037-01) — what the public
+ * «Eliberează singur locurile nesemnate la termen» (§914; BR-REQ-033-01, BR-REQ-033-02, BR-REQ-037-01) — what the public
  * pages promise of an unsigned place, and a signature that reaches the deadline first, on a real database.
  *
  * The signing page says the place goes at the deadline even with nobody waiting while the switch is on — never that it
@@ -271,7 +271,7 @@ const rowOf = async (id: string) => (await db.select().from(registrations).where
 const completions = (id: string) => db.select().from(auditLogs).where(and(eq(auditLogs.entityId, id), eq(auditLogs.action, "registration.answers_completed")));
 const spent = async () => (await db.select({ usedAt: emailActionTokens.usedAt }).from(emailActionTokens)).some((token) => token.usedAt !== null);
 
-describe("BR-REQ-033-02 the signing page follows «Eliberează singur locurile nesemnate la termen» (§NNN)", () => {
+describe("BR-REQ-033-02 the signing page follows «Eliberează singur locurile nesemnate la termen» (§914)", () => {
   it("says the place goes at the deadline even with nobody waiting while the switch is on; today's words off it and for a special guest (ro, en)", async () => {
     const armed = await race(30);
     const off = await race(30, false);
@@ -349,7 +349,7 @@ describe("BR-REQ-033-02 the signing page follows «Eliberează singur locurile n
   });
 });
 
-describe("BR-REQ-033-01 a signature that is itself the deadline's release saves nothing of its own (§NNN)", () => {
+describe("BR-REQ-033-01 a signature that is itself the deadline's release saves nothing of its own (§914)", () => {
   it("no answer, no offers' yes, no signature: the release, its email and the spent link commit, and the page says the place is gone", async () => {
     // The control: the switch off, nobody waiting (§160) — the same press signs, keeps the answers and the yes.
     const off = await race(1, false);
@@ -381,7 +381,7 @@ describe("BR-REQ-033-01 a signature that is itself the deadline's release saves 
   });
 });
 
-describe("BR-REQ-037-01 «Înregistrările mele» and «Ce îi spui» say the place goes at the deadline (§NNN)", () => {
+describe("BR-REQ-037-01 «Înregistrările mele» and «Ce îi spui» say the place goes at the deadline (§914)", () => {
   it("reads the release off the event for a counted held place, never for a special guest's or with the switch off", async () => {
     const armed = await race(30);
     const off = await race(30, false);

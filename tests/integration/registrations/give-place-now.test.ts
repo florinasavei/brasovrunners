@@ -298,7 +298,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(await capacityOf(other.id)).toBe(1);
     const [raised] = await raises(event.id);
     expect(raised).toMatchObject({ actorStaffUserId: admin.id, entityType: "event", participantId: null, metadataJson: { from: 1, to: 2, registrationId: mara.id } });
-    // «Istoric capacitate»'s fields (§NNN): the row's version and the places taken; no press of an offer.
+    // «Istoric capacitate»'s fields (§914): the row's version and the places taken; no press of an offer.
     expect(raised.metadataJson).toEqual({ from: 1, to: 2, registrationId: mara.id, version: expect.any(Number), occupied: 1 });
     expect(await vouchedTrail(mara.id)).toHaveLength(1);
     expect(await declarationEmails(mara.id)).toHaveLength(1);

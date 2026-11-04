@@ -422,7 +422,7 @@ describe("«Oferă-i un loc acum» is never refused by the waiting list's limit 
     const entered = await staffEntry(event.id, "Ioana", { addPlaceTo: 2 });
     expect(entered).toMatchObject({ status: "WAITLIST_OFFERED", capacityRaisedTo: 2 });
     expect(await capacityOf(event.id)).toBe(2);
-    // «Istoric capacitate»'s fields on the raise (§NNN): the row's version, the places taken and the press.
+    // «Istoric capacitate»'s fields on the raise (§914): the row's version, the places taken and the press.
     expect((await trail("event.capacity_raised_for_offer")).map((row) => row.metadataJson)).toEqual([
       { from: 1, to: 2, registrationId: entered.registrationId, version: expect.any(Number), occupied: 1, via: "offerNow" },
     ]);

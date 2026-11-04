@@ -2,7 +2,7 @@ import type { Database, Transaction } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 
 /**
- * «Istoric capacitate»'s writes (§NNN; the owner, 2026-11-04: he wants to see when and why the number of places
+ * «Istoric capacitate»'s writes (§914; the owner, 2026-11-04: he wants to see when and why the number of places
  * changed). Every save that moves an event's capacity or its «Locuri păstrate pentru club» leaves one audit row per
  * value that moved, in the save's own transaction — the editor, a series save on each date it reaches, an import,
  * a create, a duplicate, the dates a series makes by itself. The supplementary places an offer, «Dă-i un loc acum» or
@@ -19,7 +19,7 @@ export type PlacesVia = "editor" | "series" | "import" | "create" | "duplicate" 
 /** The reason typed under the places, as stored: trimmed, at most this long, never empty. */
 export const PLACES_REASON_MAX = 200;
 
-/** The reason as stored (§NNN): trimmed and cut to `PLACES_REASON_MAX`, or null when nothing was typed. */
+/** The reason as stored (§914): trimmed and cut to `PLACES_REASON_MAX`, or null when nothing was typed. */
 export function placesChangeReason(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.replace(/\s+/g, " ").trim();
@@ -35,7 +35,7 @@ export function placesMoved(before: Places | null, after: Places): boolean {
 }
 
 /**
- * The rows themselves (§NNN): `event.capacity_changed` when the capacity moved —
+ * The rows themselves (§914): `event.capacity_changed` when the capacity moved —
  * `{from, to, occupied, offered, via, reason?, version}` — and `event.places_kept_changed` when the places kept for
  * the club did — `{from, to, via, reason?, version}`. `before` is null for an event the save created (from null, and
  * from 0 kept). `occupied` is the count the save took under the event lock (0 for a new event); `offered`, the

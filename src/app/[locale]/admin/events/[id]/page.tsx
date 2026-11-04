@@ -350,7 +350,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const occupiedCounts =
     internal && event.capacity !== null && canReadRegistrations(staffUser.role) ? await countOccupied(db, event.id, now) : null;
   const placesTaken = occupiedCounts === null ? null : computeOccupied(occupiedCounts);
-  // …and by what (§NNN): the capacity's help says how low a save may go, as the save refuses under the lock.
+  // …and by what (§914): the capacity's help says how low a save may go, as the save refuses under the lock.
   const heldPlaces =
     occupiedCounts === null || event.capacity === null ? null : { occupied: computeOccupied(occupiedCounts), ...placesTakenOf(event.capacity, occupiedCounts) };
   // Seated «În afara locurilor» (§643): beside the occupied places, which leave them out; read only where those are said.
@@ -773,7 +773,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     return undefined;
   };
   /*
-    The place settings' summary (§NNN): the loaded settings, the numbers the pages read — the places taken
+    The place settings' summary (§914): the loaded settings, the numbers the pages read — the places taken
     (`computeOccupied`), the people waiting, whether the dates let the public in — and the words, for a saved event this
     site registers, to whoever may save its settings. Worked out in the browser at the press (`domain/place-changes.ts`).
   */
@@ -938,7 +938,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       : []),
     ...windowSpecs,
     /*
-      «Controlul înscrierilor e foarte sensibil» (§NNN): a save that changes a place setting first says each change «before →
+      «Controlul înscrierilor e foarte sensibil» (§914): a save that changes a place setting first says each change «before →
       after» and what it does — the offers a raise emails, the site's button, the release at the deadline — and an unchanged
       save asks nothing. Last, and with no `when`: it asks only through its lines (`resolvePlaceChanges`).
     */

@@ -176,7 +176,7 @@ function hiddenListOutcome(error: unknown, locale: Locale): { error: string; err
 }
 
 /**
- * The places refused (§NNN) as their own sentences rather than «Verifică datele introduse»: «Număr de locuri» lowered under
+ * The places refused (§914) as their own sentences rather than «Verifică datele introduse»: «Număr de locuri» lowered under
  * the places taken — how many, and by what, the allocator's own counts under the lock — and «Locuri păstrate pentru club»
  * above the places. Each names its box; another date of a series is named too, in the reader's language. Nothing for any
  * other error, so the caller's outcome stands. The editor's save and create read it.
@@ -419,11 +419,11 @@ function eventFieldsFrom(form: FormData) {
     // their markers, so a form without them is "not editing it" — never a door shut or opened by omission.
     freePlacesByOfferOnly: form.get("event.freePlacesByOfferOnly.present") === "1" ? form.get("event.freePlacesByOfferOnly") === "on" : undefined,
     publicRegistrationOpen: form.get("event.publicRegistrationOpen.present") === "1" ? form.get("event.publicRegistrationOpen") === "on" : undefined,
-    // «Eliberează singur locurile nesemnate la termen» (§NNN): a tick, by the same marker.
+    // «Eliberează singur locurile nesemnate la termen» (§914): a tick, by the same marker.
     releaseUnsignedAtDeadline: form.get("event.releaseUnsignedAtDeadline.present") === "1" ? form.get("event.releaseUnsignedAtDeadline") === "on" : undefined,
     // «Anunță-mă când rămân N locuri» (§906): an empty box is off; a form without the box is "not editing it".
     placesAlertAt: form.has("event.placesAlertAt") ? value("placesAlertAt") : undefined,
-    // «Locuri păstrate pentru club» (§NNN): an empty box is 0; a form without the box is "not editing it".
+    // «Locuri păstrate pentru club» (§914): an empty box is 0; a form without the box is "not editing it".
     placesKeptForClub: form.has("event.placesKeptForClub") ? value("placesKeptForClub") : undefined,
     // «Condiții de participare» → «Informații medicale» (§557), by the same marker.
     askHealthNote: form.get("event.askHealthNote.present") === "1" ? form.get("event.askHealthNote") === "on" : undefined,
@@ -813,7 +813,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
         // «Trimite din nou „Semnează declarația”» beside «Fereastra de confirmare» (slice 4): its own field, apart from the
         // save's other emails; absent — no window line drawn — it sends.
         windowSendEmail: sendEmailOf(form, WINDOW_SEND_EMAIL_FIELD),
-        // «De ce schimbi locurile? (opțional)» (§NNN): kept only on the history row of a save that moves the places.
+        // «De ce schimbi locurile? (opțional)» (§914): kept only on the history row of a save that moves the places.
         placesChangeReason: editsEventRow ? text(form, "event.placesChangeReason") : null,
       });
       // A raised capacity's offers (§147) ride on the same banner as a number; absent when none.

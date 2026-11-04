@@ -366,7 +366,7 @@ async function renderRow(
     row.messageType === "VOLUNTEER_INVITATION" ||
     // The Administrators' places alert (§906): about an event's places, nobody's registration.
     row.messageType === "PLACES_ALERT" ||
-    // …and the deadline release's summary (§NNN), the same.
+    // …and the deadline release's summary (§914), the same.
     row.messageType === "UNSIGNED_RELEASED" ||
     bulkRecipients !== null
       ? (row.payloadJson as { eventId?: unknown } | null)?.eventId
@@ -536,7 +536,7 @@ async function renderRow(
   /*
     What happens to an offered place after its deadline (§906), read now, as the line is: it passes to the next person
     by itself only while places go out by themselves and none is kept for the club (`offersWaitlistAutomatically`, the
-    words' predicate, §NNN) — with «Nu», «Locurile libere le dau doar eu», or places kept for the club (a place freed
+    words' predicate, §914) — with «Nu», «Locurile libere le dau doar eu», or places kept for the club (a place freed
     while the site's places are taken stays the club's), the organizers give it, and the message says so.
   */
   if (row.messageType === "WAITLIST_SPOT_OFFER" && registration) {
@@ -601,7 +601,7 @@ async function renderRow(
       if (eventDetails) {
         data.windowOpen = participationWindowOpen(eventDetails.startsAt, eventDetails.confirmationOpensDaysBefore, now);
         /*
-          «Eliberează singur locurile nesemnate la termen» (§NNN): a hold the release will take — due by its armed deadline
+          «Eliberează singur locurile nesemnate la termen» (§914): a hold the release will take — due by its armed deadline
           — is told the place goes then, instead of being promised a place kept while nobody asks and a paper on race day.
           Never a special guest's: the release leaves it, so its message keeps today's words. The moment named is the
           release's deadline, each half in its own words; a hold that ends before it (a place taken inside the window)
@@ -923,7 +923,7 @@ async function renderRow(
     if (eventId) payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/registrations", query: { eventId } } })}`;
   }
   /*
-    «Eliberează singur locurile nesemnate la termen» (§NNN), to an Administrator or a Superadministrator: the deadline and
+    «Eliberează singur locurile nesemnate la termen» (§914), to an Administrator or a Superadministrator: the deadline and
     the counts are in the payload, as the release counted them under the lock — no participant, no token. The deadline is
     said in the event's zone, in each half's language. The one button opens the event's registrations, from
     `APP_BASE_URL` (AGENTS.md §8); the sign-in decides who may open it.
@@ -1249,7 +1249,7 @@ async function renderRow(
     // or a registration that moved on (restarted, signed late, or a newer hold lapsed), has nothing left to tell.
     if (!lapsed) throw new OutboxMessageWithdrawn("the lapsed hold's event is over or cancelled, or the registration moved on from that hold");
     const zone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
-    // At the deadline's own release (§NNN) the sentence states the window's deadline, the one everybody was given.
+    // At the deadline's own release (§914) the sentence states the window's deadline, the one everybody was given.
     const stated = lapsed.atDeadline ?? lapsed.deadline;
     if (stated) {
       data.holdExpiresAtFormatted = formatDeadlineInSentence(stated, zone, locale);
@@ -1964,7 +1964,7 @@ async function waitlistTakesNewcomer(db: RendererDb, eventId: string, now: Date)
   if (!event || event.capacity === null) return false;
   const counts = await countOccupied(db, eventId, now);
   const waiting = await countEligibleWaitlisted(db, eventId);
-  // A family's form is a public entry (§NNN): measured on the site's places, the capacity less those kept for the club.
+  // A family's form is a public entry (§914): measured on the site's places, the capacity less those kept for the club.
   const queues =
     newcomerJoinsLine({ waitlisted: waiting, freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel: "public", capacity: event.capacity }) ||
     !hasDirectAvailability({ capacity: announcedCapacity(event), occupied: computeOccupied(counts), eligibleWaitlisted: waiting });
@@ -1991,7 +1991,7 @@ async function waitlistByHand(db: RendererDb, eventId: string, now: Date): Promi
     .limit(1);
   if (!event) return false;
   if (publicEntryQueues({ freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel: "public", capacity: event.capacity })) return true;
-  // The site's places (§NNN): with the places kept for the club the only ones left, the site is full, as the page says.
+  // The site's places (§914): with the places kept for the club the only ones left, the site is full, as the page says.
   return hasDirectAvailability({ capacity: announcedCapacity(event), occupied: computeOccupied(await countOccupied(db, eventId, now)), eligibleWaitlisted: 0 });
 }
 
@@ -2011,7 +2011,7 @@ async function describeLapsedHold(
 ): Promise<{ deadline: Date | null; toWaitlist: boolean; atDeadline: Date | null; next: HoldLapsedNext } | null> {
   if (registration.status !== "EXPIRED" || registration.expiryReason !== "DECLARATION_HOLD_LAPSED") return null;
   const payload = (row.payloadJson ?? {}) as { deadline?: unknown; toWaitlist?: unknown; atDeadline?: unknown };
-  // The deadline's own release (§NNN): the participation window's deadline the release ran for, when it was that.
+  // The deadline's own release (§914): the participation window's deadline the release ran for, when it was that.
   const releasedAt = typeof payload.atDeadline === "string" ? new Date(payload.atDeadline) : null;
   const atDeadline = releasedAt && !Number.isNaN(releasedAt.getTime()) ? releasedAt : null;
   const fromPayload = typeof payload.deadline === "string" ? new Date(payload.deadline) : null;
@@ -2033,7 +2033,7 @@ async function describeLapsedHold(
       // The site's door as the card reads it (§906): shut by the organizers, or the line's whatever is free.
       publicRegistrationOpen: events.publicRegistrationOpen,
       freePlacesByOfferOnly: events.freePlacesByOfferOnly,
-      // The site's places (§NNN): the person comes back through the public form, measured on the capacity less those kept.
+      // The site's places (§914): the person comes back through the public form, measured on the capacity less those kept.
       placesKeptForClub: events.placesKeptForClub,
     })
     .from(events)

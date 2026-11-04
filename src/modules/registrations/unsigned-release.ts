@@ -8,7 +8,7 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { listStaffUsers } from "@/modules/staff-identity/repository";
 
 /**
- * Who is told about the places of an event (§906, §NNN): every Administrator and Superadministrator with an address,
+ * Who is told about the places of an event (§906, §914): every Administrator and Superadministrator with an address,
  * in their own language — the audience of «Anunță-mă când rămân N locuri» (`places-alert.ts`) and of the deadline's
  * release below. One read of the team.
  */
@@ -29,7 +29,7 @@ export type DeadlineReleaseCounts = {
 };
 
 /**
- * The rest of «Eliberează singur locurile nesemnate la termen» (§NNN), in the transaction that released the holds and
+ * The rest of «Eliberează singur locurile nesemnate la termen» (§914), in the transaction that released the holds and
  * under the same event lock — so the release, its memory and its messages commit together or not at all:
  *
  * 1. the memory: `unsigned_released_for` = the deadline, without moving `version` (like `places_alert_sent`), so a

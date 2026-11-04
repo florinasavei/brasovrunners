@@ -390,7 +390,7 @@ describe("BR-REQ-034-01 a family sitting reserves every place the moment its for
   });
 });
 
-describe("BR-REQ-034-01 a family's form is a public entry: it stops at the places the site gives (§NNN)", () => {
+describe("BR-REQ-034-01 a family's form is a public entry: it stops at the places the site gives (§914)", () => {
   it("capacity 3 with 1 kept for the club: the sitting reserves two places, and the third form waits for the address, then the line", async () => {
     const event = await createEvent(3);
     await db.update(events).set({ placesKeptForClub: 1 }).where(eq(events.id, event.id));

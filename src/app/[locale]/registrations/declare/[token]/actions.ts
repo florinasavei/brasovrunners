@@ -109,7 +109,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     await clearFormDraft(path);
     /*
       The participation window's deadline had passed and this press was the transaction that released the unsigned
-      places (§NNN, «Eliberează singur locurile nesemnate la termen»): nothing was signed and the link is spent. The page
+      places (§914, «Eliberează singur locurile nesemnate la termen»): nothing was signed and the link is spent. The page
       reads the spent link and says the place is no longer held, as it would had the job released it a minute earlier.
     */
     if (result.registration.status === "EXPIRED") redirect(path);

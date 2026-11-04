@@ -16,11 +16,11 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * «Eliberează singur locurile nesemnate la termen» (§NNN; BR-REQ-033-01, BR-REQ-080-01) as pure rules and words: the
+ * «Eliberează singur locurile nesemnate la termen» (§914; BR-REQ-033-01, BR-REQ-080-01) as pure rules and words: the
  * release is armed only on a capped, scheduled event with the box ticked and a participation window whose deadline is
  * before the start; it is due from that deadline until the start, once per deadline (the memory); a moved deadline arms
  * it again. The person released is told the window's deadline; the Administrators get one summary; the declaration's
- * message says the place goes at the deadline. The forecast offers a freed place only as the allocator does (§NNN, K).
+ * message says the place goes at the deadline. The forecast offers a freed place only as the allocator does (§914, K).
  */
 const DAY = 24 * 60 * 60_000;
 const NOW = new Date();
@@ -37,7 +37,7 @@ const rules = (over: Partial<DeadlineReleaseRules> = {}): DeadlineReleaseRules =
   ...over,
 });
 
-describe("BR-REQ-033-01 the release's deadline, as pure rules (§NNN)", () => {
+describe("BR-REQ-033-01 the release's deadline, as pure rules (§914)", () => {
   it("the window's deadline only when it is before the start", () => {
     expect(windowDeadlineOf(rules())).toEqual(DEADLINE);
     // A deadline at the start (0 days) or no window at all: nothing new to release before the start.
@@ -88,7 +88,7 @@ describe("BR-REQ-033-01 the release's deadline, as pure rules (§NNN)", () => {
   });
 });
 
-describe("§NNN the forecast's offers follow the allocator's: by itself, and into the site's room only", () => {
+describe("§914 the forecast's offers follow the allocator's: by itself, and into the site's room only", () => {
   const offers = [
     { at: new Date(1_000), count: 2 },
     { at: new Date(2_000), count: 1 },
@@ -109,7 +109,7 @@ describe("§NNN the forecast's offers follow the allocator's: by itself, and int
   });
 });
 
-describe("BR-REQ-080-01 the release's words in the emails (§NNN)", () => {
+describe("BR-REQ-080-01 the release's words in the emails (§914)", () => {
   const render = (type: "COMPLETE_DECLARATION" | "UNSIGNED_RELEASED", locale: "ro" | "en", extra: Partial<TemplateData>) =>
     renderBilingual(type, locale, { ...emailSampleFor(type, locale), ...extra }, "https://example.test/ro/admin/registrations");
 

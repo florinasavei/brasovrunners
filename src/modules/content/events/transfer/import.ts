@@ -349,7 +349,7 @@ export async function importEventAsNew<T extends Record<string, unknown>>(db: Da
         en: translationFieldsFromConfig(resolved.config.translations.en, slugs.en),
       },
     },
-    // «Istoric capacitate» names the import as the save that set the places (§NNN).
+    // «Istoric capacitate» names the import as the save that set the places (§914).
     via: "import",
     now,
     fetchImpl: input.fetchImpl,
@@ -668,7 +668,7 @@ export async function importEventOver<T extends Record<string, unknown>>(db: Dat
     placeNamesAsTyped: true,
     // The file's list replaces the saved one below, held to the rules already; else the saved list is held to them against the file's event (§757).
     checkpointsReplaced: checkpointsChanged,
-    // «Istoric capacitate» names the import as the save that moved the places (§NNN).
+    // «Istoric capacitate» names the import as the save that moved the places (§914).
     via: "import",
     now,
     fetchImpl: input.fetchImpl,

@@ -75,7 +75,7 @@ export function invitationDeadline(input: { now: Date; days: number; startsAt: D
  * the place is still the waiting row's to be given — a staff-made allocation never goes ahead of anyone
  * waiting (AGENTS.md §15.11), and a newcomer queues while anybody waits (§615). Never below zero.
  *
- * **The waiting list has a claim only on the site's places (§NNN).** With «Locuri păstrate pentru club» (K), the
+ * **The waiting list has a claim only on the site's places (§914).** With «Locuri păstrate pentru club» (K), the
  * people waiting claim at most the places the site still gives — `max(capacity − K − occupied, 0)` — and a kept
  * place nobody holds is the club's to give: an invitation takes it with no supplementary place while one is free.
  * `max(capacity − occupied − min(waiting, max(capacity − K − occupied, 0)), 0)`, the same number as before when

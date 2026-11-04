@@ -206,7 +206,7 @@ describe("§906 «Locurile libere le dau doar eu»", () => {
   });
 });
 
-describe("BR-REQ-034-01 «Locuri păstrate pentru club» on the event page and the card (§NNN)", () => {
+describe("BR-REQ-034-01 «Locuri păstrate pentru club» on the event page and the card (§914)", () => {
   it("announces the capacity less the kept places, names no reserve, and reads full once only the kept places are left", async () => {
     const event = await publish({ capacity: 20, placesKeptForClub: 5, waitlistAutoOffer: true });
     await take(event.id, 10);

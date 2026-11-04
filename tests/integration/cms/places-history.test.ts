@@ -29,7 +29,7 @@ const { confirmEmail, submitRegistration } = await import("@/modules/registratio
 const { offerPlaceByStaff } = await import("@/modules/registrations/admin-service");
 
 /**
- * «Istoric capacitate»'s writes (§NNN; BR-REQ-034-02) and «Locuri păstrate pentru club» in the editor (BR-REQ-050-02): every
+ * «Istoric capacitate»'s writes (§914; BR-REQ-034-02) and «Locuri păstrate pentru club» in the editor (BR-REQ-050-02): every
  * save that moves the capacity or the places kept leaves one audit row per value that moved, in the save's own transaction,
  * in the format lane B reads — `event.capacity_changed` `{from, to, occupied, offered, via, reason?, version}` and
  * `event.places_kept_changed` `{from, to, via, reason?, version}` — and the supplementary places' rows carry `version`,
@@ -189,7 +189,7 @@ async function enter(row: typeof events.$inferSelect, name: string) {
   return confirmEmail(db, event, created.id, NOW);
 }
 
-describe("BR-REQ-034-02 «Istoric capacitate»: every save that moves the places leaves its row (§NNN)", () => {
+describe("BR-REQ-034-02 «Istoric capacitate»: every save that moves the places leaves its row (§914)", () => {
   it("the editor's save: from, to, the places taken under the lock, the offers, the save, the reason and the row's version", async () => {
     const row = await seedEvent(10);
     await enter(row, "Ana");
@@ -347,7 +347,7 @@ describe("BR-REQ-034-02 «Istoric capacitate»: every save that moves the places
       expect(row.actorStaffUserId).toBeNull();
       expect(row.metadataJson).toMatchObject({ from: null, to: 30, via: "series_generated" });
     }
-    // The release at the deadline is never copied onto a date the job makes (§NNN).
+    // The release at the deadline is never copied onto a date the job makes (§914).
     expect(fresh.every((row) => row.releaseUnsignedAtDeadline === false && row.unsignedReleasedFor === null)).toBe(true);
   });
 

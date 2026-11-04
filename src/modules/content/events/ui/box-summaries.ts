@@ -63,7 +63,7 @@ export type SummaryWords = {
     internal: string;
     places: CountWords;
     unlimited: string;
-    /** «Locuri păstrate pentru club» (§NNN): «păstrate pentru club: 10», said only when places are kept. */
+    /** «Locuri păstrate pentru club» (§914): «păstrate pentru club: 10», said only when places are kept. */
     keptForClub: string;
     declaration: string;
     noDeclaration: string;
@@ -409,7 +409,7 @@ export function registrationSummary(
   return join(words, [
     words.registration.internal,
     event?.capacity === null || event?.capacity === undefined ? words.registration.unlimited : counted(words.registration.places, event.capacity, options.locale),
-    // The places kept for the club (§NNN), beside the places they are part of; nothing when none are.
+    // The places kept for the club (§914), beside the places they are part of; nothing when none are.
     ...(event && keptOf(event) > 0 ? [fillIn(words.registration.keptForClub, { count: keptOf(event) })] : []),
     options.declarationVersion !== null ? fillIn(words.registration.declaration, { version: options.declarationVersion }) : words.registration.noDeclaration,
     // The waiting list public too (§628) is a disclosure of its own, said where the list is (§760).

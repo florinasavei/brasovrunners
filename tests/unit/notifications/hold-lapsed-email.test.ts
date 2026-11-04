@@ -65,7 +65,7 @@ describe("§638 the DECLARATION_HOLD_EXPIRED email's words", () => {
   const render = (locale: "ro" | "en", extra: Partial<TemplateData>, action: string | null = ACTION) =>
     renderBilingual("DECLARATION_HOLD_EXPIRED", locale, { ...emailSampleFor("DECLARATION_HOLD_EXPIRED", locale), ...extra }, action ?? undefined);
 
-  it("says the place expired, the deadline that passed, and that it was released for somebody waiting (§NNN: true on «Nu» too) — in both languages", () => {
+  it("says the place expired, the deadline that passed, and that it was released for somebody waiting (§914: true on «Nu» too) — in both languages", () => {
     const mail = render("ro", { holdLapsedToWaitlist: true, holdLapsedNext: "waitlist" });
     const sample = emailSampleFor("DECLARATION_HOLD_EXPIRED", "ro");
     expect(mail.subject.startsWith(`Locul pentru ${sample.participantName} la ${sample.eventTitle} a expirat`)).toBe(true);
@@ -125,7 +125,7 @@ describe("§638 the DECLARATION_HOLD_EXPIRED email's words", () => {
     }
   });
 
-  it("§NNN released at «Eliberează singur locurile nesemnate la termen»'s deadline: the window's deadline and the release, in both languages", () => {
+  it("§914 released at «Eliberează singur locurile nesemnate la termen»'s deadline: the window's deadline and the release, in both languages", () => {
     const sample = emailSampleFor("DECLARATION_HOLD_EXPIRED", "ro");
     const mail = render("ro", { holdLapsedAtDeadline: true, holdLapsedToWaitlist: false, holdLapsedNext: "waitlist" });
     expect(mail.text).toContain(

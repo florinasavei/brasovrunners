@@ -457,7 +457,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     : null;
   const notice = spent ?? movedOnNotice;
   /*
-    «Eliberează singur locurile nesemnate la termen» (§NNN): a hold the release will take is told that the place goes at
+    «Eliberează singur locurile nesemnate la termen» (§914): a hold the release will take is told that the place goes at
     the deadline, even with nobody waiting — never that it stays theirs until the start — and, once the release's own
     deadline has come, that it is being released rather than still theirs. The rule the declaration's email words it by
     (`releaseDeadlineOfHold`), off the same event row; the moment named is always the release's deadline, which a hold
@@ -476,7 +476,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const formBelow = !(familyMode && !familyCurrent && passSteps && walking) && !(blocked || !declaration || movedOnNotice) && !beingReleased;
   const journeyStep = familyMode && !familyCurrent ? ("done" as const) : notice ? notice.step : ("declare" as const);
   /*
-    The strip's declaration step says the release's deadline instead of the paper at the desk (§NNN): this hold's own,
+    The strip's declaration step says the release's deadline instead of the paper at the desk (§914): this hold's own,
     or — on a spent link, whose registration this page does not read — the one the link names.
   */
   const journeyRelease =
@@ -517,7 +517,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     registration.status === "PENDING_DECLARATION" &&
     registration.holdExpiresAt <= new Date() &&
     (await countEligibleWaitlisted(db, registration.eventId)) === 0;
-  // The release's deadline as the page says an instant (§NNN), and whether this hold ends before it (a place taken inside the window).
+  // The release's deadline as the page says an instant (§914), and whether this hold ends before it (a place taken inside the window).
   const releaseDeadline =
     releaseAt && eventDetails
       ? formatDay(releaseAt, { locale, timeZone: eventDetails.timezone, style: "long", withTime: true, position: "inline" })
@@ -687,7 +687,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
         </>
       ) : beingReleased ? (
         /*
-          The release's deadline has come and its run has not yet reached this hold (§NNN): the place is no longer held, a
+          The release's deadline has come and its run has not yet reached this hold (§914): the place is no longer held, a
           press would be refused by design, so the page says so and draws no form — what the link answers once the run
           has released it, said a few minutes early.
         */
@@ -742,7 +742,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               {eventDetails && <div>{t("declare.event", { event: eventDetails.title })}</div>}
               {deadline && (
                 <div>
-                  {/* The release names its own deadline (§NNN), and the hold's only when it ends before it. */}
+                  {/* The release names its own deadline (§914), and the hold's only when it ends before it. */}
                   {deadlinePassed
                     ? t("declare.deadlinePassed", { deadline })
                     : deadlineAtStart

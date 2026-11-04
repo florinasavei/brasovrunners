@@ -42,7 +42,7 @@ export type DeclarationWhere = "emailJustSent" | "emailHeldUntil" | "onThisPage"
 /**
  * `declaration` is required at the third step and has no meaning at any other: the type says so.
  *
- * `release` is «Eliberează singur locurile nesemnate la termen»'s deadline when it will take this place (§NNN; the page
+ * `release` is «Eliberează singur locurile nesemnate la termen»'s deadline when it will take this place (§914; the page
  * asks `releaseDeadlineOfHold`, or `spentLinkReleaseMoment` after a press): the step then says to sign online by it and
  * that the place goes then — never «sau pe hârtie la masa de înscrieri în ziua cursei», which the release makes false.
  */
@@ -65,7 +65,7 @@ export default async function RegistrationJourney(props: RegistrationJourneyProp
   const waitMinutes = current === "declare" ? await cachedEmailWaitMinutes(new Date()) : null;
   const opens = props.opens ?? "";
   const locale = await getLocale();
-  // The release's deadline in the event's clock, as the signing page says its own deadline (§NNN).
+  // The release's deadline in the event's clock, as the signing page says its own deadline (§914).
   const release = props.release
     ? formatDay(props.release.at, { locale, timeZone: props.release.timeZone, style: "long", withTime: true, position: "inline" })
     : null;

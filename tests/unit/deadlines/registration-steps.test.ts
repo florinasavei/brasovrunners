@@ -240,7 +240,7 @@ describe("§908 the waiting list's step says who gives the places", () => {
   });
 
   /*
-    «Eliberează singur locurile nesemnate la termen» (§NNN): with the release on, an unsigned place goes at the deadline
+    «Eliberează singur locurile nesemnate la termen» (§914): with the release on, an unsigned place goes at the deadline
     whoever waits — so the step says that, and no paper at the desk, which comes after the deadline. A deadline at the
     start releases nothing new: its words stay.
   */

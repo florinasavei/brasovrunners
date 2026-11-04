@@ -86,7 +86,7 @@ export const EMAIL_AUDIENCE = {
   RELAY_NOTICE: "staff",
   // «Anunță-mă când rămân N locuri» (§906): to the Administrators, about an event's places — no participant.
   PLACES_ALERT: "staff",
-  // «Eliberează singur locurile nesemnate la termen» (§NNN): to the Administrators, about an event's places — no participant.
+  // «Eliberează singur locurile nesemnate la termen» (§914): to the Administrators, about an event's places — no participant.
   UNSIGNED_RELEASED: "staff",
 } as const satisfies Record<EmailMessageType, EmailAudience>;
 

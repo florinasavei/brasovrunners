@@ -178,7 +178,7 @@ export default async function RegistrationBox({
   /** How many wait for a place (§147); the create form has nobody. */
   waiting?: number;
   /**
-   * Who holds the places now (§NNN), the allocator's own counts read by the page — the occupied places and by what — so
+   * Who holds the places now (§914), the allocator's own counts read by the page — the occupied places and by what — so
    * the capacity's help says how low it may go before the press, as the save refuses under the lock. Null on the create
    * form, and for a role that reads no registrations.
    */
@@ -249,7 +249,7 @@ export default async function RegistrationBox({
           .join(" ");
   const askTicked = event?.rsvpAskEnabled ?? true;
   /*
-    The kept places already given (§NNN): the places taken beyond the site's announced ones (`lineRoom` below nought). A
+    The kept places already given (§914): the places taken beyond the site's announced ones (`lineRoom` below nought). A
     raise first makes them up — they stay the club's — so only the places beyond them reach the line by themselves.
   */
   const keptBeyondSite =
@@ -287,7 +287,7 @@ export default async function RegistrationBox({
   })();
 
   /*
-    «Eliberează singur locurile nesemnate la termen» (§NNN): the saved deadline it acts at, said as a date and time — or
+    «Eliberează singur locurile nesemnate la termen» (§914): the saved deadline it acts at, said as a date and time — or
     that it does nothing on this event — then what unticked means, and that it ran, when it has.
   */
   const releaseDeadline = event && event.capacity !== null && typedStartOrNull(event) ? windowDeadlineOf(event) : null;
@@ -425,7 +425,7 @@ export default async function RegistrationBox({
                       helperText={[
                         t("editor.capacityHelp"),
                         /*
-                          Who holds the places now (§NNN): the save refuses under them, so the help says how low it goes. And
+                          Who holds the places now (§914): the save refuses under them, so the help says how low it goes. And
                           what a raise does for the people waiting — offered at once only while the places go out by
                           themselves (`offersOnItsOwn`); on «Nu» or the tick, they wait for the staff.
                         */
@@ -480,7 +480,7 @@ export default async function RegistrationBox({
                   </Stack>
 
                   {/*
-                    «De ce schimbi locurile? (opțional)» (§NNN): kept on «Istoric capacitate»'s row of a save that moves the
+                    «De ce schimbi locurile? (opțional)» (§914): kept on «Istoric capacitate»'s row of a save that moves the
                     capacity or the places kept for the club, and nowhere else. Only on a saved event: a new one's first row
                     needs no reason.
                   */}
@@ -533,7 +533,7 @@ export default async function RegistrationBox({
                     </CheckboxField>
                     <BoxNote more={t("editor.freePlacesByOfferOnlyHelpMore")}>{t("editor.freePlacesByOfferOnlyHelp")}</BoxNote>
                     {/*
-                      «Locuri păstrate pentru club» (§NNN): of the places, how many the site never gives — an empty box is 0. The
+                      «Locuri păstrate pentru club» (§914): of the places, how many the site never gives — an empty box is 0. The
                       line under it says what the site announces now, from the saved row, when places are kept.
                     */}
                     <RecallField
@@ -645,7 +645,7 @@ export default async function RegistrationBox({
                       )}
                       <BoxNote more={t("editor.confirmationWindowHelpMore", { hold })}>{t("editor.confirmationWindowHelp")}</BoxNote>
                       {/*
-                        «Eliberează singur locurile nesemnate la termen» (§NNN): under the deadline it acts at. A real tick
+                        «Eliberează singur locurile nesemnate la termen» (§914): under the deadline it acts at. A real tick
                         with its marker, off by default; the help names the saved deadline, or says it has no effect here
                         (a deadline at the start, no limit on the places), and that it ran when it has.
                       */}

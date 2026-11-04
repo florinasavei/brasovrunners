@@ -3,7 +3,7 @@ import { newcomerJoinsLine, offersOnItsOwn } from "@/modules/registrations/domai
 import { isWaitlistChoice, waitlistLengthPosted } from "../waitlist-choice";
 
 /**
- * «Controlul înscrierilor e foarte sensibil» (§NNN; the owner, 2026-11-04, right after a near-save of 175 → 190 places
+ * «Controlul înscrierilor e foarte sensibil» (§914; the owner, 2026-11-04, right after a near-save of 175 → 190 places
  * with twenty people waiting): before the event editor's save commits a change to a setting that decides who gets a
  * place, the save says each change «before → after» and what it does, in plain words — and an unchanged save asks
  * nothing. Pure, so it runs in the browser at the press (`notice.ts#resolvePlaceChanges`, inside ActionForm's one

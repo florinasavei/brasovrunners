@@ -141,7 +141,7 @@ export default function ConfirmDialog({
       <DialogContent>
         <DialogContentText id={descriptionId}>{spec.body}</DialogContentText>
         {spec.lines && spec.lines.length > 0 && (
-          // One fact a line (§NNN): each place setting the save changes, then what it does.
+          // One fact a line (§914): each place setting the save changes, then what it does.
           <Box component="ul" sx={{ mt: 1, mb: 0, pl: 2.5 }} data-testid="confirm-lines">
             {spec.lines.map((line, index) => (
               <Typography component="li" variant="body2" key={index} sx={{ mb: 0.5 }}>

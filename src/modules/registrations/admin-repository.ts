@@ -709,7 +709,7 @@ export async function readPlaceOutlook<T extends Record<string, unknown>>(db: Da
     waiting,
     internal: internal?.total ?? 0,
     outside,
-    // «Locuri păstrate pentru club» (§NNN): the free places split into the site's and the club's.
+    // «Locuri păstrate pentru club» (§914): the free places split into the site's and the club's.
     kept: event.placesKeptForClub,
     offersOnly: event.freePlacesByOfferOnly,
   });
@@ -861,7 +861,7 @@ export type RegistrationDetail = {
   eventTimezone: string;
   /** The event is cancelled: «Ce îi spui» says the cancellation rather than a deadline (§654). */
   eventCancelled: boolean;
-  /** The deadline at which «Eliberează singur locurile nesemnate la termen» (§NNN) will take this place (`releaseDeadlineOfHold`), or null. */
+  /** The deadline at which «Eliberează singur locurile nesemnate la termen» (§914) will take this place (`releaseDeadlineOfHold`), or null. */
   releaseDeadline: Date | null;
   /** «Ofertele din lista de așteptare pleacă automat» (§615) and «Arată public câți așteaptă» (§634), for the waiting sentence. */
   waitlistAutoOffer: boolean;
@@ -997,7 +997,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       offerEmailQueued: offerEmailQueuedAt(now),
       // «Ce îi spui» (§654): the event's clock, whether it is cancelled, the line's two settings and numbers, the live link.
       eventTimezone: events.timezone,
-      // …and what the release at the deadline reads (§NNN), for whether «confirmă până» says the place goes then.
+      // …and what the release at the deadline reads (§914), for whether «confirmă până» says the place goes then.
       releaseRules: {
         capacity: events.capacity,
         eventStatus: events.eventStatus,
@@ -1816,7 +1816,7 @@ export async function readPlaceDeadlines<T extends Record<string, unknown>>(
       waitlistCapacity: events.waitlistCapacity,
       // «Termene» says who gives a freed place (§615); «Locurile libere le dau doar eu» makes it the staff (§906).
       waitlistAutoOffer: lineOffersOnItsOwn(),
-      // «Eliberează singur locurile nesemnate la termen» (§NNN): the switch and the deadline it last ran for.
+      // «Eliberează singur locurile nesemnate la termen» (§914): the switch and the deadline it last ran for.
       releaseUnsignedAtDeadline: events.releaseUnsignedAtDeadline,
       unsignedReleasedFor: events.unsignedReleasedFor,
       held: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and not ${registrations.outsideCapacity})::int`,

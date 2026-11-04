@@ -21,7 +21,7 @@ export type PublicDoor = {
    */
   offersOnly: boolean;
   /**
-   * The places kept for the club nobody holds (§NNN), said only when the site shows no free place of its own: then the
+   * The places kept for the club nobody holds (§914), said only when the site shows no free place of its own: then the
    * page reads full (or the line's) while these are left for the staff to give. 0 otherwise — a door closed for another
    * reason, or site places still free, is not «only the kept places are left».
    */
@@ -73,7 +73,7 @@ export async function readPublicDoor<T extends Record<string, unknown>>(db: Data
   );
   const internal = event.registrationMode === "INTERNAL";
   /*
-    The free places split (§NNN), on the count the page says (`readPublicPlaces`' occupied): the kept ones are named
+    The free places split (§914), on the count the page says (`readPublicPlaces`' occupied): the kept ones are named
     only while the page reads full — the door open by its dates and its tick, and no place of the site's own left.
     A door closed for another reason, or site places still free beside the line, is not «only the kept are left».
   */

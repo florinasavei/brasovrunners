@@ -52,7 +52,7 @@ const EVERY_MESSAGE: Record<Exclude<EmailMessageType, RelayMessageType>, { butto
   // The outage grace's two, to the Administrators (§657).
   UNREACHABLE_WINDOW_OPENED: { button: false, why: "no registration" },
   PLACES_ALERT: { button: false, why: "no registration" },
-  // The deadline release's summary (§NNN), to the Administrators: about an event's places.
+  // The deadline release's summary (§914), to the Administrators: about an event's places.
   UNSIGNED_RELEASED: { button: false, why: "no registration" },
   UNREACHABLE_WINDOW_CLOSED: { button: false, why: "no registration" },
   // An invitation (§647): to an address, before any registration exists.

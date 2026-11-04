@@ -76,7 +76,7 @@ export default async function PublicNowLine({
         )}
       </Stack>
       {/*
-        «Locuri păstrate pentru club» (§NNN): the page reads full while kept places are left — said only then (the door open by
+        «Locuri păstrate pentru club» (§914): the page reads full while kept places are left — said only then (the door open by
         its dates and tick, no place of the site's own free), so it is never said beside a door closed for another reason.
       */}
       {(door.keptFree ?? 0) > 0 && (

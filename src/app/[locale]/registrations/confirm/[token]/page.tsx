@@ -94,7 +94,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
     */
     const byItself =
       done === "waitlist" || people.some((person) => person.status === "WAITLISTED") ? await spentLinkOffersByItself(token, ["VERIFY_REGISTRATION_EMAIL"], now) : true;
-    // The release at the deadline will take the place just held (§NNN): the strip names its deadline, never the paper at the desk.
+    // The release at the deadline will take the place just held (§914): the strip names its deadline, never the paper at the desk.
     const release = done !== "waitlist" ? await spentLinkReleaseMoment(token, ["VERIFY_REGISTRATION_EMAIL"], now) : null;
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -161,7 +161,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
     : await readReplacedActionLink(token, [{ purpose: "VERIFY_REGISTRATION_EMAIL", reason: context.reason }], locale, new Date());
 
   const journeyStep = spent ? spent.step : ("confirm" as const);
-  // A spent link whose registration waits for its declaration (§NNN): the release's deadline, when it will take the place.
+  // A spent link whose registration waits for its declaration (§914): the release's deadline, when it will take the place.
   const release = journeyStep === "declare" ? await spentLinkReleaseMoment(token, ["VERIFY_REGISTRATION_EMAIL"], new Date()) : null;
 
   return (

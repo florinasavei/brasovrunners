@@ -32,7 +32,7 @@ const { forecastAutomaticEmails } = await import("@/modules/notifications/foreca
 const { DEFAULT_DEADLINES } = await import("@/modules/deadlines/domain/deadlines");
 
 /**
- * «Eliberează singur locurile nesemnate la termen» (§NNN; the owner, 2026-11-04, for the 21 November race; BR-REQ-033-01,
+ * «Eliberează singur locurile nesemnate la termen» (§914; the owner, 2026-11-04, for the 21 November race; BR-REQ-033-01,
  * BR-REQ-080-01) on a real database. One run, at the participation window's deadline, inside `expireStaleHolds`: every
  * declaration hold that holds a counted place and is past its own deadline goes, whoever waits — never a special guest's
  * («În afara locurilor») — the places go to nobody by themselves («Locurile libere le dau doar eu» ticked, audited), each
@@ -166,7 +166,7 @@ async function refusedCode(work: Promise<unknown>): Promise<string> {
   throw new Error("expected a refusal");
 }
 
-describe("BR-REQ-033-01 «Eliberează singur locurile nesemnate la termen»: one release at the deadline (§NNN)", () => {
+describe("BR-REQ-033-01 «Eliberează singur locurile nesemnate la termen»: one release at the deadline (§914)", () => {
   it("before the deadline nothing; at it every counted unsigned hold goes, whoever waits — one stamp, the people told, one summary each, no offer, the tick audited", async () => {
     const event = await createRace(3);
     const ana = await join(event, "Ana");
@@ -306,7 +306,7 @@ describe("BR-REQ-033-01 «Eliberează singur locurile nesemnate la termen»: one
   });
 });
 
-describe("BR-REQ-033-01 the job wakes at the deadline and selects the event with nobody waiting (§NNN)", () => {
+describe("BR-REQ-033-01 the job wakes at the deadline and selects the event with nobody waiting (§914)", () => {
   it("next-work names the armed deadline; the selection takes the event at it, once", async () => {
     const event = await createRace(5);
     expect(await nextMaintenanceWork(db, NOW)).toEqual(DEADLINE);
@@ -342,7 +342,7 @@ describe("BR-REQ-033-01 the job wakes at the deadline and selects the event with
   });
 });
 
-describe("§NNN «Emailuri»: the forecast lists the release and honours the places kept for the club", () => {
+describe("§914 «Emailuri»: the forecast lists the release and honours the places kept for the club", () => {
   it("an armed race: one lapsed-hold email per counted unsigned hold at the deadline, the Administrators' summary, and no offer", async () => {
     const event = await createRace(2);
     await join(event, "Ana");

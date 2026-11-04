@@ -228,13 +228,13 @@ const PUBLIC_COLUMNS = {
   // itself — what the door and the join form say of an offer (`registration-cta.ts#offersByItself`, §906).
   waitlistAutoOffer: events.waitlistAutoOffer,
   /*
-    «Locuri păstrate pentru club» (§NNN), as a yes or no and nothing more: whether some of the places are the club's, so
+    «Locuri păstrate pentru club» (§914), as a yes or no and nothing more: whether some of the places are the club's, so
     no sentence promises that a freed place reaches the waiting list by itself (`offersByItself`) — a place freed while
     the site's places are taken stays the club's. The number itself is never public.
   */
   keepsPlacesForClub: sql<boolean>`(${events.placesKeptForClub} > 0 and ${events.capacity} is not null)`.mapWith(Boolean),
   /*
-    «Eliberează singur locurile nesemnate la termen» (§NNN) on a capped event: the steps and the screen after the form
+    «Eliberează singur locurile nesemnate la termen» (§914) on a capped event: the steps and the screen after the form
     say that an unsigned place goes at the window's deadline, never that it is held only while somebody waits.
   */
   releasesUnsignedAtDeadline: sql<boolean>`(${events.releaseUnsignedAtDeadline} and ${events.capacity} is not null)`.mapWith(Boolean),
@@ -783,7 +783,7 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       reminderHoursBefore: events.reminderHoursBefore,
       confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
       /*
-        «Eliberează singur locurile nesemnate la termen» (§NNN): whether the declaration's message says the place goes at
+        «Eliberează singur locurile nesemnate la termen» (§914): whether the declaration's message says the place goes at
         its deadline — the switch, the window's deadline, the places and the deadline it last ran for (the state is read above).
       */
       confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,

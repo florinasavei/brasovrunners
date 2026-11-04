@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.25-2026-11-04 -->
+<!-- PROJECT_BASELINE: BR-V4.26-2026-11-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.25-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.26-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1303,7 +1303,7 @@ started, with `expiry_reason = EVENT_STARTED`. No message is sent for it.
 when the place is wanted, and to as many holds as are wanted: `wanted = waiting - free`
 places, released oldest deadline first, or every hold once the event has started or is
 `COMPLETED` (`DECISIONS.md` §160) — and, on a capped event with «Eliberează singur locurile nesemnate la
-termen» ticked (`events.release_unsigned_at_deadline`, §NNN), once at the participation window's deadline
+termen» ticked (`events.release_unsigned_at_deadline`, §914), once at the participation window's deadline
 (when it is before the start): every hold that holds a counted place and is past its own deadline, whoever
 waits, never a special guest's or one whose first email is still queued; the places go to nobody by
 themselves («Locurile libere le dau doar eu» is ticked in the same transaction). The person whose hold is
@@ -1400,7 +1400,7 @@ Rules:
   invitation is one free after everyone eligible who waits** — `max(capacity - occupied - eligible
   WAITLISTED, 0)` (`invitationFreePlaces`), whatever «Oferte automate» says and whether the registration
   has closed: with offers off (§615) or after the close nobody is offered the free place on the send's
-  way, yet it is still the waiting row's, never an invitation's. The line claims only the site's places (§NNN):
+  way, yet it is still the waiting row's, never an invitation's. The line claims only the site's places (§914):
   with places kept for the club the rule is `max(capacity - occupied - min(waiting, max(capacity - K - occupied, 0)), 0)`,
   so a kept place nobody holds is an invitation's with no supplementary place while the public line waits. Each invitation that needs a counted
   place and finds none free in that sense — a full race, or anyone waiting — adds one supplementary place,
@@ -1421,7 +1421,7 @@ Rules:
   seat one too many. While it is on, nothing is offered by itself either, whatever `waitlist_auto_offer` says
   (`domain/waitlist.ts#offersOnItsOwn`, read by `fillAvailableSpots`' one gate): every free place is the staff's
   to give. On an uncapped event the switch changes nothing;
-- «Locuri păstrate pentru club» (`events.places_kept_for_club`, K, 0 by default, at most the capacity; `DECISIONS.md` §NNN):
+- «Locuri păstrate pentru club» (`events.places_kept_for_club`, K, 0 by default, at most the capacity; `DECISIONS.md` §914):
   a threshold on the same channel, never on `kind` and never a second formula (`domain/kept-places.ts`). A **public** entry
   takes a place only while fewer than `capacity − K` are taken, and the line's automatic offers fill places only up to
   `capacity − K`; every staff verb — the staff entry and the desk (still behind anybody waiting, §615/§872), «Trimite-i
@@ -1438,12 +1438,12 @@ Rules:
   under its lock: the Administrators are emailed once per crossing — down to N, then 0 — remembered in
   `places_alert_sent` and re-armed above N or by a save that changes N. It decides nothing about places;
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
-- every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place — measured on the site's places for the line and a public newcomer (`capacity − K`, clamped at nought, so never more holds than people want places), never for a public newcomer while the club's kept places are in use, on the whole capacity for a staff newcomer (§NNN) — or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
-- «Eliberează singur locurile nesemnate la termen» (`events.release_unsigned_at_deadline`, off by default; `DECISIONS.md` §NNN): the first capacity-changing transaction at or after the participation window's deadline (strictly before the start) on a scheduled, capped event releases every counted declaration hold past its own deadline, whoever waits — not a special guest's, not one whose first email is queued, never an offer, a family's reservation or an invitation — writes the deadline it ran for (`events.unsigned_released_for`, no version bump) and ticks «Locurile libere le dau doar eu» (version + 1, audited `via: "deadline"`), so it offers and seats nobody; once per deadline, a moved deadline arms it again; a hold given or lapsing after it follows §160; it only moves holds to `EXPIRED` under the lock, so it adds no way past the capacity;
+- every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place — measured on the site's places for the line and a public newcomer (`capacity − K`, clamped at nought, so never more holds than people want places), never for a public newcomer while the club's kept places are in use, on the whole capacity for a staff newcomer (§914) — or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
+- «Eliberează singur locurile nesemnate la termen» (`events.release_unsigned_at_deadline`, off by default; `DECISIONS.md` §914): the first capacity-changing transaction at or after the participation window's deadline (strictly before the start) on a scheduled, capped event releases every counted declaration hold past its own deadline, whoever waits — not a special guest's, not one whose first email is queued, never an offer, a family's reservation or an invitation — writes the deadline it ran for (`events.unsigned_released_for`, no version bump) and ticks «Locurile libere le dau doar eu» (version + 1, audited `via: "deadline"`), so it offers and seats nobody; once per deadline, a moved deadline arms it again; a hold given or lapsing after it follows §160; it only moves holds to `EXPIRED` under the lock, so it adds no way past the capacity;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
 - public read may subtract eligible waiting entries as a conservative safeguard while maintenance is catching up, but it never mutates state;
 - scheduled maintenance expires holds and allocates released places;
-- increasing the site's places — a higher capacity, a cap lifted, or fewer places kept for the club — allocates the queue first, up to `capacity − K` (§147, §NNN);
+- increasing the site's places — a higher capacity, a cap lifted, or fewer places kept for the club — allocates the queue first, up to `capacity − K` (§147, §914);
 - the capacity changes in four places only: the event editor's save, and an Administrator's
   press for one named person on a full event — «Trimite-i oferta» (also pressed as «Oferă-i un loc acum»,
   right after a vouched entry in its transaction, §888) or «Dă-i un loc acum» — which,
@@ -1456,12 +1456,12 @@ Rules:
   invitations (§647), which adds one place per invitation that finds none free, only when the form
   carried exactly the locked capacity plus that number (`invitationRaises`), each raise audited with
   the invitation it is for;
-- decreasing capacity below occupied places is rejected, the refusal saying the places taken by kind (§NNN); the places kept
+- decreasing capacity below occupied places is rejected, the refusal saying the places taken by kind (§914); the places kept
   for the club are never more than the capacity, refused naming the box (and the date of a series);
 - every change of the capacity or of the places kept is written as an audit row in the save's own transaction —
   `event.capacity_changed` `{from, to, occupied, offered, via, reason?, version}` and `event.places_kept_changed`
   `{from, to, via, reason?, version}` — from the editor, a series, an import, a create, a duplicate and the dates a series
-  makes (no actor), and the supplementary places' rows carry `version`, `occupied` and the offer's `via` (§NNN);
+  makes (no actor), and the supplementary places' rows carry `version`, `occupied` and the offer's `via` (§914);
 - no cached free count is a source of truth;
 - no capacity or queue decision may depend on the maintenance job having run; every read
   and every capacity-changing transaction evaluates offer expiry against the current time, and
@@ -1473,7 +1473,7 @@ Rules:
 - only capped/internal/full/open events;
 - email confirmed before active waitlist;
 - FIFO by `waitlisted_at`, then stable ID;
-- existing eligible waiting entries always have priority over later direct registrations — on the site's places: a place kept for the club (§NNN) is the staff's to give, an invitation's included;
+- existing eligible waiting entries always have priority over later direct registrations — on the site's places: a place kept for the club (§914) is the staff's to give, an invitation's included;
 - one active registration per runner per participant/event (§389: a family on one address, up to the club's limit per address; the runner is keyed by `name_key`, `foldName` of `registered_name`);
 - promotion creates `WAITLIST_OFFERED` and `hold_expires_at`;
 - offer deadline: the club's offer window ("Termene", §377; 24 h by default), capped by close/start — an Administrator's chosen offer («Trimite-i oferta») by the start alone (§642);
@@ -1871,9 +1871,9 @@ events
 - difficulty EASY|MODERATE|HARD null   -- §11.7; null means the club has not said
 - cost_type FREE|PAID null            -- §11.7; whether it charges, never how much
 - capacity integer null
-- places_kept_for_club integer NOT NULL DEFAULT 0  -- §10.6, §NNN; «Locuri păstrate pentru club», 0 to the capacity, 0 uncapped
-- release_unsigned_at_deadline boolean NOT NULL DEFAULT false  -- §10.6, §NNN; never copied by a duplicate, a series or a repeat
-- unsigned_released_for timestamptz null  -- §NNN; the deadline the release last ran for; a memory, no version bump, never exported
+- places_kept_for_club integer NOT NULL DEFAULT 0  -- §10.6, §914; «Locuri păstrate pentru club», 0 to the capacity, 0 uncapped
+- release_unsigned_at_deadline boolean NOT NULL DEFAULT false  -- §10.6, §914; never copied by a duplicate, a series or a repeat
+- unsigned_released_for timestamptz null  -- §914; the deadline the release last ran for; a memory, no version bump, never exported
 - registration_mode
 - registration_opens_at timestamptz null
 - registration_closes_at timestamptz null
@@ -1916,7 +1916,7 @@ Checks:
   `modules/content/events/service.ts#transitionEvent`;
 - non-negative distance/elevation;
 - positive capacity;
-- places kept for the club nought or more, and never more than a capacity (`events_places_kept_*`, §NNN);
+- places kept for the club nought or more, and never more than a capacity (`events_places_kept_*`, §914);
 - close not before open/not after start for internal;
 - capacity/declaration internal only;
 - approved declaration required internal;
@@ -2761,7 +2761,7 @@ On explicit POST with valid token/action session:
    called off in between must not still be signed into;
 5. expire stale holds (a lapsed declaration hold is stale only as far as the queue wants its
    place, or once the event has started, §160; a cancelled event was refused at step 4, and its
-   holds are left standing, §331) — and when this sweep is the window deadline's own release (§NNN)
+   holds are left standing, §331) — and when this sweep is the window deadline's own release (§914)
    and it released this very hold, return without re-allocating or signing, so the release commits
    and the answer is the same whichever transaction reached the deadline first; a signature before
    the deadline keeps its place;
@@ -2780,7 +2780,7 @@ On explicit POST with valid token/action session:
 - count Confirmed;
 - count unexpired Pending declaration and Waitlist offered holds;
 - count eligible Waitlisted entries for allocation priority;
-- return `max((capacity - K) - occupied - eligibleWaitlisted, 0)` for a capped event, K the places kept for the club (§NNN), and the announced capacity `capacity - K` beside it;
+- return `max((capacity - K) - occupied - eligibleWaitlisted, 0)` for a capped event, K the places kept for the club (§914), and the announced capacity `capacity - K` beside it;
 - exclude pending email confirmations;
 - do not mutate queue state from the public GET;
 - do not persist mutable counter as sole source of truth;
@@ -2805,7 +2805,7 @@ On explicit POST with valid token/action session:
 Within an event-locked transaction, called by cancellation, hold expiry, capacity increase, and before later direct allocation:
 
 1. expire stale holds;
-2. compute available places — the site's room, `capacity − K − occupied`, never a place kept for the club (§NNN);
+2. compute available places — the site's room, `capacity − K − occupied`, never a place kept for the club (§914);
 3. while place available and eligible Waitlisted exists (bounded):
    - select oldest `WAITLISTED` row using safe lock (`FOR UPDATE SKIP LOCKED` or equivalent);
    - transition to `WAITLIST_OFFERED`;
@@ -3156,7 +3156,7 @@ Registration maintenance:
 - expire declaration holds — only as many as the queue wants places for, oldest deadline
   first, or all of them on an event that has started (`DECISIONS.md` §160); a lapsed hold
   nothing wants is kept, and its event is not even selected — except the window deadline's own
-  release (§NNN): an event whose armed deadline has come is selected with **no** «somebody waits»
+  release (§914): an event whose armed deadline has come is selected with **no** «somebody waits»
   condition (`deadlineReleaseDueSql`), runs it once (its memory column), and `next-work` wakes the job
   at that deadline;
 - select scheduled events only: a `COMPLETED` event is over (§82), and a `CANCELLED` one is
@@ -3262,7 +3262,7 @@ PLACES_ALERT
 UNSIGNED_RELEASED
 ```
 
-`UNSIGNED_RELEASED` (§NNN) is queued by `unsigned-release.ts#completeDeadlineRelease`, in the transaction
+`UNSIGNED_RELEASED` (§914) is queued by `unsigned-release.ts#completeDeadlineRelease`, in the transaction
 of the window deadline's own release, to the `PLACES_ALERT` audience (every Administrator and
 Superadministrator with an address, in their own language) — only when the release freed a hold or left
 one unsigned — once per deadline and person (`unsigned-released:<event>:<deadline>:<staff>`): the counts in

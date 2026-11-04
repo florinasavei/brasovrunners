@@ -524,7 +524,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   );
 
   it(
-    "§NNN «Locuri păstrate pentru club»: capacity 12, K 2 — twenty public confirmations, a «Trimite-i oferta» and a staff entry at once: the public never past 10, nobody past 12, the capacity unchanged",
+    "§914 «Locuri păstrate pentru club»: capacity 12, K 2 — twenty public confirmations, a «Trimite-i oferta» and a staff entry at once: the public never past 10, nobody past 12, the capacity unchanged",
     async () => {
       const event = await createInternalEvent(12);
       await db.update(events).set({ placesKeptForClub: 2, waitlistAutoOffer: false }).where(eq(events.id, event.id));
@@ -564,7 +564,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   );
 
   it(
-    "§NNN «Eliberează singur locurile nesemnate la termen»: the deadline passed, ten lapsed holds, six transactions reach it at once — one release, one memory, one summary each, no offer, nobody past the capacity",
+    "§914 «Eliberează singur locurile nesemnate la termen»: the deadline passed, ten lapsed holds, six transactions reach it at once — one release, one memory, one summary each, no offer, nobody past the capacity",
     async () => {
       const now = new Date();
       // The start a day ahead, the window's deadline two days before it: passed a day ago.

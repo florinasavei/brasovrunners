@@ -112,7 +112,7 @@ export function offersByItself(
   availablePlaces: number | null,
 ): boolean {
   /*
-    «Locuri păstrate pentru club» (§NNN): with places kept, a place freed while the site's places are taken stays the club's,
+    «Locuri păstrate pentru club» (§914): with places kept, a place freed while the site's places are taken stays the club's,
     so the words are the organizers' (`kept-places.ts#offerWordsByItself`). Only where places are counted.
   */
   const kept = availablePlaces !== null && event.keepsPlacesForClub === true;

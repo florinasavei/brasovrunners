@@ -32,7 +32,7 @@ describe("§384 ActionForm asks first", () => {
     expect(source).toMatch(/const ticked = resolveBodyCount\(spec, valuesOf\);\s*if \(!ticked\) return unasked\(\);/);
     // A body naming the fields the press changes (§645): none moved, the press goes through unasked.
     expect(source).toMatch(/const named = resolveChangedFields\(ticked, [\s\S]*?\}\);\s*if \(!named\) return unasked\(\);/);
-    // The event editor's place settings (§NNN): each change and what it does; none changed, a dialog only for them asks nothing.
+    // The event editor's place settings (§914): each change and what it does; none changed, a dialog only for them asks nothing.
     expect(source).toMatch(/const placed = resolvePlaceChanges\(named, valueOf\);\s*if \(!placed\) return unasked\(\);\s*event\.preventDefault\(\);/);
     // A series save's email line is summed over the dates ticked at this press, then asked (§384).
     expect(source).toMatch(/const counted = resolveEmailCount\(placed, valuesOf\);/);

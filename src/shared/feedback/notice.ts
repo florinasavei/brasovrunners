@@ -389,7 +389,7 @@ export type ConfirmSpec = {
    */
   tick?: ConfirmTick;
   /**
-   * The event editor's place settings (§NNN, «Controlul înscrierilor e foarte sensibil»): each one the press changes,
+   * The event editor's place settings (§914, «Controlul înscrierilor e foarte sensibil»): each one the press changes,
    * «before → after», and what it does, worked out from the form as posted and the numbers the page read
    * (`resolvePlaceChanges`). Nothing changed, no lines — and a dialog that exists only for them asks nothing.
    */
@@ -419,7 +419,7 @@ export type PlaceChangeSpec = {
 };
 
 /**
- * The dialog with the place settings' lines, worked out from the form as posted (§NNN): null when it exists only for
+ * The dialog with the place settings' lines, worked out from the form as posted (§914): null when it exists only for
  * them and no place setting moved — the caller then lets the press through — else the spec with its `lines`. A form
  * posting another registration mode than the site's own changes no place (the service ignores the hidden boxes).
  */

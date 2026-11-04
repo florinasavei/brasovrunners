@@ -97,7 +97,7 @@ export type MyRegistration = {
    */
   holdExpiresAt: Date | null;
   /**
-   * The deadline at which «Eliberează singur locurile nesemnate la termen» (§NNN) will take this place
+   * The deadline at which «Eliberează singur locurile nesemnate la termen» (§914) will take this place
    * (`releaseDeadlineOfHold`), or null: «confirmă până» then says the place goes at it, never a paper on race day.
    */
   releaseDeadline: Date | null;
@@ -167,7 +167,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       checkinCode: registrations.checkinCode,
       checkedInAt: registrations.checkedInAt,
       holdExpiresAt: registrations.holdExpiresAt,
-      // What the release at the deadline reads (§NNN): the switch, the places, the window and the deadline it last ran for.
+      // What the release at the deadline reads (§914): the switch, the places, the window and the deadline it last ran for.
       outsideCapacity: registrations.outsideCapacity,
       capacity: events.capacity,
       confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,

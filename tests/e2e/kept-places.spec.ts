@@ -6,7 +6,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox } from "./support/fold";
 
 /**
- * «Locuri păstrate pentru club» (§NNN; BR-REQ-034-01, BR-REQ-050-02): what only a browser can see. The Administrator types
+ * «Locuri păstrate pentru club» (§914; BR-REQ-034-01, BR-REQ-050-02): what only a browser can see. The Administrator types
  * K in the event editor and presses «Salvează»; the save first says each place setting it changes «before → after» and
  * what the site will announce («Controlul înscrierilor e foarte sensibil»), and a save that changes no place setting asks
  * nothing. Then the public event page reads full — «Toate cele 7 locuri s-au ocupat», the waiting list's door — while
@@ -76,7 +76,7 @@ async function fitsTheScreen(page: Page) {
   expect(overflow).toBeLessThanOrEqual(0);
 }
 
-test.describe("§NNN «Locuri păstrate pentru club» from the editor to the public page", () => {
+test.describe("§914 «Locuri păstrate pentru club» from the editor to the public page", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("K typed in the editor: the save says the change and what the site announces, and the event page reads full while kept places remain", async ({ page }) => {

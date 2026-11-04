@@ -169,9 +169,9 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
       freePlacesByOfferOnly: event.freePlacesByOfferOnly,
       publicRegistrationOpen: event.publicRegistrationOpen,
       placesAlertAt: event.placesAlertAt,
-      // «Locuri păstrate pentru club» (§NNN), as the editor sets it.
+      // «Locuri păstrate pentru club» (§914), as the editor sets it.
       placesKeptForClub: event.placesKeptForClub,
-      // «Eliberează singur locurile nesemnate la termen» (§NNN), as the editor sets it; its memory never travels.
+      // «Eliberează singur locurile nesemnate la termen» (§914), as the editor sets it; its memory never travels.
       releaseUnsignedAtDeadline: event.releaseUnsignedAtDeadline,
       opensAt: event.registrationOpensAt?.toISOString() ?? null,
       opensSoon: event.registrationOpensSoon,

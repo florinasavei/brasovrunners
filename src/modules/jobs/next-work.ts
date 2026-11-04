@@ -257,7 +257,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
   const familyLapse = await nextFamilyEntryLapse(db, now);
   // An invitation's deadline (§647): the sweep ends it and the place it kept goes to the line.
   const invitationLapse = await nextInvitationLapse(db, now);
-  // «Eliberează singur locurile nesemnate la termen» (§NNN): the participation window's deadline the release is armed for.
+  // «Eliberează singur locurile nesemnate la termen» (§914): the participation window's deadline the release is armed for.
   const deadlineRelease = await nextDeadlineRelease(db, now);
   // `queueConfirmationRetries` (§653): the verification email re-sent, the club's hours after the last one left.
   const confirmationRetry = await nextConfirmationRetry(db, now, settings);
@@ -282,7 +282,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
 }
 
 /**
- * «Eliberează singur locurile nesemnate la termen» (§NNN, `registrations/domain/unsigned-release.ts`): the soonest
+ * «Eliberează singur locurile nesemnate la termen» (§914, `registrations/domain/unsigned-release.ts`): the soonest
  * participation-window deadline still ahead on a scheduled, capped event with the box ticked and the release not yet
  * run for that deadline — whether or not anybody has registered or waits, since the release runs (and ticks «Locurile
  * libere le dau doar eu») at the deadline either way. The job's own selection is `deadlineReleaseDueSql`, from the

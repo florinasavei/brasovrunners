@@ -42,7 +42,7 @@ type Props = {
   /**
    * The event's participation window (§104), when it has one that is still ahead: the third
    * step then says "confirm a week before" rather than "sign within thirty minutes". `releases`: «Eliberează singur
-   * locurile nesemnate la termen» (§NNN) takes an unsigned place at the deadline, even with nobody waiting.
+   * locurile nesemnate la termen» (§914) takes an unsigned place at the deadline, even with nobody waiting.
    */
   window?: { opensDays: number; deadlineDays: number; releases?: boolean } | null;
   /**
@@ -107,7 +107,7 @@ export default async function RegistrationSteps({ folded = false, window = null,
     The third step's last clause says what a lapsed hold does with a waiting list (§908): «apoi trece la următorul»
     only while a place reaches the line by itself — else the place stays free for the organizers to give. With a
     window, the clause speaks only of the hold (`bodyLater`, `bodyLaterAtStart`), true either way — and, while the
-    release at the deadline is on (§NNN), that the unsigned place goes then whoever waits (`bodyLaterReleased`).
+    release at the deadline is on (§914), that the unsigned place goes then whoever waits (`bodyLaterReleased`).
   */
   const stepBody = (key: string) =>
     key === "declaration" && window

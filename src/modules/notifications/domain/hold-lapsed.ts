@@ -47,14 +47,14 @@ export function holdLapsedNext(input: {
   publicRegistrationOpen?: boolean | null;
   /** «Locurile libere le dau doar eu» (`events.free_places_by_offer_only`, §906); absent is off. */
   freePlacesByOfferOnly?: boolean | null;
-  /** «Locuri păstrate pentru club» (`events.places_kept_for_club`, §NNN): a public entry is measured on the rest; absent is 0. */
+  /** «Locuri păstrate pentru club» (`events.places_kept_for_club`, §914): a public entry is measured on the rest; absent is 0. */
   placesKeptForClub?: number | null;
 }): HoldLapsedNext {
   if (!input.registrationOpen) return "desk";
   // The dates say open, the organizers say not on the site (§906): the card's `PAUSED`, never a button.
   if (!publicDoorOpen(input)) return "paused";
   const entry = { freePlacesByOfferOnly: input.freePlacesByOfferOnly === true, channel: "public" as const, capacity: input.capacity };
-  // The site's places (§NNN): the capacity less those kept for the club, the allocator's threshold for a public entry.
+  // The site's places (§914): the capacity less those kept for the club, the allocator's threshold for a public entry.
   const free = hasDirectAvailability({ capacity: announcedCapacity(input), occupied: input.occupied, eligibleWaitlisted: input.waitlisted });
   if (!newcomerJoinsLine({ waitlisted: input.waitlisted, ...entry }) && free) return "register";
   if (waitlistHasRoom({ waitlistCapacity: input.waitlistCapacity, waitlisted: input.waitlisted, openOffers: input.openOffers })) return "waitlist";

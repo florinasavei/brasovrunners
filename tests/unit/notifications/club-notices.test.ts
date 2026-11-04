@@ -153,7 +153,7 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       "UNREACHABLE_WINDOW_CLOSED",
       // «Anunță-mă când rămân N locuri» (§906): to the Administrators.
       "PLACES_ALERT",
-      // The deadline release's summary (§NNN): to the Administrators.
+      // The deadline release's summary (§914): to the Administrators.
       "UNSIGNED_RELEASED",
       // The members' shop (§683): to a member's account and the club's mailbox.
       "SHOP_ORDER_PLACED",

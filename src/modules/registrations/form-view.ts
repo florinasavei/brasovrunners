@@ -70,7 +70,7 @@ export type RegistrationFormView = {
   costHost: string | null;
   /**
    * The participation window's days while it is still ahead (§104), for the five steps — and `releases`, whether
-   * «Eliberează singur locurile nesemnate la termen» (§NNN) takes an unsigned place at its deadline.
+   * «Eliberează singur locurile nesemnate la termen» (§914) takes an unsigned place at its deadline.
    */
   stepsWindow: { opensDays: number; deadlineDays: number; releases: boolean } | null;
 };

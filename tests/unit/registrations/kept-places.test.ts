@@ -19,12 +19,12 @@ import { holdLapsedNext } from "@/modules/notifications/domain/hold-lapsed";
 import { publicFill } from "@/modules/events/domain/registration-cta";
 
 /**
- * «Locuri păstrate pentru club» (§NNN; BR-REQ-034-01, BR-REQ-034-02, BR-REQ-035-01), the pure rules: a threshold on
+ * «Locuri păstrate pentru club» (§914; BR-REQ-034-01, BR-REQ-034-02, BR-REQ-035-01), the pure rules: a threshold on
  * the entry's channel — the public form and the line's automatic offers measured on `capacity − K`, every staff verb
  * on the whole capacity — never a second capacity formula. K at 0, every event's default, changes nothing anywhere.
  */
 
-describe("BR-REQ-034-01 kept places: the numbers an entry is measured on (§NNN)", () => {
+describe("BR-REQ-034-01 kept places: the numbers an entry is measured on (§914)", () => {
   it("clamps K to the places, reads an absent or uncapped K as nothing", () => {
     expect(keptOf({ capacity: 175, placesKeptForClub: 10 })).toBe(10);
     expect(keptOf({ capacity: 5, placesKeptForClub: 10 })).toBe(5);
@@ -83,7 +83,7 @@ describe("BR-REQ-034-01 kept places: the numbers an entry is measured on (§NNN)
   });
 });
 
-describe("BR-REQ-034-01 kept places in the public count (§NNN)", () => {
+describe("BR-REQ-034-01 kept places in the public count (§914)", () => {
   it("counts a lapsed hold as free for a public newcomer only where the allocator would let it go for one", () => {
     const line = { waitlistCapacity: 0, waitlisted: 0, openOffers: 0 };
     // The club's places not in use: as before, the lapsed holds are free for the next newcomers.
@@ -102,7 +102,7 @@ describe("BR-REQ-034-01 kept places in the public count (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-035-01 §160 with kept places: never more holds released than people want places (§NNN)", () => {
+describe("BR-REQ-035-01 §160 with kept places: never more holds released than people want places (§914)", () => {
   it("keeps the identity table for every free ≥ 0", () => {
     for (const lapsed of [0, 1, 3, 30]) {
       for (const waiting of [0, 1, 20]) {
@@ -121,7 +121,7 @@ describe("BR-REQ-035-01 §160 with kept places: never more holds released than p
   });
 });
 
-describe("BR-REQ-034-02 invitations: the line claims only the site's places (§NNN)", () => {
+describe("BR-REQ-034-02 invitations: the line claims only the site's places (§914)", () => {
   it("is today's number with nothing kept", () => {
     for (const capacity of [1, 10, 175]) {
       for (const occupied of [0, 5, capacity]) {
@@ -145,7 +145,7 @@ describe("BR-REQ-034-02 invitations: the line claims only the site's places (§N
   });
 });
 
-describe("BR-REQ-034-02 «Locuri»: the free places split (§NNN)", () => {
+describe("BR-REQ-034-02 «Locuri»: the free places split (§914)", () => {
   const counts = { capacity: 175, occupied: 163, confirmed: 150, declaration: 13, offered: 0, invited: 0, family: 0, waiting: 0, internal: 0, outside: 0 };
 
   it("says the site's free places and the club's, the whole outlook otherwise unchanged", () => {
@@ -160,7 +160,7 @@ describe("BR-REQ-034-02 «Locuri»: the free places split (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-034-02 the places refused in the editor's words (§NNN)", () => {
+describe("BR-REQ-034-02 the places refused in the editor's words (§914)", () => {
   it("refuses K above the places, naming the box and, for a series, the date", () => {
     expect(() => assertPlacesKeptWithin(10, 10)).not.toThrow();
     expect(() => assertPlacesKeptWithin(null, 50)).not.toThrow();
@@ -193,7 +193,7 @@ describe("BR-REQ-034-02 the places refused in the editor's words (§NNN)", () =>
   });
 });
 
-describe("BR-REQ-080-01 a lapsed hold's next step, on the site's places (§NNN)", () => {
+describe("BR-REQ-080-01 a lapsed hold's next step, on the site's places (§914)", () => {
   const open = { registrationOpen: true, waitlisted: 0, openOffers: 0, waitlistCapacity: 0 };
 
   it("says «te poți înscrie din nou» only while a site place is free, the kept ones aside", () => {

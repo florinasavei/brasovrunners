@@ -12,7 +12,7 @@ import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Eliberează singur locurile nesemnate la termen» (§NNN; the review's should-fix) — the registration journey's strip on
+ * «Eliberează singur locurile nesemnate la termen» (§914; the review's should-fix) — the registration journey's strip on
  * every page that draws its declaration step: while the release will take the place, the step says to sign online by the
  * release's deadline and that the place goes then, and never «sau pe hârtie la masa de înscrieri în ziua cursei»; with
  * the switch off, today's words, the desk included.
@@ -207,7 +207,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("§NNN the reader the pages ask: when the release will take the place a spent link speaks of", () => {
+describe("§914 the reader the pages ask: when the release will take the place a spent link speaks of", () => {
   it("the person's own hold for their own links, a hold given now for a family's link, the accepted registration for an invitation's", async () => {
     const race = await createRace(true);
     const ana = await register(race.id, "PENDING_DECLARATION");
@@ -239,7 +239,7 @@ describe("§NNN the reader the pages ask: when the release will take the place a
   });
 });
 
-describe("§NNN the journey's strip on every page that draws the declaration step", () => {
+describe("§914 the journey's strip on every page that draws the declaration step", () => {
   for (const release of [true, false]) {
     for (const locale of LOCALES) {
       const name = `${release ? "the release armed" : "the switch off"} (${locale})`;

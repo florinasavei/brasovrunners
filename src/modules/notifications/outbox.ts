@@ -138,7 +138,7 @@ export type EnqueueEmailParams = {
    */
   notBefore?: Date;
   /**
-   * No club copy of this message (§NNN), whatever the club's list says: the club is told of it another way — the
+   * No club copy of this message (§914), whatever the club's list says: the club is told of it another way — the
    * Administrators' one summary of a deadline's release (`UNSIGNED_RELEASED`) stands for the person's messages it caused.
    */
   noClubCopy?: boolean;

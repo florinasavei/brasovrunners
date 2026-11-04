@@ -293,7 +293,7 @@ describe("§647 §642 on a full race: one supplementary place per invitation, on
     expect((await invitationsOf(event.id)).every((row) => row.supplementaryRaise)).toBe(true);
     const raised = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.capacity_raised_for_invitation"));
     expect(raised.map((row) => row.metadataJson)).toEqual([expect.objectContaining({ from: 1, to: 2 }), expect.objectContaining({ from: 2, to: 3 })]);
-    // «Istoric capacitate»'s fields (§NNN): each raise carries the row's version, in order, and the places taken.
+    // «Istoric capacitate»'s fields (§914): each raise carries the row's version, in order, and the places taken.
     const versions = raised.map((row) => (row.metadataJson as { version: number }).version);
     expect(versions[1]).toBe(versions[0] + 1);
     for (const row of raised) expect(row.metadataJson).toEqual(expect.objectContaining({ occupied: expect.any(Number), invitationId: expect.any(String) }));

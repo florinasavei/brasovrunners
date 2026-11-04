@@ -349,7 +349,7 @@ function groupById<T extends { locale: Locale; slug: string }>(
  * - `available`: the free places (`readPublicPlaces`, the allocator's formula);
  * - `capacity`: the event's own number of places, off the very row the formula counted, for
  *   "12 înscriși din 50 de locuri" (§346 public fill count) — the places the site announces, the capacity less
- *   «Locuri păstrate pentru club» (§NNN), which nothing public names;
+ *   «Locuri păstrate pentru club» (§914), which nothing public names;
  * - `waitlistRoom`: how many more the waiting list takes (§350 waiting-list length), `null` when
  *   it has no limit, counted from the same two counts as the places — an offer lapsing, the key's
  *   clock, frees a slot in the line exactly when it frees a place;
@@ -374,7 +374,7 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
   /*
     "count-switch" (§634): the entry's shape gained `waitlistCountPublic`, so its key changed with it, as
     the start list's keys did for §628 — no entry written without the switch is ever read by code that
-    asks for it. "numbers-switch" (§668): the same again for `participantCountPublic`. "kept-places" (§NNN):
+    asks for it. "numbers-switch" (§668): the same again for `participantCountPublic`. "kept-places" (§914):
     `capacity` became the announced one, the capacity less «Locuri păstrate pentru club», so no entry that said the
     whole capacity is ever read by code that says the announced one.
   */
@@ -386,7 +386,7 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
     if (places.availablePlaces === null || places.announcedCapacity === null) return null;
     return {
       available: places.availablePlaces,
-      // The places the site announces (§NNN): the whole capacity while nothing is kept for the club.
+      // The places the site announces (§914): the whole capacity while nothing is kept for the club.
       capacity: places.announcedCapacity,
       waitlistRoom: places.waitlistRoom,
       waitlistCapacity: event.waitlistCapacity,
