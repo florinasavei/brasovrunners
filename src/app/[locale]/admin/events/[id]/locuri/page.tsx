@@ -145,7 +145,7 @@ export default async function RacePlanPage({ params }: Props) {
 
       <Panel glyph="registration" title={t("racePlan.places.title")} data-testid="race-plan-places">
         {outlook ? (
-          <PlaceOutlook outlook={outlook} locale={locale} door={door ? { door, eventId: id, locale, listQuery: "" } : undefined} />
+          <PlaceOutlook outlook={outlook} locale={locale} elites={eliteEntries} door={door ? { door, eventId: id, locale, listQuery: "" } : undefined} />
         ) : (
           <>
             <Typography variant="body2" color="text.secondary" data-testid="race-plan-uncapped">
@@ -171,7 +171,7 @@ export default async function RacePlanPage({ params }: Props) {
       </Panel>
 
       <Panel glyph="kit" collapsible title={t("racePlan.order.title")} aside={orderAside} data-testid="race-plan-order-panel">
-        <KitCount kits={kits} volunteers={volunteersWithKit} />
+        <KitCount kits={kits} locale={locale} volunteers={volunteersWithKit} elites={eliteEntries} />
         <OrderTotals now={kitsNow} totals={totals} bibs={bibs} eliteEntries={eliteEntries} eventId={id} locale={locale} />
       </Panel>
 
