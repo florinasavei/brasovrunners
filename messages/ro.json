@@ -7767,7 +7767,7 @@
           "refused": "refuzat",
           "captured": "n-a ajuns la nimeni (QA)"
         },
-        "site": "{at} · de pe site (persoana însăși)",
+        "site": "{at} · de pe site",
         "unrecorded": "{at} · nu s-a notat cine l-a trimis",
         "tries": {
           "one": "{count} încercare",

@@ -99,7 +99,7 @@ function latestState(row: EmailHistoryRow, t: T, locale: Locale, now: Date): str
 }
 
 /**
- * «10:02 · Anulează înscrierea · de Ana Pop», «… · automat: întreținerea înscrierilor», «… · de pe site (persoana însăși)»
+ * «10:02 · Anulează înscrierea · de Ana Pop», «… · automat: întreținerea înscrierilor», «… · de pe site»
  * — the site only for a row known to be the person's own (`fromSite`), never for one queued before presses were
  * recorded, which says «… · nu s-a notat cine l-a trimis» (§NNN).
  */

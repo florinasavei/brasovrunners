@@ -229,7 +229,7 @@ describe("§NNN a registration's emails", () => {
     expect(page).toContain(">20 de încercări<");
     expect(page).toContain("automat: întreținerea înscrierilor");
     expect(page).toMatch(/Retrimite emailul · de Ana Admin/);
-    expect(page).toContain("11:59 · de pe site (persoana însăși)");
+    expect(page).toContain("11:59 · de pe site");
     expect(page).toContain(">Retrimis manual<");
     expect(page).toContain("Ultimul răspuns al furnizorului: 550 mailbox unavailable");
     expect(page).toContain("Respins");
@@ -257,7 +257,7 @@ describe("§NNN a registration's emails", () => {
     expect(page).toContain(">1 try<");
     expect(page).toContain("3 tries · next try: 12:30");
     expect(page).toContain(">20 tries<");
-    expect(page).toContain("from the site (the person themselves)");
+    expect(page).toContain("from the site");
     expect(page).toContain("by Ana Admin");
     expect(page).toContain("+ 1 to the club&#x27;s mailboxes");
     expect(page).not.toMatch(/emails\.(history|today|causes|types)\./);
