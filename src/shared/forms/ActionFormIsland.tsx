@@ -369,7 +369,7 @@ export default function ActionFormIsland({
       const value = data.get(field);
       return typeof value === "string" ? value : null;
     };
-    // The event editor's place settings (§NNN): each change and what it does; none changed, nothing to ask for them.
+    // The event editor's place settings (§NNN): each change and what it does; none changed, a dialog only for them asks nothing.
     const placed = resolvePlaceChanges(named, valueOf);
     if (!placed) return unasked();
     event.preventDefault();
