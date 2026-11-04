@@ -650,3 +650,33 @@ describe("§NNN the words, Română and English", () => {
     expect(without.every((spec) => spec.also === undefined)).toBe(true);
   });
 });
+
+/*
+  The owner, 2026-11-04: «trebuie să poată lumea să se înscrie prin invitație, chiar dacă înscrierile pe site sunt închise».
+  The invitation is its own door (§647, §906): «Înscrieri publice deschise» unticked, «Locurile libere le dau doar eu»
+  ticked and the registration window closed shut the site's form, never an invitation — sent, its link open, accepted
+  and signed — and the place it holds is the invitation's.
+*/
+describe("§647, §906 an invitation is its own door: the site's door shut and the window closed take no invitation away", () => {
+  it("sent, opened, accepted and signed while the public form is refused", async () => {
+    const event = await createEvent(5);
+    const closedAt = new Date(NOW.getTime() - DAY);
+    await db.update(events).set({ publicRegistrationOpen: false, freePlacesByOfferOnly: true, registrationClosesAt: closedAt }).where(eq(events.id, event.id));
+    const shut = { ...event, publicRegistrationOpen: false, freePlacesByOfferOnly: true, registrationClosesAt: closedAt } as EventInput;
+
+    // The site's own form: refused, nothing written.
+    expect(await refusal(submitRegistration(db, shut, submission("Public", "public@example.invalid", at(1)), at(1), "REAL", { source: "PUBLIC", createdByStaffUserId: null }))).toBeTruthy();
+    expect(await db.select().from(registrations)).toEqual([]);
+
+    // The invitation: sent, its link open, accepted into a held place, signed.
+    await inviteToEventByStaff(db, shut, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 3, outsideCapacity: false }, admin, at(2));
+    const { secret } = await invitationEmailTo("ana@example.invalid", at(3));
+    expect((await readInvitationLink(db, secret, "ro", at(3))).kind).toBe("open");
+    const accepted = await acceptInvitation(db, secret, submission("Ana", "ana@example.invalid", at(4)), at(4));
+    expect(accepted.ok).toBe(true);
+    const registration = accepted.ok ? accepted.registration : null;
+    expect(registration).toMatchObject({ status: "PENDING_DECLARATION", elite: false });
+    await signDeclaration(db, shut, registration!.id, await signingInput(db, at(5), "Ana Munteanu"), at(5));
+    expect((await rowOf("Ana")).status).toBe("CONFIRMED");
+  });
+});
