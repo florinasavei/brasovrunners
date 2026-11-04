@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.23-2026-11-04 -->
+<!-- PROJECT_BASELINE: BR-V4.24-2026-11-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.23-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.24-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2318,7 +2318,7 @@ whose change sends at the job's pass — say it in a `shared/feedback/MailLine.t
 no click. `tests/unit/shared/emailing-presses.test.ts` follows every posting of every emailing press, handed-down props
 included, and fails one that says nothing.
 
-**«Trimite emailul»** (`DECISIONS.md` §NNN). A press whose person's email may sensibly stay unsent offers a box, ticked
+**«Trimite emailul»** (`DECISIONS.md` §912). A press whose person's email may sensibly stay unsent offers a box, ticked
 by default: in its question (`ConfirmSpec.emailOptOut`, worded by the builder's `optOut`; the form carries a hidden
 `sendEmail` drawn `on`, and the answer writes `on` or `off` into it) or beside its button (`MailLine`'s `optOut`: the
 box, then a hidden `off` under the same name). One parser reads it, `shared/forms/send-email.ts#sendEmailOf` — no value,
@@ -3312,7 +3312,7 @@ colleague's language — who added them, as what, the sign-in page as the action
 the sign-in page asserts who they are. Sent again from the row until they first sign in
 (`DECISIONS.md` §141). With «Trimite invitația acum» unticked the colleague is added and
 nothing is queued — nor is Zitadel asked; «Retrimite invitația» later sends the invitation and
-makes the Zitadel account when it is missing (`DECISIONS.md` §NNN).
+makes the Zitadel account when it is missing (`DECISIONS.md` §912).
 
 `CLUB_CONFIRMATION_NOTICE` is the club's own: queued in the transaction that confirms a real
 registration, one row per address the club named under "anunță-ne când cineva confirmă" on

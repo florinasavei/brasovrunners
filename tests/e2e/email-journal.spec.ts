@@ -6,7 +6,7 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * §NNN (the design «telling the owner about every email a staff press sends», slice 1) — one press through Next
+ * §912 (the design «telling the owner about every email a staff press sends», slice 1) — one press through Next
  * itself: «Anulează înscrierea» runs as a real Server Action, so the email press scope (`notifications/press.ts`, an
  * `AsyncLocalStorage` the unit tests prove over PGlite by calling the services) must reach the insert through Next's
  * own request and its drain after the response. Every row the press queued carries its cause, one press id and the
@@ -53,7 +53,7 @@ async function seedRunner(name: string, email: string): Promise<string> {
   });
 }
 
-test.describe("§NNN every email a staff press queues carries the press, and «Emailuri azi» lists it", () => {
+test.describe("§912 every email a staff press queues carries the press, and «Emailuri azi» lists it", () => {
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one runner, cancelled once");
   });
