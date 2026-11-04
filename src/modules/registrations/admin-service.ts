@@ -579,7 +579,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   actor: Pick<StaffUser, "id" | "role">,
   input: CreateRegistrationByStaffInput,
   now: Date,
-): Promise<{ registrationId: string | null; status: RegistrationStatus | null }> {
+): Promise<StaffEntryResult> {
   assertDesk(actor);
 
   if (!input.relayedByParticipantRequest) {
@@ -703,6 +703,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     entry without the tick is today's, untouched; the fast track's paper confirmation below stays its own step either way.
   */
   let created: Registration | undefined;
+  let elitePublic = false;
   if (elite) {
     const entered = await db.transaction(async (tx) => {
       const written = await enter(tx);
@@ -710,8 +711,13 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
       return { written, publicChanged: marked?.public === true };
     });
     created = entered.written;
-    // A restarted row whose club ticks (§910) the mark now brings into force: told after the commit, as the mark's own press.
-    if (entered.publicChanged) revalidatePublicContent("events", "places");
+    elitePublic = entered.publicChanged;
+    /*
+      A restarted row whose club ticks (§910) the mark now brings into force: told after the commit, as the mark's own
+      press. Run inside a caller's transaction (`enterOnWaitlistByStaff`), the commit above is a savepoint's: the caller
+      reads `elitePublic` and tells the pages again after its own commit, so a render in between keeps no old rows.
+    */
+    if (elitePublic) revalidatePublicContent("events", "places");
   } else {
     created = await enter(db);
   }
@@ -740,8 +746,15 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   // The row this entry wrote, for «Trece pe lista oficială» (§854), which carries the line's note onto it, and
   // the state the entry itself landed in — the line or a hold for a vouched entry (§872), before any fast-track
   // confirmation — for the short form's toast («Adaugă pe lista de așteptare»).
-  return { registrationId: created?.id ?? null, status: created?.status ?? null };
+  return { registrationId: created?.id ?? null, status: created?.status ?? null, elitePublic };
 }
+
+/**
+ * What the staff entry wrote: the row and the state the entry landed in, and `elitePublic` — «Elită» (§NNN) brought a
+ * restarted row's club ticks (§910) into force, so the public pages were told. A caller that ran the entry inside its own
+ * transaction (`enterOnWaitlistByStaff`) tells them again after its commit.
+ */
+export type StaffEntryResult = { registrationId: string | null; status: RegistrationStatus | null; elitePublic: boolean };
 
 export type WaitlistEntryByStaffInput = {
   eventId: string;
@@ -839,11 +852,14 @@ export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
         );
     }
     if (input.note) await addRegistrationNote(tx, actor, created.registrationId, input.note, now);
-    return { registrationId: created.registrationId, status, capacityRaisedTo };
+    return { registrationId: created.registrationId, status, capacityRaisedTo, elitePublic: created.elitePublic };
   });
+  const { elitePublic, ...entered } = result;
   // The capacity is on every public page that counts places (§333): told after the commit, as the offer's own press.
-  if (result.capacityRaisedTo !== null) revalidatePublicContent("places");
-  return result;
+  if (entered.capacityRaisedTo !== null) revalidatePublicContent("places");
+  // «Elită» on a restarted row with the club's ticks (§910): the entry told the pages inside this transaction; again now it committed.
+  if (elitePublic) revalidatePublicContent("events", "places");
+  return entered;
 }
 
 /**

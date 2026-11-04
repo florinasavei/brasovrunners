@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, gt, lte, min, type SQL, sql } from "drizzle-orm";
 import { type EventInvitation, eventInvitations } from "@/db/schema/event-invitations";
 import { events } from "@/db/schema/events";
+import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
@@ -148,15 +149,23 @@ export async function findInvitationOfRegistration<T extends Record<string, unkn
   return row ? { sentAt: row.sentAt, invitedByName: row.invitedByName ?? null } : undefined;
 }
 
-/** An event's invitations, the newest first, for the backoffice's «Invitații», each with who sent it (a staff name, or null once that row is gone). */
-export async function listEventInvitations<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<(EventInvitation & { invitedByName: string | null })[]> {
+/**
+ * An event's invitations, the newest first, for the backoffice's «Invitații», each with who sent it (a staff name, or null
+ * once that row is gone) and, once accepted, whether the registration it became is marked «Elită» now (`acceptedElite`,
+ * §NNN) — the mark as it stands, which «Nu mai e elită» may have taken off since the send's tick; null while not accepted.
+ */
+export async function listEventInvitations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<(EventInvitation & { invitedByName: string | null; acceptedElite: boolean | null })[]> {
   const rows = await db
-    .select({ invitation: eventInvitations, invitedByName: staffUsers.displayName })
+    .select({ invitation: eventInvitations, invitedByName: staffUsers.displayName, acceptedElite: registrations.elite })
     .from(eventInvitations)
     .leftJoin(staffUsers, eq(staffUsers.id, eventInvitations.invitedByStaffUserId))
+    .leftJoin(registrations, eq(registrations.id, eventInvitations.acceptedRegistrationId))
     .where(eq(eventInvitations.eventId, eventId))
     .orderBy(desc(eventInvitations.createdAt), asc(eventInvitations.id));
-  return rows.map((row) => ({ ...row.invitation, invitedByName: row.invitedByName ?? null }));
+  return rows.map((row) => ({ ...row.invitation, invitedByName: row.invitedByName ?? null, acceptedElite: row.acceptedElite ?? null }));
 }
 
 /**

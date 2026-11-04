@@ -224,8 +224,9 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                       <Chip size="small" variant="outlined" label={t(row.memberStaffUserId ? "invitations.origin.member" : "invitations.origin.typed")} data-testid="invitation-origin" />
                       {/* «Invitat special» (§649): the registrations' own chip, glyph and hint, not a bare word. */}
                       {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="invitation-outside-chip" />}
-                      {/* «Elită» (§NNN): the registrations list's own chip, on an invitation still open or the one it became; staff-only. */}
-                      {row.elite && (state === "sent" || state === "accepted") && (
+                      {/* «Elită» (§NNN): the registrations list's own chip, staff-only — on an open invitation by the send's tick, on an
+                          accepted one by the registration it became as it stands now («Nu mai e elită» takes it off here too). */}
+                      {(state === "sent" ? row.elite : state === "accepted" && row.acceptedElite === true) && (
                         <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="invitation-elite-chip" />
                       )}
                     </Stack>

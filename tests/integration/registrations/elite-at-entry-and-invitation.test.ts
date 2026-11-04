@@ -37,7 +37,14 @@ import ro from "../../../messages/ro.json";
  *
  * Read from a real database (PGlite).
  */
-const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en" }));
+const state = vi.hoisted(() => ({
+  db: undefined as unknown,
+  actor: undefined as unknown,
+  locale: "ro" as "ro" | "en",
+  /** Every tell of the public pages, with how many of the test's own `db.transaction` were open at that moment. */
+  told: [] as { contents: string[]; depth: number }[],
+  depth: 0,
+}));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }), headers: async () => new Headers() }));
 vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
@@ -55,7 +62,9 @@ vi.mock("@/modules/staff-identity/session", () => ({
 vi.mock("@/modules/notifications/drain", () => ({ drainOutboxAfterResponse: () => undefined, drainOutboxRowsAfterResponse: () => undefined }));
 vi.mock("@/modules/public-cache/cache", async (original) => ({
   ...(await original<typeof import("@/modules/public-cache/cache")>()),
-  revalidatePublicContent: () => undefined,
+  revalidatePublicContent: (...contents: string[]) => {
+    state.told.push({ contents, depth: state.depth });
+  },
 }));
 // «Invitații» is a Server Component: its words from the catalogues, as the page has them.
 vi.mock("next-intl/server", async (original) => {
@@ -70,7 +79,8 @@ vi.mock("@/shared/feedback/confirm-words", async (original) => ({
   confirmWords: async () => ({ cancel: "Cancel" }),
 }));
 
-const { createRegistrationByStaff, enterOnWaitlistByStaff } = await import("@/modules/registrations/admin-service");
+const { cancelRegistrationByStaff, createRegistrationByStaff, enterOnWaitlistByStaff } = await import("@/modules/registrations/admin-service");
+const { setRegistrationElite, setRegistrationEliteTick } = await import("@/modules/registrations/elite-mark");
 const { confirmEmail, inviteToEventByStaff, signDeclaration, submitRegistration, withdrawInvitationByStaff } = await import("@/modules/registrations/service");
 const { acceptInvitation, readInvitationLink } = await import("@/modules/registrations/invitations");
 const { listActiveRegistrationsForParticipant } = await import("@/modules/registrations/my-registrations");
@@ -109,6 +119,8 @@ beforeEach(async () => {
   await resetTables(db);
   forgetCachedDeadlines();
   state.locale = "ro";
+  state.told = [];
+  state.depth = 0;
   const pair: LegalDocumentTranslationInput[] = [
     { locale: "ro", title: "Document", body: { sections: [{ paragraphs: ["p"] }] } },
     { locale: "en", title: "Document", body: { sections: [{ paragraphs: ["p"] }] } },
@@ -316,6 +328,42 @@ describe("§NNN «Elită» at the staff entry: marked in the entry's own transac
     expect((await rowOf("Mara")).elite).toBe(false);
   });
 
+  it("the one-press on a restarted row whose club ticks (§910) the mark brings back: the public pages told again once the press's own transaction committed", async () => {
+    const event = await createEvent(5);
+    // Mara marked, hidden from the site by the club, unmarked, cancelled: her row keeps the club's tick, inert.
+    const { registrationId } = await createRegistrationByStaff(db, admin, entryOf(event.id, "Mara", { vouchAddress: true, elite: true }), at(1));
+    await setRegistrationEliteTick(db, admin, registrationId!, "onSite", false, at(2));
+    await setRegistrationElite(db, admin, registrationId!, false, at(3));
+    await cancelRegistrationByStaff(db, admin, registrationId!, "a test", at(4));
+    expect(await rowOf("Mara")).toMatchObject({ status: "CANCELLED", elite: false, eliteHiddenFromSite: true });
+
+    // The press's transaction counted: a tell made inside it is made before its commit.
+    const transaction = db.transaction.bind(db);
+    db.transaction = (async (...args: Parameters<typeof transaction>) => {
+      state.depth += 1;
+      try {
+        return await transaction(...args);
+      } finally {
+        state.depth -= 1;
+      }
+    }) as typeof db.transaction;
+    state.told = [];
+    try {
+      await enterOnWaitlistByStaff(
+        db,
+        admin,
+        { eventId: event.id, firstName: "Mara", lastName: "Munteanu", email: "mara@example.invalid", locale: "ro", relayedByParticipantRequest: true, elite: true },
+        at(5),
+      );
+    } finally {
+      db.transaction = transaction;
+    }
+    const mara = await rowOf("Mara");
+    expect(mara).toMatchObject({ id: registrationId, elite: true, eliteHiddenFromSite: true });
+    expect(mara.status).not.toBe("CANCELLED");
+    expect(state.told).toContainEqual({ contents: ["events", "places"], depth: 0 });
+  });
+
   it("a refused entry takes the mark with it: the line full, nothing written — no row, no mark, no trail", async () => {
     const event = await createEvent(1);
     await db.update(events).set({ waitlistCapacity: 0 }).where(eq(events.id, event.id));
@@ -462,6 +510,34 @@ describe("§NNN «Invitații» wears the «Elită» chip on an elite invitation,
     const chips = Object.fromEntries(rows.map((row) => [nameOf(row), chipsOf(row).map((chip) => [chip.props.glyph, chip.props.label])]));
     const word = (locale === "ro" ? ro : en).Admin.registrations.elite.chip;
     expect(chips).toEqual({ "Ana Pop": [["elite", word]], "Ion Pop": [], "Dan Pop": [] });
+  });
+
+  it("an accepted invitation wears the mark of the registration it became, as it stands: «Nu mai e elită» takes the chip off, «Marchează ca elită» puts it on", async () => {
+    const event = await createEvent(5);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 3, outsideCapacity: false, elite: true }, admin, NOW);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Dan Pop", email: "dan@example.invalid" }], days: 3, outsideCapacity: false }, admin, NOW);
+    const accepted: Record<string, string> = {};
+    for (const [name, email] of [["Ana", "ana@example.invalid"], ["Dan", "dan@example.invalid"]] as const) {
+      const { secret } = await invitationEmailTo(email, at(1));
+      const outcome = await acceptInvitation(db, secret, submission(name, `${name.toLowerCase()}-x@example.invalid`, at(2)), at(2));
+      if (!outcome.ok) throw new Error(`${name}'s invitation was not accepted`);
+      accepted[name] = outcome.registration.id;
+    }
+
+    const chipsNow = async () => {
+      const tree = await InvitationsPanel({ db, locale: "ro", eventId: event.id, mayManage: false, sendAction: (async () => null) as never, resendAction: (async () => null) as never, withdrawAction: (async () => null) as never, now: at(3) });
+      const rows = elementsOf(tree).filter((element) => element.props["data-testid"] === "invitation-row");
+      const nameOf = (row: ReactElement<Record<string, unknown>>) => elementsOf(row).map((element) => element.props.children).find((child) => typeof child === "string" && / Pop$/.test(child));
+      return Object.fromEntries(rows.map((row) => [nameOf(row), elementsOf(row).some((element) => element.type === StatusChip && element.props.testId === "invitation-elite-chip")]));
+    };
+    expect(await chipsNow()).toEqual({ "Ana Pop": true, "Dan Pop": false });
+
+    await setRegistrationElite(db, admin, accepted.Ana, false, at(3));
+    await setRegistrationElite(db, admin, accepted.Dan, true, at(3));
+    expect(await chipsNow()).toEqual({ "Ana Pop": false, "Dan Pop": true });
+    // The send's own tick stays what it was: the trail of what was sent.
+    const stored = await db.select({ name: eventInvitations.name, elite: eventInvitations.elite }).from(eventInvitations);
+    expect(Object.fromEntries(stored.map((row) => [row.name, row.elite]))).toEqual({ "Ana Pop": true, "Dan Pop": false });
   });
 });
 

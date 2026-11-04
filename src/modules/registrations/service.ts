@@ -805,7 +805,11 @@ async function invitationToAdopt<T extends Record<string, unknown>>(db: Transact
  *
  * An invitation sent with «Elită» (§NNN) marks the registration that took it over, in this same transaction, as the
  * link's press does (`invitations.ts#acceptInvitation`): the person the club named is the one it marked. The public
- * pages hear of it with the place itself: the route that gave the place tells `places` after its own commit.
+ * pages hear of it with the place itself, and `places` is enough for it: the only public reads the mark changes — a
+ * restarted row whose club ticks (§910) it brings into force — are the start list, its counts and the results, each
+ * filed under both `places` and `events` (`public-cache/reads.ts`), so the `places` this place's move tells
+ * (`transitionRegistration`, expired again after the response by the cache itself, past this commit) expires them too.
+ * The mark's own `public` flag is therefore not carried out to the many routes that reach the allocator.
  */
 async function markInvitationAdopted<T extends Record<string, unknown>>(
   db: Transaction<T>,
