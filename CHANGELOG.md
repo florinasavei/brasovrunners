@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.23-2026-11-04
+
+- **«Planul locurilor» for each race** — one read-only page per event, from «Planul locurilor» under «Locuri» on the registrations list: the places by who holds them, the people outside them (special guests, the elite list, volunteers with a kit), every runner — the elite list's names included, a registered elite counted once — both lists, the deadlines, the kits needed now and the kits and race numbers to order if every place fills with their parts written out, and «Istoric capacitate» — every change of the places with when, who, from → to and why, and a line wherever one went unrecorded. §911.
 ## BR-V4.22-2026-11-04
 
 - **The kits, the elites, the site's tick and «Voluntari», counted as they read** — «Kituri de pregătit: 188 — 179 de alergători + 9 voluntari», the separate elite list among the runners and linked to its card; an «Elite» fold on the registrations list with the separate list and the registrations marked «Elită»; the same elites among «Locuri»'s people at the start and beside the bibs («+ 2 BIB-uri de elită»); shut by its tick, «Pe site acum» says «înscrierile sunt oprite» above the one tick «Înscrierile pe site sunt deschise»; the «Voluntari» tab counts everyone still in, with a pill for those to confirm or place. §909.

@@ -189,6 +189,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // The hard delete's confirmation screen (BR-REQ-037-06): written here by hand, like
       // every other one, which is the property this test exists to keep.
       "/admin/events/[id]/erase",
+      // «Planul locurilor» (§911): one event's places on one read-only page, by hand like the pages beside it.
+      "/admin/events/[id]/locuri",
       // The organizer's own message to the event's participants (§364): written by hand, per send.
       "/admin/events/[id]/mesaje",
       // A race's results (§808), entered or imported by race number and ranked: by hand, like the pages beside it.
