@@ -107,7 +107,7 @@ test.describe("§NNN «Locuri păstrate pentru club» from the editor to the pub
     await expect(lines).toContainText("Libere după salvare: 3 din 10 — pe site 0, păstrate pentru club 3.");
     await fitsTheScreen(page);
     await confirmDialog(page, "Verifică ce se schimbă la locuri");
-    await expect(page.getByTestId("toast-live")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("toast")).toBeVisible({ timeout: 30_000 });
     await expect.poll(() => keptOf(eventId), { timeout: 30_000 }).toBe(3);
 
     // A save that changes no place setting asks nothing about the places: it saves at once.
@@ -116,7 +116,7 @@ test.describe("§NNN «Locuri păstrate pentru club» from the editor to the pub
     await page.locator('[name="acknowledgeLiveEdit"]').check();
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page.getByRole("dialog", { name: "Verifică ce se schimbă la locuri" })).toHaveCount(0);
-    await expect(page.getByTestId("toast-live")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("toast")).toBeVisible({ timeout: 30_000 });
 
     // The public page: full at the site's seven, the waiting list's door — nothing public names the kept places.
     expect((await page.goto(`/ro/evenimente/${slug}`))?.status()).toBe(200);
