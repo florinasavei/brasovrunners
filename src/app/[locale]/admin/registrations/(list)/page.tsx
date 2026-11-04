@@ -2032,7 +2032,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               if (verbs.includes("eliteUnmark")) {
                 items.push({ kind: "submit", icon: "elite", label: t("registrations.elite.unmark"), formId: `elite-${row.id}` });
                 /*
-                  The marked elite's two ticks (§NNN), where the mark is the Administrator's to take off: «Apare în clasament» and «Apare pe
+                  The marked elite's two ticks (§910), where the mark is the Administrator's to take off: «Apare în clasament» and «Apare pe
                   site», each a tick in the menu posting the other state. They only ever hide — ticked, the person's own ticks decide.
                 */
                 items.push(
@@ -2195,7 +2195,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                     </ActionForm>
                   )}
-                  {/* The two ticks of a marked elite (§NNN): ask nothing (§384) — they tell nobody, only hide, and the same tick undoes them. */}
+                  {/* The two ticks of a marked elite (§910): ask nothing (§384) — they tell nobody, only hide, and the same tick undoes them. */}
                   {verbs.includes("eliteUnmark") &&
                     ([
                       ["inResults", `elite-results-${row.id}`, !row.eliteHiddenFromResults],

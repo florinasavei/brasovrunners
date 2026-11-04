@@ -66,7 +66,7 @@ describe("§808 buildResultsCsv", () => {
     expect(row).toContain('"a, ""b""\nc"');
   });
 
-  // §NNN: an elite left out of the ranking is in the club's own file, its place saying so in the reader's words.
+  // §910: an elite left out of the ranking is in the club's own file, its place saying so in the reader's words.
   it("writes «în afara clasamentului» where an elite hors concours would have its place", () => {
     const csv = buildResultsCsv(header, [{ position: ro.Admin.results.outOfRanking, positionSex: null, positionCategory: null, bib: 7, name: "Eliud Kipchoge", sex: "", category: "", status: "Sosit", time: "0:35:00", chip: "", note: null }]);
     expect(csv.split("\r\n")[1]).toBe("în afara clasamentului,,,7,Eliud Kipchoge,,,Sosit,0:35:00,,");

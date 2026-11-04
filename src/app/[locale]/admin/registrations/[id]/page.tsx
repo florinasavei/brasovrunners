@@ -958,7 +958,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       )}
 
       {/*
-        «Elită: clasament și site» (§NNN; the owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe site»): drawn while the
+        «Elită: clasament și site» (§910; the owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe site»): drawn while the
         registration is marked «Elită» (§897), for every role that reads the page; the two ticks are the Administrator's — the house's
         `TickButton`, each in a form posting the state it wants — and read-only, the same boxes disabled, for the others. They ask
         nothing (§384): they tell nobody, only ever hide, and the same tick undoes them. The help says what each hides.

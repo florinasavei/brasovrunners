@@ -20,7 +20,7 @@ import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Apare pe site» (§NNN; the owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe site»; BR-REQ-039-01, BR-REQ-060-01) —
+ * «Apare pe site» (§910; the owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe site»; BR-REQ-039-01, BR-REQ-060-01) —
  * on real PostgreSQL. A line of the race's elite list ticked «Apare pe site» is named under «Elitele cursei», a name and a number and
  * nothing else, only while the event's public list is on; a registered runner marked «Elită» stays on «Cine vine» by their own tick,
  * and the club's tick only hides — a «Participant (nume ascuns)» row when confirmed, no row when pending — never showing anybody who
@@ -179,7 +179,7 @@ function form(fields: Record<string, string>): FormData {
   return posted;
 }
 
-describe("§NNN «Elitele cursei» on the event page", () => {
+describe("§910 «Elitele cursei» on the event page", () => {
   it("names only the lines ticked «Apare pe site», in the order typed, with their number — under «Cine vine», never in its table or count", async () => {
     await register({ name: "Ana Popescu" });
     await line("Eliud Kipchoge", { bibNumber: 7, onSite: true, at: at(2) });
@@ -224,7 +224,7 @@ describe("§NNN «Elitele cursei» on the event page", () => {
   });
 });
 
-describe("§NNN a registered elite on «Cine vine»: the club's tick only hides (BR-REQ-039-01)", () => {
+describe("§910 a registered elite on «Cine vine»: the club's tick only hides (BR-REQ-039-01)", () => {
   it("unticked, a ticked runner is a «Participant (nume ascuns)» row while confirmed, and counted as one", async () => {
     await register({ name: "Ana Popescu", confirmedAt: at(1) });
     await register({ name: "Dan Ionescu", confirmedAt: at(2), elite: true, hiddenFromSite: true });
@@ -255,7 +255,7 @@ describe("§NNN a registered elite on «Cine vine»: the club's tick only hides 
   });
 });
 
-describe("§NNN the ticks' readers and Server Actions (BR-REQ-060-01)", () => {
+describe("§910 the ticks' readers and Server Actions (BR-REQ-060-01)", () => {
   it("lets the Organizer read the ticks and refuses Tehnic", async () => {
     const dan = await register({ name: "Dan Ionescu", elite: true, hiddenFromSite: true });
     await register({ name: "Ana Popescu" });

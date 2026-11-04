@@ -3,7 +3,7 @@ import { foldEliteName, type HorsConcoursRow, horsConcoursBibs, NOBODY_OUT, type
 import { type Rankable, rankResults } from "@/modules/results/domain/ranking";
 
 /**
- * §NNN, BR-REQ-050-02 — «Apare în clasament» unticked: an elite runs hors concours. The ranking places it nowhere and counts it in
+ * §910, BR-REQ-050-02 — «Apare în clasament» unticked: an elite runs hors concours. The ranking places it nowhere and counts it in
  * nobody's position, the others ranked as if it had not run; which stored row is an elite's is the results module's own link — the
  * registration a row is filed under, the confirmed registration holding a typed row's number, an elite line's number, and for a line
  * with no number its name, matched only when exactly one typed row carries it.
@@ -18,7 +18,7 @@ const runner = (bibNumber: number, gunMinutes: number, sex: Rankable["sex"], age
   ...(outOfRanking ? { outOfRanking: true } : {}),
 });
 
-describe("§NNN rankResults — a row hors concours", () => {
+describe("§910 rankResults — a row hors concours", () => {
   it("places the elite nowhere and ranks the others as if it had not run: overall, by sex and by category", () => {
     const ranked = rankResults([runner(7, 30, "MALE", 35, true), runner(101, 40, "MALE", 35), runner(102, 42, "FEMALE", 35), runner(103, 45, "MALE", 35)]);
     expect(ranked.get(7)).toMatchObject({ positionOverall: null, positionSex: null, positionCategory: null, outOfRanking: true });
@@ -43,7 +43,7 @@ const typed = (bibNumber: number, displayName: string | null): HorsConcoursRow =
 const filed = (bibNumber: number, registrationId: string): HorsConcoursRow => ({ bibNumber, registrationId, displayName: null });
 const nobodyHolds = () => null;
 
-describe("§NNN horsConcoursBibs — which row is an elite's", () => {
+describe("§910 horsConcoursBibs — which row is an elite's", () => {
   it("takes nobody out while no tick is off", () => {
     expect(horsConcoursBibs([typed(7, "Eliud Kipchoge"), filed(101, "reg-a")], NOBODY_OUT, nobodyHolds)).toEqual(new Set());
   });

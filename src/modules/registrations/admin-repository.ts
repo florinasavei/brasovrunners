@@ -66,7 +66,7 @@ export type RegistrationListRow = {
   outsideCapacity: boolean;
   /** «Elită» (§897): the bib prints as an elite bib — the row's chip and the «⋮»'s mark or unmark. */
   elite: boolean;
-  /** The two ticks of a marked elite (§NNN), stored as what the club hid: the «⋮»'s «Apare în clasament» and «Apare pe site». */
+  /** The two ticks of a marked elite (§910), stored as what the club hid: the «⋮»'s «Apare în clasament» and «Apare pe site». */
   eliteHiddenFromResults: boolean;
   eliteHiddenFromSite: boolean;
   /** «Folosește lista de invitați speciali» of the row's event (§647): the «⋮» offers «Pune pe listă» only while it is on (§747). */
@@ -790,7 +790,7 @@ export type RegistrationDetail = {
   outsideCapacity: boolean;
   /** «Elită» (§897): the bib prints as an elite bib — the page's chip, for every role that reads it. */
   elite: boolean;
-  /** The two ticks of a marked elite (§NNN), stored as what the club hid: the page's «Elită» card, read by every role, changed by the Administrator. */
+  /** The two ticks of a marked elite (§910), stored as what the club hid: the page's «Elită» card, read by every role, changed by the Administrator. */
   eliteHiddenFromResults: boolean;
   eliteHiddenFromSite: boolean;
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */

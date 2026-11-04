@@ -196,7 +196,7 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
     expect(block(await render({ elite: { ...elite, registered } }, "en"), "bib-elite-registered")).toContain("registered");
   });
 
-  // §NNN: per elite, «Apare în clasament» and «Apare pe site» — the house's tick, posting a form beside the save form.
+  // §910: per elite, «Apare în clasament» and «Apare pe site» — the house's tick, posting a form beside the save form.
   it("draws each line's two ticks as the Administrator's ticks, each naming its own small form, and says what they do", async () => {
     const registered = [{ id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Ana Pop", bibNumber: 12, inResults: false, onSite: true }];
     const card = block(await render({ elite: { ...elite, registered } }), "bib-elite");

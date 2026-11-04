@@ -33,7 +33,7 @@ export type Rankable = {
   /** The age on the event's day (`ageOnRaceDay`), or null without a birth date. */
   ageOnRaceDay: number | null;
   /**
-   * An elite the Administrator left out of the ranking (§NNN, `hors-concours.ts`): no position of its own, and counted in nobody
+   * An elite the Administrator left out of the ranking (§910, `hors-concours.ts`): no position of its own, and counted in nobody
    * else's — the others are ranked as if it had not run. Absent or false, an ordinary result.
    */
   outOfRanking?: boolean;
@@ -46,7 +46,7 @@ export type Ranked = {
   positionCategory: number | null;
   /** The sex and band, `FEMALE:from30`; null without both answers (`categoryKeyOf`). */
   categoryKey: string | null;
-  /** Set only on a row that runs hors concours (§NNN): no positions, left off every public list. */
+  /** Set only on a row that runs hors concours (§910): no positions, left off every public list. */
   outOfRanking?: true;
 };
 
@@ -68,7 +68,7 @@ function positionsOf(sorted: readonly Rankable[]): Map<number, number> {
   return positions;
 }
 
-/** A result that is placed: finished with a time, and not hors concours (§NNN). */
+/** A result that is placed: finished with a time, and not hors concours (§910). */
 function placed(row: Rankable): boolean {
   return row.status === "FINISHED" && row.gunTimeMs !== null && row.outOfRanking !== true;
 }
@@ -84,7 +84,7 @@ function byTime(rows: readonly Rankable[]): Rankable[] {
  * (`DNF`, `DNS`, `DSQ`) has no position at all; a finisher without a sex has no position by sex and none by
  * category, one without a birth date has an overall and a sex position and no category — the Excel's footer says
  * «Fără categorie» for the same rows (§787), and nothing is guessed. The bands are the race's own (`starts`, §850), the
- * platform's when it chose none. A row hors concours (`outOfRanking`, §NNN) is placed nowhere and moves nobody: it keeps its
+ * platform's when it chose none. A row hors concours (`outOfRanking`, §910) is placed nowhere and moves nobody: it keeps its
  * category and carries `outOfRanking`.
  */
 export function rankResults(rows: readonly Rankable[], starts: readonly number[] = DEFAULT_AGE_BAND_STARTS): Map<number, Ranked> {

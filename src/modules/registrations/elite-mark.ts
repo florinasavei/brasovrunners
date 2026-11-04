@@ -27,7 +27,7 @@ import { isUuid } from "@/shared/ids";
  * `registration.elite_unmarked` on the registration, its metadata the new value alone. A press that finds the mark
  * already as asked (a stale list, a colleague first) writes nothing and no row.
  *
- * **The elite's two ticks (§NNN; the owner, 2026-11-04).** On a marked registration the Administrator may untick
+ * **The elite's two ticks (§910; the owner, 2026-11-04).** On a marked registration the Administrator may untick
  * «Apare în clasament» — its result runs hors concours: out of the public results and of everybody's positions — and
  * «Apare pe site» — the public «Cine vine» reads it as one that did not tick «Vreau să apar». **A staff tick only ever
  * hides**: ticked is no override at all, and the person's own ticks decide (`registrations.elite_hidden_from_*`), so
@@ -69,7 +69,7 @@ export async function setRegistrationElite<T extends Record<string, unknown>>(
       metadata: { elite },
       now,
     });
-    // The two ticks (§NNN) count only under the mark: a hidden result returns to the ranking, or leaves it again.
+    // The two ticks (§910) count only under the mark: a hidden result returns to the ranking, or leaves it again.
     if (changed.hiddenFromResults) await rerankEventResults(tx, changed.eventId);
     return { changed: true, public: changed.hiddenFromResults || changed.hiddenFromSite };
   });
@@ -77,7 +77,7 @@ export async function setRegistrationElite<T extends Record<string, unknown>>(
   return { changed: outcome.changed };
 }
 
-/** The two ticks of a marked registration (§NNN), by the names the forms post. */
+/** The two ticks of a marked registration (§910), by the names the forms post. */
 export const REGISTRATION_ELITE_TICKS = ["inResults", "onSite"] as const;
 export type RegistrationEliteTick = (typeof REGISTRATION_ELITE_TICKS)[number];
 
@@ -92,7 +92,7 @@ function tickAction(tick: RegistrationEliteTick, shown: boolean): AuditAction {
 }
 
 /**
- * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§NNN): `shown` is the tick as it should now stand —
+ * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§910): `shown` is the tick as it should now stand —
  * false hides (out of the ranking; off the public «Cine vine» by name), true takes the club's hide away and leaves the person's own
  * ticks to decide, exactly as before the mark. Nothing here can show a runner their own ticks do not show.
  *
@@ -138,11 +138,11 @@ export async function setRegistrationEliteTick<T extends Record<string, unknown>
   return outcome;
 }
 
-/** A marked registration's two ticks as the card and the menu draw them: ticked unless the club hid it (§NNN). */
+/** A marked registration's two ticks as the card and the menu draw them: ticked unless the club hid it (§910). */
 export type EliteTicks = { inResults: boolean; onSite: boolean };
 
 /**
- * The two ticks of every registration of an event marked «Elită» (§NNN), by registration — for the elite card's lines, which read
+ * The two ticks of every registration of an event marked «Elită» (§910), by registration — for the elite card's lines, which read
  * the sheet's rows (`listBibs`) and need nothing else of them. Whoever reads the registrations (`canReadRegistrations`): the Organizer
  * sees them, the Administrator ticks them. Test rows are never marked on a sheet, and are left out like everywhere a count is read.
  */

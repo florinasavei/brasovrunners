@@ -571,7 +571,7 @@ export async function setRegistrationEliteAction(_previous: FormOutcome | null, 
 }
 
 /**
- * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§NNN), from the list's «⋮» or the registration's own page:
+ * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§910), from the list's «⋮» or the registration's own page:
  * `tick` names which, `on` the state it should now stand in — a submit posting the state it wants. A staff tick only ever hides
  * (`elite-mark.ts#setRegistrationEliteTick`): ticked, the person's own ticks decide. The Administrator's: the coarse gate here, the
  * service asserts it again (BR-REQ-060-01). It asks nothing (§384): it tells nobody and the same tick undoes it. Back to the list as it

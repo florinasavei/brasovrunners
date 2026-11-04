@@ -155,7 +155,7 @@ const NO_NUMBER = "—";
  * which names appear is the person's tick and the notice's gates alone. The places line never counts
  * the hidden list — it takes no place.
  *
- * ## «Elitele cursei» (§NNN)
+ * ## «Elitele cursei» (§910)
  *
  * The owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe site». The lines of the race's elite list (§895) the
  * Administrator ticked «Apare pe site» — only with the person's agreement — are named under the fold, a name and the number the
@@ -239,7 +239,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     firstStatesNotice !== null && view.othersLimit > 0
       ? cachedStartListOthersPage(event.id, firstStatesNotice, waitlistOn, view.othersOffset, view.othersLimit, socialsOn, hiddenShown, clubMode)
       : [],
-    // «Elitele cursei» (§NNN): the elite list's lines ticked «Apare pe site», a name and a number each.
+    // «Elitele cursei» (§910): the elite list's lines ticked «Apare pe site», a name and a number each.
     cachedPublicEliteEntries(event.id),
   ]);
   /*
@@ -545,7 +545,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
         </>
       )}
     </Box>
-    {/* «Elitele cursei» (§NNN): under the fold, open — a few names the club announces, no registrations, so no row of the table. */}
+    {/* «Elitele cursei» (§910): under the fold, open — a few names the club announces, no registrations, so no row of the table. */}
     {elites.length > 0 && (
       <Box data-testid="start-list-elites" sx={{ mt: 2 }}>
         <Typography component="h3" variant="h3" sx={{ fontSize: "1.0625rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 0.75 }}>

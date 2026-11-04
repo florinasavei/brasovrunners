@@ -172,7 +172,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     if (result.positionCategory !== null && result.categoryKey !== null) parts.push(t("results.place.category", { category: categoryLabel(result.categoryKey), position: String(result.positionCategory) }));
     return { overall: String(result.positionOverall), detail: parts.join(" · ") };
   };
-  // What the published results say of a line (§808): by name, «Participant #bib», or — an elite hors concours (§NNN) — nothing at all.
+  // What the published results say of a line (§808): by name, «Participant #bib», or — an elite hors concours (§910) — nothing at all.
   const publicLineOf = (runner: ResultRunner, anonymousLabel: string) =>
     runner.outOfRanking ? t("results.publicLine.outOfRanking") : runner.named ? t("results.publicLine.named") : t("results.publicLine.anonymous", { label: anonymousLabel });
   const valuesOf = (runner: ResultRunner) => ({
@@ -188,7 +188,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     name: runner.name ?? "",
     present: runner.checkedIn,
     // What the published list would say of the runner — `publicResultName`'s own answer (the tick, a confirmed registration, a notice that
-    // described the results), never a guess from the tick alone; an elite out of the ranking (§NNN) is not on it at all.
+    // described the results), never a guess from the tick alone; an elite out of the ranking (§910) is not on it at all.
     publicLine: publicLineOf(runner, anonymousResultLabel(locale, runner.bibNumber, event.raceNumberFormat)),
     values: valuesOf(runner),
     place: placeOf(runner),

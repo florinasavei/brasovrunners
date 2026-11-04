@@ -74,7 +74,7 @@ describe("§810 the typed line's tick, before and after a refusal", () => {
   });
 });
 
-describe("§NNN an elite's line out of the ranking says so where its place would be", () => {
+describe("§910 an elite's line out of the ranking says so where its place would be", () => {
   it("draws «în afara clasamentului» instead of a position or «fără loc», and only on that line", () => {
     const html = draw([{ ...stored(false, "7", "Eliud Kipchoge"), outOfRanking: true }, stored(false, "901", "Maria Pop")], null);
     expect(html.match(/data-testid="result-out-of-ranking"/g) ?? []).toHaveLength(1);

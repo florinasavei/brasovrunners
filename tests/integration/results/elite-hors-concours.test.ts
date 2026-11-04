@@ -12,7 +12,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { AFTER_THE_RACE, approveResultsTexts, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * «Apare în clasament» (§NNN; the owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe site»; BR-REQ-050-02,
+ * «Apare în clasament» (§910; the owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe site»; BR-REQ-050-02,
  * BR-REQ-039-01, BR-REQ-060-01) — on real PostgreSQL. Unticked, an elite runs hors concours: its result stays on «Clasament», marked,
  * and is left out of the public results and of everybody's positions — the stored ones, ranked again in the tick's own transaction,
  * and the ones every read ranks from the live answers. A registered elite is recognised by its registration; a separate-list elite by
@@ -64,7 +64,7 @@ async function field() {
   return { ana, ben, dan };
 }
 
-describe("§NNN a registered elite out of the ranking", () => {
+describe("§910 a registered elite out of the ranking", () => {
   it("leaves the public results and everybody's positions, stored and read, and comes back with the tick", async () => {
     const { dan } = await field();
     await save([line(101, { time: "44:00" }), line(102, { time: "42:00" }), line(103, { time: "38:00" })]);
@@ -118,7 +118,7 @@ describe("§NNN a registered elite out of the ranking", () => {
   });
 });
 
-describe("§NNN a separate-list elite out of the ranking, by its number or its name", () => {
+describe("§910 a separate-list elite out of the ranking, by its number or its name", () => {
   it("by the line's number: the typed row on it, whatever name it was typed with", async () => {
     await field();
     const line7 = await addEliteEntry(db, admin, raceId, { name: "Eliud Kipchoge", bibNumber: "7" }, NOW);
@@ -155,7 +155,7 @@ describe("§NNN a separate-list elite out of the ranking, by its number or its n
   });
 });
 
-describe("§NNN «Apare pe site» on a registered elite only hides", () => {
+describe("§910 «Apare pe site» on a registered elite only hides", () => {
   it("unticked, the runner is «Participant #bib» in the public results, still ranked; ticked, their own tick decides", async () => {
     const { ben } = await field();
     await save([line(101, { time: "44:00" }), line(102, { time: "42:00" })]);
@@ -182,7 +182,7 @@ describe("§NNN «Apare pe site» on a registered elite only hides", () => {
   });
 });
 
-describe("§NNN who may tick, and the trail (BR-REQ-060-01)", () => {
+describe("§910 who may tick, and the trail (BR-REQ-060-01)", () => {
   it("refuses the Organizer and Tehnic on both kinds of elite, writing nothing", async () => {
     const { dan } = await field();
     const line7 = await addEliteEntry(db, admin, raceId, { name: "Eliud Kipchoge", bibNumber: "7" }, NOW);

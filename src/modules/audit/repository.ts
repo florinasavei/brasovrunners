@@ -101,7 +101,7 @@ export type AuditAction =
   | "registration.elite_marked"
   | "registration.elite_unmarked"
   /**
-   * The two ticks of a registration marked «Elită» (§NNN): «Apare în clasament» (`_in_results` / `_out_of_results`) and
+   * The two ticks of a registration marked «Elită» (§910): «Apare în clasament» (`_in_results` / `_out_of_results`) and
    * «Apare pe site» (`_on_site` / `_off_site`), as the Administrator set them. A staff tick only hides: ticked, the person's
    * own ticks decide. The metadata is the new value alone (`{ inResults }` or `{ onSite }`) — never a name or a number.
    */
@@ -559,7 +559,7 @@ export type AuditAction =
   | "event_elite.added"
   | "event_elite.deleted"
   /**
-   * A line's two ticks (§NNN), entity `event`: «Apare în clasament» (`in_results` / `out_of_results`) and «Apare pe site»
+   * A line's two ticks (§910), entity `event`: «Apare în clasament» (`in_results` / `out_of_results`) and «Apare pe site»
    * (`on_site` / `off_site`). The metadata is the line's id and the tick's new value (`{ entryId, inResults }` or
    * `{ entryId, onSite }`) — never the name or its number.
    */

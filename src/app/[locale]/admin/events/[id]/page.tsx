@@ -268,7 +268,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     registrations, so nothing above counts them.
   */
   const eliteEntries = bibCounts ? await listEliteEntries(db, staffUser, event.id) : null;
-  // The registrations marked «Elită» (§897) that the elite sheet prints beside the list: lines of its card, with their two ticks (§NNN).
+  // The registrations marked «Elită» (§897) that the elite sheet prints beside the list: lines of its card, with their two ticks (§910).
   const eliteRegistered = bibCounts ? await listBibs(db, event.id, { elite: true }) : null;
   const eliteRegisteredTicks = eliteRegistered && eliteRegistered.length > 0 ? await listEliteTicks(db, staffUser, event.id) : null;
   // The range the print just reserved, for its banner (§444) — only two real numbers from the address.
@@ -431,7 +431,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const elite = eliteEntries
     ? {
         entries: eliteEntries,
-        // A marked registration's ticks are ticked unless the club hid it (§NNN): the sheet's rows and the ticks are one event's, read a moment apart.
+        // A marked registration's ticks are ticked unless the club hid it (§910): the sheet's rows and the ticks are one event's, read a moment apart.
         registered: (eliteRegistered ?? []).map((row) => ({
           id: row.id,
           name: row.registeredName,

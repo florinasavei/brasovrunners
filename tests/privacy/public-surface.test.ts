@@ -708,11 +708,11 @@ describe("§821 what the volunteers' public list may contain — a name only for
 });
 
 /**
- * §NNN — «Elitele cursei» and an elite's two ticks. The section names what the club ticked «Apare pe site», with the person's agreement:
+ * §910 — «Elitele cursei» and an elite's two ticks. The section names what the club ticked «Apare pe site», with the person's agreement:
  * a name and a number, nothing else. A registered runner marked «Elită» is named only by their own tick: the club's tick only removes
  * a name — there is no column of the staff's that puts one on a public list.
  */
-describe("§NNN what «Elitele cursei» and an elite's staff tick may disclose", () => {
+describe("§910 what «Elitele cursei» and an elite's staff tick may disclose", () => {
   /** The code of listPublicEliteEntries, without its comments: the select list it guards. */
   function publicReadCode(): string {
     const source = readFileSync("src/modules/registrations/elite-list.ts", "utf8");

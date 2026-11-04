@@ -1119,7 +1119,7 @@ export async function deleteEliteEntryAction(_previous: FormOutcome | null, form
 }
 
 /**
- * «Apare în clasament» / «Apare pe site» on one line of the elite list (§NNN): the tick posted as it should now stand (`tick` names
+ * «Apare în clasament» / «Apare pe site» on one line of the elite list (§910): the tick posted as it should now stand (`tick` names
  * which, `on` its new value: the `TickButton` pattern, a submit posting the state it wants). The Administrator's
  * (`canManageRegistrations`), here at the door and again in `elite-list.ts#setEliteEntryTick` (BR-REQ-060-01). A tick already as asked
  * writes nothing; a refusal comes back in the editor's banner. Back to the elite card, open.
@@ -1139,7 +1139,7 @@ export async function setEliteEntryTickAction(_previous: FormOutcome | null, for
 }
 
 /**
- * The same two ticks on a registered runner's line of the elite card (§NNN): a registration marked «Elită», whose ticks only ever hide
+ * The same two ticks on a registered runner's line of the elite card (§910): a registration marked «Elită», whose ticks only ever hide
  * (`elite-mark.ts#setRegistrationEliteTick`). The Administrator's, asserted here and in the service. Back to the elite card, open; a
  * refusal — the mark taken off meanwhile (`ELITE_NOT_MARKED`), the role — in the editor's banner.
  */

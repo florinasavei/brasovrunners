@@ -267,7 +267,7 @@ describe("§897 the elite mark on the registrations list", () => {
   });
 });
 
-describe("§NNN an elite's two ticks on the list's «⋮» and on the registration's page", () => {
+describe("§910 an elite's two ticks on the list's «⋮» and on the registration's page", () => {
   const tickItems = (tree: ReactNode, id: string) => menuItems(tree, id).filter((item) => item.formId === `elite-results-${id}` || item.formId === `elite-site-${id}`);
   const formOf = (tree: ReactNode, formId: string) => cellOf(tree, formId.replace(/^elite-(results|site)-/, "")).find((element) => element.props.id === formId);
   const field = (form: ReactElement<Props> | undefined, name: string) => elements(form).find((element) => element.props.name === name)?.props.value;

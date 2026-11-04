@@ -64,7 +64,7 @@ export type RegistrationMenuItem =
        */
       hint?: string;
       /**
-       * A setting drawn as a tick (§NNN, the owner's rule of 2026-10-14: an on/off is a tick box, never a toggle button): the
+       * A setting drawn as a tick (§910, the owner's rule of 2026-10-14: an on/off is a tick box, never a toggle button): the
        * item is a `menuitemcheckbox`, its glyph the house's box — ticked or empty, `icon` ignored — and its words name the setting
        * the same whether ticked or not («Apare în clasament»); the hidden form it submits posts the other state.
        */
@@ -117,7 +117,7 @@ export default function RegistrationRowMenu({ ariaLabel, items }: { ariaLabel: s
                 <ListItemText>{item.label}</ListItemText>
               </MenuItem>
             ) : item.checked !== undefined ? (
-              // A tick (§NNN): the state in `aria-checked` and in the glyph, never in the colour alone.
+              // A tick (§910): the state in `aria-checked` and in the glyph, never in the colour alone.
               <MenuItem
                 key={item.label}
                 role="menuitemcheckbox"

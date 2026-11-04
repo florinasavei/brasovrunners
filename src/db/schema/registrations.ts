@@ -478,7 +478,7 @@ export const registrations = pgTable(
      */
     elite: boolean("elite").notNull().default(false),
     /**
-     * The Administrator's two ticks on a registration marked «Elită» (§NNN), stored as what they hide — a staff tick may
+     * The Administrator's two ticks on a registration marked «Elită» (§910), stored as what they hide — a staff tick may
      * hide a registered elite, never show one: «Apare în clasament» unticked (`elite_hidden_from_results`) leaves the
      * runner's result out of the public results and of everybody's positions (hors concours,
      * `results/domain/hors-concours.ts`); «Apare pe site» unticked (`elite_hidden_from_site`) reads the row on the

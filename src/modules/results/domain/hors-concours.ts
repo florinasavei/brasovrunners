@@ -1,5 +1,5 @@
 /**
- * «Apare în clasament» (§NNN; the owner, 2026-11-04: «per elite, two ticks: „Apare în clasament" and „Apare pe site"»): the elites the
+ * «Apare în clasament» (§910; the owner, 2026-11-04: «per elite, two ticks: „Apare în clasament" and „Apare pe site"»): the elites the
  * Administrator left out of the ranking run **hors concours** — their result is on the backoffice's «Clasament», marked «în afara
  * clasamentului», and nowhere else: not in the public results, and not in anybody's position, the others ranked as if they had not run.
  *

@@ -300,7 +300,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Marchează ca elită» / «Nu mai e elită» (§897): how one registration's bib prints, nothing else of it.
   setRegistrationEliteAction:
     "a mark on how one registration's bib prints, undone from the same menu; it tells nobody and changes no state, place, number or count",
-  // «Apare în clasament» / «Apare pe site» (§NNN): an elite's two ticks, the TickButton pattern — each undone by the same tick.
+  // «Apare în clasament» / «Apare pe site» (§910): an elite's two ticks, the TickButton pattern — each undone by the same tick.
   setEliteEntryTickAction:
     "one of an elite line's two ticks, undone by the same tick; it tells nobody and moves no place — putting a name on the site asks first, naming the person, since only their agreement allows it",
   setRegisteredEliteTickAction:

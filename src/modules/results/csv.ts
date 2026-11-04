@@ -27,7 +27,7 @@ export type ResultsCsvHeader = {
 };
 
 export type ResultsCsvRow = {
-  /** The overall position — or, for an elite hors concours (§NNN), the words «în afara clasamentului» where it would be. */
+  /** The overall position — or, for an elite hors concours (§910), the words «în afara clasamentului» where it would be. */
   position: number | string | null;
   positionSex: number | null;
   positionCategory: number | null;

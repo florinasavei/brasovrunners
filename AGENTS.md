@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.21-2026-11-04 -->
+<!-- PROJECT_BASELINE: BR-V4.22-2026-11-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.21-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.22-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1518,7 +1518,7 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   For `NONE` there is nobody to list; for `EXTERNAL` the entrants are another organizer's;
 - the published set is exactly `status = CONFIRMED AND kind = 'REAL' AND list_opt_out = false AND NOT
   (elite AND elite_hidden_from_site)` (the last clause the Administrator's «Apare pe site» on an elite,
-  which only hides, §NNN), ordered by `confirmed_at` then `id`. The public list shows the display name and club of registrations that ticked «Vreau să apar»: the confirmed always. Only while the privacy notice in force names `{{participantListStates}}` in every language (`describesListStates`, §396) does it also show the pending (`PENDING_DECLARATION`, `WAITLIST_OFFERED`) and the waiting list, each with its state word and without a position. The waiting list shows only when the event's «Lista de așteptare e publică» (`events.waitlist_public`, off by default, stored true only beside `NAMES`; §628) is on as well — a narrowing on top of the notice's gates, never a way round them. How many wait is a separate switch, «Arată public câți așteaptă» (`events.waitlist_count_public`, on by default; §634): off, the card, the page and each waiting person's own page and email say no count of the line and no place in it; it hides a number, never a name, and opens nothing of the list. «Arată public numărătoarea» (`events.participant_count_public`, on by default; §648, §668) hides every number at once: off, «Cine vine» says only the names, and the event's public pages — the page, its card, hero, calendar and series card, the register page — say no number derived from its capacity or its registrations: no places line, no free places, no capacity, no room, no offered or waiting count; only whether places are left, the race is full, the waiting list is open or full, or places are given from it. The waiting count's switch sits under it in the editor (§669): off, each waiting person's own page, «Toate înscrierile mele», email and «Ce îi spui» say no count of the line and no place in it either, whatever «Arată public câți așteaptă» says (`waitlistCountShown`). It never shows `PENDING_EMAIL_CONFIRMATION`, `CANCELLED`, `EXPIRED` or `TEST` rows, and never the raw lifecycle state;
+  which only hides, §910), ordered by `confirmed_at` then `id`. The public list shows the display name and club of registrations that ticked «Vreau să apar»: the confirmed always. Only while the privacy notice in force names `{{participantListStates}}` in every language (`describesListStates`, §396) does it also show the pending (`PENDING_DECLARATION`, `WAITLIST_OFFERED`) and the waiting list, each with its state word and without a position. The waiting list shows only when the event's «Lista de așteptare e publică» (`events.waitlist_public`, off by default, stored true only beside `NAMES`; §628) is on as well — a narrowing on top of the notice's gates, never a way round them. How many wait is a separate switch, «Arată public câți așteaptă» (`events.waitlist_count_public`, on by default; §634): off, the card, the page and each waiting person's own page and email say no count of the line and no place in it; it hides a number, never a name, and opens nothing of the list. «Arată public numărătoarea» (`events.participant_count_public`, on by default; §648, §668) hides every number at once: off, «Cine vine» says only the names, and the event's public pages — the page, its card, hero, calendar and series card, the register page — say no number derived from its capacity or its registrations: no places line, no free places, no capacity, no room, no offered or waiting count; only whether places are left, the race is full, the waiting list is open or full, or places are given from it. The waiting count's switch sits under it in the editor (§669): off, each waiting person's own page, «Toate înscrierile mele», email and «Ce îi spui» say no count of the line and no place in it either, whatever «Arată public câți așteaptă» says (`waitlistCountShown`). It never shows `PENDING_EMAIL_CONFIRMATION`, `CANCELLED`, `EXPIRED` or `TEST` rows, and never the raw lifecycle state;
 - the club column is free text the person typed, so it is shown by the event's `public_list_club`
   («Clubul pe lista publică», `DECISIONS.md` §753 and §756, amending §32/§143/§396): `members_only`
   (the default for every event, existing ones included) fills the cell with the club's own name
@@ -1544,7 +1544,7 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   the row and in the audit trail (`event_results.name_agreed_at`, `publicResultName`), and never when
   a confirmed registration holds the number: a registered runner's name follows their own tick, never
   a staff mark;
-- a race's elite runners (§NNN, the owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe
+- a race's elite runners (§910, the owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe
   site»): a registration marked «Elită» (§897) is named by its own tick and nothing else — the
   Administrator's «Apare pe site» on it only hides. Unticked (`registrations.elite_hidden_from_site`,
   read only while `elite` is true), the public list and the published results read the registration
@@ -3036,7 +3036,7 @@ asserted by `setRegistrationEliteAction` and `elite-mark.ts`; the Organizer read
 any time and in any state, audited (`registration.elite_marked` / `registration.elite_unmarked`, the new value only). It
 changes only how the registration's bib prints — an elite bib, the name where the number goes (§895) — and never the
 state, the place, the race number, a count, the queue or the outbox: no allocator call and no email, like the printing
-mark (§264). On a marked registration the same Administrator has two ticks (§NNN; on the list's «⋮», the registration's
+mark (§264). On a marked registration the same Administrator has two ticks (§910; on the list's «⋮», the registration's
 page and the elite card, asserted by `setRegistrationEliteTickAction`, `setRegisteredEliteTickAction` and
 `elite-mark.ts#setRegistrationEliteTick`): «Apare în clasament» — unticked, the result runs hors concours, out of the
 published results and of everybody's position — and «Apare pe site» — unticked, the site reads the person as one who did

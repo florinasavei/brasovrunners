@@ -330,7 +330,7 @@ describe("the file an event is exported as", () => {
     expect(Object.keys(file.event.registration)).not.toContain("participants");
   });
 
-  // §895 keeps the race's elite list out of the file (people's names), so its two ticks (§NNN) stay out with it.
+  // §895 keeps the race's elite list out of the file (people's names), so its two ticks (§910) stay out with it.
   it("never carries the race's elite list: no name, no number, no «Apare în clasament» or «Apare pe site»", async () => {
     const { event } = await seedRace();
     await db.insert(eventEliteEntries).values([

@@ -541,7 +541,7 @@ export async function cachedStartListOthersPage(
 }
 
 /**
- * «Elitele cursei» under «Cine vine» (§NNN): the lines of the race's elite list the Administrator ticked «Apare pe site», a name and
+ * «Elitele cursei» under «Cine vine» (§910): the lines of the race's elite list the Administrator ticked «Apare pe site», a name and
  * a number each (`listPublicEliteEntries`). Filed under "places" and "events" — a tick, an add and a delete expire both — and so with
  * **no saved copy**: a name the club takes off the page, with the person's agreement withdrawn, must not outlive it (§281), as the start
  * list's rows.

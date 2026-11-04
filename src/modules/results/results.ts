@@ -54,7 +54,7 @@ import { type PostedResultRow, resultBox } from "./rows";
  * stored positions being what the last save, or an erasure, wrote — a cache, rewritten on the next save. One audit row per result created, changed or deleted (`event_result.*`: the number, the state, the times and the names of the
  * boxes that changed, never a name), and the public cache is told once.
  *
- * **Hors concours (§NNN).** An elite the Administrator left out of the ranking — a registration marked «Elită» with «Apare în clasament»
+ * **Hors concours (§910).** An elite the Administrator left out of the ranking — a registration marked «Elită» with «Apare în clasament»
  * unticked, or a line of the race's elite list unticked, its typed result recognised by the line's number or, for a line with none, by its
  * name (`domain/hors-concours.ts`) — keeps its row here, drawn «în afara clasamentului», and is placed nowhere: every ranking, stored or
  * read, counts the others as if it had not run, and the public results leave it out altogether. The tick ranks the stored rows again in
@@ -88,7 +88,7 @@ type RegisteredRunner = {
   birthDate: string | null;
   /**
    * The «Vreau să apar pe lista de participanți & rezultate» tick (`list_opt_out` false) — read as unticked while an Administrator
-   * unticked «Apare pe site» on the registration marked «Elită» (§NNN, `tickedForTheSite`).
+   * unticked «Apare pe site» on the registration marked «Elită» (§910, `tickedForTheSite`).
    */
   ticked: boolean;
   checkedIn: boolean;
@@ -103,13 +103,13 @@ type RegisteredRunner = {
 };
 
 /**
- * The event's registered runners, by race number and by registration — and the elites the Administrator left out of the ranking (§NNN,
+ * The event's registered runners, by race number and by registration — and the elites the Administrator left out of the ranking (§910,
  * `domain/hors-concours.ts`), read with them so every list ranked from them leaves out the same rows.
  */
 type Runners = { byBib: Map<number, RegisteredRunner>; byRegistration: Map<string, RegisteredRunner>; out: OutOfRanking };
 
 /**
- * Whether the published results may read the person's own list tick as given (§NNN): their «Vreau să apar» — and no Administrator
+ * Whether the published results may read the person's own list tick as given (§910): their «Vreau să apar» — and no Administrator
  * unticked «Apare pe site» on the registration while it is marked «Elită». That tick only ever hides: unticked, the runner is
  * «Participant #bib» wherever the ranking still counts them, as one who did not tick; ticked, the person's own answer decides, as before.
  * The public start list reads the same two columns (`registrations/repository.ts#namedOnPublicList`).
@@ -175,7 +175,7 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
 }
 
 /**
- * What «Apare în clasament» leaves out at this event (§NNN): the registrations marked «Elită» whose tick is off — wherever their number
+ * What «Apare în clasament» leaves out at this event (§910): the registrations marked «Elită» whose tick is off — wherever their number
  * is, never a test row — and the elite list's lines (§895): the unticked ones by number, or by folded name when they have none, and every
  * line's number, so a row its own line holds is never another line's by name.
  */
@@ -232,7 +232,7 @@ async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Data
       displayName: row.displayName,
       sex: sexShown(row.sex),
       birthDate: row.birthDate,
-      // The person's own tick — read as unticked while the club unticked «Apare pe site» on a marked elite (§NNN): a staff tick only hides.
+      // The person's own tick — read as unticked while the club unticked «Apare pe site» on a marked elite (§910): a staff tick only hides.
       ticked: tickedForTheSite(row),
       checkedIn: row.checkedInAt !== null,
       status: row.status,
@@ -291,7 +291,7 @@ function answersOf(row: { registrationId: string | null; sex: RegistrationSex | 
 
 /**
  * The rankings of a whole list, by the number each row is listed under (`rankResults`), with the answers read as above — the elites the
- * Administrator left out of the ranking (`runners.out`, §NNN) carried as hors concours: no position, and in nobody else's.
+ * Administrator left out of the ranking (`runners.out`, §910) carried as hors concours: no position, and in nobody else's.
  */
 function rankingOf(
   rows: readonly {
@@ -344,7 +344,7 @@ export type ResultRunner = {
   /** A typed runner: the staff recorded that the person agreed to appear by name (§810); null for a registered runner, whose own tick answers. */
   nameAgreed: boolean | null;
   /**
-   * An elite the Administrator left out of the ranking (§NNN): the line is drawn «în afara clasamentului», without a position, and the
+   * An elite the Administrator left out of the ranking (§910): the line is drawn «în afara clasamentului», without a position, and the
    * published results leave it out. For a registered runner, whether or not a result is entered yet; for a typed one, by its line.
    */
   outOfRanking: boolean;
@@ -447,7 +447,7 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
           typedDisplayName: null,
         }) !== null,
       nameAgreed: null,
-      // The registration's own tick (§NNN): drawn so before a result is typed, and its row, once typed, ranked accordingly.
+      // The registration's own tick (§910): drawn so before a result is typed, and its row, once typed, ranked accordingly.
       outOfRanking: runners.out.registrations.has(runner.registrationId) || (row !== undefined && rankedOf(row).outOfRanking === true),
       checkedIn: runner.checkedIn,
       sex: runner.sex,
@@ -482,7 +482,7 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
           typedDisplayName: row.displayName,
         }) !== null,
       nameAgreed: row.nameAgreedAt !== null,
-      // A separate-list elite's line left out (§NNN), recognised by its number or, for a line with none, by its name (`hors-concours.ts`).
+      // A separate-list elite's line left out (§910), recognised by its number or, for a line with none, by its name (`hors-concours.ts`).
       outOfRanking: rankedOf(row).outOfRanking === true,
       checkedIn: false,
       sex: sexShown(row.sex),
@@ -755,7 +755,7 @@ async function writeRanking<T extends Record<string, unknown>>(db: Database<T>, 
  * left to answer for it the sex, the age band and the positions by sex and by category it carried are cleared, and the other runners'
  * places are counted again without it — nothing that describes the erased person stays on their number. An event with no results is a
  * no-op. Every page and file already ranks from the live answers when it reads, so this only keeps what is stored honest. The elite
- * ticks call it too (§NNN): «Apare în clasament» changed, a line deleted, a mark put on or taken off — whatever moves who runs hors concours.
+ * ticks call it too (§910): «Apare în clasament» changed, a line deleted, a mark put on or taken off — whatever moves who runs hors concours.
  */
 export async function rerankEventResults<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
   const stored = await loadStored(db, eventId, true);
@@ -1032,7 +1032,7 @@ export type ExportedResultRow = {
   gunTimeMs: number | null;
   chipTimeMs: number | null;
   note: string | null;
-  /** An elite left out of the ranking (§NNN): the file says «în afara clasamentului» where the position would be. */
+  /** An elite left out of the ranking (§910): the file says «în afara clasamentului» where the position would be. */
   outOfRanking: boolean;
 };
 
@@ -1040,7 +1040,7 @@ const STATUS_ORDER: Record<ResultStatus, number> = { FINISHED: 0, DNF: 1, DSQ: 2
 
 /**
  * The list in the order a results sheet reads: the finishers by position, then the others by state and number. A finisher with no
- * position — an elite hors concours (§NNN), in the club's own file only — follows the placed finishers, by time.
+ * position — an elite hors concours (§910), in the club's own file only — follows the placed finishers, by time.
  */
 function sheetOrder<T extends { status: ResultStatus; positionOverall: number | null; bibNumber: number; gunTimeMs: number | null }>(rows: T[]): T[] {
   const unplaced = Number.MAX_SAFE_INTEGER;
@@ -1128,7 +1128,7 @@ export type PublicEventResults = {
  * described the results (`firstResultsNoticeVersion`, §421's line) — or, made under an older one, whose runner asked since to appear by name
  * under a notice that named the tick (`results_name_consent`, `firstResultsNameAskNoticeVersion`, §879) — or a runner typed by hand whom the staff recorded as agreeing to appear by name
  * under a notice that described the results — everyone else is «Participant #bib». Never an address, a phone
- * number, a document, a note or a registration's id: the select names its columns. An elite left out of the ranking (§NNN) is not a row
+ * number, a document, a note or a registration's id: the select names its columns. An elite left out of the ranking (§910) is not a row
  * of the answer at all, and the positions were counted without it.
  */
 export async function readPublicEventResults<T extends Record<string, unknown>>(
@@ -1198,7 +1198,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
     .leftJoin(registrations, and(eq(registrations.id, eventResults.registrationId), eq(registrations.kind, "REAL")))
     .where(eq(eventResults.eventId, eventId));
 
-  // An elite the Administrator left out of the ranking (§NNN) is not on the page at all — not a name, not «Participant #bib», not a time —
+  // An elite the Administrator left out of the ranking (§910) is not on the page at all — not a name, not «Participant #bib», not a time —
   // and the positions the page shows were counted without it (`rankingOf`).
   const onShow = rows.filter((row) => ranking.get(row.bibNumber)?.outOfRanking !== true);
   const shown = onShow.map((row): PublicResultRow => {
@@ -1208,7 +1208,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       bibNumber: row.bibNumber,
       name: publicResultName({
         registered,
-        // The person's own tick, read as unticked under the club's «Apare pe site» unticked on a marked elite (§NNN).
+        // The person's own tick, read as unticked under the club's «Apare pe site» unticked on a marked elite (§910).
         ticked: tickedForTheSite(row),
         displayName: row.registeredName,
         confirmed: row.registrationStatus === "CONFIRMED",
