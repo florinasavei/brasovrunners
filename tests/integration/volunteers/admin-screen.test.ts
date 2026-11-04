@@ -8,8 +8,8 @@ import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import {
-  countVolunteersAwaiting,
   countVolunteersForAdmin,
+  countVolunteersForTab,
   findVolunteerForAdmin,
   listEventsWithVolunteers,
   listRoleNames,
@@ -38,7 +38,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *   both, the Tehnic role and an unknown or guessed id get a 404 (BR-REQ-060-01);
  * - a verb pressed on the screen comes back to the page it came from, a refusal's code in the address, and a `returnTo`
  *   that is not a path of the screen sends nobody anywhere but the event's card;
- * - the tab's figure is the offers still waiting on the events ahead, memoized a minute.
+ * - the tab's figures are everyone still in at the events ahead and, of them, those the organizers still have to
+ *   confirm or give a role — each once — memoized a minute (the owner, 2026-11-04: read it like «Înscrieri»).
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en", redirected: [] as string[] }));
 
@@ -294,16 +295,23 @@ describe("the list's repository (§839)", () => {
     expect((await summariseVolunteersForAdmin(db, { search: "ionescu" })).total).toBe(1);
   });
 
-  it("counts the offers still waiting on the events ahead for the tab, and memoizes them a minute", async () => {
-    // Ana, Dana and Bogdan: «Înscris» on events not yet over; Ștefan is confirmed, Mihai cancelled.
-    expect(await countVolunteersAwaiting(db, NOW)).toBe(3);
-    expect(await countVolunteersAwaiting(db, new Date("2026-12-01T10:00:00.000Z"))).toBe(0);
-    expect(await volunteersBadgeCount(db, NOW)).toBe(3);
+  it("counts everyone still in at the events ahead for the tab, and those to confirm or place, and memoizes them a minute", async () => {
+    // Ana, Ștefan, Dana and Bogdan: «Înscris» or «Confirmat» on events not yet over; Mihai is cancelled. Ana, Dana and
+    // Bogdan wait for an answer (Dana for a role too: counted once); Ștefan is confirmed, with his roles.
+    expect(await countVolunteersForTab(db, NOW)).toEqual({ active: 4, toAct: 3 });
+    expect(await countVolunteersForTab(db, new Date("2026-12-01T10:00:00.000Z"))).toEqual({ active: 0, toAct: 0 });
+    // Confirmed with no role given, Dana still waits for the organizers: «De repartizat».
+    await db.update(eventVolunteers).set({ state: "CONFIRMED" }).where(eq(eventVolunteers.id, people.dana));
+    expect(await countVolunteersForTab(db, NOW)).toEqual({ active: 4, toAct: 3 });
+    // Given a role, she needs nothing more.
+    await db.insert(eventVolunteerRoleAssignments).values({ volunteerId: people.dana, roleId: finishId });
+    expect(await countVolunteersForTab(db, NOW)).toEqual({ active: 4, toAct: 2 });
+    expect(await volunteersBadgeCount(db, NOW)).toEqual({ active: 4, toAct: 2 });
     await volunteer({ eventId: runId, name: "Nou Venit" });
-    expect(await volunteersBadgeCount(db, new Date(NOW.getTime() + 30_000))).toBe(3);
-    expect(await volunteersBadgeCount(db, new Date(NOW.getTime() + 61_000))).toBe(4);
+    expect(await volunteersBadgeCount(db, new Date(NOW.getTime() + 30_000))).toEqual({ active: 4, toAct: 2 });
+    expect(await volunteersBadgeCount(db, new Date(NOW.getTime() + 61_000))).toEqual({ active: 5, toAct: 3 });
     forgetVolunteersBadgeCount();
-    expect(await volunteersBadgeCount(db, NOW)).toBe(4);
+    expect(await volunteersBadgeCount(db, NOW)).toEqual({ active: 5, toAct: 3 });
   });
 
   it("finds one person with their event, names the roles of a page's rows, and counts who holds each role", async () => {

@@ -63,6 +63,12 @@ export type RegistrationMenuItem =
        * The item stays and still submits; the server still refuses.
        */
       hint?: string;
+      /**
+       * A setting drawn as a tick (§910, the owner's rule of 2026-10-14: an on/off is a tick box, never a toggle button): the
+       * item is a `menuitemcheckbox`, its glyph the house's box — ticked or empty, `icon` ignored — and its words name the setting
+       * the same whether ticked or not («Apare în clasament»); the hidden form it submits posts the other state.
+       */
+      checked?: boolean;
     } & MenuSeparation);
 
 export default function RegistrationRowMenu({ ariaLabel, items }: { ariaLabel: string; items: readonly RegistrationMenuItem[] }) {
@@ -91,6 +97,8 @@ export default function RegistrationRowMenu({ ariaLabel, items }: { ariaLabel: s
         */}
         {items.flatMap((item) => {
           const Icon = ACTION_ICONS[item.icon];
+          const TickedIcon = ACTION_ICONS.tickOn;
+          const UntickedIcon = ACTION_ICONS.tickOff;
           const tint = item.color === "error" ? { color: "error.main" } : undefined;
           const rule = item.separated ? <Divider key={`${item.label}-rule`} sx={{ my: 0.5 }} /> : null;
 
@@ -105,6 +113,23 @@ export default function RegistrationRowMenu({ ariaLabel, items }: { ariaLabel: s
               >
                 <ListItemIcon sx={tint}>
                   <Icon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>{item.label}</ListItemText>
+              </MenuItem>
+            ) : item.checked !== undefined ? (
+              // A tick (§910): the state in `aria-checked` and in the glyph, never in the colour alone.
+              <MenuItem
+                key={item.label}
+                role="menuitemcheckbox"
+                aria-checked={item.checked}
+                onClick={() => {
+                  setAnchor(null);
+                  submit(item.formId);
+                }}
+                sx={{ minHeight: 44, ...tint }}
+              >
+                <ListItemIcon sx={item.checked ? { color: "success.main" } : tint}>
+                  {item.checked ? <TickedIcon fontSize="small" /> : <UntickedIcon fontSize="small" />}
                 </ListItemIcon>
                 <ListItemText>{item.label}</ListItemText>
               </MenuItem>

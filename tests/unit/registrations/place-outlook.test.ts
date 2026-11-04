@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HELD_KINDS, placeOutlook, type PlaceOutlookCounts } from "@/modules/registrations/domain/place-outlook";
+import { HELD_KINDS, peopleAtStartIfAll, placeOutlook, type PlaceOutlookCounts } from "@/modules/registrations/domain/place-outlook";
 
 /**
  * «Locuri» (the owner, 2026-11-03): the free places go to the official waiting list first, then to the
@@ -56,5 +56,13 @@ describe("placeOutlook", () => {
   it("counts no free place when the capacity was lowered under the places taken", () => {
     const outlook = placeOutlook(counts({ capacity: 100, occupied: 104, confirmed: 104, waiting: 2, internal: 1, outside: 0 }));
     expect([outlook.free, outlook.fromWaiting, outlook.fromInternal, outlook.raises]).toEqual([0, 0, 0, 3]);
+  });
+
+  it("adds the separate elite list to the people at the start, and to nothing else (the owner, 2026-11-04)", () => {
+    const outlook = placeOutlook(counts({ capacity: 20, occupied: 10, confirmed: 10, waiting: 2, internal: 3, outside: 1 }));
+    expect(peopleAtStartIfAll(outlook, 2)).toBe(18);
+    expect(peopleAtStartIfAll(outlook, 0)).toBe(outlook.totalIfAll);
+    // The places are the allocator's: an elite name takes none.
+    expect([outlook.free, outlook.raises, outlook.totalIfAll]).toEqual([10, 0, 16]);
   });
 });

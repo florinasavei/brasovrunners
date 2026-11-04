@@ -164,6 +164,8 @@ export const PANEL_GLYPHS = {
   bibMembers: CardMembershipIcon,
   // «Elită» (§895): the race's elite runners, printed by name — a medal, the designer's section and the print card's list alike.
   bibElite: MilitaryTechIcon,
+  // «Elite» on the registrations list: the same medal, the separate list and the marked registrations read together.
+  elite: MilitaryTechIcon,
   print: PrintIcon,
   startList: GroupsIcon,
   // «Lista de invitați speciali» (§647), a fold of «Lista publică a participanților»: the incognito the
