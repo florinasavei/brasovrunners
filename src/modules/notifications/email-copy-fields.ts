@@ -379,6 +379,8 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "UNREACHABLE_WINDOW_CLOSED",
   // The Administrators' places alert (§906): about an event's places, never a registration — no status to state.
   "PLACES_ALERT",
+  // The deadline release's summary (§914): the same.
+  "UNSIGNED_RELEASED",
   "SHOP_ORDER_PLACED",
   "SHOP_ORDER_PAID",
   "SHOP_ORDER_CLUB_NOTICE",

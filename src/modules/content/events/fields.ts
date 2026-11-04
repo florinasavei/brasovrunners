@@ -231,6 +231,13 @@ const MAX_WAITLIST_LENGTH = 100_000;
  */
 export const waitlistLimitSchema = optionalWholeNumber({ min: 1, max: MAX_WAITLIST_LENGTH });
 
+/**
+ * «De ce schimbi locurile? (opțional)» (§914): a line for the capacity's history, not a column of the event — read by the
+ * action beside the event's fields and kept on the history row of a save that moves the places
+ * (`capacity-audit.ts#placesChangeReason`, which trims it and cuts it to the same length). The box reads its ceiling here.
+ */
+export const placesChangeReasonSchema = z.string().trim().max(200).optional();
+
 /** As `optionalWholeNumber`, with a default for an absent or empty value rather than null. */
 const wholeNumberWithDefault = (fallback: number, options: { min: number; max: number }) =>
   optionalWholeNumber(options)
@@ -1005,6 +1012,11 @@ export const eventFieldsSchema = z
      */
     freePlacesByOfferOnly: z.boolean().optional(),
     /**
+     * «Eliberează singur locurile nesemnate la termen» (§914): at the participation window's deadline the unsigned
+     * declaration holds go, and nobody is given their places by itself. Absent means this caller is not editing it.
+     */
+    releaseUnsignedAtDeadline: z.boolean().optional(),
+    /**
      * «Înscrieri publice deschise» (§906): unticked, the site's button goes and the public form is refused,
      * whatever the dates; every staff verb keeps working. Absent means this caller is not editing it.
      */
@@ -1015,6 +1027,12 @@ export const eventFieldsSchema = z
      * themselves. Absent means this caller is not editing it.
      */
     placesAlertAt: optionalWholeNumber({ min: 0, max: 100_000 }).optional(),
+    /**
+     * «Locuri păstrate pentru club» (§914): of the places, how many the site never gives — empty is 0. At most the
+     * capacity, which the service judges with the row's own number when the box is not posted (`assertPlacesKeptWithin`);
+     * stored as 0 on an uncapped event. Absent means this caller is not editing it.
+     */
+    placesKeptForClub: optionalWholeNumber({ min: 0, max: 100_000 }).optional(),
     /**
      * «Condiții de participare» → «Informații medicale» (§557): the form asks the optional health
      * note. Absent means this caller is not editing it, by the kit's discipline (§554).

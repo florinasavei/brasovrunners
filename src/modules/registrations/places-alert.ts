@@ -3,11 +3,10 @@ import { eq } from "drizzle-orm";
 import { events } from "@/db/schema/events";
 import type { Transaction } from "@/db/types";
 import { enqueueEmail } from "@/modules/notifications/outbox";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
-import { listStaffUsers } from "@/modules/staff-identity/repository";
 import { computeOccupied } from "./domain/capacity";
 import { placesAlertSentOf, placesAlertStep } from "./domain/places-alert";
 import { countOccupied } from "./repository";
+import { placesAlertRecipients } from "./unsigned-release";
 
 /**
  * «Anunță-mă când rămân N locuri» (§906), checked after an allocator write, in the caller's transaction and
@@ -41,7 +40,7 @@ export async function watchPlacesAlert<T extends Record<string, unknown>>(tx: Tr
   if (step.sent !== remembered) await rememberSent(tx, eventId, step.sent);
   if (step.send === null) return;
 
-  const recipients = (await listStaffUsers(tx)).filter((member) => canManageRegistrations(member.role) && member.email.trim() !== "");
+  const recipients = await placesAlertRecipients(tx);
   /*
     Once per crossing is the memory column's, written above under the lock; the key only has to name this crossing
     apart from every other one — a later crossing may come at the same instant in a script or a test.

@@ -686,6 +686,8 @@ export function renderBilingual(
     ...(data.eventStartsAtFormattedOther ? { eventStartsAtFormatted: data.eventStartsAtFormattedOther } : {}),
     // Every date of the second half in its own language (§349), not only the event's.
     ...(data.holdExpiresAtFormattedOther ? { holdExpiresAtFormatted: data.holdExpiresAtFormattedOther } : {}),
+    // The release's deadline (§914), likewise.
+    ...(data.releaseDeadlineFormattedOther ? { releaseDeadlineFormatted: data.releaseDeadlineFormattedOther } : {}),
     // A family's reservations, in the second half's own words (§543).
     ...(data.familyReservedUntilFormattedOther ? { familyReservedUntilFormatted: data.familyReservedUntilFormattedOther } : {}),
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
@@ -1025,6 +1027,23 @@ export type TemplateData = {
    */
   placesAlert?: { stage: "LOW" | "FULL"; free: number; capacity: number; alertAt: number };
   /**
+   * «Eliberează singur locurile nesemnate la termen» (§914): the participation window's deadline the release ran for, in
+   * each language's words; the real registrations it released and, apart, the test ones; the holds still unsigned it left
+   * (a special guest's, one whose first email is still queued, one whose own deadline is later); the places after it — free
+   * of the capacity, and the people waiting — and whether it ticked «Locurile libere le dau doar eu». Counted in the
+   * release's own transaction, under the event's lock.
+   */
+  unsignedReleased?: {
+    deadline: { ro: string; en: string } | null;
+    released: number;
+    test: number;
+    unsigned: number;
+    free: number;
+    capacity: number;
+    waiting: number;
+    offerOnlyTicked: boolean;
+  };
+  /**
    * The members' shop's order (§683), from the order's own copy at the send: the bold line, the
    * payment words and the note, each half in its own language (`shop-order-words.ts`).
    */
@@ -1284,6 +1303,18 @@ export type TemplateData = {
    * (`domain/hold-lapsed.ts`). The deadline that passed is `holdExpiresAtFormatted`.
    */
   holdLapsedToWaitlist?: boolean;
+  /** The release was «Eliberează singur locurile nesemnate la termen»'s own (§914): the sentence says the deadline released every unsigned place. */
+  holdLapsedAtDeadline?: boolean;
+  /**
+   * The declaration's message (§104, §665): the hold is one «Eliberează singur locurile nesemnate la termen» takes at its
+   * deadline (§914) — so the message says the place goes then, never that it is kept while nobody asks for it.
+   */
+  releasesAtDeadline?: boolean;
+  /** The release's deadline (§914), each half in its own words: the moment the declaration's message names for the release. */
+  releaseDeadlineFormatted?: string;
+  releaseDeadlineFormattedOther?: string;
+  /** The hold ends before the release's deadline (a place taken inside the window): its own instant is said for the waiting list. */
+  holdEndsBeforeRelease?: boolean;
   holdLapsedNext?: HoldLapsedNext;
   /**
    * Why the participant cancelled (§558), from the row: the answer, and the words of «Alt motiv».
@@ -1687,7 +1718,9 @@ const T = {
           ? // No "the race is free" (§419): said of any event more than a day away, paid or not a race.
             `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Înscrierea este completă doar după ce **semnezi declarația pe proprie răspundere**. ${d.windowOpen ? "Semnează acum, din linkul de mai jos." : `Poți semna acum, din linkul de mai jos, sau când îți reamintim, ${d.confirmationOpens ? `cu ${d.confirmationOpens} înainte de start` : "înainte de start"}.`}`
           : `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Înscrierea este completă doar cu **declarația pe proprie răspundere semnată** — citește-o și semneaz-o din linkul de mai jos.`,
-        `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până **${d.holdExpiresAtFormatted}**; până atunci semnează.` : ""}`,
+        d.releasesAtDeadline && d.releaseDeadlineFormatted
+          ? `${d.holdEndsBeforeRelease && d.holdExpiresAtFormatted ? `Dacă se formează lista de așteptare, locul îți este ținut până **${d.holdExpiresAtFormatted}**. ` : ""}Dacă nu semnezi până **${d.releaseDeadlineFormatted}**, locul se eliberează și nu mai este rezervat pentru tine.`
+          : `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până **${d.holdExpiresAtFormatted}**; până atunci semnează.` : ""}`,
       ],
       action: "Semnează declarația",
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
@@ -2116,6 +2149,16 @@ const T = {
           : `Locurile se împuținează la ${d.eventTitle ?? "eveniment"}`,
       facts: (d: TemplateData) => placesAlertFacts("ro", d),
       body: (d: TemplateData) => placesAlertBody("ro", d),
+      action: "Deschide înscrierile",
+    },
+    // «Eliberează singur locurile nesemnate la termen» (§914): to the Administrators, once per deadline — what was released and what now.
+    unsignedReleased: {
+      subject: (d: TemplateData) =>
+        (d.unsignedReleased?.released ?? 0) > 0
+          ? `Locurile nesemnate s-au eliberat la ${d.eventTitle ?? "eveniment"}`
+          : `A trecut termenul declarației la ${d.eventTitle ?? "eveniment"}`,
+      facts: (d: TemplateData) => unsignedReleasedFacts("ro", d),
+      body: (d: TemplateData) => unsignedReleasedBody("ro", d),
       action: "Deschide înscrierile",
     },
     // The role the organizers gave a volunteer (§761): one short message naming it — nothing to press.
@@ -2565,8 +2608,10 @@ const T = {
      * the band with the body's first line; no bold inside, so the editor's «Înlocuiește cu câmpurile»
      * recognises it as the platform's line (`framingSentencesOf`).
      */
-    holdLapsed: (deadline: string | undefined, toWaitlist: boolean) =>
-      `Termenul pentru semnare a fost ${deadline ?? "depășit"}. ${toWaitlist ? "Altcineva aștepta un loc, așa că locul tău a trecut la lista de așteptare." : "Altcineva a cerut un loc, așa că locul tău a devenit liber."}`,
+    holdLapsed: (deadline: string | undefined, toWaitlist: boolean, atDeadline = false) =>
+      atDeadline
+        ? `Termenul pentru semnarea declarației a fost ${deadline ?? "depășit"}. Locurile celor care nu semnaseră până atunci au fost eliberate, așa că locul tău nu mai este rezervat.`
+        : `Termenul pentru semnare a fost ${deadline ?? "depășit"}. ${toWaitlist ? "Altcineva aștepta un loc, așa că locul tău a fost eliberat." : "Altcineva a cerut un loc, așa că locul tău a devenit liber."}`,
     /**
      * …and what the person can do now, by the event as it stands at the send (`holdLapsedNext`). A site the
      * organizers keep shut (§906) is said in the card's own words, with «scrie-ne» — the footer's «Scrie-ne» link.
@@ -2691,7 +2736,9 @@ const T = {
         d.confirmLater
           ? `Your place at ${d.eventTitle ?? "the event"} is held. Your registration is complete only once you **sign the declaration of own responsibility**. ${d.windowOpen ? "Sign now, from the link below." : `You can sign now, from the link below, or when we remind you ${d.confirmationOpens ? `${d.confirmationOpens} before the start` : "before the start"}.`}`
           : `A place at ${d.eventTitle ?? "the event"} is held for you. The registration is complete only with the **signed declaration of own responsibility** — read and sign it from the link below.`,
-        `If you do not get to it online, you sign the declaration on paper at the registration desk on race day, before picking up your number.${d.holdExpiresAtFormatted ? ` If a waiting list forms, the place is held for you until **${d.holdExpiresAtFormatted}**; sign before then.` : ""}`,
+        d.releasesAtDeadline && d.releaseDeadlineFormatted
+          ? `${d.holdEndsBeforeRelease && d.holdExpiresAtFormatted ? `If a waiting list forms, the place is held for you until **${d.holdExpiresAtFormatted}**. ` : ""}If you do not sign by **${d.releaseDeadlineFormatted}**, the place is released and no longer held for you.`
+          : `If you do not get to it online, you sign the declaration on paper at the registration desk on race day, before picking up your number.${d.holdExpiresAtFormatted ? ` If a waiting list forms, the place is held for you until **${d.holdExpiresAtFormatted}**; sign before then.` : ""}`,
       ],
       action: "Sign the declaration",
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
@@ -2987,6 +3034,15 @@ const T = {
           : `Places are running out at ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => placesAlertFacts("en", d),
       body: (d: TemplateData) => placesAlertBody("en", d),
+      action: "Open the registrations",
+    },
+    unsignedReleased: {
+      subject: (d: TemplateData) =>
+        (d.unsignedReleased?.released ?? 0) > 0
+          ? `The unsigned places were released at ${d.eventTitle ?? "the event"}`
+          : `The declaration deadline has passed at ${d.eventTitle ?? "the event"}`,
+      facts: (d: TemplateData) => unsignedReleasedFacts("en", d),
+      body: (d: TemplateData) => unsignedReleasedBody("en", d),
       action: "Open the registrations",
     },
     volunteerRoleAssigned: {
@@ -3387,8 +3443,10 @@ const T = {
     waitlistPosition: (standing: WaitlistStandingLine) => waitlistPositionLine("en", standing),
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "The person"} is no longer on the waiting list.` : "The place has been released.",
-    holdLapsed: (deadline: string | undefined, toWaitlist: boolean) =>
-      `The deadline to sign was ${deadline ?? "missed"}. ${toWaitlist ? "Somebody was waiting for a place, so yours went to the waiting list." : "Somebody else asked for a place, so yours has been released."}`,
+    holdLapsed: (deadline: string | undefined, toWaitlist: boolean, atDeadline = false) =>
+      atDeadline
+        ? `The deadline to sign the declaration was ${deadline ?? "missed"}. The places of those who had not signed by then were released, so your place is no longer held.`
+        : `The deadline to sign was ${deadline ?? "missed"}. ${toWaitlist ? "Somebody was waiting for a place, so yours has been released." : "Somebody else asked for a place, so yours has been released."}`,
     holdLapsedNext: (next: HoldLapsedNext) =>
       next === "register"
         ? "If you still want to come, you can register again: there are places free."
@@ -3503,7 +3561,76 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   VOLUNTEER_GUARDIAN_REQUEST: "volunteerGuardianRequest",
   VOLUNTEER_INVITATION: "volunteerInvitation",
   PLACES_ALERT: "placesAlert",
+  UNSIGNED_RELEASED: "unsignedReleased",
 };
+
+/**
+ * The deadline release's bold line (§914): what it released, the free places of the capacity after it and the people
+ * waiting — «Eliberate: 12 · libere acum: 14 din 175 · pe lista de așteptare: 20» — then, only when there are any, the
+ * holds still unsigned it left and the test registrations it released (never in production). The counts are this line's,
+ * never fields of the words below, so a club text for the message (§359) never stores a sample number.
+ */
+function unsignedReleasedFacts(locale: "ro" | "en", d: TemplateData): { line: string; links: [] } | undefined {
+  const facts = d.unsignedReleased;
+  if (!facts) return undefined;
+  const parts =
+    locale === "ro"
+      ? [
+          `Eliberate: ${facts.released}`,
+          `libere acum: ${facts.free} din ${facts.capacity}`,
+          `pe lista de așteptare: ${facts.waiting}`,
+          ...(facts.unsigned > 0 ? [`încă nesemnate, păstrate: ${facts.unsigned}`] : []),
+          ...(facts.test > 0 ? [`înscrieri de test eliberate: ${facts.test}`] : []),
+        ]
+      : [
+          `Released: ${facts.released}`,
+          `free now: ${facts.free} of ${facts.capacity}`,
+          `on the waiting list: ${facts.waiting}`,
+          ...(facts.unsigned > 0 ? [`still unsigned, kept: ${facts.unsigned}`] : []),
+          ...(facts.test > 0 ? [`test registrations released: ${facts.test}`] : []),
+        ];
+  return { line: parts.join(" · "), links: [] };
+}
+
+/**
+ * The deadline release's paragraphs (§914), each half in its own language: what happened at the deadline, that each
+ * person released was told, the holds it left and why, and who gives the free places from now — never a person's name,
+ * nothing of a registration.
+ */
+function unsignedReleasedBody(locale: "ro" | "en", d: TemplateData): string[] {
+  const facts = d.unsignedReleased;
+  const event = d.eventTitle ?? (locale === "ro" ? "eveniment" : "the event");
+  const deadline = facts?.deadline?.[locale];
+  const released = (facts?.released ?? 0) + (facts?.test ?? 0) > 0;
+  if (locale === "ro") {
+    const when = deadline ? ` (${deadline})` : "";
+    return [
+      released
+        ? `A trecut termenul pentru semnarea declarației la ${event}${when}: locurile celor care nu semnaseră până atunci s-au eliberat, fără să le primească cineva automat.`
+        : `A trecut termenul pentru semnarea declarației la ${event}${when} și nu s-a eliberat niciun loc.`,
+      ...(released ? ["Fiecare persoană al cărei loc s-a eliberat a primit emailul „Locul tău nu mai este rezervat”."] : []),
+      ...((facts?.unsigned ?? 0) > 0
+        ? ["Locurile încă nesemnate scrise mai sus nu s-au eliberat: ale invitaților speciali, cele al căror prim email n-a plecat încă și cele cu termenul lor după termenul declarației."]
+        : []),
+      facts?.offerOnlyTicked
+        ? "Am bifat «Locurile libere le dau doar eu»: de acum locurile libere le dai doar tu, din pagina înscrierilor («Trimite-i oferta», «Oferă-i un loc acum», «Dă-i un loc acum»). Debifează-l în editorul evenimentului dacă vrei să le dea site-ul."
+        : "«Locurile libere le dau doar eu» era deja bifat: locurile libere le dai doar tu, din pagina înscrierilor.",
+    ];
+  }
+  const when = deadline ? ` (${deadline})` : "";
+  return [
+    released
+      ? `The deadline to sign the declaration at ${event} has passed${when}: the places of those who had not signed by then were released, and nobody was given them automatically.`
+      : `The deadline to sign the declaration at ${event} has passed${when}, and no place was released.`,
+    ...(released ? ["Each person whose place was released got the email “Your place is no longer held”."] : []),
+    ...((facts?.unsigned ?? 0) > 0
+      ? ["The places still unsigned written above were not released: the special guests', those whose first email has not left yet, and those whose own deadline is after the declaration deadline."]
+      : []),
+    facts?.offerOnlyTicked
+      ? "We ticked «I hand out the free places myself»: from now on you alone give the free places, from the registrations page («Send them the offer», «Offer them a place now», «Give them a place now»). Untick it in the event's editor if you want the site to give them."
+      : "«I hand out the free places myself» was already ticked: you alone give the free places, from the registrations page.",
+  ];
+}
 
 /**
  * The alert's bold line (§906): the free places of the capacity and the club's N, counted under the lock that
@@ -3944,7 +4071,7 @@ export function buildTemplateContent(
                   copy.cancelledReleased(data.participantName, data.cancelledFromWaitlist === true),
                 ]
               : messageType === "DECLARATION_HOLD_EXPIRED"
-                ? [...(own.highlight ?? []), copy.holdLapsed(data.holdExpiresAtFormatted, data.holdLapsedToWaitlist === true)]
+                ? [...(own.highlight ?? []), copy.holdLapsed(data.holdExpiresAtFormatted, data.holdLapsedToWaitlist === true, data.holdLapsedAtDeadline === true)]
                 : own.highlight,
         quiet: [...(own.quiet ?? []), ...(messageType === "GROUP_RUN_DECLARATION_SIGNED" ? [copy.groupRunNotYou(data.contactUrl)] : [])],
       };
@@ -4112,7 +4239,7 @@ export function buildTemplateContent(
         A released declaration hold's facts (§638), after the body whoever wrote it: the deadline that
         passed and where the place went, then what the person can do now — one sentence, read at the send.
       */
-      ...(messageType === "DECLARATION_HOLD_EXPIRED" ? [copy.holdLapsed(data.holdExpiresAtFormatted, data.holdLapsedToWaitlist === true)] : []),
+      ...(messageType === "DECLARATION_HOLD_EXPIRED" ? [copy.holdLapsed(data.holdExpiresAtFormatted, data.holdLapsedToWaitlist === true, data.holdLapsedAtDeadline === true)] : []),
       ...(messageType === "DECLARATION_HOLD_EXPIRED" && data.holdLapsedNext ? [copy.holdLapsedNext(data.holdLapsedNext)] : []),
       // The participant's reason (§558), on the club's copy only: the club asked for it, the person knows it.
       ...(messageType === "REGISTRATION_CANCELLED" && clubCopy && data.cancelReasonKind
@@ -4238,7 +4365,9 @@ export function buildTemplateContent(
         // …nor the organizers' notice of a volunteer's sign-up (§754): to colleagues, its one link is its button.
         messageType === "VOLUNTEER_CLUB_NOTICE" ||
         // …nor the Administrators' places alert (§906): to colleagues, its one link is its button.
-        messageType === "PLACES_ALERT"
+        messageType === "PLACES_ALERT" ||
+        // …nor the deadline release's summary (§914), for the same reason.
+        messageType === "UNSIGNED_RELEASED"
       ) {
         return own.length > 0 ? own : undefined;
       }

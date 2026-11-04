@@ -19,6 +19,7 @@ import {
   readReplacedActionLink,
   readSpentRegistrationLink,
   spentLinkOffersByItself,
+  spentLinkReleaseMoment,
 } from "@/modules/registrations/token-actions";
 import { confirmEmailAction } from "./actions";
 import { DENSITY } from "@/theme/density";
@@ -93,6 +94,8 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
     */
     const byItself =
       done === "waitlist" || people.some((person) => person.status === "WAITLISTED") ? await spentLinkOffersByItself(token, ["VERIFY_REGISTRATION_EMAIL"], now) : true;
+    // The release at the deadline will take the place just held (§914): the strip names its deadline, never the paper at the desk.
+    const release = done !== "waitlist" ? await spentLinkReleaseMoment(token, ["VERIFY_REGISTRATION_EMAIL"], now) : null;
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         {/* Every page in this journey opens with an h1, this one included. A page whose only
@@ -106,7 +109,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
         {await emailDelayNotice({ sx: { mb: 2 } })}
         {/* Confirmed is not finished: the declaration is still to sign, and the hold that
             protects their place is running. Saying "done" alone loses people here. */}
-        {done !== "waitlist" && <RegistrationJourney current="declare" declaration="emailJustSent" />}
+        {done !== "waitlist" && <RegistrationJourney current="declare" declaration="emailJustSent" release={release} />}
         <Alert severity="success">{t("confirm.done")}</Alert>
         {/* On the waiting list there is no declaration to sign yet, so the page says what is true instead. */}
         {done === "waitlist" && (
@@ -158,6 +161,8 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
     : await readReplacedActionLink(token, [{ purpose: "VERIFY_REGISTRATION_EMAIL", reason: context.reason }], locale, new Date());
 
   const journeyStep = spent ? spent.step : ("confirm" as const);
+  // A spent link whose registration waits for its declaration (§914): the release's deadline, when it will take the place.
+  const release = journeyStep === "declare" ? await spentLinkReleaseMoment(token, ["VERIFY_REGISTRATION_EMAIL"], new Date()) : null;
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -168,7 +173,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
       {/* A spent link moves the stepper to where the registration actually is, and drops it
           entirely once there is no journey left (cancelled, lapsed). */}
       {journeyStep === "declare" ? (
-        <RegistrationJourney current="declare" declaration="emailReceived" />
+        <RegistrationJourney current="declare" declaration="emailReceived" release={release} />
       ) : (
         journeyStep && <RegistrationJourney current={journeyStep} />
       )}

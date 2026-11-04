@@ -1175,6 +1175,8 @@
       },
       "places": {
         "title": "Locuri libere acum: {free} din {capacity}",
+        "split": "Din ele, pe site: {publicFree}; păstrate pentru club: {keptFree} din {kept}, le dai doar tu.",
+        "splitOffersOnly": "Pe toate le dai tu, cu «Locurile libere le dau doar eu»; păstrate pentru club: {keptFree} din {kept}.",
         "taken": "Ocupate {occupied}: {confirmed} confirmați și {held} — {kinds}.",
         "held": {
           "one": "{count} care își ține locul până semnează",
@@ -1233,6 +1235,11 @@
           "NOT_HERE": "evenimentul nu primește înscrieri pe acest site"
         },
         "offersOnly": "Cu «Locurile libere le dau doar eu», niciun loc nu pleacă automat: fiecare loc liber îl dai tu.",
+        "keptLeft": {
+          "one": "Pe site arată plin: a rămas doar locul păstrat pentru club.",
+          "few": "Pe site arată plin: au rămas doar cele {count} locuri păstrate pentru club.",
+          "other": "Pe site arată plin: au rămas doar cele {count} de locuri păstrate pentru club."
+        },
         "setting": "Schimbă în editor"
       },
       "publicDoor": {
@@ -1869,6 +1876,8 @@
         "releaseClosed": "După termen locul nu se pierde singur: se eliberează doar când cineva de pe listă n-are alt loc liber; înscrierile s-au închis: îl dai cu «Trimite-i oferta» sau, la masă, cu «Dă-i un loc».",
         "releaseNoList": "După termen locul nu se pierde singur: se eliberează doar când îl cere cineva nou și nu mai e alt loc liber.",
         "releaseNever": "După termen locul nu se pierde: evenimentul nu are limită de locuri.",
+        "releaseAtDeadline": "La {due}, locurile celor care n-au semnat se eliberează toate, fiecare primește un email și nimeni nu le primește automat: de atunci le dai doar tu.",
+        "releasedAtDeadline": "La {due}, locurile nesemnate s-au eliberat; de atunci locurile libere le dai doar tu.",
         "atStart": "La start, cine n-a semnat pierde locul; la masă poate fi confirmat pe hârtie, dacă mai e un loc liber.",
         "emailLink": {
           "one": "O persoană n-a confirmat încă adresa: linkul e valabil {hours} de când pleacă emailul, apoi înscrierea expiră; până atunci nu ține niciun loc.",
@@ -2220,6 +2229,39 @@
       "bulkArchiveBody": "Dispar de pe site în ambele limbi. Le poți readuce mai târziu, una câte una.",
       "saveNoticeTitle": "Salvezi și anunți participanții?",
       "saveNoticeBody": "Modificările se salvează, iar participanții primesc „Detalii actualizate”, fiecare în limba lui — dacă s-a schimbat locul, ora sau programul, evenimentul nu mai este anulat, sau ai scris o notă.",
+      "places": {
+        "title": "Verifică ce se schimbă la locuri",
+        "intro": "Salvarea schimbă:",
+        "line": "{label}: {from} → {to}.",
+        "back": "Înapoi",
+        "empty": "gol",
+        "unlimited": "nelimitat",
+        "ticked": "bifat",
+        "unticked": "nebifat",
+        "effects": {
+          "belowTaken": "Sunt deja {occupied} locuri ocupate: nu poți coborî sub ele, așa că salvarea va fi refuzată.",
+          "keptAbove": "Locurile păstrate pentru club ar fi mai multe decât cele {capacity} de locuri: salvarea va fi refuzată.",
+          "uncapped": "Locuri nelimitate: oricine se înscrie primește loc, iar lista de așteptare nu mai e folosită.",
+          "free": "Locuri anunțate pe site: {announced}. Libere după salvare: {free} din {capacity}.",
+          "freeSplit": "Locuri anunțate pe site: {announced}, adică {capacity} minus {kept} păstrate pentru club. Libere după salvare: {free} din {capacity} — pe site {site}, păstrate pentru club {keptFree}.",
+          "offers": "Pe lista de așteptare sunt {waiting}: primii {count} primesc câte o ofertă pe email, imediat sau în câteva minute.",
+          "nobodyAuto": "Pe lista de așteptare sunt {waiting}: nimeni nu primește loc automat, locurile libere le dai tu.",
+          "doorDirect": "Pe site, butonul este „Înscrie-te”: primul venit ia un loc.",
+          "doorWaitlist": "Pe site, butonul este „Intră pe lista de așteptare”.",
+          "doorFull": "Pe site arată plin și nu e listă de așteptare: nimeni nu se mai poate înscrie de pe site.",
+          "doorListFull": "Pe site arată plin, iar lista de așteptare e plină: nimeni nu se mai poate înscrie de pe site.",
+          "doorOffersOnly": "Pe site nu e niciun buton: locurile libere le dai doar tu și nu e listă de așteptare.",
+          "doorShut": "Formularul de pe site e închis: înscrierile le faceți doar voi, din administrare.",
+          "datesClosed": "Perioada de înscriere nu e deschisă acum: butonul apare pe site abia la deschidere.",
+          "releaseAt": "La {deadline}, locurile celor care n-au semnat se eliberează și fiecare primește un email; de atunci locurile libere le dai doar tu.",
+          "releasePassed": "Termenul declarației a trecut: locurile nesemnate se eliberează în câteva minute și fiecare persoană primește un email.",
+          "releaseNoEffect": "Bifa nu are efect: termenul declarației e la start sau locurile sunt nelimitate.",
+          "releaseOff": "Locurile nesemnate nu se mai eliberează la termen: rămân ale lor până le cere cineva sau până la start.",
+          "releaseRan": "Eliberarea a rulat deja: mutarea termenului nu aduce pe nimeni înapoi și pregătește o nouă eliberare la noul termen.",
+          "alertOn": "Administratorii primesc un email când locurile libere scad la {count}; acum sunt {free}.",
+          "alertOff": "Nu mai pleacă emailul când locurile se împuținează."
+        }
+      },
       "cancelEventTitle": "Anulezi „{title}”?",
       "cancelEventBody": "Apare ca anulat pe site, înscrierile nu se mai deschid și cele existente rămân înregistrate. Participanții primesc „Eveniment anulat” cu motivul tău.",
       "cancelEventQuietBody": "Apare ca anulat pe site, înscrierile nu se mai deschid și cele existente rămân înregistrate. Participanții nu sunt anunțați.",
@@ -2515,6 +2557,10 @@
       "NO_WAITLIST": "Toate locurile sunt ocupate și evenimentul nu are listă de așteptare, așa că nu s-a schimbat nimic.",
       "WALK_IN_LEFT_UNCONFIRMED": "Persoana e înscrisă, dar tocmai s-a ocupat ultimul loc, deci e neconfirmată și nu a primit email. Confirm-o pe hârtie când se eliberează un loc.",
       "NO_FREE_PLACE": "Cursa e plină: locuri {capacity}, confirmați {confirmed}, declarații de semnat {declaration}, oferite {offered}, rezervate familiilor {family}, invitați {invited}. Mărește întâi capacitatea.",
+      "CAPACITY_BELOW_TAKEN": "Locurile nu pot fi mai puține decât cele ocupate acum, {occupied}: confirmați {confirmed}, de semnat {declaration}, oferite {offered}, invitați {invited}, rezervate familiilor {family}. Nu s-a salvat nimic.",
+      "CAPACITY_BELOW_TAKEN_DATED": "La {date}, locurile nu pot fi mai puține decât cele ocupate, {occupied}: confirmați {confirmed}, de semnat {declaration}, oferite {offered}, invitați {invited}, familii {family}. Nu s-a salvat nimic.",
+      "PLACES_KEPT_ABOVE_CAPACITY": "«Locuri păstrate pentru club» nu poate fi mai mare decât numărul de locuri. Nu s-a salvat nimic.",
+      "PLACES_KEPT_ABOVE_CAPACITY_DATED": "La {date}, «Locuri păstrate pentru club» ar fi mai mare decât numărul de locuri al acelei date. Nu s-a salvat nimic, la nicio dată.",
       "SUPPLEMENTARY_PLACE_UNCONFIRMED": "Nu s-a schimbat nimic: locurile s-au schimbat de când ai deschis pagina, iar întrebarea nu spunea că adaugi acest loc suplimentar. Apasă din nou: întrebarea spune acum cât devine capacitatea.",
       "NO_RECIPIENTS": "Nu s-a trimis nimic: nu e nimeni în grupul ales acum. Alege alt grup.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care îl putem completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete.",
@@ -2787,6 +2833,9 @@
       "capacity": "Număr de locuri",
       "capacityHelp": "Lasă gol pentru nelimitat. Nu poate fi coborât sub locurile deja ocupate.",
       "capacityWaiting": "Pe lista de așteptare: {waiting}. Dacă mărești numărul, locurile noi se oferă imediat, în ordine, câte {offer} fiecare.",
+      "capacityWaitingByHand": "Pe lista de așteptare: {waiting}. Locurile noi nu se oferă singure: le dai tu din «Înscrieri».",
+      "capacityWaitingKeptInUse": "Pe lista de așteptare: {waiting}. Ai dat deja {beyond} locuri păstrate: la o mărire, primele {beyond} locuri noi rămân ale clubului; doar cele de peste se oferă imediat, câte {offer} fiecare.",
+      "placesTaken": "Ocupate acum: {occupied} — confirmați {confirmed}, de semnat {declaration}, oferite {offered}, invitați {invited}, rezervate familiilor {family}. Nu poți coborî sub {occupied}.",
       "waitlistMode": "Lista de așteptare",
       "waitlistModeHelp": "Ce se întâmplă când locurile s-au ocupat.",
       "waitlistModeTip": "Nelimitată: oricine poate intra pe listă când locurile s-au ocupat. Limitată: cel mult atâtea persoane. Fără listă: evenimentul plin refuză pe toată lumea.",
@@ -3547,6 +3596,7 @@
               "other": "{count} de locuri"
             },
             "unlimited": "locuri nelimitate",
+            "keptForClub": "păstrate pentru club: {count}",
             "declaration": "declarația v{version}",
             "noDeclaration": "lipsește declarația",
             "listHidden": "listă nepublică",
@@ -3712,6 +3762,12 @@
       },
       "participantListHelpMore": "Ceilalți apar ca „Participant (nume ascuns)”. Salvarea e refuzată cât timp nu e în vigoare o notă de confidențialitate aprobată care descrie lista.",
       "confirmationWindowHelpMore": "După termen, locul trece la următorul doar dacă așteaptă cineva. Cine se înscrie după deschiderea ferestrei, sau când prima cifră e 0, are {hold} să semneze.",
+      "releaseUnsignedAtDeadline": "Eliberează singur locurile nesemnate la termen",
+      "releaseUnsignedHelp": "La {deadline}, locurile celor care n-au semnat declarația se eliberează, fără să le primească cineva automat: de atunci locurile libere le dai doar tu.",
+      "releaseUnsignedHelpUnticked": "Nebifat: un loc nesemnat se păstrează până îl cere cineva sau până la start.",
+      "releaseUnsignedHelpMore": "Fiecare primește un email, administratorii unul singur. O dată pe termen. Ia și locurile date de voi, nesemnate; nu ia invitații speciali, ofertele și invitațiile neacceptate.",
+      "releaseUnsignedNoEffect": "Fără efect pe acest eveniment: termenul declarației e la start sau locurile sunt nelimitate.",
+      "releaseUnsignedRan": "Eliberarea a rulat pentru termenul {deadline}.",
       "declarationKinds": {
         "EVENT_DECLARATION": "Eveniment montan",
         "EVENT_DECLARATION_ROAD": "Eveniment pe șosea sau în parc"
@@ -3730,6 +3786,12 @@
       "placesAlertAt": "Anunță-mă când rămân N locuri",
       "placesAlertAtHelp": "Gol: fără email. Un număr: administratorii primesc un email când locurile libere scad la el, și încă unul când nu mai rămâne niciunul.",
       "placesAlertAtHelpMore": "Câte un email pe prag; altul vine doar după ce locurile libere urcă din nou peste număr.",
+      "placesKeptForClub": "Locuri păstrate pentru club",
+      "placesKeptForClubHelp": "Câte locuri nu se dau de pe site: site-ul primește înscrieri până rămân doar acestea, apoi arată plin sau lista de așteptare. Gol sau 0: toate sunt pe site.",
+      "placesKeptForClubHelpMore": "Le dai tu, fără loc în plus cât mai sunt: «Oferă-i un loc acum», «Trimite-i oferta», o invitație. Lista nu le primește singură; un loc eliberat cât site-ul e plin rămâne al clubului.",
+      "placesKeptAnnounced": "Pe site apar acum {announced} din {capacity}.",
+      "placesChangeReason": "De ce schimbi locurile? (opțional)",
+      "placesChangeReasonHelp": "Apare în «Istoric capacitate», doar dacă se schimbă locurile. Nu scrie nume.",
       "waitlistCountPublic": "Arată public câți așteaptă",
       "waitlistCountPublicHelp": "Bifat: cardul, pagina și fiecare persoană de pe listă află câți așteaptă. Debifat: se spune doar că există o listă și cum intri pe ea; clubul vede numărul în administrare.",
       "hiddenListTitle": "Lista de invitați speciali",
@@ -7311,6 +7373,7 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "Acordul tău pentru un voluntar minor",
         "VOLUNTEER_INVITATION": "Invitația de a fi voluntar",
         "PLACES_ALERT": "Mai sunt puține locuri",
+        "UNSIGNED_RELEASED": "Locurile nesemnate s-au eliberat la termen",
         "RSVP_CONFIRM": "Confirmă că vii („Vin!”)",
         "RSVP_ASK": "Vii mâine? („Vin” / „Nu vin”)"
       },
@@ -7384,6 +7447,7 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "Când un voluntar sub 18 ani se oferă, sau un organizator apasă „Trimite linkul părintelui”: contractul și linkul prin care părintele îl acceptă în nume propriu.",
         "VOLUNTEER_INVITATION": "Când un organizator sau un administrator trimite invitații din cardul «Voluntari» al unui eveniment cu voluntari doar pe invitație, și la „Retrimite”. Un link personal spre pagina voluntarilor.",
         "PLACES_ALERT": "Când locurile libere scad la pragul din «Anunță-mă când rămân N locuri», și încă o dată când nu mai rămâne niciunul: fiecărui Administrator. Butonul deschide înscrierile.",
+        "UNSIGNED_RELEASED": "La termenul declarației, pe un eveniment cu «Eliberează singur locurile nesemnate la termen» bifat: fiecărui Administrator, o dată pe termen — câte locuri s-au eliberat și cine le dă de acum.",
         "RSVP_CONFIRM": "Când cineva scrie o adresă la „Vin!” pe pagina unui eveniment: butonul „Da, vin”, care îl numără, și dedesubt „Nu vin”. La „Nu mai vin” de pe pagină pleacă același mesaj, doar cu linkul de retragere.",
         "RSVP_ASK": "Cu {askDays} înainte de start, de la {askHour}: {askWho}. „Vin”, apoi „Da, vin”, îi numără; „Nu vin” nu. Cine a răspuns nu primește."
       },
@@ -7432,6 +7496,7 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "când se oferă un voluntar sub 18 ani",
         "VOLUNTEER_INVITATION": "când clubul invită pe cineva să fie voluntar",
         "PLACES_ALERT": "când locurile scad la prag, administratorilor",
+        "UNSIGNED_RELEASED": "la termenul declarației, administratorilor",
         "RSVP_CONFIRM": "când cineva spune „Vin!”, către adresa lui",
         "RSVP_ASK": "cu {askDays} înainte, de la ora {askHour}, {askWhoShort}"
       },
@@ -8115,7 +8180,8 @@
           "lastCall": "ultimul apel la semnat, către cei care nu au semnat încă",
           "participation": "se deschide confirmarea participării, către cei care nu au semnat încă",
           "nextInLine": "expiră un loc ținut; locul trece la următorul de pe lista de așteptare",
-          "holdLapsed": "expiră un loc ținut; celui care nu a semnat, că locul a trecut la altcineva",
+          "holdLapsed": "expiră un loc ținut; celui care nu a semnat, că locul nu mai e rezervat",
+          "unsignedReleased": "termenul declarației: se eliberează locurile nesemnate; administratorilor, câte un singur email",
           "registrationOpened": "se deschid înscrierile, către adresele lăsate pe pagina evenimentului",
           "newEventAlert": "anunțul de eveniment nou, către abonații temelor lui",
           "newsletter": "newsletterul, către abonații temei",
@@ -8342,6 +8408,7 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "Voluntarul și evenimentul se adaugă singure. Linkul e doar pentru părinte sau tutore, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "VOLUNTEER_INVITATION": "Evenimentul, rolurile căutate și mesajul clubului se adaugă singure. Linkul e doar al persoanei invitate, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "PLACES_ALERT": "Locurile libere, capacitatea și pragul se adaugă singure, oricum ai scrie textul. Un email pe prag; altul vine doar după ce locurile urcă din nou peste prag.",
+        "UNSIGNED_RELEASED": "Termenul, locurile eliberate, cele libere, capacitatea și lista de așteptare se adaugă singure, oricum ai scrie textul. Un singur email pe termen.",
         "RSVP_CONFIRM": "Cel mult un mesaj la 10 minute pe adresă. Linkurile sunt doar pentru această adresă, merg o singură dată și le înlocuiește mesajul nou. Cine e deja numărat primește doar „Nu mai vin”.",
         "RSVP_ASK": "O dată pe eveniment, dacă nu l-ai debifat în editor. Bifat după deschidere, se întreabă la prima trecere; bifat abia în ziua lui, nu. Ce n-a plecat până la miezul nopții dinainte se anulează."
       },
@@ -9928,6 +9995,8 @@
           "freePlacesByOfferOnly": "Locurile libere le dau doar eu",
           "publicRegistrationOpen": "Înscrieri publice deschise",
           "placesAlertAt": "Anunță-mă când rămân N locuri",
+          "placesKeptForClub": "Locuri păstrate pentru club",
+          "releaseUnsignedAtDeadline": "Eliberează singur locurile nesemnate la termen",
           "opensAt": "Înscrierile se deschid",
           "opensSoon": "Înscrierile se deschid în curând",
           "closesAt": "Înscrierile se închid",
@@ -11826,7 +11895,8 @@
         "declare": {
           "title": "Semnezi declarația",
           "body": "Din același email: o citești și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei.",
-          "bodyLater": "Locul e al tău. Îți cerem declarația cu {opens} înainte de start, online sau pe hârtie la masa de înscrieri; poți semna și mai devreme."
+          "bodyLater": "Locul e al tău. Îți cerem declarația cu {opens} înainte de start, online sau pe hârtie la masa de înscrieri; poți semna și mai devreme.",
+          "bodyLaterReleased": "Locul e al tău. Îți cerem declarația cu {opens} înainte de start și o semnezi online; poți semna și mai devreme. Dacă nu semnezi până {due}, locul se eliberează."
         },
         "confirmed": {
           "title": "Ești înscris",
@@ -11979,7 +12049,8 @@
         "body": "Din același email, o semnezi online sau pe hârtie, la masa de înscrieri în ziua cursei. Locul e ținut {hold}; dacă e listă de așteptare, apoi trece la următorul.",
         "bodyByHand": "Din același email, o semnezi online sau pe hârtie, la masa de înscrieri în ziua cursei. Locul e ținut {hold}; dacă e listă de așteptare, organizatorii îl pot da apoi altcuiva.",
         "bodyLater": "Cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația, online sau pe hârtie la masa de înscrieri. Poți semna și mai devreme. Dacă e listă de așteptare, locul e ținut până {due}.",
-        "bodyLaterAtStart": "Cursa e gratuită, așa că îți cerem o confirmare: semnezi declarația din emailul de înscriere oricând până la start, online sau pe hârtie la masa de înscrieri. Îți amintim cu {opens} înainte. Locul nu expiră înainte de start."
+        "bodyLaterAtStart": "Cursa e gratuită, așa că îți cerem o confirmare: semnezi declarația din emailul de înscriere oricând până la start, online sau pe hârtie la masa de înscrieri. Îți amintim cu {opens} înainte. Locul nu expiră înainte de start.",
+        "bodyLaterReleased": "Cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația online. Poți semna și mai devreme. Dacă nu semnezi până {due}, locul se eliberează, chiar dacă nu așteaptă nimeni."
       },
       "confirmed": {
         "title": "Ești înscris",
@@ -12024,6 +12095,18 @@
           "emailHeldUntil": "Locul tău este rezervat. Declarația ți-o cerem pe email cu {opens} înainte de start — o semnezi atunci, online sau pe hârtie la masa de înscrieri; după ce semnezi, îți trimitem declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
           "onThisPage": "Mai rămâne un pas: citește și semnează declarația mai jos — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
           "emailReceived": "Mai rămâne un pas: citește și semnează declarația din emailul pe care l-ai primit — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}."
+        },
+        "declareReleased": {
+          "emailJustSent": "Mai rămâne un pas: citește și semnează online declarația din emailul pe care tocmai ți l-am trimis. Locul tău este rezervat, dar dacă nu semnezi până {release}, se eliberează. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "emailHeldUntil": "Locul tău este rezervat. Declarația ți-o cerem pe email cu {opens} înainte de start — o semnezi atunci, online, până {release}: dacă nu semnezi până atunci, locul se eliberează; după ce semnezi, îți trimitem declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "onThisPage": "Mai rămâne un pas: citește și semnează online declarația mai jos. Locul tău este rezervat, dar dacă nu semnezi până {release}, se eliberează. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "emailReceived": "Mai rămâne un pas: citește și semnează online declarația din emailul pe care l-ai primit. Locul tău este rezervat, dar dacă nu semnezi până {release}, se eliberează. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră."
+        },
+        "declareScheduledReleased": {
+          "emailJustSent": "Mai rămâne un pas: citește și semnează online declarația din emailul care pleacă spre tine în cel mult {wait}. Locul tău este rezervat, dar dacă nu semnezi până {release}, se eliberează. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs.",
+          "emailHeldUntil": "Locul tău este rezervat. Declarația ți-o cerem pe email cu {opens} înainte de start — o semnezi atunci, online, până {release}: dacă nu semnezi până atunci, locul se eliberează; după ce semnezi, îți trimitem declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+          "onThisPage": "Mai rămâne un pas: citește și semnează online declarația mai jos. Locul tău este rezervat, dar dacă nu semnezi până {release}, se eliberează. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+          "emailReceived": "Mai rămâne un pas: citește și semnează online declarația din emailul pe care l-ai primit. Locul tău este rezervat, dar dacă nu semnezi până {release}, se eliberează. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}."
         },
         "done": "Înscrierea ta este confirmată. Ne vedem la start!"
       }
@@ -12262,6 +12345,9 @@
       "deadline": "Locul tău este rezervat până {deadline}. Fără listă de așteptare rămâne al tău și după, până la start — dar înscrierea e completă doar cu declarația semnată.",
       "deadlineAtStart": "Locul tău este rezervat până la start, {deadline}: nu expiră înainte. Înscrierea e completă doar cu declarația semnată.",
       "deadlinePassed": "Termenul, {deadline}, a trecut, dar locul este încă al tău: semnează acum și înscrierea e completă.",
+      "deadlineReleased": "Locul tău este rezervat până {deadline}. Dacă nu semnezi până atunci, locul se eliberează, chiar dacă nu așteaptă nimeni — înscrierea e completă doar cu declarația semnată.",
+      "deadlineReleasing": "Termenul, {deadline}, a trecut: locurile celor care n-au semnat se eliberează, așa că locul nu mai este rezervat pentru tine.",
+      "deadlineReleasedLater": "Locul tău este rezervat până {deadline}; dacă așteaptă cineva, după aceea poate trece mai departe. Dacă nu semnezi până {release}, locul se eliberează, chiar dacă nu așteaptă nimeni — înscrierea e completă doar cu declarația semnată.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
       "idDocument": "Act de identitate (seria și numărul)",
       "idDocumentHelp": "Cartea de identitate (de ex. „{idExample}”) sau pașaportul; kitul se ridică pe baza lui. Se șterge la șapte zile după eveniment, e mascată în copia clubului; nu păstrăm o copie.",
@@ -12428,6 +12514,8 @@
       "eventCancelled": "Nu trebuie să faci nimic: înscrierea rămâne la noi ca înregistrare, cu starea de mai sus.",
       "runner": "Înscris: {name}",
       "confirmBy": "Confirmă semnând declarația, din emailul de înscriere, până {due}. Sau pe hârtie, la masa de înscrieri, în ziua cursei.",
+      "confirmByReleased": "Confirmă semnând declarația, din emailul de înscriere, până {due}. Dacă nu semnezi până atunci, locul se eliberează.",
+      "confirmByReleasedLater": "Confirmă semnând declarația, din emailul de înscriere, până {due}. Dacă nu semnezi până {release}, locul se eliberează.",
       "familySign": {
         "body": "La {event} așteaptă semnătura declarațiile pentru: {names}. Le poți semna aici pe toate, una după alta.",
         "action": "Semnează declarațiile"

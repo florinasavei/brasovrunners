@@ -15,6 +15,7 @@ import { enqueueEmail } from "@/modules/notifications/outbox";
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { DomainError } from "@/shared/errors/domain-error";
+import { releaseDeadlineOfHold } from "./domain/unsigned-release";
 import type { WaitlistStanding } from "./domain/waitlist-standing";
 import { findRegistrationById, readWaitlistPosition } from "./repository";
 import { checkIn, type EventForRegistration, looksLikeSpam, unregister } from "./service";
@@ -95,6 +96,11 @@ export type MyRegistration = {
    * page can say by when to confirm, "până la start" when it is the start itself (§407).
    */
   holdExpiresAt: Date | null;
+  /**
+   * The deadline at which «Eliberează singur locurile nesemnate la termen» (§914) will take this place
+   * (`releaseDeadlineOfHold`), or null: «confirmă până» then says the place goes at it, never a paper on race day.
+   */
+  releaseDeadline: Date | null;
   /** The race number, given at the confirmation (§87, §548); shown through `raceNumberOf`. */
   bibNumber: number | null;
   /** How the event writes the number (§735): «007» when its bib says «007». */
@@ -161,6 +167,13 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       checkinCode: registrations.checkinCode,
       checkedInAt: registrations.checkedInAt,
       holdExpiresAt: registrations.holdExpiresAt,
+      // What the release at the deadline reads (§914): the switch, the places, the window and the deadline it last ran for.
+      outsideCapacity: registrations.outsideCapacity,
+      capacity: events.capacity,
+      confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
+      confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
+      releaseUnsignedAtDeadline: events.releaseUnsignedAtDeadline,
+      unsignedReleasedFor: events.unsignedReleasedFor,
       bibNumber: registrations.bibNumber,
       raceNumberFormat: RACE_NUMBER_FORMAT,
       listOptOut: registrations.listOptOut,
@@ -197,8 +210,15 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
   const standings = new Map<string, WaitlistStanding | null>(
     await Promise.all(rows.filter((row) => row.status === "WAITLISTED").map(async (row) => [row.id, await readWaitlistPosition(db, row.id)] as const)),
   );
-  return rows.map(({ listOptOut, eventStatus, ...row }) => ({
+  return rows.map(({ listOptOut, eventStatus, outsideCapacity, capacity, confirmationOpensDaysBefore, confirmationDeadlineDaysBefore, releaseUnsignedAtDeadline, unsignedReleasedFor, ...row }) => ({
     ...row,
+    releaseDeadline:
+      row.status !== "PENDING_DECLARATION"
+        ? null
+        : releaseDeadlineOfHold(
+            { capacity, eventStatus, startsAt: row.eventStartsAt, confirmationOpensDaysBefore, confirmationDeadlineDaysBefore, releaseUnsignedAtDeadline, unsignedReleasedFor },
+            { holdExpiresAt: row.holdExpiresAt, outsideCapacity },
+          ),
     waitlistStanding: standings.get(row.id) ?? null,
     listed: !listOptOut,
     eventCancelled: eventStatus === "CANCELLED",

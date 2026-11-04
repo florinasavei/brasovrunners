@@ -22,13 +22,16 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, wantedLapsedHoldReleases } from "./domain/capacity";
-import { offersOnItsOwn } from "./domain/waitlist";
+import { keptPlacesInUse, lineRoom, offerWordsByItself } from "./domain/kept-places";
+import { type EntryChannel, offersOnItsOwn } from "./domain/waitlist";
 import { registrationNameKey } from "./domain/name-key";
 import { DEFAULT_PUBLIC_LIST_CLUB, memberClubCell } from "./domain/public-list-club";
 import { PENDING_LIST_STATUSES, WAITLISTED_LIST_STATUSES } from "./domain/public-list-states";
 import { allowedFromStatuses } from "./domain/state-machine";
 import { type SignatureTrace, traceColumns } from "@/modules/legal-documents/domain/signature-trace";
 import { queueHoldLapsedEmails } from "./hold-lapsed-email";
+import { completeDeadlineRelease } from "./unsigned-release";
+import { deadlineReleaseDue } from "./domain/unsigned-release";
 import { resolveDisplayName, type RegistrationEntryDetails } from "./names";
 import { HOME_COUNTRY } from "@/modules/events/domain/place";
 
@@ -181,38 +184,114 @@ export async function addSupplementaryPlace<T extends Record<string, unknown>>(
   actorStaffUserId: string,
   now: Date,
 ): Promise<number | null> {
+  return (await addSupplementaryPlaceVersioned(db, eventId, actorStaffUserId, now))?.capacity ?? null;
+}
+
+/**
+ * `addSupplementaryPlace` with the row's new version beside the capacity (§914): the order «Istoric capacitate» reads
+ * the changes in, whatever the clock said. The one statement both return from.
+ */
+export async function addSupplementaryPlaceVersioned<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  actorStaffUserId: string,
+  now: Date,
+): Promise<{ capacity: number; version: number } | null> {
   const [row] = await db
     .update(events)
     .set({ capacity: sql`${events.capacity} + 1`, version: sql`${events.version} + 1`, updatedAt: now, updatedByStaffUserId: actorStaffUserId })
     .where(and(eq(events.id, eventId), isNotNull(events.capacity)))
-    .returning({ capacity: events.capacity });
-  return row?.capacity ?? null;
+    .returning({ capacity: events.capacity, version: events.version });
+  return row && row.capacity !== null ? { capacity: row.capacity, version: row.version } : null;
 }
 
 /**
- * Whether the event offers its freed and added places to the waiting list on its own (§615):
- * `events.waitlist_auto_offer`, read by `fillAvailableSpots` inside the caller's transaction, after
- * the caller locked the row — so the answer is the row's as it stands under the lock, whatever copy
- * of the event the caller carries (a fixture's partial row, the editor's row from before the save).
- * A row that does not exist offers nothing. «Locurile libere le dau doar eu» on (§906) offers nothing either, «Da» or
- * not: every free place is then the staff's to give (`domain/waitlist.ts#offersOnItsOwn`).
+ * The event's rules a place is decided by (§615, §906, §914), as they stand on the row: the capacity, «Locuri
+ * păstrate pentru club», «Locurile libere le dau doar eu», «Locurile din lista de așteptare se alocă automat» and the
+ * waiting list's length. One primary-key read inside the caller's transaction, after the caller locked the row — so
+ * the answer is the row's under the lock, whatever copy of the event the caller carries (a fixture's partial row, the
+ * maintenance job's hand-built one, the editor's row from before the save). Undefined for a row that does not exist.
  */
-export async function offersWaitlistAutomatically<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<boolean> {
+export type PlaceRules = {
+  capacity: number | null;
+  placesKeptForClub: number;
+  freePlacesByOfferOnly: boolean;
+  waitlistAutoOffer: boolean;
+  waitlistCapacity: number | null;
+  /*
+    «Eliberează singur locurile nesemnate la termen» (§914): the switch, its memory and what its deadline is read from —
+    the start, the status and the participation window — as the row has them under the lock (`domain/unsigned-release.ts`).
+  */
+  eventStatus: string;
+  startsAt: Date;
+  confirmationOpensDaysBefore: number | null;
+  confirmationDeadlineDaysBefore: number | null;
+  releaseUnsignedAtDeadline: boolean;
+  unsignedReleasedFor: Date | null;
+};
+
+export async function readPlaceRules<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<PlaceRules | undefined> {
   const [row] = await db
-    .select({ waitlistAutoOffer: events.waitlistAutoOffer, freePlacesByOfferOnly: events.freePlacesByOfferOnly, capacity: events.capacity })
+    .select({
+      capacity: events.capacity,
+      placesKeptForClub: events.placesKeptForClub,
+      freePlacesByOfferOnly: events.freePlacesByOfferOnly,
+      waitlistAutoOffer: events.waitlistAutoOffer,
+      waitlistCapacity: events.waitlistCapacity,
+      eventStatus: events.eventStatus,
+      startsAt: events.startsAt,
+      confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
+      confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
+      releaseUnsignedAtDeadline: events.releaseUnsignedAtDeadline,
+      unsignedReleasedFor: events.unsignedReleasedFor,
+    })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  return row ? offersOnItsOwn(row) : false;
+  return row;
 }
 
 /**
- * `domain/waitlist.ts#offersOnItsOwn` as a column (§615, §906): the line is offered the free places on its own —
- * «Da» and «Locurile libere le dau doar eu» off. For the readers that tell a person or the staff whether the places
- * go out by themselves, so no sentence promises an offer the allocator will not make.
+ * Whether a person may be **told** that a freed place reaches the line by itself (§615, §906, §914): «Da», «Locurile
+ * libere le dau doar eu» off (`domain/waitlist.ts#offersOnItsOwn`) — and no place kept for the club
+ * (`kept-places.ts#offerWordsByItself`): with K > 0 a place freed while the site's places are taken stays the club's,
+ * so the words are the organizers' («le dau organizatorii, pe rând»). For the sentences alone — the allocator's own
+ * gate is `readPlaceRules` + `offersOnItsOwn` in `fillAvailableSpots`. A row that does not exist reads as no.
+ */
+export async function offersWaitlistAutomatically<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<boolean> {
+  const row = await readPlaceRules(db, eventId);
+  return row ? offerWordsByItself(offersOnItsOwn(row), row) : false;
+}
+
+/**
+ * `offersWaitlistAutomatically` as a column (§615, §906, §914): the line is offered the free places on its own — «Da»
+ * and «Locurile libere le dau doar eu» off — and no place is kept for the club. For the readers that tell a person or
+ * the staff whether the places go out by themselves, so no sentence promises an offer the allocator will not make.
  */
 export function lineOffersOnItsOwn(): SQL<boolean> {
-  return sql<boolean>`(${events.waitlistAutoOffer} and not (${events.freePlacesByOfferOnly} and ${events.capacity} is not null))`.mapWith(Boolean);
+  return sql<boolean>`(${events.waitlistAutoOffer} and not (${events.freePlacesByOfferOnly} and ${events.capacity} is not null) and (${events.placesKeptForClub} = 0 or ${events.capacity} is null))`.mapWith(
+    Boolean,
+  );
+}
+
+/**
+ * `domain/unsigned-release.ts#deadlineReleaseDue` in SQL (§914), for the job's choice of events: the switch on, a
+ * scheduled capped event, a participation window whose deadline is before the start (`opens > deadline > 0` days),
+ * that deadline reached, the start still ahead, and the release not yet run for this deadline. Days are counted as
+ * `n * interval '24 hours'`, as `confirmationWindow` counts them — never `'1 day'`, which a DST change bends by an hour.
+ * A unit test holds it to the pure rule.
+ */
+export function deadlineReleaseDueSql(now: Date): SQL<boolean> {
+  const deadline = sql`(${events.startsAt} - ${events.confirmationDeadlineDaysBefore} * interval '24 hours')`;
+  return sql<boolean>`(${events.releaseUnsignedAtDeadline}
+    and ${events.capacity} is not null
+    and ${events.eventStatus} = 'SCHEDULED'
+    and ${events.confirmationOpensDaysBefore} > 0
+    and ${events.confirmationDeadlineDaysBefore} > 0
+    and ${events.confirmationOpensDaysBefore} > ${events.confirmationDeadlineDaysBefore}
+    and ${deadline} <= ${now.toISOString()}::timestamptz
+    and ${events.startsAt} > ${now.toISOString()}::timestamptz
+    and ${events.unsignedReleasedFor} is distinct from ${deadline})`.mapWith(Boolean);
 }
 
 /**
@@ -1361,13 +1440,28 @@ export type EventForExpiry = {
  * (`confirmByStaff`), both under the same lock and both after this sweep. Keeping the hold here
  * would leave them "the event is full" for a place nobody is holding. The guard against dead
  * offers lives in `fillAvailableSpots` alone.
+ *
+ * «Locuri păstrate pentru club» (§914): the waiting list, and a public newcomer, want the **site's** places — the
+ * room they are measured on is `capacity − K − occupied` (`kept-places.ts#lineRoom`), clamped at nought as `free`
+ * always was, so no input releases more holds than people want places. A staff newcomer (`wantingChannel: "staff"`,
+ * the desk's walk-in, «Dă-i un loc acum») keeps the whole capacity, as every staff verb does. A public newcomer is never
+ * the reason a hold goes while the club's own places are in use (`lineRoom` below nought): the place it frees would be
+ * the club's again, not theirs. Read off the row (`readPlaceRules`), so a caller's copy without the column — the
+ * maintenance job's — counts the same. With K at 0 every number here is today's.
+ *
+ * «Eliberează singur locurile nesemnate la termen» (§914): once the participation window's deadline is reached on an
+ * event with the box ticked (`domain/unsigned-release.ts#deadlineReleaseDue`, read off the locked row), every lapsed
+ * hold that holds a counted place goes at once, whether or not anybody waits — still never a hold outside the places
+ * or one whose first email is queued — and `atDeadline` names the deadline, so the caller completes the release (the
+ * memory, the tick, the summary). Asked before the early return, so a deadline with nothing lapsed still runs once.
  */
 async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>>(
   db: Database<T>,
   event: EventForExpiry,
   now: Date,
   wanting: number,
-): Promise<string[]> {
+  wantingChannel: EntryChannel,
+): Promise<{ ids: string[]; atDeadline: Date | null }> {
   const over = event.eventStatus !== "SCHEDULED" || event.startsAt <= now;
   const lapsed = await db
     .select({ id: registrations.id })
@@ -1385,20 +1479,31 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
       ),
     )
     .orderBy(asc(registrations.holdExpiresAt), asc(registrations.id));
-  if (lapsed.length === 0) return [];
 
-  if (over) return lapsed.map((row) => row.id);
+  if (over) return { ids: lapsed.map((row) => row.id), atDeadline: null };
 
-  const waiting = (await countEligibleWaitlisted(db, event.id)) + wanting;
-  if (waiting === 0) return [];
-  const free =
-    event.capacity === null
-      ? Number.POSITIVE_INFINITY
-      : Math.max(event.capacity - computeOccupied(await countOccupied(db, event.id, now)), 0);
+  // The deadline's own release (§914), before any rule of §160's: every counted lapsed hold, whoever waits.
+  const rules = await readPlaceRules(db, event.id);
+  const atDeadline = rules ? deadlineReleaseDue(rules, now) : null;
+  if (atDeadline) return { ids: lapsed.map((row) => row.id), atDeadline };
+  const none = { ids: [], atDeadline: null };
+  if (lapsed.length === 0) return none;
+
+  const inLine = await countEligibleWaitlisted(db, event.id);
+  if (inLine + wanting === 0) return none;
+  // An uncapped event is never short of a place: nothing is wanted from a hold.
+  if (event.capacity === null) return none;
+  const occupied = computeOccupied(await countOccupied(db, event.id, now));
+  const staffWants = wanting > 0 && wantingChannel === "staff";
+  const kept = { capacity: event.capacity, placesKeptForClub: staffWants ? 0 : (rules?.placesKeptForClub ?? 0), occupied };
+  const room = lineRoom(kept) ?? 0;
+  // The club's kept places in use (§914): a public newcomer wants nothing a release could give them.
+  const waiting = inLine + (wantingChannel === "public" && keptPlacesInUse(kept) ? 0 : wanting);
+  if (waiting === 0) return none;
   // Shared with the forecast (`notifications/domain/automatic-sends.ts` and `forecast.ts`), so
   // the page never promises a last call the job is about to release out from under it.
-  const wanted = wantedLapsedHoldReleases({ lapsed: lapsed.length, waiting, free });
-  return lapsed.slice(0, wanted).map((row) => row.id);
+  const wanted = wantedLapsedHoldReleases({ lapsed: lapsed.length, waiting, free: Math.max(room, 0) });
+  return { ids: lapsed.slice(0, wanted).map((row) => row.id), atDeadline: null };
 }
 
 /**
@@ -1414,19 +1519,25 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
  * serialised against this decision rather than racing it.
  *
  * `wanting` counts a newcomer the waiting list has no room for as one more person wanting a
- * place (§348) — `allocateOrWaitlist` alone passes it; every other caller wants the default.
+ * place (§348) — `allocateOrWaitlist` and «Dă-i un loc acum» pass it; every other caller wants the default.
+ * `wantingChannel` says how that newcomer came (§914): `public` is measured on the site's places
+ * (`capacity − K`), `staff` — the default — on the whole capacity, as every staff verb is.
  *
  * A declaration hold released here queues its one «Locul tău … a expirat» (§638,
  * `hold-lapsed-email.ts`) in the same transaction — which is why this takes a `Transaction`: every
  * path that releases one comes through here, so every one of them tells the person. A lapsed offer
  * stays silent (§331).
+ *
+ * Returns the declaration holds released and, when this sweep was the deadline's own release (§914), that
+ * deadline — so a signature arriving after it (`signDeclaration`) is told its place went, rather than being given
+ * the place back by a re-allocation.
  */
 export async function expireStaleHolds<T extends Record<string, unknown>>(
   db: Transaction<T>,
   event: EventForExpiry,
   now: Date,
-  { wanting = 0 }: { wanting?: number } = {},
-): Promise<void> {
+  { wanting = 0, wantingChannel = "staff" }: { wanting?: number; wantingChannel?: EntryChannel } = {},
+): Promise<{ atDeadline: Date | null; released: string[] }> {
   // The offers first: each one released is a place the queue can have without touching a
   // kept declaration hold, and the count below must see it as free. Not an offer whose email is
   // still queued (§520) — unless the race has started or the event is no longer scheduled. No
@@ -1479,38 +1590,74 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
   */
   const lapsedInvitations = await expireLapsedInvitations(db, event.id, now);
 
-  const releasing = await lapsedDeclarationHoldsToRelease(db, event, now, wanting);
+  const { ids: releasing, atDeadline } = await lapsedDeclarationHoldsToRelease(db, event, now, wanting, wantingChannel);
+  let releasedIds: string[] = [];
+  let releasedRows: { id: string; kind: "REAL" | "TEST" }[] = [];
   if (releasing.length > 0) {
     const released = await db
       .update(registrations)
       .set({ status: "EXPIRED", expiredAt: now, expiryReason: "DECLARATION_HOLD_LAPSED", updatedAt: now })
-      .where(and(eq(registrations.eventId, event.id), inArray(registrations.id, releasing)))
+      // Only a row still holding its declaration's place: the transition this is (`PENDING_DECLARATION → EXPIRED`).
+      .where(and(eq(registrations.eventId, event.id), inArray(registrations.id, releasing), eq(registrations.status, "PENDING_DECLARATION")))
       .returning({
         id: registrations.id,
         participantId: registrations.participantId,
         locale: registrations.locale,
         holdExpiresAt: registrations.holdExpiresAt,
+        kind: registrations.kind,
       });
+    releasedIds = released.map((row) => row.id);
+    releasedRows = released.map((row) => ({ id: row.id, kind: row.kind }));
     /*
       The person who held the place is told (§638), in this transaction, once per lapsed hold — but
       not when the race has started or the event is no longer scheduled (`over`): every hold goes
       then, nobody wanted the place, and there is nothing left to do about it. A cancelled event is
       quiet (§331), and a hold that lapses with the start is the end of the event's registration,
       not a place taken by somebody else.
+
+      At the deadline's own release (§914) the message says so — the deadline that passed and that the unsigned places
+      were released — and is copied to no club address: the Administrators get the one summary instead
+      (`completeDeadlineRelease`), never one copy per person released.
     */
     if (!over) {
       await queueHoldLapsedEmails(db, {
         eventId: event.id,
         released,
         // Somebody in the line wanted it, rather than a newcomer the line had no room for (§348).
-        toWaitlist: (await countEligibleWaitlisted(db, event.id)) > 0,
+        toWaitlist: atDeadline ? false : (await countEligibleWaitlisted(db, event.id)) > 0,
+        atDeadline,
         now,
       });
     }
   }
+  /*
+    The deadline's release completes in the same transaction (§914): its memory, the tick, the trail, the one summary —
+    with the places after it, the line, and the real holds it left unsigned, counted here under the lock.
+  */
+  if (atDeadline) {
+    const rules = await readPlaceRules(db, event.id);
+    const [left] = await db
+      .select({ count: count() })
+      .from(registrations)
+      .where(and(eq(registrations.eventId, event.id), eq(registrations.status, "PENDING_DECLARATION"), eq(registrations.kind, "REAL")));
+    await completeDeadlineRelease(db, {
+      eventId: event.id,
+      deadline: atDeadline,
+      released: releasedRows,
+      counts: {
+        capacity: rules?.capacity ?? 0,
+        occupied: computeOccupied(await countOccupied(db, event.id, now)),
+        waiting: await countEligibleWaitlisted(db, event.id),
+        unsigned: Number(left?.count ?? 0),
+      },
+      offerOnlyBefore: rules?.freePlacesByOfferOnly ?? false,
+      now,
+    });
+  }
   // A bulk sweep, beside `transitionRegistration` rather than through it, so it tells the public
   // cache itself (§333): the places these rows held are counted as free from now on.
-  if (lapsedOffers.length > 0 || releasing.length > 0 || lapsedReservations.length > 0 || lapsedPlaceHolds.some((row) => row.holdsPlace) || lapsedInvitations > 0) revalidatePublicContent("places");
+  if (lapsedOffers.length > 0 || releasedIds.length > 0 || lapsedReservations.length > 0 || lapsedPlaceHolds.some((row) => row.holdsPlace) || lapsedInvitations > 0) revalidatePublicContent("places");
+  return { atDeadline, released: releasedIds };
 }
 
 /**
@@ -1607,6 +1754,12 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
   const due = new Set(rows.map((row) => row.eventId));
   // An invitation past its deadline (§647): the sweep stamps it and offers its place to the line.
   for (const eventId of await eventsWithLapsedInvitations(db, now)) due.add(eventId);
+  /*
+    «Eliberează singur locurile nesemnate la termen» (§914): an event whose participation window's deadline has come with
+    the release not yet run for it — with **no** «somebody waits» condition: the release frees the unsigned places
+    whoever waits, and runs once (its memory column), so the job locks such an event on one run, not on every run.
+  */
+  for (const row of await db.select({ id: events.id }).from(events).where(deadlineReleaseDueSql(now))) due.add(row.id);
 
   /*
     A free place while somebody waits (§612, amending §104 and §587): a scheduled, capped event,
@@ -1628,9 +1781,13 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
     out the places («Nu»), a free place while people wait is the organizer's to give and
     `fillAvailableSpots` would offer nothing — so the sweep does not select it, rather than locking it
     on every run to do nothing.
+
+    And only a free place **of the site** (§914): `occupied < capacity − K`. A kept place nobody holds is the club's
+    to give, never the line's by itself (`fillAvailableSpots` offers only `capacity − K − occupied`), so an event
+    whose only free places are kept is not locked on every run for nothing either.
   */
   const waitedFor = await db
-    .selectDistinct({ eventId: events.id, capacity: events.capacity })
+    .selectDistinct({ eventId: events.id, capacity: events.capacity, placesKeptForClub: events.placesKeptForClub })
     .from(events)
     .innerJoin(registrations, and(eq(registrations.eventId, events.id), eq(registrations.status, "WAITLISTED")))
     .where(
@@ -1647,7 +1804,7 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
   for (const candidate of waitedFor) {
     if (due.has(candidate.eventId) || candidate.capacity === null) continue;
     const occupied = computeOccupied(await countOccupied(db, candidate.eventId, now));
-    if (occupied < candidate.capacity) due.add(candidate.eventId);
+    if ((lineRoom({ ...candidate, occupied }) ?? 0) > 0) due.add(candidate.eventId);
   }
   return [...due];
 }

@@ -784,7 +784,8 @@ export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
     let status: RegistrationStatus = created.status;
     let capacityRaisedTo: number | null = null;
     if (input.offerNow && status === "WAITLISTED") {
-      const offered = await offerPlaceByStaff(tx, actor, created.registrationId, now, input.offerNow);
+      // «Oferă-i un loc acum» — or «Mută pe lista oficială» with it, which says so (§914): the raise's trail names the press.
+      const offered = await offerPlaceByStaff(tx, actor, created.registrationId, now, { ...input.offerNow, via: input.offerNow.via ?? "offerNow" });
       status = offered.status;
       capacityRaisedTo = offered.capacityRaisedTo;
       await tx
@@ -965,10 +966,15 @@ export async function readInvitationForecast<T extends Record<string, unknown>>(
   eventId: string,
   now: Date,
 ): Promise<{ capacity: number | null; free: number | null; waiting: number } | null> {
-  const [event] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, eventId)).limit(1);
+  const [event] = await db.select({ capacity: events.capacity, placesKeptForClub: events.placesKeptForClub }).from(events).where(eq(events.id, eventId)).limit(1);
   if (!event) return null;
   const [counts, waiting] = await Promise.all([countOccupied(db, eventId, now), countEligibleWaitlisted(db, eventId)]);
-  return { capacity: event.capacity, free: invitationForecastFree({ capacity: event.capacity, occupied: computeOccupied(counts), waiting }), waiting };
+  // The line's claim is on the site's places alone (§914), as the send counts under the lock.
+  return {
+    capacity: event.capacity,
+    free: invitationForecastFree({ capacity: event.capacity, occupied: computeOccupied(counts), waiting, placesKeptForClub: event.placesKeptForClub }),
+    waiting,
+  };
 }
 
 /** «Retrimite» on an invitation (§647): the Administrator's alone, asserted here and in the service. */

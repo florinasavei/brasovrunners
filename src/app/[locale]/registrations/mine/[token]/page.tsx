@@ -22,6 +22,7 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { confirmationDueMoment } from "@/modules/registrations/domain/hold-deadlines";
+import { confirmByKey } from "@/modules/registrations/domain/unsigned-release";
 import { readMyRegistrations } from "@/modules/registrations/my-registrations";
 import { cachedAddressCap, cachedFamilyRegistrationOpen, cachedPromotionalMaterialsOffered } from "@/modules/public-cache/reads";
 import { countForm } from "@/i18n/count-form";
@@ -405,12 +406,16 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 item.holdExpiresAt &&
                 item.holdExpiresAt.getTime() > now.getTime() && (
                   <Typography variant="body2" sx={{ mb: 1.5 }} data-testid="my-registration-confirm-by">
-                    {t("mine.confirmBy", {
+                    {/* The release at the deadline (§914): the place goes then — its deadline named — never a paper on race day. */}
+                    {t(confirmByKey(item.holdExpiresAt, item.releaseDeadline), {
                       due: confirmationDueMoment(
                         locale,
                         { at: item.holdExpiresAt, startsAt: item.eventStartsAt },
                         formatDay(item.holdExpiresAt, { locale, timeZone: item.eventTimezone, style: "long", withTime: true, position: "inline" }),
                       ),
+                      release: item.releaseDeadline
+                        ? formatDay(item.releaseDeadline, { locale, timeZone: item.eventTimezone, style: "long", withTime: true, position: "inline" })
+                        : "",
                     })}
                   </Typography>
                 )}

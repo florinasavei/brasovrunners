@@ -456,3 +456,25 @@ export function nextInLineOffers(input: {
   return nextInLineReleases(input).filter((release) => release.at.getTime() < lastOfferBefore);
 }
 
+/**
+ * The offers above the line is actually made (§914): none while it is not offered places by itself — «Nu», or
+ * «Locurile libere le dau doar eu» (`domain/waitlist.ts#offersOnItsOwn`) — and, with places kept for the club, none
+ * until the places taken beyond the site's are made up: `offerFreedPlaces` offers only `max(capacity − K − occupied,
+ * 0)`, so the first `beyondSite` = `max(occupied − (capacity − K), 0)` releases free a place that stays the club's.
+ * In time order, as the job meets them. With K at 0 and «Da», the offers unchanged.
+ */
+export function lineOffersMade(
+  offers: readonly { at: Date; count: number }[],
+  input: { offersByItself: boolean; beyondSite: number },
+): { at: Date; count: number }[] {
+  if (!input.offersByItself) return [];
+  let skip = Math.max(input.beyondSite, 0);
+  const made: { at: Date; count: number }[] = [];
+  for (const offer of offers) {
+    const skipped = Math.min(skip, offer.count);
+    skip -= skipped;
+    if (offer.count > skipped) made.push({ at: offer.at, count: offer.count - skipped });
+  }
+  return made;
+}
+
