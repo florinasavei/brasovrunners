@@ -1,0 +1,7 @@
+{
+  "branch": "fix/kits-equals",
+  "decisionsTitle": "«Kituri de pregătit» writes its total as a sum: «N = X alergători + Y voluntari»",
+  "decisionsSection": "**The owner, 2026-11-04,** of «Kituri de pregătit: 190 — 179 de alergători + 11 voluntari»: «trebuie să fie „Kituri de pregătit: 190 = 179 de alergători + 11 voluntari”».\n\n**Decision.** The title with volunteers says its total as a sum, with «=» where the dash was (`Admin.registrations.kits.titleWithVolunteers`, RO and EN); the counts and their forms are unchanged.",
+  "changelogLine": "- **«Kituri de pregătit: 190 = 179 de alergători + 11 voluntari»** — the total written as a sum. §NNN.",
+  "batchLine": "the kits' total written as a sum"
+}

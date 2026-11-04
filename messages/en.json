@@ -1141,7 +1141,7 @@
       "summaryTest": "Test: {count}",
       "kits": {
         "title": "Kits to prepare: {runners}",
-        "titleWithVolunteers": "Kits to prepare: {count} — {runners} + {volunteers}",
+        "titleWithVolunteers": "Kits to prepare: {count} = {runners} + {volunteers}",
         "runners": {
           "one": "{count} runner",
           "few": "{count} runners",

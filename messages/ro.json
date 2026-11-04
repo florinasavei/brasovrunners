@@ -1141,7 +1141,7 @@
       "summaryTest": "De test: {count}",
       "kits": {
         "title": "Kituri de pregătit: {runners}",
-        "titleWithVolunteers": "Kituri de pregătit: {count} — {runners} + {volunteers}",
+        "titleWithVolunteers": "Kituri de pregătit: {count} = {runners} + {volunteers}",
         "runners": {
           "one": "{count} alergător",
           "few": "{count} alergători",

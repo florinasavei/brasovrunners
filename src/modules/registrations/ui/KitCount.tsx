@@ -14,7 +14,7 @@ type Counted = "runners" | "volunteers" | "holding" | "invitations" | "elites";
  * the volunteers (the owner, 2026-11-04, of «Kituri de pregătit: 178»: «Cu tot cu Ingrid și cu Silviu Stoica? Aș vrea să mă
  * asigur că număr și elitele»):
  *
- * - the title says the total and its split — «Kituri de pregătit: 188 — 179 de alergători + 9 voluntari» — or, with no
+ * - the title says the total and its split — «Kituri de pregătit: 188 = 179 de alergători + 9 voluntari» — or, with no
  *   volunteer ticked «Are kit», the runners alone: «Kituri de pregătit: 179 de alergători»;
  * - the line under it says what the runners are: everyone holding a place now (the special guests among them), the open
  *   invitations and, when there is any, the event's separate elite list (§895: names, not registrations — no place, but at
