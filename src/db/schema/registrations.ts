@@ -477,6 +477,17 @@ export const registrations = pgTable(
      * stays exactly what it was.
      */
     elite: boolean("elite").notNull().default(false),
+    /**
+     * The Administrator's two ticks on a registration marked «Elită» (§NNN), stored as what they hide — a staff tick may
+     * hide a registered elite, never show one: «Apare în clasament» unticked (`elite_hidden_from_results`) leaves the
+     * runner's result out of the public results and of everybody's positions (hors concours,
+     * `results/domain/hors-concours.ts`); «Apare pe site» unticked (`elite_hidden_from_site`) reads the row on the
+     * public «Cine vine» as one that did not tick «Vreau să apar» — a «Participant (nume ascuns)» row when confirmed, no
+     * row when pending or waiting. Both have effect only while `elite` is true (a mark taken off leaves them inert, and
+     * a mark put back finds them as they were); both false by default, so the person's own ticks decide.
+     */
+    eliteHiddenFromResults: boolean("elite_hidden_from_results").notNull().default(false),
+    eliteHiddenFromSite: boolean("elite_hidden_from_site").notNull().default(false),
 
     submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
     /**

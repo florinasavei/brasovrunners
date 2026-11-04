@@ -1,4 +1,4 @@
-import { check, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { events } from "./events";
 import { staffUsers } from "./staff-users";
@@ -15,8 +15,9 @@ export const ELITE_NUMBER_MAX = 99_999;
  *
  * **Not a registration**: no participant, no address, no declaration, no place, no slot in the queue, no state,
  * no email, no count the club or the public is given — the allocator, «Locuri», the kits, the registrations'
- * summary and export, the sponsors' list, the desk and the results never read this table. The declaration rule
- * stays whole precisely because an elite line is a name to print and nothing else.
+ * summary and export, the sponsors' list and the desk never read this table, and the results read only which
+ * lines run hors concours (§NNN, below). The declaration rule stays whole precisely because an elite line is a
+ * name to print and nothing else.
  *
  * Read by whoever reads the registrations (`canReadRegistrations`: the Organizer and above), written by the
  * Administrator (`canManageRegistrations`), asserted in `elite-list.ts`. **Deleted with the event**
@@ -25,6 +26,12 @@ export const ELITE_NUMBER_MAX = 99_999;
  *
  * A line's number is one person's: refused when the event already has it on somebody or among the
  * desk's spares, and read as worn by every draw (`bibs.ts#wornNumbers`) so no runner is given it.
+ *
+ * **Two ticks of the Administrator's per line (§NNN)**: «Apare în clasament» (`in_results`, ticked by default) —
+ * unticked, the result the club typed for this line's number (or, for a line with no number, for its name) is
+ * left out of the public results and of everybody's positions (`results/domain/hors-concours.ts`); and «Apare pe
+ * site» (`on_site`, unticked by default) — ticked, only with the person's agreement, the name and the number are
+ * shown on the event page under «Elitele cursei», while its public list is on (`listPublicEliteEntries`).
  */
 export const eventEliteEntries = pgTable(
   "event_elite_entries",
@@ -37,6 +44,10 @@ export const eventEliteEntries = pgTable(
     name: text("name").notNull(),
     /** The number printed under the name when the design asks for it; optional, a positive whole number. */
     bibNumber: integer("bib_number"),
+    /** «Apare în clasament» (§NNN): false, the line's result runs hors concours — out of the public results and of the positions. */
+    inResults: boolean("in_results").notNull().default(true),
+    /** «Apare pe site» (§NNN): true, the name (and number) shows under «Elitele cursei» on the event page while its public list is on. */
+    onSite: boolean("on_site").notNull().default(false),
     createdByStaffUserId: uuid("created_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

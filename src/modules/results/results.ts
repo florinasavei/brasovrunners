@@ -1,4 +1,5 @@
 import { and, asc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventResults, type EventResultRow } from "@/db/schema/event-results";
 import { events } from "@/db/schema/events";
 import { registrations, type RegistrationSex } from "@/db/schema/registrations";
@@ -20,6 +21,7 @@ import { ageBandStartsOf, DEFAULT_AGE_BAND_STARTS, isValidAgeBandStarts, sameAge
 import { type AwardRules, isValidAwardPlaces } from "./domain/awards";
 import { eventTakesResults } from "./domain/event-type";
 import { type FingerprintedResult, resultsFingerprint } from "./domain/fingerprint";
+import { foldEliteName, horsConcoursBibs, type OutOfRanking } from "./domain/hors-concours";
 import { parseResultsCsv } from "./domain/import-csv";
 import { publicResultName } from "./domain/public-name";
 import { type Rankable, RESULTS_MAX, rankResults, type ResultStatus, type Ranked } from "./domain/ranking";
@@ -51,6 +53,12 @@ import { type PostedResultRow, resultBox } from "./rows";
  * skips. **The page and the public read re-rank from the live answers** (a corrected sex, a moved race day, an erased registration), the
  * stored positions being what the last save, or an erasure, wrote — a cache, rewritten on the next save. One audit row per result created, changed or deleted (`event_result.*`: the number, the state, the times and the names of the
  * boxes that changed, never a name), and the public cache is told once.
+ *
+ * **Hors concours (§NNN).** An elite the Administrator left out of the ranking — a registration marked «Elită» with «Apare în clasament»
+ * unticked, or a line of the race's elite list unticked, its typed result recognised by the line's number or, for a line with none, by its
+ * name (`domain/hors-concours.ts`) — keeps its row here, drawn «în afara clasamentului», and is placed nowhere: every ranking, stored or
+ * read, counts the others as if it had not run, and the public results leave it out altogether. The tick ranks the stored rows again in
+ * its own transaction (`rerankEventResults`).
  */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -91,8 +99,11 @@ type RegisteredRunner = {
   resultsConsentVersion: number;
 };
 
-/** The event's registered runners, by race number and by registration. */
-type Runners = { byBib: Map<number, RegisteredRunner>; byRegistration: Map<string, RegisteredRunner> };
+/**
+ * The event's registered runners, by race number and by registration — and the elites the Administrator left out of the ranking (§NNN,
+ * `domain/hors-concours.ts`), read with them so every list ranked from them leaves out the same rows.
+ */
+type Runners = { byBib: Map<number, RegisteredRunner>; byRegistration: Map<string, RegisteredRunner>; out: OutOfRanking };
 
 type EventFacts = {
   id: string;
@@ -150,26 +161,54 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
   return { ...event, resultAgeBands: ageBandStartsOf(event.resultAgeBands) };
 }
 
+/**
+ * What «Apare în clasament» leaves out at this event (§NNN): the registrations marked «Elită» whose tick is off — wherever their number
+ * is, never a test row — and the elite list's lines (§895): the unticked ones by number, or by folded name when they have none, and every
+ * line's number, so a row its own line holds is never another line's by name.
+ */
+async function loadOutOfRanking<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<OutOfRanking> {
+  const [hidden, lines] = await Promise.all([
+    db
+      .select({ id: registrations.id })
+      .from(registrations)
+      .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), eq(registrations.elite, true), eq(registrations.eliteHiddenFromResults, true))),
+    db.select({ name: eventEliteEntries.name, bibNumber: eventEliteEntries.bibNumber, inResults: eventEliteEntries.inResults }).from(eventEliteEntries).where(eq(eventEliteEntries.eventId, eventId)),
+  ]);
+  const bibs = new Set<number>();
+  const names = new Set<string>();
+  const listedBibs = new Set<number>();
+  for (const line of lines) {
+    if (line.bibNumber !== null) listedBibs.add(line.bibNumber);
+    if (line.inResults) continue;
+    if (line.bibNumber !== null) bibs.add(line.bibNumber);
+    else names.add(foldEliteName(line.name));
+  }
+  return { registrations: new Set(hidden.map((row) => row.id)), bibs, names, listedBibs };
+}
+
 /** The registrations of the event that hold a race number — any state, never a test row — by that number and by registration. */
 async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Runners> {
-  const rows = await db
-    .select({
-      registrationId: registrations.id,
-      bibNumber: registrations.bibNumber,
-      displayName: registrations.displayName,
-      sex: registrations.sex,
-      birthDate: registrations.birthDate,
-      listOptOut: registrations.listOptOut,
-      checkedInAt: registrations.checkedInAt,
-      status: registrations.status,
-      outsideCapacity: registrations.outsideCapacity,
-      noticeVersion: registrations.privacyNoticeVersion,
-      resultsNameConsent: registrations.resultsNameConsent,
-      resultsConsentVersion: registrations.resultsConsentVersion,
-    })
-    .from(registrations)
-    .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), isNotNull(registrations.bibNumber)));
-  const runners: Runners = { byBib: new Map(), byRegistration: new Map() };
+  const [out, rows] = await Promise.all([
+    loadOutOfRanking(db, eventId),
+    db
+      .select({
+        registrationId: registrations.id,
+        bibNumber: registrations.bibNumber,
+        displayName: registrations.displayName,
+        sex: registrations.sex,
+        birthDate: registrations.birthDate,
+        listOptOut: registrations.listOptOut,
+        checkedInAt: registrations.checkedInAt,
+        status: registrations.status,
+        outsideCapacity: registrations.outsideCapacity,
+        noticeVersion: registrations.privacyNoticeVersion,
+        resultsNameConsent: registrations.resultsNameConsent,
+        resultsConsentVersion: registrations.resultsConsentVersion,
+      })
+      .from(registrations)
+      .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), isNotNull(registrations.bibNumber))),
+  ]);
+  const runners: Runners = { byBib: new Map(), byRegistration: new Map(), out };
   for (const row of rows) {
     if (row.bibNumber === null) continue;
     const runner: RegisteredRunner = {
@@ -234,20 +273,41 @@ function answersOf(row: { registrationId: string | null; sex: RegistrationSex | 
   return { sex, ageOnRaceDay: ageOnRaceDay(birthDate, event.startsAt, event.timezone) };
 }
 
-/** The rankings of a whole list, by the number each row is listed under (`rankResults`), with the answers read as above. */
+/**
+ * The rankings of a whole list, by the number each row is listed under (`rankResults`), with the answers read as above — the elites the
+ * Administrator left out of the ranking (`runners.out`, §NNN) carried as hors concours: no position, and in nobody else's.
+ */
 function rankingOf(
-  rows: readonly { bibNumber: number; registrationId: string | null; sex: RegistrationSex | null; birthDate: string | null; status: ResultStatus; gunTimeMs: number | null }[],
-  runners: ReadonlyMap<string, RegisteredRunner>,
+  rows: readonly {
+    bibNumber: number;
+    registrationId: string | null;
+    displayName: string | null;
+    sex: RegistrationSex | null;
+    birthDate: string | null;
+    status: ResultStatus;
+    gunTimeMs: number | null;
+  }[],
+  runners: Runners,
   event: EventFacts,
 ): Map<number, Ranked> {
-  const rankable: Rankable[] = rows.map((row) => ({ bibNumber: row.bibNumber, status: row.status, gunTimeMs: row.gunTimeMs, ...answersOf(row, runners, event) }));
+  const out = horsConcoursBibs(rows, runners.out, (bibNumber) => {
+    const holder = runners.byBib.get(bibNumber);
+    return holder && holder.status === "CONFIRMED" ? holder.registrationId : null;
+  });
+  const rankable: Rankable[] = rows.map((row) => ({
+    bibNumber: row.bibNumber,
+    status: row.status,
+    gunTimeMs: row.gunTimeMs,
+    ...answersOf(row, runners.byRegistration, event),
+    ...(out.has(row.bibNumber) ? { outOfRanking: true } : {}),
+  }));
   return rankResults(rankable, event.resultAgeBands);
 }
 
 /** The rankings of the event's stored rows read from the live answers — what every page and file shows, whatever the last save stored — by stored number. */
 async function loadLiveRanking<T extends Record<string, unknown>>(db: Database<T>, event: EventFacts): Promise<{ ranking: Map<number, Ranked>; runners: Runners }> {
   const [runners, stored] = await Promise.all([loadRegisteredRunners(db, event.id), loadStored(db, event.id, false)]);
-  return { ranking: rankingOf(stored, runners.byRegistration, event), runners };
+  return { ranking: rankingOf(stored, runners, event), runners };
 }
 
 // ---- Reading for the backoffice ------------------------------------------------------------------------
@@ -267,6 +327,11 @@ export type ResultRunner = {
   named: boolean;
   /** A typed runner: the staff recorded that the person agreed to appear by name (§810); null for a registered runner, whose own tick answers. */
   nameAgreed: boolean | null;
+  /**
+   * An elite the Administrator left out of the ranking (§NNN): the line is drawn «în afara clasamentului», without a position, and the
+   * published results leave it out. For a registered runner, whether or not a result is entered yet; for a typed one, by its line.
+   */
+  outOfRanking: boolean;
   checkedIn: boolean;
   sex: SexChoice | null;
   /** A typed runner's birth date, `YYYY-MM-DD` — what the box shows; null for a registered one, whose registration answers. */
@@ -331,7 +396,7 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
     findFirstResultsNameAskNoticeVersion(db),
   ]);
   const index = indexStored(stored, runners);
-  const ranking = rankingOf(stored, runners.byRegistration, event);
+  const ranking = rankingOf(stored, runners, event);
   const rankedOf = (row: EventResultRow) => ranking.get(row.bibNumber) as Ranked;
   const hiddenShown = hiddenListShownPublicly(event);
 
@@ -366,6 +431,8 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
           typedDisplayName: null,
         }) !== null,
       nameAgreed: null,
+      // The registration's own tick (§NNN): drawn so before a result is typed, and its row, once typed, ranked accordingly.
+      outOfRanking: runners.out.registrations.has(runner.registrationId) || (row !== undefined && rankedOf(row).outOfRanking === true),
       checkedIn: runner.checkedIn,
       sex: runner.sex,
       birthDate: null,
@@ -399,6 +466,8 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
           typedDisplayName: row.displayName,
         }) !== null,
       nameAgreed: row.nameAgreedAt !== null,
+      // A separate-list elite's line left out (§NNN), recognised by its number or, for a line with none, by its name (`hors-concours.ts`).
+      outOfRanking: rankedOf(row).outOfRanking === true,
       checkedIn: false,
       sex: sexShown(row.sex),
       birthDate: row.birthDate,
@@ -510,7 +579,7 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
     }
 
     // ---- 2. The rankings of the list as it will be ------------------------------------------------------
-    const ranking = rankingOf([...prepared.values()], runners.byRegistration, event);
+    const ranking = rankingOf([...prepared.values()], runners, event);
 
     // ---- 3. The writes: deleted, moved off their numbers, then created, changed and the rows only the rankings moved ----------
     let created = 0;
@@ -644,7 +713,7 @@ export async function deleteEventResult<T extends Record<string, unknown>>(db: D
 
 /** Writes the rankings of `rows` where they differ from what is stored; returns how many rows were rewritten. */
 async function writeRanking<T extends Record<string, unknown>>(db: Database<T>, event: EventFacts, runners: Runners, rows: readonly EventResultRow[]): Promise<number> {
-  const ranking = rankingOf(rows, runners.byRegistration, event);
+  const ranking = rankingOf(rows, runners, event);
   let rewritten = 0;
   for (const row of rows) {
     const ranked = ranking.get(row.bibNumber) as Ranked;
@@ -669,7 +738,8 @@ async function writeRanking<T extends Record<string, unknown>>(db: Database<T>, 
  * **Erasing a registration calls it** (`eraseRegistration`): the row is left nameless by `ON DELETE SET NULL`, and with no registration
  * left to answer for it the sex, the age band and the positions by sex and by category it carried are cleared, and the other runners'
  * places are counted again without it — nothing that describes the erased person stays on their number. An event with no results is a
- * no-op. Every page and file already ranks from the live answers when it reads, so this only keeps what is stored honest.
+ * no-op. Every page and file already ranks from the live answers when it reads, so this only keeps what is stored honest. The elite
+ * ticks call it too (§NNN): «Apare în clasament» changed, a line deleted, a mark put on or taken off — whatever moves who runs hors concours.
  */
 export async function rerankEventResults<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
   const stored = await loadStored(db, eventId, true);
@@ -789,7 +859,7 @@ export async function recordFinish<T extends Record<string, unknown>>(db: Databa
       });
     }
     await writeRanking(tx, event, runners, rows);
-    const ranked = rankingOf(rows, runners.byRegistration, event).get(request.bibNumber);
+    const ranked = rankingOf(rows, runners, event).get(request.bibNumber);
     return { bibNumber: request.bibNumber, name: runner.displayName, gunTimeMs, positionOverall: ranked?.positionOverall ?? null };
   });
   revalidatePublicContent("events", "places");
@@ -946,13 +1016,25 @@ export type ExportedResultRow = {
   gunTimeMs: number | null;
   chipTimeMs: number | null;
   note: string | null;
+  /** An elite left out of the ranking (§NNN): the file says «în afara clasamentului» where the position would be. */
+  outOfRanking: boolean;
 };
 
 const STATUS_ORDER: Record<ResultStatus, number> = { FINISHED: 0, DNF: 1, DSQ: 2, DNS: 3 };
 
-/** The list in the order a results sheet reads: the finishers by position, then the others by state and number. */
-function sheetOrder<T extends { status: ResultStatus; positionOverall: number | null; bibNumber: number }>(rows: T[]): T[] {
-  return rows.sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || (a.positionOverall ?? 0) - (b.positionOverall ?? 0) || a.bibNumber - b.bibNumber);
+/**
+ * The list in the order a results sheet reads: the finishers by position, then the others by state and number. A finisher with no
+ * position — an elite hors concours (§NNN), in the club's own file only — follows the placed finishers, by time.
+ */
+function sheetOrder<T extends { status: ResultStatus; positionOverall: number | null; bibNumber: number; gunTimeMs: number | null }>(rows: T[]): T[] {
+  const unplaced = Number.MAX_SAFE_INTEGER;
+  return rows.sort(
+    (a, b) =>
+      STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
+      (a.positionOverall ?? unplaced) - (b.positionOverall ?? unplaced) ||
+      (a.gunTimeMs ?? 0) - (b.gunTimeMs ?? 0) ||
+      a.bibNumber - b.bibNumber,
+  );
 }
 
 /**
@@ -980,6 +1062,7 @@ export async function exportEventResults<T extends Record<string, unknown>>(db: 
               gunTimeMs: runner.result.gunTimeMs,
               chipTimeMs: runner.result.chipTimeMs,
               note: runner.result.note,
+              outOfRanking: runner.outOfRanking,
             },
           ]
         : [],
@@ -1029,7 +1112,8 @@ export type PublicEventResults = {
  * described the results (`firstResultsNoticeVersion`, §421's line) — or, made under an older one, whose runner asked since to appear by name
  * under a notice that named the tick (`results_name_consent`, `firstResultsNameAskNoticeVersion`, §879) — or a runner typed by hand whom the staff recorded as agreeing to appear by name
  * under a notice that described the results — everyone else is «Participant #bib». Never an address, a phone
- * number, a document, a note or a registration's id: the select names its columns.
+ * number, a document, a note or a registration's id: the select names its columns. An elite left out of the ranking (§NNN) is not a row
+ * of the answer at all, and the positions were counted without it.
  */
 export async function readPublicEventResults<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -1096,7 +1180,10 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
     .leftJoin(registrations, and(eq(registrations.id, eventResults.registrationId), eq(registrations.kind, "REAL")))
     .where(eq(eventResults.eventId, eventId));
 
-  const shown = rows.map((row): PublicResultRow => {
+  // An elite the Administrator left out of the ranking (§NNN) is not on the page at all — not a name, not «Participant #bib», not a time —
+  // and the positions the page shows were counted without it (`rankingOf`).
+  const onShow = rows.filter((row) => ranking.get(row.bibNumber)?.outOfRanking !== true);
+  const shown = onShow.map((row): PublicResultRow => {
     const registered = row.registrationId !== null && row.listOptOut !== null;
     const ranked = ranking.get(row.bibNumber) as Ranked;
     return {
