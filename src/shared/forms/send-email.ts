@@ -29,11 +29,13 @@ export function sendEmailOf(form: Pick<FormData, "getAll">, field: string = SEND
 /**
  * What a press's outcome adds when the box was unticked: `mailSkipped`, how many emails it kept back — one for a press on
  * one person, the people a bulk press reached — which its toast turns into «Emailul nu a plecat …» or «3 emailuri nu au
- * plecat …» (`flash.ts#flashOutcome`, `mail-line.ts`); nothing when the email went. Unticked over nobody, `0`: the box was
- * unticked, and the toast says nothing of an email kept back.
+ * plecat …» (`flash.ts#flashOutcome`, `mail-line.ts`); nothing when the email went. Unticked over nobody — a bulk press
+ * that reached no one, «Adaugă mai mulți membri» where every address was already a member — nothing either: no email was
+ * kept back, so neither the toast nor a page's banner («Nu a plecat nicio invitație», `/admin/staff`) may say one was.
  */
 export function mailSkippedOf(sendEmail: boolean, count = 1): { mailSkipped?: string } {
-  return sendEmail ? {} : { mailSkipped: String(Math.max(0, Math.trunc(count))) };
+  const kept = Math.max(0, Math.trunc(count));
+  return sendEmail || kept === 0 ? {} : { mailSkipped: String(kept) };
 }
 
 /** The count a `mailSkipped` value carries, or null for one the browser rewrote (`mail-line.ts`, `flash.ts`). */

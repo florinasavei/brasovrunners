@@ -92,7 +92,10 @@ describe("§841 the toast names the road", () => {
   });
 
   it("appends the road's sentence to whatever the toast says", () => {
-    const source = read("src/shared/feedback/ToastProvider.tsx");
+    // The toast's composition is `mail-line.ts#toastSentence`, which the provider calls (the third review round of the
+    // design «telling the owner about every email a staff press sends»: so a test reads the sentence it draws).
+    expect(read("src/shared/feedback/ToastProvider.tsx")).toContain("toastSentence(notice, t,");
+    const source = read("src/shared/feedback/mail-line.ts");
     expect(source).toContain('const via = values.via === "mailgun" || values.via === "gmail" ? ` ${t(`via.${values.via}`)}` : "";');
     expect(source).toContain("return `${said}${via}`;");
     // An emailing press tells its road inside its mail line instead (the design «telling the owner about every email a

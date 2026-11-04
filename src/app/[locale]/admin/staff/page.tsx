@@ -104,8 +104,13 @@ export default async function StaffPage({ params, searchParams }: Props) {
 
   const current = await searchParams;
   const { error, saved, invite, reason, account, count, failed, retried, report, mailSkipped } = current;
-  /** «Trimite invitația acum» unticked (slice 4): `mailSkipped` is there, whatever count it carries — `0` when the press added nobody new. */
-  const invitationsKept = mailSkippedCount(mailSkipped) !== null;
+  /**
+   * «Trimite invitația acum» unticked (slice 4) and an invitation kept back: `mailSkipped` counts them (`mailSkippedOf`), and
+   * a press that added nobody new kept none back, so it carries none — and «Nu a plecat nicio invitație» is not said.
+   */
+  const invitationsKept = (mailSkippedCount(mailSkipped) ?? 0) > 0;
+  /** «Adaugă mai mulți membri» that added nobody new (every address already a member): no invitation of its own is on its way. */
+  const nobodyAdded = count === "0";
   /** Whichever of the three account verbs was pressed (§171) — they share their four answers. */
   const accountVerb = saved === "passwordReset" || saved === "accountDeactivated" || saved === "accountReactivated";
   // Whether "Add" also creates the Zitadel account and sends the invitation (§123).
@@ -438,10 +443,11 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {/* «Adaugă mai mulți membri» (§524): how many, and how many accounts the provider refused. */}
         {saved === "membersInvited" && (
           <Alert severity={failed ? "warning" : "success"} data-testid="staff-members-report">
-            {/* Unticked «Trimite invitațiile acum» (slice 4): added, and no invitation is on its way — the info line above says so. */}
+            {/* Unticked «Trimite invitațiile acum» (slice 4): added, and no invitation is on its way — the info line above says so.
+                Nobody new added: no invitation is on its way either, and nothing claims one is. */}
             {failed
               ? t("staff.membersInviteFailed", { count: count ?? "0", failed })
-              : invitationsKept
+              : invitationsKept || nobodyAdded
                 ? t("staff.membersAdded", { count: count ?? "0" })
                 : t("staff.membersInvited", { count: count ?? "0" })}
             {retried && ` ${t("staff.membersRetried", { retried })}`}

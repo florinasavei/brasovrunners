@@ -38,8 +38,9 @@ describe("sendEmailOf — the one parser", () => {
     expect(mailSkippedOf(false)).toEqual({ mailSkipped: "1" });
     // A bulk press: the people it reached.
     expect(mailSkippedOf(false, 3)).toEqual({ mailSkipped: "3" });
-    // Unticked over nobody: the box was unticked, and no email was kept back.
-    expect(mailSkippedOf(false, 0)).toEqual({ mailSkipped: "0" });
+    // Unticked over nobody — every address already a member on «Echipa»: no email was kept back, so nothing says one was.
+    expect(mailSkippedOf(false, 0)).toEqual({});
+    expect(mailSkippedOf(false, -2)).toEqual({});
   });
 
   it("reads the count back, and nothing the browser rewrote", () => {

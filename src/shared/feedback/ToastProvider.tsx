@@ -2,8 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef } from "react";
-import { countForm } from "@/i18n/count-form";
-import { mailLine, TOAST_MAX_CHARACTERS } from "./mail-line";
+import { toastSentence } from "./mail-line";
 import { EMPTY_TOAST_QUEUE, FLASH_COOKIE, type FormNotice, LONG_TOAST_AUTO_HIDE_MS, toastQueueReducer } from "./notice";
 import { type ToastApi, ToastContext } from "./toast-context";
 import ToastRegion from "./ToastRegion";
@@ -76,26 +75,9 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
     }
   }, [flash]);
 
-  const sentence = (notice: FormNotice): string => {
-    // Already in the reader's language (the translate press's refusal, §464).
-    if (notice.sentence) return notice.sentence;
-    const values = notice.values ?? {};
-    const base = `toast.${notice.key}`;
-    const said = (() => {
-      if (t.has(`${base}.other`)) {
-        const count = Number.isFinite(Number(values.count)) ? Number(values.count) : 0;
-        return t(`${base}.${countForm(count, locale)}`, { ...values, count: String(count) });
-      }
-      if (t.has(base)) return t(base, values);
-      return t("toast.saved");
-    })();
-    // What the press emailed, the road it chose inside it: «… Pleacă la 10:15 (estimat): „Înscriere anulată” către 1 persoană.»
-    const mail = mailLine(values, t, (type) => (types.has(type) ? types(type) : null), locale, TOAST_MAX_CHARACTERS - said.length - 1);
-    if (mail) return `${said} ${mail}`;
-    // The road the press chose for its email (§841, `flashOutcome`): «… Pleacă prin Mailgun.»
-    const via = values.via === "mailgun" || values.via === "gmail" ? ` ${t(`via.${values.via}`)}` : "";
-    return `${said}${via}`;
-  };
+  // The act's sentence and what the press emailed, composed in one pure place (`mail-line.ts#toastSentence`) so a unit
+  // test reads the very sentence this toast draws.
+  const sentence = (notice: FormNotice): string => toastSentence(notice, t, (type) => (types.has(type) ? types(type) : null), locale);
 
   // Two sentences — the act and what it emailed — are read longer, as the translate press's are.
   const autoHideOf = (notice: FormNotice): number | undefined =>

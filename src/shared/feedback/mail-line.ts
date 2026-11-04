@@ -1,6 +1,7 @@
 import { countForm } from "@/i18n/count-form";
 import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
 import { mailSkippedCount } from "@/shared/forms/send-email";
+import type { FormNotice } from "./notice";
 
 /**
  * The toast's mail line (the design «telling the owner about every email a staff press sends», 2026-11-03, slice 2):
@@ -33,6 +34,40 @@ export const TOAST_MAX_CHARACTERS = 200;
 
 /** The catalogue's `Feedback` translator, as the provider hands it. */
 type Words = (key: string, values?: Record<string, string>) => string;
+
+/** The same translator with its `has`, which the act's sentence needs to choose its key. */
+type Catalogue = Words & { has: (key: string) => boolean };
+
+/**
+ * The whole toast a notice draws (`ToastProvider`): the act's sentence from `Feedback.toast` — a counting key's `one`,
+ * `few` or `other` by the notice's `count` (`countForm`, never an ICU plural), the generic «saved» for a key with no
+ * sentence yet — then the press's mail line (above), or, without one, the road the press chose (§841, «Pleacă prin
+ * Mailgun.»). A notice already in the reader's language (the translate press's refusal, §464) is shown as it is.
+ *
+ * Here rather than in the provider so the sentence a press's flash draws is read by a test, catalogue and all: the bulk
+ * cancel's «2 înscrieri anulate. Anulate și ele, nenumărate nicăieri: … Pleacă acum: „Înscriere anulată” către 2
+ * persoane (+1 către adresă de test, nenumărat).» (`tests/integration/notifications/press-receipt.test.ts`, from the
+ * press itself; `tests/unit/shared/mail-line.test.ts`).
+ */
+export function toastSentence(notice: FormNotice, t: Catalogue, typeName: (type: string) => string | null, locale: string): string {
+  if (notice.sentence) return notice.sentence;
+  const values = notice.values ?? {};
+  const base = `toast.${notice.key}`;
+  const said = (() => {
+    if (t.has(`${base}.other`)) {
+      const count = Number.isFinite(Number(values.count)) ? Number(values.count) : 0;
+      return t(`${base}.${countForm(count, locale)}`, { ...values, count: String(count) });
+    }
+    if (t.has(base)) return t(base, values);
+    return t("toast.saved");
+  })();
+  // What the press emailed, the road it chose inside it: «… Pleacă la 10:15 (estimat): „Înscriere anulată” către 1 persoană.»
+  const mail = mailLine(values, t, typeName, locale, TOAST_MAX_CHARACTERS - said.length - 1);
+  if (mail) return `${said} ${mail}`;
+  // The road the press chose for its email (§841, `flashOutcome`): «… Pleacă prin Mailgun.»
+  const via = values.via === "mailgun" || values.via === "gmail" ? ` ${t(`via.${values.via}`)}` : "";
+  return `${said}${via}`;
+}
 
 type When = "now" | "at" | "reset" | "days";
 type Audience = "people" | "test" | "others";

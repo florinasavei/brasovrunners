@@ -285,3 +285,35 @@ describe("§842 the add folds on «Echipa»", () => {
     expect(order).toEqual(["staff-list", "staff-invite", "staff-members"]);
   });
 });
+
+/**
+ * «Trimite invitațiile acum» unticked on «Adaugă mai mulți membri» (the design «telling the owner about every email a
+ * staff press sends», slice 4): «Nu a plecat nicio invitație» only when an invitation was kept back — never when every
+ * address was already a member and nobody new was added — and «Invitațiile sunt pe drum» only when one is.
+ */
+describe("the banner after «Adaugă mai mulți membri» says an invitation was kept back only when one was", () => {
+  async function banner(query: Record<string, string>) {
+    actor = member("reader", "ADMIN");
+    team = [actor];
+    const tree = elements(await StaffPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve(query) }));
+    const report = tree.find((element) => element.props["data-testid"] === "staff-members-report");
+    const words = report ? (report.props.children as ReactNode[]).filter((child): child is string => typeof child === "string").join("") : null;
+    return { kept: tree.some((element) => element.props["data-testid"] === "staff-invite-not-sent"), words };
+  }
+
+  it("unticked over two new members: both kept back, and said", async () => {
+    expect(await banner({ saved: "membersInvited", count: "2", mailSkipped: "2" })).toEqual({ kept: true, words: "Membri adăugați: 2." });
+  });
+
+  it("unticked with every address already a member: nothing kept back, nothing said of an invitation", async () => {
+    // What the press now writes (`mailSkippedOf(false, 0)` adds nothing), and a link from before, which carried `0`.
+    const queries: Record<string, string>[] = [{ saved: "membersInvited", count: "0" }, { saved: "membersInvited", count: "0", mailSkipped: "0" }];
+    for (const query of queries) {
+      expect(await banner(query), JSON.stringify(query)).toEqual({ kept: false, words: "Membri adăugați: 0." });
+    }
+  });
+
+  it("ticked: the invitations are on their way, and nothing is said kept back", async () => {
+    expect(await banner({ saved: "membersInvited", count: "2" })).toEqual({ kept: false, words: "Membri adăugați: 2. Invitațiile sunt pe drum." });
+  });
+});

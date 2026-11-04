@@ -1,6 +1,7 @@
 import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
-import { mailLine, TOAST_MAX_CHARACTERS } from "@/shared/feedback/mail-line";
+import { mailLine, TOAST_MAX_CHARACTERS, toastSentence } from "@/shared/feedback/mail-line";
+import { type FormNotice, noticeOf } from "@/shared/feedback/notice";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
@@ -169,5 +170,45 @@ describe("the toast stays short: 200 characters with the act's sentence", () => 
         for (const form of ["one", "few", "other"]) expect(forms[form], `${key}.${form}`).toContain("{count}");
       }
     }
+  });
+});
+
+/**
+ * The whole toast (`toastSentence`, what `ToastProvider` draws): the act's sentence, counted by the notice's `count`, then
+ * the mail line — or, without one, the road. The bulk cancel's flash is built here as `flash.ts` builds it: `noticeOf`
+ * the action's outcome, the press's `mail…` values merged in.
+ */
+describe("the toast: the act, then what the press emailed", () => {
+  function toast(notice: FormNotice, locale: Locale = "ro"): string {
+    const t = createTranslator({ locale, messages: CATALOGUES[locale].Feedback as never }) as unknown as Parameters<typeof toastSentence>[1];
+    const types = CATALOGUES[locale].Admin.emails.types as Record<string, string>;
+    return toastSentence(notice, t, (type) => types[type] ?? null, locale);
+  }
+  const withMail = (outcome: Record<string, string>, mail: Record<string, string>): FormNotice => {
+    const notice = noticeOf(outcome) as FormNotice;
+    return { ...notice, values: { ...notice.values, ...mail } };
+  };
+  const twoCancelled = { mail: "now", mailTo: "people", mailPeople: "2", mailPressedAt: PRESSED, mailType: "REGISTRATION_CANCELLED", mailRoad: "mailgun" };
+
+  it("the bulk cancel over two real rows: the count's form, then the two emails", () => {
+    const notice = withMail({ saved: "registrationsCancelled", cancelled: "2", failed: "0", test: "0" }, twoCancelled);
+    expect(toast(notice)).toBe("2 înscrieri anulate. Pleacă acum prin Mailgun: „Înscriere anulată” către 2 persoane.");
+    expect(toast(notice, "en")).toBe("2 registrations cancelled. Leaving now by Mailgun: “Registration cancelled” to 2 people.");
+  });
+
+  it("the bulk cancel that took a test row too: its own act, then the emails with the test address apart (§30)", () => {
+    const notice = withMail({ saved: "registrationsCancelled", cancelled: "2", failed: "1", test: "1" }, { ...twoCancelled, mailTest: "1" });
+    expect(notice.key).toBe("registrationsCancelledTest");
+    const said = toast(notice);
+    expect(said).toMatch(/^2 înscrieri anulate\. Anulate și ele, nenumărate nicăieri: 1 [^.]+\. Pleacă acum prin Mailgun: „Înscriere anulată” către 2 persoane \(\+1 către adresă de test, nenumărat\)\.$/);
+    expect(said).not.toContain("2 înscrieri anulate. Pleacă ");
+    expect(said.length).toBeLessThanOrEqual(TOAST_MAX_CHARACTERS);
+  });
+
+  it("without a mail line: the road the press chose, or the act alone; a key with no sentence says «Salvat.»", () => {
+    expect(toast({ kind: "success", key: "registrationsCancelled", values: { count: "1", via: "gmail" } })).toBe("1 înscriere anulată. Pleacă prin Gmail-ul clubului.");
+    expect(toast({ kind: "success", key: "registrationsCancelled", values: { count: "21" } })).toBe("21 de înscrieri anulate.");
+    expect(toast({ kind: "success", key: "noSuchSentenceYet" })).toBe("Salvat.");
+    expect(toast({ kind: "error", key: "x", sentence: "Already in the reader's words." })).toBe("Already in the reader's words.");
   });
 });

@@ -136,14 +136,18 @@ test.describe("§384 the bulk cancel counts the emails it will send", () => {
     await expect(dialog.getByTestId("confirm-email")).toHaveCount(0);
     await cancelDialog(page, "Anulezi înscrierile bifate?");
 
-    // Through it: the toast counts the real rows cancelled, the same two — and its mail line (the design «telling the
-    // owner about every email a staff press sends», slice 2) the two emails the press really queued, and when.
+    // Through it, all four ticked again (the unconfirmed address and the test row still are): the toast counts the real
+    // rows cancelled, the same two, and says the test row went too, counted nowhere (`registrationsCancelledTest`) — so
+    // its act is «2 înscrieri anulate. Anulate și ele, …», never «2 înscrieri anulate. Pleacă …». Then its mail line (the
+    // design «telling the owner about every email a staff press sends», slice 2): the two emails the press really
+    // queued, when, and the test row's own email apart, uncounted (§30).
     for (const index of [0, 1]) await tick(index).check();
     await panel.locator('input[name="reason"]').fill("Test automat");
     await press();
     await confirmDialog(page, "Anulezi înscrierile bifate?");
     const toast = page.getByTestId("toast");
-    await expect(toast).toContainText("2 înscrieri anulate. Pleacă ", { timeout: 30_000 });
-    await expect(toast).toContainText("„Înscriere anulată” către 2 persoane");
+    await expect(toast).toContainText("2 înscrieri anulate. Anulate și ele, nenumărate nicăieri: 1 ", { timeout: 30_000 });
+    await expect(toast).toContainText(" Pleacă ");
+    await expect(toast).toContainText("„Înscriere anulată” către 2 persoane (+1 către adresă de test, nenumărat).");
   });
 });

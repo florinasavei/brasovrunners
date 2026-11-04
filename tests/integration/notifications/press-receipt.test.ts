@@ -1,11 +1,14 @@
 import { eq } from "drizzle-orm";
+import { createTranslator } from "next-intl";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { decodeFlash, FLASH_COOKIE } from "@/shared/feedback/notice";
+import { TOAST_MAX_CHARACTERS, toastSentence } from "@/shared/feedback/mail-line";
+import { decodeFlash, FLASH_COOKIE, type FormNotice } from "@/shared/feedback/notice";
+import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -58,7 +61,7 @@ const { inEmailPress } = await import("@/modules/notifications/press");
 const { enqueueEmail } = await import("@/modules/notifications/outbox");
 const { updateClubNotices } = await import("@/modules/notifications/club-notices");
 const { flashOutcome } = await import("@/shared/feedback/flash");
-const { addToWaitlistAction } = await import("@/app/[locale]/admin/registrations/actions");
+const { addToWaitlistAction, bulkCancelRegistrationsAction } = await import("@/app/[locale]/admin/registrations/actions");
 const { confirmEmail, submitRegistration } = await import("@/modules/registrations/service");
 
 const NOW = new Date();
@@ -94,6 +97,13 @@ beforeEach(async () => {
 /** The flash the last press left, read back as the admin layout reads it. */
 const flashed = () => decodeFlash(state.set.filter((cookie) => cookie.name === FLASH_COOKIE).at(-1)?.value);
 
+/** The toast that flash draws, composed as `ToastProvider` composes it (`mail-line.ts#toastSentence`), in Romanian. */
+function drawn(notice: FormNotice): string {
+  const t = createTranslator({ locale: "ro", messages: ro.Feedback as never }) as unknown as Parameters<typeof toastSentence>[1];
+  const types = ro.Admin.emails.types as Record<string, string>;
+  return toastSentence(notice, t, (type) => types[type] ?? null, "ro");
+}
+
 async function createEvent(capacity: number): Promise<EventInput> {
   const [event] = await db
     .insert(events)
@@ -120,7 +130,13 @@ async function createEvent(capacity: number): Promise<EventInput> {
 }
 
 /** One person through the public door, as far as the address's confirmation: the event's one place, held. */
-async function confirmedAddress(event: EventInput, name: string) {
+async function confirmedAddress(event: EventInput, name: string, kind: "REAL" | "TEST" = "REAL") {
+  const row = await submitted(event, name, kind);
+  return confirmEmail(db, event, row.id, NOW);
+}
+
+/** One person through the public door, the address not yet confirmed: no place, and no edge to CANCELLED. */
+async function submitted(event: EventInput, name: string, kind: "REAL" | "TEST" = "REAL") {
   await submitRegistration(
     db,
     event,
@@ -147,11 +163,11 @@ async function confirmedAddress(event: EventInput, name: string) {
       renderedAt: new Date(NOW.getTime() - 30_000).toISOString(),
     },
     NOW,
-    "REAL",
+    kind,
     { source: "PUBLIC", createdByStaffUserId: null },
   );
   const [row] = await db.select().from(registrations).where(eq(registrations.registeredName, `${name} Munteanu`));
-  return confirmEmail(db, event, row.id, NOW);
+  return row;
 }
 
 describe("the toast after a press says what the press queued", () => {
@@ -240,5 +256,68 @@ describe("the toast after a press says what the press queued", () => {
       await flashOutcome({ saved: "invited", invite: "invited" });
     });
     expect(flashed()).toMatchObject({ kind: "success", key: "invited", values: { mailType: "STAFF_INVITATION", mailZitadel: "1" } });
+  });
+});
+
+/**
+ * The bulk cancel's toast (§384, slice 2), drawn from the press itself: `tests/e2e/bulk-cancel-count.spec.ts` ticks four rows
+ * — two real ones the cancel reaches, an address never confirmed, a test row — and on 2026-11-04 waited for «2 înscrieri
+ * anulate. Pleacă …» while the toast, rightly, said the test row went too («… Anulate și ele, nenumărate nicăieri: …»)
+ * before its mail line. Here the press runs through its action, the flash is read back from the cookie and composed as
+ * the provider composes it, so the sentence the browser shows is the one asserted.
+ */
+describe("the bulk cancel's toast: the act, then what the press emailed", () => {
+  async function bulkCancel(rows: readonly { id: string }[]) {
+    const form = new FormData();
+    form.set("uiLocale", "ro");
+    form.set("reason", "Test automat");
+    for (const row of rows) form.append("registrationId", row.id);
+    await expect(bulkCancelRegistrationsAction(form)).rejects.toThrow(/^REDIRECT \/ro\/admin\/registrations\?saved=registrationsCancelled&/);
+    const notice = flashed();
+    expect(notice).not.toBeNull();
+    return { notice: notice as FormNotice, toast: drawn(notice as FormNotice) };
+  }
+
+  it("four ticked as the e2e ticks them: the two real ones counted, the test row said apart, and the emails the press queued", async () => {
+    const event = await createEvent(5);
+    const ana = await confirmedAddress(event, "Ana");
+    const bia = await confirmedAddress(event, "Bia");
+    const cora = await submitted(event, "Cora");
+    const dana = await confirmedAddress(event, "Dana", "TEST");
+    expect(cora.status).toBe("PENDING_EMAIL_CONFIRMATION");
+
+    const { notice, toast } = await bulkCancel([ana, bia, cora, dana]);
+    expect(notice).toMatchObject({
+      kind: "success",
+      key: "registrationsCancelledTest",
+      values: { count: "2", test: "1", mailTo: "people", mailType: "REGISTRATION_CANCELLED", mailPeople: "2", mailTest: "1" },
+    });
+    expect(toast).toMatch(/^2 înscrieri anulate\. Anulate și ele, nenumărate nicăieri: 1 [^.]+\. Pleacă [^:]+: „Înscriere anulată” către 2 persoane \(\+1 către adresă de test, nenumărat\)\.$/);
+    // What the e2e waited for on 2026-11-04, and what a toast over a test row never says.
+    expect(toast).not.toContain("2 înscrieri anulate. Pleacă ");
+    expect(toast.length).toBeLessThanOrEqual(TOAST_MAX_CHARACTERS);
+  });
+
+  it("the two real ones alone: «2 înscrieri anulate. Pleacă …: „Înscriere anulată” către 2 persoane.»", async () => {
+    const event = await createEvent(5);
+    const ana = await confirmedAddress(event, "Ana");
+    const bia = await confirmedAddress(event, "Bia");
+
+    const { notice, toast } = await bulkCancel([ana, bia]);
+    expect(notice).toMatchObject({ kind: "success", key: "registrationsCancelled", values: { count: "2", mailPeople: "2", mailType: "REGISTRATION_CANCELLED" } });
+    expect(toast).toMatch(/^2 înscrieri anulate\. Pleacă [^:]+: „Înscriere anulată” către 2 persoane\.$/);
+  });
+
+  it("«Trimite emailul» unticked: the act, and how many emails it kept back — nothing about any that left", async () => {
+    const event = await createEvent(5);
+    const ana = await confirmedAddress(event, "Ana");
+    const bia = await confirmedAddress(event, "Bia");
+    const form = new FormData();
+    form.set("uiLocale", "ro");
+    form.set("reason", "Test automat");
+    form.set("sendEmail", "off");
+    for (const row of [ana, bia]) form.append("registrationId", row.id);
+    await expect(bulkCancelRegistrationsAction(form)).rejects.toThrow(/^REDIRECT /);
+    expect(drawn(flashed() as FormNotice)).toBe("2 înscrieri anulate. 2 emailuri nu au plecat: ai debifat „Trimite…”.");
   });
 });
