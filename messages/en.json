@@ -6917,7 +6917,7 @@
         "few": "{count} names",
         "other": "{count} names"
       },
-      "eliteHelp": "Their name prints large, where the number goes. They are not registrations: they take no place and get no email. On the registrations page they count among the kits, the people at the start and the bibs.",
+      "eliteHelp": "Their name prints large, where the number goes. They are not registrations: no place, no email. The registrations page counts them among the kits, the people at the start and the bibs.",
       "eliteEmpty": "No names on the list.",
       "eliteName": "Name on the bib",
       "eliteNameHelp": "As it prints, at most {max} characters. It shrinks to fit, on one line or two.",
