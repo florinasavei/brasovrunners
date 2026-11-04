@@ -3,6 +3,7 @@ import { events } from "@/db/schema/events";
 import type { Database } from "@/db/types";
 import { registrationCta } from "@/modules/events/domain/registration-cta";
 import { publicNow, type PublicNow } from "./domain/public-now";
+import { freeSplit } from "./domain/kept-places";
 import { publicEntryQueues } from "./domain/waitlist";
 import { readPublicPlaces } from "./service";
 
@@ -19,6 +20,12 @@ export type PublicDoor = {
    * line says so under its sentence: every free place is the staff's to give.
    */
   offersOnly: boolean;
+  /**
+   * The places kept for the club nobody holds (§NNN), said only when the site shows no free place of its own: then the
+   * page reads full (or the line's) while these are left for the staff to give. 0 otherwise — a door closed for another
+   * reason, or site places still free, is not «only the kept places are left».
+   */
+  keptFree?: number;
 };
 
 /**
@@ -46,12 +53,13 @@ export async function readPublicDoor<T extends Record<string, unknown>>(db: Data
       waitlistCapacity: events.waitlistCapacity,
       publicRegistrationOpen: events.publicRegistrationOpen,
       freePlacesByOfferOnly: events.freePlacesByOfferOnly,
+      placesKeptForClub: events.placesKeptForClub,
     })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
   if (!event) return null;
-  const places = await readPublicPlaces(db, { id: eventId, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity }, now);
+  const places = await readPublicPlaces(db, { id: eventId, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity, placesKeptForClub: event.placesKeptForClub }, now);
   const cta = registrationCta(
     {
       ...event,
@@ -64,10 +72,18 @@ export async function readPublicDoor<T extends Record<string, unknown>>(db: Data
     now,
   );
   const internal = event.registrationMode === "INTERNAL";
+  /*
+    The free places split (§NNN), on the count the page says (`readPublicPlaces`' occupied): the kept ones are named
+    only while the page reads full — the door open by its dates and its tick, and no place of the site's own left.
+    A door closed for another reason, or site places still free beside the line, is not «only the kept are left».
+  */
+  const split = freeSplit({ capacity: event.capacity, placesKeptForClub: event.placesKeptForClub, occupied: places.occupied });
+  const readsFull = cta.kind === "FULL" || cta.kind === "WAITLIST_FULL" || cta.kind === "FULL_NO_WAITLIST";
   return {
     now: publicNow(cta, { waiting: places.waiting, waitlistCapacity: event.capacity === null ? null : event.waitlistCapacity }),
     open: event.publicRegistrationOpen,
     internal,
     offersOnly: internal && publicEntryQueues({ freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel: "public", capacity: event.capacity }),
+    keptFree: internal && readsFull && split.publicFree === 0 ? split.keptFree : 0,
   };
 }

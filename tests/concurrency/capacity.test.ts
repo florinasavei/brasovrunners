@@ -520,4 +520,44 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
     },
     30_000,
   );
+
+  it(
+    "§NNN «Locuri păstrate pentru club»: capacity 12, K 2 — twenty public confirmations, a «Trimite-i oferta» and a staff entry at once: the public never past 10, nobody past 12, the capacity unchanged",
+    async () => {
+      const event = await createInternalEvent(12);
+      await db.update(events).set({ placesKeptForClub: 2, waitlistAutoOffer: false }).where(eq(events.id, event.id));
+      const actor = await administrator();
+
+      // The person the Administrator offers a place to: a staff entry waiting (so the public rows below are the public channel's alone).
+      const chosen = await createPendingRegistration(event.id, "kept-chosen");
+      await db.update(registrations).set({ status: "WAITLISTED", waitlistedAt: NOW, source: "STAFF" }).where(eq(registrations.id, chosen.id));
+      // A staff entry confirming its address in the same instant: the whole capacity is its.
+      const staffEntry = await createPendingRegistration(event.id, "kept-staff");
+      await db.update(registrations).set({ source: "STAFF" }).where(eq(registrations.id, staffEntry.id));
+      const publicRows = await Promise.all(Array.from({ length: 20 }, (_, i) => createPendingRegistration(event.id, `kept-public${i}`)));
+
+      const outcomes = await Promise.allSettled([
+        ...publicRows.map((row) => confirmEmail(db, event, row.id, NOW)),
+        offerPlaceToByStaff(db, event, chosen.id, actor, NOW, {}),
+        confirmEmail(db, event, staffEntry.id, NOW),
+      ]);
+      // No transaction failed: every public entry took a place of the site's or joined the line; the offer and the staff entry went through.
+      expect(outcomes.filter((outcome) => outcome.status === "rejected")).toEqual([]);
+
+      const rows = await db.select({ id: registrations.id, status: registrations.status, source: registrations.source }).from(registrations).where(eq(registrations.eventId, event.id));
+      const holdsAPlace = (status: string) => status === "PENDING_DECLARATION" || status === "WAITLIST_OFFERED" || status === "CONFIRMED";
+      // The public channel's own allocations stop at capacity − K.
+      expect(rows.filter((row) => row.source === "PUBLIC" && holdsAPlace(row.status)).length).toBeLessThanOrEqual(10);
+      // Nobody past the capacity, by the allocator's own count.
+      expect(computeOccupied(await countOccupied(db, event.id, NOW))).toBeLessThanOrEqual(12);
+      expect(rows.filter((row) => holdsAPlace(row.status)).length).toBeLessThanOrEqual(12);
+      // The offer used a free place — a kept one at worst — and added none.
+      expect(rows.find((row) => row.id === chosen.id)?.status).toBe("WAITLIST_OFFERED");
+      const [{ capacity }] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, event.id));
+      expect(capacity).toBe(12);
+      // Every row ended in one of the states the allocator writes.
+      expect(rows.every((row) => ["PENDING_DECLARATION", "WAITLIST_OFFERED", "WAITLISTED"].includes(row.status))).toBe(true);
+    },
+    30_000,
+  );
 });

@@ -19,6 +19,8 @@ import { readBibDesign } from "@/modules/registrations/bib-design";
 import type { RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { spareBandOf } from "@/modules/registrations/domain/spare-bibs";
+import { announcedCapacity, keptOf } from "@/modules/registrations/domain/kept-places";
+import { offersOnItsOwn } from "@/modules/registrations/domain/waitlist";
 import {
   confirmationDueAtStart,
   confirmationWindow,
@@ -32,7 +34,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import InfoTip from "@/shared/ui/InfoTip";
 import Panel from "@/shared/ui/Panel";
 import { type EventFieldName, eventInputConstraints } from "../../constraints";
-import { waitlistLimitSchema } from "../../fields";
+import { placesChangeReasonSchema, waitlistLimitSchema } from "../../fields";
 import { WAITLIST_CHOICES, waitlistChoiceOf } from "../../waitlist-choice";
 import BibDesignPanel from "../BibDesignPanel";
 import { BIB_COLOURS } from "@/theme/brand";
@@ -128,6 +130,7 @@ export default async function RegistrationBox({
   languages,
   declarations,
   waiting = 0,
+  placesTaken = null,
   bibCounts,
   bibPrint,
   bibPrintSaved = false,
@@ -169,6 +172,12 @@ export default async function RegistrationBox({
   declarations: readonly DeclarationOption[];
   /** How many wait for a place (§147); the create form has nobody. */
   waiting?: number;
+  /**
+   * Who holds the places now (§NNN), the allocator's own counts read by the page — the occupied places and by what — so
+   * the capacity's help says how low it may go before the press, as the save refuses under the lock. Null on the create
+   * form, and for a role that reads no registrations.
+   */
+  placesTaken?: { occupied: number; confirmed: number; declaration: number; offered: number; invited: number; family: number } | null;
   bibCounts?: { total: number; unprinted: number } | null;
   /** Sub-sub-card 8.4.2, edit only, drawn by the page (it posts forms of its own). */
   bibPrint?: ReactNode;
@@ -382,11 +391,22 @@ export default async function RegistrationBox({
                     <RecallField
                       name="event.capacity"
                       label={t("editor.capacity")}
-                      helperText={
-                        waiting > 0
-                          ? `${t("editor.capacityHelp")} ${t("editor.capacityWaiting", { waiting, offer: hoursPhrase(locale, clubDeadlines.offerHours) })}`
-                          : t("editor.capacityHelp")
-                      }
+                      helperText={[
+                        t("editor.capacityHelp"),
+                        /*
+                          Who holds the places now (§NNN): the save refuses under them, so the help says how low it goes. And
+                          what a raise does for the people waiting — offered at once only while the places go out by
+                          themselves (`offersOnItsOwn`); on «Nu» or the tick, they wait for the staff.
+                        */
+                        ...(placesTaken ? [t("editor.placesTaken", placesTaken)] : []),
+                        ...(waiting > 0
+                          ? [
+                              event && !offersOnItsOwn(event)
+                                ? t("editor.capacityWaitingByHand", { waiting })
+                                : t("editor.capacityWaiting", { waiting, offer: hoursPhrase(locale, clubDeadlines.offerHours) }),
+                            ]
+                          : []),
+                      ].join(" ")}
                       defaultValue={event?.capacity ?? ""}
                       {...box("capacity", { inputMode: "numeric" })}
                       sx={{ flex: 1 }}
@@ -427,6 +447,22 @@ export default async function RegistrationBox({
                   </Stack>
 
                   {/*
+                    «De ce schimbi locurile? (opțional)» (§NNN): kept on «Istoric capacitate»'s row of a save that moves the
+                    capacity or the places kept for the club, and nowhere else. Only on a saved event: a new one's first row
+                    needs no reason.
+                  */}
+                  {event && (
+                    <RecallField
+                      name="event.placesChangeReason"
+                      label={t("editor.placesChangeReason")}
+                      helperText={t("editor.placesChangeReasonHelp")}
+                      defaultValue=""
+                      {...textFieldConstraints(htmlConstraints(placesChangeReasonSchema))}
+                      fullWidth
+                    />
+                  )}
+
+                  {/*
                     Who hands out a freed or added place (§615): the line, at once («Da», the default
                     and every event before it), or the organizer, from «Coada de înscrieri» with
                     «Trimite-i oferta» and at the desk with «Dă-i un loc» («Nu»). Under the capacity,
@@ -460,6 +496,24 @@ export default async function RegistrationBox({
                       {t("editor.freePlacesByOfferOnly")}
                     </CheckboxField>
                     <BoxNote more={t("editor.freePlacesByOfferOnlyHelpMore")}>{t("editor.freePlacesByOfferOnlyHelp")}</BoxNote>
+                    {/*
+                      «Locuri păstrate pentru club» (§NNN): of the places, how many the site never gives — an empty box is 0. The
+                      line under it says what the site announces now, from the saved row, when places are kept.
+                    */}
+                    <RecallField
+                      name="event.placesKeptForClub"
+                      label={t("editor.placesKeptForClub")}
+                      helperText={t("editor.placesKeptForClubHelp")}
+                      helpMore={t("editor.placesKeptForClubHelpMore")}
+                      defaultValue={event?.placesKeptForClub ? event.placesKeptForClub : ""}
+                      {...box("placesKeptForClub", { inputMode: "numeric" })}
+                      sx={{ width: { sm: 320 } }}
+                    />
+                    {event && event.capacity !== null && keptOf(event) > 0 && (
+                      <Typography variant="body2" color="text.secondary" data-testid="places-kept-announced">
+                        {t("editor.placesKeptAnnounced", { announced: announcedCapacity(event) ?? event.capacity, capacity: event.capacity })}
+                      </Typography>
+                    )}
                     <RecallField
                       name="event.placesAlertAt"
                       label={t("editor.placesAlertAt")}

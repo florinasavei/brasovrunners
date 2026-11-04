@@ -1342,7 +1342,7 @@ occupied =
   + live invitations NOT sent outside_capacity, before their deadline (§647)
 
 publicDirectAvailability =
-  max(capacity - occupied - eligible WAITLISTED registrations, 0)
+  max((capacity - places kept for the club) - occupied - eligible WAITLISTED registrations, 0)
 ```
 
 Rules:
@@ -1396,7 +1396,9 @@ Rules:
   invitation is one free after everyone eligible who waits** — `max(capacity - occupied - eligible
   WAITLISTED, 0)` (`invitationFreePlaces`), whatever «Oferte automate» says and whether the registration
   has closed: with offers off (§615) or after the close nobody is offered the free place on the send's
-  way, yet it is still the waiting row's, never an invitation's. Each invitation that needs a counted
+  way, yet it is still the waiting row's, never an invitation's. The line claims only the site's places (§NNN):
+  with places kept for the club the rule is `max(capacity - occupied - min(waiting, max(capacity - K - occupied, 0)), 0)`,
+  so a kept place nobody holds is an invitation's with no supplementary place while the public line waits. Each invitation that needs a counted
   place and finds none free in that sense — a full race, or anyone waiting — adds one supplementary place,
   under the rule of the bullet below, or the send is refused. At the
   acceptance the allocator seats the registration in the invitation's place while the invitation still
@@ -1415,6 +1417,15 @@ Rules:
   seat one too many. While it is on, nothing is offered by itself either, whatever `waitlist_auto_offer` says
   (`domain/waitlist.ts#offersOnItsOwn`, read by `fillAvailableSpots`' one gate): every free place is the staff's
   to give. On an uncapped event the switch changes nothing;
+- «Locuri păstrate pentru club» (`events.places_kept_for_club`, K, 0 by default, at most the capacity; `DECISIONS.md` §NNN):
+  a threshold on the same channel, never on `kind` and never a second formula (`domain/kept-places.ts`). A **public** entry
+  takes a place only while fewer than `capacity − K` are taken, and the line's automatic offers fill places only up to
+  `capacity − K`; every staff verb — the staff entry and the desk (still behind anybody waiting, §615/§872), «Trimite-i
+  oferta», «Oferă-i un loc acum», «Dă-i un loc acum», «Mută pe lista oficială», «Dă-i un loc», an invitation — counts against
+  the whole capacity, so a kept place is given with no supplementary place while one is free (§642's place only when nothing
+  at all is free). A place freed while `capacity − K` or more are taken stays the club's, a public runner's cancellation
+  included. The site announces `capacity − K` places and nothing public names the reserve. K can only lower the number a
+  public entry and the automatic offers are compared with, so it can never seat one too many. On an uncapped event K is 0;
 - the waiting list's limit (§348) is asked only of a registration that would stay in the line: «Oferă-i un loc
   acum», whose row is offered a place in the same transaction, is never refused by it, 0 included (§906);
   «Adaugă pe lista de așteptare» and «Mută pe lista oficială», which leave the person waiting, still are;
@@ -1423,11 +1434,11 @@ Rules:
   under its lock: the Administrators are emailed once per crossing — down to N, then 0 — remembered in
   `places_alert_sent` and re-armed above N or by a save that changes N. It decides nothing about places;
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
-- every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
+- every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place — measured on the site's places for the line and a public newcomer (`capacity − K`, clamped at nought, so never more holds than people want places), never for a public newcomer while the club's kept places are in use, on the whole capacity for a staff newcomer (§NNN) — or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
 - public read may subtract eligible waiting entries as a conservative safeguard while maintenance is catching up, but it never mutates state;
 - scheduled maintenance expires holds and allocates released places;
-- increasing capacity allocates the queue first;
+- increasing the site's places — a higher capacity, a cap lifted, or fewer places kept for the club — allocates the queue first, up to `capacity − K` (§147, §NNN);
 - the capacity changes in four places only: the event editor's save, and an Administrator's
   press for one named person on a full event — «Trimite-i oferta» (also pressed as «Oferă-i un loc acum»,
   right after a vouched entry in its transaction, §888) or «Dă-i un loc acum» — which,
@@ -1440,7 +1451,12 @@ Rules:
   invitations (§647), which adds one place per invitation that finds none free, only when the form
   carried exactly the locked capacity plus that number (`invitationRaises`), each raise audited with
   the invitation it is for;
-- decreasing capacity below occupied places is rejected;
+- decreasing capacity below occupied places is rejected, the refusal saying the places taken by kind (§NNN); the places kept
+  for the club are never more than the capacity, refused naming the box (and the date of a series);
+- every change of the capacity or of the places kept is written as an audit row in the save's own transaction —
+  `event.capacity_changed` `{from, to, occupied, offered, via, reason?, version}` and `event.places_kept_changed`
+  `{from, to, via, reason?, version}` — from the editor, a series, an import, a create, a duplicate and the dates a series
+  makes (no actor), and the supplementary places' rows carry `version`, `occupied` and the offer's `via` (§NNN);
 - no cached free count is a source of truth;
 - no capacity or queue decision may depend on the maintenance job having run; every read
   and every capacity-changing transaction evaluates offer expiry against the current time, and
@@ -1452,7 +1468,7 @@ Rules:
 - only capped/internal/full/open events;
 - email confirmed before active waitlist;
 - FIFO by `waitlisted_at`, then stable ID;
-- existing eligible waiting entries always have priority over later direct registrations;
+- existing eligible waiting entries always have priority over later direct registrations — on the site's places: a place kept for the club (§NNN) is the staff's to give, an invitation's included;
 - one active registration per runner per participant/event (§389: a family on one address, up to the club's limit per address; the runner is keyed by `name_key`, `foldName` of `registered_name`);
 - promotion creates `WAITLIST_OFFERED` and `hold_expires_at`;
 - offer deadline: the club's offer window ("Termene", §377; 24 h by default), capped by close/start — an Administrator's chosen offer («Trimite-i oferta») by the start alone (§642);
@@ -1836,6 +1852,7 @@ events
 - difficulty EASY|MODERATE|HARD null   -- §11.7; null means the club has not said
 - cost_type FREE|PAID null            -- §11.7; whether it charges, never how much
 - capacity integer null
+- places_kept_for_club integer NOT NULL DEFAULT 0  -- §10.6, §NNN; «Locuri păstrate pentru club», 0 to the capacity, 0 uncapped
 - registration_mode
 - registration_opens_at timestamptz null
 - registration_closes_at timestamptz null
@@ -1878,6 +1895,7 @@ Checks:
   `modules/content/events/service.ts#transitionEvent`;
 - non-negative distance/elevation;
 - positive capacity;
+- places kept for the club nought or more, and never more than a capacity (`events_places_kept_*`, §NNN);
 - close not before open/not after start for internal;
 - capacity/declaration internal only;
 - approved declaration required internal;
@@ -2691,7 +2709,7 @@ On explicit POST with valid token/action session:
 - count Confirmed;
 - count unexpired Pending declaration and Waitlist offered holds;
 - count eligible Waitlisted entries for allocation priority;
-- return `max(capacity - occupied - eligibleWaitlisted, 0)` for a capped event;
+- return `max((capacity - K) - occupied - eligibleWaitlisted, 0)` for a capped event, K the places kept for the club (§NNN), and the announced capacity `capacity - K` beside it;
 - exclude pending email confirmations;
 - do not mutate queue state from the public GET;
 - do not persist mutable counter as sole source of truth;
@@ -2716,7 +2734,7 @@ On explicit POST with valid token/action session:
 Within an event-locked transaction, called by cancellation, hold expiry, capacity increase, and before later direct allocation:
 
 1. expire stale holds;
-2. compute available places;
+2. compute available places — the site's room, `capacity − K − occupied`, never a place kept for the club (§NNN);
 3. while place available and eligible Waitlisted exists (bounded):
    - select oldest `WAITLISTED` row using safe lock (`FOR UPDATE SKIP LOCKED` or equivalent);
    - transition to `WAITLIST_OFFERED`;

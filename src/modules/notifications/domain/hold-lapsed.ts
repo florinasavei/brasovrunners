@@ -1,4 +1,5 @@
 import { hasDirectAvailability } from "@/modules/registrations/domain/capacity";
+import { announcedCapacity } from "@/modules/registrations/domain/kept-places";
 import { publicDoorOpen } from "@/modules/registrations/domain/public-door";
 import { newcomerJoinsLine, publicEntryQueues, waitlistHasRoom } from "@/modules/registrations/domain/waitlist";
 
@@ -46,12 +47,15 @@ export function holdLapsedNext(input: {
   publicRegistrationOpen?: boolean | null;
   /** «Locurile libere le dau doar eu» (`events.free_places_by_offer_only`, §906); absent is off. */
   freePlacesByOfferOnly?: boolean | null;
+  /** «Locuri păstrate pentru club» (`events.places_kept_for_club`, §NNN): a public entry is measured on the rest; absent is 0. */
+  placesKeptForClub?: number | null;
 }): HoldLapsedNext {
   if (!input.registrationOpen) return "desk";
   // The dates say open, the organizers say not on the site (§906): the card's `PAUSED`, never a button.
   if (!publicDoorOpen(input)) return "paused";
   const entry = { freePlacesByOfferOnly: input.freePlacesByOfferOnly === true, channel: "public" as const, capacity: input.capacity };
-  const free = hasDirectAvailability({ capacity: input.capacity, occupied: input.occupied, eligibleWaitlisted: input.waitlisted });
+  // The site's places (§NNN): the capacity less those kept for the club, the allocator's threshold for a public entry.
+  const free = hasDirectAvailability({ capacity: announcedCapacity(input), occupied: input.occupied, eligibleWaitlisted: input.waitlisted });
   if (!newcomerJoinsLine({ waitlisted: input.waitlisted, ...entry }) && free) return "register";
   if (waitlistHasRoom({ waitlistCapacity: input.waitlistCapacity, waitlisted: input.waitlisted, openOffers: input.openOffers })) return "waitlist";
   // Places free, given by the organizers alone, and nothing to join (§906): the card's `PAUSED` in its own words, not the desk's.

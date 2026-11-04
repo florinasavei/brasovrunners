@@ -167,6 +167,12 @@ export const emailMessageType = pgEnum("email_message_type", [
   // queued in the transaction of the allocator write that crossed it. The event's id and the counts in the
   // payload; no participant, no registration, no token — the button opens the event's registrations.
   "PLACES_ALERT",
+  // «Locurile nesemnate s-au eliberat la …» (§NNN): «Eliberează singur locurile nesemnate la termen» ran at the
+  // participation window's deadline — to every active Administrator and Superadministrator with an address, once per
+  // deadline, queued in the release's own transaction. The event's id, the deadline and the counts in the payload
+  // (`{deadline, released, test, unsigned, free, capacity, waiting, offerOnlyTicked}`); no participant, no
+  // registration, no token — the button opens the event's registrations.
+  "UNSIGNED_RELEASED",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

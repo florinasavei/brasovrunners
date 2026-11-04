@@ -22,7 +22,8 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, wantedLapsedHoldReleases } from "./domain/capacity";
-import { offersOnItsOwn } from "./domain/waitlist";
+import { keptPlacesInUse, lineRoom, offerWordsByItself } from "./domain/kept-places";
+import { type EntryChannel, offersOnItsOwn } from "./domain/waitlist";
 import { registrationNameKey } from "./domain/name-key";
 import { DEFAULT_PUBLIC_LIST_CLUB, memberClubCell } from "./domain/public-list-club";
 import { PENDING_LIST_STATUSES, WAITLISTED_LIST_STATUSES } from "./domain/public-list-states";
@@ -181,38 +182,78 @@ export async function addSupplementaryPlace<T extends Record<string, unknown>>(
   actorStaffUserId: string,
   now: Date,
 ): Promise<number | null> {
+  return (await addSupplementaryPlaceVersioned(db, eventId, actorStaffUserId, now))?.capacity ?? null;
+}
+
+/**
+ * `addSupplementaryPlace` with the row's new version beside the capacity (§NNN): the order «Istoric capacitate» reads
+ * the changes in, whatever the clock said. The one statement both return from.
+ */
+export async function addSupplementaryPlaceVersioned<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  actorStaffUserId: string,
+  now: Date,
+): Promise<{ capacity: number; version: number } | null> {
   const [row] = await db
     .update(events)
     .set({ capacity: sql`${events.capacity} + 1`, version: sql`${events.version} + 1`, updatedAt: now, updatedByStaffUserId: actorStaffUserId })
     .where(and(eq(events.id, eventId), isNotNull(events.capacity)))
-    .returning({ capacity: events.capacity });
-  return row?.capacity ?? null;
+    .returning({ capacity: events.capacity, version: events.version });
+  return row && row.capacity !== null ? { capacity: row.capacity, version: row.version } : null;
 }
 
 /**
- * Whether the event offers its freed and added places to the waiting list on its own (§615):
- * `events.waitlist_auto_offer`, read by `fillAvailableSpots` inside the caller's transaction, after
- * the caller locked the row — so the answer is the row's as it stands under the lock, whatever copy
- * of the event the caller carries (a fixture's partial row, the editor's row from before the save).
- * A row that does not exist offers nothing. «Locurile libere le dau doar eu» on (§906) offers nothing either, «Da» or
- * not: every free place is then the staff's to give (`domain/waitlist.ts#offersOnItsOwn`).
+ * The event's rules a place is decided by (§615, §906, §NNN), as they stand on the row: the capacity, «Locuri
+ * păstrate pentru club», «Locurile libere le dau doar eu», «Locurile din lista de așteptare se alocă automat» and the
+ * waiting list's length. One primary-key read inside the caller's transaction, after the caller locked the row — so
+ * the answer is the row's under the lock, whatever copy of the event the caller carries (a fixture's partial row, the
+ * maintenance job's hand-built one, the editor's row from before the save). Undefined for a row that does not exist.
  */
-export async function offersWaitlistAutomatically<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<boolean> {
+export type PlaceRules = {
+  capacity: number | null;
+  placesKeptForClub: number;
+  freePlacesByOfferOnly: boolean;
+  waitlistAutoOffer: boolean;
+  waitlistCapacity: number | null;
+};
+
+export async function readPlaceRules<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<PlaceRules | undefined> {
   const [row] = await db
-    .select({ waitlistAutoOffer: events.waitlistAutoOffer, freePlacesByOfferOnly: events.freePlacesByOfferOnly, capacity: events.capacity })
+    .select({
+      capacity: events.capacity,
+      placesKeptForClub: events.placesKeptForClub,
+      freePlacesByOfferOnly: events.freePlacesByOfferOnly,
+      waitlistAutoOffer: events.waitlistAutoOffer,
+      waitlistCapacity: events.waitlistCapacity,
+    })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  return row ? offersOnItsOwn(row) : false;
+  return row;
 }
 
 /**
- * `domain/waitlist.ts#offersOnItsOwn` as a column (§615, §906): the line is offered the free places on its own —
- * «Da» and «Locurile libere le dau doar eu» off. For the readers that tell a person or the staff whether the places
- * go out by themselves, so no sentence promises an offer the allocator will not make.
+ * Whether a person may be **told** that a freed place reaches the line by itself (§615, §906, §NNN): «Da», «Locurile
+ * libere le dau doar eu» off (`domain/waitlist.ts#offersOnItsOwn`) — and no place kept for the club
+ * (`kept-places.ts#offerWordsByItself`): with K > 0 a place freed while the site's places are taken stays the club's,
+ * so the words are the organizers' («le dau organizatorii, pe rând»). For the sentences alone — the allocator's own
+ * gate is `readPlaceRules` + `offersOnItsOwn` in `fillAvailableSpots`. A row that does not exist reads as no.
+ */
+export async function offersWaitlistAutomatically<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<boolean> {
+  const row = await readPlaceRules(db, eventId);
+  return row ? offerWordsByItself(offersOnItsOwn(row), row) : false;
+}
+
+/**
+ * `offersWaitlistAutomatically` as a column (§615, §906, §NNN): the line is offered the free places on its own — «Da»
+ * and «Locurile libere le dau doar eu» off — and no place is kept for the club. For the readers that tell a person or
+ * the staff whether the places go out by themselves, so no sentence promises an offer the allocator will not make.
  */
 export function lineOffersOnItsOwn(): SQL<boolean> {
-  return sql<boolean>`(${events.waitlistAutoOffer} and not (${events.freePlacesByOfferOnly} and ${events.capacity} is not null))`.mapWith(Boolean);
+  return sql<boolean>`(${events.waitlistAutoOffer} and not (${events.freePlacesByOfferOnly} and ${events.capacity} is not null) and (${events.placesKeptForClub} = 0 or ${events.capacity} is null))`.mapWith(
+    Boolean,
+  );
 }
 
 /**
@@ -1346,12 +1387,21 @@ export type EventForExpiry = {
  * (`confirmByStaff`), both under the same lock and both after this sweep. Keeping the hold here
  * would leave them "the event is full" for a place nobody is holding. The guard against dead
  * offers lives in `fillAvailableSpots` alone.
+ *
+ * «Locuri păstrate pentru club» (§NNN): the waiting list, and a public newcomer, want the **site's** places — the
+ * room they are measured on is `capacity − K − occupied` (`kept-places.ts#lineRoom`), clamped at nought as `free`
+ * always was, so no input releases more holds than people want places. A staff newcomer (`wantingChannel: "staff"`,
+ * the desk's walk-in, «Dă-i un loc acum») keeps the whole capacity, as every staff verb does. A public newcomer is never
+ * the reason a hold goes while the club's own places are in use (`lineRoom` below nought): the place it frees would be
+ * the club's again, not theirs. Read off the row (`readPlaceRules`), so a caller's copy without the column — the
+ * maintenance job's — counts the same. With K at 0 every number here is today's.
  */
 async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>>(
   db: Database<T>,
   event: EventForExpiry,
   now: Date,
   wanting: number,
+  wantingChannel: EntryChannel,
 ): Promise<string[]> {
   const over = event.eventStatus !== "SCHEDULED" || event.startsAt <= now;
   const lapsed = await db
@@ -1374,15 +1424,20 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
 
   if (over) return lapsed.map((row) => row.id);
 
-  const waiting = (await countEligibleWaitlisted(db, event.id)) + wanting;
+  const inLine = await countEligibleWaitlisted(db, event.id);
+  if (inLine + wanting === 0) return [];
+  // An uncapped event is never short of a place: nothing is wanted from a hold.
+  if (event.capacity === null) return [];
+  const occupied = computeOccupied(await countOccupied(db, event.id, now));
+  const staffWants = wanting > 0 && wantingChannel === "staff";
+  const kept = { capacity: event.capacity, placesKeptForClub: staffWants ? 0 : ((await readPlaceRules(db, event.id))?.placesKeptForClub ?? 0), occupied };
+  const room = lineRoom(kept) ?? 0;
+  // The club's kept places in use (§NNN): a public newcomer wants nothing a release could give them.
+  const waiting = inLine + (wantingChannel === "public" && keptPlacesInUse(kept) ? 0 : wanting);
   if (waiting === 0) return [];
-  const free =
-    event.capacity === null
-      ? Number.POSITIVE_INFINITY
-      : Math.max(event.capacity - computeOccupied(await countOccupied(db, event.id, now)), 0);
   // Shared with the forecast (`notifications/domain/automatic-sends.ts` and `forecast.ts`), so
   // the page never promises a last call the job is about to release out from under it.
-  const wanted = wantedLapsedHoldReleases({ lapsed: lapsed.length, waiting, free });
+  const wanted = wantedLapsedHoldReleases({ lapsed: lapsed.length, waiting, free: Math.max(room, 0) });
   return lapsed.slice(0, wanted).map((row) => row.id);
 }
 
@@ -1399,7 +1454,9 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
  * serialised against this decision rather than racing it.
  *
  * `wanting` counts a newcomer the waiting list has no room for as one more person wanting a
- * place (§348) — `allocateOrWaitlist` alone passes it; every other caller wants the default.
+ * place (§348) — `allocateOrWaitlist` and «Dă-i un loc acum» pass it; every other caller wants the default.
+ * `wantingChannel` says how that newcomer came (§NNN): `public` is measured on the site's places
+ * (`capacity − K`), `staff` — the default — on the whole capacity, as every staff verb is.
  *
  * A declaration hold released here queues its one «Locul tău … a expirat» (§638,
  * `hold-lapsed-email.ts`) in the same transaction — which is why this takes a `Transaction`: every
@@ -1410,7 +1467,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
   db: Transaction<T>,
   event: EventForExpiry,
   now: Date,
-  { wanting = 0 }: { wanting?: number } = {},
+  { wanting = 0, wantingChannel = "staff" }: { wanting?: number; wantingChannel?: EntryChannel } = {},
 ): Promise<void> {
   // The offers first: each one released is a place the queue can have without touching a
   // kept declaration hold, and the count below must see it as free. Not an offer whose email is
@@ -1464,7 +1521,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
   */
   const lapsedInvitations = await expireLapsedInvitations(db, event.id, now);
 
-  const releasing = await lapsedDeclarationHoldsToRelease(db, event, now, wanting);
+  const releasing = await lapsedDeclarationHoldsToRelease(db, event, now, wanting, wantingChannel);
   if (releasing.length > 0) {
     const released = await db
       .update(registrations)
@@ -1613,9 +1670,13 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
     out the places («Nu»), a free place while people wait is the organizer's to give and
     `fillAvailableSpots` would offer nothing — so the sweep does not select it, rather than locking it
     on every run to do nothing.
+
+    And only a free place **of the site** (§NNN): `occupied < capacity − K`. A kept place nobody holds is the club's
+    to give, never the line's by itself (`fillAvailableSpots` offers only `capacity − K − occupied`), so an event
+    whose only free places are kept is not locked on every run for nothing either.
   */
   const waitedFor = await db
-    .selectDistinct({ eventId: events.id, capacity: events.capacity })
+    .selectDistinct({ eventId: events.id, capacity: events.capacity, placesKeptForClub: events.placesKeptForClub })
     .from(events)
     .innerJoin(registrations, and(eq(registrations.eventId, events.id), eq(registrations.status, "WAITLISTED")))
     .where(
@@ -1632,7 +1693,7 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
   for (const candidate of waitedFor) {
     if (due.has(candidate.eventId) || candidate.capacity === null) continue;
     const occupied = computeOccupied(await countOccupied(db, candidate.eventId, now));
-    if (occupied < candidate.capacity) due.add(candidate.eventId);
+    if ((lineRoom({ ...candidate, occupied }) ?? 0) > 0) due.add(candidate.eventId);
   }
   return [...due];
 }

@@ -352,6 +352,17 @@ export type AuditAction =
   | "event.free_places_by_offer_only_changed"
   | "event.places_alert_changed"
   /**
+   * «Istoric capacitate» (§NNN): the event's number of places changed, in the save's own transaction — `metadata`
+   * `{from, to, occupied, offered, via, reason?, version}`: from and to (null is uncapped), the places taken under the
+   * event lock when it moved, the offers the raise made to the waiting list, which save (`editor`, `series`, `import`,
+   * `create`, `duplicate`, `series_generated` — the last with no actor), the reason typed under the places (at most two
+   * hundred characters, never a name), and the row's new `version`, which orders the changes whatever the clock said.
+   * Never a registration or a person.
+   */
+  | "event.capacity_changed"
+  /** «Locuri păstrate pentru club» changed (§NNN): `{from, to, via, reason?, version}`, as the capacity's row. */
+  | "event.places_kept_changed"
+  /**
    * One supplementary place added by «Trimite-i oferta» on a full event (§642): the capacity from and
    * to, the Administrator (the actor), the event (the entity) and the registration offered the place
    * (`registrationId`, an id, never a name) — written in the transaction that makes the offer, under

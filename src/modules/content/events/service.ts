@@ -39,8 +39,10 @@ import { findCurrentApprovedVersionId } from "@/modules/legal-documents/reposito
 import { groupRunDeclarationKeyFor } from "@/modules/legal-documents/domain/keys";
 import { deleteGroupRunDeclarationMessagesOfEvent, refuseHeldGroupRunDeclarationsOfEvent, rehomeGroupRunDeclarationsOfEvent } from "@/modules/group-run-declarations/repository";
 import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-service";
-import { computeOccupied } from "@/modules/registrations/domain/capacity";
+import { CapacityBelowTakenError, computeOccupied } from "@/modules/registrations/domain/capacity";
+import { assertPlacesKeptWithin, keptOf } from "@/modules/registrations/domain/kept-places";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
+import { auditPlacesChange, placesMoved } from "./capacity-audit";
 import { areTestRegistrationsAvailable, removeTestRegistrations } from "@/modules/registrations/test-registrations";
 import { moveWindowHolds, type WindowHoldsMoved } from "@/modules/registrations/window-holds";
 import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
@@ -629,6 +631,11 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     ...(fields.membersOnly === undefined ? {} : { membersOnly: fields.membersOnly }),
     registrationMode: fields.registrationMode,
     capacity: fields.capacity,
+    /*
+      «Locuri păstrate pentru club» (§NNN): 0 on an uncapped event, whatever was posted — K means nothing there. Otherwise
+      by the partners' discipline: a caller that did not post the box writes nothing, and an empty box is 0.
+    */
+    ...(fields.capacity === null ? { placesKeptForClub: 0 } : fields.placesKeptForClub === undefined ? {} : { placesKeptForClub: fields.placesKeptForClub ?? 0 }),
     // The waiting list's length (§348), by the partners' discipline: a caller that said nothing
     // about it — a fixture, a caller from before it existed — writes nothing, so no save lifts a
     // limit the organizer set just by not mentioning it. The editor and the create form post it.
@@ -746,6 +753,8 @@ const TURN_UP_FIELDS = {
   scheduleRows: [],
   registrationMode: "NONE",
   capacity: null,
+  // Nothing kept on an event with no places (§NNN): stored 0 with the capacity's null.
+  placesKeptForClub: null,
   // A turn-up event queues nobody (§350, the waiting-list cap).
   waitlistCapacity: null,
   declarationDocumentId: null,
@@ -777,6 +786,8 @@ export function normalizeForMode<T extends EventFieldsInput>(fields: T): T {
 /** What "Pe site" alone shows, and what "La organizator" alone shows — as the values stored in their place. */
 const INTERNAL_ONLY_FIELDS = {
   capacity: null,
+  // «Locuri păstrate pentru club» (§NNN) goes with the capacity it is part of.
+  placesKeptForClub: null,
   waitlistCapacity: null,
   declarationDocumentId: null,
   participantListVisibility: "HIDDEN",
@@ -1732,8 +1743,23 @@ export type SaveEventFieldsInput = {
   notice?: EventNoticeRequest;
   /** Required when the save moves the event to CANCELLED (§331). */
   cancellation?: EventCancellationRequest;
+  /** «De ce schimbi locurile? (opțional)» (§NNN): kept on the history row when the places move. */
+  placesChangeReason?: string | null;
   now?: Date;
 };
+
+/**
+ * The places a save leaves on the row (§NNN): the capacity posted, and «Locuri păstrate pentru club» as
+ * `eventColumnsFrom` writes it — 0 on an uncapped event, the number posted (an empty box is 0), or the row's own when
+ * the box was not posted. What the history compares and the refusal judges.
+ */
+function placesAfterSave(
+  fields: { capacity: number | null; placesKeptForClub?: number | null },
+  current: { placesKeptForClub: number } | null,
+): { capacity: number | null; placesKeptForClub: number } {
+  if (fields.capacity === null) return { capacity: null, placesKeptForClub: 0 };
+  return { capacity: fields.capacity, placesKeptForClub: fields.placesKeptForClub === undefined ? (current?.placesKeptForClub ?? 0) : (fields.placesKeptForClub ?? 0) };
+}
 
 /**
  * Every column an organizer owns: the type and the surface, the status, the times and the
@@ -1761,6 +1787,9 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   await assertCoherentRegistrationBlock(db, fields, now);
   await assertDateToBeAnnouncedAllowed(db, fields, current);
   await assertStoredCover(db, fields, current);
+  // «Locuri păstrate pentru club» (§NNN) within the places, the row's own number when the box was not posted.
+  const places = placesAfterSave(fields, current);
+  assertPlacesKeptWithin(fields.capacity, places.placesKeptForClub);
   const times = resolveTimes(fields, switchesAfterSave(fields, current));
   // The same rule as the editor's save (§331): a cancellation says why, and tells whom it was asked to.
   const request = readNoticeRequest(input.actor, current, fields.eventStatus, input.notice, input.cancellation);
@@ -1779,15 +1808,13 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     // Under the event lock, on an uncapped event too, so the spares it reads are the ones in force (§647).
     if (hiddenListNumbers) assertHiddenListNumbers(hiddenListNumbers, await lockEventForCapacity(tx, input.eventId));
     await assertNobodyRegisteredForUndated(tx, fields, current);
-    if (fields.capacity !== null) {
+    // Refused with the allocator's own counts (§NNN), and counted whenever the places move, for the history.
+    let occupied = 0;
+    if (fields.capacity !== null || placesMoved(current, places)) {
       await lockEventForCapacity(tx, input.eventId);
-      const occupied = computeOccupied(await countOccupied(tx, input.eventId, now));
-      if (fields.capacity < occupied) {
-        throw new DomainError(
-          "VALIDATION_ERROR",
-          `capacity: ${occupied} places are already taken; capacity cannot be lowered below that`,
-        );
-      }
+      const counts = await countOccupied(tx, input.eventId, now);
+      occupied = computeOccupied(counts);
+      if (fields.capacity !== null && fields.capacity < occupied) throw new CapacityBelowTakenError(fields.capacity, counts);
     }
 
     if (fields.featured) await clearFeaturedExcept(tx, input.eventId, now);
@@ -1807,6 +1834,8 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     await auditHiddenList(tx, input.actor, current, saved, now);
     await auditPublicListClub(tx, input.actor, current, saved, now);
     await auditCover(tx, input.actor, current, saved, now);
+    // «Istoric capacitate» (§NNN): this path makes no offers, so none are counted.
+    await auditPlacesChange(tx, { actorStaffUserId: input.actor.id, before: current, after: saved, via: "editor", occupied, offered: 0, reason: input.placesChangeReason, now });
     // The holds the window gave follow it (§665): under the event lock, in this transaction.
     holdsQueued = (await moveWindowHolds(tx, { actorStaffUserId: input.actor.id, before: current, after: saved, now, deadlines })).queued;
     // The place's name in each language is the event's (§362): written with the row, under its version.
@@ -1872,6 +1901,13 @@ export type SaveEventAndTranslationsInput = {
    * about to be replaced, is then not held to them against the new start, end and length.
    */
   checkpointsReplaced?: boolean;
+  /**
+   * «De ce schimbi locurile? (opțional)» (§NNN): the reason typed under the places, kept on the history row of every
+   * date whose capacity or «Locuri păstrate pentru club» this save moves — and nowhere else. Never a name.
+   */
+  placesChangeReason?: string | null;
+  /** Which save this is, for «Istoric capacitate» (§NNN): an event file's import says so; the editor's otherwise. */
+  via?: "import";
   now?: Date;
   /** Only for tests: a `fetch` stand-in for the YouTube poster fetches, never a live default. */
   fetchImpl?: typeof fetch;
@@ -1957,6 +1993,9 @@ const SERIES_COLUMNS = [
   // series carries as a time column below.
   "registrationOpensSoon",
   "capacity",
+  // «Locuri păstrate pentru club» (§NNN), like the places it is part of: «from this date» keeps the same number for the
+  // club on every later date — judged against each date's own capacity, a date it would not fit refusing the save.
+  "placesKeptForClub",
   // The waiting list's length, like the places (§348). No lock and no allocation when it moves:
   // raising it offers nobody anything, and lowering it removes nobody already waiting.
   "waitlistCapacity",
@@ -2085,6 +2124,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
     discountNoteCleared?: boolean;
     /** Each written date's saved «Puncte pe traseu» held to the rules against the date as written (§757). */
     checkpointsHold?: (member: EditableEvent, date: string) => Promise<void>;
+    /** «De ce schimbi locurile?» (§NNN): the reason typed on the saved date, on each date's own history row. */
+    placesChangeReason?: string | null;
   },
 ): Promise<{
   applied: number;
@@ -2250,14 +2291,28 @@ async function applyToSeries<T extends Record<string, unknown>>(
       }
     }
 
-    if (typeof changes.capacity === "number") {
+    /*
+      This date's places (§NNN): a cap lifted here keeps nothing for the club, and the places kept are judged against
+      this date's own capacity as the save leaves it — a date they would not fit refuses the save, named. The count
+      under this date's lock is the one the refusal and the history read.
+    */
+    const memberDate = toWallTimeInput(member.startsAt, zone).slice(0, 10);
+    // Nothing is kept on a date without places, whichever of the two numbers this save carries there.
+    const memberCapacity = changes.capacity === undefined ? member.capacity : changes.capacity;
+    if (memberCapacity === null && (changes.capacity === null || "placesKeptForClub" in changes)) changes.placesKeptForClub = 0;
+    const placesChange = "capacity" in changes || "placesKeptForClub" in changes;
+    const memberPlaces = {
+      capacity: changes.capacity === undefined ? member.capacity : changes.capacity,
+      placesKeptForClub: changes.placesKeptForClub ?? member.placesKeptForClub,
+    };
+    if (placesChange) assertPlacesKeptWithin(memberPlaces.capacity, memberPlaces.placesKeptForClub, memberDate);
+    let memberOccupied = 0;
+    if (typeof changes.capacity === "number" || (placesChange && placesMoved(member, memberPlaces))) {
       await lockEventForCapacity(tx, member.id);
-      const occupied = computeOccupied(await countOccupied(tx, member.id, now));
-      if (changes.capacity < occupied) {
-        throw new DomainError(
-          "VALIDATION_ERROR",
-          `capacity: ${occupied} places are already taken on ${toWallTimeInput(member.startsAt, zone).slice(0, 10)}; capacity cannot be lowered below that`,
-        );
+      const counts = await countOccupied(tx, member.id, now);
+      memberOccupied = computeOccupied(counts);
+      if (typeof changes.capacity === "number" && changes.capacity < memberOccupied) {
+        throw new CapacityBelowTakenError(changes.capacity, counts, memberDate);
       }
     }
 
@@ -2273,7 +2328,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
     // A place moved in one language only still takes the date's version: the names are the
     // event's, guarded by the event row's version (`writePlaceNames`); the short place too.
     if (Object.keys(changes).length > 0 || placeMoved.length > 0 || shortMoved.length > 0) {
-      await tx
+      const [rewritten] = await tx
         .update(events)
         .set({
           ...changes,
@@ -2283,7 +2338,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
           updatedAt: now,
           updatedByStaffUserId: input.actor.id,
         })
-        .where(eq(events.id, member.id));
+        .where(eq(events.id, member.id))
+        .returning({ version: events.version });
       touched = true;
       if (input.checkpointsHold) {
         const written = { ...member, ...changes, id: member.id } as EditableEvent;
@@ -2317,15 +2373,29 @@ async function applyToSeries<T extends Record<string, unknown>>(
       // Each date has its own queue, checked against its own places (§147): the new capacity
       // is the source's, the raise is measured against what this date had, and the status is
       // this date's as it now stands — a cancelled date offers nothing.
-      if (
-        "capacity" in changes &&
+      // The site's places grow by the places kept for the club too, when fewer are kept (§NNN).
+      const memberOffered =
+        placesChange &&
         capacityRaised(member, {
           eventStatus: changes.eventStatus ?? member.eventStatus,
           registrationMode: changes.registrationMode ?? member.registrationMode,
-          capacity: changes.capacity ?? null,
+          ...memberPlaces,
         })
-      ) {
-        offered += await offerRaisedCapacity(tx, member.id, now, input.deadlines);
+          ? await offerRaisedCapacity(tx, member.id, now, input.deadlines)
+          : 0;
+      offered += memberOffered;
+      // «Istoric capacitate» (§NNN): this date's own row, from what it had, after its own offers.
+      if (placesChange) {
+        await auditPlacesChange(tx, {
+          actorStaffUserId: input.actor.id,
+          before: member,
+          after: { id: member.id, ...memberPlaces, version: rewritten?.version ?? member.version + 1 },
+          via: "series",
+          occupied: memberOccupied,
+          offered: memberOffered,
+          reason: input.placesChangeReason,
+          now,
+        });
       }
     }
     if (translationChanges.length > 0) {
@@ -2700,14 +2770,19 @@ function assertCopiedHiddenList(source: HiddenListNumbersRow, startsAt: Date, zo
  * Whether a save gave the event more places than it had: a higher number, or the cap lifted —
  * on an event that will run. A race cancelled and widened in the same press offers nothing:
  * the offer's link would only answer that the event is cancelled (§147).
+ *
+ * «Locuri păstrate pentru club» (§NNN): the site's places grow too when fewer are kept — the waiting list's automatic
+ * offers fill places up to `capacity − K` (`fillAvailableSpots`), so a lowered K hands the line what it frees, as a
+ * raised capacity does. A raise that only widens the club's reserve offers nothing: the fill finds no room of the site's.
  */
 function capacityRaised(
-  before: { capacity: number | null },
-  after: { eventStatus: EditableEvent["eventStatus"]; registrationMode: EditableEvent["registrationMode"]; capacity: number | null },
+  before: { capacity: number | null; placesKeptForClub?: number },
+  after: { eventStatus: EditableEvent["eventStatus"]; registrationMode: EditableEvent["registrationMode"]; capacity: number | null; placesKeptForClub?: number },
 ): boolean {
   if (after.eventStatus !== "SCHEDULED" || after.registrationMode !== "INTERNAL") return false;
   if (after.capacity === null) return before.capacity !== null;
-  return before.capacity !== null && after.capacity > before.capacity;
+  if (before.capacity === null) return false;
+  return after.capacity > before.capacity || keptOf(after) < keptOf(before);
 }
 
 /**
@@ -2787,6 +2862,8 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     await assertDateToBeAnnouncedAllowed(db, parsedEventFields, current);
     await assertStoredCover(db, parsedEventFields, current);
     assertRouteGpxOfThisEnvironment(parsedEventFields, current);
+    // «Locuri păstrate pentru club» (§NNN) within the places, the row's own number when the box was not posted.
+    assertPlacesKeptWithin(parsedEventFields.capacity, placesAfterSave(parsedEventFields, current).placesKeptForClub);
   }
   const times = parsedEventFields ? resolveTimes(parsedEventFields, switchesAfterSave(parsedEventFields, current)) : undefined;
   // The notice and the cancellation's reason, refused here like any other box (§331, §315).
@@ -2845,6 +2922,8 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     let discountNoteCleared = false;
     // What the window's move did to the holds of every date this save wrote (§665).
     const holdMoves: WindowHoldsMoved[] = [];
+    // The places taken when this save moved the places (§NNN), for «Istoric capacitate».
+    let occupiedAtSave = 0;
     if (parsedEventFields && times) {
       // Under the event lock, on an uncapped event too, so the spares it reads are the ones in force (§647).
       const hiddenListNumbers = hiddenListNumbersToJudge(parsedEventFields, current);
@@ -2857,14 +2936,17 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
        * waits behind this save instead of slipping past it; the version guard alone would
        * only catch another *save*.
        */
-      if (parsedEventFields.capacity !== null) {
+      /*
+        …and refused with the allocator's own counts (§NNN), so the editor says how many are taken and by what. Counted
+        under the same lock whenever the places move — the capacity or the places kept for the club, a cap lifted
+        included — for «Istoric capacitate»'s row.
+      */
+      if (parsedEventFields.capacity !== null || placesMoved(current, placesAfterSave(parsedEventFields, current))) {
         await lockEventForCapacity(tx, input.eventId);
-        const occupied = computeOccupied(await countOccupied(tx, input.eventId, now));
-        if (parsedEventFields.capacity < occupied) {
-          throw new DomainError(
-            "VALIDATION_ERROR",
-            `capacity: ${occupied} places are already taken; capacity cannot be lowered below that`,
-          );
+        const counts = await countOccupied(tx, input.eventId, now);
+        occupiedAtSave = computeOccupied(counts);
+        if (parsedEventFields.capacity !== null && parsedEventFields.capacity < occupiedAtSave) {
+          throw new CapacityBelowTakenError(parsedEventFields.capacity, counts);
         }
       }
 
@@ -2949,6 +3031,19 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     // More places than before: the difference goes to the waiting list at once (§147), here,
     // where the row is already locked by the guarded update and the number is not yet committed.
     let offered = capacityRaised(current, savedEvent) ? await offerRaisedCapacity(tx, savedEvent.id, now, deadlines) : 0;
+    // «Istoric capacitate» (§NNN): a row for each of the two numbers that moved, after the offers its raise made.
+    if (parsedEventFields) {
+      await auditPlacesChange(tx, {
+        actorStaffUserId: input.actor.id,
+        before: current,
+        after: savedEvent,
+        via: input.via ?? "editor",
+        occupied: occupiedAtSave,
+        offered,
+        reason: input.placesChangeReason,
+        now,
+      });
+    }
 
     /*
       This date's languages as they now stand: the rows a text save wrote back (which already carry
@@ -2986,6 +3081,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         deadlines,
         discountNoteCleared,
         checkpointsHold: checkCheckpoints ? (member, date) => assertSavedCheckpointsHold(tx, member, gpxMetersOf(member.routeGpx), date) : undefined,
+        placesChangeReason: input.placesChangeReason,
       });
       appliedTo = series.applied;
       holdMoves.push(...series.holds);
@@ -3143,6 +3239,9 @@ function blankEventRow(now: Date): EditableEvent {
     freePlacesByOfferOnly: false,
     placesAlertAt: null,
     placesAlertSent: null,
+    placesKeptForClub: 0,
+    releaseUnsignedAtDeadline: false,
+    unsignedReleasedFor: null,
     confirmationOpensDaysBefore: 7,
     confirmationDeadlineDaysBefore: 2,
     reminderHoursBefore: null,
@@ -3333,6 +3432,8 @@ export type CreateEventInput = {
    * new event has nobody registered to tell.
    */
   cancellation?: EventCancellationRequest;
+  /** Which create this is, for «Istoric capacitate» (§NNN): an event file's import says so; the create form's otherwise. */
+  via?: "import";
 };
 
 type PreparedEventCreate = {
@@ -3344,6 +3445,8 @@ type PreparedEventCreate = {
   shorts: PlaceNames;
   /** The reason of an event created cancelled (§448), for its audit row; null for any other status. */
   cancelledBecause: BilingualText | null;
+  /** The create's name in «Istoric capacitate» (§NNN). */
+  via: "create" | "import";
 };
 
 /**
@@ -3415,6 +3518,8 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
   const hiddenListNumbers = hiddenListNumbersToJudge(parsed, null);
   if (hiddenListNumbers) assertHiddenListNumbers(hiddenListNumbers, null);
   const times = resolveTimes(parsed, switchesAfterSave(parsed, null));
+  // «Locuri păstrate pentru club» (§NNN) within the places, judged before anything is written.
+  assertPlacesKeptWithin(parsed.capacity, placesAfterSave(parsed, null).placesKeptForClub);
   // Created cancelled or completed (§448): judged before any fetch, like every other refusal here.
   const cancelledBecause = readCreateStatus(input.actor, parsed.eventStatus, times.startsAt, input.cancellation, now);
   // A film pasted straight into any of a new event's five rich texts, in either language, gets
@@ -3440,7 +3545,7 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
   const names = placeNamesFrom(parsed);
   const shorts = placeShortsFrom(parsed);
 
-  return { parsed, times, translationColumns, names, shorts, cancelledBecause };
+  return { parsed, times, translationColumns, names, shorts, cancelledBecause, via: input.via ?? "create" };
 }
 
 /** The insert half of a create: no network fetch, safe to run inside any transaction or savepoint. */
@@ -3466,6 +3571,8 @@ async function insertPreparedEvent<T extends Record<string, unknown>>(
     .returning();
   // A new event created with its cover (§709): the trail names who chose it, as a save's would.
   await auditCover(tx, actor, null, event, now);
+  // «Istoric capacitate» starts here (§NNN): the places it was made with, nobody registered yet.
+  await auditPlacesChange(tx, { actorStaffUserId: actor.id, before: null, after: event, via: prepared.via, occupied: 0, offered: 0, now });
 
   // Through the same function a save writes with: the rich summary's words become the
   // plain `excerpt`, the empty documents become null, a group run gets no programme.
@@ -3668,6 +3775,8 @@ export async function duplicateEvent<T extends Record<string, unknown>>(
       .insert(events)
       .values(copiedEventValues(source, input.actor, now))
       .returning();
+    // «Istoric capacitate» (§NNN): the copy's places, from its first row.
+    await auditPlacesChange(tx, { actorStaffUserId: input.actor.id, before: null, after: copy, via: "duplicate", occupied: 0, offered: 0, now });
 
     await tx.insert(eventTranslations).values(
       sourceTranslations.map((translation) =>
@@ -3798,6 +3907,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     freePlacesByOfferOnly: source.freePlacesByOfferOnly,
     publicRegistrationOpen: source.publicRegistrationOpen,
     placesAlertAt: source.placesAlertAt,
+    // «Locuri păstrate pentru club» (§NNN) goes with the places it is part of: a copy, and every date of a series.
+    placesKeptForClub: source.placesKeptForClub,
     // The race kit goes with the race (§554): a copy, and every date of a series, give the same shirt.
     kitShirt: source.kitShirt,
     // What the race number looks like goes with the race (§560): the band's colour and the club's
@@ -4070,6 +4181,8 @@ async function materializeSeries<T extends Record<string, unknown>>(
       );
       // A new date carries the source's checkpoints (§757), like its route: the limits are minutes from the start.
       await copyCheckpoints(tx, source.id, copy.id, now);
+      // «Istoric capacitate» (§NNN): the date's places, made by the series — by nobody when the job made it.
+      await auditPlacesChange(tx, { actorStaffUserId: actor?.id ?? null, before: null, after: copy, via: "series_generated", occupied: 0, offered: 0, now });
     }
   });
 

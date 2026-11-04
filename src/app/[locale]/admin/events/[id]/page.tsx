@@ -140,7 +140,7 @@ import { countEligibleWaitlisted, countOccupied, countOutsideCapacity, countRegi
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import { readPlaceDeadlines } from "@/modules/registrations/admin-repository";
-import { noFreePlaceValues, type PlacesTaken } from "@/modules/registrations/domain/capacity";
+import { noFreePlaceValues, type PlacesTaken, placesTaken as placesTakenOf } from "@/modules/registrations/domain/capacity";
 import GroupRunDeclarationsPanel from "@/modules/group-run-declarations/ui/GroupRunDeclarationsPanel";
 import { listGroupRunDeclarations } from "@/modules/group-run-declarations/repository";
 import { showsGroupRunDeclarationsFold } from "@/modules/group-run-declarations/domain";
@@ -339,6 +339,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const occupiedCounts =
     internal && event.capacity !== null && canReadRegistrations(staffUser.role) ? await countOccupied(db, event.id, now) : null;
   const placesTaken = occupiedCounts === null ? null : computeOccupied(occupiedCounts);
+  // …and by what (§NNN): the capacity's help says how low a save may go, as the save refuses under the lock.
+  const heldPlaces =
+    occupiedCounts === null || event.capacity === null ? null : { occupied: computeOccupied(occupiedCounts), ...placesTakenOf(event.capacity, occupiedCounts) };
   // Seated «În afara locurilor» (§643): beside the occupied places, which leave them out; read only where those are said.
   const outsideCount = occupiedCounts === null ? 0 : await countOutsideCapacity(db, event.id);
   // Invitations still waiting for an answer (§647): «invitații în așteptare: N» beside the counts.
@@ -776,6 +779,25 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       confirmLabel: t("editor.save"),
       cancelLabel: words.cancel,
     },
+    /*
+      The places changed while people wait and the places go out by themselves (§147, §NNN): a raise of the site's places
+      — a higher capacity, or fewer kept for the club — emails offers at once, so the save asks first. Only where offers
+      would leave: «Da», the tick off, a scheduled event of this site with somebody waiting.
+    */
+    ...(internal && event.eventStatus === "SCHEDULED" && waiting > 0 && offersOnItsOwn(event)
+      ? (
+          [
+            ["event.capacity", event.capacity === null ? "" : String(event.capacity)],
+            ["event.placesKeptForClub", event.placesKeptForClub ? String(event.placesKeptForClub) : ""],
+          ] as const
+        ).map(([field, loaded]) => ({
+          when: [{ field, notEquals: loaded }],
+          title: t("confirm.placesOfferTitle"),
+          body: t("confirm.placesOfferBody", { waiting }),
+          confirmLabel: t("editor.save"),
+          cancelLabel: words.cancel,
+        }))
+      : []),
   ];
 
   return (
@@ -1181,6 +1203,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     languages={languages}
                     declarations={declarations}
                     waiting={waiting}
+                    placesTaken={maySaveSettings ? heldPlaces : null}
                     bibCounts={bibCounts}
                     rsvp={{ counts: rsvpCounts, rows: rsvpRows }}
                     locale={locale}

@@ -124,11 +124,14 @@ export type PreviewDoor = { door: RegistrationDoor; word: string };
  * length — the unsaved numbers are what the preview is for — never through the public cache, which
  * a preview must neither fill nor read, and with no page lifetime to hold (a preview is no page the
  * CDN keeps). An event not saved yet has nobody registered: its counts are nought.
+ *
+ * The draft's «Locuri păstrate pentru club» (§NNN) too: the places line says the announced capacity, as the saved
+ * page will. Absent, it is read off the saved row.
  */
 export async function draftRegistrationDoor<T extends Record<string, unknown>>(
   db: Database<T>,
   event: PublicEventPage,
-  limits: { capacity: number | null; waitlistCapacity: number | null },
+  limits: { capacity: number | null; waitlistCapacity: number | null; placesKeptForClub?: number | null },
   now: Date,
 ): Promise<RegistrationDoor> {
   let availablePlaces: number | null = null;
@@ -138,8 +141,10 @@ export async function draftRegistrationDoor<T extends Record<string, unknown>>(
   let waitlisted = 0;
   let confirmed: number | undefined;
   let occupied: number | undefined;
+  let announced = limits.capacity;
   if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
     const places = await readPublicPlaces(db, { id: event.id, ...limits }, now);
+    announced = places.announcedCapacity;
     availablePlaces = places.availablePlaces;
     waitlistRoom = places.waitlistRoom;
     waiting = places.waiting;
@@ -166,7 +171,7 @@ export async function draftRegistrationDoor<T extends Record<string, unknown>>(
       },
       now,
     ),
-    fill: publicFill(limits.capacity, availablePlaces, {
+    fill: publicFill(announced, availablePlaces, {
       occupied,
       confirmed,
       waitlisted,

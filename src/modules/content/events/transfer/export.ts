@@ -169,6 +169,8 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
       freePlacesByOfferOnly: event.freePlacesByOfferOnly,
       publicRegistrationOpen: event.publicRegistrationOpen,
       placesAlertAt: event.placesAlertAt,
+      // «Locuri păstrate pentru club» (§NNN), as the editor sets it.
+      placesKeptForClub: event.placesKeptForClub,
       opensAt: event.registrationOpensAt?.toISOString() ?? null,
       opensSoon: event.registrationOpensSoon,
       closesAt: event.registrationClosesAt?.toISOString() ?? null,

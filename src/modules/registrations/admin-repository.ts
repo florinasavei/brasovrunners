@@ -685,7 +685,11 @@ export async function countKits<T extends Record<string, unknown>>(db: Database<
  * to let anyone into. Blind to every filter but the event.
  */
 export async function readPlaceOutlook<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<PlaceOutlook | null> {
-  const [event] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, eventId)).limit(1);
+  const [event] = await db
+    .select({ capacity: events.capacity, placesKeptForClub: events.placesKeptForClub, freePlacesByOfferOnly: events.freePlacesByOfferOnly })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
   if (!event || event.capacity === null) return null;
   const [counts, waiting, outside, [internal]] = await Promise.all([
     countOccupied(db, eventId, now),
@@ -693,7 +697,16 @@ export async function readPlaceOutlook<T extends Record<string, unknown>>(db: Da
     countOutsideCapacity(db, eventId),
     db.select({ total: count() }).from(eventReserveEntries).where(eq(eventReserveEntries.eventId, eventId)),
   ]);
-  return placeOutlook({ ...placesTaken(event.capacity, counts), occupied: computeOccupied(counts), waiting, internal: internal?.total ?? 0, outside });
+  return placeOutlook({
+    ...placesTaken(event.capacity, counts),
+    occupied: computeOccupied(counts),
+    waiting,
+    internal: internal?.total ?? 0,
+    outside,
+    // «Locuri păstrate pentru club» (§NNN): the free places split into the site's and the club's.
+    kept: event.placesKeptForClub,
+    offersOnly: event.freePlacesByOfferOnly,
+  });
 }
 
 /** How many times the form was filled again for one registration, and when last (§312). */

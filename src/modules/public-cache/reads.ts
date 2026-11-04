@@ -347,7 +347,8 @@ function groupById<T extends { locale: Locale; slug: string }>(
  * visitor:
  * - `available`: the free places (`readPublicPlaces`, the allocator's formula);
  * - `capacity`: the event's own number of places, off the very row the formula counted, for
- *   "12 înscriși din 50 de locuri" (§346 public fill count);
+ *   "12 înscriși din 50 de locuri" (§346 public fill count) — the places the site announces, the capacity less
+ *   «Locuri păstrate pentru club» (§NNN), which nothing public names;
  * - `waitlistRoom`: how many more the waiting list takes (§350 waiting-list length), `null` when
  *   it has no limit, counted from the same two counts as the places — an offer lapsing, the key's
  *   clock, frees a slot in the line exactly when it frees a place;
@@ -372,17 +373,20 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
   /*
     "count-switch" (§634): the entry's shape gained `waitlistCountPublic`, so its key changed with it, as
     the start list's keys did for §628 — no entry written without the switch is ever read by code that
-    asks for it. "numbers-switch" (§668): the same again for `participantCountPublic`.
+    asks for it. "numbers-switch" (§668): the same again for `participantCountPublic`. "kept-places" (§NNN):
+    `capacity` became the announced one, the capacity less «Locuri păstrate pentru club», so no entry that said the
+    whole capacity is ever read by code that says the announced one.
   */
-  return publicRead(["places.available", eventId, window, "count-switch", "numbers-switch"], ["places", "events"], async () => {
+  return publicRead(["places.available", eventId, window, "count-switch", "numbers-switch", "kept-places"], ["places", "events"], async () => {
     const db = getDb();
     const event = await findEventForRegistrationById(db, eventId);
     if (!event || event.capacity === null) return null;
     const places = await readPublicPlaces(db, event, now);
-    if (places.availablePlaces === null) return null;
+    if (places.availablePlaces === null || places.announcedCapacity === null) return null;
     return {
       available: places.availablePlaces,
-      capacity: event.capacity,
+      // The places the site announces (§NNN): the whole capacity while nothing is kept for the club.
+      capacity: places.announcedCapacity,
       waitlistRoom: places.waitlistRoom,
       waitlistCapacity: event.waitlistCapacity,
       waiting: places.waiting,

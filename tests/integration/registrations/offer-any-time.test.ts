@@ -277,8 +277,10 @@ describe("§642 «Trimite-i oferta» on a full event: one supplementary place, e
 
     const raisedFor = async (registrationId: string, eventId: string) =>
       (await listAuditTrail(db, "registration", registrationId, eventId)).filter((entry) => entry.action === "event.capacity_raised_for_offer").map((entry) => entry.metadataJson);
-    expect(await raisedFor(luca.id, event.id)).toEqual([{ from: 1, to: 2, registrationId: luca.id }]);
-    expect(await raisedFor((await rowOf("Radu")).id, other.id)).toEqual([{ from: 1, to: 2, registrationId: (await rowOf("Radu")).id }]);
+    // «Istoric capacitate»'s fields beside them (§NNN): the row's version, the places taken and the press.
+    const history = { version: expect.any(Number), occupied: 1, via: "offer" };
+    expect(await raisedFor(luca.id, event.id)).toEqual([{ from: 1, to: 2, registrationId: luca.id, ...history }]);
+    expect(await raisedFor((await rowOf("Radu")).id, other.id)).toEqual([{ from: 1, to: 2, registrationId: (await rowOf("Radu")).id, ...history }]);
   });
 
   it("with «Da», the named person gets the new place, not the head of the line", async () => {

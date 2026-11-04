@@ -101,6 +101,8 @@ function sampleConfig(): EventConfig {
       freePlacesByOfferOnly: false,
       publicRegistrationOpen: true,
       placesAlertAt: null,
+      // «Locuri păstrate pentru club» (§NNN): none kept, the default a file without it reads.
+      placesKeptForClub: 0,
       opensAt: null,
       opensSoon: false,
       closesAt: null,
@@ -256,6 +258,28 @@ describe("the event file's reader", () => {
     const bad = JSON.parse(written) as { event: { registration: Record<string, unknown> } };
     bad.event.registration.placesAlertAt = -1;
     expect(readEventFile(JSON.stringify(bad)).ok).toBe(false);
+  });
+
+  it("§NNN writes «Locuri păstrate pentru club» only when places are kept, and reads it back as it was", () => {
+    const file = sampleFile();
+    // Nothing kept, as every event before it: not written, so the release before it still reads the file; read back as 0.
+    const plain = serializeEventFile(file);
+    expect(plain).not.toContain("placesKeptForClub");
+    const readDefaults = readEventFile(plain);
+    if (!readDefaults.ok) throw new Error("the file did not read back");
+    expect(readDefaults.file.event.registration.placesKeptForClub).toBe(0);
+
+    file.event.registration.placesKeptForClub = 10;
+    const written = serializeEventFile(file);
+    const read = readEventFile(written);
+    if (!read.ok) throw new Error("the file did not read back");
+    expect(read.file.event.registration.placesKeptForClub).toBe(10);
+    // A count that is not one is refused, as the editor's box refuses it.
+    const bad = JSON.parse(written) as { event: { registration: Record<string, unknown> } };
+    bad.event.registration.placesKeptForClub = -1;
+    expect(readEventFile(JSON.stringify(bad)).ok).toBe(false);
+    // The diff names it in both languages.
+    expect(FIELD_LABELS).toContain("registration.placesKeptForClub");
   });
 
   it("refuses what is not one of ours, saying which of the five reasons it is", () => {

@@ -94,6 +94,11 @@ export function hasDirectAvailability(input: AvailabilityInput): boolean {
  * "free" count to ask for — nothing has actually lapsed yet for a query to count. The two agree
  * whenever free is 0, which is the case this formula and the forecast both cover: a lapse is only
  * ever released to a queue at all when something is waiting for it.
+ *
+ * With «Locuri păstrate pentru club» (§NNN) the caller passes as `free` the room the waiting people would be given
+ * from: the site's places for the line and a public newcomer (`max(capacity − K − occupied, 0)`), the whole capacity
+ * for a staff newcomer — clamped at nought like before, so no input releases more holds than people want places.
+ * With K at 0 both are today's `free`.
  */
 export function wantedLapsedHoldReleases(input: { lapsed: number; waiting: number; free: number }): number {
   return Math.min(input.lapsed, Math.max(input.waiting - input.free, 0));
@@ -131,6 +136,49 @@ export class NoFreePlaceError extends DomainError {
     this.name = "NoFreePlaceError";
     this.places = placesTaken(capacity, counts);
   }
+}
+
+/**
+ * «Locuri» lowered under the places already taken (AGENTS.md §10.6, BR-REQ-034-02 criterion 3; §NNN): refused, and
+ * said with the allocator's own counts under the event lock — how many are taken, and by what — so the editor reads
+ * why instead of «Verifică datele introduse». Names the `capacity` box; on another date of a series (a scoped save)
+ * the date too, in the event's zone. Nothing is written by the refusal: the whole save is one transaction.
+ */
+export const CAPACITY_BELOW_TAKEN = "CAPACITY_BELOW_TAKEN";
+
+export class CapacityBelowTakenError extends DomainError {
+  readonly places: PlacesTaken;
+  /** The occupied places, `computeOccupied` of the same counts. */
+  readonly occupied: number;
+  /** The series' date the refusal is about (`YYYY-MM-DD` in the event's zone), or null for the event saved. */
+  readonly date: string | null;
+
+  constructor(capacity: number, counts: OccupiedCounts, date: string | null = null) {
+    const occupied = computeOccupied(counts);
+    super(
+      "VALIDATION_ERROR",
+      `capacity: ${occupied} places are already taken${date ? ` on ${date}` : ""}; capacity cannot be lowered below that`,
+      ["capacity"],
+    );
+    this.name = "CapacityBelowTakenError";
+    this.places = placesTaken(capacity, counts);
+    this.occupied = occupied;
+    this.date = date;
+  }
+}
+
+/**
+ * The editor's sentence for that refusal (§NNN): the code — `_DATED` for another date of a series — and the numbers as
+ * strings, the date filled by the caller in its own language. Null for any other error.
+ */
+export function capacityBelowTakenRefusalOf(error: unknown): { code: string; values: Record<string, string>; date: string | null } | null {
+  if (!(error instanceof CapacityBelowTakenError)) return null;
+  const { confirmed, declaration, offered, invited, family } = placesTakenValues(error.places);
+  return {
+    code: error.date ? `${CAPACITY_BELOW_TAKEN}_DATED` : CAPACITY_BELOW_TAKEN,
+    values: { occupied: String(error.occupied), confirmed, declaration, offered, invited, family },
+    date: error.date,
+  };
 }
 
 /** Who holds an event's places, as the six numbers the sentence says (§589; the invitations since §647). */

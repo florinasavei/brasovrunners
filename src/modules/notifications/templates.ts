@@ -1025,6 +1025,23 @@ export type TemplateData = {
    */
   placesAlert?: { stage: "LOW" | "FULL"; free: number; capacity: number; alertAt: number };
   /**
+   * «Eliberează singur locurile nesemnate la termen» (§NNN): the participation window's deadline the release ran for, in
+   * each language's words; the real registrations it released and, apart, the test ones; the holds still unsigned it left
+   * (a special guest's, one whose first email is still queued, one whose own deadline is later); the places after it — free
+   * of the capacity, and the people waiting — and whether it ticked «Locurile libere le dau doar eu». Counted in the
+   * release's own transaction, under the event's lock.
+   */
+  unsignedReleased?: {
+    deadline: { ro: string; en: string } | null;
+    released: number;
+    test: number;
+    unsigned: number;
+    free: number;
+    capacity: number;
+    waiting: number;
+    offerOnlyTicked: boolean;
+  };
+  /**
    * The members' shop's order (§683), from the order's own copy at the send: the bold line, the
    * payment words and the note, each half in its own language (`shop-order-words.ts`).
    */
@@ -2118,6 +2135,16 @@ const T = {
       body: (d: TemplateData) => placesAlertBody("ro", d),
       action: "Deschide înscrierile",
     },
+    // «Eliberează singur locurile nesemnate la termen» (§NNN): to the Administrators, once per deadline — what was released and what now.
+    unsignedReleased: {
+      subject: (d: TemplateData) =>
+        (d.unsignedReleased?.released ?? 0) > 0
+          ? `Locurile nesemnate s-au eliberat la ${d.eventTitle ?? "eveniment"}`
+          : `A trecut termenul declarației la ${d.eventTitle ?? "eveniment"}`,
+      facts: (d: TemplateData) => unsignedReleasedFacts("ro", d),
+      body: (d: TemplateData) => unsignedReleasedBody("ro", d),
+      action: "Deschide înscrierile",
+    },
     // The role the organizers gave a volunteer (§761): one short message naming it — nothing to press.
     volunteerRoleAssigned: {
       subject: (d: TemplateData) => `Rolul tău de voluntar la ${d.eventTitle ?? "eveniment"}`,
@@ -2989,6 +3016,15 @@ const T = {
       body: (d: TemplateData) => placesAlertBody("en", d),
       action: "Open the registrations",
     },
+    unsignedReleased: {
+      subject: (d: TemplateData) =>
+        (d.unsignedReleased?.released ?? 0) > 0
+          ? `The unsigned places were released at ${d.eventTitle ?? "the event"}`
+          : `The declaration deadline has passed at ${d.eventTitle ?? "the event"}`,
+      facts: (d: TemplateData) => unsignedReleasedFacts("en", d),
+      body: (d: TemplateData) => unsignedReleasedBody("en", d),
+      action: "Open the registrations",
+    },
     volunteerRoleAssigned: {
       subject: (d: TemplateData) => `Your volunteer role at ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
@@ -3503,7 +3539,76 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   VOLUNTEER_GUARDIAN_REQUEST: "volunteerGuardianRequest",
   VOLUNTEER_INVITATION: "volunteerInvitation",
   PLACES_ALERT: "placesAlert",
+  UNSIGNED_RELEASED: "unsignedReleased",
 };
+
+/**
+ * The deadline release's bold line (§NNN): what it released, the free places of the capacity after it and the people
+ * waiting — «Eliberate: 12 · libere acum: 14 din 175 · pe lista de așteptare: 20» — then, only when there are any, the
+ * holds still unsigned it left and the test registrations it released (never in production). The counts are this line's,
+ * never fields of the words below, so a club text for the message (§359) never stores a sample number.
+ */
+function unsignedReleasedFacts(locale: "ro" | "en", d: TemplateData): { line: string; links: [] } | undefined {
+  const facts = d.unsignedReleased;
+  if (!facts) return undefined;
+  const parts =
+    locale === "ro"
+      ? [
+          `Eliberate: ${facts.released}`,
+          `libere acum: ${facts.free} din ${facts.capacity}`,
+          `pe lista de așteptare: ${facts.waiting}`,
+          ...(facts.unsigned > 0 ? [`încă nesemnate, păstrate: ${facts.unsigned}`] : []),
+          ...(facts.test > 0 ? [`înscrieri de test eliberate: ${facts.test}`] : []),
+        ]
+      : [
+          `Released: ${facts.released}`,
+          `free now: ${facts.free} of ${facts.capacity}`,
+          `on the waiting list: ${facts.waiting}`,
+          ...(facts.unsigned > 0 ? [`still unsigned, kept: ${facts.unsigned}`] : []),
+          ...(facts.test > 0 ? [`test registrations released: ${facts.test}`] : []),
+        ];
+  return { line: parts.join(" · "), links: [] };
+}
+
+/**
+ * The deadline release's paragraphs (§NNN), each half in its own language: what happened at the deadline, that each
+ * person released was told, the holds it left and why, and who gives the free places from now — never a person's name,
+ * nothing of a registration.
+ */
+function unsignedReleasedBody(locale: "ro" | "en", d: TemplateData): string[] {
+  const facts = d.unsignedReleased;
+  const event = d.eventTitle ?? (locale === "ro" ? "eveniment" : "the event");
+  const deadline = facts?.deadline?.[locale];
+  const released = (facts?.released ?? 0) + (facts?.test ?? 0) > 0;
+  if (locale === "ro") {
+    const when = deadline ? ` (${deadline})` : "";
+    return [
+      released
+        ? `A trecut termenul pentru semnarea declarației la ${event}${when}: locurile celor care nu semnaseră până atunci s-au eliberat, fără să le primească cineva automat.`
+        : `A trecut termenul pentru semnarea declarației la ${event}${when} și nu s-a eliberat niciun loc.`,
+      ...(released ? ["Fiecare persoană al cărei loc s-a eliberat a primit emailul „Locul tău nu mai este rezervat”."] : []),
+      ...((facts?.unsigned ?? 0) > 0
+        ? ["Locurile încă nesemnate scrise mai sus nu s-au eliberat: ale invitaților speciali, cele al căror prim email n-a plecat încă și cele cu termenul lor după termenul declarației."]
+        : []),
+      facts?.offerOnlyTicked
+        ? "Am bifat «Locurile libere le dau doar eu»: de acum locurile libere le dai doar tu, din pagina înscrierilor («Trimite-i oferta», «Oferă-i un loc acum», «Dă-i un loc acum»). Debifează-l în editorul evenimentului dacă vrei să le dea site-ul."
+        : "«Locurile libere le dau doar eu» era deja bifat: locurile libere le dai doar tu, din pagina înscrierilor.",
+    ];
+  }
+  const when = deadline ? ` (${deadline})` : "";
+  return [
+    released
+      ? `The deadline to sign the declaration at ${event} has passed${when}: the places of those who had not signed by then were released, and nobody was given them automatically.`
+      : `The deadline to sign the declaration at ${event} has passed${when}, and no place was released.`,
+    ...(released ? ["Each person whose place was released got the email “Your place is no longer held”."] : []),
+    ...((facts?.unsigned ?? 0) > 0
+      ? ["The places still unsigned written above were not released: the special guests', those whose first email has not left yet, and those whose own deadline is after the declaration deadline."]
+      : []),
+    facts?.offerOnlyTicked
+      ? "We ticked «I hand out the free places myself»: from now on you alone give the free places, from the registrations page («Send them the offer», «Offer them a place now», «Give them a place now»). Untick it in the event's editor if you want the site to give them."
+      : "«I hand out the free places myself» was already ticked: you alone give the free places, from the registrations page.",
+  ];
+}
 
 /**
  * The alert's bold line (§906): the free places of the capacity and the club's N, counted under the lock that
@@ -4238,7 +4343,9 @@ export function buildTemplateContent(
         // …nor the organizers' notice of a volunteer's sign-up (§754): to colleagues, its one link is its button.
         messageType === "VOLUNTEER_CLUB_NOTICE" ||
         // …nor the Administrators' places alert (§906): to colleagues, its one link is its button.
-        messageType === "PLACES_ALERT"
+        messageType === "PLACES_ALERT" ||
+        // …nor the deadline release's summary (§NNN), for the same reason.
+        messageType === "UNSIGNED_RELEASED"
       ) {
         return own.length > 0 ? own : undefined;
       }

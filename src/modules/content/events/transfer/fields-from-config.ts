@@ -132,6 +132,8 @@ export function eventFieldsFromConfig(context: PostedFieldsContext): Record<stri
     freePlacesByOfferOnly: config.registration.freePlacesByOfferOnly,
     publicRegistrationOpen: config.registration.publicRegistrationOpen,
     placesAlertAt: asNumber(config.registration.placesAlertAt),
+    // «Locuri păstrate pentru club» (§NNN): the box as the editor posts it, judged against the file's places by the save.
+    placesKeptForClub: asNumber(config.registration.placesKeptForClub),
     askHealthNote: config.registration.askHealthNote,
     rsvpEnabled: config.registration.rsvpEnabled,
     rsvpAskEnabled: config.registration.rsvpAskEnabled,

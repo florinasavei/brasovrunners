@@ -227,6 +227,12 @@ const PUBLIC_COLUMNS = {
   // «Locurile din lista de așteptare se alocă automat» (§615): with the tick above, whether a place goes to the line by
   // itself — what the door and the join form say of an offer (`registration-cta.ts#offersByItself`, §906).
   waitlistAutoOffer: events.waitlistAutoOffer,
+  /*
+    «Locuri păstrate pentru club» (§NNN), as a yes or no and nothing more: whether some of the places are the club's, so
+    no sentence promises that a freed place reaches the waiting list by itself (`offersByItself`) — a place freed while
+    the site's places are taken stays the club's. The number itself is never public.
+  */
+  keepsPlacesForClub: sql<boolean>`(${events.placesKeptForClub} > 0 and ${events.capacity} is not null)`.mapWith(Boolean),
   // «Kit de participare» → «Tricou» (§554): whether the registration form asks the T-shirt size.
   kitShirt: events.kitShirt,
   // «Condiții de participare» → «Informații medicale» (§557): whether the form asks the health note.

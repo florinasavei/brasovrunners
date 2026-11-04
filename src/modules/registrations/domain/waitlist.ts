@@ -125,9 +125,15 @@ export function waitlistHasRoom(input: WaitlistInput): boolean {
  * the oldest deadline first (`expireStaleHolds`' `wanting`), and gives them the place directly.
  * This is what the door and the event page count with, so they say "a place" exactly when the
  * allocator would give one; the formula itself (`capacity.ts`) is untouched.
+ *
+ * `keptInUse` (§NNN, a public newcomer only — `kept-places.ts#keptPlacesInUse`): the club's kept places are in use,
+ * more taken than the site announces. The allocator then lets no lapsed hold go for a public newcomer
+ * (`repository.ts#lapsedDeclarationHoldsToRelease`): the place it frees would be the club's again, not theirs. So the
+ * lapsed holds count as free only where they would be released. Absent or false, as before.
  */
-export function occupiedForNewcomer(input: WaitlistInput & { occupied: number; lapsedDeclarationHolds: number }): number {
-  return waitlistHasRoom(input) ? input.occupied : input.occupied - input.lapsedDeclarationHolds;
+export function occupiedForNewcomer(input: WaitlistInput & { occupied: number; lapsedDeclarationHolds: number; keptInUse?: boolean }): number {
+  if (waitlistHasRoom(input) || input.keptInUse === true) return input.occupied;
+  return input.occupied - input.lapsedDeclarationHolds;
 }
 
 /**

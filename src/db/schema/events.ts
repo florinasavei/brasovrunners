@@ -793,6 +793,29 @@ export const events = pgTable(
     /** What the alert above already said for the current crossing: null nothing, `LOW` the «N or fewer», `FULL` the «0». */
     placesAlertSent: text("places_alert_sent"),
     /**
+     * «Locuri păstrate pentru club» (§NNN): of `capacity`, how many places the site never gives — 0 by default,
+     * every event before the column, unchanged. A **public** entry (the form, its emailed link for another
+     * person, a family's form, a restart, the confirmation of a row the form wrote) takes a place only while
+     * fewer than `capacity − places_kept_for_club` are taken, and the line's automatic offers fill only up to
+     * that number; every staff verb keeps the whole capacity. A threshold on the entry's channel inside the one
+     * allocator (`registrations/domain/kept-places.ts`), never on `kind`; the capacity formula is untouched, so
+     * it can only ever give fewer places to the public, never one too many. Meaningless on an uncapped event
+     * (read as 0 there). The site announces `capacity − places_kept_for_club` places.
+     */
+    placesKeptForClub: integer("places_kept_for_club").notNull().default(0),
+    /**
+     * «Eliberează singur locurile nesemnate la termen» (§NNN): off by default. On, at the participation window's
+     * deadline the declaration holds still unsigned and past their own deadline are released, whether or not
+     * anybody waits, and nobody is given their places by itself. Read by the maintenance run the deadline wakes.
+     */
+    releaseUnsignedAtDeadline: boolean("release_unsigned_at_deadline").notNull().default(false),
+    /**
+     * The release's memory (§NNN): the window deadline it last ran for, null never. Written without moving
+     * `version`, like `places_alert_sent`; no form posts it, and no copy, series date or JSON file carries it.
+     * A window moved to another deadline arms the release again.
+     */
+    unsignedReleasedFor: timestamp("unsigned_released_for", { withTimezone: true }),
+    /**
      * The participation window (`DECISIONS.md` §104): for an event further away than
      * `confirmation_opens_days_before`, a registration that clears email verification keeps its
      * place until `confirmation_deadline_days_before` the start, and the declaration — the
@@ -1128,6 +1151,11 @@ export const events = pgTable(
     check("events_places_alert_at_non_negative", sql`${t.placesAlertAt} IS NULL OR ${t.placesAlertAt} >= 0`),
     /** What the alert already sent (§906): nothing, the «N or fewer», or the «0». */
     check("events_places_alert_sent_known", sql`${t.placesAlertSent} IS NULL OR ${t.placesAlertSent} IN ('LOW', 'FULL')`),
+
+    /** «Locuri păstrate pentru club» (§NNN): a count of places, nought or more… */
+    check("events_places_kept_non_negative", sql`${t.placesKeptForClub} >= 0`),
+    /** …never more than the places there are; an uncapped event's number means nothing (the editor saves 0 there). */
+    check("events_places_kept_within_capacity", sql`${t.capacity} IS NULL OR ${t.placesKeptForClub} <= ${t.capacity}`),
 
     /**
      * A minimum age a person can have (§329): zero to ninety-nine. Since §515 the form refuses

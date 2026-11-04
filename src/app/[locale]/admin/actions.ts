@@ -74,6 +74,8 @@ import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
 import { addEliteEntry, deleteEliteEntry } from "@/modules/registrations/elite-list";
 import { hiddenListRefusalOf, SPARES_BEFORE_HIDDEN_LIST } from "@/modules/registrations/domain/hidden-list";
+import { capacityBelowTakenRefusalOf } from "@/modules/registrations/domain/capacity";
+import { placesKeptRefusalOf } from "@/modules/registrations/domain/kept-places";
 import { formatCalendarDay } from "@/i18n/dates";
 import { getTranslations } from "next-intl/server";
 import { SavedCheckpointsRefusal } from "@/modules/event-checkpoints/checkpoints";
@@ -165,6 +167,21 @@ function hiddenListOutcome(error: unknown, locale: Locale): { error: string; err
   if (!refusal) return null;
   if (refusal.date === null) return { error: refusal.code };
   return { error: refusal.code, errorValues: { date: formatCalendarDay(refusal.date, { locale, position: "inline" }) } };
+}
+
+/**
+ * The places refused (§NNN) as their own sentences rather than «Verifică datele introduse»: «Număr de locuri» lowered under
+ * the places taken — how many, and by what, the allocator's own counts under the lock — and «Locuri păstrate pentru club»
+ * above the places. Each names its box; another date of a series is named too, in the reader's language. Nothing for any
+ * other error, so the caller's outcome stands. The editor's save and create read it.
+ */
+function placesOutcome(error: unknown, locale: Locale): { error: string; errorValues?: Record<string, string> } | null {
+  const dated = (date: string | null): Record<string, string> => (date === null ? {} : { date: formatCalendarDay(date, { locale, position: "inline" }) });
+  const below = capacityBelowTakenRefusalOf(error);
+  if (below) return { error: below.code, errorValues: { ...below.values, ...dated(below.date) } };
+  const kept = placesKeptRefusalOf(error);
+  if (kept) return kept.date === null ? { error: kept.code } : { error: kept.code, errorValues: dated(kept.date) };
+  return null;
 }
 
 /**
@@ -398,6 +415,8 @@ function eventFieldsFrom(form: FormData) {
     publicRegistrationOpen: form.get("event.publicRegistrationOpen.present") === "1" ? form.get("event.publicRegistrationOpen") === "on" : undefined,
     // «Anunță-mă când rămân N locuri» (§906): an empty box is off; a form without the box is "not editing it".
     placesAlertAt: form.has("event.placesAlertAt") ? value("placesAlertAt") : undefined,
+    // «Locuri păstrate pentru club» (§NNN): an empty box is 0; a form without the box is "not editing it".
+    placesKeptForClub: form.has("event.placesKeptForClub") ? value("placesKeptForClub") : undefined,
     // «Condiții de participare» → «Informații medicale» (§557), by the same marker.
     askHealthNote: form.get("event.askHealthNote.present") === "1" ? form.get("event.askHealthNote") === "on" : undefined,
     bibStartNumber: value("bibStartNumber"),
@@ -753,6 +772,8 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
           : undefined,
       // The Locul box ran in the browser (§362): its English name is the organizer's as it stands.
       placeNamesAsTyped: form.get(PLACE_NAMES_AS_TYPED_FIELD) === "1",
+      // «De ce schimbi locurile? (opțional)» (§NNN): kept only on the history row of a save that moves the places.
+      placesChangeReason: editsEventRow ? text(form, "event.placesChangeReason") : null,
     });
     // A raised capacity's offers (§147) ride on the same banner as a number; absent when none.
     // So does what the participants were told (§331): the kind and the count, never who.
@@ -778,7 +799,12 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
       ...(notice?.kind === "cancelledNobodyToTell" ? { notice: "cancelledNobody" } : {}),
     };
   } catch (error) {
-    return { ...refused(error, form, { fieldNames: eventFormFieldNames }), ...hiddenListOutcome(error, locale), ...(await savedCheckpointsOutcome(error, locale)) };
+    return {
+      ...refused(error, form, { fieldNames: eventFormFieldNames }),
+      ...hiddenListOutcome(error, locale),
+      ...placesOutcome(error, locale),
+      ...(await savedCheckpointsOutcome(error, locale)),
+    };
   }
 
   return backTo(path, outcome);
@@ -899,7 +925,7 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
   } catch (error) {
     // Nothing was written — the create, the publication and the series are one transaction —
     // so the form comes back with everything typed.
-    return { ...refused(error, form, { fieldNames: eventFormFieldNames }), ...hiddenListOutcome(error, locale) };
+    return { ...refused(error, form, { fieldNames: eventFormFieldNames }), ...hiddenListOutcome(error, locale), ...placesOutcome(error, locale) };
   }
 
   return backTo(editorPath(locale, createdId), outcome);

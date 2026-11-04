@@ -299,6 +299,8 @@ describe("§799 «Condiții de participare» inside «Regulamentul»", () => {
     const added = [
       "event.freePlacesByOfferOnly", "event.freePlacesByOfferOnly.present", "event.placesAlertAt",
       "event.publicRegistrationOpen", "event.publicRegistrationOpen.present",
+      // «Locuri păstrate pentru club» and the reason kept on the capacity's history (§NNN).
+      "event.placesKeptForClub", "event.placesChangeReason",
     ];
     const markup = await registration({ ...RACE, declarationDocumentId: declarations[0].id } as EditableEvent);
     expect([...postedNames(markup)].sort()).toEqual([...before, ...added].sort());
@@ -368,5 +370,47 @@ describe("§760 «Titlu și rezumat» holds the page's address and «Copertă»"
     );
     expect(fold(markup, "box-title").open).toBe(true);
     expect(markup).toMatch(/data-testid="required-titleSummary"[^>]*>[^<]*(<[^>]+>)*[^<]*lipsesc: [^<]*Adresa paginii \(EN\)/);
+  });
+});
+
+describe("BR-REQ-050-02 «Locuri păstrate pentru club» and the places' help in the registration card (§NNN)", () => {
+  const box = async (event: EditableEvent | null, extra: Partial<Parameters<typeof RegistrationBox>[0]> = {}) =>
+    html(
+      (await RegistrationBox({
+        event,
+        mayEditSettings: true,
+        languages: [language("ro"), language("en")],
+        declarations,
+        locale: "ro",
+        clubDeadlines: deadlines,
+        ...extra,
+      })) as ReactElement,
+    );
+  const words = (markup: string) => markup.replace(/<[^>]+>/g, " ").replace(/&quot;/g, '"').replace(/\s+/g, " ");
+
+  it("draws the box with its help, and the places the site announces under it while places are kept", async () => {
+    const kept = words(await box({ ...RACE, placesKeptForClub: 10, waitlistAutoOffer: true, freePlacesByOfferOnly: false } as EditableEvent));
+    expect(kept).toContain(ro.Admin.editor.placesKeptForClub);
+    expect(kept).toContain(ro.Admin.editor.placesKeptForClubHelp);
+    expect(kept).toContain("Pe site apar acum 140 din 150.");
+    // Nothing kept: the box, empty, and no announced line.
+    const none = await box({ ...RACE, placesKeptForClub: 0, waitlistAutoOffer: true, freePlacesByOfferOnly: false } as EditableEvent);
+    expect(none).toContain('name="event.placesKeptForClub"');
+    expect(none).not.toContain('data-testid="places-kept-announced"');
+  });
+
+  it("says under the places how many are taken and by what, and what a raise does for the people waiting", async () => {
+    const placesTaken = { occupied: 12, confirmed: 8, declaration: 2, offered: 1, invited: 1, family: 0 };
+    const byHand = words(await box({ ...RACE, placesKeptForClub: 0, waitlistAutoOffer: false, freePlacesByOfferOnly: false } as EditableEvent, { placesTaken, waiting: 4 }));
+    expect(byHand).toContain("Ocupate acum: 12 — confirmați 8, de semnat 2, oferite 1, invitați 1, rezervate familiilor 0. Nu poți coborî sub 12.");
+    // «Nu»: the new places wait for the staff, never «offered at once».
+    expect(byHand).toContain("Pe lista de așteptare: 4. Locurile noi nu se oferă singure: le dai tu din «Înscrieri».");
+    const auto = words(await box({ ...RACE, placesKeptForClub: 0, waitlistAutoOffer: true, freePlacesByOfferOnly: false } as EditableEvent, { placesTaken, waiting: 4 }));
+    expect(auto).not.toContain("Locurile noi nu se oferă singure");
+  });
+
+  it("asks why the places change only on a saved event; a new one's first history row needs no reason", async () => {
+    expect(await box({ ...RACE, placesKeptForClub: 0 } as EditableEvent)).toContain('name="event.placesChangeReason"');
+    expect(await box(null)).not.toContain('name="event.placesChangeReason"');
   });
 });

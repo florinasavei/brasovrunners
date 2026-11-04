@@ -107,8 +107,16 @@ export function offersOnlyShut(places: {
  * offer is the organizers' to make, so «Când se eliberează un loc, primești un email…» would promise what no place does by
  * itself. A row read without the setting — a copy cached before it — reads as «Da», the column's default.
  */
-export function offersByItself(event: { waitlistAutoOffer?: boolean | null; freePlacesByOfferOnly?: boolean | null }, availablePlaces: number | null): boolean {
-  return offersOnItsOwn({ waitlistAutoOffer: event.waitlistAutoOffer !== false, freePlacesByOfferOnly: event.freePlacesByOfferOnly === true, capacity: availablePlaces });
+export function offersByItself(
+  event: { waitlistAutoOffer?: boolean | null; freePlacesByOfferOnly?: boolean | null; keepsPlacesForClub?: boolean | null },
+  availablePlaces: number | null,
+): boolean {
+  /*
+    «Locuri păstrate pentru club» (§NNN): with places kept, a place freed while the site's places are taken stays the club's,
+    so the words are the organizers' (`kept-places.ts#offerWordsByItself`). Only where places are counted.
+  */
+  const kept = availablePlaces !== null && event.keepsPlacesForClub === true;
+  return !kept && offersOnItsOwn({ waitlistAutoOffer: event.waitlistAutoOffer !== false, freePlacesByOfferOnly: event.freePlacesByOfferOnly === true, capacity: availablePlaces });
 }
 
 /**

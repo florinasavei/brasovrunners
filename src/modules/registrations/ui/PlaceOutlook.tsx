@@ -16,6 +16,10 @@ import PublicNowLine from "./PublicNowLine";
  *
  * Last, «Pe site acum» (§906, `PublicNowLine`): what the public meets this minute, from the public card's own
  * predicate, and the tick «Înscrieri publice deschise» beside it. Absent when the page read no door.
+ *
+ * With «Locuri păstrate pentru club» (§NNN) the free places are split under the title: the site's own, which a visitor
+ * can still take, and the kept ones, which only the staff give — or all of them the staff's, while «Locurile libere
+ * le dau doar eu» is on. Nothing more is said when nothing is kept.
  */
 export default async function PlaceOutlook({
   outlook,
@@ -40,6 +44,14 @@ export default async function PlaceOutlook({
       <Typography variant="subtitle2" component="p" sx={{ fontWeight: 600, mb: 0.5 }}>
         {t("registrations.places.title", { free: outlook.free, capacity: outlook.capacity })}
       </Typography>
+      {/* «Locuri păstrate pentru club» (§NNN): the free places split into the site's and the club's — said only when places are kept. */}
+      {(outlook.kept ?? 0) > 0 && (
+        <Typography variant="body2" color="text.secondary" data-testid="registrations-places-kept">
+          {outlook.offersOnly
+            ? t("registrations.places.splitOffersOnly", { kept: outlook.kept ?? 0, keptFree: outlook.keptFree ?? 0 })
+            : t("registrations.places.split", { kept: outlook.kept ?? 0, publicFree: outlook.publicFree ?? outlook.free, keptFree: outlook.keptFree ?? 0 })}
+        </Typography>
+      )}
       <Typography variant="body2" color="text.secondary" data-testid="registrations-places-taken">
         {outlook.held > 0
           ? t("registrations.places.taken", {

@@ -77,6 +77,7 @@ import { isUuid } from "@/shared/ids";
 import { events } from "@/db/schema/events";
 import { countEligibleWaitlisted, countOccupied, offersWaitlistAutomatically, readWaitlistPosition } from "@/modules/registrations/repository";
 import { computeOccupied, hasDirectAvailability } from "@/modules/registrations/domain/capacity";
+import { announcedCapacity } from "@/modules/registrations/domain/kept-places";
 import { newcomerJoinsLine, publicEntryQueues, waitlistHasRoom } from "@/modules/registrations/domain/waitlist";
 import type { FamilySitting, PendingFamilyEntry } from "@/db/schema/family-entries";
 import {
@@ -364,6 +365,8 @@ async function renderRow(
     row.messageType === "VOLUNTEER_INVITATION" ||
     // The Administrators' places alert (§906): about an event's places, nobody's registration.
     row.messageType === "PLACES_ALERT" ||
+    // …and the deadline release's summary (§NNN), the same.
+    row.messageType === "UNSIGNED_RELEASED" ||
     bulkRecipients !== null
       ? (row.payloadJson as { eventId?: unknown } | null)?.eventId
       : undefined;
@@ -531,8 +534,9 @@ async function renderRow(
   }
   /*
     What happens to an offered place after its deadline (§906), read now, as the line is: it passes to the next person
-    by itself only while places go out by themselves (`offersWaitlistAutomatically`, the allocator's own gate) — with
-    «Nu», or «Locurile libere le dau doar eu», the organizers give it, and the message says so.
+    by itself only while places go out by themselves and none is kept for the club (`offersWaitlistAutomatically`, the
+    words' predicate, §NNN) — with «Nu», «Locurile libere le dau doar eu», or places kept for the club (a place freed
+    while the site's places are taken stays the club's), the organizers give it, and the message says so.
   */
   if (row.messageType === "WAITLIST_SPOT_OFFER" && registration) {
     data.offerPassesOnItsOwn = await offersWaitlistAutomatically(db, registration.eventId);
@@ -900,6 +904,43 @@ async function renderRow(
       free: whole(payload.free),
       capacity: whole(payload.capacity),
       alertAt: whole(payload.alertAt),
+    };
+    if (eventId) payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/registrations", query: { eventId } } })}`;
+  }
+  /*
+    «Eliberează singur locurile nesemnate la termen» (§NNN), to an Administrator or a Superadministrator: the deadline and
+    the counts are in the payload, as the release counted them under the lock — no participant, no token. The deadline is
+    said in the event's zone, in each half's language. The one button opens the event's registrations, from
+    `APP_BASE_URL` (AGENTS.md §8); the sign-in decides who may open it.
+  */
+  if (row.messageType === "UNSIGNED_RELEASED") {
+    const payload = (row.payloadJson ?? {}) as {
+      displayName?: unknown;
+      deadline?: unknown;
+      released?: unknown;
+      test?: unknown;
+      unsigned?: unknown;
+      free?: unknown;
+      capacity?: unknown;
+      waiting?: unknown;
+      offerOnlyTicked?: unknown;
+    };
+    data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
+    const whole = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? Math.max(Math.trunc(value), 0) : 0);
+    const at = typeof payload.deadline === "string" ? new Date(payload.deadline) : null;
+    const zone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
+    data.unsignedReleased = {
+      deadline:
+        at && !Number.isNaN(at.getTime())
+          ? { ro: formatDeadlineInSentence(at, zone, "ro"), en: formatDeadlineInSentence(at, zone, "en") }
+          : null,
+      released: whole(payload.released),
+      test: whole(payload.test),
+      unsigned: whole(payload.unsigned),
+      free: whole(payload.free),
+      capacity: whole(payload.capacity),
+      waiting: whole(payload.waiting),
+      offerOnlyTicked: payload.offerOnlyTicked === true,
     };
     if (eventId) payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/registrations", query: { eventId } } })}`;
   }
@@ -1893,16 +1934,22 @@ function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
  */
 async function waitlistTakesNewcomer(db: RendererDb, eventId: string, now: Date): Promise<boolean> {
   const [event] = await db
-    .select({ capacity: events.capacity, waitlistCapacity: events.waitlistCapacity, freePlacesByOfferOnly: events.freePlacesByOfferOnly })
+    .select({
+      capacity: events.capacity,
+      waitlistCapacity: events.waitlistCapacity,
+      freePlacesByOfferOnly: events.freePlacesByOfferOnly,
+      placesKeptForClub: events.placesKeptForClub,
+    })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
   if (!event || event.capacity === null) return false;
   const counts = await countOccupied(db, eventId, now);
   const waiting = await countEligibleWaitlisted(db, eventId);
+  // A family's form is a public entry (§NNN): measured on the site's places, the capacity less those kept for the club.
   const queues =
     newcomerJoinsLine({ waitlisted: waiting, freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel: "public", capacity: event.capacity }) ||
-    !hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted: waiting });
+    !hasDirectAvailability({ capacity: announcedCapacity(event), occupied: computeOccupied(counts), eligibleWaitlisted: waiting });
   return queues && waitlistHasRoom({ waitlistCapacity: event.waitlistCapacity, waitlisted: waiting, openOffers: counts.unexpiredWaitlistOfferedHolds });
 }
 
@@ -1920,13 +1967,14 @@ async function waitlistTakesNewcomer(db: RendererDb, eventId: string, now: Date)
  */
 async function waitlistByHand(db: RendererDb, eventId: string, now: Date): Promise<boolean> {
   const [event] = await db
-    .select({ capacity: events.capacity, freePlacesByOfferOnly: events.freePlacesByOfferOnly })
+    .select({ capacity: events.capacity, freePlacesByOfferOnly: events.freePlacesByOfferOnly, placesKeptForClub: events.placesKeptForClub })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
   if (!event) return false;
   if (publicEntryQueues({ freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel: "public", capacity: event.capacity })) return true;
-  return hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(await countOccupied(db, eventId, now)), eligibleWaitlisted: 0 });
+  // The site's places (§NNN): with the places kept for the club the only ones left, the site is full, as the page says.
+  return hasDirectAvailability({ capacity: announcedCapacity(event), occupied: computeOccupied(await countOccupied(db, eventId, now)), eligibleWaitlisted: 0 });
 }
 
 /**
@@ -1964,6 +2012,8 @@ async function describeLapsedHold(
       // The site's door as the card reads it (§906): shut by the organizers, or the line's whatever is free.
       publicRegistrationOpen: events.publicRegistrationOpen,
       freePlacesByOfferOnly: events.freePlacesByOfferOnly,
+      // The site's places (§NNN): the person comes back through the public form, measured on the capacity less those kept.
+      placesKeptForClub: events.placesKeptForClub,
     })
     .from(events)
     .where(eq(events.id, registration.eventId))
@@ -1984,6 +2034,7 @@ async function describeLapsedHold(
       waitlistCapacity: event.waitlistCapacity,
       publicRegistrationOpen: event.publicRegistrationOpen,
       freePlacesByOfferOnly: event.freePlacesByOfferOnly,
+      placesKeptForClub: event.placesKeptForClub,
     }),
   };
 }

@@ -66,12 +66,14 @@ import {
   type EntryChannel,
   newcomerJoinsLine,
   occupiedForNewcomer,
+  offersOnItsOwn,
   publicEntryQueues,
   waitlistFullError,
   waitlistHasRoom,
   waitlistLength,
   waitlistRoom,
 } from "./domain/waitlist";
+import { announcedCapacity, capacityForEntry, keptPlacesInUse, lineRoom } from "./domain/kept-places";
 import { canManageRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { deriveAllowedResendMessageType } from "./domain/resend";
 import { expectedSignatures, mismatchedSignatures } from "./domain/signature-name";
@@ -237,6 +239,7 @@ function withLockedRow(
     eventStatus: EventForRegistration["eventStatus"];
     waitlistCapacity: number | null;
     freePlacesByOfferOnly: boolean;
+    placesKeptForClub: number;
   },
 ): LockedEventForRegistration {
   /*
@@ -244,7 +247,7 @@ function withLockedRow(
     the caller's: no caller passes it, so none can pass a stale one, and the type below is what
     makes `allocateOrWaitlist` refuse an event that did not come through this function.
     «Locurile libere le dau doar eu» (§906) by the same rule: a switch ticked by a save that committed a
-    moment ago is the one the allocator obeys.
+    moment ago is the one the allocator obeys — and «Locuri păstrate pentru club» (§NNN) the same.
   */
   return {
     ...event,
@@ -253,6 +256,7 @@ function withLockedRow(
     eventStatus: locked.eventStatus,
     waitlistCapacity: locked.waitlistCapacity,
     freePlacesByOfferOnly: locked.freePlacesByOfferOnly,
+    placesKeptForClub: locked.placesKeptForClub,
   };
 }
 
@@ -262,6 +266,8 @@ type LockedEventForRegistration = EventForRegistration & {
   waitlistCapacity: number | null;
   /** `events.free_places_by_offer_only` as it stands under the lock (§906): a public entry never takes a free place. */
   freePlacesByOfferOnly: boolean;
+  /** `events.places_kept_for_club` as it stands under the lock (§NNN): the places the site never gives. */
+  placesKeptForClub: number;
 };
 
 function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDesk = false): void {
@@ -429,11 +435,13 @@ async function placeForNewcomer<T extends Record<string, unknown>>(
   settings: Deadlines,
   /** Who is entering (§906): a `public` entry takes no free place while «Locurile libere le dau doar eu» is ticked. */
   channel: EntryChannel,
-): Promise<{ free: boolean; counts: repo.OccupiedCountsRow; eligibleWaitlisted: number }> {
+): Promise<{ free: boolean; counts: repo.OccupiedCountsRow; eligibleWaitlisted: number; rules: EntryRules }> {
   await repo.expireStaleHolds(db, event, now);
   await fillAvailableSpots(db, event, now, settings);
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
+  // The row's rules after the sweep (§NNN), under the caller's lock: what a place is decided by from here on.
+  const rules = entryRulesOf(event, await repo.readPlaceRules(db, event.id));
   /*
     Newcomers queue while anybody waits (§615, amending §104 and §587): one `WAITLISTED` row, and the
     newcomer joins the line even with a place free — under the same lock, from the count just taken.
@@ -451,12 +459,33 @@ async function placeForNewcomer<T extends Record<string, unknown>>(
     off the locked row (`withLockedRow`), on the entry's channel, never on `kind`. The formula still says
     what is free; the switch only ever says «not for this entry», so it cannot seat anybody past it. On an
     uncapped event it says nothing at all (`publicEntryQueues`): nothing is scarce there.
+
+    «Locuri păstrate pentru club» (§NNN), a threshold on the same channel: a public entry is measured on
+    `capacity − K` (`capacityForEntry`), a staff entry on the whole capacity. The formula is the same one; the
+    number it is compared with is only ever lower for the public, so K can seat fewer people, never one too many.
   */
-  const lineFirst = newcomerJoinsLine({ waitlisted: eligibleWaitlisted, freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel, capacity: event.capacity });
+  const lineFirst = newcomerJoinsLine({ waitlisted: eligibleWaitlisted, freePlacesByOfferOnly: rules.freePlacesByOfferOnly, channel, capacity: rules.capacity });
   return {
-    free: !lineFirst && hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted }),
+    free: !lineFirst && hasDirectAvailability({ capacity: capacityForEntry({ ...rules, channel }), occupied: computeOccupied(counts), eligibleWaitlisted }),
     counts,
     eligibleWaitlisted,
+    rules,
+  };
+}
+
+/** What a newcomer's place is decided by (§906, §NNN): the capacity, the places kept for the club and the tick. */
+type EntryRules = { capacity: number | null; placesKeptForClub: number; freePlacesByOfferOnly: boolean };
+
+/**
+ * The rules off the row read under the lock (`repo.readPlaceRules`) — the capacity from the event the caller locked
+ * (`withLockedRow`'s, the same row), K and the tick from the read, which follows the sweep. A row the read did not find
+ * (it is locked, so never) falls back to the locked event's own copy.
+ */
+function entryRulesOf(event: LockedEventForRegistration, read: repo.PlaceRules | undefined): EntryRules {
+  return {
+    capacity: event.capacity,
+    placesKeptForClub: read?.placesKeptForClub ?? event.placesKeptForClub,
+    freePlacesByOfferOnly: read?.freePlacesByOfferOnly ?? event.freePlacesByOfferOnly,
   };
 }
 
@@ -873,7 +902,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     as in every capacity-changing transaction; the column is the one condition, `kind` none (§30).
   */
   const outside = await repo.isOutsideCapacity(db, registrationId);
-  const { free, counts, eligibleWaitlisted } = await placeForNewcomer(db, event, now, settings, channel);
+  const { free, counts, eligibleWaitlisted, rules } = await placeForNewcomer(db, event, now, settings, channel);
   // An invitation's held place is this registration's (§647), as a family's reserved one is.
   let direct = outside || reserved || invited || adopted !== undefined || free;
 
@@ -893,16 +922,20 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
       runner who never signed would hold it until the race while every newcomer was refused.
       With no lapsed hold there is nothing to release and the refusal stands; a refusal after a
       release takes the release back with it, like everything else in the transaction.
+
+      The newcomer's channel goes with the want (§NNN): a public one is measured on the site's places
+      (`capacity − K`), and no hold goes for it while the club's kept places are in use — the place would be
+      the club's again; a staff one on the whole capacity.
     */
-    const offerOnly = { freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel, capacity: event.capacity };
+    const offerOnly = { freePlacesByOfferOnly: rules.freePlacesByOfferOnly, channel, capacity: rules.capacity };
     if (counts.lapsedDeclarationHolds > 0 && !publicEntryQueues(offerOnly)) {
-      await repo.expireStaleHolds(db, event, now, { wanting: 1 });
+      await repo.expireStaleHolds(db, event, now, { wanting: 1, wantingChannel: channel });
       const after = await repo.countOccupied(db, event.id, now);
       // Never past somebody waiting (§615): a full line with people waiting in it refuses, as above.
       // Nor a public entry while the free places are the staff's to give (§906): it is refused like a full race.
       direct =
         !newcomerJoinsLine({ waitlisted: eligibleWaitlisted, ...offerOnly }) &&
-        hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(after), eligibleWaitlisted });
+        hasDirectAvailability({ capacity: capacityForEntry({ ...rules, channel }), occupied: computeOccupied(after), eligibleWaitlisted });
     }
     if (!direct) throw waitlistFullError(event.waitlistCapacity);
   }
@@ -1098,7 +1131,8 @@ async function offerFreedPlaces<T extends Record<string, unknown>>(
     then waits for the organizer, and newcomers queue behind the people already waiting
     (`placeForNewcomer`).
   */
-  if (!(await repo.offersWaitlistAutomatically(db, event.id))) return 0;
+  const rules = await repo.readPlaceRules(db, event.id);
+  if (!rules || !offersOnItsOwn(rules)) return 0;
 
   /*
     The offer's deadline, once for every candidate (§420): the club's offer window (§377) at the
@@ -1121,10 +1155,15 @@ async function offerFreedPlaces<T extends Record<string, unknown>>(
   // Nothing is ever waitlisted against an uncapped event, so an uncapped event has no queue to
   // fill — unless its cap was just lifted (§147), in which case everyone still waiting is
   // offered a place: the count is what bounds the loop, and it is zero on every other visit.
+  // On a capped one the line is offered **the site's** places alone (§NNN): `capacity − K − occupied`,
+  // never a place kept for the club — those the staff give. With K at 0, the free places as before.
   const availablePlaces =
     event.capacity === null
       ? await repo.countEligibleWaitlisted(db, event.id)
-      : Math.max(event.capacity - computeOccupied(await repo.countOccupied(db, event.id, now)), 0);
+      : Math.max(
+          lineRoom({ capacity: event.capacity, placesKeptForClub: rules.placesKeptForClub, occupied: computeOccupied(await repo.countOccupied(db, event.id, now)) }) ?? 0,
+          0,
+        );
   if (availablePlaces <= 0) return 0;
 
   let offers = 0;
@@ -1254,6 +1293,12 @@ export type PublicPlaces = {
    * 0 for an uncapped event.
    */
   occupied: number;
+  /**
+   * The places the site announces (§NNN): the capacity less «Locuri păstrate pentru club» — «N înscriși din 165 de
+   * locuri». The capacity itself while nothing is kept; null for an uncapped event. Every public number beside the
+   * button is said against this one, so taken plus free is always the announced number.
+   */
+  announcedCapacity: number | null;
 };
 
 /**
@@ -1267,23 +1312,39 @@ export type PublicPlaces = {
  * it is for the next newcomer (`occupiedForNewcomer`, §160): the allocator releases one for them
  * rather than refusing, so the page offers the button rather than "full". Where the line has
  * room — and always without a limit — the count is exactly `readPublicAvailability`'s.
+ *
+ * «Locuri păstrate pentru club» (§NNN): a visitor is a public entry, so the free places are counted against the
+ * announced capacity, `capacity − K` — the allocator's own threshold for that channel — and a lapsed hold counts as
+ * free for a newcomer only where the allocator would let it go for one. K is read off the row when the caller does
+ * not carry it (one primary-key read), so no caller can forget it; the editor's preview passes the draft's own.
  */
 export async function readPublicPlaces<T extends Record<string, unknown>>(
   db: Database<T>,
-  event: { id: string; capacity: number | null; waitlistCapacity: number | null },
+  event: { id: string; capacity: number | null; waitlistCapacity: number | null; placesKeptForClub?: number | null },
   now: Date,
 ): Promise<PublicPlaces> {
-  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0, offered: 0, waitlisted: 0, confirmed: 0, occupied: 0 };
+  if (event.capacity === null) {
+    return { availablePlaces: null, waitlistRoom: null, waiting: 0, offered: 0, waitlisted: 0, confirmed: 0, occupied: 0, announcedCapacity: null };
+  }
 
+  const kept =
+    event.placesKeptForClub === undefined || event.placesKeptForClub === null ? ((await repo.readPlaceRules(db, event.id))?.placesKeptForClub ?? 0) : event.placesKeptForClub;
+  const announced = announcedCapacity({ capacity: event.capacity, placesKeptForClub: kept });
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
   const line = { waitlistCapacity: event.waitlistCapacity, waitlisted: eligibleWaitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds };
   // The count the free places are built on, carried to the display as it is (§615): a lapsed
   // declaration hold the line has no room to wait behind is free, not occupied, so the places
   // line and the free line add up to the capacity.
-  const occupied = occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds });
+  const counted = computeOccupied(counts);
+  const occupied = occupiedForNewcomer({
+    ...line,
+    occupied: counted,
+    lapsedDeclarationHolds: counts.lapsedDeclarationHolds,
+    keptInUse: keptPlacesInUse({ capacity: event.capacity, placesKeptForClub: kept, occupied: counted }),
+  });
   return {
-    availablePlaces: computePublicAvailability({ capacity: event.capacity, occupied, eligibleWaitlisted }),
+    availablePlaces: computePublicAvailability({ capacity: announced, occupied, eligibleWaitlisted }),
     waitlistRoom: waitlistRoom(line),
     waiting: waitlistLength(line),
     // The line's two halves, from the same two counts — no query of their own (§612).
@@ -1291,6 +1352,7 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
     waitlisted: line.waitlisted,
     confirmed: counts.confirmed,
     occupied,
+    announcedCapacity: announced,
   };
 }
 
@@ -1326,12 +1388,16 @@ async function assertWaitlistCanTakeOneMore<T extends Record<string, unknown>>(
   const waitlisted = await repo.countEligibleWaitlisted(db, eventId);
   const line = { waitlistCapacity: row.waitlistCapacity, waitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds };
   if (waitlistHasRoom(line)) return;
-  const occupied = occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds });
+  // The capacity this entry is measured on (§NNN): `capacity − K` for the public, the whole one for the staff.
+  const entryCapacity = capacityForEntry({ ...row, channel });
+  const counted = computeOccupied(counts);
+  const keptInUse = channel === "public" && keptPlacesInUse({ ...row, occupied: counted });
+  const occupied = occupiedForNewcomer({ ...line, occupied: counted, lapsedDeclarationHolds: counts.lapsedDeclarationHolds, keptInUse });
   // Somebody waiting: a newcomer joins the line whatever is free (`newcomerJoinsLine`), and the line is full.
   // The same for a public entry while the free places are the staff's to give (§906).
   if (
     !newcomerJoinsLine({ waitlisted, freePlacesByOfferOnly: row.freePlacesByOfferOnly, channel, capacity: row.capacity }) &&
-    hasDirectAvailability({ capacity: row.capacity, occupied, eligibleWaitlisted: waitlisted })
+    hasDirectAvailability({ capacity: entryCapacity, occupied, eligibleWaitlisted: waitlisted })
   ) {
     return;
   }
@@ -3135,6 +3201,10 @@ type SupplementaryPlaceAction = "event.capacity_raised_for_offer" | "event.capac
  * count still be full after the one place (a count above the capacity, which no path writes), §589's
  * `NoFreePlaceError` refuses and the transaction writes nothing. The caller tells the public count after
  * the commit (`revalidatePublicContent("places")`). Returns the new capacity.
+ *
+ * The trail row is one of «Istoric capacitate»'s (§NNN): beside from, to and whom the place is for, the row's new
+ * `version` (the order of the event's capacity changes, whatever the clock said), the places `occupied` when it was
+ * added, and — for «Trimite-i oferta»'s raise — which press it came from (`via`).
  */
 async function addOneSupplementaryPlace<T extends Record<string, unknown>>(
   tx: Transaction<T>,
@@ -3148,6 +3218,8 @@ async function addOneSupplementaryPlace<T extends Record<string, unknown>>(
     action: SupplementaryPlaceAction;
     /** The capacity the dialog named and the press confirmed, or null when it named none. */
     confirmedTo: number | null;
+    /** The press behind an offer's raise (§NNN): «Trimite-i oferta», «Oferă-i un loc acum» or «Mută pe lista oficială» with the offer. */
+    via?: StaffOfferVia;
   },
   actorStaffUserId: string,
   now: Date,
@@ -3155,9 +3227,11 @@ async function addOneSupplementaryPlace<T extends Record<string, unknown>>(
   const from = input.capacity;
   // Never a raise the Administrator was not asked about (§642): the question must have named this one.
   if (!confirmsSupplementaryPlace(from, input.confirmedTo)) throw supplementaryPlaceUnconfirmedError(from, input.confirmedTo);
-  const to = await repo.addSupplementaryPlace(tx, input.eventId, actorStaffUserId, now);
-  if (to === null) throw new DomainError("CONFLICT", "the event's capacity changed concurrently");
-  if (computeOccupied(input.counts) >= to) throw new NoFreePlaceError(from, input.counts);
+  const raised = await repo.addSupplementaryPlaceVersioned(tx, input.eventId, actorStaffUserId, now);
+  if (raised === null) throw new DomainError("CONFLICT", "the event's capacity changed concurrently");
+  const to = raised.capacity;
+  const occupied = computeOccupied(input.counts);
+  if (occupied >= to) throw new NoFreePlaceError(from, input.counts);
   await recordAuditEvent(tx, {
     actorStaffUserId,
     // The registration's id, never its person (§12.12): the erasure's scrub reaches rows about a registration only.
@@ -3165,11 +3239,21 @@ async function addOneSupplementaryPlace<T extends Record<string, unknown>>(
     action: input.action,
     entityType: "event",
     entityId: input.eventId,
-    metadata: { from, to, ...(input.invitationId ? { invitationId: input.invitationId } : { registrationId: input.registrationId }) },
+    metadata: {
+      from,
+      to,
+      ...(input.invitationId ? { invitationId: input.invitationId } : { registrationId: input.registrationId }),
+      version: raised.version,
+      occupied,
+      ...(input.via ? { via: input.via } : {}),
+    },
     now,
   });
   return to;
 }
+
+/** Which press made a staff offer (§NNN), for the trail of the place it may add: «Istoric capacitate» says it. */
+export type StaffOfferVia = "offer" | "offerNow" | "moveAndOffer";
 
 /**
  * What an Administrator's press for one named person did (§642): the registration, and the capacity
@@ -3182,8 +3266,9 @@ export type PlacedByStaff = Registration & { capacityRaisedTo: number | null };
  * said a supplementary place would be added — the form posts it only then. Absent or null, the press
  * adds no place: a full event refuses it with `SUPPLEMENTARY_PLACE_UNCONFIRMED`. A place found free under
  * the lock is used whatever the press confirmed; a confirmed raise that is no longer needed adds nothing.
+ * `via` (§NNN): which press an offer came from, for the supplementary place's trail row — «Trimite-i oferta» when absent.
  */
-export type StaffPlaceOptions = { addPlaceTo?: number | null };
+export type StaffPlaceOptions = { addPlaceTo?: number | null; via?: StaffOfferVia };
 
 /**
  * «Dă-i un loc acum» (§637; the owner, 2026-10-02: no further step from the person, and a
@@ -3289,8 +3374,9 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
     let counts = await repo.countOccupied(tx, event.id, now);
     const hasRoom = () => locked.capacity === null || computeOccupied(counts) < locked.capacity;
     if (!needsNoRoom && !hasRoom() && counts.lapsedDeclarationHolds > 0) {
-      // One more person wanting a place who is not in the line (§160): one lapsed hold may go for them.
-      await repo.expireStaleHolds(tx, locked, now, { wanting: 1 });
+      // One more person wanting a place who is not in the line (§160): one lapsed hold may go for them —
+      // measured on the whole capacity, as every staff verb is (§NNN).
+      await repo.expireStaleHolds(tx, locked, now, { wanting: 1, wantingChannel: "staff" });
       counts = await repo.countOccupied(tx, event.id, now);
     }
     let capacityRaisedTo: number | null = null;
@@ -3985,6 +4071,7 @@ export async function offerPlaceToByStaff<T extends Record<string, unknown>>(
           registrationId: current.id,
           action: "event.capacity_raised_for_offer",
           confirmedTo: options.addPlaceTo ?? null,
+          via: options.via ?? "offer",
         },
         actor.id,
         now,
@@ -4498,7 +4585,8 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
     const counts = await repo.countOccupied(tx, event.id, now);
     const waiting = await repo.countEligibleWaitlisted(tx, event.id);
     const needed = input.outsideCapacity ? 0 : invitees.length;
-    const raises = invitationRaises({ capacity: locked.capacity, occupied: computeOccupied(counts), waiting, needed });
+    // The line claims only the site's places (§NNN): a kept place nobody holds is an invitation's with no supplementary place.
+    const raises = invitationRaises({ capacity: locked.capacity, occupied: computeOccupied(counts), waiting, needed, placesKeptForClub: locked.placesKeptForClub });
     if (locked.capacity !== null && !confirmsInvitationRaises(locked.capacity, raises, input.addPlaceTo ?? null)) {
       throw supplementaryPlaceUnconfirmedError(locked.capacity, input.addPlaceTo ?? null);
     }
@@ -4509,7 +4597,7 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
       let raised = false;
       if (!input.outsideCapacity && locked.capacity !== null) {
         const before = await repo.countOccupied(tx, event.id, now);
-        if (invitationFreePlaces({ capacity: locked.capacity, occupied: computeOccupied(before), waiting }) === 0) {
+        if (invitationFreePlaces({ capacity: locked.capacity, occupied: computeOccupied(before), waiting, placesKeptForClub: locked.placesKeptForClub }) === 0) {
           capacityRaisedTo = await addOneSupplementaryPlace(
             tx,
             { eventId: event.id, capacity: locked.capacity, counts: before, invitationId, action: "event.capacity_raised_for_invitation", confirmedTo: locked.capacity + 1 },

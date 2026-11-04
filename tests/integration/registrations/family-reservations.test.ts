@@ -390,6 +390,20 @@ describe("BR-REQ-034-01 a family sitting reserves every place the moment its for
   });
 });
 
+describe("BR-REQ-034-01 a family's form is a public entry: it stops at the places the site gives (§NNN)", () => {
+  it("capacity 3 with 1 kept for the club: the sitting reserves two places, and the third form waits for the address, then the line", async () => {
+    const event = await createEvent(3);
+    await db.update(events).set({ placesKeptForClub: 1 }).where(eq(events.id, event.id));
+    const pressed = await start(event, "Ana", 0);
+    expect(pressed).toMatchObject({ opened: true, place: "reserved" });
+    expect(await send(event, "Mihai", 2, pressed.sittingId)).toMatchObject({ sittingPlace: "reserved" });
+    // The site's two places are held: the kept one is the club's, never the family's.
+    expect(await send(event, "Ioana", 4, pressed.sittingId)).toMatchObject({ sittingPlace: "waitlist" });
+    const held = (await rows()).filter((row) => row.holdExpiresAt !== null).map((row) => row.registeredName);
+    expect(held).toEqual(["Ana Pop", "Mihai Pop"]);
+  });
+});
+
 describe("BR-REQ-031-01 the page the family's email opens says whether the places still hold (§543, the review of 2026-09-28, round four)", () => {
   it("before the deadline: reserved, nobody confirmed yet; past it, while the link still lives: the places lapsed, and the press allocates what is free", async () => {
     const event = await createEvent(50);
