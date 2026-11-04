@@ -1141,7 +1141,7 @@
       "summaryTest": "De test: {count}",
       "kits": {
         "title": "Kituri de pregătit: {runners}",
-        "titleWithVolunteers": "Kituri de pregătit: {count} — {runners} + {volunteers}",
+        "titleWithVolunteers": "Kituri de pregătit: {count} = {runners} + {volunteers}",
         "runners": {
           "one": "{count} alergător",
           "few": "{count} alergători",
@@ -1270,17 +1270,15 @@
         "inResultsHelp": "Debifat, rezultatul nu apare în clasamentul public și nu ia locul nimănui; la «Clasament» rămâne, marcat «în afara clasamentului».",
         "readOnly": "Doar un administrator schimbă bifele.",
         "panelTitle": "Elite",
-        "panelIntro": "Cine aleargă ca elită la acest eveniment: lista separată, doar cu numele pe BIB, și înscrierile marcate «Elită».",
-        "separate": "{count} pe lista separată",
-        "marked": {
-          "one": "{count} înscris marcat",
-          "few": "{count} înscriși marcați",
-          "other": "{count} de înscriși marcați"
+        "panelIntro": "Fiecare elită a evenimentului, într-o singură listă: fie doar un nume pe BIB, fără înscriere, fie o înscriere marcată «Elită».",
+        "count": {
+          "one": "{count} elită",
+          "few": "{count} elite",
+          "other": "{count} de elite"
         },
-        "separateTitle": "Lista separată — doar numele pe BIB",
-        "separateEmpty": "Niciun nume pe lista separată.",
-        "markedTitle": "Înscriși marcați «Elită»",
-        "markedEmpty": "Nicio înscriere marcată «Elită».",
+        "nameOnly": "fără înscriere — doar numele pe BIB",
+        "registered": "cu înscriere",
+        "empty": "Nicio elită la acest eveniment.",
         "manage": "Gestionează lista de elite",
         "seeCard": "Vezi lista de elite în editor"
       },

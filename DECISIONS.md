@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.24-2026-11-04 -->
+<!-- PROJECT_BASELINE: BR-V4.25-2026-11-04 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.24-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.25-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -28988,3 +28988,11 @@ So that the sentence a press's flash draws is read by a test, catalogue and all,
 `mailSkippedOf` adds nothing for a count of nought: «Adaugă mai mulți membri» with the box unticked and every address already a member kept no invitation back, and «Echipa» said «Nu a plecat nicio invitație» anyway (`mailSkipped=0`). The page now says it only for a count above nought — so an older link carrying `0` does not either —, and the members' banner says «Invitațiile sunt pe drum» only when somebody new was added (`tests/unit/staff/staff-page-roles.test.ts`).
 
 Baseline `BR-V4.24-2026-11-04`.
+
+## 913. «Kituri de pregătit» writes its total as a sum, and «Elite» is one list with each line's kind
+
+**The owner, 2026-11-04,** of «Kituri de pregătit: 190 — 179 de alergători + 11 voluntari»: «trebuie să fie „Kituri de pregătit: 190 = 179 de alergători + 11 voluntari”»; and of the «Elite» fold on the registrations list, its line «1 pe lista separată · 1 înscris marcat» over two sub-lists: «ce înseamnă asta? nu înțeleg, sunt 2 elite».
+
+**Decision.** The kits' title with volunteers says its total as a sum, with «=» where the dash was (`Admin.registrations.kits.titleWithVolunteers`, RO and EN); the counts and their forms are unchanged. The «Elite» fold (`ElitePanel`) counts the elites once — its line «N elite» / “N elites”, the separate list's names plus the marked registrations — and lists them in one numbered list, each line saying its kind: a name on the separate list «fără înscriere — doar numele pe BIB» / “not registered — the name on the bib only”, with its number when set, in the order typed; then each registration marked «Elită», «cu înscriere» / “registered”, its name a link to its page, its state chip and its number. No elite says «Nicio elită la acest eveniment.» The two sub-lists, their headings and their two counts are gone; what each list holds, who reads it and the link to the editor's elite card are unchanged.
+
+Baseline `BR-V4.25-2026-11-04`.

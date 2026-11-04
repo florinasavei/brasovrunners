@@ -18,7 +18,7 @@ import { createRace, registerRunner, type Runner } from "../../helpers/results";
  * Never the waiting list, a cancelled or expired row, a test row, or an answered, withdrawn or lapsed invitation.
  *
  * Said as the runners plus the volunteers (the owner, 2026-11-04: «aș vrea să mă asigur că număr și elitele»): the title
- * «Kituri de pregătit: N — X alergători + Y voluntari», the volunteers being the event's ticked «Are kit», the cancelled
+ * «Kituri de pregătit: N = X alergători + Y voluntari», the volunteers being the event's ticked «Are kit», the cancelled
  * left out (§904), or «Kituri de pregătit: X alergători» with none; the runners are the registrations above, the open
  * invitations and the event's separate elite list (§895), the line under the title splitting them, the elites a link to
  * the editor's elite card. A registered runner marked «Elită» is a registration, counted once. `countKits` is unchanged.
@@ -132,7 +132,7 @@ describe("«Kituri de pregătit»", () => {
     expect(text).not.toContain("Tricouri");
   });
 
-  it("§904's volunteers in the title: «N — X alergători + Y voluntari» — the event's ticked «Are kit», not cancelled — and countKits without them", async () => {
+  it("§904's volunteers in the title: «N = X alergători + Y voluntari» — the event's ticked «Are kit», not cancelled — and countKits without them", async () => {
     const race = await createRace(db, { kitShirt: true });
     const other = await createRace(db, { kitShirt: true });
     await runner(race.id, "M");
@@ -149,7 +149,7 @@ describe("«Kituri de pregătit»", () => {
     const volunteers = await countVolunteersWithKit(db, race.id);
     expect(volunteers).toBe(2);
     const text = await drawn(kits, volunteers);
-    expect(text).toContain("Kituri de pregătit: 3 — 1 alergător + 2 voluntari");
+    expect(text).toContain("Kituri de pregătit: 3 = 1 alergător + 2 voluntari");
     expect(text).not.toContain("Plus voluntari");
     // Nobody ticked: the runners alone, no word of volunteers.
     expect(await drawn(kits, 0)).toContain("Kituri de pregătit: 1 alergător");
@@ -179,7 +179,7 @@ describe("«Kituri de pregătit»", () => {
     const elites = (await listEliteEntries(db, { id: "00000000-0000-4000-8000-000000000001", role: "MODERATOR" }, race.id)).length;
     expect(elites).toBe(1);
     const text = await drawn(kits, 1, elites);
-    expect(text).toContain("Kituri de pregătit: 5 — 4 alergători + 1 voluntar");
+    expect(text).toContain("Kituri de pregătit: 5 = 4 alergători + 1 voluntar");
     expect(text).toContain("Alergători: 3 au acum un loc, cu invitați speciali · 0 invitații fără răspuns · 1 elită din lista separată. Lista de așteptare nu intră.");
     // The elites' words link to the editor's elite card, a plain anchor.
     expect(await markup(kits, 1, elites)).toMatch(new RegExp(`<a[^>]*href="${ELITE_CARD}"[^>]*>1 elită din lista separată</a>`));
@@ -196,14 +196,14 @@ describe("«Kituri de pregătit»", () => {
   });
 
   it("says each count in its own form, in Romanian and in English", async () => {
-    expect(await drawn(figures(1), 1)).toContain("Kituri de pregătit: 2 — 1 alergător + 1 voluntar");
-    expect(await drawn(figures(19), 20, 1)).toContain("Kituri de pregătit: 40 — 20 de alergători + 20 de voluntari");
+    expect(await drawn(figures(1), 1)).toContain("Kituri de pregătit: 2 = 1 alergător + 1 voluntar");
+    expect(await drawn(figures(19), 20, 1)).toContain("Kituri de pregătit: 40 = 20 de alergători + 20 de voluntari");
     expect(await drawn(figures(1, 1), 0, 1)).toContain("Alergători: 1 are acum un loc, cu invitați speciali · 1 invitație fără răspuns · 1 elită din lista separată.");
     expect(await drawn(figures(20, 20), 0, 20)).toContain("Alergători: 20 au acum un loc, cu invitați speciali · 20 de invitații fără răspuns · 20 de elite din lista separată.");
 
     locale = "en";
-    expect(await drawn(figures(1), 1)).toContain("Kits to prepare: 2 — 1 runner + 1 volunteer");
-    expect(await drawn(figures(19), 20, 1)).toContain("Kits to prepare: 40 — 20 runners + 20 volunteers");
+    expect(await drawn(figures(1), 1)).toContain("Kits to prepare: 2 = 1 runner + 1 volunteer");
+    expect(await drawn(figures(19), 20, 1)).toContain("Kits to prepare: 40 = 20 runners + 20 volunteers");
     expect(await drawn(figures(2))).toContain("Kits to prepare: 2 runners");
     expect(await drawn(figures(1, 1), 0, 1)).toContain(
       "Runners: 1 holding a place now, special guests included · 1 invitation unanswered · 1 elite on the separate list. The waiting list is not counted.",
