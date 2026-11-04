@@ -27,10 +27,10 @@ vi.mock("next-intl/server", async () => (await import("../../helpers/intl-server
 const { readPlaceOutlook } = await import("@/modules/registrations/admin-repository");
 const { default: PlaceOutlook } = await import("@/modules/registrations/ui/PlaceOutlook");
 
-async function drawn(eventId: string): Promise<string> {
+async function drawn(eventId: string, elites?: number): Promise<string> {
   const outlook = await readPlaceOutlook(db, eventId, NOW);
   if (!outlook) throw new Error("no outlook");
-  return renderToStaticMarkup(await PlaceOutlook({ outlook, locale: "ro" })).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return renderToStaticMarkup(await PlaceOutlook({ outlook, locale: "ro", elites })).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
 let invited = 0;
@@ -129,6 +129,23 @@ describe("«Locuri»", () => {
     expect(text).toContain("Locurile libere merg întâi la lista oficială («Trimite-i oferta»), apoi la cea internă («Oferă-i un loc acum»).");
     expect(text).toContain("Ca să intre toți cei care așteaptă, capacitatea ar trebui să ajungă la 12 (+2)");
     expect(text).toContain("Invitați speciali: 1 (nu ocupă loc). Oameni la start dacă intră toți: 13.");
+    expect(text).not.toContain("inclusiv");
+  });
+
+  it("counts the separate elite list among the people at the start, each count in its form (the owner, 2026-11-04)", async () => {
+    const race = await createRace(db, { capacity: 10 });
+    await runners(race.id, 5);
+    await runners(race.id, 4, { status: "WAITLISTED" });
+    await internalLines(race.id, 3);
+    await runners(race.id, 1, { outsideCapacity: true });
+
+    // The places are the allocator's: the free ones and the ones to add do not move.
+    const one = await drawn(race.id, 1);
+    expect(one).toContain("Locuri libere acum: 5 din 10");
+    expect(one).toContain("capacitatea ar trebui să ajungă la 12 (+2)");
+    expect(one).toContain("Invitați speciali: 1 (nu ocupă loc). Oameni la start dacă intră toți: 14, inclusiv 1 elită din lista separată.");
+    expect(await drawn(race.id, 2)).toContain("Oameni la start dacă intră toți: 15, inclusiv 2 elite din lista separată.");
+    expect(await drawn(race.id, 20)).toContain("Oameni la start dacă intră toți: 33, inclusiv 20 de elite din lista separată.");
   });
 
   it("says when no place is free, and when nobody waits", async () => {

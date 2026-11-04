@@ -1,9 +1,9 @@
-import { and, eq, ne } from "drizzle-orm";
-import { registrations } from "@/db/schema/registrations";
+import { and, asc, eq, ne } from "drizzle-orm";
+import { type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
@@ -61,4 +61,26 @@ export async function setRegistrationElite<T extends Record<string, unknown>>(
     });
     return { changed: true };
   });
+}
+
+/** A registration marked «Elită», as the registrations page's «Elite» panel lists it. */
+export type EliteMarkedRow = { id: string; name: string; status: RegistrationStatus; bibNumber: number | null };
+
+/**
+ * The registrations marked «Elită» at one event, for the registrations page's «Elite» panel — read-only, beside the race's
+ * separate elite list (the owner, 2026-11-04, who looked for an elite on the registrations page and did not find her). Every
+ * state, each said by its chip there — the mark is kept on a cancelled row, which a restart keeps — by name; a test row is
+ * left out, as from every figure the club is given (`AGENTS.md` §12.6). The Organizer and above (`canReadRegistrations`, the
+ * list's own gate), asserted here as at the page (BR-REQ-060-01).
+ */
+export async function listEliteMarkedRegistrations<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string): Promise<EliteMarkedRow[]> {
+  if (!canReadRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not read an event's registrations`);
+  }
+  if (!isUuid(eventId)) return [];
+  return db
+    .select({ id: registrations.id, name: registrations.registeredName, status: registrations.status, bibNumber: registrations.bibNumber })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, eventId), eq(registrations.elite, true), eq(registrations.kind, "REAL")))
+    .orderBy(asc(registrations.registeredName), asc(registrations.id));
 }

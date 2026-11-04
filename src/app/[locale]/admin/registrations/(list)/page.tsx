@@ -46,7 +46,9 @@ import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import KitCount from "@/modules/registrations/ui/KitCount";
 import { countVolunteersWithKit } from "@/modules/volunteers/admin-list";
-import { countEliteEntries } from "@/modules/registrations/elite-list";
+import { listEliteEntries } from "@/modules/registrations/elite-list";
+import { listEliteMarkedRegistrations } from "@/modules/registrations/elite-mark";
+import ElitePanel from "@/modules/registrations/ui/ElitePanel";
 import PlaceOutlook from "@/modules/registrations/ui/PlaceOutlook";
 import PublicNowLine from "@/modules/registrations/ui/PublicNowLine";
 import { readPublicDoor } from "@/modules/registrations/public-now";
@@ -254,7 +256,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const featuredEvent = events.find((event) => event.featured) ?? null;
 
   const deadlinesNow = new Date();
-  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits, eliteKits] = await Promise.all([
+  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits] = await Promise.all([
     listRegistrationsForAdmin(
       db,
       filters,
@@ -298,9 +300,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? readPlaceOutlook(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
     // «Pe site acum» (§906): what the public meets this minute, by the public card's predicate, and the tick beside it — one event only.
     filters.eventId ? readPublicDoor(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
-    // «Plus voluntari cu kit» (§904): the event's volunteers ticked «Are kit», a figure of its own beside the kits — `countKits` is untouched.
+    // The kits' volunteers (§904): the event's volunteers ticked «Are kit», said in the kits' title — `countKits` is untouched.
     filters.eventId ? countVolunteersWithKit(db, filters.eventId) : Promise.resolve(0),
-    filters.eventId ? countEliteEntries(db, filters.eventId) : Promise.resolve(0),
   ]);
 
   // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
@@ -416,6 +417,16 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const mayManage = canManageRegistrations(actor.role);
   // «Adaugă pe lista de așteptare» (§875) is drawn only where the press can succeed: the door of «Dă-i un loc acum» (§637).
   const waitlistAddOpen = mayManage && filters.eventId ? await waitlistAddDoorOpen(filters.eventId) : false;
+  // The editor's elite card (§895): the kits' elites, the «Elite» fold and the way back from «Mută pe lista de elită» link there.
+  const eliteCardHref = filters.eventId ? `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: filters.eventId } } })}#bib-elite` : null;
+  /*
+    The «Elite» fold's two lists — the separate one (§895) and the registrations marked «Elită» (§897) — one event only; each
+    reader asks the role again. The separate list's length is also the kits' elites: no registration, no place, but at the
+    start with a kit.
+  */
+  const eliteLists = filters.eventId ? await Promise.all([listEliteEntries(db, actor, filters.eventId), listEliteMarkedRegistrations(db, actor, filters.eventId)]) : null;
+  // The separate list's names: among the kits' runners, the people at the start in «Locuri» and the bibs beside the registrations'.
+  const eliteNames = eliteLists?.[0].length ?? 0;
   /*
     «Bife de membru fără cont de membru» (§645): the preview, read only while it is open and only
     for the role that may press it — the scope the list was resolved to (one event, or every event that
@@ -1142,7 +1153,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       {filters.eventId && (bibs.total > 0 || voidBibs.length > 0) && (
         <Panel glyph="bibs"
           title={t("panels.bibs")}
-          aside={t("registrations.bibsPrintedCount", { printed: bibs.total - bibs.unprinted, total: bibs.total })}
+          // The separate elite list's bibs beside the registrations' (the owner, 2026-11-04): printed from the editor's elite card, never in the sheet's figures.
+          aside={[
+            t("registrations.bibsPrintedCount", { printed: bibs.total - bibs.unprinted, total: bibs.total }),
+            ...(eliteNames > 0 ? [t(`registrations.bibsElite.${countForm(eliteNames, locale)}`, { count: eliteNames })] : []),
+          ].join(" · ")}
           collapsible
           // Open while a bib waits for the printer or a printed one waits to be pulled (§311),
           // and after a batch was marked — the undo is in here (§336).
@@ -1293,14 +1308,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
       </SummaryStrip>
       {/*
-        «Locuri», and «Pe site acum» inside it (§906) — the tick «Înscrieri publice deschise» beside it handed to an
-        Administrator alone (the action asserts it again); the Organizer reads the state. An event with no capacity
+        «Locuri», and «Pe site acum» inside it (§906) — the tick «Înscrierile pe site sunt deschise» beside it handed to
+        an Administrator alone (the action asserts it again); the Organizer reads the state. An event with no capacity
         has no «Locuri»: the line and the tick stand alone.
       */}
       {places ? (
         <PlaceOutlook
           outlook={places}
           locale={locale}
+          elites={eliteNames}
           spaceAbove={1.5}
           door={
             publicDoor && filters.eventId
@@ -1321,7 +1337,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           />
         )
       )}
-      {kits && <KitCount kits={kits} volunteers={volunteerKits} elites={eliteKits} spaceAbove={1.5} />}
+      {/* «Kituri de pregătit» (the owner, 2026-11-04): the runners — the separate elite list among them — plus the volunteers with a kit. */}
+      {kits && <KitCount kits={kits} locale={locale} volunteers={volunteerKits} elites={eliteNames} eliteHref={eliteCardHref ?? undefined} spaceAbove={1.5} />}
       {/*
         «Când pierde lumea locul?» (§635; the owner, 2026-10-02): until when the people of this event
         keep their place, and what a passed deadline does — right under the counts, and only when the list
@@ -1415,12 +1432,24 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           moveAction={mayManage && waitlistAddOpen ? moveReserveEntryAction : undefined}
           eliteMoveAction={mayManage ? moveReserveEntryToEliteAction : undefined}
           listQuery={listQueryString}
-          eliteCardHref={
-            mayManage && saved === "reserveMovedToElite"
-              ? `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: filters.eventId } } })}#bib-elite`
-              : undefined
-          }
+          eliteCardHref={mayManage && saved === "reserveMovedToElite" ? (eliteCardHref ?? undefined) : undefined}
           opened={saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveDeleted" || saved === "reserveMovedToElite" || current.from === "reserve"}
+        />
+      )}
+
+      {/*
+        «Elite» (the owner, 2026-11-04, who looked here for an elite and did not find her): the race's separate elite list
+        (§895) and the registrations marked «Elită» (§897), read-only, for every role that reads this list — each reader
+        asserts the role again — with the link to the editor's elite card, where the separate list changes.
+      */}
+      {eliteLists && eliteCardHref && (
+        <ElitePanel
+          locale={locale}
+          entries={eliteLists[0]}
+          marked={eliteLists[1]}
+          cardHref={eliteCardHref}
+          registrationHref={(registrationId) => getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } } })}
+          mayManage={mayManage}
         />
       )}
 

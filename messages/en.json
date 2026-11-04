@@ -1080,7 +1080,8 @@
       "events": "Events",
       "registrations": "Registrations",
       "volunteers": "Volunteers",
-      "volunteersHint": "{count} offers await an answer at the events ahead",
+      "volunteersHint": "Volunteers at the events ahead, the cancelled left out: {active} · to confirm or to place: {toAct}",
+      "volunteersToActLabel": "{count} to confirm or to place",
       "staff": "Staff",
       "legal": "Legal documents",
       "tasks": "Tasks",
@@ -1134,14 +1135,38 @@
       "summaryTotal": "Registrations: {count} (all states, cancelled and expired included)",
       "summaryTest": "Test: {count}",
       "kits": {
-        "title": "Kits to prepare: {count}",
-        "who": "Holding a place now, special guests included: {registrations} · Invitations unanswered: {invitations}. The waiting list is not counted.",
+        "title": "Kits to prepare: {runners}",
+        "titleWithVolunteers": "Kits to prepare: {count} — {runners} + {volunteers}",
+        "runners": {
+          "one": "{count} runner",
+          "few": "{count} runners",
+          "other": "{count} runners"
+        },
+        "volunteers": {
+          "one": "{count} volunteer",
+          "few": "{count} volunteers",
+          "other": "{count} volunteers"
+        },
+        "who": "Runners: {holding} · {invitations}. The waiting list is not counted.",
+        "whoWithElites": "Runners: {holding} · {invitations} · <link>{elites}</link>. The waiting list is not counted.",
+        "holding": {
+          "one": "{count} holding a place now, special guests included",
+          "few": "{count} holding a place now, special guests included",
+          "other": "{count} holding a place now, special guests included"
+        },
+        "invitations": {
+          "one": "{count} invitation unanswered",
+          "few": "{count} invitations unanswered",
+          "other": "{count} invitations unanswered"
+        },
+        "elites": {
+          "one": "{count} elite on the separate list",
+          "few": "{count} elites on the separate list",
+          "other": "{count} elites on the separate list"
+        },
         "shirts": "T-shirts — {sizes}",
         "noShirt": "no T-shirt: {count}",
-        "unknownSize": "size not known yet (invitations): {count}",
-        "volunteers": "Plus volunteers with a kit: {count}",
-        "elites": "Plus elites on the separate list: {count}",
-        "total": "Total to prepare: {count}"
+        "unknownSize": "size not known yet (invitations): {count}"
       },
       "places": {
         "title": "Places free now: {free} of {capacity}",
@@ -1178,7 +1203,8 @@
         "nobodyWaits": "Nobody is waiting on either list.",
         "letIn": "The free places go to the official list first («Send them the offer»), then to the internal list («Offer them a place now»).",
         "raises": "To let in everybody waiting, the capacity would have to reach {capacity} (+{count}); each offer adds its own place, once you confirm.",
-        "total": "Special guests: {outside} (take no place). People at the start if everybody comes: {count}."
+        "total": "Special guests: {outside} (take no place). People at the start if everybody comes: {count}.",
+        "totalWithElites": "Special guests: {outside} (take no place). People at the start if everybody comes: {count}, including {elites}."
       },
       "publicNow": {
         "direct": "On the site now: the «Register» button — the first to come takes a free place.",
@@ -1189,6 +1215,7 @@
         },
         "waitlistUnlimited": "On the site now: «Join the waiting list» — {waiting} on the list, no limit.",
         "closed": "On the site now: registration is closed — {reason}.",
+        "stopped": "On the site now: registration is stopped.",
         "reasons": {
           "NOT_YET_OPEN": "the registration period has not started",
           "WINDOW_CLOSED": "the registration period is over",
@@ -1204,9 +1231,10 @@
         "setting": "Change it in the editor"
       },
       "publicDoor": {
-        "label": "Registration open on the site",
+        "label": "Registration on the site is open",
         "save": "Save",
-        "help": "Unticked, the button on the site disappears at once, whatever the dates say; everything the team does keeps working.",
+        "helpOpen": "Untick and press «Save» to stop it; everything the team does keeps working.",
+        "helpStopped": "Tick and press «Save» to open it again.",
         "readOnlyOn": "Registration on the site is open (only an Administrator can stop it).",
         "readOnlyOff": "Registration on the site has been stopped by an Administrator."
       },
@@ -1228,7 +1256,21 @@
       "elite": {
         "chip": "Elite",
         "mark": "Mark as elite",
-        "unmark": "No longer elite"
+        "unmark": "No longer elite",
+        "panelTitle": "Elites",
+        "panelIntro": "Who runs as an elite at this event: the separate list, with the name only on the bib, and the registrations marked «Elite».",
+        "separate": "{count} on the separate list",
+        "marked": {
+          "one": "{count} registration marked",
+          "few": "{count} registrations marked",
+          "other": "{count} registrations marked"
+        },
+        "separateTitle": "The separate list — the name only on the bib",
+        "separateEmpty": "No names on the separate list.",
+        "markedTitle": "Registrations marked «Elite»",
+        "markedEmpty": "No registration marked «Elite».",
+        "manage": "Manage the elite list",
+        "seeCard": "See the elite list in the editor"
       },
       "export": "Download CSV",
       "personLink": "Everything held about a person",
@@ -1733,6 +1775,11 @@
       "bibMarkPrinted": "Mark the bib as printed",
       "bibMarkUnprinted": "The bib is not printed",
       "bibsPrintedCount": "Bibs: {printed} of {total} printed — confirmed registrations only",
+      "bibsElite": {
+        "one": "+ {count} elite bib, from the separate list",
+        "few": "+ {count} elite bibs, from the separate list",
+        "other": "+ {count} elite bibs, from the separate list"
+      },
       "bibsVoid": "Printed numbers belonging to cancelled or expired registrations — pull them out of the pile ({count}):",
       "bibsVoidCancelled": "Number {number}: {name}, registration cancelled on {date}",
       "bibsVoidExpired": "Number {number}: {name}, registration expired on {date}",
@@ -6870,7 +6917,7 @@
         "few": "{count} names",
         "other": "{count} names"
       },
-      "eliteHelp": "Their name prints large, where the number goes. They are not registrations: they take no place, get no email and are in no list or count.",
+      "eliteHelp": "Their name prints large, where the number goes. They are not registrations: they take no place and get no email. On the registrations page they count among the kits, the people at the start and the bibs.",
       "eliteEmpty": "No names on the list.",
       "eliteName": "Name on the bib",
       "eliteNameHelp": "As it prints, at most {max} characters. It shrinks to fit, on one line or two.",
