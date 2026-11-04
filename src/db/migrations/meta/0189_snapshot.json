@@ -1,6 +1,6 @@
 {
   "id": "e2ecddc7-5a28-430d-9cae-28b5c2a81420",
-  "prevId": "60f2c92b-6555-4f69-af1e-31856c5d7972",
+  "prevId": "3635061f-c924-4b0a-a4f7-20235c463d67",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4854,6 +4854,25 @@
           "notNull": true,
           "default": true
         },
+        "free_places_by_offer_only": {
+          "name": "free_places_by_offer_only",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "places_alert_at": {
+          "name": "places_alert_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "places_alert_sent": {
+          "name": "places_alert_sent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "confirmation_opens_days_before": {
           "name": "confirmation_opens_days_before",
           "type": "integer",
@@ -4921,6 +4940,13 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "public_registration_open": {
+          "name": "public_registration_open",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
         },
         "kit_shirt": {
           "name": "kit_shirt",
@@ -5337,6 +5363,14 @@
         "events_waitlist_capacity_non_negative": {
           "name": "events_waitlist_capacity_non_negative",
           "value": "\"events\".\"waitlist_capacity\" IS NULL OR \"events\".\"waitlist_capacity\" >= 0"
+        },
+        "events_places_alert_at_non_negative": {
+          "name": "events_places_alert_at_non_negative",
+          "value": "\"events\".\"places_alert_at\" IS NULL OR \"events\".\"places_alert_at\" >= 0"
+        },
+        "events_places_alert_sent_known": {
+          "name": "events_places_alert_sent_known",
+          "value": "\"events\".\"places_alert_sent\" IS NULL OR \"events\".\"places_alert_sent\" IN ('LOW', 'FULL')"
         },
         "events_min_age_in_range": {
           "name": "events_min_age_in_range",
@@ -11133,7 +11167,8 @@
         "RELAY_NOTICE",
         "RSVP_CONFIRM",
         "RSVP_ASK",
-        "VOLUNTEER_INVITATION"
+        "VOLUNTEER_INVITATION",
+        "PLACES_ALERT"
       ]
     },
     "public.email_outbox_status": {
