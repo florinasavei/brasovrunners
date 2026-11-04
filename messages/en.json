@@ -11760,6 +11760,7 @@
         "withdrawBack": "No, go back"
       },
       "signPersonally": "{participant} must sign this declaration personally. If this email address is not theirs, forward them the link or hand them the phone: nobody signs for another adult.",
+      "signPersonallyNameAbove": "The person registered must sign this declaration personally, with the full name above. If this email address is not theirs, forward them the link: nobody signs for another adult.",
       "typedName": "Type your full name as a signature",
       "privacyLink": "Privacy notice",
       "doneConfirmed": "Your registration is confirmed.",

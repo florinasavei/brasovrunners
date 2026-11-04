@@ -11720,6 +11720,7 @@
       "title": "Declarație pe proprie răspundere",
       "accept": "Am citit și accept declarația de mai sus, inclusiv, în mod expres, limitarea răspunderii organizatorului în limitele permise de lege.",
       "signPersonally": "Declarația trebuie semnată personal de {participant}. Dacă această adresă de email nu este a sa, trimiteți-i linkul sau dați-i telefonul: nimeni nu semnează în locul altui adult.",
+      "signPersonallyNameAbove": "Declarația trebuie semnată personal de persoana înscrisă, cu numele complet de mai sus. Dacă această adresă de email nu este a sa, trimiteți-i linkul: nimeni nu semnează în locul altui adult.",
       "typedName": "Scrie numele complet ca semnătură",
       "privacyLink": "Nota de confidențialitate",
       "doneConfirmed": "Înscrierea a fost confirmată.",
@@ -12099,7 +12100,7 @@
       "declareLeadName": "Înainte de semnătură, <link>verifică-ți numele complet și completează datele care lipsesc</link> din înscrierea ta: le găsești chiar deasupra semnăturii.",
       "signatureOpenName": "Semnează cu numele complet scris mai sus, exact cum apare acolo. Pentru un minor semnează părintele sau tutorele, cu numele lui scris mai sus.",
       "nameTypedAbove": "Numele cu care semnezi e cel scris mai sus, la datele tale: dacă e greșit, corectează-l acolo și semnează cu el.",
-      "minorNameTypedAbove": "Numele minorului e cel scris mai sus, la datele lui: dacă e greșit, corectează-l acolo și semnați cu el."
+      "minorNameTypedAbove": "Numele minorului e cel scris mai sus, la datele lui: dacă e greșit, corectează-l acolo și semnează cu el."
     }
   },
   "Devs": {

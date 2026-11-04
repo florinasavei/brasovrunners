@@ -922,8 +922,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                     page says whose signature it wants. Not for a minor — the parent signs there,
                     and the box below already says so.
                   */}
+                  {/* With the name check on, the name the club typed may be corrected above: the line names nobody. */}
                   {!signerOpen && signsForMinor === null && expectedName !== null && (
-                    <Typography>{t("declare.signPersonally", { participant: expectedName })}</Typography>
+                    <Typography>{nameCheck ? t("declare.signPersonallyNameAbove") : t("declare.signPersonally", { participant: expectedName })}</Typography>
                   )}
                   {needsDocuments && (
                     <IdDocumentFields
