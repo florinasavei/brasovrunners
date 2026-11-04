@@ -9,7 +9,9 @@ import { getDb } from "@/db/client";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
+import { readEmailHistory } from "@/modules/notifications/email-history";
+import EmailHistoryPanel from "@/modules/notifications/ui/EmailHistory";
+import { canManageRegistrations, canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { findVolunteerForAdmin } from "@/modules/volunteers/admin-list";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
@@ -49,7 +51,11 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
 
   const t = await getTranslations("Admin");
   const path = getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id } } });
-  const context = await volunteerPersonContextOf(db, person.event, locale, now, path);
+  const [context, emails] = await Promise.all([
+    volunteerPersonContextOf(db, person.event, locale, now, path),
+    // «Emailuri» (§915): read only for the Administrator and the Superadministrator; the reader asks again.
+    canManageRegistrations(actor) ? readEmailHistory(db, actor, { volunteerId: person.id }, now) : Promise.resolve(null),
+  ]);
   const { volunteerError } = await searchParams;
   const errorCode = volunteerError && /^[A-Z_]{1,48}$/.test(volunteerError) && t.has(`errors.${volunteerError}`) ? volunteerError : null;
   const eventCardHref = `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: person.eventId } } })}#box-volunteers`;
@@ -83,6 +89,14 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
       </Stack>
 
       <VolunteerPerson person={person} context={context} as="section" />
+
+      {/*
+        «Emailuri» (§915): every email the outbox holds for this volunteer — their own and their parent's link, by the
+        payload's `volunteerId` as «Emailuri azi» joins them — newest first, each with its tries, when it was queued and by
+        what, what became of it; closed, its line saying how many and the latest. The Administrator's and the
+        Superadministrator's alone: the Organizer, who opens this page for the roles, gets no fold, and the reader refuses.
+      */}
+      {emails && <EmailHistoryPanel locale={locale} history={emails} now={now} title="person" level={3} id="emailuri" data-testid="volunteer-emails" />}
     </Stack>
   );
 }

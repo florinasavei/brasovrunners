@@ -92,7 +92,16 @@ export type JournalLine = {
   copies: JournalClubLine[];
   /** What the waiting judgement needs (`domain/departure.ts`). */
   departure: DepartureRow;
+  /**
+   * The person's own page in the backoffice, when the line names one (§915): the registration's for a line named
+   * from the registration, the volunteer's for the volunteer's own messages and their parent's link. Null for a
+   * colleague, an address with no name, and every club line.
+   */
+  person: JournalPersonLink | null;
 };
+
+/** Which backoffice page a person line links to (§915): by id only, the page builds the address. */
+export type JournalPersonLink = { kind: "registration" | "volunteer"; id: string };
 
 /** A row to one of the club's own mailboxes: a copy, the declaration's archive, «somebody has confirmed» (§670). */
 export type JournalClubLine = { id: string; messageType: EmailMessageType; status: EmailOutboxStatus; recipientEmail: string; sentAt: Date | null };
@@ -150,10 +159,20 @@ export type JournalRowRead = {
   requestedByStaffUserId: string | null;
   registeredName: string | null;
   test: boolean;
+  /** The registration the row is about (`registration_id`), and the volunteer its payload names, when there is one. */
+  registrationId: string | null;
+  volunteerId: string | null;
   volunteerName: string | null;
   guardianName: string | null;
   eventTitle: string | null;
 };
+
+/**
+ * The volunteer a row is about: the payload's `volunteerId`, matched as text (§754's rows carry it, the parent's link
+ * too). The one predicate «Emailuri azi» joins the volunteers by and a volunteer's own «Emailuri» reads their rows by
+ * (`email-history.ts`, §915).
+ */
+export const VOLUNTEER_OF_ROW: SQL = sql`${eventVolunteers.id}::text = ${emailOutbox.payloadJson} ->> 'volunteerId'`;
 
 /** The volunteer's own messages (§754–§820): the name is the volunteer row's. The parent's link names the parent. */
 const VOLUNTEER_PERSON_TYPES: ReadonlySet<EmailMessageType> = new Set([
@@ -187,7 +206,7 @@ function identityOf(address: string): string | null {
 const isWaiting = (status: EmailOutboxStatus) => status === "PENDING" || status === "PROCESSING";
 
 /** The part of a club copy's key that is the copied message's own (`outbox.ts#enqueueClubCopies`). */
-function copiedKey(idempotencyKey: string): string | null {
+export function copiedKey(idempotencyKey: string): string | null {
   const at = idempotencyKey.indexOf(":club-copy:");
   return at > 0 ? idempotencyKey.slice(0, at) : null;
 }
@@ -214,6 +233,14 @@ export function groupEmailJournal(
     if (row.registeredName) return row.registeredName;
     const identity = identityOf(row.recipientEmail);
     return identity ? (nameByIdentity.get(identity) ?? null) : null;
+  };
+  // The page of the person the line names, by the same rule as the name: the volunteer's for their own messages and
+  // their parent's link, the registration's for a line named from it — never a colleague's notice.
+  const personOf = (row: JournalRowRead): JournalPersonLink | null => {
+    if (row.messageType === "VOLUNTEER_GUARDIAN_REQUEST" || VOLUNTEER_PERSON_TYPES.has(row.messageType)) {
+      return row.volunteerId ? { kind: "volunteer", id: row.volunteerId } : null;
+    }
+    return row.registrationId && row.registeredName ? { kind: "registration", id: row.registrationId } : null;
   };
 
   // The person's own real mail that left, by canonical address: how many today, and how many of each type.
@@ -257,6 +284,7 @@ export function groupEmailJournal(
         sentNow: row.sentNow,
         onMailgunRoad: row.onMailgunRoad,
       },
+      person: personOf(row),
     };
   };
 
@@ -364,13 +392,15 @@ export async function readEmailJournal<T extends Record<string, unknown>>(db: Da
       requestedByStaffUserId: emailOutbox.requestedByStaffUserId,
       registeredName: registrations.registeredName,
       test: sql<boolean>`coalesce(${registrations.kind} = 'TEST', false)`,
+      registrationId: emailOutbox.registrationId,
+      volunteerId: eventVolunteers.id,
       volunteerName: eventVolunteers.name,
       guardianName: eventVolunteers.guardianName,
       eventTitle: sql<string | null>`coalesce(${titleIn(locale)}, ${titleIn("ro")})`,
     })
     .from(emailOutbox)
     .leftJoin(registrations, eq(registrations.id, emailOutbox.registrationId))
-    .leftJoin(eventVolunteers, sql`${eventVolunteers.id}::text = ${emailOutbox.payloadJson} ->> 'volunteerId'`)
+    .leftJoin(eventVolunteers, VOLUNTEER_OF_ROW)
     .where(today)
     // The newest first, so a day longer than the page keeps its latest rows.
     .orderBy(desc(sql`coalesce(${emailOutbox.sentAt}, ${emailOutbox.createdAt})`), desc(emailOutbox.id))

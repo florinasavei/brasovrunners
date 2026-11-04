@@ -259,6 +259,15 @@ describe("«Emailuri azi» groups by press", () => {
     expect((await lineOf(await readEmailJournal(db, NOW, "en"), "k:cancel"))?.eventTitle).toBe("The autumn cross");
   });
 
+  it("links each person line to the person's own page (§915): the registration's, the volunteer's for theirs and their parent's link, none for a colleague", async () => {
+    expect((await lineOf(journalRo, "k:cancel"))?.person).toEqual({ kind: "registration", id: maria });
+    expect((await lineOf(journalRo, "k:verify"))?.person).toEqual({ kind: "registration", id: maria });
+    expect((await lineOf(journalRo, "k:role1"))?.person).toEqual({ kind: "volunteer", id: vlad });
+    expect((await lineOf(journalRo, "k:guardian"))?.person).toEqual({ kind: "volunteer", id: vlad });
+    expect((await lineOf(journalRo, "k:member"))?.person).toBeNull();
+    expect((await lineOf(journalRo, "k:midnight"))?.person).toBeNull();
+  });
+
   it("keeps a failed row's sanitized reason, and only a failed row's", async () => {
     expect((await lineOf(journalRo, "k:failed"))?.lastError).toBe("550 mailbox unavailable");
     expect((await lineOf(journalRo, "k:cancel"))?.lastError).toBeNull();
@@ -377,6 +386,11 @@ describe("the «Emailuri azi» page draws the day", () => {
     expect(page).toContain("Întârziat: trebuia să fi plecat deja.");
     expect(page).toContain(ro.Admin.emails.today.footnote);
     expect(page).not.toMatch(/emails\.(today|causes|types)\./);
+    // A person's name opens their own page (§915), a plain anchor a thumb reaches; a colleague's does not.
+    expect(page).toMatch(new RegExp(`<a [^>]*href="/ro/admin/registrations/${maria}"[^>]*data-testid="email-journal-person"[^>]*>Maria Pop</a>`));
+    expect(page).toMatch(new RegExp(`<a [^>]*href="/ro/admin/volunteers/${vlad}"[^>]*>Vlad Voluntar</a>`));
+    expect(page).toMatch(new RegExp(`<a [^>]*href="/ro/admin/volunteers/${vlad}"[^>]*>Gina Părinte</a>`));
+    expect(page).not.toMatch(/<a [^>]*>Mihai Membru<\/a>/);
   });
 
   it("says the same in English", async () => {

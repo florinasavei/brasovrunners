@@ -391,10 +391,18 @@ export function gmailRoadCondition(roads: OutboxRoads): SQL {
   return or(stampedGmail, and(isNull(emailOutbox.road), bySetting)) as SQL;
 }
 
+/**
+ * The same answer from a row's facts alone — its press's stamp, whether it is a club copy, its type — for a reader
+ * that never reads the payload (a person's «Emailuri», `email-history.ts`, §915).
+ */
+export function onGmailRoadOf(row: { road: string | null; clubCopy: boolean; messageType: EmailMessageType }, roads: OutboxRoads): boolean {
+  if (row.road) return row.road === "gmail";
+  return row.clubCopy ? roads.gmailClubCopies : roads.gmailMessageTypes.includes(row.messageType);
+}
+
 /** The same answer for one claimed row: whether `gmailRoadCondition` put it on Gmail's road. */
 function onGmailRoad(row: OutboxRow, roads: OutboxRoads): boolean {
-  if (row.road) return row.road === "gmail";
-  return isClubCopy(row.payloadJson) ? roads.gmailClubCopies : roads.gmailMessageTypes.includes(row.messageType);
+  return onGmailRoadOf({ road: row.road, clubCopy: isClubCopy(row.payloadJson), messageType: row.messageType }, roads);
 }
 
 /**
