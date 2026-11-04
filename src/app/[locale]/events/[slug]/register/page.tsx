@@ -24,8 +24,9 @@ import {
 } from "@/modules/public-cache/reads";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
-import { newcomerWouldQueue, publicNumbersShown, waitlistCountShown } from "@/modules/events/domain/registration-cta";
+import { newcomerWouldQueue, offersByItself, offersOnlyShut, publicNumbersShown, waitlistCountShown } from "@/modules/events/domain/registration-cta";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
+import { PUBLIC_REGISTRATION_PAUSED } from "@/modules/registrations/domain/public-door";
 import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
@@ -254,17 +255,32 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     who arrived from «Intră pe lista de așteptare».
   */
   let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | "WAITLIST" | null = null;
-  let offerHours: number | null = null;
+  // How an offer works: the club's offer window, and whether a place reaches the line by itself — else the organizers' words (§906).
+  let offer: { hours: number; byItself: boolean } | null = null;
   // `waiting` null: the club keeps the line's count private (§634), and the title says no number.
   // `capacity` null: the event says no public number at all (§668), and the title names no capacity.
   let fullCounts: { capacity: number | null; waiting: number | null } | null = null;
-  if (!submitted && !error && !resting) {
+  // Places free, given from the line (§615, §906): the join form's lead says so, as the card does — never «s-au ocupat».
+  let fromWaitlist = false;
+  /*
+    The organizers shut the site's door (§906): «Înscrieri publice deschise» unticked — read off the page's own row,
+    or from a press the server refused for it while the row was cached open — or, below, the free places theirs to
+    give with a waiting list that takes nobody. The page then says so instead of the form.
+  */
+  let pausedReason: "SWITCH" | "OFFERS_ONLY" | null =
+    event.publicRegistrationOpen === false || refusedMarkers.includes(PUBLIC_REGISTRATION_PAUSED) ? "SWITCH" : null;
+  const offersOnly = event.freePlacesByOfferOnly === true;
+  if (!submitted && !error && !resting && pausedReason === null) {
     try {
       const places = await cachedPublicAvailability(event.id, now);
-      if (places && newcomerWouldQueue({ availablePlaces: places.available, waitlisted: places.waitlisted, waiting: places.waiting })) {
+      // «Locurile libere le dau doar eu» (§906): places free, and no line to join — the door's own predicate.
+      const asked = places && { availablePlaces: places.available, freePlacesByOfferOnly: offersOnly, waitlistCapacity: places.waitlistCapacity, waitlistRoom: places.waitlistRoom };
+      if (asked && offersOnlyShut(asked)) pausedReason = "OFFERS_ONLY";
+      else if (places && newcomerWouldQueue({ availablePlaces: places.available, waitlisted: places.waitlisted, waiting: places.waiting, freePlacesByOfferOnly: offersOnly })) {
         fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : "WAITLIST";
         if (fullNotice === "WAITLIST") {
-          offerHours = (await cachedDeadlines()).offerHours;
+          fromWaitlist = places.available > 0;
+          offer = { hours: (await cachedDeadlines()).offerHours, byItself: offersByItself(event, places.available) };
           // «Arată public numărătoarea» (§668): off in the row or the entry, no capacity and no count — the door's rule.
           const numbers = publicNumbersShown(event) && publicNumbersShown(places);
           fullCounts = {
@@ -477,6 +493,20 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               : undefined
           }
         />
+      ) : pausedReason ? (
+        /*
+          The organizers shut the site's door (§906): the event page's own sentence and the way back, never the form —
+          the server refuses it anyway. Also what a press refused for it lands on (`PUBLIC_REGISTRATION_PAUSED`).
+        */
+        <Alert severity="info" sx={{ mb: 2 }} data-testid="registration-paused" id={ERROR_SUMMARY_ID} tabIndex={-1}>
+          {tEvent(pausedReason === "SWITCH" ? "cta.paused" : "cta.pausedOffersOnly")}{" "}
+          <MuiLink
+            href={getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } })}
+            sx={{ display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight }}
+          >
+            {t("pausedBack")}
+          </MuiLink>
+        </Alert>
       ) : (
         <>
           {/*
@@ -633,7 +663,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             resting,
             fullNotice,
             fullCounts,
-            offerHours,
+            fromWaitlist,
+            offer,
             action: submitRegistrationAction,
             /*
               The next person of a family sitting (§519): who was sent so far, that nothing waiting is

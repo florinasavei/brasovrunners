@@ -300,7 +300,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // The route section (§387), born on the scale, spaced like "Linkuri și fișiere" beside it.
   { file: "src/modules/events/ui/EventRoute.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
   { file: "src/modules/events/ui/EventCheckpoints.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §757: written on the scale from the start, as the route section above it
-  { file: "src/modules/events/ui/RegistrationCta.tsx", prop: "mt", step: "gapSm", sm: 3, xsBefore: 3, count: 7 }, // §480: one step tighter on a phone, the event page
+  { file: "src/modules/events/ui/RegistrationCta.tsx", prop: "mt", step: "gapSm", sm: 3, xsBefore: 3, count: 8 }, // §480: one step tighter on a phone, the event page; the eighth is the shut door's sentence (§906)
   { file: "src/modules/events/ui/StartList.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
   // The filter panel (§424, a fix round on §413/§424's small-chip button — the owner: "Butonul
   // de filtre e mult prea mare"): the open form's own padding and grid gap, tighter on a phone.

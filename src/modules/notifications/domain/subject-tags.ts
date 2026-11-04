@@ -79,6 +79,7 @@ export const SUBJECT_TAGS_OF: Readonly<Record<StaffBound, readonly SubjectTag[]>
   FEEDBACK_MESSAGE: ["feedback"],
   RELAY_NOTICE: ["livrare"],
   CLUB_CONFIRMATION_NOTICE: ["inscrieri"],
+  PLACES_ALERT: ["inscrieri"],
   DECLARATION_ARCHIVE: ["declaratii"],
   GROUP_RUN_DECLARATION_ARCHIVE: ["declaratii"],
   VOLUNTEER_CLUB_NOTICE: ["voluntari"],

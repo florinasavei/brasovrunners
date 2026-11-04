@@ -230,6 +230,12 @@ export const eventConfigSchema = z
         capacity: z.number().int().min(1).nullable(),
         waitlist: z.object({ choice: z.enum(WAITLIST_CHOICES), limit: z.number().int().min(1).nullable() }).strict(),
         waitlistAutoOffer: z.boolean(),
+        /** «Locurile libere le dau doar eu» (§906): a file made before the tick existed has none: off. Written only when it is on. */
+        freePlacesByOfferOnly: z.boolean().default(false),
+        /** «Înscrieri publice deschise» (§906): a file made before the tick existed has none: on. Written only when it is off. */
+        publicRegistrationOpen: z.boolean().default(true),
+        /** «Anunță-mă când rămân N locuri» (§906): a file made before it existed has none: off (null). Written only when it is set. */
+        placesAlertAt: z.number().int().min(0).max(100_000).nullable().default(null),
         opensAt: instant.nullable(),
         opensSoon: z.boolean(),
         closesAt: instant.nullable(),
@@ -454,9 +460,24 @@ export function upgradeCheckpoints(file: EventFile): { file: EventFile; notes: F
  * The registration block's `rsvpEnabled` (§811) is the mirror: written only when it is **on**, because «off» is what a file without it
  * means, and the file's version stays 3 for the same reason. So is the volunteers block's `access` (§821): written only when it is not «Oricine» (`ANYONE`);
  * and its `listPublic` (§821), written only when it is **on**; and its `buttonShown` (§835), written only when it is **off**.
+ * The registration controls (§906) likewise: `freePlacesByOfferOnly` only when **on**, `publicRegistrationOpen` only when **off**,
+ * `placesAlertAt` only when **set** — an event that never touched them makes a file the release before them still reads.
  */
+const WRITTEN_ONLY_WHEN_NOT: ReadonlyMap<string, unknown> = new Map<string, unknown>([
+  ["onProfile", true],
+  ["showRouteProfile", true],
+  ["rsvpEnabled", false],
+  ["rsvpAskEnabled", true],
+  ["access", DEFAULT_VOLUNTEERS_ACCESS],
+  ["listPublic", false],
+  ["buttonShown", true],
+  ["freePlacesByOfferOnly", false],
+  ["publicRegistrationOpen", true],
+  ["placesAlertAt", null],
+]);
+
 export const serializeEventFile = (file: EventFile): string =>
-  `${JSON.stringify(file, (key, value) => (((key === "onProfile" || key === "showRouteProfile") && value === true) || (key === "rsvpEnabled" && value === false) || (key === "rsvpAskEnabled" && value === true) || (key === "access" && value === DEFAULT_VOLUNTEERS_ACCESS) || (key === "listPublic" && value === false) || (key === "buttonShown" && value === true) ? undefined : value), 2)}\n`;
+  `${JSON.stringify(file, (key, value) => (WRITTEN_ONLY_WHEN_NOT.has(key) && WRITTEN_ONLY_WHEN_NOT.get(key) === value ? undefined : value), 2)}\n`;
 
 /** Why a file was refused, as a code the page says in words (`Admin.eventJson.refusals.<code>`). */
 export type EventFileRefusal = "tooLarge" | "notJson" | "notAnEventFile" | "unknownVersion" | "invalid";

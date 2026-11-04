@@ -4,6 +4,7 @@ import {
   type RegistrationWindowInput,
 } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
+import { publicDoorOpen } from "@/modules/registrations/domain/public-door";
 
 /**
  * When the platform emails a participant on its own (§383; the owner, 2026-09-24: "I need to know
@@ -370,17 +371,24 @@ export type InterestEvent = RegistrationWindowInput & {
    * members' alone now — they wait, as for a page taken off the site, and are told if it comes back.
    */
   membersOnly?: boolean;
+  /**
+   * «Înscrieri publice deschise» (§906): unticked, the site takes nobody whatever the dates say, so «Înscrierile
+   * s-au deschis» would be false — the addresses wait, kept, and are told on the first run after the tick is back
+   * while the dates still say open. Absent or null is on, the column's default.
+   */
+  publicRegistrationOpen?: boolean | null;
 };
 
 /**
  * What the job does with the addresses left on an event's page, at `now`: `wait` while the window
- * is ahead (or open on a page taken off the site), `announce` once it is open and published, and
- * `drop` when it can no longer open — cancelled, completed, started, closed, another form.
+ * is ahead (or open on a page taken off the site, or behind a door the organizers shut, §906),
+ * `announce` once it is open, published and its door open, and `drop` when it can no longer open —
+ * cancelled, completed, started, closed, another form.
  */
 export function interestAction(event: InterestEvent, now: Date): "wait" | "announce" | "drop" {
   const state = registrationState(event, now);
   if (state === "NOT_YET_OPEN") return "wait";
-  if (state === "OPEN") return event.editorialStatus === "PUBLISHED" && event.membersOnly !== true ? "announce" : "wait";
+  if (state === "OPEN") return event.editorialStatus === "PUBLISHED" && event.membersOnly !== true && publicDoorOpen(event) ? "announce" : "wait";
   return "drop";
 }
 

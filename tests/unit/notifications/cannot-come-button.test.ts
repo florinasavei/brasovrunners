@@ -51,6 +51,7 @@ const EVERY_MESSAGE: Record<Exclude<EmailMessageType, RelayMessageType>, { butto
   LEGAL_TEMPLATES_CHANGED: { button: false, why: "no registration" },
   // The outage grace's two, to the Administrators (§657).
   UNREACHABLE_WINDOW_OPENED: { button: false, why: "no registration" },
+  PLACES_ALERT: { button: false, why: "no registration" },
   UNREACHABLE_WINDOW_CLOSED: { button: false, why: "no registration" },
   // An invitation (§647): to an address, before any registration exists.
   EVENT_INVITATION: { button: false, why: "no registration" },

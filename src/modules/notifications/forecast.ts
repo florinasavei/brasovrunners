@@ -342,6 +342,8 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       registrationClosesAt: events.registrationClosesAt,
       publishedAt: events.publishedAt,
       membersOnly: events.membersOnly,
+      // A door the organizers shut (§906) announces nothing until it opens again: the job's own rule (`interestAction`).
+      publicRegistrationOpen: events.publicRegistrationOpen,
       addresses: sql<number>`count(*)::int`,
     })
     .from(registrationInterests)

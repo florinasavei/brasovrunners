@@ -102,9 +102,24 @@ export function openLinePhrases(say: Say, locale: string, line: { offered: numbe
  * mai departe." (§587, amending §348): how a waiting-list offer works, under the full event's
  * button and above the join form — with the club's own offer window («Termene», `offerHours`,
  * §377), the number the allocator gives an offer, in the site's hour words (`hoursPhrase`).
+ *
+ * Only while a place goes to the line by itself (`byItself`, `registration-cta.ts#offersByItself`, §906). With «Nu», or
+ * «Locurile libere le dau doar eu», no freed place reaches anybody by itself and none passes on by itself: «Locurile le
+ * dau organizatorii, pe rând: când îți pot da unul, primești un email și ai 24 de ore să confirmi.»
  */
-export function waitlistOfferPhrase(say: Say, locale: string, offerHours: number): string {
-  return say("cta.fullOffer", { hours: hoursPhrase(locale, offerHours) });
+export function waitlistOfferPhrase(say: Say, locale: string, offerHours: number, byItself: boolean): string {
+  return say(byItself ? "cta.fullOffer" : "cta.fullOfferByHand", { hours: hoursPhrase(locale, offerHours) });
+}
+
+/**
+ * "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc." (§587): what the waiting list does, under
+ * the full event's lead on the page and the listing card, and in the join form's notice — by the same rule as the offer
+ * sentence above (`byItself`, `registration-cta.ts#offersByItself`, §906). With «Nu», or «Locurile libere le dau doar eu»,
+ * a freed place reaches nobody by itself, so nobody is emailed when one frees up: «Intră pe lista de așteptare —
+ * organizatorii îți scriu pe email când îți pot da un loc.»
+ */
+export function waitlistJoinPhrase(say: Say, byItself: boolean): string {
+  return say(byItself ? "cta.fullJoin" : "cta.fullJoinByHand");
 }
 
 /**

@@ -47,6 +47,8 @@ import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import KitCount from "@/modules/registrations/ui/KitCount";
 import { countVolunteersWithKit } from "@/modules/volunteers/admin-list";
 import PlaceOutlook from "@/modules/registrations/ui/PlaceOutlook";
+import PublicNowLine from "@/modules/registrations/ui/PublicNowLine";
+import { readPublicDoor } from "@/modules/registrations/public-now";
 import RowDeadlineCell from "@/modules/registrations/ui/RowDeadlineCell";
 import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
 import { cityLabel } from "@/modules/registrations/domain/city-label";
@@ -86,7 +88,7 @@ import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
-import { addToWaitlistAction, bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, moveReserveEntryAction, sendOutboxNowAction } from "../actions";
+import { addToWaitlistAction, bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, moveReserveEntryAction, sendOutboxNowAction, setPublicRegistrationOpenAction } from "../actions";
 import { resendFamilyEmailAction, resendRegistrationEmailAction } from "../[id]/actions";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
@@ -251,7 +253,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const featuredEvent = events.find((event) => event.featured) ?? null;
 
   const deadlinesNow = new Date();
-  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, volunteerKits] = await Promise.all([
+  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits] = await Promise.all([
     listRegistrationsForAdmin(
       db,
       filters,
@@ -293,6 +295,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? countKits(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
     // «Locuri» (the owner, 2026-11-03): taken, free, both lists, how many can be let in — one event with a capacity only.
     filters.eventId ? readPlaceOutlook(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
+    // «Pe site acum» (§906): what the public meets this minute, by the public card's predicate, and the tick beside it — one event only.
+    filters.eventId ? readPublicDoor(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
     // «Plus voluntari cu kit» (§904): the event's volunteers ticked «Are kit», a figure of its own beside the kits — `countKits` is untouched.
     filters.eventId ? countVolunteersWithKit(db, filters.eventId) : Promise.resolve(0),
   ]);
@@ -1286,7 +1290,35 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <GlyphChip glyph="membersOnly" color="primary" label={t("events.membersOnlyChip")} />
         )}
       </SummaryStrip>
-      {places && <PlaceOutlook outlook={places} spaceAbove={1.5} />}
+      {/*
+        «Locuri», and «Pe site acum» inside it (§906) — the tick «Înscrieri publice deschise» beside it handed to an
+        Administrator alone (the action asserts it again); the Organizer reads the state. An event with no capacity
+        has no «Locuri»: the line and the tick stand alone.
+      */}
+      {places ? (
+        <PlaceOutlook
+          outlook={places}
+          locale={locale}
+          spaceAbove={1.5}
+          door={
+            publicDoor && filters.eventId
+              ? { door: publicDoor, eventId: filters.eventId, locale, listQuery: listQueryString, ...(mayManage ? { publicDoorAction: setPublicRegistrationOpenAction } : {}) }
+              : undefined
+          }
+        />
+      ) : (
+        publicDoor &&
+        filters.eventId && (
+          <PublicNowLine
+            door={publicDoor}
+            eventId={filters.eventId}
+            locale={locale}
+            listQuery={listQueryString}
+            spaceAbove={1.5}
+            {...(mayManage ? { publicDoorAction: setPublicRegistrationOpenAction } : {})}
+          />
+        )
+      )}
       {kits && <KitCount kits={kits} volunteers={volunteerKits} spaceAbove={1.5} />}
       {/*
         «Când pierde lumea locul?» (§635; the owner, 2026-10-02): until when the people of this event

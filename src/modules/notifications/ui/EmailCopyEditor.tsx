@@ -42,6 +42,14 @@ type Props = {
 };
 
 /**
+ * The messages whose default words follow the event's waiting-list settings at the send (§906): `WAITLIST_JOINED` says
+ * who gives the places, and `WAITLIST_SPOT_OFFER` what happens to the place after its deadline, by «Locurile din lista de
+ * așteptare se alocă automat» and «Locurile libere le dau doar eu». A text the club saves replaces those words whatever
+ * the settings are, so the editor says so under the box — one line, nothing refused.
+ */
+const FOLLOWS_THE_SETTINGS: ReadonlySet<EmailMessageType> = new Set(["WAITLIST_JOINED", "WAITLIST_SPOT_OFFER"]);
+
+/**
  * The club's own wording for one message, in one language (`DECISIONS.md` §247).
  *
  * A form inside the message's own disclosure, under the preview it changes: the subject, the
@@ -155,6 +163,12 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
         <Typography variant="caption" color="text.secondary">
           {t("emails.copy.paragraphsHelp")}
         </Typography>
+        {/* The two messages whose default words follow the event's waiting-list settings (§906): a saved text replaces them, however they are set. */}
+        {FOLLOWS_THE_SETTINGS.has(messageType) && (
+          <Typography variant="caption" color="text.secondary" data-testid="email-copy-follows-settings">
+            {t("emails.copy.followsSettings")}
+          </Typography>
+        )}
         {/* The fields, as the declaration's editor lists its tokens (§373, email follow-up): a named card, closed. */}
         <EmailFieldLegend locale={locale} emailLocale={emailLocale} messageType={messageType} deadlines={deadlines} />
         <Typography variant="caption" color="text.secondary">

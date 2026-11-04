@@ -503,9 +503,13 @@
         "other": "{count} de locuri oferite din lista de așteptare"
       },
       "fullJoin": "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.",
+      "fullJoinByHand": "Intră pe lista de așteptare — organizatorii îți scriu pe email când îți pot da un loc.",
       "fullOffer": "Când se eliberează un loc, primești un email și ai {hours} să confirmi — altfel locul trece mai departe.",
+      "fullOfferByHand": "Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email și ai {hours} să confirmi.",
       "waitlistFull": "Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.",
       "fullNoWaitlist": "Locurile s-au ocupat, iar acest eveniment nu are listă de așteptare.",
+      "paused": "Înscrierile pe site sunt oprite de organizatori.",
+      "pausedOffersOnly": "Locurile rămase le dau organizatorii: nu te poți înscrie direct pe site.",
       "waitlistRoom": {
         "one": "Mai este {count} loc pe lista de așteptare",
         "few": "Mai sunt {count} locuri pe lista de așteptare",
@@ -1138,13 +1142,70 @@
       },
       "places": {
         "title": "Locuri libere acum: {free} din {capacity}",
-        "taken": "Ocupate {occupied}: {confirmed} confirmați și {held} care își țin locul până semnează (declarație de semnat sau ofertă activă).",
+        "taken": "Ocupate {occupied}: {confirmed} confirmați și {held} — {kinds}.",
+        "held": {
+          "one": "{count} care își ține locul până semnează",
+          "few": "{count} care își țin locul până semnează",
+          "other": "{count} care își țin locul până semnează"
+        },
+        "heldKinds": {
+          "declaration": {
+            "one": "{count} declarație",
+            "few": "{count} declarații",
+            "other": "{count} de declarații"
+          },
+          "offered": {
+            "one": "{count} ofertă",
+            "few": "{count} oferte",
+            "other": "{count} de oferte"
+          },
+          "invited": {
+            "one": "{count} invitație",
+            "few": "{count} invitații",
+            "other": "{count} de invitații"
+          },
+          "family": {
+            "one": "{count} rezervare de familie",
+            "few": "{count} rezervări de familie",
+            "other": "{count} de rezervări de familie"
+          }
+        },
         "takenConfirmed": "Ocupate {occupied}, toate confirmate.",
         "waiting": "Așteaptă un loc: {count} — pe lista oficială {waiting}, pe lista internă {internal}.",
         "nobodyWaits": "Nu așteaptă nimeni pe liste.",
         "letIn": "Locurile libere merg întâi la lista oficială («Trimite-i oferta»), apoi la cea internă («Oferă-i un loc acum»).",
         "raises": "Ca să intre toți cei care așteaptă, capacitatea ar trebui să ajungă la {capacity} (+{count}); fiecare ofertă adaugă locul ei, după ce confirmi.",
         "total": "Invitați speciali: {outside} (nu ocupă loc). Oameni la start dacă intră toți: {count}."
+      },
+      "publicNow": {
+        "direct": "Pe site acum: butonul «Înscrie-te» — primul venit ia un loc liber.",
+        "waitlistLimited": {
+          "one": "Pe site acum: «Intră pe lista de așteptare» — {waiting} din {limit} loc pe listă.",
+          "few": "Pe site acum: «Intră pe lista de așteptare» — {waiting} din {limit} locuri pe listă.",
+          "other": "Pe site acum: «Intră pe lista de așteptare» — {waiting} din {limit} de locuri pe listă."
+        },
+        "waitlistUnlimited": "Pe site acum: «Intră pe lista de așteptare» — {waiting} pe listă, fără limită.",
+        "closed": "Pe site acum: înscrierile sunt închise — {reason}.",
+        "reasons": {
+          "NOT_YET_OPEN": "perioada de înscriere nu a început",
+          "WINDOW_CLOSED": "perioada de înscriere s-a încheiat",
+          "SWITCH": "bifa «Înscrieri publice deschise» e scoasă",
+          "OFFERS_ONLY": "locurile libere le dai doar tu, iar lista de așteptare nu mai primește pe nimeni",
+          "WAITLIST_FULL": "locurile s-au ocupat și lista de așteptare e plină",
+          "NO_WAITLIST": "locurile s-au ocupat și evenimentul nu are listă de așteptare",
+          "CANCELLED": "evenimentul e anulat",
+          "COMPLETED": "evenimentul s-a încheiat",
+          "NOT_HERE": "evenimentul nu primește înscrieri pe acest site"
+        },
+        "offersOnly": "Cu «Locurile libere le dau doar eu», niciun loc nu pleacă automat: fiecare loc liber îl dai tu.",
+        "setting": "Schimbă în editor"
+      },
+      "publicDoor": {
+        "label": "Înscrieri publice deschise",
+        "save": "Salvează",
+        "help": "Debifat, butonul de pe site dispare imediat, oricare ar fi datele; tot ce face echipa merge mai departe.",
+        "readOnlyOn": "Înscrierile pe site sunt deschise (doar un Administrator le poate opri).",
+        "readOnlyOff": "Înscrierile pe site sunt oprite de un Administrator."
       },
       "outside": {
         "pill": "Invitați speciali: {count}",
@@ -2122,6 +2183,12 @@
       "createRegistrationBody": "Persoana este înscrisă la eveniment în numele ei, la cererea ei, și primește emailul pasului următor.",
       "createRegistrationVouchBody": "Garantezi adresa {email}: persoana intră acum, la cererea ei, pe lista de așteptare sau, dacă e un loc liber, pe el, fără emailul de confirmare. Primește emailul stării în care ajunge.",
       "waitlistAddTitle": "Adaugi pe lista de așteptare?",
+      "publicDoorCloseTitle": "Oprești înscrierile de pe site?",
+      "publicDoorCloseBody": "Butonul de pe site dispare imediat și formularul public nu mai primește pe nimeni, oricare ar fi datele. Echipa poate înscrie, oferi locuri și primi oameni la masă în continuare.",
+      "publicDoorCloseConfirm": "Oprește înscrierile",
+      "publicDoorOpenTitle": "Redeschizi înscrierile de pe site?",
+      "publicDoorOpenBody": "Butonul de pe site revine imediat, dacă perioada de înscriere e deschisă.",
+      "publicDoorOpenConfirm": "Redeschide înscrierile",
       "waitlistAddBody": "Garantezi adresa {email}, iar persoana intră acum, la cererea ei: pe lista de așteptare sau, dacă e un loc liber, pe el. Primește emailul stării în care ajunge.",
       "waitlistOfferTitle": "Îi oferi un loc acum?",
       "waitlistOfferBody": "Garantezi adresa {email}, iar persoana intră acum pe lista oficială și primește un loc: unul liber sau, altfel, o ofertă pe email. Declarația o semnează ea, din email.",
@@ -2585,6 +2652,9 @@
       "waitlistCapacityHelp": "Coborât sub câți așteaptă deja, nu scoate pe nimeni, doar nu mai primește alții. Gol sau 0: lista devine nelimitată.",
       "registrationOpensAt": "Înscrierile se deschid",
       "registrationOpensSoon": "Înscrierile se deschid în curând (fără dată)",
+      "publicRegistrationOpen": "Înscrieri publice deschise",
+      "publicRegistrationOpenHelp": "Debifat, butonul de pe site dispare imediat, oricare ar fi datele, iar formularul public refuză pe oricine. Ce face echipa merge mai departe.",
+      "publicRegistrationOpenHelpMore": "Merg mai departe: înscrierea de către un organizator, masa din ziua cursei, «Trimite-i oferta», «Dă-i un loc», «Oferă-i un loc acum», «Mută pe lista oficială» și invitațiile.",
       "registrationOpensSoonHelp": "Bifat, pagina spune „Înscrierile se deschid în curând” și formularul rămâne închis. Debifează când deschizi: cei de la „Anunță-mă” primesc emailul.",
       "kitShirt": "Tricou",
       "kitShirtHelp": "Dacă e bifat, formularul cere mărimea tricoului.",
@@ -3341,7 +3411,8 @@
             "range": "{from} – {to}",
             "fromPublication": "De la publicare",
             "soon": "Se deschid în curând",
-            "untilStart": "până la start"
+            "untilStart": "până la start",
+            "paused": "oprite pe site"
           },
           "conditions": {
             "noDeclaration": "Lipsește declarația — obligatorie pentru înscrierea pe site"
@@ -3505,6 +3576,12 @@
       "waitlistAutoOfferNo": "Nu",
       "waitlistAutoOfferHelp": "Pe „Da”, un loc eliberat sau adăugat se alocă pe loc primului de pe lista de așteptare: primește oferta pe email și o confirmă până la termen. Pe „Nu”, locurile rămân libere până le dai tu.",
       "waitlistAutoOfferHelpMore": "Le dai din «Coada de înscrieri», cu «Trimite-i oferta», sau, la masă, cu «Dă-i un loc». Cât timp cineva așteaptă, cei noi intră tot pe listă.",
+      "freePlacesByOfferOnly": "Locurile libere le dau doar eu",
+      "freePlacesByOfferOnlyHelp": "Bifat, cine vine de pe site intră pe lista de așteptare, chiar cu locuri libere, și niciun loc nu pleacă automat, nici cu „Da” mai sus: fiecare loc liber îl dai tu.",
+      "freePlacesByOfferOnlyHelpMore": "Le dai din «Coada de înscrieri», cu «Trimite-i oferta», sau la masă, cu «Dă-i un loc». O înscriere făcută de echipă ia un loc liber doar cât nu așteaptă nimeni. Cu lista plină, site-ul refuză.",
+      "placesAlertAt": "Anunță-mă când rămân N locuri",
+      "placesAlertAtHelp": "Gol: fără email. Un număr: administratorii primesc un email când locurile libere scad la el, și încă unul când nu mai rămâne niciunul.",
+      "placesAlertAtHelpMore": "Câte un email pe prag; altul vine doar după ce locurile libere urcă din nou peste număr.",
       "waitlistCountPublic": "Arată public câți așteaptă",
       "waitlistCountPublicHelp": "Bifat: cardul, pagina și fiecare persoană de pe listă află câți așteaptă. Debifat: se spune doar că există o listă și cum intri pe ea; clubul vede numărul în administrare.",
       "hiddenListTitle": "Lista de invitați speciali",
@@ -7063,6 +7140,7 @@
         "VOLUNTEER_ROLE_ASSIGNED": "Rolul tău de voluntar",
         "VOLUNTEER_GUARDIAN_REQUEST": "Acordul tău pentru un voluntar minor",
         "VOLUNTEER_INVITATION": "Invitația de a fi voluntar",
+        "PLACES_ALERT": "Mai sunt puține locuri",
         "RSVP_CONFIRM": "Confirmă că vii („Vin!”)",
         "RSVP_ASK": "Vii mâine? („Vin” / „Nu vin”)"
       },
@@ -7135,6 +7213,7 @@
         "VOLUNTEER_ROLE_ASSIGNED": "Când organizatorii îi dau unui voluntar un rol sau îi schimbă rolurile, din cardul «Voluntari» al evenimentului: un mesaj scurt care numește rolurile lui, data și locul. Nimic de apăsat.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Când un voluntar sub 18 ani se oferă, sau un organizator apasă „Trimite linkul părintelui”: contractul și linkul prin care părintele îl acceptă în nume propriu.",
         "VOLUNTEER_INVITATION": "Când un organizator sau un administrator trimite invitații din cardul «Voluntari» al unui eveniment cu voluntari doar pe invitație, și la „Retrimite”. Un link personal spre pagina voluntarilor.",
+        "PLACES_ALERT": "Când locurile libere scad la pragul din «Anunță-mă când rămân N locuri», și încă o dată când nu mai rămâne niciunul: fiecărui Administrator. Butonul deschide înscrierile.",
         "RSVP_CONFIRM": "Când cineva scrie o adresă la „Vin!” pe pagina unui eveniment: butonul „Da, vin”, care îl numără, și dedesubt „Nu vin”. La „Nu mai vin” de pe pagină pleacă același mesaj, doar cu linkul de retragere.",
         "RSVP_ASK": "Cu {askDays} înainte de start, de la {askHour}: {askWho}. „Vin”, apoi „Da, vin”, îi numără; „Nu vin” nu. Cine a răspuns nu primește."
       },
@@ -7182,6 +7261,7 @@
         "VOLUNTEER_ROLE_ASSIGNED": "când organizatorii dau sau schimbă rolurile",
         "VOLUNTEER_GUARDIAN_REQUEST": "când se oferă un voluntar sub 18 ani",
         "VOLUNTEER_INVITATION": "când clubul invită pe cineva să fie voluntar",
+        "PLACES_ALERT": "când locurile scad la prag, administratorilor",
         "RSVP_CONFIRM": "când cineva spune „Vin!”, către adresa lui",
         "RSVP_ASK": "cu {askDays} înainte, de la ora {askHour}, {askWhoShort}"
       },
@@ -7433,6 +7513,7 @@
           }
         },
         "machinery": "Butonul, linkul din el, codul QR, atașamentele, salutul și semnătura rămân cele implicite: ele duc token-uri și fișiere, nu cuvinte.",
+        "followsSettings": "Textul implicit se schimbă după «Locurile din lista de așteptare se alocă automat» și «Locurile libere le dau doar eu»; un text salvat aici îl înlocuiește, oricum ar fi setate.",
         "samplesTitle": "Textul salvat conține valori de exemplu, nu câmpuri",
         "samplePairWhere": "„{value}” — {where}; în locul ei: {replacement}",
         "samplesHelp": "Fiecare participant ar primi exact aceste cuvinte. „Înlocuiește cu câmpurile” pune câmpul potrivit în locul fiecărei valori și salvează textul.",
@@ -7975,6 +8056,7 @@
         "VOLUNTEER_ROLE_ASSIGNED": "Rolurile date, data și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Voluntarul și evenimentul se adaugă singure. Linkul e doar pentru părinte sau tutore, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "VOLUNTEER_INVITATION": "Evenimentul, rolurile căutate și mesajul clubului se adaugă singure. Linkul e doar al persoanei invitate, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
+        "PLACES_ALERT": "Locurile libere, capacitatea și pragul se adaugă singure, oricum ai scrie textul. Un email pe prag; altul vine doar după ce locurile urcă din nou peste prag.",
         "RSVP_CONFIRM": "Cel mult un mesaj la 10 minute pe adresă. Linkurile sunt doar pentru această adresă, merg o singură dată și le înlocuiește mesajul nou. Cine e deja numărat primește doar „Nu mai vin”.",
         "RSVP_ASK": "O dată pe eveniment, dacă nu l-ai debifat în editor. Bifat după deschidere, se întreabă la prima trecere; bifat abia în ziua lui, nu. Ce n-a plecat până la miezul nopții dinainte se anulează."
       },
@@ -9552,6 +9634,9 @@
             "limit": "Lungimea listei de așteptare"
           },
           "waitlistAutoOffer": "Locurile libere se oferă automat",
+          "freePlacesByOfferOnly": "Locurile libere le dau doar eu",
+          "publicRegistrationOpen": "Înscrieri publice deschise",
+          "placesAlertAt": "Anunță-mă când rămân N locuri",
           "opensAt": "Înscrierile se deschid",
           "opensSoon": "Înscrierile se deschid în curând",
           "closesAt": "Înscrierile se închid",
@@ -11671,7 +11756,8 @@
       "notYou": "Nu te așteptai la această invitație? Ignor-o sau scrie-ne:"
     },
     "memberBibWanted": "Vreau numărul de membru",
-    "memberBibWantedHelp": "Același număr, în aceeași ordine; doar arată altfel. Clubul îl tipărește doar dacă adresa ta e a unui membru {club}."
+    "memberBibWantedHelp": "Același număr, în aceeași ordine; doar arată altfel. Clubul îl tipărește doar dacă adresa ta e a unui membru {club}.",
+    "pausedBack": "Înapoi la eveniment"
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
@@ -13197,6 +13283,9 @@
       "invitationWithdrawn": "Invitație retrasă; locul s-a eliberat.",
       "memberTickCleared": "Bifa de membru a fost scoasă.",
       "memberTickSet": "Bifa de membru a fost pusă.",
+      "publicRegistrationOpened": "Înscrierile pe site sunt deschise din nou.",
+      "publicRegistrationPaused": "Înscrierile pe site sunt oprite. Echipa poate înscrie în continuare.",
+      "publicRegistrationUnchanged": "Bifa era deja așa; nu s-a schimbat nimic.",
       "memberTicksCleared": {
         "one": "Bifa de membru scoasă la {count} înscriere.",
         "few": "Bifa de membru scoasă la {count} înscrieri.",

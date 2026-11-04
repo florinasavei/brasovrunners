@@ -8,7 +8,7 @@ import { type Locale, routing } from "@/i18n/routing";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { memberDefinitionFor, readMemberDefinition } from "@/modules/content/members/member-definition";
 import { datedOrNull } from "@/modules/events/domain/dated";
-import type { RegistrationCta } from "@/modules/events/domain/registration-cta";
+import { offersByItself, type RegistrationCta } from "@/modules/events/domain/registration-cta";
 import type { PublicEventPage } from "@/modules/events/repository";
 import type { RegistrationDoor } from "@/modules/events/ui/registration-door";
 import {
@@ -66,6 +66,8 @@ function closedDoorSentence(tEvent: (key: string, values?: Record<string, string
   if (cta.kind === "CANCELLED") return tEvent("cta.cancelled");
   if (cta.kind === "COMPLETED") return tEvent("cta.completed");
   if (cta.kind === "CLOSED") return tEvent("cta.closed");
+  // The organizers shut the site's door (§906): the event page's own sentence.
+  if (cta.kind === "PAUSED") return tEvent(cta.reason === "SWITCH" ? "cta.paused" : "cta.pausedOffersOnly");
   if (cta.kind === "NOT_YET_OPEN") {
     return cta.opensAt === null
       ? tEvent("cta.opensSoon")
@@ -131,7 +133,8 @@ export async function renderDraftForm<T extends Record<string, unknown>>(
   const fullNotice = cta?.kind === "FULL_NO_WAITLIST" ? NO_WAITLIST : cta?.kind === "WAITLIST_FULL" ? WAITLIST_FULL : cta?.kind === "FULL" ? "WAITLIST" : null;
   // No places line — «Arată public numărătoarea» unticked (§668) — is the real page's lead with no capacity.
   const fullCounts = cta?.kind === "FULL" && door.kind === "KNOWN" ? { capacity: door.fill?.capacity ?? null, waiting: cta.waiting } : null;
-  const offerHours = fullNotice === "WAITLIST" ? steps.deadlines.offerHours : null;
+  // How an offer works (§587), in the organizers' words while no place reaches the line by itself (§906); `FULL` has none free.
+  const offer = fullNotice === "WAITLIST" ? { hours: steps.deadlines.offerHours, byItself: offersByItself(view, 0) } : null;
 
   return (
     <Box data-testid="draft-preview-form">
@@ -161,7 +164,7 @@ export async function renderDraftForm<T extends Record<string, unknown>>(
         resting: false,
         fullNotice,
         fullCounts,
-        offerHours,
+        offer,
         preview: { word },
       })}
     </Box>

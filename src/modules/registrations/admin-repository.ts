@@ -26,9 +26,10 @@ import {
   countOutsideCapacity,
   familyEmailQueued,
   familyReservationHolds,
+  lineOffersOnItsOwn,
   offerAwaitingItsFirstEmail,
 } from "./repository";
-import { computeOccupied } from "./domain/capacity";
+import { computeOccupied, placesTaken } from "./domain/capacity";
 import { placeOutlook, type PlaceOutlook } from "./domain/place-outlook";
 import { eventReserveEntries } from "@/db/schema/event-reserve-entries";
 import { promoListed } from "./sponsor-list";
@@ -678,9 +679,10 @@ export async function countKits<T extends Record<string, unknown>>(db: Database<
 }
 
 /**
- * «Locuri» (the owner, 2026-11-03): one event's capacity, the places the allocator counts as taken, its
- * official waiting list, the lines of its internal list and its special guests, as `placeOutlook` reads
- * them. Null for an event with no capacity — nothing to let anyone into. Blind to every filter but the event.
+ * «Locuri» (the owner, 2026-11-03): one event's capacity, the places the allocator counts as taken — the confirmed
+ * and the rest by kind, from the same count (`placesTaken`, §906) — its official waiting list, the lines of its
+ * internal list and its special guests, as `placeOutlook` reads them. Null for an event with no capacity — nothing
+ * to let anyone into. Blind to every filter but the event.
  */
 export async function readPlaceOutlook<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<PlaceOutlook | null> {
   const [event] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, eventId)).limit(1);
@@ -691,7 +693,7 @@ export async function readPlaceOutlook<T extends Record<string, unknown>>(db: Da
     countOutsideCapacity(db, eventId),
     db.select({ total: count() }).from(eventReserveEntries).where(eq(eventReserveEntries.eventId, eventId)),
   ]);
-  return placeOutlook({ capacity: event.capacity, occupied: computeOccupied(counts), confirmed: counts.confirmed, waiting, internal: internal?.total ?? 0, outside });
+  return placeOutlook({ ...placesTaken(event.capacity, counts), occupied: computeOccupied(counts), waiting, internal: internal?.total ?? 0, outside });
 }
 
 /** How many times the form was filled again for one registration, and when last (§312). */
@@ -970,7 +972,8 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       // «Ce îi spui» (§654): the event's clock, whether it is cancelled, the line's two settings and numbers, the live link.
       eventTimezone: events.timezone,
       eventCancelled: sql<boolean>`(${events.eventStatus} = 'CANCELLED')`.mapWith(Boolean),
-      waitlistAutoOffer: events.waitlistAutoOffer,
+      // Whether the places go out by themselves (§615), «Locurile libere le dau doar eu» included (§906).
+      waitlistAutoOffer: lineOffersOnItsOwn(),
       waitlistCountPublic: events.waitlistCountPublic,
       participantCountPublic: events.participantCountPublic,
       waitlistPosition: waitlistPositionOfRow,
@@ -1773,7 +1776,8 @@ export async function readPlaceDeadlines<T extends Record<string, unknown>>(
       confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
       capacity: events.capacity,
       waitlistCapacity: events.waitlistCapacity,
-      waitlistAutoOffer: events.waitlistAutoOffer,
+      // «Termene» says who gives a freed place (§615); «Locurile libere le dau doar eu» makes it the staff (§906).
+      waitlistAutoOffer: lineOffersOnItsOwn(),
       held: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and not ${registrations.outsideCapacity})::int`,
       heldPast: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and not ${registrations.outsideCapacity} and ${registrations.holdExpiresAt} <= ${now} and not ${awaitingItsFirstEmail()})::int`,
       awaitingEmail: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION')::int`,

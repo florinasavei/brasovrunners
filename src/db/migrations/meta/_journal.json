@@ -1268,6 +1268,13 @@
       "when": 1793721045643,
       "tag": "0187_volunteer_has_kit",
       "breakpoints": true
+    },
+    {
+      "idx": 181,
+      "version": "7",
+      "when": 1793732734172,
+      "tag": "0188_registration_control",
+      "breakpoints": true
     }
   ]
 }

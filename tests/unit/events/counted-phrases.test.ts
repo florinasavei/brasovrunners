@@ -2,7 +2,7 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { confirmedPhrase, fillPhrase, startListHeadline, waitlistOfferPhrase, waitlistRoomPhrase } from "@/modules/events/ui/counted-phrases";
+import { confirmedPhrase, fillPhrase, startListHeadline, waitlistJoinPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "@/modules/events/ui/counted-phrases";
 
 /**
  * §346 — the two counted sentences an event page can show, assembled from the real catalogues.
@@ -147,18 +147,45 @@ describe("§348 waitlistRoomPhrase — the room a capped waiting list has left",
 describe("§587 waitlistOfferPhrase — how an offer works, with the club's own hours", () => {
   it("says the offer window the club set, in the site's hour words", () => {
     const ro = translator("ro");
-    expect(waitlistOfferPhrase(ro, "ro", 24)).toBe(
+    expect(waitlistOfferPhrase(ro, "ro", 24, true)).toBe(
       "Când se eliberează un loc, primești un email și ai 24 de ore să confirmi — altfel locul trece mai departe.",
     );
-    expect(waitlistOfferPhrase(ro, "ro", 12)).toContain("ai 12 ore să confirmi");
-    expect(waitlistOfferPhrase(ro, "ro", 48)).toContain("ai 48 de ore să confirmi");
+    expect(waitlistOfferPhrase(ro, "ro", 12, true)).toContain("ai 12 ore să confirmi");
+    expect(waitlistOfferPhrase(ro, "ro", 48, true)).toContain("ai 48 de ore să confirmi");
     const en = translator("en");
-    expect(waitlistOfferPhrase(en, "en", 24)).toBe("When a place frees up, you get an email and 24 hours to confirm — then it passes on.");
-    expect(waitlistOfferPhrase(en, "en", 6)).toContain("6 hours to confirm");
+    expect(waitlistOfferPhrase(en, "en", 24, true)).toBe("When a place frees up, you get an email and 24 hours to confirm — then it passes on.");
+    expect(waitlistOfferPhrase(en, "en", 6, true)).toContain("6 hours to confirm");
+  });
+
+  it("§906 while no place reaches the line by itself, says the organizers give the places — never «când se eliberează»", () => {
+    const ro = translator("ro");
+    const byHand = waitlistOfferPhrase(ro, "ro", 24, false);
+    expect(byHand).toBe("Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email și ai 24 de ore să confirmi.");
+    expect(byHand).not.toContain("Când se eliberează");
+    expect(byHand).not.toContain("trece mai departe");
+    expect(waitlistOfferPhrase(ro, "ro", 12, false)).toContain("ai 12 ore să confirmi");
+    const en = translator("en");
+    const enByHand = waitlistOfferPhrase(en, "en", 24, false);
+    expect(enByHand).toBe("The organizers give out the places one at a time: when they can give you one, you get an email and 24 hours to confirm.");
+    expect(enByHand).not.toContain("frees up");
+    expect(enByHand).not.toContain("passes on");
+  });
+
+  it("§906 the join sentence by the same rule: «te anunțăm…» only while a freed place reaches the line by itself", () => {
+    expect(waitlistJoinPhrase(translator("ro"), true)).toBe("Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.");
+    expect(waitlistJoinPhrase(translator("en"), true)).toBe("Join the waiting list — we email you when a place frees up.");
+    const roByHand = waitlistJoinPhrase(translator("ro"), false);
+    expect(roByHand).toBe("Intră pe lista de așteptare — organizatorii îți scriu pe email când îți pot da un loc.");
+    expect(roByHand).not.toContain("se eliberează");
+    const enByHand = waitlistJoinPhrase(translator("en"), false);
+    expect(enByHand).toBe("Join the waiting list — the organizers email you when they can give you a place.");
+    expect(enByHand).not.toContain("frees up");
   });
 
   it("stays under 200 characters at the longest window the club may set", () => {
-    for (const locale of ["ro", "en"] as const) expect(waitlistOfferPhrase(translator(locale), locale, 72).length).toBeLessThanOrEqual(200);
+    for (const locale of ["ro", "en"] as const) {
+      for (const byItself of [true, false]) expect(waitlistOfferPhrase(translator(locale), locale, 72, byItself).length).toBeLessThanOrEqual(200);
+    }
   });
 });
 

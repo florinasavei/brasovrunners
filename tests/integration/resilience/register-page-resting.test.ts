@@ -23,7 +23,18 @@ const state = vi.hoisted(() => ({
   refusal: null as Error | null,
   draft: null as Record<string, string> | null,
   // The event's count (§587: the join form's words); null, as before, for every other case.
-  availability: null as null | { available: number; capacity: number; waitlistRoom: number | null; waitlistCapacity: number | null; waiting?: number; waitlistCountPublic?: boolean; participantCountPublic?: boolean },
+  availability: null as null | {
+    available: number;
+    capacity: number;
+    waitlistRoom: number | null;
+    waitlistCapacity: number | null;
+    waiting?: number;
+    waitlisted?: number;
+    waitlistCountPublic?: boolean;
+    participantCountPublic?: boolean;
+  },
+  // The organizers' two switches on the event's row (§906), and «Da»/«Nu» beside them; nothing, as before, for every other case.
+  eventOver: {} as { publicRegistrationOpen?: boolean; freePlacesByOfferOnly?: boolean; waitlistAutoOffer?: boolean },
   sitting: null as null | {
     sittingId: string | null;
     seed?: null;
@@ -78,7 +89,7 @@ vi.mock("@/db/client", () => ({
 vi.mock("@/modules/events/repository", () => ({
   findPublishedEventBySlug: async () => {
     if (state.refusal) throw Object.assign(new Error("Failed query: select … from events"), { cause: state.refusal });
-    return EVENT;
+    return { ...EVENT, ...state.eventOver };
   },
 }));
 vi.mock("@/modules/diagnostics/budget-level", () => ({
@@ -103,7 +114,7 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedListStatesDisclosed: async () => false,
   cachedPublicAvailability: async () => state.availability,
   cachedDeadlines: async () => ({ offerHours: 36 }),
-  cachedPublishedEventBySlug: async () => EVENT,
+  cachedPublishedEventBySlug: async () => ({ ...EVENT, ...state.eventOver }),
 }));
 vi.mock("@/modules/registrations/form-draft", () => ({
   readFormDraft: async () => state.draft,
@@ -164,6 +175,7 @@ beforeEach(() => {
   state.refusal = null;
   state.draft = null;
   state.availability = null;
+  state.eventOver = {};
   state.sitting = null;
   forgetLastGood();
   resetBreaker();
@@ -349,5 +361,120 @@ describe("§587 the join form says the event page's message once, above the form
     const open = await render();
     expect(open).not.toContain('data-testid="registration-waitlist-notice"');
     expect(open).not.toContain('data-testid="registration-full-notice"');
+  });
+
+  it("§615 with places free and somebody waiting, the lead is the card's «Locurile se dau din lista de așteptare», never «s-au ocupat»", async () => {
+    state.availability = { available: 3, capacity: 10, waitlistRoom: 4, waitlistCapacity: 5, waiting: 1, waitlisted: 1 };
+    const html = await render();
+    expect(html).toContain('data-testid="registration-waitlist-notice"');
+    expect(html).toContain(ro.Event.cta.fromWaitlist);
+    expect(html).not.toContain("s-au ocupat");
+    expect(html).toContain(ro.Event.cta.fullJoin);
+  });
+});
+
+/**
+ * §906 — the organizers' door on the register page (the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»):
+ * «Înscrieri publice deschise» unticked, or a press the server refused for it, says the event page's own sentence and
+ * the way back instead of the form; «Locurile libere le dau doar eu» with places free and no line to join says its
+ * own words; with room in the line it is the join form, led by the card's words and never «s-au ocupat».
+ */
+describe("§906 the organizers' door on the register page", () => {
+  it("unticked «Înscrieri publice deschise»: the event page's sentence and the way back, never the form", async () => {
+    state.eventOver = { publicRegistrationOpen: false };
+    state.availability = { available: 3, capacity: 10, waitlistRoom: null, waitlistCapacity: null };
+    const html = await render();
+    expect(html).toContain('data-testid="registration-paused"');
+    expect(html).toContain(ro.Event.cta.paused);
+    expect(html).toContain(ro.Registration.pausedBack);
+    expect(html).not.toContain('name="firstName"');
+  });
+
+  it("a press the server refused for it lands on the same sentence, though the cached row still said open", async () => {
+    state.availability = { available: 3, capacity: 10, waitlistRoom: null, waitlistCapacity: null };
+    const html = await render({ error: "VALIDATION_ERROR", fields: "publicRegistrationPaused" });
+    expect(html).toContain('data-testid="registration-paused"');
+    expect(html).toContain(ro.Event.cta.paused);
+    expect(html).not.toContain('name="firstName"');
+  });
+
+  it("«Locurile libere le dau doar eu» with places free and no line to join: its own words, no form", async () => {
+    state.eventOver = { freePlacesByOfferOnly: true };
+    state.availability = { available: 3, capacity: 10, waitlistRoom: null, waitlistCapacity: 0 };
+    const none = await render();
+    expect(none).toContain('data-testid="registration-paused"');
+    expect(none).toContain(ro.Event.cta.pausedOffersOnly);
+    expect(none).not.toContain("s-au ocupat");
+    expect(none).not.toContain('name="firstName"');
+
+    state.availability = { available: 3, capacity: 10, waitlistRoom: 0, waitlistCapacity: 4, waiting: 4, waitlisted: 4 };
+    expect(await render()).toContain(ro.Event.cta.pausedOffersOnly);
+  });
+
+  it("«Locurile libere le dau doar eu» with room in the line: the join form, led by the card's words", async () => {
+    state.eventOver = { freePlacesByOfferOnly: true };
+    state.availability = { available: 3, capacity: 10, waitlistRoom: 5, waitlistCapacity: 5, waiting: 0, waitlisted: 0 };
+    const html = await render();
+    expect(html).not.toContain('data-testid="registration-paused"');
+    expect(html).toContain('data-testid="registration-waitlist-notice"');
+    expect(html).toContain(ro.Event.cta.fromWaitlist);
+    expect(html).not.toContain("s-au ocupat");
+    expect(html).toContain('name="firstName"');
+
+    // Unticked, the same free places are the button's: no notice above the form.
+    state.eventOver = {};
+    const open = await render();
+    expect(open).not.toContain('data-testid="registration-waitlist-notice"');
+    expect(open).toContain('name="firstName"');
+  });
+
+  it("how an offer works follows the allocator's gate: the organizers' words while no place reaches the line by itself", async () => {
+    const byHandWords = "Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email și ai 36 de ore să confirmi.";
+    // The tick, places free beside a line with room: nothing frees itself to anybody, so never «Când se eliberează un loc».
+    state.eventOver = { freePlacesByOfferOnly: true };
+    state.availability = { available: 3, capacity: 10, waitlistRoom: 5, waitlistCapacity: 5, waiting: 0, waitlisted: 0 };
+    const ticked = await render();
+    expect(ticked).toContain('data-testid="registration-waitlist-offer"');
+    expect(ticked).toContain(byHandWords);
+    expect(ticked).not.toContain("Când se eliberează un loc");
+
+    // The tick on a full event wins over «Da»: the same words.
+    state.eventOver = { freePlacesByOfferOnly: true, waitlistAutoOffer: true };
+    state.availability = { available: 0, capacity: 10, waitlistRoom: 4, waitlistCapacity: 5, waiting: 1, waitlisted: 1 };
+    const tickedFull = await render();
+    expect(tickedFull).toContain(byHandWords);
+    expect(tickedFull).not.toContain("Când se eliberează un loc");
+
+    // «Nu», full: the organizers give every freed place.
+    state.eventOver = { waitlistAutoOffer: false };
+    const byHand = await render();
+    expect(byHand).toContain(byHandWords);
+    expect(byHand).not.toContain("Când se eliberează un loc");
+
+    // «Da», the tick off: a freed place reaches the line by itself — the sentence that says so, and not the organizers'.
+    state.eventOver = { waitlistAutoOffer: true };
+    const auto = await render();
+    expect(auto).toContain("Când se eliberează un loc, primești un email și ai 36 de ore să confirmi — altfel locul trece mai departe.");
+    expect(auto).not.toContain("Locurile le dau organizatorii");
+  });
+
+  it("the join sentence above the form keeps the offer line's rule: «te anunțăm…» only while a freed place reaches the line by itself", async () => {
+    const full = { available: 0, capacity: 10, waitlistRoom: 4, waitlistCapacity: 5, waiting: 1, waitlisted: 1 };
+    const cases = [
+      // The tick beside free places, and on a full event over «Da»; «Nu» on a full one: the organizers' words.
+      { over: { freePlacesByOfferOnly: true }, availability: { available: 3, capacity: 10, waitlistRoom: 5, waitlistCapacity: 5, waiting: 0, waitlisted: 0 }, byItself: false },
+      { over: { freePlacesByOfferOnly: true, waitlistAutoOffer: true }, availability: full, byItself: false },
+      { over: { waitlistAutoOffer: false }, availability: full, byItself: false },
+      // «Da», the tick off: a freed place reaches the line by itself.
+      { over: { waitlistAutoOffer: true }, availability: full, byItself: true },
+    ];
+    for (const { over, availability, byItself } of cases) {
+      state.eventOver = over;
+      state.availability = availability;
+      const html = await render();
+      expect(html, JSON.stringify(over)).toContain('data-testid="registration-waitlist-join"');
+      expect(html).toContain(byItself ? ro.Event.cta.fullJoin : ro.Event.cta.fullJoinByHand);
+      expect(html).not.toContain(byItself ? ro.Event.cta.fullJoinByHand : ro.Event.cta.fullJoin);
+    }
   });
 });
