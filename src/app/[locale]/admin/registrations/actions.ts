@@ -406,6 +406,8 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
           fastTrack: form.get("fastTrack") === "on",
           // «Direct pe lista de așteptare» (§872): the Administrator vouches for the address; the service asserts the role.
           vouchAddress: form.get("vouchAddress") === "on",
+          // «Elită» (§NNN): the Administrator's; the service refuses it from any other role (FORBIDDEN), never drops it.
+          elite: form.get("elite") === "on",
           // The number handed with the paper (§444); empty is the platform's own draw.
           bibNumber: handedBibNumber(form),
         },
@@ -1174,6 +1176,8 @@ export async function addToWaitlistAction(_previous: FormOutcome | null, form: F
           relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
           note,
           offerNow: offerNowOf(form),
+          // «Elită» (§NNN), as on the full form: marked in the entry's transaction.
+          elite: form.get("elite") === "on",
         },
         new Date(),
       );

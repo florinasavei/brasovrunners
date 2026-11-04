@@ -65,6 +65,14 @@ export const eventInvitations = pgTable(
     outsideCapacity: boolean("outside_capacity").notNull().default(false),
     /** This invitation's send raised the capacity by one (§642's confirmed supplementary place). */
     supplementaryRaise: boolean("supplementary_raise").notNull().default(false),
+    /**
+     * «Elită» at the send (§NNN; the owner, 2026-11-04: «trimit invitație, ar trebui să pot bifa direct ca e elită, dar asta e
+     * ceva intern»): the registration this invitation becomes is marked «Elită» in the same transaction — by the link's press
+     * (`seatInvitedRegistration`) or by another route that takes the invitation over (`markInvitationAdopted`) — exactly as
+     * `elite-mark.ts` marks one, audited under the Administrator who sent it. The club's alone: no email, page or form the
+     * person sees says it. An invitation withdrawn or expired marks nobody.
+     */
+    elite: boolean("elite").notNull().default(false),
     acceptedAt: timestamp("accepted_at", { withTimezone: true }),
     acceptedRegistrationId: uuid("accepted_registration_id").references(() => registrations.id, { onDelete: "cascade" }),
     withdrawnAt: timestamp("withdrawn_at", { withTimezone: true }),

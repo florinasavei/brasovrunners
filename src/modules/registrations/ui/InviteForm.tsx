@@ -9,7 +9,7 @@ import RadioGroup from "@mui/material/RadioGroup";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type FormEvent, useActionState, useMemo, useRef, useState } from "react";
+import { type FormEvent, useActionState, useId, useMemo, useRef, useState } from "react";
 import { countForm } from "@/i18n/count-form";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
 import type { ConfirmRoad, ConfirmSpec } from "@/shared/feedback/notice";
@@ -39,6 +39,9 @@ export type InviteFormWords = {
   daysHelp: string;
   outsideLabel: string;
   outsideHelp: string;
+  /** «Elită» for the whole send (§NNN) and its one line: internal, the person is not told. */
+  eliteLabel: string;
+  eliteHelp: string;
   /** «Limba invitației», its two answers and the sentence saying whom it is for. */
   localeLegend: string;
   localeRo: string;
@@ -54,6 +57,8 @@ export type InviteFormWords = {
   dialogRaise: Counted;
   dialogNoRaise: string;
   dialogOutside: string;
+  /** «Înscrierile vor fi marcate «Elită» — intern, persoanele nu sunt anunțate.»: said only with «Elită» ticked. */
+  dialogElite: string;
   /** «Invitația expiră în {count} zile, cel mult la start.», counted: the deadline the press sends. */
   dialogDays: Counted;
   /** «Limba pentru adresele pe care clubul nu le cunoaște: {language}.»: the language the press sends. */
@@ -142,6 +147,9 @@ export default function InviteForm({
   const nextKey = useRef(1);
   const [rows, setRows] = useState<readonly { key: number; name: string; email: string }[]>([{ key: 0, name: "", email: "" }]);
   const [outside, setOutside] = useState(false);
+  // «Elită» (§NNN): controlled like «Pe lista ascunsă», so a refused send keeps it for the corrected press.
+  const [elite, setElite] = useState(false);
+  const eliteHelpId = useId();
   /*
     Controlled, as the ticks and the lines are: React resets an uncontrolled field of a form once its
     action completes, and a refusal answered with state completes it — the corrected second press would
@@ -209,6 +217,7 @@ export default function InviteForm({
       counted(words.dialogCount, count),
       hiddenListEnabled && outside ? words.dialogOutside : nowFree === null ? null : fill(words.dialogFree, { free: nowFree }),
       (hiddenListEnabled && outside) || nowFree === null ? null : raisedTo !== null ? counted(words.dialogRaise, raises, { capacity: raisedTo }) : words.dialogNoRaise,
+      elite ? words.dialogElite : null,
       counted(words.dialogDays, dayCount),
       fill(words.dialogLocale, { language: inviteLocale === "en" ? words.localeEn : words.localeRo }),
     ]
@@ -245,6 +254,7 @@ export default function InviteForm({
       <input type="hidden" name="eventId" value={eventId} />
       <input type="hidden" name="addPlace" value={addPlace} />
       {hiddenListEnabled && outside && <input type="hidden" name="outside" value="1" />}
+      {elite && <input type="hidden" name="elite" value="1" />}
       <Stack spacing={2}>
         {(localError ?? serverError) && (
           <Alert severity="error" role="alert" data-testid="invite-error">
@@ -387,6 +397,17 @@ export default function InviteForm({
             </Typography>
           </Box>
         )}
+        {/* «Elită» (§NNN), beside «Pe lista de invitați speciali» and drawn the same way: one tick for the whole send. */}
+        <Box data-testid="invite-elite">
+          <FormControlLabel
+            sx={{ minHeight: TAP_TARGET.minHeight }}
+            control={<Checkbox checked={elite} onChange={(event) => setElite(event.target.checked)} slotProps={{ input: { "aria-describedby": eliteHelpId } }} />}
+            label={words.eliteLabel}
+          />
+          <Typography id={eliteHelpId} variant="body2" color="text.secondary">
+            {words.eliteHelp}
+          </Typography>
+        </Box>
         <Box>
           <GlyphButton icon="send" type="submit" variant="contained" disabled={pending} sx={{ minHeight: TAP_TARGET.minHeight }} data-testid="invite-submit">
             {words.submit}

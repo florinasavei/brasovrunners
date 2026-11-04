@@ -119,6 +119,8 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   // The next free desk spare per event (§444), suggested only to the desk — a person on the
   // telephone, entered from the list, is not standing at a table with a bib.
   const spareSuggestions = fromDesk ? await spareStates(getDb(), events.map((event) => event.id)) : {};
+  // «Elită» (§NNN): drawn for the role that marks (§897); the service refuses the box from any other.
+  const mayMarkElite = canManageRegistrations(actor.role);
 
   return (
     <Stack spacing={3}>
@@ -187,6 +189,8 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             },
             confirmLabel: t("registrations.create"),
             cancelLabel: words.cancel,
+            // «Elită» ticked (§NNN): one quieter line, only where the tick is drawn.
+            elite: mayMarkElite ? t("registrations.elite.entryConfirm") : undefined,
           })}
           data-testid="registration-new-form"
         >
@@ -360,6 +364,19 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
                 <Typography variant="body2" color="text.secondary">
                   {t("registrations.vouchAddressHelp")}
                 </Typography>
+              </Box>
+            )}
+
+            {/*
+              «Elită» (§NNN; the owner, 2026-11-04: «înscriu pe cineva de mână… ar trebui să pot bifa direct că e elită, dar
+              asta e ceva intern»): marked from the start, in the entry's own transaction, as «Marchează ca elită» marks it —
+              how the bib prints, nothing else, and nothing the person is told. The Administrator's; unticked by default.
+            */}
+            {mayMarkElite && (
+              <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, px: 2, py: 1 }} data-testid="staff-entry-elite">
+                <CheckboxField name="elite" help={t("registrations.elite.entryHelp")}>
+                  {t("registrations.elite.entry")}
+                </CheckboxField>
               </Box>
             )}
 

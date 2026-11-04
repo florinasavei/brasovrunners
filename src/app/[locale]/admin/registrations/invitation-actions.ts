@@ -92,7 +92,15 @@ export async function inviteAction(_previous: InvitationSendState, form: FormDat
         db,
         actor,
         eventId,
-        { people, days, outsideCapacity: form.get("outside") === "1", locale: form.get("inviteLocale") === "en" ? "en" : "ro", addPlaceTo: confirmedCapacityOf(form.get("addPlace")) },
+        {
+          people,
+          days,
+          outsideCapacity: form.get("outside") === "1",
+          // «Elită» for the whole send (§NNN), beside «Pe lista de invitați speciali»: the registration each becomes is marked.
+          elite: form.get("elite") === "1",
+          locale: form.get("inviteLocale") === "en" ? "en" : "ro",
+          addPlaceTo: confirmedCapacityOf(form.get("addPlace")),
+        },
         new Date(),
       );
     } catch (error) {

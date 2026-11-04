@@ -126,6 +126,7 @@ import * as repo from "./repository";
 import { watchPlacesAlert } from "./places-alert";
 import { publicDoorOpen, publicRegistrationPausedError } from "./domain/public-door";
 import { findInvitationById, findLiveInvitationOfParticipant, findOpenInvitation, invitationOpen } from "./invitation-repository";
+import { writeRegistrationEliteMark } from "./elite-mark";
 import { confirmsInvitationRaises, INVITATION_BATCH_MAX, InvitationRefusal, invitationDeadline, invitationFreePlaces, invitationRaises, invitationState, validInvitationDays } from "./domain/invitations";
 import { waitlistRefusalOf } from "./domain/waitlist";
 import { memberBibKept } from "./domain/member-bib";
@@ -801,8 +802,17 @@ async function invitationToAdopt<T extends Record<string, unknown>>(db: Transact
  * registration's id, after the registration took the place — the stamp the link's press writes
  * (`seatInvitedRegistration`) — and audited `event.invitation_accepted` with `adopted: true` (no actor:
  * the route that placed the row writes its own row). The link's page then says it was used.
+ *
+ * An invitation sent with «Elită» (§NNN) marks the registration that took it over, in this same transaction, as the
+ * link's press does (`invitations.ts#acceptInvitation`): the person the club named is the one it marked. The public
+ * pages hear of it with the place itself: the route that gave the place tells `places` after its own commit.
  */
-async function markInvitationAdopted<T extends Record<string, unknown>>(db: Transaction<T>, invitation: { id: string; eventId: string }, registrationId: string, now: Date): Promise<void> {
+async function markInvitationAdopted<T extends Record<string, unknown>>(
+  db: Transaction<T>,
+  invitation: { id: string; eventId: string; elite: boolean; invitedByStaffUserId: string | null },
+  registrationId: string,
+  now: Date,
+): Promise<void> {
   const [accepted] = await db
     .update(eventInvitations)
     .set({ acceptedAt: now, acceptedRegistrationId: registrationId })
@@ -818,6 +828,7 @@ async function markInvitationAdopted<T extends Record<string, unknown>>(db: Tran
     metadata: { invitationId: invitation.id, registrationId, adopted: true },
     now,
   });
+  if (invitation.elite) await writeRegistrationEliteMark(db, invitation.invitedByStaffUserId, registrationId, true, now, "invitation");
 }
 
 /**
@@ -4473,6 +4484,11 @@ export type InvitationSendInput = {
   /** «Pe lista ascunsă» (§643's `outside_capacity`) for the whole send: organizers, volunteers, pacemakers hold no counted place. */
   outsideCapacity: boolean;
   /**
+   * «Elită» for the whole send (§NNN): each invitation stores it, and the registration it becomes is marked «Elită» in
+   * that same transaction (`seatInvitedRegistration`, `markInvitationAdopted`) — internal, nothing the person is told.
+   */
+  elite?: boolean;
+  /**
    * «Limba invitației» for a typed address the club has never seen (Romanian by default): a member is
    * written to in the account's language, and an address the club knows in its participant's.
    */
@@ -4670,6 +4686,7 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
         expiresAt: deadline,
         outsideCapacity: input.outsideCapacity,
         supplementaryRaise: raised,
+        elite: input.elite === true,
         lastSentAt: now,
       });
       const idempotencyKey = `invitation:${invitationId}:sent:${now.toISOString()}`;
@@ -4696,6 +4713,7 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
           outsideCapacity: input.outsideCapacity,
           supplementaryRaise: raised,
           ...(person.memberStaffUserId ? { member: true } : {}),
+          ...(input.elite === true ? { elite: true } : {}),
         },
         now,
       });
