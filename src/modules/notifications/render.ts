@@ -75,9 +75,9 @@ import { shopOrders } from "@/db/schema/shop";
 import { readShopSettings } from "@/modules/content/shop/settings";
 import { isUuid } from "@/shared/ids";
 import { events } from "@/db/schema/events";
-import { countEligibleWaitlisted, countOccupied, readWaitlistPosition } from "@/modules/registrations/repository";
-import { computeOccupied, computePublicAvailability } from "@/modules/registrations/domain/capacity";
-import { waitlistHasRoom } from "@/modules/registrations/domain/waitlist";
+import { countEligibleWaitlisted, countOccupied, offersWaitlistAutomatically, readWaitlistPosition } from "@/modules/registrations/repository";
+import { computeOccupied, hasDirectAvailability } from "@/modules/registrations/domain/capacity";
+import { newcomerJoinsLine, publicEntryQueues, waitlistHasRoom } from "@/modules/registrations/domain/waitlist";
 import type { FamilySitting, PendingFamilyEntry } from "@/db/schema/family-entries";
 import {
   extendHeldVerificationLink,
@@ -362,6 +362,8 @@ async function renderRow(
     row.messageType === "VOLUNTEER_ROLE_ASSIGNED" ||
     row.messageType === "VOLUNTEER_GUARDIAN_REQUEST" ||
     row.messageType === "VOLUNTEER_INVITATION" ||
+    // The Administrators' places alert (§906): about an event's places, nobody's registration.
+    row.messageType === "PLACES_ALERT" ||
     bulkRecipients !== null
       ? (row.payloadJson as { eventId?: unknown } | null)?.eventId
       : undefined;
@@ -523,6 +525,17 @@ async function renderRow(
     // An Administrator's resend (§641) opens with «still on the waiting list», never «we added you» (§654).
     // A resend rendered after the person left the list says nothing of a standing it no longer has.
     if (row.isManualResend && standing) data.waitlistResent = true;
+    // Not full, the organizers' places (§906): the tick, or a place nobody holds beside the line — never «este complet».
+    // Full with «Nu», the promise after «este complet» is the organizers' too, read off the standing's `autoOffer` above.
+    if (standing && (await waitlistByHand(db, registration.eventId, now))) data.waitlistByHand = true;
+  }
+  /*
+    What happens to an offered place after its deadline (§906), read now, as the line is: it passes to the next person
+    by itself only while places go out by themselves (`offersWaitlistAutomatically`, the allocator's own gate) — with
+    «Nu», or «Locurile libere le dau doar eu», the organizers give it, and the message says so.
+  */
+  if (row.messageType === "WAITLIST_SPOT_OFFER" && registration) {
+    data.offerPassesOnItsOwn = await offersWaitlistAutomatically(db, registration.eventId);
   }
   /*
     One cancellation email per person (§547): whether the person held a place or waited in line —
@@ -872,6 +885,24 @@ async function renderRow(
     button is «Versiune nouă» (`/admin/legal/new`) in the recipient's language, from `APP_BASE_URL`
     (AGENTS.md §8); the backoffice's sign-in decides who may open it.
   */
+  /*
+    «Anunță-mă când rămân N locuri» (§906), to an Administrator or a Superadministrator: the crossing and its counts are
+    in the payload, as the allocator's write counted them under the lock — no participant, no token. The event is named
+    from the payload's id above. The one button opens the event's registrations, where «Locuri» says what the public
+    sees now, from `APP_BASE_URL` (AGENTS.md §8); the sign-in decides who may open it.
+  */
+  if (row.messageType === "PLACES_ALERT") {
+    const payload = (row.payloadJson ?? {}) as { displayName?: unknown; stage?: unknown; free?: unknown; capacity?: unknown; alertAt?: unknown };
+    data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
+    const whole = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? Math.max(Math.trunc(value), 0) : 0);
+    data.placesAlert = {
+      stage: payload.stage === "FULL" ? "FULL" : "LOW",
+      free: whole(payload.free),
+      capacity: whole(payload.capacity),
+      alertAt: whole(payload.alertAt),
+    };
+    if (eventId) payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/registrations", query: { eventId } } })}`;
+  }
   if (row.messageType === "LEGAL_TEMPLATES_CHANGED") {
     const payload = (row.payloadJson ?? {}) as { displayName?: unknown; keys?: unknown };
     data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
@@ -1153,7 +1184,8 @@ async function renderRow(
     the date); whether the place went to the waiting list, a fact of the release; and what the person
     can do now, read off the event as it stands at the send (`holdLapsedNext` says why not at the
     queueing). The button is the ordinary registration page — no token (§12.8), and absent from a club
-    copy like every action (§320) — and only when the form would take them.
+    copy like every action (§320) — and only when the form would take them: never while the organizers
+    keep the site's door shut (`paused`, `offersOnly`, §906), as the card draws no button then.
   */
   if (row.messageType === "DECLARATION_HOLD_EXPIRED" && registration) {
     const lapsed = await describeLapsedHold(db, row, registration, now);
@@ -1167,7 +1199,7 @@ async function renderRow(
     }
     data.holdLapsedToWaitlist = lapsed.toWaitlist;
     data.holdLapsedNext = lapsed.next;
-    if (lapsed.next !== "desk" && eventDetails?.slug) {
+    if ((lapsed.next === "register" || lapsed.next === "waitlist") && eventDetails?.slug) {
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } } })}`;
     }
   }
@@ -1852,17 +1884,49 @@ function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
 }
 
 /**
- * Whether a newcomer would join the waiting list now (§543): no place by the allocator's own formula,
- * read as the public count reads it (`readPublicAvailability`'s counts), and a line that still takes
- * somebody (§348) — for the family message's «pe lista de așteptare». An uncapped event is never full.
+ * Whether a newcomer would join the waiting list now (§543): the allocator's own decision for a family's
+ * form, a **public** entry (`placeForNewcomer`) — no place by its formula, read as the public count reads
+ * it (`readPublicAvailability`'s counts), or the line first whatever is free: somebody waiting in it (§615),
+ * or «Locurile libere le dau doar eu» (§906, `newcomerJoinsLine` on the `public` channel) — and a line that
+ * still takes somebody (§348) — for the family message's «pe lista de așteptare». An uncapped event is never
+ * full, and the tick sends nobody to the line there.
  */
 async function waitlistTakesNewcomer(db: RendererDb, eventId: string, now: Date): Promise<boolean> {
-  const [event] = await db.select({ capacity: events.capacity, waitlistCapacity: events.waitlistCapacity }).from(events).where(eq(events.id, eventId)).limit(1);
+  const [event] = await db
+    .select({ capacity: events.capacity, waitlistCapacity: events.waitlistCapacity, freePlacesByOfferOnly: events.freePlacesByOfferOnly })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
   if (!event || event.capacity === null) return false;
   const counts = await countOccupied(db, eventId, now);
   const waiting = await countEligibleWaitlisted(db, eventId);
-  const full = computePublicAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted: waiting }) === 0;
-  return full && waitlistHasRoom({ waitlistCapacity: event.waitlistCapacity, waitlisted: waiting, openOffers: counts.unexpiredWaitlistOfferedHolds });
+  const queues =
+    newcomerJoinsLine({ waitlisted: waiting, freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel: "public", capacity: event.capacity }) ||
+    !hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted: waiting });
+  return queues && waitlistHasRoom({ waitlistCapacity: event.waitlistCapacity, waitlisted: waiting, openOffers: counts.unexpiredWaitlistOfferedHolds });
+}
+
+/**
+ * Whether a person in the line waits for the organizers to give out the places rather than because every place is held
+ * (§906), for `WAITLIST_JOINED`'s words — the allocator's rule, read at render time as every fact of the message is:
+ *
+ * - «Locurile libere le dau doar eu» in force (`publicEntryQueues` on the `public` channel): a public entry joins the line
+ *   whatever is free, and no place goes out by itself (`offersOnItsOwn`) — the organizers give each one;
+ * - or a place nobody holds beside the line: the capacity formula's own count with the line's claim left aside
+ *   (`hasDirectAvailability`, no one waiting) — «Nu», or after the close, when no offer goes out by itself either. An
+ *   uncapped event is never full.
+ *
+ * Either way «este complet momentan» would be false. Otherwise every place is held: the event is full.
+ */
+async function waitlistByHand(db: RendererDb, eventId: string, now: Date): Promise<boolean> {
+  const [event] = await db
+    .select({ capacity: events.capacity, freePlacesByOfferOnly: events.freePlacesByOfferOnly })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
+  if (!event) return false;
+  if (publicEntryQueues({ freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel: "public", capacity: event.capacity })) return true;
+  return hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(await countOccupied(db, eventId, now)), eligibleWaitlisted: 0 });
 }
 
 /**
@@ -1897,6 +1961,9 @@ async function describeLapsedHold(
       publishedAt: events.publishedAt,
       capacity: events.capacity,
       waitlistCapacity: events.waitlistCapacity,
+      // The site's door as the card reads it (§906): shut by the organizers, or the line's whatever is free.
+      publicRegistrationOpen: events.publicRegistrationOpen,
+      freePlacesByOfferOnly: events.freePlacesByOfferOnly,
     })
     .from(events)
     .where(eq(events.id, registration.eventId))
@@ -1915,6 +1982,8 @@ async function describeLapsedHold(
       waitlisted,
       openOffers: counts.unexpiredWaitlistOfferedHolds,
       waitlistCapacity: event.waitlistCapacity,
+      publicRegistrationOpen: event.publicRegistrationOpen,
+      freePlacesByOfferOnly: event.freePlacesByOfferOnly,
     }),
   };
 }

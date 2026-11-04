@@ -354,6 +354,30 @@ describe("§789 the «?» after «Sunt membru al grupului» says what the club s
   });
 });
 
+describe("§906 the preview's join form says how an offer works as the saved page will", () => {
+  /** A full race whose line takes people: the preview's door as `draftRegistrationDoor` answers it. */
+  const full: RegistrationDoor = { kind: "KNOWN", cta: { kind: "FULL", waitlistRoom: null, waiting: 0 }, fill: null };
+  const auto = "Când se eliberează un loc, primești un email și ai 24 de ore să confirmi — altfel locul trece mai departe.";
+  const byHand = "Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email și ai 24 de ore să confirmi.";
+
+  it("in the organizers' words while no place reaches the line by itself — the tick, or «Nu» — and the old sentence with «Da»", async () => {
+    for (const change of [{ freePlacesByOfferOnly: true, waitlistAutoOffer: true }, { freePlacesByOfferOnly: false, waitlistAutoOffer: false }]) {
+      const html = await render({ ...draft(), ...change }, full);
+      expect(html).toContain('data-testid="registration-waitlist-notice"');
+      expect(html).toContain(byHand);
+      expect(html).not.toContain("Când se eliberează un loc");
+      // The join sentence above it by the same rule: nobody is emailed when a place frees up.
+      expect(html).toContain(ro.Event.cta.fullJoinByHand);
+      expect(html).not.toContain(ro.Event.cta.fullJoin);
+    }
+    const html = await render({ ...draft(), freePlacesByOfferOnly: false, waitlistAutoOffer: true }, full);
+    expect(html).toContain(auto);
+    expect(html).not.toContain(byHand);
+    expect(html).toContain(ro.Event.cta.fullJoin);
+    expect(html).not.toContain(ro.Event.cta.fullJoinByHand);
+  });
+});
+
 describe("§579 amended — the words, both languages", () => {
   it("has every preview word in Română and English, short, plain", () => {
     expect(Object.keys(en.Registration.preview).sort()).toEqual(Object.keys(ro.Registration.preview).sort());

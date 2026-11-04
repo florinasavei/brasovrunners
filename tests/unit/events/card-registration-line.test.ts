@@ -92,6 +92,27 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     expect(en.button?.label).toBe("Join the waiting list");
   });
 
+  it("§906 says what the list does in the organizers' words while no place reaches it by itself — «Nu», or the tick over «Da»", () => {
+    const full = known({ kind: "FULL", waitlistRoom: null, waiting: 0 }, { taken: 10, capacity: 10 });
+    const byHand: Partial<PublicEvent>[] = [{ waitlistAutoOffer: false }, { waitlistAutoOffer: true, freePlacesByOfferOnly: true }];
+    for (const settings of byHand) {
+      expect(cardRegistrationLine(translator("ro"), "ro", race(settings), NOW, full).note).toBe(
+        "Intră pe lista de așteptare — organizatorii îți scriu pe email când îți pot da un loc.",
+      );
+      expect(cardRegistrationLine(translator("en"), "en", race(settings), NOW, full).note).toBe(
+        "Join the waiting list — the organizers email you when they can give you a place.",
+      );
+    }
+    // «Da» and the tick off — or a row cached before the two settings, read as their defaults: a freed place reaches the list by itself.
+    const byItself: Partial<PublicEvent>[] = [{ waitlistAutoOffer: true, freePlacesByOfferOnly: false }, {}];
+    for (const settings of byItself) {
+      expect(cardRegistrationLine(translator("ro"), "ro", race(settings), NOW, full).note).toBe(
+        "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.",
+      );
+      expect(cardRegistrationLine(translator("en"), "en", race(settings), NOW, full).note).toBe("Join the waiting list — we email you when a place frees up.");
+    }
+  });
+
   it("§594 says the room a capped waiting list has left under the join sentence, and nothing for a list with no limit", () => {
     const capped = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "FULL", waitlistRoom: 4, waiting: 1 }, { taken: 10, capacity: 10 }));
     expect(capped.roomLine).toBe("Mai sunt 4 locuri pe lista de așteptare");
@@ -179,7 +200,7 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
   it("§587 keeps the full event's words short enough for a phone", () => {
     for (const locale of ["ro", "en"] as const) {
       const say = translator(locale);
-      for (const key of ["cta.fullLead", "cta.fullJoin", "cta.waitlistFull", "cta.fullNoWaitlist", "cta.fullThanks.other", "cta.fullThanksFirst.other", "cta.waitingCount"]) {
+      for (const key of ["cta.fullLead", "cta.fullJoin", "cta.fullJoinByHand", "cta.waitlistFull", "cta.fullNoWaitlist", "cta.fullThanks.other", "cta.fullThanksFirst.other", "cta.waitingCount"]) {
         expect(say(key).length, `${locale} ${key}`).toBeLessThanOrEqual(200);
         expect(say(key), `${locale} ${key}`).not.toMatch(/platform|de obicei/i);
       }

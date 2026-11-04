@@ -98,6 +98,9 @@ function sampleConfig(): EventConfig {
       capacity: 100,
       waitlist: { choice: "LIMITED", limit: 20 },
       waitlistAutoOffer: true,
+      freePlacesByOfferOnly: false,
+      publicRegistrationOpen: true,
+      placesAlertAt: null,
       opensAt: null,
       opensSoon: false,
       closesAt: null,
@@ -126,7 +129,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V4.19-2026-11-03" },
+    exportedFrom: { environment: "production", baseline: "BR-V4.20-2026-11-04" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     // The volunteers' categories and roles (§774): none in the sample; the round trip with some is in the integration test.
@@ -223,6 +226,35 @@ describe("the event file's reader", () => {
   it("refuses a «Vin!» tick that is not true or false", () => {
     const bad = JSON.parse(serializeEventFile(sampleFile())) as { event: { registration: Record<string, unknown> } };
     bad.event.registration.rsvpEnabled = "yes";
+    expect(readEventFile(JSON.stringify(bad)).ok).toBe(false);
+  });
+
+  it("§906 writes the registration controls only when they are not what a file without them means, and reads them back as they were", () => {
+    const file = sampleFile();
+    // As every event before them: the door open, the tick off, no alert — nothing written, so the release before them still reads the file.
+    const plain = serializeEventFile(file);
+    for (const key of ["freePlacesByOfferOnly", "publicRegistrationOpen", "placesAlertAt"]) expect(plain).not.toContain(key);
+    const readDefaults = readEventFile(plain);
+    if (!readDefaults.ok) throw new Error("the file did not read back");
+    expect(readDefaults.file.event.registration).toMatchObject({ freePlacesByOfferOnly: false, publicRegistrationOpen: true, placesAlertAt: null });
+
+    file.event.registration.freePlacesByOfferOnly = true;
+    file.event.registration.publicRegistrationOpen = false;
+    file.event.registration.placesAlertAt = 0;
+    const written = serializeEventFile(file);
+    expect((JSON.parse(written) as { event: { registration: Record<string, unknown> } }).event.registration).toMatchObject({
+      freePlacesByOfferOnly: true,
+      publicRegistrationOpen: false,
+      placesAlertAt: 0,
+    });
+    const read = readEventFile(written);
+    if (!read.ok) throw new Error("the file did not read back");
+    expect(read.file.event.registration).toMatchObject({ freePlacesByOfferOnly: true, publicRegistrationOpen: false, placesAlertAt: 0 });
+    expect(read.file.version).toBe(3);
+
+    // A count that is not one is refused, as the editor's box refuses it.
+    const bad = JSON.parse(written) as { event: { registration: Record<string, unknown> } };
+    bad.event.registration.placesAlertAt = -1;
     expect(readEventFile(JSON.stringify(bad)).ok).toBe(false);
   });
 

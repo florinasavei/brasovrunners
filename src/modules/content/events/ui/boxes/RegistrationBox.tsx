@@ -449,9 +449,39 @@ export default async function RegistrationBox({
                     <BoxNote more={t("editor.waitlistAutoOfferHelpMore")}>{t("editor.waitlistAutoOfferHelp")}</BoxNote>
                   </Stack>
 
+                  {/*
+                    Who a free place is for, and when the Administrators are told the places are going (§906). A real
+                    tick, not a toggle button; its marker says the form carried it, so an unticked box reads as "off".
+                    The anchor is what «Pe site acum» on the registrations page links to.
+                  */}
+                  <Stack spacing={1} id="box-places-control" data-testid="places-control">
+                    <input type="hidden" name="event.freePlacesByOfferOnly.present" value="1" />
+                    <CheckboxField name="event.freePlacesByOfferOnly" defaultChecked={event?.freePlacesByOfferOnly ?? false}>
+                      {t("editor.freePlacesByOfferOnly")}
+                    </CheckboxField>
+                    <BoxNote more={t("editor.freePlacesByOfferOnlyHelpMore")}>{t("editor.freePlacesByOfferOnlyHelp")}</BoxNote>
+                    <RecallField
+                      name="event.placesAlertAt"
+                      label={t("editor.placesAlertAt")}
+                      helperText={t("editor.placesAlertAtHelp")}
+                      helpMore={t("editor.placesAlertAtHelpMore")}
+                      defaultValue={event?.placesAlertAt ?? ""}
+                      {...box("placesAlertAt", { inputMode: "numeric" })}
+                      sx={{ width: { sm: 320 } }}
+                    />
+                  </Stack>
+
                   {/* 6.1.1 — from when until when. */}
                   <Panel glyph="window" collapsible level={3} id="box-registration-window" title={t("editor.boxes.registrationWindow.title")} aside={registrationWindowSummary(words, event, locale)}>
                     <Stack spacing={1}>
+                      {/* «Înscrieri publice deschise» (§906): the public door beside the dates — unticked, the site's
+                          button goes at once and the public form is refused on the server; every staff verb keeps
+                          working. Its marker, like the tick below, says the form carried it. */}
+                      <input type="hidden" name="event.publicRegistrationOpen.present" value="1" />
+                      <CheckboxField name="event.publicRegistrationOpen" defaultChecked={event?.publicRegistrationOpen ?? true}>
+                        {t("editor.publicRegistrationOpen")}
+                      </CheckboxField>
+                      <BoxNote more={t("editor.publicRegistrationOpenHelpMore")}>{t("editor.publicRegistrationOpenHelp")}</BoxNote>
                       {/* «Se deschid în curând» (§451): announced, with no date. The marker says the
                           form carried the box, so an unticked one reads as "off", not "not edited". */}
                       <input type="hidden" name="event.registrationOpensSoon.present" value="1" />

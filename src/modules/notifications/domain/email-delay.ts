@@ -62,6 +62,8 @@ const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(
   // The outage grace's two (§657): to the Administrators; nobody on a public page waits for them.
   "UNREACHABLE_WINDOW_OPENED",
   "UNREACHABLE_WINDOW_CLOSED",
+  // «Anunță-mă când rămân N locuri» (§906): to the Administrators; nobody on a public page waits for it.
+  "PLACES_ALERT",
   // An invitation (§647): sent by an Administrator's press, to somebody who is on no page waiting for it.
   "EVENT_INVITATION",
   // The members' shop (§683): the zone shows the order itself, whatever the email; nobody on a public page waits.

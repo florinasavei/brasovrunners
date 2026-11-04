@@ -377,6 +377,8 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "LEGAL_TEMPLATES_CHANGED",
   "UNREACHABLE_WINDOW_OPENED",
   "UNREACHABLE_WINDOW_CLOSED",
+  // The Administrators' places alert (§906): about an event's places, never a registration — no status to state.
+  "PLACES_ALERT",
   "SHOP_ORDER_PLACED",
   "SHOP_ORDER_PAID",
   "SHOP_ORDER_CLUB_NOTICE",
