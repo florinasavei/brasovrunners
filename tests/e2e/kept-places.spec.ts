@@ -94,6 +94,8 @@ test.describe("§NNN «Locuri păstrate pentru club» from the editor to the pub
     const kept = page.locator('[name="event.placesKeptForClub"]');
     await kept.scrollIntoViewIfNeeded();
     await kept.fill("3");
+    // A published event: the save asks for the live-edit tick first.
+    await page.locator('[name="acknowledgeLiveEdit"]').check();
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
 
     // One question, listing the change before → after and what the site will announce — free places split.
@@ -111,6 +113,7 @@ test.describe("§NNN «Locuri păstrate pentru club» from the editor to the pub
     // A save that changes no place setting asks nothing about the places: it saves at once.
     await page.goto(`/ro/admin/events/${eventId}`);
     await hydrated(page);
+    await page.locator('[name="acknowledgeLiveEdit"]').check();
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page.getByRole("dialog", { name: "Verifică ce se schimbă la locuri" })).toHaveCount(0);
     await expect(page.getByTestId("toast-live")).toBeVisible({ timeout: 30_000 });
