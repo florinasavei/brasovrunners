@@ -158,6 +158,18 @@ describe("departureOf — the one judgement of when a waiting email leaves", () 
     expect(departureOf({ ...ROW, sentNow: true }, stopped)).toEqual({ kind: "now" });
   });
 
+  it("under «imediat» never says now for a Mailgun row the stop holds — the drain's claim takes none of it — and still does for a Gmail row", () => {
+    // Queued a minute ago, never tried: the drain after the response runs, but Mailgun's road is closed to it until 12:00.
+    const stoppedNow = { ...CTX, timing: "immediate" as const, mailgunReopensAt: minutes(116) };
+    expect(departureOf(ROW, stoppedNow)).toEqual({ kind: "reset", at: new Date("2026-10-01T09:00:00.000Z") });
+    // The Free plan's day spent, the same: the provider would refuse it and the row waits for the reset.
+    expect(departureOf(ROW, { ...stoppedNow, mailgunReopensAt: minutes(20 * 60) })).toMatchObject({ kind: "reset" });
+    // Gmail's road is open: that drain sends it.
+    expect(departureOf({ ...ROW, onMailgunRoad: false }, stoppedNow)).toEqual({ kind: "now" });
+    // The stop already over: the drain sends it.
+    expect(departureOf(ROW, { ...stoppedNow, mailgunReopensAt: minutes(-1) })).toEqual({ kind: "now" });
+  });
+
   it("finds Mailgun's reopening: the stop's end when nothing carries, the Free day's reset, never while Gmail carries or a month binds", () => {
     const stop = { kind: "paused" as const, until: minutes(30) };
     expect(mailgunReopensAt({ whileStopped: { road: "wait", stop, reason: "fallbackOff" }, remaining: 50, period: "day" }, NOW)).toEqual(stop.until);

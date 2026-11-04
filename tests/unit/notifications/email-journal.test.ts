@@ -27,7 +27,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * - **The names**: the registration's, the volunteer's (the parent's on the parent's link), a colleague's account
  *   found by its canonical address.
  * - **Repeats**: the same email to the same person twice or more today is listed — counted by the canonical
- *   address, the person's own mail only — and each line says the person's day when it is three or more.
+ *   address, the person's own mail only, on what left only (a waiting row may yet be withdrawn) — and each line
+ *   says the person's day when it is three or more.
  * - **Test rows** are marked and counted nowhere (§12.6); the counts are the real rows'.
  */
 const state = vi.hoisted(() => ({ locale: "ro" as "ro" | "en" }));
@@ -123,7 +124,7 @@ function row(key: string, fields: Partial<Row>): Row {
   };
 }
 
-const PRESS = { cancel: randomUUID(), roles: randomUUID(), job: randomUUID(), guardian: randomUUID(), invite: randomUUID() };
+const PRESS = { cancel: randomUUID(), rolesFirst: randomUUID(), roles: randomUUID(), job: randomUUID(), guardian: randomUUID(), invite: randomUUID() };
 
 beforeEach(async () => {
   await resetTables(db);
@@ -174,7 +175,9 @@ beforeEach(async () => {
     row("k:cancel", { registrationId: maria, recipientEmail: "maria.pop@gmail.com", cause: "registrations.cancel", pressId: PRESS.cancel, requestedByStaffUserId: admin.id }),
     row("k:cancel:club-copy:copii@club.test", { registrationId: maria, recipientEmail: "copii@club.test", payloadJson: { clubCopy: true }, cause: "registrations.cancel", pressId: PRESS.cancel, requestedByStaffUserId: admin.id }),
     row("k:archive", { messageType: "DECLARATION_ARCHIVE", registrationId: maria, recipientEmail: "arhiva@club.test", cause: "registrations.cancel", pressId: PRESS.cancel, requestedByStaffUserId: admin.id }),
-    // «Dă-i un rol», twice to the same person: one left, one waits — the same email twice today.
+    // «Dă-i un rol», three times to the same person by three spellings: two left — the same email twice today — and
+    // the third waits, counted nowhere: the sending withdraws a roles email a later press made stale (`render.ts`).
+    row("k:role0", { messageType: "VOLUNTEER_ROLE_ASSIGNED", recipientEmail: "VLAD@example.ro", payloadJson: { volunteerId: vlad }, cause: "volunteers.assign", pressId: PRESS.rolesFirst, requestedByStaffUserId: admin.id, createdAt: at("2026-10-01T06:30:00.000Z"), sentAt: at("2026-10-01T06:31:00.000Z") }),
     row("k:role1", { messageType: "VOLUNTEER_ROLE_ASSIGNED", recipientEmail: "vlad@example.ro", payloadJson: { volunteerId: vlad }, cause: "volunteers.assign", pressId: PRESS.roles, requestedByStaffUserId: admin.id, createdAt: at("2026-10-01T07:00:00.000Z"), sentAt: at("2026-10-01T07:02:00.000Z") }),
     row("k:role2", { messageType: "VOLUNTEER_ROLE_ASSIGNED", status: "PENDING", recipientEmail: "Vlad@Example.ro", payloadJson: { volunteerId: vlad }, cause: "volunteers.assign", pressId: PRESS.roles, requestedByStaffUserId: admin.id, createdAt: at("2026-10-01T08:58:00.000Z") }),
     // The maintenance job's reminder, and the site's verification email to the same person by another spelling.
@@ -210,7 +213,7 @@ describe("«Emailuri azi» reads the club's day", () => {
   it("starts at midnight on the club's clock: yesterday's last minute out, a row queued two days ago and sent at 00:01 in", async () => {
     expect(journalRo.dayStart).toEqual(DAY_START);
     const listed = new Set(everyRow(journalRo));
-    for (const key of ["k:midnight", "k:cancel", "k:failed", "k:bounced", "k:guardian", "k:role2"]) expect(listed.has(await idOf(key)), key).toBe(true);
+    for (const key of ["k:midnight", "k:cancel", "k:failed", "k:bounced", "k:guardian", "k:role0", "k:role2"]) expect(listed.has(await idOf(key)), key).toBe(true);
     for (const key of ["k:yesterday", "k:failed-old", "k:bounced-old"]) expect(listed.has(await idOf(key)), key).toBe(false);
   });
 
@@ -222,7 +225,7 @@ describe("«Emailuri azi» reads the club's day", () => {
   });
 
   it("counts the real rows only: left today, waiting now, failed today — the test row in none", () => {
-    expect(journalRo.counts).toEqual({ sent: 8, waiting: 2, failed: 1 });
+    expect(journalRo.counts).toEqual({ sent: 9, waiting: 2, failed: 1 });
   });
 });
 
@@ -263,15 +266,39 @@ describe("«Emailuri azi» groups by press", () => {
 });
 
 describe("«Emailuri azi» marks repeats and test rows", () => {
-  it("lists the same email to the same person twice today, by the canonical address", async () => {
-    expect(journalRo.repeats).toEqual([{ personName: "Vlad Voluntar", recipientEmail: expect.stringMatching(/^vlad@example\.ro$/i), messageType: "VOLUNTEER_ROLE_ASSIGNED", count: 2 }]);
-    expect((await lineOf(journalRo, "k:role2"))?.sameTypeCount).toBe(2);
+  it("lists the same email to the same person twice today, by the canonical address, counting what left", async () => {
+    // Two left, the third waits: «de 2 ori», never 3, and the address as the latest row that left spelled it.
+    expect(journalRo.repeats).toEqual([{ personName: "Vlad Voluntar", recipientEmail: "vlad@example.ro", messageType: "VOLUNTEER_ROLE_ASSIGNED", count: 2 }]);
+    expect((await lineOf(journalRo, "k:role0"))?.sameTypeCount).toBe(2);
+    expect((await lineOf(journalRo, "k:role1"))?.sameTypeCount).toBe(2);
+    expect((await lineOf(journalRo, "k:role2"))?.sameTypeCount).toBe(0);
     expect((await lineOf(journalRo, "k:cancel"))?.sameTypeCount).toBe(1);
   });
 
-  it("says a person's day on each of their lines — three emails by three spellings of one address — never the club's", async () => {
+  it("never warns of what waits: one that left and one waiting are no repeat, three waiting none either — the sending may withdraw them", async () => {
+    await db.delete(emailOutbox).where(eq(emailOutbox.idempotencyKey, "k:role0"));
+    const pair = await readEmailJournal(db, NOW, "ro");
+    expect(pair.repeats).toEqual([]);
+    expect((await lineOf(pair, "k:role1"))?.sameTypeCount).toBe(1);
+    expect(await lineOf(pair, "k:role2")).toMatchObject({ sameTypeCount: 0, dayCount: 0 });
+
+    // Three roles given in three presses, all three waiting (the hold after the last press, §901, then the next run): the person gets one.
+    await db.delete(emailOutbox).where(eq(emailOutbox.idempotencyKey, "k:role1"));
+    await db.insert(emailOutbox).values(
+      ["k:role3", "k:role4"].map((key, index) =>
+        row(key, { messageType: "VOLUNTEER_ROLE_ASSIGNED", status: "PENDING", recipientEmail: "vlad@example.ro", payloadJson: { volunteerId: vlad }, cause: "volunteers.assign", pressId: randomUUID(), requestedByStaffUserId: admin.id, createdAt: at(`2026-10-01T08:5${8 + index}:30.000Z`) }),
+      ),
+    );
+    const waiting = await readEmailJournal(db, NOW, "ro");
+    expect(waiting.waiting.flatMap((press) => press.lines).filter((line) => line.messageType === "VOLUNTEER_ROLE_ASSIGNED")).toHaveLength(3);
+    expect(waiting.repeats).toEqual([]);
+  });
+
+  it("says a person's day on each of their lines — three emails by three spellings of one address — never the club's, never a waiting line", async () => {
     for (const key of ["k:cancel", "k:reminder", "k:verify"]) expect((await lineOf(journalRo, key))?.dayCount, key).toBe(3);
-    expect((await lineOf(journalRo, "k:guardian"))?.dayCount).toBe(1);
+    expect((await lineOf(journalRo, "k:member"))?.dayCount).toBe(1);
+    // The parent's link has not left: it counts for nobody's day yet.
+    expect((await lineOf(journalRo, "k:guardian"))?.dayCount).toBe(0);
   });
 
   it("marks a test registration's row and counts it nowhere", async () => {
@@ -290,7 +317,7 @@ describe("«Emailuri azi» marks repeats and test rows", () => {
     const drawn = everyRow(journal).length;
     expect(drawn).toBe(JOURNAL_ROW_LIMIT);
     // Every row of the day, minus the ones drawn.
-    expect(journal.more).toBe(JOURNAL_ROW_LIMIT + 1 + 13 - JOURNAL_ROW_LIMIT);
+    expect(journal.more).toBe(JOURNAL_ROW_LIMIT + 1 + 14 - JOURNAL_ROW_LIMIT);
   });
 
   it("groups the rows it is given the same way without the database", () => {
@@ -332,7 +359,7 @@ describe("the «Emailuri azi» page draws the day", () => {
     const page = await html("ro", journalRo);
     const ro = catalogueOf("ro") as unknown as { Admin: { emails: { today: Record<string, string> } } };
     expect(page).toContain("Emailuri azi");
-    expect(page).toContain("Plecate: 8 · Așteaptă: 2 · Eșuate: 1");
+    expect(page).toContain("Plecate: 9 · Așteaptă: 2 · Eșuate: 1");
     // The address as the latest of the two rows spelled it: one person, whichever spelling.
     expect(page).toMatch(/Vlad Voluntar · vlad@example\.ro — „Rolul tău de voluntar”, de 2 ori azi/i);
     expect(page).toMatch(/11:00 · Anulează înscrierea · de Ana Admin/);
@@ -355,7 +382,7 @@ describe("the «Emailuri azi» page draws the day", () => {
   it("says the same in English", async () => {
     const page = await html("en", await readEmailJournal(db, NOW, "en"));
     expect(page).toContain("Today&#x27;s emails");
-    expect(page).toContain("Sent: 8 · Waiting: 2 · Failed: 1");
+    expect(page).toContain("Sent: 9 · Waiting: 2 · Failed: 1");
     expect(page).toContain("From the site");
     expect(page).toContain("automatic: the registrations&#x27; upkeep");
     expect(page).toContain("by Ana Admin");

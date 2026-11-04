@@ -16,7 +16,10 @@ import { LEAVES_NOW_WITHIN_MS, leavesNow } from "./send-at-once";
  * - **never** — it spent its retries and moves again only by a hand («Reîncearcă emailurile eșuate»);
  * - **now** — a press sent it past the scheduled pass (§540, the `sentNow` flag), or the «imediat» timing sends
  *   it after the response of the request that queued it: in both, only while that drain is still plausibly
- *   under way (`LEAVES_NOW_WITHIN_MS`) and the row was never tried;
+ *   under way (`LEAVES_NOW_WITHIN_MS`) and the row was never tried. The «imediat» drain's «now» is judged after
+ *   the stop below: while Mailgun's road is stopped and nothing carries the row, the drain's claim takes none of
+ *   it (`outbox.ts#claimOutboxBatchWithStop`), and «now» would promise what waits for the reopening. A press's
+ *   «now» is judged before it: «Trimite acum» was asked with room to send (`assertRoomToSendNow`);
  * - **reset** — on Mailgun's road while Mailgun is stopped and nothing carries it (§622, the panel's header), or
  *   while the plan's day is spent: it leaves when the stop ends or the allowance resets;
  * - **at** — the outbox job's first real run at or after the row's own turn (its creation, or the end of its
@@ -99,16 +102,17 @@ export function departureOf(row: DepartureRow, ctx: DepartureContext): Departure
   const { now } = ctx;
   if (row.status === "PROCESSING") return { kind: "sending" };
   if (row.status === "FAILED") return { kind: "never" };
-  // A press sent it now, past the scheduled pass (§540): it leaves after that press's response.
+  // A press sent it now, past the scheduled pass (§540): it leaves after that press's response, asked with room to send it.
   if (leavesNow(row, now)) return { kind: "now" };
-  // The «imediat» timing: the request that queued it drains it after its response (§68).
-  if (ctx.timing === "immediate" && drainedNow(row, now)) return { kind: "now" };
 
   const dueAt = row.nextAttemptAt ?? row.createdAt;
   // Mailgun stopped with nothing carrying it, or the plan's day spent (§622): the stop's end, unless the row's own turn is later.
   if (row.onMailgunRoad && ctx.mailgunReopensAt && ctx.mailgunReopensAt.getTime() > now.getTime() && ctx.mailgunReopensAt.getTime() > dueAt.getTime()) {
     return { kind: "reset", at: outboxRowLeavesAt({ dueAt: ctx.mailgunReopensAt, nextTickAt: ctx.nextTickAt, intervalMinutes: ctx.runIntervalMinutes, pingerMinutesAt: ctx.pingerMinutesAt }) };
   }
+  // The «imediat» timing: the request that queued it drains it after its response (§68) — only past the stop above,
+  // which that drain's claim honours like the job's: a Mailgun-road row it holds is never «now».
+  if (ctx.timing === "immediate" && drainedNow(row, now)) return { kind: "now" };
 
   /*
     Late by health's own number (§98, §447): `overdueCadenceMinutes` is the cadence `/api/health` adds to its

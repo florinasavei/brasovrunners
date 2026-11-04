@@ -2260,7 +2260,7 @@ scope's `cause`, its `press_id` and its actor as `requested_by_staff_user_id` (a
 A public flow opens no scope: its rows carry none. The scope labels rows and never decides whether or when one
 leaves. «Setări» → «Emailuri» → «Emailuri azi» (`notifications/journal.ts`) lists the day's rows by press, with
 the names, for the Administrator and the Superadministrator alone; `tests/unit/shared/emailing-presses.test.ts`
-holds every emailing press to its scope.
+holds every emailing press to its scope, and `tests/e2e/email-journal.spec.ts` runs one through Next itself.
 
 Each deliberate resend gets a new row/idempotency key. Every message type names whom it is written
 for — the participant, the club's own mailboxes, the staff or the public

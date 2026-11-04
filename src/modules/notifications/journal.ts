@@ -42,16 +42,28 @@ export const JOURNAL_ROW_LIMIT = 2000;
 /**
  * How many emails one person may get today before each of their lines says the count (the design's marker): the
  * registration journey alone is three — the address, the declaration, the confirmation — so the count is a fact
- * beside the name, never a warning.
+ * beside the name, never a warning. Counted on what left (`hasLeft`), as the warning below.
  */
 export const REPEATED_TODAY = 3;
 
 /**
  * The same email to the same person this many times today is the warning (Critic correction 5 to the design): the
  * volunteers' complaint was one roles email arriving twice. Counted by the canonical address (§10.4), on the
- * person's own mail only — never the club's mailboxes or a colleague's notices — and on real rows only.
+ * person's own mail only — never the club's mailboxes or a colleague's notices — on real rows only, and on rows
+ * that left only (`hasLeft`).
  */
 export const SAME_EMAIL_REPEATED = 2;
+
+/**
+ * Whether a row of the day left the queue — sent, or refused by the person's server after it left (bounced,
+ * complained of): what the club did send the person. Never one still waiting: three roles given in three presses
+ * queue three rows, held a few minutes after the last (§901), and the sending withdraws (deletes) the ones a later
+ * press made stale (`render.ts`, `OutboxMessageWithdrawn`), so the person gets one — «Au primit» counted on the
+ * waiting rows would warn of what never arrives. Never a failure: it never left.
+ */
+function hasLeft(status: EmailOutboxStatus): boolean {
+  return status === "SENT" || status === "BOUNCED" || status === "COMPLAINED";
+}
 
 /** One row of the day, as the page draws it. Nothing of the message's words. */
 export type JournalLine = {
@@ -72,9 +84,9 @@ export type JournalLine = {
   lastError: string | null;
   /** A test registration's row (§12.6): marked, never counted. */
   test: boolean;
-  /** How many of the person's own emails the page holds for today (0 on a club or colleague line). */
+  /** How many of the person's own emails of the day left the queue (`hasLeft`; 0 on a waiting, failed, club or colleague line). */
   dayCount: number;
-  /** How many times the person got this same type today (0 on a club or colleague line). */
+  /** How many of those were this same type (0 on a waiting, failed, club or colleague line). */
   sameTypeCount: number;
   /** The club's copies of this very message (`<key>:club-copy:<address>`), folded under it. */
   copies: JournalClubLine[];
@@ -109,7 +121,7 @@ export type EmailJournal = {
   departed: JournalPress[];
   /** The day's real rows: left today, waiting now, failed today — test rows never counted. */
   counts: { sent: number; waiting: number; failed: number };
-  /** The same email to the same person, `SAME_EMAIL_REPEATED` times or more today. */
+  /** The same email to the same person, `SAME_EMAIL_REPEATED` times or more today, of the rows that left. */
   repeats: JournalRepeat[];
   /** Rows past `JOURNAL_ROW_LIMIT`, not drawn. */
   more: number;
@@ -207,10 +219,10 @@ export function groupEmailJournal(
     return identity ? (nameByIdentity.get(identity) ?? null) : null;
   };
 
-  // The person's own real mail, by canonical address: how many today, and how many of each type.
+  // The person's own real mail that left, by canonical address: how many today, and how many of each type.
   const dayCounts = new Map<string, number>();
   const typeCounts = new Map<string, number>();
-  const counted = (row: JournalRowRead): string | null => (!row.test && row.status !== "FAILED" && isPersonsOwnMail(row) ? identityOf(row.recipientEmail) : null);
+  const counted = (row: JournalRowRead): string | null => (!row.test && hasLeft(row.status) && isPersonsOwnMail(row) ? identityOf(row.recipientEmail) : null);
   for (const row of rows) {
     const identity = counted(row);
     if (!identity) continue;
