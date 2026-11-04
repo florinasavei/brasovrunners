@@ -7753,6 +7753,29 @@
         "more": "Și încă {count}, mai vechi, neafișate aici.",
         "footnote": "Un email care așteaptă poate fi retras înainte să plece: dispare de aici, fiindcă n-a plecat. Emailurile trimise de Zitadel nu trec prin coada noastră."
       },
+      "history": {
+        "title": "Emailuri",
+        "titleTries": "Încercări și cine le-a trimis",
+        "summary": "{count} · ultimul: „{type}” — {state}",
+        "summaryNone": "niciun email",
+        "none": "Niciun email încă.",
+        "last": {
+          "sentToday": "a plecat la {at}",
+          "sentOn": "a plecat {at}",
+          "waiting": "așteaptă",
+          "failed": "eșuat",
+          "refused": "refuzat",
+          "captured": "n-a ajuns la nimeni (QA)"
+        },
+        "site": "{at} · de pe site (persoana însăși)",
+        "tries": {
+          "one": "{count} încercare",
+          "few": "{count} încercări",
+          "other": "{count} de încercări"
+        },
+        "triesNone": "încă nu s-a încercat",
+        "nextTry": "următoarea încercare: {at}"
+      },
       "copy": {
         "title": "Textul mesajului ({lang}) — cel implicit",
         "editedTitle": "Textul mesajului ({lang}) — scris de club",

@@ -1,16 +1,26 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { countForm } from "@/i18n/count-form";
+import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { type DepartureContext, departureOf } from "@/modules/notifications/domain/departure";
 import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
 import { isJobCause } from "@/modules/notifications/domain/press-causes";
 import { isRelayMessage } from "@/modules/notifications/domain/relay";
-import { type EmailJournal as Journal, type JournalClubLine, type JournalLine, type JournalPress, REPEATED_TODAY, SAME_EMAIL_REPEATED } from "@/modules/notifications/journal";
+import {
+  type EmailJournal as Journal,
+  type JournalClubLine,
+  type JournalLine,
+  type JournalPersonLink,
+  type JournalPress,
+  REPEATED_TODAY,
+  SAME_EMAIL_REPEATED,
+} from "@/modules/notifications/journal";
 import { departureWords } from "@/modules/notifications/ui/departure-words";
 import type { EmailVolumeToday } from "@/modules/notifications/volume";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
@@ -18,6 +28,7 @@ import Panel from "@/shared/ui/Panel";
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 import { ROW_SX } from "@/shared/ui/row-fold";
 import StatusChip from "@/shared/ui/StatusChip";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 type Props = {
   locale: Locale;
@@ -39,7 +50,19 @@ const LINES_BEFORE_FOLD = 5;
 const PeopleIcon = PANEL_GLYPHS.startList;
 const ClubMailboxIcon = PANEL_GLYPHS.contacts;
 
-type T = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
+export type T = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
+
+/** An email's name on the backoffice: a visitor's message by the relay's words, any other by `emails.types`. */
+export function emailTypeName(t: T): (type: EmailMessageType) => string {
+  return (type) => (isRelayMessage(type) ? t(`emails.relay.type.${type}`) : t(`emails.types.${type}`));
+}
+
+/** The person's own page in the backoffice (§NNN): their registration's, or the volunteer's. */
+function personHref(person: JournalPersonLink, locale: Locale): string {
+  return person.kind === "registration"
+    ? getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: person.id } } })
+    : getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id: person.id } } });
+}
 
 /**
  * «Emailuri azi» (the design «telling the owner about every email a staff press sends», slice 1, its section 5): the
@@ -53,7 +76,7 @@ type T = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
  */
 export default async function EmailJournal({ locale, journal, volume, departure, now }: Props) {
   const t = await getTranslations("Admin");
-  const typeName = (type: EmailMessageType) => (isRelayMessage(type) ? t(`emails.relay.type.${type}`) : t(`emails.types.${type}`));
+  const typeName = emailTypeName(t);
   const allowance = t(`outbox.status.${volume.period}`, {
     waiting: volume.waitingMessages,
     sent: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
@@ -131,7 +154,7 @@ function linesWords(presses: readonly JournalPress[], t: T, locale: Locale): str
 }
 
 /** «A plecat la 10:15» today, «A plecat joi, 2 oct. 2026, la 10:15» on another day (`emailLeavesWords`, §452). */
-function sentWords(at: Date, t: T, locale: Locale, now: Date): string {
+export function sentWords(at: Date, t: T, locale: Locale, now: Date): string {
   const words = emailLeavesWords(at, now, locale);
   return words.key === "leavesToday" ? t("emails.today.status.sentToday", { at: words.at }) : t("emails.today.status.sentOn", { at: words.at });
 }
@@ -212,9 +235,16 @@ function Line({ line, t, typeName, locale, now, departure }: LineProps) {
       <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
         {line.personName ? (
           <>
-            <Box component="span" sx={{ fontWeight: 600 }}>
-              {line.personName}
-            </Box>
+            {line.person ? (
+              /* The person's own page (§NNN): their emails, their state, what to do next — a plain anchor a thumb reaches. */
+              <MuiLink href={personHref(line.person, locale)} sx={{ ...TAP_TARGET, display: "inline-flex", alignItems: "center", fontWeight: 600 }} data-testid="email-journal-person">
+                {line.personName}
+              </MuiLink>
+            ) : (
+              <Box component="span" sx={{ fontWeight: 600 }}>
+                {line.personName}
+              </Box>
+            )}
             {` · ${line.recipientEmail}`}
           </>
         ) : (
@@ -249,8 +279,11 @@ function Line({ line, t, typeName, locale, now, departure }: LineProps) {
   );
 }
 
-/** What became of a row that is no longer waiting: left at an hour, reached nobody (QA), failed, refused. */
-function DepartedChip({ line, t, locale, now }: { line: JournalLine; t: T; locale: Locale; now: Date }) {
+/**
+ * What became of a row that is no longer waiting: left at an hour, reached nobody (QA), failed, refused. A person's
+ * «Emailuri» draws the same chip (`EmailHistory.tsx`, §NNN).
+ */
+export function DepartedChip({ line, t, locale, now }: { line: Pick<JournalLine, "status" | "recipientCount" | "sentAt" | "createdAt">; t: T; locale: Locale; now: Date }) {
   if (line.status === "FAILED") return <StatusChip glyph="failed" color="error" label={t("emails.today.status.failed")} testId="email-journal-status" />;
   if (line.status === "BOUNCED" || line.status === "COMPLAINED") return <StatusChip glyph="failed" color="warning" label={t("emails.today.status.refused")} testId="email-journal-status" />;
   if (line.recipientCount === 0) return <StatusChip glyph="hidden" label={t("emails.today.status.captured")} testId="email-journal-status" />;
@@ -258,8 +291,8 @@ function DepartedChip({ line, t, locale, now }: { line: JournalLine; t: T; local
   return <StatusChip glyph="done" color="success" label={sentWords(line.sentAt ?? line.createdAt, t, locale, now)} testId="email-journal-status" />;
 }
 
-/** «+ 2 pentru căsuțele clubului», closed: the addresses, the type and the state behind it. */
-function ClubFold({ rows, t, typeName, locale, now }: { rows: readonly JournalClubLine[]; t: T; typeName: (type: EmailMessageType) => string; locale: Locale; now: Date }) {
+/** «+ 2 pentru căsuțele clubului», closed: the addresses, the type and the state behind it. A person's «Emailuri» folds its club rows the same way. */
+export function ClubFold({ rows, t, typeName, locale, now }: { rows: readonly JournalClubLine[]; t: T; typeName: (type: EmailMessageType) => string; locale: Locale; now: Date }) {
   return (
     <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 0.5 }} data-testid="email-journal-club">
       <Box component="summary">

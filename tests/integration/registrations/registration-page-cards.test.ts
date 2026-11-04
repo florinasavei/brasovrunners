@@ -89,6 +89,7 @@ const { default: Panel } = await import("@/shared/ui/Panel");
 const { default: ActionForm } = await import("@/shared/forms/ActionForm");
 const { default: WhatToTell } = await import("@/modules/registrations/ui/WhatToTell");
 const { default: NotesCard } = await import("@/modules/registrations/ui/NotesCard");
+const { default: EmailHistoryPanel } = await import("@/modules/notifications/ui/EmailHistory");
 const { default: RegistrationStatusChip, REGISTRATION_STATUS_CHIP } = await import("@/modules/registrations/ui/RegistrationStatusChip");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
@@ -159,7 +160,7 @@ async function register(eventId: string, status: "CONFIRMED" | "CANCELLED") {
   return created.id;
 }
 
-async function staff(role: "ADMIN" | "MODERATOR"): Promise<StaffUser> {
+async function staff(role: "ADMIN" | "SUPERADMIN" | "MODERATOR"): Promise<StaffUser> {
   const [user] = await db.insert(staffUsers).values({ email: `${role.toLowerCase()}-${serial}@dev.test`, displayName: role, role }).returning();
   return user;
 }
@@ -247,6 +248,23 @@ describe("§847 the registration's page: every section a card", () => {
     expect(byTestId(all, "race-day")).toBeDefined();
     expect(byTestId(all, "answers")).toBeDefined();
     expect(byTestId(all, "answers-open")?.props.children).toBe("Arată datele");
+  });
+
+  it("folds «Încercări și cine le-a trimis» inside «Emailuri» for the Administrator and the Superadministrator, never for the Organizer (§NNN)", async () => {
+    const race = await createRace();
+    const id = await register(race.id, "CONFIRMED");
+    for (const role of ["ADMIN", "SUPERADMIN"] as const) {
+      state.actor = await staff(role);
+      const emails = elements(byTestId(await detailPage(id), "emails-section"));
+      const tries = emails.find((element) => element.type === EmailHistoryPanel);
+      expect(tries, role).toBeDefined();
+      expect(tries?.props).toMatchObject({ title: "tries", level: 4, "data-testid": "email-tries", history: { rows: [], club: [], ownTotal: 0, more: 0 } });
+    }
+    // The Organizer reads the page and its «Emailuri» card as before (§289, §671), and gets no fold — the reader refuses them.
+    state.actor = await staff("MODERATOR");
+    const all = await detailPage(id);
+    expect(byTestId(all, "emails-section")).toBeDefined();
+    expect(all.find((element) => element.type === EmailHistoryPanel)).toBeUndefined();
   });
 
   it("draws no race-day card on a registration that is over, and folds what the team did with its count", async () => {
