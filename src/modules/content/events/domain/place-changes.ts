@@ -194,7 +194,13 @@ export function placeChangeEffects(before: PlaceSettings, after: PlaceSettings, 
     else {
       const free = Math.max(after.capacity - occupied, 0);
       const site = Math.max(lineRoom({ capacity: after.capacity, placesKeptForClub: after.placesKeptForClub, occupied }) ?? 0, 0);
-      effects.push(after.placesKeptForClub > 0 ? effect("freeSplit", { free, capacity: after.capacity, site, kept: free - site }) : effect("free", { free, capacity: after.capacity }));
+      // What the site announces — the capacity less the kept places (`kept-places.ts#announcedCapacity`) — and the free places after the save.
+      const announced = after.capacity - after.placesKeptForClub;
+      effects.push(
+        after.placesKeptForClub > 0
+          ? effect("freeSplit", { announced, capacity: after.capacity, kept: after.placesKeptForClub, free, site, keptFree: free - site })
+          : effect("free", { announced, free, capacity: after.capacity }),
+      );
     }
   }
 

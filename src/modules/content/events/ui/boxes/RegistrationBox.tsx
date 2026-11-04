@@ -19,7 +19,7 @@ import { readBibDesign } from "@/modules/registrations/bib-design";
 import type { RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { spareBandOf } from "@/modules/registrations/domain/spare-bibs";
-import { announcedCapacity, keptOf } from "@/modules/registrations/domain/kept-places";
+import { announcedCapacity, keptOf, lineRoom } from "@/modules/registrations/domain/kept-places";
 import { windowDeadlineOf } from "@/modules/registrations/domain/unsigned-release";
 import { offersOnItsOwn } from "@/modules/registrations/domain/waitlist";
 import {
@@ -242,6 +242,12 @@ export default async function RegistrationBox({
           .filter(Boolean)
           .join(" ");
   const askTicked = event?.rsvpAskEnabled ?? true;
+  /*
+    The kept places already given (§NNN): the places taken beyond the site's announced ones (`lineRoom` below nought). A
+    raise first makes them up — they stay the club's — so only the places beyond them reach the line by themselves.
+  */
+  const keptBeyondSite =
+    event && placesTaken && event.capacity !== null ? Math.max(-(lineRoom({ capacity: event.capacity, placesKeptForClub: event.placesKeptForClub, occupied: placesTaken.occupied }) ?? 0), 0) : 0;
   const storedReminder = event?.reminderHoursBefore ?? null;
   const reminderChoices = [
     ...EVENT_REMINDER_CHOICES,
@@ -415,7 +421,9 @@ export default async function RegistrationBox({
                           ? [
                               event && !offersOnItsOwn(event)
                                 ? t("editor.capacityWaitingByHand", { waiting })
-                                : t("editor.capacityWaiting", { waiting, offer: hoursPhrase(locale, clubDeadlines.offerHours) }),
+                                : keptBeyondSite > 0
+                                  ? t("editor.capacityWaitingKeptInUse", { waiting, beyond: keptBeyondSite, offer: hoursPhrase(locale, clubDeadlines.offerHours) })
+                                  : t("editor.capacityWaiting", { waiting, offer: hoursPhrase(locale, clubDeadlines.offerHours) }),
                             ]
                           : []),
                       ].join(" ")}

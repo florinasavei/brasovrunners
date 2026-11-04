@@ -1801,6 +1801,9 @@ export async function readPlaceDeadlines<T extends Record<string, unknown>>(
       waitlistCapacity: events.waitlistCapacity,
       // «Termene» says who gives a freed place (§615); «Locurile libere le dau doar eu» makes it the staff (§906).
       waitlistAutoOffer: lineOffersOnItsOwn(),
+      // «Eliberează singur locurile nesemnate la termen» (§NNN): the switch and the deadline it last ran for.
+      releaseUnsignedAtDeadline: events.releaseUnsignedAtDeadline,
+      unsignedReleasedFor: events.unsignedReleasedFor,
       held: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and not ${registrations.outsideCapacity})::int`,
       heldPast: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and not ${registrations.outsideCapacity} and ${registrations.holdExpiresAt} <= ${now} and not ${awaitingItsFirstEmail()})::int`,
       awaitingEmail: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION')::int`,

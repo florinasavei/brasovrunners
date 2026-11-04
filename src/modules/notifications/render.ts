@@ -6,6 +6,7 @@ import { participants } from "@/db/schema/participants";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
+import { deadlineReleaseArmedFor } from "@/modules/registrations/domain/unsigned-release";
 import { eventDay, howItWentOpen, howItWentUrl } from "@/modules/feedback/links";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
@@ -599,6 +600,12 @@ async function renderRow(
       // the window opens, or a resend after it), so it must not promise "or when we remind you".
       if (eventDetails) {
         data.windowOpen = participationWindowOpen(eventDetails.startsAt, eventDetails.confirmationOpensDaysBefore, now);
+        /*
+          «Eliberează singur locurile nesemnate la termen» (§NNN): a hold the release will take — due by its armed deadline
+          — is told the place goes then, instead of being promised a place kept while nobody asks and a paper on race day.
+        */
+        const releaseAt = deadlineReleaseArmedFor(eventDetails);
+        data.releasesAtDeadline = releaseAt !== null && holdEndsAt.getTime() <= releaseAt.getTime();
       }
     }
     /*

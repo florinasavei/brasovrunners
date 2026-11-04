@@ -1303,6 +1303,11 @@ export type TemplateData = {
   holdLapsedToWaitlist?: boolean;
   /** The release was «Eliberează singur locurile nesemnate la termen»'s own (§NNN): the sentence says the deadline released every unsigned place. */
   holdLapsedAtDeadline?: boolean;
+  /**
+   * The declaration's message (§104, §665): the hold is one «Eliberează singur locurile nesemnate la termen» takes at its
+   * deadline (§NNN) — so the message says the place goes then, never that it is kept while nobody asks for it.
+   */
+  releasesAtDeadline?: boolean;
   holdLapsedNext?: HoldLapsedNext;
   /**
    * Why the participant cancelled (§558), from the row: the answer, and the words of «Alt motiv».
@@ -1706,7 +1711,9 @@ const T = {
           ? // No "the race is free" (§419): said of any event more than a day away, paid or not a race.
             `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Înscrierea este completă doar după ce **semnezi declarația pe proprie răspundere**. ${d.windowOpen ? "Semnează acum, din linkul de mai jos." : `Poți semna acum, din linkul de mai jos, sau când îți reamintim, ${d.confirmationOpens ? `cu ${d.confirmationOpens} înainte de start` : "înainte de start"}.`}`
           : `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Înscrierea este completă doar cu **declarația pe proprie răspundere semnată** — citește-o și semneaz-o din linkul de mai jos.`,
-        `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până **${d.holdExpiresAtFormatted}**; până atunci semnează.` : ""}`,
+        d.releasesAtDeadline && d.holdExpiresAtFormatted
+          ? `Dacă nu semnezi până **${d.holdExpiresAtFormatted}**, locul se eliberează și nu mai este rezervat pentru tine.`
+          : `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până **${d.holdExpiresAtFormatted}**; până atunci semnează.` : ""}`,
       ],
       action: "Semnează declarația",
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
@@ -2722,7 +2729,9 @@ const T = {
         d.confirmLater
           ? `Your place at ${d.eventTitle ?? "the event"} is held. Your registration is complete only once you **sign the declaration of own responsibility**. ${d.windowOpen ? "Sign now, from the link below." : `You can sign now, from the link below, or when we remind you ${d.confirmationOpens ? `${d.confirmationOpens} before the start` : "before the start"}.`}`
           : `A place at ${d.eventTitle ?? "the event"} is held for you. The registration is complete only with the **signed declaration of own responsibility** — read and sign it from the link below.`,
-        `If you do not get to it online, you sign the declaration on paper at the registration desk on race day, before picking up your number.${d.holdExpiresAtFormatted ? ` If a waiting list forms, the place is held for you until **${d.holdExpiresAtFormatted}**; sign before then.` : ""}`,
+        d.releasesAtDeadline && d.holdExpiresAtFormatted
+          ? `If you do not sign by **${d.holdExpiresAtFormatted}**, the place is released and no longer held for you.`
+          : `If you do not get to it online, you sign the declaration on paper at the registration desk on race day, before picking up your number.${d.holdExpiresAtFormatted ? ` If a waiting list forms, the place is held for you until **${d.holdExpiresAtFormatted}**; sign before then.` : ""}`,
       ],
       action: "Sign the declaration",
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),

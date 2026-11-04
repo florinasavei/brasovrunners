@@ -777,6 +777,14 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       // zile"), and when its participation window opens ("când îți reamintim cu o săptămână").
       reminderHoursBefore: events.reminderHoursBefore,
       confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
+      /*
+        «Eliberează singur locurile nesemnate la termen» (§NNN): whether the declaration's message says the place goes at
+        its deadline — the switch, the window's deadline, the places and the deadline it last ran for (the state is read above).
+      */
+      confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
+      capacity: events.capacity,
+      releaseUnsignedAtDeadline: events.releaseUnsignedAtDeadline,
+      unsignedReleasedFor: events.unsignedReleasedFor,
     })
     .from(eventTranslations)
     .innerJoin(events, eq(events.id, eventTranslations.eventId))

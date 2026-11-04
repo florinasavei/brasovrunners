@@ -20,7 +20,10 @@ vi.mock("@/modules/notifications/drain", () => ({
   drainOutboxRowsAfterResponse: () => undefined,
 }));
 
-const { createEvent, duplicateEvent, repeatEvent, saveEventAndTranslations } = await import("@/modules/content/events/service");
+const { createEvent, duplicateEvent, materializeStandingRepeats, repeatEvent, saveEventAndTranslations } = await import("@/modules/content/events/service");
+const { exportEvent } = await import("@/modules/content/events/transfer/export");
+const { readEventFile } = await import("@/modules/content/events/transfer/file-format");
+const { diffEventImport, importEventAsNew, importEventOver } = await import("@/modules/content/events/transfer/import");
 type SeriesEditScope = Parameters<typeof saveEventAndTranslations>[1]["scope"];
 const { confirmEmail, submitRegistration } = await import("@/modules/registrations/service");
 const { offerPlaceByStaff } = await import("@/modules/registrations/admin-service");
@@ -291,6 +294,61 @@ describe("BR-REQ-034-02 «Istoric capacitate»: every save that moves the places
     const refused = await refusal(save(source.id, { placesKeptForClub: "6" }, { scope: "all" }));
     expect(placesKeptRefusalOf(refused)).toEqual({ code: "PLACES_KEPT_ABOVE_CAPACITY_DATED", date: toWallTimeInput(second.startsAt, ZONE).slice(0, 10) });
     expect((await reload(source.id)).placesKeptForClub).toBe(5);
+  });
+
+  it("an import as a new event and an import over an event name the import (`via: \"import\"`), with the file's places and K", async () => {
+    const source = await seedEvent(40, 6);
+    const { file: exported } = await exportEvent(db, { actor: admin, eventId: source.id, now: NOW });
+    const read = readEventFile(JSON.stringify(exported));
+    if (!read.ok) throw new Error(`the export did not read back: ${read.refusal}`);
+    const nothingToFetch = (async () => new Response(null, { status: 404 })) as unknown as typeof fetch;
+
+    const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: nothingToFetch, now: NOW });
+    const createdId = created.eventId;
+    expect((await trail("event.capacity_changed")).find((entry) => entry.entityId === createdId)?.metadataJson).toMatchObject({ from: null, to: 40, via: "import" });
+    expect((await trail("event.places_kept_changed")).find((entry) => entry.entityId === createdId)?.metadataJson).toMatchObject({ from: 0, to: 6, via: "import" });
+
+    // Over another event: the editor's own save, named the import.
+    const target = await seedEvent(25);
+    const diff = await diffEventImport(db, { actor: admin, file: read.file, eventId: target.id });
+    await importEventOver(db, {
+      actor: admin,
+      file: read.file,
+      eventId: target.id,
+      expectedVersion: diff.target.version,
+      translationVersions: diff.target.translationVersions,
+      fetchImpl: nothingToFetch,
+      now: NOW,
+    });
+    expect((await trail("event.capacity_changed")).find((entry) => entry.entityId === target.id)?.metadataJson).toEqual({
+      from: 25,
+      to: 40,
+      occupied: 0,
+      offered: 0,
+      via: "import",
+      version: target.version + 1,
+    });
+    expect((await trail("event.places_kept_changed")).find((entry) => entry.entityId === target.id)?.metadataJson).toEqual({ from: 0, to: 6, via: "import", version: target.version + 1 });
+  });
+
+  it("a standing repeat's date made by the job starts its history with no actor (`via: \"series_generated\"`)", async () => {
+    const source = await seedEvent(30, 2);
+    await repeatEvent(db, { actor: admin, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: null, publish: false }, now: NOW });
+    const before = new Set((await db.select({ id: events.id }).from(events).where(eq(events.repeatOf, source.id))).map((row) => row.id));
+    // The job, weeks later: the series brought up to the horizon again, by nobody.
+    const later = new Date(NOW.getTime() + 60 * 24 * 60 * 60_000);
+    const { created } = await materializeStandingRepeats(db, later, { seriesHorizonDays: 120 });
+    expect(created).toBeGreaterThan(0);
+    const fresh = (await db.select().from(events).where(eq(events.repeatOf, source.id))).filter((row) => !before.has(row.id));
+    expect(fresh.length).toBe(created);
+    const rows = (await trail("event.capacity_changed")).filter((entry) => fresh.some((row) => row.id === entry.entityId));
+    expect(rows).toHaveLength(fresh.length);
+    for (const row of rows) {
+      expect(row.actorStaffUserId).toBeNull();
+      expect(row.metadataJson).toMatchObject({ from: null, to: 30, via: "series_generated" });
+    }
+    // The release at the deadline is never copied onto a date the job makes (§NNN).
+    expect(fresh.every((row) => row.releaseUnsignedAtDeadline === false && row.unsignedReleasedFor === null)).toBe(true);
   });
 
   it("«Trimite-i oferta»'s supplementary place carries the row's version, the places taken and the press", async () => {

@@ -103,6 +103,8 @@ function sampleConfig(): EventConfig {
       placesAlertAt: null,
       // «Locuri păstrate pentru club» (§NNN): none kept, the default a file without it reads.
       placesKeptForClub: 0,
+      // «Eliberează singur locurile nesemnate la termen» (§NNN): off, the default a file without it reads.
+      releaseUnsignedAtDeadline: false,
       opensAt: null,
       opensSoon: false,
       closesAt: null,

@@ -8,7 +8,13 @@ import type { Database } from "@/db/types";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { readNewsletterWords } from "@/modules/newsletter/domain/message";
-import { holdAwaitingItsFirstEmail } from "@/modules/registrations/repository";
+import { computeOccupied } from "@/modules/registrations/domain/capacity";
+import { keptOf } from "@/modules/registrations/domain/kept-places";
+import { deadlineReleaseArmedFor } from "@/modules/registrations/domain/unsigned-release";
+import { offersOnItsOwn } from "@/modules/registrations/domain/waitlist";
+import { countOccupied, holdAwaitingItsFirstEmail } from "@/modules/registrations/repository";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { listStaffUsers } from "@/modules/staff-identity/repository";
 import {
   AUTOMATIC_SEND_KEYS,
   askYieldsToKey,
@@ -18,6 +24,7 @@ import {
   isConfirmationRetryDue,
   lastCallKey,
   isEventReminderDue,
+  lineOffersMade,
   nextInLineOffers,
   onePerAddress,
   nextInLineReleases,
@@ -47,7 +54,10 @@ import { planConfirmationRetriesFrom } from "./confirmation-retry";
  * (§104), the last call to sign at the reminder's lead (§160), the offer to the next in line when
  * a waiting-list offer or a declaration hold lapses with somebody waiting, before registration
  * closes (§160, AGENTS.md §10.5, §420), the «Locul tău … a expirat» to the person whose declaration
- * hold that lapse releases, before the start (§638 — never for a lapsed offer, §331),
+ * hold that lapse releases, before the start (§638 — never for a lapsed offer, §331) — the offers only as the
+ * allocator makes them: by itself («Da», «Locurile libere le dau doar eu» off) and, with places kept for the club,
+ * only into the site's room (§NNN) — at «Eliberează singur locurile nesemnate la termen»'s deadline every counted
+ * unsigned hold lapsed by then, with the Administrators' one summary and no offer (§NNN),
  * "registration is open" to the addresses left on the
  * event's page (§146), and the verification email re-sent to whoever has not confirmed (§653). No race number is sent on its own since §548: it rides on the confirmation.
  *
@@ -76,6 +86,8 @@ export type AutomaticSend =
   | "nextInLine"
   // The person whose declaration hold a lapse releases to somebody waiting (§638).
   | "holdLapsed"
+  // «Eliberează singur locurile nesemnate la termen» (§NNN): the Administrators' one summary at the window's deadline.
+  | "unsignedReleased"
   | "registrationOpened"
   // The verification email re-sent by itself, to whoever has not confirmed the address yet (§653).
   | "confirmationRetry"
@@ -118,6 +130,7 @@ const TYPE_OF: Record<AutomaticSend, EmailMessageType> = {
   participation: "COMPLETE_DECLARATION",
   nextInLine: "WAITLIST_SPOT_OFFER",
   holdLapsed: "DECLARATION_HOLD_EXPIRED",
+  unsignedReleased: "UNSIGNED_RELEASED",
   registrationOpened: "REGISTRATION_OPENED",
   confirmationRetry: "VERIFY_REGISTRATION_EMAIL",
   newsletter: "NEWSLETTER",
@@ -128,6 +141,8 @@ const TYPE_OF: Record<AutomaticSend, EmailMessageType> = {
 const RUN_ORDER: AutomaticSend[] = [
   // The release queues its message before the place is offered on (`expireStaleHolds`, then `fillAvailableSpots`).
   "holdLapsed",
+  // The deadline's release queues its summary after the people's messages, in the same transaction (§NNN).
+  "unsignedReleased",
   "nextInLine",
   "reminder",
   "lastCall",
@@ -189,6 +204,11 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       eventId: events.id,
       startsAt: events.startsAt,
       registrationClosesAt: events.registrationClosesAt,
+      // Who the line is offered places by (§615, §906) and the places kept for the club (§NNN): `offerFreedPlaces`' gate and room.
+      capacity: events.capacity,
+      placesKeptForClub: events.placesKeptForClub,
+      waitlistAutoOffer: events.waitlistAutoOffer,
+      freePlacesByOfferOnly: events.freePlacesByOfferOnly,
       holdExpiresAt: registrations.holdExpiresAt,
       registrationId: registrations.id,
       kind: registrations.kind,
@@ -224,6 +244,32 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
   // lapse is still sent: the job reaches it first. Keyed by registration id to its lapse instant
   // (`max(holdExpiresAt, now)`, never before the job's next run).
   const consumedByNextInLine = new Map<string, Date>();
+  /*
+    «Eliberează singur locurile nesemnate la termen» (§NNN): the events whose release is armed for a deadline in the
+    horizon (`domain/unsigned-release.ts#deadlineReleaseArmedFor`), each at the job's run for it — the deadline, or the
+    next run when it has passed and the release has not run yet — while the start is still ahead. Few rows: only the
+    events with the box ticked.
+  */
+  const releaseAt = new Map<string, Date>();
+  const armed = await db
+    .select({
+      id: events.id,
+      capacity: events.capacity,
+      eventStatus: events.eventStatus,
+      startsAt: events.startsAt,
+      confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
+      confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
+      releaseUnsignedAtDeadline: events.releaseUnsignedAtDeadline,
+      unsignedReleasedFor: events.unsignedReleasedFor,
+    })
+    .from(events)
+    .where(and(eq(events.releaseUnsignedAtDeadline, true), eq(events.eventStatus, "SCHEDULED"), isNotNull(events.capacity)));
+  for (const row of armed) {
+    const deadline = deadlineReleaseArmedFor(row);
+    if (!deadline) continue;
+    const at = notBeforeNow(deadline);
+    if (inHorizon(at) && at.getTime() < row.startsAt.getTime()) releaseAt.set(row.id, at);
+  }
   if (holds.length > 0) {
     const eventIds = [...new Set(holds.map((row) => row.eventId))];
     // The line in the allocator's own order (`lockOldestWaitlisted`): who is offered first.
@@ -237,26 +283,39 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
         .filter((row) => row.eventId === eventId)
         .sort((a, b) => (a.holdExpiresAt?.getTime() ?? 0) - (b.holdExpiresAt?.getTime() ?? 0));
       const waiting = line.filter((row) => row.eventId === eventId);
+      const first = rows[0];
+      /*
+        The line is offered a freed place only as `offerFreedPlaces` offers it (§NNN): by itself («Da», the tick off), and
+        with places kept for the club only once the places taken beyond the site's are made up — read off the places
+        taken now, only where places are kept (with none kept, nothing is ever taken beyond the site's).
+      */
+      const kept = keptOf(first);
+      const beyondSite =
+        kept > 0 && first.capacity !== null ? Math.max(computeOccupied(await countOccupied(db, eventId, now)) - (first.capacity - kept), 0) : 0;
+      const gate = { offersByItself: offersOnItsOwn(first), beyondSite };
+      const deadlineAt = releaseAt.get(eventId) ?? null;
+      const lapseOf = (row: (typeof rows)[number]) => notBeforeNow(row.holdExpiresAt as Date);
+      // Before the deadline's release (or all of them, with none armed): §160 — released for the line, offered as above.
+      const early = rows.filter((row) => row.holdExpiresAt && (!deadlineAt || lapseOf(row).getTime() < deadlineAt.getTime()));
       const lapsing = {
-        lapses: rows.flatMap((row) => (row.holdExpiresAt ? [row.holdExpiresAt] : [])),
+        lapses: early.flatMap((row) => (row.holdExpiresAt ? [row.holdExpiresAt] : [])),
         waiting: waiting.length,
-        startsAt: rows[0].startsAt,
-        registrationClosesAt: rows[0].registrationClosesAt,
+        startsAt: first.startsAt,
+        registrationClosesAt: first.registrationClosesAt,
         now,
       };
       // Every release spends a hold, offer or not: after the close (§420) the job still releases a
       // lapsed hold to the queue — the desk gives that place — but emails nobody an offer for it.
       const consumed = nextInLineReleases(lapsing).reduce((sum, release) => sum + release.count, 0);
-      const offers = nextInLineOffers(lapsing);
-      for (const row of rows.slice(0, consumed)) {
-        if (!row.holdExpiresAt) continue;
-        const releasedAt = notBeforeNow(row.holdExpiresAt);
-        consumedByNextInLine.set(row.registrationId, releasedAt);
+      const offers = lineOffersMade(nextInLineOffers(lapsing), gate);
+      const release = (row: (typeof rows)[number], at: Date) => {
+        consumedByNextInLine.set(row.registrationId, at);
         // The person who held it is told (§638): a declaration hold only — an offer's lapse is silent (§331).
         if (row.status === "PENDING_DECLARATION") {
-          nextInLinePending.push({ at: releasedAt, eventId, send: "holdLapsed", registrationId: row.registrationId, kind: row.kind });
+          nextInLinePending.push({ at, eventId, send: "holdLapsed", registrationId: row.registrationId, kind: row.kind });
         }
-      }
+      };
+      for (const row of early.slice(0, consumed)) release(row, lapseOf(row));
       let next = 0;
       for (const offer of offers) {
         for (const person of waiting.slice(next, next + offer.count)) {
@@ -264,6 +323,37 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
         }
         next += offer.count;
       }
+      if (deadlineAt) {
+        /*
+          The deadline's own release (§NNN): every counted hold lapsed by then and not already released goes at that run,
+          whoever waits — each declaration hold's person told — and none of those places is offered: the run ticks
+          «Locurile libere le dau doar eu». A hold lapsing after it follows §160 for whoever still waits, offering nobody.
+        */
+        for (const row of rows) {
+          if (row.holdExpiresAt && !consumedByNextInLine.has(row.registrationId) && lapseOf(row).getTime() <= deadlineAt.getTime()) release(row, deadlineAt);
+        }
+        const late = rows.filter((row) => row.holdExpiresAt && lapseOf(row).getTime() > deadlineAt.getTime());
+        const lateReleases = nextInLineReleases({ ...lapsing, lapses: late.map((row) => row.holdExpiresAt as Date), waiting: Math.max(waiting.length - next, 0) });
+        const lateConsumed = lateReleases.reduce((sum, item) => sum + item.count, 0);
+        for (const row of late.slice(0, lateConsumed)) release(row, lapseOf(row));
+      }
+    }
+  }
+  /*
+    The deadline's summary (§NNN): one `UNSIGNED_RELEASED` to each Administrator and Superadministrator with an address,
+    at the release — only for an event that has somebody still to sign now, as the release emails only when it released
+    a hold or left one unsigned (`unsigned-release.ts#completeDeadlineRelease`).
+  */
+  if (releaseAt.size > 0) {
+    const unsigned = await db
+      .select({ eventId: registrations.eventId })
+      .from(registrations)
+      .where(and(inArray(registrations.eventId, [...releaseAt.keys()]), eq(registrations.status, "PENDING_DECLARATION")))
+      .groupBy(registrations.eventId);
+    const administrators = (await listStaffUsers(db)).filter((member) => canManageRegistrations(member.role) && member.email.trim() !== "").length;
+    for (const { eventId } of unsigned) {
+      const at = releaseAt.get(eventId);
+      if (at && administrators > 0) nextInLinePending.push({ at, eventId, send: "unsignedReleased", count: administrators });
     }
   }
 
