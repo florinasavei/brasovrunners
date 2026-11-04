@@ -45,7 +45,8 @@ vi.mock("@/modules/diagnostics/invite-key", () => ({
   checkInviteKey: async () => ({ kind: "inapplicable" }),
   hasNoAccount: () => false,
 }));
-vi.mock("@/shared/feedback/confirm-words", () => ({ confirmWords: async () => ({ cancel: "Renunță" }) }));
+// The dialogs' email lines come from the one builder (`confirmWords().mail`), whose own test holds its words.
+vi.mock("@/shared/feedback/confirm-words", () => ({ confirmWords: async () => ({ cancel: "Renunță", mail: () => ({}), line: () => ({ text: "" }) }) }));
 vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: async () => null }));
 vi.mock("@/shared/forms/refusal-messages", () => ({ refusalMessages: async (boxes: Record<string, string>) => boxes }));
 vi.mock("@/modules/notifications/delivery-evidence", () => ({ refusedInvitations: async () => new Map() }));

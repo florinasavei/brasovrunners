@@ -425,13 +425,20 @@ export async function requestVolunteerGuardian<T extends Record<string, unknown>
  * `VOLUNTEER_AGREEMENT_REPRINT` — when the version in force or the volunteer's roles are no longer the ones the card
  * printed (`printed`): what the row records must be what the sheet says. The staff member records the guardian's
  * signature; they never sign for them.
+ *
+ * `sendEmail: false` («Trimite emailul» unticked in its question — the design «telling the owner about every email a
+ * staff press sends», slice 4): the record is the same, the volunteer's second copy of their agreement is not queued —
+ * their first, sent when they accepted their own, stands; the guardian is sent nothing either way — and the audit row
+ * says `emailSkipped` when a copy would have left.
  */
 export async function recordPaperVolunteerGuardian<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Actor,
   request: { eventId: string; id: string; printed: { documentId: string; roles: string } },
   now: Date,
+  options: { sendEmail?: boolean } = {},
 ): Promise<void> {
+  const sendEmail = options.sendEmail !== false;
   assertMayManage(actor);
   assertIds(request.eventId, request.id);
   if (!(await volunteerMinorsOpen(db, now))) throw new DomainError("VOLUNTEER_MINORS_CLOSED", "the notice and the agreement in force do not describe minors");
@@ -461,13 +468,15 @@ export async function recordPaperVolunteerGuardian<T extends Record<string, unkn
       now,
     );
     await tx.update(eventVolunteers).set({ ...acceptance, updatedAt: now }).where(eq(eventVolunteers.id, row.id));
-    await queueVolunteerCopy(tx, row, actor.id, now);
+    if (sendEmail) await queueVolunteerCopy(tx, row, actor.id, now);
+    // The box kept back a copy that would have left (`queueVolunteerCopy`'s own conditions).
+    const skipped = !sendEmail && row.agreementAcceptedAt !== null && row.email !== null;
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
       action: "volunteer.guardian_recorded",
       entityType: "event",
       entityId: row.eventId,
-      metadata: { volunteerId: row.id, version: document.version, method: "PAPER" },
+      metadata: { volunteerId: row.id, version: document.version, method: "PAPER", ...(skipped ? { emailSkipped: true } : {}) },
       now,
     });
   });

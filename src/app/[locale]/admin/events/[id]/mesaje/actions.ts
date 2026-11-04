@@ -14,8 +14,9 @@ import {
   sendParticipantMessage,
 } from "@/modules/notifications/participant-messages";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { inEmailPress } from "@/modules/notifications/press";
 import { isDomainError } from "@/shared/errors/domain-error";
-import { flash } from "@/shared/feedback/flash";
+import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, keptValuesOf, refused } from "@/shared/forms/outcome";
 
 /**
@@ -42,70 +43,66 @@ function posted(form: FormData, name: string): string {
  * A second press of the same form lands on the page saying so, with nothing queued again.
  */
 export async function sendParticipantMessageAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = localeOf(form.get("uiLocale"));
-  const eventId = posted(form, "eventId");
-  const words = {
-    subject: { ro: posted(form, "subjectRo"), en: posted(form, "subjectEn") },
-    body: { ro: posted(form, "bodyRo"), en: posted(form, "bodyEn") },
-  };
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("events.participantMessage", async (press) => {
+    const locale = localeOf(form.get("uiLocale"));
+    const eventId = posted(form, "eventId");
+    const words = {
+      subject: { ro: posted(form, "subjectRo"), en: posted(form, "subjectEn") },
+      body: { ro: posted(form, "bodyRo"), en: posted(form, "bodyEn") },
+    };
 
-  // The dialog's answer (§540): «now» past the scheduled pass, anything else the queue, as before.
-  const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
+    // The dialog's answer (§540): «now» past the scheduled pass, anything else the queue, as before.
+    const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
 
-  let result;
-  try {
-    const actor = await requireStaff();
-    result = await sendParticipantMessage(
-      getDb(),
-      actor,
-      { eventId, audience: posted(form, "audience"), sendId: posted(form, "sendId"), delivery, ...words },
-      new Date(),
-    );
-  } catch (error) {
-    // A «now» the day's allowance cannot hold (§80, §540): its own sentence, the boxes as typed.
-    if (error instanceof SendNowRefused) {
-      return { error: sendNowRefusalCode(error), fields: [], values: keptValuesOf(form) };
-    }
-    // An unknown placeholder is refused with its name in the sentence, so the organizer knows
-    // which `{…}` to correct and not only which box it is in (§247's rule, said the same way).
-    if (isDomainError(error) && error.code === "VALIDATION_ERROR") {
-      const names = [
-        ...new Set(
-          checkOrganizerMessage(words).issues.flatMap((issue) => (issue.problem === "unknownPlaceholder" ? issue.names : [])),
-        ),
-      ];
-      if (names.length > 0) {
-        return {
-          error: "MESSAGE_UNKNOWN_PLACEHOLDER",
-          errorValues: { names: names.map((name) => `{${name}}`).join(", ") },
-          fields: error.fields,
-          values: keptValuesOf(form),
-        };
+    let result;
+    try {
+      const actor = await requireStaff();
+      press.by(actor.id);
+      result = await sendParticipantMessage(
+        getDb(),
+        actor,
+        { eventId, audience: posted(form, "audience"), sendId: posted(form, "sendId"), delivery, ...words },
+        new Date(),
+      );
+    } catch (error) {
+      // A «now» the day's allowance cannot hold (§80, §540): its own sentence, the boxes as typed.
+      if (error instanceof SendNowRefused) {
+        return { error: sendNowRefusalCode(error), fields: [], values: keptValuesOf(form) };
       }
+      // An unknown placeholder is refused with its name in the sentence, so the organizer knows
+      // which `{…}` to correct and not only which box it is in (§247's rule, said the same way).
+      if (isDomainError(error) && error.code === "VALIDATION_ERROR") {
+        const names = [
+          ...new Set(
+            checkOrganizerMessage(words).issues.flatMap((issue) => (issue.problem === "unknownPlaceholder" ? issue.names : [])),
+          ),
+        ];
+        if (names.length > 0) {
+          return {
+            error: "MESSAGE_UNKNOWN_PLACEHOLDER",
+            errorValues: { names: names.map((name) => `{${name}}`).join(", ") },
+            fields: error.fields,
+            values: keptValuesOf(form),
+          };
+        }
+      }
+      return refused(error, form);
     }
-    return refused(error, form);
-  }
 
-  if (result.kind === "nobody") {
-    return { error: "NO_RECIPIENTS", fields: ["audience"], values: keptValuesOf(form) };
-  }
+    if (result.kind === "nobody") {
+      return { error: "NO_RECIPIENTS", fields: ["audience"], values: keptValuesOf(form) };
+    }
 
-  const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/mesaje", params: { id: eventId } } });
-  const query = result.kind === "duplicate" ? "duplicate=1" : `sent=${result.real}&test=${result.test}`;
-  // The toast (§384): what was queued, for how many — the same count the banner shows.
-  await flash(
-    result.kind === "duplicate"
-      ? { kind: "info", key: "participantMessageDuplicate" }
-      : // Sent now, past the scheduled pass (§540), says so; a list longer than one press sends
-        // (`SEND_NOW_ROW_LIMIT`) says how many leave now and how many at the scheduled pass; queued, as before.
-        delivery === "now" && (result.later ?? 0) > 0
-        ? { kind: "success", key: "participantMessageSentNowPart", values: { count: String(result.sentNow ?? 0), later: String(result.later ?? 0) } }
-        : delivery === "now"
-          ? { kind: "success", key: "participantMessageSentNow", values: { count: String(result.real), test: String(result.test) } }
-          : { kind: "success", key: "participantMessageSent", values: { count: String(result.real), test: String(result.test) } },
-  );
-  revalidatePath(path);
-  redirect(`${path}?${query}#admin-alert`);
+    const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/mesaje", params: { id: eventId } } });
+    const query = result.kind === "duplicate" ? "duplicate=1" : `sent=${result.real}&test=${result.test}`;
+    // The toast (§384): the send, and what the press queued — how many, and when each part leaves, a press's «now»
+    // past the scheduled pass (§540) and the rest of a list longer than one press sends (`SEND_NOW_ROW_LIMIT`)
+    // included — is the mail line's (`withPressMail`), read from the rows themselves. A second press queues nothing.
+    await flashOutcome(result.kind === "duplicate" ? { saved: "participantMessageDuplicate" } : { saved: "participantMessageSent" });
+    revalidatePath(path);
+    redirect(`${path}?${query}#admin-alert`);
+  });
 }
 
 /**

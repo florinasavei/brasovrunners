@@ -518,8 +518,9 @@ describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role
     expect(rendered.text).toContain("Organizatorii ți-au dat mai multe roluri la Cursa: Punct de apă, Sosire.");
     expect(rendered.text).toContain("Ce presupune fiecare rol: Punct de apă — Dai apă la km 5.");
     expect(rendered.text).toContain("What each role involves: Water point — Hand out water at km 5.");
-    // «Ia-i rolul …»: the one role goes, the other stands and is named again; the second message is withdrawn.
-    expect(await press(actions.unassignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }))).not.toContain("volunteerError");
+    // «Ia-i rolul …»: the one role goes, the other stands and is named again; the second message is withdrawn. The role is bound to
+    // the button, as the roles block draws it (`unassignVolunteerAction.bind(null, role.id)`): React posts no name of such a button.
+    expect(await press(actions.unassignVolunteerAction.bind(null, water.id), form({ volunteerId: maria.id }))).not.toContain("volunteerError");
     expect((await listVolunteers(db, eventId))[0]).toMatchObject({ roleIds: [finish.id], choiceIds: [water.id] });
     const [unassigned] = (await trail()).filter((row) => row.action === "volunteer.unassigned");
     expect(unassigned.metadataJson).toEqual({ volunteerId: maria.id, roleId: water.id, assignedRoleIds: [finish.id], from: both });
@@ -528,7 +529,7 @@ describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role
     expect(third.payloadJson).toEqual({ eventId, volunteerId: maria.id, roleIds: [finish.id] });
     expect((await render(third)).text).toContain("Rol: Sosire");
     // Taking a role the person does not hold changes nothing; taking the last back by hand leaves nothing to announce, and the last message is withdrawn too.
-    await press(actions.unassignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }));
+    await press(actions.unassignVolunteerAction.bind(null, water.id), form({ volunteerId: maria.id }));
     expect(await told()).toHaveLength(3);
     await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleIds: [] }));
     await expect(render(third)).rejects.toThrow(/roles were changed/);
@@ -951,5 +952,37 @@ describe("§835 «Arată butonul „Vreau să fiu voluntar” pe pagina evenimen
       expect(await press(actions.switchVolunteersButtonAction, form({ on: "0" })), key).toContain("volunteerError=FORBIDDEN");
     }
     expect(await shown()).toBe(true);
+  });
+});
+
+describe("«Trimite emailul» unticked beside the roles and the forms (the design «telling the owner about every email a staff press sends», slice 4)", () => {
+  const roleEmails = () => db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "VOLUNTEER_ROLE_ASSIGNED"));
+  const skippedRows = async () => (await trail()).filter((row) => (row.metadataJson as { emailSkipped?: boolean }).emailSkipped === true).map((row) => row.action);
+
+  it("adds a person with a role, gives and takes roles from the block's one form, and edits the address: every change made, none of it emailed, each trail row saying emailSkipped", async () => {
+    const water = await addRole();
+    const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
+    // The MailLine's box unticked posts its hidden «off» alone.
+    const maria = await addPerson(water.id, { roleIds: [water.id, finish.id], sendEmail: "off" });
+    expect(maria).toMatchObject({ roleIds: [water.id] });
+    // «Dă-i alt rol»: the button posts an empty role, the select its own (`otherRoleId`).
+    expect(await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: "", otherRoleId: finish.id, sendEmail: "off" }))).not.toContain("volunteerError");
+    // «Ia-i rolul …» through the same form's other action, its role bound to the button.
+    expect(await press(actions.unassignVolunteerAction.bind(null, water.id), form({ volunteerId: maria.id, sendEmail: "off" }))).not.toContain("volunteerError");
+    expect((await listVolunteers(db, eventId))[0]).toMatchObject({ roleIds: [finish.id] });
+    expect(
+      await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id, finish.id], assignedRoleIds: [finish.id], email: "maria.noua@example.test", sendEmail: "off" })),
+    ).toBe("redirected");
+    expect(await roleEmails()).toEqual([]);
+    expect(await skippedRows()).toEqual(["volunteer.added", "volunteer.assigned", "volunteer.unassigned", "volunteer.edited"]);
+  });
+
+  it("ticked — the box drawn ticked posts «on» before its hidden «off» — tells the person as ever, and a form that posts no box sends too", async () => {
+    const water = await addRole();
+    const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
+    const maria = await addPerson(water.id, { roleIds: [water.id, finish.id], sendEmail: ["on", "off"] });
+    expect(await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: finish.id }))).not.toContain("volunteerError");
+    expect((await roleEmails()).map((row) => (row.payloadJson as { roleIds: string[] }).roleIds.length)).toEqual([1, 2]);
+    expect(await skippedRows()).toEqual([]);
   });
 });

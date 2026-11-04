@@ -400,3 +400,20 @@ describe("§622 the queue panel says Mailgun's stop, who carries for it, and off
     expect(en.Admin.emails.queue.retryFailed.button).toBe("Retry the failed emails");
   });
 });
+
+describe("the queue panel's way to «Emailuri azi» (the design «telling the owner about every email a staff press sends», slice 1)", () => {
+  it("draws «Vezi ce a plecat azi» only when the page hands it the address — for the roles that page admits", async () => {
+    const html = await render("ro", { journalHref: "/ro/admin/settings/emails/today" });
+    expect(html).toMatch(/<a[^>]*href="\/ro\/admin\/settings\/emails\/today"[^>]*data-testid="outbox-journal-link"[^>]*>Vezi ce a plecat azi<\/a>/);
+    expect(await render("en", { journalHref: "/en/admin/settings/emails/today" })).toContain(">See what left today</a>");
+    expect(await render("ro")).not.toContain("outbox-journal-link");
+  });
+
+  it("says «Pleacă după ce Mailgun reia» for a Mailgun row while Mailgun is stopped and nothing carries it", async () => {
+    const allowance = { kind: "allowance" as const, until: new Date("2026-10-01T09:00:00.000Z") };
+    const stopped = { ...VOLUME, mailgunStop: allowance, whileStopped: { road: "wait", stop: allowance, reason: "gmailUnconfigured" } } as Props["volume"];
+    const html = await render("ro", { volume: stopped, queue: { ...QUEUE, total: 1, rows: [QUEUE.rows[0]!] } });
+    const leaves = [...html.matchAll(/data-testid="outbox-row-leaves"[^>]*>([^<]*)</g)].map((match) => match[1]);
+    expect(leaves).toEqual([ro.Admin.emails.queue.leaves.reset.replace("{at}", "12:00")]);
+  });
+});

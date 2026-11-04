@@ -175,6 +175,8 @@ describe("§377 the reminder lead, the event's or the club's", () => {
       payloadJson: {},
       idempotencyKey: "t:reminder",
       requestedByStaffUserId: null,
+      cause: null,
+      pressId: null,
       isManualResend: false,
       status: "PROCESSING" as const,
       attemptCount: 1,

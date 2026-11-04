@@ -116,6 +116,8 @@ function row(
     payloadJson,
     idempotencyKey: `calendar:${rowNumber}`,
     requestedByStaffUserId: null,
+    cause: null,
+    pressId: null,
     isManualResend: false,
     status: "PROCESSING",
     attemptCount: 1,

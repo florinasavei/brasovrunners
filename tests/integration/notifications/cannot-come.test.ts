@@ -124,6 +124,8 @@ function row(messageType: EmailMessageType, registrationId: string, payloadJson:
     payloadJson,
     idempotencyKey: `test:${messageType}`,
     requestedByStaffUserId: null,
+    cause: null,
+    pressId: null,
     isManualResend: false,
     status: "PROCESSING" as const,
     attemptCount: 1,

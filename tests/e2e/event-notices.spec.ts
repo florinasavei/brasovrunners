@@ -139,7 +139,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await expect(field("notice.noteRo")).toHaveValue("Ne mutăm la Poiana: drumul spre Tractorul e închis.");
     await field("notice.noteEn").fill("We move to Poiana: the road to Tractorul is closed.");
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
-    await expect(page.getByRole("dialog", { name: "Salvezi și anunți participanții?" }).getByTestId("confirm-email")).toHaveText("Se va trimite un email către 1 participant.");
+    await expect(page.getByRole("dialog", { name: "Salvezi și anunți participanții?" }).getByTestId("confirm-email")).toHaveText("Pleacă 1 email „Detalii actualizate (loc, oră, program)”, câte unul către fiecare participant.");
     await confirmDialog(page);
     await expect(page.getByTestId("notice-outcome")).toContainText("Emailuri „Detalii actualizate” puse la coadă: 1", { timeout: 30_000 });
     await hydrated(page);
@@ -163,7 +163,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     // The question names the event and says who is emailed, from the same count (§384).
     const cancelDialog = page.getByRole("dialog", { name: `Anulezi „Cursa anunțată ${suffix}”?` });
-    await expect(cancelDialog.getByTestId("confirm-email")).toHaveText("Se va trimite un email către 1 participant.");
+    await expect(cancelDialog.getByTestId("confirm-email")).toHaveText("Pleacă 1 email „Eveniment anulat”, câte unul către fiecare participant.");
     await confirmDialog(page);
     await expect(page.getByTestId("notice-outcome")).toContainText("Evenimentul a fost anulat. Emailuri „Eveniment anulat” puse la coadă: 1.", {
       timeout: 30_000,

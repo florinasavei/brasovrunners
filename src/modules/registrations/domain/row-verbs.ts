@@ -99,6 +99,17 @@ export function specialListVerb(
   return outside.enabled ? "mark" : null;
 }
 
+/**
+ * Whether «Confirmă pe hârtie» may still end with the person on the waiting list and nothing sent (`confirmByStaff`), so
+ * that its question says the confirmation «or none» rather than a certain email: an address never confirmed goes through
+ * the allocator first, and from the event's start a place still waiting for its declaration may be released before the
+ * press lands — the start releases it — and is placed again. A place held before the start, or an offer, is confirmed.
+ */
+export function mayEndWaitlisted(status: RegistrationStatus, eventStartsAt: Date, now: Date): boolean {
+  if (status === "PENDING_EMAIL_CONFIRMATION") return true;
+  return status === "PENDING_DECLARATION" && eventStartsAt.getTime() <= now.getTime();
+}
+
 export function rowVerbsFor(
   status: RegistrationStatus,
   role: StaffRole,

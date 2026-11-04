@@ -5,6 +5,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { DELIVERY_CHOICE_FIELD, deliveryChoiceOf } from "@/modules/notifications/domain/send-at-once";
+import { inEmailPress } from "@/modules/notifications/press";
 import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { resendFamilyMessage, resendRegistrationMessage } from "@/modules/registrations/admin-service";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -18,57 +19,66 @@ function toLocale(value: FormDataEntryValue | null): Locale {
 
 /** «Retrimite familiei» (§588): one email for everybody on the row's address at its event. */
 export async function resendFamilyEmailAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const registrationId = String(form.get("registrationId") ?? "");
-  const path = getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } } });
-  const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
-  let error: string | null = null;
-  try {
-    // Authorization on the server (BR-REQ-060-01): the service refuses anyone but an Administrator.
-    await resendFamilyMessage(getDb(), await requireStaff(), registrationId, new Date(), delivery);
-  } catch (caught) {
-    if (!isDomainError(caught)) throw caught;
-    error = sendNowRefusalCode(caught);
-  }
-  const now = delivery === "now";
-  if (error === null) await flashOutcome(now ? { saved: "resentNow" } : { saved: "resent" });
-  redirect(error === null ? `${path}?resent=${now ? "now" : "1"}#admin-alert` : `${path}?error=${error}#admin-alert`);
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.familyResend", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const registrationId = String(form.get("registrationId") ?? "");
+    const path = getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } } });
+    const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
+    let error: string | null = null;
+    try {
+      // Authorization on the server (BR-REQ-060-01): the service refuses anyone but an Administrator.
+      const actor = await requireStaff();
+      press.by(actor.id);
+      await resendFamilyMessage(getDb(), actor, registrationId, new Date(), delivery);
+    } catch (caught) {
+      if (!isDomainError(caught)) throw caught;
+      error = sendNowRefusalCode(caught);
+    }
+    const now = delivery === "now";
+    if (error === null) await flashOutcome(now ? { saved: "resentNow" } : { saved: "resent" });
+    redirect(error === null ? `${path}?resent=${now ? "now" : "1"}#admin-alert` : `${path}?error=${error}#admin-alert`);
+  });
 }
 
 export async function resendRegistrationEmailAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const registrationId = String(form.get("registrationId") ?? "");
   // "Trimite reminderul" asks for the reminder by name; anything else is the state's message.
   const wanted = form.get("messageType") === "EVENT_REMINDER" ? ("EVENT_REMINDER" as const) : undefined;
-  const path = getPathname({
-    locale,
-    href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } },
-  });
+  // An email press (`notifications/press.ts`), its cause the button's: the reminder, or the state's own message.
+  return inEmailPress(wanted === "EVENT_REMINDER" ? "registrations.reminder" : "registrations.resend", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const registrationId = String(form.get("registrationId") ?? "");
+    const path = getPathname({
+      locale,
+      href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } },
+    });
 
-  // The dialog's answer (§540): «now» past the scheduled pass, anything else the queue, as before.
-  const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
+    // The dialog's answer (§540): «now» past the scheduled pass, anything else the queue, as before.
+    const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
 
-  let outcome: "sent" | { error: string };
-  try {
-    const actor = await requireStaff();
-    await resendRegistrationMessage(getDb(), actor, registrationId, new Date(), wanted, delivery);
-    outcome = "sent";
-  } catch (error) {
-    if (isDomainError(error)) {
-      // The allowance's own sentence for a «now» it cannot hold (§80, §540), never a generic one.
-      outcome = { error: sendNowRefusalCode(error) };
-    } else {
-      throw error;
+    let outcome: "sent" | { error: string };
+    try {
+      const actor = await requireStaff();
+      press.by(actor.id);
+      await resendRegistrationMessage(getDb(), actor, registrationId, new Date(), wanted, delivery);
+      outcome = "sent";
+    } catch (error) {
+      if (isDomainError(error)) {
+        // The allowance's own sentence for a «now» it cannot hold (§80, §540), never a generic one.
+        outcome = { error: sendNowRefusalCode(error) };
+      } else {
+        throw error;
+      }
     }
-  }
 
-  // `#admin-alert`, like every other backoffice redirect: land on the outcome — and the toast
-  // (§384) says which message went, from the same flag, and whether it left now (§540).
-  if (outcome === "sent" && delivery === "now") await flashOutcome({ saved: wanted === "EVENT_REMINDER" ? "reminderSentNow" : "resentNow" });
-  else if (outcome === "sent") await flashOutcome({ saved: wanted === "EVENT_REMINDER" ? "reminderSent" : "resent" });
-  redirect(
-    outcome === "sent"
-      ? `${path}?resent=${delivery === "now" ? "now" : "1"}#admin-alert`
-      : `${path}?error=${outcome.error}#admin-alert`,
-  );
+    // `#admin-alert`, like every other backoffice redirect: land on the outcome — and the toast
+    // (§384) says which message went, from the same flag, and whether it left now (§540).
+    if (outcome === "sent" && delivery === "now") await flashOutcome({ saved: wanted === "EVENT_REMINDER" ? "reminderSentNow" : "resentNow" });
+    else if (outcome === "sent") await flashOutcome({ saved: wanted === "EVENT_REMINDER" ? "reminderSent" : "resent" });
+    redirect(
+      outcome === "sent"
+        ? `${path}?resent=${delivery === "now" ? "now" : "1"}#admin-alert`
+        : `${path}?error=${outcome.error}#admin-alert`,
+    );
+  });
 }

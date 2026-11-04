@@ -100,15 +100,24 @@ export default async function ReserveListPanel({
     // The address the emails go to: the line's, or the one typed beside the buttons (§875's safeguard).
     const email = entry.email ?? "{email}";
     const fillFrom = entry.email ? undefined : ["email"];
-    const shared = { email: words.email(1), road: words.road("links"), cancelLabel: words.cancel, tick: { field: "relayedByParticipantRequest", label: t("registrations.relayConfirmation") }, fillFrom };
+    const shared = { cancelLabel: words.cancel, tick: { field: "relayedByParticipantRequest", label: t("registrations.relayConfirmation") }, fillFrom };
     const questions: ConfirmSpec[] = [];
     if (forecast) {
       const offer = waitlistOfferQuestion((key, values) => t(key, values), email, forecast);
       // The line holds a name and an address (§888): the rest the form asks, the person types when they sign (§905).
-      questions.push({ ...shared, when: [{ field: "intent", equals: "offer" }], title: t("confirm.waitlistOfferTitle"), body: `${name}: ${offer.body} ${t("reserve.noteFollows")} ${t("reserve.detailsAtSigning")}`, confirmLabel: offer.confirmLabel });
+      questions.push({
+        ...shared,
+        // The person named, and the email by its outcome (the design «telling the owner about every email a staff press sends», slice 3).
+        ...words.mail({ to: name, type: "COMPLETE_DECLARATION", or: "WAITLIST_SPOT_OFFER" }),
+        when: [{ field: "intent", equals: "offer" }],
+        title: t("confirm.waitlistOfferTitle"),
+        body: `${name}: ${offer.body} ${t("reserve.noteFollows")} ${t("reserve.detailsAtSigning")}`,
+        confirmLabel: offer.confirmLabel,
+      });
     }
     questions.push({
       ...shared,
+      ...words.mail({ to: name, type: "WAITLIST_JOINED", or: "COMPLETE_DECLARATION" }),
       title: t("reserve.moveTitle"),
       body: `${name}: ${t("confirm.waitlistAddBody", { email })} ${t("reserve.noteFollows")} ${t("reserve.detailsAtSigning")}`,
       confirmLabel: t("reserve.move"),

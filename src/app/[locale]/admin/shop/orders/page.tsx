@@ -85,6 +85,7 @@ export default async function AdminShopOrdersPage({ params, searchParams }: Prop
         locale={locale}
         words={t}
         cancel={words.cancel}
+        mail={words}
         messages={messages}
         mayManage={mayManage}
         showEmail={canSeeShopMemberAddresses(actor.role)}

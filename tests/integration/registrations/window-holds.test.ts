@@ -190,7 +190,7 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
     confirmationDeadlineDaysBefore: String(deadline),
   });
 
-  async function saveWindow(eventId: string, opens: number, deadline: number, now: Date) {
+  async function saveWindow(eventId: string, opens: number, deadline: number, now: Date, options: { windowSendEmail?: boolean } = {}) {
     const row = await reload(eventId);
     return saveEventAndTranslations(db, {
       actor: admin,
@@ -199,6 +199,7 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
       expectedVersion: row.version,
       translations: [],
       acknowledgeLiveEdit: true,
+      ...options,
       now,
     });
   }
@@ -223,7 +224,7 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
     expect(await previewWindowHolds(db, await reload(event.id), NOW, 30)).toEqual({ moveNow: 0, atWindow: 3, to: before(2) });
 
     const result = await saveWindow(event.id, 15, 5, NOW);
-    expect(result.holdsMoved).toEqual({ moved: 3, test: 1, to: before(5), queued: 0 });
+    expect(result.holdsMoved).toEqual({ moved: 3, test: 1, to: before(5), queued: 0, skipped: 0 });
 
     for (const row of [...given, test]) expect(await holdOf(row.id)).toEqual(before(5));
     expect(await holdOf(minutes.id)).toEqual(clubMinutes);
@@ -244,7 +245,7 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
 
     // The same save again moves nothing and writes nothing.
     const again = await saveWindow(event.id, 15, 5, new Date(NOW.getTime() + MINUTE));
-    expect(again.holdsMoved).toEqual({ moved: 0, test: 0, to: null, queued: 0 });
+    expect(again.holdsMoved).toEqual({ moved: 0, test: 0, to: null, queued: 0, skipped: 0 });
     expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "event.holds_moved_by_window"))).toHaveLength(1);
   });
 
@@ -281,7 +282,7 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
     for (const row of [real, test]) await sendAsk(row, new Date(OPEN.getTime() - 2 * 60 * MINUTE));
 
     const first = await saveWindow(event.id, 15, 3, OPEN);
-    expect(first.holdsMoved).toEqual({ moved: 1, test: 1, to: before(3), queued: 2 });
+    expect(first.holdsMoved).toEqual({ moved: 1, test: 1, to: before(3), queued: 2, skipped: 0 });
     const queued = (await declarationEmails()).filter((row) => row.idempotencyKey.includes(":deadline-moved:"));
     expect(queued.map((row) => row.registrationId).sort()).toEqual([real.id, test.id].sort());
     expect(queued.map((row) => row.idempotencyKey).sort()).toEqual(
@@ -317,7 +318,7 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
       createdAt: OPEN,
     });
     const result = await saveWindow(event.id, 15, 3, OPEN);
-    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(3), queued: 0 });
+    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(3), queued: 0, skipped: 0 });
     expect(await declarationEmails()).toHaveLength(1);
   });
 
@@ -338,7 +339,7 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
       sentAt: new Date(OPEN.getTime() - MINUTE),
     });
     const result = await saveWindow(event.id, 15, 3, OPEN);
-    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(3), queued: 0 });
+    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(3), queued: 0, skipped: 0 });
     expect(await declarationEmails()).toHaveLength(1);
   });
 
@@ -349,7 +350,7 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
     const real = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(2) });
     const at = before(10);
     const result = await saveWindow(event.id, 15, 5, at);
-    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(5), queued: 1 });
+    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(5), queued: 1, skipped: 0 });
     const [email, ...rest] = await declarationEmails();
     expect(rest).toHaveLength(0);
     expect(email.idempotencyKey).toBe(`registration:${real.id}:confirm-participation`);
@@ -366,7 +367,7 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
     const real = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(2) });
     const at = new Date(before(7).getTime() - 30 * MINUTE);
     const result = await saveWindow(event.id, 15, 5, at);
-    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(5), queued: 1 });
+    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(5), queued: 1, skipped: 0 });
     const [email, ...rest] = await declarationEmails();
     expect(rest).toHaveLength(0);
     expect(email.idempotencyKey).toBe(`registration:${real.id}:sign-reminder:${before(5).toISOString()}`);
@@ -386,7 +387,7 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
     const real = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(3) });
     await sendAsk(real, new Date(OPEN.getTime() - 30 * MINUTE));
     const earlier = await saveWindow(event.id, 15, 5, OPEN);
-    expect(earlier.holdsMoved).toEqual({ moved: 1, test: 0, to: before(5), queued: 1 });
+    expect(earlier.holdsMoved).toEqual({ moved: 1, test: 0, to: before(5), queued: 1, skipped: 0 });
     expect((await declarationEmails()).map((row) => row.idempotencyKey)).toContain(`registration:${real.id}:deadline-moved:${before(5).toISOString()}`);
   });
 
@@ -396,8 +397,32 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
     const real = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(5) });
     await sendAsk(real, new Date(OPEN.getTime() - 30 * MINUTE));
     const later = await saveWindow(event.id, 15, 3, OPEN);
-    expect(later.holdsMoved).toEqual({ moved: 1, test: 0, to: before(3), queued: 0 });
+    expect(later.holdsMoved).toEqual({ moved: 1, test: 0, to: before(3), queued: 0, skipped: 0 });
     expect(await declarationEmails()).toHaveLength(1);
+  });
+
+  /*
+    Â«Trimite din nou â€žSemneazÄƒ declaraÈ›iaâ€Â» unticked beside Â«Fereastra de confirmareÂ» (the design Â«telling the owner about every
+    email a staff press sendsÂ», slice 4, and its Critic correction 3): only a deadline moved later, under the move's own key, is
+    kept back â€” the email the person has states an earlier deadline, still safe to act on. One moved earlier is always told,
+    and so is a move that is the job's own last call: keeping that back would only leave its key free for the job's next pass.
+  */
+  it("unticked, a deadline moved later is not sent again â€” audited, counted apart; one moved earlier still is", async () => {
+    const event = await seedEvent(5);
+    const real = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(5) });
+    await sendAsk(real, new Date(OPEN.getTime() - 2 * 60 * MINUTE));
+
+    const later = await saveWindow(event.id, 15, 3, OPEN, { windowSendEmail: false });
+    expect(later.holdsMoved).toEqual({ moved: 1, test: 0, to: before(3), queued: 0, skipped: 1 });
+    expect(await holdOf(real.id)).toEqual(before(3));
+    expect((await declarationEmails()).filter((row) => row.idempotencyKey.includes(":deadline-moved:"))).toEqual([]);
+    const [onEvent] = (await db.select().from(auditLogs).where(eq(auditLogs.action, "event.holds_moved_by_window"))).filter((row) => row.entityId === event.id);
+    expect(onEvent.metadataJson).toEqual({ moved: 1, test: 0, to: before(3).toISOString(), queued: 0, emailSkipped: true, skipped: 1 });
+
+    // Back to 5 days, earlier: told whatever the box says.
+    const earlier = await saveWindow(event.id, 15, 5, new Date(OPEN.getTime() + 2 * 60 * MINUTE), { windowSendEmail: false });
+    expect(earlier.holdsMoved).toEqual({ moved: 1, test: 0, to: before(5), queued: 1, skipped: 0 });
+    expect((await declarationEmails()).map((row) => row.idempotencyKey)).toContain(`registration:${real.id}:deadline-moved:${before(5).toISOString()}`);
   });
 
   it("a move past the new deadline's last call is that last call: the job queues nothing after it", async () => {
@@ -407,7 +432,7 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
     const real = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(5) });
     const at = new Date(before(6).getTime() + 60 * MINUTE);
     const result = await saveWindow(event.id, 15, 4, at);
-    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(4), queued: 1 });
+    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(4), queued: 1, skipped: 0 });
     const [email] = await declarationEmails();
     expect(email.idempotencyKey).toBe(`registration:${real.id}:sign-reminder:${before(4).toISOString()}`);
     expect(await queueEventReminders(db, at, DEFAULT_DEADLINES)).toBe(0);
@@ -479,7 +504,7 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
     expect(await holdOf(onSource.id)).toEqual(before(5));
     expect(await holdOf(onMember.id)).toEqual(new Date(nextWeek.getTime() - 5 * DAY));
     // Two dates, two instants: the banner counts both and names no single date.
-    expect(result.holdsMoved).toEqual({ moved: 2, test: 0, to: null, queued: 0 });
+    expect(result.holdsMoved).toEqual({ moved: 2, test: 0, to: null, queued: 0, skipped: 0 });
   });
 
   it("a cancelled event's holds are left as they stood (Â§331)", async () => {

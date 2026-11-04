@@ -187,6 +187,12 @@ export type SubmitButtonProps = {
   /** `name` and `value` of the native submit: which of several buttons of one form was pressed (the FAQ's moves, §710). A button with a `name` is busy only while its own `name`/`value` is the submission in flight. */
   name?: string;
   value?: string;
+  /**
+   * A second Server Action of the form this button sits in (§287, as `ConfirmSubmitButton`'s): a volunteer's roles block is
+   * one form whose «Dă-i rolul …» buttons post its action and whose «Ia-i rolul …» buttons post this one, so the block's one
+   * «Trimite emailul» reaches both (the design «telling the owner about every email a staff press sends», slice 4).
+   */
+  formAction?: (formData: FormData) => void | Promise<void>;
 };
 
 /**
@@ -249,6 +255,7 @@ export default function SubmitButton({
   compact,
   name,
   value,
+  formAction,
 }: SubmitButtonProps) {
   const status = useFormStatus();
   /*
@@ -591,6 +598,7 @@ export default function SubmitButton({
         form={owner?.id}
         name={name}
         value={value}
+        formAction={formAction}
         color={color}
         variant={variant}
         size={size}

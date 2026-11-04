@@ -13,12 +13,13 @@ import { FACTS_SX, LINE_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/ro
 import { staffInviteConstraints } from "@/modules/staff-identity/constraints";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import { mailSkippedCount } from "@/shared/forms/send-email";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
-import { assignableRoles, canGrantPermission, canHoldMemberTier, canManageMember, canManageStaff, holdsGrant, impliesPermission } from "@/modules/staff-identity/domain/roles";
+import { assignableRoles, canGrantPermission, canHoldMemberTier, canManageMember, canManageStaff, holdsGrant, impliesPermission, isBackofficeRole } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { listStaff } from "@/modules/staff-identity/service";
@@ -102,7 +103,14 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const offered = assignableRoles(actor.role);
 
   const current = await searchParams;
-  const { error, saved, invite, reason, account, count, failed, retried, report } = current;
+  const { error, saved, invite, reason, account, count, failed, retried, report, mailSkipped } = current;
+  /**
+   * «Trimite invitația acum» unticked (slice 4) and an invitation kept back: `mailSkipped` counts them (`mailSkippedOf`), and
+   * a press that added nobody new kept none back, so it carries none — and «Nu a plecat nicio invitație» is not said.
+   */
+  const invitationsKept = (mailSkippedCount(mailSkipped) ?? 0) > 0;
+  /** «Adaugă mai mulți membri» that added nobody new (every address already a member): no invitation of its own is on its way. */
+  const nobodyAdded = count === "0";
   /** Whichever of the three account verbs was pressed (§171) — they share their four answers. */
   const accountVerb = saved === "passwordReset" || saved === "accountDeactivated" || saved === "accountReactivated";
   // Whether "Add" also creates the Zitadel account and sends the invitation (§123).
@@ -336,7 +344,20 @@ export default async function StaffPage({ params, searchParams }: Props) {
                 <ActionForm
                   action={resendStaffInviteAction}
                   confirm={withSendNowChoice(
-                    { title: t("staff.resendInviteTitle"), body: t("staff.resendInviteBody", { email: member.email }), confirmLabel: t("staff.resendInvite"), cancelLabel: words.cancel },
+                    {
+                      title: t("staff.resendInviteTitle"),
+                      body: t("staff.resendInviteBody", { email: member.email }),
+                      // The club's invitation named, and Zitadel's own password email beside it when the key lets it send one (the
+                      // design «telling the owner about every email a staff press sends», slice 3).
+                      ...words.mail({
+                        to: { name: member.displayName, address: member.email },
+                        // The service's own choice (`invitationMessageType`): a backoffice role's invitation, or a member's.
+                        type: isBackofficeRole(member.role) ? "STAFF_INVITATION" : "MEMBER_INVITATION",
+                        also: invitesSend ? [words.line("zitadel")] : [],
+                      }),
+                      confirmLabel: t("staff.resendInvite"),
+                      cancelLabel: words.cancel,
+                    },
                     sendNow,
                   )}
                   data-testid="staff-resend-form"
@@ -391,6 +412,12 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {saved === "invited" && invite === "invited" && <Alert severity="success">{t("staff.inviteSent")}</Alert>}
         {saved === "invited" && invite === "exists" && <Alert severity="success">{t("staff.inviteExists")}</Alert>}
         {saved === "invited" && invite === "unconfigured" && <Alert severity="success">{t("staff.inviteManual")}</Alert>}
+        {/* Added with «Trimite invitația acum» unticked (slice 4): nobody was written to and Zitadel was not asked. */}
+        {(saved === "invited" || saved === "membersInvited") && invitationsKept && (
+          <Alert severity="info" data-testid="staff-invite-not-sent">
+            {t("staff.inviteNotSent")}
+          </Alert>
+        )}
         {/* Two different failures, and they were wearing one sentence (§170): adding says the
             row is on the list and the account was refused; resending says the row is on the
             list and there is no account to send to. "A refuzat să creeze contul" under a
@@ -416,7 +443,13 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {/* «Adaugă mai mulți membri» (§524): how many, and how many accounts the provider refused. */}
         {saved === "membersInvited" && (
           <Alert severity={failed ? "warning" : "success"} data-testid="staff-members-report">
-            {failed ? t("staff.membersInviteFailed", { count: count ?? "0", failed }) : t("staff.membersInvited", { count: count ?? "0" })}
+            {/* Unticked «Trimite invitațiile acum» (slice 4): added, and no invitation is on its way — the info line above says so.
+                Nobody new added: no invitation is on its way either, and nothing claims one is. */}
+            {failed
+              ? t("staff.membersInviteFailed", { count: count ?? "0", failed })
+              : invitationsKept || nobodyAdded
+                ? t("staff.membersAdded", { count: count ?? "0" })
+                : t("staff.membersInvited", { count: count ?? "0" })}
             {retried && ` ${t("staff.membersRetried", { retried })}`}
             {reportLines.length > 0 && (
               <Box component="ul" sx={{ m: 0, mt: 1, pl: 2.5 }}>
@@ -501,7 +534,23 @@ export default async function StaffPage({ params, searchParams }: Props) {
             preferredLocale: t("staff.preferredLocale"),
             tierId: t("staff.memberTier"),
           })}
-          confirm={{ title: t("confirm.inviteStaffTitle"), body: t("confirm.inviteStaffBody"), confirmLabel: t("staff.invite"), cancelLabel: words.cancel }}
+          // The person typed, named once the dialog opens (`fillFrom`), and the invitation the chosen role gets — a member's own, or
+          // the team's — with Zitadel's password email beside it when the key lets it send one.
+          confirm={(["MEMBER", "team"] as const).map((kind) => ({
+            ...(kind === "MEMBER" ? { when: [{ field: "role", equals: "MEMBER" }] } : {}),
+            title: t("confirm.inviteStaffTitle"),
+            body: t("confirm.inviteStaffBody"),
+            ...words.mail({
+              to: { name: "{displayName}", address: "{email}" },
+              type: kind === "MEMBER" ? "MEMBER_INVITATION" : "STAFF_INVITATION",
+              also: invitesSend ? [{ ...words.line("zitadel"), withEmail: true }] : [],
+              // «Trimite invitația acum» (slice 4): unticked, the person is added and told nothing — Zitadel is not asked either.
+              optOut: { label: t("staff.inviteOptOut"), offLine: t("staff.inviteOptOutOff", { name: "{displayName}" }) },
+            }),
+            fillFrom: ["displayName", "email"],
+            confirmLabel: t("staff.invite"),
+            cancelLabel: words.cancel,
+          }))}
           data-testid="staff-invite-form"
         >
           <input type="hidden" name="uiLocale" value={locale} />
@@ -601,7 +650,21 @@ export default async function StaffPage({ params, searchParams }: Props) {
           // Its own boxes' ids, apart from «Adaugă o persoană»'s namesakes (the language, the level).
           scope="members"
           messages={await refusalMessages({ members: t("staff.membersRows"), preferredLocale: t("staff.preferredLocale"), tierId: t("staff.memberTier") })}
-          confirm={{ title: t("confirm.inviteMembersTitle"), body: t("confirm.inviteMembersBody"), confirmLabel: t("staff.membersInvite"), cancelLabel: words.cancel }}
+          // At most one member's invitation per row typed, and — with the key — Zitadel's password email for each new address, and
+          // again for an address already a member's (the design «telling the owner about every email a staff press sends», slice 3).
+          confirm={{
+            title: t("confirm.inviteMembersTitle"),
+            body: t("confirm.inviteMembersBody"),
+            ...words.mail({
+              to: { upToLinesOf: "members", audience: "memberAddresses" },
+              type: "MEMBER_INVITATION",
+              also: invitesSend ? [{ ...words.line("zitadelEach"), withEmail: true }, { ...words.line("zitadelAgain"), withEmail: true }] : [],
+              // «Trimite invitațiile acum» (slice 4): unticked, the members are added and nobody is written to.
+              optOut: { label: t("staff.membersOptOut"), offLine: t("staff.membersOptOutOff") },
+            }),
+            confirmLabel: t("staff.membersInvite"),
+            cancelLabel: words.cancel,
+          }}
           data-testid="staff-members-form"
         >
           <input type="hidden" name="uiLocale" value={locale} />
