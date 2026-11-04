@@ -104,7 +104,7 @@ let close: () => Promise<void>;
 
 const HOUR = 60 * 60_000;
 
-async function createRace(options: { autoOffer?: boolean; cancelled?: boolean; countPublic?: boolean } = {}) {
+async function createRace(options: { autoOffer?: boolean; cancelled?: boolean; countPublic?: boolean; offersOnly?: boolean } = {}) {
   const [event] = await db
     .insert(events)
     .values({
@@ -117,6 +117,8 @@ async function createRace(options: { autoOffer?: boolean; cancelled?: boolean; c
       editorialStatus: "PUBLISHED",
       publishedAt: new Date("2026-09-01T10:00:00.000Z"),
       waitlistAutoOffer: options.autoOffer ?? true,
+      // «Locurile libere le dau doar eu» (§908): off unless a case says so.
+      freePlacesByOfferOnly: options.offersOnly ?? false,
       waitlistCountPublic: options.countPublic ?? true,
       eventStatus: options.cancelled ? "CANCELLED" : "SCHEDULED",
     })
@@ -335,9 +337,21 @@ describe("§654 «Ce îi spui» — every state on the page, for the Administrat
         await register(race.id, "Primul", { status: "WAITLISTED", waitlistedAt: new Date(Date.now() - 2 * HOUR) });
         const row = await register(race.id, "Al doilea", { status: "WAITLISTED", waitlistedAt: new Date(Date.now() - HOUR) });
         const standing = waitlistStandingPhrase(roR, "ro", { position: 2, length: 2, autoOffer, countPublic });
-        return { id: row.id, expected: [stateLine("WAITLISTED"), standing, tell.WAITLISTED] };
+        // What comes next follows the same setting (§908): with «Nu», the organizers' words.
+        return { id: row.id, expected: [stateLine("WAITLISTED"), standing, autoOffer ? tell.WAITLISTED : tell.waitlistedByHand] };
       },
     })),
+    {
+      // §908: «Locurile libere le dau doar eu» wins over «Da» — no place goes out by itself, so the organizers' words.
+      name: "waiting, «Da» with «Locurile libere le dau doar eu» ticked",
+      setup: async () => {
+        const race = await createRace({ autoOffer: true, offersOnly: true });
+        await register(race.id, "Primul", { status: "WAITLISTED", waitlistedAt: new Date(Date.now() - 2 * HOUR) });
+        const row = await register(race.id, "Al doilea", { status: "WAITLISTED", waitlistedAt: new Date(Date.now() - HOUR) });
+        const standing = waitlistStandingPhrase(roR, "ro", { position: 2, length: 2, autoOffer: false, countPublic: true });
+        return { id: row.id, expected: [stateLine("WAITLISTED"), standing, tell.waitlistedByHand] };
+      },
+    },
     {
       name: "an offer open, with the manage link minted beside it",
       setup: async () => {

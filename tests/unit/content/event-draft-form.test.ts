@@ -67,7 +67,10 @@ vi.mock("@/modules/content/members/member-definition", async (importOriginal) =>
 }));
 vi.mock("@/modules/registrations/ui/EmailDeliveryNotice", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
-vi.mock("@/modules/registrations/ui/RegistrationSteps", () => ({ default: () => null }));
+// The steps stand in as what the preview asked them to say of the waiting list (§908), the rest of them being theirs.
+vi.mock("@/modules/registrations/ui/RegistrationSteps", () => ({
+  default: ({ byItself }: { byItself: boolean }) => createElement("div", { "data-testid": "registration-steps", "data-by-itself": byItself ? "yes" : "no" }),
+}));
 
 const { renderDraftForm } = await import("@/modules/content/events/draft-form");
 
@@ -375,6 +378,20 @@ describe("§906 the preview's join form says how an offer works as the saved pag
     expect(html).not.toContain(byHand);
     expect(html).toContain(ro.Event.cta.fullJoin);
     expect(html).not.toContain(ro.Event.cta.fullJoinByHand);
+  });
+
+  it("§908 the steps' waiting list by the same rule, whatever the door: the organizers' words with «Nu» or the tick", async () => {
+    for (const [change, byItself] of [
+      [{}, "yes"],
+      [{ freePlacesByOfferOnly: false, waitlistAutoOffer: true }, "yes"],
+      [{ freePlacesByOfferOnly: false, waitlistAutoOffer: false }, "no"],
+      [{ freePlacesByOfferOnly: true, waitlistAutoOffer: true }, "no"],
+    ] as const) {
+      for (const door of [undefined, full]) {
+        const html = await render({ ...draft(), ...change }, door);
+        expect(html, JSON.stringify(change)).toContain(`data-testid="registration-steps" data-by-itself="${byItself}"`);
+      }
+    }
   });
 });
 

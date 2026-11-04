@@ -15,7 +15,7 @@ import { dayIn, isMinorOn } from "./domain/age";
 import { registrationNameKey } from "./domain/name-key";
 import { isActiveStatus } from "./domain/state-machine";
 import { readRegistrationForm } from "./form-mapping";
-import { ANSWERS_MISSING, answersToAsk, missingAnswers } from "./missing-answers";
+import { ANSWERS_MISSING, answersToAsk, asksNameCheck, missingAnswers, NAME_ANSWERS } from "./missing-answers";
 import * as repo from "./repository";
 
 /**
@@ -36,6 +36,14 @@ import * as repo from "./repository";
  * event's minimum age, a guardian for whoever was a minor when the row was written. A required answer left empty
  * is refused by name — never filled with a default. A declaration already signed names its declarant: under one, no
  * guardian is added and the name of record does not move (`NAME_SIGNED`).
+ *
+ * **The name the club typed, checked before the signature (§907).** On the declaration's page only (`DECLARATION`),
+ * a staff row whose declaration is not signed (`missing-answers.ts#asksNameCheck`) is drawn its two name boxes too,
+ * prefilled, and the press reads them beside the missing answers: a name typed differently goes through the same
+ * planner — the form's rule, the name of record composed from the two with its key (§389), the list's name following
+ * when it was the derived one, as the form derives it — and the signature, in the same transaction, is checked against
+ * the name it leaves. A name left as the club typed it writes nothing; a box left blank (its `required` stops that
+ * first) corrects nothing either: the row always holds a name, never owed. Never from the manage link.
  */
 
 /**
@@ -103,8 +111,11 @@ function filled(value: unknown): string | undefined {
 /** The event's facts a completion is judged by: the day and minimum age, the T-shirt, the members' bib (§664). */
 export type CompletionEvent = Pick<typeof events.$inferSelect, "kitShirt" | "startsAt" | "timezone" | "minAge" | "bibDesign">;
 
-/** `planAnswerCompletion`'s context from the event's row — one reading for the page that previews and the write. */
-export function completionContext(event: CompletionEvent, now: Date, declarationSigned: boolean): Parameters<typeof planAnswerCompletion>[2] {
+/**
+ * `planAnswerCompletion`'s context from the event's row — one reading for the page that previews and the write. The
+ * door decides whether the name the club typed is read (§907): the declaration's page draws it, the manage page never.
+ */
+export function completionContext(event: CompletionEvent, now: Date, declarationSigned: boolean, door: CompletionDoor): Parameters<typeof planAnswerCompletion>[2] {
   return {
     kitShirt: event.kitShirt,
     eventDay: dayIn(event.startsAt, event.timezone ?? CLUB_TIME_ZONE),
@@ -112,28 +123,44 @@ export function completionContext(event: CompletionEvent, now: Date, declaration
     now,
     declarationSigned,
     memberBibOffered: readBibDesign(event.bibDesign).member.enabled,
+    checksName: door === "DECLARATION",
   };
+}
+
+/** A name box's value on the row: the club's typed name, which a checked box is compared with (§907). */
+function heldName(current: Registration, field: string): string {
+  return field === "firstName" ? (current.firstName ?? "") : field === "lastName" ? (current.lastName ?? "") : "";
 }
 
 /**
  * What a completion writes, decided from the row as it stands — pure, every rule tested without a database. Null
- * when nothing is missing (a complete registration: nothing to do, nothing written). Refuses (VALIDATION_ERROR
- * naming the boxes) a required answer left empty (`ANSWERS_MISSING`), an answer the form's rule refuses, the form's
+ * when nothing is missing and no name is checked, or when nothing would change (a complete registration, a name left
+ * as the club typed it: nothing to do, nothing written). Refuses (VALIDATION_ERROR naming the boxes) a required answer
+ * left empty (`ANSWERS_MISSING`), an answer the form's rule refuses — a corrected name included — the form's
  * cross-field rules (`answers.ts` markers), and a new name of record under a signed declaration (`NAME_SIGNED`).
+ *
+ * `checksName` (the declaration's door, `completionContext`): the two name boxes of a staff row not yet signed are
+ * read as well (§907) — a correction of the name the club typed, never an owed answer.
  */
 export function planAnswerCompletion(
   current: Registration,
   posted: PostedAnswers,
-  context: { kitShirt: boolean; eventDay: string; minAge: number | null; now: Date; declarationSigned: boolean; memberBibOffered?: boolean },
+  context: { kitShirt: boolean; eventDay: string; minAge: number | null; now: Date; declarationSigned: boolean; memberBibOffered?: boolean; checksName?: boolean },
 ): AnswerPlan | null {
   const missing = missingAnswers({ kitShirt: context.kitShirt }, current);
-  if (missing.length === 0) return null;
-  const { fields, guardianIfMinor } = answersToAsk(missing, context.declarationSigned);
+  const nameCheck = context.checksName === true && asksNameCheck(current, context.declarationSigned);
+  if (missing.length === 0 && !nameCheck) return null;
+  const { fields, guardianIfMinor } = answersToAsk(missing, context.declarationSigned, nameCheck);
+  // The name's boxes that hold the club's name rather than ask a missing one: what they carry is a correction.
+  const checked: ReadonlySet<string> = new Set(nameCheck ? NAME_ANSWERS.filter((field) => !missing.includes(field)) : []);
 
   const changes: Record<string, string> = {};
   for (const field of fields) {
     const value = filled(posted[field]);
-    if (value !== undefined) changes[field] = value;
+    if (value === undefined) continue;
+    // A checked name left as the club typed it — the form's own trim aside — writes nothing (§907).
+    if (checked.has(field) && value.trim() === heldName(current, field)) continue;
+    changes[field] = value;
   }
   // The guardian beside a missing birth date (§108): kept only when the date typed makes a minor on the day the
   // row was written, as the form keeps one — an adult's typed guardian is ignored, never refused.
@@ -146,7 +173,8 @@ export function planAnswerCompletion(
   }
   if (fields.length === 0) return null;
 
-  const absent = fields.filter((field) => !(field in changes));
+  // A checked name is never owed (§907): a box left blank keeps the name the row holds. Every other box left empty is.
+  const absent = fields.filter((field) => !(field in changes) && !checked.has(field));
   let plan: AnswerPlan | null = null;
   if (Object.keys(changes).length > 0) {
     try {
@@ -223,7 +251,8 @@ export async function declarationSignedFor<T extends Record<string, unknown>>(db
  * completed name and a new runner on the same address cannot both find the name free, §389), the row read again
  * under it, only a registration that still stands, only the changed columns, and one audit row with no staff
  * actor. `db` may be the caller's transaction — the signature's, so the answers and the signature commit together
- * or not at all. Returns the columns written; none when nothing was missing.
+ * or not at all — and then the signature is checked against the name this leaves (§907). Returns the columns written —
+ * a corrected name's among them, by name — none when nothing was missing or changed.
  */
 export async function completeMissingAnswers<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -243,7 +272,7 @@ export async function completeMissingAnswers<T extends Record<string, unknown>>(
     // A cancelled or lapsed registration owes nothing: its answers are kept as they were.
     if (!isActiveStatus(current.status)) throw new DomainError("CONFLICT", `a ${current.status} registration is not completed`);
 
-    const plan = planAnswerCompletion(current, posted, completionContext(event, now, await declarationSignedFor(tx, current.id)));
+    const plan = planAnswerCompletion(current, posted, completionContext(event, now, await declarationSignedFor(tx, current.id), via));
     if (!plan) return { completed: [] };
     if (plan.nameChange) {
       // Two people on one address are told apart by their names (§389), as «Modifică datele» asks.

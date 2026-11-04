@@ -424,10 +424,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       <RegistrationJourney current={submitted && !sittingScreen ? "confirm" : "details"} />
 
       {/* The five steps and the waiting list, folded: the journey above says where they are,
-          this says the whole of it (`DECISIONS.md` §91). */}
+          this says the whole of it (`DECISIONS.md` §91). The waiting list's step speaks of a full
+          event, which has places to count (`0`), in the organizers' words while none reaches the line by itself (§908). */}
       {!submitted && (
         <Box sx={{ mb: 3 }}>
-          <RegistrationSteps folded window={stepsWindow} reminderHoursBefore={event.reminderHoursBefore} />
+          <RegistrationSteps folded window={stepsWindow} reminderHoursBefore={event.reminderHoursBefore} byItself={offersByItself(event, 0)} />
         </Box>
       )}
 
