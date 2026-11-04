@@ -5,6 +5,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
+import type { ConfirmEmailOptOut } from "@/shared/feedback/notice";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 
@@ -56,6 +57,13 @@ export default function BulkBar({
     remove: string;
     publishTitle: string;
     publishBody: string;
+    /** What a publication sets off at the job's next pass (§445): the new-event alert to the newsletter's subscribers. */
+    publishAlso: string;
+    /**
+     * «Anunță abonații newsletterului» under it (the design «telling the owner about every email a staff press sends», slice 4):
+     * one box for the batch; unticked, none of the events published is ever announced. Worded on the server.
+     */
+    publishOptOut?: ConfirmEmailOptOut;
     archiveTitle: string;
     archiveBody: string;
     deleteTitle: string;
@@ -124,6 +132,7 @@ export default function BulkBar({
             icon="publish"
             title={labels.publishTitle}
             body={labels.publishBody}
+            mail={{ also: [{ text: labels.publishAlso, withEmail: true }], ...(labels.publishOptOut ? { emailOptOut: labels.publishOptOut } : {}) }}
             confirmLabel={labels.publish}
             cancelLabel={labels.cancel}
             variant="contained"

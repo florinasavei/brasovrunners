@@ -20,10 +20,12 @@ import {
 import { readShopSettings, saveShopSettings } from "@/modules/content/shop/settings";
 import { canManageShop } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
+import { inEmailPress } from "@/modules/notifications/press";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { isUuid } from "@/shared/ids";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
+import { mailSkippedOf, sendEmailOf } from "@/shared/forms/send-email";
 
 /**
  * «Magazin»'s writes (§683, §687, §690, §697), the codes' shape (§552): a refused product, picture or
@@ -255,20 +257,33 @@ export async function saveShopSettingsAction(_previous: FormOutcome | null, form
 
 /** «Marchează plătită», «Marchează predată», «Anulează» on an order — the verb a closed set, never a name from the POST. */
 export async function moveShopOrderAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const posted = text(form, "verb");
-  const verb: OrderVerb = posted === "pay" ? "pay" : posted === "handOver" ? "handOver" : "cancel";
-  const orderId = text(form, "orderId");
-  let outcome: { error?: string; saved?: string };
-  try {
-    const actor = await requireStaffCapability(canManageShop);
-    await moveOrderByClub(getDb(), { actor, orderId, verb });
-    // The words follow the switch (§704): off, the member was told nothing, and the banner says so.
-    const emailed = verb === "pay" ? (await readShopSettings(getDb())).emailMembers : true;
-    outcome = verb === "pay" ? { saved: emailed ? "shopOrderPaid" : "shopOrderPaidNoEmail" } : verb === "handOver" ? { saved: "shopOrderHandedOver" } : { saved: "shopOrderCancelled" };
-  } catch (error) {
-    outcome = outcomeOf(error);
-  }
-  return backTo(form, "/admin/shop/orders", outcome, `order-${orderId}`, ordersFilterOf(form));
+  // An email press (`notifications/press.ts`): «Marchează plătită» emails the member; the other two verbs queue nothing.
+  return inEmailPress("club.shopPaid", async (press) => {
+    const posted = text(form, "verb");
+    const verb: OrderVerb = posted === "pay" ? "pay" : posted === "handOver" ? "handOver" : "cancel";
+    const orderId = text(form, "orderId");
+    // «Trimite emailul» in «Marchează plătită»'s question (slice 4); the other two verbs offer none and send nothing.
+    const sendEmail = sendEmailOf(form);
+    let outcome: { error?: string; saved?: string; mailSkipped?: string };
+    try {
+      const actor = await requireStaffCapability(canManageShop);
+      press.by(actor.id);
+      await moveOrderByClub(getDb(), { actor, orderId, verb, sendEmail });
+      // The words follow the switch (§704): off, the member was told nothing, and the banner says so.
+      const emailed = verb === "pay" ? (await readShopSettings(getDb())).emailMembers : true;
+      outcome =
+        verb === "pay"
+          ? emailed
+            ? { saved: "shopOrderPaid", ...mailSkippedOf(sendEmail) }
+            : { saved: "shopOrderPaidNoEmail" }
+          : verb === "handOver"
+            ? { saved: "shopOrderHandedOver" }
+            : { saved: "shopOrderCancelled" };
+    } catch (error) {
+      outcome = outcomeOf(error);
+    }
+    return backTo(form, "/admin/shop/orders", outcome, `order-${orderId}`, ordersFilterOf(form));
+  });
 }
 
 /**
@@ -279,24 +294,28 @@ export async function moveShopOrderAction(_previous: FormOutcome | null, form: F
  * toast.
  */
 export async function placeOrderForMemberAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  let id: string;
-  try {
-    const actor = await requireStaffCapability(canManageShop);
-    id = (
-      await placeOrderForMember(getDb(), {
-        actor,
-        fields: {
-          memberStaffUserId: text(form, "memberStaffUserId"),
-          item: text(form, "item"),
-          quantity: text(form, "quantity"),
-          note: text(form, "note"),
-          emailMember: text(form, "emailMember"),
-          markPaid: text(form, "markPaid"),
-        },
-      })
-    ).id;
-  } catch (error) {
-    return refused(error, form);
-  }
-  return backTo(form, "/admin/shop/orders", { saved: "shopOrderPlacedForMember" }, `order-${id}`, ordersFilterOf(form));
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("club.shopOrderForMember", async (press) => {
+    let id: string;
+    try {
+      const actor = await requireStaffCapability(canManageShop);
+      press.by(actor.id);
+      id = (
+        await placeOrderForMember(getDb(), {
+          actor,
+          fields: {
+            memberStaffUserId: text(form, "memberStaffUserId"),
+            item: text(form, "item"),
+            quantity: text(form, "quantity"),
+            note: text(form, "note"),
+            emailMember: text(form, "emailMember"),
+            markPaid: text(form, "markPaid"),
+          },
+        })
+      ).id;
+    } catch (error) {
+      return refused(error, form);
+    }
+    return backTo(form, "/admin/shop/orders", { saved: "shopOrderPlacedForMember" }, `order-${id}`, ordersFilterOf(form));
+  });
 }

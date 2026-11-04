@@ -118,13 +118,14 @@ test.describe("§384 the bulk cancel counts the emails it will send", () => {
     // One real, confirmed row: one email.
     await tick(0).check();
     await press();
-    await expect(dialog.getByTestId("confirm-email")).toHaveText("Se va trimite un email către 1 participant.");
+    // The one builder's words (the design «telling the owner about every email a staff press sends», slice 3): the email named.
+    await expect(dialog.getByTestId("confirm-email")).toHaveText("Pleacă 1 email „Înscriere anulată”, câte unul către fiecare persoană bifată.");
     await cancelDialog(page, "Anulezi înscrierile bifate?");
 
     // All four: the waiting-list row adds one; the unconfirmed address and the test row add nobody.
     for (const index of [1, 2, 3]) await tick(index).check();
     await press();
-    await expect(dialog.getByTestId("confirm-email")).toHaveText("Se va trimite un email către 2 participanți.");
+    await expect(dialog.getByTestId("confirm-email")).toHaveText("Pleacă 2 emailuri „Înscriere anulată”, câte unul către fiecare persoană bifată.");
     await cancelDialog(page, "Anulezi înscrierile bifate?");
 
     // Only the rows that email nobody the club counts: no email line at all.
@@ -135,11 +136,18 @@ test.describe("§384 the bulk cancel counts the emails it will send", () => {
     await expect(dialog.getByTestId("confirm-email")).toHaveCount(0);
     await cancelDialog(page, "Anulezi înscrierile bifate?");
 
-    // Through it: the toast counts the real rows cancelled, the same two.
+    // Through it, all four ticked again (the unconfirmed address and the test row still are): the toast counts the real
+    // rows cancelled, the same two, and says the test row went too, counted nowhere (`registrationsCancelledTest`) — so
+    // its act is «2 înscrieri anulate. Anulate și ele, …», never «2 înscrieri anulate. Pleacă …». Then its mail line (the
+    // design «telling the owner about every email a staff press sends», slice 2): the two emails the press really
+    // queued, when, and the test row's own email apart, uncounted (§30).
     for (const index of [0, 1]) await tick(index).check();
     await panel.locator('input[name="reason"]').fill("Test automat");
     await press();
     await confirmDialog(page, "Anulezi înscrierile bifate?");
-    await expect(page.getByTestId("toast")).toContainText("2 înscrieri anulate; 2 emailuri puse la coadă.", { timeout: 30_000 });
+    const toast = page.getByTestId("toast");
+    await expect(toast).toContainText("2 înscrieri anulate. Anulate și ele, nenumărate nicăieri: 1 ", { timeout: 30_000 });
+    await expect(toast).toContainText(" Pleacă ");
+    await expect(toast).toContainText("„Înscriere anulată” către 2 persoane (+1 către adresă de test, nenumărat).");
   });
 });

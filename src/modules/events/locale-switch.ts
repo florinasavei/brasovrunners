@@ -95,6 +95,7 @@ export async function resolveLocaleSwitch(
     parsed.route === "/admin/events/[id]/erase" ||
     parsed.route === "/admin/events/[id]/urgente" ||
     parsed.route === "/admin/events/[id]/mesaje" ||
+    parsed.route === "/admin/events/[id]/locuri" ||
     parsed.route === "/admin/events/[id]/results" ||
     parsed.route === "/admin/events/[id]/results/sosire" ||
     parsed.route === "/preview/events/[id]" ||

@@ -11,6 +11,7 @@ import StatusChip from "@/shared/ui/StatusChip";
 import type { ShopOrderStatus } from "@/db/schema/shop";
 import { clubVerbsFor, formatPrice, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, orderTotalBani, type OrderVerb } from "@/modules/content/shop/domain";
 import type { AdminOrder, OrderableItem, OrdersQuery, ZoneAccount } from "@/modules/content/shop/repository";
+import type { ConfirmWords } from "@/shared/feedback/confirm-words";
 import { type ListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
@@ -24,6 +25,8 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { moveShopOrderAction, placeOrderForMemberAction } from "@/app/[locale]/admin/shop/actions";
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
+/** The one builder of the dialogs' email lines (the design «telling the owner about every email a staff press sends», slice 3). */
+type MailWords = Pick<ConfirmWords, "mail" | "noMail" | "line">;
 
 /** The order's statuses in the filter's order. */
 const STATUSES: readonly ShopOrderStatus[] = ["PLACED", "PAID", "HANDED_OVER", "CANCELLED"];
@@ -54,6 +57,7 @@ export default function OrdersCard({
   locale,
   words: t,
   cancel,
+  mail,
   messages,
   mayManage,
   showEmail,
@@ -74,6 +78,7 @@ export default function OrdersCard({
   locale: Locale;
   words: Words;
   cancel: string;
+  mail: MailWords;
   messages: RefusalMessages;
   mayManage: boolean;
   showEmail: boolean;
@@ -90,7 +95,7 @@ export default function OrdersCard({
   return (
     <Panel glyph="registrations" title={t("members.shop.ordersHeading")} aside={count} id="shop-orders" data-testid="shop-orders">
       <Stack spacing={2}>
-        {mayManage && <ForMemberFold accounts={accounts} items={items} query={query} locale={locale} words={t} cancel={cancel} messages={messages} emailMembers={emailMembers} />}
+        {mayManage && <ForMemberFold accounts={accounts} items={items} query={query} locale={locale} words={t} cancel={cancel} mail={mail} messages={messages} emailMembers={emailMembers} />}
         <Box component="form" method="get" action={`${path}#shop-orders`} role="search" aria-label={t("members.shop.filterLabel")}>
           <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
             <TextField
@@ -171,7 +176,7 @@ export default function OrdersCard({
               {t("members.shop.ordersEmpty")}
             </Typography>
           }
-          rowActions={mayManage ? (order) => <OrderVerbs order={order} query={query} locale={locale} words={t} cancel={cancel} emailMembers={emailMembers} /> : undefined}
+          rowActions={mayManage ? (order) => <OrderVerbs order={order} query={query} locale={locale} words={t} cancel={cancel} mail={mail} showEmail={showEmail} emailMembers={emailMembers} /> : undefined}
         />
       </Stack>
     </Panel>
@@ -193,6 +198,7 @@ function ForMemberFold({
   locale,
   words: t,
   cancel,
+  mail,
   messages,
   emailMembers,
 }: {
@@ -202,6 +208,7 @@ function ForMemberFold({
   locale: Locale;
   words: Words;
   cancel: string;
+  mail: MailWords;
   messages: RefusalMessages;
   emailMembers: boolean;
 }) {
@@ -232,7 +239,19 @@ function ForMemberFold({
             messages={messages}
             scope="order-for-member"
             data-testid="order-for-member-form"
-            confirm={{ title: t("members.shop.forMember.ask"), body: t("members.shop.forMember.askBody"), confirmLabel: t("members.shop.forMember.add"), cancelLabel: cancel }}
+            // By the two ticks (the design «telling the owner about every email a staff press sends», slice 3): «Comanda ta a fost primită»
+            // when the member is emailed, «Comanda ta e plătită» after it when it is paid at once too — or no email at all.
+            confirm={[
+              {
+                when: [
+                  { field: "emailMember", equals: "on" },
+                  { field: "markPaid", equals: "on" },
+                ],
+                ...mail.mail({ to: t("members.shop.forMember.theMember"), type: "SHOP_ORDER_PLACED", also: [mail.line("andType", { type: t("emails.types.SHOP_ORDER_PAID") })] }),
+              },
+              { when: [{ field: "emailMember", equals: "on" }], ...mail.mail({ to: t("members.shop.forMember.theMember"), type: "SHOP_ORDER_PLACED" }) },
+              { ...mail.noMail(t("members.shop.forMember.theMember")) },
+            ].map((spec) => ({ ...spec, title: t("members.shop.forMember.ask"), body: t("members.shop.forMember.askBody"), confirmLabel: t("members.shop.forMember.add"), cancelLabel: cancel }))}
           >
             <input type="hidden" name="uiLocale" value={locale} />
             {query.status && <input type="hidden" name="orderStatus" value={query.status} />}
@@ -391,6 +410,8 @@ function OrderVerbs({
   locale,
   words: t,
   cancel,
+  mail,
+  showEmail,
   emailMembers,
 }: {
   order: AdminOrder;
@@ -399,8 +420,19 @@ function OrderVerbs({
   locale: Locale;
   words: Words;
   cancel: string;
+  mail: MailWords;
+  /** The member's address in the dialog only for a reader who already sees it (§550). */
+  showEmail: boolean;
   emailMembers: boolean;
 }) {
+  // «Marchează plătită» tells the member, at their account's address — none while the shop's switch is off, and none when the
+  // account is gone (`moveOrderByClub`): the dialog no longer promises an email that is never queued. The other verbs send nothing.
+  // «Trimite emailul» under it (the design «telling the owner about every email a staff press sends», slice 4): a payment taken
+  // by hand from a member standing there need not be emailed too; unticked, the order is marked paid and nothing is queued.
+  const paidMail =
+    emailMembers && order.memberEmail !== null
+      ? mail.mail({ to: showEmail ? { name: order.memberName, address: order.memberEmail } : order.memberName, type: "SHOP_ORDER_PAID", optOut: true })
+      : mail.noMail(order.memberName);
   const verbs: OrderVerb[] = clubVerbsFor(order.status);
   if (verbs.length === 0) return null;
   return (
@@ -412,6 +444,7 @@ function OrderVerbs({
           confirm={{
             title: t(`members.shop.verbs.${verb}.title`, { number: order.number }),
             body: t(verb === "pay" && !emailMembers ? "members.shop.verbs.pay.bodyNoEmail" : `members.shop.verbs.${verb}.body`),
+            ...(verb === "pay" ? paidMail : mail.noMail(order.memberName)),
             confirmLabel: t(`members.shop.verbs.${verb}.label`),
             cancelLabel: cancel,
             destructive: verb === "cancel",

@@ -5,12 +5,15 @@ import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import { type CSSProperties, type FormEvent, type ReactNode, useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
+import ConfirmDialog, { type ConfirmAnswer } from "@/shared/feedback/ConfirmDialog";
 import {
   choiceAnswer,
   type ConfirmSpec,
+  emailOptOutAnswer,
+  emailOptOutFields,
   fillFromForm,
   pickConfirm,
+  resolveAlso,
   resolveBodyCount,
   resolveChangedFields,
   resolveEmailCount,
@@ -319,6 +322,8 @@ export default function ActionFormIsland({
 
   // The question on screen, with the button that asked it — the submitter, replayed on "yes".
   const [asking, setAsking] = useState<{ spec: ConfirmSpec; submitter: HTMLElement | null } | null>(null);
+  // «Trimite emailul»'s fields (slice 4): drawn below as hidden `on`, so a press posts the field whichever question it met.
+  const optOutFields = useMemo(() => emailOptOutFields(confirm), [confirm]);
   // The one submit that follows a "yes": let it through, then ask again next time.
   const confirmed = useRef(false);
 
@@ -332,6 +337,13 @@ export default function ActionFormIsland({
     }
     const element = event.currentTarget;
     const submitter = ((event.nativeEvent as SubmitEvent).submitter ?? null) as HTMLElement | null;
+    // A press let through unasked sends the person's email (slice 4): no earlier question's untick rides along.
+    const unasked = () => {
+      for (const field of optOutFields) {
+        const input = element.elements.namedItem(field);
+        if (input instanceof HTMLInputElement) input.value = "on";
+      }
+    };
     let data: FormData;
     try {
       data = submitter ? new FormData(element, submitter) : new FormData(element);
@@ -342,51 +354,54 @@ export default function ActionFormIsland({
       const value = data.get(field);
       return typeof value === "string" ? value : null;
     });
-    if (!spec) return;
+    if (!spec) return unasked();
     const valuesOf = (field: string) => data.getAll(field).filter((value): value is string => typeof value === "string");
     // A body that counts the ticks (§532): with none ticked, nothing to ask — the server refuses.
     const ticked = resolveBodyCount(spec, valuesOf);
-    if (!ticked) return;
+    if (!ticked) return unasked();
     // A body naming the fields the press changes (§645): none changed, nothing to ask — the server says so.
     const named = resolveChangedFields(ticked, (field) => {
       const value = data.get(field);
       return typeof value === "string" ? value : null;
     });
-    if (!named) return;
+    if (!named) return unasked();
+    const valueOf = (field: string) => {
+      const value = data.get(field);
+      return typeof value === "string" ? value : null;
+    };
     // The event editor's place settings (§NNN): each change and what it does; none changed, nothing to ask for them.
-    const placed = resolvePlaceChanges(named, (field) => {
-      const value = data.get(field);
-      return typeof value === "string" ? value : null;
-    });
-    if (!placed) return;
+    const placed = resolvePlaceChanges(named, valueOf);
+    if (!placed) return unasked();
     event.preventDefault();
-    // A series save's email line, summed over the dates ticked at this press (§384).
+    // A series save's email line, summed over the dates ticked at this press (§384); the lines of a typed list counted.
     const counted = resolveEmailCount(placed, valuesOf);
-    // A typed value named in the sentence (§511): «Limita nouă: 100 ore-CU.».
-    const resolved = fillFromForm(counted, (field) => {
-      const value = data.get(field);
-      return typeof value === "string" ? value : null;
-    });
+    // The quieter lines true of this press alone: the offers a raised capacity sends, the window's re-sent links.
+    const said = resolveAlso(counted, valueOf);
+    // A typed value named in the sentence (§511): «Limita nouă: 100 ore-CU.», «Pleacă 1 email către {firstName} {lastName}…».
+    const resolved = fillFromForm(said, valueOf);
     setAsking({ spec: resolved, submitter });
   };
 
-  const answer = (which: "confirm" | "alternative") => {
+  const answer = (which: "confirm" | "alternative", given: ConfirmAnswer) => {
     const pending = asking;
     setAsking(null);
     const element = form.current;
     if (!pending || !element) return;
+    const write = (field: string, value: string) => {
+      const input = element.elements.namedItem(field);
+      if (input instanceof HTMLInputElement) input.value = value;
+    };
     // A two-way question (§540): the answer is the hidden field's value, set before the form is sent.
     const chosen = choiceAnswer(pending.spec, which);
-    if (chosen) {
-      const input = element.elements.namedItem(chosen.field);
-      if (input instanceof HTMLInputElement) input.value = chosen.value;
-    }
+    if (chosen) write(chosen.field, chosen.value);
     // A box ticked in the dialog (§888): its hidden input carries the tick to the action; the dialog let nothing through unticked.
     const ticked = which === "confirm" ? tickAnswer(pending.spec) : null;
-    if (ticked) {
-      const input = element.elements.namedItem(ticked.field);
-      if (input instanceof HTMLInputElement) input.value = ticked.value;
-    }
+    if (ticked) write(ticked.field, ticked.value);
+    // «Trimite emailul» (slice 4): every opt-out of this form back to `on`, then this question's answer — a dialog without
+    // the box (the club's refusal, which always tells the person) never sends an earlier press's untick.
+    for (const field of optOutFields) write(field, "on");
+    const optedOut = emailOptOutAnswer(pending.spec, given.emailOff);
+    if (optedOut) write(optedOut.field, optedOut.value);
     confirmed.current = true;
     // The same submitter, so a button's own `formAction` and `name=value` still travel (§287).
     const button = pending.submitter;
@@ -420,15 +435,19 @@ export default function ActionFormIsland({
         {state?.error && <RefusalSummary state={state} messages={messages} scope={scope} />}
         {children}
       </RecallProvider>
+      {/* «Trimite emailul»: `on` as drawn — and as posted without JavaScript, which asks nothing — until a question's answer says `off`. */}
+      {optOutFields.map((field) => (
+        <input key={field} type="hidden" name={field} defaultValue="on" />
+      ))}
       {/* The question, drawn only while it is asked: fifty hidden row forms cost no dialog DOM. */}
       {asking && (
         <ConfirmDialog
           spec={asking.spec}
           open
           onCancel={cancelAsking}
-          onConfirm={() => answer("confirm")}
+          onConfirm={(given) => answer("confirm", given)}
           // A two-way question (§540): the quiet answer beside the primary one, never on Enter.
-          alternative={asking.spec.choice ? { label: asking.spec.choice.alternativeLabel, onClick: () => answer("alternative") } : null}
+          alternative={asking.spec.choice ? { label: asking.spec.choice.alternativeLabel, onClick: (given) => answer("alternative", given) } : null}
         />
       )}
     </form>

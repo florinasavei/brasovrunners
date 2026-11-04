@@ -27,9 +27,12 @@ import {
   confirmationWindow,
   DEFAULT_CONFIRMATION_DEADLINE_DAYS,
   DEFAULT_CONFIRMATION_OPENS_DAYS,
+  participationWindowOpen,
 } from "@/modules/registrations/domain/hold-deadlines";
+import { WINDOW_SEND_EMAIL_FIELD } from "@/shared/forms/send-email";
 import { REGISTRATION_MODE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { htmlConstraints, textFieldConstraints } from "@/shared/forms/constraints";
+import MailLine from "@/shared/feedback/MailLine";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import InfoTip from "@/shared/ui/InfoTip";
@@ -139,6 +142,7 @@ export default async function RegistrationBox({
   now,
   clubDeadlines,
   windowHolds = null,
+  interests = null,
   rsvp = null,
   rsvpAsk = DEFAULT_RSVP_ASK_SETTINGS,
 }: BoxProps & {
@@ -179,6 +183,8 @@ export default async function RegistrationBox({
    * form, and for a role that reads no registrations.
    */
   placesTaken?: { occupied: number; confirmed: number; declaration: number; offered: number; invited: number; family: number } | null;
+  /** How many asked «Anunță-mă» while registration is not open yet (§451), for the role that reads them; null otherwise. */
+  interests?: number | null;
   bibCounts?: { total: number; unprinted: number } | null;
   /** Sub-sub-card 8.4.2, edit only, drawn by the page (it posts forms of its own). */
   bibPrint?: ReactNode;
@@ -295,6 +301,13 @@ export default async function RegistrationBox({
     What the save does to the places the window already gave (§665): moves those held to another
     window's instant now, or — when they all hold this one — says a changed window will move them.
   */
+  // Whether the save's move sends anything now (`moveWindowHolds`): only inside an open window, never on a cancelled event.
+  const windowSends =
+    windowHolds !== null &&
+    event !== null &&
+    now !== undefined &&
+    event.eventStatus !== "CANCELLED" &&
+    participationWindowOpen(event.startsAt, event.confirmationOpensDaysBefore ?? DEFAULT_CONFIRMATION_OPENS_DAYS, now);
   const windowHoldsLine = (() => {
     if (!windowHolds) return null;
     const due = summaryDateTime(windowHolds.to, zone, locale, "inline");
@@ -503,6 +516,9 @@ export default async function RegistrationBox({
                       <option value="false">{t("editor.waitlistAutoOfferNo")}</option>
                     </RecallField>
                     <BoxNote more={t("editor.waitlistAutoOfferHelpMore")}>{t("editor.waitlistAutoOfferHelp")}</BoxNote>
+                    {/* What a raise or «Da» here emails at the save (the design «telling the owner about every email a staff press sends», slice 3):
+                        beside the boxes of a data-entry form, never a question; the save's own dialog says it again with the numbers posted. */}
+                    {waiting > 0 && <MailLine text={t("mailLine.capacity", { count: String(waiting) })} data-testid="capacity-mail" />}
                   </Stack>
 
                   {/*
@@ -563,6 +579,11 @@ export default async function RegistrationBox({
                         {t("editor.registrationOpensSoon")}
                       </CheckboxField>
                       <BoxNote>{t("editor.registrationOpensSoonHelp")}</BoxNote>
+                      {/* «Anunță-mă» (§451): the job writes to them when registration opens, never the save itself. */}
+                      <MailLine
+                        text={interests !== null ? t("mailLine.openingCount", { count: String(interests) }) : t("mailLine.opening")}
+                        data-testid="opening-mail"
+                      />
                       <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                         <WallTimeField name="event.registrationOpensAt" label={t("editor.registrationOpensAt")} timeLabel={t("editor.timeOfDay")} value={event?.registrationOpensAt ?? null} zone={zone} />
                         <WallTimeField name="event.registrationClosesAt" label={t("editor.registrationClosesAt")} timeLabel={t("editor.timeOfDay")} value={event?.registrationClosesAt ?? null} zone={zone} />
@@ -609,6 +630,19 @@ export default async function RegistrationBox({
                           {windowHoldsLine}
                         </Typography>
                       )}
+                      {/* The places the window moves are sent the declaration again, with the new deadline (`moveWindowHolds`). */}
+                      {/*
+                        «Trimite din nou „Semnează declarația”» (the design «telling the owner about every email a staff press sends», slice 4),
+                        offered only while a move sends — the window open, the event not cancelled; its own field, apart from the save's other
+                        emails. Unticked, a deadline moved later is not sent again; one moved earlier still is (`windowEmailSkippable`).
+                      */}
+                      {windowHoldsLine && (
+                        <MailLine
+                          text={t("mailLine.window")}
+                          {...(windowSends ? { also: [t("mailLine.windowOptOutHelp")], optOut: { label: t("mailLine.windowOptOut"), field: WINDOW_SEND_EMAIL_FIELD } } : {})}
+                          data-testid="confirmation-mail"
+                        />
+                      )}
                       <BoxNote more={t("editor.confirmationWindowHelpMore", { hold })}>{t("editor.confirmationWindowHelp")}</BoxNote>
                       {/*
                         «Eliberează singur locurile nesemnate la termen» (§NNN): under the deadline it acts at. A real tick
@@ -648,6 +682,8 @@ export default async function RegistrationBox({
                         <option value="0">{t("editor.reminder.none")}</option>
                       </RecallField>
                       <BoxNote>{t("editor.reminder.help", { lead: clubReminder })}</BoxNote>
+                      {/* The reminder is the job's (§81): a lead lengthened, or a start moved earlier, reaches the events newly inside it at the next pass. */}
+                      <MailLine text={t("mailLine.reminder")} data-testid="reminder-mail" />
                     </Stack>
                   </Panel>
                 </Stack>

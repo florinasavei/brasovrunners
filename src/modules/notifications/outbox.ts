@@ -45,6 +45,7 @@ import { forgetUnsentVolunteerAgreementLink } from "@/modules/volunteers/unsent-
 import { BULK_MESSAGE_TYPES, isBulkMessage } from "./domain/bulk";
 import { RELAY_MESSAGE_TYPES } from "./domain/relay";
 import { drainOutboxAfterResponse } from "./drain";
+import { pressStamp } from "./press";
 import {
   nextAllowanceResetAt,
   nextAttemptAt,
@@ -181,7 +182,8 @@ export async function enqueueEmail<T extends Record<string, unknown>>(
       // The participant's own message, exactly as asked for: no club address rides on it (§320).
       payloadJson: params.payload,
       idempotencyKey: params.idempotencyKey,
-      requestedByStaffUserId: params.requestedByStaffUserId ?? null,
+      // The press or job that queued it, its id and who pressed (`press.ts`); nothing outside a scope.
+      ...pressStamp(params.requestedByStaffUserId),
       isManualResend: params.isManualResend ?? false,
       status: "PENDING",
       attemptCount: 0,
@@ -271,7 +273,8 @@ async function enqueueClubCopies<T extends Record<string, unknown>>(
         recipientEmail: recipient,
         payloadJson: clubCopyPayload(params.payload),
         idempotencyKey: `${params.idempotencyKey}:club-copy:${recipient.toLowerCase()}`,
-        requestedByStaffUserId: params.requestedByStaffUserId ?? null,
+        // The same press as the message it copies (`press.ts`): «Emailuri azi» folds it under that row.
+        ...pressStamp(params.requestedByStaffUserId),
         isManualResend: params.isManualResend ?? false,
         status: "PENDING",
         attemptCount: 0,
@@ -338,7 +341,8 @@ export async function enqueueBulkClubCopies<T extends Record<string, unknown>>(
           [BULK_COPY_RECIPIENTS]: params.realRecipients,
         },
         idempotencyKey: `${params.sendKey}:club-copy:${recipient.toLowerCase()}`,
-        requestedByStaffUserId: params.requestedByStaffUserId ?? null,
+        // The send's press (`press.ts`), like every row it queued.
+        ...pressStamp(params.requestedByStaffUserId),
         isManualResend: false,
         status: "PENDING",
         attemptCount: 0,

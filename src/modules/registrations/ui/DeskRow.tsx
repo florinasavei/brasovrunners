@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import type { DeskRegistration } from "@/modules/registrations/admin-repository";
+import { mayEndWaitlisted } from "@/modules/registrations/domain/row-verbs";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { bibPictureSrc } from "@/modules/registrations/domain/bib-stamp";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
@@ -305,8 +306,9 @@ export default async function DeskRow({
                 title: t("desk.confirmOnPaper"),
                 // A minor's paper carries two signatures, and the press attests both (§330).
                 body: row.guardianName && minorSigns[row.locale] ? t("registrations.confirmOnPaperBodyMinor", { guardian: row.guardianName }) : t("registrations.confirmOnPaperBody"),
-                ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
-                road: words.road("confirmations"),
+                // The person by name, never an address — the desk's rule — and what the club's mailboxes get (§244, §245); «or none»
+                // where the allocator may still put them on the waiting list (`mayEndWaitlisted`).
+                ...words.mail({ to: row.registeredName, type: "REGISTRATION_CONFIRMED", confirms: true, orNothing: mayEndWaitlisted(row.status, row.eventStartsAt, new Date()), test: row.kind === "TEST" }),
                 confirmLabel: t("desk.confirmHere"),
                 cancelLabel: words.cancel,
               }}
@@ -372,7 +374,13 @@ export default async function DeskRow({
           {!readOnly && row.status === "WAITLISTED" && (
             <ActionForm
               action={promoteRegistrationAction}
-              confirm={{ title: t("confirm.givePlaceTitle"), body: t("confirm.givePlaceBody", { name: row.registeredName }), ...(row.kind === "TEST" ? {} : { email: words.email(1), road: words.road("confirmations") }), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
+              confirm={{
+                title: t("confirm.givePlaceTitle"),
+                body: t("confirm.givePlaceBody", { name: row.registeredName }),
+                ...words.mail({ to: row.registeredName, type: "REGISTRATION_CONFIRMED", confirms: true, test: row.kind === "TEST" }),
+                confirmLabel: t("desk.givePlace"),
+                cancelLabel: words.cancel,
+              }}
               data-testid="desk-place-form"
             >
               {hidden}
@@ -395,7 +403,14 @@ export default async function DeskRow({
                 <ActionForm
                   action={setBibNumberAction}
                   messages={await bibRefusalMessages(t("desk.bibField"))}
-                  confirm={{ title: t("confirm.setBibTitle"), body: t("confirm.setBibBody"), ...(row.kind === "TEST" ? {} : { email: words.email(1), road: words.road("confirmations") }), confirmLabel: t("desk.saveBib"), cancelLabel: words.cancel }}
+                  confirm={{
+                    title: t("confirm.setBibTitle"),
+                    body: t("confirm.setBibBody"),
+                    // «Trimite emailul» (slice 4): a number handed at the desk need not be emailed too.
+                    ...words.mail({ to: row.registeredName, type: "BIB_ASSIGNED", test: row.kind === "TEST", optOut: true }),
+                    confirmLabel: t("desk.saveBib"),
+                    cancelLabel: words.cancel,
+                  }}
                   scope={`bib-${row.id}`}
                 >
                   {hidden}

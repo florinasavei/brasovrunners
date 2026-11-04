@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.22-2026-11-04 -->
+<!-- PROJECT_BASELINE: BR-V4.24-2026-11-04 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V4.22-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.24-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -821,6 +821,8 @@ The club can switch the anti-bot check on the registration and contact forms on 
 The club designs its own race number: what is printed on it — the runner's name, the event, the date, the club's logo — how large the number is, where the name sits, a picture of its own instead of the coloured band, a strip of sponsors, and cut marks on the printed sheet. The preview in the backoffice is the sheet that prints (`DECISIONS.md` §249).
 
 An administrator may resend the state-appropriate message. QA email is captured or restricted to approved testers. Production email goes to the intended participant.
+
+Every staff press that can send an email says which email leaves, to whom, before it is pressed; the toast after it says what left and when; and «Emailuri azi» lists the day's emails by press. Where it is sensible, the person's own email may be left unsent — a box ticked by default, «Trimite emailul»: a race number given by hand, a cancellation by staff (one or in bulk), a volunteer's roles given, taken or changed (and a volunteer added or reopened with roles), the volunteer's second copy of their agreement once the parent's consent is recorded on paper, a shop order marked paid, a colleague's or members' invitation («Trimite invitația acum»: unticked, nothing is sent and the sign-in provider is not asked — «Retrimite invitația» sends both later), the declaration sent again when a save moves a deadline later («Trimite din nou „Semnează declarația”»; one moved earlier is always told), and the new-event alert to the newsletter's subscribers at a publication («Anunță abonații newsletterului»). What the press sends anybody else always goes — the freed place's offer to the next in line, the club's archive and notices. The email is never optional where it is the point: a resend, an offer, a declaration to sign, a link, the copy of a document the person signed (the desk's paper confirmation, the volunteer's paper contract), and the club's refusal under the terms, whose email states its ground. The audit trail records every email left unsent (`DECISIONS.md` §912).
 
 Newsletters and promotional campaigns require a separate consent model and decision.
 

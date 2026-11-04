@@ -308,6 +308,9 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                           icon="erase"
                           title={t("person.eventInvitationsEraseTitle")}
                           body={t("person.eventInvitationsEraseBody")}
+                          // The address is told nothing; each place an open invitation held may go to the next in line, with its offer
+                          // (the design «telling the owner about every email a staff press sends», slice 3).
+                          mail={words.noMail(q ?? "", [words.nextInLineMaybe(true)])}
                           confirmLabel={t("person.eventInvitationsErase")}
                           cancelLabel={words.cancel}
                           color="error"

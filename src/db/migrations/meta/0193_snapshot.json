@@ -1,6 +1,6 @@
 {
   "id": "186b0550-7a76-47aa-9af2-1f4a8fbeb192",
-  "prevId": "816c5cd1-1ccd-4657-a682-bcf639f13699",
+  "prevId": "e2ecddc7-5a28-430d-9cae-28b5c2a81420",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -740,6 +740,18 @@
           "notNull": true,
           "default": false
         },
+        "cause": {
+          "name": "cause",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "press_id": {
+          "name": "press_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "status": {
           "name": "status",
           "type": "email_outbox_status",
@@ -975,6 +987,22 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "email_outbox_press_idx": {
+          "name": "email_outbox_press_idx",
+          "columns": [
+            {
+              "expression": "press_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"email_outbox\".\"press_id\" is not null",
           "concurrently": false,
           "method": "btree",
           "with": {}

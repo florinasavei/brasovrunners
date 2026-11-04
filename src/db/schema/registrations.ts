@@ -473,7 +473,8 @@ export const registrations = pgTable(
      * înscris»): this registration's bib prints as an elite bib — the name where the number goes (§895,
      * `bib-elite.ts`), its own number under it and the sponsors' row only as the design ticks them. Set and cleared
      * by an Administrator at any time and in any state (`elite-mark.ts`), audited. It belongs to the printed bib and
-     * nothing else: never read by the allocator, a count, a state, the number's draw or an email — the registration
+     * nothing else: never read by the allocator, a state, the number's draw or an email, and by one count only —
+     * «Planul locurilor»'s «din care elită» (§911), said beside the places it changes nothing in — the registration
      * stays exactly what it was.
      */
     elite: boolean("elite").notNull().default(false),

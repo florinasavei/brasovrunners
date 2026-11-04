@@ -199,6 +199,17 @@ export async function resendZitadelInvite(email: string, deps: Deps = {}): Promi
 }
 
 /**
+ * «Retrimite invitația» (§123): the invitation again to the account that exists — or, when there is none, the account
+ * made and invited (`inviteZitadelUser`): somebody added with «Trimite invitația acum» unticked was never given one (the
+ * design «telling the owner about every email a staff press sends», slice 4), and the resend is when they are.
+ */
+export async function reinviteZitadelUser(person: { email: string; displayName: string; locale: Locale }, deps: Deps = {}): Promise<InviteOutcome> {
+  const again = await resendZitadelInvite(person.email, deps);
+  if (again.kind === "failed" && again.reason === NO_ACCOUNT) return inviteZitadelUser(person, deps);
+  return again;
+}
+
+/**
  * "Send them a password reset" (§171; the owner: "I can also deactivate, send password resets,
  * etc").
  *

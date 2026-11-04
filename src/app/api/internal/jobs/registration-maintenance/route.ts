@@ -1,4 +1,5 @@
 import { answerJobPing } from "@/modules/jobs/ping";
+import { inEmailPress } from "@/modules/notifications/press";
 
 /**
  * The registration maintenance job (AGENTS.md §16.2), posted by the external pinger every
@@ -16,10 +17,14 @@ import { answerJobPing } from "@/modules/jobs/ping";
  * no reason to spend each other's allowance.
  */
 export async function POST(request: Request): Promise<Response> {
-  return answerJobPing(request, "registration-maintenance", async (db, now) => {
-    // Imported here, not above: a ping that answers from the cache never loads the job.
-    const { runRegistrationMaintenance } = await import("@/modules/registrations/maintenance");
-    const result = await runRegistrationMaintenance(db, now);
-    return { summary: result, failed: result.retryableErrorCount > 0 };
-  });
+  // Every email a real run queues — reminders, last calls, offers, lapsed holds — is stamped with the job's cause
+  // and one id per run (`notifications/press.ts`): «Emailuri azi» shows them as «automat», never «de pe site».
+  return answerJobPing(request, "registration-maintenance", (db, now) =>
+    inEmailPress("job.registrationMaintenance", async () => {
+      // Imported here, not above: a ping that answers from the cache never loads the job.
+      const { runRegistrationMaintenance } = await import("@/modules/registrations/maintenance");
+      const result = await runRegistrationMaintenance(db, now);
+      return { summary: result, failed: result.retryableErrorCount > 0 };
+    }),
+  );
 }

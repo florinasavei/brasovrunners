@@ -86,8 +86,13 @@ export default async function NewsletterPanel({ locale, audience, history, listQ
     when: [{ field: "topic", equals: choice.topic }],
     title: t(`newsletter.confirmTitle.${countForm(choice.count, locale)}`, { count: choice.count }),
     body: t("newsletter.confirmBody", { topic: tn(`topics.${choice.topic}`) }),
-    ...(choice.count > 0 ? { email: words.email(choice.count) } : {}),
-    road: words.road("newsletter"),
+    // Each subscriber of the topic, the club's one copy (§445), and what today's room past the reserve leaves for the next days
+    // (the design «telling the owner about every email a staff press sends», slice 3).
+    ...words.mail({
+      to: { count: choice.count, audience: "subscribers" },
+      type: "NEWSLETTER",
+      also: choice.deferred > 0 ? [words.line("laterDays", { count: choice.deferred })] : [],
+    }),
     confirmLabel: t("newsletter.send"),
     cancelLabel: words.cancel,
   }));

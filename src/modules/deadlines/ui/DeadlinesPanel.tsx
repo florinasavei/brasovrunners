@@ -215,7 +215,9 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
           <ActionForm
             action={updateDeadlinesAction}
             messages={await refusalMessages(labels)}
-            confirm={{ title: t("confirm.deadlinesTitle"), body: t("confirm.deadlinesBody"), confirmLabel: t("emails.deadlines.save"), cancelLabel: confirmText.cancel }}
+            // The save queues nothing itself, but the next pass of the job sends what the new leads bring within reach — the
+            // design «telling the owner about every email a staff press sends», its Critic correction 1: said before the press.
+            confirm={{ title: t("confirm.deadlinesTitle"), body: t("confirm.deadlinesBody"), also: [confirmText.line("jobPass")], confirmLabel: t("emails.deadlines.save"), cancelLabel: confirmText.cancel }}
             scope="deadlines"
             data-testid="deadlines-form"
           >

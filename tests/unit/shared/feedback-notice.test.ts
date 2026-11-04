@@ -8,6 +8,8 @@ import {
   FLASH_COOKIE,
   noticeOf,
   pickConfirm,
+  PROVIDER_FAILED_TOASTS,
+  providerDone,
   TOAST_AUTO_HIDE_MS,
   toastQueueReducer,
 } from "@/shared/feedback/notice";
@@ -96,6 +98,16 @@ describe("§384 the notice a redirect's outcome becomes", () => {
     expect(noticeOf({ saved: "reinvitedNow", invite: "invited" })).toEqual({ kind: "success", key: "reinvitedNow" });
   });
 
+  it("toasts a Zitadel failure on an invitation as info, never a green tick, for the club's email that still left", () => {
+    // The design «telling the owner about every email a staff press sends», slice 2: `flash.ts#withPressMail` drops
+    // these when the press queued nothing, so the banner alone says why.
+    for (const saved of PROVIDER_FAILED_TOASTS) expect(noticeOf({ saved })).toEqual({ kind: "info", key: saved });
+    expect([...PROVIDER_FAILED_TOASTS].sort()).toEqual(["invitedProviderFailed", "membersInvitedProviderFailed", "reinvitedProviderFailed"]);
+    expect(providerDone("invited")).toBe(true);
+    expect(providerDone("exists")).toBe(true);
+    for (const answer of ["failed", "unconfigured", "missing"]) expect(providerDone(answer), answer).toBe(false);
+  });
+
   it("never carries a name or a provider's words into the cookie — only numbers travel", () => {
     // The desk's search box is a participant's name, and it rides on the redirect's query.
     const desk = noticeOf({ eventId: "7f0c2d1e-0000-4000-8000-000000000000", q: "Ana Popescu", saved: "checkedIn" });
@@ -105,15 +117,15 @@ describe("§384 the notice a redirect's outcome becomes", () => {
     expect(noticeOf({ saved: "eventsArchived", archived: "Ana" })?.values).toBeUndefined();
   });
 
-  it("an event save counts what it says: the dates for a series, the emails when it told anyone (§331)", () => {
+  it("an event save counts what it says: the dates for a series; the notice's sentence counts no email — the mail line does (§331, slice 2)", () => {
     expect(noticeOf({ saved: "eventSeries", applied: "4" })).toEqual({ kind: "success", key: "eventSeries", values: { count: "4" } });
     expect(noticeOf({ saved: "eventSeries", applied: "4", notice: "update", queued: "37" })).toEqual({
       kind: "success",
       key: "eventSeriesNotified",
-      values: { count: "37", dates: "4" },
+      values: { dates: "4" },
     });
-    expect(noticeOf({ saved: "event", notice: "update", queued: "12" })).toEqual({ kind: "success", key: "eventNotified", values: { count: "12" } });
-    expect(noticeOf({ saved: "event", notice: "cancelled", queued: "9" })).toEqual({ kind: "success", key: "eventCancelled", values: { count: "9" } });
+    expect(noticeOf({ saved: "event", notice: "update", queued: "12" })).toEqual({ kind: "success", key: "eventNotified" });
+    expect(noticeOf({ saved: "event", notice: "cancelled", queued: "9" })).toEqual({ kind: "success", key: "eventCancelled" });
     expect(noticeOf({ saved: "eventSeries", applied: "3", notice: "cancelled", queued: "20" })?.key).toBe("eventSeriesCancelled");
     expect(noticeOf({ saved: "event", notice: "cancelledQuiet", queued: "0" })?.key).toBe("eventCancelledQuiet");
     expect(noticeOf({ saved: "event", notice: "cancelledNobody" })?.key).toBe("eventCancelledQuiet");

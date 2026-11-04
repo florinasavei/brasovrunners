@@ -229,11 +229,29 @@ export const emailOutbox = pgTable(
 
     idempotencyKey: text("idempotency_key").notNull().unique(),
 
-    // Populated when a staff member asked for this message (§12.11).
+    // Populated when a staff member asked for this message (§12.11) — since the email press scope
+    // (`notifications/press.ts`), by every staff press that queues one, not only by the services that pass it.
     requestedByStaffUserId: uuid("requested_by_staff_user_id").references(() => staffUsers.id, {
       onDelete: "set null",
     }),
     isManualResend: boolean("is_manual_resend").notNull().default(false),
+
+    /*
+      What queued the row, stamped from the email press scope (`notifications/press.ts`; the design «telling the
+      owner about every email a staff press sends»): «Emailuri azi» groups the day's rows by press with these two,
+      and the toast after a press reads its own rows back by `press_id`. Neither holds personal data.
+    */
+    /**
+     * The press or job that queued it, as a closed token (`notifications/domain/press-causes.ts`):
+     * `registrations.cancel`, `volunteers.assign`, `job.registrationMaintenance`. Null for a row a public flow
+     * queued (the person's own form or link), and for every row queued before the column existed.
+     */
+    cause: text("cause"),
+    /**
+     * One id per press (or per job run): every row that press queued — the person's message, the club's copies,
+     * an offer to the next in line — carries the same one. Null where `cause` is.
+     */
+    pressId: uuid("press_id"),
 
     status: emailOutboxStatus("status").notNull().default("PENDING"),
     attemptCount: integer("attempt_count").notNull().default(0),
@@ -356,5 +374,9 @@ export const emailOutbox = pgTable(
     // A participant's own rows, across their registrations (§670): the email state's probe, and the
     // webhook's settling of earlier refusals by a later delivery to the same address.
     index("email_outbox_participant_idx").on(t.participantId),
+    // One press's rows, read back by the toast after it and grouped by «Emailuri azi» (`notifications/press.ts`).
+    index("email_outbox_press_idx")
+      .on(t.pressId)
+      .where(sql`${t.pressId} is not null`),
   ],
 );

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.22-2026-11-04 -->
+<!-- PROJECT_BASELINE: BR-V4.24-2026-11-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.22-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.24-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2286,8 +2286,10 @@ email_outbox
 - recipient_email
 - payload_json
 - idempotency_key UNIQUE
-- requested_by_staff_user_id null
+- requested_by_staff_user_id null   who pressed: every staff press's rows (the press scope, below), and a service's own
 - is_manual_resend boolean DEFAULT false
+- cause null                   what queued it: a staff press's or a job's closed token (notifications/domain/press-causes.ts)
+- press_id null                one id per press or job run: every row that press queued carries it
 - status PENDING|PROCESSING|SENT|FAILED|BOUNCED|COMPLAINED
 - attempt_count
 - next_attempt_at null
@@ -2309,7 +2311,52 @@ INDEX(status, next_attempt_at, created_at)
 INDEX(registration_id, created_at)
 INDEX(provider_message_id) WHERE provider_message_id IS NOT NULL
 INDEX(participant_id)
+INDEX(press_id) WHERE press_id IS NOT NULL
 ```
+
+**What queued a row.** Every staff press that can queue an email runs its whole body inside its email press scope
+(`notifications/press.ts#inEmailPress`, `AsyncLocalStorage`), and so do the two job routes and the drains that do
+the outbox job's work after a response; `enqueueEmail`, the club's copies and the relay stamp each row with the
+scope's `cause`, its `press_id` and its actor as `requested_by_staff_user_id` (a requester the service names wins).
+A public flow opens no scope: its rows carry none. The scope labels rows and never decides whether or when one
+leaves. «Setări» → «Emailuri» → «Emailuri azi» (`notifications/journal.ts`) lists the day's rows by press, with
+the names, for the Administrator and the Superadministrator alone; `tests/unit/shared/emailing-presses.test.ts`
+holds every emailing press to its scope, and `tests/e2e/email-journal.spec.ts` runs one through Next itself.
+
+**What a press's toast says it sent.** `shared/feedback/flash.ts#flashOutcome` (and `withPressMail`, for a press that
+answers with its notice) reads the press's rows back by `press_id` once its transaction committed
+(`notifications/press-receipt.ts`, the pure `domain/press-receipt.ts`) and adds the toast's mail line: what left (the
+type's words), how many — the person, the club's mailboxes, other people, test addresses — and when, by the queue's
+own `departureOf`. Tokens, counts and instants travel in the flash cookie, never a name or an address; a press that
+queued nothing adds nothing, so an emailing press's `Feedback.toast` sentence says its act alone — never «pus la
+coadă», «pleacă acum» or «primește un email» — and the mail line (`shared/feedback/mail-line.ts`, words
+`Feedback.mail`) is the one place that says what left and when.
+
+**What a press says before it is pressed.** Every element that posts an emailing press names its email first: its
+question's email line comes from one builder, `shared/feedback/confirm-words.ts` — `mail({ to, type, or, test,
+confirms, also })`, `mailCount` (counted from the ticks or the typed lines at the press), `noMail` — which names the
+person (or the count and whom) and the email by its words in «Emailuri», counts the club's mailboxes as one quiet line
+exactly as the enqueue does (`shared/feedback/club-copies-request.ts`) and derives the road (§841) from the email
+itself, so no page pairs an email with another's road. The presses that come quickly one after another or sit inside a
+data-entry form — a volunteer's role buttons and form, the test registrations, the typed-name erase, the editor's boxes
+whose change sends at the job's pass — say it in a `shared/feedback/MailLine.tsx` beside the button, the same words,
+no click. `tests/unit/shared/emailing-presses.test.ts` follows every posting of every emailing press, handed-down props
+included, and fails one that says nothing.
+
+**«Trimite emailul»** (`DECISIONS.md` §912). A press whose person's email may sensibly stay unsent offers a box, ticked
+by default: in its question (`ConfirmSpec.emailOptOut`, worded by the builder's `optOut`; the form carries a hidden
+`sendEmail` drawn `on`, and the answer writes `on` or `off` into it) or beside its button (`MailLine`'s `optOut`: the
+box, then a hidden `off` under the same name). One parser reads it, `shared/forms/send-email.ts#sendEmailOf` — no value,
+or `on` among them, sends — and the action hands it to its service as an explicit `sendEmail` option that reaches the
+enqueue of the person's own message alone: false queues that row and so none of its club copies, never the offer to the
+next in line, the declaration's archive, a notice to the club or a refusal's ground (`REFUSAL_NEEDS_EMAIL` refuses the
+club's refusal without its email). The press's own audit row says `emailSkipped: true`; the two presses with no row of
+their own write one when skipped — `staff.invitation_not_sent` and `event.new_event_alert_skipped` (the publication's
+box marks the event seen with a `newsletter_sends` row of no recipients, in the publication's transaction). The editor's
+window box (`sendEmail.window`) keeps back only a deadline moved later under the move's own key
+(`registrations/window-holds.ts#windowEmailSkippable`): a move that is the job's own last call or ask still goes. The
+presses are exactly `OPT_OUT_PRESSES` in `tests/unit/shared/emailing-presses.test.ts`, which fails any other action that
+reads the box — never a resend, an offer, a declaration to sign or the copy of a document the person signed.
 
 Each deliberate resend gets a new row/idempotency key. Every message type names whom it is written
 for — the participant, the club's own mailboxes, the staff or the public
@@ -3303,7 +3350,9 @@ public event registration page. It carries no scoped token and creates none.
 adds a colleague on Echipa (`staff:<id>:invitation:<time>`), to the staff address, in the
 colleague's language — who added them, as what, the sign-in page as the action. No token:
 the sign-in page asserts who they are. Sent again from the row until they first sign in
-(`DECISIONS.md` §141).
+(`DECISIONS.md` §141). With «Trimite invitația acum» unticked the colleague is added and
+nothing is queued — nor is Zitadel asked; «Retrimite invitația» later sends the invitation and
+makes the Zitadel account when it is missing (`DECISIONS.md` §912).
 
 `CLUB_CONFIRMATION_NOTICE` is the club's own: queued in the transaction that confirms a real
 registration, one row per address the club named under "anunță-ne când cineva confirmă" on

@@ -419,6 +419,12 @@ export type AuditAction =
    */
   | "event.holds_moved_by_window"
   /**
+   * A publication with «Anunță abonații newsletterului» unticked (the design «telling the owner about every email a staff
+   * press sends», slice 4): the event (the entity) is marked seen for the new-event alert — its `newsletter_sends` row with no
+   * recipients — so the job never announces it. `emailSkipped`, never a subscriber. Written only when skipped.
+   */
+  | "event.new_event_alert_skipped"
+  /**
    * An invitation the outage grace did not revive (§657): it lapsed while the platform could not be
    * reached and its counted place was given meanwhile. The invitation's id, the window's id and the
    * `deadline` left as it was — never a name or an address.
@@ -831,6 +837,12 @@ export type AuditAction =
    * address.
    */
   | "staff.invitation_sent_now"
+  /**
+   * «Adaugă o persoană» with «Trimite invitația acum» unticked (the design «telling the owner about every email a staff
+   * press sends», slice 4): the added row (the entity), `staffUserId`, the invitation's `messageType` and `emailSkipped` —
+   * nothing was queued and Zitadel was not asked. Never an address. Written only when skipped.
+   */
+  | "staff.invitation_not_sent"
   /**
    * «Gestionează magazinul» ticked or unticked on «Echipa» (§687): the colleague's row (the entity),
    * `staffUserId` and the `permission`; a revoke says why — `tick`, the box unticked, or

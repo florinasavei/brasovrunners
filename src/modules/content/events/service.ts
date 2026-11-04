@@ -31,6 +31,7 @@ import {
 import { readScheduleItems, type ScheduleItem, shiftScheduleItems } from "@/modules/events/domain/schedule";
 import { addWallClockInterval, fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { skipNewEventAlert } from "@/modules/newsletter/alert-skip";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
@@ -1425,7 +1426,14 @@ export async function transitionEvent<T extends Record<string, unknown>>(
   return moved;
 }
 
-export type PublishEventInput = Omit<TransitionEventInput, "to">;
+export type PublishEventInput = Omit<TransitionEventInput, "to"> & {
+  /**
+   * «Anunță abonații newsletterului» (the design «telling the owner about every email a staff press sends», slice 4):
+   * false, the event is marked seen for the new-event alert in the publication's own transaction (`skipNewEventAlert`),
+   * so the job never announces it. Absent or true, the job announces it as ever.
+   */
+  announce?: boolean;
+};
 
 /**
  * «Publică» on the editor, from a draft as from a submission (§423) — the one press
@@ -1460,7 +1468,9 @@ export async function publishEvent<T extends Record<string, unknown>>(
       const reviewed = await transitionEvent(tx, { actor: input.actor, eventId: input.eventId, expectedVersion, to: "IN_REVIEW", now });
       expectedVersion = reviewed.version;
     }
-    return transitionEvent(tx, { actor: input.actor, eventId: input.eventId, expectedVersion, to: "PUBLISHED", now });
+    const published = await transitionEvent(tx, { actor: input.actor, eventId: input.eventId, expectedVersion, to: "PUBLISHED", now });
+    if (input.announce === false) await skipNewEventAlert(tx, { actorStaffUserId: input.actor.id, eventId: input.eventId, now });
+    return published;
   });
 }
 
@@ -1910,6 +1920,12 @@ export type SaveEventAndTranslationsInput = {
   placesChangeReason?: string | null;
   /** Which save this is, for «Istoric capacitate» (§NNN): an event file's import says so; the editor's otherwise. */
   via?: "import";
+  /**
+   * «Trimite din nou „Semnează declarația”» beside «Fereastra de confirmare» (the design «telling the owner about every
+   * email a staff press sends», slice 4): false keeps back the window move's email where `windowEmailSkippable` allows —
+   * a deadline moved later, under the move's own key — on this date and every date the save reaches. Absent: true.
+   */
+  windowSendEmail?: boolean;
   now?: Date;
   /** Only for tests: a `fetch` stand-in for the YouTube poster fetches, never a live default. */
   fetchImpl?: typeof fetch;
@@ -2130,6 +2146,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
     checkpointsHold?: (member: EditableEvent, date: string) => Promise<void>;
     /** «De ce schimbi locurile?» (§NNN): the reason typed on the saved date, on each date's own history row. */
     placesChangeReason?: string | null;
+    /** The save's «Trimite din nou „Semnează declarația”» (`SaveEventAndTranslationsInput.windowSendEmail`). */
+    windowSendEmail?: boolean;
   },
 ): Promise<{
   applied: number;
@@ -2372,6 +2390,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
           after: { ...member, ...changes, id: member.id },
           now,
           deadlines: input.deadlines,
+          sendEmail: input.windowSendEmail,
         }),
       );
       // Each date has its own queue, checked against its own places (§147): the new capacity
@@ -2982,7 +3001,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         or off, a moved start — or holds given under an older window than the one stored. Under the event
         lock, in this transaction; `hold_expires_at` only, nobody seated or released (AGENTS.md §10.6).
       */
-      holdMoves.push(await moveWindowHolds(tx, { actorStaffUserId: input.actor.id, before: current, after: savedEvent, now, deadlines }));
+      holdMoves.push(await moveWindowHolds(tx, { actorStaffUserId: input.actor.id, before: current, after: savedEvent, now, deadlines, sendEmail: input.windowSendEmail }));
       // Before the words, so each row a text save writes back already carries its new name.
       await writePlaceNames(tx, input.eventId, names, shorts);
       // Before the translations loop: a settings-only save (an Organizer without text rights)
@@ -3086,6 +3105,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         now,
         deadlines,
         discountNoteCleared,
+        windowSendEmail: input.windowSendEmail,
         checkpointsHold: checkCheckpoints ? (member, date) => assertSavedCheckpointsHold(tx, member, gpxMetersOf(member.routeGpx), date) : undefined,
         placesChangeReason: input.placesChangeReason,
       });
@@ -3146,6 +3166,7 @@ function combineHoldMoves(moves: readonly WindowHoldsMoved[]): WindowHoldsMoved 
     test: moves.reduce((sum, move) => sum + move.test, 0),
     to: instants.size === 1 ? withRows[0].to : null,
     queued: moves.reduce((sum, move) => sum + move.queued, 0),
+    skipped: moves.reduce((sum, move) => sum + move.skipped, 0),
   };
 }
 
@@ -3679,7 +3700,8 @@ export type NewEventRepeatRule = Omit<RepeatEventInput["rule"], "publish"> & { p
  */
 export async function createEventAndPublish<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: CreateEventInput & { publish: boolean; repeat?: NewEventRepeatRule | null },
+  /** `announce`: `PublishEventInput`'s, for «Creează și publică» — false marks the new event seen for the alert, once it is published. */
+  input: CreateEventInput & { publish: boolean; announce?: boolean; repeat?: NewEventRepeatRule | null },
 ): Promise<CreateAndPublishResult> {
   const now = input.now ?? new Date();
   // Every YouTube poster fetch, before any transaction opens (`DECISIONS.md` §403, found by
@@ -3691,6 +3713,8 @@ export async function createEventAndPublish<T extends Record<string, unknown>>(
   const result = await db.transaction(async (tx) => {
     const created = await insertPreparedEvent(tx, input.actor, prepared, now);
     const { event, published, refusal } = await publishNewEvent(tx, input.actor, created, input.publish, now);
+    // «Anunță abonații newsletterului» unticked (slice 4): the event live, and never announced.
+    if (published && input.announce === false) await skipNewEventAlert(tx, { actorStaffUserId: input.actor.id, eventId: event.id, now });
     if (!input.repeat) return { event, published, refusal, repeated: 0 };
 
     // The series, as drafts — or live, when the source has just gone live and the rule asks for it
