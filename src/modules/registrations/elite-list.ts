@@ -17,8 +17,11 @@ import { isSpareNumber, spareBandOf } from "./domain/spare-bibs";
  * as a list of names, printed as bibs with the name where the number usually is (`bibs-pdf.ts`, `bib-image.tsx`).
  *
  * **Not registrations.** No participant, no address, no declaration, no place, no queue, no email: nothing here
- * reaches the allocator or any count — «Locuri», the kits, the registrations' summary and export, the sponsors'
- * list, the desk. That is why the declaration rule stays whole: a registration still needs the
+ * reaches the allocator or any count of registrations — «Locuri», `countKits`, the registrations' summary and export,
+ * the sponsors' list, the desk; the results read a line only for its «Apare în clasament», to run it hors concours. The registrations list alone adds the lines, said beside its own figures, never
+ * in them (the owner, 2026-11-04: an elite takes a kit and stands at the start): among the kits' runners (`ui/KitCount.tsx`),
+ * the people at the start of «Locuri» (`domain/place-outlook.ts#peopleAtStartIfAll`) and the bibs' header beside the
+ * registrations' bibs; the «Elite» fold lists them, read-only. That is why the declaration rule stays whole: a registration still needs the
  * person's own signed declaration, and an elite line is a name to print, nothing else. A name and an optional
  * number are all it stores, and two ticks. The one thing of it the race numbers read is that number, as worn (`addEliteEntry`).
  *

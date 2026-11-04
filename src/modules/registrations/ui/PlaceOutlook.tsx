@@ -3,7 +3,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { ComponentProps } from "react";
 import { countForm } from "@/i18n/count-form";
-import { HELD_KINDS, type PlaceOutlook as Outlook } from "../domain/place-outlook";
+import { HELD_KINDS, peopleAtStartIfAll, type PlaceOutlook as Outlook } from "../domain/place-outlook";
 import PublicNowLine from "./PublicNowLine";
 
 /**
@@ -14,18 +14,24 @@ import PublicNowLine from "./PublicNowLine";
  * would take, and the people at the start. The owner, the same day, of the first wording: «nu înțeleg exact
  * câte locuri mai pot să dau». `domain/place-outlook.ts` does the arithmetic; this only says it.
  *
+ * The people at the start count the race's separate elite list too (`elites`, the owner, 2026-11-04): «…, inclusiv
+ * 2 elite din lista separată», said only when the list holds a name.
+ *
  * Last, «Pe site acum» (§906, `PublicNowLine`): what the public meets this minute, from the public card's own
- * predicate, and the tick «Înscrieri publice deschise» beside it. Absent when the page read no door.
+ * predicate, and the tick «Înscrierile pe site sunt deschise» beside it. Absent when the page read no door.
  */
 export default async function PlaceOutlook({
   outlook,
   locale,
+  elites = 0,
   spaceAbove = 0,
   door,
 }: {
   outlook: Outlook;
   /** The page's language, for the counted words («1 ofertă», «2 oferte», «20 de oferte»). */
   locale: string;
+  /** How many names the event's separate elite list holds (`elite-list.ts#listEliteEntries`): at the start, in no place. */
+  elites?: number;
   spaceAbove?: number;
   door?: ComponentProps<typeof PublicNowLine>;
 }) {
@@ -70,7 +76,13 @@ export default async function PlaceOutlook({
         </Typography>
       )}
       <Typography variant="body2" color="text.secondary" data-testid="registrations-places-total">
-        {t("registrations.places.total", { outside: outlook.outside, count: outlook.totalIfAll })}
+        {elites > 0
+          ? t("registrations.places.totalWithElites", {
+              outside: outlook.outside,
+              count: peopleAtStartIfAll(outlook, elites),
+              elites: t(`registrations.kits.elites.${countForm(elites, locale)}`, { count: elites }),
+            })
+          : t("registrations.places.total", { outside: outlook.outside, count: outlook.totalIfAll })}
       </Typography>
       {door && <PublicNowLine {...door} spaceAbove={1} />}
     </Box>
