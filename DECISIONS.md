@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.27-2026-11-04 -->
+<!-- PROJECT_BASELINE: BR-V4.28-2026-11-04 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.27-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.28-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29056,3 +29056,11 @@ Baseline `BR-V4.26-2026-11-04`.
 Amends §671 (the card holds the Administrator's fold), §839 (the volunteer's page) and §912 (the journal's names link).
 
 Baseline `BR-V4.27-2026-11-04`.
+
+## 916. The deadline's release sends its emails under its own cause, «automat: eliberarea locurilor nesemnate la termen»
+
+**The review of 2026-11-04** (the merge of «Eliberează singur locurile nesemnate la termen» with the email presses): the release's emails — each person released and the Administrators' one summary — were stamped with the job's upkeep, «automat: întreținerea înscrierilor», on «Emailuri azi» and on each person's emails, and, where a staff press reached the deadline first, with that press and its colleague.
+
+**Decision.** A press cause of its own, `job.deadlineRelease` (`notifications/domain/press-causes.ts`, «eliberarea locurilor nesemnate la termen» / “releasing the unsigned places at the deadline”), opened by `registrations/repository.ts#expireStaleHolds` around the release and its emails only when the deadline's own release runs, wherever it runs: the job, a staff press or a public form that reached the deadline first. One press holds every person told and the summary, so «Emailuri azi» shows them as one card, «automat», with no colleague. Every other lapsed hold keeps the scope it ran in. The guard that keeps scopes out of public flows (`tests/unit/shared/emailing-presses.test.ts`) allows that file this one cause and no other.
+
+Baseline `BR-V4.28-2026-11-04`.

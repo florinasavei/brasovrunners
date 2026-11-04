@@ -26,6 +26,7 @@ vi.mock("@/modules/notifications/drain", () => ({
 const { confirmEmail, signDeclaration, submitRegistration } = await import("@/modules/registrations/service");
 type EventForRegistration = Parameters<typeof submitRegistration>[1];
 const { runRegistrationMaintenance } = await import("@/modules/registrations/maintenance");
+const { inEmailPress } = await import("@/modules/notifications/press");
 const { deadlineReleaseDueSql, findEventsNeedingMaintenance } = await import("@/modules/registrations/repository");
 const { nextMaintenanceWork } = await import("@/modules/jobs/next-work");
 const { forecastAutomaticEmails } = await import("@/modules/notifications/forecast");
@@ -186,7 +187,8 @@ describe("BR-REQ-033-01 «Eliberează singur locurile nesemnate la termen»: one
     expect((await eventRow(event.id)).unsignedReleasedFor).toBeNull();
     expect(await mail("DECLARATION_HOLD_EXPIRED")).toEqual([]);
 
-    await runRegistrationMaintenance(db, after(1));
+    // As the job's route runs it: inside the job's own press.
+    await inEmailPress("job.registrationMaintenance", () => runRegistrationMaintenance(db, after(1)));
     expect(await statusOf(ana.id)).toBe("EXPIRED");
     expect(await statusOf(bia.id)).toBe("EXPIRED");
     expect(await statusOf(tina.id)).toBe("EXPIRED");
@@ -217,6 +219,11 @@ describe("BR-REQ-033-01 «Eliberează singur locurile nesemnate la termen»: one
       ["super@dev.test", "en"],
     ]);
     expect(summaries[0].payloadJson).toMatchObject({ eventId: event.id, deadline: DEADLINE.toISOString(), released: 2, test: 1, unsigned: 1, capacity: 3 });
+    // The release's emails under its own cause, one press for the people told and the summaries — not the job's upkeep.
+    const releaseMail = [...people, ...summaries];
+    expect(new Set(releaseMail.map((item) => item.cause))).toEqual(new Set(["job.deadlineRelease"]));
+    expect(new Set(releaseMail.map((item) => item.pressId)).size).toBe(1);
+    expect(releaseMail[0].pressId).not.toBeNull();
 
     // A second run, and a third: nothing more.
     await runRegistrationMaintenance(db, after(20));

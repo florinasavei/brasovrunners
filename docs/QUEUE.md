@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.28` | the deadline release's emails under their own cause (§916) |
 | `BR-V4.27` | a person's emails with their tries on the registration's and the volunteer's page, and «Emailuri azi»'s names as links (§915) |
 | `BR-V4.26` | kept places for the club, the release of the unsigned places at the deadline, a summary before every change of the places, and the capacity's history (§914) |
 | `BR-V4.25` | the kits' total written as a sum; «Elite» as one list (§913) |
