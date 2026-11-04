@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.25-2026-11-04
+
+- **«Kituri de pregătit: 190 = 179 de alergători + 11 voluntari»** — the total written as a sum; **«Elite»** on the registrations list is one list, «2 elite», each name saying whether it is only a name on the bib or a registration. §913.
 ## BR-V4.24-2026-11-04
 
 - **«Emailuri azi», every press's email before and after, and «Trimite emailul»** — every staff press that can send an email now stamps its rows with what was pressed, by whom and one id per press; «Setări» → «Emailuri» → «Emailuri azi» lists the day's emails with the names, what waits and what left, by press, and who got the same email twice — for the Administrator and the Superadministrator; before the press, its question — or, for a volunteer's role buttons and the forms where presses come quickly, a line beside the button — names the person or how many, the email, how many copies go to the club's mailboxes and the road it takes, and the volunteer agreement's link, the parent's link, the volunteer invitations and the editor's save that offers places now ask first; the toast after it says what left, to how many — the person, the club, other people — and when: now, at the estimated hour, or after Mailgun resumes; and where it is sensible — a race number given by hand, a cancellation, a volunteer's roles, the parent's paper consent, an invitation to the team, a shop order paid, the declaration re-sent for a deadline moved later, a publication's alert to the subscribers — a «Trimite emailul» box, ticked by default, lets the person's own email stay unsent, on the audit trail, while the offer to the next in line and the club's archive still go. §912.

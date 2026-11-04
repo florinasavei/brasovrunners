@@ -1141,7 +1141,7 @@
       "summaryTest": "Test: {count}",
       "kits": {
         "title": "Kits to prepare: {runners}",
-        "titleWithVolunteers": "Kits to prepare: {count} — {runners} + {volunteers}",
+        "titleWithVolunteers": "Kits to prepare: {count} = {runners} + {volunteers}",
         "runners": {
           "one": "{count} runner",
           "few": "{count} runners",
@@ -1270,17 +1270,15 @@
         "inResultsHelp": "Unticked, the result is not in the public results and takes nobody's place; on «Results» it stays, marked «out of the results».",
         "readOnly": "Only an administrator changes the ticks.",
         "panelTitle": "Elites",
-        "panelIntro": "Who runs as an elite at this event: the separate list, with the name only on the bib, and the registrations marked «Elite».",
-        "separate": "{count} on the separate list",
-        "marked": {
-          "one": "{count} registration marked",
-          "few": "{count} registrations marked",
-          "other": "{count} registrations marked"
+        "panelIntro": "Every elite at this event, in one list: either a name on a bib only, not registered, or a registration marked «Elite».",
+        "count": {
+          "one": "{count} elite",
+          "few": "{count} elites",
+          "other": "{count} elites"
         },
-        "separateTitle": "The separate list — the name only on the bib",
-        "separateEmpty": "No names on the separate list.",
-        "markedTitle": "Registrations marked «Elite»",
-        "markedEmpty": "No registration marked «Elite».",
+        "nameOnly": "not registered — the name on the bib only",
+        "registered": "registered",
+        "empty": "No elite at this event.",
         "manage": "Manage the elite list",
         "seeCard": "See the elite list in the editor"
       },
