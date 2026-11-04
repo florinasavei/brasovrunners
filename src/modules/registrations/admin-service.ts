@@ -34,7 +34,7 @@ import type { SexChoice } from "./domain/sex";
 import { heldRefusal, refuseIfRegistrationHeld, registrationIsHeld } from "./declaration-hold";
 import { bibNumberInUse, isEventSpareNumber, retiredBibNumbers } from "./bibs";
 import { BIB_NUMBER_MAX, handsSpareAtConfirm } from "./domain/spare-bibs";
-import { type BulkResendCounts, canResendDeclarationToAll, canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
+import { type BulkResendCounts, canResendDeclarationToAll, canResendReminder, deriveAllowedResendMessageType, familyResendTarget } from "./domain/resend";
 import { listDeclarationResendCandidates, sortCandidates, spentResendLimits } from "./bulk-resend";
 import { canTransition, isActiveStatus, isTerminalStatus } from "./domain/state-machine";
 import { waitlistRefusalOf, walkInLeftUnconfirmedError } from "./domain/waitlist";
@@ -386,10 +386,8 @@ export async function resendFamilyMessage<T extends Record<string, unknown>>(
     .filter((row) => isActiveStatus(row.status))
     .sort((a, b) => a.submittedAt.getTime() - b.submittedAt.getTime());
   if (family.length < 2) throw new DomainError("VALIDATION_ERROR", "the address holds nobody else at this event");
-  const target =
-    family.find((row) => row.status === "PENDING_EMAIL_CONFIRMATION") ??
-    family.find((row) => row.status === "PENDING_DECLARATION" || row.status === "WAITLIST_OFFERED") ??
-    family.find((row) => row.status === "CONFIRMED");
+  // The same choice the dialog before the press named (`familyResendTypes`): one rule, in the domain.
+  const target = familyResendTarget(family);
   if (!target) throw new DomainError("VALIDATION_ERROR", "everybody on the address is on the waiting list; there is nothing to resend");
   const confirmed = family.filter((row) => row.status === "CONFIRMED").map((row) => row.id);
   const extra = target.status === "CONFIRMED" && confirmed.length > 1 ? { familyRegistrationIds: confirmed } : {};
@@ -1083,6 +1081,10 @@ export async function setOutsideCapacity<T extends Record<string, unknown>>(
  * one with a line saying it replaces any earlier number. A confirmed registration with no number
  * (confirmed before §87) is given one the same way. Clearing a confirmed runner's number is
  * refused: it would be a number retired for nothing and a runner with none.
+ *
+ * `sendEmail: false` («Trimite emailul» unticked in the question — the design «telling the owner about every email a
+ * staff press sends», slice 4): the number is written and audited exactly the same, the audit row says `emailSkipped`,
+ * and no `BIB_ASSIGNED` is queued — nor its club copies.
  */
 export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -1090,7 +1092,9 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   registrationId: string,
   bibNumber: number | null,
   now: Date,
+  options: { sendEmail?: boolean } = {},
 ): Promise<Registration> {
+  const sendEmail = options.sendEmail !== false;
   assertDesk(actor);
   if (bibNumber !== null && (!Number.isInteger(bibNumber) || bibNumber < 1 || bibNumber > 99_999)) {
     throw new DomainError("VALIDATION_ERROR", "a race number is a whole number from 1 to 99999");
@@ -1209,7 +1213,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
         action: "registration.bib_set",
         entityType: "registration",
         entityId: registrationId,
-        metadata: { eventId: current.eventId, from: replaced, to: bibNumber },
+        metadata: { eventId: current.eventId, from: replaced, to: bibNumber, ...(sendEmail ? {} : { emailSkipped: true }) },
         now,
       });
       return row;
@@ -1228,9 +1232,10 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   */
   revalidatePublicContent("places");
   // The runner is told (§105): the confirmation carried the old number, or none. A number at a
-  // race that will not run is not news (§331): it is written, and nobody is mailed.
+  // race that will not run is not news (§331): it is written, and nobody is mailed — nor when the
+  // staff member unticked «Trimite emailul» (slice 4).
   const event = await findEventForAllocation(db, updated.eventId);
-  if (event?.eventStatus !== "CANCELLED") {
+  if (sendEmail && event?.eventStatus !== "CANCELLED") {
     await db.transaction(async (tx) => {
       await enqueueEmail(tx, {
         participantId: updated.participantId,
@@ -1411,6 +1416,12 @@ export async function clearMemberTicksByStaff<T extends Record<string, unknown>>
  * Administrator typed is the ground, and it goes to the person in the cancellation email, under a
  * box that said so before the press; the audit row records the kind beside the reason. A refusal
  * without a ground is refused: the terms promise the person is told why.
+ *
+ * **«Trimite emailul» unticked** (`sendEmail: false`; the design «telling the owner about every email a staff press
+ * sends», slice 4): the same cancellation through the same allocator, with no «Înscriere anulată» to the person — nor
+ * its club copies — and `emailSkipped` on the audit row. The freed place's offer to the first in line is that person's
+ * email, not this one's, and always goes. A refusal under the terms always tells the person: with the box unticked it is
+ * refused (`REFUSAL_NEEDS_EMAIL`, naming the refusal's box), whatever the dialog offered.
  */
 export type StaffCancelKind = "REFUSED_BY_ORGANIZER";
 
@@ -1420,14 +1431,18 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
   registrationId: string,
   reason: string,
   now: Date,
-  options: { kind?: StaffCancelKind } = {},
+  options: { kind?: StaffCancelKind; sendEmail?: boolean } = {},
 ): Promise<Registration> {
   assertAdministrator(actor);
 
   const ground = reason.trim().slice(0, 500);
   const refused = options.kind === "REFUSED_BY_ORGANIZER";
+  const sendEmail = options.sendEmail !== false;
   if (refused && ground === "") {
     throw new DomainError("VALIDATION_ERROR", "a refusal under the terms names its ground", ["reason"]);
+  }
+  if (refused && !sendEmail) {
+    throw new DomainError("REFUSAL_NEEDS_EMAIL", "a refusal under the terms is sent to the person with its ground; it cannot be made without the email", ["refusedByOrganizer"]);
   }
 
   const current = await findRegistrationById(db, registrationId);
@@ -1450,7 +1465,7 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
   }
 
   const event = await eventForRegistration(db, current.eventId);
-  const cancelled = await unregister(db, event, registrationId, "ADMIN", now, refused ? { refusedGround: ground } : {});
+  const cancelled = await unregister(db, event, registrationId, "ADMIN", now, { ...(refused ? { refusedGround: ground } : {}), notify: sendEmail });
 
   /*
     A printed bib going void is written into the row's own record (§311; the owner: "trebuie sa
@@ -1472,7 +1487,7 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
     action: "registration.cancelled_by_staff",
     entityType: "registration",
     entityId: registrationId,
-    metadata: { from: current.status, reason: ground, ...(refused ? { kind: options.kind } : {}), ...printedBib },
+    metadata: { from: current.status, reason: ground, ...(refused ? { kind: options.kind } : {}), ...printedBib, ...(sendEmail ? {} : { emailSkipped: true }) },
     now,
   });
 
@@ -1493,6 +1508,10 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
  * made void**, lowest first, read from each cancelled row itself (a cancellation keeps the number
  * and the mark, §173) — so the banner names the bibs to pull out of the pile instead of leaving
  * the club to notice them on the bibs panel afterwards.
+ *
+ * `sendEmail: false` — the batch's one «Trimite emailul», unticked (slice 4 of the design «telling the owner about every
+ * email a staff press sends») — reaches every row's cancellation alike: nobody ticked is emailed, every freed place is
+ * still offered with its email, and each row's audit row says `emailSkipped`.
  */
 export async function bulkCancelRegistrationsByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -1500,6 +1519,7 @@ export async function bulkCancelRegistrationsByStaff<T extends Record<string, un
   registrationIds: readonly string[],
   reason: string,
   now: Date,
+  options: { sendEmail?: boolean } = {},
 ): Promise<{ cancelled: number; test: number; failed: number; voided: number[] }> {
   assertAdministrator(actor);
 
@@ -1510,7 +1530,7 @@ export async function bulkCancelRegistrationsByStaff<T extends Record<string, un
   const voided: number[] = [];
   for (const registrationId of registrationIds) {
     try {
-      const row = await cancelRegistrationByStaff(db, actor, registrationId, reason, now);
+      const row = await cancelRegistrationByStaff(db, actor, registrationId, reason, now, { sendEmail: options.sendEmail });
       cancelled += 1;
       if (row.kind === "TEST") test += 1;
       if (row.bibNumber !== null && row.bibPrintedAt !== null) voided.push(row.bibNumber);

@@ -1,5 +1,6 @@
 import type { RegistrationKind, RegistrationStatus } from "@/db/schema/registrations";
-import type { ConfirmRoad } from "@/shared/feedback/notice";
+import type { ConfirmMail } from "@/shared/feedback/confirm-words";
+import { holdsAPlace } from "../domain/state-machine";
 
 type OutsideMarkKey =
   | "confirm.outsideMarkBody"
@@ -38,18 +39,22 @@ export function outsideMarkBody(
 
 /**
  * The whole question «Pune pe» / «Scoate de pe lista de invitați speciali» asks (§643, §648, §747), for
- * the registration's page and the list's «⋮» alike: its title, the body by the row's state, the bold email
- * line only for a real waiting or offered row (a TEST row names none, §384), and the two buttons' words.
+ * the registration's page and the list's «⋮» alike: its title, the body by the row's state, the email line
+ * the one builder worded (the design «telling the owner about every email a staff press sends», slice 3) —
+ * the declaration's email to a waiting or offered runner seated now (`seated`; a TEST row's says its address
+ * reaches nobody), no email but the freed place's offer for a row that held a counted place (`freed`), and no
+ * email for any other press (`none`) — and the two buttons' words.
  */
 export function outsideMarkConfirm(
   t: (key: OutsideMarkKey, values?: { name: string; message: string }) => string,
   row: { status: RegistrationStatus; kind: RegistrationKind; registeredName: string; outsideCapacity: boolean },
-  words: { cancel: string; emailLine: string; road?: ConfirmRoad },
-): { title: string; body: string; email?: string; road?: ConfirmRoad; confirmLabel: string; cancelLabel: string } {
+  words: { cancel: string; seated: ConfirmMail; freed: ConfirmMail; none: ConfirmMail },
+): ConfirmMail & { title: string; body: string; confirmLabel: string; cancelLabel: string } {
   if (row.outsideCapacity) {
     return {
       title: t("confirm.outsideUnmarkTitle"),
       body: t("confirm.outsideUnmarkBody", { name: row.registeredName, message: "" }),
+      ...words.none,
       confirmLabel: t("registrations.outside.unmark"),
       cancelLabel: words.cancel,
     };
@@ -58,7 +63,7 @@ export function outsideMarkConfirm(
   return {
     title: t("confirm.outsideMarkTitle"),
     body: outsideMarkBody(t, row),
-    ...(seatedNow && row.kind !== "TEST" ? { email: words.emailLine, ...(words.road ? { road: words.road } : {}) } : {}),
+    ...(seatedNow ? words.seated : holdsAPlace(row.status) ? words.freed : words.none),
     confirmLabel: t("registrations.outside.mark"),
     cancelLabel: words.cancel,
   };

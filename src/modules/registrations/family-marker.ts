@@ -1,5 +1,5 @@
 import { and, asc, inArray } from "drizzle-orm";
-import { ACTIVE_REGISTRATION_STATUSES, registrations } from "@/db/schema/registrations";
+import { ACTIVE_REGISTRATION_STATUSES, type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 
 /**
@@ -13,7 +13,7 @@ import type { Database } from "@/db/types";
  * named — a cancelled or lapsed one is nobody's family any more. Staff read it behind their own
  * permission, and a participant reads only their own address's (§39: nothing about another inbox).
  */
-export type FamilyMember = { id: string; name: string };
+export type FamilyMember = { id: string; name: string; status: RegistrationStatus };
 
 export async function familyOf<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -24,7 +24,7 @@ export async function familyOf<T extends Record<string, unknown>>(
   const participants = [...new Set(rows.map((row) => row.participantId))];
   const eventIds = [...new Set(rows.map((row) => row.eventId))];
   const all = await db
-    .select({ id: registrations.id, participantId: registrations.participantId, eventId: registrations.eventId, name: registrations.registeredName })
+    .select({ id: registrations.id, participantId: registrations.participantId, eventId: registrations.eventId, name: registrations.registeredName, status: registrations.status })
     .from(registrations)
     .where(
       and(
@@ -37,7 +37,7 @@ export async function familyOf<T extends Record<string, unknown>>(
   const groups = new Map<string, FamilyMember[]>();
   for (const row of all) {
     const key = `${row.participantId}:${row.eventId}`;
-    groups.set(key, [...(groups.get(key) ?? []), { id: row.id, name: row.name }]);
+    groups.set(key, [...(groups.get(key) ?? []), { id: row.id, name: row.name, status: row.status }]);
   }
   for (const row of rows) {
     const others = (groups.get(`${row.participantId}:${row.eventId}`) ?? []).filter((member) => member.id !== row.id);

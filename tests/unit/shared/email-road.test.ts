@@ -75,9 +75,9 @@ describe("§841 the dialog's road line", () => {
   });
 
   it("starts from the group's setting, not from the recommendation — the club's choice stands until the reader moves it", () => {
-    expect(dialog).toContain('const road = picked.spec === spec ? picked.road : (spec?.road?.current ?? "mailgun");');
+    expect(dialog).toContain('const road = picked.spec === asked ? picked.road : (asked?.road?.current ?? "mailgun");');
     // A new question starts afresh, even in a dialog kept mounted between two of them.
-    expect(dialog).toContain("if (picked.spec !== spec) setPicked({ spec, road });");
+    expect(dialog).toContain("if (picked.spec !== asked) setPicked({ spec: asked, road });");
   });
 });
 
@@ -92,9 +92,22 @@ describe("§841 the toast names the road", () => {
   });
 
   it("appends the road's sentence to whatever the toast says", () => {
-    const source = read("src/shared/feedback/ToastProvider.tsx");
+    // The toast's composition is `mail-line.ts#toastSentence`, which the provider calls (the third review round of the
+    // design «telling the owner about every email a staff press sends»: so a test reads the sentence it draws).
+    expect(read("src/shared/feedback/ToastProvider.tsx")).toContain("toastSentence(notice, t,");
+    const source = read("src/shared/feedback/mail-line.ts");
     expect(source).toContain('const via = values.via === "mailgun" || values.via === "gmail" ? ` ${t(`via.${values.via}`)}` : "";');
     expect(source).toContain("return `${said}${via}`;");
+    // An emailing press tells its road inside its mail line instead (the design «telling the owner about every email a
+    // staff press sends», slice 2): the line first, the bare road only when there is none.
+    expect(source.indexOf("if (mail) return `${said} ${mail}`;")).toBeGreaterThan(0);
+    expect(source.indexOf("if (mail) return `${said} ${mail}`;")).toBeLessThan(source.indexOf("return `${said}${via}`;"));
+    for (const catalogue of [ro, en]) {
+      expect(catalogue.Feedback.mail.now).toContain("{road}");
+      expect(catalogue.Feedback.mail.at).toContain("{road}");
+      expect(typeof catalogue.Feedback.mail.road.mailgun).toBe("string");
+      expect(typeof catalogue.Feedback.mail.road.gmail).toBe("string");
+    }
   });
 
   it("flashes the chosen road as `via` beside the outcome's numbers, and nothing when no press chose one", async () => {

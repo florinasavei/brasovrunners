@@ -92,7 +92,21 @@ export default async function VolunteerInvitations({
         </Typography>
 
         {access === "INVITED" ? (
-          <ActionForm action={sendVolunteerInvitationsAction} scope="invitations" messages={messages} data-testid="volunteer-invite-form">
+          <ActionForm
+            action={sendVolunteerInvitationsAction}
+            scope="invitations"
+            messages={messages}
+            // The press that sends the most in this area (the design «telling the owner about every email a staff press sends», slice 3):
+            // asked first, counting at most one email per address typed — the service skips an open invitation or an offer already made.
+            confirm={{
+              title: t("volunteers.invite.sendTitle"),
+              body: t("volunteers.invite.sendBody", { max: String(VOLUNTEER_INVITATION_BATCH_MAX) }),
+              ...dialog.mail({ to: { upToLinesOf: "addresses", audience: "volunteerAddresses" }, type: "VOLUNTEER_INVITATION" }),
+              confirmLabel: t("volunteers.invite.send"),
+              cancelLabel: dialog.cancel,
+            }}
+            data-testid="volunteer-invite-form"
+          >
             {hidden}
             <Stack spacing={1.5}>
               <RecallField
@@ -193,7 +207,7 @@ export default async function VolunteerInvitations({
                     <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
                       <ActionForm
                         action={resendVolunteerInvitationAction}
-                        confirm={{ title: t("volunteers.invite.resendTitle"), body: t("volunteers.invite.resendBody"), email: dialog.email(1), road: dialog.road("announcements"), confirmLabel: t("volunteers.invite.resend"), cancelLabel: dialog.cancel }}
+                        confirm={{ title: t("volunteers.invite.resendTitle"), body: t("volunteers.invite.resendBody"), ...dialog.mail({ to: invitation.deliveryEmail, type: "VOLUNTEER_INVITATION" }), confirmLabel: t("volunteers.invite.resend"), cancelLabel: dialog.cancel }}
                         data-testid="volunteer-invite-resend-form"
                       >
                         {hidden}

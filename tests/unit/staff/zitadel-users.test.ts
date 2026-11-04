@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   inviteZitadelUser,
   listZitadelHumanAccounts,
+  reinviteZitadelUser,
   resendZitadelInvite,
   sendZitadelPasswordReset,
   setZitadelUserActive,
@@ -102,6 +103,47 @@ describe("the Zitadel invitation", () => {
       kind: "failed",
       reason: "no account with this address at the identity provider",
     });
+  });
+});
+
+/**
+ * «Retrimite invitația» (§123) after somebody was added with «Trimite invitația acum» unticked (the design «telling the
+ * owner about every email a staff press sends», slice 4): Zitadel was never asked, so there is no account to send to —
+ * the resend makes it and invites it, as «Adaugă» would have.
+ */
+describe("«Retrimite invitația» for a person never given an account", () => {
+  const person = { email: "mihai@example.ro", displayName: "Mihai Pop", locale: "ro" as const };
+
+  it("makes the account and invites it when the search finds nobody", async () => {
+    const { call, calls } = fakeFetch({
+      "/v2/users/human": () => new Response(JSON.stringify({ userId: "42" }), { status: 201 }),
+      "/v2/users/42/invite_code": () => new Response("{}", { status: 200 }),
+      "/v2/users": () => new Response(JSON.stringify({ result: [] }), { status: 200 }),
+    });
+    expect(await reinviteZitadelUser(person, { ...deps, fetch: call })).toEqual({ kind: "invited" });
+    // Both searches found nobody, then the account was made with the person's own words and invited.
+    expect(calls.map((entry) => entry.url.replace(deps.issuer, "/"))).toEqual(["/v2/users", "/v2/users", "/v2/users/human", "/v2/users/42/invite_code"]);
+    expect(calls[2].body).toMatchObject({ username: "mihai@example.ro", profile: { displayName: "Mihai Pop", preferredLanguage: "ro" }, email: { email: "mihai@example.ro", isVerified: true } });
+  });
+
+  it("sends the invitation again to an account that exists, and makes none", async () => {
+    const { call, calls } = fakeFetch({
+      "/v2/users/7/invite_code": () => new Response("{}", { status: 200 }),
+      "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "7" }] }), { status: 200 }),
+    });
+    expect(await reinviteZitadelUser(person, { ...deps, fetch: call })).toEqual({ kind: "invited" });
+    expect(calls.some((entry) => entry.url.endsWith("/v2/users/human"))).toBe(false);
+  });
+
+  it("gives back any other refusal as it came, without making an account", async () => {
+    const { call, calls } = fakeFetch({
+      "/v2/users/7/invite_code": () => new Response(JSON.stringify({ message: "permission denied" }), { status: 403 }),
+      "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "7" }] }), { status: 200 }),
+    });
+    expect(await reinviteZitadelUser(person, { ...deps, fetch: call })).toEqual({ kind: "failed", reason: "403 permission denied" });
+    expect(calls.some((entry) => entry.url.endsWith("/v2/users/human"))).toBe(false);
+    // Without the key, nothing is asked of anybody.
+    expect(await reinviteZitadelUser(person, { issuer: "", token: "", fetch: call })).toEqual({ kind: "unconfigured" });
   });
 });
 

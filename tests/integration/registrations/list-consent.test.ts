@@ -126,6 +126,8 @@ describe("BR-REQ-039-01 the participant's own switch for the public list", () =>
       payloadJson: {},
       idempotencyKey: `test:${registrationId}`,
       requestedByStaffUserId: null,
+      cause: null,
+      pressId: null,
       isManualResend: false,
       status: "PROCESSING" as const,
       attemptCount: 1,

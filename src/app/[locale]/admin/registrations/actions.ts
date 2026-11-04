@@ -38,6 +38,7 @@ import { ANSWER_MARKERS, ANSWERS_UNCHANGED, answersRefusalCode, EDITABLE_ANSWERS
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import { PLACES_TAKEN_KEYS, confirmedCapacityOf, noFreePlaceOutcome, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
+import { inEmailPress } from "@/modules/notifications/press";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
@@ -48,6 +49,7 @@ import type { StaffPlaceOptions } from "@/modules/registrations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
+import { mailSkippedOf, sendEmailOf } from "@/shared/forms/send-email";
 import { wholeDigits } from "@/shared/forms/whole-digits";
 import { normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
 import type { SexChoice } from "@/modules/registrations/domain/sex";
@@ -157,38 +159,46 @@ async function backToDesk(form: FormData, locale: Locale, registrationId: string
  * action. Each redirects with the outcome so the desk reads a sentence, not a stack trace.
  */
 export async function confirmRegistrationNowAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const registrationId = text(form, "registrationId");
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.confirmPaper", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const registrationId = text(form, "registrationId");
 
-  let outcome: { error?: string; saved?: string };
-  try {
-    const actor = await requireStaff();
-    // The number handed with the paper, when the row offered the box (§444); empty is the draw.
-    const result = await confirmRegistrationByStaff(getDb(), actor, registrationId, new Date(), { bibNumber: handedBibNumber(form) });
-    outcome = { saved: result.status === "CONFIRMED" ? "registrationConfirmed" : "registrationWaitlisted" };
-  } catch (error) {
-    // No place and the waiting list full (§348): the desk says so, rather than "check the data"
-    // about a button with no data behind it. Nothing was written; the row stays as it was. A
-    // handed number somebody else has (§444) is said as that, and nothing was written either.
-    outcome = { error: waitlistRefusalCode(error) ?? handedBibRefusalCode(error) ?? outcomeOf(error).error };
-  }
-  return backToDesk(form, locale, registrationId, outcome);
+    let outcome: { error?: string; saved?: string };
+    try {
+      const actor = await requireStaff();
+      press.by(actor.id);
+      // The number handed with the paper, when the row offered the box (§444); empty is the draw.
+      const result = await confirmRegistrationByStaff(getDb(), actor, registrationId, new Date(), { bibNumber: handedBibNumber(form) });
+      outcome = { saved: result.status === "CONFIRMED" ? "registrationConfirmed" : "registrationWaitlisted" };
+    } catch (error) {
+      // No place and the waiting list full (§348): the desk says so, rather than "check the data"
+      // about a button with no data behind it. Nothing was written; the row stays as it was. A
+      // handed number somebody else has (§444) is said as that, and nothing was written either.
+      outcome = { error: waitlistRefusalCode(error) ?? handedBibRefusalCode(error) ?? outcomeOf(error).error };
+    }
+    return backToDesk(form, locale, registrationId, outcome);
+  });
 }
 
 export async function promoteRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const registrationId = text(form, "registrationId");
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.givePlace", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const registrationId = text(form, "registrationId");
 
-  let outcome: Record<string, string | undefined>;
-  try {
-    const actor = await requireStaff();
-    await promoteRegistrationByStaff(getDb(), actor, registrationId, new Date());
-    outcome = { saved: "registrationConfirmed" };
-  } catch (error) {
-    // No place free (§589): the sentence names who holds the places, by number, not "check the data".
-    outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
-  }
-  return backToDesk(form, locale, registrationId, outcome);
+    let outcome: Record<string, string | undefined>;
+    try {
+      const actor = await requireStaff();
+      press.by(actor.id);
+      await promoteRegistrationByStaff(getDb(), actor, registrationId, new Date());
+      outcome = { saved: "registrationConfirmed" };
+    } catch (error) {
+      // No place free (§589): the sentence names who holds the places, by number, not "check the data".
+      outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
+    }
+    return backToDesk(form, locale, registrationId, outcome);
+  });
 }
 
 /**
@@ -200,23 +210,27 @@ export async function promoteRegistrationAction(_previous: FormOutcome | null, f
  * race that filled since the page was read is refused (`SUPPLEMENTARY_PLACE_UNCONFIRMED`), nothing written.
  */
 export async function offerPlaceAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const registrationId = text(form, "registrationId");
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.offer", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const registrationId = text(form, "registrationId");
 
-  let outcome: Record<string, string | undefined>;
-  try {
-    const actor = await requireStaffCapability(canManageRegistrations);
-    const offered = await offerPlaceByStaff(getDb(), actor, registrationId, new Date(), { addPlaceTo: confirmedCapacityOf(form.get("addPlace")) });
-    // The server decided under the lock whether a supplementary place was needed (§642); the toast says which.
-    outcome = offered.capacityRaisedTo === null ? { saved: "registrationOffered" } : { saved: "registrationOfferedRaised", count: String(offered.capacityRaisedTo) };
-  } catch (error) {
-    // An unconfirmed raise says the race filled since the page was read (§642); a full count after the
-    // one place added (no path writes one) keeps §589's sentence. Either way nothing was written.
-    outcome = supplementaryPlaceRefusalOutcome(error) ?? noFreePlaceOutcome(error) ?? outcomeOf(error);
-  }
-  // From the list's «⋮» the form carries the list's query: back to the list, as it stands (§747).
-  if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome as Record<string, string>);
-  return backToDesk(form, locale, registrationId, outcome);
+    let outcome: Record<string, string | undefined>;
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      const offered = await offerPlaceByStaff(getDb(), actor, registrationId, new Date(), { addPlaceTo: confirmedCapacityOf(form.get("addPlace")) });
+      // The server decided under the lock whether a supplementary place was needed (§642); the toast says which.
+      outcome = offered.capacityRaisedTo === null ? { saved: "registrationOffered" } : { saved: "registrationOfferedRaised", count: String(offered.capacityRaisedTo) };
+    } catch (error) {
+      // An unconfirmed raise says the race filled since the page was read (§642); a full count after the
+      // one place added (no path writes one) keeps §589's sentence. Either way nothing was written.
+      outcome = supplementaryPlaceRefusalOutcome(error) ?? noFreePlaceOutcome(error) ?? outcomeOf(error);
+    }
+    // From the list's «⋮» the form carries the list's query: back to the list, as it stands (§747).
+    if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome as Record<string, string>);
+    return backToDesk(form, locale, registrationId, outcome);
+  });
 }
 
 /**
@@ -228,19 +242,23 @@ export async function offerPlaceAction(_previous: FormOutcome | null, form: Form
  * the plain question on a race that filled since is refused (`SUPPLEMENTARY_PLACE_UNCONFIRMED`).
  */
 export async function givePlaceNowAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const registrationId = text(form, "registrationId");
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.givePlaceNow", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const registrationId = text(form, "registrationId");
 
-  let outcome: Record<string, string | undefined>;
-  try {
-    const actor = await requireStaffCapability(canManageRegistrations);
-    const placed = await givePlaceToUnconfirmedByStaff(getDb(), actor, registrationId, new Date(), undefined, { addPlaceTo: confirmedCapacityOf(form.get("addPlace")) });
-    // The server decided under the lock whether a supplementary place was needed (§642); the banner says which.
-    outcome = placed.capacityRaisedTo === null ? { saved: "placeGiven" } : { saved: "placeGivenRaised", count: String(placed.capacityRaisedTo) };
-  } catch (error) {
-    outcome = supplementaryPlaceRefusalOutcome(error) ?? noFreePlaceOutcome(error) ?? outcomeOf(error);
-  }
-  return backTo(detailPath(locale, registrationId), outcome);
+    let outcome: Record<string, string | undefined>;
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      const placed = await givePlaceToUnconfirmedByStaff(getDb(), actor, registrationId, new Date(), undefined, { addPlaceTo: confirmedCapacityOf(form.get("addPlace")) });
+      // The server decided under the lock whether a supplementary place was needed (§642); the banner says which.
+      outcome = placed.capacityRaisedTo === null ? { saved: "placeGiven" } : { saved: "placeGivenRaised", count: String(placed.capacityRaisedTo) };
+    } catch (error) {
+      outcome = supplementaryPlaceRefusalOutcome(error) ?? noFreePlaceOutcome(error) ?? outcomeOf(error);
+    }
+    return backTo(detailPath(locale, registrationId), outcome);
+  });
 }
 
 /**
@@ -249,22 +267,26 @@ export async function givePlaceNowAction(_previous: FormOutcome | null, form: Fo
  * full event says who holds the places (§589's sentence).
  */
 export async function setOutsideCapacityAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const registrationId = text(form, "registrationId");
-  const outside = text(form, "outside") === "true";
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.specialGuests", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const registrationId = text(form, "registrationId");
+    const outside = text(form, "outside") === "true";
 
-  let outcome: Record<string, string | undefined>;
-  try {
-    const actor = await requireStaffCapability(canManageRegistrations);
-    await setOutsideCapacity(getDb(), actor, registrationId, outside, new Date());
-    outcome = outside ? { saved: "outsideMarked" } : { saved: "outsideUnmarked" };
-  } catch (error) {
-    // «Folosește lista ascunsă» off (§647): its own sentence, naming the switch, not "check the data".
-    outcome = isDomainError(error) && error.fields.includes(HIDDEN_LIST_OFF) ? { error: HIDDEN_LIST_OFF } : (noFreePlaceOutcome(error) ?? outcomeOf(error));
-  }
-  // From the list's «⋮» (§747) the form carries the list's query: back to the list, as it stands.
-  if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome as Record<string, string>);
-  return backTo(detailPath(locale, registrationId), outcome);
+    let outcome: Record<string, string | undefined>;
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      await setOutsideCapacity(getDb(), actor, registrationId, outside, new Date());
+      outcome = outside ? { saved: "outsideMarked" } : { saved: "outsideUnmarked" };
+    } catch (error) {
+      // «Folosește lista ascunsă» off (§647): its own sentence, naming the switch, not "check the data".
+      outcome = isDomainError(error) && error.fields.includes(HIDDEN_LIST_OFF) ? { error: HIDDEN_LIST_OFF } : (noFreePlaceOutcome(error) ?? outcomeOf(error));
+    }
+    // From the list's «⋮» (§747) the form carries the list's query: back to the list, as it stands.
+    if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome as Record<string, string>);
+    return backTo(detailPath(locale, registrationId), outcome);
+  });
 }
 
 /**
@@ -273,21 +295,27 @@ export async function setOutsideCapacityAction(_previous: FormOutcome | null, fo
  * (§315); every refusal of this verb is about that one box, so it is the one the summary names.
  */
 export async function setBibNumberAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const registrationId = text(form, "registrationId");
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.setBib", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const registrationId = text(form, "registrationId");
+    // «Trimite emailul» in the question (slice 4): unticked, the number is given and the runner is not emailed it.
+    const sendEmail = sendEmailOf(form);
 
-  try {
-    const actor = await requireStaff();
-    // An empty field clears the number; anything else must be digits only (`wholeDigits`, §553),
-    // and the service checks the range — `Number("")` would be 0 and a lie.
-    const bibNumber = wholeDigits(text(form, "bibNumber"));
-    await setBibNumberByStaff(getDb(), actor, registrationId, bibNumber, new Date());
-  } catch (error) {
-    return refused(error, form, {
-      fieldNames: (failure) => (failure.code === "VALIDATION_ERROR" || failure.code === "CONFLICT" ? ["bibNumber"] : failure.fields),
-    });
-  }
-  return backToDesk(form, locale, registrationId, { saved: "bibSet" });
+    try {
+      const actor = await requireStaff();
+      press.by(actor.id);
+      // An empty field clears the number; anything else must be digits only (`wholeDigits`, §553),
+      // and the service checks the range — `Number("")` would be 0 and a lie.
+      const bibNumber = wholeDigits(text(form, "bibNumber"));
+      await setBibNumberByStaff(getDb(), actor, registrationId, bibNumber, new Date(), { sendEmail });
+    } catch (error) {
+      return refused(error, form, {
+        fieldNames: (failure) => (failure.code === "VALIDATION_ERROR" || failure.code === "CONFLICT" ? ["bibNumber"] : failure.fields),
+      });
+    }
+    return backToDesk(form, locale, registrationId, { saved: "bibSet", ...mailSkippedOf(sendEmail) });
+  });
 }
 
 export async function checkInAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -320,133 +348,137 @@ function optional(form: FormData, key: string): string | undefined {
  * (`DECISIONS.md` §315); the event stays selected because it is one of the boxes.
  */
 export async function createRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const eventId = text(form, "eventId");
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.create", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const eventId = text(form, "eventId");
 
-  let outcome: { error?: string; saved?: string };
-  let reserveEventId: string | null = null;
-  try {
-    // Every role: a walk-in on race morning is entered by the volunteer at the table
-    // (BR-REQ-037-07). The service asserts the same.
-    const actor = await requireStaff();
-    const created = await createRegistrationByStaff(
-      getDb(),
-      actor,
-      {
-        eventId,
-        firstName: text(form, "firstName"),
-        lastName: text(form, "lastName"),
-        // BR-REQ-031-04 criterion 5: blank is a legitimate answer here. `optional` turns an
-        // empty field into `undefined` so the staff schema sees an absent value rather than
-        // an empty string it would have to reject.
-        details: {
-          displayName: optional(form, "displayName"),
-          // Typed day first, «11.05.1990», as the public form's box (§561): read into `YYYY-MM-DD` here.
-          birthDate: normalizeTypedDate(optional(form, "birthDate") ?? "") || undefined,
-          // Any other value, the retired «Prefer să nu spun» included, is refused by the schema (§554).
-          sex: optional(form, "sex") as SexChoice | undefined,
-          nationality: optional(form, "nationality"),
-          country: optional(form, "country"),
-          city: optional(form, "city"),
-          phone: optional(form, "phone"),
-          emergencyContactName: optional(form, "emergencyContactName"),
-          emergencyContactPhone: optional(form, "emergencyContactPhone"),
-          clubName: optional(form, "clubName"),
-          // A minor's parent (§108), asked by the form once the birth date says under eighteen
-          // (§324); the schema requires it then, and ignores it for an adult.
-          guardianName: optional(form, "guardianName"),
-          clubMemberDeclared: form.get("clubMemberDeclared") === "on",
-          // The members' bib (§664): kept by the service only where the event offers it.
-          memberBibWanted: form.get("memberBibWanted") === "on",
-          tshirtSize: optional(form, "tshirtSize") as
-            | "NONE"
-            | "XS"
-            | "S"
-            | "M"
-            | "L"
-            | "XL"
-            | "XXL"
-            | undefined,
+    let outcome: { error?: string; saved?: string };
+    let reserveEventId: string | null = null;
+    try {
+      // Every role: a walk-in on race morning is entered by the volunteer at the table
+      // (BR-REQ-037-07). The service asserts the same.
+      const actor = await requireStaff();
+      press.by(actor.id);
+      const created = await createRegistrationByStaff(
+        getDb(),
+        actor,
+        {
+          eventId,
+          firstName: text(form, "firstName"),
+          lastName: text(form, "lastName"),
+          // BR-REQ-031-04 criterion 5: blank is a legitimate answer here. `optional` turns an
+          // empty field into `undefined` so the staff schema sees an absent value rather than
+          // an empty string it would have to reject.
+          details: {
+            displayName: optional(form, "displayName"),
+            // Typed day first, «11.05.1990», as the public form's box (§561): read into `YYYY-MM-DD` here.
+            birthDate: normalizeTypedDate(optional(form, "birthDate") ?? "") || undefined,
+            // Any other value, the retired «Prefer să nu spun» included, is refused by the schema (§554).
+            sex: optional(form, "sex") as SexChoice | undefined,
+            nationality: optional(form, "nationality"),
+            country: optional(form, "country"),
+            city: optional(form, "city"),
+            phone: optional(form, "phone"),
+            emergencyContactName: optional(form, "emergencyContactName"),
+            emergencyContactPhone: optional(form, "emergencyContactPhone"),
+            clubName: optional(form, "clubName"),
+            // A minor's parent (§108), asked by the form once the birth date says under eighteen
+            // (§324); the schema requires it then, and ignores it for an adult.
+            guardianName: optional(form, "guardianName"),
+            clubMemberDeclared: form.get("clubMemberDeclared") === "on",
+            // The members' bib (§664): kept by the service only where the event offers it.
+            memberBibWanted: form.get("memberBibWanted") === "on",
+            tshirtSize: optional(form, "tshirtSize") as
+              | "NONE"
+              | "XS"
+              | "S"
+              | "M"
+              | "L"
+              | "XL"
+              | "XXL"
+              | undefined,
+          },
+          email: text(form, "email"),
+          locale: toLocale(form.get("participantLocale")),
+          listOptOut: form.get("listOptIn") !== "on",
+          relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
+          fastTrack: form.get("fastTrack") === "on",
+          // «Direct pe lista de așteptare» (§872): the Administrator vouches for the address; the service asserts the role.
+          vouchAddress: form.get("vouchAddress") === "on",
+          // The number handed with the paper (§444); empty is the platform's own draw.
+          bibNumber: handedBibNumber(form),
         },
-        email: text(form, "email"),
-        locale: toLocale(form.get("participantLocale")),
-        listOptOut: form.get("listOptIn") !== "on",
-        relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
-        fastTrack: form.get("fastTrack") === "on",
-        // «Direct pe lista de așteptare» (§872): the Administrator vouches for the address; the service asserts the role.
-        vouchAddress: form.get("vouchAddress") === "on",
-        // The number handed with the paper (§444); empty is the platform's own draw.
-        bibNumber: handedBibNumber(form),
-      },
-      new Date(),
-    );
-    /*
-      «Trece pe lista oficială» (§854): the line of the internal list this entry was opened from — its note
-      onto the new registration, the line removed. Only for a role that keeps the list; the registration
-      stands whatever happens here, so a line already gone is no refusal.
-    */
-    // Moving a line is the Administrator's since §888, in one press or through this form.
-    const reserveEntryId = text(form, "reserveEntryId");
-    if (reserveEntryId && created.registrationId && canManageRegistrations(actor.role)) {
-      await settleReserveEntry(getDb(), actor, reserveEntryId, created.registrationId, new Date());
-      reserveEventId = eventId;
+        new Date(),
+      );
+      /*
+        «Trece pe lista oficială» (§854): the line of the internal list this entry was opened from — its note
+        onto the new registration, the line removed. Only for a role that keeps the list; the registration
+        stands whatever happens here, so a line already gone is no refusal.
+      */
+      // Moving a line is the Administrator's since §888, in one press or through this form.
+      const reserveEntryId = text(form, "reserveEntryId");
+      if (reserveEntryId && created.registrationId && canManageRegistrations(actor.role)) {
+        await settleReserveEntry(getDb(), actor, reserveEntryId, created.registrationId, new Date());
+        reserveEventId = eventId;
+      }
+      outcome = { saved: "registrationCreated" };
+    } catch (error) {
+      /*
+        The form comes back as typed, the event still selected (§315).
+
+        Under the event's minimum age on the race day (§321) is the one refusal here about a fact
+        the volunteer typed and can check with the person in front of them, so it keeps its own
+        sentence — the generic "check what you entered" would send them hunting through a form that
+        is correct. The sentence names the chosen event's own number (§329), read from the event
+        the refusal was about, in the backoffice's language. The rule's marker is not a box: the
+        summary names the birth date alone, under its label.
+      */
+      const refusal = refused(error, form, {
+        fieldNames: (failure) => failure.fields.filter((name) => name !== UNDER_MINIMUM_AGE && name !== ALREADY_ON_ADDRESS && name !== ADDRESS_AT_CAP),
+      });
+      /*
+        Another person on a registered address is entered here since §493; the two refusals it can meet
+        are said as sentences — this person is on the address already, or the address is at the club's
+        limit — with the address box named, rather than "check what you entered" over a correct form.
+      */
+      if (isDomainError(error) && error.fields.includes(ALREADY_ON_ADDRESS)) return { ...refusal, error: "STAFF_ALREADY_ON_ADDRESS" };
+      if (isDomainError(error) && error.fields.includes(ADDRESS_AT_CAP)) return { ...refusal, error: "STAFF_ADDRESS_AT_CAP" };
+      /*
+        No place and the waiting list full (§348), for a staff entry and the desk's walk-in alike: no
+        bypass (`AGENTS.md` §15.11), and a sentence that says so rather than "check what you entered"
+        — the form is correct, the line is full. The marker names no box; every box stays filled.
+        A walk-in whose row went in and whose confirmation, a moment later, found the line full has
+        its own sentence (`WALK_IN_LEFT_UNCONFIRMED`): the row exists, unconfirmed.
+      */
+      const full = waitlistRefusalCode(error);
+      if (full) return { ...refusal, error: full, fields: [] };
+      /*
+        The number handed with the paper (§444): somebody else's already — the box named, nothing
+        written — or given away between the desk's check and the confirmation, when the entry stands
+        unconfirmed and the sentence says what to do with it.
+      */
+      const bib = handedBibRefusalCode(error);
+      if (bib === "BIB_NUMBER_TAKEN") return { ...refusal, error: bib, fields: ["bibNumber"] };
+      if (bib === "WALK_IN_BIB_TAKEN") return { ...refusal, error: bib, fields: [] };
+      if (!(isDomainError(error) && error.fields.includes(UNDER_MINIMUM_AGE))) return refusal;
+      const event = await findEventForRegistrationById(getDb(), eventId);
+      return {
+        ...refusal,
+        error: "UNDER_MINIMUM_AGE",
+        errorValues: { age: yearsPhrase(effectiveMinimumAge(event?.minAge), locale) },
+      };
     }
-    outcome = { saved: "registrationCreated" };
-  } catch (error) {
-    /*
-      The form comes back as typed, the event still selected (§315).
 
-      Under the event's minimum age on the race day (§321) is the one refusal here about a fact
-      the volunteer typed and can check with the person in front of them, so it keeps its own
-      sentence — the generic "check what you entered" would send them hunting through a form that
-      is correct. The sentence names the chosen event's own number (§329), read from the event
-      the refusal was about, in the backoffice's language. The rule's marker is not a box: the
-      summary names the birth date alone, under its label.
-    */
-    const refusal = refused(error, form, {
-      fieldNames: (failure) => failure.fields.filter((name) => name !== UNDER_MINIMUM_AGE && name !== ALREADY_ON_ADDRESS && name !== ADDRESS_AT_CAP),
-    });
-    /*
-      Another person on a registered address is entered here since §493; the two refusals it can meet
-      are said as sentences — this person is on the address already, or the address is at the club's
-      limit — with the address box named, rather than "check what you entered" over a correct form.
-    */
-    if (isDomainError(error) && error.fields.includes(ALREADY_ON_ADDRESS)) return { ...refusal, error: "STAFF_ALREADY_ON_ADDRESS" };
-    if (isDomainError(error) && error.fields.includes(ADDRESS_AT_CAP)) return { ...refusal, error: "STAFF_ADDRESS_AT_CAP" };
-    /*
-      No place and the waiting list full (§348), for a staff entry and the desk's walk-in alike: no
-      bypass (`AGENTS.md` §15.11), and a sentence that says so rather than "check what you entered"
-      — the form is correct, the line is full. The marker names no box; every box stays filled.
-      A walk-in whose row went in and whose confirmation, a moment later, found the line full has
-      its own sentence (`WALK_IN_LEFT_UNCONFIRMED`): the row exists, unconfirmed.
-    */
-    const full = waitlistRefusalCode(error);
-    if (full) return { ...refusal, error: full, fields: [] };
-    /*
-      The number handed with the paper (§444): somebody else's already — the box named, nothing
-      written — or given away between the desk's check and the confirmation, when the entry stands
-      unconfirmed and the sentence says what to do with it.
-    */
-    const bib = handedBibRefusalCode(error);
-    if (bib === "BIB_NUMBER_TAKEN") return { ...refusal, error: bib, fields: ["bibNumber"] };
-    if (bib === "WALK_IN_BIB_TAKEN") return { ...refusal, error: bib, fields: [] };
-    if (!(isDomainError(error) && error.fields.includes(UNDER_MINIMUM_AGE))) return refusal;
-    const event = await findEventForRegistrationById(getDb(), eventId);
-    return {
-      ...refusal,
-      error: "UNDER_MINIMUM_AGE",
-      errorValues: { age: yearsPhrase(effectiveMinimumAge(event?.minAge), locale) },
-    };
-  }
-
-  // A success goes to where the new row is visible with the status it actually landed in —
-  // the desk, when the form was opened from there, otherwise the list.
-  const fromDesk = text(form, "back") === "desk";
-  if (fromDesk) {
-    return backTo(getPathname({ locale, href: "/admin/checkin" }), outcome, { eventId });
-  }
-  // From the internal list (§854): back to that event's list, where the new row and what is left of the list are.
-  return backTo(getPathname({ locale, href: "/admin/registrations" }), outcome, reserveEventId ? { eventId: reserveEventId } : {});
+    // A success goes to where the new row is visible with the status it actually landed in —
+    // the desk, when the form was opened from there, otherwise the list.
+    const fromDesk = text(form, "back") === "desk";
+    if (fromDesk) {
+      return backTo(getPathname({ locale, href: "/admin/checkin" }), outcome, { eventId });
+    }
+    // From the internal list (§854): back to that event's list, where the new row and what is left of the list are.
+    return backTo(getPathname({ locale, href: "/admin/registrations" }), outcome, reserveEventId ? { eventId: reserveEventId } : {});
+  });
 }
 
 /**
@@ -650,25 +682,27 @@ export async function clearMemberTicksAction(_previous: FormOutcome | null, form
  * box; the list's row menu posts none, so it stays an ordinary cancellation.
  */
 export async function cancelRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const registrationId = text(form, "registrationId");
-  const byOrganizer = form.get("refusedByOrganizer") === "on";
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.cancel", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const registrationId = text(form, "registrationId");
+    const byOrganizer = form.get("refusedByOrganizer") === "on";
+    // «Trimite emailul» in the question (slice 4): never offered with the club's refusal, which the service refuses without it.
+    const sendEmail = sendEmailOf(form);
 
-  try {
-    const actor = await requireStaffCapability(canManageRegistrations);
-    await cancelRegistrationByStaff(
-      getDb(),
-      actor,
-      registrationId,
-      text(form, "reason"),
-      new Date(),
-      byOrganizer ? { kind: "REFUSED_BY_ORGANIZER" } : {},
-    );
-  } catch (error) {
-    return refused(error, form);
-  }
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      await cancelRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date(), {
+        ...(byOrganizer ? { kind: "REFUSED_BY_ORGANIZER" as const } : {}),
+        sendEmail,
+      });
+    } catch (error) {
+      return refused(error, form);
+    }
 
-  return backTo(detailPath(locale, registrationId), { saved: "registrationCancelled" });
+    return backTo(detailPath(locale, registrationId), { saved: "registrationCancelled", ...mailSkippedOf(sendEmail) });
+  });
 }
 
 /**
@@ -677,10 +711,14 @@ export async function cancelRegistrationAction(_previous: FormOutcome | null, fo
  * The same action underneath as the page's form, which redirects by itself on success.
  */
 export async function cancelRegistrationFromRowAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const refusal = await cancelRegistrationAction(null, form);
-  if (refusal) return backTo(detailPath(toLocale(form.get("uiLocale")), text(form, "registrationId")), { error: refusal.error });
-  // Unreachable: a cancel that went through redirected from inside `cancelRegistrationAction`.
-  return null;
+  // An email press (`notifications/press.ts`). The cancel underneath opens its own, which wins and names the actor;
+  // this one holds a refusal's redirect, which queues nothing.
+  return inEmailPress("registrations.cancel", async () => {
+    const refusal = await cancelRegistrationAction(null, form);
+    if (refusal) return backTo(detailPath(toLocale(form.get("uiLocale")), text(form, "registrationId")), { error: refusal.error });
+    // Unreachable: a cancel that went through redirected from inside `cancelRegistrationAction`.
+    return null;
+  });
 }
 
 /**
@@ -784,47 +822,54 @@ export async function setBibPrintedAction(form: FormData): Promise<void> {
 }
 
 export async function bulkCancelRegistrationsAction(form: FormData): Promise<void> {
-  const locale = toLocale(form.get("uiLocale"));
-  const ids = form
-    .getAll("registrationId")
-    .filter((value): value is string => typeof value === "string" && value !== "");
-  const reason = text(form, "reason");
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.bulkCancel", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const ids = form
+      .getAll("registrationId")
+      .filter((value): value is string => typeof value === "string" && value !== "");
+    const reason = text(form, "reason");
 
-  const listPath = getPathname({ locale, href: "/admin/registrations" });
-  /*
-    The list's own query string comes back as a field so the organizer returns to the filtered,
-    sorted page they acted from. Only the query is carried, never a path: a redirect target
-    taken from a form is an open redirect, and rebuilding the path here from `getPathname`
-    means the field can only ever choose which rows are shown.
-  */
-  const listQuery = text(form, "listQuery");
-  const returnTo = listQuery ? `${listPath}?${listQuery}` : listPath;
+    const listPath = getPathname({ locale, href: "/admin/registrations" });
+    /*
+      The list's own query string comes back as a field so the organizer returns to the filtered,
+      sorted page they acted from. Only the query is carried, never a path: a redirect target
+      taken from a form is an open redirect, and rebuilding the path here from `getPathname`
+      means the field can only ever choose which rows are shown.
+    */
+    const listQuery = text(form, "listQuery");
+    const returnTo = listQuery ? `${listPath}?${listQuery}` : listPath;
 
-  if (ids.length === 0) {
-    return backTo(returnTo, { error: "NOTHING_SELECTED" });
-  }
+    if (ids.length === 0) {
+      return backTo(returnTo, { error: "NOTHING_SELECTED" });
+    }
 
-  let cancelled = 0;
-  let test = 0;
-  let failed = 0;
-  let voided: number[] = [];
-  try {
-    const actor = await requireStaffCapability(canManageRegistrations);
-    ({ cancelled, test, failed, voided } = await bulkCancelRegistrationsByStaff(getDb(), actor, ids, reason, new Date()));
-  } catch (error) {
-    return backTo(returnTo, outcomeOf(error));
-  }
+    let cancelled = 0;
+    let test = 0;
+    let failed = 0;
+    let voided: number[] = [];
+    // The batch's one «Trimite emailul» (slice 4): unticked, nobody ticked is emailed; every freed place is still offered.
+    const sendEmail = sendEmailOf(form);
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      ({ cancelled, test, failed, voided } = await bulkCancelRegistrationsByStaff(getDb(), actor, ids, reason, new Date(), { sendEmail }));
+    } catch (error) {
+      return backTo(returnTo, outcomeOf(error));
+    }
 
-  // The printed numbers this press just made void (§311), for the banner to name: numbers only,
-  // which is all the page needs to say which bibs come out of the pile.
-  const separator = returnTo.includes("?") ? "&" : "?";
-  const voidedQuery = voided.length > 0 ? `&voided=${voided.join(",")}` : "";
-  // The real rows only (§30): each was cancelled and sent its email, the number the dialog stated.
-  const real = cancelled - test;
-  await flashOutcome({ saved: "registrationsCancelled", cancelled: String(real), failed: String(failed), test: String(test) });
-  redirect(
-    `${returnTo}${separator}saved=registrationsCancelled&cancelled=${real}&failed=${failed}&test=${test}${voidedQuery}#admin-alert`,
-  );
+    // The printed numbers this press just made void (§311), for the banner to name: numbers only,
+    // which is all the page needs to say which bibs come out of the pile.
+    const separator = returnTo.includes("?") ? "&" : "?";
+    const voidedQuery = voided.length > 0 ? `&voided=${voided.join(",")}` : "";
+    // The real rows only (§30): each was cancelled and sent its email — unless the box was unticked — the number the dialog stated,
+    // and the number of emails the unticked box kept back.
+    const real = cancelled - test;
+    await flashOutcome({ saved: "registrationsCancelled", cancelled: String(real), failed: String(failed), test: String(test), ...mailSkippedOf(sendEmail, real) });
+    redirect(
+      `${returnTo}${separator}saved=registrationsCancelled&cancelled=${real}&failed=${failed}&test=${test}${voidedQuery}#admin-alert`,
+    );
+  });
 }
 
 /**
@@ -845,37 +890,41 @@ export async function bulkCancelRegistrationsAction(form: FormData): Promise<voi
  * count on the banner, not a refusal of the form.
  */
 export async function bulkDeleteRegistrationsAction(form: FormData): Promise<void> {
-  const locale = toLocale(form.get("uiLocale"));
-  const ids = form
-    .getAll("registrationId")
-    .filter((value): value is string => typeof value === "string" && value !== "");
-  const reason = text(form, "reason");
-  const confirmCount = text(form, "confirmCount");
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.bulkErase", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const ids = form
+      .getAll("registrationId")
+      .filter((value): value is string => typeof value === "string" && value !== "");
+    const reason = text(form, "reason");
+    const confirmCount = text(form, "confirmCount");
 
-  const listPath = getPathname({ locale, href: "/admin/registrations" });
-  // Only the query, never a path: a redirect target taken from a form is an open redirect.
-  const listQuery = text(form, "listQuery");
-  const returnTo = listQuery ? `${listPath}?${listQuery}` : listPath;
+    const listPath = getPathname({ locale, href: "/admin/registrations" });
+    // Only the query, never a path: a redirect target taken from a form is an open redirect.
+    const listQuery = text(form, "listQuery");
+    const returnTo = listQuery ? `${listPath}?${listQuery}` : listPath;
 
-  let erased = 0;
-  let failed = 0;
-  try {
-    const actor = await requireStaffCapability(canManageRegistrations);
-    ({ erased, failed } = await bulkDeleteRegistrationsByStaff(
-      getDb(),
-      actor,
-      ids,
-      reason,
-      new Date(),
-      { confirmCount },
-    ));
-  } catch (error) {
-    return backTo(returnTo, outcomeOf(error));
-  }
+    let erased = 0;
+    let failed = 0;
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      ({ erased, failed } = await bulkDeleteRegistrationsByStaff(
+        getDb(),
+        actor,
+        ids,
+        reason,
+        new Date(),
+        { confirmCount },
+      ));
+    } catch (error) {
+      return backTo(returnTo, outcomeOf(error));
+    }
 
-  await flashOutcome({ saved: "registrationsErased", erased: String(erased), failed: String(failed) });
-  const separator = returnTo.includes("?") ? "&" : "?";
-  redirect(`${returnTo}${separator}saved=registrationsErased&erased=${erased}&failed=${failed}#admin-alert`);
+    await flashOutcome({ saved: "registrationsErased", erased: String(erased), failed: String(failed) });
+    const separator = returnTo.includes("?") ? "&" : "?";
+    redirect(`${returnTo}${separator}saved=registrationsErased&erased=${erased}&failed=${failed}#admin-alert`);
+  });
 }
 
 /**
@@ -883,19 +932,23 @@ export async function bulkDeleteRegistrationsAction(form: FormData): Promise<voi
  * for the "I understand" tick again (§315): the tick is the guard here and is never recalled.
  */
 export async function deleteRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const registrationId = text(form, "registrationId");
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.erase", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const registrationId = text(form, "registrationId");
 
-  try {
-    const actor = await requireStaffCapability(canManageRegistrations);
-    await deleteRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date());
-  } catch (error) {
-    return refused(error, form);
-  }
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      await deleteRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date());
+    } catch (error) {
+      return refused(error, form);
+    }
 
-  // Always back to the list, never to the detail page: on success that page describes a row
-  // that no longer exists, and a 404 is a poor way to learn a deletion worked.
-  return backTo(getPathname({ locale, href: "/admin/registrations" }), { saved: "registrationDeleted" });
+    // Always back to the list, never to the detail page: on success that page describes a row
+    // that no longer exists, and a 404 is a poor way to learn a deletion worked.
+    return backTo(getPathname({ locale, href: "/admin/registrations" }), { saved: "registrationDeleted" });
+  });
 }
 
 /**
@@ -949,52 +1002,56 @@ export async function declarationHoldAction(_previous: FormOutcome | null, form:
  * bulk is recoverable — the person registers again — and erasing is not.
  */
 export async function eraseRegistrationFromListAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const registrationId = text(form, "registrationId");
-  const confirmName = text(form, "confirmName");
-  const listPath = getPathname({ locale, href: "/admin/registrations" });
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.erase", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const registrationId = text(form, "registrationId");
+    const confirmName = text(form, "confirmName");
+    const listPath = getPathname({ locale, href: "/admin/registrations" });
 
-  try {
-    const actor = await requireStaffCapability(canManageRegistrations);
-    /*
-      Refused before the database is touched. Not a duplicate of the service's own check: that
-      one compares against the registration, this one is what stops an empty field spending a
-      round trip. Both have to exist, because the `required` attribute on the field is a courtesy
-      the browser may not be running.
-    */
-    if (confirmName.trim() === "") {
-      throw new DomainError("VALIDATION_ERROR", "type the registered name to erase", ["confirmName"]);
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      /*
+        Refused before the database is touched. Not a duplicate of the service's own check: that
+        one compares against the registration, this one is what stops an empty field spending a
+        round trip. Both have to exist, because the `required` attribute on the field is a courtesy
+        the browser may not be running.
+      */
+      if (confirmName.trim() === "") {
+        throw new DomainError("VALIDATION_ERROR", "type the registered name to erase", ["confirmName"]);
+      }
+      await deleteRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date(), {
+        confirmName,
+      });
+    } catch (error) {
+      /*
+        The panel stays open on the same row — the page was never left — with the summary above
+        the two boxes (§315). **The reason comes back; the typed name never does.** The reason used
+        to be dropped because the only way back was a redirect and a free line of somebody's prose
+        has no business in a query string; a returned state never leaves the POST, so that reason
+        is gone. The name is the guard (§180) and is meant to be typed again (`NEVER_KEPT`).
+
+        A mistyped name is the one failure that is about what was typed rather than about the
+        registration, so it says so; every other code stays what the service called it.
+      */
+      const failure = refused(error, form);
+      const mistyped = isDomainError(error) && error.fields.includes("confirmName");
+      return { ...failure, error: mistyped ? "ERASE_NAME_MISMATCH" : failure.error, fields: mistyped ? ["confirmName"] : failure.fields };
     }
-    await deleteRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date(), {
-      confirmName,
-    });
-  } catch (error) {
+
     /*
-      The panel stays open on the same row — the page was never left — with the summary above
-      the two boxes (§315). **The reason comes back; the typed name never does.** The reason used
-      to be dropped because the only way back was a redirect and a free line of somebody's prose
-      has no business in a query string; a returned state never leaves the POST, so that reason
-      is gone. The name is the guard (§180) and is meant to be typed again (`NEVER_KEPT`).
-
-      A mistyped name is the one failure that is about what was typed rather than about the
-      registration, so it says so; every other code stays what the service called it.
+      Merged into the list's own query rather than appended to it. `backTo` builds a query string
+      and joins it with a bare "?", which is right for the paths it was written for — a detail page
+      with no query of its own — and wrong for a return to a filtered, sorted, paginated list,
+      where it would produce `?eventId=…?error=…` and lose both.
     */
-    const failure = refused(error, form);
-    const mistyped = isDomainError(error) && error.fields.includes("confirmName");
-    return { ...failure, error: mistyped ? "ERASE_NAME_MISMATCH" : failure.error, fields: mistyped ? ["confirmName"] : failure.fields };
-  }
-
-  /*
-    Merged into the list's own query rather than appended to it. `backTo` builds a query string
-    and joins it with a bare "?", which is right for the paths it was written for — a detail page
-    with no query of its own — and wrong for a return to a filtered, sorted, paginated list,
-    where it would produce `?eventId=…?error=…` and lose both.
-  */
-  const params = new URLSearchParams(text(form, "listQuery"));
-  for (const key of ["erase", "error"]) params.delete(key);
-  params.set("saved", "registrationDeleted");
-  await flashOutcome({ saved: "registrationDeleted" });
-  redirect(`${listPath}?${params.toString()}#admin-alert`);
+    const params = new URLSearchParams(text(form, "listQuery"));
+    for (const key of ["erase", "error"]) params.delete(key);
+    params.set("saved", "registrationDeleted");
+    await flashOutcome({ saved: "registrationDeleted" });
+    redirect(`${listPath}?${params.toString()}#admin-alert`);
+  });
 }
 
 /**
@@ -1092,38 +1149,42 @@ function waitlistEntryRefused(error: unknown, form: FormData, page: string): For
  * typed (§315); a success returns to the panel it came from, open, and the toast says which state the row landed in.
  */
 export async function addToWaitlistAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  const eventId = text(form, "eventId");
+  // An email press (`notifications/press.ts`), its cause the button's: «Oferă-i un loc acum», or the plain entry.
+  return inEmailPress(offerNowOf(form) ? "registrations.offerNow" : "registrations.waitlistAdd", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const eventId = text(form, "eventId");
 
-  let outcome: { saved: string; count?: string };
-  try {
-    const actor = await requireStaffCapability(canManageRegistrations);
-    // An over-long note is refused naming its box, before any row exists (§315); an empty box is no note.
-    const typedNote = text(form, "note").trim();
-    const note = typedNote === "" ? null : parseNoteBody(typedNote);
-    const entered = await enterOnWaitlistByStaff(
-      getDb(),
-      actor,
-      {
-        eventId,
-        firstName: text(form, "firstName"),
-        lastName: text(form, "lastName"),
-        email: text(form, "email"),
-        // The person's emails in the backoffice's language; the full form asks for their own.
-        locale,
-        relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
-        note,
-        offerNow: offerNowOf(form),
-      },
-      new Date(),
-    );
-    outcome = waitlistEntrySaved(entered);
-  } catch (error) {
-    const page =
-      text(form, "back") === "event" ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } }) : getPathname({ locale, href: "/admin/registrations" });
-    return waitlistEntryRefused(error, form, page);
-  }
-  return backToWaitlistPanel(form, locale, eventId, outcome);
+    let outcome: { saved: string; count?: string };
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      // An over-long note is refused naming its box, before any row exists (§315); an empty box is no note.
+      const typedNote = text(form, "note").trim();
+      const note = typedNote === "" ? null : parseNoteBody(typedNote);
+      const entered = await enterOnWaitlistByStaff(
+        getDb(),
+        actor,
+        {
+          eventId,
+          firstName: text(form, "firstName"),
+          lastName: text(form, "lastName"),
+          email: text(form, "email"),
+          // The person's emails in the backoffice's language; the full form asks for their own.
+          locale,
+          relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
+          note,
+          offerNow: offerNowOf(form),
+        },
+        new Date(),
+      );
+      outcome = waitlistEntrySaved(entered);
+    } catch (error) {
+      const page =
+        text(form, "back") === "event" ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } }) : getPathname({ locale, href: "/admin/registrations" });
+      return waitlistEntryRefused(error, form, page);
+    }
+    return backToWaitlistPanel(form, locale, eventId, outcome);
+  });
 }
 
 /**
@@ -1135,25 +1196,29 @@ export async function addToWaitlistAction(_previous: FormOutcome | null, form: F
  * refusal keeps the line and what was typed; a success returns to the internal list, open, where the line is gone.
  */
 export async function moveReserveEntryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = toLocale(form.get("uiLocale"));
-  let eventId: string;
-  let outcome: { saved: string; count?: string };
-  try {
-    const actor = await requireStaffCapability(canManageRegistrations);
-    const moved = await moveReserveEntryToWaitlist(
-      getDb(),
-      actor,
-      text(form, "entryId"),
-      { email: form.get("email"), relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on", locale, offerNow: offerNowOf(form) },
-      new Date(),
-    );
-    eventId = moved.eventId;
-    outcome = waitlistEntrySaved(moved);
-  } catch (error) {
-    return waitlistEntryRefused(error, form, getPathname({ locale, href: "/admin/registrations" }));
-  }
-  await flashOutcome(outcome);
-  // `from=reserve`: the internal list opens on the way back, not the official list's add form.
-  const query = new URLSearchParams({ eventId, ...outcome, from: "reserve" });
-  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${query.toString()}#registrations-reserve`);
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.reserveMove", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    let eventId: string;
+    let outcome: { saved: string; count?: string };
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      const moved = await moveReserveEntryToWaitlist(
+        getDb(),
+        actor,
+        text(form, "entryId"),
+        { email: form.get("email"), relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on", locale, offerNow: offerNowOf(form) },
+        new Date(),
+      );
+      eventId = moved.eventId;
+      outcome = waitlistEntrySaved(moved);
+    } catch (error) {
+      return waitlistEntryRefused(error, form, getPathname({ locale, href: "/admin/registrations" }));
+    }
+    await flashOutcome(outcome);
+    // `from=reserve`: the internal list opens on the way back, not the official list's add form.
+    const query = new URLSearchParams({ eventId, ...outcome, from: "reserve" });
+    redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${query.toString()}#registrations-reserve`);
+  });
 }

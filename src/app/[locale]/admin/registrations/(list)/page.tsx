@@ -6,6 +6,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
+import MuiLink from "@mui/material/Link";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -36,10 +37,10 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { declarationAsksMinorToSignByEvent } from "@/modules/legal-documents/repository";
 import { registrationStatus } from "@/db/schema/registrations";
 import { journeyOf } from "@/modules/registrations/domain/journey";
-import { canTransition, isActiveStatus } from "@/modules/registrations/domain/state-machine";
+import { canTransition, holdsAPlace, isActiveStatus } from "@/modules/registrations/domain/state-machine";
 import { missingAnswersHeld } from "@/modules/registrations/missing-answers";
 import { formatRaceNumber, printedNumbersACancelWouldVoid, raceNumberOf, raceNumberTextOf } from "@/modules/registrations/domain/race-number";
-import { deriveAllowedResendMessageType, resendEmailGroup } from "@/modules/registrations/domain/resend";
+import { deriveAllowedResendMessageType, familyResendTypes } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
@@ -97,7 +98,6 @@ import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import { resumesWords, stopWords } from "@/modules/notifications/ui/stop-words";
 import { confirmWords } from "@/shared/feedback/confirm-words";
-import type { EmailCount } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField, { NeverKeptField } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -118,10 +118,11 @@ import {
 import { previewMemberTickSweep } from "@/modules/registrations/admin-service";
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
-import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
+import { mayEndWaitlisted, rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import { givePlaceRefusalAhead, staffOfferIfMadeNow, staffOfferQuestion, waitlistAddDoorOpen } from "@/modules/registrations/give-place-tip";
 import { noFreePlaceValues } from "@/modules/registrations/domain/capacity";
 import { outsideMarkConfirm } from "@/modules/registrations/ui/outside-mark-body";
+import MailLine from "@/shared/feedback/MailLine";
 import { paperConfirmationText } from "@/modules/registrations/ui/PaperConfirmationTip";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
@@ -453,12 +454,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     status has no edge to CANCELLED is refused by the service and emails nobody; a test row is
     emailed but counted nowhere the club is given (§30), like the toast afterwards.
   */
-  const bulkCancelEmailCount: EmailCount = {
+  const bulkCancelEmailCount = {
     field: "registrationId",
-    base: 0,
     counts: Object.fromEntries(rows.filter((row) => row.kind !== "TEST" && canTransition(row.status, "CANCELLED")).map((row) => [row.id, 1])),
-    forms: t.raw("confirm.email") as EmailCount["forms"],
-    locale,
   };
 
   // «Membru (verificat)» / «Membru (declarat)» (§662): one chip, or none; its sentence is the tooltip.
@@ -943,6 +941,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 autoComplete="off"
                 sx={{ maxWidth: 480 }}
               />
+              {/* Who is emailed, beside the button (the design «telling the owner about every email a staff press sends», slice 3): the typed name is
+                  this press's question, so the line costs no click — nobody erased is emailed, the freed place may be offered with its email. */}
+              <MailLine
+                text={t("confirm.mail.none", { name: eraseTarget.registeredName })}
+                also={holdsAPlace(eraseTarget.status) && !eraseTarget.outsideCapacity ? [t("confirm.mail.nextInLineMaybe")] : []}
+                data-testid="erase-from-list-mail"
+              />
               <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
                 <GlyphSubmitButton
                   label={t("registrations.eraseAction")}
@@ -1338,6 +1343,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           />
         )
       )}
+      {/* «Planul locurilor» (§911): the event's places on one read-only page — only when the list is about one event. */}
+      {filters.eventId && (
+        <GlyphButton
+          icon="place"
+          href={getPathname({ locale, href: { pathname: "/admin/events/[id]/locuri", params: { id: filters.eventId } } })}
+          variant="text"
+          size="small"
+          sx={{ ...TAP_TARGET, mt: 0.5 }}
+          data-testid="race-plan-link"
+        >
+          {t("racePlan.link")}
+        </GlyphButton>
+      )}
       {/* «Kituri de pregătit» (the owner, 2026-11-04): the runners — the separate elite list among them — plus the volunteers with a kit. */}
       {kits && <KitCount kits={kits} locale={locale} volunteers={volunteerKits} elites={eliteNames} eliteHref={eliteCardHref ?? undefined} spaceAbove={1.5} />}
       {/*
@@ -1530,6 +1548,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Typography>
         )}
       </Stack>
+      {/* «Emailuri azi»: what left today and what waits, with the names — the Administrator's, like this panel's button. */}
+      {mayManage && (
+        <Typography variant="body2" sx={{ mt: 1.5 }}>
+          <MuiLink href={getPathname({ locale, href: "/admin/settings/emails/today" })} sx={{ ...TAP_TARGET, display: "inline-flex", alignItems: "center" }} data-testid="outbox-journal-link">
+            {t("emails.today.queueLink")}
+          </MuiLink>
+        </Typography>
+      )}
       </Panel>
 
       {/*
@@ -1869,8 +1895,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     title: t("confirm.resendTitle"),
                     // What the last refusal says of this press, first (§671); it never blocks it.
                     body: withResendWarning(t(`confirm.resendWhat.${row.status}`, { name: row.registeredName }), resendWarning(row.emailState, locale)),
-                    ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
-                    road: words.road(resendEmailGroup(row.status)),
+                    // The state's own message, named (the design «telling the owner about every email a staff press sends», slice 3).
+                    ...words.mail({ to: row.registeredName, type: deriveAllowedResendMessageType(row.status) ?? "REGISTRATION_STATE_NOTICE", test: row.kind === "TEST" }),
                     confirmLabel: t("registrations.resendShort"),
                     cancelLabel: words.cancel,
                   },
@@ -1918,8 +1944,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       }),
                       resendWarning(row.emailState, locale),
                     ),
-                    ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
-                    road: words.road(resendEmailGroup(row.status)),
+                    // The one email the address is sent, by the service's own choice among the family's states (`familyResendTypes`):
+                    // no longer the clicked row's road, which could be another email's.
+                    ...(() => {
+                      const sent = familyResendTypes([row.status, ...(family.get(row.id) ?? []).map((member) => member.status)]);
+                      const names = [row.registeredName, ...(family.get(row.id) ?? []).map((member) => member.name)].join(", ");
+                      return sent ? words.mail({ to: names, type: sent.type, or: sent.or, test: row.kind === "TEST" }) : {};
+                    })(),
                     confirmLabel: t("registrations.resendFamily"),
                     cancelLabel: words.cancel,
                   },
@@ -2079,8 +2110,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                           row.guardianName && minorSigns[row.eventId]?.[row.locale]
                             ? t("registrations.confirmOnPaperBodyMinor", { guardian: row.guardianName })
                             : t("registrations.confirmOnPaperBody"),
-                        ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
-                        road: words.road("confirmations"),
+                        // The confirmation, and the club's archive and «cineva a confirmat» (§244, §245); nothing when it lands on the waiting list.
+                        ...words.mail({ to: row.registeredName, type: "REGISTRATION_CONFIRMED", confirms: true, orNothing: mayEndWaitlisted(row.status, row.eventStartsAt, new Date()), test: row.kind === "TEST" }),
                         confirmLabel: t("desk.confirmOnPaper"),
                         cancelLabel: words.cancel,
                       }}
@@ -2097,8 +2128,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       confirm={{
                         title: t("confirm.offerPlaceTitle"),
                         ...staffOfferQuestion((key, values) => t(key, values), row.registeredName, offerForecast),
-                        ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
-                        road: words.road("links"),
+                        ...words.mail({ to: row.registeredName, type: "WAITLIST_SPOT_OFFER", test: row.kind === "TEST" }),
                         cancelLabel: words.cancel,
                       }}
                     >
@@ -2115,7 +2145,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       action={promoteRegistrationAction}
                       hidden
                       // A thumb cannot hover a menu item: the question says the same sentence first.
-                      confirm={{ title: t("confirm.givePlaceTitle"), body: [givePlaceWhy.get(row.eventId), t("confirm.givePlaceBody", { name: row.registeredName })].filter(Boolean).join(" "), ...(row.kind === "TEST" ? {} : { email: words.email(1), road: words.road("confirmations") }), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
+                      confirm={{
+                        title: t("confirm.givePlaceTitle"),
+                        body: [givePlaceWhy.get(row.eventId), t("confirm.givePlaceBody", { name: row.registeredName })].filter(Boolean).join(" "),
+                        ...words.mail({ to: row.registeredName, type: "REGISTRATION_CONFIRMED", confirms: true, test: row.kind === "TEST" }),
+                        confirmLabel: t("desk.givePlace"),
+                        cancelLabel: words.cancel,
+                      }}
                     >
                       {hidden}
                     </ActionForm>
@@ -2137,7 +2173,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       action={setOutsideCapacityAction}
                       hidden
                       // The registration page's dialog, word for word (§643, §648, §747): one function for both screens.
-                      confirm={outsideMarkConfirm(t, row, { cancel: words.cancel, emailLine: words.email(1), road: words.road("confirmations") })}
+                      confirm={outsideMarkConfirm(t, row, {
+                        cancel: words.cancel,
+                        seated: words.mail({ to: row.registeredName, type: "COMPLETE_DECLARATION", test: row.kind === "TEST" }),
+                        freed: words.noMail(row.registeredName, [words.nextInLineMaybe()]),
+                        none: words.noMail(row.registeredName),
+                      })}
                     >
                       {hidden}
                       <input type="hidden" name="outside" value={row.outsideCapacity ? "false" : "true"} />
@@ -2154,8 +2195,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                         // A printed bib is named before the press (§311): after this the number stays
                         // retired and the paper has to come out of the pile.
                         body: `${row.bibPrintedAt !== null && row.bibNumber !== null ? `${t("confirm.cancelRegistrationPrintedBody", { number: formatRaceNumber(row.bibNumber, row.raceNumberFormat) })} ` : ""}${t("registrations.cancelBody")}`,
-                        ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
-                        road: words.road("confirmations"),
+                        // The person named (on a long list), and the freed place's offer when it held one (BR-REQ-037-03 criterion 10).
+                        ...words.mail({
+                          to: row.registeredName,
+                          type: "REGISTRATION_CANCELLED",
+                          test: row.kind === "TEST",
+                          also: holdsAPlace(row.status) && !row.outsideCapacity ? [words.nextInLineMaybe()] : [],
+                          // «Trimite emailul» (slice 4): the row menu has no refusal box, so the box is always offered.
+                          optOut: true,
+                        }),
                         confirmLabel: t("registrations.cancel"),
                         cancelLabel: words.cancel,
                         destructive: true,
@@ -2300,7 +2348,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   icon="cancel"
                   title={t("confirm.bulkCancelTitle")}
                   body={t("confirm.bulkCancelBody")}
-                  emailCount={bulkCancelEmailCount}
+                  // One «Trimite emailul» for the batch (slice 4): unticked, nobody ticked is emailed; each freed place is still offered.
+                  mail={words.mailCount({ ...bulkCancelEmailCount, type: "REGISTRATION_CANCELLED", audience: "ticked", also: [words.nextInLineMaybe(true)], optOut: true })}
                   confirmLabel={t("registrations.bulkCancelAction")}
                   cancelLabel={words.cancel}
                   color="warning"
@@ -2345,6 +2394,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     icon="erase"
                     title={t("confirm.bulkEraseTitle")}
                     body={t("confirm.bulkEraseBody")}
+                    // Nobody erased is emailed (BR-REQ-037-06); each freed place may go to the next in line, with its email.
+                    mail={words.noMailMany([words.nextInLineMaybe(true)])}
                     confirmLabel={t("registrations.bulkEraseAction")}
                     cancelLabel={words.cancel}
                     color="error"

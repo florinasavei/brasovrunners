@@ -42,7 +42,10 @@ describe("§423 the editor's verbs on a draft", () => {
     expect(editor).toContain("const transitions = eventEditorTransitions(");
     expect(editor).not.toContain("allowedTransitions(");
     const actions = read("src/app/[locale]/admin/actions.ts");
-    expect(actions).toMatch(/if \(to === "PUBLISHED"\) await publishEvent\(getDb\(\), move\);\s*else await transitionEvent\(getDb\(\), \{ \.\.\.move, to \}\);/);
+    // With «Anunță abonații newsletterului» handed on (slice 4 of the design «telling the owner about every email a staff press sends»).
+    expect(actions).toMatch(
+      /if \(to === "PUBLISHED"\) alert = await alertOutcome\(await publishEvent\(getDb\(\), \{ \.\.\.move, announce \}\), announce\);\s*else await transitionEvent\(getDb\(\), \{ \.\.\.move, to \}\);/,
+    );
     // Standing pages and albums keep the plain table.
     for (const file of ["src/app/[locale]/admin/pages/[id]/page.tsx", "src/app/[locale]/admin/gallery/[id]/page.tsx"]) {
       expect(read(file), file).not.toContain("eventEditorTransitions");

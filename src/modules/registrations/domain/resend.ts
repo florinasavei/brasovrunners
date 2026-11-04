@@ -64,6 +64,36 @@ export function deriveAllowedResendMessageType(status: RegistrationStatus): Emai
 }
 
 /**
+ * «Retrimite familiei» (§588): which of a family's active registrations the one email is for — the first still to confirm
+ * the address (its link confirms them all), else the first with a declaration or an offer to act on (one link signs for
+ * all), else the first confirmed (every confirmed person's code in one email); none while everybody waits on the list, which
+ * the service refuses. In the order given: the order they registered. Pure, so the service sends for it and the dialog
+ * before the press names the same email (`familyResendTypes`).
+ */
+export function familyResendTarget<R extends { status: RegistrationStatus }>(family: readonly R[]): R | undefined {
+  return (
+    family.find((row) => row.status === "PENDING_EMAIL_CONFIRMATION") ??
+    family.find((row) => row.status === "PENDING_DECLARATION" || row.status === "WAITLIST_OFFERED") ??
+    family.find((row) => row.status === "CONFIRMED")
+  );
+}
+
+/**
+ * The email «Retrimite familiei» sends, from the family's states alone (the design «telling the owner about every email a
+ * staff press sends», slice 3): what `familyResendTarget` picks, whatever the order — and, where both a declaration and an
+ * offer wait and only the order they registered decides, both, as the dialog's «… sau …». `null`: nothing to resend.
+ */
+export function familyResendTypes(statuses: readonly RegistrationStatus[]): { type: EmailMessageType; or?: EmailMessageType } | null {
+  if (statuses.includes("PENDING_EMAIL_CONFIRMATION")) return { type: "VERIFY_REGISTRATION_EMAIL" };
+  const declaration = statuses.includes("PENDING_DECLARATION");
+  const offer = statuses.includes("WAITLIST_OFFERED");
+  if (declaration && offer) return { type: "COMPLETE_DECLARATION", or: "WAITLIST_SPOT_OFFER" };
+  if (declaration) return { type: "COMPLETE_DECLARATION" };
+  if (offer) return { type: "WAITLIST_SPOT_OFFER" };
+  return statuses.includes("CONFIRMED") ? { type: "REGISTRATION_CONFIRMED" } : null;
+}
+
+/**
  * The road group of the message a resend sends for this state (§841, the dialog's road line): the
  * links' for an address, a declaration or an offer still to act on, the confirmations' for the rest.
  */

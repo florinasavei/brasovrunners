@@ -13,9 +13,11 @@ import {
   sealPersonLookup,
 } from "@/modules/registrations/person-data";
 import { getDb } from "@/db/client";
+import { type EmailPressHandle, inEmailPress } from "@/modules/notifications/press";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { flashOutcome } from "@/shared/feedback/flash";
 
 /**
  * The lookup's form (§322): the address arrives in the body of a POST, is canonicalized here, and
@@ -102,14 +104,19 @@ export async function eraseReserveEntriesAction(form: FormData): Promise<void> {
  * accepted one stays with its registration. Same sealed lookup, same Administrator, asserted again in the service.
  */
 export async function eraseEventInvitationsAction(form: FormData): Promise<void> {
-  await erasePersonPart(form, "eventInvitations", eraseEventInvitationsOfPerson);
+  // An email press (`notifications/press.ts`): a withdrawn invitation's place may go to the next in line, with its email.
+  return inEmailPress("registrations.invitationsErase", (press) => erasePersonPart(form, "eventInvitations", eraseEventInvitationsOfPerson, press));
 }
 
-/** The two presses above: the role first, the sealed lookup opened, the erase, and back to the page with the result's alert. */
+/**
+ * The two presses above: the role first, the sealed lookup opened, the erase, and back to the page with the result's alert.
+ * `press`, for the one that can queue an email: told who pressed once the role is asserted.
+ */
 async function erasePersonPart(
   form: FormData,
   erased: "reserve" | "eventInvitations",
   erase: (db: ReturnType<typeof getDb>, actor: Awaited<ReturnType<typeof requireStaffCapability>>, canonicalEmail: string, now: Date) => Promise<unknown>,
+  press?: EmailPressHandle,
 ): Promise<void> {
   const locale: Locale = form.get("uiLocale") === "en" ? "en" : "ro";
   const path = getPathname({ locale, href: "/admin/registrations/person" });
@@ -117,6 +124,7 @@ async function erasePersonPart(
   let done = false;
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
+    press?.by(actor.id);
     const now = new Date();
     const canonicalEmail = openPersonLookup(sealed, now);
     if (!canonicalEmail) redirect(path);
@@ -126,5 +134,9 @@ async function erasePersonPart(
     if (isDomainError(error)) redirect(`${path}?error=${error.code}#admin-alert`);
     throw error;
   }
+  // The emailing one says so in a toast (§384): a withdrawn invitation's place may have gone to the next in line,
+  // and the toast's mail line says what that sent and when (the design «telling the owner about every email a staff
+  // press sends»). Its key only, never the address the page was opened for.
+  if (done && press) await flashOutcome({ saved: "eventInvitationsErased" });
   redirect(`${path}?q=${encodeURIComponent(sealed)}${done ? `&erased=${erased}` : ""}`);
 }

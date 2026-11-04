@@ -88,7 +88,8 @@ test.describe("§540 a resend may leave now, past the scheduled pass", () => {
       await expect(dialog).toBeHidden();
       // The banner and the toast say it leaves now; the trail names the press.
       await expect(page.getByRole("alert").filter({ hasText: "Emailul pleacă acum, fără să aștepte trecerea programată." })).toBeVisible();
-      await expect(page.getByTestId("toast-live")).toContainText("Emailul pleacă acum, fără să aștepte trecerea programată.");
+      // The toast's mail line says it from the row itself (the design «telling the owner about every email a staff press sends»).
+      await expect(page.getByTestId("toast-live")).toContainText("Retrimis. Pleacă acum");
       // «Ce a făcut echipa» is a fold since the third wave (§847).
       await openFold(page.getByTestId("audit-trail"));
       await expect(page.getByText(/Trimis acum, ocolind trecerea programată/)).toBeVisible();
@@ -110,7 +111,8 @@ test.describe("§540 a resend may leave now, past the scheduled pass", () => {
       await chooseAlternative(page, "Retrimiți emailul?");
       await expect(page.getByRole("alert").filter({ hasText: "Emailul a fost pus în coadă din nou." })).toBeVisible();
       // One toast at a time (§384): the second waits for the first to go.
-      await expect(page.getByTestId("toast-live")).toContainText("Emailul a fost pus la coadă din nou.", { timeout: 15_000 });
+      // …and its mail line the scheduled pass's estimated hour, never «acum».
+      await expect(page.getByTestId("toast-live")).toContainText(/Retrimis\. Pleacă .*\(estimat\)/, { timeout: 15_000 });
       const queued = await withDatabase(async (client) => {
         const { rows } = await client.query<{ status: string; sent_now: boolean | null }>(
           `SELECT status, (payload_json ->> 'sentNow') = 'true' AS sent_now FROM email_outbox

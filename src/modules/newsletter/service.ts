@@ -22,7 +22,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { looksLikeSpam } from "@/modules/registrations/service";
 import { canManageRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { alertDayOf, eventAlertTopics, eventAlertWanted, EVENT_ALERT_WINDOW_DAYS } from "./domain/alerts";
+import { type AlertCandidate, alertDayOf, eventAlertTopics, eventAlertWanted, EVENT_ALERT_WINDOW_DAYS } from "./domain/alerts";
 import { checkNewsletterWords, type NewsletterIssue, newsletterFirstLine, readNewsletterWords } from "./domain/message";
 import { isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, receives, SENDABLE_TOPICS, type SendableTopic } from "./domain/topics";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
@@ -646,6 +646,38 @@ export async function listNewsletterSends<T extends Record<string, unknown>>(db:
       senderName: row.senderName ?? null,
     };
   });
+}
+
+/**
+ * Who the new-event alert would reach if this event were published now (the design «telling the owner about every email a
+ * staff press sends», slice 3): the confirmed subscribers of its topics, by the job's own rule (`eventAlertWanted`,
+ * `eventAlertTopics`, `receivesSql`) — or `null` when the job would announce nothing: an event already announced or seen,
+ * one the rule leaves out (a later date of a series, a members' event, a start behind or still to be announced, a first
+ * publication more than a week ago), or nobody subscribed. Reads only: the publish dialog says it before the press, and the
+ * job queues the alert at its next pass, one a day at most (`alertDayOf`).
+ */
+export async function previewEventAlertAudience<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: Omit<AlertCandidate, "partnered" | "editorialStatus"> & {
+    id: string;
+    dateToBeAnnounced: boolean;
+    timeToBeAnnounced: boolean;
+    coHosts: unknown;
+    coHostName: string | null;
+    coHostUrl: string | null;
+  },
+  now: Date,
+): Promise<number | null> {
+  if (event.dateToBeAnnounced || event.timeToBeAnnounced) return null;
+  const candidate = { ...event, editorialStatus: "PUBLISHED", publishedAt: event.publishedAt ?? now, partnered: readCoHosts(event).length > 0 };
+  if (!eventAlertWanted(candidate, now)) return null;
+  const [seen] = await db.select({ id: newsletterSends.id }).from(newsletterSends).where(eq(newsletterSends.eventId, event.id)).limit(1);
+  if (seen) return null;
+  const [{ audience }] = await db
+    .select({ audience: count() })
+    .from(newsletterSubscribers)
+    .where(and(isNotNull(newsletterSubscribers.confirmedAt), receivesSql(eventAlertTopics(candidate))));
+  return audience > 0 ? audience : null;
 }
 
 /**

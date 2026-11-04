@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { registrationStatus, type RegistrationStatus } from "@/db/schema/registrations";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
-import { rowVerbsFor, specialListVerb } from "@/modules/registrations/domain/row-verbs";
+import { mayEndWaitlisted, rowVerbsFor, specialListVerb } from "@/modules/registrations/domain/row-verbs";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
 
 /**
@@ -369,5 +369,25 @@ describe("§897 the elite mark on the row", () => {
       }
     }
     expect(rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false })).not.toContain("eliteMark");
+  });
+});
+
+describe("BR-REQ-037-07 «Confirmă pe hârtie» says its email «or none» where the allocator may still put the person on the waiting list", () => {
+  const START = new Date("2026-11-21T08:00:00.000Z");
+  const before = new Date("2026-11-20T08:00:00.000Z");
+  const after = new Date("2026-11-21T08:30:00.000Z");
+
+  it("an address never confirmed goes through the allocator first: its confirmation may end on the waiting list, sending nothing", () => {
+    expect(mayEndWaitlisted("PENDING_EMAIL_CONFIRMATION", START, before)).toBe(true);
+  });
+
+  it("a place held for the declaration is confirmed before the start; from the start on, the start may release it first", () => {
+    expect(mayEndWaitlisted("PENDING_DECLARATION", START, before)).toBe(false);
+    expect(mayEndWaitlisted("PENDING_DECLARATION", START, START)).toBe(true);
+    expect(mayEndWaitlisted("PENDING_DECLARATION", START, after)).toBe(true);
+  });
+
+  it("an offer being accepted on paper is confirmed: the certain line", () => {
+    expect(mayEndWaitlisted("WAITLIST_OFFERED", START, after)).toBe(false);
   });
 });

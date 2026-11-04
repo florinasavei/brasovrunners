@@ -50,6 +50,18 @@ describe("§384 ConfirmDialog", () => {
     expect(source).toMatch(/\{spec\.email && \([\s\S]*?data-testid="confirm-email"/);
   });
 
+  it("says what else the press sends after the road, quieter, each line as the builder worded it (the design «telling the owner about every email a staff press sends», slice 3)", () => {
+    expect(source).toMatch(/\{spec\.also\?\.map\(\(line, index\) => \([\s\S]*?key=\{`\$\{index\}:\$\{line\.text\}`\}[\s\S]*?variant="body2"[\s\S]*?data-testid="confirm-also"/);
+    // After the road's block, so the road speaks of the bold email line above it.
+    expect(source.indexOf('data-testid="confirm-also"')).toBeGreaterThan(source.indexOf('data-testid="confirm-road-why"'));
+  });
+
+  it("lets a several-verb form's button take the builder's words whole, counted and filtered at the press", () => {
+    const button = read("src/shared/ui/ConfirmSubmitButton.tsx");
+    expect(button).toContain('const spec: ConfirmSpec = { title, body, confirmLabel, cancelLabel, ...mail, destructive: color === "error" };');
+    expect(button).toMatch(/const counted = resolveEmailCount\(spec, valuesOf\);\s*setOpen\(resolveAlso\(counted, /);
+  });
+
   it("renders no dialog on the server (a portal), so a hidden row form costs no dialog markup", () => {
     const html = renderToStaticMarkup(
       createElement(ConfirmDialog, {
