@@ -238,6 +238,23 @@ describe("§908 the waiting list's step says who gives the places", () => {
       }
     }
   });
+
+  /*
+    «Eliberează singur locurile nesemnate la termen» (§NNN): with the release on, an unsigned place goes at the deadline
+    whoever waits — so the step says that, and no paper at the desk, which comes after the deadline. A deadline at the
+    start releases nothing new: its words stay.
+  */
+  it("with the release at the deadline the step says the unsigned place goes then, even with nobody waiting (ro, en)", async () => {
+    expect(await declarationStep({ window: { opensDays: 10, deadlineDays: 2, releases: true } })).toBe(
+      "Cursa e gratuită, așa că îți cerem o confirmare: cu 10 zile înainte de start primești un email și semnezi declarația online. Poți semna și mai devreme. Dacă nu semnezi până cu 2 zile înainte de start, locul se eliberează, chiar dacă nu așteaptă nimeni.",
+    );
+    expect(await declarationStep({ window: { opensDays: 7, deadlineDays: 0, releases: true } })).toBe(await declarationStep({ window: { opensDays: 7, deadlineDays: 0 } }));
+    lang.current = "en";
+    expect(await declarationStep({ window: { opensDays: 10, deadlineDays: 2, releases: true } })).toBe(
+      "The race is free, so we ask for a confirmation: 10 days before the start you get an email and sign the declaration online. You can sign earlier too. If you do not sign by 2 days before the start, the place is released, even if nobody is waiting.",
+    );
+    expect(await declarationStep({ window: { opensDays: 10, deadlineDays: 2, releases: false } })).toContain("If there is a waiting list, the place is held until");
+  });
 });
 
 /** The third step as drawn — what stands between its title and the fourth's — without the markup. */

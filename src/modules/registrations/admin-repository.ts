@@ -47,6 +47,7 @@ import { eventInvitations } from "@/db/schema/event-invitations";
 import { invitationOpen } from "./invitation-repository";
 import { PLACE_HOLDING_STATUSES } from "./domain/state-machine";
 import type { RaceNumberFormat } from "./domain/race-number";
+import { releaseTakesHold } from "./domain/unsigned-release";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -860,6 +861,8 @@ export type RegistrationDetail = {
   eventTimezone: string;
   /** The event is cancelled: «Ce îi spui» says the cancellation rather than a deadline (§654). */
   eventCancelled: boolean;
+  /** «Eliberează singur locurile nesemnate la termen» (§NNN) will take this place at its deadline (`releaseTakesHold`). */
+  releasesAtDeadline: boolean;
   /** «Ofertele din lista de așteptare pleacă automat» (§615) and «Arată public câți așteaptă» (§634), for the waiting sentence. */
   waitlistAutoOffer: boolean;
   waitlistCountPublic: boolean;
@@ -994,6 +997,16 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       offerEmailQueued: offerEmailQueuedAt(now),
       // «Ce îi spui» (§654): the event's clock, whether it is cancelled, the line's two settings and numbers, the live link.
       eventTimezone: events.timezone,
+      // …and what the release at the deadline reads (§NNN), for whether «confirmă până» says the place goes then.
+      releaseRules: {
+        capacity: events.capacity,
+        eventStatus: events.eventStatus,
+        startsAt: events.startsAt,
+        confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
+        confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
+        releaseUnsignedAtDeadline: events.releaseUnsignedAtDeadline,
+        unsignedReleasedFor: events.unsignedReleasedFor,
+      },
       eventCancelled: sql<boolean>`(${events.eventStatus} = 'CANCELLED')`.mapWith(Boolean),
       // Whether the places go out by themselves (§615), «Locurile libere le dau doar eu» included (§906).
       waitlistAutoOffer: lineOffersOnItsOwn(),
@@ -1043,7 +1056,9 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
     .where(eq(registrations.id, id))
     .limit(1);
 
-  return row;
+  if (!row) return undefined;
+  const { releaseRules, ...detail } = row;
+  return { ...detail, releasesAtDeadline: detail.status === "PENDING_DECLARATION" && releaseTakesHold(releaseRules, detail) };
 }
 
 /**

@@ -190,3 +190,28 @@ describe("§536 the short screen after the first form", () => {
     expect(html).not.toContain('data-testid="family-sitting-offer"');
   });
 });
+
+/**
+ * «Eliberează singur locurile nesemnate la termen» (§NNN): with a participation window ahead, the declaration's step says
+ * when it is asked — and, while the release is on, that an unsigned place goes at the deadline, with no paper on race day.
+ */
+describe("§NNN the screen after the form says the release at the deadline", () => {
+  async function declareStep(window: { opensDays: number; deadlineDays?: number; releases?: boolean }): Promise<string> {
+    const element = (await CheckYourEmail({
+      eventTitle: "Crosul Tâmpei",
+      whenLabel: "sâmbătă, 21 noiembrie 2026, la 10:00",
+      eventHref: "/ro/evenimente/crosul-tampei",
+      slug: "crosul-tampei",
+      facts: null,
+      window,
+    })) as ReactElement;
+    return renderToStaticMarkup(element).replace(/<[^>]+>/g, " ");
+  }
+
+  it("says the place goes at the deadline while the release is on, and the paper at the desk otherwise", async () => {
+    const released = await declareStep({ opensDays: 7, deadlineDays: 2, releases: true });
+    expect(released).toContain("Îți cerem declarația cu o săptămână înainte de start și o semnezi online; poți semna și mai devreme. Dacă nu semnezi până cu 2 zile înainte de start, locul se eliberează.");
+    expect(released).not.toContain("pe hârtie la masa de înscrieri");
+    expect(await declareStep({ opensDays: 7, deadlineDays: 2 })).toContain("Îți cerem declarația cu o săptămână înainte de start, online sau pe hârtie la masa de înscrieri");
+  });
+});

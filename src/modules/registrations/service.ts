@@ -34,6 +34,7 @@ import { handsSpareAtConfirm } from "./domain/spare-bibs";
 import { HIDDEN_LIST_OFF } from "./domain/hidden-list";
 import type { CancelReason } from "./domain/cancel-reason";
 import { shirtSizeKept } from "./domain/kit";
+import { deadlineReleaseDue, type DeadlineReleaseRules } from "./domain/unsigned-release";
 import { healthNoteKept, withoutHealthNote } from "./domain/health-note";
 import { asksForIdDocument, asksForMinorSignature, describesListSocials, describesPromotionalMaterials } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
@@ -3506,6 +3507,41 @@ function declarationChanged(version: number): DomainError {
   );
 }
 
+/**
+ * «Eliberează singur locurile nesemnate la termen» (§NNN) when a signing press is the first transaction to reach the
+ * deadline (the critic's correction 18): the release runs here, under the event's lock, before the press writes anything
+ * of its own. When it releases this very hold, the press gets the released row back and must write nothing more — no
+ * answer of «Completează-ți datele» (§905), no «Vreau să primesc oferte și beneficii» (§562), no signature — so the outcome
+ * is the one a press that came after the job's release meets: the place gone and nothing of the press kept. Returned,
+ * not thrown, so the release, its memory and its emails commit with the link's spend; the page then reads the spent link
+ * and says the place is no longer held. Null when the release is not due, or took somebody else's hold.
+ *
+ * Called by the token's own transaction before it saves the posted answers (`token-actions.ts`), and again by
+ * `signDeclaration` itself, where it is a no-op once the release has run (its memory is written).
+ */
+export async function releasedAtDeadlineFirst<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  event: EventForRegistration,
+  registrationId: string,
+  now: Date,
+): Promise<Registration | null> {
+  const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
+  return lockedEvent ? releaseUnderLock(tx, withLockedRow(event, lockedEvent), lockedEvent, registrationId, now) : null;
+}
+
+async function releaseUnderLock<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  locked: LockedEventForRegistration,
+  lockedEvent: DeadlineReleaseRules,
+  registrationId: string,
+  now: Date,
+): Promise<Registration | null> {
+  if (!deadlineReleaseDue(lockedEvent, now)) return null;
+  const sweep = await repo.expireStaleHolds(tx, locked, now);
+  if (!sweep.atDeadline || !sweep.released.includes(registrationId)) return null;
+  return (await repo.findRegistrationById(tx, registrationId)) ?? null;
+}
+
 export async function signDeclaration<T extends Record<string, unknown>>(
   db: Database<T>,
   event: EventForRegistration,
@@ -3546,6 +3582,10 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     if (before.status !== "PENDING_DECLARATION" && before.status !== "WAITLIST_OFFERED") {
       throw new DomainError("CONFLICT", `a declaration cannot be signed from status ${before.status}`);
     }
+
+    // The deadline's release first (§NNN): a press it releases writes nothing of its own (`releasedAtDeadlineFirst`).
+    const releasedFirst = await releaseUnderLock(tx, locked, lockedEvent, registrationId, now);
+    if (releasedFirst) return { registration: releasedFirst, offered: 0 };
 
     /*
       «Completează-ți datele» (§905): no signature while the registration lacks an answer the public form
@@ -3642,19 +3682,10 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     // live when the page was rendered (§15.3 step 6; §10.6: evaluated against `now`). A hold
     // past its deadline is still live while nobody waits for the place (§160): the signature
     // that comes late is the one the owner asked to be lenient about.
-    const sweep = await repo.expireStaleHolds(tx, locked, now);
+    // The deadline's release has already run above when it was due (§NNN), so this sweep is §160's alone.
+    await repo.expireStaleHolds(tx, locked, now);
     let current = await repo.findRegistrationById(tx, registrationId);
     if (!current) throw new DomainError("NOT_FOUND", "no such registration");
-
-    /*
-      «Eliberează singur locurile nesemnate la termen» (§NNN): this very sweep was the deadline's release, and this hold
-      was one of those it released. The place went with the others — whichever transaction reached the deadline first,
-      the job's or this signature's — so the answer is the same either way: no re-allocation, nothing signed. Returned,
-      not thrown, so the release, its memory and its emails commit; the page then says the place is no longer held.
-    */
-    if (current.status === "EXPIRED" && sweep.atDeadline && sweep.released.includes(registrationId)) {
-      return { registration: current, offered: 0 };
-    }
 
     if (current.status === "EXPIRED") {
       // The hold lapsed at the very moment of signing (§15.3 step 7): re-run allocation

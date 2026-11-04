@@ -27,6 +27,8 @@ export type TellFacts = {
   eventStartsAt: Date;
   eventTimezone: string;
   eventCancelled: boolean;
+  /** «Eliberează singur locurile nesemnate la termen» (§NNN) takes the held place at its deadline: «confirmă până» says so. */
+  releasesAtDeadline?: boolean;
   waitlistAutoOffer: boolean;
   waitlistCountPublic: boolean;
   /** «Arată public numărătoarea» (§668), the parent of the switch above (§669): required, so no caller can leave the line's length said by forgetting it. */
@@ -125,7 +127,12 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
       break;
     case "PENDING_DECLARATION":
       if (deadline?.kind === "hold") {
-        lines.push(say("mine.confirmBy", { due: confirmationDueMoment(locale, { at: deadline.at, startsAt: facts.eventStartsAt }, at(deadline.at)) }));
+        // The participant's page's own sentence, the release's when it will take the place (§NNN).
+        lines.push(
+          say(facts.releasesAtDeadline ? "mine.confirmByReleased" : "mine.confirmBy", {
+            due: confirmationDueMoment(locale, { at: deadline.at, startsAt: facts.eventStartsAt }, at(deadline.at)),
+          }),
+        );
       } else lines.push(ours("kept"));
       break;
     case "WAITLISTED":

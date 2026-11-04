@@ -41,6 +41,18 @@ export function deadlineReleaseArmedFor(rules: DeadlineReleaseRules): Date | nul
 }
 
 /**
+ * Whether the armed release will take this hold: a counted declaration hold — never a special guest's («În afara
+ * locurilor», released only at the start) — ending by the deadline the release is armed for. The one question every
+ * promise about an unsigned place asks — the declaration's emails (`render.ts`), its page, «Înregistrările mele» and
+ * «Ce îi spui» — so none says a place stays while nobody waits when the release will take it.
+ */
+export function releaseTakesHold(rules: DeadlineReleaseRules, hold: { holdExpiresAt: Date | null; outsideCapacity?: boolean | null }): boolean {
+  if (!hold.holdExpiresAt || hold.outsideCapacity === true) return false;
+  const deadline = deadlineReleaseArmedFor(rules);
+  return deadline !== null && hold.holdExpiresAt.getTime() <= deadline.getTime();
+}
+
+/**
  * The deadline the release must run for now — armed, the deadline reached and the start still ahead — or null. The
  * one question `expireStaleHolds` asks under the event's lock before it decides which lapsed holds go.
  */

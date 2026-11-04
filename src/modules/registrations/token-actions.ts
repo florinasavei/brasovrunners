@@ -27,6 +27,7 @@ import {
   checkIn,
   confirmEmailOnAddress,
   type EventForRegistration,
+  releasedAtDeadlineFirst,
   signDeclaration,
   unregister,
 } from "./service";
@@ -385,7 +386,12 @@ export async function consumeAndSignDeclaration(
     if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
     const event = await loadEventForRegistration(tx, registration.eventId);
 
-    if (answers) await completeMissingAnswers(tx, registration.id, answers, now, "DECLARATION");
+    if (answers) {
+      // The deadline's release before the answers (§NNN): a press it releases saves none of them.
+      const released = await releasedAtDeadlineFirst(tx, event, registration.id, now);
+      if (released) return { ok: true as const, token: consumed.token, registration: released };
+      await completeMissingAnswers(tx, registration.id, answers, now, "DECLARATION");
+    }
     const updated = await signDeclaration(tx, event, registration.id, input, now);
     return { ok: true as const, token: consumed.token, registration: updated };
   });
@@ -439,6 +445,9 @@ export async function consumeAndSignFamilyDeclaration(
   const event = await loadEventForRegistration(db, registration.eventId);
   const updated = answers
     ? await db.transaction(async (tx) => {
+        // The deadline's release before the answers (§NNN), as on the link's own page.
+        const released = await releasedAtDeadlineFirst(tx, event, registration.id, now);
+        if (released) return released;
         await completeMissingAnswers(tx, registration.id, answers, now, "DECLARATION");
         return signDeclaration(tx, event, registration.id, input, now);
       })

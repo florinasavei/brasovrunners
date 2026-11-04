@@ -61,6 +61,7 @@ import { DECLARATION_ACCEPT_BOX_ID, DECLARATION_ERROR_SUMMARY_ID } from "@/modul
 import UntickedBoxSummary from "@/modules/registrations/ui/UntickedBoxSummary";
 import { countEligibleWaitlisted, findRegistrationById, offersWaitlistAutomatically } from "@/modules/registrations/repository";
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
+import { deadlineReleaseArmedFor, releaseTakesHold } from "@/modules/registrations/domain/unsigned-release";
 import { declarantValues, identityDocumentValues } from "@/modules/registrations/signed-declaration";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
@@ -494,6 +495,16 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     registration.status === "PENDING_DECLARATION" &&
     registration.holdExpiresAt <= new Date() &&
     (await countEligibleWaitlisted(db, registration.eventId)) === 0;
+  /*
+    «Eliberează singur locurile nesemnate la termen» (§NNN): a hold the release will take is told that the place goes at
+    the deadline, even with nobody waiting — never that it stays theirs until the start — and, once the release's own
+    deadline has come, that it is being released rather than still theirs. The rule the declaration's email words it by
+    (`releaseTakesHold`), off the same event row.
+  */
+  const releasedAtDeadline =
+    registration?.status === "PENDING_DECLARATION" && eventDetails !== undefined && releaseTakesHold(eventDetails, registration);
+  const releaseAt = releasedAtDeadline && eventDetails ? deadlineReleaseArmedFor(eventDetails) : null;
+  const beingReleased = releaseAt !== null && releaseAt.getTime() <= now.getTime();
 
   /*
     The text the signature binds to (§330): the version above, in the registration's language —
@@ -702,11 +713,15 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               {eventDetails && <div>{t("declare.event", { event: eventDetails.title })}</div>}
               {deadline && (
                 <div>
-                  {deadlinePassed
-                    ? t("declare.deadlinePassed", { deadline })
-                    : deadlineAtStart
-                      ? t("declare.deadlineAtStart", { deadline })
-                      : t("declare.deadline", { deadline })}
+                  {beingReleased
+                    ? t("declare.deadlineReleasing", { deadline })
+                    : deadlinePassed
+                      ? t("declare.deadlinePassed", { deadline })
+                      : deadlineAtStart
+                        ? t("declare.deadlineAtStart", { deadline })
+                        : releasedAtDeadline
+                          ? t("declare.deadlineReleased", { deadline })
+                          : t("declare.deadline", { deadline })}
                 </div>
               )}
             </Alert>

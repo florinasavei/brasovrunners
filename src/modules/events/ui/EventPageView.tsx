@@ -30,6 +30,7 @@ import { eventPageUrl } from "@/modules/events/share-links";
 import DeclarationOffer from "@/modules/group-run-declarations/ui/DeclarationOffer";
 import GroupRunSafetyRules from "@/modules/group-run-declarations/ui/GroupRunSafetyRules";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
+import { windowDeadlineOf } from "@/modules/registrations/domain/unsigned-release";
 import type { parseInterestOutcome } from "@/modules/registrations/interest-box";
 import type { RsvpOutcome } from "@/modules/rsvp/rsvp-box";
 import { RSVP_WHO_ID } from "@/modules/rsvp/rsvp-box";
@@ -324,8 +325,13 @@ export default async function EventPageView({
               (() => {
                 // "Confirm a week before" only while that week is ahead (§104).
                 const w = dated && confirmationWindow(dated);
-                return w && w.opensAt.getTime() > now.getTime()
-                  ? { opensDays: event.confirmationOpensDaysBefore, deadlineDays: event.confirmationDeadlineDaysBefore }
+                return dated && w && w.opensAt.getTime() > now.getTime()
+                  ? {
+                      opensDays: event.confirmationOpensDaysBefore,
+                      deadlineDays: event.confirmationDeadlineDaysBefore,
+                      // «Eliberează singur locurile nesemnate la termen» (§NNN): the unsigned place goes at the deadline.
+                      releases: event.releasesUnsignedAtDeadline === true && windowDeadlineOf(dated) !== null,
+                    }
                   : null;
               })()
             }

@@ -233,6 +233,11 @@ const PUBLIC_COLUMNS = {
     the site's places are taken stays the club's. The number itself is never public.
   */
   keepsPlacesForClub: sql<boolean>`(${events.placesKeptForClub} > 0 and ${events.capacity} is not null)`.mapWith(Boolean),
+  /*
+    «Eliberează singur locurile nesemnate la termen» (§NNN) on a capped event: the steps and the screen after the form
+    say that an unsigned place goes at the window's deadline, never that it is held only while somebody waits.
+  */
+  releasesUnsignedAtDeadline: sql<boolean>`(${events.releaseUnsignedAtDeadline} and ${events.capacity} is not null)`.mapWith(Boolean),
   // «Kit de participare» → «Tricou» (§554): whether the registration form asks the T-shirt size.
   kitShirt: events.kitShirt,
   // «Condiții de participare» → «Informații medicale» (§557): whether the form asks the health note.

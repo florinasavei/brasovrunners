@@ -11534,7 +11534,8 @@
         "declare": {
           "title": "Sign the declaration",
           "body": "From that same email: read it and type your name — online, or on paper at the registration desk on race day.",
-          "bodyLater": "The place is yours. We ask for the declaration {opens} before the start, online or on paper at the registration desk; you can sign earlier too."
+          "bodyLater": "The place is yours. We ask for the declaration {opens} before the start, online or on paper at the registration desk; you can sign earlier too.",
+          "bodyLaterReleased": "The place is yours. We ask for the declaration {opens} before the start and you sign it online; you can sign earlier too. If you do not sign by {due}, the place is released."
         },
         "confirmed": {
           "title": "You are in",
@@ -11687,7 +11688,8 @@
         "body": "From that same email, sign it online or on paper at the registration desk on race day. Your place is held for {hold}; if there is a waiting list, it then goes to the next in line.",
         "bodyByHand": "From that same email, sign it online or on paper at the registration desk on race day. Your place is held for {hold}; if there is a waiting list, the organizers may then give it to someone else.",
         "bodyLater": "The race is free, so we ask for a confirmation: {opens} before the start you get an email and sign the declaration, online or on paper at the registration desk. You can sign earlier too. If there is a waiting list, the place is held until {due}.",
-        "bodyLaterAtStart": "The race is free, so we ask for a confirmation: sign the declaration from the registration email any time before the start, online or on paper at the registration desk. We remind you {opens} before. The place does not lapse before the start."
+        "bodyLaterAtStart": "The race is free, so we ask for a confirmation: sign the declaration from the registration email any time before the start, online or on paper at the registration desk. We remind you {opens} before. The place does not lapse before the start.",
+        "bodyLaterReleased": "The race is free, so we ask for a confirmation: {opens} before the start you get an email and sign the declaration online. You can sign earlier too. If you do not sign by {due}, the place is released, even if nobody is waiting."
       },
       "confirmed": {
         "title": "You are in",
@@ -12011,6 +12013,8 @@
       "deadline": "Your place is held until {deadline}. With no waiting list it stays yours after that, until the start — but the registration is complete only with the signed declaration.",
       "deadlineAtStart": "Your place is held until the start, {deadline}: it does not lapse before. The registration is complete only with the signed declaration.",
       "deadlinePassed": "The deadline, {deadline}, has passed, but the place is still yours: sign now and the registration is complete.",
+      "deadlineReleased": "Your place is held until {deadline}. If you do not sign by then, the place is released, even if nobody is waiting — the registration is complete only with the signed declaration.",
+      "deadlineReleasing": "The deadline, {deadline}, has passed: the places of those who did not sign are released, so the place is no longer held for you.",
       "idDocument": "Identity document (series and number)",
       "idDocumentHelp": "Your identity card (e.g. “{idExample}”) or passport; the kit is collected against it. Deleted seven days after the event, masked in the club's copy; we keep no copy of the document.",
       "idDocumentPlaceholder": "{idExample}",
@@ -12136,6 +12140,7 @@
       "eventCancelled": "There is nothing you need to do: your registration stays with us as a record, with the status above.",
       "runner": "Registered: {name}",
       "confirmBy": "Confirm by signing the declaration, from the registration email, by {due}. Or on paper, at the registration desk, on race day.",
+      "confirmByReleased": "Confirm by signing the declaration, from the registration email, by {due}. If you do not sign by then, the place is released.",
       "familySign": {
         "body": "At {event}, the declarations of {names} are waiting for a signature. You can sign them all here, one after the other.",
         "action": "Sign the declarations"

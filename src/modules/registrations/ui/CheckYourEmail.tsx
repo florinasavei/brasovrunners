@@ -17,6 +17,7 @@ import DoneHeading from "@/shared/ui/DoneHeading";
 import { StepItem, StepList } from "@/shared/ui/StepList";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { doneFamilySentence, offerHint, shortScreenEmailLeft } from "../domain/family-sitting";
+import { confirmationDueWords } from "../domain/hold-deadlines";
 import type { SubmittedFacts } from "../form-draft";
 import { emailDelayNotice } from "./email-delay-notice";
 import FamilySittingOffer from "./FamilySittingOffer";
@@ -46,9 +47,11 @@ type Props = {
   /**
    * The participation window (§104) when it is still ahead: the declaration step then says how
    * many days before the start the confirmation is asked. Only that number is read here; the
-   * deadline is `RegistrationSteps`'s longer telling, so the caller may pass its object as is.
+   * deadline is `RegistrationSteps`'s longer telling, so the caller may pass its object as is —
+   * except while «Eliberează singur locurile nesemnate la termen» is on (`releases`, §NNN): then the
+   * step names the deadline too, since an unsigned place goes there, and drops the paper on race day.
    */
-  window: { opensDays: number } | null;
+  window: { opensDays: number; deadlineDays?: number; releases?: boolean } | null;
   /**
    * After the first form of a would-be family (§536): the screen is then the short one — «Formularul
    * pentru Ana a ajuns.», «Emailul către ana@… pleacă la 10:15.» and, quiet after them, «Înscriu încă o
@@ -172,12 +175,15 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
   const values = {
     confirmation: hoursPhrase(locale, (await cachedDeadlines()).confirmationHours),
     opens: daysPhrase(locale, window?.opensDays ?? 0),
+    due: confirmationDueWords(locale, window?.deadlineDays ?? 0),
   };
   // The club sends on the scheduler's tick by default (§513): the wait is then the pinger's, and
   // "within a minute" would be the promise that makes somebody fill the form in again.
   const waitMinutes = await cachedEmailWaitMinutes(new Date());
   const stepBody = (key: (typeof NEXT)[number]["key"]) =>
-    key === "declare" && window ? t("done.next.declare.bodyLater", values) : t(`done.next.${key}.body`, values);
+    key === "declare" && window
+      ? t(window.releases ? "done.next.declare.bodyLaterReleased" : "done.next.declare.bodyLater", values)
+      : t(`done.next.${key}.body`, values);
   const textLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
 
   return (
