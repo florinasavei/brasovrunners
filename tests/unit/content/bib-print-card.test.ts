@@ -215,8 +215,10 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
     expect(card).toContain("Apare pe site");
     // The help: the agreement the site needs, and that a registered runner's tick only hides.
     const help = block(card, "bib-elite-ticks-help");
-    expect(help).toContain("bifează doar cu acordul persoanei");
-    expect(help).toContain("doar ascunde");
+    expect(help).toContain(ro.Admin.bibs.eliteTicksHelp);
+    // What each tick does, behind the «?»: the results, the site, and a registered runner's tick that only hides.
+    const more = block(help, "bib-elite-ticks-more");
+    for (const fact of ["în afara clasamentului", "Elitele cursei", "doar ascunde"]) expect(more).toContain(fact);
     // In English too.
     const english = block(await render({ elite: { ...elite, registered } }, "en"), "bib-elite");
     expect(english).toContain("In the results");

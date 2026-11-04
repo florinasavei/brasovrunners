@@ -281,10 +281,14 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
             ))}
           </Stack>
         )}
-        {/* What the two ticks do (§NNN), once for every line: the agreement the site tick needs, and the registered runner's own ticks. */}
+        {/*
+          What the two ticks do (§NNN), once for every line: the agreement the site tick needs, said; what each tick does and a
+          registered runner's own ticks, behind the «?» (the owner's rule: one sentence, the rest behind «?», §511).
+        */}
         {count > 0 && (
           <Typography variant="caption" color="text.secondary" component="p" sx={{ m: 0, overflowWrap: "anywhere" }} data-testid="bib-elite-ticks-help">
-            {t("bibs.eliteTicksHelp")}
+            {t("bibs.eliteTicksHelp")}{" "}
+            <QuietHelp text={[t("bibs.eliteInResultsHelp"), t("bibs.eliteOnSiteHelp"), t("bibs.eliteRegisteredSiteHelp")].join("\n")} size={14} testId="bib-elite-ticks-more" />
           </Typography>
         )}
         {mayEdit ? (

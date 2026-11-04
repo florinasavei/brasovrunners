@@ -65,6 +65,7 @@ import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import InfoTip from "@/shared/ui/InfoTip";
 import StatusChip from "@/shared/ui/StatusChip";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import TickButton from "@/shared/ui/TickButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -986,8 +987,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 </TickButton>
               ),
             )}
-            <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 0, overflowWrap: "anywhere" }}>
-              {tr("registrations.elite.help")}
+            {/* One sentence said, what each tick hides behind the «?» (§511). */}
+            <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 0, overflowWrap: "anywhere" }} data-testid="elite-ticks-help">
+              {tr("registrations.elite.help")}{" "}
+              <QuietHelp text={[tr("registrations.elite.inResultsHelp"), tr("registrations.elite.onSiteHint")].join("\n")} size={14} testId="elite-ticks-more" />
             </Typography>
             {!mayManage && (
               <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 0 }}>

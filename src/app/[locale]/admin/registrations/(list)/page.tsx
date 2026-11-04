@@ -2005,7 +2005,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   site», each a tick in the menu posting the other state. They only ever hide — ticked, the person's own ticks decide.
                 */
                 items.push(
-                  { kind: "submit", icon: "elite", label: t("registrations.elite.inResults"), formId: `elite-results-${row.id}`, checked: !row.eliteHiddenFromResults },
+                  { kind: "submit", icon: "elite", label: t("registrations.elite.inResults"), formId: `elite-results-${row.id}`, checked: !row.eliteHiddenFromResults, hint: t("registrations.elite.inResultsHelp") },
                   { kind: "submit", icon: "elite", label: t("registrations.elite.onSite"), formId: `elite-site-${row.id}`, checked: !row.eliteHiddenFromSite, hint: t("registrations.elite.onSiteHint") },
                 );
               }
