@@ -81,7 +81,7 @@ const ENDED: ReadonlySet<RegistrationStatus> = new Set(["CANCELLED", "EXPIRED"])
  * already words the thing, the key is that text word for word and a unit test keeps each pair equal:
  * `PENDING_EMAIL_CONFIRMATION` is the address email's first line; `WAITLISTED` the waiting-list email's
  * last sentence, and `waitlistedByHand` the one its full and resent variants end with while no place reaches the line
- * by itself (§NNN) — its variant for a line beside free places (`waitlistByHand`) says it inside a sentence of its own;
+ * by itself (§908) — its variant for a line beside free places (`waitlistByHand`) says it inside a sentence of its own;
  * `offer` the offer email's subject and its sentence up to the deadline, its `{due}` written as that
  * email writes `holdExpiresAtFormatted` (`formatDeadlineInSentence` inside `confirmationDueMoment`); `bib` the
  * confirmation email's number sentence; `CANCELLED` is `mine.cancelledTitle` and the first sentence of
@@ -140,7 +140,7 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
           }),
         );
       }
-      // What comes next is the `WAITLIST_JOINED` email's promise for this event (§NNN), word for word the sentence its
+      // What comes next is the `WAITLIST_JOINED` email's promise for this event (§908), word for word the sentence its
       // full and resent variants end with: while no place reaches the line by itself (`waitlistAutoOffer`, the
       // allocator's `offersOnItsOwn` as a column), the organizers' words.
       lines.push(ours(facts.waitlistAutoOffer ? "WAITLISTED" : "waitlistedByHand"));

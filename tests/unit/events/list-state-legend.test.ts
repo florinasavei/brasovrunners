@@ -117,11 +117,11 @@ describe("§556 listStateLegend — what each state on the public list means", (
 });
 
 /**
- * §NNN — the waiting list's sentence says who gives the place, by the one rule (`offersByItself`): «the first gets an
+ * §908 — the waiting list's sentence says who gives the place, by the one rule (`offersByItself`): «the first gets an
  * offer» only while a place reaches the line by itself («Da», «Locurile libere le dau doar eu» off); «Nu», or the tick
  * whatever «Da» says, and the organizers give each one. A row read without the two settings is «Da», as before.
  */
-describe("§NNN listStateLegend — the waiting list's sentence follows who gives the places", () => {
+describe("§908 listStateLegend — the waiting list's sentence follows who gives the places", () => {
   const waiting = (event: Partial<typeof race> & { waitlistAutoOffer?: boolean; freePlacesByOfferOnly?: boolean }, locale: "ro" | "en") =>
     listStateLegend(translator(locale), locale, { groups: ["WAITLISTED"], event: { ...race, ...event }, deadlines, now })[0].sentence;
   const auto = {

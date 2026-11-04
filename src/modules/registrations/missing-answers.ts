@@ -164,7 +164,7 @@ export function missingAnswersHeld(row: HeldReading): MissingAnswer[] {
 export const NAME_ANSWERS: readonly MissingAnswer[] = ["firstName", "lastName"];
 
 /**
- * «Verifică-ți numele complet» (§NNN; the owner, 2026-11-04, of the people he offers places to: «… își pot completa
+ * «Verifică-ți numele complet» (§907; the owner, 2026-11-04, of the people he offers places to: «… își pot completa
  * toate datele gen nume complet, DOB, oraș»): whether the declaration's page — the offer's too —
  * draws the name the club typed for the person to check and correct before they sign. A staff row's (`source =
  * STAFF`: a staff entry, a line of the internal list moved or offered a place, a vouched entry), while no declaration
@@ -181,7 +181,7 @@ export function asksNameCheck(registration: Pick<AnswersOnRow, "source">, declar
  * birth date — shown by the date typed, as on the form (`GuardianForMinor`). Never the guardian under a signed
  * declaration, online or on paper: the signed text names its declarant (`answers.ts#GUARDIAN_SIGNED`), and only a
  * new declaration changes who that is. With `nameCheck` (`asksNameCheck`, the declaration's page only), the two name
- * boxes as well, first, as the form asks them (§NNN).
+ * boxes as well, first, as the form asks them (§907).
  */
 export function answersToAsk(
   missing: readonly MissingAnswer[],

@@ -50,14 +50,14 @@ export type MissingAnswersFieldsInput = {
    */
   refused?: { note: string; sentences: readonly string[] } | null;
   /**
-   * The name the club typed, drawn in the two name boxes for the person to check and correct before signing (§NNN,
+   * The name the club typed, drawn in the two name boxes for the person to check and correct before signing (§907,
    * `missing-answers.ts#asksNameCheck`): the declaration's page of a staff row not yet signed, and nowhere else. Null:
    * the name boxes are drawn only when the name is missing, empty, as every missing answer.
    */
   checkedName?: { firstName: string | null; lastName: string | null } | null;
 };
 
-/** A box's id on the page: what a refusal's links point at, and what the signature's island reads the name from (§NNN). */
+/** A box's id on the page: what a refusal's links point at, and what the signature's island reads the name from (§907). */
 export function answerBoxId(name: string, idPrefix = ""): string {
   return `f-${idPrefix}${name}`;
 }
@@ -68,7 +68,7 @@ export function answerBoxId(name: string, idPrefix = ""): string {
  * echo, the country pickers on Romania, the telephone with its country, the emergency contact who must be
  * somebody else, «Feminin» / «Masculin», the T-shirt with «Fără tricou», the guardian shown by a minor's date.
  * Only the missing ones; nothing already on the registration is asked again — but the name the club typed, on the
- * declaration's page of a staff row not yet signed (`checkedName`, §NNN): the form's own two name boxes, prefilled,
+ * declaration's page of a staff row not yet signed (`checkedName`, §907): the form's own two name boxes, prefilled,
  * first, under the one line that says why it matters. Awaited, not mounted, like `registrationForm`, so the pages that
  * draw it stay one tree a synchronous renderer can draw.
  *
@@ -94,14 +94,14 @@ export async function missingAnswersFields(input: MissingAnswersFieldsInput): Pr
     defaultValue: prefill(name),
   });
   /*
-    A checked name box (§NNN): what the club typed, until a refused press — then what that press typed, as every
+    A checked name box (§907): what the club typed, until a refused press — then what that press typed, as every
     box here (a draft keeps only what was not blank, so a box cleared comes back cleared).
   */
   const nameBox = (name: "firstName" | "lastName") => ({
     ...box(name),
     defaultValue: checkedName === null ? prefill(name) : draft !== null ? (draft[name] ?? "") : (checkedName[name] ?? ""),
   });
-  // Anything beyond the name to complete: the intro says why the form asks it, after the name's own line (§NNN).
+  // Anything beyond the name to complete: the intro says why the form asks it, after the name's own line (§907).
   const completesMore = guardianIfMinor || fields.some((field) => field !== "firstName" && field !== "lastName");
   const intro = (
     <Typography variant="body2" color="text.secondary" sx={checkedName === null ? { mb: 2 } : undefined}>
@@ -142,7 +142,7 @@ export async function missingAnswersFields(input: MissingAnswersFieldsInput): Pr
         <ContactPageIcon aria-hidden="true" />
         {heading}
       </Typography>
-      {/* The name checked comes first, under its own line; the intro then speaks of what is missing (§NNN). */}
+      {/* The name checked comes first, under its own line; the intro then speaks of what is missing (§907). */}
       {checkedName === null && intro}
       {/* The refusal, where the redirect lands (§47's summary): focusable, announced, a link to each box it names. */}
       {refused && (
@@ -163,7 +163,7 @@ export async function missingAnswersFields(input: MissingAnswersFieldsInput): Pr
       )}
       <Stack spacing={2} sx={checkedName !== null ? { mt: 1 } : undefined}>
         {/*
-          The public form's own two name boxes. Checked (§NNN): prefilled with the club's typing, under the line that says
+          The public form's own two name boxes. Checked (§907): prefilled with the club's typing, under the line that says
           what the name is for — the declaration is signed with it and the race number prints it.
         */}
         {checkedName !== null && (

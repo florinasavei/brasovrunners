@@ -37,7 +37,7 @@ import * as repo from "./repository";
  * is refused by name — never filled with a default. A declaration already signed names its declarant: under one, no
  * guardian is added and the name of record does not move (`NAME_SIGNED`).
  *
- * **The name the club typed, checked before the signature (§NNN).** On the declaration's page only (`DECLARATION`),
+ * **The name the club typed, checked before the signature (§907).** On the declaration's page only (`DECLARATION`),
  * a staff row whose declaration is not signed (`missing-answers.ts#asksNameCheck`) is drawn its two name boxes too,
  * prefilled, and the press reads them beside the missing answers: a name typed differently goes through the same
  * planner — the form's rule, the name of record composed from the two with its key (§389), the list's name following
@@ -113,7 +113,7 @@ export type CompletionEvent = Pick<typeof events.$inferSelect, "kitShirt" | "sta
 
 /**
  * `planAnswerCompletion`'s context from the event's row — one reading for the page that previews and the write. The
- * door decides whether the name the club typed is read (§NNN): the declaration's page draws it, the manage page never.
+ * door decides whether the name the club typed is read (§907): the declaration's page draws it, the manage page never.
  */
 export function completionContext(event: CompletionEvent, now: Date, declarationSigned: boolean, door: CompletionDoor): Parameters<typeof planAnswerCompletion>[2] {
   return {
@@ -127,7 +127,7 @@ export function completionContext(event: CompletionEvent, now: Date, declaration
   };
 }
 
-/** A name box's value on the row: the club's typed name, which a checked box is compared with (§NNN). */
+/** A name box's value on the row: the club's typed name, which a checked box is compared with (§907). */
 function heldName(current: Registration, field: string): string {
   return field === "firstName" ? (current.firstName ?? "") : field === "lastName" ? (current.lastName ?? "") : "";
 }
@@ -140,7 +140,7 @@ function heldName(current: Registration, field: string): string {
  * cross-field rules (`answers.ts` markers), and a new name of record under a signed declaration (`NAME_SIGNED`).
  *
  * `checksName` (the declaration's door, `completionContext`): the two name boxes of a staff row not yet signed are
- * read as well (§NNN) — a correction of the name the club typed, never an owed answer.
+ * read as well (§907) — a correction of the name the club typed, never an owed answer.
  */
 export function planAnswerCompletion(
   current: Registration,
@@ -158,7 +158,7 @@ export function planAnswerCompletion(
   for (const field of fields) {
     const value = filled(posted[field]);
     if (value === undefined) continue;
-    // A checked name left as the club typed it — the form's own trim aside — writes nothing (§NNN).
+    // A checked name left as the club typed it — the form's own trim aside — writes nothing (§907).
     if (checked.has(field) && value.trim() === heldName(current, field)) continue;
     changes[field] = value;
   }
@@ -173,7 +173,7 @@ export function planAnswerCompletion(
   }
   if (fields.length === 0) return null;
 
-  // A checked name is never owed (§NNN): a box left blank keeps the name the row holds. Every other box left empty is.
+  // A checked name is never owed (§907): a box left blank keeps the name the row holds. Every other box left empty is.
   const absent = fields.filter((field) => !(field in changes) && !checked.has(field));
   let plan: AnswerPlan | null = null;
   if (Object.keys(changes).length > 0) {
@@ -251,7 +251,7 @@ export async function declarationSignedFor<T extends Record<string, unknown>>(db
  * completed name and a new runner on the same address cannot both find the name free, §389), the row read again
  * under it, only a registration that still stands, only the changed columns, and one audit row with no staff
  * actor. `db` may be the caller's transaction — the signature's, so the answers and the signature commit together
- * or not at all — and then the signature is checked against the name this leaves (§NNN). Returns the columns written —
+ * or not at all — and then the signature is checked against the name this leaves (§907). Returns the columns written —
  * a corrected name's among them, by name — none when nothing was missing or changed.
  */
 export async function completeMissingAnswers<T extends Record<string, unknown>>(

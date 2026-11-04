@@ -97,7 +97,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       «Completează-ți datele» (§905): the answers the page asked above the signature, read by the public form's own
       mapping — only when the page drew them, so a complete registration's press is what it always was. The
       service saves them as the person's own in the signature's transaction, and keeps only the missing ones — and,
-      on a staff row not yet signed, the name the club typed as the person corrected it (§NNN).
+      on a staff row not yet signed, the name the club typed as the person corrected it (§907).
     */
     const answers = form.get(ANSWERS_ASKED_FIELD) === "1" ? readPostedAnswers(form, locale) : undefined;
     const result = familyRegistrationId

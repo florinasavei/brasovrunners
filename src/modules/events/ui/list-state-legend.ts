@@ -30,7 +30,7 @@ export function listStateLegend(
     /** The groups the list shows; the legend explains only these, in the list's order. */
     groups: readonly PublicListGroup[];
     /**
-     * With the two settings that say who gives a place (§NNN): «Locurile din lista de așteptare se alocă automat» and
+     * With the two settings that say who gives a place (§908): «Locurile din lista de așteptare se alocă automat» and
      * «Locurile libere le dau doar eu», read by the one rule (`offersByItself`). A row read without them is «Da».
      */
     event: {
@@ -51,7 +51,7 @@ export function listStateLegend(
   const explanation = (group: PublicListGroup): string => {
     if (group === "CONFIRMED") return say("startList.legend.confirmed");
     /*
-      Who gives the place (§NNN): «the first gets an offer» only while a place reaches the line by itself — else the
+      Who gives the place (§908): «the first gets an offer» only while a place reaches the line by itself — else the
       organizers give each one. A waiting row is a capped event's, so its places are counted (`0`, as the door's full state).
     */
     if (group === "WAITLISTED") {

@@ -317,7 +317,7 @@ export default async function EventPageView({
           <RegistrationSteps
             folded
             reminderHoursBefore={event.reminderHoursBefore}
-            // The waiting list's step speaks of a full event, places counted (`0`): the organizers' words while none reaches the line by itself (§NNN).
+            // The waiting list's step speaks of a full event, places counted (`0`): the organizers' words while none reaches the line by itself (§908).
             byItself={offersByItself(event, 0)}
             settings={preview?.steps}
             window={

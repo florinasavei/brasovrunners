@@ -1,11 +1,11 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { composeLegalName } from "../names";
 
-/** The two name boxes a signature follows (§NNN), by their ids on the page (`MissingAnswersFields#answerBoxId`). */
+/** The two name boxes a signature follows (§907), by their ids on the page (`MissingAnswersFields#answerBoxId`). */
 export type NameBoxIds = { firstName: string; lastName: string };
 
 /**
- * The full name the two name boxes above the signature hold, as it is typed (§NNN) — composed as the server composes
+ * The full name the two name boxes above the signature hold, as it is typed (§907) — composed as the server composes
  * the name of record from them (`names.ts#composeLegalName`), so the signature box asks for the very name the press
  * will check it against. Null without the boxes, before a word is typed in either, and on the server.
  *

@@ -133,7 +133,7 @@ vi.mock("@/i18n/navigation", () => ({
 // The async parts not about the outage (see above).
 vi.mock("@/modules/registrations/ui/EmailDeliveryNotice", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
-// The steps stand in as what the page asked them to say of the waiting list (§NNN), the rest of them being theirs.
+// The steps stand in as what the page asked them to say of the waiting list (§908), the rest of them being theirs.
 vi.mock("@/modules/registrations/ui/RegistrationSteps", () => ({
   default: ({ byItself }: { byItself: boolean }) => createElement("div", { "data-testid": "registration-steps", "data-by-itself": byItself ? "yes" : "no" }),
 }));
@@ -483,12 +483,12 @@ describe("§906 the organizers' door on the register page", () => {
 });
 
 /**
- * §NNN — the five steps' waiting list, folded above the form, by the same rule as the join sentence: whatever the
+ * §908 — the five steps' waiting list, folded above the form, by the same rule as the join sentence: whatever the
  * places say right now, the page asks the steps for the organizers' words while no place reaches the line by itself
  * («Nu», or «Locurile libere le dau doar eu»), and for today's with «Da» — a copy cached before the settings is «Da».
  * The words themselves, in both languages, are `tests/unit/deadlines/registration-steps.test.ts`.
  */
-describe("§NNN the steps' waiting list on the register page", () => {
+describe("§908 the steps' waiting list on the register page", () => {
   it("is the organizers' with «Nu» or the tick, today's with «Da»", async () => {
     const cases = [
       { over: {}, byItself: "yes" },

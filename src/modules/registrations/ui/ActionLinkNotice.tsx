@@ -127,7 +127,7 @@ export default async function ActionLinkNotice({
 
       {/* Waitlisted: nothing to press. The form a "send it again" button opens
           (`requestRegistrationLink`) queues nothing for that status, so it would promise an email nobody queues.
-          Who gives the places (§NNN): while no place reaches the line by itself, the organizers write when they can give one —
+          Who gives the places (§908): while no place reaches the line by itself, the organizers write when they can give one —
           and when the state carries no answer, as `spentLinkOffersByItself` answers for a link it cannot read. */}
       {status.next === "NONE" && <Typography variant="body2">{status.byItself === true ? t("spent.waitHelp") : t("spent.waitHelpByHand")}</Typography>}
     </Stack>

@@ -262,12 +262,12 @@ describe("BR-REQ-037-05 criterion 23: who signs follows the answers typed above 
       memberBibOffered: false,
       checksName: false,
     });
-    // The declaration's door reads the name the club typed as well (§NNN); the manage link never does.
+    // The declaration's door reads the name the club typed as well (§907); the manage link never does.
     expect(completionContext(event, context.now, false, "DECLARATION").checksName).toBe(true);
   });
 });
 
-describe("BR-REQ-037-05: the name the club typed, checked by the person before signing (§NNN)", () => {
+describe("BR-REQ-037-05: the name the club typed, checked by the person before signing (§907)", () => {
   /** A line of the internal list moved onto the official one: «Sebi Sebi» and an address, the list's name derived. */
   const sebi = { ...row, firstName: "Sebi", lastName: "Sebi", registeredName: "Sebi Sebi", displayName: "Sebi Sebi" } as unknown as Registration;
   const atSigning = { ...context, checksName: true };

@@ -142,7 +142,7 @@ export async function renderDraftForm<T extends Record<string, unknown>>(
       <EmailDeliveryNotice />
       <RegistrationJourney current="details" />
       <Box sx={{ mb: 3 }}>
-        {/* The waiting list's step as the page says it (§NNN): a full event's, places counted (`0`). */}
+        {/* The waiting list's step as the page says it (§908): a full event's, places counted (`0`). */}
         <RegistrationSteps folded window={formView.stepsWindow} reminderHoursBefore={dated.reminderHoursBefore} byItself={offersByItself(view, 0)} settings={steps} />
       </Box>
       {closed && (

@@ -87,7 +87,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
     const now = new Date();
     const people = await readConfirmedOnAddress(token, now);
     /*
-      Whoever is now in the line is told who gives the places (§NNN): while no place reaches the line by itself — «Nu», or
+      Whoever is now in the line is told who gives the places (§908): while no place reaches the line by itself — «Nu», or
       «Locurile libere le dau doar eu» — the organizers write when they can give one, never «when a place frees up». The
       allocator's own rule, read off the event the link names; only when somebody here waits.
     */

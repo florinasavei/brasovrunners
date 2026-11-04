@@ -50,7 +50,7 @@ type Props = {
    */
   reminderHoursBefore?: number | null;
   /**
-   * Whether a place reaches the waiting list by itself on this event (§NNN): `registration-cta.ts#offersByItself`, the
+   * Whether a place reaches the waiting list by itself on this event (§908): `registration-cta.ts#offersByItself`, the
    * allocator's own rule read off the event's row, asked by every caller — so no page can forget it. False («Nu», or
    * «Locurile libere le dau doar eu»): the waiting list's step says the organizers give the places, never «when a place
    * frees up», and no order of registration either, since they choose; and the declaration's step, that the organizers
@@ -103,7 +103,7 @@ export default async function RegistrationSteps({ folded = false, window = null,
     due: confirmationDueWords(locale, window?.deadlineDays ?? 0),
   };
   /*
-    The third step's last clause says what a lapsed hold does with a waiting list (§NNN): «apoi trece la următorul»
+    The third step's last clause says what a lapsed hold does with a waiting list (§908): «apoi trece la următorul»
     only while a place reaches the line by itself — else the place stays free for the organizers to give. With a
     window, the clause speaks only of the hold (`bodyLater`, `bodyLaterAtStart`), true either way.
   */

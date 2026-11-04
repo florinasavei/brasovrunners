@@ -301,7 +301,7 @@ describe("BR-REQ-037-05 criterion 23: the declaration's page asks the missing an
       }
       // The answers the row holds are never asked again (the country, on Romania)…
       expect(html).not.toContain('name="country"');
-      // …but a staff row's name is drawn, prefilled with what the club typed, for the person to check (§NNN).
+      // …but a staff row's name is drawn, prefilled with what the club typed, for the person to check (§907).
       expect(inputOf(html, "firstName")).toContain('value="Mara"');
       expect(inputOf(html, "lastName")).toContain('value="Munteanu"');
       expect(html).toContain(catalogue.Registrations.complete.nameCheck);
@@ -404,7 +404,7 @@ describe("BR-REQ-037-05 criterion 23: the declaration's page asks the missing an
     }
   });
 
-  it("a staff row's name is checked above (§NNN): the open signature points at the name typed there, naming none", async () => {
+  it("a staff row's name is checked above (§907): the open signature points at the name typed there, naming none", async () => {
     const row = await registration("PENDING_DECLARATION");
     const secret = await link(row.id, "COMPLETE_DECLARATION");
     for (const [locale, catalogue] of [
@@ -580,7 +580,7 @@ describe("BR-REQ-037-05 criteria 25 and 27: «Date lipsă» in the backoffice, a
 });
 
 /**
- * §NNN (BR-REQ-037-05; the owner, 2026-11-04, of the people he offers places to: «… își pot completa toate datele gen
+ * §907 (BR-REQ-037-05; the owner, 2026-11-04, of the people he offers places to: «… își pot completa toate datele gen
  * nume complet, DOB, oraș») — the name the club typed is the person's to check before they sign: a
  * staff row not yet signed draws it on the declaration's and the offer's page in the form's own two name boxes,
  * prefilled, and the one press saves it corrected with the answers and signs with it.

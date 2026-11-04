@@ -55,7 +55,7 @@ export const PUBLIC_CLIENT_MESSAGES = [
   "Registrations.declare.signatureNameWrongForMinorReply",
   "Registrations.declare.minorNameWrong",
   "Registrations.declare.minorNameWrongReply",
-  // …and, beside a name the person checks above it (§NNN), the same three for the name typed there.
+  // …and, beside a name the person checks above it (§907), the same three for the name typed there.
   "Registrations.declare.typedNameHelpAbove",
   "Registrations.declare.minorTypedNameHelpAbove",
   "Registrations.declare.signatureMismatchAbove",

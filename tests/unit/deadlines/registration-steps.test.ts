@@ -159,12 +159,12 @@ describe("§636 the fold says the club may refuse, behind the terms in force", (
 });
 
 /**
- * §NNN — the waiting list's step says who gives the places. While no place reaches the line by itself («Nu», or
+ * §908 — the waiting list's step says who gives the places. While no place reaches the line by itself («Nu», or
  * «Locurile libere le dau doar eu»: `byItself` false, which every caller reads through `offersByItself`), the
  * organizers' words — never «Când se eliberează un loc», nor an order of registration the organizers do not keep;
  * «Da» keeps today's sentence. Both languages, with the club's offer window in either.
  */
-describe("§NNN the waiting list's step says who gives the places", () => {
+describe("§908 the waiting list's step says who gives the places", () => {
   beforeEach(() => {
     lang.current = "ro";
   });

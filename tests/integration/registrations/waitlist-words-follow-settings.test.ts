@@ -14,7 +14,7 @@ import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — every page a person reads once they are in the waiting list says who gives the places, by the allocator's
+ * §908 — every page a person reads once they are in the waiting list says who gives the places, by the allocator's
  * own rule (`offersOnItsOwn`, read off the event the link names): while no place reaches the line by itself —
  * «Locurile din lista de așteptare se alocă automat» on «Nu», or «Locurile libere le dau doar eu» ticked, whatever
  * «Da» says — the organizers write when they can give a place, never «when a place frees up»; with «Da» and the tick
@@ -195,7 +195,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("§NNN the reader of the rule: a spent link names its event", () => {
+describe("§908 the reader of the rule: a spent link names its event", () => {
   it("answers the allocator's own rule for the event the link was spent at", async () => {
     for (const setting of SETTINGS) {
       const race = await createRace(setting);
@@ -237,7 +237,7 @@ describe("§NNN the reader of the rule: a spent link names its event", () => {
   });
 });
 
-describe("§NNN the address confirmed onto the waiting list", () => {
+describe("§908 the address confirmed onto the waiting list", () => {
   for (const setting of SETTINGS) {
     for (const locale of LOCALES) {
       it(`${setting.name}: ${setting.byItself ? "today's words" : "the organizers'"} (${locale})`, async () => {
@@ -262,7 +262,7 @@ describe("§NNN the address confirmed onto the waiting list", () => {
   }
 });
 
-describe("§NNN a spent link of somebody waiting", () => {
+describe("§908 a spent link of somebody waiting", () => {
   for (const setting of SETTINGS) {
     for (const locale of LOCALES) {
       it(`${setting.name}: ${setting.byItself ? "today's words" : "the organizers'"} (${locale})`, async () => {
@@ -281,7 +281,7 @@ describe("§NNN a spent link of somebody waiting", () => {
   }
 });
 
-describe("§NNN the declaration signed onto the waiting list", () => {
+describe("§908 the declaration signed onto the waiting list", () => {
   for (const setting of SETTINGS) {
     for (const locale of LOCALES) {
       it(`${setting.name}: ${setting.byItself ? "today's words" : "the organizers'"} (${locale})`, async () => {
@@ -316,7 +316,7 @@ describe("§NNN the declaration signed onto the waiting list", () => {
   «merge la cineva de pe lista de așteptare» only while a place reaches the line by itself; with «Nu» or the tick the freed
   place waits for the organizers' «Trimite-i oferta», so they may give it.
 */
-describe("§NNN the declaration signed with a place: where a cancelled place goes", () => {
+describe("§908 the declaration signed with a place: where a cancelled place goes", () => {
   for (const setting of SETTINGS) {
     for (const locale of LOCALES) {
       it(`${setting.name}: ${setting.byItself ? "today's words" : "the organizers'"} (${locale})`, async () => {
@@ -346,7 +346,7 @@ describe("§NNN the declaration signed with a place: where a cancelled place goe
   });
 });
 
-describe("§NNN a family's last screen: the person on the waiting list", () => {
+describe("§908 a family's last screen: the person on the waiting list", () => {
   for (const setting of SETTINGS) {
     for (const locale of LOCALES) {
       it(`${setting.name}: ${setting.byItself ? "today's words" : "the organizers'"} (${locale})`, async () => {
@@ -377,7 +377,7 @@ describe("§NNN a family's last screen: the person on the waiting list", () => {
   }
 });
 
-describe("§NNN another person on the address, entered onto the waiting list", () => {
+describe("§908 another person on the address, entered onto the waiting list", () => {
   for (const setting of SETTINGS) {
     for (const locale of LOCALES) {
       it(`${setting.name}: ${setting.byItself ? "today's words" : "the organizers'"} (${locale})`, async () => {
@@ -405,7 +405,7 @@ function elementsOf(node: unknown, type: unknown): { props: Record<string, unkno
   return [...(element.type === type ? [element] : []), ...elementsOf(element.props.children, type)];
 }
 
-describe("§NNN the event page's five steps ask the event's own row", () => {
+describe("§908 the event page's five steps ask the event's own row", () => {
   it("the waiting list's step is the organizers' with «Nu» or the tick, today's with «Da» — the page's row in both languages", async () => {
     for (const setting of SETTINGS) {
       const race = await createRace(setting);

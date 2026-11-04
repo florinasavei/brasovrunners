@@ -77,7 +77,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
 
   if (done === "declare" || done === "waitlist") {
     /*
-      The person now in the line is told who gives the places (§NNN): while no place reaches the line by itself — «Nu», or
+      The person now in the line is told who gives the places (§908): while no place reaches the line by itself — «Nu», or
       «Locurile libere le dau doar eu» — the organizers write when they can give one. The allocator's own rule, read off
       the event the spent link names (the address's registration there).
     */

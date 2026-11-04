@@ -454,11 +454,11 @@ describe("§632 the title counts everyone with a place on a capped event", () =>
 });
 
 /**
- * §NNN — the waiting list's legend sentence says who gives the place, read off the event's row by the one rule
+ * §908 — the waiting list's legend sentence says who gives the place, read off the event's row by the one rule
  * (`offersByItself`): «the first gets an offer» only with «Da» and «Locurile libere le dau doar eu» off; «Nu», or
  * the tick whatever «Da» says, and the organizers give each place. The same rows, the same notice, both languages.
  */
-describe("§NNN the waiting list's legend says who gives the places", () => {
+describe("§908 the waiting list's legend says who gives the places", () => {
   it("«Da» keeps the first's offer; «Nu», or the tick over «Da», says the organizers give each place", async () => {
     await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
     const event = await mixedEvent();

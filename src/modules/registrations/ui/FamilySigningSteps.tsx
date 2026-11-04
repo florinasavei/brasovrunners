@@ -5,7 +5,7 @@ import { env } from "@/shared/config/env";
 import { type FamilyStep, familyStepWordsKey } from "../domain/family-signing";
 
 /**
- * `byItself` (§NNN): whether a place reaches the waiting list by itself at the event — the allocator's own rule, read by
+ * `byItself` (§908): whether a place reaches the waiting list by itself at the event — the allocator's own rule, read by
  * the page — for the last screen's waiting person: false, and the line says the organizers write when they can give one.
  * Required with `detailed`, the one screen that says what comes next.
  */

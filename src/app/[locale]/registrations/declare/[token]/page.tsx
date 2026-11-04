@@ -121,7 +121,7 @@ async function heldPass(token: string, pass: FamilySigningPass | null, now: Date
 async function FamilyDone({ steps, doneHref, eventId }: { steps: readonly FamilyStep[]; doneHref: string; eventId: string }) {
   const t = await getTranslations("Registrations");
   const later = steps.some((step) => step.state === "later");
-  // Who gives the places, for anybody now in the line (§NNN): the allocator's own rule, read off the event — only then.
+  // Who gives the places, for anybody now in the line (§908): the allocator's own rule, read off the event — only then.
   const byItself = steps.some((step) => step.status === "WAITLISTED") ? await offersWaitlistAutomatically(getDb(), eventId) : true;
   return (
     <Box data-testid="family-signing-done" sx={{ mt: 3 }}>
@@ -239,7 +239,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     const held = await heldPass(token, pass, now);
     const familySteps = held ? await familyStepsOfPass(getDb(), held) : null;
     /*
-      Who gives the places (§NNN): while no place reaches the line by itself — «Nu», or «Locurile libere le dau doar eu» —
+      Who gives the places (§908): while no place reaches the line by itself — «Nu», or «Locurile libere le dau doar eu» —
       the person now in the line is told the organizers write when they can give one, never «when a place frees up»; the
       person confirmed, that the organizers may give their place on to the line if they cancel, never that it goes there by
       itself. The allocator's own rule, read off the event: the family's pass names it, else the link.
@@ -537,7 +537,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     is missing. A complete registration reads nothing more and draws nothing more.
   */
   /*
-    «Verifică-ți numele complet» (§NNN): the name of a staff row — the club typed it — drawn in the form's two name
+    «Verifică-ți numele complet» (§907): the name of a staff row — the club typed it — drawn in the form's two name
     boxes above the signature for the person to check and correct, while no declaration is signed; saved with the
     answers and the signature in the one press, the signature checked against the name it leaves.
   */
@@ -557,7 +557,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     (`registrationAfterCompletion`), so the boxes below, the text's declarant and the server's check are one person.
     Before anything is typed, while the birth date or the guardian is still asked, nobody can know it yet: the
     signature then names no person to match while typing (`signerOpen`), says whose name it takes in either case,
-    and the server checks it against the row the answers leave. A name corrected above (§NNN) is read the same way —
+    and the server checks it against the row the answers leave. A name corrected above (§907) is read the same way —
     the box follows the name boxes as they are typed, too (`SignatureField#nameFrom`).
   */
   const afterPress =
@@ -572,7 +572,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const signsForMinor = signer?.guardianName ? signer.registeredName : null;
   // The declarant is a guardian the boxes above brought, not one the row holds: still the person's to correct there.
   const guardianTypedAbove = signsForMinor !== null && !registration?.guardianName;
-  // The name boxes above, while the person checks the name the club typed (§NNN): the signature follows them as typed.
+  // The name boxes above, while the person checks the name the club typed (§907): the signature follows them as typed.
   const nameFrom = nameCheck ? { firstName: answerBoxId("firstName"), lastName: answerBoxId("lastName") } : undefined;
   const contactHref = getPathname({ locale, href: "/contact" });
   /*
@@ -715,7 +715,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             «Completează-ți datele» (§905), said before the declaration's text: the boxes are above the signature,
             and nobody should reach the end of a page of legal text to learn that something is still asked of them.
           */}
-          {/* The name checked too (§NNN): the lead says so — the declaration's text below still names the club's typing. */}
+          {/* The name checked too (§907): the lead says so — the declaration's text below still names the club's typing. */}
           {asksAnswers && (
             <Alert severity="warning" sx={{ mb: 3 }} data-testid="complete-answers-lead">
               {owed.length === 0
@@ -797,7 +797,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   <MuiLink href={`#${box}`}>{boxLabel(box)}</MuiLink>
                 </Box>
               ))}
-              {/* A name checked above (§NNN) is the person's to correct there — never a message to the club. */}
+              {/* A name checked above (§907) is the person's to correct there — never a message to the club. */}
               {refusedBoxes.includes("minorTypedName") && (
                 <Box sx={{ mt: 0.5 }}>
                   {nameCheck ? t("complete.minorNameTypedAbove") : t.rich(canReply ? "declare.minorNameWrongReply" : "declare.minorNameWrong", { contact })}
@@ -859,12 +859,12 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               {/*
                 «Completează-ți datele» (§905), first in the form: only the answers missing, with the public form's
                 own boxes, saved with the signature in one transaction — a refusal of either keeps what was typed. On a
-                staff row not yet signed, the name the club typed first of all, prefilled, to check (§NNN).
+                staff row not yet signed, the name the club typed first of all, prefilled, to check (§907).
               */}
               {asksAnswers && formEvent && registration &&
                 (await missingAnswersFields({
                   ...answersAsked,
-                  // The name the club typed, prefilled for the person to check (§NNN); null on a public row.
+                  // The name the club typed, prefilled for the person to check (§907); null on a public row.
                   checkedName: nameCheck ? { firstName: registration.firstName, lastName: registration.lastName } : null,
                   locale,
                   birthDate: {
@@ -876,7 +876,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   invalid: answersRefusal?.invalid ?? new Set(),
                   refusal: { tooYoung: answersRefusal?.tooYoung === true, emergencySame: answersRefusal?.emergencySame === true },
                   draft,
-                  // Only the name to check (§NNN): its own heading — nothing is missing, so nothing is «to complete».
+                  // Only the name to check (§907): its own heading — nothing is missing, so nothing is «to complete».
                   heading:
                     nameCheck && owed.length === 0
                       ? familyCurrent
@@ -976,7 +976,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                     canReply={canReply}
                     defaultValue={draft?.typedName}
                     refused={nameRefused}
-                    // With the name checked above (§NNN), whose name it is is typed there: the sentence names none.
+                    // With the name checked above (§907), whose name it is is typed there: the sentence names none.
                     help={
                       signerOpen && registration
                         ? nameCheck

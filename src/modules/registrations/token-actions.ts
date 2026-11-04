@@ -147,7 +147,7 @@ export type SpentRegistrationLink = {
   /** For the "ask for it again" and "register again" links; both fall back to the listing. */
   eventSlug: string | null;
   /**
-   * Beside `next: "NONE"` alone — the person waits in the line (§NNN): whether a place reaches the waiting list by itself
+   * Beside `next: "NONE"` alone — the person waits in the line (§908): whether a place reaches the waiting list by itself
    * at the event, the allocator's own `offersOnItsOwn` read off the event row (`offersWaitlistAutomatically`). False
    * («Nu», or «Locurile libere le dau doar eu»): the organizers give each place, and the page says they write when they
    * can give one. Absent on every other state, where nobody waits.
@@ -223,7 +223,7 @@ export async function readSpentRegistrationLink(
       */
       eventTitle: event?.locale === locale ? event.title : null,
       eventSlug: event?.locale === locale ? event.slug : null,
-      // Somebody in the line is told who gives the places (§NNN): one row more, read for them alone.
+      // Somebody in the line is told who gives the places (§908): one row more, read for them alone.
       ...(view.next === "NONE" ? { byItself: await offersWaitlistAutomatically(tx, registration.eventId) } : {}),
     };
   });
@@ -313,7 +313,7 @@ export async function readConfirmedOnAddress(secret: string, now: Date): Promise
 const CONFIRMED_ON_ADDRESS: ReadonlySet<string> = new Set(["PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED", "CONFIRMED"]);
 
 /**
- * Whether a place reaches the waiting list by itself at the event a spent link names (§NNN): the allocator's own
+ * Whether a place reaches the waiting list by itself at the event a spent link names (§908): the allocator's own
  * `offersOnItsOwn`, read off the event row as the emails read it when they are rendered (`offersWaitlistAutomatically`).
  * For the pages after a press that say what comes next — the address confirmed, the declaration signed (either outcome),
  * another person on the address entered. False («Nu», or «Locurile libere le dau doar eu»): the organizers give each

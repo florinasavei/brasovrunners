@@ -61,7 +61,7 @@ import { type NameBoxIds, useNameTypedAbove } from "./use-name-typed-above";
  * refusal summary: the two cannot drift apart ("Semnătura părintelui sau tutorelui" beside the
  * minor's box, the words an adult's box always had when the parent signs alone).
  *
- * ## A name the person checks above (§NNN)
+ * ## A name the person checks above (§907)
  *
  * On a staff row not yet signed the page draws the name the club typed in the form's two name boxes,
  * for the person to correct before signing (`nameFrom`, their ids). The participant's name this box
@@ -123,7 +123,7 @@ export default function SignatureField({
    */
   required?: boolean;
   /**
-   * The ids of the two name boxes the page draws above for the person to check (§NNN): the participant's name this
+   * The ids of the two name boxes the page draws above for the person to check (§907): the participant's name this
    * box speaks of follows them as they are typed. Absent: the name the page passed, fixed.
    */
   nameFrom?: NameBoxIds;
@@ -133,7 +133,7 @@ export default function SignatureField({
   const [value, setValue] = useState(defaultValue ?? "");
   const [touched, setTouched] = useState(false);
   /*
-    The name typed above (§NNN), when the page draws it: an adult's or a minor's box wants it — never in place of no
+    The name typed above (§907), when the page draws it: an adult's or a minor's box wants it — never in place of no
     name at all, which is a signer the boxes above have still to decide — and a parent's box names the minor by it.
   */
   const typedAbove = useNameTypedAbove(nameFrom);
@@ -181,7 +181,7 @@ export default function SignatureField({
     — an adult's, or a minor's in their own box (§330) — is one the club corrects ("Corectează
     numele") and the same link then signs; a guardian's is not — no staff verb edits it
     (`AGENTS.md` §15.11) — so the parent is told what actually works: cancel, and register the
-    minor again with the right name. A name the page draws above for the person to check (§NNN)
+    minor again with the right name. A name the page draws above for the person to check (§907)
     is corrected there, by the person, and nobody else.
   */
   const wrongNameSentence =
