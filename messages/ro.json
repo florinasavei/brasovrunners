@@ -7757,6 +7757,7 @@
         },
         "job": {
           "registrationMaintenance": "întreținerea înscrierilor",
+          "deadlineRelease": "eliberarea locurilor nesemnate la termen",
           "emailOutbox": "trimiterea emailurilor"
         }
       },

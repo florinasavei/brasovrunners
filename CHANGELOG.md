@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.28-2026-11-04
+
+- **«Emailuri azi» names the release at the deadline** — its emails show «automat: eliberarea locurilor nesemnate la termen», one card, instead of the registrations' upkeep. §916.
 ## BR-V4.27-2026-11-04
 
 - **Every email to a person, with its tries** — a volunteer's page has a closed «Emailuri» fold, and a registration's «Emailuri» card a fold «Încercări și cine le-a trimis»: every email the outbox holds for them, newest first, with how many tries it took and the next one, when it was queued and by which press and colleague (or «automat», or «de pe site»), what became of it, a failure's reason and the club's copies under it — for the Administrator and the Superadministrator only; on «Emailuri azi» each person's name opens their page. §915.

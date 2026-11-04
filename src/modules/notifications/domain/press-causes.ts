@@ -81,6 +81,9 @@ export const PRESS_CAUSES = {
 
   // The two jobs (their routes open the scope, and the drains that do their work early): nobody in particular.
   "job.registrationMaintenance": [],
+  // «Eliberează singur locurile nesemnate la termen»: the release's own emails — each person released and the one summary —
+  // under their own cause, wherever the release runs (the job, or a press that reached the deadline first).
+  "job.deadlineRelease": [],
   "job.emailOutbox": [],
 } as const satisfies Record<string, readonly EmailMessageType[]>;
 

@@ -35,7 +35,7 @@ describe("the press causes", () => {
 
   it("is a closed set of `<area>.<verb>` tokens: the two jobs, and every staff area's presses", () => {
     for (const cause of PRESS_CAUSE_NAMES) expect(cause).toMatch(/^(registrations|events|volunteers|club|job)\.[a-zA-Z]+$/);
-    expect(PRESS_CAUSE_NAMES.filter(isJobCause).sort()).toEqual(["job.emailOutbox", "job.registrationMaintenance"]);
+    expect(PRESS_CAUSE_NAMES.filter(isJobCause).sort()).toEqual(["job.deadlineRelease", "job.emailOutbox", "job.registrationMaintenance"]);
     // A job acts on nobody in particular: it names no main email.
     for (const cause of PRESS_CAUSE_NAMES.filter(isJobCause)) expect(PRESS_CAUSES[cause]).toEqual([]);
   });

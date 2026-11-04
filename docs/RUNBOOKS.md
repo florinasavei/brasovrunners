@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V4.27-2026-11-04`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V4.28-2026-11-04`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |

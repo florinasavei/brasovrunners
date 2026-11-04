@@ -7757,6 +7757,7 @@
         },
         "job": {
           "registrationMaintenance": "the registrations' upkeep",
+          "deadlineRelease": "releasing the unsigned places at the deadline",
           "emailOutbox": "sending the emails"
         }
       },
