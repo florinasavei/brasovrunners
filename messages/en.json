@@ -443,7 +443,8 @@
         "confirmed": "signed the declaration (online or on paper at the registration desk) and has the place.",
         "pendingWindow": "holds a place, declaration not signed. It is emailed at registration and {opens} before; it is due by {due}, or the place is freed.",
         "pendingHold": "holds a place for {hold} from registration until the declaration is signed; otherwise the place is freed.",
-        "waitlisted": "has no place yet. When one is freed, the first gets an offer by email and has {offer} to sign the declaration."
+        "waitlisted": "has no place yet. When one is freed, the first gets an offer by email and has {offer} to sign the declaration.",
+        "waitlistedByHand": "has no place yet. The organizers give out the places one at a time: whoever gets an offer by email has {offer} to sign the declaration."
       },
       "captionStatesNoWaitlist": "First the confirmed participants — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet.",
       "captionStatesNumbersNoWaitlist": "First the confirmed participants, with their race number — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet.",
@@ -1940,6 +1941,7 @@
         "linkLapsed": "The link in the confirmation email has expired, so your address is not confirmed and we hold no place for you.",
         "kept": "The deadline to sign has passed, but we are still keeping your place: sign the declaration from the email as soon as you can.",
         "WAITLISTED": "We'll let you know if a place opens up.",
+        "waitlistedByHand": "The organizers give out the places one at a time: we will write to you when we can give you a place.",
         "offer": "A place has opened up for you. It is yours if you sign the self-declaration by {due}.",
         "offerQueued": "We have offered you a place; the offer email is on its way, and the time to sign counts from when it is sent.",
         "offerLapsed": "The offer's deadline has passed, so the place is no longer held for you.",
@@ -11277,7 +11279,7 @@
       "move": "Move to the official list",
       "moveTitle": "Move to the official waiting list?",
       "noteFollows": "The note moves onto the registration, and the line leaves the internal list.",
-      "detailsAtSigning": "The person fills in the missing details themselves, such as the birth date or the phone, when they sign the declaration.",
+      "detailsAtSigning": "When they sign the declaration, the person checks their full name and fills in the missing details themselves, such as the birth date or the phone.",
       "emailForOfficial": "Email for the official list",
       "emailForOfficialHelp": "This line has no address: type it here to move it. The emails go here.",
       "eliteNoAddress": "An elite runner? No address needed: “Move to the elite list”.",
@@ -11538,6 +11540,7 @@
       "declaration": {
         "title": "Sign the declaration",
         "body": "From that same email, sign it online or on paper at the registration desk on race day. Your place is held for {hold}; if there is a waiting list, it then goes to the next in line.",
+        "bodyByHand": "From that same email, sign it online or on paper at the registration desk on race day. Your place is held for {hold}; if there is a waiting list, the organizers may then give it to someone else.",
         "bodyLater": "The race is free, so we ask for a confirmation: {opens} before the start you get an email and sign the declaration, online or on paper at the registration desk. You can sign earlier too. If there is a waiting list, the place is held until {due}.",
         "bodyLaterAtStart": "The race is free, so we ask for a confirmation: sign the declaration from the registration email any time before the start, online or on paper at the registration desk. We remind you {opens} before. The place does not lapse before the start."
       },
@@ -11552,7 +11555,8 @@
       },
       "waitingList": {
         "title": "If it is full",
-        "body": "You join the waiting list, in order of registration. When a place frees up, you get an offer by email and {offer} to sign the declaration."
+        "body": "You join the waiting list, in order of registration. When a place frees up, you get an offer by email and {offer} to sign the declaration.",
+        "bodyByHand": "You join the waiting list. The organizers give out the places one at a time: when they can give you one, you get an offer by email and {offer} to sign the declaration."
       },
       "family": {
         "title": "Registering someone else on the same address?",
@@ -11791,10 +11795,12 @@
       "done": "Your email address has been confirmed.",
       "doneTitle": "Your email address is confirmed",
       "doneWaitlist": "You are on the waiting list. If a place frees up, we email you what to do next.",
+      "doneWaitlistByHand": "You are on the waiting list. The organizers give out the places one at a time: when they can give you one, we email you what to do next.",
       "eventOff": "The event has been cancelled or is over, so the registration does not go on: no place was held for you and there is nothing you need to do.",
       "waitlistFull": "Places and waiting list are full: your address is not confirmed and nothing is held for you. The link is valid for {confirmation} from when the first email left; if a place opens on the list, open it again.",
       "noWaitlist": "Every place is taken and there is no waiting list: your address is not confirmed and nothing is held for you. The link is valid for {confirmation} from when the first email left; if a place frees, open it again.",
       "doneFor": "The address is confirmed for:",
+      "nextWaitlistedByHand": "on the waiting list: gets an email when the organizers can give them a place",
       "next": {
         "PENDING_DECLARATION": "signs the declaration from the email on its way now",
         "WAITLIST_OFFERED": "has a place offered: sign the declaration from the email",
@@ -11833,6 +11839,7 @@
           "number": "Race number: {number}",
           "noNumber": "Race number: none yet",
           "waitlisted": "On the waiting list: an email comes if a place frees up.",
+          "waitlistedByHand": "On the waiting list: an email comes when the organizers can give them a place.",
           "later": "Later: sign from the link emailed for this person.",
           "closed": "No longer waiting for a signature.",
           "cancelled": "The registration is cancelled, and the place is free again."
@@ -11846,6 +11853,7 @@
         "withdrawBack": "No, go back"
       },
       "signPersonally": "{participant} must sign this declaration personally. If this email address is not theirs, forward them the link or hand them the phone: nobody signs for another adult.",
+      "signPersonallyNameAbove": "The person registered must sign this declaration personally, with the full name above. If this email address is not theirs, forward them the link: nobody signs for another adult.",
       "typedName": "Type your full name as a signature",
       "privacyLink": "Privacy notice",
       "doneConfirmed": "Your registration is confirmed.",
@@ -11868,9 +11876,19 @@
         "You get a reminder {reminder} before the start, with the time, the place, what to bring and, if assigned, your race number.",
         "If you can no longer come, cancel from the link in the email: your place goes to somebody on the waiting list."
       ],
+      "nextConfirmedByHand": [
+        "The confirmation email is on its way, with your QR code and your access code — keep it for race day.",
+        "You get a reminder {reminder} before the start, with the time, the place, what to bring and, if assigned, your race number.",
+        "If you can no longer come, cancel from the link in the email: the organizers may give your place to somebody on the waiting list."
+      ],
       "nextWaitlisted": [
         "You are on the waiting list; if a place frees up, you get an email with a confirmation link.",
         "The link has a deadline; if you do not confirm in time, the place moves on.",
+        "You can withdraw at any time from the email you received."
+      ],
+      "nextWaitlistedByHand": [
+        "You are on the waiting list. The organizers give out the places one at a time: when they can give you one, you get an email with a confirmation link.",
+        "The link has a deadline; if you do not confirm in time, the organizers may give the place to someone else.",
         "You can withdraw at any time from the email you received."
       ],
       "pressFailed": "We could not record the signature. Try again — your link is fine.",
@@ -11907,6 +11925,12 @@
       "minorSignatureMismatchRich": "The minor's signature must be exactly the name they were registered under: <strong>{name}</strong>.",
       "minorNameWrong": "If the minor's name given at registration is wrong, <contact>write to us</contact>: the club corrects it, and you then sign from the same link.",
       "minorNameWrongReply": "If the minor's name given at registration is wrong, reply to the email you received or <contact>write to us</contact>: the club corrects it, and you then sign from the same link.",
+      "typedNameHelpAbove": "You sign with the full name above: <strong>{name}</strong> — type exactly this name. It appears as a signature.",
+      "minorTypedNameHelpAbove": "The minor signs too, with their full name above: <strong>{name}</strong> — type exactly this name. It appears as a signature.",
+      "signatureMismatchAbove": "The signature must be exactly the full name above: {name}.",
+      "signatureMismatchAboveRich": "The signature must be exactly the full name above: <strong>{name}</strong>.",
+      "minorSignatureMismatchAbove": "The minor's signature must be exactly their full name above: {name}.",
+      "minorSignatureMismatchAboveRich": "The minor's signature must be exactly their full name above: <strong>{name}</strong>.",
       "idDocumentTypes": {
         "ID_CARD": "Identity card",
         "PASSPORT": "Passport",
@@ -12041,6 +12065,7 @@
       "registerAgainHelp": "If you change your mind, you can register again from the event page.",
       "registerAgainAction": "See the event",
       "waitHelp": "There is nothing for you to do now. If a place opens up, you will get an email with a confirmation link.",
+      "waitHelpByHand": "There is nothing for you to do now. The organizers give out the places one at a time: when they can give you one, you will get an email with a confirmation link.",
       "CONFIRM_EMAIL": {
         "title": "One step left: confirming your address",
         "body": "This link has already been used, but your registration is still waiting for your email address to be confirmed."
@@ -12084,6 +12109,7 @@
       "doneTitle": "The person is registered",
       "done": "Done. The email with the declaration to sign for this person comes to your address: each person signs their own declaration and gets their own QR code.",
       "doneWaitlist": "The person is on the waiting list. When a place frees up, an email comes to your address.",
+      "doneWaitlistByHand": "The person is on the waiting list. The organizers give out the places one at a time: when they can give them one, an email comes to your address.",
       "alreadyOnAddress": "We did not register them: a person with the same name or the same birth date is already registered with this address. For someone else, send the form again with that person's full name and birth date.",
       "atCap": "We did not register them: one email address may register at most {people} for an event, and this address already has. For one more person, use their own email address. This link still works if a place on the address frees up.",
       "fitnessMissing": "First tick that the person declares their own health when they sign.",
@@ -12171,7 +12197,15 @@
       "saving": "Saving…",
       "saved": "Done, your details are saved.",
       "signatureOpen": "You registered as {name}: sign with exactly this name. For a minor, the parent or guardian signs, with the name typed above.",
-      "guardianTypedAbove": "The parent or guardian signs, with the name typed above in the details to complete. If that name is wrong, correct it there and sign with it."
+      "guardianTypedAbove": "The parent or guardian signs, with the name typed above in the details to complete. If that name is wrong, correct it there and sign with it.",
+      "nameTitle": "Check your name",
+      "nameTitleFor": "Check the name for {name}",
+      "nameCheck": "Check your full name, as on your identity document: you sign the declaration with it, and it is printed on your race number.",
+      "nameLead": "Before you sign, <link>check your full name</link>: it is right above the signature.",
+      "declareLeadName": "Before you sign, <link>check your full name and fill in the details missing</link> from your registration: they are right above the signature.",
+      "signatureOpenName": "Sign with the full name typed above, exactly as it is there. For a minor, the parent or guardian signs, with their name typed above.",
+      "nameTypedAbove": "The name you sign with is the one typed above, in your details: if it is wrong, correct it there and sign with it.",
+      "minorNameTypedAbove": "The minor's name is the one typed above, in their details: if it is wrong, correct it there and sign with it."
     }
   },
   "Devs": {

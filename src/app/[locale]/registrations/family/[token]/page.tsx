@@ -12,7 +12,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
-import { readFamilyEntryLinkPage, readFamilySittingLinkPage } from "@/modules/registrations/token-actions";
+import { readFamilyEntryLinkPage, readFamilySittingLinkPage, spentLinkOffersByItself } from "@/modules/registrations/token-actions";
 import FamilySittingConfirm from "@/modules/registrations/ui/FamilySittingConfirm";
 import DrawIcon from "@mui/icons-material/Draw";
 import Button from "@mui/material/Button";
@@ -76,6 +76,12 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
   }
 
   if (done === "declare" || done === "waitlist") {
+    /*
+      The person now in the line is told who gives the places (§908): while no place reaches the line by itself — «Nu», or
+      «Locurile libere le dau doar eu» — the organizers write when they can give one. The allocator's own rule, read off
+      the event the spent link names (the address's registration there).
+    */
+    const byItself = done === "waitlist" ? await spentLinkOffersByItself(token, ["REGISTER_ANOTHER_PERSON"], new Date()) : true;
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
@@ -87,7 +93,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
         {/* The inbox is not named: that would put the address in the URL (§14.5). It is the one the email came to. */}
         <Stack spacing={2}>
           <Alert severity="success" data-testid="family-confirmed">
-            {done === "declare" ? t("family.done") : t("family.doneWaitlist")}
+            {done === "declare" ? t("family.done") : byItself ? t("family.doneWaitlist") : t("family.doneWaitlistByHand")}
           </Alert>
           {/* Both wait for an email with a link to press (the declaration's, the offer's): §619. */}
           <Alert severity="info" data-testid="spam-hint">

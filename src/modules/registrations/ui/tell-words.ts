@@ -80,7 +80,9 @@ const ENDED: ReadonlySet<RegistrationStatus> = new Set(["CANCELLED", "EXPIRED"])
  * The rest are the backoffice's own lines (`Admin.registrations.tell.*`). Where an email or a public page
  * already words the thing, the key is that text word for word and a unit test keeps each pair equal:
  * `PENDING_EMAIL_CONFIRMATION` is the address email's first line; `WAITLISTED` the waiting-list email's
- * last sentence; `offer` the offer email's subject and its sentence up to the deadline, its `{due}` written as that
+ * last sentence, and `waitlistedByHand` the one its full and resent variants end with while no place reaches the line
+ * by itself (§908) — its variant for a line beside free places (`waitlistByHand`) says it inside a sentence of its own;
+ * `offer` the offer email's subject and its sentence up to the deadline, its `{due}` written as that
  * email writes `holdExpiresAtFormatted` (`formatDeadlineInSentence` inside `confirmationDueMoment`); `bib` the
  * confirmation email's number sentence; `CANCELLED` is `mine.cancelledTitle` and the first sentence of
  * `mine.cancelled`; `holdLapsed` the `DECLARATION_HOLD_EXPIRED` email's sentence without the event's name.
@@ -138,7 +140,10 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
           }),
         );
       }
-      lines.push(ours("WAITLISTED"));
+      // What comes next is the `WAITLIST_JOINED` email's promise for this event (§908), word for word the sentence its
+      // full and resent variants end with: while no place reaches the line by itself (`waitlistAutoOffer`, the
+      // allocator's `offersOnItsOwn` as a column), the organizers' words.
+      lines.push(ours(facts.waitlistAutoOffer ? "WAITLISTED" : "waitlistedByHand"));
       break;
     case "WAITLIST_OFFERED":
       // The first email still queued (§520): its send re-bases the deadline, so the stored one is not the

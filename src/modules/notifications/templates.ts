@@ -2176,6 +2176,12 @@ const T = {
       action: (d: TemplateData) => (d.holdLapsedNext === "register" ? "Înscrie-te din nou" : "Intră pe lista de așteptare"),
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
+    /*
+      Never queued (§331, `domain/never-queued.ts`): an offer's lapse is silent, and the row goes to EXPIRED, not back to
+      the line (AGENTS.md §10.5). So its words are left as they were, not made to follow «Nu» or «Locurile libere le dau
+      doar eu» as every other waiting-list sentence is (§908): «Rămâi pe lista de așteptare» is already untrue of what the
+      allocator does, whatever the settings, and sending it again would be a decision about a lapsed offer, not a wording.
+    */
     waitlistOfferExpired: {
       subject: "Timpul pentru confirmarea locului a expirat",
       body: (d: TemplateData) => [
@@ -3088,6 +3094,7 @@ const T = {
       action: (d: TemplateData) => (d.holdLapsedNext === "register" ? "Register again" : "Join the waiting list"),
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
+    // Never queued, its words left as they were: the Romanian entry above says why (§908).
     waitlistOfferExpired: {
       subject: "The time to confirm your place has expired",
       body: (d: TemplateData) => [

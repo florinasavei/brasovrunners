@@ -18,6 +18,7 @@ import {
   readRegistrationTokenContext,
   readReplacedActionLink,
   readSpentRegistrationLink,
+  spentLinkOffersByItself,
 } from "@/modules/registrations/token-actions";
 import { confirmEmailAction } from "./actions";
 import { DENSITY } from "@/theme/density";
@@ -83,7 +84,15 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
 
   if (done) {
     // One click proved the inbox (§588): with more than one person on it, the page names each and their next step.
-    const people = await readConfirmedOnAddress(token, new Date());
+    const now = new Date();
+    const people = await readConfirmedOnAddress(token, now);
+    /*
+      Whoever is now in the line is told who gives the places (§908): while no place reaches the line by itself — «Nu», or
+      «Locurile libere le dau doar eu» — the organizers write when they can give one, never «when a place frees up». The
+      allocator's own rule, read off the event the link names; only when somebody here waits.
+    */
+    const byItself =
+      done === "waitlist" || people.some((person) => person.status === "WAITLISTED") ? await spentLinkOffersByItself(token, ["VERIFY_REGISTRATION_EMAIL"], now) : true;
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         {/* Every page in this journey opens with an h1, this one included. A page whose only
@@ -102,7 +111,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
         {/* On the waiting list there is no declaration to sign yet, so the page says what is true instead. */}
         {done === "waitlist" && (
           <Alert severity="info" sx={{ mt: 2 }} data-testid="confirm-waitlist">
-            {t("confirm.doneWaitlist")}
+            {byItself ? t("confirm.doneWaitlist") : t("confirm.doneWaitlistByHand")}
           </Alert>
         )}
         {people.length > 1 && (
@@ -111,7 +120,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
             <ul style={{ margin: "4px 0 0", paddingInlineStart: 20 }}>
               {people.map((person, index) => (
                 <li key={index}>
-                  <strong>{person.name}</strong> — {t(`confirm.next.${person.status}`)}
+                  <strong>{person.name}</strong> — {person.status === "WAITLISTED" && !byItself ? t("confirm.nextWaitlistedByHand") : t(`confirm.next.${person.status}`)}
                 </li>
               ))}
             </ul>
