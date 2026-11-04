@@ -302,7 +302,7 @@ describe("BR-REQ-050-02 the page draws the list's own readers, read only, in bot
     const words = text(html);
     expect(words).toContain("Planul locurilor — Crosul Tâmpei");
     expect(words).toContain("Locuri libere acum: 8 din 20");
-    expect(words).toContain("Ocupate 12 din 20 · în afara locurilor 3 · alergători 17 · pe liste 5");
+    expect(words).toContain("Ocupate 12 din 20 · fără loc din capacitate 3 · alergători 17 · pe liste 5");
     expect(words).toContain("Dacă se ocupă toate locurile: kituri 28 · numere de concurs 26");
     expect(words).toContain("Kituri acum, cu toți: 19");
     expect(words).toContain("pe lista de elită: 2");

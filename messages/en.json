@@ -11406,10 +11406,10 @@
       },
       "categories": {
         "title": "By category",
-        "aside": "Taken {occupied} of {capacity} · outside the places {outside} · runners {runners} · on the lists {lists}",
-        "asideUncapped": "Holding a place {occupied} · outside the places {outside} · runners {runners} · on the lists {lists}",
+        "aside": "Taken {occupied} of {capacity} · taking no place {outside} · runners {runners} · on the lists {lists}",
+        "asideUncapped": "Holding a place {occupied} · taking no place {outside} · runners {runners} · on the lists {lists}",
         "inside": "Inside the places",
-        "outside": "Outside the places — they take no place",
+        "outside": "Taking no place — not counted in the capacity",
         "runners": "All the runners",
         "runnersNote": "A registration marked elite is counted once, in its place; each name on the elite list, with no registration, is added. Volunteers are not among the runners.",
         "lists": "On the lists — they hold no place",

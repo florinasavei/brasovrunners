@@ -11406,10 +11406,10 @@
       },
       "categories": {
         "title": "Pe categorii",
-        "aside": "Ocupate {occupied} din {capacity} · în afara locurilor {outside} · alergători {runners} · pe liste {lists}",
-        "asideUncapped": "Cu loc {occupied} · în afara locurilor {outside} · alergători {runners} · pe liste {lists}",
+        "aside": "Ocupate {occupied} din {capacity} · fără loc din capacitate {outside} · alergători {runners} · pe liste {lists}",
+        "asideUncapped": "Cu loc {occupied} · fără loc din capacitate {outside} · alergători {runners} · pe liste {lists}",
         "inside": "În locuri",
-        "outside": "În afara locurilor — nu ocupă loc",
+        "outside": "Fără loc din capacitate — nu ocupă loc",
         "runners": "Alergătorii, toți la un loc",
         "runnersNote": "Un înscris marcat elită e numărat o singură dată, la locul lui; fiecare nume de pe lista de elită, fără înscriere, se adaugă. Voluntarii nu sunt printre alergători.",
         "lists": "Pe liste — nu țin un loc",
