@@ -338,7 +338,8 @@ const VERB_AUDIT = { pay: "shop.order.paid", handOver: "shop.order.handed_over",
  */
 async function moveOrder<T extends Record<string, unknown>>(
   tx: Transaction<T>,
-  input: { actorId: string; orderId: string; verb: OrderVerb; by: OrderActor; ownerId?: string; now: Date },
+  /** `audit`: what the caller adds to the move's audit row — «Trimite emailul» unticked on a payment, `emailSkipped`. */
+  input: { actorId: string; orderId: string; verb: OrderVerb; by: OrderActor; ownerId?: string; now: Date; audit?: Readonly<Record<string, unknown>> },
 ): Promise<{ order: ShopOrder; from: ShopOrderStatus }> {
   // A member's own door names only their own orders: anybody else's is "no such order", never "not yours".
   const owned = (row: Pick<ShopOrder, "memberStaffUserId"> | undefined) =>
@@ -385,7 +386,7 @@ async function moveOrder<T extends Record<string, unknown>>(
     action: VERB_AUDIT[input.verb],
     entityType: "shop_order",
     entityId: order.id,
-    metadata: { from: current.status, to: next, by: input.by, stockReturned: next === "CANCELLED" && current.stockTaken },
+    metadata: { from: current.status, to: next, by: input.by, stockReturned: next === "CANCELLED" && current.stockTaken, ...input.audit },
     now: input.now,
   });
   return { order, from: current.status };
@@ -394,18 +395,22 @@ async function moveOrder<T extends Record<string, unknown>>(
 /**
  * «Marchează plătită», «Marchează predată», «Anulează» — the club's verbs, the Administrator's
  * (`canManageShop`). Marked paid, the member is told («Comanda ta e plătită»), in the language they
- * ordered in, at their account's address — none when the account is gone.
+ * ordered in, at their account's address — none when the account is gone, and none when the shop manager
+ * unticked «Trimite emailul» in the question (`sendEmail: false`; the design «telling the owner about every
+ * email a staff press sends», slice 4), which the payment's audit row records as `emailSkipped`.
  */
 export async function moveOrderByClub<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { actor: Actor; orderId: string; verb: OrderVerb; now?: Date },
+  input: { actor: Actor; orderId: string; verb: OrderVerb; now?: Date; sendEmail?: boolean },
 ): Promise<ShopOrder> {
   if (!canManageShop(input.actor)) throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change an order`);
   if (!isUuid(input.orderId)) throw new DomainError("NOT_FOUND", "no such order");
   const now = input.now ?? new Date();
+  const sendEmail = input.sendEmail !== false;
   return db.transaction(async (tx) => {
-    const { order } = await moveOrder(tx, { actorId: input.actor.id, orderId: input.orderId, verb: input.verb, by: "CLUB", now });
-    if (order.status === "PAID" && order.memberStaffUserId && (await readShopSettings(tx)).emailMembers) {
+    const skipped = !sendEmail && input.verb === "pay";
+    const { order } = await moveOrder(tx, { actorId: input.actor.id, orderId: input.orderId, verb: input.verb, by: "CLUB", now, ...(skipped ? { audit: { emailSkipped: true } } : {}) });
+    if (sendEmail && order.status === "PAID" && order.memberStaffUserId && (await readShopSettings(tx)).emailMembers) {
       const [member] = await tx.select({ email: staffUsers.email }).from(staffUsers).where(eq(staffUsers.id, order.memberStaffUserId)).limit(1);
       if (member) {
         await enqueueEmail(tx, {

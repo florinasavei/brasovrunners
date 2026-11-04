@@ -3,6 +3,7 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { type CountForm, countForm } from "@/i18n/count-form";
 import { isCopiedPerMessage } from "@/modules/notifications/domain/club-notices";
 import { type EmailGroup, type EmailTransport, emailGroupOf, RECOMMENDED_ROAD } from "@/modules/notifications/domain/email-transport";
+import { SEND_EMAIL_FIELD } from "@/shared/forms/send-email";
 import { type ClubCopies, clubCopiesForThisRequest } from "./club-copies-request";
 import { emailRoadsForThisRequest } from "./email-roads-request";
 import type { ConfirmAlso, ConfirmRoad, ConfirmSpec, EmailCount } from "./notice";
@@ -53,7 +54,18 @@ export type MailInput = {
   confirms?: boolean;
   /** What else the press sets off, said after the club's line: the next in line's offer, Zitadel's own email. */
   also?: readonly ConfirmAlso[];
+  /**
+   * «Trimite emailul» (slice 4): the box under the line, ticked as the dialog opens — only on the presses whose
+   * service takes the option (`shared/forms/send-email.ts`). `true` for the usual words and field.
+   */
+  optOut?: MailOptOut;
 };
+
+/**
+ * The box's words, its field and the bold line while it is unticked, when not the usual ones: «Trimite invitația acum» on
+ * a colleague's invitation, «Anunță abonații newsletterului» on a publication. Each defaults to the builder's own.
+ */
+export type MailOptOut = true | { label?: string; field?: string; offLine?: string };
 
 /**
  * A count the browser makes at the press (`mailCount`): the ticks of the bulk cancel, each ticked value adding what
@@ -66,10 +78,12 @@ export type MailCountInput = {
   type: EmailMessageType;
   audience: MailAudience;
   also?: readonly ConfirmAlso[];
+  /** «Trimite emailul» for the whole batch (slice 4): one box, the same answer for every person ticked. */
+  optOut?: MailOptOut;
 };
 
 /** What the builder hands a dialog: spread into `confirm={{ … }}` (`ActionForm`) or `mail={…}` (`ConfirmSubmitButton`). */
-export type ConfirmMail = Pick<ConfirmSpec, "email" | "emailCount" | "also" | "road">;
+export type ConfirmMail = Pick<ConfirmSpec, "email" | "emailCount" | "also" | "road" | "emailOptOut">;
 
 /** The bulk sends whose club copy is one per send, not one per email (§419, §445): the club line counts the Bcc once. */
 const COPIED_ONCE_PER_SEND: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(["ORGANIZER_MESSAGE", "EVENT_UPDATE_NOTICE", "NEWSLETTER", "NEW_EVENT_ALERT"]);
@@ -131,13 +145,24 @@ export async function confirmWords() {
     const group = emailGroupOf(type, false);
     return or === undefined || emailGroupOf(or, false) === group ? { road: road(group) } : {};
   };
-  /** The club's quiet line: how many emails, never which mailboxes; «cel mult» when the outcome decides. */
-  const clubLine = (count: number, upTo: boolean): ConfirmAlso[] => (count > 0 ? [{ text: counted(upTo ? "confirm.mail.clubUpTo" : "confirm.mail.club", count) }] : []);
-  const testLine: ConfirmAlso = { text: t("confirm.mail.test") };
+  /** The club's quiet line: how many emails, never which mailboxes; «cel mult» when the outcome decides. Unsaid with the email unticked. */
+  const clubLine = (count: number, upTo: boolean): ConfirmAlso[] =>
+    count > 0 ? [{ text: counted(upTo ? "confirm.mail.clubUpTo" : "confirm.mail.club", count), withEmail: true }] : [];
+  const testLine: ConfirmAlso = { text: t("confirm.mail.test"), withEmail: true };
+  /**
+   * «Trimite emailul» (slice 4): the box's words and field, and the bold line while it is unticked — «Nu pleacă niciun
+   * email către Ana Pop.» for a person, «Nu pleacă niciun email „…”.» for a count.
+   */
+  const optOutOf = (optOut: MailOptOut | undefined, offLine: string): Pick<ConfirmSpec, "emailOptOut"> => {
+    if (!optOut) return {};
+    const given = optOut === true ? {} : optOut;
+    return { emailOptOut: { field: given.field ?? SEND_EMAIL_FIELD, label: given.label ?? t("confirm.mail.optOut"), offLine: given.offLine ?? offLine } };
+  };
 
-  const mail = ({ to, type, or, test, confirms, also }: MailInput): ConfirmMail => {
+  const mail = ({ to, type, or, test, confirms, also, optOut }: MailInput): ConfirmMail => {
     const what = typeName(type);
     const extra = also ?? [];
+    const noneOfType = () => t("confirm.mail.noneType", { type: what });
     if (typeof to === "string" || "name" in to) {
       const values: Record<string, string> = typeof to === "string" ? { name: to, type: what } : { name: to.name, address: to.address, type: what };
       if (or !== undefined) values.alt = typeName(or);
@@ -146,7 +171,12 @@ export async function confirmWords() {
       // (`or` — the second never a confirmation), the larger count, said «cel mult» when the two differ.
       const first = copiesEach(type, copies) + (confirms ? copies.archive + copies.notices : 0);
       const second = or !== undefined ? copiesEach(or, copies) : first;
-      return { email, ...roadOf(type, or), also: [...(test ? [testLine] : clubLine(Math.max(first, second), first !== second)), ...extra] };
+      return {
+        email,
+        ...roadOf(type, or),
+        also: [...(test ? [testLine] : clubLine(Math.max(first, second), first !== second)), ...extra],
+        ...optOutOf(optOut, t("confirm.mail.none", { name: values.name })),
+      };
     }
     if ("upToLinesOf" in to) {
       const emailCount: EmailCount = {
@@ -160,7 +190,7 @@ export async function confirmWords() {
         club: { each: copiesEach(type, copies), once: COPIED_ONCE_PER_SEND.has(type) ? copies.bcc : 0, forms: forms("confirm.mail.club") },
         locale,
       };
-      return { emailCount, ...roadOf(type), ...(extra.length > 0 ? { also: extra } : {}) };
+      return { emailCount, ...roadOf(type), ...(extra.length > 0 ? { also: extra } : {}), ...optOutOf(optOut, noneOfType()) };
     }
     // A count read on the server: exactly that many, or — `upTo` — at most that many, as the press's outcome decides.
     const upTo = "upTo" in to;
@@ -168,10 +198,10 @@ export async function confirmWords() {
     if (count <= 0) return extra.length > 0 ? { also: extra } : {};
     const email = t(`confirm.mail.${upTo ? "upTo" : "toMany"}.${countForm(count, locale)}`, { count, type: what, audience: t(`confirm.mail.audience.${to.audience}`) });
     const club = COPIED_ONCE_PER_SEND.has(type) ? copies.bcc : count * copiesEach(type, copies);
-    return { email, ...roadOf(type), also: [...(test ? [testLine] : clubLine(club, upTo)), ...extra] };
+    return { email, ...roadOf(type), also: [...(test ? [testLine] : clubLine(club, upTo)), ...extra], ...optOutOf(optOut, noneOfType()) };
   };
 
-  const mailCount = ({ field, counts, base, type, audience, also }: MailCountInput): ConfirmMail & { emailCount: EmailCount } => ({
+  const mailCount = ({ field, counts, base, type, audience, also, optOut }: MailCountInput): ConfirmMail & { emailCount: EmailCount } => ({
     emailCount: {
       field,
       base: base ?? 0,
@@ -184,12 +214,15 @@ export async function confirmWords() {
     },
     ...roadOf(type),
     ...(also && also.length > 0 ? { also } : {}),
+    ...optOutOf(optOut, t("confirm.mail.noneType", { type: typeName(type) })),
   });
 
   const noMail = (name: string, also?: readonly ConfirmAlso[]): ConfirmMail => ({ email: t("confirm.mail.none", { name }), ...(also && also.length > 0 ? { also } : {}) });
 
   return {
     cancel: t("confirm.cancel"),
+    /** «Trimite emailul»: the box's usual words, for a `MailLine` beside a button (slice 4). */
+    optOutLabel: t("confirm.mail.optOut"),
     queue: (count: number) => t(`confirm.emailMessages.${countForm(count, locale)}`, { count }),
     road,
     mail,
@@ -205,6 +238,12 @@ export async function confirmWords() {
     nextInLineMaybe: (many = false): ConfirmAlso => ({ text: t(many ? "confirm.mail.nextInLineMaybeMany" : "confirm.mail.nextInLineMaybe") }),
     /** A quiet line in the builder's voice, for what a press sends besides its email: Zitadel's own, the job's later. */
     line: (key: MailLineKey, values?: Record<string, string | number>): ConfirmAlso => ({ text: t(`confirm.mail.${key}`, values) }),
+    /**
+     * «Trimite emailul» on a question whose email is a quieter line rather than the bold one (slice 4): a publication,
+     * whose new-event alert the job sends later — the box, and the bold line said while it is unticked. The lines that
+     * belong to the email are marked `withEmail` by the page.
+     */
+    optOut: (given: Exclude<MailOptOut, true>, offLine: string): Pick<ConfirmSpec, "emailOptOut"> => optOutOf(given, offLine),
   };
 }
 
@@ -225,6 +264,9 @@ export const MAIL_LINE_KEYS = [
   "windowResend",
   "jobPass",
   "andType",
+  // Slice 4, «Trimite emailul»: why a refusal offers no box, and the window's resend left unsent.
+  "refusalTells",
+  "windowSkipped",
 ] as const;
 export type MailLineKey = (typeof MAIL_LINE_KEYS)[number];
 

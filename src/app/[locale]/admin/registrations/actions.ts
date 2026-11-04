@@ -48,6 +48,7 @@ import type { StaffPlaceOptions } from "@/modules/registrations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
+import { mailSkippedOf, sendEmailOf } from "@/shared/forms/send-email";
 import { wholeDigits } from "@/shared/forms/whole-digits";
 import { normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
 import type { SexChoice } from "@/modules/registrations/domain/sex";
@@ -297,6 +298,8 @@ export async function setBibNumberAction(_previous: FormOutcome | null, form: Fo
   return inEmailPress("registrations.setBib", async (press) => {
     const locale = toLocale(form.get("uiLocale"));
     const registrationId = text(form, "registrationId");
+    // «Trimite emailul» in the question (slice 4): unticked, the number is given and the runner is not emailed it.
+    const sendEmail = sendEmailOf(form);
 
     try {
       const actor = await requireStaff();
@@ -304,13 +307,13 @@ export async function setBibNumberAction(_previous: FormOutcome | null, form: Fo
       // An empty field clears the number; anything else must be digits only (`wholeDigits`, §553),
       // and the service checks the range — `Number("")` would be 0 and a lie.
       const bibNumber = wholeDigits(text(form, "bibNumber"));
-      await setBibNumberByStaff(getDb(), actor, registrationId, bibNumber, new Date());
+      await setBibNumberByStaff(getDb(), actor, registrationId, bibNumber, new Date(), { sendEmail });
     } catch (error) {
       return refused(error, form, {
         fieldNames: (failure) => (failure.code === "VALIDATION_ERROR" || failure.code === "CONFLICT" ? ["bibNumber"] : failure.fields),
       });
     }
-    return backToDesk(form, locale, registrationId, { saved: "bibSet" });
+    return backToDesk(form, locale, registrationId, { saved: "bibSet", ...mailSkippedOf(sendEmail) });
   });
 }
 
@@ -636,23 +639,21 @@ export async function cancelRegistrationAction(_previous: FormOutcome | null, fo
     const locale = toLocale(form.get("uiLocale"));
     const registrationId = text(form, "registrationId");
     const byOrganizer = form.get("refusedByOrganizer") === "on";
+    // «Trimite emailul» in the question (slice 4): never offered with the club's refusal, which the service refuses without it.
+    const sendEmail = sendEmailOf(form);
 
     try {
       const actor = await requireStaffCapability(canManageRegistrations);
       press.by(actor.id);
-      await cancelRegistrationByStaff(
-        getDb(),
-        actor,
-        registrationId,
-        text(form, "reason"),
-        new Date(),
-        byOrganizer ? { kind: "REFUSED_BY_ORGANIZER" } : {},
-      );
+      await cancelRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date(), {
+        ...(byOrganizer ? { kind: "REFUSED_BY_ORGANIZER" as const } : {}),
+        sendEmail,
+      });
     } catch (error) {
       return refused(error, form);
     }
 
-    return backTo(detailPath(locale, registrationId), { saved: "registrationCancelled" });
+    return backTo(detailPath(locale, registrationId), { saved: "registrationCancelled", ...mailSkippedOf(sendEmail) });
   });
 }
 
@@ -799,10 +800,12 @@ export async function bulkCancelRegistrationsAction(form: FormData): Promise<voi
     let test = 0;
     let failed = 0;
     let voided: number[] = [];
+    // The batch's one «Trimite emailul» (slice 4): unticked, nobody ticked is emailed; every freed place is still offered.
+    const sendEmail = sendEmailOf(form);
     try {
       const actor = await requireStaffCapability(canManageRegistrations);
       press.by(actor.id);
-      ({ cancelled, test, failed, voided } = await bulkCancelRegistrationsByStaff(getDb(), actor, ids, reason, new Date()));
+      ({ cancelled, test, failed, voided } = await bulkCancelRegistrationsByStaff(getDb(), actor, ids, reason, new Date(), { sendEmail }));
     } catch (error) {
       return backTo(returnTo, outcomeOf(error));
     }
@@ -811,9 +814,9 @@ export async function bulkCancelRegistrationsAction(form: FormData): Promise<voi
     // which is all the page needs to say which bibs come out of the pile.
     const separator = returnTo.includes("?") ? "&" : "?";
     const voidedQuery = voided.length > 0 ? `&voided=${voided.join(",")}` : "";
-    // The real rows only (§30): each was cancelled and sent its email, the number the dialog stated.
+    // The real rows only (§30): each was cancelled and sent its email — unless the box was unticked — the number the dialog stated.
     const real = cancelled - test;
-    await flashOutcome({ saved: "registrationsCancelled", cancelled: String(real), failed: String(failed), test: String(test) });
+    await flashOutcome({ saved: "registrationsCancelled", cancelled: String(real), failed: String(failed), test: String(test), ...mailSkippedOf(sendEmail) });
     redirect(
       `${returnTo}${separator}saved=registrationsCancelled&cancelled=${real}&failed=${failed}&test=${test}${voidedQuery}#admin-alert`,
     );

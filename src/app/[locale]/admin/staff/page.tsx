@@ -102,7 +102,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const offered = assignableRoles(actor.role);
 
   const current = await searchParams;
-  const { error, saved, invite, reason, account, count, failed, retried, report } = current;
+  const { error, saved, invite, reason, account, count, failed, retried, report, mailSkipped } = current;
   /** Whichever of the three account verbs was pressed (§171) — they share their four answers. */
   const accountVerb = saved === "passwordReset" || saved === "accountDeactivated" || saved === "accountReactivated";
   // Whether "Add" also creates the Zitadel account and sends the invitation (§123).
@@ -404,6 +404,12 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {saved === "invited" && invite === "invited" && <Alert severity="success">{t("staff.inviteSent")}</Alert>}
         {saved === "invited" && invite === "exists" && <Alert severity="success">{t("staff.inviteExists")}</Alert>}
         {saved === "invited" && invite === "unconfigured" && <Alert severity="success">{t("staff.inviteManual")}</Alert>}
+        {/* Added with «Trimite invitația acum» unticked (slice 4): nobody was written to and Zitadel was not asked. */}
+        {(saved === "invited" || saved === "membersInvited") && mailSkipped === "1" && (
+          <Alert severity="info" data-testid="staff-invite-not-sent">
+            {t("staff.inviteNotSent")}
+          </Alert>
+        )}
         {/* Two different failures, and they were wearing one sentence (§170): adding says the
             row is on the list and the account was refused; resending says the row is on the
             list and there is no account to send to. "A refuzat să creeze contul" under a
@@ -523,7 +529,9 @@ export default async function StaffPage({ params, searchParams }: Props) {
             ...words.mail({
               to: { name: "{displayName}", address: "{email}" },
               type: kind === "MEMBER" ? "MEMBER_INVITATION" : "STAFF_INVITATION",
-              also: invitesSend ? [words.line("zitadel")] : [],
+              also: invitesSend ? [{ ...words.line("zitadel"), withEmail: true }] : [],
+              // «Trimite invitația acum» (slice 4): unticked, the person is added and told nothing — Zitadel is not asked either.
+              optOut: { label: t("staff.inviteOptOut"), offLine: t("staff.inviteOptOutOff", { name: "{displayName}" }) },
             }),
             fillFrom: ["displayName", "email"],
             confirmLabel: t("staff.invite"),
@@ -636,7 +644,9 @@ export default async function StaffPage({ params, searchParams }: Props) {
             ...words.mail({
               to: { upToLinesOf: "members", audience: "memberAddresses" },
               type: "MEMBER_INVITATION",
-              also: invitesSend ? [words.line("zitadelEach"), words.line("zitadelAgain")] : [],
+              also: invitesSend ? [{ ...words.line("zitadelEach"), withEmail: true }, { ...words.line("zitadelAgain"), withEmail: true }] : [],
+              // «Trimite invitațiile acum» (slice 4): unticked, the members are added and nobody is written to.
+              optOut: { label: t("staff.membersOptOut"), offLine: t("staff.membersOptOutOff") },
             }),
             confirmLabel: t("staff.membersInvite"),
             cancelLabel: words.cancel,

@@ -261,14 +261,23 @@ export async function moveShopOrderAction(_previous: FormOutcome | null, form: F
     const posted = text(form, "verb");
     const verb: OrderVerb = posted === "pay" ? "pay" : posted === "handOver" ? "handOver" : "cancel";
     const orderId = text(form, "orderId");
-    let outcome: { error?: string; saved?: string };
+    // «Trimite emailul» in «Marchează plătită»'s question (slice 4); the other two verbs offer none and send nothing.
+    const sendEmail = sendEmailOf(form);
+    let outcome: { error?: string; saved?: string; mailSkipped?: "1" };
     try {
       const actor = await requireStaffCapability(canManageShop);
       press.by(actor.id);
-      await moveOrderByClub(getDb(), { actor, orderId, verb });
+      await moveOrderByClub(getDb(), { actor, orderId, verb, sendEmail });
       // The words follow the switch (§704): off, the member was told nothing, and the banner says so.
       const emailed = verb === "pay" ? (await readShopSettings(getDb())).emailMembers : true;
-      outcome = verb === "pay" ? { saved: emailed ? "shopOrderPaid" : "shopOrderPaidNoEmail" } : verb === "handOver" ? { saved: "shopOrderHandedOver" } : { saved: "shopOrderCancelled" };
+      outcome =
+        verb === "pay"
+          ? emailed
+            ? { saved: "shopOrderPaid", ...mailSkippedOf(sendEmail) }
+            : { saved: "shopOrderPaidNoEmail" }
+          : verb === "handOver"
+            ? { saved: "shopOrderHandedOver" }
+            : { saved: "shopOrderCancelled" };
     } catch (error) {
       outcome = outcomeOf(error);
     }

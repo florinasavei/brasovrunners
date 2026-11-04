@@ -223,7 +223,13 @@ export function VolunteerStateForm({
           ariaLabel={named}
           title={t("volunteers.reopenTitle", { name: shortText(person.name) })}
           body={t("volunteers.reopenBody", { name: shortText(person.name) })}
-          mail={words.mail({ to: { name: person.name, address: person.email }, type: "VOLUNTEER_ROLE_ASSIGNED", also: [words.line("rolesHeld", { minutes: ROLE_EMAIL_SETTLE_MINUTES })] })}
+          // «Trimite emailul» (slice 4): a person reopened may be told their roles by the organizers instead.
+          mail={words.mail({
+            to: { name: person.name, address: person.email },
+            type: "VOLUNTEER_ROLE_ASSIGNED",
+            also: [{ ...words.line("rolesHeld", { minutes: ROLE_EMAIL_SETTLE_MINUTES }), withEmail: true }],
+            optOut: true,
+          })}
           confirmLabel={label}
           cancelLabel={words.cancel}
           size="medium"
@@ -690,9 +696,15 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
               title: t("volunteers.guardian.paperTitle", { name: shortText(person.name) }),
               body: t("volunteers.guardian.paperBody", { name: shortText(person.name) }),
               // The volunteer's second copy of their agreement, now with the parent's consent — only once they accepted their own,
-              // and only to an address (`guardian.ts#queueVolunteerCopy`); the parent is sent nothing.
+              // and only to an address (`guardian.ts#queueVolunteerCopy`); the parent is sent nothing. A second copy, so it may
+              // stay unsent (slice 4): the first, of what the volunteer signed, reached them when they accepted.
               ...(person.agreementAcceptedAt !== null && person.email !== null
-                ? words.mail({ to: { name: person.name, address: person.email }, type: "VOLUNTEER_AGREEMENT_ACCEPTED", also: [words.line("guardianCopy")] })
+                ? words.mail({
+                    to: { name: person.name, address: person.email },
+                    type: "VOLUNTEER_AGREEMENT_ACCEPTED",
+                    also: [{ ...words.line("guardianCopy"), withEmail: true }],
+                    optOut: true,
+                  })
                 : words.noMail(person.name, [words.line("guardianNone")])),
               confirmLabel: t("volunteers.guardian.paper"),
               cancelLabel: words.cancel,
@@ -729,6 +741,10 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
    * of these presses emails the person «Rolul tău de voluntar», held a few minutes for the next press — so the block says it
    * once, beside the buttons, naming the person and the address (`MailLine`), rather than a question before each of a row of
    * quick presses. A person with no address is sent nothing (§865), and the line says that instead.
+   *
+   * **One form, one «Trimite emailul»** (slice 4): the block is one form, so the line's box reaches every press of it — each
+   * button posts the role it names (`roleId`), «Ia-i rolul …» through its own action (`formAction`), and «Dă-i alt rol» the
+   * select's (`otherRoleId`).
    */
   const rolesBlock = (person: VolunteerItem) => {
     const given = rolesOf(person).assigned;
@@ -740,7 +756,10 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
     const some = held.size > 0;
     const pressable = person.state !== "CANCELLED";
     return (
-      <Box data-testid="volunteer-roles">
+      // A cancelled person's block is the same form with no button in it: the chips alone, nothing to post.
+      <Box component="form" action={assignVolunteerAction} data-testid="volunteer-roles">
+        {hidden}
+        <input type="hidden" name="volunteerId" value={person.id} />
         {given.length > 0 && (
           <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.5, mt: 0.5 }} data-testid="volunteer-given">
             <Typography component="span" variant="body2" color="text.secondary">
@@ -750,19 +769,17 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
               <Stack key={role.id} direction="row" sx={{ alignItems: "center", gap: 0.25 }}>
                 <StatusChip glyph="given" variant="outlined" label={labelOf(role)} testId="volunteer-given-role" />
                 {pressable && (
-                  <Box component="form" action={unassignVolunteerAction} data-testid="volunteer-unassign-form">
-                    {hidden}
-                    <input type="hidden" name="volunteerId" value={person.id} />
-                    <input type="hidden" name="roleId" value={role.id} />
-                    <GlyphSubmitButton
-                      icon="cancel"
-                      label={t("volunteers.assign.remove", { role: labelOf(role) })}
-                      pendingLabel={t("volunteers.assign.remove", { role: labelOf(role) })}
-                      ariaLabel={`${t("volunteers.assign.remove", { role: labelOf(role) })}: ${shortText(person.name)}`}
-                      variant="text"
-                      size="small"
-                    />
-                  </Box>
+                  <GlyphSubmitButton
+                    formAction={unassignVolunteerAction}
+                    name="roleId"
+                    value={role.id}
+                    icon="cancel"
+                    label={t("volunteers.assign.remove", { role: labelOf(role) })}
+                    pendingLabel={t("volunteers.assign.remove", { role: labelOf(role) })}
+                    ariaLabel={`${t("volunteers.assign.remove", { role: labelOf(role) })}: ${shortText(person.name)}`}
+                    variant="text"
+                    size="small"
+                  />
                 )}
               </Stack>
             ))}
@@ -773,26 +790,22 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
             {quick.map((role) => {
               const label = t(some ? "volunteers.assign.alsoButton" : "volunteers.assign.button", { role: roleStanding(role) });
               return (
-                <Box component="form" action={assignVolunteerAction} key={role.id} data-testid="volunteer-assign-form">
-                  {hidden}
-                  <input type="hidden" name="volunteerId" value={person.id} />
-                  <input type="hidden" name="roleId" value={role.id} />
-                  <GlyphSubmitButton
-                    icon="role"
-                    label={label}
-                    pendingLabel={label}
-                    ariaLabel={`${label}: ${shortText(person.name)}`}
-                    variant="outlined"
-                  />
-                </Box>
+                <GlyphSubmitButton
+                  key={role.id}
+                  name="roleId"
+                  value={role.id}
+                  icon="role"
+                  label={label}
+                  pendingLabel={label}
+                  ariaLabel={`${label}: ${shortText(person.name)}`}
+                  variant="outlined"
+                />
               );
             })}
             {others.length > 0 && (
-              <Box component="form" action={assignVolunteerAction} sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }} data-testid="volunteer-assign-other">
-                {hidden}
-                <input type="hidden" name="volunteerId" value={person.id} />
+              <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }} data-testid="volunteer-assign-other">
                 <TextField
-                  name="roleId"
+                  name="otherRoleId"
                   select
                   label={t("volunteers.assign.other")}
                   defaultValue={others[0]?.id ?? ""}
@@ -817,7 +830,10 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
                     );
                   })}
                 </TextField>
+                {/* No role of its own on the button (`roleId` empty): the action takes the select's, `otherRoleId`. */}
                 <GlyphSubmitButton
+                  name="roleId"
+                  value=""
                   icon="role"
                   label={t(some ? "volunteers.assign.alsoOtherSubmit" : "volunteers.assign.otherSubmit")}
                   pendingLabel={t(some ? "volunteers.assign.alsoOtherSubmit" : "volunteers.assign.otherSubmit")}
@@ -836,6 +852,8 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
                   ? t("mailLine.roles", { name: person.name, email: person.email, minutes: String(ROLE_EMAIL_SETTLE_MINUTES) })
                   : t("mailLine.rolesNoAddress", { name: person.name })
               }
+              // «Trimite emailul» for every press of the block (slice 4) — none for a person with no address, who is sent nothing.
+              {...(person.email !== null ? { optOut: { label: words.optOutLabel } } : {})}
               data-testid="volunteer-roles-mail"
             />
           </Box>
@@ -1018,6 +1036,8 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
                       ? t("mailLine.volunteerEditCancelled", { name: person.name })
                       : t("mailLine.volunteerEdit", { name: person.name, minutes: String(ROLE_EMAIL_SETTLE_MINUTES) })
                   }
+                  // «Trimite emailul» (slice 4): a save that changes the roles or the address may leave the person untold.
+                  {...(person.state !== "CANCELLED" ? { optOut: { label: words.optOutLabel } } : {})}
                   data-testid="volunteer-edit-mail"
                 />
               </Box>

@@ -1067,7 +1067,8 @@ export default async function VolunteersCard({
               <VolunteerPersonFields person={null} context={personContext} />
               {/* What the add may email (the design «telling the owner about every email a staff press sends», slice 3): the roles given, to the address typed. */}
               <Box sx={{ mt: 1.5 }}>
-                <MailLine text={t("mailLine.volunteerAdd", { minutes: String(ROLE_EMAIL_SETTLE_MINUTES) })} data-testid="volunteer-add-mail" />
+                {/* «Trimite emailul» (slice 4): a person entered with roles may be told them later, by the organizers. */}
+                <MailLine text={t("mailLine.volunteerAdd", { minutes: String(ROLE_EMAIL_SETTLE_MINUTES) })} optOut={{ label: words.optOutLabel }} data-testid="volunteer-add-mail" />
               </Box>
               <Box sx={{ mt: 1.5 }}>
                 <GlyphSubmitButton label={t("volunteers.person.add")} pendingLabel={t("volunteers.person.adding")} icon="addPerson" />

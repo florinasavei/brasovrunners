@@ -98,7 +98,8 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
   };
 
   // Two sentences — the act and what it emailed — are read longer, as the translate press's are.
-  const autoHideOf = (notice: FormNotice): number | undefined => notice.autoHideMs ?? (notice.values?.mail ? LONG_TOAST_AUTO_HIDE_MS : undefined);
+  const autoHideOf = (notice: FormNotice): number | undefined =>
+    notice.autoHideMs ?? (notice.values?.mail || notice.values?.mailSkipped || notice.values?.mailAlert ? LONG_TOAST_AUTO_HIDE_MS : undefined);
 
   const current = queue.current;
 

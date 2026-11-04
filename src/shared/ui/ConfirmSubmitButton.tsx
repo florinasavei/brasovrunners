@@ -4,7 +4,7 @@ import Button from "@mui/material/Button";
 import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
-import { type ConfirmSpec, resolveAlso, resolveEmailCount } from "@/shared/feedback/notice";
+import { type ConfirmSpec, emailOptOutAnswer, resolveAlso, resolveEmailCount } from "@/shared/feedback/notice";
 import { ACTION_ICONS, type ActionIconName } from "./action-icons";
 
 type Props = {
@@ -17,9 +17,11 @@ type Props = {
    * The email the press sends, named before it, as the one builder words it (`confirmWords().mail`, `mailCount`,
    * `noMail`; the design «telling the owner about every email a staff press sends», slice 3): the email line, its road
    * and the quieter lines — the club's count, the next in line's offer. A count made from the ticks at the press
-   * (`mailCount`: the bulk cancel's ticks exist only in the browser) is summed when the dialog opens.
+   * (`mailCount`: the bulk cancel's ticks exist only in the browser) is summed when the dialog opens. With
+   * «Trimite emailul» (`emailOptOut`, slice 4) the button draws the box's hidden field beside itself, `on`, and the
+   * dialog's answer writes `on` or `off` into it before the form is sent.
    */
-  mail?: Pick<ConfirmSpec, "email" | "emailCount" | "also" | "road">;
+  mail?: Pick<ConfirmSpec, "email" | "emailCount" | "also" | "road" | "emailOptOut">;
   /** The button's accessible name where a list repeats its words on every row: «Trimite linkul: Ana Pop». */
   ariaLabel?: string;
   color?: "primary" | "error" | "warning";
@@ -89,6 +91,8 @@ export default function ConfirmSubmitButton({
 }: Props) {
   const [open, setOpen] = useState<ConfirmSpec | null>(null);
   const anchor = useRef<HTMLButtonElement>(null);
+  // «Trimite emailul»'s field (slice 4): `on` as drawn and without JavaScript; the dialog's answer sets it.
+  const optOut = useRef<HTMLInputElement>(null);
   const Icon = ACTION_ICONS[icon];
   const spec: ConfirmSpec = { title, body, confirmLabel, cancelLabel, ...mail, destructive: color === "error" };
   // The parent form's status: meaningful only for a button inside its form (not one tied by `form=`).
@@ -130,14 +134,17 @@ export default function ConfirmSubmitButton({
       >
         {pending ? pendingLabel : label}
       </Button>
+      {mail?.emailOptOut && <input ref={optOut} type="hidden" name={mail.emailOptOut.field} defaultValue="on" form={form} />}
 
       {open && (
         <ConfirmDialog
           spec={open}
           open
           onCancel={() => setOpen(null)}
-          onConfirm={() => {
+          onConfirm={(given) => {
             setOpen(null);
+            // The box's answer, or `on` again for a question that counted nobody and so offered no box.
+            if (optOut.current) optOut.current.value = emailOptOutAnswer(open, given.emailOff)?.value ?? "on";
             // `requestSubmit` rather than `submit()`: it runs the form's own validation and
             // fires the submit event React's Server Action handler is listening for. The
             // plain `submit()` bypasses both and posts nothing useful.

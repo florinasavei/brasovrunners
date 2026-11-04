@@ -62,8 +62,10 @@ export async function flashOutcome(outcome: Readonly<Record<string, string | num
   } catch {
     return;
   }
-  // Zitadel's own email (§123): its answer rides on the outcome of an invitation to the team.
-  const told = await withPressMail(notice, { zitadel: outcome.invite === "invited" });
+  // Zitadel's own email (§123): its answer rides on the outcome of an invitation to the team. What the press chose not
+  // to send (slice 4): `mailSkipped=1` when «Trimite emailul» was unticked, `alert` for a publication's new-event alert.
+  const alert = outcome.alert === "later" || outcome.alert === "skipped" ? outcome.alert : undefined;
+  const told = await withPressMail(notice, { zitadel: outcome.invite === "invited", skipped: outcome.mailSkipped === "1", alert });
   if (told) await flash(told);
 }
 
@@ -81,23 +83,32 @@ export async function flashOutcome(outcome: Readonly<Record<string, string | num
  * A Zitadel failure on an invitation (`PROVIDER_FAILED_TOASTS`) is toasted only for the club's emails that still left
  * (null otherwise: the banner alone says why), never as a green tick. The toast is a courtesy: a read that fails falls
  * back to the plain notice. Exported for the presses that flash or answer with a notice themselves.
+ *
+ * What the press chose not to send is said whatever it queued (slice 4): `skipped` — «Trimite emailul» unticked, the
+ * person was sent nothing (`mailSkipped`) — and a publication's new-event alert, left to the job's next pass or not
+ * sent at all (`mailAlert`).
  */
-export async function withPressMail(notice: FormNotice, extras: { zitadel?: boolean } = {}): Promise<FormNotice | null> {
+export async function withPressMail(
+  notice: FormNotice,
+  extras: { zitadel?: boolean; skipped?: boolean; alert?: "later" | "skipped" } = {},
+): Promise<FormNotice | null> {
   const road = (await emailRoadChoice())?.road ?? null;
   if (road) await consumeEmailRoadChoice();
   const onlyWithMail = PROVIDER_FAILED_TOASTS.has(notice.key);
+  const chosen: Record<string, string> = { ...(extras.skipped ? { mailSkipped: "1" } : {}), ...(extras.alert ? { mailAlert: extras.alert } : {}) };
+  const told = (base: FormNotice): FormNotice => (Object.keys(chosen).length > 0 ? { ...base, values: { ...base.values, ...chosen } } : base);
   const plain = road ? { ...notice, values: { ...notice.values, via: road } } : notice;
   const press = currentEmailPress();
-  if (!press) return onlyWithMail ? null : plain;
+  if (!press) return onlyWithMail ? null : told(plain);
   let mail: Record<string, string>;
   try {
     mail = await pressMailValues(getDb(), press, { road, zitadel: extras.zitadel === true }, new Date());
   } catch (error) {
     console.error("[flash] the press's emails could not be read for its toast", error);
-    return onlyWithMail ? null : plain;
+    return onlyWithMail ? null : told(plain);
   }
-  if (!mail.mail) return onlyWithMail ? null : notice;
-  return { ...notice, values: { ...notice.values, ...mail } };
+  if (!mail.mail) return onlyWithMail ? null : told(notice);
+  return told({ ...notice, values: { ...notice.values, ...mail } });
 }
 
 /**

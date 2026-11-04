@@ -791,7 +791,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                         confirm={{
                           title: tr("confirm.setBibTitle"),
                           body: tr("confirm.setBibBody"),
-                          ...words.mail({ to: registration.registeredName, type: "BIB_ASSIGNED", test: registration.kind === "TEST" }),
+                          ...words.mail({ to: registration.registeredName, type: "BIB_ASSIGNED", test: registration.kind === "TEST", optOut: true }),
                           confirmLabel: tr("desk.saveBib"),
                           cancelLabel: words.cancel,
                         }}
@@ -1616,7 +1616,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <ActionForm
             action={cancelRegistrationAction}
             messages={refusal}
-            confirm={{
+            confirm={(
+              [
+                // The club's refusal under the terms (§618) always tells the person its ground: no «Trimite emailul» there, and a line says why.
+                { when: [{ field: "refusedByOrganizer", equals: "on" }], optOut: false },
+                // Any other cancellation (slice 4): the person's email may stay unsent; the freed place's offer still goes.
+                { when: [], optOut: true },
+              ] as const
+            ).map(({ when, optOut }) => ({
+              when,
               title: tr("confirm.cancelRegistrationTitle"),
               // The printed bib is named before the press (§311), not discovered in the pile.
               body:
@@ -1628,12 +1636,16 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 to: registration.registeredName,
                 type: "REGISTRATION_CANCELLED",
                 test: registration.kind === "TEST",
-                also: holdsAPlace(registration.status) && !registration.outsideCapacity ? [words.nextInLineMaybe()] : [],
+                also: [
+                  ...(holdsAPlace(registration.status) && !registration.outsideCapacity ? [words.nextInLineMaybe()] : []),
+                  ...(optOut ? [] : [words.line("refusalTells")]),
+                ],
+                optOut,
               }),
               confirmLabel: tr("registrations.cancelAction"),
               cancelLabel: words.cancel,
               destructive: true,
-            }}
+            }))}
             scope="cancel"
             data-testid="cancel-registration-form"
           >

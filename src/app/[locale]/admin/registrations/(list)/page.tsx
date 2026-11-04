@@ -2116,6 +2116,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                           type: "REGISTRATION_CANCELLED",
                           test: row.kind === "TEST",
                           also: holdsAPlace(row.status) && !row.outsideCapacity ? [words.nextInLineMaybe()] : [],
+                          // «Trimite emailul» (slice 4): the row menu has no refusal box, so the box is always offered.
+                          optOut: true,
                         }),
                         confirmLabel: t("registrations.cancel"),
                         cancelLabel: words.cancel,
@@ -2248,7 +2250,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   icon="cancel"
                   title={t("confirm.bulkCancelTitle")}
                   body={t("confirm.bulkCancelBody")}
-                  mail={words.mailCount({ ...bulkCancelEmailCount, type: "REGISTRATION_CANCELLED", audience: "ticked", also: [words.nextInLineMaybe(true)] })}
+                  // One «Trimite emailul» for the batch (slice 4): unticked, nobody ticked is emailed; each freed place is still offered.
+                  mail={words.mailCount({ ...bulkCancelEmailCount, type: "REGISTRATION_CANCELLED", audience: "ticked", also: [words.nextInLineMaybe(true)], optOut: true })}
                   confirmLabel={t("registrations.bulkCancelAction")}
                   cancelLabel={words.cancel}
                   color="warning"

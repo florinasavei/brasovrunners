@@ -21,6 +21,10 @@ import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
  *
  * Pure, so it is unit-tested in Node; the cookie is the browser's to rewrite, so every value is checked before it is
  * read, and a line that does not add up is no line.
+ *
+ * **What the press chose not to send** (slice 4): «Trimite emailul» unticked (`mailSkipped`) is said first — the
+ * person was sent nothing —, then whatever else left (the offer to the next in line); a publication's new-event alert
+ * (`mailAlert`) is said last: left to the job's next pass, or not sent at all.
  */
 
 /** A toast's longest sentence, the act and its mail line together (BR-REQ-060-01). */
@@ -117,6 +121,17 @@ export function mailLine(
   locale: string,
   room: number = Number.POSITIVE_INFINITY,
 ): string | null {
+  // What the press chose not to send (slice 4), around what it did send.
+  const skipped = values.mailSkipped === "1" ? t("mail.skipped") : "";
+  const alert = values.mailAlert === "later" ? t("mail.alertLater") : values.mailAlert === "skipped" ? t("mail.alertSkipped") : "";
+  const chosen = [skipped, alert].filter(Boolean).join(" ").length;
+  const sent = sentLine(values, t, typeName, locale, room - (chosen > 0 ? chosen + 1 : 0));
+  const line = [skipped, sent, alert].filter(Boolean).join(" ");
+  return line === "" ? null : line;
+}
+
+/** The line of what the press sent (above): null when it sent nothing, or the values do not add up. */
+function sentLine(values: Readonly<Record<string, string>>, t: Words, typeName: (type: string) => string | null, locale: string, room: number): string | null {
   const mail = readMailValues(values);
   if (!mail) return null;
   const name = mail.type === null ? null : typeName(mail.type);

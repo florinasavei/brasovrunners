@@ -28,6 +28,7 @@ import { joinDuration } from "@/modules/content/events/duration";
 import { raceStartWallTime } from "@/modules/content/events/race-start";
 import { type DraftPreview, renderEventDraftPreview } from "@/modules/content/events/draft-preview";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
+import { mailSkippedOf, sendEmailOf, WINDOW_SEND_EMAIL_FIELD } from "@/shared/forms/send-email";
 import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
 import { nightOverrideFromChoice } from "@/modules/events/domain/night";
 import { eq } from "drizzle-orm";
@@ -57,7 +58,7 @@ import { inEmailPress } from "@/modules/notifications/press";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import {
   inviteZitadelUser,
-  resendZitadelInvite,
+  reinviteZitadelUser,
   sendZitadelPasswordReset,
   setZitadelUserActive,
 } from "@/modules/staff-identity/zitadel-users";
@@ -1376,6 +1377,9 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
 
     let outcome: Record<string, string | undefined>;
     let toast: Record<string, string | undefined>;
+    // «Trimite invitația acum» in the question (slice 4): unticked, the row is added and nobody is written to — neither
+    // the club's invitation nor Zitadel's account and its password email; «Retrimite invitația» sends both later.
+    const sendEmail = sendEmailOf(form);
     try {
       // The coarse gate first, so a non-Administrator never reaches the service; the service
       // asserts it again for callers that are not this action.
@@ -1393,20 +1397,26 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
           role: text(form, "role") as StaffRole,
           preferredLocale: toLocale(form.get("preferredLocale")),
         },
-        { tierId: tierId === "" ? null : tierId },
+        { tierId: tierId === "" ? null : tierId, sendEmail },
       );
-      // The allowlist row exists; now the account and its invitation, where Zitadel is the
-      // provider and a key is set (§123). Locally the switcher is the provider: nothing to send.
-      const invite =
-        env.STAFF_AUTH_MODE === "provider"
-          ? await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
-          : ({ kind: "unconfigured" } as const);
-      outcome = { saved: "invited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
-      // Without Zitadel as the provider the allowlist row is the whole verb, and "added to the team"
-      // is true: the toast says so. Under the provider `unconfigured` means no key, and the banner
-      // says why nobody was invited — no green tick (`notice.ts`, PROVIDER_DONE); the club's own
-      // invitation still left, and an info toast says what it was and when (`PROVIDER_FAILED_TOASTS`).
-      toast = env.STAFF_AUTH_MODE !== "provider" ? { saved: "invited" } : providerDone(invite.kind) ? outcome : { saved: "invitedProviderFailed" };
+      if (!sendEmail) {
+        // Added, told nothing: the banner and the toast say so, and Zitadel is not asked.
+        outcome = { saved: "invited", ...mailSkippedOf(sendEmail) };
+        toast = outcome;
+      } else {
+        // The allowlist row exists; now the account and its invitation, where Zitadel is the
+        // provider and a key is set (§123). Locally the switcher is the provider: nothing to send.
+        const invite =
+          env.STAFF_AUTH_MODE === "provider"
+            ? await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
+            : ({ kind: "unconfigured" } as const);
+        outcome = { saved: "invited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
+        // Without Zitadel as the provider the allowlist row is the whole verb, and "added to the team"
+        // is true: the toast says so. Under the provider `unconfigured` means no key, and the banner
+        // says why nobody was invited — no green tick (`notice.ts`, PROVIDER_DONE); the club's own
+        // invitation still left, and an info toast says what it was and when (`PROVIDER_FAILED_TOASTS`).
+        toast = env.STAFF_AUTH_MODE !== "provider" ? { saved: "invited" } : providerDone(invite.kind) ? outcome : { saved: "invitedProviderFailed" };
+      }
     } catch (error) {
       return refused(error, form);
     }
@@ -1437,6 +1447,9 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
 
     let outcome: Record<string, string | undefined>;
     let toast: Record<string, string | undefined>;
+    // «Trimite invitațiile acum» in the question (slice 4): unticked, the members are added and nobody is written to —
+    // no invitation queued, no Zitadel account asked for; «Retrimite invitația» on each row sends both later.
+    const sendEmail = sendEmailOf(form);
     try {
       const actor = await requireStaffCapability(canManageStaff);
       press.by(actor.id);
@@ -1446,9 +1459,10 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
         rows,
         preferredLocale: toLocale(form.get("preferredLocale")),
         tierId: tierId === "" ? null : tierId,
+        sendEmail,
       });
       const lines: MemberAccountLine[] =
-        env.STAFF_AUTH_MODE === "provider"
+        env.STAFF_AUTH_MODE === "provider" && sendEmail
           ? await createMemberAccounts([...added, ...existing], (member) =>
               inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale }),
             )
@@ -1459,7 +1473,7 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
         action: "staff.members_invited",
         entityType: "staff_user",
         entityId: null,
-        metadata: { added: added.length, existing: existing.length, ...(tierId !== "" ? { tierId } : {}), ...counts, accounts: lines },
+        metadata: { added: added.length, existing: existing.length, ...(tierId !== "" ? { tierId } : {}), ...counts, accounts: lines, ...(sendEmail ? {} : { emailSkipped: true }) },
         now: new Date(),
       });
       outcome = {
@@ -1468,6 +1482,7 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
         ...(existing.length > 0 ? { retried: String(existing.length) } : {}),
         ...(counts.failed > 0 ? { failed: String(counts.failed) } : {}),
         ...(lines.length > 0 ? { report } : {}),
+        ...mailSkippedOf(sendEmail),
       };
       // A green tick only when every account exists; otherwise the banner and the report say which did not,
       // and an info toast what the club's own invitations were and when they leave (`PROVIDER_FAILED_TOASTS`).
@@ -1519,7 +1534,11 @@ export async function resendStaffInviteAction(_previous: FormOutcome | null, for
       // «Trimite acum» or «Pune la coadă» (§540): the dialog's answer, the queue when none was offered.
       const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
       const member = await resendStaffInvitation(getDb(), actor, text(form, "email"), new Date(), delivery);
-      const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(member.email) : ({ kind: "unconfigured" } as const);
+      // An account never made — added with «Trimite invitația acum» unticked (slice 4) — is made now (`reinviteZitadelUser`).
+      const invite =
+        env.STAFF_AUTH_MODE === "provider"
+          ? await reinviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
+          : ({ kind: "unconfigured" } as const);
       outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
       // The provider's answer rides along: a failed or unconfigured Zitadel invite holds the green toast back (§171, §288),
       // and an info toast says what the club's own invitation was and when it leaves (`PROVIDER_FAILED_TOASTS`).

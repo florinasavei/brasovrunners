@@ -30,6 +30,7 @@ import { readVolunteersAccess, VOLUNTEER_INVITATION_BATCH_MAX, VOLUNTEER_INVITAT
 import { resendVolunteerInvitation, sendVolunteerInvitations, withdrawVolunteerInvitation } from "@/modules/volunteers/invitations";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, keptValuesOf, refused } from "@/shared/forms/outcome";
+import { mailSkippedOf, sendEmailOf } from "@/shared/forms/send-email";
 // The form's language, its boxes, its event and the way back (§839): shared with the «Voluntari» screen's own verb (§904).
 import { backToCard, eventIdOf, field, localeOf } from "./volunteer-return";
 
@@ -103,11 +104,23 @@ async function runRoles(request: VolunteerRolesRequest) {
   return changeVolunteerRoles(getDb(), actor, request, new Date());
 }
 
-/** `press`, for the presses that can email the person (`notifications/press.ts`): told who pressed once the session is asserted. */
-async function runVolunteer(request: VolunteerRequest, press?: EmailPressHandle) {
+/**
+ * `press`, for the presses that can email the person (`notifications/press.ts`): told who pressed once the session is asserted.
+ * `sendEmail`: «Trimite emailul» as the form posted it (slice 4) — beside the role buttons and in the forms, or in the
+ * reopening's question; the service queues nothing while it is unticked.
+ */
+async function runVolunteer(request: VolunteerRequest, press?: EmailPressHandle, sendEmail = true) {
   const actor = await requireStaff();
   press?.by(actor.id);
-  return changeVolunteer(getDb(), actor, request, new Date());
+  return changeVolunteer(getDb(), actor, request, new Date(), { sendEmail });
+}
+
+/**
+ * The role a press of the person's roles block names (slice 4: the block is one form, so its one «Trimite emailul» reaches
+ * every button): the role on the button pressed — «Dă-i rolul …», «Ia-i rolul …» —, else the select's, for «Dă-i alt rol».
+ */
+function roleIdOf(form: FormData): string {
+  return field(form, "roleId") || field(form, "otherRoleId");
 }
 
 /** «Pornește formularul public» / «Oprește formularul public»: the form posts the state it wants, never a toggle. */
@@ -403,12 +416,14 @@ export async function deleteVolunteerRoleAction(_previous: FormOutcome | null, f
 export async function addVolunteerAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   // An email press (`notifications/press.ts`): the roles ticked under «Rolurile date» email the person.
   return inEmailPress("volunteers.add", async (press) => {
+    // «Trimite emailul» beside the form's button (slice 4).
+    const sendEmail = sendEmailOf(form);
     try {
-      await runVolunteer({ kind: "add", eventId: eventIdOf(form), fields: staffFields(form) }, press);
+      await runVolunteer({ kind: "add", eventId: eventIdOf(form), fields: staffFields(form) }, press, sendEmail);
     } catch (error) {
       return refused(error, form);
     }
-    return backToCard(form, { saved: "volunteerAdded" });
+    return backToCard(form, { saved: "volunteerAdded", ...mailSkippedOf(sendEmail) });
   });
 }
 
@@ -416,15 +431,17 @@ export async function addVolunteerAction(_previous: FormOutcome | null, form: Fo
 export async function editVolunteerAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   // An email press (`notifications/press.ts`): changed roles, or a corrected address, email the person.
   return inEmailPress("volunteers.edit", async (press) => {
+    // «Trimite emailul» beside «Salvează» (slice 4).
+    const sendEmail = sendEmailOf(form);
     let changed: boolean;
     try {
-      changed = (await runVolunteer({ kind: "edit", eventId: eventIdOf(form), id: field(form, "volunteerId"), fields: staffFields(form) }, press)).changed;
+      changed = (await runVolunteer({ kind: "edit", eventId: eventIdOf(form), id: field(form, "volunteerId"), fields: staffFields(form) }, press, sendEmail)).changed;
     } catch (error) {
       if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "VOLUNTEER_ALREADY_LISTED")) return refused(error, form);
       if (!isDomainError(error)) throw error;
       return backToCard(form, { error: error.code });
     }
-    return backToCard(form, { saved: changed ? "volunteerSaved" : "volunteerUnchanged" });
+    return backToCard(form, changed ? { saved: "volunteerSaved", ...mailSkippedOf(sendEmail) } : { saved: "volunteerUnchanged" });
   });
 }
 
@@ -433,10 +450,12 @@ export async function setVolunteerStateAction(form: FormData): Promise<void> {
   // An email press (`notifications/press.ts`): reopening a cancelled person who holds roles emails them.
   return inEmailPress("volunteers.state", async (press) => {
     const state = field(form, "state");
+    // «Trimite emailul» in the reopening's question (slice 4); the other state presses post none and send nothing anyway.
+    const sendEmail = sendEmailOf(form);
     try {
-      const result = await runVolunteer({ kind: "setState", eventId: eventIdOf(form), id: field(form, "volunteerId"), state }, press);
+      const result = await runVolunteer({ kind: "setState", eventId: eventIdOf(form), id: field(form, "volunteerId"), state }, press, sendEmail);
       const saved = state === "CONFIRMED" ? "volunteerConfirmed" : state === "CANCELLED" ? "volunteerCancelled" : "volunteerReopened";
-      return backToCard(form, { saved: result.changed ? saved : "volunteerUnchanged" });
+      return backToCard(form, result.changed ? { saved, ...mailSkippedOf(sendEmail) } : { saved: "volunteerUnchanged" });
     } catch (error) {
       if (!isDomainError(error)) throw error;
       return backToCard(form, { error: error.code });
@@ -452,10 +471,13 @@ export async function setVolunteerStateAction(form: FormData): Promise<void> {
 export async function assignVolunteerAction(form: FormData): Promise<void> {
   // An email press (`notifications/press.ts`): the person is told the roles that stand.
   return inEmailPress("volunteers.assign", async (press) => {
+    // «Trimite emailul» on the person's roles block (slice 4): one box for every role button of the block.
+    const sendEmail = sendEmailOf(form);
     try {
-      const result = await runVolunteer({ kind: "assign", eventId: eventIdOf(form), id: field(form, "volunteerId"), roleId: field(form, "roleId") }, press);
+      const result = await runVolunteer({ kind: "assign", eventId: eventIdOf(form), id: field(form, "volunteerId"), roleId: roleIdOf(form) }, press, sendEmail);
       // A person with no address hears nothing (§865): the toast says so, never «primește un email».
-      return backToCard(form, { saved: result.changed ? (result.volunteer.hasAddress ? "volunteerAssigned" : "volunteerAssignedNoEmail") : "volunteerUnchanged" });
+      if (!result.changed) return backToCard(form, { saved: "volunteerUnchanged" });
+      return backToCard(form, result.volunteer.hasAddress ? { saved: "volunteerAssigned", ...mailSkippedOf(sendEmail) } : { saved: "volunteerAssignedNoEmail" });
     } catch (error) {
       if (!isDomainError(error)) throw error;
       return backToCard(form, { error: error.code });
@@ -467,9 +489,12 @@ export async function assignVolunteerAction(form: FormData): Promise<void> {
 export async function unassignVolunteerAction(form: FormData): Promise<void> {
   // An email press (`notifications/press.ts`): the person is told the roles that stand.
   return inEmailPress("volunteers.unassign", async (press) => {
+    // The same block's «Trimite emailul» (slice 4): «Ia-i rolul …» posts the block's form through its own button.
+    const sendEmail = sendEmailOf(form);
     try {
-      const result = await runVolunteer({ kind: "unassign", eventId: eventIdOf(form), id: field(form, "volunteerId"), roleId: field(form, "roleId") }, press);
-      return backToCard(form, { saved: result.changed ? (result.volunteer.hasAddress ? "volunteerUnassigned" : "volunteerUnassignedNoEmail") : "volunteerUnchanged" });
+      const result = await runVolunteer({ kind: "unassign", eventId: eventIdOf(form), id: field(form, "volunteerId"), roleId: field(form, "roleId") }, press, sendEmail);
+      if (!result.changed) return backToCard(form, { saved: "volunteerUnchanged" });
+      return backToCard(form, result.volunteer.hasAddress ? { saved: "volunteerUnassigned", ...mailSkippedOf(sendEmail) } : { saved: "volunteerUnassignedNoEmail" });
     } catch (error) {
       if (!isDomainError(error)) throw error;
       return backToCard(form, { error: error.code });
@@ -554,6 +579,8 @@ export async function requestVolunteerGuardianAction(form: FormData): Promise<vo
 export async function recordPaperVolunteerGuardianAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
   return inEmailPress("volunteers.guardianPaper", async (press) => {
+    // «Trimite emailul» in its question (slice 4): the volunteer's second copy of the agreement, now with the parent's consent.
+    const sendEmail = sendEmailOf(form);
     try {
       const actor = await requireStaff();
       press.by(actor.id);
@@ -567,12 +594,13 @@ export async function recordPaperVolunteerGuardianAction(_previous: FormOutcome 
           printed: { documentId: field(form, "agreementDocumentId"), roles: field(form, "agreementRoles") },
         },
         new Date(),
+        { sendEmail },
       );
     } catch (error) {
       if (!isDomainError(error)) throw error;
       return backToCard(form, { error: error.code });
     }
-    return backToCard(form, { saved: "volunteerGuardianRecorded" });
+    return backToCard(form, { saved: "volunteerGuardianRecorded", ...mailSkippedOf(sendEmail) });
   });
 }
 

@@ -22,7 +22,10 @@ import Typography from "@mui/material/Typography";
 import { useId, useState } from "react";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { emailRoadCookieLine } from "./email-road";
-import { type ConfirmSpec, confirmOnKey } from "./notice";
+import { type ConfirmSpec, confirmOnKey, withEmailOff } from "./notice";
+
+/** What the reader answered besides yes: whether «Trimite emailul» was unticked (`ConfirmSpec.emailOptOut`). */
+export type ConfirmAnswer = { emailOff: boolean };
 
 /**
  * The one confirmation dialog of the backoffice (`DECISIONS.md` §384): "are you sure", worded
@@ -59,9 +62,15 @@ import { type ConfirmSpec, confirmOnKey } from "./notice";
  * writes the road into a twenty-second cookie just before the form is sent (`email-road.ts`), and
  * the action's `enqueueEmail` stamps the row with it. Nothing is decided here: a road the server
  * cannot take (Gmail gone) is the group's road again, and the group's setting never moves.
+ *
+ * **«Trimite emailul»** (`spec.emailOptOut`; the design «telling the owner about every email a staff press sends», slice
+ * 4): a box after the quieter lines, ticked whenever a question opens. Unticked, the bold line says that no email
+ * leaves to the person, the road is not offered and the lines that belong to that email — its club copies — go
+ * (`withEmailOff`); what the press sends anybody else stays said. Either answer hands the box's state to the caller
+ * (`ConfirmAnswer`), which writes it into the form (`emailOptOutAnswer`) before it is sent.
  */
 export default function ConfirmDialog({
-  spec,
+  spec: asked,
   open,
   onCancel,
   onConfirm,
@@ -70,27 +79,33 @@ export default function ConfirmDialog({
   spec: ConfirmSpec | null;
   open: boolean;
   onCancel: () => void;
-  onConfirm: () => void;
-  alternative?: { label: string; onClick: () => void } | null;
+  onConfirm: (answer: ConfirmAnswer) => void;
+  alternative?: { label: string; onClick: (answer: ConfirmAnswer) => void } | null;
 }) {
   const titleId = useId();
   const descriptionId = useId();
   const roadId = useId();
   // The road for this press, starting from the group's setting — again for each new question: a dialog kept
   // mounted between two questions (`InviteForm`) must not carry the last press's pick into the next.
-  const [picked, setPicked] = useState<{ spec: ConfirmSpec | null; road: "mailgun" | "gmail" }>({ spec, road: spec?.road?.current ?? "mailgun" });
-  const road = picked.spec === spec ? picked.road : (spec?.road?.current ?? "mailgun");
-  if (picked.spec !== spec) setPicked({ spec, road });
-  const setRoad = (next: "mailgun" | "gmail") => setPicked({ spec, road: next });
+  const [picked, setPicked] = useState<{ spec: ConfirmSpec | null; road: "mailgun" | "gmail" }>({ spec: asked, road: asked?.road?.current ?? "mailgun" });
+  const road = picked.spec === asked ? picked.road : (asked?.road?.current ?? "mailgun");
+  if (picked.spec !== asked) setPicked({ spec: asked, road });
+  const setRoad = (next: "mailgun" | "gmail") => setPicked({ spec: asked, road: next });
   // The dialog's own box (§888), unticked again for each new question, as the road is picked again.
-  const [tick, setTick] = useState<{ spec: ConfirmSpec | null; on: boolean }>({ spec, on: false });
-  const ticked = tick.spec === spec && tick.on;
-  if (!spec) return null;
+  const [tick, setTick] = useState<{ spec: ConfirmSpec | null; on: boolean }>({ spec: asked, on: false });
+  const ticked = tick.spec === asked && tick.on;
+  // «Trimite emailul», ticked again for each new question: a press never inherits the last one's untick.
+  const [mailOff, setMailOff] = useState<{ spec: ConfirmSpec | null; off: boolean }>({ spec: asked, off: false });
+  const emailOff = mailOff.spec === asked && mailOff.off;
+  if (!asked) return null;
+  // The question as it reads now: unticked, no email line to the person, no road, none of its copies.
+  const spec = withEmailOff(asked, emailOff);
   // A dialog that asks for a tick answers only once it is ticked — Enter included.
   const mayConfirm = !spec.tick || ticked;
 
-  // Either way forward carries the road to the action, as a cookie the request that follows reads once.
-  const withRoad = (answer: () => void) => () => {
+  // Either way forward carries the road to the action, as a cookie the request that follows reads once — and the box's state.
+  const withRoad = (answer: (given: ConfirmAnswer) => void) => () => {
+    // An email left unsent takes no road (`withEmailOff` dropped it): nothing is written for the action to read.
     if (spec.road) {
       try {
         document.cookie = emailRoadCookieLine({ road, group: spec.road.group }, Date.now());
@@ -98,7 +113,7 @@ export default function ConfirmDialog({
         // A browser that refuses the write: the message takes its group's road, and the toast names none.
       }
     }
-    answer();
+    answer({ emailOff });
   };
   const confirm = withRoad(onConfirm);
 
@@ -164,10 +179,19 @@ export default function ConfirmDialog({
             {line.text}
           </DialogContentText>
         ))}
+        {asked.emailOptOut && (
+          // «Trimite emailul» (slice 4): ticked as the question opens; unticked, the person's email is not queued.
+          <FormControlLabel
+            control={<Checkbox checked={!emailOff} onChange={(_event, on) => setMailOff({ spec: asked, off: !on })} sx={CHECKBOX_TAP_TARGET} />}
+            label={<Typography variant="body2">{asked.emailOptOut.label}</Typography>}
+            sx={{ mt: 1.5, mx: 0, alignItems: "flex-start", "& .MuiFormControlLabel-label": { pt: 1.25 } }}
+            data-testid="confirm-send-email"
+          />
+        )}
         {spec.tick && (
           // A rule the press must not assume (§33): the reader ticks it here, and the confirm button waits for it.
           <FormControlLabel
-            control={<Checkbox checked={ticked} onChange={(_event, on) => setTick({ spec, on })} sx={CHECKBOX_TAP_TARGET} />}
+            control={<Checkbox checked={ticked} onChange={(_event, on) => setTick({ spec: asked, on })} sx={CHECKBOX_TAP_TARGET} />}
             label={<Typography variant="body2">{spec.tick.label}</Typography>}
             sx={{ mt: 1.5, mx: 0, alignItems: "flex-start", "& .MuiFormControlLabel-label": { pt: 1.25 } }}
             data-testid="confirm-tick"

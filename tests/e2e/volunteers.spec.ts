@@ -717,8 +717,10 @@ test.describe("§754 volunteers for a race", () => {
       await expect(give).toContainText("Sosire · 0 din 1");
       expect((await give.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       // She ticked both of the event's roles: each has its own button, and «Alt rol», which offers only the others, is not drawn.
-      await expect(row.getByTestId("volunteer-assign-form")).toHaveCount(2);
+      await expect(row.getByTestId("volunteer-assign").getByRole("button", { name: /^Dă-i rolul/ })).toHaveCount(2);
       await expect(row.getByTestId("volunteer-assign-other")).toHaveCount(0);
+      // One form for her roles, so its one «Trimite emailul» reaches every button of it (slice 4), ticked as drawn.
+      await expect(row.getByTestId("volunteer-roles-mail-send-email").getByRole("checkbox")).toBeChecked();
       await give.click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
