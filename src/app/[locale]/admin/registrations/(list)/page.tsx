@@ -1338,6 +1338,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           />
         )
       )}
+      {/* «Planul locurilor» (§911): the event's places on one read-only page — only when the list is about one event. */}
+      {filters.eventId && (
+        <GlyphButton
+          icon="place"
+          href={getPathname({ locale, href: { pathname: "/admin/events/[id]/locuri", params: { id: filters.eventId } } })}
+          variant="text"
+          size="small"
+          sx={{ ...TAP_TARGET, mt: 0.5 }}
+          data-testid="race-plan-link"
+        >
+          {t("racePlan.link")}
+        </GlyphButton>
+      )}
       {/* «Kituri de pregătit» (the owner, 2026-11-04): the runners — the separate elite list among them — plus the volunteers with a kit. */}
       {kits && <KitCount kits={kits} locale={locale} volunteers={volunteerKits} elites={eliteNames} eliteHref={eliteCardHref ?? undefined} spaceAbove={1.5} />}
       {/*
