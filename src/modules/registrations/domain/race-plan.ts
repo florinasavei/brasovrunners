@@ -46,11 +46,11 @@ export type RacePlanBreakdown = {
 };
 
 /** The states a special guest is counted in, as `repository.ts#countOutsideCapacity` reads them. */
-const OUTSIDE_STATES = ["CONFIRMED", "PENDING_DECLARATION", "WAITLIST_OFFERED"] as const satisfies readonly RegistrationStatus[];
+type OutsideState = Extract<RegistrationStatus, "CONFIRMED" | "PENDING_DECLARATION" | "WAITLIST_OFFERED">;
 
 export function breakdownOf(groups: readonly RegistrationGroup[]): RacePlanBreakdown {
   const sum = (match: (group: RegistrationGroup) => boolean) => groups.filter(match).reduce((total, group) => total + group.total, 0);
-  const outsideIn = (status: (typeof OUTSIDE_STATES)[number]) => sum((g) => g.outside && g.kind === "REAL" && g.status === status);
+  const outsideIn = (status: OutsideState) => sum((g) => g.outside && g.kind === "REAL" && g.status === status);
   return {
     eliteConfirmed: sum((g) => !g.outside && g.elite && g.status === "CONFIRMED"),
     eliteDeclaration: sum((g) => !g.outside && g.elite && g.status === "PENDING_DECLARATION"),

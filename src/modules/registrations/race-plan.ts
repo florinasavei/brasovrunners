@@ -59,11 +59,14 @@ export type RacePlan =
 
 /**
  * «Planul locurilor» for one event (§NNN): every reader the registrations list already calls for «Locuri», «Pe site
- * acum», «Kituri de pregătit» and «Când se pierde un loc», with their signatures as they are, and four reads of its own
- * — the allocator's count once more for the lapsed holds (`countOccupied`, the definition the sweep uses), one grouped
- * count of the registrations by state × outside × elite × kind, the open invitations by «Pe lista de invitați
- * speciali», the elite list's lines — and «Istoric capacitate». About twenty small queries in one `Promise.all`, only
- * when somebody opens the page: no polling, nothing cached, nothing written.
+ * acum», «Kituri de pregătit» and «Când se pierde un loc», with their signatures as they are, and reads of its own — the
+ * allocator's count once more for the lapsed holds (`countOccupied`, the definition the sweep uses), one grouped count
+ * of the registrations by state × outside × elite × kind, the open invitations by «Pe lista de invitați speciali», the
+ * elite list's and the internal list's lines — and «Istoric capacitate». About twenty small queries in one
+ * `Promise.all`, only when somebody opens the page: no polling, nothing cached, nothing written.
+ *
+ * Reading the elite list's lines and the elite mark here amends §895 and §897, which kept both out of every count: the
+ * plan says «din care elită» and orders a bib per elite line. Neither reaches the allocator, a state or an email.
  *
  * Asserted here as well as on the page (BR-REQ-060-01): whoever may read the registrations (`canReadRegistrations` —
  * the Organizer, the Administrator, the Superadministrator), `FORBIDDEN` for anybody else; `NOT_FOUND` for a malformed
