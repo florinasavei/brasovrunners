@@ -103,9 +103,10 @@ const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Rec
 
 /**
  * The event editor's save names what it did beyond saving (§331): an update notice or a
- * cancellation queued is a sentence of its own, with the number of emails — the brief's "the
- * toast states how many were queued". The URL keeps `saved=event` for the page's banner; only
- * the toast's key is chosen here.
+ * cancellation is a sentence of its own. How many emails, and when they leave, is the mail line's
+ * since the design «telling the owner about every email a staff press sends» (slice 2): it says
+ * what the press really queued (`flash.ts#withPressMail`), so the act's sentence names no email.
+ * The URL keeps `saved=event` for the page's banner; only the toast's key is chosen here.
  */
 function sentenceKeyOf(saved: string, notice: string | number | undefined): string {
   if (saved !== "event" && saved !== "eventSeries") return saved;
@@ -130,6 +131,19 @@ export const DERIVED_TOAST_KEYS: readonly string[] = [
  */
 const PROVIDER_DONE: ReadonlySet<string> = new Set(["invited", "exists", "done"]);
 const PROVIDER_FIELDS = ["invite", "account"] as const;
+
+/** Whether a provider's answer means the verb happened (above): the actions choose their toast by it. */
+export function providerDone(answer: string): boolean {
+  return PROVIDER_DONE.has(answer);
+}
+
+/**
+ * The invitations whose Zitadel half did not happen while the club's own email still left (the design «telling the
+ * owner about every email a staff press sends», slice 2): an `info` toast that says the account is not ready and what
+ * the club's queue sent — never a green tick (§171, §288) — and none at all when nothing was queued
+ * (`flash.ts#withPressMail`): the banner says why.
+ */
+export const PROVIDER_FAILED_TOASTS: ReadonlySet<string> = new Set(["invitedProviderFailed", "reinvitedProviderFailed", "membersInvitedProviderFailed"]);
 
 /** Sentences that say nothing happened, however the action got there: an `info`, never a green tick. */
 const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
@@ -202,7 +216,8 @@ export function noticeOf(outcome: Readonly<Record<string, string | number | unde
     if (value !== undefined) values[placeholder] = value;
   }
   if (key === "registrationsCancelledTest" && testCount !== undefined) values.test = testCount;
-  const kind: NoticeKind = (count === "0" && key !== "registrationsCancelledTest") || NOTHING_HAPPENED.has(key) ? "info" : "success";
+  const kind: NoticeKind =
+    (count === "0" && key !== "registrationsCancelledTest") || NOTHING_HAPPENED.has(key) || PROVIDER_FAILED_TOASTS.has(key) ? "info" : "success";
   return { kind, key, ...(Object.keys(values).length > 0 ? { values } : {}) };
 }
 
@@ -274,7 +289,8 @@ export const TOAST_AUTO_HIDE_MS = 5500;
 /**
  * The translate press's toasts stay longer (the owner, 2026-09-27: a confirmation that
  * everything was translated): the sentence names a count and asks for a check before Save, and
- * a refusal's reason (today's budget, DeepL's month) is a longer read.
+ * a refusal's reason (today's budget, DeepL's month) is a longer read. So is an emailing press's toast,
+ * whose mail line says what left, to how many and when (`mail-line.ts`).
  */
 export const LONG_TOAST_AUTO_HIDE_MS = 8000;
 

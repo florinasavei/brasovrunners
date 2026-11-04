@@ -116,3 +116,20 @@ export function recipientRoleOf(messageType: EmailMessageType, clubCopy: boolean
   if (audience === "club") return messageType === "CLUB_CONFIRMATION_NOTICE" ? "notice" : "archive";
   return audience;
 }
+
+/**
+ * The staff audience's messages that are still one person's own mail — a colleague's or a member's invitation, a
+ * member's two shop receipts — rather than a notice to the club's people (a new order, a new volunteer, a visitor's
+ * message, a road's notice). «Emailuri azi» counts the first as the person's (the design «telling the owner about
+ * every email a staff press sends», Critic correction 5), and the toast after a press tells the second as the club's.
+ */
+export const STAFF_PERSON_TYPES: ReadonlySet<EmailMessageType> = new Set(["STAFF_INVITATION", "MEMBER_INVITATION", "SHOP_ORDER_PLACED", "SHOP_ORDER_PAID"]);
+
+/**
+ * Whether a row goes to the club's own side rather than to a person (the toast after a press, Critic correction 4
+ * to the design): a copy, the declaration's archive, «somebody has confirmed» — and a notice to the club's people.
+ */
+export function isClubSide(messageType: EmailMessageType, clubCopy: boolean): boolean {
+  const role = recipientRoleOf(messageType, clubCopy);
+  return role === "copy" || role === "archive" || role === "notice" || (role === "staff" && !STAFF_PERSON_TYPES.has(messageType));
+}

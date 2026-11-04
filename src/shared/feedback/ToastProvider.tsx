@@ -3,7 +3,8 @@
 import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { countForm } from "@/i18n/count-form";
-import { EMPTY_TOAST_QUEUE, FLASH_COOKIE, type FormNotice, toastQueueReducer } from "./notice";
+import { mailLine, TOAST_MAX_CHARACTERS } from "./mail-line";
+import { EMPTY_TOAST_QUEUE, FLASH_COOKIE, type FormNotice, LONG_TOAST_AUTO_HIDE_MS, toastQueueReducer } from "./notice";
 import { type ToastApi, ToastContext } from "./toast-context";
 import ToastRegion from "./ToastRegion";
 
@@ -29,8 +30,8 @@ import ToastRegion from "./ToastRegion";
  * primary button of the form that just produced it (measured at 320 px by
  * `tests/e2e/toasts-and-confirms.spec.ts`).
  *
- * **The words** come from `Feedback.toast`, the one namespace this island reads
- * (`STAFF_CLIENT_MESSAGES`): a `saved` code is the key, and a code whose sentence counts
+ * **The words** come from `Feedback.toast` (`STAFF_CLIENT_MESSAGES`), and an emailing press's
+ * line from `Feedback.mail` and `Admin.emails.types`: a `saved` code is the key, and a code whose sentence counts
  * something has three keys — `one`, `few`, `other` — picked by `countForm` from the notice's
  * `count`, never an ICU plural. A code with no sentence yet falls back to the generic "saved", so
  * a new action tomorrow toasts something rather than crashing the page;
@@ -41,6 +42,11 @@ import ToastRegion from "./ToastRegion";
  * nothing. Cleared by the island rather than the server, because a Server Component cannot
  * delete a cookie during its render and the page the redirect lands on is a render, not an action.
  *
+ * **What an emailing press sent** (the design «telling the owner about every email a staff press
+ * sends», slice 2): after the act's sentence, the mail line the press's flash carries — what left,
+ * to how many, when (`mail-line.ts`), with the email's type in the words of `Admin.emails.types`.
+ * A press that sent nothing has none.
+ *
  * **INP** (§371): nothing here runs inside a press. A toast is dispatched from an effect after
  * the action answered — for a flash, after the redirected page painted — and the Snackbar mounts
  * then, not in the press's task.
@@ -48,6 +54,7 @@ import ToastRegion from "./ToastRegion";
 export default function ToastProvider({ flash, children }: { flash: FormNotice | null; children: ReactNode }) {
   const [queue, dispatch] = useReducer(toastQueueReducer, EMPTY_TOAST_QUEUE);
   const t = useTranslations("Feedback");
+  const types = useTranslations("Admin.emails.types");
   const locale = useLocale();
 
   const show = useCallback((notice: FormNotice) => dispatch({ type: "show", notice }), []);
@@ -82,10 +89,16 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
       if (t.has(base)) return t(base, values);
       return t("toast.saved");
     })();
+    // What the press emailed, the road it chose inside it: «… Pleacă la 10:15 (estimat): „Înscriere anulată” către 1 persoană.»
+    const mail = mailLine(values, t, (type) => (types.has(type) ? types(type) : null), locale, TOAST_MAX_CHARACTERS - said.length - 1);
+    if (mail) return `${said} ${mail}`;
     // The road the press chose for its email (§841, `flashOutcome`): «… Pleacă prin Mailgun.»
     const via = values.via === "mailgun" || values.via === "gmail" ? ` ${t(`via.${values.via}`)}` : "";
     return `${said}${via}`;
   };
+
+  // Two sentences — the act and what it emailed — are read longer, as the translate press's are.
+  const autoHideOf = (notice: FormNotice): number | undefined => notice.autoHideMs ?? (notice.values?.mail ? LONG_TOAST_AUTO_HIDE_MS : undefined);
 
   const current = queue.current;
 
@@ -94,7 +107,7 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
       {children}
       {/* The live region, always here and empty between toasts; the toast is drawn inside it. */}
       <ToastRegion
-        toast={current ? { id: current.id, kind: current.kind, sentence: sentence(current), autoHideMs: current.autoHideMs } : null}
+        toast={current ? { id: current.id, kind: current.kind, sentence: sentence(current), autoHideMs: autoHideOf(current) } : null}
         closeLabel={t("close")}
         onDismiss={dismiss}
       />

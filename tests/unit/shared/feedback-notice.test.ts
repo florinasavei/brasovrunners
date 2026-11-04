@@ -8,6 +8,8 @@ import {
   FLASH_COOKIE,
   noticeOf,
   pickConfirm,
+  PROVIDER_FAILED_TOASTS,
+  providerDone,
   TOAST_AUTO_HIDE_MS,
   toastQueueReducer,
 } from "@/shared/feedback/notice";
@@ -94,6 +96,16 @@ describe("§384 the notice a redirect's outcome becomes", () => {
       expect(noticeOf({ saved: "reinvitedNow", invite, reason: "Errors.Internal" }), invite).toBeNull();
     }
     expect(noticeOf({ saved: "reinvitedNow", invite: "invited" })).toEqual({ kind: "success", key: "reinvitedNow" });
+  });
+
+  it("toasts a Zitadel failure on an invitation as info, never a green tick, for the club's email that still left", () => {
+    // The design «telling the owner about every email a staff press sends», slice 2: `flash.ts#withPressMail` drops
+    // these when the press queued nothing, so the banner alone says why.
+    for (const saved of PROVIDER_FAILED_TOASTS) expect(noticeOf({ saved })).toEqual({ kind: "info", key: saved });
+    expect([...PROVIDER_FAILED_TOASTS].sort()).toEqual(["invitedProviderFailed", "membersInvitedProviderFailed", "reinvitedProviderFailed"]);
+    expect(providerDone("invited")).toBe(true);
+    expect(providerDone("exists")).toBe(true);
+    for (const answer of ["failed", "unconfigured", "missing"]) expect(providerDone(answer), answer).toBe(false);
   });
 
   it("never carries a name or a provider's words into the cookie — only numbers travel", () => {

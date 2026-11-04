@@ -10,7 +10,7 @@ import { listStaffUsers } from "@/modules/staff-identity/repository";
 import { startOfClubDay } from "@/modules/translate/budget";
 import { CLUB_COPY_FLAG } from "./domain/club-notices";
 import type { DepartureRow } from "./domain/departure";
-import { recipientRoleOf } from "./domain/email-audience";
+import { recipientRoleOf, STAFF_PERSON_TYPES } from "./domain/email-audience";
 import { isPressCause, type PressCause } from "./domain/press-causes";
 import { SENT_NOW_FLAG } from "./domain/send-at-once";
 import { gmailRoadCondition } from "./outbox";
@@ -162,9 +162,6 @@ const VOLUNTEER_PERSON_TYPES: ReadonlySet<EmailMessageType> = new Set([
   "VOLUNTEER_AGREEMENT_ACCEPTED",
   "VOLUNTEER_ROLE_ASSIGNED",
 ]);
-
-/** A colleague's or member's mail that is still the person's own, not a notice to the club's people. */
-const STAFF_PERSON_TYPES: ReadonlySet<EmailMessageType> = new Set(["STAFF_INVITATION", "MEMBER_INVITATION", "SHOP_ORDER_PLACED", "SHOP_ORDER_PAID"]);
 
 /** A row to the club's own mailboxes (§670): never a person's line, never counted for a person. */
 function isClubLine(row: Pick<JournalRowRead, "messageType" | "clubCopy">): boolean {

@@ -14,8 +14,9 @@ import { isJobCause, PRESS_CAUSE_NAMES, type PressCause } from "@/modules/notifi
  * Source-level, like `confirmed-actions.test.ts`: each listed action is found in its file, parsed, and must call
  * `inEmailPress` with each of its causes and name its actor — `press.by(…)` itself, through the helper it hands
  * `press` to, or through the listed press it delegates to. An action that opens a scope and is not listed fails
- * too, as does a scope opened anywhere a person is not pressing a staff button. Later slices add here what each
- * press must say before (its dialog's email line) and which presses offer «Trimite emailul».
+ * too, as does a scope opened anywhere a person is not pressing a staff button. Slice 2 adds that every press flashes
+ * through the one call that reads what it sent; later slices add here what each press must say before (its dialog's
+ * email line) and which presses offer «Trimite emailul».
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -165,6 +166,18 @@ describe("every emailing press runs inside its email press scope", () => {
     const drain = read("src/modules/notifications/drain.ts");
     expect(drain).toContain('inEmailPress("job.emailOutbox"');
     expect([...drain.matchAll(/after\(\(\) => asTheOutboxJob\(/g)]).toHaveLength(3);
+  });
+
+  it("tells every emailing press's toast what it sent: through `flashOutcome` or `withPressMail`, never the bare `flash` (slice 2)", () => {
+    // The receipt is read where the toast is flashed (`shared/feedback/flash.ts#withPressMail`): a press that flashed
+    // its notice itself would toast what it did and never what it emailed. The volunteers' card returns through its helper.
+    const FLASHED_BY: Readonly<Record<string, string>> = { [VOLUNTEERS]: "src/app/[locale]/admin/events/[id]/volunteer-return.ts" };
+    for (const file of new Set(Object.values(EMAILING_PRESSES).map((press) => press.file))) {
+      expect(read(FLASHED_BY[file] ?? file), file).toMatch(/\b(flashOutcome|withPressMail)\(/);
+    }
+    for (const [name, press] of Object.entries(EMAILING_PRESSES)) {
+      expect(exportedFunctions(press.file).get(name), name).not.toMatch(/\bawait flash\(/);
+    }
   });
 
   it("opens no scope on a public flow: only the backoffice's presses, the two job routes and the drains do", () => {

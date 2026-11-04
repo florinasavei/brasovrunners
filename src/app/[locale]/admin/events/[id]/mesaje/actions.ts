@@ -16,7 +16,7 @@ import {
 import { requireStaff } from "@/modules/staff-identity/session";
 import { inEmailPress } from "@/modules/notifications/press";
 import { isDomainError } from "@/shared/errors/domain-error";
-import { flash } from "@/shared/feedback/flash";
+import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, keptValuesOf, refused } from "@/shared/forms/outcome";
 
 /**
@@ -96,18 +96,10 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
 
     const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/mesaje", params: { id: eventId } } });
     const query = result.kind === "duplicate" ? "duplicate=1" : `sent=${result.real}&test=${result.test}`;
-    // The toast (§384): what was queued, for how many — the same count the banner shows.
-    await flash(
-      result.kind === "duplicate"
-        ? { kind: "info", key: "participantMessageDuplicate" }
-        : // Sent now, past the scheduled pass (§540), says so; a list longer than one press sends
-          // (`SEND_NOW_ROW_LIMIT`) says how many leave now and how many at the scheduled pass; queued, as before.
-          delivery === "now" && (result.later ?? 0) > 0
-          ? { kind: "success", key: "participantMessageSentNowPart", values: { count: String(result.sentNow ?? 0), later: String(result.later ?? 0) } }
-          : delivery === "now"
-            ? { kind: "success", key: "participantMessageSentNow", values: { count: String(result.real), test: String(result.test) } }
-            : { kind: "success", key: "participantMessageSent", values: { count: String(result.real), test: String(result.test) } },
-    );
+    // The toast (§384): the send, and what the press queued — how many, and when each part leaves, a press's «now»
+    // past the scheduled pass (§540) and the rest of a list longer than one press sends (`SEND_NOW_ROW_LIMIT`)
+    // included — is the mail line's (`withPressMail`), read from the rows themselves. A second press queues nothing.
+    await flashOutcome(result.kind === "duplicate" ? { saved: "participantMessageDuplicate" } : { saved: "participantMessageSent" });
     revalidatePath(path);
     redirect(`${path}?${query}#admin-alert`);
   });

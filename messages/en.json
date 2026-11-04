@@ -12947,27 +12947,11 @@
         "few": "Saved on {count} dates of the series.",
         "other": "Saved on {count} dates of the series."
       },
-      "eventNotified": {
-        "one": "Saved; “Details updated” queued for {count} participant.",
-        "few": "Saved; “Details updated” queued for {count} participants.",
-        "other": "Saved; “Details updated” queued for {count} participants."
-      },
-      "eventSeriesNotified": {
-        "one": "Saved on the dates chosen ({dates}); “Details updated” queued for {count} participant.",
-        "few": "Saved on the dates chosen ({dates}); “Details updated” queued for {count} participants.",
-        "other": "Saved on the dates chosen ({dates}); “Details updated” queued for {count} participants."
-      },
-      "eventCancelled": {
-        "one": "Cancelled; “Event cancelled” queued for {count} participant.",
-        "few": "Cancelled; “Event cancelled” queued for {count} participants.",
-        "other": "Cancelled; “Event cancelled” queued for {count} participants."
-      },
-      "eventSeriesCancelled": {
-        "one": "Cancelled on the dates chosen ({dates}); “Event cancelled” queued for {count} participant.",
-        "few": "Cancelled on the dates chosen ({dates}); “Event cancelled” queued for {count} participants.",
-        "other": "Cancelled on the dates chosen ({dates}); “Event cancelled” queued for {count} participants."
-      },
-      "eventCancelledQuiet": "Cancelled; no email was sent.",
+      "eventNotified": "Saved; the participants are told.",
+      "eventSeriesNotified": "Saved on the dates chosen ({dates}); the participants are told.",
+      "eventCancelled": "Cancelled; the participants are told.",
+      "eventSeriesCancelled": "Cancelled on the dates chosen ({dates}); the participants are told.",
+      "eventCancelledQuiet": "Cancelled; the participants are not told.",
       "created": "The event was created, as a draft.",
       "createdPublished": "Created and published: on the site in both languages.",
       "duplicated": "The copy was created, as a draft.",
@@ -12990,9 +12974,9 @@
         "other": "{count} race numbers assigned."
       },
       "thanksSent": {
-        "one": "Email queued for {count} participant.",
-        "few": "Email queued for {count} participants.",
-        "other": "Email queued for {count} participants."
+        "one": "Thank-you for {count} participant.",
+        "few": "Thank-yous for {count} participants.",
+        "other": "Thank-yous for {count} participants."
       },
       "deleted": "Deleted for good.",
       "eventErased": {
@@ -13029,31 +13013,31 @@
       "DRAFT": "Moved to draft: no longer on the site.",
       "ARCHIVED": "Archived: no longer on the site.",
       "invited": "The person was added to the team.",
-      "reinvited": "The invitation was sent again.",
+      "reinvited": "Invitation resent.",
       "passwordReset": "The password reset link was sent.",
       "accountDeactivated": "The account was deactivated.",
       "accountReactivated": "The account was reactivated.",
       "role": "The role was changed.",
       "revoked": "Access was withdrawn.",
-      "registrationConfirmed": "The registration is confirmed; the email with the number is queued.",
+      "registrationConfirmed": "The registration is confirmed.",
       "registrationWaitlisted": "No place left: the registration joined the waiting list.",
       "bibSet": "Number saved.",
       "checkedIn": "Present at the desk.",
       "checkinUndone": "No longer checked in.",
-      "registrationCreated": "The person was added; the email is queued.",
-      "registrationCancelled": "The registration was cancelled; the email is queued.",
+      "registrationCreated": "The person was added.",
+      "registrationCancelled": "The registration was cancelled.",
       "consentWithdrawn": "The ticked data was erased.",
       "bibsPrinted": "Marked as printed.",
       "bibsUnprinted": "Marked as not printed.",
       "registrationsCancelled": {
-        "one": "{count} registration cancelled; {count} email queued.",
-        "few": "{count} registrations cancelled; {count} emails queued.",
-        "other": "{count} registrations cancelled; {count} emails queued."
+        "one": "{count} registration cancelled.",
+        "few": "{count} registrations cancelled.",
+        "other": "{count} registrations cancelled."
       },
       "registrationsCancelledTest": {
-        "one": "{count} registration cancelled; {count} email queued. Also cancelled, counted nowhere: {test} test registrations.",
-        "few": "{count} registrations cancelled; {count} emails queued. Also cancelled, counted nowhere: {test} test registrations.",
-        "other": "{count} registrations cancelled; {count} emails queued. Also cancelled, counted nowhere: {test} test registrations."
+        "one": "{count} registration cancelled. Also cancelled, counted nowhere: {test} test registrations.",
+        "few": "{count} registrations cancelled. Also cancelled, counted nowhere: {test} test registrations.",
+        "other": "{count} registrations cancelled. Also cancelled, counted nowhere: {test} test registrations."
       },
       "registrationsErased": {
         "one": "{count} registration erased.",
@@ -13066,13 +13050,9 @@
         "few": "{count} emails sent now.",
         "other": "{count} emails sent now."
       },
-      "resent": "The email was queued again.",
-      "reminderSent": "The reminder was queued.",
-      "participantMessageSent": {
-        "one": "Email queued for {count} participant.",
-        "few": "Email queued for {count} participants.",
-        "other": "Email queued for {count} participants."
-      },
+      "resent": "Resent.",
+      "reminderSent": "Reminder resent.",
+      "participantMessageSent": "The message is on its way.",
       "participantMessageDuplicate": "The message had already been sent; nothing was queued again.",
       "legalDraftCreated": "New draft.",
       "legalDraftSaved": "Draft saved.",
@@ -13158,9 +13138,9 @@
       "volunteerAdded": "Volunteer added.",
       "volunteerSaved": "Volunteer saved.",
       "volunteerConfirmed": "Volunteer confirmed.",
-      "volunteerAssigned": "Role given. The person gets an email that names their roles.",
-      "volunteerAssignedNoEmail": "Role given. The person has no email address, so gets no email: tell them yourself.",
-      "volunteerUnassigned": "Role taken back. If they still have roles, the person gets an email that names them.",
+      "volunteerAssigned": "Role given.",
+      "volunteerAssignedNoEmail": "Role given. The person has no email address: tell them yourself.",
+      "volunteerUnassigned": "Role taken back.",
       "volunteerUnassignedNoEmail": "Role taken back. The person has no email address: tell them yourself.",
       "volunteerCancelled": "Volunteer cancelled.",
       "volunteerReopened": "Volunteer back to registered.",
@@ -13171,11 +13151,7 @@
       "eventTodoDone": "Ticked. The row is under “Done”.",
       "eventTodoReopened": "Unticked: the row is to do again.",
       "eventTodoDeleted": "Row deleted from the event's list.",
-      "newsletterSent": {
-        "one": "Newsletter queued for {count} subscriber.",
-        "few": "Newsletter queued for {count} subscribers.",
-        "other": "Newsletter queued for {count} subscribers."
-      },
+      "newsletterSent": "The newsletter is on its way.",
       "newsletterDuplicate": "This newsletter had already been sent.",
       "newsletterWithdrawn": "The address was removed from the newsletter.",
       "newsletterNotFound": "The address was not on the newsletter.",
@@ -13243,24 +13219,14 @@
         "few": "{count} versions deleted.",
         "other": "{count} versions deleted."
       },
-      "resentNow": "The email is leaving now, without waiting for the scheduled round.",
+      "resentNow": "Resent.",
       "declarationResent": {
-        "one": "The declaration was queued for {count} person.",
-        "few": "The declaration was queued for {count} people.",
-        "other": "The declaration was queued for {count} people."
+        "one": "Declaration resent: {count} person.",
+        "few": "Declaration resent: {count} people.",
+        "other": "Declaration resent: {count} people."
       },
-      "reminderSentNow": "The reminder is leaving now, without waiting for the scheduled round.",
-      "reinvitedNow": "The invitation is leaving now, without waiting for the scheduled round.",
-      "participantMessageSentNow": {
-        "one": "The email is leaving now for {count} participant, without waiting for the scheduled round.",
-        "few": "The email is leaving now for {count} participants, without waiting for the scheduled round.",
-        "other": "The email is leaving now for {count} participants, without waiting for the scheduled round."
-      },
-      "participantMessageSentNowPart": {
-        "one": "The email is leaving now for {count} participant; the other {later} leave at the scheduled round.",
-        "few": "The email is leaving now for the first {count} participants; the other {later} leave at the scheduled round.",
-        "other": "The email is leaving now for the first {count} participants; the other {later} leave at the scheduled round."
-      },
+      "reminderSentNow": "Reminder resent.",
+      "reinvitedNow": "Invitation resent.",
       "newsletterUnsubscribed": "The address was unsubscribed.",
       "newsletterUnsubscribedGone": "The address was no longer on the list; nothing changed.",
       "memberCodeCreated": "The code was added. Members see it.",
@@ -13278,8 +13244,8 @@
       "declarationHeld": "The declaration is kept. It is not deleted until you remove the keep.",
       "declarationReleased": "The keep was removed.",
       "menuOrder": "The menu order was saved.",
-      "registrationOffered": "The offer is sent: they have the usual time to sign the declaration.",
-      "placeGiven": "Place given; the declaration email has left.",
+      "registrationOffered": "The place is offered: they have the usual time to sign the declaration.",
+      "placeGiven": "Place given.",
       "outsideMarked": "The registration is on the special guests list: it takes none of the event's places now.",
       "outsideUnmarked": "The registration is off the special guests list and counts among the event's places again.",
       "failedRetried": {
@@ -13288,24 +13254,24 @@
         "other": "{count} failed emails put back in the queue."
       },
       "placeGivenRaised": {
-        "one": "Place given; a supplementary place added: {count} place. The declaration email has left.",
-        "few": "Place given; a supplementary place added: {count} places. The declaration email has left.",
-        "other": "Place given; a supplementary place added: {count} places. The declaration email has left."
+        "one": "Place given; a supplementary place added: {count} place.",
+        "few": "Place given; a supplementary place added: {count} places.",
+        "other": "Place given; a supplementary place added: {count} places."
       },
       "registrationOfferedRaised": {
-        "one": "Offer sent; a supplementary place added: {count} place.",
-        "few": "Offer sent; a supplementary place added: {count} places.",
-        "other": "Offer sent; a supplementary place added: {count} places."
+        "one": "Place offered; a supplementary place added: {count} place.",
+        "few": "Place offered; a supplementary place added: {count} places.",
+        "other": "Place offered; a supplementary place added: {count} places."
       },
       "invitationsSent": {
-        "one": "{count} invitation sent.",
-        "few": "{count} invitations sent.",
-        "other": "{count} invitations sent."
+        "one": "{count} person invited.",
+        "few": "{count} people invited.",
+        "other": "{count} people invited."
       },
       "invitationsSentRaised": {
-        "one": "{count} invitation sent; the capacity is now {capacity}.",
-        "few": "{count} invitations sent; the capacity is now {capacity}.",
-        "other": "{count} invitations sent; the capacity is now {capacity}."
+        "one": "{count} person invited; the capacity is now {capacity}.",
+        "few": "{count} people invited; the capacity is now {capacity}.",
+        "other": "{count} people invited; the capacity is now {capacity}."
       },
       "invitationResent": "Invitation resent, with a new link.",
       "invitationResentKept": "Invitation resent, with a new link. The deadline stayed as it was: someone is on the waiting list.",
@@ -13330,7 +13296,7 @@
       "shopPictureMoved": "The pictures' order has been changed.",
       "shopPictureRemoved": "The picture has been removed from the item.",
       "shopPictureReplaced": "The picture has been saved.",
-      "shopOrderPaid": "The order has been marked paid. The member receives an email.",
+      "shopOrderPaid": "The order has been marked paid.",
       "shopOrderPaidNoEmail": "The order has been marked paid. The member gets no email: member emails are off in “Settings”.",
       "shopOrderHandedOver": "The order has been marked handed over.",
       "shopOrderCancelled": "The order has been cancelled.",
@@ -13346,7 +13312,7 @@
       "checkpointsSaved": "The points on the route were saved.",
       "checkpointsAdded": "The points from the GPX were added.",
       "checkpointsUnchanged": "Nothing to change in the points on the route.",
-      "volunteerAgreementRequested": "The agreement link is on its way by email.",
+      "volunteerAgreementRequested": "Agreement requested.",
       "volunteerAgreementRecorded": "Agreement recorded as signed on paper.",
       "badgeDesignSaved": "The badge was saved.",
       "badgeDesignUnchanged": "Nothing to change on the badge.",
@@ -13355,9 +13321,9 @@
       "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
       "volunteersAccessSaved": "Saved who can offer.",
       "volunteerInvitationsSent": {
-        "one": "{count} invitation sent.",
-        "few": "{count} invitations sent.",
-        "other": "{count} invitations sent."
+        "one": "{count} person invited.",
+        "few": "{count} people invited.",
+        "other": "{count} people invited."
       },
       "volunteerInvitationsNone": "Nothing sent: those addresses already have an invitation or have already offered.",
       "volunteerInvitationResent": "Invitation sent again, with a new link.",
@@ -13369,7 +13335,7 @@
       "volunteersButtonOff": "The event's page no longer shows the “I want to volunteer” button. Sign-up stays open by link.",
       "volunteersListOn": "The event's page can now show the “Volunteers” card: the name and role of confirmed volunteers who ticked.",
       "volunteersListOff": "The event's page no longer shows the volunteers' list.",
-      "volunteerGuardianRequested": "The link to the parent is on its way by email.",
+      "volunteerGuardianRequested": "The parent's consent is requested.",
       "volunteerGuardianRecorded": "The parent's consent is recorded as signed on paper.",
       "volunteerCategoryAdded": "Category added.",
       "volunteerCategorySaved": "Category saved.",
@@ -13411,8 +13377,86 @@
       "eliteDeleted": "The name was deleted from the elite list.",
       "eliteMarked": "Marked as elite: their bib prints the name where the number goes. The registration stays as it is.",
       "eliteUnmarked": "No longer elite: their bib prints the number again.",
-      "waitlistAdded": "The person is on the waiting list; the email is queued.",
-      "waitlistPlaced": "A place was free: the person got it, and the declaration email is queued."
+      "waitlistAdded": "The person is on the waiting list.",
+      "waitlistPlaced": "A place was free: the person got it.",
+      "invitedProviderFailed": "The Zitadel account is not ready: see the message above.",
+      "reinvitedProviderFailed": "Zitadel's link did not go: see the message above.",
+      "membersInvitedProviderFailed": "Some Zitadel accounts are not ready: see the report above.",
+      "eventInvitationsErased": "Invitations withdrawn and erased.",
+      "eventImportedOver": "Imported over the event."
+    },
+    "mail": {
+      "now": "Leaving now{road}: {what}.",
+      "at": "Leaves {when} (estimated){road}: {what}.",
+      "reset": "Leaves once Mailgun resumes, {when} (estimated): {what}.",
+      "days": "Leaves over the next days, after the day's limit: {what}.",
+      "atToday": "at {at}",
+      "road": {
+        "mailgun": " by Mailgun",
+        "gmail": " by the club's Gmail"
+      },
+      "what": {
+        "one": "“{type}” to {count} person",
+        "few": "“{type}” to {count} people",
+        "other": "“{type}” to {count} people"
+      },
+      "what2": {
+        "one": "“{type}” and “{type2}” to {count} person",
+        "few": "“{type}” and “{type2}” to {count} people",
+        "other": "“{type}” and “{type2}” to {count} people"
+      },
+      "whatTest": {
+        "one": "“{type}” to {count} test address, uncounted",
+        "few": "“{type}” to {count} test addresses, uncounted",
+        "other": "“{type}” to {count} test addresses, uncounted"
+      },
+      "whatTestMixed": {
+        "one": "{count} email to a test address, uncounted",
+        "few": "{count} emails to test addresses, uncounted",
+        "other": "{count} emails to test addresses, uncounted"
+      },
+      "whatOthers": {
+        "one": "“{type}” to {count} other person",
+        "few": "“{type}” to {count} other people",
+        "other": "“{type}” to {count} other people"
+      },
+      "whatOthersMixed": {
+        "one": "{count} email to another person",
+        "few": "{count} emails to other people",
+        "other": "{count} emails to other people"
+      },
+      "test": {
+        "one": " (+{count} to a test address, uncounted)",
+        "few": " (+{count} to test addresses, uncounted)",
+        "other": " (+{count} to test addresses, uncounted)"
+      },
+      "club": {
+        "one": " and {count} email to the club",
+        "few": " and {count} emails to the club",
+        "other": " and {count} emails to the club"
+      },
+      "later": {
+        "one": "; {count} more leaves {when} (estimated)",
+        "few": "; the other {count} leave {when} (estimated)",
+        "other": "; the other {count} leave {when} (estimated)"
+      },
+      "laterDays": {
+        "one": "; {count} more leaves over the next days",
+        "few": "; the other {count} leave over the next days",
+        "other": "; the other {count} leave over the next days"
+      },
+      "others": {
+        "one": "Also, {count} email to another person: “{type}”.",
+        "few": "Also, {count} emails to other people: “{type}”.",
+        "other": "Also, {count} emails to other people: “{type}”."
+      },
+      "othersMixed": {
+        "one": "Also, {count} email to another person.",
+        "few": "Also, {count} emails to other people.",
+        "other": "Also, {count} emails to other people."
+      },
+      "roles": "If the roles are no longer the same by then, the email is withdrawn.",
+      "zitadel": "Zitadel sends the password link separately, now."
     },
     "via": {
       "mailgun": "Leaves by Mailgun.",

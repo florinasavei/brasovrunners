@@ -1,4 +1,5 @@
 import type { Locale } from "@/i18n/routing";
+import type { FormNotice } from "@/shared/feedback/notice";
 import type { ConfigChange } from "./diff";
 import type { EventFileRefusal, FileNote } from "./file-format";
 import type { DiffEventImportResult, ImportNote, MediaOutcome } from "./import";
@@ -72,4 +73,11 @@ export type DiffOutcome =
 
 export type AsNewOutcome = ImportRefusal | { ok: true; eventId: string; path: string; slugs: Record<Locale, string>; media: MediaOutcome; notes: ImportNote[] };
 
-export type OverOutcome = ImportRefusal | { ok: true; eventId: string; path: string; changed: string[]; media: MediaOutcome; offered: number };
+/**
+ * `notice`: the toast of an import whose save emailed somebody — the places a raised capacity offered, the declarations a
+ * moved window re-sent — with what it queued and when (the design «telling the owner about every email a staff press
+ * sends»); absent when the import emailed nobody, and the page's own sentence is all there is to say.
+ */
+export type OverOutcome =
+  | ImportRefusal
+  | { ok: true; eventId: string; path: string; changed: string[]; media: MediaOutcome; offered: number; notice?: FormNotice };

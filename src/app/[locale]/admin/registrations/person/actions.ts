@@ -17,6 +17,7 @@ import { type EmailPressHandle, inEmailPress } from "@/modules/notifications/pre
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { flashOutcome } from "@/shared/feedback/flash";
 
 /**
  * The lookup's form (§322): the address arrives in the body of a POST, is canonicalized here, and
@@ -133,5 +134,9 @@ async function erasePersonPart(
     if (isDomainError(error)) redirect(`${path}?error=${error.code}#admin-alert`);
     throw error;
   }
+  // The emailing one says so in a toast (§384): a withdrawn invitation's place may have gone to the next in line,
+  // and the toast's mail line says what that sent and when (the design «telling the owner about every email a staff
+  // press sends»). Its key only, never the address the page was opened for.
+  if (done && press) await flashOutcome({ saved: "eventInvitationsErased" });
   redirect(`${path}?q=${encodeURIComponent(sealed)}${done ? `&erased=${erased}` : ""}`);
 }

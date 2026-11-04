@@ -2262,6 +2262,15 @@ leaves. «Setări» → «Emailuri» → «Emailuri azi» (`notifications/journa
 the names, for the Administrator and the Superadministrator alone; `tests/unit/shared/emailing-presses.test.ts`
 holds every emailing press to its scope, and `tests/e2e/email-journal.spec.ts` runs one through Next itself.
 
+**What a press's toast says it sent.** `shared/feedback/flash.ts#flashOutcome` (and `withPressMail`, for a press that
+answers with its notice) reads the press's rows back by `press_id` once its transaction committed
+(`notifications/press-receipt.ts`, the pure `domain/press-receipt.ts`) and adds the toast's mail line: what left (the
+type's words), how many — the person, the club's mailboxes, other people, test addresses — and when, by the queue's
+own `departureOf`. Tokens, counts and instants travel in the flash cookie, never a name or an address; a press that
+queued nothing adds nothing, so an emailing press's `Feedback.toast` sentence says its act alone — never «pus la
+coadă», «pleacă acum» or «primește un email» — and the mail line (`shared/feedback/mail-line.ts`, words
+`Feedback.mail`) is the one place that says what left and when.
+
 Each deliberate resend gets a new row/idempotency key. Every message type names whom it is written
 for — the participant, the club's own mailboxes, the staff or the public
 (`notifications/domain/email-audience.ts`) — and only a participant's own message, with their id on

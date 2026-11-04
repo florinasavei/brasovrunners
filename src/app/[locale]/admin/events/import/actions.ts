@@ -15,6 +15,7 @@ import { canTransferEvents } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { inEmailPress } from "@/modules/notifications/press";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { withPressMail } from "@/shared/feedback/flash";
 
 /**
  * The import page's Server Actions (§751): each asks the session who is calling and the service
@@ -173,7 +174,19 @@ export async function importEventOverAction(input: z.input<typeof overInput>): P
         translationVersions: parsed.data.translationVersions,
         confirmation: parsed.data.typedTitle === undefined || parsed.data.registrations === undefined ? undefined : { typedTitle: parsed.data.typedTitle, registrations: parsed.data.registrations },
       });
-      return { ok: true, eventId: parsed.data.eventId, path: editorPath(localeOf(parsed.data.locale), parsed.data.eventId), changed: result.changed, media: result.media, offered: result.offered };
+      // What the save emailed (the design «telling the owner about every email a staff press sends»): a toast only when
+      // it queued something, with what and when; the page's own sentence says the rest.
+      const told = await withPressMail({ kind: "success", key: "eventImportedOver" });
+      const notice = told?.values?.mail ? told : undefined;
+      return {
+        ok: true,
+        eventId: parsed.data.eventId,
+        path: editorPath(localeOf(parsed.data.locale), parsed.data.eventId),
+        changed: result.changed,
+        media: result.media,
+        offered: result.offered,
+        ...(notice ? { notice } : {}),
+      };
     } catch (error) {
       return refusal(error);
     }

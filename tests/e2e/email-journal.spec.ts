@@ -74,6 +74,11 @@ test.describe("§NNN every email a staff press queues carries the press, and «E
     await cancelCard.getByRole("button", { name: "Anulează înscrierea" }).click();
     await confirmDialog(page);
     await page.waitForURL(/saved=registrationCancelled/);
+    // The toast after the press (slice 2): the act, then what the press queued, to how many and when — never the name.
+    const toast = page.getByTestId("toast");
+    await expect(toast).toContainText("Înscrierea a fost anulată. Pleacă ", { timeout: 30_000 });
+    await expect(toast).toContainText("„Înscriere anulată” către 1 persoană");
+    await expect(toast).not.toContainText(name);
 
     // Every row about the runner is the press's: its cause, one id, and the Administrator as the requester.
     const stamps = await withDatabase(async (client) => {

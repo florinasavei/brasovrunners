@@ -135,11 +135,14 @@ test.describe("§384 the bulk cancel counts the emails it will send", () => {
     await expect(dialog.getByTestId("confirm-email")).toHaveCount(0);
     await cancelDialog(page, "Anulezi înscrierile bifate?");
 
-    // Through it: the toast counts the real rows cancelled, the same two.
+    // Through it: the toast counts the real rows cancelled, the same two — and its mail line (the design «telling the
+    // owner about every email a staff press sends», slice 2) the two emails the press really queued, and when.
     for (const index of [0, 1]) await tick(index).check();
     await panel.locator('input[name="reason"]').fill("Test automat");
     await press();
     await confirmDialog(page, "Anulezi înscrierile bifate?");
-    await expect(page.getByTestId("toast")).toContainText("2 înscrieri anulate; 2 emailuri puse la coadă.", { timeout: 30_000 });
+    const toast = page.getByTestId("toast");
+    await expect(toast).toContainText("2 înscrieri anulate. Pleacă ", { timeout: 30_000 });
+    await expect(toast).toContainText("„Înscriere anulată” către 2 persoane");
   });
 });

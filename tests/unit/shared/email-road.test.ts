@@ -95,6 +95,16 @@ describe("§841 the toast names the road", () => {
     const source = read("src/shared/feedback/ToastProvider.tsx");
     expect(source).toContain('const via = values.via === "mailgun" || values.via === "gmail" ? ` ${t(`via.${values.via}`)}` : "";');
     expect(source).toContain("return `${said}${via}`;");
+    // An emailing press tells its road inside its mail line instead (the design «telling the owner about every email a
+    // staff press sends», slice 2): the line first, the bare road only when there is none.
+    expect(source.indexOf("if (mail) return `${said} ${mail}`;")).toBeGreaterThan(0);
+    expect(source.indexOf("if (mail) return `${said} ${mail}`;")).toBeLessThan(source.indexOf("return `${said}${via}`;"));
+    for (const catalogue of [ro, en]) {
+      expect(catalogue.Feedback.mail.now).toContain("{road}");
+      expect(catalogue.Feedback.mail.at).toContain("{road}");
+      expect(typeof catalogue.Feedback.mail.road.mailgun).toBe("string");
+      expect(typeof catalogue.Feedback.mail.road.gmail).toBe("string");
+    }
   });
 
   it("flashes the chosen road as `via` beside the outcome's numbers, and nothing when no press chose one", async () => {

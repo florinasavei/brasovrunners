@@ -12,6 +12,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { type ChangeEvent, useState } from "react";
 import { countForm } from "@/i18n/count-form";
+import { useToast } from "@/shared/feedback/toast-context";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import type { ChangeValue } from "../diff";
 import type { MediaFailure } from "../media";
@@ -125,6 +126,7 @@ export default function EventImportPanel({
   const [confirmed, setConfirmed] = useState(false);
   const [typedTitle, setTypedTitle] = useState("");
   const [created, setCreated] = useState<AsNewOk | null>(null);
+  const toast = useToast();
   const [applied, setApplied] = useState<OverOk | null>(null);
 
   const reset = () => {
@@ -218,8 +220,11 @@ export default function EventImportPanel({
         locale,
         ...(production ? { typedTitle, registrations: diff.target.registrations } : {}),
       });
-      if (outcome.ok) setApplied(outcome);
-      else setProblem(sentenceOf(outcome));
+      if (outcome.ok) {
+        setApplied(outcome);
+        // What the import's save emailed, and when (the design «telling the owner about every email a staff press sends»).
+        if (outcome.notice) toast.show(outcome.notice);
+      } else setProblem(sentenceOf(outcome));
     } catch {
       setProblem({ sentence: words.failed });
     } finally {
@@ -227,7 +232,7 @@ export default function EventImportPanel({
     }
   };
 
-  const form = (count: number, forms: Record<"one" | "few" | "other", string>) => fill(forms[countForm(count, locale)], { count });
+  const form =(count: number, forms: Record<"one" | "few" | "other", string>) => fill(forms[countForm(count, locale)], { count });
 
   const valueOf = (value: ChangeValue): string => {
     switch (value.type) {

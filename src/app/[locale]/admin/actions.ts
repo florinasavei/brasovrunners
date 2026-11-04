@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { eventListBack } from "@/modules/content/events/list-query";
 import { redirect } from "next/navigation";
 import { flashOutcome } from "@/shared/feedback/flash";
+import { providerDone } from "@/shared/feedback/notice";
 import { signOut } from "@/auth";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
@@ -1403,8 +1404,9 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
       outcome = { saved: "invited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
       // Without Zitadel as the provider the allowlist row is the whole verb, and "added to the team"
       // is true: the toast says so. Under the provider `unconfigured` means no key, and the banner
-      // says why nobody was invited — no green tick (`notice.ts`, PROVIDER_DONE).
-      toast = env.STAFF_AUTH_MODE === "provider" ? outcome : { saved: "invited" };
+      // says why nobody was invited — no green tick (`notice.ts`, PROVIDER_DONE); the club's own
+      // invitation still left, and an info toast says what it was and when (`PROVIDER_FAILED_TOASTS`).
+      toast = env.STAFF_AUTH_MODE !== "provider" ? { saved: "invited" } : providerDone(invite.kind) ? outcome : { saved: "invitedProviderFailed" };
     } catch (error) {
       return refused(error, form);
     }
@@ -1467,8 +1469,15 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
         ...(counts.failed > 0 ? { failed: String(counts.failed) } : {}),
         ...(lines.length > 0 ? { report } : {}),
       };
-      // A green tick only when every account exists; otherwise the banner and the report say which did not.
-      toast = counts.failed > 0 ? {} : outcome;
+      // A green tick only when every account exists; otherwise the banner and the report say which did not,
+      // and an info toast what the club's own invitations were and when they leave (`PROVIDER_FAILED_TOASTS`).
+      // Zitadel's own password emails, one per account it made or found, are named beside the club's.
+      toast =
+        counts.failed > 0
+          ? { saved: "membersInvitedProviderFailed" }
+          : counts.created + counts.invited > 0
+            ? { ...outcome, invite: "invited" }
+            : outcome;
     } catch (error) {
       const refusal = refused(error, form);
       if (refusal.error === "VALIDATION_ERROR") {
@@ -1512,8 +1521,10 @@ export async function resendStaffInviteAction(_previous: FormOutcome | null, for
       const member = await resendStaffInvitation(getDb(), actor, text(form, "email"), new Date(), delivery);
       const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(member.email) : ({ kind: "unconfigured" } as const);
       outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
-      // The provider's answer rides along: a failed or unconfigured Zitadel invite holds the green toast back (§171, §288).
-      if (delivery === "now") toast = { ...outcome, saved: "reinvitedNow" };
+      // The provider's answer rides along: a failed or unconfigured Zitadel invite holds the green toast back (§171, §288),
+      // and an info toast says what the club's own invitation was and when it leaves (`PROVIDER_FAILED_TOASTS`).
+      if (!providerDone(invite.kind)) toast = { saved: "reinvitedProviderFailed" };
+      else if (delivery === "now") toast = { ...outcome, saved: "reinvitedNow" };
     } catch (error) {
       // A «now» the day's allowance cannot hold says so in its own sentence (§80, §540).
       outcome = isDomainError(error) ? { error: sendNowRefusalCode(error) } : outcomeOf(error);
