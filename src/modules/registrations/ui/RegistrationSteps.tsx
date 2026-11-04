@@ -53,7 +53,8 @@ type Props = {
    * Whether a place reaches the waiting list by itself on this event (§NNN): `registration-cta.ts#offersByItself`, the
    * allocator's own rule read off the event's row, asked by every caller — so no page can forget it. False («Nu», or
    * «Locurile libere le dau doar eu»): the waiting list's step says the organizers give the places, never «when a place
-   * frees up», and no order of registration either, since they choose.
+   * frees up», and no order of registration either, since they choose; and the declaration's step, that the organizers
+   * may give a lapsed hold's place to someone else, never that it passes to the next in line.
    */
   byItself: boolean;
   /**
@@ -101,14 +102,21 @@ export default async function RegistrationSteps({ folded = false, window = null,
     // "cu 2 zile înainte de start" / "la start" (§407): the one helper decides which.
     due: confirmationDueWords(locale, window?.deadlineDays ?? 0),
   };
+  /*
+    The third step's last clause says what a lapsed hold does with a waiting list (§NNN): «apoi trece la următorul»
+    only while a place reaches the line by itself — else the place stays free for the organizers to give. With a
+    window, the clause speaks only of the hold (`bodyLater`, `bodyLaterAtStart`), true either way.
+  */
   const stepBody = (key: string) =>
     key === "declaration" && window
       ? confirmationDueAtStart({ days: window.deadlineDays })
         ? t("steps.declaration.bodyLaterAtStart", values)
         : t("steps.declaration.bodyLater", values)
-      : key === "confirmed" && reminderHours === 0
-        ? t("steps.confirmed.bodyNoReminder")
-        : t(`steps.${key}.body`, values);
+      : key === "declaration" && !byItself
+        ? t("steps.declaration.bodyByHand", values)
+        : key === "confirmed" && reminderHours === 0
+          ? t("steps.confirmed.bodyNoReminder")
+          : t(`steps.${key}.body`, values);
 
   const list = (
     <StepList>

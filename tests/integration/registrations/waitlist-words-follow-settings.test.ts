@@ -24,7 +24,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *
  * - the address confirmed (`/registrations/confirm/[token]?done=waitlist`), and its list of the address's people;
  * - the declaration signed onto the waiting list (`/registrations/declare/[token]?done=waitlisted`), and a family's
- *   last screen there, its waiting person's line;
+ *   last screen there, its waiting person's line; signed with a place (`?done=confirmed`), where a cancelled place goes;
  * - another person on the address entered onto the waiting list (`/registrations/family/[token]?done=waitlist`);
  * - a spent link of somebody waiting (the confirmation page's «Ești pe lista de așteptare»);
  * - the event page's five steps, asked of the event's own row.
@@ -87,6 +87,7 @@ vi.mock("@/modules/registrations/family-signing", async (importOriginal) => ({
 const { fakeNextCache } = await import("../../helpers/next-cache");
 const { issueActionToken } = await import("@/modules/action-tokens/repository");
 const { readSpentRegistrationLink, spentLinkOffersByItself } = await import("@/modules/registrations/token-actions");
+const { offersWaitlistAutomatically } = await import("@/modules/registrations/repository");
 const { findPublishedEventBySlug } = await import("@/modules/events/repository");
 const { default: ConfirmEmailPage } = await import("@/app/[locale]/registrations/confirm/[token]/page");
 const { default: DeclarePage } = await import("@/app/[locale]/registrations/declare/[token]/page");
@@ -195,7 +196,7 @@ afterEach(() => {
 });
 
 describe("§NNN the reader of the rule: a spent link names its event", () => {
-  it("answers the allocator's own rule for the event the link was spent at, and today's words for a link that names nothing", async () => {
+  it("answers the allocator's own rule for the event the link was spent at", async () => {
     for (const setting of SETTINGS) {
       const race = await createRace(setting);
       const ana = await register(race.id, "Ana Pop", "WAITLISTED");
@@ -204,8 +205,24 @@ describe("§NNN the reader of the rule: a spent link names its event", () => {
       // The link is presented under another purpose first, as the declaration page presents its own: the next one answers.
       expect(await spentLinkOffersByItself(link, ["COMPLETE_DECLARATION", "VERIFY_REGISTRATION_EMAIL"], NOW), setting.name).toBe(setting.byItself);
     }
-    expect(await spentLinkOffersByItself("A".repeat(43), ["VERIFY_REGISTRATION_EMAIL"], NOW)).toBe(true);
-    expect(await spentLinkOffersByItself("not-a-token", ["VERIFY_REGISTRATION_EMAIL"], NOW)).toBe(true);
+  });
+
+  /*
+    One default for the two readers (the review of this branch): what cannot be read gets the organizers' words, which
+    promise no notice — `offersWaitlistAutomatically` for an event row it cannot find, and the spent link's reader for
+    a link that names nothing, even at a «Da» event.
+  */
+  it("gives the organizers' words for a link that names nothing, as for an event row nobody can find", async () => {
+    const race = await createRace(SETTINGS[0]);
+    const ana = await register(race.id, "Ana Pop", "WAITLISTED");
+    expect(await spentLinkOffersByItself("A".repeat(43), ["VERIFY_REGISTRATION_EMAIL"], NOW)).toBe(false);
+    expect(await spentLinkOffersByItself("not-a-token", ["VERIFY_REGISTRATION_EMAIL"], NOW)).toBe(false);
+    // A link of the «Da» event, never pressed: nothing spent names it.
+    const { secret } = await issueActionToken(db, { participantId: ana.participantId, registrationId: ana.id, purpose: "VERIFY_REGISTRATION_EMAIL", expiresAt: RACE_DAY, now: NOW });
+    expect(await spentLinkOffersByItself(secret, ["VERIFY_REGISTRATION_EMAIL"], NOW)).toBe(false);
+    // Spent, but under another purpose than the page presents it under.
+    expect(await spentLinkOffersByItself(await spentLink(ana, "VERIFY_REGISTRATION_EMAIL"), ["COMPLETE_DECLARATION"], NOW)).toBe(false);
+    expect(await offersWaitlistAutomatically(db, "00000000-0000-4000-8000-000000000000")).toBe(false);
   });
 
   it("the spent link's own state carries it for somebody waiting, and for nobody else", async () => {
@@ -291,6 +308,41 @@ describe("§NNN the declaration signed onto the waiting list", () => {
     const page = await html((await DeclarePage({ params: Promise.resolve({ locale: "ro", token: link }), searchParams: Promise.resolve({ done: "waitlisted" }) })) as ReactElement);
     expect(page).toContain(ro.Registrations.declare.nextWaitlistedByHand[0]);
     expect(page).not.toContain(ro.Registrations.declare.nextWaitlisted[0]);
+  });
+});
+
+/*
+  The declaration signed with a place (the review of this branch): its last line says what a cancel does with the place —
+  «merge la cineva de pe lista de așteptare» only while a place reaches the line by itself; with «Nu» or the tick the freed
+  place waits for the organizers' «Trimite-i oferta», so they may give it.
+*/
+describe("§NNN the declaration signed with a place: where a cancelled place goes", () => {
+  for (const setting of SETTINGS) {
+    for (const locale of LOCALES) {
+      it(`${setting.name}: ${setting.byItself ? "today's words" : "the organizers'"} (${locale})`, async () => {
+        const race = await createRace(setting);
+        const ana = await register(race.id, "Ana Pop", "CONFIRMED");
+        const link = await spentLink(ana, "COMPLETE_DECLARATION");
+        state.locale = locale;
+        const page = await html((await DeclarePage({ params: Promise.resolve({ locale, token: link }), searchParams: Promise.resolve({ done: "confirmed" }) })) as ReactElement);
+        const words = catalogue[locale].Registrations.declare;
+        const shown = setting.byItself ? words.nextConfirmed : words.nextConfirmedByHand;
+        const other = setting.byItself ? words.nextConfirmedByHand : words.nextConfirmed;
+        expect(page).toContain(shown[0]);
+        expect(page).toContain(shown[2]);
+        // The line that differs: where the place goes on a cancel.
+        expect(page).not.toContain(other[2]);
+      });
+    }
+  }
+
+  it("the organizers' lines differ from today's only where a place goes, in both languages", () => {
+    for (const locale of LOCALES) {
+      const words = catalogue[locale].Registrations.declare;
+      expect(words.nextConfirmedByHand.slice(0, 2)).toEqual(words.nextConfirmed.slice(0, 2));
+      expect(words.nextConfirmedByHand[2]).not.toBe(words.nextConfirmed[2]);
+      expect(words.nextWaitlistedByHand[2]).toBe(words.nextWaitlisted[2]);
+    }
   });
 });
 

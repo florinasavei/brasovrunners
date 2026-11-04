@@ -315,12 +315,17 @@ const CONFIRMED_ON_ADDRESS: ReadonlySet<string> = new Set(["PENDING_DECLARATION"
 /**
  * Whether a place reaches the waiting list by itself at the event a spent link names (§NNN): the allocator's own
  * `offersOnItsOwn`, read off the event row as the emails read it when they are rendered (`offersWaitlistAutomatically`).
- * For the pages after a press that tell somebody now in the line what comes next — the address confirmed, the declaration
- * signed, another person on the address entered. False («Nu», or «Locurile libere le dau doar eu»): the organizers give
- * each place, and the page says they write when they can give one, never «when a place frees up».
+ * For the pages after a press that say what comes next — the address confirmed, the declaration signed (either outcome),
+ * another person on the address entered. False («Nu», or «Locurile libere le dau doar eu»): the organizers give each
+ * place, and the page says they write when they can give one, never «when a place frees up».
  *
  * `purposes` are the ones the page presents the link under; the first the link was spent under names the event. Read-only,
- * on the GET after the press (§12.8), like `readConfirmedOnAddress`. A link that names nothing readable keeps today's words.
+ * on the GET after the press (§12.8), like `readConfirmedOnAddress`.
+ *
+ * A link that names nothing readable — no spent token under those purposes, a registration erased since — answers false,
+ * the organizers' words, as `offersWaitlistAutomatically` answers for an event row it cannot find: those words promise
+ * no notice, so they hold whatever the settings, while today's would promise one only «Da» sends — and a promise
+ * nobody keeps is worse than none.
  */
 export async function spentLinkOffersByItself(secret: string, purposes: readonly EmailActionTokenPurpose[], now: Date): Promise<boolean> {
   const db = getDb();
@@ -329,10 +334,10 @@ export async function spentLinkOffersByItself(secret: string, purposes: readonly
     if (!registrationId) continue;
     return inReadOnlyTransaction(db, async (tx) => {
       const registration = await findRegistrationById(tx, registrationId);
-      return registration ? offersWaitlistAutomatically(tx, registration.eventId) : true;
+      return registration ? offersWaitlistAutomatically(tx, registration.eventId) : false;
     });
   }
-  return true;
+  return false;
 }
 
 export async function consumeAndSignDeclaration(

@@ -11540,6 +11540,7 @@
       "declaration": {
         "title": "Sign the declaration",
         "body": "From that same email, sign it online or on paper at the registration desk on race day. Your place is held for {hold}; if there is a waiting list, it then goes to the next in line.",
+        "bodyByHand": "From that same email, sign it online or on paper at the registration desk on race day. Your place is held for {hold}; if there is a waiting list, the organizers may then give it to someone else.",
         "bodyLater": "The race is free, so we ask for a confirmation: {opens} before the start you get an email and sign the declaration, online or on paper at the registration desk. You can sign earlier too. If there is a waiting list, the place is held until {due}.",
         "bodyLaterAtStart": "The race is free, so we ask for a confirmation: sign the declaration from the registration email any time before the start, online or on paper at the registration desk. We remind you {opens} before. The place does not lapse before the start."
       },
@@ -11873,6 +11874,11 @@
         "The confirmation email is on its way, with your QR code and your access code — keep it for race day.",
         "You get a reminder {reminder} before the start, with the time, the place, what to bring and, if assigned, your race number.",
         "If you can no longer come, cancel from the link in the email: your place goes to somebody on the waiting list."
+      ],
+      "nextConfirmedByHand": [
+        "The confirmation email is on its way, with your QR code and your access code — keep it for race day.",
+        "You get a reminder {reminder} before the start, with the time, the place, what to bring and, if assigned, your race number.",
+        "If you can no longer come, cancel from the link in the email: the organizers may give your place to somebody on the waiting list."
       ],
       "nextWaitlisted": [
         "You are on the waiting list; if a place frees up, you get an email with a confirmation link.",

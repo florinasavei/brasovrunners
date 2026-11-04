@@ -239,17 +239,22 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     const held = await heldPass(token, pass, now);
     const familySteps = held ? await familyStepsOfPass(getDb(), held) : null;
     /*
-      The person now in the line is told who gives the places (§NNN): while no place reaches the line by itself — «Nu», or
-      «Locurile libere le dau doar eu» — the organizers write when they can give one, never «when a place frees up». The
-      allocator's own rule, read off the event: the family's pass names it, else the link; only for that outcome.
+      Who gives the places (§NNN): while no place reaches the line by itself — «Nu», or «Locurile libere le dau doar eu» —
+      the person now in the line is told the organizers write when they can give one, never «when a place frees up»; the
+      person confirmed, that the organizers may give their place on to the line if they cancel, never that it goes there by
+      itself. The allocator's own rule, read off the event: the family's pass names it, else the link.
     */
-    const byItself =
-      done !== "waitlisted"
-        ? true
-        : held
-          ? await offersWaitlistAutomatically(getDb(), held.eventId)
-          : await spentLinkOffersByItself(token, ["COMPLETE_DECLARATION", "WAITLIST_OFFER", "REGISTER_ANOTHER_PERSON"], now);
-    const nextWaitlisted = byItself ? "declare.nextWaitlisted" : "declare.nextWaitlistedByHand";
+    const byItself = held
+      ? await offersWaitlistAutomatically(getDb(), held.eventId)
+      : await spentLinkOffersByItself(token, ["COMPLETE_DECLARATION", "WAITLIST_OFFER", "REGISTER_ANOTHER_PERSON"], now);
+    const nextKey =
+      done === "waitlisted"
+        ? byItself
+          ? "declare.nextWaitlisted"
+          : "declare.nextWaitlistedByHand"
+        : byItself
+          ? "declare.nextConfirmed"
+          : "declare.nextConfirmedByHand";
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
@@ -275,7 +280,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           {t("declare.nextTitle")}
         </Typography>
         <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
-          {nextLines(t.raw(done === "waitlisted" ? nextWaitlisted : "declare.nextConfirmed") as string[], locale, reminderHours(reminder, await cachedDeadlines())).map((line, index) => (
+          {nextLines(t.raw(nextKey) as string[], locale, reminderHours(reminder, await cachedDeadlines())).map((line, index) => (
             <Typography component="li" key={index}>
               {line}
             </Typography>

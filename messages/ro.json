@@ -11540,6 +11540,7 @@
       "declaration": {
         "title": "Semnezi declarația",
         "body": "Din același email, o semnezi online sau pe hârtie, la masa de înscrieri în ziua cursei. Locul e ținut {hold}; dacă e listă de așteptare, apoi trece la următorul.",
+        "bodyByHand": "Din același email, o semnezi online sau pe hârtie, la masa de înscrieri în ziua cursei. Locul e ținut {hold}; dacă e listă de așteptare, organizatorii îl pot da apoi altcuiva.",
         "bodyLater": "Cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația, online sau pe hârtie la masa de înscrieri. Poți semna și mai devreme. Dacă e listă de așteptare, locul e ținut până {due}.",
         "bodyLaterAtStart": "Cursa e gratuită, așa că îți cerem o confirmare: semnezi declarația din emailul de înscriere oricând până la start, online sau pe hârtie la masa de înscrieri. Îți amintim cu {opens} înainte. Locul nu expiră înainte de start."
       },
@@ -11832,6 +11833,11 @@
         "Primești acum emailul de confirmare, cu codul QR și codul tău de acces — păstrează-l pentru ziua cursei.",
         "Cu {reminder} înainte de start primești un reminder cu ora, locul, ce să aduci și, dacă a fost alocat, numărul de concurs.",
         "Dacă nu mai poți veni, anulezi din linkul din email: locul tău merge la cineva de pe lista de așteptare."
+      ],
+      "nextConfirmedByHand": [
+        "Primești acum emailul de confirmare, cu codul QR și codul tău de acces — păstrează-l pentru ziua cursei.",
+        "Cu {reminder} înainte de start primești un reminder cu ora, locul, ce să aduci și, dacă a fost alocat, numărul de concurs.",
+        "Dacă nu mai poți veni, anulezi din linkul din email: organizatorii pot da locul tău cuiva de pe lista de așteptare."
       ],
       "nextWaitlisted": [
         "Ești pe lista de așteptare; dacă se eliberează un loc, primești un email cu un link de confirmare.",
