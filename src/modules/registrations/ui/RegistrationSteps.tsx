@@ -50,6 +50,13 @@ type Props = {
    */
   reminderHoursBefore?: number | null;
   /**
+   * Whether a place reaches the waiting list by itself on this event (§NNN): `registration-cta.ts#offersByItself`, the
+   * allocator's own rule read off the event's row, asked by every caller — so no page can forget it. False («Nu», or
+   * «Locurile libere le dau doar eu»): the waiting list's step says the organizers give the places, never «when a place
+   * frees up», and no order of registration either, since they choose.
+   */
+  byItself: boolean;
+  /**
    * The club's deadlines and whether the family flow is on, read by the caller — the editor's
    * preview before saving (§579), which reads them from the database and never through the public
    * cache. Absent everywhere a visitor reads: the data cache's, as above.
@@ -77,7 +84,7 @@ async function refusalDisclosed(): Promise<boolean> {
   }
 }
 
-export default async function RegistrationSteps({ folded = false, window = null, reminderHoursBefore = null, settings }: Props) {
+export default async function RegistrationSteps({ folded = false, window = null, reminderHoursBefore = null, byItself, settings }: Props) {
   const t = await getTranslations("Registration");
   const locale = await getLocale();
   const [deadlines, familyOpen, refusalOn] = settings
@@ -108,7 +115,12 @@ export default async function RegistrationSteps({ folded = false, window = null,
       {STEPS.map(({ key, Icon }, index) => (
         <StepItem key={key} icon={<Icon fontSize="small" />} title={`${index + 1}. ${t(`steps.${key}.title`)}`} body={stepBody(key)} />
       ))}
-      <StepItem tone="quiet" icon={<HourglassTopIcon fontSize="small" />} title={t("steps.waitingList.title")} body={t("steps.waitingList.body", values)} />
+      <StepItem
+        tone="quiet"
+        icon={<HourglassTopIcon fontSize="small" />}
+        title={t("steps.waitingList.title")}
+        body={byItself ? t("steps.waitingList.body", values) : t("steps.waitingList.bodyByHand", values)}
+      />
       {/*
         A family on one address (§389; the owner: "document this … then that person can receive up
         to 4 QR codes"): the one way to add a second runner is to send the form again, and the next

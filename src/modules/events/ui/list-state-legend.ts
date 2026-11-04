@@ -2,6 +2,7 @@ import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, hoursPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { confirmationDueWords, confirmationWindow, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { LIST_STATE_KEYS, PUBLIC_LIST_GROUPS, type PublicListGroup } from "@/modules/registrations/domain/public-list-states";
+import { offersByItself } from "../domain/registration-cta";
 
 /**
  * What each state word on the public participant list means (§396; the owner, 2026-09-29, of a
@@ -28,7 +29,17 @@ export function listStateLegend(
   params: {
     /** The groups the list shows; the legend explains only these, in the list's order. */
     groups: readonly PublicListGroup[];
-    event: { startsAt: Date; confirmationOpensDaysBefore?: number | null; confirmationDeadlineDaysBefore?: number | null };
+    /**
+     * With the two settings that say who gives a place (§NNN): «Locurile din lista de așteptare se alocă automat» and
+     * «Locurile libere le dau doar eu», read by the one rule (`offersByItself`). A row read without them is «Da».
+     */
+    event: {
+      startsAt: Date;
+      confirmationOpensDaysBefore?: number | null;
+      confirmationDeadlineDaysBefore?: number | null;
+      waitlistAutoOffer?: boolean | null;
+      freePlacesByOfferOnly?: boolean | null;
+    };
     deadlines: Pick<Deadlines, "holdMinutes" | "offerHours">;
     /** The render's moment: which phase the event is in. */
     now: Date;
@@ -39,7 +50,13 @@ export function listStateLegend(
   const window = confirmationWindow(params.event);
   const explanation = (group: PublicListGroup): string => {
     if (group === "CONFIRMED") return say("startList.legend.confirmed");
-    if (group === "WAITLISTED") return say("startList.legend.waitlisted", { offer });
+    /*
+      Who gives the place (§NNN): «the first gets an offer» only while a place reaches the line by itself — else the
+      organizers give each one. A waiting row is a capped event's, so its places are counted (`0`, as the door's full state).
+    */
+    if (group === "WAITLISTED") {
+      return offersByItself(params.event, 0) ? say("startList.legend.waitlisted", { offer }) : say("startList.legend.waitlistedByHand", { offer });
+    }
     const beforeWindow =
       window !== null && !participationWindowOpen(params.event.startsAt, params.event.confirmationOpensDaysBefore, params.now);
     if (!beforeWindow) return say("startList.legend.pendingHold", { hold });

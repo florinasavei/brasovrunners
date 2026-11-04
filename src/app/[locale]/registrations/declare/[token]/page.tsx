@@ -59,7 +59,7 @@ import LegalLink from "@/shared/ui/LegalLink";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { DECLARATION_ACCEPT_BOX_ID, DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import UntickedBoxSummary from "@/modules/registrations/ui/UntickedBoxSummary";
-import { countEligibleWaitlisted, findRegistrationById } from "@/modules/registrations/repository";
+import { countEligibleWaitlisted, findRegistrationById, offersWaitlistAutomatically } from "@/modules/registrations/repository";
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
 import { declarantValues, identityDocumentValues } from "@/modules/registrations/signed-declaration";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
@@ -100,7 +100,7 @@ import {
   passFitsLink,
   readFamilySigningPass,
 } from "@/modules/registrations/family-signing";
-import { spentLinkHasFamilyLeft } from "@/modules/registrations/token-actions";
+import { spentLinkHasFamilyLeft, spentLinkOffersByItself } from "@/modules/registrations/token-actions";
 import FamilySigningSteps from "@/modules/registrations/ui/FamilySigningSteps";
 
 /**
@@ -118,15 +118,17 @@ async function heldPass(token: string, pass: FamilySigningPass | null, now: Date
  * next — a confirmed person's desk code and QR, the waiting list, or the emailed link that still
  * signs a person left for later — then «Gata», back to the event.
  */
-async function FamilyDone({ steps, doneHref }: { steps: readonly FamilyStep[]; doneHref: string }) {
+async function FamilyDone({ steps, doneHref, eventId }: { steps: readonly FamilyStep[]; doneHref: string; eventId: string }) {
   const t = await getTranslations("Registrations");
   const later = steps.some((step) => step.state === "later");
+  // Who gives the places, for anybody now in the line (§NNN): the allocator's own rule, read off the event — only then.
+  const byItself = steps.some((step) => step.status === "WAITLISTED") ? await offersWaitlistAutomatically(getDb(), eventId) : true;
   return (
     <Box data-testid="family-signing-done" sx={{ mt: 3 }}>
       <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 1 }}>
         {t("declare.family.doneTitle")}
       </Typography>
-      <FamilySigningSteps steps={steps} detailed />
+      <FamilySigningSteps steps={steps} detailed byItself={byItself} />
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {later ? t("declare.family.doneLater") : t("declare.family.doneAll")}
       </Typography>
@@ -236,6 +238,18 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     // The last person of a family signed: everybody on the address, each with their state.
     const held = await heldPass(token, pass, now);
     const familySteps = held ? await familyStepsOfPass(getDb(), held) : null;
+    /*
+      The person now in the line is told who gives the places (§NNN): while no place reaches the line by itself — «Nu», or
+      «Locurile libere le dau doar eu» — the organizers write when they can give one, never «when a place frees up». The
+      allocator's own rule, read off the event: the family's pass names it, else the link; only for that outcome.
+    */
+    const byItself =
+      done !== "waitlisted"
+        ? true
+        : held
+          ? await offersWaitlistAutomatically(getDb(), held.eventId)
+          : await spentLinkOffersByItself(token, ["COMPLETE_DECLARATION", "WAITLIST_OFFER", "REGISTER_ANOTHER_PERSON"], now);
+    const nextWaitlisted = byItself ? "declare.nextWaitlisted" : "declare.nextWaitlistedByHand";
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
@@ -252,7 +266,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           {await spamHintWords()}
         </Alert>
         {held && familySteps && isFamilyWizard(familySteps) && (
-          <FamilyDone steps={familySteps} doneHref={await familyDoneHref(held.eventId, locale)} />
+          <FamilyDone steps={familySteps} doneHref={await familyDoneHref(held.eventId, locale)} eventId={held.eventId} />
         )}
         {/* The toast the signature flashed (§427): the one that matches this outcome, never the other. */}
         {flashSlot}
@@ -261,7 +275,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           {t("declare.nextTitle")}
         </Typography>
         <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
-          {nextLines(t.raw(done === "waitlisted" ? "declare.nextWaitlisted" : "declare.nextConfirmed") as string[], locale, reminderHours(reminder, await cachedDeadlines())).map((line, index) => (
+          {nextLines(t.raw(done === "waitlisted" ? nextWaitlisted : "declare.nextConfirmed") as string[], locale, reminderHours(reminder, await cachedDeadlines())).map((line, index) => (
             <Typography component="li" key={index}>
               {line}
             </Typography>
@@ -615,7 +629,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
 
       {familyMode && !familyCurrent && passSteps && walking ? (
         /* The family's wizard with nobody left to sign (§471): who was signed, and nothing to press. */
-        <FamilyDone steps={passSteps} doneHref={await familyDoneHref(walking.eventId, locale)} />
+        <FamilyDone steps={passSteps} doneHref={await familyDoneHref(walking.eventId, locale)} eventId={walking.eventId} />
       ) : blocked || !declaration || movedOnNotice ? (
         <>
           <ActionLinkNotice locale={locale} status={notice} replaced={notice ? null : replaced} />

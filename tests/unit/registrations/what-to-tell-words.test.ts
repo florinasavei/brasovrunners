@@ -109,9 +109,24 @@ describe("§654 whatToTell — what to tell a person who asks where their regist
       ] as const) {
         const lines = whatToTell(locale, facts({ status: "WAITLISTED", waitlistPosition: 3, waitlistLength: 10, waitlistAutoOffer: autoOffer, waitlistCountPublic: countPublic }), NOW);
         expect(lines[1]).toBe(waitlistStandingPhrase(say(locale), locale, { position: 3, length: 10, autoOffer, countPublic }));
-        expect(lines[2]).toBe(ours(locale, "WAITLISTED"));
+        // What comes next follows the same setting (§NNN): the organizers' words while no place reaches the line by itself.
+        expect(lines[2]).toBe(ours(locale, autoOffer ? "WAITLISTED" : "waitlistedByHand"));
         expect(lines).not.toContain(spam);
       }
+    });
+
+    it(`§NNN a waiting row with no place reaching the line by itself promises no notice when one frees up (${locale})`, () => {
+      // `waitlistAutoOffer` is the allocator's `offersOnItsOwn` as a column: «Nu», or «Locurile libere le dau doar eu».
+      const byHand = whatToTell(locale, facts({ status: "WAITLISTED", waitlistPosition: 1, waitlistLength: 4, waitlistAutoOffer: false }), NOW);
+      expect(byHand).toContain(ours(locale, "waitlistedByHand"));
+      expect(byHand).not.toContain(ours(locale, "WAITLISTED"));
+      // With «Da» and the tick off, today's sentence.
+      const auto = whatToTell(locale, facts({ status: "WAITLISTED", waitlistPosition: 1, waitlistLength: 4, waitlistAutoOffer: true }), NOW);
+      expect(auto).toContain(ours(locale, "WAITLISTED"));
+      expect(auto).not.toContain(ours(locale, "waitlistedByHand"));
+      // Even with no place in the line said (§669), the promise follows the setting.
+      const hidden = whatToTell(locale, facts({ status: "WAITLISTED", waitlistAutoOffer: false }), NOW);
+      expect(hidden.slice(1)).toEqual([ours(locale, "waitlistedByHand")]);
     });
 
     it(`§669 the waiting line keeps the count private with «Arată public numărătoarea» unticked (${locale})`, () => {
@@ -224,6 +239,21 @@ describe("§654 whatToTell — what to tell a person who asks where their regist
 
     it(`a waiting row says the waiting-list email's own sentence (${locale})`, () => {
       expect(plain(email("WAITLIST_JOINED", { eventTitle: "Crosul" }).text)).toContain(ours(locale, "WAITLISTED"));
+    });
+
+    it(`§NNN with no place reaching the line by itself, the waiting row says the email's organizers' sentence, word for word (${locale})`, () => {
+      // The standing's `autoOffer` is what the email words its promise by (`organizersGiveThePlaces`): the same fact.
+      const standing = (autoOffer: boolean) => ({ position: 2, length: 5, autoOffer, countPublic: true });
+      const byHand = plain(email("WAITLIST_JOINED", { eventTitle: "Crosul", waitlistStanding: standing(false) }).text);
+      expect(byHand).toContain(ours(locale, "waitlistedByHand"));
+      expect(byHand).not.toContain(ours(locale, "WAITLISTED"));
+      // An Administrator's resend says it too (§641).
+      const resent = plain(email("WAITLIST_JOINED", { eventTitle: "Crosul", waitlistStanding: standing(false), waitlistResent: true }).text);
+      expect(resent).toContain(ours(locale, "waitlistedByHand"));
+      // «Da»: the email keeps «Te vom anunța…», and so does the block.
+      const auto = plain(email("WAITLIST_JOINED", { eventTitle: "Crosul", waitlistStanding: standing(true) }).text);
+      expect(auto).toContain(ours(locale, "WAITLISTED"));
+      expect(auto).not.toContain(ours(locale, "waitlistedByHand"));
     });
 
     it(`an offer says the offer email's subject and its sentence up to the deadline (${locale})`, () => {

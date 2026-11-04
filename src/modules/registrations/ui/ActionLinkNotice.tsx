@@ -126,8 +126,9 @@ export default async function ActionLinkNotice({
       )}
 
       {/* Waitlisted: nothing to press. The form a "send it again" button opens
-          (`requestRegistrationLink`) queues nothing for that status, so it would promise an email nobody queues. */}
-      {status.next === "NONE" && <Typography variant="body2">{t("spent.waitHelp")}</Typography>}
+          (`requestRegistrationLink`) queues nothing for that status, so it would promise an email nobody queues.
+          Who gives the places (§NNN): while no place reaches the line by itself, the organizers write when they can give one. */}
+      {status.next === "NONE" && <Typography variant="body2">{status.byItself === false ? t("spent.waitHelpByHand") : t("spent.waitHelp")}</Typography>}
     </Stack>
   );
 }
