@@ -745,6 +745,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             remove: t("events.bulkDeleteAction"),
             publishTitle: t("confirm.bulkPublishTitle"),
             publishBody: t("confirm.bulkPublishBody"),
+            publishAlso: words.line("alertMaybe").text,
             archiveTitle: t("confirm.bulkArchiveTitle"),
             archiveBody: t("confirm.bulkArchiveBody"),
             deleteTitle: t("confirm.bulkDeleteTitle"),

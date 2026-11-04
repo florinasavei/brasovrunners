@@ -56,6 +56,8 @@ export default function BulkBar({
     remove: string;
     publishTitle: string;
     publishBody: string;
+    /** What a publication sets off at the job's next pass (§445): the new-event alert to the newsletter's subscribers. */
+    publishAlso: string;
     archiveTitle: string;
     archiveBody: string;
     deleteTitle: string;
@@ -124,6 +126,7 @@ export default function BulkBar({
             icon="publish"
             title={labels.publishTitle}
             body={labels.publishBody}
+            mail={{ also: [{ text: labels.publishAlso }] }}
             confirmLabel={labels.publish}
             cancelLabel={labels.cancel}
             variant="contained"

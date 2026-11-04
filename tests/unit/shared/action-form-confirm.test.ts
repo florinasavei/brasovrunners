@@ -33,8 +33,11 @@ describe("§384 ActionForm asks first", () => {
     expect(source).toMatch(/const named = resolveChangedFields\(ticked, [\s\S]*?\}\);\s*if \(!named\) return;\s*event\.preventDefault\(\);/);
     // A series save's email line is summed over the dates ticked at this press, then asked (§384).
     expect(source).toMatch(/const counted = resolveEmailCount\(named, valuesOf\);/);
-    // A typed value named in the sentence is filled from the form at the press (§511), then asked.
-    expect(source).toMatch(/const resolved = fillFromForm\(counted, [\s\S]*?\}\);\s*setAsking\(\{ spec: resolved, submitter \}\);/);
+    // The quieter lines true of this press alone (the design «telling the owner about every email a staff press sends», slice 3):
+    // the offers a raised capacity sends, the window's re-sent links — then a typed value named in the sentences, the email line's
+    // person included, is filled from the form at the press (§511), and asked.
+    expect(source).toMatch(/const said = resolveAlso\(counted, valueOf\);/);
+    expect(source).toMatch(/const resolved = fillFromForm\(said, valueOf\);\s*setAsking\(\{ spec: resolved, submitter \}\);/);
   });
 
   it("reads the form with its submitter, so a two-verb form asks the right question", () => {

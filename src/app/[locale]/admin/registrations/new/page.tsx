@@ -179,8 +179,11 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             title: t("confirm.createRegistrationTitle"),
             body: t("confirm.createRegistrationBody"),
             vouchBody: t("confirm.createRegistrationVouchBody", { email: "{email}" }),
-            email: words.email(1),
-            road: words.road("links"),
+            mail: {
+              ordinary: words.mail({ to: "{firstName} {lastName}", type: "VERIFY_REGISTRATION_EMAIL", or: "COMPLETE_DECLARATION" }),
+              vouched: words.mail({ to: "{firstName} {lastName}", type: "WAITLIST_JOINED", or: "COMPLETE_DECLARATION" }),
+              fastTrack: words.mail({ to: "{firstName} {lastName}", type: "REGISTRATION_CONFIRMED", confirms: true }),
+            },
             confirmLabel: t("registrations.create"),
             cancelLabel: words.cancel,
           })}

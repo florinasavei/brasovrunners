@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import { type CSSProperties, type FormEvent, type ReactNode, useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
-import { choiceAnswer, type ConfirmSpec, fillFromForm, pickConfirm, resolveBodyCount, resolveChangedFields, resolveEmailCount, tickAnswer } from "@/shared/feedback/notice";
+import { choiceAnswer, type ConfirmSpec, fillFromForm, pickConfirm, resolveAlso, resolveBodyCount, resolveChangedFields, resolveEmailCount, tickAnswer } from "@/shared/feedback/notice";
 import { useToast } from "@/shared/feedback/toast-context";
 import { openFoldsAround, REVEAL_EVENT } from "@/shared/ui/fold";
 import { CONFIRM_CANCEL_EVENT } from "./confirm-cancel";
@@ -344,13 +344,16 @@ export default function ActionFormIsland({
     });
     if (!named) return;
     event.preventDefault();
-    // A series save's email line, summed over the dates ticked at this press (§384).
-    const counted = resolveEmailCount(named, valuesOf);
-    // A typed value named in the sentence (§511): «Limita nouă: 100 ore-CU.».
-    const resolved = fillFromForm(counted, (field) => {
+    const valueOf = (field: string) => {
       const value = data.get(field);
       return typeof value === "string" ? value : null;
-    });
+    };
+    // A series save's email line, summed over the dates ticked at this press (§384); the lines of a typed list counted.
+    const counted = resolveEmailCount(named, valuesOf);
+    // The quieter lines true of this press alone: the offers a raised capacity sends, the window's re-sent links.
+    const said = resolveAlso(counted, valueOf);
+    // A typed value named in the sentence (§511): «Limita nouă: 100 ore-CU.», «Pleacă 1 email către {firstName} {lastName}…».
+    const resolved = fillFromForm(said, valueOf);
     setAsking({ spec: resolved, submitter });
   };
 

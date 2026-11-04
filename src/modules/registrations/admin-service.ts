@@ -33,7 +33,7 @@ import type { SexChoice } from "./domain/sex";
 import { heldRefusal, refuseIfRegistrationHeld, registrationIsHeld } from "./declaration-hold";
 import { bibNumberInUse, isEventSpareNumber, retiredBibNumbers } from "./bibs";
 import { BIB_NUMBER_MAX, handsSpareAtConfirm } from "./domain/spare-bibs";
-import { type BulkResendCounts, canResendDeclarationToAll, canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
+import { type BulkResendCounts, canResendDeclarationToAll, canResendReminder, deriveAllowedResendMessageType, familyResendTarget } from "./domain/resend";
 import { listDeclarationResendCandidates, sortCandidates, spentResendLimits } from "./bulk-resend";
 import { canTransition, isActiveStatus, isTerminalStatus } from "./domain/state-machine";
 import { waitlistRefusalOf, walkInLeftUnconfirmedError } from "./domain/waitlist";
@@ -385,10 +385,8 @@ export async function resendFamilyMessage<T extends Record<string, unknown>>(
     .filter((row) => isActiveStatus(row.status))
     .sort((a, b) => a.submittedAt.getTime() - b.submittedAt.getTime());
   if (family.length < 2) throw new DomainError("VALIDATION_ERROR", "the address holds nobody else at this event");
-  const target =
-    family.find((row) => row.status === "PENDING_EMAIL_CONFIRMATION") ??
-    family.find((row) => row.status === "PENDING_DECLARATION" || row.status === "WAITLIST_OFFERED") ??
-    family.find((row) => row.status === "CONFIRMED");
+  // The same choice the dialog before the press named (`familyResendTypes`): one rule, in the domain.
+  const target = familyResendTarget(family);
   if (!target) throw new DomainError("VALIDATION_ERROR", "everybody on the address is on the waiting list; there is nothing to resend");
   const confirmed = family.filter((row) => row.status === "CONFIRMED").map((row) => row.id);
   const extra = target.status === "CONFIRMED" && confirmed.length > 1 ? { familyRegistrationIds: confirmed } : {};

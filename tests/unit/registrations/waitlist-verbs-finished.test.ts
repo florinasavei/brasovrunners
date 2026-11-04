@@ -57,8 +57,7 @@ describe("BR-REQ-037-05 the staff entry's dialog names the address only when it 
       title: confirm.createRegistrationTitle,
       body: confirm.createRegistrationBody,
       vouchBody: confirm.createRegistrationVouchBody,
-      email: "email line",
-      road: {} as never,
+      mail: { ordinary: { email: "email line" }, vouched: { email: "email line" }, fastTrack: { email: "email line" } },
       confirmLabel: "Add",
       cancelLabel: "Cancel",
     });
@@ -100,7 +99,7 @@ vi.mock("next-intl/server", async () => {
   };
 });
 vi.mock("@/i18n/navigation", () => ({ getPathname: () => "/admin/registrations/new" }));
-vi.mock("@/shared/feedback/confirm-words", () => ({ confirmWords: async () => ({ cancel: "Cancel", email: () => "email line", road: () => ({}) }) }));
+vi.mock("@/shared/feedback/confirm-words", () => ({ confirmWords: async () => ({ cancel: "Cancel", mail: () => ({ email: "email line" }) }) }));
 vi.mock("@/shared/forms/refusal-messages", () => ({ refusalMessages: async () => ({}) }));
 vi.mock("@/shared/forms/ActionForm", () => ({ default: () => null }));
 vi.mock("@/shared/forms/recall", () => ({ default: () => null }));
@@ -135,7 +134,8 @@ describe("BR-REQ-037-05 «Adaugă pe lista de așteptare» asks, naming the addr
     // Two buttons, two questions: the first button's is the add alone.
     const confirm = pickConfirm(findConfirm(tree), posted({ intent: "add", email: typed }));
     expect(confirm?.title).toBe(catalogues[locale].Admin.confirm.waitlistAddTitle);
-    expect(confirm?.fillFrom).toEqual(["email"]);
+    // The address typed, and the person's name the email line names (the design «telling the owner about every email a staff press sends», slice 3).
+    expect(confirm?.fillFrom).toEqual(["email", "firstName", "lastName"]);
     expect(confirm?.body).toContain("{email}");
     const filled = fillFromForm(confirm as ConfirmSpec, posted({ email: ` ${typed} ` }));
     expect(filled.body).toContain(typed);

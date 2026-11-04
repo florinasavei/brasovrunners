@@ -2271,6 +2271,17 @@ queued nothing adds nothing, so an emailing press's `Feedback.toast` sentence sa
 coadă», «pleacă acum» or «primește un email» — and the mail line (`shared/feedback/mail-line.ts`, words
 `Feedback.mail`) is the one place that says what left and when.
 
+**What a press says before it is pressed.** Every element that posts an emailing press names its email first: its
+question's email line comes from one builder, `shared/feedback/confirm-words.ts` — `mail({ to, type, or, test,
+confirms, also })`, `mailCount` (counted from the ticks or the typed lines at the press), `noMail` — which names the
+person (or the count and whom) and the email by its words in «Emailuri», counts the club's mailboxes as one quiet line
+exactly as the enqueue does (`shared/feedback/club-copies-request.ts`) and derives the road (§841) from the email
+itself, so no page pairs an email with another's road. The presses that come quickly one after another or sit inside a
+data-entry form — a volunteer's role buttons and form, the test registrations, the typed-name erase, the editor's boxes
+whose change sends at the job's pass — say it in a `shared/feedback/MailLine.tsx` beside the button, the same words,
+no click. `tests/unit/shared/emailing-presses.test.ts` follows every posting of every emailing press, handed-down props
+included, and fails one that says nothing.
+
 Each deliberate resend gets a new row/idempotency key. Every message type names whom it is written
 for — the participant, the club's own mailboxes, the staff or the public
 (`notifications/domain/email-audience.ts`) — and only a participant's own message, with their id on

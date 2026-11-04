@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { addVolunteerAction, setVolunteerStateAction } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
+import { addVolunteerAction } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
 import { setVolunteerKitAction } from "@/app/[locale]/admin/volunteers/actions";
 import { getDb } from "@/db/client";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
@@ -35,7 +35,10 @@ import {
 } from "@/modules/volunteers/admin-list";
 import { roleLabel, VOLUNTEER_STATES, type VolunteerState } from "@/modules/volunteers/domain/volunteer";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
-import { shortText, STATE_CHIP, VolunteerPersonFields, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
+import { shortText, STATE_CHIP, VolunteerPersonFields, VolunteerStateForm, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
+import { ROLE_EMAIL_SETTLE_MINUTES } from "@/modules/volunteers/volunteers";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import MailLine from "@/shared/feedback/MailLine";
 import ActionForm from "@/shared/forms/ActionForm";
 import { isUuid } from "@/shared/ids";
 import ChipLink from "@/shared/ui/ChipLink";
@@ -117,6 +120,8 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     filters.eventId ? listRolesWithCounts(db, filters.eventId) : Promise.resolve([]),
     getTranslations("Admin"),
   ]);
+  // The state buttons' words (§384): reopening a cancelled person who holds roles asks first, naming the email (`VolunteerStateForm`).
+  const words = await confirmWords();
   // The words of every role the page's rows name, given or offered — one read, whatever their events — each with its category's (§904):
   // «Direcționare (Traseu)», as the card and the person's page say it, so a name standing in two categories is never printed twice alike.
   const roleNames = await listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]);
@@ -155,14 +160,9 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const eventCardHref = (id: string) => `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id } } })}#box-volunteers`;
   const hidden = (row: VolunteerAdminRow) => volunteerHiddenFields({ locale, eventId: row.eventId, returnTo });
 
-  /** One button that posts the state it wants (`setVolunteerStateAction`), as the card's (`VolunteerPerson`), never a toggle. */
+  /** One button that posts the state it wants, the card's own (`VolunteerStateForm`): never a toggle, and a reopening that emails asks first. */
   const stateButton = (row: VolunteerAdminRow, next: VolunteerState, label: string, icon: "confirm" | "cancel" | "undo") => (
-    <Box component="form" action={setVolunteerStateAction} data-testid={`volunteer-${next.toLowerCase()}-form`}>
-      {hidden(row)}
-      <input type="hidden" name="volunteerId" value={row.id} />
-      <input type="hidden" name="state" value={next} />
-      <GlyphSubmitButton icon={icon} label={label} pendingLabel={label} ariaLabel={`${label}: ${shortText(row.name)}`} variant="outlined" />
-    </Box>
+    <VolunteerStateForm person={row} state={next} label={label} icon={icon} hidden={hidden(row)} words={words} t={t} />
   );
 
   /**
@@ -343,6 +343,10 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           <ActionForm action={addVolunteerAction} scope="volunteer-new" messages={personBoxes}>
             {volunteerHiddenFields(addContext)}
             <VolunteerPersonFields person={null} context={addContext} />
+            {/* What the add may email (the design «telling the owner about every email a staff press sends», slice 3): the roles given, to the address typed. */}
+            <Box sx={{ mt: 1.5 }}>
+              <MailLine text={t("mailLine.volunteerAdd", { minutes: String(ROLE_EMAIL_SETTLE_MINUTES) })} data-testid="volunteer-add-mail" />
+            </Box>
             <Box sx={{ mt: 1.5 }}>
               <GlyphSubmitButton label={t("volunteers.person.add")} pendingLabel={t("volunteers.person.adding")} icon="addPerson" />
             </Box>

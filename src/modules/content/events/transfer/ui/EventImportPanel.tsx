@@ -12,6 +12,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { type ChangeEvent, useState } from "react";
 import { countForm } from "@/i18n/count-form";
+import MailLine from "@/shared/feedback/MailLine";
 import { useToast } from "@/shared/feedback/toast-context";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import type { ChangeValue } from "../diff";
@@ -23,6 +24,23 @@ import {
   importEventOverAction,
   previewEventImportAction,
 } from "@/app/[locale]/admin/events/import/actions";
+
+/** The diff's keys that free places for the waiting list, move a declaration window, or bring a deadline's email at the job's pass. */
+const OFFER_KEYS = new Set(["registration.capacity", "registration.waitlistAutoOffer", "registration.closesAt", "registration.mode"]);
+const WINDOW_KEYS = new Set(["registration.confirmationOpensDaysBefore", "registration.confirmationDeadlineDaysBefore"]);
+const JOB_KEYS = new Set(["registration.reminderHoursBefore", "registration.rsvpEnabled", "registration.rsvpAskEnabled", "registration.opensAt", "registration.opensSoon"]);
+
+/** The lines of what applying the file may email, by what the diff changes (the date and time move the deadlines too). Pure. */
+export function importMailLines(changes: readonly { key: string }[], words: { offers: string; declarations: string; job: string }): string[] {
+  const touches = (keys: ReadonlySet<string>, more?: RegExp) => changes.some((change) => keys.has(change.key) || (more?.test(change.key) ?? false));
+  // The start's day and hour move every deadline counted back from it: the declaration window, the reminder, «Vii?».
+  const timing = /^(?:start\.date|start\.time|dateToBeAnnounced|timeToBeAnnounced)$/;
+  return [
+    ...(touches(OFFER_KEYS) ? [words.offers] : []),
+    ...(touches(WINDOW_KEYS, timing) ? [words.declarations] : []),
+    ...(touches(JOB_KEYS, timing) ? [words.job] : []),
+  ];
+}
 
 /** The input's id: the choose button is a label for it, so the native picker opens with no script. */
 export const EVENT_IMPORT_INPUT_ID = "event-json-input";
@@ -74,6 +92,12 @@ export type EventImportWords = {
   overWorking: string;
   overDone: Record<"one" | "few" | "other", string>;
   overOffered: string;
+  /**
+   * What applying the file may email (the design «telling the owner about every email a staff press sends», slice 3), said on
+   * the differences screen before the press: never the update notice; the places a capacity or an automatic offer frees, the
+   * declarations a moved window re-sends, what moved deadlines bring at the job's next pass — each only when the diff touches it.
+   */
+  overMail: { none: string; offers: string; declarations: string; job: string };
   open: string;
   mediaProblemsHeading: string;
   mediaProblems: Record<MediaFailure, string>;
@@ -442,6 +466,8 @@ export default function EventImportPanel({
                       {diff.target.published ? `${words.overPublished} ` : ""}
                       {fill(words.overPeople, { count: form(diff.target.registrations, words.overRegistrations) })}
                     </Typography>
+
+                    {diff.changes.length > 0 && <MailLine text={words.overMail.none} also={importMailLines(diff.changes, words.overMail)} data-testid="event-json-mail" />}
 
                     {diff.refusal && (
                       <Alert severity="error" data-testid="event-json-refusal">

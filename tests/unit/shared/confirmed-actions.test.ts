@@ -129,6 +129,15 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   sendOutboxNowFromEmailsAction: [],
   // «Reîncearcă emailurile eșuate» (§622): the week's failed emails back in the queue, after the count.
   retryFailedEmailsFromEmailsAction: [],
+  // Volunteers (the design «telling the owner about every email a staff press sends», slice 3): the presses that email a
+  // volunteer or a parent once each, asked first, naming the person, the address and the email. The role buttons and the
+  // person's form say theirs in a line beside the button instead (`emailing-presses.test.ts`, `BESIDE`).
+  requestVolunteerAgreementAction: [],
+  requestVolunteerGuardianAction: [],
+  sendVolunteerInvitationsAction: [],
+  // Asks only for the reopening that emails — a cancelled person who holds roles and has an address; the other state
+  // presses email nobody and post as before, a `ConfirmSubmitButton` drawn only for that case.
+  setVolunteerStateAction: [],
   // Legal.
   approvePlatformTemplatesAction: [],
   // Every text at once (§532): drafts from the templates, and the drafts approved, each naming its texts.

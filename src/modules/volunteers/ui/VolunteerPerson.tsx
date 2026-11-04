@@ -3,6 +3,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
 import {
   assignVolunteerAction,
   deleteVolunteerAction,
@@ -22,11 +23,13 @@ import { SEX_CHOICES } from "@/modules/registrations/domain/sex";
 import { formatPhone } from "@/modules/registrations/phone";
 import { shownTypedDate } from "@/shared/forms/pickers/wall-values";
 import { CLUB_NAME } from "@/theme/brand";
-import { confirmWords } from "@/shared/feedback/confirm-words";
+import { type ConfirmWords, confirmWords } from "@/shared/feedback/confirm-words";
+import MailLine from "@/shared/feedback/MailLine";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
@@ -58,7 +61,7 @@ import {
   type VolunteerAgreementStanding,
   type VolunteerState,
 } from "../domain/volunteer";
-import type { VolunteerCategory, VolunteerItem, VolunteerRole } from "../volunteers";
+import { ROLE_EMAIL_SETTLE_MINUTES, type VolunteerCategory, type VolunteerItem, type VolunteerRole } from "../volunteers";
 import VolunteerBirthDateField from "./VolunteerBirthDateField";
 
 /**
@@ -181,6 +184,55 @@ async function sharedOf(context: VolunteerPersonContext) {
   const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
   const hidden = volunteerHiddenFields(context);
   return { t, tReg, words, standingOf, labelled, labelOf, roleGroups, headed, groupName, nameOf, rolesOf, day, hidden };
+}
+
+/**
+ * One volunteer's state button (`setVolunteerStateAction`), the card's and the «Voluntari» list's: a plain form posting the
+ * state it wants, never a toggle. Reopening a cancelled person — «Confirmă» or «Înapoi la înscris» — who holds roles and has an
+ * address emails them the roles that stand (`queueRoleAssigned`, «reopened»), so that press asks first, naming the person, the
+ * address and the email (the design «telling the owner about every email a staff press sends», slice 3); every other state
+ * press sends nothing and asks nothing, as before. The service decides again what it sends.
+ */
+export function VolunteerStateForm({
+  person,
+  state,
+  label,
+  icon,
+  hidden,
+  words,
+  t,
+}: {
+  person: Pick<VolunteerItem, "id" | "name" | "email" | "state" | "roleIds">;
+  state: VolunteerState;
+  label: string;
+  icon: "confirm" | "cancel" | "undo";
+  hidden: ReactNode;
+  words: ConfirmWords;
+  t: Awaited<ReturnType<typeof getTranslations<"Admin">>>;
+}) {
+  const named = `${label}: ${shortText(person.name)}`;
+  return (
+    <Box component="form" action={setVolunteerStateAction} data-testid={`volunteer-${state.toLowerCase()}-form`}>
+      {hidden}
+      <input type="hidden" name="volunteerId" value={person.id} />
+      <input type="hidden" name="state" value={state} />
+      {person.state === "CANCELLED" && state !== "CANCELLED" && person.roleIds.length > 0 && person.email !== null ? (
+        <ConfirmSubmitButton
+          label={label}
+          icon={icon}
+          ariaLabel={named}
+          title={t("volunteers.reopenTitle", { name: shortText(person.name) })}
+          body={t("volunteers.reopenBody", { name: shortText(person.name) })}
+          mail={words.mail({ to: { name: person.name, address: person.email }, type: "VOLUNTEER_ROLE_ASSIGNED", also: [words.line("rolesHeld", { minutes: ROLE_EMAIL_SETTLE_MINUTES })] })}
+          confirmLabel={label}
+          cancelLabel={words.cancel}
+          size="medium"
+        />
+      ) : (
+        <GlyphSubmitButton icon={icon} label={label} pendingLabel={label} ariaLabel={named} variant="outlined" />
+      )}
+    </Box>
+  );
 }
 
 /**
@@ -421,14 +473,9 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
   const personBoxes = await volunteerPersonBoxes(t);
   const personFields = (one: VolunteerItem | null) => <VolunteerPersonFields person={one} context={context} />;
 
-  /** One button that posts the state it wants (`setVolunteerStateAction`), never a toggle. */
+  /** One button that posts the state it wants (`setVolunteerStateAction`), never a toggle; reopening one who holds roles asks first, naming the email. */
   const stateButton = (person: VolunteerItem, state: VolunteerState, label: string, icon: "confirm" | "cancel" | "undo") => (
-    <Box component="form" action={setVolunteerStateAction} data-testid={`volunteer-${state.toLowerCase()}-form`}>
-      {hidden}
-      <input type="hidden" name="volunteerId" value={person.id} />
-      <input type="hidden" name="state" value={state} />
-      <GlyphSubmitButton icon={icon} label={label} pendingLabel={label} ariaLabel={`${label}: ${shortText(person.name)}`} variant="outlined" />
-    </Box>
+    <VolunteerStateForm person={person} state={state} label={label} icon={icon} hidden={hidden} words={words} t={t} />
   );
 
   /**
@@ -508,15 +555,30 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
           </Typography>
         )}
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
-          {noAddress ? (
+          {person.email === null ? (
             <Typography variant="body2" color="text.secondary" sx={{ alignSelf: "center" }} data-testid="volunteer-agreement-no-email">
               {t("volunteers.agreement.noEmail")}
             </Typography>
           ) : (
+            // One email per press, each with a new link that replaces the last (§758): asked first, naming the person, the address and the email.
             <Box component="form" action={requestVolunteerAgreementAction} data-testid="volunteer-agreement-send-form">
               {hidden}
               <input type="hidden" name="volunteerId" value={person.id} />
-              <GlyphSubmitButton icon={sent ? "resend" : "send"} label={sendLabel} pendingLabel={sendLabel} ariaLabel={`${sendLabel}: ${shortText(person.name)}`} variant="outlined" />
+              <ConfirmSubmitButton
+                label={sendLabel}
+                icon={sent ? "resend" : "send"}
+                ariaLabel={`${sendLabel}: ${shortText(person.name)}`}
+                title={t("volunteers.agreement.sendTitle")}
+                body={t("volunteers.agreement.sendBody", { name: shortText(person.name) })}
+                mail={words.mail({
+                  to: { name: person.name, address: person.email },
+                  type: "VOLUNTEER_AGREEMENT_REQUEST",
+                  also: person.agreementRequestedAt ? [words.line("linkReplaced", { date: day(person.agreementRequestedAt) })] : [],
+                })}
+                confirmLabel={sendLabel}
+                cancelLabel={words.cancel}
+                size="medium"
+              />
             </Box>
           )}
           <GlyphButton icon="print" href={pdfHref} variant="outlined" sx={{ minHeight: 44 }} data-testid="volunteer-agreement-pdf">
@@ -527,6 +589,10 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
             confirm={{
               title: t("volunteers.agreement.paperTitle", { name: shortText(person.name) }),
               body: t(noAddress ? "volunteers.agreement.paperBodyNoEmail" : "volunteers.agreement.paperBody", { name: shortText(person.name) }),
+              // The person's copy, with the signed PDF (§758) — or, with no address, nothing at all.
+              ...(person.email === null
+                ? words.noMail(person.name)
+                : words.mail({ to: { name: person.name, address: person.email }, type: "VOLUNTEER_AGREEMENT_ACCEPTED", also: [words.line("agreementCopy")] })),
               confirmLabel: t("volunteers.agreement.paper"),
               cancelLabel: words.cancel,
             }}
@@ -590,10 +656,25 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
               {t("volunteers.guardian.volunteerNoEmail")}
             </Typography>
           ) : person.guardianEmail !== null ? (
+            // One email to the parent's address per press, each link replacing the last (§768): asked first, naming the parent and the address.
             <Box component="form" action={requestVolunteerGuardianAction} data-testid="volunteer-guardian-send-form">
               {hidden}
               <input type="hidden" name="volunteerId" value={person.id} />
-              <GlyphSubmitButton icon={sent ? "resend" : "send"} label={sendLabel} pendingLabel={sendLabel} ariaLabel={`${sendLabel}: ${shortText(person.name)}`} variant="outlined" />
+              <ConfirmSubmitButton
+                label={sendLabel}
+                icon={sent ? "resend" : "send"}
+                ariaLabel={`${sendLabel}: ${shortText(person.name)}`}
+                title={t("volunteers.guardian.sendTitle")}
+                body={t("volunteers.guardian.sendBody", { name: shortText(person.name) })}
+                mail={words.mail({
+                  to: { name: person.guardianName, address: person.guardianEmail },
+                  type: "VOLUNTEER_GUARDIAN_REQUEST",
+                  also: person.guardianRequestedAt ? [words.line("linkReplaced", { date: day(person.guardianRequestedAt) })] : [],
+                })}
+                confirmLabel={sendLabel}
+                cancelLabel={words.cancel}
+                size="medium"
+              />
             </Box>
           ) : (
             <Typography variant="body2" color="text.secondary" data-testid="volunteer-guardian-no-email">
@@ -608,6 +689,11 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
             confirm={{
               title: t("volunteers.guardian.paperTitle", { name: shortText(person.name) }),
               body: t("volunteers.guardian.paperBody", { name: shortText(person.name) }),
+              // The volunteer's second copy of their agreement, now with the parent's consent — only once they accepted their own,
+              // and only to an address (`guardian.ts#queueVolunteerCopy`); the parent is sent nothing.
+              ...(person.agreementAcceptedAt !== null && person.email !== null
+                ? words.mail({ to: { name: person.name, address: person.email }, type: "VOLUNTEER_AGREEMENT_ACCEPTED", also: [words.line("guardianCopy")] })
+                : words.noMail(person.name, [words.line("guardianNone")])),
               confirmLabel: t("volunteers.guardian.paper"),
               cancelLabel: words.cancel,
             }}
@@ -631,115 +717,130 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
       : t("volunteers.assign.standing", { role: label, taken: String(standingOf.get(role.id)?.taken ?? 0), needed: String(role.needed) });
 
   /**
-   * «Dă-i rolul …» (§761) and, for a person who already has one, «Dă-i și rolul …» (§837): one press per role the person
-   * ticked and does not hold yet, with how it stands, and the event's other roles in the select beside them — each a plain
-   * form posting the role it wants (`assignVolunteerAction`), which adds that role to the ones held, audited and told to
-   * the person by email naming them all. A role held is taken back with «Ia-i rolul …» on its chip (`givenBlock`), or in
-   * «Modifică» → «Rolurile date». Nothing for a cancelled person: reopen them first.
+   * A person's roles, in one block (§761, §837): the roles given, as chips under «Roluri date:» — a word and a glyph, never
+   * colour alone — each with «Ia-i rolul …», a plain form posting that one role (`unassignVolunteerAction`): the others
+   * stand, the person is told what stands; then «Dă-i rolul …» and, for a person who already has one, «Dă-i și rolul …»: one
+   * press per role the person ticked and does not hold yet, with how it stands, and the event's other roles in the select
+   * beside them — each a plain form posting the role it wants (`assignVolunteerAction`), which adds that role to the ones
+   * held, audited and told to the person by email naming them all. A role is also given or taken in «Modifică» → «Rolurile
+   * date». A cancelled person keeps the chips and loses the presses (nothing to announce to them): reopen them first.
+   *
+   * **The email, before the press** (the design «telling the owner about every email a staff press sends», slice 3): every one
+   * of these presses emails the person «Rolul tău de voluntar», held a few minutes for the next press — so the block says it
+   * once, beside the buttons, naming the person and the address (`MailLine`), rather than a question before each of a row of
+   * quick presses. A person with no address is sent nothing (§865), and the line says that instead.
    */
-  const assignBlock = (person: VolunteerItem) => {
-    if (person.state === "CANCELLED") return null;
-    const held = new Set(person.roleIds);
-    const quick = rolesOf(person).chosen.filter((role) => !held.has(role.id));
-    const others = labelled.filter((role) => !held.has(role.id) && !quick.some((chosen) => chosen.id === role.id));
-    if (quick.length === 0 && others.length === 0) return null;
-    const some = held.size > 0;
-    return (
-      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1, mt: 1 }} data-testid="volunteer-assign">
-        {quick.map((role) => {
-          const label = t(some ? "volunteers.assign.alsoButton" : "volunteers.assign.button", { role: roleStanding(role) });
-          return (
-            <Box component="form" action={assignVolunteerAction} key={role.id} data-testid="volunteer-assign-form">
-              {hidden}
-              <input type="hidden" name="volunteerId" value={person.id} />
-              <input type="hidden" name="roleId" value={role.id} />
-              <GlyphSubmitButton
-                icon="role"
-                label={label}
-                pendingLabel={label}
-                ariaLabel={`${label}: ${shortText(person.name)}`}
-                variant="outlined"
-              />
-            </Box>
-          );
-        })}
-        {others.length > 0 && (
-          <Box component="form" action={assignVolunteerAction} sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }} data-testid="volunteer-assign-other">
-            {hidden}
-            <input type="hidden" name="volunteerId" value={person.id} />
-            <TextField
-              name="roleId"
-              select
-              label={t("volunteers.assign.other")}
-              defaultValue={others[0]?.id ?? ""}
-              slotProps={{ select: { native: true }, inputLabel: { shrink: true }, htmlInput: { "aria-label": `${t("volunteers.assign.other")}: ${shortText(person.name)}` } }}
-              sx={{ minWidth: 200 }}
-            >
-              {/* The other roles under their categories (§840): one group per category, each role by its own name with how it stands. */}
-              {roleGroups.map((group) => {
-                const offered = group.roles.filter((role) => others.some((other) => other.id === role.id));
-                if (offered.length === 0) return null;
-                const options = offered.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {headed ? roleStanding(role, nameOf(role)) : roleStanding(role)}
-                  </option>
-                ));
-                return headed ? (
-                  <optgroup key={group.category?.id ?? "other"} label={groupName(group)}>
-                    {options}
-                  </optgroup>
-                ) : (
-                  options
-                );
-              })}
-            </TextField>
-            <GlyphSubmitButton
-              icon="role"
-              label={t(some ? "volunteers.assign.alsoOtherSubmit" : "volunteers.assign.otherSubmit")}
-              pendingLabel={t(some ? "volunteers.assign.alsoOtherSubmit" : "volunteers.assign.otherSubmit")}
-              ariaLabel={`${t(some ? "volunteers.assign.alsoOtherSubmit" : "volunteers.assign.otherSubmit")}: ${shortText(person.name)}`}
-              variant="outlined"
-            />
-          </Box>
-        )}
-      </Stack>
-    );
-  };
-
-  /**
-   * The roles given (§837), as chips under «Roluri date:» — a word and a glyph, never colour alone — each with «Ia-i rolul …»,
-   * a plain form posting that one role (`unassignVolunteerAction`): the others stand, the person is told what stands. Drawn
-   * only for a person with a role; a cancelled person keeps the chips and loses the presses (nothing to announce to them).
-   */
-  const givenBlock = (person: VolunteerItem) => {
+  const rolesBlock = (person: VolunteerItem) => {
     const given = rolesOf(person).assigned;
-    if (given.length === 0) return null;
+    const held = new Set(person.roleIds);
+    const quick = person.state === "CANCELLED" ? [] : rolesOf(person).chosen.filter((role) => !held.has(role.id));
+    const others = person.state === "CANCELLED" ? [] : labelled.filter((role) => !held.has(role.id) && !quick.some((chosen) => chosen.id === role.id));
+    const assignable = quick.length > 0 || others.length > 0;
+    if (given.length === 0 && !assignable) return null;
+    const some = held.size > 0;
+    const pressable = person.state !== "CANCELLED";
     return (
-      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.5, mt: 0.5 }} data-testid="volunteer-given">
-        <Typography component="span" variant="body2" color="text.secondary">
-          {t("volunteers.person.givenLine")}:
-        </Typography>
-        {given.map((role) => (
-          <Stack key={role.id} direction="row" sx={{ alignItems: "center", gap: 0.25 }}>
-            <StatusChip glyph="given" variant="outlined" label={labelOf(role)} testId="volunteer-given-role" />
-            {person.state !== "CANCELLED" && (
-              <Box component="form" action={unassignVolunteerAction} data-testid="volunteer-unassign-form">
+      <Box data-testid="volunteer-roles">
+        {given.length > 0 && (
+          <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.5, mt: 0.5 }} data-testid="volunteer-given">
+            <Typography component="span" variant="body2" color="text.secondary">
+              {t("volunteers.person.givenLine")}:
+            </Typography>
+            {given.map((role) => (
+              <Stack key={role.id} direction="row" sx={{ alignItems: "center", gap: 0.25 }}>
+                <StatusChip glyph="given" variant="outlined" label={labelOf(role)} testId="volunteer-given-role" />
+                {pressable && (
+                  <Box component="form" action={unassignVolunteerAction} data-testid="volunteer-unassign-form">
+                    {hidden}
+                    <input type="hidden" name="volunteerId" value={person.id} />
+                    <input type="hidden" name="roleId" value={role.id} />
+                    <GlyphSubmitButton
+                      icon="cancel"
+                      label={t("volunteers.assign.remove", { role: labelOf(role) })}
+                      pendingLabel={t("volunteers.assign.remove", { role: labelOf(role) })}
+                      ariaLabel={`${t("volunteers.assign.remove", { role: labelOf(role) })}: ${shortText(person.name)}`}
+                      variant="text"
+                      size="small"
+                    />
+                  </Box>
+                )}
+              </Stack>
+            ))}
+          </Stack>
+        )}
+        {assignable && (
+          <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1, mt: 1 }} data-testid="volunteer-assign">
+            {quick.map((role) => {
+              const label = t(some ? "volunteers.assign.alsoButton" : "volunteers.assign.button", { role: roleStanding(role) });
+              return (
+                <Box component="form" action={assignVolunteerAction} key={role.id} data-testid="volunteer-assign-form">
+                  {hidden}
+                  <input type="hidden" name="volunteerId" value={person.id} />
+                  <input type="hidden" name="roleId" value={role.id} />
+                  <GlyphSubmitButton
+                    icon="role"
+                    label={label}
+                    pendingLabel={label}
+                    ariaLabel={`${label}: ${shortText(person.name)}`}
+                    variant="outlined"
+                  />
+                </Box>
+              );
+            })}
+            {others.length > 0 && (
+              <Box component="form" action={assignVolunteerAction} sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }} data-testid="volunteer-assign-other">
                 {hidden}
                 <input type="hidden" name="volunteerId" value={person.id} />
-                <input type="hidden" name="roleId" value={role.id} />
+                <TextField
+                  name="roleId"
+                  select
+                  label={t("volunteers.assign.other")}
+                  defaultValue={others[0]?.id ?? ""}
+                  slotProps={{ select: { native: true }, inputLabel: { shrink: true }, htmlInput: { "aria-label": `${t("volunteers.assign.other")}: ${shortText(person.name)}` } }}
+                  sx={{ minWidth: 200 }}
+                >
+                  {/* The other roles under their categories (§840): one group per category, each role by its own name with how it stands. */}
+                  {roleGroups.map((group) => {
+                    const offered = group.roles.filter((role) => others.some((other) => other.id === role.id));
+                    if (offered.length === 0) return null;
+                    const options = offered.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {headed ? roleStanding(role, nameOf(role)) : roleStanding(role)}
+                      </option>
+                    ));
+                    return headed ? (
+                      <optgroup key={group.category?.id ?? "other"} label={groupName(group)}>
+                        {options}
+                      </optgroup>
+                    ) : (
+                      options
+                    );
+                  })}
+                </TextField>
                 <GlyphSubmitButton
-                  icon="cancel"
-                  label={t("volunteers.assign.remove", { role: labelOf(role) })}
-                  pendingLabel={t("volunteers.assign.remove", { role: labelOf(role) })}
-                  ariaLabel={`${t("volunteers.assign.remove", { role: labelOf(role) })}: ${shortText(person.name)}`}
-                  variant="text"
-                  size="small"
+                  icon="role"
+                  label={t(some ? "volunteers.assign.alsoOtherSubmit" : "volunteers.assign.otherSubmit")}
+                  pendingLabel={t(some ? "volunteers.assign.alsoOtherSubmit" : "volunteers.assign.otherSubmit")}
+                  ariaLabel={`${t(some ? "volunteers.assign.alsoOtherSubmit" : "volunteers.assign.otherSubmit")}: ${shortText(person.name)}`}
+                  variant="outlined"
                 />
               </Box>
             )}
           </Stack>
-        ))}
-      </Stack>
+        )}
+        {pressable && (
+          <Box sx={{ mt: 1 }}>
+            <MailLine
+              text={
+                person.email !== null
+                  ? t("mailLine.roles", { name: person.name, email: person.email, minutes: String(ROLE_EMAIL_SETTLE_MINUTES) })
+                  : t("mailLine.rolesNoAddress", { name: person.name })
+              }
+              data-testid="volunteer-roles-mail"
+            />
+          </Box>
+        )}
+      </Box>
     );
   };
 
@@ -889,9 +990,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
         </Stack>
       )}
 
-      {givenBlock(person)}
-
-      {assignBlock(person)}
+      {rolesBlock(person)}
 
       {agreementBlock(person)}
 
@@ -910,6 +1009,18 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
               {hidden}
               <input type="hidden" name="volunteerId" value={person.id} />
               {personFields(person)}
+              {/* What «Salvează» may email (the design «telling the owner about every email a staff press sends», slice 3): the
+                  roles' email when «Rolurile date» or the address change — beside the button of a data-entry form, never a question. */}
+              <Box sx={{ mt: 1.5 }}>
+                <MailLine
+                  text={
+                    person.state === "CANCELLED"
+                      ? t("mailLine.volunteerEditCancelled", { name: person.name })
+                      : t("mailLine.volunteerEdit", { name: person.name, minutes: String(ROLE_EMAIL_SETTLE_MINUTES) })
+                  }
+                  data-testid="volunteer-edit-mail"
+                />
+              </Box>
               <Box sx={{ mt: 1.5 }}>
                 <GlyphSubmitButton label={t("volunteers.save")} pendingLabel={t("volunteers.saving")} icon="save" />
               </Box>

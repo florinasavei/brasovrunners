@@ -118,13 +118,14 @@ test.describe("§384 the bulk cancel counts the emails it will send", () => {
     // One real, confirmed row: one email.
     await tick(0).check();
     await press();
-    await expect(dialog.getByTestId("confirm-email")).toHaveText("Se va trimite un email către 1 participant.");
+    // The one builder's words (the design «telling the owner about every email a staff press sends», slice 3): the email named.
+    await expect(dialog.getByTestId("confirm-email")).toHaveText("Pleacă 1 email „Înscriere anulată”, câte unul către fiecare persoană bifată.");
     await cancelDialog(page, "Anulezi înscrierile bifate?");
 
     // All four: the waiting-list row adds one; the unconfirmed address and the test row add nobody.
     for (const index of [1, 2, 3]) await tick(index).check();
     await press();
-    await expect(dialog.getByTestId("confirm-email")).toHaveText("Se va trimite un email către 2 participanți.");
+    await expect(dialog.getByTestId("confirm-email")).toHaveText("Pleacă 2 emailuri „Înscriere anulată”, câte unul către fiecare persoană bifată.");
     await cancelDialog(page, "Anulezi înscrierile bifate?");
 
     // Only the rows that email nobody the club counts: no email line at all.

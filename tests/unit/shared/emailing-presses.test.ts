@@ -15,8 +15,9 @@ import { isJobCause, PRESS_CAUSE_NAMES, type PressCause } from "@/modules/notifi
  * `inEmailPress` with each of its causes and name its actor — `press.by(…)` itself, through the helper it hands
  * `press` to, or through the listed press it delegates to. An action that opens a scope and is not listed fails
  * too, as does a scope opened anywhere a person is not pressing a staff button. Slice 2 adds that every press flashes
- * through the one call that reads what it sent; later slices add here what each press must say before (its dialog's
- * email line) and which presses offer «Trimite emailul».
+ * through the one call that reads what it sent; slice 3 that every element posting a press says its email before it is
+ * pressed, through the one builder or a `MailLine` (the last `describe` below); slice 4 will add which presses offer
+ * «Trimite emailul».
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -188,5 +189,255 @@ describe("every emailing press runs inside its email press scope", () => {
       file === "src/modules/notifications/drain.ts";
     const opened = sourceFiles("src").filter((file) => OPENS.test(read(file)) && !allowed(file));
     expect(opened).toEqual([]);
+  });
+});
+
+/*
+  Slice 3, «Before» (the design's sections 2 and 6): every emailing press says its email before it is pressed — the person
+  named, or the count and whom, and the email by its name — through the one builder (`confirmWords().mail`, `mailCount`,
+  `noMail`, `noMailMany`) in the question the press asks, or, for the presses that come quickly one after another or sit
+  inside a data-entry form, a `MailLine` in the same form, beside its button.
+
+  Source-level, like `confirmed-actions.test.ts`: every `.tsx` under `src/` is parsed, and every JSX attribute
+  `action={…}` / `formAction={…}` whose expression names a press — by the name it was imported under from the press's own
+  file, or by the prop a page hands it down under, followed into the component that receives it — is a posting. Each
+  posting must:
+
+  - carry the builder's words in one of its own props (`confirm`, `mail`, an island's `words`): the expression, or a
+    value the expression names in the same file, calls `….mail(`, `….mailCount(`, `….noMail(` or `….noMailMany(`;
+  - or hold, among its children, a `ConfirmSubmitButton` with no `formAction` of its own (the form's own verb) whose
+    props do;
+  - or hold a `<MailLine` among its children;
+  - or — for the role buttons alone (`BESIDE`), a row of quick presses that share one line — sit in a JSX block of its own
+    (up to the helper that draws it) that holds the `<MailLine`.
+
+  A press posted from code rather than a form (`CALLED_IN_CODE`) is held to its island's own line. Every press must be found
+  posted at least once, so a verb that moved to a bare form, or to a name this scan cannot follow, fails here first.
+*/
+
+/** A call of the one builder's email words. */
+const BUILDER = /\.(?:mail|mailCount|noMail|noMailMany)\(/;
+
+/** The presses whose before-notice is a `MailLine` beside a row of buttons rather than inside each form (the design's section 2). */
+const BESIDE: ReadonlySet<string> = new Set(["assignVolunteerAction", "unassignVolunteerAction"]);
+
+/** The presses an island calls in code: the file, and what it must draw before the call. */
+const CALLED_IN_CODE: Readonly<Record<string, { file: string; before: RegExp }>> = {
+  // The import's differences screen says what applying may email, from the diff, before «Aplică peste eveniment».
+  importEventOverAction: { file: "src/modules/content/events/transfer/ui/EventImportPanel.tsx", before: /<MailLine\b/ },
+};
+
+type Posting = { press: string; file: string; line: number; verdict: string | null };
+
+function tsxFiles(directory: string): string[] {
+  return sourceFiles(directory).filter((file) => file.endsWith(".tsx"));
+}
+
+/** The repository file an import names, or null for a package. */
+function moduleFile(from: string, specifier: string): string | null {
+  const base = specifier.startsWith("@/") ? `src/${specifier.slice(2)}` : specifier.startsWith(".") ? path.posix.join(path.posix.dirname(from), specifier) : null;
+  if (base === null) return null;
+  for (const candidate of [`${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`]) {
+    try {
+      if (statSync(path.join(ROOT, candidate)).isFile()) return candidate;
+    } catch {
+      // Not this one.
+    }
+  }
+  return null;
+}
+
+/** The local names a file imports, each with the file it comes from and the name it is exported under. */
+function importsOf(source: ts.SourceFile, file: string): Map<string, { from: string; name: string }> {
+  const names = new Map<string, { from: string; name: string }>();
+  for (const statement of source.statements) {
+    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier) || !statement.importClause) continue;
+    const from = moduleFile(file, statement.moduleSpecifier.text);
+    if (!from) continue;
+    const clause = statement.importClause;
+    if (clause.name) names.set(clause.name.text, { from, name: "default" });
+    if (clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
+      for (const element of clause.namedBindings.elements) names.set(element.name.text, { from, name: (element.propertyName ?? element.name).text });
+    }
+  }
+  return names;
+}
+
+/** The identifiers an expression mentions, by name. */
+function identifiersIn(node: ts.Node): string[] {
+  const found: string[] = [];
+  const walk = (child: ts.Node) => {
+    if (ts.isIdentifier(child)) found.push(child.text);
+    ts.forEachChild(child, walk);
+  };
+  walk(node);
+  return found;
+}
+
+/** The text of an expression, with the same-file values it names written out (a few levels deep): what the prop really carries. */
+function expanded(node: ts.Node, source: ts.SourceFile, depth = 4, seen = new Set<string>()): string {
+  let text = node.getText(source);
+  if (depth === 0) return text;
+  for (const name of new Set(identifiersIn(node))) {
+    if (seen.has(name)) continue;
+    seen.add(name);
+    const declaration = declarationOf(source, name);
+    if (declaration) text += `\n${expanded(declaration, source, depth - 1, seen)}`;
+  }
+  return text;
+}
+
+/** A `const`/`let` value or a function of this name declared anywhere in the file. */
+function declarationOf(source: ts.SourceFile, name: string): ts.Node | null {
+  let found: ts.Node | null = null;
+  const walk = (node: ts.Node) => {
+    if (found) return;
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === name && node.initializer) found = node.initializer;
+    else if (ts.isFunctionDeclaration(node) && node.name?.text === name && node.body) found = node.body;
+    else ts.forEachChild(node, walk);
+  };
+  walk(source);
+  return found;
+}
+
+function attributesOf(element: ts.JsxOpeningLikeElement): ts.JsxAttribute[] {
+  return element.attributes.properties.filter((property): property is ts.JsxAttribute => ts.isJsxAttribute(property));
+}
+
+function tagOf(element: ts.JsxOpeningLikeElement): string {
+  return element.tagName.getText();
+}
+
+/** The JSX elements under a node, opening and self-closing. */
+function jsxUnder(node: ts.Node): ts.JsxOpeningLikeElement[] {
+  const found: ts.JsxOpeningLikeElement[] = [];
+  const walk = (child: ts.Node) => {
+    if (ts.isJsxOpeningElement(child) || ts.isJsxSelfClosingElement(child)) found.push(child);
+    ts.forEachChild(child, walk);
+  };
+  ts.forEachChild(node, walk);
+  return found;
+}
+
+/** Whether a prop of the element, other than the action itself, carries the builder's words. */
+function carriesBuilder(element: ts.JsxOpeningLikeElement, source: ts.SourceFile): boolean {
+  return attributesOf(element).some((attribute) => {
+    const name = attribute.name.getText();
+    if (name === "action" || name === "formAction" || !attribute.initializer) return false;
+    return BUILDER.test(expanded(attribute.initializer, source));
+  });
+}
+
+/**
+ * The block a posting sits in: up through the JSX around it, the conditions and the `.map` callbacks that draw it, to the
+ * first function that is not such a callback — the helper or the component that draws the block.
+ */
+function blockOf(element: ts.Node): ts.Node {
+  let block: ts.Node = element;
+  let node: ts.Node | undefined = element.parent;
+  while (node && !ts.isSourceFile(node)) {
+    if (ts.isJsxElement(node) || ts.isJsxFragment(node)) block = node;
+    if (ts.isArrowFunction(node) || ts.isFunctionExpression(node) || ts.isFunctionDeclaration(node)) {
+      let up: ts.Node = node.parent;
+      while (ts.isParenthesizedExpression(up)) up = up.parent;
+      if (!ts.isCallExpression(up)) break;
+    }
+    node = node.parent;
+  }
+  return block;
+}
+
+/** The before-notice of one posting, or null when it says nothing. */
+function noticeOf(element: ts.JsxOpeningLikeElement, source: ts.SourceFile, press: string): string | null {
+  if (carriesBuilder(element, source)) return "the builder, in its props";
+  const holder = ts.isJsxOpeningElement(element) ? element.parent : null;
+  if (holder) {
+    const inside = jsxUnder(holder);
+    if (inside.some((child) => tagOf(child) === "ConfirmSubmitButton" && !attributesOf(child).some((one) => one.name.getText() === "formAction") && carriesBuilder(child, source))) {
+      return "a ConfirmSubmitButton with the builder";
+    }
+    if (inside.some((child) => tagOf(child) === "MailLine")) return "a MailLine inside";
+  }
+  if (BESIDE.has(press) && jsxUnder(blockOf(element)).some((child) => tagOf(child) === "MailLine")) return "a MailLine beside";
+  return null;
+}
+
+/** Every posting of every emailing press: imported under its own file's name, or handed down as a prop and followed. */
+function postings(): Posting[] {
+  const found: Posting[] = [];
+  const pressOf = new Map(Object.entries(EMAILING_PRESSES).map(([name, press]) => [`${press.file}#${name}`, name]));
+  // Props a component receives a press under, by the component's file: `src/…/QueuePanel.tsx` → { offerAction: "offerPlaceAction" }.
+  const handed = new Map<string, Map<string, string>>();
+  const scan = (file: string, bound: ReadonlyMap<string, string>) => {
+    const source = ts.createSourceFile(file, read(file), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const imports = importsOf(source, file);
+    const walk = (node: ts.Node) => {
+      if (ts.isJsxAttribute(node) && node.initializer && ts.isJsxExpression(node.initializer) && node.initializer.expression) {
+        const presses = new Set(identifiersIn(node.initializer.expression).flatMap((name) => (bound.has(name) ? [bound.get(name) as string] : [])));
+        const element = node.parent.parent;
+        if (presses.size > 0 && (ts.isJsxOpeningElement(element) || ts.isJsxSelfClosingElement(element))) {
+          const attribute = node.name.getText();
+          for (const press of presses) {
+            if (attribute === "action" || attribute === "formAction") {
+              found.push({ press, file, line: source.getLineAndCharacterOfPosition(node.getStart()).line + 1, verdict: noticeOf(element, source, press) });
+            } else {
+              const component = imports.get(tagOf(element));
+              if (component && component.from.endsWith(".tsx")) {
+                const props = handed.get(component.from) ?? new Map<string, string>();
+                if (props.get(attribute) !== press) {
+                  props.set(attribute, press);
+                  handed.set(component.from, props);
+                  scan(component.from, new Map([[attribute, press]]));
+                }
+              }
+            }
+          }
+        }
+      }
+      ts.forEachChild(node, walk);
+    };
+    walk(source);
+  };
+  for (const file of tsxFiles("src")) {
+    const source = ts.createSourceFile(file, read(file), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const bound = new Map<string, string>();
+    for (const [local, imported] of importsOf(source, file)) {
+      const press = pressOf.get(`${imported.from}#${imported.name}`);
+      if (press) bound.set(local, press);
+    }
+    if (bound.size > 0) scan(file, bound);
+  }
+  return found;
+}
+
+describe("every emailing press says its email before it is pressed (slice 3)", () => {
+  const all = postings();
+
+  it("is posted somewhere this scan can follow — or called by an island held to its own line", () => {
+    const posted = new Set(all.map((posting) => posting.press));
+    const unseen = Object.keys(EMAILING_PRESSES).filter((name) => !posted.has(name) && !(name in CALLED_IN_CODE));
+    expect(unseen, "emailing presses never found behind action={…} or formAction={…}").toEqual([]);
+  });
+
+  it("names its email at every posting: the builder in its question, a ConfirmSubmitButton with it, or a MailLine in the form", () => {
+    const silent = all.filter((posting) => posting.verdict === null).map((posting) => `${posting.press} at ${posting.file}:${posting.line}`);
+    expect(silent, "an emailing press posted without its before-notice").toEqual([]);
+  });
+
+  it("keeps the MailLine beside the buttons for the role presses alone, and the island's line before its call", () => {
+    const beside = all.filter((posting) => posting.verdict === "a MailLine beside").map((posting) => posting.press);
+    expect(new Set(beside)).toEqual(new Set(BESIDE));
+    for (const [name, island] of Object.entries(CALLED_IN_CODE)) {
+      const text = read(island.file);
+      expect(text, `${island.file} calls ${name}`).toMatch(new RegExp(`\\b${name}\\(`));
+      expect(text, `${island.file} draws its before-notice`).toMatch(island.before);
+    }
+  });
+
+  it("pairs no road by hand: the builder derives it from the email it names", () => {
+    // The old sentence and its road were two calls a page could pair wrongly (the map's «Dă-i un loc acum» said the
+    // confirmations' road for the links' email); `road: words.road(…)` beside an email line is that pairing again.
+    const byHand = tsxFiles("src").filter((file) => /\broad:\s*(?:words|dialog)\.road\(/.test(read(file)));
+    expect(byHand).toEqual([]);
   });
 });

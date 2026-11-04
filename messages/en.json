@@ -1682,7 +1682,7 @@
       "bibsUnprintedAlert": "{count, plural, one {# bib no longer marked as printed.} other {# bibs no longer marked as printed.}}",
       "openRow": "Open the registration",
       "cancel": "Cancel the registration",
-      "cancelBody": "The person is emailed. It cannot be undone. The place is offered to the first on the waiting list or stays free, by the setting. A refusal, with its reason, is made from the registration's page.",
+      "cancelBody": "It cannot be undone. A refusal, with its reason, is made from the registration's page.",
       "confirmOnPaperBody": "You confirm the participant signed the declaration on paper, at the desk. Only with the signed paper in front of you. Then the confirmation email; if no place, the waiting list, with no email yet.",
       "downloadBib": "Download the race number (BIB)",
       "notOnPublicList": "Not shown publicly",
@@ -2065,7 +2065,7 @@
       "removeTestTitle": "Remove the test registrations?",
       "removeTestBody": "Every test registration for this event is deleted, along with the synthetic participants behind them. Real registrations are left untouched.",
       "cancelRegistrationTitle": "Cancel this registration?",
-      "cancelRegistrationBody": "The person is emailed. The reason stays in the log; they get it only if the refusal is ticked. It cannot be undone. The place is offered to the first on the waiting list or stays free, by the setting.",
+      "cancelRegistrationBody": "The reason stays in the log; the person gets it only if the refusal is ticked. It cannot be undone.",
       "cancelRegistrationPrintedBody": "Number {number} is already printed; after cancelling it stays retired — never given to anybody else — and must be pulled out of the pile.",
       "repeatTitle": "Create the dates?",
       "repeatBody": "The next events are created at the chosen interval, each with its own address. You can edit or delete them one by one afterwards.",
@@ -2075,12 +2075,7 @@
       "sparesTitle": "Reserve numbers for the desk?",
       "sparesBody": "The numbers start at {from}, after the highest number given or reserved, and stay the desk's: nobody who registers online gets them. A reservation is not undone; unused numbers stay unused.",
       "bulkEraseTitle": "Erase the ticked registrations for good?",
-      "bulkEraseBody": "This cannot be undone. The places are released through the waiting list and the participants' data leave the record.",
-      "email": {
-        "one": "An email will be sent to {count} participant.",
-        "few": "An email will be sent to {count} participants.",
-        "other": "An email will be sent to {count} participants."
-      },
+      "bulkEraseBody": "This cannot be undone: the participants' data leave the record.",
       "emailMessages": {
         "one": "{count} email from the queue is sent now.",
         "few": "{count} emails from the queue are sent now.",
@@ -2105,7 +2100,7 @@
       "givePlaceTitle": "Give them a place?",
       "givePlaceBody": "{name} gets a free place ahead of the waiting list, and the confirmation with the race number.",
       "setBibTitle": "Save the number?",
-      "setBibBody": "The person is emailed the number. A number once given is never given to anybody else.",
+      "setBibBody": "A number once given is never given to anybody else.",
       "resendTitle": "Send the email again?",
       "resendWhat": {
         "PENDING_EMAIL_CONFIRMATION": "{name} gets the link to confirm the address again; the link in the old email stops working.",
@@ -2129,9 +2124,9 @@
       "withdrawConsentTitle": "Erase the ticked data?",
       "withdrawConsentBody": "The ticked data disappears from the registration for good; the reason stays in the log, without the person's name.",
       "eraseRegistrationTitle": "Erase the registration for good?",
-      "eraseRegistrationBody": "It cannot be undone. The place is released through the waiting list, and the person's data disappears from the records.",
+      "eraseRegistrationBody": "It cannot be undone: the person's data disappears from the records.",
       "bulkCancelTitle": "Cancel the ticked registrations?",
-      "bulkCancelBody": "Each person is emailed, without the reason. Each place is offered to the first on the waiting list or stays free, by the event's setting. The registrations stay, marked cancelled.",
+      "bulkCancelBody": "The cancellation email leaves without the reason. The registrations stay, marked cancelled.",
       "sendNowTitle": "Send the emails now?",
       "sendNowBody": "The queue goes out now, without waiting for the monitor, and stops at the day's limit.",
       "interestWithdrawTitle": "Withdraw the address?",
@@ -2217,7 +2212,7 @@
       "givePlaceNowBodyMore": "They get the declaration email at once and sign it online any time before the deadline, or on paper at the desk. They have nothing else to confirm.",
       "givePlaceNowFull": "No place is free: pressing adds one supplementary place over the limit; the capacity becomes {n}.",
       "outsideMarkTitle": "Put this registration on the special guests list?",
-      "outsideMarkBody": "{name} goes on the special guests list and no longer takes a place; the freed place goes to the first in line if offers go out automatically. State, number and emails stay.",
+      "outsideMarkBody": "{name} goes on the special guests list and no longer takes a place. State, number and emails stay.",
       "outsideMarkBodyWaitlisted": "{name} leaves the waiting list and gets a place as a special guest now: the email “{message}”, with the usual deadline.",
       "outsideMarkBodyWaitlistedTest": "{name} leaves the waiting list and gets a place as a special guest now: the declaration to sign, with the usual deadline.",
       "outsideMarkBodyOffered": "Instead of the offer, {name} gets a place as a special guest now: the email “{message}”, with the usual deadline. The offer's place is freed.",
@@ -2257,7 +2252,84 @@
           "club": "The club's Gmail recommended: the message reaches the club's own mailboxes, people who know the sender, and costs nothing from Mailgun.",
           "newsletter": "Mailgun recommended: a personal Gmail writing to many addresses gets restricted by Google."
         }
+      },
+      "saveRaiseTitle": "Save and offer the new places?",
+      "saveRaiseBody": "The places added go, in order, to those on the waiting list, each with the usual deadline to sign the declaration.",
+      "saveWindowTitle": "Save and move the declarations' deadlines?",
+      "saveWindowBody": "The places held for the declaration move their deadline to the new window.",
+      "mail": {
+        "to": "1 email goes to {name}: “{type}”.",
+        "toEither": "1 email goes to {name}: “{type}” or “{alt}”, depending on the outcome.",
+        "toAddress": "1 email goes to {name} ({address}): “{type}”.",
+        "toAddressEither": "1 email goes to {name} ({address}): “{type}” or “{alt}”, depending on the outcome.",
+        "toMany": {
+          "one": "{count} email “{type}” goes out, one to {audience}.",
+          "few": "{count} emails “{type}” go out, one to {audience}.",
+          "other": "{count} emails “{type}” go out, one to {audience}."
+        },
+        "upTo": {
+          "one": "At most {count} email “{type}” goes out, one to {audience}.",
+          "few": "At most {count} emails “{type}” go out, one to {audience}.",
+          "other": "At most {count} emails “{type}” go out, one to {audience}."
+        },
+        "audience": {
+          "participants": "each participant",
+          "confirmed": "each confirmed participant",
+          "subscribers": "each subscriber",
+          "invited": "each person invited",
+          "ticked": "each person ticked",
+          "unsigned": "each person who has not signed yet",
+          "present": "each person marked present",
+          "newAddresses": "each new address on the list",
+          "volunteerAddresses": "each address on the list without an open invitation already",
+          "memberAddresses": "each address on the list",
+          "firstWaiting": "the first on the waiting list",
+          "held": "each person with a place held for the declaration"
+        },
+        "none": "No email goes to {name}.",
+        "noneMany": "The people erased receive no email.",
+        "club": {
+          "one": "And {count} email to the club's mailboxes.",
+          "few": "And {count} emails to the club's mailboxes.",
+          "other": "And {count} emails to the club's mailboxes."
+        },
+        "clubUpTo": {
+          "one": "And at most {count} email to the club's mailboxes.",
+          "few": "And at most {count} emails to the club's mailboxes.",
+          "other": "And at most {count} emails to the club's mailboxes."
+        },
+        "test": "The address is a test one (@test.invalid): the email reaches nobody, but it counts against the day's limit.",
+        "nextInLineMaybe": "The freed place is offered to the first on the waiting list — they are sent “A place has freed up” — or stays free, by the event's setting.",
+        "nextInLineMaybeMany": "Each freed place is offered to the first on the waiting list — they are sent “A place has freed up” — or stays free, by the event's setting.",
+        "zitadel": "And Zitadel sends them the password link separately, at once.",
+        "zitadelEach": "And for each new address, Zitadel sends the password link separately, at once.",
+        "zitadelAgain": "An address that already belongs to a member gets only Zitadel's password link again.",
+        "linkReplaced": "The link sent before ({date}) stops working once this one leaves.",
+        "agreementCopy": "It is their copy, with the signed agreement attached (PDF).",
+        "guardianCopy": "It is their second copy of the agreement, now with the parent's consent; nothing goes to the parent.",
+        "guardianNone": "Nothing goes to the parent either.",
+        "rolesHeld": "It leaves {minutes} minutes after the press, with the roles given; if the roles are no longer the same by then, the email is withdrawn.",
+        "invitesServeLine": "First, the free places go to those on the waiting list — each is sent “A place has freed up”, if places are given automatically.",
+        "alertLater": "The newsletter's subscribers who follow this kind of event ({count}) get “Announcement: a new event on the calendar” at the job's next pass; one announcement a day at most.",
+        "alertMaybe": "At the job's next pass, the newsletter's subscribers may get “Announcement: a new event on the calendar” for a new event; one announcement a day at most.",
+        "laterDays": "Of them, {count} leave on the following days (the day's limit).",
+        "windowResend": "Each gets the link again, with the new deadline.",
+        "jobPass": "The save sends nothing itself; at its next pass the job sends what the new leads bring: an earlier reminder, last call or “Coming?”, and the address confirmation's resends in the new rhythm.",
+        "andType": "Then 1 more email to the same person: “{type}”."
       }
+    },
+    "mailLine": {
+      "roles": "A role given or taken sends {name} ({email}) “Your volunteer role”, with the roles that stand, {minutes} minutes after the press. It is withdrawn if the roles change meanwhile.",
+      "rolesNoAddress": "{name} has no email address: the roles given are not sent to them; tell them yourself.",
+      "volunteerAdd": "If you tick “Roles given” and type an address, the email “Your volunteer role” goes to that address, with the roles given, {minutes} minutes after saving. Otherwise no email goes.",
+      "volunteerEdit": "If you change “Roles given” or the address (with roles given), {name} is sent “Your volunteer role” at the address in the form, {minutes} minutes after saving. Otherwise, no email.",
+      "volunteerEditCancelled": "{name} is cancelled: saving sends them no email.",
+      "testRegistrations": "Each test registration sends 2 emails, “{verify}” and “{declaration}” (or “{waitlist}”), to a @test.invalid address: they reach nobody, but they count against the day's limit.",
+      "capacity": "{count} wait on the list: if you raise the number of places, or choose “Yes” above, the save sends one “A place has freed up” for each free place to the first on the list — at most {count}.",
+      "opening": "When you untick it and save, those who asked “Let me know” get “Registration is open” at the job's next pass.",
+      "openingCount": "When you untick it and save, those who asked “Let me know” ({count}) get “Registration is open” at the job's next pass.",
+      "window": "Each held place whose deadline moves is sent “Sign the declaration” again, with the new deadline.",
+      "reminder": "The reminder leaves by itself, to each confirmed participant; if you lengthen the lead or move the start earlier, the job sends it at its next pass to the events now within reach."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -3613,7 +3685,7 @@
       "changeRolePending": "Saving…",
       "revokePending": "Removing…",
       "resendInviteTitle": "Send the invitation again?",
-      "resendInviteBody": "An email goes to {email} with the sign-in link.",
+      "resendInviteBody": "The invitation goes again, with the sign-in link.",
       "passwordResetTitle": "Send a password reset?",
       "passwordResetBody": "Zitadel sends {email} a link to change their password. We never see the password.",
       "deactivateAccountTitle": "Deactivate the account?",
@@ -5708,6 +5780,8 @@
       "confirm": "Confirm",
       "cancel": "Cancel",
       "reopen": "Back to registered",
+      "reopenTitle": "Bring {name} back?",
+      "reopenBody": "{name} is no longer cancelled and keeps the roles given.",
       "delete": "Delete the volunteer",
       "deleting": "Deleting…",
       "deleteTitle": "Delete this volunteer?",
@@ -5731,11 +5805,13 @@
         "noEmail": "No email address: the link cannot be sent.",
         "send": "Send the agreement link",
         "resend": "Send the link again",
+        "sendTitle": "Send the agreement link?",
+        "sendBody": "{name} receives the volunteer agreement and a personal, single-use link to accept it.",
         "pdf": "Agreement PDF",
         "pdfToSign": "PDF to sign",
         "paper": "Signed on paper",
         "paperTitle": "Did {name} sign the agreement on paper?",
-        "paperBody": "This records that {name} signed the printed agreement, the version in force, and that you recorded the signature. {name} gets a copy by email. Keep the signed sheet.",
+        "paperBody": "This records that {name} signed the printed agreement, the version in force, and that you recorded the signature. Keep the signed sheet.",
         "paperBodyNoEmail": "This records that {name} signed the printed agreement, the version in force, and that you recorded the signature. {name} has no email address, so gets no copy: keep the signed sheet.",
         "missing": "No volunteer agreement is in force: nothing can be sent or printed yet. Approve one in «Legal documents».",
         "noticeMissing": "The privacy notice in force does not describe the agreement's acceptance yet: the link and “Signed on paper” wait. «Tasks» says what to approve."
@@ -5809,6 +5885,8 @@
         "localeEn": "English",
         "send": "Send the invitations",
         "sending": "Sending…",
+        "sendTitle": "Send the invitations?",
+        "sendBody": "Each address on the list without an open invitation, and not already offered, gets an email with a personal link to the volunteers' page. At most {max} at a time.",
         "empty": "No invitation sent yet.",
         "state": {
           "open": "Sent",
@@ -5918,6 +5996,8 @@
         "requestedLine": "Last link sent to the parent: {when}",
         "send": "Send the parent's link",
         "resend": "Send the parent's link again",
+        "sendTitle": "Send the parent's link?",
+        "sendBody": "{name}'s parent or guardian receives the agreement and a personal, single-use link to give their consent.",
         "pdf": "PDF with the parent's consent",
         "pdfToSign": "PDF for the parent to sign",
         "paper": "Parent's consent on paper",
@@ -9547,7 +9627,13 @@
           "few": "Done: {count} fields changed.",
           "other": "Done: {count} fields changed."
         },
-        "offered": "The places added were offered to the waiting list: {count}."
+        "offered": "The places added were offered to the waiting list: {count}.",
+        "mail": {
+          "none": "Applying does not send “Updated details” to the participants.",
+          "offers": "If places free up and are given automatically, the first on the waiting list get “A place has freed up”.",
+          "declarations": "Those with a declaration to sign may get “Sign the declaration” again, with the moved deadline.",
+          "job": "At the job's next pass, what the new deadlines bring leaves: the reminder, “Coming?”, “Registration is open”."
+        }
       },
       "open": "Open the event",
       "problems": {
@@ -10526,6 +10612,7 @@
           "title": "Add an order for a member",
           "help": "For orders collected outside the site. The order takes from the same stock, is marked “added by the club” and shows in the member's “My orders”. The member needs an account on “Team” first.",
           "member": "Member",
+          "theMember": "the chosen member",
           "memberNone": "No member account yet: add it on “Team” first.",
           "item": "Item and variant",
           "itemSoldOut": "{label} — sold out",

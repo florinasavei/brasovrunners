@@ -228,16 +228,19 @@ describe("BR-REQ-037-07: the list's «⋮» and the special guests list (§747)"
     expect(query.get("eventId")).toBe(race.id);
   });
 
-  it("names the email in a waiting runner's question, and none in a test row's", async () => {
+  it("names the email in a waiting runner's question, and says a test row's address reaches nobody", async () => {
     const race = await createRace("Crosul", true);
     state.actor = await staff("ADMIN");
     const waiting = await register(race.id, { status: "WAITLISTED" });
     const waitingTest = await register(race.id, { status: "WAITLISTED", kind: "TEST" });
     const tree = await listPage({ eventId: race.id });
-    const confirmOf = (id: string) => outsideForm(tree, id)?.props.confirm as { body: string; email?: unknown };
+    const confirmOf = (id: string) => outsideForm(tree, id)?.props.confirm as { body: string; email?: string; also?: { text: string }[] };
     expect(confirmOf(waiting).body).toContain("primește acum un loc ca invitat special");
-    expect(confirmOf(waiting).email).toBeDefined();
-    expect(confirmOf(waitingTest).email).toBeUndefined();
+    // The person and the email by its name (the design «telling the owner about every email a staff press sends», slice 3).
+    expect(confirmOf(waiting).email).toContain("„Semnează declarația”");
+    // A test row (§12.6): its email is named too, its address said to reach nobody, and no club count beside it.
+    expect(confirmOf(waitingTest).email).toContain("„Semnează declarația”");
+    expect(confirmOf(waitingTest).also?.map((line) => line.text)).toEqual([ro.Admin.confirm.mail.test]);
   });
 
   it("renders the refusal from the «⋮» as today's sentence naming who holds the places, not a message key", async () => {

@@ -30,6 +30,7 @@ import { badgeRoleText } from "../badges/badge-design";
 import RoleColourFields from "../badges/ui/RoleColourFields";
 import RoleColourSample from "../badges/ui/RoleColourSample";
 import { confirmWords } from "@/shared/feedback/confirm-words";
+import MailLine from "@/shared/feedback/MailLine";
 import { countForm } from "@/i18n/count-form";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
@@ -64,7 +65,7 @@ import { encodeRoleBaseline, roleBaselineOf } from "../role-baseline";
 import { newRoleRowKey, type RoleRowBox, roleBox, roleColourBoxesOf } from "../role-rows";
 import type { VolunteersAccess } from "../domain/access";
 import type { VolunteerInvitationItem } from "../invitations";
-import type { VolunteerCategory, VolunteerItem, VolunteerRole } from "../volunteers";
+import { ROLE_EMAIL_SETTLE_MINUTES, type VolunteerCategory, type VolunteerItem, type VolunteerRole } from "../volunteers";
 import VolunteerAccessChoice from "./VolunteerAccessChoice";
 import VolunteerPerson, { shortText, STATE_CHIP, VolunteerPersonFields, type VolunteerPersonContext, volunteerHiddenFields, volunteerPersonBoxes } from "./VolunteerPerson";
 import VolunteerInvitations from "./VolunteerInvitations";
@@ -1064,6 +1065,10 @@ export default async function VolunteersCard({
             <ActionForm action={addVolunteerAction} scope="volunteer-new" messages={personBoxes}>
               {hidden}
               <VolunteerPersonFields person={null} context={personContext} />
+              {/* What the add may email (the design «telling the owner about every email a staff press sends», slice 3): the roles given, to the address typed. */}
+              <Box sx={{ mt: 1.5 }}>
+                <MailLine text={t("mailLine.volunteerAdd", { minutes: String(ROLE_EMAIL_SETTLE_MINUTES) })} data-testid="volunteer-add-mail" />
+              </Box>
               <Box sx={{ mt: 1.5 }}>
                 <GlyphSubmitButton label={t("volunteers.person.add")} pendingLabel={t("volunteers.person.adding")} icon="addPerson" />
               </Box>

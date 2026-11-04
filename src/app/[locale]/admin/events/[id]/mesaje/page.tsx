@@ -146,9 +146,9 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
         when: [{ field: "audience", equals: choice.value }],
         title: choice.confirmTitle,
         body: choice.testLine ? `${t("participantMessages.confirmBody")} ${choice.testLine}` : t("participantMessages.confirmBody"),
-        // No "0 participants" for a group of test rows alone: the test line says who is written to.
-        ...(choice.real > 0 ? { email: words.email(choice.real) } : {}),
-        road: words.road("announcements"),
+        // No "0 participants" for a group of test rows alone: the test line says who is written to. The message named, and
+        // the club's one copy of the send (§419) — the design «telling the owner about every email a staff press sends», slice 3.
+        ...words.mail({ to: { count: choice.real, audience: "participants" }, type: "ORGANIZER_MESSAGE" }),
         confirmLabel: t("participantMessages.confirmSend"),
         cancelLabel: words.cancel,
       },

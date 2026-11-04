@@ -311,11 +311,18 @@ export type ConfirmSpec = {
    */
   destructive?: boolean;
   /**
-   * "An email will be sent to N participants", worded on the server from the same count the
-   * send uses (the owner: "I need to know each time a participant will be emailed!"). Absent
-   * for an action that writes to nobody, which then says nothing about email.
+   * The email the press sends, named before it (the design «telling the owner about every email a staff press sends»,
+   * slice 3): «Pleacă 1 email către Ana Pop: „Înscriere anulată”.», or «Nu pleacă niciun email către Ana Pop.» for a
+   * press that writes to nobody — worded on the server by the one builder, `confirmWords().mail(…)`, from the same count
+   * the send uses (the owner: "I need to know each time a participant will be emailed!"). Bold, so it is never missed.
    */
   email?: string;
+  /**
+   * The quieter lines under the email line and its road (`ConfirmAlso`): the club's copies as a count, what else the
+   * press sets off — the freed place's offer to the next in line, Zitadel's own email —, each drawn only while the
+   * form as posted meets its `when` (`resolveAlso`). Worded by the same builder.
+   */
+  also?: readonly ConfirmAlso[];
   /**
    * The same sentence, counted from the form as posted, for a press whose reach the reader chose
    * in the browser: a series save reaches the ticked dates, and each date's registrants are
@@ -463,15 +470,47 @@ export function resolveBodyCount(spec: ConfirmSpec, valuesOf: (field: string) =>
   return { ...spec, bodyCount: undefined, body: counted.forms[countForm(total, counted.locale)].replace("{count}", String(total)) };
 }
 
-/** `body` with each `fillFrom` field's posted value in its `{name}`; the spec unchanged without one. */
+/**
+ * `body`, the email line and every `also` line with each `fillFrom` field's posted value in its `{name}` — «Pleacă 1
+ * email către {firstName} {lastName}: …» for a person typed into the form; the spec unchanged without one.
+ */
 export function fillFromForm(spec: ConfirmSpec, valueOf: (field: string) => string | null): ConfirmSpec {
   if (!spec.fillFrom || spec.fillFrom.length === 0) return spec;
-  let body = spec.body;
-  for (const field of spec.fillFrom) body = body.split(`{${field}}`).join((valueOf(field) ?? "").trim());
-  return { ...spec, body, fillFrom: undefined };
+  const fields = spec.fillFrom;
+  const fill = (text: string) => {
+    let filled = text;
+    for (const field of fields) filled = filled.split(`{${field}}`).join((valueOf(field) ?? "").trim());
+    return filled;
+  };
+  return {
+    ...spec,
+    body: fill(spec.body),
+    ...(spec.email !== undefined ? { email: fill(spec.email) } : {}),
+    ...(spec.also ? { also: spec.also.map((line) => ({ ...line, text: fill(line.text) })) } : {}),
+    fillFrom: undefined,
+  };
 }
 
-export type FormCondition = { field: string; equals?: string; notEquals?: string };
+/**
+ * A condition on the form as posted: `equals` / `notEquals` a value, or `raisedFrom` a number — the box holds a whole
+ * number above it, or is empty, which an unlimited capacity posts (the editor's «Număr de locuri» raised: the places
+ * it frees go to the waiting list). `anyOf`: any one of several conditions — the editor's window moved by any of its
+ * four boxes — where a list of conditions means all of them.
+ */
+export type FormCondition = { field: string; equals?: string; notEquals?: string; raisedFrom?: number } | { anyOf: readonly FormCondition[] };
+
+/**
+ * One quieter line of a dialog (`ConfirmSpec.also`): the words, and — when it is true only for some presses — the
+ * conditions the posted form must meet for it to be said, as `ConfirmSpec.when`.
+ */
+export type ConfirmAlso = { text: string; when?: readonly FormCondition[] };
+
+/** The dialog with only the `also` lines whose conditions the posted form meets; the spec unchanged without any. */
+export function resolveAlso(spec: ConfirmSpec, valueOf: (field: string) => string | null): ConfirmSpec {
+  if (!spec.also) return spec;
+  const kept = spec.also.filter((line) => (line.when ?? []).every((condition) => holds(condition, valueOf)));
+  return { ...spec, also: kept.length > 0 ? kept : undefined };
+}
 
 /**
  * "An email will be sent to N participants" for the dates a series save reaches (§331, §384):
@@ -488,19 +527,57 @@ export type EmailCount = {
    * nothing (`announceSave`), and the date being edited is `base`, never counted twice.
    */
   counts: Readonly<Record<string, number>>;
-  /** `Admin.confirm.email`'s three forms, raw, each with `{count}`. */
+  /**
+   * Count the lines of the one posted value instead (the design «telling the owner about every email a staff press
+   * sends», slice 3): each distinct non-empty line, trimmed and without regard to case, is one address — «Trimite
+   * invitațiile» to the addresses typed one per line. `base` and `counts` are not read then.
+   */
+  lines?: true;
+  /**
+   * The club's mailboxes' line, counted from the same total: `each` copies per email (the per-message Bcc, §320) and
+   * `once` per send (a bulk send's one copy, §419) — one send for each value that writes to somebody, `base` included: a
+   * series save tells each date apart —, in `forms` with `{count}`. Said first among the `also` lines, and only when it
+   * counts something.
+   */
+  club?: { each: number; once: number; forms: Readonly<Record<CountForm, string>> };
+  /** The email line's three forms, raw, each with `{count}` (`Admin.confirm.mail.toMany` or `upTo`, with its type and audience). */
   forms: Readonly<Record<CountForm, string>>;
   locale: string;
 };
+
+/** How many addresses the lines of a typed list hold: distinct, non-empty, trimmed, without regard to case. */
+export function countLines(value: string): number {
+  return new Set(
+    value
+      .split(/\r?\n/)
+      .map((line) => line.trim().toLowerCase())
+      .filter((line) => line !== ""),
+  ).size;
+}
 
 /** The dialog with its email line counted from the posted values, or without one when nobody is written to. */
 export function resolveEmailCount(spec: ConfirmSpec, valuesOf: (field: string) => readonly string[]): ConfirmSpec {
   const counted = spec.emailCount;
   if (!counted) return spec;
   let total = counted.base;
-  for (const value of new Set(valuesOf(counted.field))) total += counted.counts[value] ?? 0;
+  // How many sends the press makes: a bulk send's club copy is one per send (§419), and each date of a series is its own.
+  let sends = counted.base > 0 ? 1 : 0;
+  if (counted.lines) {
+    total = countLines(valuesOf(counted.field)[0] ?? "");
+    sends = total > 0 ? 1 : 0;
+  } else {
+    for (const value of new Set(valuesOf(counted.field))) {
+      const adds = counted.counts[value] ?? 0;
+      total += adds;
+      if (adds > 0) sends += 1;
+    }
+  }
   const rest: ConfirmSpec = { ...spec, emailCount: undefined, email: undefined };
-  return total > 0 ? { ...rest, email: counted.forms[countForm(total, counted.locale)].replace("{count}", String(total)) } : rest;
+  if (total <= 0) return rest;
+  const club = counted.club ? total * counted.club.each + sends * counted.club.once : 0;
+  const clubLine = counted.club && club > 0 ? [{ text: counted.club.forms[countForm(club, counted.locale)].replace("{count}", String(club)) }] : [];
+  const also = [...clubLine, ...(spec.also ?? [])];
+  return { ...rest, email: counted.forms[countForm(total, counted.locale)].replace("{count}", String(total)), ...(also.length > 0 ? { also } : {}) };
 }
 
 /**
@@ -513,12 +590,20 @@ export function pickConfirm(
 ): ConfirmSpec | null {
   if (!specs) return null;
   const list = Array.isArray(specs) ? (specs as readonly ConfirmSpec[]) : [specs as ConfirmSpec];
-  return list.find((spec) => (spec.when ?? []).every((condition) => holds(condition, valueOf(condition.field)))) ?? null;
+  return list.find((spec) => (spec.when ?? []).every((condition) => holds(condition, valueOf))) ?? null;
 }
 
-function holds(condition: FormCondition, value: string | null): boolean {
+function holds(condition: FormCondition, valueOf: (field: string) => string | null): boolean {
+  if ("anyOf" in condition) return condition.anyOf.some((one) => holds(one, valueOf));
+  const value = valueOf(condition.field);
   if (condition.equals !== undefined && value !== condition.equals) return false;
   if (condition.notEquals !== undefined && value === condition.notEquals) return false;
+  if (condition.raisedFrom !== undefined) {
+    // Empty is unlimited — raised from any number; anything else holds only as a whole number above it. A form without the box is not raised.
+    if (value === null) return false;
+    const typed = value.trim();
+    if (typed !== "" && !(/^\d{1,9}$/.test(typed) && Number(typed) > condition.raisedFrom)) return false;
+  }
   return true;
 }
 

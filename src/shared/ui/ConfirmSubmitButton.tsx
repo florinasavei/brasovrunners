@@ -4,7 +4,7 @@ import Button from "@mui/material/Button";
 import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
-import { type ConfirmSpec, type EmailCount, resolveEmailCount } from "@/shared/feedback/notice";
+import { type ConfirmSpec, resolveAlso, resolveEmailCount } from "@/shared/feedback/notice";
 import { ACTION_ICONS, type ActionIconName } from "./action-icons";
 
 type Props = {
@@ -13,14 +13,15 @@ type Props = {
   body: string;
   confirmLabel: string;
   cancelLabel: string;
-  /** "An email will be sent to N participants", worded on the server (`ConfirmSpec.email`). */
-  email?: string;
   /**
-   * The same sentence counted at the press from the form's ticked values (`ConfirmSpec.emailCount`):
-   * the bulk cancel's ticks exist only in the browser, so the server hands the count each tick adds
-   * and the dialog sums the ticked ones when it opens. Replaces `email`.
+   * The email the press sends, named before it, as the one builder words it (`confirmWords().mail`, `mailCount`,
+   * `noMail`; the design «telling the owner about every email a staff press sends», slice 3): the email line, its road
+   * and the quieter lines — the club's count, the next in line's offer. A count made from the ticks at the press
+   * (`mailCount`: the bulk cancel's ticks exist only in the browser) is summed when the dialog opens.
    */
-  emailCount?: EmailCount;
+  mail?: Pick<ConfirmSpec, "email" | "emailCount" | "also" | "road">;
+  /** The button's accessible name where a list repeats its words on every row: «Trimite linkul: Ana Pop». */
+  ariaLabel?: string;
   color?: "primary" | "error" | "warning";
   variant?: "text" | "outlined" | "contained";
   size?: "small" | "medium";
@@ -76,8 +77,8 @@ export default function ConfirmSubmitButton({
   body,
   confirmLabel,
   cancelLabel,
-  email,
-  emailCount,
+  mail,
+  ariaLabel,
   color = "primary",
   variant = "outlined",
   size = "small",
@@ -89,7 +90,7 @@ export default function ConfirmSubmitButton({
   const [open, setOpen] = useState<ConfirmSpec | null>(null);
   const anchor = useRef<HTMLButtonElement>(null);
   const Icon = ACTION_ICONS[icon];
-  const spec: ConfirmSpec = { title, body, confirmLabel, cancelLabel, email, emailCount, destructive: color === "error" };
+  const spec: ConfirmSpec = { title, body, confirmLabel, cancelLabel, ...mail, destructive: color === "error" };
   // The parent form's status: meaningful only for a button inside its form (not one tied by `form=`).
   const status = useFormStatus();
   const pending = pendingLabel !== undefined && status.pending && status.data?.get(SUBMITTER_FIELD) === label;
@@ -113,6 +114,7 @@ export default function ConfirmSubmitButton({
         name={pendingLabel !== undefined ? SUBMITTER_FIELD : undefined}
         value={pendingLabel !== undefined ? label : undefined}
         aria-busy={pending || undefined}
+        aria-label={ariaLabel}
         sx={{ minHeight: 44 }}
         startIcon={<Icon fontSize="small" />}
         onClick={(event) => {
@@ -121,7 +123,9 @@ export default function ConfirmSubmitButton({
           // The ticks as they are at this press, the checkboxes tied by `form=` included.
           const target = anchor.current?.form;
           const data = target ? new FormData(target) : null;
-          setOpen(resolveEmailCount(spec, (field) => (data ? data.getAll(field).filter((value): value is string => typeof value === "string") : [])));
+          const valuesOf = (field: string) => (data ? data.getAll(field).filter((value): value is string => typeof value === "string") : []);
+          const counted = resolveEmailCount(spec, valuesOf);
+          setOpen(resolveAlso(counted, (field) => valuesOf(field)[0] ?? null));
         }}
       >
         {pending ? pendingLabel : label}

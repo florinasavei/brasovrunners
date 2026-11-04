@@ -190,6 +190,8 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
             confirm={{
               title: scheduled ? t("emails.queue.when.offTitle") : t("emails.queue.when.onTitle"),
               body: scheduled ? t("emails.queue.when.offBody") : t("emails.queue.when.onBody", { wait: minutesPhrase(locale, Math.max(pingerMinutes, runInterval)) }),
+              // Off, the queue leaves now (§513): how many, as «Trimite acum» says it (the design «telling the owner about every email a staff press sends», slice 3).
+              ...(scheduled && queue.due > 0 ? { email: words.queue(queue.due) } : {}),
               confirmLabel: scheduled ? t("emails.queue.when.turnOff") : t("emails.queue.when.turnOn"),
               cancelLabel: words.cancel,
             }}

@@ -341,6 +341,8 @@ describe("§690 the club places an order in a member's name", () => {
           locale: "ro",
           words: t as never,
           cancel: "Renunță",
+          // The dialogs' email lines (the one builder, `confirmWords`): their words are the builder's own tests'.
+          mail: { mail: () => ({}), noMail: () => ({}), line: () => ({ text: "" }) },
           messages: { fieldError: "", summary: "", fields: {} } as never,
           mayManage,
           showEmail: false,

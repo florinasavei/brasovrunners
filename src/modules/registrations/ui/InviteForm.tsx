@@ -58,9 +58,12 @@ export type InviteFormWords = {
   dialogDays: Counted;
   /** «Limba pentru adresele pe care clubul nu le cunoaște: {language}.»: the language the press sends. */
   dialogLocale: string;
+  /** «Pleacă {count} emailuri „Invitația la un eveniment”, câte unul către fiecare persoană invitată.», counted (`confirmWords().mailCount`). */
   dialogEmail: Counted;
   /** Which road the invitations take, and the switch for this press (§841). */
   dialogRoad: ConfirmRoad;
+  /** The quieter lines under it: what the press sends besides the invitations — the waiting list served first. */
+  dialogAlso: readonly string[];
   /** «Adaugă {count} locuri și trimite», counted. */
   confirmRaise: Counted;
   confirm: string;
@@ -217,6 +220,7 @@ export default function InviteForm({
         body,
         email: counted(words.dialogEmail, count),
         road: words.dialogRoad,
+        ...(words.dialogAlso.length > 0 ? { also: words.dialogAlso.map((text) => ({ text })) } : {}),
         confirmLabel: raisedTo !== null ? counted(words.confirmRaise, raises) : words.confirm,
         cancelLabel: words.cancel,
       },

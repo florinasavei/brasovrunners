@@ -27,6 +27,7 @@ import {
 } from "@/modules/registrations/domain/hold-deadlines";
 import { REGISTRATION_MODE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { htmlConstraints, textFieldConstraints } from "@/shared/forms/constraints";
+import MailLine from "@/shared/feedback/MailLine";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import InfoTip from "@/shared/ui/InfoTip";
@@ -135,6 +136,7 @@ export default async function RegistrationBox({
   now,
   clubDeadlines,
   windowHolds = null,
+  interests = null,
   rsvp = null,
   rsvpAsk = DEFAULT_RSVP_ASK_SETTINGS,
 }: BoxProps & {
@@ -169,6 +171,8 @@ export default async function RegistrationBox({
   declarations: readonly DeclarationOption[];
   /** How many wait for a place (§147); the create form has nobody. */
   waiting?: number;
+  /** How many asked «Anunță-mă» while registration is not open yet (§451), for the role that reads them; null otherwise. */
+  interests?: number | null;
   bibCounts?: { total: number; unprinted: number } | null;
   /** Sub-sub-card 8.4.2, edit only, drawn by the page (it posts forms of its own). */
   bibPrint?: ReactNode;
@@ -447,6 +451,9 @@ export default async function RegistrationBox({
                       <option value="false">{t("editor.waitlistAutoOfferNo")}</option>
                     </RecallField>
                     <BoxNote more={t("editor.waitlistAutoOfferHelpMore")}>{t("editor.waitlistAutoOfferHelp")}</BoxNote>
+                    {/* What a raise or «Da» here emails at the save (the design «telling the owner about every email a staff press sends», slice 3):
+                        beside the boxes of a data-entry form, never a question; the save's own dialog says it again with the numbers posted. */}
+                    {waiting > 0 && <MailLine text={t("mailLine.capacity", { count: String(waiting) })} data-testid="capacity-mail" />}
                   </Stack>
 
                   {/* 6.1.1 — from when until when. */}
@@ -459,6 +466,11 @@ export default async function RegistrationBox({
                         {t("editor.registrationOpensSoon")}
                       </CheckboxField>
                       <BoxNote>{t("editor.registrationOpensSoonHelp")}</BoxNote>
+                      {/* «Anunță-mă» (§451): the job writes to them when registration opens, never the save itself. */}
+                      <MailLine
+                        text={interests !== null ? t("mailLine.openingCount", { count: String(interests) }) : t("mailLine.opening")}
+                        data-testid="opening-mail"
+                      />
                       <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                         <WallTimeField name="event.registrationOpensAt" label={t("editor.registrationOpensAt")} timeLabel={t("editor.timeOfDay")} value={event?.registrationOpensAt ?? null} zone={zone} />
                         <WallTimeField name="event.registrationClosesAt" label={t("editor.registrationClosesAt")} timeLabel={t("editor.timeOfDay")} value={event?.registrationClosesAt ?? null} zone={zone} />
@@ -505,6 +517,8 @@ export default async function RegistrationBox({
                           {windowHoldsLine}
                         </Typography>
                       )}
+                      {/* The places the window moves are sent the declaration again, with the new deadline (`moveWindowHolds`). */}
+                      {windowHoldsLine && <MailLine text={t("mailLine.window")} data-testid="confirmation-mail" />}
                       <BoxNote more={t("editor.confirmationWindowHelpMore", { hold })}>{t("editor.confirmationWindowHelp")}</BoxNote>
                     </Stack>
                   </Panel>
@@ -534,6 +548,8 @@ export default async function RegistrationBox({
                         <option value="0">{t("editor.reminder.none")}</option>
                       </RecallField>
                       <BoxNote>{t("editor.reminder.help", { lead: clubReminder })}</BoxNote>
+                      {/* The reminder is the job's (§81): a lead lengthened, or a start moved earlier, reaches the events newly inside it at the next pass. */}
+                      <MailLine text={t("mailLine.reminder")} data-testid="reminder-mail" />
                     </Stack>
                   </Panel>
                 </Stack>

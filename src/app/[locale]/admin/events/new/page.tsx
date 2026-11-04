@@ -150,7 +150,17 @@ export default async function NewEventPage({ params, searchParams }: Props) {
   */
   const words = await confirmWords();
   const publishConfirm = mayPublish
-    ? [{ when: [{ field: THEN_FIELD, equals: THEN_PUBLISH }], title: t("confirm.createPublishTitle"), body: t("confirm.publishBody"), confirmLabel: t("editor.createAndPublish"), cancelLabel: words.cancel }]
+    ? [
+        {
+          when: [{ field: THEN_FIELD, equals: THEN_PUBLISH }],
+          title: t("confirm.createPublishTitle"),
+          body: t("confirm.publishBody"),
+          // The job announces a new event to the newsletter's subscribers at its next pass (§445), one a day at most.
+          also: [words.line("alertMaybe")],
+          confirmLabel: t("editor.createAndPublish"),
+          cancelLabel: words.cancel,
+        },
+      ]
     : undefined;
 
   return (

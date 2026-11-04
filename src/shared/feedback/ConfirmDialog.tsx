@@ -43,7 +43,9 @@ import { type ConfirmSpec, confirmOnKey } from "./notice";
  * only the red button itself does. A held key's repeats are swallowed: the Enter that submitted
  * the form, still down when the dialog opens, neither confirms nor cancels it. Escape and the
  * backdrop cancel either. An email the action will queue is a line of its own, in bold, so it is
- * never missed.
+ * never missed — the person named and the email by its name in «Emailuri», or «Nu pleacă niciun email
+ * către …» (`confirmWords().mail`, `noMail`) — and what else the press sends follows the road, quieter
+ * (`spec.also`): the club's mailboxes as a count, the freed place's offer to the next in line.
  *
  * **A second answer**, rarely (`alternative`): a question with two ways forward and a way back —
  * «Copiază și tradu tot» asks whether to replace the English already written or fill only the
@@ -155,6 +157,13 @@ export default function ConfirmDialog({
             </FormHelperText>
           </FormControl>
         )}
+        {/* What else the press sends, quieter (the design «telling the owner about every email a staff press sends», slice 3):
+            the club's mailboxes as a count, the freed place's offer, Zitadel's own email — each line as the builder worded it. */}
+        {spec.also?.map((line) => (
+          <DialogContentText key={line.text} variant="body2" sx={{ mt: 1 }} data-testid="confirm-also">
+            {line.text}
+          </DialogContentText>
+        ))}
         {spec.tick && (
           // A rule the press must not assume (§33): the reader ticks it here, and the confirm button waits for it.
           <FormControlLabel

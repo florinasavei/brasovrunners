@@ -91,6 +91,12 @@ export default async function ImportEventPage({ params }: Props) {
     overWorking: t("eventJson.over.working"),
     overDone: counted("eventJson.over.done"),
     overOffered: raw("eventJson.over.offered"),
+    overMail: {
+      none: t("eventJson.over.mail.none"),
+      offers: t("eventJson.over.mail.offers"),
+      declarations: t("eventJson.over.mail.declarations"),
+      job: t("eventJson.over.mail.job"),
+    },
     open: t("eventJson.open"),
     mediaProblemsHeading: t("eventJson.problems.heading"),
     mediaProblems: {

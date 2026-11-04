@@ -115,7 +115,9 @@ import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { clubNightEvent } from "@/modules/events/night-event";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { confirmWords } from "@/shared/feedback/confirm-words";
-import type { ConfirmSpec, EmailCount } from "@/shared/feedback/notice";
+import MailLine from "@/shared/feedback/MailLine";
+import type { ConfirmAlso, ConfirmSpec, FormCondition } from "@/shared/feedback/notice";
+import { DEFAULT_CONFIRMATION_DEADLINE_DAYS, DEFAULT_CONFIRMATION_OPENS_DAYS, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import ActionForm from "@/shared/forms/ActionForm";
 import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
@@ -133,6 +135,7 @@ import { listEliteEntries } from "@/modules/registrations/elite-list";
 import { countRsvpsForAdmin, listRsvpsForAdmin } from "@/modules/rsvp/rsvp";
 import { SPARE_BIBS_PER_PRINT, spareRangeOfQuery } from "@/modules/registrations/domain/spare-bibs";
 import { countInterests } from "@/modules/registrations/interest";
+import { previewEventAlertAudience } from "@/modules/newsletter/service";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countPendingInvitations } from "@/modules/registrations/invitation-repository";
 import { countEligibleWaitlisted, countOccupied, countOutsideCapacity, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
@@ -669,8 +672,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const thanksConfirm: ConfirmSpec = {
     title: t("thanks.confirmTitle"),
     body: thanksRecipients.test > 0 ? `${t("thanks.confirmBody")} ${t("participantMessages.testLine", { test: String(thanksRecipients.test) })}` : t("thanks.confirmBody"),
-    ...(thanksRecipients.real > 0 ? { email: words.email(thanksRecipients.real) } : {}),
-    road: words.road("reminders"),
+    // Everyone checked in, by the send's own count — the test rows named apart in the body (§12.6) — and the club's copies.
+    ...words.mail({ to: { count: thanksRecipients.real, audience: "present" }, type: "EVENT_THANKS" }),
     confirmLabel: t("thanks.send"),
     cancelLabel: words.cancel,
   };
@@ -698,8 +701,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         return {
           title: t("bulkResend.confirmTitle"),
           body: testCounts.queued > 0 ? `${body} ${t("participantMessages.testLine", { test: String(testCounts.queued) })}` : body,
-          ...(counts.queued > 0 ? { email: words.email(counts.queued) } : {}),
-          road: words.road("links"),
+          ...words.mail({ to: { count: counts.queued, audience: "unsigned" }, type: "COMPLETE_DECLARATION" }),
           confirmLabel: t("bulkResend.button"),
           cancelLabel: words.cancel,
         };
@@ -712,16 +714,17 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   */
   const laterDateIds =
     inSeries && maySaveSettings && internal ? seriesDates.filter((member) => member.id !== event.id && member.startsAt.getTime() > now.getTime()).map((member) => member.id) : [];
-  const noticeEmailCount: EmailCount | undefined =
-    laterDateIds.length > 0
-      ? {
-          field: "dates",
-          base: noticeRecipients.real,
-          counts: await countRealNoticeRecipientsByEvent(db, laterDateIds),
-          forms: t.raw("confirm.email") as EmailCount["forms"],
-          locale,
-        }
-      : undefined;
+  const laterDateCounts = laterDateIds.length > 0 ? await countRealNoticeRecipientsByEvent(db, laterDateIds) : null;
+  /*
+    Who the save's notice writes to (the design «telling the owner about every email a staff press sends», slice 3): the
+    registered of this date, counted on the server — or, for a series, summed in the browser over the dates ticked — with
+    the email named and the club's copies counted as the send makes them: one per date for the update (§419), one per
+    message for the cancellation (§320).
+  */
+  const noticeMail = (type: "EVENT_UPDATE_NOTICE" | "EVENT_CANCELLED") =>
+    laterDateCounts
+      ? words.mailCount({ field: "dates", base: noticeRecipients.real, counts: laterDateCounts, type, audience: "participants" })
+      : words.mail({ to: { count: noticeRecipients.real, audience: "participants" }, type });
   /*
     What each verb asks before it runs (§384). The publication steps that face outward — publish,
     take a live event off the site, archive — ask; "send for review" changes nothing anybody sees
@@ -730,14 +733,92 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     the same query the notices are queued from (`event-notices.ts`). Every dialog is a courtesy;
     the service asserts the role and the version as before (BR-REQ-060-01).
   */
+  /*
+    The new-event alert a publication sets off (§445; the design «telling the owner about every email a staff press sends», slice 3):
+    the publish queues nothing itself, the job announces the event at its next pass, one alert a day at most — so the question says
+    how many subscribers it reaches, by the job's own rule, as a quieter line; none when the job would announce nothing.
+  */
+  const alertAudience = transitions.includes("PUBLISHED") ? await previewEventAlertAudience(db, event, now) : null;
   const transitionConfirm = (to: (typeof transitions)[number]): ConfirmSpec | undefined => {
     const base = { confirmLabel: EDITORIAL_TRANSITION_LABEL[to], cancelLabel: words.cancel };
-    if (to === "PUBLISHED") return { ...base, title: t("confirm.publishTitle", { title: heading }), body: t("confirm.publishBody") };
+    if (to === "PUBLISHED") {
+      return {
+        ...base,
+        title: t("confirm.publishTitle", { title: heading }),
+        body: t("confirm.publishBody"),
+        ...(alertAudience !== null ? { also: [words.line("alertLater", { count: alertAudience })] } : {}),
+      };
+    }
     if (to === "DRAFT" && live) return { ...base, title: t("confirm.unpublishTitle", { title: heading }), body: t("confirm.unpublishBody"), destructive: true };
     if (to === "ARCHIVED") return { ...base, title: t("confirm.archiveTitle"), body: t("confirm.archiveBody"), destructive: true };
     return undefined;
   };
-  const noticeEmail = noticeRecipients.real > 0 ? words.email(noticeRecipients.real) : undefined;
+  /*
+    What else a save emails (the design «telling the owner about every email a staff press sends», slice 3; its Critic
+    corrections 2 and 3), each said only when the form as posted makes it true, as the save itself decides it:
+
+    - the places a raised capacity frees, or the automatic offers switched on, go to the first on the waiting list with
+      «S-a eliberat un loc» — at most as many as wait (`raiseWhen`, read from the posted «Locurile … se alocă automat», never
+      the stored one);
+    - a reserved place whose deadline the window gave is sent «Semnează declarația» again with the new deadline, when a save
+      moves it (`moveWindowHolds`): the ones held to another instant at every save, the ones held to the window's when any of
+      its four boxes — the window's two, the start's day and hour — changes. At most: an email still waiting to leave, or one
+      gone within the hour for a later deadline, is not sent again, and before the window opens nothing is.
+
+    A save that does one of these alone asks its own question; a save that asks already (the cancellation, the notice) says
+    them as quieter lines, in the order cancel > notice > offers > window. A cancelled event's save moves no hold and offers
+    no place (§331).
+  */
+  const raiseWhen: FormCondition[] | null =
+    internal && waiting > 0
+      ? [
+          { field: "event.waitlistAutoOffer", equals: "true" },
+          {
+            anyOf: [
+              ...(event.capacity !== null ? [{ field: "event.capacity", raisedFrom: event.capacity }] : []),
+              ...(event.waitlistAutoOffer === false ? [{ field: "event.waitlistAutoOffer", equals: "true" }] : []),
+            ],
+          },
+        ]
+      : null;
+  const raiseMail = raiseWhen ? words.mail({ to: { upTo: waiting, audience: "firstWaiting" }, type: "WAITLIST_SPOT_OFFER" }) : null;
+  const startBoxes = startBoxValues(event.startsAt, event.timezone);
+  const windowMoved: FormCondition = {
+    anyOf: [
+      { field: "event.confirmationOpensDaysBefore", notEquals: String(event.confirmationOpensDaysBefore ?? DEFAULT_CONFIRMATION_OPENS_DAYS) },
+      { field: "event.confirmationDeadlineDaysBefore", notEquals: String(event.confirmationDeadlineDaysBefore ?? DEFAULT_CONFIRMATION_DEADLINE_DAYS) },
+      { field: "event.startsAtDate", notEquals: startBoxes.date },
+      { field: "event.startsAtTime", notEquals: startBoxes.time },
+    ],
+  };
+  // Before the window opens a move sends nothing (`moveWindowHolds`): the window's own ask says the new deadline on its day.
+  const windowOpenNow = participationWindowOpen(event.startsAt, event.confirmationOpensDaysBefore ?? DEFAULT_CONFIRMATION_OPENS_DAYS, now);
+  const holdsMoved = windowHolds !== null && windowOpenNow && event.eventStatus !== "CANCELLED" ? windowHolds.moveNow + windowHolds.atWindow : 0;
+  const windowMail = (count: number) => words.mail({ to: { upTo: count, audience: "held" }, type: "COMPLETE_DECLARATION", also: [words.line("windowResend")] });
+  // Every save moves the places held to another instant; the window's own move only when the window does (`previewWindowHolds`).
+  const windowSpecs: ConfirmSpec[] =
+    holdsMoved > 0 && windowHolds
+      ? [
+          ...(windowHolds.atWindow > 0 ? [{ when: [windowMoved], count: holdsMoved }] : []),
+          ...(windowHolds.moveNow > 0 ? [{ count: windowHolds.moveNow }] : []),
+        ].map(({ when, count }) => ({
+          ...(when ? { when } : {}),
+          title: t("confirm.saveWindowTitle"),
+          body: t("confirm.saveWindowBody"),
+          ...windowMail(count),
+          confirmLabel: t("editor.save"),
+          cancelLabel: words.cancel,
+        }))
+      : [];
+  /** The lines a higher question carries for what the save sends besides: the offers, then the window's emails. */
+  const alsoSent = (): ConfirmAlso[] => [
+    ...(raiseWhen && raiseMail?.email ? [{ text: raiseMail.email, when: raiseWhen }] : []),
+    ...(holdsMoved > 0 && windowHolds
+      ? windowHolds.moveNow > 0
+        ? [{ text: windowMail(windowHolds.moveNow).email ?? "" }]
+        : [{ text: windowMail(holdsMoved).email ?? "", when: [windowMoved] }]
+      : []),
+  ];
   const saveConfirm: ConfirmSpec[] = [
     ...(event.eventStatus !== "CANCELLED"
       ? [
@@ -748,9 +829,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             ],
             title: t("confirm.cancelEventTitle", { title: heading }),
             body: t("confirm.cancelEventBody"),
-            email: noticeEmail,
-            emailCount: noticeEmailCount,
-            road: words.road("announcements"),
+            ...noticeMail("EVENT_CANCELLED"),
             confirmLabel: t("editor.save"),
             cancelLabel: words.cancel,
             destructive: true,
@@ -769,12 +848,29 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       when: [{ field: "notice.notify", equals: "on" }],
       title: t("confirm.saveNoticeTitle"),
       body: t("confirm.saveNoticeBody"),
-      email: noticeEmail,
-      emailCount: noticeEmailCount,
-      road: words.road("announcements"),
+      ...(() => {
+        const notice = noticeMail("EVENT_UPDATE_NOTICE");
+        const more = alsoSent();
+        return { ...notice, ...(notice.also || more.length > 0 ? { also: [...(notice.also ?? []), ...more] } : {}) };
+      })(),
       confirmLabel: t("editor.save"),
       cancelLabel: words.cancel,
     },
+    // «Salvezi și oferi locurile noi?»: the offers alone, and the window's emails beside them when the window moved too.
+    ...(raiseWhen && raiseMail
+      ? [
+          {
+            when: raiseWhen,
+            title: t("confirm.saveRaiseTitle"),
+            body: t("confirm.saveRaiseBody"),
+            ...raiseMail,
+            also: [...(raiseMail.also ?? []), ...alsoSent().slice(1)],
+            confirmLabel: t("editor.save"),
+            cancelLabel: words.cancel,
+          },
+        ]
+      : []),
+    ...windowSpecs,
   ];
 
   return (
@@ -1187,6 +1283,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     clubDeadlines={deadlines}
                     rsvpAsk={rsvpAsk}
                     windowHolds={windowHolds}
+                    interests={interestsWaiting}
                     bibPrintSaved={eliteSaved}
                     bibPrint={
                       bibCounts ? (
@@ -1529,6 +1626,18 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                             <ActionForm action={addTestRegistrationsAction} messages={await refusalMessages({ count: t("testRegistrations.count") })} scope="test" data-testid="test-registrations-form">
                               <input type="hidden" name="uiLocale" value={locale} />
                               <input type="hidden" name="eventId" value={event.id} />
+                              {/* What each test row sends, beside the button (the design «telling the owner about every email a staff press
+                                  sends», slice 3): two emails to an address that reaches nobody, still counted on the day's limit. */}
+                              <Box sx={{ mb: 1 }}>
+                                <MailLine
+                                  text={t("mailLine.testRegistrations", {
+                                    verify: t("emails.types.VERIFY_REGISTRATION_EMAIL"),
+                                    declaration: t("emails.types.COMPLETE_DECLARATION"),
+                                    waitlist: t("emails.types.WAITLIST_JOINED"),
+                                  })}
+                                  data-testid="test-registrations-mail"
+                                />
+                              </Box>
                               <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                                 <RecallField
                                   name="count"

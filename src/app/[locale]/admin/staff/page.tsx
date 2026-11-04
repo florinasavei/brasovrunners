@@ -18,7 +18,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
-import { assignableRoles, canGrantPermission, canHoldMemberTier, canManageMember, canManageStaff, holdsGrant, impliesPermission } from "@/modules/staff-identity/domain/roles";
+import { assignableRoles, canGrantPermission, canHoldMemberTier, canManageMember, canManageStaff, holdsGrant, impliesPermission, isBackofficeRole } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { listStaff } from "@/modules/staff-identity/service";
@@ -336,7 +336,20 @@ export default async function StaffPage({ params, searchParams }: Props) {
                 <ActionForm
                   action={resendStaffInviteAction}
                   confirm={withSendNowChoice(
-                    { title: t("staff.resendInviteTitle"), body: t("staff.resendInviteBody", { email: member.email }), confirmLabel: t("staff.resendInvite"), cancelLabel: words.cancel },
+                    {
+                      title: t("staff.resendInviteTitle"),
+                      body: t("staff.resendInviteBody", { email: member.email }),
+                      // The club's invitation named, and Zitadel's own password email beside it when the key lets it send one (the
+                      // design «telling the owner about every email a staff press sends», slice 3).
+                      ...words.mail({
+                        to: { name: member.displayName, address: member.email },
+                        // The service's own choice (`invitationMessageType`): a backoffice role's invitation, or a member's.
+                        type: isBackofficeRole(member.role) ? "STAFF_INVITATION" : "MEMBER_INVITATION",
+                        also: invitesSend ? [words.line("zitadel")] : [],
+                      }),
+                      confirmLabel: t("staff.resendInvite"),
+                      cancelLabel: words.cancel,
+                    },
                     sendNow,
                   )}
                   data-testid="staff-resend-form"
@@ -501,7 +514,21 @@ export default async function StaffPage({ params, searchParams }: Props) {
             preferredLocale: t("staff.preferredLocale"),
             tierId: t("staff.memberTier"),
           })}
-          confirm={{ title: t("confirm.inviteStaffTitle"), body: t("confirm.inviteStaffBody"), confirmLabel: t("staff.invite"), cancelLabel: words.cancel }}
+          // The person typed, named once the dialog opens (`fillFrom`), and the invitation the chosen role gets — a member's own, or
+          // the team's — with Zitadel's password email beside it when the key lets it send one.
+          confirm={(["MEMBER", "team"] as const).map((kind) => ({
+            ...(kind === "MEMBER" ? { when: [{ field: "role", equals: "MEMBER" }] } : {}),
+            title: t("confirm.inviteStaffTitle"),
+            body: t("confirm.inviteStaffBody"),
+            ...words.mail({
+              to: { name: "{displayName}", address: "{email}" },
+              type: kind === "MEMBER" ? "MEMBER_INVITATION" : "STAFF_INVITATION",
+              also: invitesSend ? [words.line("zitadel")] : [],
+            }),
+            fillFrom: ["displayName", "email"],
+            confirmLabel: t("staff.invite"),
+            cancelLabel: words.cancel,
+          }))}
           data-testid="staff-invite-form"
         >
           <input type="hidden" name="uiLocale" value={locale} />
@@ -601,7 +628,19 @@ export default async function StaffPage({ params, searchParams }: Props) {
           // Its own boxes' ids, apart from «Adaugă o persoană»'s namesakes (the language, the level).
           scope="members"
           messages={await refusalMessages({ members: t("staff.membersRows"), preferredLocale: t("staff.preferredLocale"), tierId: t("staff.memberTier") })}
-          confirm={{ title: t("confirm.inviteMembersTitle"), body: t("confirm.inviteMembersBody"), confirmLabel: t("staff.membersInvite"), cancelLabel: words.cancel }}
+          // At most one member's invitation per row typed, and — with the key — Zitadel's password email for each new address, and
+          // again for an address already a member's (the design «telling the owner about every email a staff press sends», slice 3).
+          confirm={{
+            title: t("confirm.inviteMembersTitle"),
+            body: t("confirm.inviteMembersBody"),
+            ...words.mail({
+              to: { upToLinesOf: "members", audience: "memberAddresses" },
+              type: "MEMBER_INVITATION",
+              also: invitesSend ? [words.line("zitadelEach"), words.line("zitadelAgain")] : [],
+            }),
+            confirmLabel: t("staff.membersInvite"),
+            cancelLabel: words.cancel,
+          }}
           data-testid="staff-members-form"
         >
           <input type="hidden" name="uiLocale" value={locale} />

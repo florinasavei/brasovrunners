@@ -1682,7 +1682,7 @@
       "bibsUnprintedAlert": "{count, plural, one {# BIB nu mai e marcat ca printat.} few {# BIB-uri nu mai sunt marcate ca printate.} other {# de BIB-uri nu mai sunt marcate ca printate.}}",
       "openRow": "Deschide înscrierea",
       "cancel": "Anulează înscrierea",
-      "cancelBody": "Persoana primește un email. Nu se poate desface. Locul se oferă primului de pe lista de așteptare sau rămâne liber, după setare. Refuzul, cu motivul lui, se face din pagina înscrierii.",
+      "cancelBody": "Nu se poate desface. Refuzul, cu motivul lui, se face din pagina înscrierii.",
       "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Doar cu hârtia semnată în față. Apoi primește emailul de confirmare; dacă nu e loc, intră pe lista de așteptare, fără email acum.",
       "downloadBib": "Descarcă numărul de concurs (BIB)",
       "notOnPublicList": "Nu apare public",
@@ -2065,7 +2065,7 @@
       "removeTestTitle": "Ștergi înscrierile de test?",
       "removeTestBody": "Se șterg toate înscrierile de test ale acestui eveniment și participanții sintetici din spatele lor. Înscrierile reale rămân neatinse.",
       "cancelRegistrationTitle": "Anulezi înscrierea?",
-      "cancelRegistrationBody": "Persoana primește un email. Motivul rămâne în jurnal; îl primește doar dacă bifezi refuzul. Nu se poate desface. Locul se oferă primului de pe lista de așteptare sau rămâne liber, după setare.",
+      "cancelRegistrationBody": "Motivul rămâne în jurnal; persoana îl primește doar dacă bifezi refuzul. Nu se poate desface.",
       "cancelRegistrationPrintedBody": "Numărul {number} e deja tipărit; după anulare rămâne retras — nu se dă altcuiva — și trebuie scos din teanc.",
       "repeatTitle": "Creezi datele?",
       "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
@@ -2075,12 +2075,7 @@
       "sparesTitle": "Rezervi numere pentru masă?",
       "sparesBody": "Numerele încep de la {from}, după cel mai mare număr dat sau rezervat, și rămân ale mesei: nimeni înscris online nu le mai primește. O rezervare nu se anulează; numerele nefolosite rămân nefolosite.",
       "bulkEraseTitle": "Ștergi definitiv înscrierile bifate?",
-      "bulkEraseBody": "Nu se poate anula. Locurile se eliberează prin lista de așteptare, iar datele participanților dispar din evidență.",
-      "email": {
-        "one": "Se va trimite un email către {count} participant.",
-        "few": "Se va trimite un email către {count} participanți.",
-        "other": "Se va trimite un email către {count} de participanți."
-      },
+      "bulkEraseBody": "Nu se poate anula: datele participanților dispar din evidență.",
       "emailMessages": {
         "one": "Se trimite acum {count} email din coadă.",
         "few": "Se trimit acum {count} emailuri din coadă.",
@@ -2105,7 +2100,7 @@
       "givePlaceTitle": "Îi dai un loc?",
       "givePlaceBody": "{name} primește un loc liber înaintea listei de așteptare și confirmarea, cu numărul de concurs.",
       "setBibTitle": "Salvezi numărul?",
-      "setBibBody": "Persoana primește numărul pe email. Un număr dat o dată nu se mai dă altcuiva.",
+      "setBibBody": "Un număr dat o dată nu se mai dă altcuiva.",
       "resendTitle": "Retrimiți emailul?",
       "resendWhat": {
         "PENDING_EMAIL_CONFIRMATION": "{name} primește din nou linkul de confirmare a adresei; linkul din emailul vechi nu mai merge.",
@@ -2129,9 +2124,9 @@
       "withdrawConsentTitle": "Ștergi datele bifate?",
       "withdrawConsentBody": "Datele bifate dispar definitiv din înscriere; motivul rămâne în jurnal, fără numele persoanei.",
       "eraseRegistrationTitle": "Ștergi definitiv înscrierea?",
-      "eraseRegistrationBody": "Nu se poate anula. Locul se eliberează prin lista de așteptare, iar datele persoanei dispar din evidență.",
+      "eraseRegistrationBody": "Nu se poate anula: datele persoanei dispar din evidență.",
       "bulkCancelTitle": "Anulezi înscrierile bifate?",
-      "bulkCancelBody": "Fiecare persoană primește un email de anulare, fără motiv. Fiecare loc se oferă primului de pe lista de așteptare sau rămâne liber, după setarea evenimentului. Înscrierile rămân, ca „anulate”.",
+      "bulkCancelBody": "Emailul de anulare pleacă fără motiv. Înscrierile rămân, ca „anulate”.",
       "sendNowTitle": "Trimiți emailurile acum?",
       "sendNowBody": "Coada pleacă acum, fără să aștepți monitorul, și se oprește la limita zilei.",
       "interestWithdrawTitle": "Retragi adresa?",
@@ -2217,7 +2212,7 @@
       "givePlaceNowBodyMore": "Primește pe loc emailul cu declarația; o semnează online oricând până la termen, sau pe hârtie la masă. Nu mai are de confirmat nimic.",
       "givePlaceNowFull": "Nu e niciun loc liber: apăsând, adaugi un loc suplimentar peste limită, capacitatea devine {n}.",
       "outsideMarkTitle": "Pui înscrierea pe lista de invitați speciali?",
-      "outsideMarkBody": "{name} trece pe lista de invitați speciali și nu mai ocupă un loc; locul eliberat merge primului care așteaptă dacă ofertele pleacă automat. Starea, numărul și emailurile rămân.",
+      "outsideMarkBody": "{name} trece pe lista de invitați speciali și nu mai ocupă un loc. Starea, numărul și emailurile rămân.",
       "outsideMarkBodyWaitlisted": "{name} iese de pe lista de așteptare și primește acum un loc ca invitat special: emailul «{message}», cu termenul obișnuit.",
       "outsideMarkBodyWaitlistedTest": "{name} iese de pe lista de așteptare și primește acum un loc ca invitat special: declarația de semnat, cu termenul obișnuit.",
       "outsideMarkBodyOffered": "În locul ofertei, {name} primește acum un loc ca invitat special: emailul «{message}», cu termenul obișnuit. Locul ofertei se eliberează.",
@@ -2257,7 +2252,84 @@
           "club": "Recomandat Gmail-ul clubului: mesajul ajunge în căsuțele clubului, la oameni care cunosc expeditorul, și nu costă nimic din Mailgun.",
           "newsletter": "Recomandat Mailgun: un Gmail personal care trimite la multe adrese e restricționat de Google."
         }
+      },
+      "saveRaiseTitle": "Salvezi și oferi locurile noi?",
+      "saveRaiseBody": "Locurile adăugate merg, în ordine, celor de pe lista de așteptare, fiecare cu termenul obișnuit ca să semneze declarația.",
+      "saveWindowTitle": "Salvezi și muți termenele declarațiilor?",
+      "saveWindowBody": "Locurile ținute pentru declarație își mută termenul după fereastra nouă.",
+      "mail": {
+        "to": "Pleacă 1 email către {name}: „{type}”.",
+        "toEither": "Pleacă 1 email către {name}: „{type}” sau „{alt}”, după cum iese apăsarea.",
+        "toAddress": "Pleacă 1 email către {name} ({address}): „{type}”.",
+        "toAddressEither": "Pleacă 1 email către {name} ({address}): „{type}” sau „{alt}”, după cum iese apăsarea.",
+        "toMany": {
+          "one": "Pleacă {count} email „{type}”, câte unul către {audience}.",
+          "few": "Pleacă {count} emailuri „{type}”, câte unul către {audience}.",
+          "other": "Pleacă {count} de emailuri „{type}”, câte unul către {audience}."
+        },
+        "upTo": {
+          "one": "Pleacă cel mult {count} email „{type}”, câte unul către {audience}.",
+          "few": "Pleacă cel mult {count} emailuri „{type}”, câte unul către {audience}.",
+          "other": "Pleacă cel mult {count} de emailuri „{type}”, câte unul către {audience}."
+        },
+        "audience": {
+          "participants": "fiecare participant",
+          "confirmed": "fiecare participant confirmat",
+          "subscribers": "fiecare abonat",
+          "invited": "fiecare persoană invitată",
+          "ticked": "fiecare persoană bifată",
+          "unsigned": "fiecare persoană care nu a semnat încă",
+          "present": "fiecare persoană marcată prezentă",
+          "newAddresses": "fiecare adresă nouă din listă",
+          "volunteerAddresses": "fiecare adresă din listă care nu are deja o invitație deschisă",
+          "memberAddresses": "fiecare adresă din listă",
+          "firstWaiting": "primii de pe lista de așteptare",
+          "held": "fiecare persoană cu un loc ținut pentru declarație"
+        },
+        "none": "Nu pleacă niciun email către {name}.",
+        "noneMany": "Persoanele șterse nu primesc niciun email.",
+        "club": {
+          "one": "Și {count} email pentru căsuțele clubului.",
+          "few": "Și {count} emailuri pentru căsuțele clubului.",
+          "other": "Și {count} de emailuri pentru căsuțele clubului."
+        },
+        "clubUpTo": {
+          "one": "Și cel mult {count} email pentru căsuțele clubului.",
+          "few": "Și cel mult {count} emailuri pentru căsuțele clubului.",
+          "other": "Și cel mult {count} de emailuri pentru căsuțele clubului."
+        },
+        "test": "Adresa e de test (@test.invalid): emailul nu ajunge la nimeni, dar se numără în limita zilei.",
+        "nextInLineMaybe": "Locul eliberat se oferă primului de pe lista de așteptare — îi pleacă „S-a eliberat un loc” — sau rămâne liber, după setarea evenimentului.",
+        "nextInLineMaybeMany": "Fiecare loc eliberat se oferă primului de pe lista de așteptare — îi pleacă „S-a eliberat un loc” — sau rămâne liber, după setarea evenimentului.",
+        "zitadel": "Și Zitadel îi trimite separat, imediat, linkul pentru parolă.",
+        "zitadelEach": "Și, pentru fiecare adresă nouă, Zitadel trimite separat, imediat, linkul pentru parolă.",
+        "zitadelAgain": "O adresă care e deja a unui membru primește din nou doar linkul Zitadel pentru parolă.",
+        "linkReplaced": "Linkul trimis înainte ({date}) nu mai merge după ce pleacă acesta.",
+        "agreementCopy": "E copia lui, cu contractul semnat atașat (PDF).",
+        "guardianCopy": "E a doua lui copie a contractului, acum cu acordul părintelui; părintelui nu-i pleacă nimic.",
+        "guardianNone": "Nici părintelui nu-i pleacă nimic.",
+        "rolesHeld": "Pleacă la {minutes} minute după apăsare, cu rolurile date; dacă până atunci rolurile nu mai sunt aceleași, emailul se retrage.",
+        "invitesServeLine": "Întâi, locurile libere merg celor de pe lista de așteptare — fiecăruia îi pleacă „S-a eliberat un loc”, dacă locurile se dau automat.",
+        "alertLater": "Abonații newsletterului care urmăresc acest fel de evenimente ({count}) primesc „Anunț: eveniment nou în calendar” la următoarea trecere a jobului; cel mult un anunț pe zi.",
+        "alertMaybe": "La următoarea trecere a jobului, abonații newsletterului pot primi „Anunț: eveniment nou în calendar” pentru un eveniment nou; cel mult un anunț pe zi.",
+        "laterDays": "Dintre ele, {count} pleacă în zilele următoare (limita zilei).",
+        "windowResend": "Fiecare primește din nou linkul, cu termenul nou.",
+        "jobPass": "Salvarea nu trimite nimic ea însăși; la următoarea trecere, jobul trimite ce aduc termenele noi: un reminder, ultimul apel sau „Vii?” mai devreme, retrimiterile adresei în noul ritm.",
+        "andType": "Apoi încă 1 email către aceeași persoană: „{type}”."
       }
+    },
+    "mailLine": {
+      "roles": "Un rol dat sau luat îi trimite lui {name} ({email}) „Rolul tău de voluntar”, cu rolurile rămase, la {minutes} minute după apăsare. Se retrage dacă rolurile se schimbă între timp.",
+      "rolesNoAddress": "{name} nu are adresă de email: rolurile date nu-i sunt trimise; spune-i tu.",
+      "volunteerAdd": "Dacă bifezi „Rolurile date” și scrii o adresă, pleacă emailul „Rolul tău de voluntar”, cu rolurile date, către acea adresă, la {minutes} minute după salvare. Altfel nu pleacă niciun email.",
+      "volunteerEdit": "Dacă schimbi „Rolurile date” sau adresa (cu roluri date), lui {name} îi pleacă „Rolul tău de voluntar”, la adresa din formular, la {minutes} minute după salvare. Altfel, niciun email.",
+      "volunteerEditCancelled": "{name} e anulat: salvarea nu-i trimite niciun email.",
+      "testRegistrations": "Fiecare înscriere de test trimite 2 emailuri, „{verify}” și „{declaration}” (sau „{waitlist}”), către o adresă @test.invalid: nu ajung la nimeni, dar se numără în limita zilei.",
+      "capacity": "Pe lista de așteptare sunt {count}: dacă mărești numărul de locuri, sau alegi „Da” mai sus, la salvare pleacă câte un „S-a eliberat un loc” pentru fiecare loc liber, primilor de pe listă — cel mult {count}.",
+      "opening": "Când debifezi și salvezi, cei de la „Anunță-mă” primesc „Înscrierile s-au deschis”, la următoarea trecere a jobului.",
+      "openingCount": "Când debifezi și salvezi, cei de la „Anunță-mă” ({count}) primesc „Înscrierile s-au deschis”, la următoarea trecere a jobului.",
+      "window": "Fiecare loc ținut a cărui dată limită se mută primește din nou „Semnează declarația”, cu termenul nou.",
+      "reminder": "Reminderul pleacă singur, către fiecare participant confirmat; dacă lungești termenul sau muți startul mai devreme, jobul îl trimite la următoarea trecere evenimentelor intrate acum în termen."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -3613,7 +3685,7 @@
       "changeRolePending": "Se salvează…",
       "revokePending": "Se retrage…",
       "resendInviteTitle": "Trimiți din nou invitația?",
-      "resendInviteBody": "Pleacă un email către {email} cu linkul de intrare.",
+      "resendInviteBody": "Invitația pleacă din nou, cu linkul de intrare.",
       "passwordResetTitle": "Trimiți resetarea parolei?",
       "passwordResetBody": "Zitadel trimite către {email} un link prin care își schimbă parola. Noi nu vedem parola.",
       "deactivateAccountTitle": "Dezactivezi contul?",
@@ -5708,6 +5780,8 @@
       "confirm": "Confirmă",
       "cancel": "Anulează",
       "reopen": "Înapoi la înscris",
+      "reopenTitle": "Readuci voluntarul {name}?",
+      "reopenBody": "{name} nu mai e anulat și își păstrează rolurile date.",
       "delete": "Șterge voluntarul",
       "deleting": "Se șterge…",
       "deleteTitle": "Ștergi acest voluntar?",
@@ -5731,11 +5805,13 @@
         "noEmail": "Fără adresă de email: linkul nu se poate trimite.",
         "send": "Trimite linkul contractului",
         "resend": "Trimite din nou linkul",
+        "sendTitle": "Trimiți linkul contractului?",
+        "sendBody": "{name} primește contractul de voluntariat și un link personal, de unică folosință, ca să îl accepte.",
         "pdf": "PDF contract",
         "pdfToSign": "PDF de semnat",
         "paper": "Semnat pe hârtie",
         "paperTitle": "{name} a semnat contractul pe hârtie?",
-        "paperBody": "Se înregistrează că {name} a semnat contractul tipărit, versiunea în vigoare, și că tu ai înregistrat semnătura. {name} primește o copie pe email. Păstrează foaia semnată.",
+        "paperBody": "Se înregistrează că {name} a semnat contractul tipărit, versiunea în vigoare, și că tu ai înregistrat semnătura. Păstrează foaia semnată.",
         "paperBodyNoEmail": "Se înregistrează că {name} a semnat contractul tipărit, versiunea în vigoare, și că tu ai înregistrat semnătura. {name} nu are adresă de email, deci nu primește o copie: păstrează foaia semnată.",
         "missing": "Niciun contract de voluntariat nu e în vigoare: nu se poate trimite sau tipări încă. Aprobă-l în «Documente legale».",
         "noticeMissing": "Nota de confidențialitate în vigoare nu descrie încă acceptarea contractului: linkul și „Semnat pe hârtie” așteaptă. «Sarcini» spune ce trebuie aprobat."
@@ -5809,6 +5885,8 @@
         "localeEn": "English",
         "send": "Trimite invitațiile",
         "sending": "Se trimit…",
+        "sendTitle": "Trimiți invitațiile?",
+        "sendBody": "Fiecare adresă din listă care nu are o invitație deschisă și nu s-a oferit deja primește un email cu un link personal către pagina voluntarilor. Cel mult {max} odată.",
         "empty": "Nicio invitație trimisă încă.",
         "state": {
           "open": "Trimisă",
@@ -5918,6 +5996,8 @@
         "requestedLine": "Ultimul link trimis părintelui: {when}",
         "send": "Trimite linkul părintelui",
         "resend": "Trimite din nou linkul părintelui",
+        "sendTitle": "Trimiți linkul părintelui?",
+        "sendBody": "Părintele sau tutorele lui {name} primește contractul și un link personal, de unică folosință, ca să își dea acordul.",
         "pdf": "PDF cu acordul părintelui",
         "pdfToSign": "PDF de semnat de părinte",
         "paper": "Acordul părintelui pe hârtie",
@@ -9547,7 +9627,13 @@
           "few": "Gata: {count} câmpuri schimbate.",
           "other": "Gata: {count} de câmpuri schimbate."
         },
-        "offered": "Locurile adăugate au fost oferite listei de așteptare: {count}."
+        "offered": "Locurile adăugate au fost oferite listei de așteptare: {count}.",
+        "mail": {
+          "none": "Aplicarea nu trimite „Detalii actualizate” participanților.",
+          "offers": "Dacă se eliberează locuri și se dau automat, primii de pe lista de așteptare primesc „S-a eliberat un loc”.",
+          "declarations": "Cei cu declarația de semnat pot primi din nou „Semnează declarația”, cu termenul mutat.",
+          "job": "La următoarea trecere a jobului pleacă ce aduc termenele noi: reminderul, „Vii?”, „Înscrierile s-au deschis”."
+        }
       },
       "open": "Deschide evenimentul",
       "problems": {
@@ -10526,6 +10612,7 @@
           "title": "Adaugă o comandă pentru un membru",
           "help": "Pentru comenzile strânse în afara site-ului. Comanda ia din același stoc, e marcată „adăugată de club” și apare la membru în „Comenzile mele”. Membrul are nevoie de cont pe „Echipa”.",
           "member": "Membrul",
+          "theMember": "membrul ales",
           "memberNone": "Niciun cont de membru încă: adaugă-l întâi pe „Echipa”.",
           "item": "Produsul și varianta",
           "itemSoldOut": "{label} — stoc epuizat",
