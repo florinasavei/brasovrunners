@@ -53,7 +53,7 @@ export function newcomerJoinsLine(input: Pick<WaitlistInput, "waitlisted"> & Off
 }
 
 /**
- * How a registration reached the allocator (§NNN): `public` — the public form, its emailed link for another
+ * How a registration reached the allocator (§906): `public` — the public form, its emailed link for another
  * person, a verified runner's restart through it, a family sitting's form, and the address confirmation of a
  * registration the public form wrote — or `staff`: a staff entry (vouched or confirmed by its email), the
  * desk, «Dă-i un loc», «Trimite-i oferta», «Oferă-i un loc acum», an invitation, «Pe lista de invitați
@@ -62,16 +62,16 @@ export function newcomerJoinsLine(input: Pick<WaitlistInput, "waitlisted"> & Off
 export type EntryChannel = "public" | "staff";
 
 export type OfferOnlyInput = {
-  /** `events.free_places_by_offer_only` («Locurile libere le dau doar eu», §NNN); absent is off. */
+  /** `events.free_places_by_offer_only` («Locurile libere le dau doar eu», §906); absent is off. */
   freePlacesByOfferOnly?: boolean;
-  /** Who is entering (§NNN); absent is the staff's, which the switch never touches. */
+  /** Who is entering (§906); absent is the staff's, which the switch never touches. */
   channel?: EntryChannel;
-  /** `events.capacity` (§NNN): null is uncapped — nothing scarce to give, so the switch sends nobody to the line. */
+  /** `events.capacity` (§906): null is uncapped — nothing scarce to give, so the switch sends nobody to the line. */
   capacity?: number | null;
 };
 
 /**
- * «Locurile libere le dau doar eu» (§NNN): a public entry joins the line whatever is free, as it does while
+ * «Locurile libere le dau doar eu» (§906): a public entry joins the line whatever is free, as it does while
  * anybody waits (§615) — the free places are the staff's to give. A staff entry is never touched. Only who a
  * free place is for: the capacity formula is untouched, so the switch can give fewer places, never more. Only
  * where places are counted, too: on an uncapped event (a duplicate or a series date that copied the tick, a cap
@@ -82,7 +82,7 @@ export function publicEntryQueues(input: OfferOnlyInput): boolean {
 }
 
 /**
- * Whether the line is offered the free places on its own (§615, §NNN): «Locurile din lista de așteptare se alocă
+ * Whether the line is offered the free places on its own (§615, §906): «Locurile din lista de așteptare se alocă
  * automat» on, and «Locurile libere le dau doar eu» off. The tick wins over «Da»: its words are «only I give the free
  * places», so while it is on no place goes out by itself — not to a newcomer, and not to the first in the line either,
  * who would otherwise be the public entrant the tick sent there a moment ago. Every free place is then the staff's to

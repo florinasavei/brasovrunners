@@ -190,7 +190,7 @@ export type EventForRegistration = {
    */
   membersOnly?: boolean;
   /**
-   * «Înscrieri publice deschise» (§NNN): false refuses the public form and its emailed link for another
+   * «Înscrieri publice deschise» (§906): false refuses the public form and its emailed link for another
    * person, whatever the dates; every staff door passes. Asked here before anything is spent and again
    * under the event's lock. Absent on a partial row: the column's default, true.
    */
@@ -243,7 +243,7 @@ function withLockedRow(
     The waiting list's length (§348) is only ever read here, off the locked row, and never off
     the caller's: no caller passes it, so none can pass a stale one, and the type below is what
     makes `allocateOrWaitlist` refuse an event that did not come through this function.
-    «Locurile libere le dau doar eu» (§NNN) by the same rule: a switch ticked by a save that committed a
+    «Locurile libere le dau doar eu» (§906) by the same rule: a switch ticked by a save that committed a
     moment ago is the one the allocator obeys.
   */
   return {
@@ -260,7 +260,7 @@ function withLockedRow(
 type LockedEventForRegistration = EventForRegistration & {
   /** `events.waitlist_capacity` as it stands under the lock (§348): null no limit, 0 no waiting list. */
   waitlistCapacity: number | null;
-  /** `events.free_places_by_offer_only` as it stands under the lock (§NNN): a public entry never takes a free place. */
+  /** `events.free_places_by_offer_only` as it stands under the lock (§906): a public entry never takes a free place. */
   freePlacesByOfferOnly: boolean;
 };
 
@@ -427,7 +427,7 @@ async function placeForNewcomer<T extends Record<string, unknown>>(
   event: LockedEventForRegistration,
   now: Date,
   settings: Deadlines,
-  /** Who is entering (§NNN): a `public` entry takes no free place while «Locurile libere le dau doar eu» is ticked. */
+  /** Who is entering (§906): a `public` entry takes no free place while «Locurile libere le dau doar eu» is ticked. */
   channel: EntryChannel,
 ): Promise<{ free: boolean; counts: repo.OccupiedCountsRow; eligibleWaitlisted: number }> {
   await repo.expireStaleHolds(db, event, now);
@@ -446,7 +446,7 @@ async function placeForNewcomer<T extends Record<string, unknown>>(
     while anybody waits reserves nothing and joins the line whole once its address is confirmed. The
     capacity formula is untouched; this only says who a free place is for.
 
-    «Locurile libere le dau doar eu» (§NNN) is the same rule with one more reason: on an event that ticks
+    «Locurile libere le dau doar eu» (§906) is the same rule with one more reason: on an event that ticks
     it, a public entry joins the line whatever is free — the free places are the staff's to give — read
     off the locked row (`withLockedRow`), on the entry's channel, never on `kind`. The formula still says
     what is free; the switch only ever says «not for this entry», so it cannot seat anybody past it. On an
@@ -485,11 +485,11 @@ async function reserveFamilyPlace<T extends Record<string, unknown>>(
   until: Date,
 ): Promise<FamilyPlace> {
   if (await repo.holdsFamilyReservation(db, registrationId, now)) return "reserved";
-  // A family's form is the public form (§NNN): with «Locurile libere le dau doar eu» it reserves nothing.
+  // A family's form is the public form (§906): with «Locurile libere le dau doar eu» it reserves nothing.
   const { free } = await placeForNewcomer(db, event, now, settings, "public");
   if (!free) return "waitlist";
   if (!(await repo.writeFamilyReservation(db, registrationId, until, now))) return "waitlist";
-  // The reservation holds a place now (§543): «Anunță-mă când rămân N locuri» may have crossed (§NNN).
+  // The reservation holds a place now (§543): «Anunță-mă când rămân N locuri» may have crossed (§906).
   await watchPlacesAlert(db, event.id, now);
   return "reserved";
 }
@@ -536,7 +536,7 @@ async function holdFamilyPlace<T extends Record<string, unknown>>(
     return "waitlist";
   }
   if (!(await repo.writeFamilyPlaceHold(db, row, now))) return "waitlist";
-  // The held place counts now (§543): «Anunță-mă când rămân N locuri» may have crossed (§NNN).
+  // The held place counts now (§543): «Anunță-mă când rămân N locuri» may have crossed (§906).
   await watchPlacesAlert(db, event.id, now);
   return "reserved";
 }
@@ -826,10 +826,10 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
    * the place, when one is given, waits as «Dă-i un loc acum»'s does (§637, `computeVouchedPlaceExpiry`) —
    * the person is not at the form reading an email — and is capped by the start alone, never the close.
    *
-   * `channel` (§NNN), required so no door forgets to say it: `public` for the public form's entries, which
+   * `channel` (§906), required so no door forgets to say it: `public` for the public form's entries, which
    * take no free place while «Locurile libere le dau doar eu» is ticked; `staff` for every staff verb.
    *
-   * `thenOffered` (§NNN): «Oferă-i un loc acum» — the caller offers the row a place in this same transaction
+   * `thenOffered` (§906): «Oferă-i un loc acum» — the caller offers the row a place in this same transaction
    * (`offerPlaceByStaff`), so a row left in the line is never left waiting: the waiting list's limit, 0
    * included, is not asked. Should the offer be refused the whole transaction goes, this row with it.
    */
@@ -878,7 +878,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   let direct = outside || reserved || invited || adopted !== undefined || free;
 
   // No place: this registration would join the line, and the line may be full (§348) — unless the caller
-  // offers it a place in this same transaction (§NNN): then it never stays in the line, and the limit is not asked.
+  // offers it a place in this same transaction (§906): then it never stays in the line, and the limit is not asked.
   if (
     !direct &&
     !thenOffered &&
@@ -899,7 +899,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
       await repo.expireStaleHolds(db, event, now, { wanting: 1 });
       const after = await repo.countOccupied(db, event.id, now);
       // Never past somebody waiting (§615): a full line with people waiting in it refuses, as above.
-      // Nor a public entry while the free places are the staff's to give (§NNN): it is refused like a full race.
+      // Nor a public entry while the free places are the staff's to give (§906): it is refused like a full race.
       direct =
         !newcomerJoinsLine({ waitlisted: eligibleWaitlisted, ...offerOnly }) &&
         hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(after), eligibleWaitlisted });
@@ -962,12 +962,12 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   // registration when it is alone there. Nothing is released when no hold has lapsed, so on
   // an event that is simply full this is one read and no write.
   if (updated.status === "WAITLISTED") {
-    // `fillAvailableSpots` watches the places itself (§NNN), after any offer it made.
+    // `fillAvailableSpots` watches the places itself (§906), after any offer it made.
     await fillAvailableSpots(db, event, now, settings);
     return (await repo.findRegistrationById(db, registrationId)) ?? updated;
   }
 
-  // «Anunță-mă când rămân N locuri» (§NNN): the place just taken may cross it — in this transaction, under this lock.
+  // «Anunță-mă când rămân N locuri» (§906): the place just taken may cross it — in this transaction, under this lock.
   await watchPlacesAlert(db, event.id, now);
   // A held place carries no race number: the number comes with the confirmation (§548).
   return updated;
@@ -1059,7 +1059,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
 ): Promise<number> {
   const offers = await offerFreedPlaces(db, event, now, settings);
   /*
-    «Anunță-mă când rămân N locuri» (§NNN): every transaction that frees, adds or offers a place comes through
+    «Anunță-mă când rămân N locuri» (§906): every transaction that frees, adds or offers a place comes through
     here, so the crossing — down to N or 0, or back above N, which re-arms it — is checked in it, after the
     offers, under the caller's lock. One read of the event's row while the setting is off.
   */
@@ -1317,7 +1317,7 @@ async function assertWaitlistCanTakeOneMore<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
   now: Date,
-  /** Who is entering (§NNN): a public entry under «Locurile libere le dau doar eu» is refused like a full race. */
+  /** Who is entering (§906): a public entry under «Locurile libere le dau doar eu» is refused like a full race. */
   channel: EntryChannel,
 ): Promise<void> {
   const row = await repo.findEventForAllocation(db, eventId);
@@ -1328,7 +1328,7 @@ async function assertWaitlistCanTakeOneMore<T extends Record<string, unknown>>(
   if (waitlistHasRoom(line)) return;
   const occupied = occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds });
   // Somebody waiting: a newcomer joins the line whatever is free (`newcomerJoinsLine`), and the line is full.
-  // The same for a public entry while the free places are the staff's to give (§NNN).
+  // The same for a public entry while the free places are the staff's to give (§906).
   if (
     !newcomerJoinsLine({ waitlisted, freePlacesByOfferOnly: row.freePlacesByOfferOnly, channel, capacity: row.capacity }) &&
     hasDirectAvailability({ capacity: row.capacity, occupied, eligibleWaitlisted: waitlisted })
@@ -1542,7 +1542,7 @@ export type RegistrationOrigin = {
    */
   addressVouched?: boolean;
   /**
-   * «Oferă-i un loc acum» (§888, §NNN): with `addressVouched`, the caller (`enterOnWaitlistByStaff`) offers the
+   * «Oferă-i un loc acum» (§888, §906): with `addressVouched`, the caller (`enterOnWaitlistByStaff`) offers the
    * row a place in this same transaction, so a row the allocator leaves in the line is never left waiting
    * there: the waiting list's limit — 0, «Fără listă de așteptare», included — is not asked, at the door or in
    * the allocator. Should the offer be refused, the whole entry goes with it. Ignored without `addressVouched`.
@@ -1814,14 +1814,14 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   // An invitation's form (§647): the invitation is the door, as the desk's is — local, scheduled and dated.
   const invited = origin.source === "PUBLIC" && origin.invitation !== undefined;
   /*
-    The entry's channel (§NNN): the public form and its emailed link for another person are `public`; a staff
+    The entry's channel (§906): the public form and its emailed link for another person are `public`; a staff
     entry, the desk and an invitation's form (the invitation is a staff verb, §647) are `staff`. It is what
     «Înscrieri publice deschise» closes and what «Locurile libere le dau doar eu» sends to the line.
   */
   const entryChannel: EntryChannel = origin.source === "PUBLIC" && !invited ? "public" : "staff";
-  // «Oferă-i un loc acum» (§888): the vouched entry the caller offers a place in this same transaction (§NNN).
+  // «Oferă-i un loc acum» (§888): the vouched entry the caller offers a place in this same transaction (§906).
   const thenOffered = vouched && origin.thenOffered === true;
-  // «Înscrieri publice deschise» off (§NNN): the public door is shut before anything is parsed or spent; asked again under the lock.
+  // «Înscrieri publice deschise» off (§906): the public door is shut before anything is parsed or spent; asked again under the lock.
   if (entryChannel === "public" && !publicDoorOpen(event)) throw publicRegistrationPausedError();
   assertRegistrationOpen(event, now, atTheDesk || invited || vouched);
   // A vouched entry is a remote act (§872): after the gun only the desk takes a person, as «Dă-i un loc acum» rules (§637).
@@ -1945,7 +1945,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     (§19.4). The allocator asks again under the lock; this only spares the email.
   */
   // Never for an invitation (§647): its place is held for the person, whatever the line holds.
-  // Nor for «Oferă-i un loc acum» (§NNN): the row is offered a place in the same transaction, never left waiting.
+  // Nor for «Oferă-i un loc acum» (§906): the row is offered a place in the same transaction, never left waiting.
   if (!invited && !thenOffered) await assertWaitlistCanTakeOneMore(db, event.id, now, entryChannel);
 
   const privacyNotice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", input.locale, now);
@@ -2214,7 +2214,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // For the members alone (§552), asked under the lock too: the switch turned on by a save that
     // committed after the caller read the row. And for the account's own address only.
     if (!invited) assertMembersDoor(locked.membersOnly, origin);
-    // «Înscrieri publice deschise» (§NNN), asked under the lock too: the tick taken off by a save that committed after the caller read the row.
+    // «Înscrieri publice deschise» (§906), asked under the lock too: the tick taken off by a save that committed after the caller read the row.
     if (entryChannel === "public" && !locked.publicRegistrationOpen) throw publicRegistrationPausedError();
     if (!invited && locked.membersOnly && origin.source === "PUBLIC" && origin.member && !sameCanonical(origin.member.email, identity.canonicalEmail)) {
       throw new DomainError("VALIDATION_ERROR", "a members' event is registered for with the account's own address", ["email"]);
@@ -4571,7 +4571,7 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
         now,
       });
     }
-    // The invitations hold places now (§647): «Anunță-mă când rămân N locuri» may have crossed (§NNN).
+    // The invitations hold places now (§647): «Anunță-mă când rămân N locuri» may have crossed (§906).
     await watchPlacesAlert(tx, event.id, now);
     return { sent: invitees.length, capacityRaisedTo, deadline, offersMade };
   });

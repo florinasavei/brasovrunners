@@ -354,7 +354,7 @@ describe("§789 the «?» after «Sunt membru al grupului» says what the club s
   });
 });
 
-describe("§NNN the preview's join form says how an offer works as the saved page will", () => {
+describe("§906 the preview's join form says how an offer works as the saved page will", () => {
   /** A full race whose line takes people: the preview's door as `draftRegistrationDoor` answers it. */
   const full: RegistrationDoor = { kind: "KNOWN", cta: { kind: "FULL", waitlistRoom: null, waiting: 0 }, fill: null };
   const auto = "Când se eliberează un loc, primești un email și ai 24 de ore să confirmi — altfel locul trece mai departe.";

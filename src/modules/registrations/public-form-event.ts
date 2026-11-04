@@ -68,7 +68,7 @@ export function publicFormEvent(
     // Whether the form asks the health note (§557): a note posted to an event that does not is
     // dropped before the schema, never refused. Absent on a partial row: the lock decides alone.
     askHealthNote: row.askHealthNote,
-    // «Înscrieri publice deschise» (§NNN): the public form is refused while it is off — asked again under the lock.
+    // «Înscrieri publice deschise» (§906): the public form is refused while it is off — asked again under the lock.
     publicRegistrationOpen: row.publicRegistrationOpen ?? true,
   };
 }

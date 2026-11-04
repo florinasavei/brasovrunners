@@ -17,7 +17,7 @@ export type PlaceOutlookCounts = {
   /** Of those, the confirmed (`OccupiedCounts.confirmed`: never a special guest). */
   confirmed: number;
   /**
-   * The rest of `occupied`, by what holds each place until somebody signs (§NNN; the production review of
+   * The rest of `occupied`, by what holds each place until somebody signs (§906; the production review of
    * 2026-11-03: «13 = 9 declarații + 2 oferte + 2 invitații»), as `capacity.ts#placesTaken` names them from the
    * same count: a declaration to sign, an offer still open, an invitation not yet answered, a family's reservation.
    */

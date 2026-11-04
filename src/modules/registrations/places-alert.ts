@@ -10,7 +10,7 @@ import { placesAlertSentOf, placesAlertStep } from "./domain/places-alert";
 import { countOccupied } from "./repository";
 
 /**
- * «Anunță-mă când rămân N locuri» (§NNN), checked after an allocator write, in the caller's transaction and
+ * «Anunță-mă când rămân N locuri» (§906), checked after an allocator write, in the caller's transaction and
  * under the event lock the caller already holds — so two writes cannot both see the crossing, and the email
  * and the memory commit with the place that crossed it, or not at all. Never a job of its own: every place
  * taken goes through `allocateOrWaitlist`, `fillAvailableSpots` or one of the staff's verbs, and each calls

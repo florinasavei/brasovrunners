@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.20-2026-11-04
+
+- **More control over registration from the site** — «Înscrieri publice deschise» stops the site's button and the public form at once (editor and beside «Locuri», staff verbs untouched); while it is off the «Anunță-mă» addresses wait instead of being told registration opened, and the calendar and the lapsed-place email say it is stopped; «Locurile libere le dau doar eu» sends every public entry to the waiting list and offers no place by itself — you give each one; the event page, the card, the join form and the waiting-list emails say who gives the places, with «Nu» too, and never «full» beside free places, and «Emailuri» says a saved text replaces those words; «Oferă-i un loc acum» no longer refused by the waiting list's limit; «Pe site acum» says what the public sees; «Locuri» names what holds each place still to sign (declarations, offers, invitations, family reservations); «Anunță-mă când rămân N locuri» emails the Administrators, afresh when you change N; the event's JSON file carries all three. §906.
 ## BR-V4.19-2026-11-03
 
 - **«Mută pe lista de elită» on the internal list** — an Administrator moves a line of «Lista internă (doar notițe)» onto the race's elite list in one asked-first press: the name prints on a bib and nobody is registered, emailed or given a place, so no address is needed; the line and its note go, the list comes back as it was and links to the editor's elite card. §903.

@@ -12,7 +12,7 @@ import { publicNowSetting } from "../domain/public-now";
 import type { PublicDoor } from "../public-now";
 
 /**
- * «Pe site acum» under «Locuri» (§NNN; the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»): one line
+ * «Pe site acum» under «Locuri» (§906; the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»): one line
  * that says what a visitor meets on the event's page this minute — the button «Înscrie-te», the waiting list's
  * door with how full it is, or closed and why — read off `registrationCta`, the public card's own predicate
  * (`public-now.ts#readPublicDoor`), with a link to the editor's fold that changes it.
@@ -63,7 +63,7 @@ export default async function PublicNowLine({
           {t("registrations.publicNow.setting")}
         </GlyphButton>
       </Stack>
-      {/* «Locurile libere le dau doar eu» (§NNN): nothing goes out by itself either, whatever «Da» says — said here, where he looks. */}
+      {/* «Locurile libere le dau doar eu» (§906): nothing goes out by itself either, whatever «Da» says — said here, where he looks. */}
       {door.offersOnly && (
         <Typography variant="body2" color="text.secondary" data-testid="registrations-public-now-offers-only">
           {t("registrations.publicNow.offersOnly")}

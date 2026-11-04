@@ -639,7 +639,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Locurile din lista de așteptare se alocă automat» (§615), by the same discipline: a caller that
     // did not post the select writes nothing, so no save changes who hands out the places by omission.
     ...(fields.waitlistAutoOffer === undefined ? {} : { waitlistAutoOffer: fields.waitlistAutoOffer }),
-    // «Locurile libere le dau doar eu», «Înscrieri publice deschise» and «Anunță-mă când rămân N locuri» (§NNN), by the
+    // «Locurile libere le dau doar eu», «Înscrieri publice deschise» and «Anunță-mă când rămân N locuri» (§906), by the
     // same discipline: a caller that did not post them writes nothing, so no save opens a door or stops an alert by omission.
     ...(fields.freePlacesByOfferOnly === undefined ? {} : { freePlacesByOfferOnly: fields.freePlacesByOfferOnly }),
     ...(fields.publicRegistrationOpen === undefined ? {} : { publicRegistrationOpen: fields.publicRegistrationOpen }),
@@ -1796,12 +1796,12 @@ export async function saveEventFields<T extends Record<string, unknown>>(
       tx,
       input.eventId,
       input.expectedVersion,
-      // A new N forgets what the alert said for the old one (§NNN).
+      // A new N forgets what the alert said for the old one (§906).
       { ...eventColumnsFrom(fields, times), ...placesAlertRearmed(fields.placesAlertAt, current.placesAlertAt), updatedByStaffUserId: input.actor.id },
       now,
     );
     await auditWaitlistAutoOffer(tx, input.actor, current, saved, now);
-    // The registration controls (§NNN): each one that moved, from → to — the saved row carries all three.
+    // The registration controls (§906): each one that moved, from → to — the saved row carries all three.
     await auditRegistrationControls(tx, input.actor, current, saved, now);
     await auditWaitlistCountPublic(tx, input.actor, current, saved, now);
     await auditHiddenList(tx, input.actor, current, saved, now);
@@ -1964,7 +1964,7 @@ const SERIES_COLUMNS = [
   // date of the series offer its places on its own, or leave them to the organizer. No lock and no
   // offer when it moves — switching it on offers nothing until a place is next freed or added.
   "waitlistAutoOffer",
-  // Who a free place is for, the public door, and the places alert (§NNN), like the places themselves: «from this
+  // Who a free place is for, the public door, and the places alert (§906), like the places themselves: «from this
   // date» gives every later date the same control. The alert's memory (`placesAlertSent`) is each date's own.
   "freePlacesByOfferOnly",
   "publicRegistrationOpen",
@@ -2277,7 +2277,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
         .update(events)
         .set({
           ...changes,
-          // This date's own memory of the alert goes with its old N (§NNN), as on the saved date.
+          // This date's own memory of the alert goes with its old N (§906), as on the saved date.
           ...placesAlertRearmed(changes.placesAlertAt, member.placesAlertAt),
           version: sql`${events.version} + 1`,
           updatedAt: now,
@@ -2292,7 +2292,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
       if (changes.waitlistAutoOffer !== undefined) {
         await auditWaitlistAutoOffer(tx, input.actor, member, { id: member.id, waitlistAutoOffer: changes.waitlistAutoOffer }, now);
       }
-      // The registration controls (§NNN): each change on the trail, from → to, who and when.
+      // The registration controls (§906): each change on the trail, from → to, who and when.
       await auditRegistrationControls(tx, input.actor, member, changes, now);
       if (changes.waitlistCountPublic !== undefined) {
         await auditWaitlistCountPublic(tx, input.actor, member, { id: member.id, waitlistCountPublic: changes.waitlistCountPublic }, now);
@@ -2386,7 +2386,7 @@ async function auditWaitlistAutoOffer<T extends Record<string, unknown>>(
 }
 
 /**
- * The trail of the registration controls (§NNN): «Înscrieri publice deschise», «Locurile libere le dau doar eu» and
+ * The trail of the registration controls (§906): «Înscrieri publice deschise», «Locurile libere le dau doar eu» and
  * «Anunță-mă când rămân N locuri» — who changed which, on which date, from and to, in the save's transaction, only
  * for a value that moved. Each decides who may enter or who is told, so the trail says who decided it.
  */
@@ -2409,7 +2409,7 @@ async function auditRegistrationControls<T extends Record<string, unknown>>(
 }
 
 /**
- * «Anunță-mă când rămân N locuri» moved (§NNN): what the alert already said belongs to the old N, so a new N starts
+ * «Anunță-mă când rămân N locuri» moved (§906): what the alert already said belongs to the old N, so a new N starts
  * a fresh crossing — a raised N is told at the next allocator write that finds the free places at or under it, and
  * not only after they climb back above the old one. Only a value that moved: a save that posts the same N keeps the
  * memory, so saving the editor never sends the same alert twice. Every save path writes it with the N, in the same row.
@@ -2874,7 +2874,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         tx,
         input.eventId,
         input.expectedVersion as number,
-        // A new N forgets what the alert said for the old one (§NNN).
+        // A new N forgets what the alert said for the old one (§906).
         {
           ...eventColumnsFrom(parsedEventFields, times),
           ...placesAlertRearmed(parsedEventFields.placesAlertAt, current.placesAlertAt),
@@ -2883,7 +2883,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         now,
       );
       await auditWaitlistAutoOffer(tx, input.actor, current, savedEvent, now);
-      // The registration controls (§NNN): each one that moved, from → to — the saved row carries all three.
+      // The registration controls (§906): each one that moved, from → to — the saved row carries all three.
       await auditRegistrationControls(tx, input.actor, current, savedEvent, now);
       await auditWaitlistCountPublic(tx, input.actor, current, savedEvent, now);
       await auditHiddenList(tx, input.actor, current, savedEvent, now);
@@ -3794,7 +3794,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     waitlistCapacity: source.waitlistCapacity,
     // Who hands out a freed place goes with the places (§615): a copy, and every date of a series.
     waitlistAutoOffer: source.waitlistAutoOffer,
-    // The registration controls (§NNN) travel with the duplicate; the alert's memory starts empty.
+    // The registration controls (§906) travel with the duplicate; the alert's memory starts empty.
     freePlacesByOfferOnly: source.freePlacesByOfferOnly,
     publicRegistrationOpen: source.publicRegistrationOpen,
     placesAlertAt: source.placesAlertAt,

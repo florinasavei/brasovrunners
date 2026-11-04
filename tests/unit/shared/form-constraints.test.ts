@@ -85,7 +85,7 @@ const NOT_A_BOX = new Set([
   "hiddenListPublic",
   // «Clubul pe lista publică» (§753): three radios of three valid answers, under the public list's own.
   "publicListClub",
-  // «Înscrieri publice deschise» and «Locurile libere le dau doar eu» (§NNN): ticks with their markers, both answers valid.
+  // «Înscrieri publice deschise» and «Locurile libere le dau doar eu» (§906): ticks with their markers, both answers valid.
   "publicRegistrationOpen",
   "freePlacesByOfferOnly",
 ]);

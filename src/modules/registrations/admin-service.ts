@@ -512,7 +512,7 @@ export type CreateRegistrationByStaffInput = {
    */
   vouchAddress?: boolean;
   /**
-   * «Oferă-i un loc acum» (§888, §NNN): with `vouchAddress`, the caller offers the row a place in the same
+   * «Oferă-i un loc acum» (§888, §906): with `vouchAddress`, the caller offers the row a place in the same
    * transaction (`enterOnWaitlistByStaff`), so the waiting list's limit — 0 included — is not asked: the person
    * ends offered, never waiting. Only `enterOnWaitlistByStaff` passes it.
    */
@@ -747,7 +747,7 @@ export type WaitlistEntryByStaffResult = { registrationId: string; status: Regis
  * note. After the start the entry is refused (`VOUCHED_ENTRY_AFTER_START`). A full line — or a limit of 0 —
  * refuses an entry without `offerNow` (§348): «Adaugă pe lista de așteptare» and «Mută pe lista oficială» leave
  * the person waiting, which is what the limit bounds. Never one with `offerNow`, which ends with the person
- * offered (`thenOffered`, §NNN), so the limit is not asked.
+ * offered (`thenOffered`, §906), so the limit is not asked.
  */
 export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -773,7 +773,7 @@ export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
         relayedByParticipantRequest: input.relayedByParticipantRequest,
         vouchAddress: true,
         /*
-          «Oferă-i un loc acum» (§NNN; the owner hit it 2026-11-03): the person ends offered, never waiting, so the
+          «Oferă-i un loc acum» (§906; the owner hit it 2026-11-03): the person ends offered, never waiting, so the
           waiting list's limit — «Fără listă de așteptare» included — never refuses the entry. The offer below runs
           in this same transaction; refused, it takes the entry back with it. «Adaugă pe lista de așteptare» and
           «Mută pe lista oficială» leave the person waiting, so they keep honouring the limit (§348).
@@ -809,7 +809,7 @@ export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
 }
 
 /**
- * «Înscrieri publice deschise» from the registrations page (§NNN; the owner, 2026-11-03: «cumva trebuie să pot
+ * «Înscrieri publice deschise» from the registrations page (§906; the owner, 2026-11-03: «cumva trebuie să pot
  * controla mai bine»): the same column the editor's «Perioada de înscriere» ticks, set beside «Locuri» so the
  * Administrator closes or opens the site's door where he watches the places. The Administrator's alone
  * (`canManageRegistrations`), asserted here before anything is read; the Organizer sees it, read-only.

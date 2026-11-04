@@ -71,7 +71,7 @@ export type SummaryWords = {
     external: string;
     externalUnnamed: string;
   };
-  /** `paused` (§NNN): «Înscrieri publice deschise» unticked, said before the dates. */
+  /** `paused` (§906): «Înscrieri publice deschise» unticked, said before the dates. */
   window: { range: string; fromPublication: string; soon: string; untilStart: string; paused: string };
   conditions: { noDeclaration: string };
   /** The minimum age, in «Regulamentul»'s closed line (§505): "vârsta minimă {age}", or none. */
@@ -433,7 +433,7 @@ export function registrationWindowSummary(words: SummaryWords, event: WindowEven
       : words.window.fromPublication;
   const to = event?.registrationClosesAt ? summaryDateTime(event.registrationClosesAt, event.timezone, locale, "continues") : words.window.untilStart;
   const range = fillIn(words.window.range, { from, to });
-  // «Înscrieri publice deschise» unticked (§NNN): the closed line says the site's door is shut, before the dates.
+  // «Înscrieri publice deschise» unticked (§906): the closed line says the site's door is shut, before the dates.
   return event?.publicRegistrationOpen === false ? `${words.window.paused} · ${range}` : range;
 }
 

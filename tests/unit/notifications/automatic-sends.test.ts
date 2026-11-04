@@ -128,7 +128,7 @@ describe("§383 when an automatic email is due", () => {
     expect(registrationOpenedDueAt({ ...event, editorialStatus: "DRAFT" }, NOW)).toBeNull();
   });
 
-  it("§NNN waits, announcing nothing, while «Înscrieri publice deschise» is unticked — and announces once it is ticked again", () => {
+  it("§906 waits, announcing nothing, while «Înscrieri publice deschise» is unticked — and announces once it is ticked again", () => {
     const event = {
       registrationMode: "INTERNAL" as const,
       eventStatus: "SCHEDULED" as const,

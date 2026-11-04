@@ -194,7 +194,7 @@ export async function addSupplementaryPlace<T extends Record<string, unknown>>(
  * `events.waitlist_auto_offer`, read by `fillAvailableSpots` inside the caller's transaction, after
  * the caller locked the row — so the answer is the row's as it stands under the lock, whatever copy
  * of the event the caller carries (a fixture's partial row, the editor's row from before the save).
- * A row that does not exist offers nothing. «Locurile libere le dau doar eu» on (§NNN) offers nothing either, «Da» or
+ * A row that does not exist offers nothing. «Locurile libere le dau doar eu» on (§906) offers nothing either, «Da» or
  * not: every free place is then the staff's to give (`domain/waitlist.ts#offersOnItsOwn`).
  */
 export async function offersWaitlistAutomatically<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<boolean> {
@@ -207,7 +207,7 @@ export async function offersWaitlistAutomatically<T extends Record<string, unkno
 }
 
 /**
- * `domain/waitlist.ts#offersOnItsOwn` as a column (§615, §NNN): the line is offered the free places on its own —
+ * `domain/waitlist.ts#offersOnItsOwn` as a column (§615, §906): the line is offered the free places on its own —
  * «Da» and «Locurile libere le dau doar eu» off. For the readers that tell a person or the staff whether the places
  * go out by themselves, so no sentence promises an offer the allocator will not make.
  */
@@ -246,7 +246,7 @@ export async function readWaitlistPosition<T extends Record<string, unknown>>(
     .select({
       eventId: registrations.eventId,
       status: registrations.status,
-      // Whether the places go out by themselves (§615), «Locurile libere le dau doar eu» included (§NNN).
+      // Whether the places go out by themselves (§615), «Locurile libere le dau doar eu» included (§906).
       autoOffer: lineOffersOnItsOwn(),
       // «Arată public câți așteaptă» (§634) under «Arată public numărătoarea» (§669), from the same read of
       // the event row: whether the sentence may say the line's length (`waitlistCountShown`, below).
@@ -1622,7 +1622,7 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
       and(
         sql`${events.eventStatus} = 'SCHEDULED'`,
         eq(events.waitlistAutoOffer, true),
-        // «Locurile libere le dau doar eu» (§NNN): the staff give every free place, so nothing here to offer.
+        // «Locurile libere le dau doar eu» (§906): the staff give every free place, so nothing here to offer.
         eq(events.freePlacesByOfferOnly, false),
         isNotNull(events.capacity),
         // Before the close — or the start, when there is no close or it is later (`capHoldExpiry`'s instant, §420).

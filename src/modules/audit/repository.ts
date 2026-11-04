@@ -344,7 +344,7 @@ export type AuditAction =
    */
   | "event.waitlist_auto_offer_changed"
   /**
-   * The registration controls (§NNN), from and to, on every date a save changed them — and «Înscrieri publice
+   * The registration controls (§906), from and to, on every date a save changed them — and «Înscrieri publice
    * deschise» from the registrations page's own tick too (`metadata.from`/`to`, `via: "registrations"`):
    * the public door, who a free place is for, and the places alert's N (null is off).
    */

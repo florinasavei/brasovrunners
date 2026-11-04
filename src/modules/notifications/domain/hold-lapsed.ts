@@ -9,9 +9,9 @@ import { newcomerJoinsLine, publicEntryQueues, waitlistHasRoom } from "@/modules
  * - `register` — registration is open and a newcomer would get a place: «te poți înscrie din nou»;
  * - `waitlist` — registration is open, a newcomer would join the line, and the line takes them:
  *   «poți intra pe lista de așteptare»;
- * - `paused` — the dates say open, but «Înscrieri publice deschise» is unticked (§NNN): the site takes
+ * - `paused` — the dates say open, but «Înscrieri publice deschise» is unticked (§906): the site takes
  *   nobody, so no button — the card's own «oprite de organizatori», and «scrie-ne»;
- * - `offersOnly` — «Locurile libere le dau doar eu» (§NNN) with places free and a line that takes nobody:
+ * - `offersOnly` — «Locurile libere le dau doar eu» (§906) with places free and a line that takes nobody:
  *   the places left are the organizers' to give, so no button either — the card's own words, and «scrie-ne»;
  * - `desk` — registration is closed, or the line is full or the event has none: nothing more online,
  *   and free places on the day are the desk's.
@@ -42,18 +42,18 @@ export function holdLapsedNext(input: {
   openOffers: number;
   /** `events.waitlist_capacity`: null no limit, 0 no waiting list. */
   waitlistCapacity: number | null;
-  /** «Înscrieri publice deschise» (`events.public_registration_open`, §NNN); absent is on, the column's default. */
+  /** «Înscrieri publice deschise» (`events.public_registration_open`, §906); absent is on, the column's default. */
   publicRegistrationOpen?: boolean | null;
-  /** «Locurile libere le dau doar eu» (`events.free_places_by_offer_only`, §NNN); absent is off. */
+  /** «Locurile libere le dau doar eu» (`events.free_places_by_offer_only`, §906); absent is off. */
   freePlacesByOfferOnly?: boolean | null;
 }): HoldLapsedNext {
   if (!input.registrationOpen) return "desk";
-  // The dates say open, the organizers say not on the site (§NNN): the card's `PAUSED`, never a button.
+  // The dates say open, the organizers say not on the site (§906): the card's `PAUSED`, never a button.
   if (!publicDoorOpen(input)) return "paused";
   const entry = { freePlacesByOfferOnly: input.freePlacesByOfferOnly === true, channel: "public" as const, capacity: input.capacity };
   const free = hasDirectAvailability({ capacity: input.capacity, occupied: input.occupied, eligibleWaitlisted: input.waitlisted });
   if (!newcomerJoinsLine({ waitlisted: input.waitlisted, ...entry }) && free) return "register";
   if (waitlistHasRoom({ waitlistCapacity: input.waitlistCapacity, waitlisted: input.waitlisted, openOffers: input.openOffers })) return "waitlist";
-  // Places free, given by the organizers alone, and nothing to join (§NNN): the card's `PAUSED` in its own words, not the desk's.
+  // Places free, given by the organizers alone, and nothing to join (§906): the card's `PAUSED` in its own words, not the desk's.
   return publicEntryQueues(entry) && free ? "offersOnly" : "desk";
 }

@@ -13,7 +13,7 @@ import { createRace, registerRunner, type Runner } from "../../helpers/results";
  * asta, nu să mă uit eu de fiecare dată»): one event's places taken against its capacity, the official
  * waiting list, the internal list's lines and the special guests — never a cancelled or test row, never
  * another event's — and how many can be let in with and without a place added. The places held until somebody
- * signs are named by what holds them, counted (§NNN; the production review of 2026-11-03: the parenthesis said
+ * signs are named by what holds them, counted (§906; the production review of 2026-11-03: the parenthesis said
  * «declarație de semnat sau ofertă activă» while two of the thirteen were invitations).
  */
 const NOW = new Date("2026-11-03T10:00:00.000Z");
@@ -81,7 +81,7 @@ describe("«Locuri»", () => {
     expect(await drawn(race.id)).toContain("Ocupate 10: 9 confirmați și 1 care își ține locul până semnează — 1 declarație.");
   });
 
-  it("names the places held until somebody signs by kind, each counted, a kind at 0 left out (§NNN)", async () => {
+  it("names the places held until somebody signs by kind, each counted, a kind at 0 left out (§906)", async () => {
     const race = await createRace(db, { capacity: 20 });
     await runners(race.id, 5);
     await runners(race.id, 2, { status: "PENDING_DECLARATION" });

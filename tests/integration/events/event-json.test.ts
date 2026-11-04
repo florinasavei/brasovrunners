@@ -463,7 +463,7 @@ describe("import as a new event", () => {
     expect(diffConfigs(read.file.event, file.event).map((change) => change.key)).toContain("publicList.club");
   });
 
-  it("§NNN carries the registration controls — «Locurile libere le dau doar eu», «Înscrieri publice deschise», «Anunță-mă când rămân N locuri» — as a new event and over one, never the alert's memory", async () => {
+  it("§906 carries the registration controls — «Locurile libere le dau doar eu», «Înscrieri publice deschise», «Anunță-mă când rămân N locuri» — as a new event and over one, never the alert's memory", async () => {
     const { event } = await seedRace({ freePlacesByOfferOnly: true, publicRegistrationOpen: false, placesAlertAt: "5" }, {}, false);
     // The alert already told the Administrators about this event: its memory is the event's own, never the file's.
     await db.update(events).set({ placesAlertSent: "LOW" }).where(eq(events.id, event.id));

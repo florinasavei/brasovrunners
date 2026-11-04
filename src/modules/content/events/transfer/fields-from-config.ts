@@ -128,7 +128,7 @@ export function eventFieldsFromConfig(context: PostedFieldsContext): Record<stri
     waitlistCapacity: asNumber(config.registration.waitlist.limit),
     kitShirt: config.registration.kitShirt,
     waitlistAutoOffer: config.registration.waitlistAutoOffer,
-    // The registration controls (§NNN), posted as the editor posts them: two ticks and the alert's box.
+    // The registration controls (§906), posted as the editor posts them: two ticks and the alert's box.
     freePlacesByOfferOnly: config.registration.freePlacesByOfferOnly,
     publicRegistrationOpen: config.registration.publicRegistrationOpen,
     placesAlertAt: asNumber(config.registration.placesAlertAt),

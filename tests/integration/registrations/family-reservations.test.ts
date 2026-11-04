@@ -369,7 +369,7 @@ describe("BR-REQ-034-01 a family sitting reserves every place the moment its for
     ]);
   });
 
-  it("§NNN with «Locurile libere le dau doar eu» the family reserves nothing beside free places, and the email says each one goes on the waiting list", async () => {
+  it("§906 with «Locurile libere le dau doar eu» the family reserves nothing beside free places, and the email says each one goes on the waiting list", async () => {
     const event = await createEvent(50);
     await db.update(events).set({ freePlacesByOfferOnly: true }).where(eq(events.id, event.id));
     const { sittingId } = await start(event, "Ana", 0);

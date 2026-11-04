@@ -169,7 +169,7 @@ export default async function RegistrationCta({
             {fullThanksPhrase(t, locale, fill?.capacity ?? null, cta.waiting)}
           </Typography>
           <Typography variant="body1" component="p">
-            {/* What the list does, true whether or not a place reaches it by itself (§NNN): the offer line's rule below. */}
+            {/* What the list does, true whether or not a place reaches it by itself (§906): the offer line's rule below. */}
             {waitlistJoinPhrase(t, offersByItself(event, 0))}
           </Typography>
         </Box>
@@ -192,7 +192,7 @@ export default async function RegistrationCta({
           </Typography>
         )}
 
-        {/* «Nu», or «Locurile libere le dau doar eu» (§NNN): no place reaches the line by itself — the organizers' words. No place is free here. */}
+        {/* «Nu», or «Locurile libere le dau doar eu» (§906): no place reaches the line by itself — the organizers' words. No place is free here. */}
         <Typography variant="body2" color="text.secondary" data-testid="waitlist-offer">
           {waitlistOfferPhrase(t, locale, offerHours, offersByItself(event, 0))}
         </Typography>
@@ -223,7 +223,7 @@ export default async function RegistrationCta({
   }
 
   /*
-    The organizers shut the site's door (§NNN): «Înscrieri publice deschise» unticked, or the free places theirs to
+    The organizers shut the site's door (§906): «Înscrieri publice deschise» unticked, or the free places theirs to
     give with nothing to join. A sentence and no button, as above — a button would lead to a form the server refuses.
   */
   if (cta.kind === "PAUSED") {

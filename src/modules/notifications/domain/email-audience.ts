@@ -84,7 +84,7 @@ export const EMAIL_AUDIENCE = {
   CONTACT_MESSAGE: "staff",
   FEEDBACK_MESSAGE: "staff",
   RELAY_NOTICE: "staff",
-  // «Anunță-mă când rămân N locuri» (§NNN): to the Administrators, about an event's places — no participant.
+  // «Anunță-mă când rămân N locuri» (§906): to the Administrators, about an event's places — no participant.
   PLACES_ALERT: "staff",
 } as const satisfies Record<EmailMessageType, EmailAudience>;
 

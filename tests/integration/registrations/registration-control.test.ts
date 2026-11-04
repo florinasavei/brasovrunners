@@ -18,7 +18,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * The Administrator's control over the site's door (§NNN; the owner, 2026-11-03: «cumva trebuie să pot controla mai
+ * The Administrator's control over the site's door (§906; the owner, 2026-11-03: «cumva trebuie să pot controla mai
  * bine»), on a real database:
  *
  * - «Înscrieri publice deschise» unticked refuses the public form on the server — from the caller's row and again
@@ -215,7 +215,7 @@ const capacityOf = async (eventId: string) => (await db.select({ capacity: event
 const alerts = () => db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "PLACES_ALERT"));
 const trail = (action: string) => db.select().from(auditLogs).where(eq(auditLogs.action, action));
 
-describe("«Înscrieri publice deschise» (§NNN)", () => {
+describe("«Înscrieri publice deschise» (§906)", () => {
   it("unticked, the public form is refused on the server with its marker, and nothing is written", async () => {
     const event = await createEvent(10, { publicRegistrationOpen: false });
     const error = await refusal(publicSubmission(event, "Ana"));
@@ -264,7 +264,7 @@ describe("«Înscrieri publice deschise» (§NNN)", () => {
   });
 });
 
-describe("«Locurile libere le dau doar eu» (§NNN)", () => {
+describe("«Locurile libere le dau doar eu» (§906)", () => {
   it("a staff entry takes a free place; a public entry joins the waiting list beside the one left, given only by the staff", async () => {
     const event = await createEvent(3, { freePlacesByOfferOnly: true });
     expect((await staffEntry(event.id, "Mara")).status).toBe("PENDING_DECLARATION");
@@ -322,7 +322,7 @@ describe("«Locurile libere le dau doar eu» (§NNN)", () => {
   });
 });
 
-describe("The waiting list's emails say what the allocator does (§NNN)", () => {
+describe("The waiting list's emails say what the allocator does (§906)", () => {
   /** The one message of this type queued for the person, rendered as it would leave now: both halves, as text. */
   async function sent(name: string, messageType: "WAITLIST_JOINED" | "WAITLIST_SPOT_OFFER"): Promise<string> {
     const registration = await rowOf(name);
@@ -413,7 +413,7 @@ describe("The waiting list's emails say what the allocator does (§NNN)", () => 
   });
 });
 
-describe("«Oferă-i un loc acum» is never refused by the waiting list's limit (§NNN)", () => {
+describe("«Oferă-i un loc acum» is never refused by the waiting list's limit (§906)", () => {
   it("a full event with no waiting list: the entry ends offered, with the one supplementary place the dialog named", async () => {
     const event = await createEvent(1, { waitlistCapacity: 0 });
     expect((await staffEntry(event.id, "Mara")).status).toBe("PENDING_DECLARATION");
@@ -454,7 +454,7 @@ describe("«Oferă-i un loc acum» is never refused by the waiting list's limit 
   });
 });
 
-describe("«Anunță-mă când rămân N locuri» (§NNN)", () => {
+describe("«Anunță-mă când rămân N locuri» (§906)", () => {
   it("emails every Administrator once per crossing — down to N, then 0 — and again only after climbing back above N", async () => {
     const event = await createEvent(3, { placesAlertAt: 1 });
     await staffEntry(event.id, "Ana");
@@ -503,7 +503,7 @@ describe("«Anunță-mă când rămân N locuri» (§NNN)", () => {
   });
 });
 
-describe("«Pe site acum» (§NNN)", () => {
+describe("«Pe site acum» (§906)", () => {
   async function line(eventId: string): Promise<string> {
     const door = await readPublicDoor(db, eventId, NOW);
     if (!door) throw new Error("no door");
@@ -602,7 +602,7 @@ describe("«Pe site acum» (§NNN)", () => {
   });
 });
 
-describe("The editor's save of the registration controls leaves the trail (§NNN)", () => {
+describe("The editor's save of the registration controls leaves the trail (§906)", () => {
   /** The editor's fields for the row as posted (as `cms/capacity-raise.test.ts` posts them), with the changes given. */
   async function editorFields(eventId: string, changes: Record<string, unknown>) {
     const [row] = await db.select().from(events).where(eq(events.id, eventId));

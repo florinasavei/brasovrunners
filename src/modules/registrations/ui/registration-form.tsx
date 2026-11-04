@@ -269,12 +269,12 @@ export type RegistrationFormInput = {
   fullCounts: { capacity: number | null; waiting: number | null } | null;
   /**
    * For `WAITLIST`: places are free, and given from the line — somebody waits (§615), or «Locurile libere le dau
-   * doar eu» (§NNN). The lead is the card's own «Locurile se dau din lista de așteptare», never «s-au ocupat».
+   * doar eu» (§906). The lead is the card's own «Locurile se dau din lista de așteptare», never «s-au ocupat».
    */
   fromWaitlist?: boolean;
   /**
    * For `WAITLIST`: the club's offer window («Termene», `offerHours`, §377), and whether a place goes to the line by itself
-   * (`registration-cta.ts#offersByItself`, §NNN) — else the organizers' words, in the join sentence and the offer
+   * (`registration-cta.ts#offersByItself`, §906) — else the organizers' words, in the join sentence and the offer
    * sentence alike; null says no offer sentence, and the join sentence reads as «Da», the setting's default.
    */
   offer: { hours: number; byItself: boolean } | null;
@@ -405,7 +405,7 @@ export async function registrationForm({
                 ? fullThanksPhrase(tEvent, locale, fullCounts.capacity, fullCounts.waiting)
                 : tEvent("cta.fullLead")}
           </AlertTitle>
-          {/* What the list does, by the offer line's own rule (§NNN): «te anunțăm…» only while a freed place reaches it by itself. */}
+          {/* What the list does, by the offer line's own rule (§906): «te anunțăm…» only while a freed place reaches it by itself. */}
           <Typography variant="body2" data-testid="registration-waitlist-join">
             {waitlistJoinPhrase(tEvent, offer?.byItself ?? true)}
           </Typography>

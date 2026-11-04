@@ -5,7 +5,7 @@ import { confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — «Înscrieri publice deschise» beside «Locuri» (the owner, 2026-11-03: «cumva trebuie să pot controla mai
+ * §906 — «Înscrieri publice deschise» beside «Locuri» (the owner, 2026-11-03: «cumva trebuie să pot controla mai
  * bine»). What only a browser can see, and the unit and PGlite tests cannot: the tick is a real check box in an
  * `ActionForm` whose two questions are chosen by the box's state — unticked asks «Oprești înscrierile de pe site?»,
  * ticked «Redeschizi înscrierile de pe site?» — saved by its own button, 44 pixels tall; «Pe site acum» says the
@@ -92,7 +92,7 @@ async function publicPagesSay(page: Page, slug: string, shut: boolean) {
   await fitsTheScreen(page);
 }
 
-test.describe("§NNN «Înscrieri publice deschise» beside «Locuri»", () => {
+test.describe("§906 «Înscrieri publice deschise» beside «Locuri»", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("the Administrator shuts the site's door and opens it again; the public pages and «Pe site acum» follow", async ({ page }) => {

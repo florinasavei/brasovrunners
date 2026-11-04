@@ -33,7 +33,7 @@ const state = vi.hoisted(() => ({
     waitlistCountPublic?: boolean;
     participantCountPublic?: boolean;
   },
-  // The organizers' two switches on the event's row (§NNN), and «Da»/«Nu» beside them; nothing, as before, for every other case.
+  // The organizers' two switches on the event's row (§906), and «Da»/«Nu» beside them; nothing, as before, for every other case.
   eventOver: {} as { publicRegistrationOpen?: boolean; freePlacesByOfferOnly?: boolean; waitlistAutoOffer?: boolean },
   sitting: null as null | {
     sittingId: string | null;
@@ -374,12 +374,12 @@ describe("§587 the join form says the event page's message once, above the form
 });
 
 /**
- * §NNN — the organizers' door on the register page (the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»):
+ * §906 — the organizers' door on the register page (the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»):
  * «Înscrieri publice deschise» unticked, or a press the server refused for it, says the event page's own sentence and
  * the way back instead of the form; «Locurile libere le dau doar eu» with places free and no line to join says its
  * own words; with room in the line it is the join form, led by the card's words and never «s-au ocupat».
  */
-describe("§NNN the organizers' door on the register page", () => {
+describe("§906 the organizers' door on the register page", () => {
   it("unticked «Înscrieri publice deschise»: the event page's sentence and the way back, never the form", async () => {
     state.eventOver = { publicRegistrationOpen: false };
     state.availability = { available: 3, capacity: 10, waitlistRoom: null, waitlistCapacity: null };

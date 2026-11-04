@@ -129,7 +129,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V4.19-2026-11-03" },
+    exportedFrom: { environment: "production", baseline: "BR-V4.20-2026-11-04" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     // The volunteers' categories and roles (§774): none in the sample; the round trip with some is in the integration test.
@@ -229,7 +229,7 @@ describe("the event file's reader", () => {
     expect(readEventFile(JSON.stringify(bad)).ok).toBe(false);
   });
 
-  it("§NNN writes the registration controls only when they are not what a file without them means, and reads them back as they were", () => {
+  it("§906 writes the registration controls only when they are not what a file without them means, and reads them back as they were", () => {
     const file = sampleFile();
     // As every event before them: the door open, the tick off, no alert — nothing written, so the release before them still reads the file.
     const plain = serializeEventFile(file);

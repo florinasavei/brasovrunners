@@ -571,7 +571,7 @@ export async function setRegistrationEliteAction(_previous: FormOutcome | null, 
 }
 
 /**
- * «Înscrieri publice deschise» beside «Locuri» (§NNN): the tick posted as it stands — ticked opens the site's door,
+ * «Înscrieri publice deschise» beside «Locuri» (§906): the tick posted as it stands — ticked opens the site's door,
  * unticked closes it — through the service, which asserts the Administrator again, writes the one event row with its
  * trail and tells the public pages. The coarse gate here (BR-REQ-060-01); the Organizer is never handed the form.
  * Back to the same list, with the outcome; a tick that already said the same writes nothing and says so.

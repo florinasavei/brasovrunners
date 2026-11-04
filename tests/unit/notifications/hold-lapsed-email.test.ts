@@ -13,7 +13,7 @@ import ro from "../../../messages/ro.json";
  * locul»): the person whose declaration hold was released to somebody who wanted the place is told the
  * deadline that passed, where the place went, and what they can still do — one of five sentences,
  * decided by the allocator's own rules over the event as it stands at the send, and the site's door
- * as the card reads it (§NNN).
+ * as the card reads it (§906).
  */
 describe("§638 what a person whose hold lapsed can still do", () => {
   const open = { registrationOpen: true, capacity: 10, occupied: 10, waitlisted: 0, openOffers: 0, waitlistCapacity: null };
@@ -39,7 +39,7 @@ describe("§638 what a person whose hold lapsed can still do", () => {
     expect(holdLapsedNext({ ...open, waitlistCapacity: 2, waitlisted: 1, openOffers: 1 })).toBe("desk");
   });
 
-  it("§NNN «Înscrieri publice deschise» unticked: shut by the organizers, whatever is free — and the dates still speak first", () => {
+  it("§906 «Înscrieri publice deschise» unticked: shut by the organizers, whatever is free — and the dates still speak first", () => {
     expect(holdLapsedNext({ ...open, occupied: 8, publicRegistrationOpen: false })).toBe("paused");
     expect(holdLapsedNext({ ...open, publicRegistrationOpen: false })).toBe("paused");
     expect(holdLapsedNext({ ...open, registrationOpen: false, publicRegistrationOpen: false })).toBe("desk");
@@ -47,7 +47,7 @@ describe("§638 what a person whose hold lapsed can still do", () => {
     expect(holdLapsedNext({ ...open, occupied: 8, publicRegistrationOpen: true })).toBe("register");
   });
 
-  it("§NNN «Locurile libere le dau doar eu»: the line beside free places, or the organizers' places when the line takes nobody", () => {
+  it("§906 «Locurile libere le dau doar eu»: the line beside free places, or the organizers' places when the line takes nobody", () => {
     // A public entry joins the line whatever is free: never «register again».
     expect(holdLapsedNext({ ...open, occupied: 8, freePlacesByOfferOnly: true })).toBe("waitlist");
     // Free places and no line to join: the organizers give them — not the desk's sentence, not «full».
@@ -112,7 +112,7 @@ describe("§638 the DECLARATION_HOLD_EXPIRED email's words", () => {
     expect(mail.text).not.toContain("Înscrie-te din nou:");
   });
 
-  it("§NNN with the site's door shut by the organizers: the card's own words and «scrie-ne», in both languages, and no button", () => {
+  it("§906 with the site's door shut by the organizers: the card's own words and «scrie-ne», in both languages, and no button", () => {
     const paused = render("ro", { holdLapsedNext: "paused" }, null);
     expect(paused.text).toContain("Înscrierile pe site sunt oprite acum de organizatori. Dacă mai vrei să vii, scrie-ne din pagina de contact.");
     expect(paused.text).toContain("Registration on the site has been stopped by the organizers for now. If you still want to come, write to us from the contact page.");

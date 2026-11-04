@@ -1,7 +1,7 @@
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
- * «Înscrieri publice deschise» (§NNN; the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»): the
+ * «Înscrieri publice deschise» (§906; the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»): the
  * public form's own door, beside its dates. Off, the public form — and its emailed link for another person on
  * the same address (§389) — is refused on the server whatever the dates say, before anything is spent and
  * again under the event's lock; every staff verb keeps working, an invitation's form included (its door is

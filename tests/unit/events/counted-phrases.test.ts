@@ -157,7 +157,7 @@ describe("§587 waitlistOfferPhrase — how an offer works, with the club's own 
     expect(waitlistOfferPhrase(en, "en", 6, true)).toContain("6 hours to confirm");
   });
 
-  it("§NNN while no place reaches the line by itself, says the organizers give the places — never «când se eliberează»", () => {
+  it("§906 while no place reaches the line by itself, says the organizers give the places — never «când se eliberează»", () => {
     const ro = translator("ro");
     const byHand = waitlistOfferPhrase(ro, "ro", 24, false);
     expect(byHand).toBe("Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email și ai 24 de ore să confirmi.");
@@ -171,7 +171,7 @@ describe("§587 waitlistOfferPhrase — how an offer works, with the club's own 
     expect(enByHand).not.toContain("passes on");
   });
 
-  it("§NNN the join sentence by the same rule: «te anunțăm…» only while a freed place reaches the line by itself", () => {
+  it("§906 the join sentence by the same rule: «te anunțăm…» only while a freed place reaches the line by itself", () => {
     expect(waitlistJoinPhrase(translator("ro"), true)).toBe("Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.");
     expect(waitlistJoinPhrase(translator("en"), true)).toBe("Join the waiting list — we email you when a place frees up.");
     const roByHand = waitlistJoinPhrase(translator("ro"), false);

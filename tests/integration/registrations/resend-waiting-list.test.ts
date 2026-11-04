@@ -180,7 +180,7 @@ describe("§641 the resend of a waiting row", () => {
   });
 
   it("§654 opens by saying it is sent again and «still on the waiting list», never «we added you», in both halves", async () => {
-    // The one place held: the event is full, as the allocator leaves it while somebody waits (a place nobody holds is not «full», §NNN).
+    // The one place held: the event is full, as the allocator leaves it while somebody waits (a place nobody holds is not «full», §906).
     await person("CONFIRMED", null);
     const mine = await person("WAITLISTED", at(-2));
     await resendRegistrationMessage(db, admin(), mine.id, NOW);
@@ -196,7 +196,7 @@ describe("§641 the resend of a waiting row", () => {
     expect(message.text).toContain("erai singura persoană pe lista de așteptare.");
   });
 
-  it("§NNN with «Locurile libere le dau doar eu» in force, the resend says the organizers give the places, never the old promise", async () => {
+  it("§906 with «Locurile libere le dau doar eu» in force, the resend says the organizers give the places, never the old promise", async () => {
     await db.update(events).set({ freePlacesByOfferOnly: true }).where(eq(events.id, eventId));
     await person("CONFIRMED", null);
     const mine = await person("WAITLISTED", at(-2));
@@ -213,7 +213,7 @@ describe("§641 the resend of a waiting row", () => {
     expect(message.text).not.toContain("este complet");
   });
 
-  it("§NNN full with «Nu», the resend promises the organizers' word, never a notice when a place frees up", async () => {
+  it("§906 full with «Nu», the resend promises the organizers' word, never a notice when a place frees up", async () => {
     await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, eventId));
     // The one place held: the event is full — and with «Nu» a freed place reaches nobody by itself.
     await person("CONFIRMED", null);

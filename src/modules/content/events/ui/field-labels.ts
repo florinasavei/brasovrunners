@@ -68,7 +68,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     // «Lista de așteptare» and, under «Limitată», its number (§633).
     "event.waitlistMode": inBox("registration", t("editor.waitlistMode")),
     "event.waitlistCapacity": inBox("registration", `${t("editor.waitlistMode")} › ${t("editor.waitlistCapacity")}`),
-    // «Anunță-mă când rămân N locuri» (§NNN), under the places.
+    // «Anunță-mă când rămân N locuri» (§906), under the places.
     "event.placesAlertAt": inBox("registration", t("editor.placesAlertAt")),
     // One box for every type, in «Regulamentul» since §505 (was «Condiții de participare», and a
     // group run's own in «Traseul», §440).
