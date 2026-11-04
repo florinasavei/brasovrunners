@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.25` | the kits' total written as a sum; «Elite» as one list (§913) |
 | `BR-V4.24` | every staff press's emails carry their press, «Emailuri azi» lists the day's emails by press, every press names its email before it is pressed, each press's toast says what it emailed and when, and «Trimite emailul» lets the person's own email stay unsent where sensible (§912) |
 | `BR-V4.23` | «Planul locurilor» and «Istoric capacitate» for each race (§911) |
 | `BR-V4.22` | the kits as runners plus volunteers, an «Elite» fold on the registrations list, the elites at the start and beside the bibs, the site's tick offered once, «Voluntari» counted like «Înscrieri» (§909) · an elite's «Apare în clasament» and «Apare pe site» (§910) |
