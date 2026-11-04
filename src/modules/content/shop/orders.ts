@@ -392,12 +392,25 @@ async function moveOrder<T extends Record<string, unknown>>(
   return { order, from: current.status };
 }
 
+/** Whether «Comanda ta e plătită» would leave for this order, ticked: the shop writes to members and the order's account is there. */
+async function paidEmailWouldLeave<T extends Record<string, unknown>>(tx: Transaction<T>, orderId: string): Promise<boolean> {
+  if (!(await readShopSettings(tx)).emailMembers) return false;
+  const [member] = await tx
+    .select({ id: staffUsers.id })
+    .from(shopOrders)
+    .innerJoin(staffUsers, eq(staffUsers.id, shopOrders.memberStaffUserId))
+    .where(eq(shopOrders.id, orderId))
+    .limit(1);
+  return member !== undefined;
+}
+
 /**
  * «Marchează plătită», «Marchează predată», «Anulează» — the club's verbs, the Administrator's
  * (`canManageShop`). Marked paid, the member is told («Comanda ta e plătită»), in the language they
  * ordered in, at their account's address — none when the account is gone, and none when the shop manager
  * unticked «Trimite emailul» in the question (`sendEmail: false`; the design «telling the owner about every
- * email a staff press sends», slice 4), which the payment's audit row records as `emailSkipped`.
+ * email a staff press sends», slice 4), which the payment's audit row records as `emailSkipped` — only when the email
+ * would have left (`paidEmailWouldLeave`).
  */
 export async function moveOrderByClub<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -408,7 +421,9 @@ export async function moveOrderByClub<T extends Record<string, unknown>>(
   const now = input.now ?? new Date();
   const sendEmail = input.sendEmail !== false;
   return db.transaction(async (tx) => {
-    const skipped = !sendEmail && input.verb === "pay";
+    // `emailSkipped` only when the box kept an email back: not with «Îi scriem membrului pe email despre comenzi» off (§704),
+    // nor for an order whose account is gone — neither would have been emailed ticked.
+    const skipped = !sendEmail && input.verb === "pay" && (await paidEmailWouldLeave(tx, input.orderId));
     const { order } = await moveOrder(tx, { actorId: input.actor.id, orderId: input.orderId, verb: input.verb, by: "CLUB", now, ...(skipped ? { audit: { emailSkipped: true } } : {}) });
     if (sendEmail && order.status === "PAID" && order.memberStaffUserId && (await readShopSettings(tx)).emailMembers) {
       const [member] = await tx.select({ email: staffUsers.email }).from(staffUsers).where(eq(staffUsers.id, order.memberStaffUserId)).limit(1);

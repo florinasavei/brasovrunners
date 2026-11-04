@@ -264,7 +264,7 @@ export async function moveShopOrderAction(_previous: FormOutcome | null, form: F
     const orderId = text(form, "orderId");
     // «Trimite emailul» in «Marchează plătită»'s question (slice 4); the other two verbs offer none and send nothing.
     const sendEmail = sendEmailOf(form);
-    let outcome: { error?: string; saved?: string; mailSkipped?: "1" };
+    let outcome: { error?: string; saved?: string; mailSkipped?: string };
     try {
       const actor = await requireStaffCapability(canManageShop);
       press.by(actor.id);

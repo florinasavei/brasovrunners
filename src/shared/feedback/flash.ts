@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { getDb } from "@/db/client";
+import { mailSkippedCount } from "@/shared/forms/send-email";
 import { currentEmailPress } from "@/modules/notifications/press";
 import { pressMailValues } from "@/modules/notifications/press-receipt";
 import { consumeEmailRoadChoice, emailRoadChoice } from "./email-road-request";
@@ -63,9 +64,10 @@ export async function flashOutcome(outcome: Readonly<Record<string, string | num
     return;
   }
   // Zitadel's own email (§123): its answer rides on the outcome of an invitation to the team. What the press chose not
-  // to send (slice 4): `mailSkipped=1` when «Trimite emailul» was unticked, `alert` for a publication's new-event alert.
+  // to send (slice 4): `mailSkipped`, how many emails «Trimite emailul» unticked kept back, `alert` for a publication's
+  // new-event alert.
   const alert = outcome.alert === "later" || outcome.alert === "skipped" ? outcome.alert : undefined;
-  const told = await withPressMail(notice, { zitadel: outcome.invite === "invited", skipped: outcome.mailSkipped === "1", alert });
+  const told = await withPressMail(notice, { zitadel: outcome.invite === "invited", skipped: mailSkippedCount(outcome.mailSkipped) ?? 0, alert });
   if (told) await flash(told);
 }
 
@@ -84,18 +86,19 @@ export async function flashOutcome(outcome: Readonly<Record<string, string | num
  * (null otherwise: the banner alone says why), never as a green tick. The toast is a courtesy: a read that fails falls
  * back to the plain notice. Exported for the presses that flash or answer with a notice themselves.
  *
- * What the press chose not to send is said whatever it queued (slice 4): `skipped` — «Trimite emailul» unticked, the
- * person was sent nothing (`mailSkipped`) — and a publication's new-event alert, left to the job's next pass or not
- * sent at all (`mailAlert`).
+ * What the press chose not to send is said whatever it queued (slice 4): `skipped` — how many emails «Trimite emailul»
+ * unticked kept back, the person's or the people's of a bulk press (`mailSkipped`) — and a publication's new-event
+ * alert, left to the job's next pass or not sent at all (`mailAlert`).
  */
 export async function withPressMail(
   notice: FormNotice,
-  extras: { zitadel?: boolean; skipped?: boolean; alert?: "later" | "skipped" } = {},
+  extras: { zitadel?: boolean; skipped?: number; alert?: "later" | "skipped" } = {},
 ): Promise<FormNotice | null> {
   const road = (await emailRoadChoice())?.road ?? null;
   if (road) await consumeEmailRoadChoice();
   const onlyWithMail = PROVIDER_FAILED_TOASTS.has(notice.key);
-  const chosen: Record<string, string> = { ...(extras.skipped ? { mailSkipped: "1" } : {}), ...(extras.alert ? { mailAlert: extras.alert } : {}) };
+  const skipped = extras.skipped ?? 0;
+  const chosen: Record<string, string> = { ...(skipped > 0 ? { mailSkipped: String(skipped) } : {}), ...(extras.alert ? { mailAlert: extras.alert } : {}) };
   const told = (base: FormNotice): FormNotice => (Object.keys(chosen).length > 0 ? { ...base, values: { ...base.values, ...chosen } } : base);
   const plain = road ? { ...notice, values: { ...notice.values, via: road } } : notice;
   const press = currentEmailPress();

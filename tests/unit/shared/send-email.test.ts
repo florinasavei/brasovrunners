@@ -4,7 +4,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { mailLine } from "@/shared/feedback/mail-line";
 import { type ConfirmSpec, emailOptOutAnswer, emailOptOutFields, fillFromForm, withEmailOff } from "@/shared/feedback/notice";
-import { mailSkippedOf, SEND_EMAIL_FIELD, sendEmailOf, WINDOW_SEND_EMAIL_FIELD } from "@/shared/forms/send-email";
+import { mailSkippedCount, mailSkippedOf, SEND_EMAIL_FIELD, sendEmailOf, WINDOW_SEND_EMAIL_FIELD } from "@/shared/forms/send-email";
 
 /**
  * «Trimite emailul» (the design «telling the owner about every email a staff press sends», 2026-11-03, slice 4): the one
@@ -32,9 +32,21 @@ describe("sendEmailOf — the one parser", () => {
     expect(sendEmailOf(posted([[WINDOW_SEND_EMAIL_FIELD, "off"]]), WINDOW_SEND_EMAIL_FIELD)).toBe(false);
   });
 
-  it("adds `mailSkipped=1` to an outcome only when the box was unticked", () => {
+  it("adds `mailSkipped` to an outcome only when the box was unticked: how many emails it kept back, one by default", () => {
     expect(mailSkippedOf(true)).toEqual({});
+    expect(mailSkippedOf(true, 3)).toEqual({});
     expect(mailSkippedOf(false)).toEqual({ mailSkipped: "1" });
+    // A bulk press: the people it reached.
+    expect(mailSkippedOf(false, 3)).toEqual({ mailSkipped: "3" });
+    // Unticked over nobody: the box was unticked, and no email was kept back.
+    expect(mailSkippedOf(false, 0)).toEqual({ mailSkipped: "0" });
+  });
+
+  it("reads the count back, and nothing the browser rewrote", () => {
+    expect(mailSkippedCount("1")).toBe(1);
+    expect(mailSkippedCount("21")).toBe(21);
+    expect(mailSkippedCount("0")).toBe(0);
+    for (const forged of ["yes", "-1", "1.5", "", "1e3", undefined, ["1"]]) expect(mailSkippedCount(forged), String(forged)).toBeNull();
   });
 });
 
@@ -95,11 +107,18 @@ describe("the toast says what the press chose not to send", () => {
   };
 
   it("says the email was kept back first, then what else left — the offer to the next in line", () => {
-    expect(line({ mailSkipped: "1" })).toBe(ro.Feedback.mail.skipped);
-    expect(line({ mailSkipped: "1" }, "en")).toBe(en.Feedback.mail.skipped);
+    expect(line({ mailSkipped: "1" })).toBe("1 email nu a plecat: ai debifat „Trimite…”.");
+    expect(line({ mailSkipped: "1" }, "en")).toBe("1 email did not go: you unticked “Send…”.");
     // The freed place's offer, the one email the press still sent — to another person.
     const withOffer = line({ mailSkipped: "1", mail: "now", mailTo: "others", mailPeople: "1", mailPressedAt: "2026-11-04T08:00:00.000Z", mailType: "WAITLIST_SPOT_OFFER" });
-    expect(withOffer).toBe(`${ro.Feedback.mail.skipped} Pleacă acum: „S-a eliberat un loc” către 1 altă persoană.`);
+    expect(withOffer).toBe("1 email nu a plecat: ai debifat „Trimite…”. Pleacă acum: „S-a eliberat un loc” către 1 altă persoană.");
+  });
+
+  it("counts the emails a bulk press kept back, in the count's own form — and says nothing when it kept none back", () => {
+    expect(line({ mailSkipped: "3" })).toBe("3 emailuri nu au plecat: ai debifat „Trimite…”.");
+    expect(line({ mailSkipped: "21" })).toBe("21 de emailuri nu au plecat: ai debifat „Trimite…”.");
+    expect(line({ mailSkipped: "3" }, "en")).toBe("3 emails did not go: you unticked “Send…”.");
+    expect(line({ mailSkipped: "0" })).toBeNull();
   });
 
   it("says a publication's new-event alert last: left to the job's next pass, or not sent at all", () => {

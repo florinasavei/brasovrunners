@@ -485,14 +485,19 @@ export async function assignVolunteerAction(form: FormData): Promise<void> {
   });
 }
 
-/** «Ia-i rolul …» (§837): one press takes one role given back; the person's other roles stand and are named to them again. */
-export async function unassignVolunteerAction(form: FormData): Promise<void> {
+/**
+ * «Ia-i rolul …» (§837): one press takes one role given back; the person's other roles stand and are named to them again.
+ * The role is bound to the button (`unassignVolunteerAction.bind(null, role.id)`), never its `name`/`value`: the button
+ * posts the roles block's one form through this action (`formAction`), and React posts no name of such a button. Read
+ * like any posted field (`unknown` to the service): not a role id is refused, a role the person does not hold changes nothing.
+ */
+export async function unassignVolunteerAction(roleId: string, form: FormData): Promise<void> {
   // An email press (`notifications/press.ts`): the person is told the roles that stand.
   return inEmailPress("volunteers.unassign", async (press) => {
     // The same block's «Trimite emailul» (slice 4): «Ia-i rolul …» posts the block's form through its own button.
     const sendEmail = sendEmailOf(form);
     try {
-      const result = await runVolunteer({ kind: "unassign", eventId: eventIdOf(form), id: field(form, "volunteerId"), roleId: field(form, "roleId") }, press, sendEmail);
+      const result = await runVolunteer({ kind: "unassign", eventId: eventIdOf(form), id: field(form, "volunteerId"), roleId }, press, sendEmail);
       if (!result.changed) return backToCard(form, { saved: "volunteerUnchanged" });
       return backToCard(form, result.volunteer.hasAddress ? { saved: "volunteerUnassigned", ...mailSkippedOf(sendEmail) } : { saved: "volunteerUnassignedNoEmail" });
     } catch (error) {

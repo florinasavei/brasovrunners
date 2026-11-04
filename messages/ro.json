@@ -13683,7 +13683,11 @@
       },
       "roles": "Dacă până atunci rolurile nu mai sunt aceleași, emailul se retrage.",
       "zitadel": "Zitadel trimite separat, acum, linkul pentru parolă.",
-      "skipped": "Emailul nu a plecat: ai debifat „Trimite…”.",
+      "skipped": {
+        "one": "{count} email nu a plecat: ai debifat „Trimite…”.",
+        "few": "{count} emailuri nu au plecat: ai debifat „Trimite…”.",
+        "other": "{count} de emailuri nu au plecat: ai debifat „Trimite…”."
+      },
       "alertLater": "Abonații newsletterului primesc anunțul la următoarea trecere a jobului.",
       "alertSkipped": "Abonații newsletterului nu primesc anunțul: ai debifat caseta."
     },

@@ -1528,7 +1528,8 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
         ...(existing.length > 0 && sendEmail ? { retried: String(existing.length) } : {}),
         ...(counts.failed > 0 ? { failed: String(counts.failed) } : {}),
         ...(lines.length > 0 ? { report } : {}),
-        ...mailSkippedOf(sendEmail),
+        // One invitation kept back per member added (an address already a member is not written to again either way).
+        ...mailSkippedOf(sendEmail, added.length),
       };
       // A green tick only when every account exists; otherwise the banner and the report say which did not,
       // and an info toast what the club's own invitations were and when they leave (`PROVIDER_FAILED_TOASTS`).

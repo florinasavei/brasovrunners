@@ -13,6 +13,7 @@ import { FACTS_SX, LINE_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/ro
 import { staffInviteConstraints } from "@/modules/staff-identity/constraints";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import { mailSkippedCount } from "@/shared/forms/send-email";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -103,6 +104,8 @@ export default async function StaffPage({ params, searchParams }: Props) {
 
   const current = await searchParams;
   const { error, saved, invite, reason, account, count, failed, retried, report, mailSkipped } = current;
+  /** «Trimite invitația acum» unticked (slice 4): `mailSkipped` carries how many invitations it kept back, none for a press that added nobody. */
+  const invitationsKept = mailSkippedCount(mailSkipped) !== null;
   /** Whichever of the three account verbs was pressed (§171) — they share their four answers. */
   const accountVerb = saved === "passwordReset" || saved === "accountDeactivated" || saved === "accountReactivated";
   // Whether "Add" also creates the Zitadel account and sends the invitation (§123).
@@ -405,7 +408,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {saved === "invited" && invite === "exists" && <Alert severity="success">{t("staff.inviteExists")}</Alert>}
         {saved === "invited" && invite === "unconfigured" && <Alert severity="success">{t("staff.inviteManual")}</Alert>}
         {/* Added with «Trimite invitația acum» unticked (slice 4): nobody was written to and Zitadel was not asked. */}
-        {(saved === "invited" || saved === "membersInvited") && mailSkipped === "1" && (
+        {(saved === "invited" || saved === "membersInvited") && invitationsKept && (
           <Alert severity="info" data-testid="staff-invite-not-sent">
             {t("staff.inviteNotSent")}
           </Alert>
@@ -438,7 +441,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
             {/* Unticked «Trimite invitațiile acum» (slice 4): added, and no invitation is on its way — the info line above says so. */}
             {failed
               ? t("staff.membersInviteFailed", { count: count ?? "0", failed })
-              : mailSkipped === "1"
+              : invitationsKept
                 ? t("staff.membersAdded", { count: count ?? "0" })
                 : t("staff.membersInvited", { count: count ?? "0" })}
             {retried && ` ${t("staff.membersRetried", { retried })}`}

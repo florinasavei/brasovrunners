@@ -1,5 +1,6 @@
 import { countForm } from "@/i18n/count-form";
 import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
+import { mailSkippedCount } from "@/shared/forms/send-email";
 
 /**
  * The toast's mail line (the design «telling the owner about every email a staff press sends», 2026-11-03, slice 2):
@@ -22,8 +23,8 @@ import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
  * Pure, so it is unit-tested in Node; the cookie is the browser's to rewrite, so every value is checked before it is
  * read, and a line that does not add up is no line.
  *
- * **What the press chose not to send** (slice 4): «Trimite emailul» unticked (`mailSkipped`) is said first — the
- * person was sent nothing —, then whatever else left (the offer to the next in line); a publication's new-event alert
+ * **What the press chose not to send** (slice 4): «Trimite emailul» unticked (`mailSkipped`, how many emails it kept
+ * back) is said first — the person was sent nothing, or the people of a bulk press —, then whatever else left (the offer to the next in line); a publication's new-event alert
  * (`mailAlert`) is said last: left to the job's next pass, or not sent at all.
  */
 
@@ -121,8 +122,9 @@ export function mailLine(
   locale: string,
   room: number = Number.POSITIVE_INFINITY,
 ): string | null {
-  // What the press chose not to send (slice 4), around what it did send.
-  const skipped = values.mailSkipped === "1" ? t("mail.skipped") : "";
+  // What the press chose not to send (slice 4), around what it did send: how many emails it kept back, in the count's form.
+  const kept = mailSkippedCount(values.mailSkipped) ?? 0;
+  const skipped = kept > 0 ? t(`mail.skipped.${countForm(kept, locale)}`, { count: String(kept) }) : "";
   const alert = values.mailAlert === "later" ? t("mail.alertLater") : values.mailAlert === "skipped" ? t("mail.alertSkipped") : "";
   const chosen = [skipped, alert].filter(Boolean).join(" ").length;
   const sent = sentLine(values, t, typeName, locale, room - (chosen > 0 ? chosen + 1 : 0));

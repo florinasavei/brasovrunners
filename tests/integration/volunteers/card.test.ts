@@ -518,8 +518,9 @@ describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role
     expect(rendered.text).toContain("Organizatorii ți-au dat mai multe roluri la Cursa: Punct de apă, Sosire.");
     expect(rendered.text).toContain("Ce presupune fiecare rol: Punct de apă — Dai apă la km 5.");
     expect(rendered.text).toContain("What each role involves: Water point — Hand out water at km 5.");
-    // «Ia-i rolul …»: the one role goes, the other stands and is named again; the second message is withdrawn.
-    expect(await press(actions.unassignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }))).not.toContain("volunteerError");
+    // «Ia-i rolul …»: the one role goes, the other stands and is named again; the second message is withdrawn. The role is bound to
+    // the button, as the roles block draws it (`unassignVolunteerAction.bind(null, role.id)`): React posts no name of such a button.
+    expect(await press(actions.unassignVolunteerAction.bind(null, water.id), form({ volunteerId: maria.id }))).not.toContain("volunteerError");
     expect((await listVolunteers(db, eventId))[0]).toMatchObject({ roleIds: [finish.id], choiceIds: [water.id] });
     const [unassigned] = (await trail()).filter((row) => row.action === "volunteer.unassigned");
     expect(unassigned.metadataJson).toEqual({ volunteerId: maria.id, roleId: water.id, assignedRoleIds: [finish.id], from: both });
@@ -528,7 +529,7 @@ describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role
     expect(third.payloadJson).toEqual({ eventId, volunteerId: maria.id, roleIds: [finish.id] });
     expect((await render(third)).text).toContain("Rol: Sosire");
     // Taking a role the person does not hold changes nothing; taking the last back by hand leaves nothing to announce, and the last message is withdrawn too.
-    await press(actions.unassignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }));
+    await press(actions.unassignVolunteerAction.bind(null, water.id), form({ volunteerId: maria.id }));
     expect(await told()).toHaveLength(3);
     await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleIds: [] }));
     await expect(render(third)).rejects.toThrow(/roles were changed/);
@@ -966,8 +967,8 @@ describe("«Trimite emailul» unticked beside the roles and the forms (the desig
     expect(maria).toMatchObject({ roleIds: [water.id] });
     // «Dă-i alt rol»: the button posts an empty role, the select its own (`otherRoleId`).
     expect(await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: "", otherRoleId: finish.id, sendEmail: "off" }))).not.toContain("volunteerError");
-    // «Ia-i rolul …» through the same form's other action.
-    expect(await press(actions.unassignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id, sendEmail: "off" }))).not.toContain("volunteerError");
+    // «Ia-i rolul …» through the same form's other action, its role bound to the button.
+    expect(await press(actions.unassignVolunteerAction.bind(null, water.id), form({ volunteerId: maria.id, sendEmail: "off" }))).not.toContain("volunteerError");
     expect((await listVolunteers(db, eventId))[0]).toMatchObject({ roleIds: [finish.id] });
     expect(
       await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id, finish.id], assignedRoleIds: [finish.id], email: "maria.noua@example.test", sendEmail: "off" })),

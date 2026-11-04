@@ -743,8 +743,15 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
    * quick presses. A person with no address is sent nothing (§865), and the line says that instead.
    *
    * **One form, one «Trimite emailul»** (slice 4): the block is one form, so the line's box reaches every press of it — each
-   * button posts the role it names (`roleId`), «Ia-i rolul …» through its own action (`formAction`), and «Dă-i alt rol» the
-   * select's (`otherRoleId`).
+   * «Dă-i rolul …» posts the role it names (`roleId`), «Dă-i alt rol» the select's (`otherRoleId`), and «Ia-i rolul …» goes
+   * through its own action (`formAction`) with its role bound to it (`unassignVolunteerAction.bind(null, role.id)`): React
+   * posts no `name`/`value` of a button whose `formAction` is a Server Action — it writes its own name there.
+   *
+   * **Enter presses nothing** (slice 4's review): Enter on the focused «Trimite emailul» box, or on the select, submits the
+   * form through its default button — the first submit button in it, which would be the first «Ia-i rolul …». So the form
+   * opens with a hidden default of its own that goes nowhere: a string `formAction`, which React leaves to the browser, and
+   * `formMethod="dialog"`, a submission the browser drops outside a `<dialog>` — with or without JavaScript. Never `disabled`:
+   * Chrome and Safari skip a disabled default on a box's Enter and press the next submit button instead.
    */
   const rolesBlock = (person: VolunteerItem) => {
     const given = rolesOf(person).assigned;
@@ -757,7 +764,11 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
     const pressable = person.state !== "CANCELLED";
     return (
       // A cancelled person's block is the same form with no button in it: the chips alone, nothing to post.
-      <Box component="form" action={assignVolunteerAction} data-testid="volunteer-roles">
+      <Box component="form" action={assignVolunteerAction} data-testid="volunteer-person-roles">
+        {/* The form's default, first in it: what Enter presses, and it posts nothing (above). */}
+        {pressable && (
+          <button type="submit" formAction="#" formMethod="dialog" formNoValidate tabIndex={-1} aria-hidden="true" hidden data-testid="volunteer-roles-default" />
+        )}
         {hidden}
         <input type="hidden" name="volunteerId" value={person.id} />
         {given.length > 0 && (
@@ -770,9 +781,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
                 <StatusChip glyph="given" variant="outlined" label={labelOf(role)} testId="volunteer-given-role" />
                 {pressable && (
                   <GlyphSubmitButton
-                    formAction={unassignVolunteerAction}
-                    name="roleId"
-                    value={role.id}
+                    formAction={unassignVolunteerAction.bind(null, role.id)}
                     icon="cancel"
                     label={t("volunteers.assign.remove", { role: labelOf(role) })}
                     pendingLabel={t("volunteers.assign.remove", { role: labelOf(role) })}

@@ -1216,6 +1216,45 @@ describe("§842 each volunteer on the card is the house's row fold", () => {
   });
 });
 
+describe("a volunteer's roles block is one form whose default presses nothing (the design «telling the owner about every email a staff press sends», slice 4)", () => {
+  /** The opening tags of the form's submit buttons, in tree order: the first is the form's default, what Enter on a box presses. */
+  const submitsOf = (form: string) => [...form.matchAll(/<button\b[^>]*>/g)].map((match) => match[0]).filter((tag) => !/\btype="button"/.test(tag));
+  const formOf = (page: string) => /<form[^>]*data-testid="volunteer-person-roles"[\s\S]*?<\/form>/.exec(page)?.[0] ?? "";
+
+  it("opens with a hidden default that posts nowhere, so Enter on «Trimite emailul» or on the select never presses «Ia-i rolul …»", async () => {
+    // A role given (Sosire), the one she ticked still to give (Punct de apă), and the event's other role in the select.
+    const placed: VolunteerItem = { ...PEOPLE[0], roleIds: [FINISH], state: "CONFIRMED" };
+    const form = formOf(await drawCard({ volunteers: [placed] }));
+    expect(form).toMatch(/<input[^>]*type="checkbox"[^>]*name="sendEmail"|<input[^>]*name="sendEmail"[^>]*type="checkbox"/);
+    expect(form).toContain('name="otherRoleId"');
+    const [first, ...rest] = submitsOf(form);
+    expect(first).toContain('data-testid="volunteer-roles-default"');
+    // Nowhere: a string action React leaves to the browser, and a dialog's method, which the browser drops outside a <dialog>.
+    expect(first).toMatch(/\bformAction="#"/i);
+    expect(first).toMatch(/\bformMethod="dialog"/i);
+    expect(first).toMatch(/\bhidden(=""|\s|>)/);
+    expect(first).toContain('tabindex="-1"');
+    // Never disabled: Chrome and Safari skip a disabled default on a box's Enter and press the next submit button.
+    expect(first).not.toMatch(/\bdisabled\b/);
+    expect(first).not.toContain("Ia-i rolul");
+    // «Ia-i rolul Sosire» comes after it, and posts no role of its own name: its role is bound to its action.
+    const remove = rest.find((tag) => tag.includes('aria-label="Ia-i rolul Sosire: Maria Test"')) ?? "";
+    expect(remove).not.toBe("");
+    expect(remove).not.toContain('name="roleId"');
+    expect(rest.some((tag) => tag.includes('aria-label="Dă-i și rolul Punct de apă'))).toBe(true);
+    // The person's own form, apart from the event's roles panel (`volunteer-roles`).
+    expect(form).not.toContain('data-testid="volunteer-roles"');
+  });
+
+  it("draws no default and no box for a cancelled person: chips alone, nothing to press", async () => {
+    const cancelled: VolunteerItem = { ...PEOPLE[0], roleIds: [FINISH], state: "CANCELLED" };
+    const form = formOf(await drawCard({ volunteers: [cancelled] }));
+    expect(form).toContain('data-testid="volunteer-given"');
+    expect(submitsOf(form)).toEqual([]);
+    expect(form).not.toContain('name="sendEmail"');
+  });
+});
+
 describe("§865 a person the club typed with no address or no telephone number, on the event's card", () => {
   const NAME_ONLY: VolunteerItem = { ...PEOPLE[1], id: "77777777-7777-4777-8777-777777777777", name: "Doar Nume", email: null, phone: null };
   const MINOR_NAME_ONLY: VolunteerItem = {

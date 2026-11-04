@@ -13683,7 +13683,11 @@
       },
       "roles": "If the roles are no longer the same by then, the email is withdrawn.",
       "zitadel": "Zitadel sends the password link separately, now.",
-      "skipped": "The email did not go: you unticked “Send…”.",
+      "skipped": {
+        "one": "{count} email did not go: you unticked “Send…”.",
+        "few": "{count} emails did not go: you unticked “Send…”.",
+        "other": "{count} emails did not go: you unticked “Send…”."
+      },
       "alertLater": "The newsletter's subscribers get the announcement at the job's next pass.",
       "alertSkipped": "The newsletter's subscribers are not told: you unticked the box."
     },

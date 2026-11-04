@@ -471,6 +471,16 @@ describe("§683 the members' shop", () => {
     expect(handed.metadataJson).not.toHaveProperty("emailSkipped");
   });
 
+  it("«Trimite emailul» unticked while «Îi scriem membrului pe email despre comenzi» is off (§704): paid, and no `emailSkipped` — no email would have left", async () => {
+    await saveShopSettings(db, { actor: admin, fields: { paymentRo: "", paymentEn: "", ordersTo: "comenzi@example.org", emailMembers: "off" }, now: NOW });
+    const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
+    const placed = await order(member, product.id, (await variantsOf(product.id)).L.id, 1);
+    await moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "pay", now: NOW, sendEmail: false });
+    const [paid] = (await db.select().from(auditLogs).where(eq(auditLogs.entityId, placed.id))).filter((row) => row.action === "shop.order.paid");
+    expect(paid.metadataJson).toMatchObject({ from: "PLACED", to: "PAID", by: "CLUB" });
+    expect(paid.metadataJson).not.toHaveProperty("emailSkipped");
+  });
+
   it("without an address for orders, the club gets no email: the list alone", async () => {
     const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
     await order(member, product.id, (await variantsOf(product.id)).L.id, 1);
