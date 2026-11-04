@@ -15,7 +15,7 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — a person's «Emailuri»: every outbox row of one registration, or of one volunteer by the payload's
+ * §915 — a person's «Emailuri»: every outbox row of one registration, or of one volunteer by the payload's
  * `volunteerId`, newest first, with its tries and the next one, when it was queued and by what, what became of it, a
  * FAILED row's sanitized reason and nothing else of the provider, and the club's copies folded under their message —
  * read by the Administrator and the Superadministrator alone (BR-REQ-060-01), in «Emailuri azi»'s own words.
@@ -191,7 +191,7 @@ async function html(history: EmailHistory, locale: "ro" | "en" = "ro"): Promise<
   return renderToStaticMarkup(element as ReactElement).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 }
 
-describe("§NNN a registration's emails", () => {
+describe("§915 a registration's emails", () => {
   it("lists the registration's own rows newest first, another person's never, the club's copy under its message and the archive apart", async () => {
     const history = await readEmailHistory(db, admin(), { registrationId: maria }, NOW);
     expect(history.rows.map((line) => line.id)).toEqual(await ids(["k:declaration", "k:bib", "k:reminder", "k:confirm", "k:verify", "k:joined"]));
@@ -263,7 +263,7 @@ describe("§NNN a registration's emails", () => {
     expect(page).not.toMatch(/emails\.(history|today|causes|types)\./);
   });
 
-  it("never says «de pe site» for a row queued before the outbox recorded presses — a press-less reminder names nobody (§NNN)", async () => {
+  it("never says «de pe site» for a row queued before the outbox recorded presses — a press-less reminder names nobody (§915)", async () => {
     // The race's reminder from the job as it ran before `cause` and `press_id` existed (0192): no press, no colleague.
     await db.insert(emailOutbox).values(
       row("k:old-reminder", { messageType: "EVENT_REMINDER", registrationId: maria, createdAt: at("2026-09-26T06:00:00.000Z"), sentAt: at("2026-09-26T06:00:30.000Z") }),
@@ -335,7 +335,7 @@ describe("§NNN a registration's emails", () => {
   });
 });
 
-describe("§NNN a volunteer's emails", () => {
+describe("§915 a volunteer's emails", () => {
   it("lists the rows whose payload names the volunteer — their own and their parent's link — the colleagues' notice as the club's, never another volunteer's", async () => {
     const history = await readEmailHistory(db, admin(), { volunteerId: vlad }, NOW);
     expect(history.rows.map((line) => line.id)).toEqual(await ids(["k:guardian", "k:role"]));
@@ -373,7 +373,7 @@ describe("BR-REQ-060-01 a person's emails are the Administrator's and the Supera
   });
 });
 
-describe("§NNN the fold's closed line", () => {
+describe("§915 the fold's closed line", () => {
   it("says the latest that left with its hour, and nothing to say when there is none", async () => {
     const history = await readEmailHistory(db, admin(), { volunteerId: vlad }, NOW);
     state.locale = "ro";

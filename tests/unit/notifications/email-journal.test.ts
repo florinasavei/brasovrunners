@@ -259,7 +259,7 @@ describe("«Emailuri azi» groups by press", () => {
     expect((await lineOf(await readEmailJournal(db, NOW, "en"), "k:cancel"))?.eventTitle).toBe("The autumn cross");
   });
 
-  it("links each person line to the person's own page (§NNN): the registration's, the volunteer's for theirs and their parent's link, none for a colleague", async () => {
+  it("links each person line to the person's own page (§915): the registration's, the volunteer's for theirs and their parent's link, none for a colleague", async () => {
     expect((await lineOf(journalRo, "k:cancel"))?.person).toEqual({ kind: "registration", id: maria });
     expect((await lineOf(journalRo, "k:verify"))?.person).toEqual({ kind: "registration", id: maria });
     expect((await lineOf(journalRo, "k:role1"))?.person).toEqual({ kind: "volunteer", id: vlad });
@@ -386,7 +386,7 @@ describe("the «Emailuri azi» page draws the day", () => {
     expect(page).toContain("Întârziat: trebuia să fi plecat deja.");
     expect(page).toContain(ro.Admin.emails.today.footnote);
     expect(page).not.toMatch(/emails\.(today|causes|types)\./);
-    // A person's name opens their own page (§NNN), a plain anchor a thumb reaches; a colleague's does not.
+    // A person's name opens their own page (§915), a plain anchor a thumb reaches; a colleague's does not.
     expect(page).toMatch(new RegExp(`<a [^>]*href="/ro/admin/registrations/${maria}"[^>]*data-testid="email-journal-person"[^>]*>Maria Pop</a>`));
     expect(page).toMatch(new RegExp(`<a [^>]*href="/ro/admin/volunteers/${vlad}"[^>]*>Vlad Voluntar</a>`));
     expect(page).toMatch(new RegExp(`<a [^>]*href="/ro/admin/volunteers/${vlad}"[^>]*>Gina Părinte</a>`));

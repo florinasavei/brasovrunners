@@ -57,7 +57,7 @@ export function emailTypeName(t: T): (type: EmailMessageType) => string {
   return (type) => (isRelayMessage(type) ? t(`emails.relay.type.${type}`) : t(`emails.types.${type}`));
 }
 
-/** The person's own page in the backoffice (§NNN): their registration's, or the volunteer's. */
+/** The person's own page in the backoffice (§915): their registration's, or the volunteer's. */
 function personHref(person: JournalPersonLink, locale: Locale): string {
   return person.kind === "registration"
     ? getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: person.id } } })
@@ -237,7 +237,7 @@ function Line({ line, t, typeName, locale, now, departure }: LineProps) {
         {line.personName ? (
           <>
             {line.person ? (
-              /* The person's own page (§NNN): a plain anchor a thumb reaches, 44 tall above its words so the line keeps its height (§480). */
+              /* The person's own page (§915): a plain anchor a thumb reaches, 44 tall above its words so the line keeps its height (§480). */
               <MuiLink href={personHref(line.person, locale)} sx={{ ...INLINE_TAP_TARGET, fontWeight: 600 }} data-testid="email-journal-person">
                 {line.personName}
               </MuiLink>
@@ -282,7 +282,7 @@ function Line({ line, t, typeName, locale, now, departure }: LineProps) {
 
 /**
  * What became of a row that is no longer waiting: left at an hour, reached nobody (QA), failed, refused. A person's
- * «Emailuri» draws the same chip (`EmailHistory.tsx`, §NNN).
+ * «Emailuri» draws the same chip (`EmailHistory.tsx`, §915).
  */
 export function DepartedChip({ line, t, locale, now }: { line: Pick<JournalLine, "status" | "recipientCount" | "sentAt" | "createdAt">; t: T; locale: Locale; now: Date }) {
   if (line.status === "FAILED") return <StatusChip glyph="failed" color="error" label={t("emails.today.status.failed")} testId="email-journal-status" />;

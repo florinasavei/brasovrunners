@@ -93,14 +93,14 @@ export type JournalLine = {
   /** What the waiting judgement needs (`domain/departure.ts`). */
   departure: DepartureRow;
   /**
-   * The person's own page in the backoffice, when the line names one (§NNN): the registration's for a line named
+   * The person's own page in the backoffice, when the line names one (§915): the registration's for a line named
    * from the registration, the volunteer's for the volunteer's own messages and their parent's link. Null for a
    * colleague, an address with no name, and every club line.
    */
   person: JournalPersonLink | null;
 };
 
-/** Which backoffice page a person line links to (§NNN): by id only, the page builds the address. */
+/** Which backoffice page a person line links to (§915): by id only, the page builds the address. */
 export type JournalPersonLink = { kind: "registration" | "volunteer"; id: string };
 
 /** A row to one of the club's own mailboxes: a copy, the declaration's archive, «somebody has confirmed» (§670). */
@@ -170,7 +170,7 @@ export type JournalRowRead = {
 /**
  * The volunteer a row is about: the payload's `volunteerId`, matched as text (§754's rows carry it, the parent's link
  * too). The one predicate «Emailuri azi» joins the volunteers by and a volunteer's own «Emailuri» reads their rows by
- * (`email-history.ts`, §NNN).
+ * (`email-history.ts`, §915).
  */
 export const VOLUNTEER_OF_ROW: SQL = sql`${eventVolunteers.id}::text = ${emailOutbox.payloadJson} ->> 'volunteerId'`;
 

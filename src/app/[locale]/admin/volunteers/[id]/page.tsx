@@ -53,7 +53,7 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
   const path = getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id } } });
   const [context, emails] = await Promise.all([
     volunteerPersonContextOf(db, person.event, locale, now, path),
-    // «Emailuri» (§NNN): read only for the Administrator and the Superadministrator; the reader asks again.
+    // «Emailuri» (§915): read only for the Administrator and the Superadministrator; the reader asks again.
     canManageRegistrations(actor) ? readEmailHistory(db, actor, { volunteerId: person.id }, now) : Promise.resolve(null),
   ]);
   const { volunteerError } = await searchParams;
@@ -91,7 +91,7 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
       <VolunteerPerson person={person} context={context} as="section" />
 
       {/*
-        «Emailuri» (§NNN): every email the outbox holds for this volunteer — their own and their parent's link, by the
+        «Emailuri» (§915): every email the outbox holds for this volunteer — their own and their parent's link, by the
         payload's `volunteerId` as «Emailuri azi» joins them — newest first, each with its tries, when it was queued and by
         what, what became of it; closed, its line saying how many and the latest. The Administrator's and the
         Superadministrator's alone: the Organizer, who opens this page for the roles, gets no fold, and the reader refuses.

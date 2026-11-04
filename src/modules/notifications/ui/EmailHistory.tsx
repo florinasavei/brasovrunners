@@ -32,7 +32,7 @@ type Props = {
 const isWaiting = (row: Pick<EmailHistoryRow, "status">) => row.status === "PENDING" || row.status === "PROCESSING";
 
 /**
- * A person's «Emailuri» (§NNN), read by `email-history.ts#readEmailHistory` — the Administrator's and the
+ * A person's «Emailuri» (§915), read by `email-history.ts#readEmailHistory` — the Administrator's and the
  * Superadministrator's alone; a page draws it only for them, and the reader refuses anybody else.
  *
  * A closed fold whose line says how many and the latest — «4 emailuri · ultimul: „Confirmare înscriere” — a plecat la
@@ -101,7 +101,7 @@ function latestState(row: EmailHistoryRow, t: T, locale: Locale, now: Date): str
 /**
  * «10:02 · Anulează înscrierea · de Ana Pop», «… · automat: întreținerea înscrierilor», «… · de pe site»
  * — the site only for a row known to be the person's own (`fromSite`), never for one queued before presses were
- * recorded, which says «… · nu s-a notat cine l-a trimis» (§NNN).
+ * recorded, which says «… · nu s-a notat cine l-a trimis» (§915).
  */
 function causeWords(row: EmailHistoryRow, t: T, locale: Locale, now: Date): string {
   const at = emailLeavesWords(row.createdAt, now, locale).at;

@@ -458,7 +458,7 @@ describe("the person's page (§839)", () => {
     expect(page).toContain(">Șterge voluntarul<");
   });
 
-  it("folds the volunteer's «Emailuri» for the Administrator, newest first with its tries, and none for the Organizer (§NNN)", async () => {
+  it("folds the volunteer's «Emailuri» for the Administrator, newest first with its tries, and none for the Organizer (§915)", async () => {
     await db.insert(emailOutbox).values([
       {
         messageType: "VOLUNTEER_ROLE_ASSIGNED",

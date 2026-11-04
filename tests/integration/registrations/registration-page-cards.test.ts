@@ -250,7 +250,7 @@ describe("§847 the registration's page: every section a card", () => {
     expect(byTestId(all, "answers-open")?.props.children).toBe("Arată datele");
   });
 
-  it("folds «Încercări și cine le-a trimis» inside «Emailuri» for the Administrator and the Superadministrator, never for the Organizer (§NNN)", async () => {
+  it("folds «Încercări și cine le-a trimis» inside «Emailuri» for the Administrator and the Superadministrator, never for the Organizer (§915)", async () => {
     const race = await createRace();
     const id = await register(race.id, "CONFIRMED");
     for (const role of ["ADMIN", "SUPERADMIN"] as const) {

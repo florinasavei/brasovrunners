@@ -393,7 +393,7 @@ export function gmailRoadCondition(roads: OutboxRoads): SQL {
 
 /**
  * The same answer from a row's facts alone — its press's stamp, whether it is a club copy, its type — for a reader
- * that never reads the payload (a person's «Emailuri», `email-history.ts`, §NNN).
+ * that never reads the payload (a person's «Emailuri», `email-history.ts`, §915).
  */
 export function onGmailRoadOf(row: { road: string | null; clubCopy: boolean; messageType: EmailMessageType }, roads: OutboxRoads): boolean {
   if (row.road) return row.road === "gmail";

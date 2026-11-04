@@ -183,7 +183,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     findInvitationOfRegistration(db, id),
     // «Note interne» (§777): read only for a role that may keep them — the Organizer and above, never Tehnic; the service asks again.
     canKeepRegistrationNotes(actor.role) ? listRegistrationNotes(db, actor, id) : Promise.resolve(null),
-    // «Încercări și cine le-a trimis» (§NNN): read only for the Administrator and the Superadministrator; the reader asks again.
+    // «Încercări și cine le-a trimis» (§915): read only for the Administrator and the Superadministrator; the reader asks again.
     mayManage ? readEmailHistory(db, actor, { registrationId: id }, timelineNow) : Promise.resolve(null),
   ]);
 
@@ -1075,7 +1075,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             </Panel>
           )}
           {/*
-            «Încercări și cine le-a trimis» (§NNN): the same emails as the outbox holds them — how many tries each took,
+            «Încercări și cine le-a trimis» (§915): the same emails as the outbox holds them — how many tries each took,
             the next one, when it was queued and by what (the press and the colleague, a job, the person on the site),
             «Retrimis manual», a failure's sanitized reason and the club's copies under their message — in «Emailuri azi»'s
             own words. A fold inside this card, never a second «Emailuri»; the Administrator's and the

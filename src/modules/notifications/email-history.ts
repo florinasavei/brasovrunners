@@ -22,7 +22,7 @@ import { departureContextOf } from "./ui/departure-words";
 import { readEmailVolumeToday } from "./volume";
 
 /**
- * A person's «Emailuri» (§NNN; the owner: «for each person, the list of emails the outbox holds for them, with how many
+ * A person's «Emailuri» (§915; the owner: «for each person, the list of emails the outbox holds for them, with how many
  * tries each took»): every outbox row of one registration (`registration_id`) or of one volunteer (the payload's
  * `volunteerId`, the journal's own predicate `VOLUNTEER_OF_ROW`), newest first, each with its tries, its next try, what
  * became of it and who caused it — the press and the colleague, a job, the person on the site, or, for a row queued
@@ -32,7 +32,7 @@ import { readEmailVolumeToday } from "./volume";
  * neither a press nor a colleague — but neither does every row queued before `cause` and `press_id` existed (0192): the
  * race's reminders, the maintenance job's expiries and offers, a staff verb that did not stamp its requester. A row with
  * neither is the person's own only when it was queued at or after the outbox's **first recorded press** (read in the
- * same query); before it, or in an outbox that has recorded none, the fold says that nobody was recorded (§NNN).
+ * same query); before it, or in an outbox that has recorded none, the fold says that nobody was recorded (§915).
  *
  * **What is read, and what never is** — the journal's rule (`journal.ts`): the type, the state and its times, the tries,
  * the provider's facts after it left (`delivered_at`, `rejected_at`, `rejection_cause`), the press's `cause` and
@@ -48,7 +48,7 @@ import { readEmailVolumeToday } from "./volume";
  *
  * **One query**, by `email_outbox_registration_created_idx` for a registration; a volunteer's rows are matched on the
  * payload, which no index holds — a volunteer's page is opened rarely and the outbox is small, so no migration
- * (§NNN). Capped at `EMAIL_HISTORY_LIMIT`; the window count says how many more. A waiting row's departure is judged
+ * (§915). Capped at `EMAIL_HISTORY_LIMIT`; the window count says how many more. A waiting row's departure is judged
  * as the queue and «Emailuri azi» judge it (`domain/departure.ts`), the context read only when a row waits.
  */
 
@@ -84,7 +84,7 @@ export type EmailHistoryRow = {
   manualResend: boolean;
   /**
    * Queued by the person's own form or link: no press, no colleague, and queued at or after the outbox's first recorded
-   * press — before it nothing was stamped, so such a row could as well be a job's or a colleague's (§NNN).
+   * press — before it nothing was stamped, so such a row could as well be a job's or a colleague's (§915).
    */
   fromSite: boolean;
   /** When a waiting row leaves, in the queue's own judgement; null on a row that is not waiting. */
@@ -242,7 +242,7 @@ export async function readEmailHistory<T extends Record<string, unknown>>(
       total: sql<number>`count(*) over ()`.mapWith(Number),
       ownTotal: sql<number>`count(*) filter (where not (${clubSideSql})) over ()`.mapWith(Number),
       // The outbox's first recorded press, computed once for the query (an uncorrelated subquery): only from then on
-      // is a row with neither press nor colleague the person's own (§NNN).
+      // is a row with neither press nor colleague the person's own (§915).
       pressesSince: sql<Date | null>`(select min(${emailOutbox.createdAt}) from ${emailOutbox} where ${emailOutbox.pressId} is not null)`.mapWith(
         emailOutbox.createdAt,
       ),
