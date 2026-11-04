@@ -1319,6 +1319,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           />
         )
       )}
+      {/* «Planul locurilor» (§NNN): the event's places on one read-only page — only when the list is about one event. */}
+      {filters.eventId && (
+        <GlyphButton
+          icon="place"
+          href={getPathname({ locale, href: { pathname: "/admin/events/[id]/locuri", params: { id: filters.eventId } } })}
+          variant="text"
+          size="small"
+          sx={{ ...TAP_TARGET, mt: 0.5 }}
+          data-testid="race-plan-link"
+        >
+          {t("racePlan.link")}
+        </GlyphButton>
+      )}
       {kits && <KitCount kits={kits} volunteers={volunteerKits} spaceAbove={1.5} />}
       {/*
         «Când pierde lumea locul?» (§635; the owner, 2026-10-02): until when the people of this event

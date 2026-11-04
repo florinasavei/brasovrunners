@@ -240,6 +240,11 @@ export const routing = defineRouting({
      */
     "/admin/events/[id]/mesaje": "/admin/events/[id]/mesaje",
     /**
+     * «Planul locurilor» (§NNN): one event's places on one read-only page — who holds them, who sits outside them, the
+     * deadlines, what to order and «Istoric capacitate». One spelling in both locales, like `mesaje` and `urgente`.
+     */
+    "/admin/events/[id]/locuri": "/admin/events/[id]/locuri",
+    /**
      * «Clasament» (§808): a race's results entered or imported by race number, ranked, and made public by an Administrator. One
      * spelling in both locales, like `mesaje` and `urgente`: a backoffice address, read by the club.
      */

@@ -11314,6 +11314,143 @@
       "add": "Add to the waiting list",
       "offerNow": "Offer them a place now",
       "longForm": "The full form: other details, another language"
+    },
+    "racePlan": {
+      "link": "Places plan",
+      "backToEvent": "Back to the event",
+      "toRegistrations": "The event's registrations",
+      "title": "Places plan — {event}",
+      "intro": "All of the event's places on one page: who holds them, who is outside them, the deadlines and what to order. Read only.",
+      "introMore": "The figures are those of now, counted the way places are allocated. You change them from «Registrations» and from the event editor.",
+      "notHere": "The event takes no registrations on this site, so it has no places to follow here.",
+      "noLimit": "no limit",
+      "places": {
+        "title": "Places",
+        "uncapped": "The event has no limit of places: no place is taken or freed."
+      },
+      "categories": {
+        "title": "By category",
+        "aside": "Taken {occupied} of {capacity} · outside the places {outside} · on the lists {lists}",
+        "asideUncapped": "Holding a place {occupied} · outside the places {outside} · on the lists {lists}",
+        "inside": "Inside the places",
+        "outside": "Outside the places — they take no place",
+        "lists": "On the lists — they hold no place",
+        "test": "Active test registrations: {count}. They take places and wait on the list like any other; production has none."
+      },
+      "rows": {
+        "confirmed": "Confirmed",
+        "eliteConfirmed": "of whom elite",
+        "declaration": "Still to sign the declaration",
+        "lapsed": "of whom past their deadline",
+        "eliteDeclaration": "of whom elite",
+        "offered": "Open offers",
+        "invited": "Invitations not yet answered",
+        "family": "Family reservations",
+        "occupied": "Taken",
+        "free": "Free",
+        "capacity": "Capacity",
+        "outside": "Special guests with a place",
+        "outsideConfirmed": "confirmed",
+        "outsideDeclaration": "still to sign the declaration",
+        "outsideOffered": "with an open offer",
+        "outsideInvitations": "Special-guest invitations not yet answered",
+        "eliteEntries": "On the elite list (name on the bib, no place)",
+        "volunteersWithKit": "Volunteers with a kit",
+        "waiting": "Official waiting list",
+        "internal": "Internal list (notes only)"
+      },
+      "deadlines": {
+        "title": "Deadlines",
+        "asideWindow": "Declaration deadline: {due}",
+        "asideAtStart": "Declaration deadline: the start",
+        "asideNoWindow": "Each place given has its own deadline",
+        "nothing": "Right now nobody has a deadline their place depends on."
+      },
+      "order": {
+        "title": "To order",
+        "aside": "If every place fills: kits {kits} · race numbers {bibs}",
+        "asideUncapped": "Kits now: {kits}",
+        "kits": "Kits if every place fills: {total}",
+        "bibs": "Race numbers if every place fills: {total}",
+        "part": "{label}: {count}",
+        "parts": {
+          "places": "the places (the capacity)",
+          "outside": "special guests with a place",
+          "outsideInvitations": "special-guest invitations not yet answered",
+          "volunteersWithKit": "volunteers with a kit",
+          "eliteEntries": "on the elite list",
+          "spares": "unused spare numbers, for the registration desk"
+        },
+        "uncapped": "The event has no limit of places: only what is needed now.",
+        "bibsNow": "Race numbers given now: {total} · not printed yet: {unprinted}",
+        "bibsLink": "See the race numbers"
+      }
+    },
+    "capacityHistory": {
+      "title": "Capacity history",
+      "intro": "Every change of the places: when, who, from how many to how many and why; the newest on top.",
+      "introMore": "Recorded from this version on; a change from before shows as «Unrecorded change» between two lines that do not join.",
+      "summary": {
+        "one": "{count} change · last {date}",
+        "few": "{count} changes · last {date}",
+        "other": "{count} changes · last {date}"
+      },
+      "none": "no change recorded",
+      "current": "Capacity now: {capacity}",
+      "empty": "No change of the places recorded yet.",
+      "limited": "Only the newest {count} are shown; older ones do not fit here.",
+      "unknown": "?",
+      "noLimit": "no limit",
+      "who": {
+        "automatic": "automatic",
+        "removed": "account deleted"
+      },
+      "what": {
+        "capacity": "Places: {from} → {to}",
+        "kept": "Places kept for the club: {from} → {to}",
+        "released": "Released at the deadline: {released}",
+        "publicRegistration": "«Registration open on the site»: {from} → {to}",
+        "offersOnly": "«I hand out the free places myself»: {from} → {to}",
+        "placesAlert": "«Email me when N places are left»: {from} → {to}",
+        "autoOffer": "«Places from the waiting list are allocated automatically»: {from} → {to}",
+        "releaseUnsigned": "«Release unsigned places at the deadline by itself»: {from} → {to}"
+      },
+      "values": {
+        "on": "ticked",
+        "off": "unticked",
+        "yes": "Yes",
+        "no": "No",
+        "alertOff": "off"
+      },
+      "why": {
+        "editor": "from the editor",
+        "series": "from the series save",
+        "import": "from an imported JSON file",
+        "create": "when the event was created",
+        "duplicate": "when an event was duplicated",
+        "seriesGenerated": "on a new date of the series",
+        "offer": "one more place for «Send them the offer»",
+        "offerNow": "one more place for «Offer them a place now»",
+        "moveAndOffer": "one more place for «Offer them a place now», from the internal list",
+        "anyOffer": "one more place for an offer",
+        "placeNow": "one more place for «Give them a place now»",
+        "invitation": "one more place for an invitation",
+        "deadline": "at the declaration deadline",
+        "registrations": "from the «Registrations» page"
+      },
+      "reason": "“{reason}”",
+      "occupied": "taken {occupied}",
+      "offered": "offers sent {offered}",
+      "registration": "See the registration",
+      "registrationGone": "registration erased",
+      "gap": "Unrecorded change: {from} → {to}",
+      "released": {
+        "deadline": "deadline {deadline}",
+        "test": "test {test}",
+        "free": "free after {free}",
+        "waiting": "on the waiting list {waiting}",
+        "ticked": "«I hand out the free places myself» was ticked"
+      }
     }
   },
   "NotFound": {

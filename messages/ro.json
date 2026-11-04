@@ -11314,6 +11314,143 @@
       "add": "Adaugă pe lista de așteptare",
       "offerNow": "Oferă-i un loc acum",
       "longForm": "Formularul complet: alte date, altă limbă"
+    },
+    "racePlan": {
+      "link": "Planul locurilor",
+      "backToEvent": "Înapoi la eveniment",
+      "toRegistrations": "Înscrierile evenimentului",
+      "title": "Planul locurilor — {event}",
+      "intro": "Toate locurile evenimentului pe o pagină: cine le ține, cine e în afara lor, termenele și ce comanzi. Doar citire.",
+      "introMore": "Cifrele sunt cele de acum, numărate cum le numără alocarea locurilor. Le schimbi din «Înscrieri» și din editorul evenimentului.",
+      "notHere": "Evenimentul nu primește înscrieri pe acest site, așa că nu are locuri de urmărit aici.",
+      "noLimit": "fără limită",
+      "places": {
+        "title": "Locuri",
+        "uncapped": "Evenimentul nu are limită de locuri: niciun loc nu se ocupă și nu se eliberează."
+      },
+      "categories": {
+        "title": "Pe categorii",
+        "aside": "Ocupate {occupied} din {capacity} · în afara locurilor {outside} · pe liste {lists}",
+        "asideUncapped": "Cu loc {occupied} · în afara locurilor {outside} · pe liste {lists}",
+        "inside": "În locuri",
+        "outside": "În afara locurilor — nu ocupă loc",
+        "lists": "Pe liste — nu țin un loc",
+        "test": "Înscrieri de test active: {count}. Ocupă locuri și stau pe listă ca oricare alta; în producție nu există."
+      },
+      "rows": {
+        "confirmed": "Confirmați",
+        "eliteConfirmed": "din care elită",
+        "declaration": "Au de semnat declarația",
+        "lapsed": "din care cu termenul trecut",
+        "eliteDeclaration": "din care elită",
+        "offered": "Oferte deschise",
+        "invited": "Invitații fără răspuns",
+        "family": "Rezervări de familie",
+        "occupied": "Ocupate",
+        "free": "Libere",
+        "capacity": "Capacitatea",
+        "outside": "Invitați speciali cu loc",
+        "outsideConfirmed": "confirmați",
+        "outsideDeclaration": "au de semnat declarația",
+        "outsideOffered": "cu ofertă deschisă",
+        "outsideInvitations": "Invitații speciale fără răspuns",
+        "eliteEntries": "Pe lista de elită (BIB cu numele, fără loc)",
+        "volunteersWithKit": "Voluntari cu kit",
+        "waiting": "Lista de așteptare oficială",
+        "internal": "Lista internă (doar notițe)"
+      },
+      "deadlines": {
+        "title": "Termene",
+        "asideWindow": "Termenul declarației: {due}",
+        "asideAtStart": "Termenul declarației: la start",
+        "asideNoWindow": "Fiecare loc dat are termenul lui",
+        "nothing": "Acum nimeni nu are un termen de care să depindă locul."
+      },
+      "order": {
+        "title": "De comandat",
+        "aside": "Dacă se ocupă toate locurile: kituri {kits} · numere de concurs {bibs}",
+        "asideUncapped": "Kituri acum: {kits}",
+        "kits": "Kituri dacă se ocupă toate locurile: {total}",
+        "bibs": "Numere de concurs dacă se ocupă toate locurile: {total}",
+        "part": "{label}: {count}",
+        "parts": {
+          "places": "locurile (capacitatea)",
+          "outside": "invitați speciali cu loc",
+          "outsideInvitations": "invitații speciale fără răspuns",
+          "volunteersWithKit": "voluntari cu kit",
+          "eliteEntries": "pe lista de elită",
+          "spares": "numere de rezervă nefolosite, pentru masa de înscrieri"
+        },
+        "uncapped": "Evenimentul nu are limită de locuri: aici e doar ce trebuie acum.",
+        "bibsNow": "Numere de concurs date acum: {total} · netipărite încă: {unprinted}",
+        "bibsLink": "Vezi numerele de concurs"
+      }
+    },
+    "capacityHistory": {
+      "title": "Istoric capacitate",
+      "intro": "Fiecare schimbare a locurilor: când, cine, de la cât la cât și de ce; cea mai nouă sus.",
+      "introMore": "Se înregistrează de la această versiune; o schimbare de dinainte apare ca «Schimbare neînregistrată» între două rânduri care nu se leagă.",
+      "summary": {
+        "one": "{count} schimbare · ultima {date}",
+        "few": "{count} schimbări · ultima {date}",
+        "other": "{count} de schimbări · ultima {date}"
+      },
+      "none": "nicio schimbare înregistrată",
+      "current": "Capacitatea de acum: {capacity}",
+      "empty": "Nicio schimbare a locurilor înregistrată încă.",
+      "limited": "Se arată doar cele mai noi {count}; cele mai vechi nu încap aici.",
+      "unknown": "?",
+      "noLimit": "fără limită",
+      "who": {
+        "automatic": "automat",
+        "removed": "cont șters"
+      },
+      "what": {
+        "capacity": "Locuri: {from} → {to}",
+        "kept": "Locuri păstrate pentru club: {from} → {to}",
+        "released": "Eliberate la termen: {released}",
+        "publicRegistration": "«Înscrieri publice deschise»: {from} → {to}",
+        "offersOnly": "«Locurile libere le dau doar eu»: {from} → {to}",
+        "placesAlert": "«Anunță-mă când rămân N locuri»: {from} → {to}",
+        "autoOffer": "«Locurile din lista de așteptare se alocă automat»: {from} → {to}",
+        "releaseUnsigned": "«Eliberează singur locurile nesemnate la termen»: {from} → {to}"
+      },
+      "values": {
+        "on": "bifat",
+        "off": "nebifat",
+        "yes": "Da",
+        "no": "Nu",
+        "alertOff": "oprit"
+      },
+      "why": {
+        "editor": "din editor",
+        "series": "din salvarea seriei",
+        "import": "dintr-un fișier JSON importat",
+        "create": "la crearea evenimentului",
+        "duplicate": "la duplicarea unui eveniment",
+        "seriesGenerated": "la o dată nouă a seriei",
+        "offer": "un loc în plus pentru «Trimite-i oferta»",
+        "offerNow": "un loc în plus pentru «Oferă-i un loc acum»",
+        "moveAndOffer": "un loc în plus pentru «Oferă-i un loc acum», din lista internă",
+        "anyOffer": "un loc în plus pentru o ofertă",
+        "placeNow": "un loc în plus pentru «Dă-i un loc acum»",
+        "invitation": "un loc în plus pentru o invitație",
+        "deadline": "la termenul declarației",
+        "registrations": "din pagina «Înscrieri»"
+      },
+      "reason": "„{reason}”",
+      "occupied": "ocupate {occupied}",
+      "offered": "oferte trimise {offered}",
+      "registration": "Vezi înscrierea",
+      "registrationGone": "înscriere ștearsă",
+      "gap": "Schimbare neînregistrată: {from} → {to}",
+      "released": {
+        "deadline": "termenul {deadline}",
+        "test": "de test {test}",
+        "free": "libere după {free}",
+        "waiting": "pe lista de așteptare {waiting}",
+        "ticked": "s-a bifat «Locurile libere le dau doar eu»"
+      }
     }
   },
   "NotFound": {
