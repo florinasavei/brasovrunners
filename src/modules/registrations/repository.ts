@@ -18,6 +18,7 @@ import type { Database, Transaction } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { waitlistCountShown } from "@/modules/events/domain/registration-cta";
 import { OFFER_UNTIL_START, STARTS_DEADLINE } from "@/modules/notifications/domain/deadline-rebase";
+import { inEmailPress } from "@/modules/notifications/press";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -1593,67 +1594,75 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
   const { ids: releasing, atDeadline } = await lapsedDeclarationHoldsToRelease(db, event, now, wanting, wantingChannel);
   let releasedIds: string[] = [];
   let releasedRows: { id: string; kind: "REAL" | "TEST" }[] = [];
-  if (releasing.length > 0) {
-    const released = await db
-      .update(registrations)
-      .set({ status: "EXPIRED", expiredAt: now, expiryReason: "DECLARATION_HOLD_LAPSED", updatedAt: now })
-      // Only a row still holding its declaration's place: the transition this is (`PENDING_DECLARATION → EXPIRED`).
-      .where(and(eq(registrations.eventId, event.id), inArray(registrations.id, releasing), eq(registrations.status, "PENDING_DECLARATION")))
-      .returning({
-        id: registrations.id,
-        participantId: registrations.participantId,
-        locale: registrations.locale,
-        holdExpiresAt: registrations.holdExpiresAt,
-        kind: registrations.kind,
-      });
-    releasedIds = released.map((row) => row.id);
-    releasedRows = released.map((row) => ({ id: row.id, kind: row.kind }));
-    /*
-      The person who held the place is told (§638), in this transaction, once per lapsed hold — but
-      not when the race has started or the event is no longer scheduled (`over`): every hold goes
-      then, nobody wanted the place, and there is nothing left to do about it. A cancelled event is
-      quiet (§331), and a hold that lapses with the start is the end of the event's registration,
-      not a place taken by somebody else.
+  /*
+    The release and its emails. At the deadline's own release they run under its own cause, «automat: eliberarea locurilor
+    nesemnate la termen» on «Emailuri azi» and on each person's emails — one press for every person told and the summary,
+    whether the job or a press reached the deadline first.
+  */
+  const releaseLapsed = async () => {
+    if (releasing.length > 0) {
+      const released = await db
+        .update(registrations)
+        .set({ status: "EXPIRED", expiredAt: now, expiryReason: "DECLARATION_HOLD_LAPSED", updatedAt: now })
+        // Only a row still holding its declaration's place: the transition this is (`PENDING_DECLARATION → EXPIRED`).
+        .where(and(eq(registrations.eventId, event.id), inArray(registrations.id, releasing), eq(registrations.status, "PENDING_DECLARATION")))
+        .returning({
+          id: registrations.id,
+          participantId: registrations.participantId,
+          locale: registrations.locale,
+          holdExpiresAt: registrations.holdExpiresAt,
+          kind: registrations.kind,
+        });
+      releasedIds = released.map((row) => row.id);
+      releasedRows = released.map((row) => ({ id: row.id, kind: row.kind }));
+      /*
+        The person who held the place is told (§638), in this transaction, once per lapsed hold — but
+        not when the race has started or the event is no longer scheduled (`over`): every hold goes
+        then, nobody wanted the place, and there is nothing left to do about it. A cancelled event is
+        quiet (§331), and a hold that lapses with the start is the end of the event's registration,
+        not a place taken by somebody else.
 
-      At the deadline's own release (§914) the message says so — the deadline that passed and that the unsigned places
-      were released — and is copied to no club address: the Administrators get the one summary instead
-      (`completeDeadlineRelease`), never one copy per person released.
+        At the deadline's own release (§914) the message says so — the deadline that passed and that the unsigned places
+        were released — and is copied to no club address: the Administrators get the one summary instead
+        (`completeDeadlineRelease`), never one copy per person released.
+      */
+      if (!over) {
+        await queueHoldLapsedEmails(db, {
+          eventId: event.id,
+          released,
+          // Somebody in the line wanted it, rather than a newcomer the line had no room for (§348).
+          toWaitlist: atDeadline ? false : (await countEligibleWaitlisted(db, event.id)) > 0,
+          atDeadline,
+          now,
+        });
+      }
+    }
+    /*
+      The deadline's release completes in the same transaction (§914): its memory, the tick, the trail, the one summary —
+      with the places after it, the line, and the real holds it left unsigned, counted here under the lock.
     */
-    if (!over) {
-      await queueHoldLapsedEmails(db, {
+    if (atDeadline) {
+      const rules = await readPlaceRules(db, event.id);
+      const [left] = await db
+        .select({ count: count() })
+        .from(registrations)
+        .where(and(eq(registrations.eventId, event.id), eq(registrations.status, "PENDING_DECLARATION"), eq(registrations.kind, "REAL")));
+      await completeDeadlineRelease(db, {
         eventId: event.id,
-        released,
-        // Somebody in the line wanted it, rather than a newcomer the line had no room for (§348).
-        toWaitlist: atDeadline ? false : (await countEligibleWaitlisted(db, event.id)) > 0,
-        atDeadline,
+        deadline: atDeadline,
+        released: releasedRows,
+        counts: {
+          capacity: rules?.capacity ?? 0,
+          occupied: computeOccupied(await countOccupied(db, event.id, now)),
+          waiting: await countEligibleWaitlisted(db, event.id),
+          unsigned: Number(left?.count ?? 0),
+        },
+        offerOnlyBefore: rules?.freePlacesByOfferOnly ?? false,
         now,
       });
     }
-  }
-  /*
-    The deadline's release completes in the same transaction (§914): its memory, the tick, the trail, the one summary —
-    with the places after it, the line, and the real holds it left unsigned, counted here under the lock.
-  */
-  if (atDeadline) {
-    const rules = await readPlaceRules(db, event.id);
-    const [left] = await db
-      .select({ count: count() })
-      .from(registrations)
-      .where(and(eq(registrations.eventId, event.id), eq(registrations.status, "PENDING_DECLARATION"), eq(registrations.kind, "REAL")));
-    await completeDeadlineRelease(db, {
-      eventId: event.id,
-      deadline: atDeadline,
-      released: releasedRows,
-      counts: {
-        capacity: rules?.capacity ?? 0,
-        occupied: computeOccupied(await countOccupied(db, event.id, now)),
-        waiting: await countEligibleWaitlisted(db, event.id),
-        unsigned: Number(left?.count ?? 0),
-      },
-      offerOnlyBefore: rules?.freePlacesByOfferOnly ?? false,
-      now,
-    });
-  }
+  };
+  await (atDeadline ? inEmailPress("job.deadlineRelease", releaseLapsed) : releaseLapsed());
   // A bulk sweep, beside `transitionRegistration` rather than through it, so it tells the public
   // cache itself (§333): the places these rows held are counted as free from now on.
   if (lapsedOffers.length > 0 || releasedIds.length > 0 || lapsedReservations.length > 0 || lapsedPlaceHolds.some((row) => row.holdsPlace) || lapsedInvitations > 0) revalidatePublicContent("places");

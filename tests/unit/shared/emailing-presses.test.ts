@@ -187,9 +187,14 @@ describe("every emailing press runs inside its email press scope", () => {
       file.startsWith("src/app/[locale]/admin/") ||
       file.startsWith("src/app/api/internal/jobs/") ||
       file === "src/modules/notifications/press.ts" ||
-      file === "src/modules/notifications/drain.ts";
+      file === "src/modules/notifications/drain.ts" ||
+      // The deadline's release (§914): its own automatic cause wherever it runs — a public form can reach the deadline
+      // first — and never another cause in that file.
+      (file === "src/modules/registrations/repository.ts" &&
+        [...read(file).matchAll(/\binEmailPress\(([^,]*),/g)].every((call) => call[1] === '"job.deadlineRelease"'));
     const opened = sourceFiles("src").filter((file) => OPENS.test(read(file)) && !allowed(file));
     expect(opened).toEqual([]);
+    expect(read("src/modules/registrations/repository.ts")).toContain('inEmailPress("job.deadlineRelease", releaseLapsed)');
   });
 });
 
