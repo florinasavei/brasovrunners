@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.24-2026-11-04 -->
+<!-- PROJECT_BASELINE: BR-V4.25-2026-11-04 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.24-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.25-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2083,6 +2083,7 @@ way through every step, and none of them is a way around the allocator.
 110. Amends criterion 105 for the kits, «Locuri»'s people at the start and the bibs' header. Given an event chosen on the registrations list, then a closed fold «Elite» / “Elites”, its line «N pe lista separată · M înscriși marcați», lists read-only the event's separate elite list — each name, its number when set — and its registrations marked «Elită» in every state, never a test row, each a link to the registration's page with its state chip, and links to `/admin/events/[id]#bib-elite` with «Gestionează lista de elite» for an Administrator and «Vezi lista de elite în editor» for the Organizer; both readers refuse a role that may not read the list; no fold while the list spans every event; the separate list's lines count among the kits' runners, «Locuri»'s people at the start and beside the bibs, and in no other count (2026-11-04, `DECISIONS.md` §909).
 111. Given elite lines on the event chosen on the registrations list, then «Locuri»'s last line says «Oameni la start dacă intră toți: N, inclusiv M elite din lista separată.» / “People at the start if everybody comes: N, including M elites on the separate list.” — N the places' own sum plus the M lines, the places free and the places to add unchanged — and the header of «Numere de concurs» adds «+ M BIB-uri de elită, din lista separată» / “+ M elite bibs, from the separate list” beside «BIB-uri: X din Y printate — doar înscrierile confirmate», whose figures stay the confirmed registrations'; with no line, neither is said; each count in its own form («1 elită», «2 elite», «20 de elite»); a registered runner marked «Elită» counted once, as a registration (2026-11-04, `DECISIONS.md` §909).
 112. Amends criteria 7 and 11. Given a race number given or changed by hand on a confirmed registration, when «Trimite emailul» is unticked in its question, then the number is written and audited as ever, the audit row says `emailSkipped`, and no `BIB_ASSIGNED` is queued: the runner is not told by email; ticked, the number, the QR code and the manage link go as before (2026-11-04, `DECISIONS.md` §912).
+113. Amends criterion 110 for the «Elite» fold's words. Given an event chosen on the registrations list, then the fold's line is «N elite» / “N elites”, N the separate list's names plus the registrations marked «Elită» it lists, and its body one numbered list: first each name of the separate list in the order typed, saying «fără înscriere — doar numele pe BIB», with its number when set, then each marked registration saying «cu înscriere», with its link, state chip and number; with none it says «Nicio elită la acest eveniment.» (2026-11-04, `DECISIONS.md` §913).
 
 **Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`, `cms/bib-design.test.ts`; unit `registrations/bibs-pdf.test.ts`, `registrations/bib-design.test.ts`; integration `registrations/void-bibs.test.ts` (16, 17); unit `registrations/race-number.test.ts` (16); unit `registrations/bib-footer.test.ts` (19); e2e `bib-design.spec.ts` (19)
 

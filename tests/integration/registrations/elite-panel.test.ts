@@ -15,9 +15,10 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * «Elite» on the registrations list (the owner, 2026-11-04, who looked there for an elite on the race's separate list
- * and did not find her: that list lived only in the event's editor). For the event chosen, a closed fold — the medal,
- * its line «N pe lista separată · M înscriși marcați» — holding both kinds of elite, read-only: the separate list's
- * names (and numbers), and the registrations marked «Elită» in every state, each a link to its page with its state chip;
+ * and did not find her: that list lived only in the event's editor; then, of two sub-lists counted apart, «sunt 2
+ * elite»). For the event chosen, a closed fold — the medal, its line «N elite» — holding every elite in one numbered list,
+ * read-only, each line saying its kind: the separate list's names «fără înscriere — doar numele pe BIB» (and numbers),
+ * then the registrations marked «Elită» in every state, «cu înscriere», each a link to its page with its state chip;
  * never another event's line, an unmarked registration or a test row. It ends with the link to the editor's elite card,
  * «Gestionează lista de elite» for the Administrator, «Vezi lista de elite în editor» for the Organizer. No fold while
  * the list spans every event. The kits' elites link to the same card.
@@ -227,11 +228,16 @@ describe("«Elite» on the registrations list (2026-11-04)", () => {
     expect(html).toContain('data-testid="MilitaryTechIcon"');
     expect(html).not.toMatch(/<details[^>]*\bopen\b/);
     expect(text).toContain("Elite");
-    expect(text).toContain("2 pe lista separată · 2 înscriși marcați");
-    expect(text).toContain("Ingrid Elita nr. 7");
-    expect(text).toContain("Ana Fara Numar");
-    expect(text).toContain("Silviu Stoica");
-    expect(text).toContain("nr. 12");
+    expect(text).toContain("4 elite");
+    expect(text).not.toContain("pe lista separată ·");
+    // One numbered list, each line its kind: the names on the bib first, in the order typed, then the registrations.
+    expect(html.match(/<ol/g)).toHaveLength(1);
+    expect(text).toContain("Ingrid Elita fără înscriere — doar numele pe BIB nr. 7");
+    expect(text).toContain("Ana Fara Numar fără înscriere — doar numele pe BIB");
+    expect(text).toContain("Mara Anulata cu înscriere Anulată");
+    expect(text).toContain("Silviu Stoica cu înscriere Confirmată nr. 12");
+    const order = ["Ingrid Elita", "Ana Fara Numar", "Mara Anulata", "Silviu Stoica"].map((name) => text.indexOf(name));
+    expect(order).toEqual([...order].sort((a, b) => a - b));
     expect(text).not.toContain("Alt Eveniment");
     expect(text).not.toContain("Marcat Altundeva");
     expect(text).not.toContain("Test Elita");
@@ -280,9 +286,9 @@ describe("«Elite» on the registrations list (2026-11-04)", () => {
     state.actor = await staff("ADMIN");
     const panel = panelOf(await listPage({ eventId: race.id }));
     const text = words(await drawn(panel!));
-    expect(text).toContain("0 pe lista separată · 0 înscriși marcați");
-    expect(text).toContain("Niciun nume pe lista separată.");
-    expect(text).toContain("Nicio înscriere marcată «Elită».");
+    expect(text).toContain("0 elite");
+    expect(text).toContain("Nicio elită la acest eveniment.");
+    expect(await drawn(panel!)).not.toContain("<ol");
     expect(panelOf(await listPage({ eventId: "all" }))).toBeUndefined();
   });
 
@@ -306,7 +312,9 @@ describe("«Elite» on the registrations list (2026-11-04)", () => {
     const panel = panelOf(await listPage({ eventId: race.id }));
     const text = words(await drawn(panel!));
     expect(text).toContain("Elites");
-    expect(text).toContain("2 on the separate list · 2 registrations marked");
+    expect(text).toContain("4 elites");
+    expect(text).toContain("Ingrid Elita not registered — the name on the bib only no. 7");
+    expect(text).toMatch(/Silviu Stoica registered \S+ no\. 12/);
     expect(text).toContain("Manage the elite list");
     const tree = await listPage({ eventId: race.id });
     expect(bibsPanelOf(tree)?.props.aside).toBe("Bibs: 0 of 1 printed — confirmed registrations only · + 2 elite bibs, from the separate list");
