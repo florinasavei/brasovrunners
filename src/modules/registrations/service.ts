@@ -803,7 +803,7 @@ async function invitationToAdopt<T extends Record<string, unknown>>(db: Transact
  * (`seatInvitedRegistration`) — and audited `event.invitation_accepted` with `adopted: true` (no actor:
  * the route that placed the row writes its own row). The link's page then says it was used.
  *
- * An invitation sent with «Elită» (§NNN) marks the registration that took it over, in this same transaction, as the
+ * An invitation sent with «Elită» (§917) marks the registration that took it over, in this same transaction, as the
  * link's press does (`invitations.ts#acceptInvitation`): the person the club named is the one it marked. The public
  * pages hear of it with the place itself, and `places` is enough for it: the only public reads the mark changes — a
  * restarted row whose club ticks (§910) it brings into force — are the start list, its counts and the results, each
@@ -4488,7 +4488,7 @@ export type InvitationSendInput = {
   /** «Pe lista ascunsă» (§643's `outside_capacity`) for the whole send: organizers, volunteers, pacemakers hold no counted place. */
   outsideCapacity: boolean;
   /**
-   * «Elită» for the whole send (§NNN): each invitation stores it, and the registration it becomes is marked «Elită» in
+   * «Elită» for the whole send (§917): each invitation stores it, and the registration it becomes is marked «Elită» in
    * that same transaction (`seatInvitedRegistration`, `markInvitationAdopted`) — internal, nothing the person is told.
    */
   elite?: boolean;

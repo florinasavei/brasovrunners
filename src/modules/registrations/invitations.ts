@@ -32,7 +32,7 @@ import { seatInvitedRegistration, submitRegistration } from "./service";
  *   (`submitRegistration`, the invitation's origin) and seated in the invitation's place
  *   (`seatInvitedRegistration`): the address proved by the link, «Sunt membru» set for a member the club
  *   picked, the place moved from the invitation to
- *   the declaration hold with no gap, the declaration's email queued — and, for an invitation sent with «Elită» (§NNN),
+ *   the declaration hold with no gap, the declaration's email queued — and, for an invitation sent with «Elită» (§917),
  *   the registration marked as `elite-mark.ts` marks one, said to nobody. One transaction: a refusal of the
  *   form (a field, the terms changed, this runner on the address already) takes the token's spend back
  *   with everything else, and the same link still works.
@@ -178,7 +178,7 @@ export async function acceptInvitation<T extends Record<string, unknown>>(db: Da
     if (!created.registrationId) throw new DomainError("CONFLICT", "the invitation created no registration");
     const seated = await seatInvitedRegistration(tx, event, created.registrationId, invitation, now, settings);
     /*
-      «Elită» from the send (§NNN): the registration marked in this same transaction, exactly as «Marchează ca elită» marks
+      «Elită» from the send (§917): the registration marked in this same transaction, exactly as «Marchează ca elită» marks
       it (`writeRegistrationEliteMark`), its trail naming the Administrator who sent the invitation, `via: "invitation"`.
       Internal: the person's page, form and emails say nothing of it — the declaration's email above is the ordinary one.
     */

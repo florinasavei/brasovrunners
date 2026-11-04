@@ -517,7 +517,7 @@ export type CreateRegistrationByStaffInput = {
    */
   thenOffered?: boolean;
   /**
-   * «Elită» (§NNN): the registration is marked elite from the start, in the entry's own transaction, exactly as
+   * «Elită» (§917): the registration is marked elite from the start, in the entry's own transaction, exactly as
    * «Marchează ca elită» marks it afterwards (`elite-mark.ts#writeRegistrationEliteMark`, audited `via: "entry"`) —
    * how its bib prints, and nothing else. The Administrator's (`canManageRegistrations`): any other role posting it
    * is refused before anything is written, never silently left unmarked. Internal: the person is told nothing.
@@ -615,7 +615,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   if (vouchAddress && !canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not vouch for an address at the entry`);
   }
-  // «Elită» at the entry (§NNN): the mark's own gate (`setRegistrationElite`), asserted before anything is written.
+  // «Elită» at the entry (§917): the mark's own gate (`setRegistrationElite`), asserted before anything is written.
   const elite = input.elite === true;
   if (elite && !canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not mark a registration elite`);
@@ -697,7 +697,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   };
 
   /*
-    «Elită» at the entry (§NNN): the registration and its mark in one transaction — the entry above, then the mark
+    «Elită» at the entry (§917): the registration and its mark in one transaction — the entry above, then the mark
     exactly as «Marchează ca elită» writes it (`writeRegistrationEliteMark`, `via: "entry"`), so a refusal leaves
     neither and nothing ever stands half-marked. A restarted row that kept its mark (§897) writes nothing more. The
     entry without the tick is today's, untouched; the fast track's paper confirmation below stays its own step either way.
@@ -750,7 +750,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
 }
 
 /**
- * What the staff entry wrote: the row and the state the entry landed in, and `elitePublic` — «Elită» (§NNN) brought a
+ * What the staff entry wrote: the row and the state the entry landed in, and `elitePublic` — «Elită» (§917) brought a
  * restarted row's club ticks (§910) into force, so the public pages were told. A caller that ran the entry inside its own
  * transaction (`enterOnWaitlistByStaff`) tells them again after its commit.
  */
@@ -773,7 +773,7 @@ export type WaitlistEntryByStaffInput = {
    * supplementary place the dialog named (`addPlaceTo`). Absent, the entry is «Adaugă pe lista de așteptare» alone.
    */
   offerNow?: StaffPlaceOptions | null;
-  /** «Elită» (§NNN): marked from the start, in the entry's transaction, as the full form's tick marks it (`createRegistrationByStaff`). */
+  /** «Elită» (§917): marked from the start, in the entry's transaction, as the full form's tick marks it (`createRegistrationByStaff`). */
   elite?: boolean;
 };
 

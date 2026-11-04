@@ -14,7 +14,7 @@ import type { ConfirmAlso, ConfirmSpec } from "@/shared/feedback/notice";
  * restarted row lands on — for the ordinary one. `vouchBody` carries `{email}` raw, for the browser to fill too. Pure, so
  * every answer is tested in Node.
  *
- * `elite` (§NNN): with «Elită» ticked, every dialog says so in one quieter line under the email — the mark is internal and
+ * `elite` (§917): with «Elită» ticked, every dialog says so in one quieter line under the email — the mark is internal and
  * the person is told nothing — and unticked says nothing of it. Absent (a role the tick is not drawn for), no line.
  */
 export function staffEntryConfirm(words: {

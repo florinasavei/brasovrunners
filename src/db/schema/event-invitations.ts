@@ -66,7 +66,7 @@ export const eventInvitations = pgTable(
     /** This invitation's send raised the capacity by one (§642's confirmed supplementary place). */
     supplementaryRaise: boolean("supplementary_raise").notNull().default(false),
     /**
-     * «Elită» at the send (§NNN; the owner, 2026-11-04: «trimit invitație, ar trebui să pot bifa direct ca e elită, dar asta e
+     * «Elită» at the send (§917; the owner, 2026-11-04: «trimit invitație, ar trebui să pot bifa direct ca e elită, dar asta e
      * ceva intern»): the registration this invitation becomes is marked «Elită» in the same transaction — by the link's press
      * (`seatInvitedRegistration`) or by another route that takes the invitation over (`markInvitationAdopted`) — exactly as
      * `elite-mark.ts` marks one, audited under the Administrator who sent it. The club's alone: no email, page or form the

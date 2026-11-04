@@ -39,7 +39,7 @@ export type InviteFormWords = {
   daysHelp: string;
   outsideLabel: string;
   outsideHelp: string;
-  /** «Elită» for the whole send (§NNN) and its one line: internal, the person is not told. */
+  /** «Elită» for the whole send (§917) and its one line: internal, the person is not told. */
   eliteLabel: string;
   eliteHelp: string;
   /** «Limba invitației», its two answers and the sentence saying whom it is for. */
@@ -147,7 +147,7 @@ export default function InviteForm({
   const nextKey = useRef(1);
   const [rows, setRows] = useState<readonly { key: number; name: string; email: string }[]>([{ key: 0, name: "", email: "" }]);
   const [outside, setOutside] = useState(false);
-  // «Elită» (§NNN): controlled like «Pe lista ascunsă», so a refused send keeps it for the corrected press.
+  // «Elită» (§917): controlled like «Pe lista ascunsă», so a refused send keeps it for the corrected press.
   const [elite, setElite] = useState(false);
   const eliteHelpId = useId();
   /*
@@ -397,7 +397,7 @@ export default function InviteForm({
             </Typography>
           </Box>
         )}
-        {/* «Elită» (§NNN), beside «Pe lista de invitați speciali» and drawn the same way: one tick for the whole send. */}
+        {/* «Elită» (§917), beside «Pe lista de invitați speciali» and drawn the same way: one tick for the whole send. */}
         <Box data-testid="invite-elite">
           <FormControlLabel
             sx={{ minHeight: TAP_TARGET.minHeight }}

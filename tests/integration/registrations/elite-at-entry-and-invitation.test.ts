@@ -23,7 +23,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * «Elită» from the start (§NNN; the owner, 2026-11-04: «înscriu pe cineva de mână, sau trimit invitație, ar trebui să pot
+ * «Elită» from the start (§917; the owner, 2026-11-04: «înscriu pe cineva de mână, sau trimit invitație, ar trebui să pot
  * bifa direct că e elită, dar asta e ceva intern — ei nu știu că sunt bifați ca elite»; BR-REQ-037-05, BR-REQ-060-01):
  *
  * - the staff entry — the full form in each of its ways (ordinary, «Direct pe lista de așteptare», the desk's fast track)
@@ -264,7 +264,7 @@ async function invitationEmailTo(email: string, when: Date) {
   return { secret: match[1], message };
 }
 
-describe("§NNN «Elită» at the staff entry: marked in the entry's own transaction, as «Marchează ca elită» marks it", () => {
+describe("§917 «Elită» at the staff entry: marked in the entry's own transaction, as «Marchează ca elită» marks it", () => {
   it.each([
     ["the ordinary entry (the person's own link)", {}, "PENDING_EMAIL_CONFIRMATION"],
     ["«Direct pe lista de așteptare» (§872)", { vouchAddress: true }, "PENDING_DECLARATION"],
@@ -374,7 +374,7 @@ describe("§NNN «Elită» at the staff entry: marked in the entry's own transac
   });
 });
 
-describe("§NNN «Elită» on the staff forms' presses", () => {
+describe("§917 «Elită» on the staff forms' presses", () => {
   const fullForm = (eventId: string, extra: Record<string, string> = {}) =>
     form({ eventId, firstName: "Mara", lastName: "Munteanu", email: "mara@example.invalid", participantLocale: "ro", relayedByParticipantRequest: "on", ...extra });
 
@@ -406,7 +406,7 @@ describe("§NNN «Elită» on the staff forms' presses", () => {
   });
 });
 
-describe("§NNN «Elită» on an invitation: stored at the send, carried onto the registration it becomes", () => {
+describe("§917 «Elită» on an invitation: stored at the send, carried onto the registration it becomes", () => {
   it("the send stores the tick on each invitation of the batch, and its trail says so; without it, nothing", async () => {
     const event = await createEvent(5);
     await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }, { name: "Ion Pop", email: "ion@example.invalid" }], days: 3, outsideCapacity: false, elite: true }, admin, NOW);
@@ -493,7 +493,7 @@ function elementsOf(node: ReactNode): ReactElement<Record<string, unknown>>[] {
   return [element, ...elementsOf(element.props.children as ReactNode)];
 }
 
-describe("§NNN «Invitații» wears the «Elită» chip on an elite invitation, open or accepted — staff-only", () => {
+describe("§917 «Invitații» wears the «Elită» chip on an elite invitation, open or accepted — staff-only", () => {
   it.each(["ro", "en"] as const)("%s: the registrations' own chip and glyph on Ana's, none on Dan's nor on a withdrawn one", async (locale) => {
     state.locale = locale;
     const event = await createEvent(5);
@@ -541,7 +541,7 @@ describe("§NNN «Invitații» wears the «Elită» chip on an elite invitation,
   });
 });
 
-describe("§NNN internal: the person is never told", () => {
+describe("§917 internal: the person is never told", () => {
   it("an elite invitation: its email, the link's page, the declaration's and the confirmation's emails and «Înregistrările mele» say nothing of it", async () => {
     const event = await createEvent(5);
     await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 3, outsideCapacity: false, elite: true }, admin, NOW);
@@ -612,7 +612,7 @@ describe("§NNN internal: the person is never told", () => {
   });
 });
 
-describe("§NNN the words, Română and English", () => {
+describe("§917 the words, Română and English", () => {
   it.each([
     ["ro", ro],
     ["en", en],

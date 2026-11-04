@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.28-2026-11-04 -->
+<!-- PROJECT_BASELINE: BR-V4.29-2026-11-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.28-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.29-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3109,7 +3109,7 @@ Beside the seven too, and a write that governs none of what they do: **the elite
 «Nu mai e elită» on the list's «⋮», 2026-11-03, `DECISIONS.md` §897). The Administrator's (`canManageRegistrations`,
 asserted by `setRegistrationEliteAction` and `elite-mark.ts`; the Organizer reads the «Elită» chip, Tehnic nothing), at
 any time and in any state, audited (`registration.elite_marked` / `registration.elite_unmarked`, the new value only). The
-same mark may be put on from the start (§NNN): the staff entry's «Elită» tick — the full form in each of its ways and the
+same mark may be put on from the start (§917): the staff entry's «Elită» tick — the full form in each of its ways and the
 one-press «Adaugă pe lista de așteptare» — marks the registration in the entry's own transaction, and an invitation sent
 with «Elită» (`event_invitations.elite`, per send) marks the registration it becomes, by its link or by the route that
 takes it over, in that transaction, the trail naming the Administrator who sent it; both through

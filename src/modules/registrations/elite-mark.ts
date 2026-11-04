@@ -38,7 +38,7 @@ import { isUuid } from "@/shared/ids";
 type Actor = Pick<StaffUser, "id" | "role">;
 
 /**
- * Where a mark put on from the start came from (§NNN): the staff entry's «Elită» tick, or the invitation's, carried onto
+ * Where a mark put on from the start came from (§917): the staff entry's «Elită» tick, or the invitation's, carried onto
  * the registration it became. Absent for «Marchează ca elită» itself, whose trail keeps the new value alone.
  */
 export type EliteMarkVia = "entry" | "invitation";
@@ -49,7 +49,7 @@ export type EliteMarkWritten = { changed: boolean; public: boolean };
 /**
  * The mark written inside the caller's transaction — the one body of «Marchează ca elită» (`setRegistrationElite`), of the
  * staff entry's «Elită» tick (`admin-service.ts#createRegistrationByStaff`) and of an invitation sent with it
- * (`service.ts#seatInvitedRegistration`, `markInvitationAdopted`), so the three can never mark differently (§NNN).
+ * (`service.ts#seatInvitedRegistration`, `markInvitationAdopted`), so the three can never mark differently (§917).
  *
  * One statement: the mark changes only where it says otherwise, so a second press is a no-op and writes no row. Then the
  * trail — `registration.elite_marked` / `registration.elite_unmarked` on the registration, `{ elite }` and, from the

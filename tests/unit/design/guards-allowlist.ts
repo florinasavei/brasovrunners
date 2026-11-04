@@ -328,7 +328,7 @@ const BACKOFFICE_FILES: ReadonlySet<string> = new Set([
   "src/modules/results/ui/ResultRows.tsx",
   "src/modules/registrations/ui/DeskRow.tsx",
   "src/modules/registrations/ui/InviteForm.tsx",
-  // «Invitații» on the registrations list (§647), its «Elită» chip the list's own (§NNN): the staff's.
+  // «Invitații» on the registrations list (§647), its «Elită» chip the list's own (§917): the staff's.
   "src/modules/registrations/ui/InvitationsPanel.tsx",
   "src/modules/registrations/ui/QueuePanel.tsx",
   "src/modules/registrations/ui/RegistrationRowMenu.tsx",

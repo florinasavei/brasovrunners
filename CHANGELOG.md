@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.29-2026-11-04
+
+- **«Elită» ticked at the entry and on an invitation** — «Adaugă o înscriere», «Adaugă pe lista de așteptare» and «Trimite invitații» have an «Elită» tick for the Administrator: the registration is marked from the start, exactly as «Marchează ca elită» marks it, and the person is told nothing. §917.
 ## BR-V4.28-2026-11-04
 
 - **«Emailuri azi» names the release at the deadline** — its emails show «automat: eliberarea locurilor nesemnate la termen», one card, instead of the registrations' upkeep. §916.

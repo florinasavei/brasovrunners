@@ -62,7 +62,7 @@ export default async function WaitlistAddForm({
   // The person typed in the boxes, named in the email line once the dialog opens (`fillFrom`), and the email the entry sends by
   // its outcome — the design «telling the owner about every email a staff press sends», slice 3; no road where the two travel apart.
   const person = "{firstName} {lastName}";
-  // «Elită» ticked (§NNN): one quieter line under the email, said only while the box is ticked.
+  // «Elită» ticked (§917): one quieter line under the email, said only while the box is ticked.
   const eliteLine = { text: t("registrations.elite.entryConfirm"), when: [{ field: "elite", equals: "on" }] };
   const withElite = (mail: ReturnType<typeof words.mail>) => ({ ...mail, also: [...(mail.also ?? []), eliteLine] });
   const shared = { fillFrom: ["email", "firstName", "lastName"], cancelLabel: words.cancel };
@@ -133,7 +133,7 @@ export default async function WaitlistAddForm({
           <CheckboxField name="relayedByParticipantRequest" required>
             {t("registrations.relayConfirmation")}
           </CheckboxField>
-          {/* «Elită» (§NNN), the full form's tick: marked in the entry's transaction, internal. The form is the Administrator's. */}
+          {/* «Elită» (§917), the full form's tick: marked in the entry's transaction, internal. The form is the Administrator's. */}
           <CheckboxField name="elite" help={t("registrations.elite.entryHelp")}>
             {t("registrations.elite.entry")}
           </CheckboxField>

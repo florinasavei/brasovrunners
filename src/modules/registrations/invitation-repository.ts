@@ -152,7 +152,7 @@ export async function findInvitationOfRegistration<T extends Record<string, unkn
 /**
  * An event's invitations, the newest first, for the backoffice's «Invitații», each with who sent it (a staff name, or null
  * once that row is gone) and, once accepted, whether the registration it became is marked «Elită» now (`acceptedElite`,
- * §NNN) — the mark as it stands, which «Nu mai e elită» may have taken off since the send's tick; null while not accepted.
+ * §917) — the mark as it stands, which «Nu mai e elită» may have taken off since the send's tick; null while not accepted.
  */
 export async function listEventInvitations<T extends Record<string, unknown>>(
   db: Database<T>,
