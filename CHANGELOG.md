@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.26-2026-11-04
+
+- **«Locuri păstrate pentru club», the release at the deadline and a summary before every change of the places** — the site registers until the capacity less the places the club keeps and announces only those, the waiting list's automatic offers stop there too, while every staff verb gives a kept place with no supplementary one; «Eliberează singur locurile nesemnate la termen» frees, once at the declaration's deadline, the places of everybody who has not signed, gives them to nobody, tells each person and sends the Administrators one summary, and the signing page, the registration steps on every page, the screen after the form, the declaration's email, «Înregistrările mele» and «Ce îi spui» say beforehand that an unsigned place goes at that deadline, naming it, with no paper at the desk; before a save changes the places, the waiting list, the site's door, the release or the alert, the editor says each change and what it does — the places announced, the free places on the site and kept, the offers that will leave; «Emailuri» foresees only the offers the allocator makes; every change of the places is recorded with who, when, why and how many were taken. §914.
 ## BR-V4.25-2026-11-04
 
 - **«Kituri de pregătit: 190 = 179 de alergători + 11 voluntari»** — the total written as a sum; **«Elite»** on the registrations list is one list, «2 elite», each name saying whether it is only a name on the bib or a registration. §913.

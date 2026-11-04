@@ -68,6 +68,10 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     // The door the saved page would draw (§906): shut by the organizers, or the line's whatever is free.
     publicRegistrationOpen: event.publicRegistrationOpen,
     freePlacesByOfferOnly: event.freePlacesByOfferOnly,
+    // Whether the draft keeps places for the club (§914): the join form's words, as the saved page will say them.
+    keepsPlacesForClub: event.capacity !== null && event.placesKeptForClub > 0,
+    // The release at the deadline (§914): the steps' words, as the saved page will say them.
+    releasesUnsignedAtDeadline: event.capacity !== null && event.releaseUnsignedAtDeadline,
     // Whether a place goes to the line by itself (§615, §906): what the preview's door and form say of an offer.
     waitlistAutoOffer: event.waitlistAutoOffer,
     kitShirt: event.kitShirt,

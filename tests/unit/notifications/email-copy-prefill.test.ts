@@ -86,6 +86,8 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   UNREACHABLE_WINDOW_OPENED: [],
   // «Anunță-mă când rămân N locuri» (§906): the event; the counts are the platform's bold line, not fields.
   PLACES_ALERT: ["eventTitle"],
+  // The deadline release's summary (§914): the event; the counts are the platform's bold line, not fields.
+  UNSIGNED_RELEASED: ["eventTitle"],
   UNREACHABLE_WINDOW_CLOSED: [],
   // The members' shop (§683): the order is the platform's bold line and lines after the words, not fields.
   SHOP_ORDER_PLACED: [],

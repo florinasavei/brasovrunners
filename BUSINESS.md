@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.25-2026-11-04 -->
+<!-- PROJECT_BASELINE: BR-V4.26-2026-11-04 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V4.25-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.26-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -297,7 +297,7 @@ For internal registration, the normal sequence is:
 1. participant submits name and email and acknowledges the privacy notice;
 2. participant confirms the email address within the club's email-link window (48 hours by default);
 3. if a place is available, the platform temporarily holds it;
-4. participant reads and signs the approved declaration — online, or on paper at the desk on race day before picking up the number;
+4. participant reads and signs the approved declaration — online, or on paper at the desk on race day before picking up the number; on an event where the club ticked «Eliberează singur locurile nesemnate la termen», a place still unsigned at the participation window's deadline is released then, whether or not anybody waits, and nobody is given it by itself — the organizers hand out the free places from then on (`DECISIONS.md` §914);
 5. registration becomes confirmed;
 6. a confirmation email containing a secure management/unregistration link is sent.
 
@@ -342,8 +342,17 @@ For a capped event:
   choice. It is not a registration: the invited person opens the form from the link, fills in the rest
   and signs the declaration themselves; accepting moves the kept place to their registration, and so
   does a registration of the invited address made another way, once it gets its place. On a full
-  race, or while anyone waits, each invitation that needs a place adds one supplementary place, which the Administrator
-  confirms before the send; one sent «pe lista de invitați speciali» keeps none (`DECISIONS.md` §647).
+  race, or while anyone waits for the site's places, each invitation that needs a place adds one supplementary place, which
+  the Administrator confirms before the send; one sent «pe lista de invitați speciali» keeps none (`DECISIONS.md` §647); a
+  place kept for the club nobody holds needs none (`DECISIONS.md` §914);
+- **«Locuri păstrate pentru club»** (*places kept for the club*): of the capacity, a number of places the site never gives.
+  The site takes registrations until only these are left — then it reads full, or offers the waiting list — and announces
+  the capacity less them («N înscriși din 165 de locuri»); nothing public names the reserve. The waiting list is never
+  offered them by itself; the organizers give them — «Trimite-i oferta», «Oferă-i un loc acum», «Dă-i un loc acum», an
+  invitation, the desk — with no supplementary place while one is left. A place freed while the site's places are taken
+  stays the club's, a cancellation included. 0 by default, never more than the capacity, and every change of it, like
+  every change of the capacity, is kept in the event's history with who, when, why and how many were taken
+  (`DECISIONS.md` §914).
 
 The initial direct declaration hold is the club's setting (30 minutes by default, "Termene"), capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104). Either deadline is enforced only when it protects somebody: with nobody on the waiting list, the person who forgot keeps the place and their number, and signs on race day at the desk; the declaration is asked once more two days before the start, and a race called off refuses the signature and releases the place (`DECISIONS.md` §160).
 
@@ -791,7 +800,8 @@ Messages include:
 - registration confirmed;
 - registration cancelled;
 - waiting-list offer expired;
-- a held place that lapsed: once for each place lost, to the person who had not signed the declaration by the deadline when somebody else wanted the place, with what they can still do — never after the start or for a cancelled event (`DECISIONS.md` §638);
+- a held place that lapsed: once for each place lost, to the person who had not signed the declaration by the deadline when somebody else wanted the place, or at the deadline the club set to release the unsigned places, with what they can still do — never after the start or for a cancelled event (`DECISIONS.md` §638, §914);
+- that release, once per deadline, to each Administrator: how many places were released and how many are still unsigned, the free places and the waiting list after it, and who gives the places now — never a name (`DECISIONS.md` §914);
 - secure registration-management link;
 - secure public-profile management link;
 - current registration status notice for a cancelled or expired registration;

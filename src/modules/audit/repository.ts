@@ -361,6 +361,27 @@ export type AuditAction =
   | "event.free_places_by_offer_only_changed"
   | "event.places_alert_changed"
   /**
+   * «Istoric capacitate» (§914): the event's number of places changed, in the save's own transaction — `metadata`
+   * `{from, to, occupied, offered, via, reason?, version}`: from and to (null is uncapped), the places taken under the
+   * event lock when it moved, the offers the raise made to the waiting list, which save (`editor`, `series`, `import`,
+   * `create`, `duplicate`, `series_generated` — the last with no actor), the reason typed under the places (at most two
+   * hundred characters, never a name), and the row's new `version`, which orders the changes whatever the clock said.
+   * Never a registration or a person.
+   */
+  | "event.capacity_changed"
+  /** «Locuri păstrate pentru club» changed (§914): `{from, to, via, reason?, version}`, as the capacity's row. */
+  | "event.places_kept_changed"
+  /** «Eliberează singur locurile nesemnate la termen» ticked or unticked in the editor (§914): `{from, to}`. */
+  | "event.release_unsigned_changed"
+  /**
+   * The release at the participation window's deadline ran (§914), with no actor — the maintenance run or whichever
+   * transaction reached the deadline first: `{deadline, released, test, unsigned, free, waiting, offerOnlyTicked, via:
+   * "deadline"}` — the deadline it ran for, the real holds released and apart the test ones, the real holds still
+   * unsigned it left, the free places and the people waiting after it, and whether it ticked «Locurile libere le dau
+   * doar eu» (that tick has its own `event.free_places_by_offer_only_changed` row, `via: "deadline"`). Counts only.
+   */
+  | "event.unsigned_released"
+  /**
    * One supplementary place added by «Trimite-i oferta» on a full event (§642): the capacity from and
    * to, the Administrator (the actor), the event (the entity) and the registration offered the place
    * (`registrationId`, an id, never a name) — written in the transaction that makes the offer, under

@@ -103,7 +103,13 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
   const view = previewPageOf(draft.event, draft.translations[input.locale]);
   const tEvent = await getTranslations({ locale: input.locale, namespace: "Event" });
   const previewDoor = {
-    door: await draftRegistrationDoor(db, view, { capacity: draft.event.capacity, waitlistCapacity: draft.event.waitlistCapacity }, now),
+    // The draft's «Locuri păstrate pentru club» too (§914): the places line says the number the saved page will.
+    door: await draftRegistrationDoor(
+      db,
+      view,
+      { capacity: draft.event.capacity, waitlistCapacity: draft.event.waitlistCapacity, placesKeptForClub: draft.event.placesKeptForClub },
+      now,
+    ),
     word: tEvent("previewDoor"),
   };
   // The club's deadlines and family switch, from their rows (the page reads them through the cache).

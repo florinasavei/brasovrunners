@@ -74,9 +74,18 @@ export function invitationDeadline(input: { now: Date; days: number; startsAt: D
  * line (`fillAvailableSpots`), and with them off («Nu», §615) or after the close nothing offers it, yet
  * the place is still the waiting row's to be given — a staff-made allocation never goes ahead of anyone
  * waiting (AGENTS.md §15.11), and a newcomer queues while anybody waits (§615). Never below zero.
+ *
+ * **The waiting list has a claim only on the site's places (§914).** With «Locuri păstrate pentru club» (K), the
+ * people waiting claim at most the places the site still gives — `max(capacity − K − occupied, 0)` — and a kept
+ * place nobody holds is the club's to give: an invitation takes it with no supplementary place while one is free.
+ * `max(capacity − occupied − min(waiting, max(capacity − K − occupied, 0)), 0)`, the same number as before when
+ * K is 0. Never above `capacity − occupied`, so an invitation still needs a free place under the whole capacity,
+ * or a confirmed supplementary one.
  */
-export function invitationFreePlaces(input: { capacity: number; occupied: number; waiting: number }): number {
-  return Math.max(input.capacity - input.occupied - Math.max(input.waiting, 0), 0);
+export function invitationFreePlaces(input: { capacity: number; occupied: number; waiting: number; placesKeptForClub?: number }): number {
+  const kept = Math.min(Math.max(Math.trunc(input.placesKeptForClub ?? 0), 0), Math.max(input.capacity, 0));
+  const lineClaim = Math.min(Math.max(input.waiting, 0), Math.max(input.capacity - kept - input.occupied, 0));
+  return Math.max(input.capacity - input.occupied - lineClaim, 0);
 }
 
 /**
@@ -86,9 +95,12 @@ export function invitationFreePlaces(input: { capacity: number; occupied: number
  * need none. The dialog's forecast and the server's check under the lock are this one function, so the
  * capacity the question names is the one the server accepts — «capacitatea devine {capacity + raises}».
  */
-export function invitationRaises(input: { capacity: number | null; occupied: number; waiting: number; needed: number }): number {
+export function invitationRaises(input: { capacity: number | null; occupied: number; waiting: number; needed: number; placesKeptForClub?: number }): number {
   if (input.capacity === null || input.needed <= 0) return 0;
-  return Math.max(input.needed - invitationFreePlaces({ capacity: input.capacity, occupied: input.occupied, waiting: input.waiting }), 0);
+  return Math.max(
+    input.needed - invitationFreePlaces({ capacity: input.capacity, occupied: input.occupied, waiting: input.waiting, placesKeptForClub: input.placesKeptForClub }),
+    0,
+  );
 }
 
 /**
@@ -99,9 +111,9 @@ export function invitationRaises(input: { capacity: number | null; occupied: num
  * free and one fewer waiting.) Null on an uncapped event. A forecast for the dialog; the server counts
  * again under the lock, and a different number refuses the send rather than raising unasked.
  */
-export function invitationForecastFree(input: { capacity: number | null; occupied: number; waiting: number }): number | null {
+export function invitationForecastFree(input: { capacity: number | null; occupied: number; waiting: number; placesKeptForClub?: number }): number | null {
   if (input.capacity === null) return null;
-  return invitationFreePlaces({ capacity: input.capacity, occupied: input.occupied, waiting: input.waiting });
+  return invitationFreePlaces({ capacity: input.capacity, occupied: input.occupied, waiting: input.waiting, placesKeptForClub: input.placesKeptForClub });
 }
 
 /** Whether the press confirmed exactly the places the send needs: the question named `capacity + raises`. */

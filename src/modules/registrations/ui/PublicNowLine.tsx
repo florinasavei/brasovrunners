@@ -75,6 +75,15 @@ export default async function PublicNowLine({
           </GlyphButton>
         )}
       </Stack>
+      {/*
+        «Locuri păstrate pentru club» (§914): the page reads full while kept places are left — said only then (the door open by
+        its dates and tick, no place of the site's own free), so it is never said beside a door closed for another reason.
+      */}
+      {(door.keptFree ?? 0) > 0 && (
+        <Typography variant="body2" color="text.secondary" data-testid="registrations-public-now-kept">
+          {t(`registrations.publicNow.keptLeft.${countForm(door.keptFree ?? 0, locale)}`, { count: door.keptFree ?? 0 })}
+        </Typography>
+      )}
       {/* «Locurile libere le dau doar eu» (§906): nothing goes out by itself either, whatever «Da» says — said here, where he looks. */}
       {door.offersOnly && (
         <Typography variant="body2" color="text.secondary" data-testid="registrations-public-now-offers-only">

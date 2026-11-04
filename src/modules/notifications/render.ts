@@ -6,6 +6,7 @@ import { participants } from "@/db/schema/participants";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
+import { releaseDeadlineOfHold } from "@/modules/registrations/domain/unsigned-release";
 import { eventDay, howItWentOpen, howItWentUrl } from "@/modules/feedback/links";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
@@ -77,6 +78,7 @@ import { isUuid } from "@/shared/ids";
 import { events } from "@/db/schema/events";
 import { countEligibleWaitlisted, countOccupied, offersWaitlistAutomatically, readWaitlistPosition } from "@/modules/registrations/repository";
 import { computeOccupied, hasDirectAvailability } from "@/modules/registrations/domain/capacity";
+import { announcedCapacity } from "@/modules/registrations/domain/kept-places";
 import { newcomerJoinsLine, publicEntryQueues, waitlistHasRoom } from "@/modules/registrations/domain/waitlist";
 import type { FamilySitting, PendingFamilyEntry } from "@/db/schema/family-entries";
 import {
@@ -364,6 +366,8 @@ async function renderRow(
     row.messageType === "VOLUNTEER_INVITATION" ||
     // The Administrators' places alert (§906): about an event's places, nobody's registration.
     row.messageType === "PLACES_ALERT" ||
+    // …and the deadline release's summary (§914), the same.
+    row.messageType === "UNSIGNED_RELEASED" ||
     bulkRecipients !== null
       ? (row.payloadJson as { eventId?: unknown } | null)?.eventId
       : undefined;
@@ -531,8 +535,9 @@ async function renderRow(
   }
   /*
     What happens to an offered place after its deadline (§906), read now, as the line is: it passes to the next person
-    by itself only while places go out by themselves (`offersWaitlistAutomatically`, the allocator's own gate) — with
-    «Nu», or «Locurile libere le dau doar eu», the organizers give it, and the message says so.
+    by itself only while places go out by themselves and none is kept for the club (`offersWaitlistAutomatically`, the
+    words' predicate, §914) — with «Nu», «Locurile libere le dau doar eu», or places kept for the club (a place freed
+    while the site's places are taken stays the club's), the organizers give it, and the message says so.
   */
   if (row.messageType === "WAITLIST_SPOT_OFFER" && registration) {
     data.offerPassesOnItsOwn = await offersWaitlistAutomatically(db, registration.eventId);
@@ -595,6 +600,20 @@ async function renderRow(
       // the window opens, or a resend after it), so it must not promise "or when we remind you".
       if (eventDetails) {
         data.windowOpen = participationWindowOpen(eventDetails.startsAt, eventDetails.confirmationOpensDaysBefore, now);
+        /*
+          «Eliberează singur locurile nesemnate la termen» (§914): a hold the release will take — due by its armed deadline
+          — is told the place goes then, instead of being promised a place kept while nobody asks and a paper on race day.
+          Never a special guest's: the release leaves it, so its message keeps today's words. The moment named is the
+          release's deadline, each half in its own words; a hold that ends before it (a place taken inside the window)
+          keeps its own instant for the waiting list, said apart.
+        */
+        const releaseAt = releaseDeadlineOfHold(eventDetails, { holdExpiresAt: holdEndsAt, outsideCapacity: registration.outsideCapacity });
+        data.releasesAtDeadline = releaseAt !== null;
+        if (releaseAt) {
+          data.releaseDeadlineFormatted = formatDeadlineInSentence(releaseAt, holdZone, locale);
+          data.releaseDeadlineFormattedOther = formatDeadlineInSentence(releaseAt, holdZone, otherLocale(locale));
+          data.holdEndsBeforeRelease = holdEndsAt.getTime() < releaseAt.getTime();
+        }
       }
     }
     /*
@@ -903,6 +922,43 @@ async function renderRow(
     };
     if (eventId) payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/registrations", query: { eventId } } })}`;
   }
+  /*
+    «Eliberează singur locurile nesemnate la termen» (§914), to an Administrator or a Superadministrator: the deadline and
+    the counts are in the payload, as the release counted them under the lock — no participant, no token. The deadline is
+    said in the event's zone, in each half's language. The one button opens the event's registrations, from
+    `APP_BASE_URL` (AGENTS.md §8); the sign-in decides who may open it.
+  */
+  if (row.messageType === "UNSIGNED_RELEASED") {
+    const payload = (row.payloadJson ?? {}) as {
+      displayName?: unknown;
+      deadline?: unknown;
+      released?: unknown;
+      test?: unknown;
+      unsigned?: unknown;
+      free?: unknown;
+      capacity?: unknown;
+      waiting?: unknown;
+      offerOnlyTicked?: unknown;
+    };
+    data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
+    const whole = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? Math.max(Math.trunc(value), 0) : 0);
+    const at = typeof payload.deadline === "string" ? new Date(payload.deadline) : null;
+    const zone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
+    data.unsignedReleased = {
+      deadline:
+        at && !Number.isNaN(at.getTime())
+          ? { ro: formatDeadlineInSentence(at, zone, "ro"), en: formatDeadlineInSentence(at, zone, "en") }
+          : null,
+      released: whole(payload.released),
+      test: whole(payload.test),
+      unsigned: whole(payload.unsigned),
+      free: whole(payload.free),
+      capacity: whole(payload.capacity),
+      waiting: whole(payload.waiting),
+      offerOnlyTicked: payload.offerOnlyTicked === true,
+    };
+    if (eventId) payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/registrations", query: { eventId } } })}`;
+  }
   if (row.messageType === "LEGAL_TEMPLATES_CHANGED") {
     const payload = (row.payloadJson ?? {}) as { displayName?: unknown; keys?: unknown };
     data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
@@ -1193,11 +1249,14 @@ async function renderRow(
     // or a registration that moved on (restarted, signed late, or a newer hold lapsed), has nothing left to tell.
     if (!lapsed) throw new OutboxMessageWithdrawn("the lapsed hold's event is over or cancelled, or the registration moved on from that hold");
     const zone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
-    if (lapsed.deadline) {
-      data.holdExpiresAtFormatted = formatDeadlineInSentence(lapsed.deadline, zone, locale);
-      data.holdExpiresAtFormattedOther = formatDeadlineInSentence(lapsed.deadline, zone, otherLocale(locale));
+    // At the deadline's own release (§914) the sentence states the window's deadline, the one everybody was given.
+    const stated = lapsed.atDeadline ?? lapsed.deadline;
+    if (stated) {
+      data.holdExpiresAtFormatted = formatDeadlineInSentence(stated, zone, locale);
+      data.holdExpiresAtFormattedOther = formatDeadlineInSentence(stated, zone, otherLocale(locale));
     }
     data.holdLapsedToWaitlist = lapsed.toWaitlist;
+    data.holdLapsedAtDeadline = lapsed.atDeadline !== null;
     data.holdLapsedNext = lapsed.next;
     if ((lapsed.next === "register" || lapsed.next === "waitlist") && eventDetails?.slug) {
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } } })}`;
@@ -1893,16 +1952,22 @@ function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
  */
 async function waitlistTakesNewcomer(db: RendererDb, eventId: string, now: Date): Promise<boolean> {
   const [event] = await db
-    .select({ capacity: events.capacity, waitlistCapacity: events.waitlistCapacity, freePlacesByOfferOnly: events.freePlacesByOfferOnly })
+    .select({
+      capacity: events.capacity,
+      waitlistCapacity: events.waitlistCapacity,
+      freePlacesByOfferOnly: events.freePlacesByOfferOnly,
+      placesKeptForClub: events.placesKeptForClub,
+    })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
   if (!event || event.capacity === null) return false;
   const counts = await countOccupied(db, eventId, now);
   const waiting = await countEligibleWaitlisted(db, eventId);
+  // A family's form is a public entry (§914): measured on the site's places, the capacity less those kept for the club.
   const queues =
     newcomerJoinsLine({ waitlisted: waiting, freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel: "public", capacity: event.capacity }) ||
-    !hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted: waiting });
+    !hasDirectAvailability({ capacity: announcedCapacity(event), occupied: computeOccupied(counts), eligibleWaitlisted: waiting });
   return queues && waitlistHasRoom({ waitlistCapacity: event.waitlistCapacity, waitlisted: waiting, openOffers: counts.unexpiredWaitlistOfferedHolds });
 }
 
@@ -1920,13 +1985,14 @@ async function waitlistTakesNewcomer(db: RendererDb, eventId: string, now: Date)
  */
 async function waitlistByHand(db: RendererDb, eventId: string, now: Date): Promise<boolean> {
   const [event] = await db
-    .select({ capacity: events.capacity, freePlacesByOfferOnly: events.freePlacesByOfferOnly })
+    .select({ capacity: events.capacity, freePlacesByOfferOnly: events.freePlacesByOfferOnly, placesKeptForClub: events.placesKeptForClub })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
   if (!event) return false;
   if (publicEntryQueues({ freePlacesByOfferOnly: event.freePlacesByOfferOnly, channel: "public", capacity: event.capacity })) return true;
-  return hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(await countOccupied(db, eventId, now)), eligibleWaitlisted: 0 });
+  // The site's places (§914): with the places kept for the club the only ones left, the site is full, as the page says.
+  return hasDirectAvailability({ capacity: announcedCapacity(event), occupied: computeOccupied(await countOccupied(db, eventId, now)), eligibleWaitlisted: 0 });
 }
 
 /**
@@ -1942,9 +2008,12 @@ async function describeLapsedHold(
   row: OutboxRow,
   registration: Registration,
   now: Date,
-): Promise<{ deadline: Date | null; toWaitlist: boolean; next: HoldLapsedNext } | null> {
+): Promise<{ deadline: Date | null; toWaitlist: boolean; atDeadline: Date | null; next: HoldLapsedNext } | null> {
   if (registration.status !== "EXPIRED" || registration.expiryReason !== "DECLARATION_HOLD_LAPSED") return null;
-  const payload = (row.payloadJson ?? {}) as { deadline?: unknown; toWaitlist?: unknown };
+  const payload = (row.payloadJson ?? {}) as { deadline?: unknown; toWaitlist?: unknown; atDeadline?: unknown };
+  // The deadline's own release (§914): the participation window's deadline the release ran for, when it was that.
+  const releasedAt = typeof payload.atDeadline === "string" ? new Date(payload.atDeadline) : null;
+  const atDeadline = releasedAt && !Number.isNaN(releasedAt.getTime()) ? releasedAt : null;
   const fromPayload = typeof payload.deadline === "string" ? new Date(payload.deadline) : null;
   const queuedFor = fromPayload && !Number.isNaN(fromPayload.getTime()) ? fromPayload : null;
   if (queuedFor && registration.holdExpiresAt?.getTime() !== queuedFor.getTime()) return null;
@@ -1964,6 +2033,8 @@ async function describeLapsedHold(
       // The site's door as the card reads it (§906): shut by the organizers, or the line's whatever is free.
       publicRegistrationOpen: events.publicRegistrationOpen,
       freePlacesByOfferOnly: events.freePlacesByOfferOnly,
+      // The site's places (§914): the person comes back through the public form, measured on the capacity less those kept.
+      placesKeptForClub: events.placesKeptForClub,
     })
     .from(events)
     .where(eq(events.id, registration.eventId))
@@ -1975,6 +2046,7 @@ async function describeLapsedHold(
   return {
     deadline,
     toWaitlist: payload.toWaitlist === true,
+    atDeadline,
     next: holdLapsedNext({
       registrationOpen: registrationState(event, now) === "OPEN",
       capacity: event.capacity,
@@ -1984,6 +2056,7 @@ async function describeLapsedHold(
       waitlistCapacity: event.waitlistCapacity,
       publicRegistrationOpen: event.publicRegistrationOpen,
       freePlacesByOfferOnly: event.freePlacesByOfferOnly,
+      placesKeptForClub: event.placesKeptForClub,
     }),
   };
 }

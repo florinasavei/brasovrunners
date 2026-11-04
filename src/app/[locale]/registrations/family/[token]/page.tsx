@@ -12,7 +12,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
-import { readFamilyEntryLinkPage, readFamilySittingLinkPage, spentLinkOffersByItself } from "@/modules/registrations/token-actions";
+import { readFamilyEntryLinkPage, readFamilySittingLinkPage, spentLinkOffersByItself, spentLinkReleaseMoment } from "@/modules/registrations/token-actions";
 import FamilySittingConfirm from "@/modules/registrations/ui/FamilySittingConfirm";
 import DrawIcon from "@mui/icons-material/Draw";
 import Button from "@mui/material/Button";
@@ -82,6 +82,8 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
       the event the spent link names (the address's registration there).
     */
     const byItself = done === "waitlist" ? await spentLinkOffersByItself(token, ["REGISTER_ANOTHER_PERSON"], new Date()) : true;
+    // The release at the deadline will take the place just held (§914): the strip names its deadline, never the paper at the desk.
+    const release = done === "declare" ? await spentLinkReleaseMoment(token, ["REGISTER_ANOTHER_PERSON"], new Date()) : null;
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
@@ -89,7 +91,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
         </Typography>
         {/* While the club's emails are late (§623), above the wait the steps promise. */}
         {await emailDelayNotice({ sx: { mb: 2 } })}
-        {done === "declare" && <RegistrationJourney current="declare" declaration="emailJustSent" />}
+        {done === "declare" && <RegistrationJourney current="declare" declaration="emailJustSent" release={release} />}
         {/* The inbox is not named: that would put the address in the URL (§14.5). It is the one the email came to. */}
         <Stack spacing={2}>
           <Alert severity="success" data-testid="family-confirmed">
@@ -123,6 +125,8 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
       not confirmed and nobody registered, so the page says that, never «the registrations are made».
     */
     const nobodyJoined = nobody === "1";
+    // The declarations wait on this event: the release at its deadline (§914) says when, in place of the paper at the desk.
+    const release = !nobodyJoined && wizard === "1" ? await spentLinkReleaseMoment(token, ["REGISTER_ANOTHER_PERSON"], new Date()) : null;
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
@@ -131,7 +135,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
         {/* While the club's emails are late (§623): nobody joined, nothing was sent, nothing is said. */}
         {!nobodyJoined && (await emailDelayNotice({ sx: { mb: 2 } }))}
         {/* Somebody has a declaration to sign only when the wizard is on the page; everyone on the waiting list gets no stepper (§202). */}
-        {!nobodyJoined && wizard === "1" && <RegistrationJourney current="declare" declaration="onThisPage" />}
+        {!nobodyJoined && wizard === "1" && <RegistrationJourney current="declare" declaration="onThisPage" release={release} />}
         <Stack spacing={2}>
           {nobodyJoined ? (
             <Alert severity="info" data-testid="family-sitting-nobody">

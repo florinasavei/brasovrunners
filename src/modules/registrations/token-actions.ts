@@ -1,7 +1,12 @@
+import { and, eq, isNotNull } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { inReadOnlyTransaction } from "@/db/read-only";
-import type { EmailActionTokenPurpose } from "@/db/schema/email-action-tokens";
+import { type EmailActionTokenPurpose, emailActionTokens } from "@/db/schema/email-action-tokens";
+import { eventInvitations } from "@/db/schema/event-invitations";
+import { events } from "@/db/schema/events";
+import { registrations } from "@/db/schema/registrations";
 import type { Locale } from "@/i18n/routing";
+import { hashTokenSecret, isWellFormedTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { TOKEN_NOT_FOUND, type TokenRejectionReason } from "@/modules/action-tokens/domain/token-state";
 import {
   consumeActionToken,
@@ -27,6 +32,7 @@ import {
   checkIn,
   confirmEmailOnAddress,
   type EventForRegistration,
+  releasedAtDeadlineFirst,
   signDeclaration,
   unregister,
 } from "./service";
@@ -57,6 +63,7 @@ import {
 } from "./family-signing";
 import { listManagedPeople, managedRegistration } from "./manage-family";
 import { currentFamilyStep, type FamilyStep, familySigningSteps, isFamilyWizard, isSignable } from "./domain/family-signing";
+import { type ReleaseMoment, releaseDeadlineForNewHold, releaseDeadlineOfHold } from "./domain/unsigned-release";
 import { readMyRegistrations } from "./my-registrations";
 import { isUuid } from "@/shared/ids";
 import { isActiveStatus } from "./domain/state-machine";
@@ -340,6 +347,71 @@ export async function spentLinkOffersByItself(secret: string, purposes: readonly
   return false;
 }
 
+/**
+ * When «Eliberează singur locurile nesemnate la termen» (§914) will take the place a page after a press speaks of — the
+ * journey's strip then says to sign online by that deadline, never the paper at the desk on race day — or null.
+ *
+ * The person's own registration where the link names it — the address confirmed, the declaration's or the offer's link,
+ * an invitation's accepted registration — by its own hold (`releaseDeadlineOfHold`); a family's link names the address's
+ * registration, not the person just entered, so it asks of a hold given now at that event (`releaseDeadlineForNewHold`).
+ * Read-only, on the GET after the press (§12.8), like `spentLinkOffersByItself`; a link that names nothing answers null,
+ * today's words.
+ */
+export async function spentLinkReleaseMoment(secret: string, purposes: readonly EmailActionTokenPurpose[], now: Date): Promise<ReleaseMoment | null> {
+  const db = getDb();
+  for (const purpose of purposes) {
+    const registrationId =
+      purpose === "ACCEPT_INVITATION" ? await acceptedRegistrationOfSpentInvitation(secret) : (await readSpentActionTokenScope(db, { secret, purpose, now }))?.registrationId;
+    if (!registrationId) continue;
+    return inReadOnlyTransaction(db, async (tx) => {
+      const [row] = await tx
+        .select({
+          status: registrations.status,
+          holdExpiresAt: registrations.holdExpiresAt,
+          outsideCapacity: registrations.outsideCapacity,
+          timeZone: events.timezone,
+          rules: {
+            capacity: events.capacity,
+            eventStatus: events.eventStatus,
+            startsAt: events.startsAt,
+            confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
+            confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
+            releaseUnsignedAtDeadline: events.releaseUnsignedAtDeadline,
+            unsignedReleasedFor: events.unsignedReleasedFor,
+          },
+        })
+        .from(registrations)
+        .innerJoin(events, eq(events.id, registrations.eventId))
+        .where(eq(registrations.id, registrationId))
+        .limit(1);
+      if (!row) return null;
+      const at =
+        purpose === "REGISTER_ANOTHER_PERSON"
+          ? releaseDeadlineForNewHold(row.rules, now)
+          : row.status === "PENDING_DECLARATION"
+            ? releaseDeadlineOfHold(row.rules, row)
+            : null;
+      return at ? { at, timeZone: row.timeZone } : null;
+    });
+  }
+  return null;
+}
+
+/** The registration a spent invitation link created (§647): the token names the invitation, the invitation its accepted row. */
+async function acceptedRegistrationOfSpentInvitation(secret: string): Promise<string | null> {
+  if (!isWellFormedTokenSecret(secret)) return null;
+  const db = getDb();
+  return inReadOnlyTransaction(db, async (tx) => {
+    const [row] = await tx
+      .select({ registrationId: eventInvitations.acceptedRegistrationId })
+      .from(emailActionTokens)
+      .innerJoin(eventInvitations, eq(eventInvitations.id, emailActionTokens.invitationId))
+      .where(and(eq(emailActionTokens.tokenHash, hashTokenSecret(secret)), eq(emailActionTokens.purpose, "ACCEPT_INVITATION"), isNotNull(emailActionTokens.usedAt)))
+      .limit(1);
+    return row?.registrationId ?? null;
+  });
+}
+
 export async function consumeAndSignDeclaration(
   secret: string,
   input: {
@@ -385,7 +457,12 @@ export async function consumeAndSignDeclaration(
     if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
     const event = await loadEventForRegistration(tx, registration.eventId);
 
-    if (answers) await completeMissingAnswers(tx, registration.id, answers, now, "DECLARATION");
+    if (answers) {
+      // The deadline's release before the answers (§914): a press it releases saves none of them.
+      const released = await releasedAtDeadlineFirst(tx, event, registration.id, now);
+      if (released) return { ok: true as const, token: consumed.token, registration: released };
+      await completeMissingAnswers(tx, registration.id, answers, now, "DECLARATION");
+    }
     const updated = await signDeclaration(tx, event, registration.id, input, now);
     return { ok: true as const, token: consumed.token, registration: updated };
   });
@@ -439,6 +516,9 @@ export async function consumeAndSignFamilyDeclaration(
   const event = await loadEventForRegistration(db, registration.eventId);
   const updated = answers
     ? await db.transaction(async (tx) => {
+        // The deadline's release before the answers (§914), as on the link's own page.
+        const released = await releasedAtDeadlineFirst(tx, event, registration.id, now);
+        if (released) return released;
         await completeMissingAnswers(tx, registration.id, answers, now, "DECLARATION");
         return signDeclaration(tx, event, registration.id, input, now);
       })

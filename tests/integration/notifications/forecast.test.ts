@@ -378,6 +378,8 @@ describe("§383 the forecast of automatic emails", () => {
         await queueConfirmationRetries(db, when, DEFAULT_DEADLINES);
         return participantOnly("VERIFY_REGISTRATION_EMAIL", ":verify-retry:%");
       // The subscribers' sends are already in the outbox (§445): no job decides them, and this fixture queues none.
+      // The deadline release's summary (§914) goes to the staff: this fixture arms no release.
+      case "unsignedReleased":
       case "newsletter":
       case "newEventAlert":
         throw new Error(`the fixture queues no ${row.send}`);

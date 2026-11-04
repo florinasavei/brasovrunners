@@ -154,6 +154,8 @@ export const FIELD_LABELS = [
   "registration.freePlacesByOfferOnly",
   "registration.publicRegistrationOpen",
   "registration.placesAlertAt",
+  "registration.placesKeptForClub",
+  "registration.releaseUnsignedAtDeadline",
   "registration.opensAt",
   "registration.opensSoon",
   "registration.closesAt",
