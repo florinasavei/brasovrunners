@@ -3,6 +3,7 @@ import { resolveLocaleSwitch } from "@/modules/events/locale-switch";
 import { computeOccupied, type OccupiedCounts, placesTaken } from "@/modules/registrations/domain/capacity";
 import {
   breakdownOf,
+  kitsNow,
   ORDER_PART_KEYS,
   orderTotals,
   outsideOf,
@@ -12,6 +13,7 @@ import {
   type RacePlanInput,
   racePlanRows,
   type RegistrationGroup,
+  runnersOf,
 } from "@/modules/registrations/domain/race-plan";
 import { placeOutlook } from "@/modules/registrations/domain/place-outlook";
 import en from "../../../messages/en.json";
@@ -20,8 +22,9 @@ import ro from "../../../messages/ro.json";
 /**
  * «Planul locurilor» (§NNN) — the arithmetic of «Pe categorii» and «De comandat», BR-REQ-034-02: inside the places
  * the kinds are the allocator's own and add up to the places taken; nobody outside the places — a special guest, an
- * invitation «Pe lista de invitați speciali», an elite line, a volunteer — is ever counted among them; and the totals to
- * order are the sum of the parts the page writes out.
+ * invitation «Pe lista de invitați speciali», an elite line, a volunteer — is ever counted among them; the runners are
+ * the places taken, the special guests and the elite list's lines, a registration marked elite once; and the totals to
+ * order are the sum of the parts the page writes out, the elite list's lines among them.
  */
 const NONE: RacePlanBreakdown = { eliteConfirmed: 0, eliteDeclaration: 0, outsideConfirmed: 0, outsideDeclaration: 0, outsideOffered: 0, waiting: 0, test: 0 };
 
@@ -88,6 +91,27 @@ describe("BR-REQ-034-02 «Pe categorii» (§NNN)", () => {
     ]);
   });
 
+  it("counts every runner: the places taken, the special guests and the elite list's lines — never a volunteer", () => {
+    const rows = racePlanRows(inputFrom(175, counts, { outside: 12, outsideInvitations: 4, eliteEntries: 6, volunteersWithKit: 33 }));
+    expect(rows.runners).toEqual([
+      { key: "runnersNow", count: 165 + 12 + 6, total: true },
+      // If every place fills: the capacity, the special guests, their invitations not yet answered, the elite lines.
+      { key: "runnersIfFull", count: 175 + 12 + 4 + 6, total: true },
+    ]);
+    // The capacity lowered under the places taken: every one of those still runs.
+    expect(count(racePlanRows(inputFrom(150, counts, { eliteEntries: 6 })).runners, "runnersIfFull")).toBe(165 + 3 + 6);
+    // With no limit, only the runners of now.
+    expect(racePlanRows({ ...inputFrom(175, counts, { eliteEntries: 6 }), capacity: null, free: null }).runners).toEqual([{ key: "runnersNow", count: 165 + 3 + 6, total: true }]);
+  });
+
+  it("counts a registration marked elite once, in its place: «din care elită» is a part, never added", () => {
+    const plain = racePlanRows(inputFrom(175, counts, { eliteEntries: 2 }));
+    const marked = racePlanRows(inputFrom(175, counts, { eliteEntries: 2, breakdown: { ...NONE, eliteConfirmed: 5, eliteDeclaration: 1 } }));
+    expect(marked.runners).toEqual(plain.runners);
+    expect(count(marked.inside, "occupied")).toBe(count(plain.inside, "occupied"));
+    expect(count(marked.runners, "runnersNow")).toBe(165 + 3 + 2);
+  });
+
   it("says «din care …» only when it has something to say, and never more than the line it is part of", () => {
     const quiet = racePlanRows(inputFrom(175, counts));
     expect(quiet.inside.some((row) => row.part)).toBe(false);
@@ -152,18 +176,34 @@ describe("BR-REQ-034-02 the grouped read, as «Locuri» counts (§NNN)", () => {
 describe("BR-REQ-034-02 «De comandat» if every place fills (§NNN)", () => {
   const input = { capacity: 175, occupied: 170, outside: 4, outsideInvitations: 2, volunteersWithKit: 33, eliteEntries: 12, spares: 6 };
 
-  it("is the sum of the parts it writes out", () => {
+  it("is the sum of the parts it writes out, a kit and a bib for every elite line", () => {
     const totals = orderTotals(input);
     expect(totals?.kits.parts).toEqual([
       { key: "places", count: 175 },
       { key: "outside", count: 4 },
       { key: "outsideInvitations", count: 2 },
+      { key: "eliteEntries", count: 12 },
       { key: "volunteersWithKit", count: 33 },
     ]);
-    expect(totals?.kits.total).toBe(214);
+    expect(totals?.kits.total).toBe(175 + 4 + 2 + 12 + 33);
     expect(totals?.bibs.parts.map((part) => part.key)).toEqual(["places", "outside", "outsideInvitations", "eliteEntries", "spares"]);
     expect(totals?.bibs.total).toBe(175 + 4 + 2 + 12 + 6);
     for (const total of [totals?.kits, totals?.bibs]) expect(total?.parts.reduce((sum, part) => sum + part.count, 0)).toBe(total?.total);
+    // The runners if every place fills, plus the volunteers' kits or the desk's spare numbers.
+    const runners = runnersOf(input).ifFull ?? 0;
+    expect(totals?.kits.total).toBe(runners + input.volunteersWithKit);
+    expect(totals?.bibs.total).toBe(runners + input.spares);
+  });
+
+  it("adds the elite list's lines and the volunteers with a kit to the kits needed now, with or without a limit", () => {
+    const now = kitsNow({ registrations: 150, invitations: 3, eliteEntries: 12, volunteersWithKit: 33 });
+    expect(now.parts).toEqual([
+      { key: "registrations", count: 150 },
+      { key: "invitations", count: 3 },
+      { key: "eliteEntries", count: 12 },
+      { key: "volunteersWithKit", count: 33 },
+    ]);
+    expect(now.total).toBe(198);
   });
 
   it("counts the places taken when the capacity was lowered under them, and nothing for an event with no limit", () => {

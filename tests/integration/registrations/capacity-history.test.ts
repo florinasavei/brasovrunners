@@ -116,10 +116,11 @@ describe("BR-REQ-034-02 «Istoric capacitate» from the audit trail (§NNN)", ()
 
     // Against the capacity of now: an unrecorded change after the last row.
     expect((await listCapacityHistory(db, event.id, 200)).lines[0]).toEqual({ kind: "gap", from: 195, to: 200 });
-    // At most the newest rows asked for, and said so.
+    // At most the newest rows asked for, and said so — only when older ones exist.
     const short = await listCapacityHistory(db, event.id, 195, 3);
     expect(short.count).toBe(3);
     expect(short.limited).toBe(true);
+    expect((await listCapacityHistory(db, event.id, 195, 8)).limited).toBe(false);
   });
 
   it("draws who, when, from → to and why on each line, with the registration's door or its absence", async () => {

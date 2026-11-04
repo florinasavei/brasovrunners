@@ -18,7 +18,7 @@ function placesWords(t: Translate, value: Places): string {
 /** A switch's value in words: ticked or not, «Da» or «Nu» for the automatic offers, the alert's N or «oprit». */
 function settingWords(t: Translate, setting: SettingKey, value: SettingValue): string {
   if (value === undefined) return t("capacityHistory.unknown");
-  if (setting === "placesAlert") return value === null || typeof value === "boolean" ? t("capacityHistory.values.alertOff") : String(value);
+  if (setting === "placesAlert") return typeof value === "number" ? String(value) : t("capacityHistory.values.alertOff");
   if (setting === "autoOffer") return t(value === true ? "capacityHistory.values.yes" : "capacityHistory.values.no");
   return t(value === true ? "capacityHistory.values.on" : "capacityHistory.values.off");
 }

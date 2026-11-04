@@ -30,14 +30,18 @@ export async function listCapacityHistory<T extends Record<string, unknown>>(
   current: number | null,
   limit: number = CAPACITY_HISTORY_LIMIT,
 ): Promise<CapacityHistory> {
+  // One row more than shown: whether older rows exist is then a fact, not a guess from a full page.
   const newestFirst = await db
     .select({ id: auditLogs.id, action: auditLogs.action, at: auditLogs.createdAt, metadata: auditLogs.metadataJson, actorName: staffUsers.displayName })
     .from(auditLogs)
     .leftJoin(staffUsers, eq(staffUsers.id, auditLogs.actorStaffUserId))
     .where(and(eq(auditLogs.entityType, "event"), eq(auditLogs.entityId, eventId), inArray(auditLogs.action, [...CAPACITY_HISTORY_ACTIONS])))
     .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
-    .limit(limit);
-  const rows: CapacityAuditRow[] = newestFirst.map((row) => ({ id: row.id, action: row.action, at: row.at, actorName: row.actorName ?? null, metadata: row.metadata }));
+    .limit(limit + 1);
+  const limited = newestFirst.length > limit;
+  const rows: CapacityAuditRow[] = newestFirst
+    .slice(0, limit)
+    .map((row) => ({ id: row.id, action: row.action, at: row.at, actorName: row.actorName ?? null, metadata: row.metadata }));
 
   // «Vezi înscrierea» or «înscriere ștearsă»: one read for every registration the rows name.
   const named = [...new Set(rows.flatMap((row) => registrationIdOf(row.metadata) ?? []))];
@@ -46,5 +50,5 @@ export async function listCapacityHistory<T extends Record<string, unknown>>(
       ? []
       : await db.select({ id: registrations.id }).from(registrations).where(inArray(registrations.id, named));
 
-  return capacityHistory(rows, { current, existingRegistrations: new Set(existing.map((row) => row.id)), limited: rows.length === limit });
+  return capacityHistory(rows, { current, existingRegistrations: new Set(existing.map((row) => row.id)), limited });
 }

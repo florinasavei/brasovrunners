@@ -11330,10 +11330,12 @@
       },
       "categories": {
         "title": "By category",
-        "aside": "Taken {occupied} of {capacity} · outside the places {outside} · on the lists {lists}",
-        "asideUncapped": "Holding a place {occupied} · outside the places {outside} · on the lists {lists}",
+        "aside": "Taken {occupied} of {capacity} · outside the places {outside} · runners {runners} · on the lists {lists}",
+        "asideUncapped": "Holding a place {occupied} · outside the places {outside} · runners {runners} · on the lists {lists}",
         "inside": "Inside the places",
         "outside": "Outside the places — they take no place",
+        "runners": "All the runners",
+        "runnersNote": "A registration marked elite is counted once, in its place; each name on the elite list, with no registration, is added. Volunteers are not among the runners.",
         "lists": "On the lists — they hold no place",
         "test": "Active test registrations: {count}. They take places and wait on the list like any other; production has none."
       },
@@ -11356,6 +11358,8 @@
         "outsideInvitations": "Special-guest invitations not yet answered",
         "eliteEntries": "On the elite list (name on the bib, no place)",
         "volunteersWithKit": "Volunteers with a kit",
+        "runnersNow": "Runners now (places taken, special guests, elite list)",
+        "runnersIfFull": "Runners if every place fills (with the open special-guest invitations)",
         "waiting": "Official waiting list",
         "internal": "Internal list (notes only)"
       },
@@ -11370,6 +11374,7 @@
         "title": "To order",
         "aside": "If every place fills: kits {kits} · race numbers {bibs}",
         "asideUncapped": "Kits now: {kits}",
+        "kitsNow": "Kits now, everyone included: {total}",
         "kits": "Kits if every place fills: {total}",
         "bibs": "Race numbers if every place fills: {total}",
         "part": "{label}: {count}",
@@ -11379,10 +11384,13 @@
           "outsideInvitations": "special-guest invitations not yet answered",
           "volunteersWithKit": "volunteers with a kit",
           "eliteEntries": "on the elite list",
-          "spares": "unused spare numbers, for the registration desk"
+          "spares": "unused spare numbers, for the registration desk",
+          "registrations": "registrations holding a place",
+          "invitations": "invitations not yet answered"
         },
         "uncapped": "The event has no limit of places: only what is needed now.",
         "bibsNow": "Race numbers given now: {total} · not printed yet: {unprinted}",
+        "bibsElite": "Plus named bibs from the elite list: {count}, from their own sheet",
         "bibsLink": "See the race numbers"
       }
     },

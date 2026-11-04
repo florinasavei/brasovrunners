@@ -17,6 +17,9 @@ import { ACTIVE_STATUSES } from "./state-machine";
  * - **Outside the places** — the special guests (§643) by state, as `countOutsideCapacity` counts them (real rows,
  *   confirmed, to sign or offered), their invitations not yet answered, the lines of the elite list (§895: a name on a
  *   bib, no place), the volunteers with a kit (§904) — never enter `occupied`.
+ * - **The runners**: everybody who runs — the places taken, the special guests and the elite list's lines (a runner
+ *   with no registration). A registration marked «Elită» is one of the places taken or one of the special guests and is
+ *   counted there, once: «din care elită» is a part of its line, never added to anything.
  * - **The lists**: the official waiting list and «Lista internă (doar notițe)», which hold no place either.
  */
 
@@ -119,6 +122,8 @@ export const PLAN_ROW_KEYS = [
   "outsideInvitations",
   "eliteEntries",
   "volunteersWithKit",
+  "runnersNow",
+  "runnersIfFull",
   "waiting",
   "internal",
 ] as const;
@@ -140,6 +145,8 @@ export type RacePlanRows = {
   inside: PlanRow[];
   /** Outside the capacity: nobody here takes a place. */
   outside: PlanRow[];
+  /** Everybody who runs: now, and — with a limit of places — if every place fills (`runnersOf`). */
+  runners: PlanRow[];
   /** The two lists: nobody here holds a place either. */
   lists: PlanRow[];
   /** Test registrations counted above (§30); said only when there are any, which is never in production. */
@@ -151,8 +158,26 @@ function partOf(key: PlanRowKey, count: number): PlanRow[] {
   return count > 0 ? [{ key, count, part: true }] : [];
 }
 
+/**
+ * Everybody who runs (§NNN): the places taken, the special guests holding a place outside them and the lines of the elite
+ * list — a name on a bib, a runner with no registration (§895) — now; and, if every place fills, the places (the capacity,
+ * or the places taken when it was lowered under them) and the special guests' invitations not yet answered as well. A
+ * registration marked «Elită» (§897) is already one of the places taken or one of the special guests, so it is counted
+ * once, there; only the elite list's lines are added. The volunteers are not runners: their kits are «De comandat»'s.
+ * `ifFull` is null for an event with no limit of places.
+ */
+export function runnersOf(input: { capacity: number | null; occupied: number; outside: number; outsideInvitations: number; eliteEntries: number }): {
+  now: number;
+  ifFull: number | null;
+} {
+  const now = input.occupied + input.outside + input.eliteEntries;
+  if (input.capacity === null) return { now, ifFull: null };
+  return { now, ifFull: Math.max(input.capacity, input.occupied) + input.outside + input.outsideInvitations + input.eliteEntries };
+}
+
 export function racePlanRows(input: RacePlanInput): RacePlanRows {
   const { taken, breakdown } = input;
+  const runners = runnersOf({ capacity: input.capacity, occupied: taken.occupied, outside: input.outside, outsideInvitations: input.outsideInvitations, eliteEntries: input.eliteEntries });
   const inside: PlanRow[] = [
     { key: "confirmed", count: taken.confirmed },
     ...partOf("eliteConfirmed", Math.min(breakdown.eliteConfirmed, taken.confirmed)),
@@ -181,10 +206,19 @@ export function racePlanRows(input: RacePlanInput): RacePlanRows {
     { key: "waiting", count: input.waiting },
     { key: "internal", count: input.internal },
   ];
-  return { inside, outside, lists, test: breakdown.test };
+  return {
+    inside,
+    outside,
+    runners: [
+      { key: "runnersNow", count: runners.now, total: true },
+      ...(runners.ifFull === null ? [] : [{ key: "runnersIfFull", count: runners.ifFull, total: true } satisfies PlanRow]),
+    ],
+    lists,
+    test: breakdown.test,
+  };
 }
 
-export const ORDER_PART_KEYS = ["places", "outside", "outsideInvitations", "volunteersWithKit", "eliteEntries", "spares"] as const;
+export const ORDER_PART_KEYS = ["places", "outside", "outsideInvitations", "eliteEntries", "volunteersWithKit", "spares", "registrations", "invitations"] as const;
 
 export type OrderPartKey = (typeof ORDER_PART_KEYS)[number];
 
@@ -193,13 +227,18 @@ export type OrderTotal = { total: number; parts: { key: OrderPartKey; count: num
 
 export type OrderTotals = { kits: OrderTotal; bibs: OrderTotal };
 
+const sumOf = (parts: OrderTotal["parts"]): OrderTotal => ({ total: parts.reduce((sum, part) => sum + part.count, 0), parts });
+
 /**
  * What to order if every place fills (§NNN), the parts written out so the club sees what each total is made of:
  *
  * - **kits** = the places + the special guests holding a place + the special guests' invitations not yet answered + the
- *   volunteers with a kit (§904);
- * - **bibs** = the places + the special guests + their invitations not yet answered + the elite list's lines (§895: a
- *   bib with a name, no place) + the desk's spare numbers still free (§444: printed ahead, with no name).
+ *   elite list's lines (§895: a runner with no registration) + the volunteers with a kit (§904);
+ * - **bibs** = the places + the special guests + their invitations not yet answered + the elite list's lines (a bib with
+ *   a name, no place) + the desk's spare numbers still free (§444: printed ahead, with no name).
+ *
+ * The first four parts are the runners if every place fills (`runnersOf`): a registration marked «Elită» is among the
+ * places or the special guests, never counted again.
  *
  * The places are the capacity — or the places taken, when the capacity was lowered under them: every one of those still
  * gets a kit and a bib. Null for an event with no limit of places: «if every place fills» means nothing there, and the
@@ -217,12 +256,12 @@ export function orderTotals(input: {
 }): OrderTotals | null {
   if (input.capacity === null) return null;
   const places = Math.max(input.capacity, input.occupied);
-  const sumOf = (parts: OrderTotal["parts"]): OrderTotal => ({ total: parts.reduce((sum, part) => sum + part.count, 0), parts });
   return {
     kits: sumOf([
       { key: "places", count: places },
       { key: "outside", count: input.outside },
       { key: "outsideInvitations", count: input.outsideInvitations },
+      { key: "eliteEntries", count: input.eliteEntries },
       { key: "volunteersWithKit", count: input.volunteersWithKit },
     ]),
     bibs: sumOf([
@@ -233,4 +272,19 @@ export function orderTotals(input: {
       { key: "spares", count: input.spares },
     ]),
   };
+}
+
+/**
+ * The kits needed now (§NNN), with or without a limit of places: «Kituri de pregătit» as the registrations list counts it
+ * (`countKits`: the real registrations holding a place, the special guests among them, and the open invitations), plus
+ * the elite list's lines — runners with no registration (§895), a registration marked «Elită» already among the first
+ * part — and the volunteers with a kit (§904), each part written out.
+ */
+export function kitsNow(input: { registrations: number; invitations: number; eliteEntries: number; volunteersWithKit: number }): OrderTotal {
+  return sumOf([
+    { key: "registrations", count: input.registrations },
+    { key: "invitations", count: input.invitations },
+    { key: "eliteEntries", count: input.eliteEntries },
+    { key: "volunteersWithKit", count: input.volunteersWithKit },
+  ]);
 }

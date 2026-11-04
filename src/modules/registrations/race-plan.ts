@@ -19,7 +19,7 @@ import { computeOccupied, placesTaken } from "./domain/capacity";
 import type { CapacityHistory } from "./domain/capacity-history";
 import type { PlaceDeadlineCounts, PlaceDeadlineEvent } from "./domain/place-deadlines";
 import type { PlaceOutlook } from "./domain/place-outlook";
-import { breakdownOf, type OrderTotals, orderTotals, outsideOf, type RacePlanRows, racePlanRows } from "./domain/race-plan";
+import { breakdownOf, kitsNow, type OrderTotal, type OrderTotals, orderTotals, outsideOf, type RacePlanRows, racePlanRows } from "./domain/race-plan";
 import { invitationOpen } from "./invitation-repository";
 import { type PublicDoor, readPublicDoor } from "./public-now";
 import { countOccupied } from "./repository";
@@ -49,6 +49,10 @@ export type RacePlan =
       /** «Kituri de pregătit» now (`countKits`, unchanged) and the volunteers with a kit beside it (§904). */
       kits: KitCount;
       volunteersWithKit: number;
+      /** Every kit needed now, the parts written out: `kits`, the elite list's lines and the volunteers with a kit. */
+      kitsNow: OrderTotal;
+      /** The lines of the race's elite list (§895): a bib with a name each, printed from their own sheet. */
+      eliteEntries: number;
       /** «Termene» (`readPlaceDeadlines`, unchanged) and the club's deadlines it words them with. */
       placeDeadlines: { event: PlaceDeadlineEvent; counts: PlaceDeadlineCounts; deadlines: Deadlines } | null;
       /** The race numbers given now and how many are still unprinted (`countBibs`, unchanged). */
@@ -66,7 +70,8 @@ export type RacePlan =
  * `Promise.all`, only when somebody opens the page: no polling, nothing cached, nothing written.
  *
  * Reading the elite list's lines and the elite mark here amends §895 and §897, which kept both out of every count: the
- * plan says «din care elită» and orders a bib per elite line. Neither reaches the allocator, a state or an email.
+ * plan says «din care elită», counts the elite list's lines among the runners and orders a kit and a bib for each — a
+ * registration marked «Elită» is counted once, in its place. Neither reaches the allocator, a state or an email.
  *
  * Asserted here as well as on the page (BR-REQ-060-01): whoever may read the registrations (`canReadRegistrations` —
  * the Organizer, the Administrator, the Superadministrator), `FORBIDDEN` for anybody else; `NOT_FOUND` for a malformed
@@ -145,6 +150,8 @@ export async function readRacePlan<T extends Record<string, unknown>>(
     totals: orderTotals({ capacity, occupied: taken.occupied, outside, outsideInvitations, volunteersWithKit, eliteEntries, spares: spares.free }),
     kits,
     volunteersWithKit,
+    kitsNow: kitsNow({ registrations: kits.registrations, invitations: kits.invitations, eliteEntries, volunteersWithKit }),
+    eliteEntries,
     placeDeadlines: deadlineFacts ? { ...deadlineFacts, deadlines } : null,
     bibs,
     history,

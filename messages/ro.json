@@ -11330,10 +11330,12 @@
       },
       "categories": {
         "title": "Pe categorii",
-        "aside": "Ocupate {occupied} din {capacity} · în afara locurilor {outside} · pe liste {lists}",
-        "asideUncapped": "Cu loc {occupied} · în afara locurilor {outside} · pe liste {lists}",
+        "aside": "Ocupate {occupied} din {capacity} · în afara locurilor {outside} · alergători {runners} · pe liste {lists}",
+        "asideUncapped": "Cu loc {occupied} · în afara locurilor {outside} · alergători {runners} · pe liste {lists}",
         "inside": "În locuri",
         "outside": "În afara locurilor — nu ocupă loc",
+        "runners": "Alergătorii, toți la un loc",
+        "runnersNote": "Un înscris marcat elită e numărat o singură dată, la locul lui; fiecare nume de pe lista de elită, fără înscriere, se adaugă. Voluntarii nu sunt printre alergători.",
         "lists": "Pe liste — nu țin un loc",
         "test": "Înscrieri de test active: {count}. Ocupă locuri și stau pe listă ca oricare alta; în producție nu există."
       },
@@ -11356,6 +11358,8 @@
         "outsideInvitations": "Invitații speciale fără răspuns",
         "eliteEntries": "Pe lista de elită (BIB cu numele, fără loc)",
         "volunteersWithKit": "Voluntari cu kit",
+        "runnersNow": "Alergători acum (ocupate, invitați speciali, lista de elită)",
+        "runnersIfFull": "Alergători dacă se ocupă toate locurile (și invitațiile speciale fără răspuns)",
         "waiting": "Lista de așteptare oficială",
         "internal": "Lista internă (doar notițe)"
       },
@@ -11370,6 +11374,7 @@
         "title": "De comandat",
         "aside": "Dacă se ocupă toate locurile: kituri {kits} · numere de concurs {bibs}",
         "asideUncapped": "Kituri acum: {kits}",
+        "kitsNow": "Kituri acum, cu toți: {total}",
         "kits": "Kituri dacă se ocupă toate locurile: {total}",
         "bibs": "Numere de concurs dacă se ocupă toate locurile: {total}",
         "part": "{label}: {count}",
@@ -11379,10 +11384,13 @@
           "outsideInvitations": "invitații speciale fără răspuns",
           "volunteersWithKit": "voluntari cu kit",
           "eliteEntries": "pe lista de elită",
-          "spares": "numere de rezervă nefolosite, pentru masa de înscrieri"
+          "spares": "numere de rezervă nefolosite, pentru masa de înscrieri",
+          "registrations": "înscrieri care țin un loc",
+          "invitations": "invitații fără răspuns"
         },
         "uncapped": "Evenimentul nu are limită de locuri: aici e doar ce trebuie acum.",
         "bibsNow": "Numere de concurs date acum: {total} · netipărite încă: {unprinted}",
+        "bibsElite": "Plus BIB-uri cu nume de pe lista de elită: {count}, din foaia lor separată",
         "bibsLink": "Vezi numerele de concurs"
       }
     },

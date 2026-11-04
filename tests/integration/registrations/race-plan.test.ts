@@ -29,7 +29,8 @@ import { createRace, person, registerRunner, type Runner } from "../../helpers/r
  * - BR-REQ-034-02 — the places taken inside the capacity are the allocator's own (`countOccupied`), their kinds add up
  *   to them, the lapsed holds are the sweep's (not one whose first email is still queued), and nobody outside the
  *   places — a special guest, an invitation «Pe lista de invitați speciali», an elite line, a volunteer — is counted
- *   among them; what to order if every place fills is the sum of its parts;
+ *   among them; the runners are the places taken, the special guests and the elite list's lines, a registration marked
+ *   elite once; what to order, now and if every place fills, is the sum of its parts, a kit and a bib per elite line;
  * - BR-REQ-050-02 — the page draws the registrations list's own «Locuri», «Pe site acum» (said, never offered: no
  *   form) and «Kituri de pregătit», then «Pe categorii», «Termene», «De comandat» and «Istoric capacitate», in both
  *   languages; an event registered elsewhere gets one sentence, an event with no limit only what is needed now.
@@ -252,14 +253,22 @@ describe("BR-REQ-034-02 «Pe categorii» counts as the allocator counts (§NNN)"
     expect(countOf(lists, "waiting")).toBe(2);
     expect(countOf(lists, "internal")).toBe(3);
 
-    // If every place fills: the places, the special guests and their open invitation, then a kit per volunteer and a
-    // bib per elite line — each the sum of the parts it writes out.
-    expect(plan.totals?.kits.total).toBe(20 + 3 + 1 + 2);
+    // Every runner: the twelve places taken — the two marked elite among them, counted once — the three special guests
+    // and the two elite lines; if every place fills, the twenty places and the special guests' open invitation too.
+    expect(countOf(plan.rows.runners, "runnersNow")).toBe(12 + 3 + 2);
+    expect(countOf(plan.rows.runners, "runnersIfFull")).toBe(20 + 3 + 1 + 2);
+
+    // If every place fills: the runners, then a kit per volunteer and the desk's spare numbers (none) — each the sum of
+    // the parts it writes out, a kit and a bib per elite line.
+    expect(plan.totals?.kits.total).toBe(20 + 3 + 1 + 2 + 2);
     expect(plan.totals?.bibs.total).toBe(20 + 3 + 1 + 2 + 0);
     // «Kituri de pregătit» as the list counts it: the real rows holding a place and the open invitations.
     expect(plan.kits.registrations).toBe(6 + 3 + 1 + 3);
     expect(plan.kits.invitations).toBe(2);
     expect(plan.volunteersWithKit).toBe(2);
+    // Every kit needed now: those, the elite lines and the volunteers with a kit.
+    expect(plan.kitsNow.total).toBe(13 + 2 + 2 + 2);
+    expect(plan.eliteEntries).toBe(2);
   });
 
   it("counts an event with no limit from the same allocator's count, and has nothing to order «if every place fills»", async () => {
@@ -293,8 +302,13 @@ describe("BR-REQ-050-02 the page draws the list's own readers, read only, in bot
     const words = text(html);
     expect(words).toContain("Planul locurilor — Crosul Tâmpei");
     expect(words).toContain("Locuri libere acum: 8 din 20");
-    expect(words).toContain("Ocupate 12 din 20 · în afara locurilor 3 · pe liste 5");
-    expect(words).toContain("Dacă se ocupă toate locurile: kituri 26 · numere de concurs 26");
+    expect(words).toContain("Ocupate 12 din 20 · în afara locurilor 3 · alergători 17 · pe liste 5");
+    expect(words).toContain("Dacă se ocupă toate locurile: kituri 28 · numere de concurs 26");
+    expect(words).toContain("Kituri acum, cu toți: 19");
+    expect(words).toContain("pe lista de elită: 2");
+    expect(words).toContain("Plus BIB-uri cu nume de pe lista de elită: 2");
+    expect(words).toContain("Alergători acum (ocupate, invitați speciali, lista de elită) 17");
+    expect(html).toContain('data-testid="race-plan-runners-note"');
     expect(words).toContain("Înscrieri de test active: 1.");
     expect(words).toContain("nicio schimbare înregistrată");
     // Every fold but «Locuri» closed.
@@ -326,11 +340,14 @@ describe("BR-REQ-050-02 the page draws the list's own readers, read only, in bot
 
     const open = await createRace(db, { capacity: null, startsAt: new Date(Date.now() + 18 * DAY) });
     await runners(open.id, 2);
+    await db.insert(eventEliteEntries).values({ eventId: open.id, name: "Elita Trei" });
     const html = await page(organizer, open.id);
     expect(html).toContain('data-testid="race-plan-uncapped"');
     expect(html).toContain('data-testid="registrations-public-now"');
     expect(html).not.toContain('data-testid="registrations-places"');
     expect(html).toContain('data-testid="race-plan-order-uncapped"');
-    expect(text(html)).toContain("Kituri acum: 2");
+    // Two runners holding a place and an elite line: a kit each.
+    expect(text(html)).toContain("Kituri acum: 3");
+    expect(html).not.toContain('data-row="runnersIfFull"');
   });
 });

@@ -43,10 +43,12 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * 1. **«Locuri»** — `PlaceOutlook` and `PublicNowLine` exactly as the registrations list draws them, the tick
  *    «Înscrieri publice deschise» said rather than offered (no action is handed down here).
  * 2. **«Pe categorii»** — `RacePlanTable`: inside the places by kind, from the same outlook so the two never disagree;
- *    outside them the special guests, their invitations, the elite list and the volunteers with a kit; both lists.
+ *    outside them the special guests, their invitations, the elite list and the volunteers with a kit; everybody who
+ *    runs — the places taken, the special guests and the elite list's lines, a registration marked elite once; both lists.
  * 3. **«Termene»** — the sentences of «Când se pierde un loc» (`placeDeadlineLines`), closed on the declaration's deadline.
- * 4. **«De comandat»** — `KitCount` (now), then `OrderTotals` (if every place fills, the parts written out) and the
- *    race numbers given, with the door to «Numerele de concurs».
+ * 4. **«De comandat»** — `KitCount` (the registrations' kits now), then `OrderTotals`: every kit needed now with the
+ *    elite list and the volunteers, the kits and race numbers if every place fills (the parts written out), and the race
+ *    numbers given, with the door to «Numerele de concurs».
  * 5. **«Istoric capacitate»** — `CapacityHistory`, closed on «N schimbări · ultima …».
  *
  * Whoever may read the registrations (`canReadRegistrations`: the Organizer, the Administrator, the Superadministrator),
@@ -103,17 +105,18 @@ export default async function RacePlanPage({ params }: Props) {
     );
   }
 
-  const { event, outlook, door, rows, totals, kits, volunteersWithKit, placeDeadlines, bibs, history } = plan;
+  const { event, outlook, door, rows, totals, kits, volunteersWithKit, kitsNow, eliteEntries, placeDeadlines, bibs, history } = plan;
   const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
 
-  // «Pe categorii»'s closed line: the places taken, the people outside them and on both lists.
+  // «Pe categorii»'s closed line: the places taken, the people outside them, everybody who runs and both lists.
   const lists = (rows.lists.find((row) => row.key === "waiting")?.count ?? 0) + (rows.lists.find((row) => row.key === "internal")?.count ?? 0);
   const occupied = rows.inside.find((row) => row.key === "occupied")?.count ?? 0;
   const outside = rows.outside.find((row) => row.key === "outside")?.count ?? 0;
+  const runners = rows.runners.find((row) => row.key === "runnersNow")?.count ?? 0;
   const categoriesAside =
     event.capacity === null
-      ? t("racePlan.categories.asideUncapped", { occupied, outside, lists })
-      : t("racePlan.categories.aside", { occupied, capacity: event.capacity, outside, lists });
+      ? t("racePlan.categories.asideUncapped", { occupied, outside, runners, lists })
+      : t("racePlan.categories.aside", { occupied, capacity: event.capacity, outside, runners, lists });
 
   // «Termene»: the sentences of «Când se pierde un loc», closed on the declaration's own deadline.
   const deadlineLines = placeDeadlines
@@ -129,7 +132,7 @@ export default async function RacePlanPage({ params }: Props) {
 
   const orderAside = totals
     ? t("racePlan.order.aside", { kits: totals.kits.total, bibs: totals.bibs.total })
-    : t("racePlan.order.asideUncapped", { kits: kits.registrations + kits.invitations });
+    : t("racePlan.order.asideUncapped", { kits: kitsNow.total });
 
   const historyAside =
     history.count > 0 && history.lastAt
@@ -169,7 +172,7 @@ export default async function RacePlanPage({ params }: Props) {
 
       <Panel glyph="kit" collapsible title={t("racePlan.order.title")} aside={orderAside} data-testid="race-plan-order-panel">
         <KitCount kits={kits} volunteers={volunteersWithKit} />
-        <OrderTotals totals={totals} bibs={bibs} eventId={id} locale={locale} />
+        <OrderTotals now={kitsNow} totals={totals} bibs={bibs} eliteEntries={eliteEntries} eventId={id} locale={locale} />
       </Panel>
 
       <Panel
