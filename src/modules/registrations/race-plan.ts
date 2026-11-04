@@ -117,12 +117,14 @@ export async function readRacePlan<T extends Record<string, unknown>>(
     speaks for the places, and the grouped read for the guests and the line, counted as `readPlaceOutlook` counts them.
   */
   const breakdown = breakdownOf(groups);
+  // The capacity the outlook counted against: a save between the two reads cannot leave the rows on two capacities.
+  const capacity = outlook ? outlook.capacity : null;
   const taken = outlook ?? { ...placesTaken(0, counts), occupied: computeOccupied(counts) };
   const outside = outlook ? outlook.outside : outsideOf(breakdown);
   const outsideInvitations = invitations.find((group) => group.outside)?.total ?? 0;
   const eliteEntries = elite?.total ?? 0;
   const rows = racePlanRows({
-    capacity: event.capacity,
+    capacity,
     taken: { confirmed: taken.confirmed, declaration: taken.declaration, offered: taken.offered, invited: taken.invited, family: taken.family, occupied: taken.occupied },
     free: outlook ? outlook.free : null,
     waiting: outlook ? outlook.waiting : breakdown.waiting,
@@ -135,12 +137,12 @@ export async function readRacePlan<T extends Record<string, unknown>>(
     volunteersWithKit,
   });
   return {
-    event,
+    event: { ...event, capacity },
     internal: true,
     outlook,
     door,
     rows,
-    totals: orderTotals({ capacity: event.capacity, occupied: taken.occupied, outside, outsideInvitations, volunteersWithKit, eliteEntries, spares: spares.free }),
+    totals: orderTotals({ capacity, occupied: taken.occupied, outside, outsideInvitations, volunteersWithKit, eliteEntries, spares: spares.free }),
     kits,
     volunteersWithKit,
     placeDeadlines: deadlineFacts ? { ...deadlineFacts, deadlines } : null,

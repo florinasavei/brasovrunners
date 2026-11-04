@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { resolveLocaleSwitch } from "@/modules/events/locale-switch";
 import { computeOccupied, type OccupiedCounts, placesTaken } from "@/modules/registrations/domain/capacity";
 import {
   breakdownOf,
@@ -168,6 +169,15 @@ describe("BR-REQ-034-02 «De comandat» if every place fills (§NNN)", () => {
   it("counts the places taken when the capacity was lowered under them, and nothing for an event with no limit", () => {
     expect(orderTotals({ ...input, capacity: 150 })?.kits.parts[0]).toEqual({ key: "places", count: 170 });
     expect(orderTotals({ ...input, capacity: null })).toBeNull();
+  });
+});
+
+describe("BR-REQ-040-01 the plan in the other language (§NNN)", () => {
+  it("keeps the event's plan when the language switches: one spelling in both locales, the id the same", async () => {
+    const id = "6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b";
+    // A staff route carries an id, never a slug: the switch reads no database for it.
+    expect(await resolveLocaleSwitch(undefined as never, `/ro/admin/events/${id}/locuri`, "en")).toBe(`/en/admin/events/${id}/locuri`);
+    expect(await resolveLocaleSwitch(undefined as never, `/en/admin/events/${id}/locuri`, "ro")).toBe(`/ro/admin/events/${id}/locuri`);
   });
 });
 

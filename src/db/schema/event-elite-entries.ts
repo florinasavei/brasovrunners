@@ -16,7 +16,8 @@ export const ELITE_NUMBER_MAX = 99_999;
  * **Not a registration**: no participant, no address, no declaration, no place, no slot in the queue, no state,
  * no email, no count the club or the public is given — the allocator, «Locuri», the kits, the registrations'
  * summary and export, the sponsors' list, the desk and the results never read this table. The declaration rule
- * stays whole precisely because an elite line is a name to print and nothing else.
+ * stays whole precisely because an elite line is a name to print and nothing else. One reader counts the lines:
+ * «Planul locurilor» (§NNN), beside the places and never in them, for the race numbers to order.
  *
  * Read by whoever reads the registrations (`canReadRegistrations`: the Organizer and above), written by the
  * Administrator (`canManageRegistrations`), asserted in `elite-list.ts`. **Deleted with the event**
