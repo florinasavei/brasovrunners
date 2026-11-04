@@ -28,7 +28,7 @@ export type AdminTab = {
   href: string;
   label: string;
   section: AdminSection;
-  /** A figure beside the label — how many are signed up, on "Înscrieri" (§255). */
+  /** A figure beside the label — how many are signed up, on "Înscrieri" (§255); the volunteers still in, on «Voluntari». */
   count?: number | null;
   /** What that figure counts, as the tab's tooltip (§277). */
   countHint?: string;
@@ -51,25 +51,30 @@ export type AdminTab = {
  * those completing their registration with a place — a declaration to sign, an open offer,
  * a family's hold, a part OF the figure — those awaiting the email confirmation, and the waiting list,
  * both outside it.
+ *
+ * And the one pill of «Voluntari» (the owner, 2026-11-04: read it like «Înscrieri»): `toAct`, the volunteers
+ * the organizers still have to confirm or give a role — a part of that tab's figure, everyone still in.
  */
-export type CountPillKind = "inProgress" | "awaitingEmail" | "waiting";
+export type CountPillKind = "inProgress" | "awaitingEmail" | "waiting" | "toAct";
 
 /** One pill: its group, how many, and what a screen reader says for it — «16 în curs de confirmare». */
 export type CountPill = { kind: CountPillKind; count: number; label: string };
 
 /** The pills' order: the part of the figure first, then the two outside it, nearest a place first. */
-const COUNT_PILL_ORDER: readonly CountPillKind[] = ["inProgress", "awaitingEmail", "waiting"];
+const COUNT_PILL_ORDER: readonly CountPillKind[] = ["inProgress", "awaitingEmail", "waiting", "toAct"];
 
 /**
  * Each group's glyph, the one the participant's own steps wear for that step (`RegistrationSteps`: the
- * pen for the declaration, the envelope with the tick for the address) and the waiting list's hourglass.
- * Named in the registry, never imported here (§318).
+ * pen for the declaration, the envelope with the tick for the address) and the waiting list's hourglass;
+ * the volunteers to confirm or place wear the person with the gear that «Dă-i rolul …» wears on a volunteer.
+ * Named in the registry, never imported here (§318). Each with the test id its pill carries.
  */
-const COUNT_PILL_GLYPH = {
-  inProgress: ACTION_ICONS.declaration,
-  awaitingEmail: ACTION_ICONS.emailConfirmation,
-  waiting: ACTION_ICONS.waiting,
-} satisfies Record<CountPillKind, unknown>;
+const COUNT_PILL_LOOK = {
+  inProgress: { glyph: ACTION_ICONS.declaration, testId: "registered-inProgress-pill" },
+  awaitingEmail: { glyph: ACTION_ICONS.emailConfirmation, testId: "registered-awaitingEmail-pill" },
+  waiting: { glyph: ACTION_ICONS.waiting, testId: "registered-waiting-pill" },
+  toAct: { glyph: ACTION_ICONS.role, testId: "volunteers-toAct-pill" },
+} satisfies Record<CountPillKind, { glyph: unknown; testId: string }>;
 
 /**
  * One icon per section (the owner, 2026-09-18: "icons for each tab"), from the icon package
@@ -234,7 +239,8 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
  * On «Înscrieri» the figure is everyone with a place (§632, amending §626's confirmed alone), and the
  * groups still in progress follow it as smaller pills — «Înscrieri [150] [✍ 16] [✉ 7] [⏳ 10]». They
  * are not links: the tab is already an anchor, and a link inside one is invalid HTML; the summary
- * strip's pills on the list page are the filters (§626).
+ * strip's pills on the list page are the filters (§626). «Voluntari» reads the same way: everyone still
+ * in, then those to confirm or place — «Voluntari [9] [⚙ 2]».
  */
 function CountBadge({ count, hint, pills = [] }: { count: number; hint?: string; pills?: readonly CountPill[] }) {
   const drawn = COUNT_PILL_ORDER.flatMap((kind) => pills.filter((pill) => pill.kind === kind && pill.count > 0));
@@ -263,14 +269,14 @@ function CountBadge({ count, hint, pills = [] }: { count: number; hint?: string;
         only above zero.
       */}
       {drawn.map(({ kind, count: groupCount, label }) => {
-        const Glyph = COUNT_PILL_GLYPH[kind];
+        const { glyph: Glyph, testId } = COUNT_PILL_LOOK[kind];
         return (
           <Box
             key={kind}
             component="span"
             role="img"
             aria-label={label}
-            data-testid={`registered-${kind}-pill`}
+            data-testid={testId}
             sx={{
               display: "inline-flex",
               alignItems: "center",

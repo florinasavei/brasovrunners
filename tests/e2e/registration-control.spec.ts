@@ -5,13 +5,14 @@ import { confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §906 — «Înscrieri publice deschise» beside «Locuri» (the owner, 2026-11-03: «cumva trebuie să pot controla mai
- * bine»). What only a browser can see, and the unit and PGlite tests cannot: the tick is a real check box in an
- * `ActionForm` whose two questions are chosen by the box's state — unticked asks «Oprești înscrierile de pe site?»,
- * ticked «Redeschizi înscrierile de pe site?» — saved by its own button, 44 pixels tall; «Pe site acum» says the
- * public door the press left; and the public event page and its register page, already visited (so cached), say the
- * door is shut — `registration-paused`, no button, no form — and open again once the tick is back. The Organizer
- * reads the state and is handed no form.
+ * §906 — the site's door beside «Locuri» (the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»). What only
+ * a browser can see, and the unit and PGlite tests cannot: the tick «Înscrierile pe site sunt deschise» is a real check
+ * box in an `ActionForm` whose two questions are chosen by the box's state — unticked asks «Oprești înscrierile de pe
+ * site?», ticked «Redeschizi înscrierile de pe site?» — saved by its own button, 44 pixels tall, its help saying what a
+ * press does from the state saved; «Pe site acum» says the public door the press left — shut by the tick, only
+ * «înscrierile sunt oprite», with no editor link above the tick that changes it (the owner, 2026-11-04) —; and the
+ * public event page and its register page, already visited (so cached), say the door is shut — `registration-paused`,
+ * no button, no form — and open again once the tick is back. The Organizer reads the state and is handed no form.
  *
  * The event is written straight into the database — the setup, not the subject — one per project and test, so the two
  * projects never share a row.
@@ -85,9 +86,9 @@ async function publicPagesSay(page: Page, slug: string, shut: boolean) {
   await fitsTheScreen(page);
   expect((await page.goto(`/ro/evenimente/${slug}/inscriere`))?.status()).toBe(200);
   if (shut) {
-    await expect(page.getByTestId("registration-paused")).toContainText("Înscrierile pe site sunt oprite de organizatori.");
+    await expect(page.locator("#main").getByTestId("registration-paused")).toContainText("Înscrierile pe site sunt oprite de organizatori.");
   } else {
-    await expect(page.getByTestId("registration-paused")).toHaveCount(0);
+    await expect(page.locator("#main").getByTestId("registration-paused")).toHaveCount(0);
   }
   await fitsTheScreen(page);
 }
@@ -107,11 +108,14 @@ test.describe("§906 «Înscrieri publice deschise» beside «Locuri»", () => {
     await hydrated(page);
     const main = page.locator("#main");
     await expect(main.getByTestId("registrations-public-now-line")).toHaveText("Pe site acum: butonul «Înscrie-te» — primul venit ia un loc liber.");
+    // Open, the line keeps the editor's link: the places and the dates change there.
+    await expect(main.getByTestId("registrations-public-now-setting")).toHaveCount(1);
 
     // The tick: a real check box, ticked as the row stands, and its own save button with a thumb's target and a glyph.
     let form = main.getByTestId("registrations-public-door-form");
-    let tick = form.getByRole("checkbox", { name: "Înscrieri publice deschise" });
+    let tick = form.getByRole("checkbox", { name: "Înscrierile pe site sunt deschise" });
     await expect(tick).toBeChecked();
+    await expect(form.getByTestId("registrations-public-door-help")).toHaveText("Debifează și apasă «Salvează» ca să le oprești; tot ce face echipa merge mai departe.");
     const save = form.getByTestId("registrations-public-door-save");
     expect((await save.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(save.locator("svg")).toHaveCount(1);
@@ -123,12 +127,13 @@ test.describe("§906 «Înscrieri publice deschise» beside «Locuri»", () => {
     await confirmDialog(page, "Oprești înscrierile de pe site?");
     await expect(page.getByTestId("toast-live")).toContainText("Înscrierile pe site sunt oprite. Echipa poate înscrie în continuare.", { timeout: 30_000 });
     await hydrated(page);
-    await expect(main.getByTestId("registrations-public-now-line")).toHaveText(
-      "Pe site acum: înscrierile sunt închise — bifa «Înscrieri publice deschise» e scoasă.",
-    );
+    // Shut by the tick: one sentence, and no editor link above the tick that changes it.
+    await expect(main.getByTestId("registrations-public-now-line")).toHaveText("Pe site acum: înscrierile sunt oprite.");
+    await expect(main.getByTestId("registrations-public-now-setting")).toHaveCount(0);
     form = main.getByTestId("registrations-public-door-form");
-    tick = form.getByRole("checkbox", { name: "Înscrieri publice deschise" });
+    tick = form.getByRole("checkbox", { name: "Înscrierile pe site sunt deschise" });
     await expect(tick).not.toBeChecked();
+    await expect(form.getByTestId("registrations-public-door-help")).toHaveText("Bifează și apasă «Salvează» ca să le redeschizi.");
     expect(await doorOf(eventId)).toBe(false);
     expect(await trailOf(eventId)).toEqual([{ from: true, to: false, via: "registrations" }]);
 
@@ -138,12 +143,13 @@ test.describe("§906 «Înscrieri publice deschise» beside «Locuri»", () => {
     await page.goto(`/ro/admin/registrations?eventId=${eventId}`);
     await hydrated(page);
     form = main.getByTestId("registrations-public-door-form");
-    await form.getByRole("checkbox", { name: "Înscrieri publice deschise" }).check();
+    await form.getByRole("checkbox", { name: "Înscrierile pe site sunt deschise" }).check();
     await form.getByTestId("registrations-public-door-save").click();
     await confirmDialog(page, "Redeschizi înscrierile de pe site?");
     await expect(page.getByTestId("toast-live")).toContainText("Înscrierile pe site sunt deschise din nou.", { timeout: 30_000 });
     await hydrated(page);
     await expect(main.getByTestId("registrations-public-now-line")).toHaveText("Pe site acum: butonul «Înscrie-te» — primul venit ia un loc liber.");
+    await expect(main.getByTestId("registrations-public-now-setting")).toHaveCount(1);
     expect(await doorOf(eventId)).toBe(true);
 
     await publicPagesSay(page, slug, false);
@@ -158,7 +164,9 @@ test.describe("§906 «Înscrieri publice deschise» beside «Locuri»", () => {
     await page.goto(`/ro/admin/registrations?eventId=${eventId}`);
     await hydrated(page);
     const main = page.locator("#main");
+    // The Organizer's line keeps the reason and the editor's link: he is handed no tick.
     await expect(main.getByTestId("registrations-public-now-line")).toContainText("bifa «Înscrieri publice deschise» e scoasă");
+    await expect(main.getByTestId("registrations-public-now-setting")).toHaveCount(1);
     await expect(main.getByTestId("registrations-public-door-state")).toHaveText("Înscrierile pe site sunt oprite de un Administrator.");
     await expect(main.getByTestId("registrations-public-door-form")).toHaveCount(0);
     await fitsTheScreen(page);

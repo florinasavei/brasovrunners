@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventResults } from "@/db/schema/event-results";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -12,6 +13,7 @@ import { registrations } from "@/db/schema/registrations";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { readPublicEventResults } from "@/modules/results/results";
+import { listPublicEliteEntries } from "@/modules/registrations/elite-list";
 import { readPublicVolunteersList } from "@/modules/volunteers/public-list";
 import {
   countAnonymousStartListEntries,
@@ -702,5 +704,55 @@ describe("§821 what the volunteers' public list may contain — a name only for
     expect(JSON.stringify(read)).not.toMatch(/@example\.test|\+4071|Brașov|Părinte|Tânăr|Fără Bifă/);
     // Nothing is named while no approved notice has described the list.
     expect((await readPublicVolunteersList(db, event.id, { firstListNoticeVersion: null })).list.named).toEqual([]);
+  });
+});
+
+/**
+ * §910 — «Elitele cursei» and an elite's two ticks. The section names what the club ticked «Apare pe site», with the person's agreement:
+ * a name and a number, nothing else. A registered runner marked «Elită» is named only by their own tick: the club's tick only removes
+ * a name — there is no column of the staff's that puts one on a public list.
+ */
+describe("§910 what «Elitele cursei» and an elite's staff tick may disclose", () => {
+  /** The code of listPublicEliteEntries, without its comments: the select list it guards. */
+  function publicReadCode(): string {
+    const source = readFileSync("src/modules/registrations/elite-list.ts", "utf8");
+    const start = "export async function listPublicEliteEntries<";
+    const at = source.indexOf(start);
+    expect(at).toBeGreaterThan(-1);
+    const next = source.slice(at + start.length).search(/\n(export )?(async )?function /);
+    const body = next === -1 ? source.slice(at) : source.slice(at, at + start.length + next);
+    return body.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  }
+
+  it("selects the name and the number, only of the lines ticked «Apare pe site», and nothing else of them", async () => {
+    const code = publicReadCode();
+    expect(code).toMatch(/\.select\(\{ name: eventEliteEntries\.name, bibNumber: eventEliteEntries\.bibNumber \}\)/);
+    expect(code).toMatch(/eq\(eventEliteEntries\.onSite, true\)/);
+    for (const forbidden of ["createdBy", "inResults:", "onSite:", "id:", "createdAt:"]) expect(code, forbidden).not.toContain(forbidden);
+
+    const event = await createEvent();
+    await db.insert(eventEliteEntries).values([
+      { eventId: event.id, name: "Eliud Kipchoge", bibNumber: 7, onSite: true },
+      { eventId: event.id, name: "Fara Acord", bibNumber: 8, onSite: false },
+    ]);
+    const read = await listPublicEliteEntries(db, event.id);
+    expect(read).toEqual([{ name: "Eliud Kipchoge", bibNumber: 7 }]);
+    expect(JSON.stringify(read)).not.toContain("Fara Acord");
+  });
+
+  it("names a registered elite only by their own tick: the club's tick hides a ticked runner and never shows an unticked one", async () => {
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Ana Popescu", email: "ana@example.org" });
+    await createRegistration(event.id, { name: "Elita Ascunsa", email: "hidden-elite@example.org" });
+    await createRegistration(event.id, { name: "Elita Discreta", email: "shy-elite@example.org", listOptOut: true });
+    await db.update(registrations).set({ elite: true, eliteHiddenFromSite: true }).where(eq(registrations.registeredName, "Elita Ascunsa"));
+    // Marked, and the club's tick «Apare pe site» left ticked (nothing hidden): the person's own «no» stands.
+    await db.update(registrations).set({ elite: true, eliteHiddenFromSite: false }).where(eq(registrations.registeredName, "Elita Discreta"));
+
+    const listed = await listPublicStartList(db, event.id);
+    expect(listed.map((row) => row.displayName)).toEqual(["Ana Popescu"]);
+    expect(await countPublicStartList(db, event.id)).toBe(1);
+    expect(await countAnonymousStartListEntries(db, event.id)).toBe(2);
+    expect(JSON.stringify(listed)).not.toMatch(/Elita/);
   });
 });

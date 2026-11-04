@@ -2,6 +2,7 @@ import { and, asc, eq } from "drizzle-orm";
 import sharp from "sharp";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventVolunteerCategories, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { mediaAssets } from "@/db/schema/gallery";
@@ -327,6 +328,43 @@ describe("the file an event is exported as", () => {
     expect(Object.keys(file.event)).not.toContain("volunteers");
     expect(Object.keys(file.event)).not.toContain("invitations");
     expect(Object.keys(file.event.registration)).not.toContain("participants");
+  });
+
+  // §895 keeps the race's elite list out of the file (people's names), so its two ticks (§910) stay out with it.
+  it("never carries the race's elite list: no name, no number, no «Apare în clasament» or «Apare pe site»", async () => {
+    const { event } = await seedRace();
+    await db.insert(eventEliteEntries).values([
+      { eventId: event.id, name: "Eliud Kipchoge", bibNumber: 7, onSite: true, inResults: false },
+      { eventId: event.id, name: "Faith Kipyegon", onSite: false },
+    ]);
+    const { file } = await exportEvent(db, { actor: admin, eventId: event.id, now: NOW });
+    const text = JSON.stringify(file);
+    for (const needle of ["Kipchoge", "Kipyegon", "inResults", "onSite", "in_results", "on_site", "eliteEntries"]) expect(text, needle).not.toContain(needle);
+  });
+
+  // The other way: a file cannot bring an elite list in, and an import over an event leaves its list and its ticks as they were.
+  it("never brings an elite list in: a file carrying one is refused, and an import over an event keeps its lines and their two ticks", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const file = await fileOf(event.id);
+    const smuggled = JSON.parse(JSON.stringify(file)) as { event: Record<string, unknown> };
+    smuggled.event.eliteEntries = [{ name: "Eliud Kipchoge", bibNumber: 7, inResults: false, onSite: true }];
+    expect(readEventFile(JSON.stringify(smuggled)).ok).toBe(false);
+
+    const { target } = await seedTarget();
+    await db.insert(eventEliteEntries).values([
+      { eventId: target.id, name: "Faith Kipyegon", bibNumber: 77, onSite: true, inResults: false },
+      { eventId: target.id, name: "Jakob Ingebrigtsen", onSite: false },
+    ]);
+    await importEventOver(db, await overInput(file, target.id));
+    const lines = await db
+      .select({ name: eventEliteEntries.name, bibNumber: eventEliteEntries.bibNumber, inResults: eventEliteEntries.inResults, onSite: eventEliteEntries.onSite })
+      .from(eventEliteEntries)
+      .where(eq(eventEliteEntries.eventId, target.id))
+      .orderBy(asc(eventEliteEntries.name));
+    expect(lines).toEqual([
+      { name: "Faith Kipyegon", bibNumber: 77, inResults: false, onSite: true },
+      { name: "Jakob Ingebrigtsen", bibNumber: null, inResults: true, onSite: false },
+    ]);
   });
 
   it("is not made when this release could not read it back: too many pictures, or too large", async () => {
