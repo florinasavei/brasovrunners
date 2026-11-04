@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.19-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.20-2026-11-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.19-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.20-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1085,7 +1085,7 @@ Rules:
 - absent open means after eligible publication;
 - absent close means event start;
 - cancelled/completed cannot accept registration;
-- «Înscrieri publice deschise» (`events.public_registration_open`, on by default; `DECISIONS.md` §NNN) unticked:
+- «Înscrieri publice deschise» (`events.public_registration_open`, on by default; `DECISIONS.md` §906) unticked:
   the public form and its emailed link for another person are refused on the server — off the caller's row
   and again under the event lock — whatever the window says, and the site shows no button; every staff
   door is untouched (the staff entry, the desk, «Trimite-i oferta», «Dă-i un loc», «Oferă-i un loc acum»,
@@ -1406,7 +1406,7 @@ Rules:
   that reaches its place by another route — the public form's confirmation, a staff entry, the desk, a
   restart, «Dă-i un loc acum» — takes the invitation's place over in the same way and marks it accepted,
   so no place stays held in the name of somebody already seated;
-- «Locurile libere le dau doar eu» (`events.free_places_by_offer_only`, off by default; `DECISIONS.md` §NNN): one
+- «Locurile libere le dau doar eu» (`events.free_places_by_offer_only`, off by default; `DECISIONS.md` §906): one
   condition in the allocator's opening (`placeForNewcomer`), on the entry's channel and never on `kind` — a
   **public** entry (the public form, its link for another person, a family's form, a restart through it, and
   the address confirmation of a row the public form wrote) joins the waiting list beside a free place, as when
@@ -1416,9 +1416,9 @@ Rules:
   (`domain/waitlist.ts#offersOnItsOwn`, read by `fillAvailableSpots`' one gate): every free place is the staff's
   to give. On an uncapped event the switch changes nothing;
 - the waiting list's limit (§348) is asked only of a registration that would stay in the line: «Oferă-i un loc
-  acum», whose row is offered a place in the same transaction, is never refused by it, 0 included (§NNN);
+  acum», whose row is offered a place in the same transaction, is never refused by it, 0 included (§906);
   «Adaugă pe lista de așteptare» and «Mută pe lista oficială», which leave the person waiting, still are;
-- «Anunță-mă când rămân N locuri» (`events.places_alert_at`, §NNN) is checked in the transaction of every
+- «Anunță-mă când rămân N locuri» (`events.places_alert_at`, §906) is checked in the transaction of every
   allocator write (`allocateOrWaitlist`, `fillAvailableSpots`, a family's reservation, a send of invitations),
   under its lock: the Administrators are emailed once per crossing — down to N, then 0 — remembered in
   `places_alert_sent` and re-armed above N or by a save that changes N. It decides nothing about places;
@@ -3163,7 +3163,7 @@ EVENT_INVITATION
 PLACES_ALERT
 ```
 
-`PLACES_ALERT` (§NNN) is queued by `places-alert.ts#watchPlacesAlert`, in the transaction of the
+`PLACES_ALERT` (§906) is queued by `places-alert.ts#watchPlacesAlert`, in the transaction of the
 allocator write that crossed an event's «Anunță-mă când rămân N locuri», to every Administrator and
 Superadministrator with an address, in their own language: the event's id and the counts in the
 payload, no participant, no token; its one button opens the event's registrations. Once per crossing
@@ -3176,7 +3176,7 @@ once per lapsed hold (`registration:<id>:hold-lapsed:<deadline>`: a restarted re
 new hold lapses too is told again, and an older message still queued is withdrawn). It says the deadline that passed, whether
 the place went to the waiting list, and what the person can do now, read at send time: join the
 waiting list, register again, or nothing online — the desk gives free places on the day. The site's
-door is read as the card reads it (§NNN): «Înscrieri publice deschise» unticked says the organizers
+door is read as the card reads it (§906): «Înscrieri publice deschise» unticked says the organizers
 stopped it, and «Locurile libere le dau doar eu» sends a public entry to the line beside free places, or
 — with a line that takes nobody — says the places left are the organizers'; neither has a button, both
 «scrie-ne». No token, no «Nu mai pot ajunge»: the registration is over. Not for a hold the start
@@ -3267,7 +3267,7 @@ canonical identity), once (`interest:<id>:opened`), the row deleted in the same 
 — the address is kept for nothing else. The event's id rides in the payload; the facts line
 and the ordinary registration page as the action; no token. Never for an event that will
 not open on the site — cancelled, started, moved to another form — whose rows go with no
-message (`DECISIONS.md` §146). While «Înscrieri publice deschise» is unticked (§NNN) an open
+message (`DECISIONS.md` §146). While «Înscrieri publice deschise» is unticked (§906) an open
 window announces nothing and the rows are kept; the first run after it is ticked again, the
 dates still open, tells them (the registrations page's tick wakes the job).
 

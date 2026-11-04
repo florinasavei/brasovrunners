@@ -66,7 +66,7 @@ function closedDoorSentence(tEvent: (key: string, values?: Record<string, string
   if (cta.kind === "CANCELLED") return tEvent("cta.cancelled");
   if (cta.kind === "COMPLETED") return tEvent("cta.completed");
   if (cta.kind === "CLOSED") return tEvent("cta.closed");
-  // The organizers shut the site's door (§NNN): the event page's own sentence.
+  // The organizers shut the site's door (§906): the event page's own sentence.
   if (cta.kind === "PAUSED") return tEvent(cta.reason === "SWITCH" ? "cta.paused" : "cta.pausedOffersOnly");
   if (cta.kind === "NOT_YET_OPEN") {
     return cta.opensAt === null
@@ -133,7 +133,7 @@ export async function renderDraftForm<T extends Record<string, unknown>>(
   const fullNotice = cta?.kind === "FULL_NO_WAITLIST" ? NO_WAITLIST : cta?.kind === "WAITLIST_FULL" ? WAITLIST_FULL : cta?.kind === "FULL" ? "WAITLIST" : null;
   // No places line — «Arată public numărătoarea» unticked (§668) — is the real page's lead with no capacity.
   const fullCounts = cta?.kind === "FULL" && door.kind === "KNOWN" ? { capacity: door.fill?.capacity ?? null, waiting: cta.waiting } : null;
-  // How an offer works (§587), in the organizers' words while no place reaches the line by itself (§NNN); `FULL` has none free.
+  // How an offer works (§587), in the organizers' words while no place reaches the line by itself (§906); `FULL` has none free.
   const offer = fullNotice === "WAITLIST" ? { hours: steps.deadlines.offerHours, byItself: offersByItself(view, 0) } : null;
 
   return (

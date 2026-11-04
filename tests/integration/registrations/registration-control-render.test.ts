@@ -13,7 +13,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the organizers' door on the event page and the listing card (the owner, 2026-11-03: «cumva trebuie să pot
+ * §906 — the organizers' door on the event page and the listing card (the owner, 2026-11-03: «cumva trebuie să pot
  * controla mai bine»), rendered from a real database (PGlite) through the public cache's read-through:
  *
  * - «Înscrieri publice deschise» unticked: «Înscrierile pe site sunt oprite de organizatori.», bold on the card, and
@@ -135,7 +135,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("§NNN «Înscrieri publice deschise» unticked", () => {
+describe("§906 «Înscrieri publice deschise» unticked", () => {
   it("the event page and the card say the organizers stopped it, with no button, in both languages", async () => {
     const event = await publish({ publicRegistrationOpen: false });
     await take(event.id, 5);
@@ -164,7 +164,7 @@ describe("§NNN «Înscrieri publice deschise» unticked", () => {
   });
 });
 
-describe("§NNN «Locurile libere le dau doar eu»", () => {
+describe("§906 «Locurile libere le dau doar eu»", () => {
   it("places free and a waiting list that takes nobody: its own words, never «s-au ocupat», no button", async () => {
     const event = await publish({ freePlacesByOfferOnly: true, waitlistCapacity: 0 });
     await take(event.id, 5);
@@ -206,7 +206,7 @@ describe("§NNN «Locurile libere le dau doar eu»", () => {
   });
 });
 
-describe("§NNN how an offer works, on the full event's door", () => {
+describe("§906 how an offer works, on the full event's door", () => {
   /** The door's «how an offer works» line, in words. */
   async function offerLine(): Promise<string> {
     const html = await page();

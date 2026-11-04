@@ -92,7 +92,7 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     expect(en.button?.label).toBe("Join the waiting list");
   });
 
-  it("§NNN says what the list does in the organizers' words while no place reaches it by itself — «Nu», or the tick over «Da»", () => {
+  it("§906 says what the list does in the organizers' words while no place reaches it by itself — «Nu», or the tick over «Da»", () => {
     const full = known({ kind: "FULL", waitlistRoom: null, waiting: 0 }, { taken: 10, capacity: 10 });
     const byHand: Partial<PublicEvent>[] = [{ waitlistAutoOffer: false }, { waitlistAutoOffer: true, freePlacesByOfferOnly: true }];
     for (const settings of byHand) {

@@ -505,7 +505,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     expect(await offersQueued()).toBe(0);
   });
 
-  it("§NNN a series' save that moves «Anunță-mă când rămân N locuri» forgets each date's memory of the alert; the same N keeps it", async () => {
+  it("§906 a series' save that moves «Anunță-mă când rămân N locuri» forgets each date's memory of the alert; the same N keeps it", async () => {
     const source = await seedEvent(10);
     await repeatEvent(db, { actor: editor, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-11-01", publish: false }, now: NOW });
     const ids = [source.id, ...(await db.select({ id: events.id }).from(events).where(eq(events.repeatOf, source.id))).map((row) => row.id)];

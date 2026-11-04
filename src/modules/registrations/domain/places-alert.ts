@@ -1,5 +1,5 @@
 /**
- * «Anunță-mă când rămân N locuri» (§NNN; the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»):
+ * «Anunță-mă când rămân N locuri» (§906; the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»):
  * when an event's free places drop to N or fewer, and again when they reach 0, the Administrators are
  * emailed — each crossing once. Pure: the event's setting, the free places counted under the lock, and
  * what was already sent for the current crossing in; what to send now and what to remember out.

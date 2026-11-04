@@ -83,7 +83,7 @@ export const EMAIL_GROUP_OF: Readonly<Record<Exclude<EmailMessageType, RelayMess
   // the club's own domain, the very thing that may be gone when the first one leaves.
   UNREACHABLE_WINDOW_OPENED: "club",
   UNREACHABLE_WINDOW_CLOSED: "club",
-  // «Anunță-mă când rămân N locuri» (§NNN): to the club's own people, as the notices above.
+  // «Anunță-mă când rămân N locuri» (§906): to the club's own people, as the notices above.
   PLACES_ALERT: "club",
   // The members' shop (§683): the member's two answer their own order, as a runner's confirmation does;
   // the club's notice goes to the club's own mailbox.

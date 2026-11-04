@@ -7,7 +7,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — the «Emailuri» editor of the two messages whose default words follow the event's waiting-list settings
+ * §906 — the «Emailuri» editor of the two messages whose default words follow the event's waiting-list settings
  * (`WAITLIST_JOINED`: who gives the places; `WAITLIST_SPOT_OFFER`: what happens to the place after its deadline) says,
  * under the box, that a text saved there replaces those words whatever the settings are. Every other message's editor
  * says nothing of it. The real catalogues; the form island and the rich-text editor are stubbed.
@@ -46,7 +46,7 @@ async function render(messageType: EmailMessageType, locale: "ro" | "en"): Promi
   return new Response(stream).text();
 }
 
-describe("§NNN «Emailuri»: a saved text replaces the words that follow the waiting-list settings", () => {
+describe("§906 «Emailuri»: a saved text replaces the words that follow the waiting-list settings", () => {
   it("says so under the box of WAITLIST_JOINED and WAITLIST_SPOT_OFFER, in both languages", async () => {
     for (const messageType of ["WAITLIST_JOINED", "WAITLIST_SPOT_OFFER"] as const) {
       for (const [locale, words] of [["ro", ro], ["en", en]] as const) {

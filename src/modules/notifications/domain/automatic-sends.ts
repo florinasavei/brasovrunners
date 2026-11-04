@@ -372,7 +372,7 @@ export type InterestEvent = RegistrationWindowInput & {
    */
   membersOnly?: boolean;
   /**
-   * «Înscrieri publice deschise» (§NNN): unticked, the site takes nobody whatever the dates say, so «Înscrierile
+   * «Înscrieri publice deschise» (§906): unticked, the site takes nobody whatever the dates say, so «Înscrierile
    * s-au deschis» would be false — the addresses wait, kept, and are told on the first run after the tick is back
    * while the dates still say open. Absent or null is on, the column's default.
    */
@@ -381,7 +381,7 @@ export type InterestEvent = RegistrationWindowInput & {
 
 /**
  * What the job does with the addresses left on an event's page, at `now`: `wait` while the window
- * is ahead (or open on a page taken off the site, or behind a door the organizers shut, §NNN),
+ * is ahead (or open on a page taken off the site, or behind a door the organizers shut, §906),
  * `announce` once it is open, published and its door open, and `drop` when it can no longer open —
  * cancelled, completed, started, closed, another form.
  */

@@ -404,7 +404,7 @@ describe("the calendar file", () => {
     expect(calendarRegistration({ ...base, eventStatus: "COMPLETED" }, register, new Date("2026-10-12T00:00:00.000Z"))).toBeNull();
   });
 
-  it("§NNN says what the page says while «Înscrieri publice deschise» is unticked: stopped by the organizers, and no link to the form", () => {
+  it("§906 says what the page says while «Înscrieri publice deschise» is unticked: stopped by the organizers, and no link to the form", () => {
     const register = "https://example.test/ro/evenimente/x/inscriere";
     const base = {
       registrationMode: "INTERNAL" as const,

@@ -7,7 +7,7 @@ import { publicNow, publicNowSetting } from "@/modules/registrations/domain/publ
 import { newcomerJoinsLine, offersOnItsOwn, publicEntryQueues } from "@/modules/registrations/domain/waitlist";
 
 /**
- * The Administrator's control over the site's door (§NNN), the pure halves: who a free place is for, the door the
+ * The Administrator's control over the site's door (§906), the pure halves: who a free place is for, the door the
  * public card draws, «Pe site acum» read off that same door, and the places alert's crossings.
  */
 const NOW = new Date("2026-11-03T10:00:00.000Z");
@@ -33,7 +33,7 @@ function open(over: Partial<RegistrationCtaInput> = {}): RegistrationCtaInput {
   };
 }
 
-describe("who a free place is for (§NNN)", () => {
+describe("who a free place is for (§906)", () => {
   it("a public entry under «Locurile libere le dau doar eu» joins the line; a staff entry never does for it", () => {
     expect(publicEntryQueues({ freePlacesByOfferOnly: true, channel: "public" })).toBe(true);
     expect(publicEntryQueues({ freePlacesByOfferOnly: true, channel: "staff" })).toBe(false);
@@ -69,7 +69,7 @@ describe("who a free place is for (§NNN)", () => {
   });
 });
 
-describe("the public card's door (§NNN)", () => {
+describe("the public card's door (§906)", () => {
   it("«Înscrieri publice deschise» off shuts an open window, and only an open one", () => {
     expect(registrationCta(open({ publicRegistrationOpen: false }), NOW)).toEqual({ kind: "PAUSED", reason: "SWITCH" });
     // Before the window or after it, the dates speak.
@@ -123,7 +123,7 @@ describe("the public card's door (§NNN)", () => {
   });
 });
 
-describe("«Pe site acum» (§NNN)", () => {
+describe("«Pe site acum» (§906)", () => {
   const line = { waiting: 4, waitlistCapacity: 20 };
 
   it("reads the card's door: the button, the line with its numbers, or closed and why", () => {
@@ -150,7 +150,7 @@ describe("«Pe site acum» (§NNN)", () => {
   });
 });
 
-describe("«Anunță-mă când rămân N locuri»: the crossings (§NNN)", () => {
+describe("«Anunță-mă când rămân N locuri»: the crossings (§906)", () => {
   it("emails once on the way down to N, once at 0, and nothing in between", () => {
     expect(placesAlertStep({ alertAt: 3, free: 5, sent: null })).toEqual({ send: null, sent: null });
     expect(placesAlertStep({ alertAt: 3, free: 3, sent: null })).toEqual({ send: "LOW", sent: "LOW" });

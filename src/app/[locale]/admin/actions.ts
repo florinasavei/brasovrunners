@@ -392,11 +392,11 @@ function eventFieldsFrom(form: FormData) {
     // «Locurile din lista de așteptare se alocă automat» (§615): a «Da»/«Nu» select, read only when the
     // form carried it — anything but its two values is "not editing it", never a switch.
     waitlistAutoOffer: form.get("event.waitlistAutoOffer") === "true" ? true : form.get("event.waitlistAutoOffer") === "false" ? false : undefined,
-    // «Locurile libere le dau doar eu» and «Înscrieri publice deschise» (§NNN): ticks, read only when the form carried
+    // «Locurile libere le dau doar eu» and «Înscrieri publice deschise» (§906): ticks, read only when the form carried
     // their markers, so a form without them is "not editing it" — never a door shut or opened by omission.
     freePlacesByOfferOnly: form.get("event.freePlacesByOfferOnly.present") === "1" ? form.get("event.freePlacesByOfferOnly") === "on" : undefined,
     publicRegistrationOpen: form.get("event.publicRegistrationOpen.present") === "1" ? form.get("event.publicRegistrationOpen") === "on" : undefined,
-    // «Anunță-mă când rămân N locuri» (§NNN): an empty box is off; a form without the box is "not editing it".
+    // «Anunță-mă când rămân N locuri» (§906): an empty box is off; a form without the box is "not editing it".
     placesAlertAt: form.has("event.placesAlertAt") ? value("placesAlertAt") : undefined,
     // «Condiții de participare» → «Informații medicale» (§557), by the same marker.
     askHealthNote: form.get("event.askHealthNote.present") === "1" ? form.get("event.askHealthNote") === "on" : undefined,

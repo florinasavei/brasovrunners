@@ -56,12 +56,12 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
    */
   participantCountPublic?: boolean;
   /**
-   * «Înscrieri publice deschise» (§NNN): false shuts the site's door whatever the dates — `PAUSED`, no button.
+   * «Înscrieri publice deschise» (§906): false shuts the site's door whatever the dates — `PAUSED`, no button.
    * Absent or null is on, the column's default. Only an open window reads it: before or after it the dates speak.
    */
   publicRegistrationOpen?: boolean | null;
   /**
-   * «Locurile libere le dau doar eu» (§NNN): true sends every public entry to the waiting list whatever is free,
+   * «Locurile libere le dau doar eu» (§906): true sends every public entry to the waiting list whatever is free,
    * as somebody waiting does (§615) — the allocator's own rule (`registrations/domain/waitlist.ts#publicEntryQueues`),
    * so the door says the line's words and never invites a direct registration. Absent or null is off.
    */
@@ -69,7 +69,7 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
 };
 
 /**
- * Whether a newcomer from the site joins the line rather than takes a free place (§615, §NNN): somebody waits in
+ * Whether a newcomer from the site joins the line rather than takes a free place (§615, §906): somebody waits in
  * it — a person with no place yet, or, in a cache entry written before the halves were counted, the line's length
  * alone (§587) — or the event's free places are the staff's to give («Locurile libere le dau doar eu»). The
  * allocator's own rule for a public entry (`newcomerJoinsLine`), said once for the door, the register page and
@@ -81,7 +81,7 @@ function publicEntryJoinsLine(event: { availablePlaces: number | null; waitliste
 }
 
 /**
- * «Locurile libere le dau doar eu» with places free and no line to join — a waiting list of 0, or a full one (§NNN):
+ * «Locurile libere le dau doar eu» with places free and no line to join — a waiting list of 0, or a full one (§906):
  * nothing a visitor can do, so the site's door is shut in its own words (`PAUSED`, `OFFERS_ONLY`). The one statement
  * of it, for the door and the register page alike. Never on an uncapped event (`availablePlaces` null).
  */
@@ -100,7 +100,7 @@ export function offersOnlyShut(places: {
 }
 
 /**
- * Whether a place goes to the waiting list by itself on this event (§615, §NNN), for what the door and the join form say
+ * Whether a place goes to the waiting list by itself on this event (§615, §906), for what the door and the join form say
  * of an offer: «Locurile din lista de așteptare se alocă automat» on, and «Locurile libere le dau doar eu» not in force —
  * the allocator's own `offersOnItsOwn`, read off the public row, with the door's count standing in for the capacity as
  * `publicEntryJoinsLine` reads it (`availablePlaces` null on an uncapped event, where the tick means nothing). False, every
@@ -181,7 +181,7 @@ export type RegistrationCta =
   /** No place on an event with no waiting list (a limit of 0, §348): closed as full, no button. */
   | { kind: "FULL_NO_WAITLIST" }
   /**
-   * The window is open and the site's door is shut by the organizers (§NNN): a sentence, no button.
+   * The window is open and the site's door is shut by the organizers (§906): a sentence, no button.
    * `SWITCH` — «Înscrieri publice deschise» unticked: «Înscrierile pe site sunt oprite de organizatori.»
    * `OFFERS_ONLY` — «Locurile libere le dau doar eu» with places free and a waiting list that takes nobody (a
    * limit of 0, or full): the places are given by the organizers alone, so there is nothing to join and no
@@ -235,7 +235,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       return { kind: "CLOSED" };
 
     case "OPEN": {
-      // «Înscrieri publice deschise» unticked (§NNN): the dates say open, the organizers say not on the site.
+      // «Înscrieri publice deschise» unticked (§906): the dates say open, the organizers say not on the site.
       // The one predicate the server and the calendar feed ask too (`publicDoorOpen`).
       if (!publicDoorOpen(event)) return { kind: "PAUSED", reason: "SWITCH" };
       /*
@@ -262,7 +262,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
         newcomer joins the line whatever is free (`newcomerJoinsLine`), so the door is the line's. The
         same rule the allocator follows, so the door never promises what the press will not give.
       */
-      // …and so does «Locurile libere le dau doar eu» (§NNN): a public entry never takes a free place there.
+      // …and so does «Locurile libere le dau doar eu» (§906): a public entry never takes a free place there.
       const fromWaitlist = publicEntryJoinsLine(event);
       // Zero free places is the waiting list, not a refusal: BR-REQ-035-01. `null` is an
       // uncapped event, which is never full.
@@ -272,7 +272,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       // …unless the event keeps no waiting list, or keeps one that is full (§348): then there is
       // nothing to join, and a button would lead to a form that refuses at the end of it — with
       // places free too, since a newcomer is not given one past the line (§615).
-      // Places free, given by the organizers alone, and no room in the line (§NNN): not «full» — shut, in its own words.
+      // Places free, given by the organizers alone, and no room in the line (§906): not «full» — shut, in its own words.
       if (offersOnlyShut(event)) return { kind: "PAUSED", reason: "OFFERS_ONLY" };
       if (event.waitlistCapacity === 0) return { kind: "FULL_NO_WAITLIST" };
       if (event.waitlistRoom === 0) return { kind: "WAITLIST_FULL" };

@@ -220,12 +220,12 @@ const PUBLIC_COLUMNS = {
   registrationOpensAt: events.registrationOpensAt,
   registrationOpensSoon: events.registrationOpensSoon,
   registrationClosesAt: events.registrationClosesAt,
-  // «Înscrieri publice deschise» and «Locurile libere le dau doar eu» (§NNN): the door the page draws
+  // «Înscrieri publice deschise» and «Locurile libere le dau doar eu» (§906): the door the page draws
   // (`registrationCta`) — shut by the organizers, or the line's whatever is free. The server decides again under the lock.
   publicRegistrationOpen: events.publicRegistrationOpen,
   freePlacesByOfferOnly: events.freePlacesByOfferOnly,
   // «Locurile din lista de așteptare se alocă automat» (§615): with the tick above, whether a place goes to the line by
-  // itself — what the door and the join form say of an offer (`registration-cta.ts#offersByItself`, §NNN).
+  // itself — what the door and the join form say of an offer (`registration-cta.ts#offersByItself`, §906).
   waitlistAutoOffer: events.waitlistAutoOffer,
   // «Kit de participare» → «Tricou» (§554): whether the registration form asks the T-shirt size.
   kitShirt: events.kitShirt,

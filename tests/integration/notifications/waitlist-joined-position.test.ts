@@ -143,7 +143,7 @@ function row(messageType: EmailMessageType, registrationId: string, participantI
 
 describe("§629 the WAITLIST_JOINED email says where the person stood when it was rendered", () => {
   it("adds one sentence after the existing text, in both halves, worded as of that moment", async () => {
-    // The one place held: the event is full, as the allocator leaves it while people wait (a place nobody holds is not «full», §NNN).
+    // The one place held: the event is full, as the allocator leaves it while people wait (a place nobody holds is not «full», §906).
     await person("CONFIRMED", null);
     await person("WAITLISTED", at(1));
     const mine = await person("WAITLISTED", at(2));

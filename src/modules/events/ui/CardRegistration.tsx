@@ -32,7 +32,7 @@ export type CardRegistrationLine = {
   /**
    * A full event with a waiting list (§587): what the list does, on a line of its own under the
    * lead — "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.", or, while
-   * no place reaches the list by itself (§NNN), "… — organizatorii îți scriu pe email când îți pot da
+   * no place reaches the list by itself (§906), "… — organizatorii îți scriu pe email când îți pot da
    * un loc." Absent in every other state.
    */
   note?: string;
@@ -171,7 +171,7 @@ export function cardRegistrationLine(
         ...quiet,
         lead,
         leadParts: { before: "", fact: lead, after: "" },
-        // What the list does, as the page says it (§NNN): «te anunțăm…» only while a freed place reaches it by itself.
+        // What the list does, as the page says it (§906): «te anunțăm…» only while a freed place reaches it by itself.
         note: waitlistJoinPhrase(say, offersByItself(event, 0)),
         // The room a capped list has left, as the page's door says it (§594, §348); a list with no limit says nothing.
         ...(cta.waitlistRoom !== null ? { roomLine: waitlistRoomPhrase(say, locale, cta.waitlistRoom) } : {}),
@@ -185,7 +185,7 @@ export function cardRegistrationLine(
     case "FULL_NO_WAITLIST":
       return { ...quiet, lead: say("cta.fullNoWaitlist"), bold: true, button: null };
     case "PAUSED":
-      // The organizers shut the site's door (§NNN): the page's own sentence, bold — something to wait for — and no button.
+      // The organizers shut the site's door (§906): the page's own sentence, bold — something to wait for — and no button.
       return { ...quiet, lead: say(cta.reason === "SWITCH" ? "cta.paused" : "cta.pausedOffersOnly"), bold: true, button: null };
     case "NOT_YET_OPEN": {
       // The opening date rather than "not yet" (§146) — or "soon" when there is none yet (§451).

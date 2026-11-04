@@ -999,18 +999,18 @@ export const eventFieldsSchema = z
      */
     waitlistAutoOffer: z.boolean().optional(),
     /**
-     * «Locurile libere le dau doar eu» (§NNN): a public entry never takes a free place — it joins the waiting
+     * «Locurile libere le dau doar eu» (§906): a public entry never takes a free place — it joins the waiting
      * list, or is refused like a full race when the list has no room. Absent means this caller is not editing
      * it, by the kit's discipline (§554).
      */
     freePlacesByOfferOnly: z.boolean().optional(),
     /**
-     * «Înscrieri publice deschise» (§NNN): unticked, the site's button goes and the public form is refused,
+     * «Înscrieri publice deschise» (§906): unticked, the site's button goes and the public form is refused,
      * whatever the dates; every staff verb keeps working. Absent means this caller is not editing it.
      */
     publicRegistrationOpen: z.boolean().optional(),
     /**
-     * «Anunță-mă când rămân N locuri» (§NNN): empty is off (null); a number is the free places at or under
+     * «Anunță-mă când rămân N locuri» (§906): empty is off (null); a number is the free places at or under
      * which the Administrators are emailed — 0 only when the places are gone. Bounded like the places
      * themselves. Absent means this caller is not editing it.
      */

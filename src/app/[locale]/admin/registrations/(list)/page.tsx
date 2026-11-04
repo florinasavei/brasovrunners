@@ -295,7 +295,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? countKits(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
     // «Locuri» (the owner, 2026-11-03): taken, free, both lists, how many can be let in — one event with a capacity only.
     filters.eventId ? readPlaceOutlook(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
-    // «Pe site acum» (§NNN): what the public meets this minute, by the public card's predicate, and the tick beside it — one event only.
+    // «Pe site acum» (§906): what the public meets this minute, by the public card's predicate, and the tick beside it — one event only.
     filters.eventId ? readPublicDoor(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
     // «Plus voluntari cu kit» (§904): the event's volunteers ticked «Are kit», a figure of its own beside the kits — `countKits` is untouched.
     filters.eventId ? countVolunteersWithKit(db, filters.eventId) : Promise.resolve(0),
@@ -1291,7 +1291,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
       </SummaryStrip>
       {/*
-        «Locuri», and «Pe site acum» inside it (§NNN) — the tick «Înscrieri publice deschise» beside it handed to an
+        «Locuri», and «Pe site acum» inside it (§906) — the tick «Înscrieri publice deschise» beside it handed to an
         Administrator alone (the action asserts it again); the Organizer reads the state. An event with no capacity
         has no «Locuri»: the line and the tick stand alone.
       */}

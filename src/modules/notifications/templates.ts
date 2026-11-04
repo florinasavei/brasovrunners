@@ -1020,7 +1020,7 @@ export type TemplateData = {
    */
   unreachableWindow?: UnreachableWindowFacts;
   /**
-   * «Anunță-mă când rămân N locuri» (§NNN): which crossing (`LOW`, the free places down to the club's N; `FULL`, none
+   * «Anunță-mă când rămân N locuri» (§906): which crossing (`LOW`, the free places down to the club's N; `FULL`, none
    * left), the free places and the capacity counted under the lock that crossed it, and the N itself.
    */
   placesAlert?: { stage: "LOW" | "FULL"; free: number; capacity: number; alertAt: number };
@@ -1256,7 +1256,7 @@ export type TemplateData = {
    */
   waitlistResent?: boolean;
   /**
-   * `WAITLIST_JOINED` (§NNN): the person waits for the organizers to give out the places, not because every place is
+   * `WAITLIST_JOINED` (§906): the person waits for the organizers to give out the places, not because every place is
    * held — «Locurile libere le dau doar eu» is in force, or a place nobody holds stands beside the line (`render.ts#waitlistByHand`,
    * the allocator's rule read at render time). The message then says the organizers give the places one at a time and
    * never «este complet»: the event is not full. Absent: every place is held, and the event is full — and the promise
@@ -1265,7 +1265,7 @@ export type TemplateData = {
    */
   waitlistByHand?: boolean;
   /**
-   * `WAITLIST_SPOT_OFFER` (§NNN): false while no place goes out by itself (`offersOnItsOwn`: «Nu», or «Locurile libere le
+   * `WAITLIST_SPOT_OFFER` (§906): false while no place goes out by itself (`offersOnItsOwn`: «Nu», or «Locurile libere le
    * dau doar eu»), read at render time — the deadline's sentence then says the organizers may give the place to someone
    * else, never that it passes to the next person on the waiting list by itself. Absent reads as true: those words.
    */
@@ -1696,7 +1696,7 @@ const T = {
     waitlistJoined: {
       subject: "Ești pe lista de așteptare",
       /*
-        Full, or the organizers' places (§NNN): while «Locurile libere le dau doar eu» is in force, or a place nobody
+        Full, or the organizers' places (§906): while «Locurile libere le dau doar eu» is in force, or a place nobody
         holds stands beside the line, the event is not full — the person waits for the organizers to give the places,
         so it says that, never «este complet» (`waitlistByHand`, read at render time by the allocator's rule). Full
         with «Nu», «este complet» stays true, but no freed place reaches anybody by itself: the promise is the
@@ -1718,7 +1718,7 @@ const T = {
         terms §2's {{offerHours}}): the moment, in the event's zone, and the length the club set in
         "Termene" (§377). A resend after the offer lapsed names no moment that has passed. After the
         deadline the place passes to the next person by itself only while places go out by themselves
-        (§NNN, `offerPassesOnItsOwn`); otherwise the organizers give it.
+        (§906, `offerPassesOnItsOwn`); otherwise the organizers give it.
       */
       body: (d: TemplateData) => [
         d.holdExpiresAtFormatted
@@ -2108,7 +2108,7 @@ const T = {
       ],
       action: "Deschide «Voluntari»",
     },
-    // «Anunță-mă când rămân N locuri» (§NNN): to the Administrators, once per crossing — the free places and what to do.
+    // «Anunță-mă când rămân N locuri» (§906): to the Administrators, once per crossing — the free places and what to do.
     placesAlert: {
       subject: (d: TemplateData) =>
         d.placesAlert?.stage === "FULL"
@@ -2172,7 +2172,7 @@ const T = {
       body: (d: TemplateData) => [
         `Locul tău la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **a expirat**: declarația nu a fost semnată la timp.`,
       ],
-      // The button exists only when the form would take the person (`render.ts`): never on «desk», nor while the organizers keep the site shut (§NNN).
+      // The button exists only when the form would take the person (`render.ts`): never on «desk», nor while the organizers keep the site shut (§906).
       action: (d: TemplateData) => (d.holdLapsedNext === "register" ? "Înscrie-te din nou" : "Intră pe lista de așteptare"),
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
@@ -2569,7 +2569,7 @@ const T = {
       `Termenul pentru semnare a fost ${deadline ?? "depășit"}. ${toWaitlist ? "Altcineva aștepta un loc, așa că locul tău a trecut la lista de așteptare." : "Altcineva a cerut un loc, așa că locul tău a devenit liber."}`,
     /**
      * …and what the person can do now, by the event as it stands at the send (`holdLapsedNext`). A site the
-     * organizers keep shut (§NNN) is said in the card's own words, with «scrie-ne» — the footer's «Scrie-ne» link.
+     * organizers keep shut (§906) is said in the card's own words, with «scrie-ne» — the footer's «Scrie-ne» link.
      */
     holdLapsedNext: (next: HoldLapsedNext) =>
       next === "register"
@@ -3506,7 +3506,7 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
 };
 
 /**
- * The alert's bold line (§NNN): the free places of the capacity and the club's N, counted under the lock that
+ * The alert's bold line (§906): the free places of the capacity and the club's N, counted under the lock that
  * crossed it — «Locuri libere: 3 din 10 · pragul tău: 5». The counts are this line's, never fields of the words
  * below, so a club text for the message (§359) never stores a sample number. Nothing without the payload's facts.
  */
@@ -3519,7 +3519,7 @@ function placesAlertFacts(locale: "ro" | "en", d: TemplateData): { line: string;
 }
 
 /**
- * The alert's paragraphs (§NNN), each half in its own language: what happened, the settings that give the
+ * The alert's paragraphs (§906), each half in its own language: what happened, the settings that give the
  * Administrator the door, and the one-email-per-threshold rule — never a person's name, nothing of a registration.
  */
 function placesAlertBody(locale: "ro" | "en", d: TemplateData): string[] {
@@ -3588,7 +3588,7 @@ function participantsPhrase(locale: EmailLocale, count: number): string {
 }
 
 /**
- * Whether `WAITLIST_JOINED` promises the organizers' word rather than a notice when a place frees up (§NNN): no place
+ * Whether `WAITLIST_JOINED` promises the organizers' word rather than a notice when a place frees up (§906): no place
  * reaches the line by itself — «Nu», or «Locurile libere le dau doar eu» in force: the standing's `autoOffer`, the
  * allocator's own `offersOnItsOwn` read with the person's place in the line (`readWaitlistPosition`), the fact the
  * position sentence below is worded by — or the person waits beside a place nobody holds (`waitlistByHand`). The event
@@ -4237,7 +4237,7 @@ export function buildTemplateContent(
         messageType === "SHOP_ORDER_CLUB_NOTICE" ||
         // …nor the organizers' notice of a volunteer's sign-up (§754): to colleagues, its one link is its button.
         messageType === "VOLUNTEER_CLUB_NOTICE" ||
-        // …nor the Administrators' places alert (§NNN): to colleagues, its one link is its button.
+        // …nor the Administrators' places alert (§906): to colleagues, its one link is its button.
         messageType === "PLACES_ALERT"
       ) {
         return own.length > 0 ? own : undefined;

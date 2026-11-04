@@ -1,7 +1,7 @@
 import type { RegistrationCta } from "@/modules/events/domain/registration-cta";
 
 /**
- * «Pe site acum» (§NNN; the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»): what a visitor meets on
+ * «Pe site acum» (§906; the owner, 2026-11-03: «cumva trebuie să pot controla mai bine»): what a visitor meets on
  * the event's page this minute, said on the registrations page under «Locuri» — read off the door the public card
  * draws (`registrationCta`, the one predicate), never a second copy of its rules.
  *

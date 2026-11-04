@@ -10,11 +10,11 @@ import PublicNowLine from "./PublicNowLine";
  * «Locuri» under the registrations list's counts, for one event with a capacity (the owner, 2026-11-03:
  * «nu să mă uit eu de fiecare dată»). The answer first — the places free now — then why: who takes the
  * places (confirmed, or holding one until they sign, by what holds it: a declaration to sign, an offer, an
- * invitation, a family's reservation — §NNN), who waits, where the free places go, what letting everybody in
+ * invitation, a family's reservation — §906), who waits, where the free places go, what letting everybody in
  * would take, and the people at the start. The owner, the same day, of the first wording: «nu înțeleg exact
  * câte locuri mai pot să dau». `domain/place-outlook.ts` does the arithmetic; this only says it.
  *
- * Last, «Pe site acum» (§NNN, `PublicNowLine`): what the public meets this minute, from the public card's own
+ * Last, «Pe site acum» (§906, `PublicNowLine`): what the public meets this minute, from the public card's own
  * predicate, and the tick «Înscrieri publice deschise» beside it. Absent when the page read no door.
  */
 export default async function PlaceOutlook({

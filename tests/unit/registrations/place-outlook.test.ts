@@ -36,7 +36,7 @@ describe("placeOutlook", () => {
     });
   });
 
-  it("carries the held places by kind beside their sum (§NNN): 13 = 9 declarations + 2 offers + 2 invitations", () => {
+  it("carries the held places by kind beside their sum (§906): 13 = 9 declarations + 2 offers + 2 invitations", () => {
     const outlook = placeOutlook(counts({ capacity: 180, occupied: 175, confirmed: 162, declaration: 9, offered: 2, invited: 2, waiting: 0, internal: 0, outside: 0 }));
     expect(outlook.held).toBe(13);
     expect(HELD_KINDS.map((kind) => outlook[kind])).toEqual([9, 2, 2, 0]);

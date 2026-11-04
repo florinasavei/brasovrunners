@@ -206,7 +206,7 @@ describe("§638 the person whose held place lapses is told by email", () => {
     await expect(renderOutboxMessage(row, db, at)).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
   });
 
-  it("§NNN says what the site's door says: shut by the organizers, or the free places theirs to give — never «te poți înscrie din nou», never a button the page does not draw", async () => {
+  it("§906 says what the site's door says: shut by the organizers, or the free places theirs to give — never «te poți înscrie din nou», never a button the page does not draw", async () => {
     const event = await createEvent({ capacity: 1 });
     await join(event, "ana@example.ro", NOW);
     await join(event, "bogdan@example.ro", NOW);

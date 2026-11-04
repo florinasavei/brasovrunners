@@ -234,7 +234,7 @@ describe("BR-REQ-011-01 criterion 13 — the interest list and REGISTRATION_OPEN
     expect(await queueRegistrationOpenedMessages(db, OPENS_AT)).toEqual({ queued: 1, dropped: 0 });
   });
 
-  it("§NNN announces nothing while «Înscrieri publice deschise» is unticked, keeps every address, and tells them once it is ticked again", async () => {
+  it("§906 announces nothing while «Înscrieri publice deschise» is unticked, keeps every address, and tells them once it is ticked again", async () => {
     const event = await seedEvent();
     await registerInterest(db, event, form("ana@example.ro"), NOW);
     await registerInterest(db, event, form("ion@example.ro", { locale: "en" }), NOW);

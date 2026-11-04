@@ -63,7 +63,7 @@ export type CalendarRegistration =
   /** `opensAt` is null for an opening announced "soon" with no date (§451). */
   | { kind: "NOT_YET_OPEN"; opensAt: Date | null; url: string }
   | { kind: "CLOSED" }
-  /** The window is open by its dates and «Înscrieri publice deschise» is unticked (§NNN): the page's sentence, no link to the form. */
+  /** The window is open by its dates and «Înscrieri publice deschise» is unticked (§906): the page's sentence, no link to the form. */
   | { kind: "PAUSED" }
   | { kind: "EXTERNAL"; url: string | null };
 
@@ -301,7 +301,7 @@ function calendarPlace(
  * an event cancelled or over. `registerUrl` is the form's absolute address, `now` the clock,
  * passed in like everywhere the window is read (AGENTS.md §1.5).
  *
- * The public door is the page's too (§NNN, `publicDoorOpen`, which `registrationCta` asks): an open window
+ * The public door is the page's too (§906, `publicDoorOpen`, which `registrationCta` asks): an open window
  * behind «Înscrieri publice deschise» unticked is `PAUSED` — the page's «oprite de organizatori», and no
  * link to a form the server refuses. The row carries the tick, so nothing more is read.
  */
@@ -504,7 +504,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
       return { text: t("cta.opensOnShort", { date }), url: r.url, separator: " — " };
     }
     if (r.kind === "CLOSED") return { text: t("registrationState.CLOSED") };
-    // The organizers shut the site's door (§NNN): the page's own sentence, and no link to the form.
+    // The organizers shut the site's door (§906): the page's own sentence, and no link to the form.
     if (r.kind === "PAUSED") return { text: t("cta.paused") };
     return { text: t("registrationState.EXTERNAL"), url: r.url ?? undefined, separator: " — " };
   })();

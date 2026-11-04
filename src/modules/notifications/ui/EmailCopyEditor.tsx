@@ -42,7 +42,7 @@ type Props = {
 };
 
 /**
- * The messages whose default words follow the event's waiting-list settings at the send (§NNN): `WAITLIST_JOINED` says
+ * The messages whose default words follow the event's waiting-list settings at the send (§906): `WAITLIST_JOINED` says
  * who gives the places, and `WAITLIST_SPOT_OFFER` what happens to the place after its deadline, by «Locurile din lista de
  * așteptare se alocă automat» and «Locurile libere le dau doar eu». A text the club saves replaces those words whatever
  * the settings are, so the editor says so under the box — one line, nothing refused.
@@ -163,7 +163,7 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
         <Typography variant="caption" color="text.secondary">
           {t("emails.copy.paragraphsHelp")}
         </Typography>
-        {/* The two messages whose default words follow the event's waiting-list settings (§NNN): a saved text replaces them, however they are set. */}
+        {/* The two messages whose default words follow the event's waiting-list settings (§906): a saved text replaces them, however they are set. */}
         {FOLLOWS_THE_SETTINGS.has(messageType) && (
           <Typography variant="caption" color="text.secondary" data-testid="email-copy-follows-settings">
             {t("emails.copy.followsSettings")}
