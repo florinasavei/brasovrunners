@@ -73,6 +73,7 @@ import {
 import { listMemberTickCandidates, type MemberTickCandidate, type MemberTickScope } from "./member-ticks";
 import { ANSWERS_UNCHANGED } from "./answers";
 import { addRegistrationNote } from "./notes";
+import { writeRegistrationEliteMark } from "./elite-mark";
 import { rerankEventResults } from "@/modules/results/results";
 
 /**
@@ -516,6 +517,13 @@ export type CreateRegistrationByStaffInput = {
    */
   thenOffered?: boolean;
   /**
+   * «Elită» (§917): the registration is marked elite from the start, in the entry's own transaction, exactly as
+   * «Marchează ca elită» marks it afterwards (`elite-mark.ts#writeRegistrationEliteMark`, audited `via: "entry"`) —
+   * how its bib prints, and nothing else. The Administrator's (`canManageRegistrations`): any other role posting it
+   * is refused before anything is written, never silently left unmarked. Internal: the person is told nothing.
+   */
+  elite?: boolean;
+  /**
    * The number handed to the walk-in with the paper (§444): the desk's next spare, which the form
    * suggests, or any free number the volunteer typed. Only with the fast track — a person who
    * finishes from their own email is not standing at the table holding a bib — and written only
@@ -571,7 +579,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   actor: Pick<StaffUser, "id" | "role">,
   input: CreateRegistrationByStaffInput,
   now: Date,
-): Promise<{ registrationId: string | null; status: RegistrationStatus | null }> {
+): Promise<StaffEntryResult> {
   assertDesk(actor);
 
   if (!input.relayedByParticipantRequest) {
@@ -607,6 +615,11 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   if (vouchAddress && !canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not vouch for an address at the entry`);
   }
+  // «Elită» at the entry (§917): the mark's own gate (`setRegistrationElite`), asserted before anything is written.
+  const elite = input.elite === true;
+  if (elite && !canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not mark a registration elite`);
+  }
   if (handedBib !== undefined) {
     if (await bibNumberInUse(db, { eventId: event.id, number: handedBib })) {
       throw new DomainError("CONFLICT", `number ${handedBib} is already somebody's at this event`, ["bibNumber"]);
@@ -639,46 +652,75 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     }
   }
 
-  const submitted = await submitRegistration(
-    db,
-    event,
-    {
-      firstName: input.firstName,
-      lastName: input.lastName,
-      ...input.details,
-      email: input.email,
-      locale: input.locale,
-      // The organizer confirmed above that they are relaying a request. That relay is what the
-      // acknowledged notice version on the row records, and the audit entry below is what says
-      // who made it — the participant's own agreement is the declaration, which only they sign.
-      privacyAcknowledged: true,
-      // Never assumed on somebody's behalf: results consent is a separate question with its own
-      // legal basis, and the answer nobody gave is "no".
-      resultsNameConsent: false,
-      listOptOut: input.listOptOut,
-    },
-    now,
-    "REAL",
-    { source: "STAFF", createdByStaffUserId: actor.id, atTheDesk: input.fastTrack === true, addressVouched: vouchAddress, thenOffered: vouchAddress && input.thenOffered === true },
-  );
+  const enter = async (conn: Database<T>) => {
+    const submitted = await submitRegistration(
+      conn,
+      event,
+      {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        ...input.details,
+        email: input.email,
+        locale: input.locale,
+        // The organizer confirmed above that they are relaying a request. That relay is what the
+        // acknowledged notice version on the row records, and the audit entry below is what says
+        // who made it — the participant's own agreement is the declaration, which only they sign.
+        privacyAcknowledged: true,
+        // Never assumed on somebody's behalf: results consent is a separate question with its own
+        // legal basis, and the answer nobody gave is "no".
+        resultsNameConsent: false,
+        listOptOut: input.listOptOut,
+      },
+      now,
+      "REAL",
+      { source: "STAFF", createdByStaffUserId: actor.id, atTheDesk: input.fastTrack === true, addressVouched: vouchAddress, thenOffered: vouchAddress && input.thenOffered === true },
+    );
 
-  const participant = await findParticipantByCanonicalEmail(db, identity.canonicalEmail);
+    const participant = await findParticipantByCanonicalEmail(conn, identity.canonicalEmail);
+    /*
+      The row this entry wrote, by the id the service returned (§420) — never re-read by address:
+      on a family's address (§389) the newest active row may be another runner's, entered on the
+      public form a moment later, and the fast track below would confirm *them* on this person's paper.
+    */
+    const written = submitted.registrationId ? await findRegistrationById(conn, submitted.registrationId) : undefined;
+
+    await recordAuditEvent(conn, {
+      actorStaffUserId: actor.id,
+      participantId: participant?.id ?? null,
+      action: "registration.created_by_staff",
+      entityType: "registration",
+      entityId: written?.id ?? event.id,
+      metadata: { eventId: event.id, status: written?.status ?? null, fastTrack: Boolean(input.fastTrack), ...(vouchAddress ? { addressVouched: true } : {}) },
+      now,
+    });
+    return written;
+  };
+
   /*
-    The row this entry wrote, by the id the service returned (§420) — never re-read by address:
-    on a family's address (§389) the newest active row may be another runner's, entered on the
-    public form a moment later, and the fast track below would confirm *them* on this person's paper.
+    «Elită» at the entry (§917): the registration and its mark in one transaction — the entry above, then the mark
+    exactly as «Marchează ca elită» writes it (`writeRegistrationEliteMark`, `via: "entry"`), so a refusal leaves
+    neither and nothing ever stands half-marked. A restarted row that kept its mark (§897) writes nothing more. The
+    entry without the tick is today's, untouched; the fast track's paper confirmation below stays its own step either way.
   */
-  const created = submitted.registrationId ? await findRegistrationById(db, submitted.registrationId) : undefined;
-
-  await recordAuditEvent(db, {
-    actorStaffUserId: actor.id,
-    participantId: participant?.id ?? null,
-    action: "registration.created_by_staff",
-    entityType: "registration",
-    entityId: created?.id ?? event.id,
-    metadata: { eventId: event.id, status: created?.status ?? null, fastTrack: Boolean(input.fastTrack), ...(vouchAddress ? { addressVouched: true } : {}) },
-    now,
-  });
+  let created: Registration | undefined;
+  let elitePublic = false;
+  if (elite) {
+    const entered = await db.transaction(async (tx) => {
+      const written = await enter(tx);
+      const marked = written ? await writeRegistrationEliteMark(tx, actor.id, written.id, true, now, "entry") : null;
+      return { written, publicChanged: marked?.public === true };
+    });
+    created = entered.written;
+    elitePublic = entered.publicChanged;
+    /*
+      A restarted row whose club ticks (§910) the mark now brings into force: told after the commit, as the mark's own
+      press. Run inside a caller's transaction (`enterOnWaitlistByStaff`), the commit above is a savepoint's: the caller
+      reads `elitePublic` and tells the pages again after its own commit, so a render in between keeps no old rows.
+    */
+    if (elitePublic) revalidatePublicContent("events", "places");
+  } else {
+    created = await enter(db);
+  }
 
   if (input.fastTrack && created) {
     try {
@@ -704,8 +746,15 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   // The row this entry wrote, for «Trece pe lista oficială» (§854), which carries the line's note onto it, and
   // the state the entry itself landed in — the line or a hold for a vouched entry (§872), before any fast-track
   // confirmation — for the short form's toast («Adaugă pe lista de așteptare»).
-  return { registrationId: created?.id ?? null, status: created?.status ?? null };
+  return { registrationId: created?.id ?? null, status: created?.status ?? null, elitePublic };
 }
+
+/**
+ * What the staff entry wrote: the row and the state the entry landed in, and `elitePublic` — «Elită» (§917) brought a
+ * restarted row's club ticks (§910) into force, so the public pages were told. A caller that ran the entry inside its own
+ * transaction (`enterOnWaitlistByStaff`) tells them again after its commit.
+ */
+export type StaffEntryResult = { registrationId: string | null; status: RegistrationStatus | null; elitePublic: boolean };
 
 export type WaitlistEntryByStaffInput = {
   eventId: string;
@@ -724,6 +773,8 @@ export type WaitlistEntryByStaffInput = {
    * supplementary place the dialog named (`addPlaceTo`). Absent, the entry is «Adaugă pe lista de așteptare» alone.
    */
   offerNow?: StaffPlaceOptions | null;
+  /** «Elită» (§917): marked from the start, in the entry's transaction, as the full form's tick marks it (`createRegistrationByStaff`). */
+  elite?: boolean;
 };
 
 export type WaitlistEntryByStaffResult = { registrationId: string; status: RegistrationStatus; capacityRaisedTo: number | null };
@@ -777,6 +828,7 @@ export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
           «Mută pe lista oficială» leave the person waiting, so they keep honouring the limit (§348).
         */
         thenOffered: Boolean(input.offerNow),
+        elite: input.elite === true,
       },
       now,
     );
@@ -800,11 +852,14 @@ export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
         );
     }
     if (input.note) await addRegistrationNote(tx, actor, created.registrationId, input.note, now);
-    return { registrationId: created.registrationId, status, capacityRaisedTo };
+    return { registrationId: created.registrationId, status, capacityRaisedTo, elitePublic: created.elitePublic };
   });
+  const { elitePublic, ...entered } = result;
   // The capacity is on every public page that counts places (§333): told after the commit, as the offer's own press.
-  if (result.capacityRaisedTo !== null) revalidatePublicContent("places");
-  return result;
+  if (entered.capacityRaisedTo !== null) revalidatePublicContent("places");
+  // «Elită» on a restarted row with the club's ticks (§910): the entry told the pages inside this transaction; again now it committed.
+  if (elitePublic) revalidatePublicContent("events", "places");
+  return entered;
 }
 
 /**

@@ -9,8 +9,10 @@ import type { TokenRejectionReason } from "@/modules/action-tokens/domain/token-
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { findEventNotificationDetails } from "@/modules/events/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { DomainError } from "@/shared/errors/domain-error";
 import { invitationState } from "./domain/invitations";
+import { writeRegistrationEliteMark } from "./elite-mark";
 import { findInvitationById } from "./invitation-repository";
 import { publicFormEvent } from "./public-form-event";
 import { lockEventForCapacity } from "./repository";
@@ -30,7 +32,8 @@ import { seatInvitedRegistration, submitRegistration } from "./service";
  *   (`submitRegistration`, the invitation's origin) and seated in the invitation's place
  *   (`seatInvitedRegistration`): the address proved by the link, «Sunt membru» set for a member the club
  *   picked, the place moved from the invitation to
- *   the declaration hold with no gap, the declaration's email queued. One transaction: a refusal of the
+ *   the declaration hold with no gap, the declaration's email queued — and, for an invitation sent with «Elită» (§917),
+ *   the registration marked as `elite-mark.ts` marks one, said to nobody. One transaction: a refusal of the
  *   form (a field, the terms changed, this runner on the address already) takes the token's spend back
  *   with everything else, and the same link still works.
  *
@@ -127,7 +130,7 @@ export async function acceptInvitation<T extends Record<string, unknown>>(db: Da
   if (!peek.ok) return { ok: false, kind: rejectionKind(peek.reason) };
   const scopedId = peek.token.invitationId;
   if (!scopedId) return { ok: false, kind: "invalid" };
-  return db.transaction(async (tx) => {
+  const outcome = await db.transaction(async (tx) => {
     const scoped = await findInvitationById(tx, scopedId);
     if (!scoped) return { ok: false as const, kind: "invalid" as const };
     const lockedEvent = await lockEventForCapacity(tx, scoped.eventId);
@@ -173,7 +176,18 @@ export async function acceptInvitation<T extends Record<string, unknown>>(db: Da
       { source: "PUBLIC", createdByStaffUserId: null, invitation: { participantId: invitation.participantId } },
     );
     if (!created.registrationId) throw new DomainError("CONFLICT", "the invitation created no registration");
-    const registration = await seatInvitedRegistration(tx, event, created.registrationId, invitation, now, settings);
-    return { ok: true as const, registration };
+    const seated = await seatInvitedRegistration(tx, event, created.registrationId, invitation, now, settings);
+    /*
+      «Elită» from the send (§917): the registration marked in this same transaction, exactly as «Marchează ca elită» marks
+      it (`writeRegistrationEliteMark`), its trail naming the Administrator who sent the invitation, `via: "invitation"`.
+      Internal: the person's page, form and emails say nothing of it — the declaration's email above is the ordinary one.
+    */
+    const marked = invitation.elite ? await writeRegistrationEliteMark(tx, invitation.invitedByStaffUserId, seated.id, true, now, "invitation") : null;
+    const registration = marked ? { ...seated, elite: true } : seated;
+    return { ok: true as const, registration, publicChanged: marked?.public === true };
   });
+  if (!outcome.ok) return outcome;
+  // A restarted row whose club ticks (§910) the mark brings into force: told after the commit, as the mark's own press.
+  if (outcome.publicChanged) revalidatePublicContent("events", "places");
+  return { ok: true, registration: outcome.registration };
 }

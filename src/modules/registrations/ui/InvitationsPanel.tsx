@@ -19,6 +19,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import type { FormOutcome } from "@/shared/forms/outcome";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
+import StatusChip from "@/shared/ui/StatusChip";
 import { readInvitationForecast } from "../admin-service";
 import { HIDDEN_LIST_OFF } from "../domain/hidden-list";
 import { INVITATION_DAYS_DEFAULT, INVITATION_DAYS_MAX, INVITATION_REFUSALS, invitationState } from "../domain/invitations";
@@ -104,6 +105,8 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       daysHelp: t("invitations.daysHelp", { max: INVITATION_DAYS_MAX }),
       outsideLabel: t("invitations.outsideLabel"),
       outsideHelp: t("invitations.outsideHelp"),
+      eliteLabel: t("invitations.eliteLabel"),
+      eliteHelp: t("invitations.eliteHelp"),
       localeLegend: t("invitations.localeLegend"),
       localeRo: t("invitations.localeRo"),
       localeEn: t("invitations.localeEn"),
@@ -115,6 +118,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       dialogRaise: counted("invitations.dialog.raise"),
       dialogNoRaise: t("invitations.dialog.noRaise"),
       dialogOutside: t("invitations.dialog.outside"),
+      dialogElite: t("invitations.dialog.elite"),
       dialogDays: counted("invitations.dialog.days"),
       dialogLocale: t.raw("invitations.dialog.locale") as string,
       dialogEmail: inviteMail.emailCount.forms,
@@ -220,6 +224,11 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                       <Chip size="small" variant="outlined" label={t(row.memberStaffUserId ? "invitations.origin.member" : "invitations.origin.typed")} data-testid="invitation-origin" />
                       {/* «Invitat special» (§649): the registrations' own chip, glyph and hint, not a bare word. */}
                       {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="invitation-outside-chip" />}
+                      {/* «Elită» (§917): the registrations list's own chip, staff-only — on an open invitation by the send's tick, on an
+                          accepted one by the registration it became as it stands now («Nu mai e elită» takes it off here too). */}
+                      {(state === "sent" ? row.elite : state === "accepted" && row.acceptedElite === true) && (
+                        <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="invitation-elite-chip" />
+                      )}
                     </Stack>
                   </td>
                   <td>

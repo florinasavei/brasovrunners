@@ -1287,7 +1287,10 @@
         "registered": "registered",
         "empty": "No elite at this event.",
         "manage": "Manage the elite list",
-        "seeCard": "See the elite list in the editor"
+        "seeCard": "See the elite list in the editor",
+        "entry": "Elite",
+        "entryHelp": "Internal: the person does not see the mark; it only changes how the bib prints.",
+        "entryConfirm": "Marked «Elite» — internal, the person is not told."
       },
       "export": "Download CSV",
       "personLink": "Everything held about a person",
@@ -11111,6 +11114,8 @@
       "daysHelp": "The place is kept this many days, at most until the start; from 1 to {max}.",
       "outsideLabel": "On the special guests list (takes no place)",
       "outsideHelp": "For organizers, volunteers, pacemakers and invited runners, who take none of the announced places: the invitation holds no place, and the registration will be a special guest's.",
+      "eliteLabel": "Elite",
+      "eliteHelp": "Internal: the registrations will be marked «Elite»; the people do not see the mark, it only changes how the bib prints.",
       "localeLegend": "Language of the invitation",
       "localeRo": "Română",
       "localeEn": "English",
@@ -11137,6 +11142,7 @@
         },
         "locale": "Language for addresses the club does not know: {language}.",
         "outside": "On the special guests list: they hold no place.",
+        "elite": "The registrations will be marked «Elite» — internal, the people are not told.",
         "confirmRaise": {
           "one": "Add {count} place and send",
           "few": "Add {count} places and send",

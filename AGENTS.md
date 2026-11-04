@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.28-2026-11-04 -->
+<!-- PROJECT_BASELINE: BR-V4.29-2026-11-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.28-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.29-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3108,7 +3108,13 @@ every role that reads the page and never at the desk.
 Beside the seven too, and a write that governs none of what they do: **the elite mark** («Marchează ca elită» /
 «Nu mai e elită» on the list's «⋮», 2026-11-03, `DECISIONS.md` §897). The Administrator's (`canManageRegistrations`,
 asserted by `setRegistrationEliteAction` and `elite-mark.ts`; the Organizer reads the «Elită» chip, Tehnic nothing), at
-any time and in any state, audited (`registration.elite_marked` / `registration.elite_unmarked`, the new value only). It
+any time and in any state, audited (`registration.elite_marked` / `registration.elite_unmarked`, the new value only). The
+same mark may be put on from the start (§917): the staff entry's «Elită» tick — the full form in each of its ways and the
+one-press «Adaugă pe lista de așteptare» — marks the registration in the entry's own transaction, and an invitation sent
+with «Elită» (`event_invitations.elite`, per send) marks the registration it becomes, by its link or by the route that
+takes it over, in that transaction, the trail naming the Administrator who sent it; both through
+`elite-mark.ts#writeRegistrationEliteMark`, the trail adding `via: "entry"` or `via: "invitation"`. Any other role posting
+the entry's tick is refused before anything is written. Internal: no email, form or page the person reads says it. It
 changes only how the registration's bib prints — an elite bib, the name where the number goes (§895) — and never the
 state, the place, the race number, a count, the queue or the outbox: no allocator call and no email, like the printing
 mark (§264). On a marked registration the same Administrator has two ticks (§910; on the list's «⋮», the registration's
