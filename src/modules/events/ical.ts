@@ -6,6 +6,7 @@ import { distanceWords } from "./domain/distance";
 import { HOME_COUNTRY } from "./domain/place";
 import { elevationWords } from "./domain/elevation";
 import { type EventSurface, type EventType } from "./domain/event-type";
+import { publicDoorOpen } from "@/modules/registrations/domain/public-door";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
 import { whenTimes } from "./domain/when-times";
@@ -62,6 +63,8 @@ export type CalendarRegistration =
   /** `opensAt` is null for an opening announced "soon" with no date (§451). */
   | { kind: "NOT_YET_OPEN"; opensAt: Date | null; url: string }
   | { kind: "CLOSED" }
+  /** The window is open by its dates and «Înscrieri publice deschise» is unticked (§906): the page's sentence, no link to the form. */
+  | { kind: "PAUSED" }
   | { kind: "EXTERNAL"; url: string | null };
 
 export type CalendarEvent = {
@@ -297,15 +300,19 @@ function calendarPlace(
  * uses (`registrationState`). Null when there is nothing to say: no registration at all, or
  * an event cancelled or over. `registerUrl` is the form's absolute address, `now` the clock,
  * passed in like everywhere the window is read (AGENTS.md §1.5).
+ *
+ * The public door is the page's too (§906, `publicDoorOpen`, which `registrationCta` asks): an open window
+ * behind «Înscrieri publice deschise» unticked is `PAUSED` — the page's «oprite de organizatori», and no
+ * link to a form the server refuses. The row carries the tick, so nothing more is read.
  */
 export function calendarRegistration(
-  event: RegistrationWindowInput & { externalRegistrationUrl: string | null },
+  event: RegistrationWindowInput & { externalRegistrationUrl: string | null; publicRegistrationOpen?: boolean | null },
   registerUrl: string,
   now: Date,
 ): CalendarRegistration | null {
   switch (registrationState(event, now)) {
     case "OPEN":
-      return { kind: "OPEN", url: registerUrl };
+      return publicDoorOpen(event) ? { kind: "OPEN", url: registerUrl } : { kind: "PAUSED" };
     case "NOT_YET_OPEN": {
       // «Se deschid în curând» (§451): the fact without a date.
       if (event.registrationOpensSoon) return { kind: "NOT_YET_OPEN", opensAt: null, url: registerUrl };
@@ -497,6 +504,8 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
       return { text: t("cta.opensOnShort", { date }), url: r.url, separator: " — " };
     }
     if (r.kind === "CLOSED") return { text: t("registrationState.CLOSED") };
+    // The organizers shut the site's door (§906): the page's own sentence, and no link to the form.
+    if (r.kind === "PAUSED") return { text: t("cta.paused") };
     return { text: t("registrationState.EXTERNAL"), url: r.url ?? undefined, separator: " — " };
   })();
 

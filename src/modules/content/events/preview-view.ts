@@ -65,6 +65,11 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     registrationOpensAt: event.registrationOpensAt,
     registrationOpensSoon: event.registrationOpensSoon,
     registrationClosesAt: event.registrationClosesAt,
+    // The door the saved page would draw (§906): shut by the organizers, or the line's whatever is free.
+    publicRegistrationOpen: event.publicRegistrationOpen,
+    freePlacesByOfferOnly: event.freePlacesByOfferOnly,
+    // Whether a place goes to the line by itself (§615, §906): what the preview's door and form say of an offer.
+    waitlistAutoOffer: event.waitlistAutoOffer,
     kitShirt: event.kitShirt,
     askHealthNote: event.askHealthNote,
     // The members' race number (§664): the draft's own switch, read as the page reads the saved one.

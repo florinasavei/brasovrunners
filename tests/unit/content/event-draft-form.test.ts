@@ -67,7 +67,10 @@ vi.mock("@/modules/content/members/member-definition", async (importOriginal) =>
 }));
 vi.mock("@/modules/registrations/ui/EmailDeliveryNotice", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
-vi.mock("@/modules/registrations/ui/RegistrationSteps", () => ({ default: () => null }));
+// The steps stand in as what the preview asked them to say of the waiting list (§908), the rest of them being theirs.
+vi.mock("@/modules/registrations/ui/RegistrationSteps", () => ({
+  default: ({ byItself }: { byItself: boolean }) => createElement("div", { "data-testid": "registration-steps", "data-by-itself": byItself ? "yes" : "no" }),
+}));
 
 const { renderDraftForm } = await import("@/modules/content/events/draft-form");
 
@@ -351,6 +354,44 @@ describe("§789 the «?» after «Sunt membru al grupului» says what the club s
       expect(readFileSync(caller, "utf8"), caller).toContain("cachedMemberDefinition(locale)");
     }
     expect(readFileSync("src/modules/content/events/draft-form.tsx", "utf8")).toContain("readMemberDefinition(db)");
+  });
+});
+
+describe("§906 the preview's join form says how an offer works as the saved page will", () => {
+  /** A full race whose line takes people: the preview's door as `draftRegistrationDoor` answers it. */
+  const full: RegistrationDoor = { kind: "KNOWN", cta: { kind: "FULL", waitlistRoom: null, waiting: 0 }, fill: null };
+  const auto = "Când se eliberează un loc, primești un email și ai 24 de ore să confirmi — altfel locul trece mai departe.";
+  const byHand = "Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email și ai 24 de ore să confirmi.";
+
+  it("in the organizers' words while no place reaches the line by itself — the tick, or «Nu» — and the old sentence with «Da»", async () => {
+    for (const change of [{ freePlacesByOfferOnly: true, waitlistAutoOffer: true }, { freePlacesByOfferOnly: false, waitlistAutoOffer: false }]) {
+      const html = await render({ ...draft(), ...change }, full);
+      expect(html).toContain('data-testid="registration-waitlist-notice"');
+      expect(html).toContain(byHand);
+      expect(html).not.toContain("Când se eliberează un loc");
+      // The join sentence above it by the same rule: nobody is emailed when a place frees up.
+      expect(html).toContain(ro.Event.cta.fullJoinByHand);
+      expect(html).not.toContain(ro.Event.cta.fullJoin);
+    }
+    const html = await render({ ...draft(), freePlacesByOfferOnly: false, waitlistAutoOffer: true }, full);
+    expect(html).toContain(auto);
+    expect(html).not.toContain(byHand);
+    expect(html).toContain(ro.Event.cta.fullJoin);
+    expect(html).not.toContain(ro.Event.cta.fullJoinByHand);
+  });
+
+  it("§908 the steps' waiting list by the same rule, whatever the door: the organizers' words with «Nu» or the tick", async () => {
+    for (const [change, byItself] of [
+      [{}, "yes"],
+      [{ freePlacesByOfferOnly: false, waitlistAutoOffer: true }, "yes"],
+      [{ freePlacesByOfferOnly: false, waitlistAutoOffer: false }, "no"],
+      [{ freePlacesByOfferOnly: true, waitlistAutoOffer: true }, "no"],
+    ] as const) {
+      for (const door of [undefined, full]) {
+        const html = await render({ ...draft(), ...change }, door);
+        expect(html, JSON.stringify(change)).toContain(`data-testid="registration-steps" data-by-itself="${byItself}"`);
+      }
+    }
   });
 });
 

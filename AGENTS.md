@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.19-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.21-2026-11-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.19-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.21-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1085,6 +1085,12 @@ Rules:
 - absent open means after eligible publication;
 - absent close means event start;
 - cancelled/completed cannot accept registration;
+- «Înscrieri publice deschise» (`events.public_registration_open`, on by default; `DECISIONS.md` §906) unticked:
+  the public form and its emailed link for another person are refused on the server — off the caller's row
+  and again under the event lock — whatever the window says, and the site shows no button; every staff
+  door is untouched (the staff entry, the desk, «Trimite-i oferta», «Dă-i un loc», «Oferă-i un loc acum»,
+  «Mută pe lista oficială», «Adaugă pe lista de așteptare», the invitations), and a registration already
+  sent goes on. Set in the editor's «Perioada de înscriere» and beside «Locuri» by an Administrator, audited;
 - requested locale translation must be published;
 - internal event references approved declaration template version;
 - an event may belong to a race (`race_id`); a race groups child events that share name,
@@ -1400,6 +1406,22 @@ Rules:
   that reaches its place by another route — the public form's confirmation, a staff entry, the desk, a
   restart, «Dă-i un loc acum» — takes the invitation's place over in the same way and marks it accepted,
   so no place stays held in the name of somebody already seated;
+- «Locurile libere le dau doar eu» (`events.free_places_by_offer_only`, off by default; `DECISIONS.md` §906): one
+  condition in the allocator's opening (`placeForNewcomer`), on the entry's channel and never on `kind` — a
+  **public** entry (the public form, its link for another person, a family's form, a restart through it, and
+  the address confirmation of a row the public form wrote) joins the waiting list beside a free place, as when
+  somebody waits (§615), or is refused like a full race when the line takes nobody (§348); every staff verb
+  is as before. The formula is untouched: the switch only ever narrows who takes a free place, so it can never
+  seat one too many. While it is on, nothing is offered by itself either, whatever `waitlist_auto_offer` says
+  (`domain/waitlist.ts#offersOnItsOwn`, read by `fillAvailableSpots`' one gate): every free place is the staff's
+  to give. On an uncapped event the switch changes nothing;
+- the waiting list's limit (§348) is asked only of a registration that would stay in the line: «Oferă-i un loc
+  acum», whose row is offered a place in the same transaction, is never refused by it, 0 included (§906);
+  «Adaugă pe lista de așteptare» and «Mută pe lista oficială», which leave the person waiting, still are;
+- «Anunță-mă când rămân N locuri» (`events.places_alert_at`, §906) is checked in the transaction of every
+  allocator write (`allocateOrWaitlist`, `fillAvailableSpots`, a family's reservation, a send of invitations),
+  under its lock: the Administrators are emailed once per crossing — down to N, then 0 — remembered in
+  `places_alert_sent` and re-armed above N or by a save that changes N. It decides nothing about places;
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
 - every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
@@ -1450,7 +1472,7 @@ V1 internal registration requires approved declaration version.
 - deterministic content SHA-256 over canonical serialized JSON;
 - participant sees exact version;
 - acceptance requires explicit checkbox + typed full name, which must be the declarant's own — the registered name, or the parent's or guardian's for a minor — compared after folding case, whitespace, diacritics, typographic punctuation and invisible characters, and refused otherwise before anything is recorded (`DECISIONS.md` §314);
-- acceptance requires the registration to hold every answer the public form requires of that person (`registrations/missing-answers.ts`, read off the form's own schema) — a staff entry or a line of the internal list moved onto the official one holds a name and an address, so the declaration's page asks the rest above the signature and saves them as the person's own in the signature's transaction; `signDeclaration` refuses any signature while one is missing, naming them. Never filled in by default and never by staff for the person; after a confirmation the manage link completes them, the declaration untouched (`DECISIONS.md` §905);
+- acceptance requires the registration to hold every answer the public form requires of that person (`registrations/missing-answers.ts`, read off the form's own schema) — a staff entry or a line of the internal list moved onto the official one holds a name and an address, so the declaration's page asks the rest above the signature and saves them as the person's own in the signature's transaction; `signDeclaration` refuses any signature while one is missing, naming them. Never filled in by default and never by staff for the person; after a confirmation the manage link completes them, the declaration untouched (`DECISIONS.md` §905). On a staff row, while no declaration is signed, the same page draws the name the club typed, prefilled, for the person to check and correct as on the form; it is saved in that same transaction, and the signature is checked against the name it leaves — never from the manage link, never on a public row, never under a signed declaration (`DECISIONS.md` §907);
 - acceptance stores version/hash/locale/name/server timestamp;
 - no raw IP/user-agent stored by default — the one exception is the trace of an **electronic** signature (§771, the owner, 2026-10-14): the caller's IP address and browser at the moment the typed name was posted (`declaration_acceptances.ip` / `user_agent`, and the same on a group run's declaration and on the volunteer agreement's and its guardian's acceptance), written only at an electronic acceptance (the race's email link, a group run's page, the volunteer's form or link, the guardian's link) — never with `PAPER`, whatever the caller passes (`signature-trace.ts#traceColumns`) —, read from the request's headers by the action (`readSignatureTrace`, never a form box), kept as long as the row and deleted with it, printed small under the signature of the PDF, listed in «Toate datele unei persoane», and named in the privacy notice's template (the declaration's, the group run's and the volunteers' paragraphs);
 - staff cannot sign on participant's behalf;
@@ -3170,16 +3192,27 @@ EVENT_UPDATE_NOTICE
 EVENT_CANCELLED
 DECLARATION_HOLD_EXPIRED
 EVENT_INVITATION
+PLACES_ALERT
 ```
+
+`PLACES_ALERT` (§906) is queued by `places-alert.ts#watchPlacesAlert`, in the transaction of the
+allocator write that crossed an event's «Anunță-mă când rămân N locuri», to every Administrator and
+Superadministrator with an address, in their own language: the event's id and the counts in the
+payload, no participant, no token; its one button opens the event's registrations. Once per crossing
+(`events.places_alert_sent`), forgotten when the free places climb back above N and by any save that
+changes N — never by a save that keeps it; never by a job of its own.
 
 `DECLARATION_HOLD_EXPIRED` (§638) is queued by `expireStaleHolds` in the transaction that
 releases a lapsed declaration hold to somebody who wanted the place (§10.5), whatever path ran it,
 once per lapsed hold (`registration:<id>:hold-lapsed:<deadline>`: a restarted registration whose
 new hold lapses too is told again, and an older message still queued is withdrawn). It says the deadline that passed, whether
 the place went to the waiting list, and what the person can do now, read at send time: join the
-waiting list, register again, or nothing online — the desk gives free places on the day. No token,
-no «Nu mai pot ajunge»: the registration is over. Not for a hold the start releases, not for a
-cancelled event (§331), and never for a lapsed waiting-list offer, which stays silent.
+waiting list, register again, or nothing online — the desk gives free places on the day. The site's
+door is read as the card reads it (§906): «Înscrieri publice deschise» unticked says the organizers
+stopped it, and «Locurile libere le dau doar eu» sends a public entry to the line beside free places, or
+— with a line that takes nobody — says the places left are the organizers'; neither has a button, both
+«scrie-ne». No token, no «Nu mai pot ajunge»: the registration is over. Not for a hold the start
+releases, not for a cancelled event (§331), and never for a lapsed waiting-list offer, which stays silent.
 
 `EVENT_INVITATION` (§647) is queued by an Administrator's send of invitations, and again by
 «Retrimite» (`invitation:<id>:sent:<instant>`, `…:resent:<instant>`), to an address before any
@@ -3266,7 +3299,9 @@ canonical identity), once (`interest:<id>:opened`), the row deleted in the same 
 — the address is kept for nothing else. The event's id rides in the payload; the facts line
 and the ordinary registration page as the action; no token. Never for an event that will
 not open on the site — cancelled, started, moved to another form — whose rows go with no
-message (`DECISIONS.md` §146).
+message (`DECISIONS.md` §146). While «Înscrieri publice deschise» is unticked (§906) an open
+window announces nothing and the rows are kept; the first run after it is ticked again, the
+dates still open, tells them (the registrations page's tick wakes the job).
 
 Complete Romanian/English HTML and text templates. Locale/timezone-aware dates and localized URLs. No fragile sentence fragments.
 

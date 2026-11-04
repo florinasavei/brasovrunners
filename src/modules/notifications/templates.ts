@@ -1020,6 +1020,11 @@ export type TemplateData = {
    */
   unreachableWindow?: UnreachableWindowFacts;
   /**
+   * «Anunță-mă când rămân N locuri» (§906): which crossing (`LOW`, the free places down to the club's N; `FULL`, none
+   * left), the free places and the capacity counted under the lock that crossed it, and the N itself.
+   */
+  placesAlert?: { stage: "LOW" | "FULL"; free: number; capacity: number; alertAt: number };
+  /**
    * The members' shop's order (§683), from the order's own copy at the send: the bold line, the
    * payment words and the note, each half in its own language (`shop-order-words.ts`).
    */
@@ -1250,6 +1255,21 @@ export type TemplateData = {
    * that we just added them. Absent on the first send and on the form sent again (§217).
    */
   waitlistResent?: boolean;
+  /**
+   * `WAITLIST_JOINED` (§906): the person waits for the organizers to give out the places, not because every place is
+   * held — «Locurile libere le dau doar eu» is in force, or a place nobody holds stands beside the line (`render.ts#waitlistByHand`,
+   * the allocator's rule read at render time). The message then says the organizers give the places one at a time and
+   * never «este complet»: the event is not full. Absent: every place is held, and the event is full — and the promise
+   * after «este complet momentan» is still the organizers' while no place reaches the line by itself («Nu»: the
+   * standing's `autoOffer` false, `templates.ts#organizersGiveThePlaces`).
+   */
+  waitlistByHand?: boolean;
+  /**
+   * `WAITLIST_SPOT_OFFER` (§906): false while no place goes out by itself (`offersOnItsOwn`: «Nu», or «Locurile libere le
+   * dau doar eu»), read at render time — the deadline's sentence then says the organizers may give the place to someone
+   * else, never that it passes to the next person on the waiting list by itself. Absent reads as true: those words.
+   */
+  offerPassesOnItsOwn?: boolean;
   /**
    * A cancellation (§547): whether the person was on the waiting list rather than holding a place,
    * from the state the registration left (the row's payload), and who else the address still holds
@@ -1675,10 +1695,19 @@ const T = {
     },
     waitlistJoined: {
       subject: "Ești pe lista de așteptare",
+      /*
+        Full, or the organizers' places (§906): while «Locurile libere le dau doar eu» is in force, or a place nobody
+        holds stands beside the line, the event is not full — the person waits for the organizers to give the places,
+        so it says that, never «este complet» (`waitlistByHand`, read at render time by the allocator's rule). Full
+        with «Nu», «este complet» stays true, but no freed place reaches anybody by itself: the promise is the
+        organizers' too, never «Te vom anunța dacă se eliberează un loc.» (`organizersGiveThePlaces`).
+      */
       body: (d: TemplateData) => [
         d.waitlistResent
-          ? `Îți retrimitem emailul: ești în continuare **pe lista de așteptare** la ${d.eventTitle ?? "eveniment"}. Te vom anunța dacă se eliberează un loc.`
-          : `${d.eventTitle ?? "Evenimentul"} este complet momentan, așa că te-am adăugat **pe lista de așteptare**. Te vom anunța dacă se eliberează un loc.`,
+          ? `Îți retrimitem emailul: ești în continuare **pe lista de așteptare** la ${d.eventTitle ?? "eveniment"}. ${organizersGiveThePlaces(d) ? "Locurile le dau organizatorii, pe rând: îți scriem când îți putem da un loc." : "Te vom anunța dacă se eliberează un loc."}`
+          : d.waitlistByHand
+            ? `La ${d.eventTitle ?? "eveniment"}, locurile le dau organizatorii, pe rând: te-am trecut **pe lista de așteptare** și îți scriem când îți putem da un loc.`
+            : `${d.eventTitle ?? "Evenimentul"} este complet momentan, așa că te-am adăugat **pe lista de așteptare**. ${organizersGiveThePlaces(d) ? "Locurile le dau organizatorii, pe rând: îți scriem când îți putem da un loc." : "Te vom anunța dacă se eliberează un loc."}`,
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
@@ -1687,12 +1716,14 @@ const T = {
       /*
         The message that starts the clock says when it stops (§419; Codul civil art. 1191, 1193;
         terms §2's {{offerHours}}): the moment, in the event's zone, and the length the club set in
-        "Termene" (§377). A resend after the offer lapsed names no moment that has passed.
+        "Termene" (§377). A resend after the offer lapsed names no moment that has passed. After the
+        deadline the place passes to the next person by itself only while places go out by themselves
+        (§906, `offerPassesOnItsOwn`); otherwise the organizers give it.
       */
       body: (d: TemplateData) => [
         d.holdExpiresAtFormatted
-          ? `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Este al tău dacă semnezi declarația pe propria răspundere până **${d.holdExpiresAtFormatted}** (ai la dispoziție **${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)}**); după acest termen, locul trece la următorul de pe lista de așteptare.`
-          : `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Ai la dispoziție **${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)}** de la ofertă să semnezi declarația pe propria răspundere; după aceea, locul trece la următorul de pe lista de așteptare.`,
+          ? `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Este al tău dacă semnezi declarația pe propria răspundere până **${d.holdExpiresAtFormatted}** (ai la dispoziție **${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)}**); după acest termen, ${d.offerPassesOnItsOwn === false ? "organizatorii pot da locul altcuiva" : "locul trece la următorul de pe lista de așteptare"}.`
+          : `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Ai la dispoziție **${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)}** de la ofertă să semnezi declarația pe propria răspundere; după aceea, ${d.offerPassesOnItsOwn === false ? "organizatorii pot da locul altcuiva" : "locul trece la următorul de pe lista de așteptare"}.`,
       ],
       action: "Confirmă locul",
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
@@ -2077,6 +2108,16 @@ const T = {
       ],
       action: "Deschide «Voluntari»",
     },
+    // «Anunță-mă când rămân N locuri» (§906): to the Administrators, once per crossing — the free places and what to do.
+    placesAlert: {
+      subject: (d: TemplateData) =>
+        d.placesAlert?.stage === "FULL"
+          ? `Toate locurile s-au ocupat la ${d.eventTitle ?? "eveniment"}`
+          : `Locurile se împuținează la ${d.eventTitle ?? "eveniment"}`,
+      facts: (d: TemplateData) => placesAlertFacts("ro", d),
+      body: (d: TemplateData) => placesAlertBody("ro", d),
+      action: "Deschide înscrierile",
+    },
     // The role the organizers gave a volunteer (§761): one short message naming it — nothing to press.
     volunteerRoleAssigned: {
       subject: (d: TemplateData) => `Rolul tău de voluntar la ${d.eventTitle ?? "eveniment"}`,
@@ -2131,10 +2172,16 @@ const T = {
       body: (d: TemplateData) => [
         `Locul tău la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **a expirat**: declarația nu a fost semnată la timp.`,
       ],
-      // The button exists only when the form would take the person (`render.ts`): never on «desk».
+      // The button exists only when the form would take the person (`render.ts`): never on «desk», nor while the organizers keep the site shut (§906).
       action: (d: TemplateData) => (d.holdLapsedNext === "register" ? "Înscrie-te din nou" : "Intră pe lista de așteptare"),
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
+    /*
+      Never queued (§331, `domain/never-queued.ts`): an offer's lapse is silent, and the row goes to EXPIRED, not back to
+      the line (AGENTS.md §10.5). So its words are left as they were, not made to follow «Nu» or «Locurile libere le dau
+      doar eu» as every other waiting-list sentence is (§908): «Rămâi pe lista de așteptare» is already untrue of what the
+      allocator does, whatever the settings, and sending it again would be a decision about a lapsed offer, not a wording.
+    */
     waitlistOfferExpired: {
       subject: "Timpul pentru confirmarea locului a expirat",
       body: (d: TemplateData) => [
@@ -2520,13 +2567,20 @@ const T = {
      */
     holdLapsed: (deadline: string | undefined, toWaitlist: boolean) =>
       `Termenul pentru semnare a fost ${deadline ?? "depășit"}. ${toWaitlist ? "Altcineva aștepta un loc, așa că locul tău a trecut la lista de așteptare." : "Altcineva a cerut un loc, așa că locul tău a devenit liber."}`,
-    /** …and what the person can do now, by the event as it stands at the send (`holdLapsedNext`). */
+    /**
+     * …and what the person can do now, by the event as it stands at the send (`holdLapsedNext`). A site the
+     * organizers keep shut (§906) is said in the card's own words, with «scrie-ne» — the footer's «Scrie-ne» link.
+     */
     holdLapsedNext: (next: HoldLapsedNext) =>
       next === "register"
         ? "Dacă mai vrei să vii, te poți înscrie din nou: mai sunt locuri libere."
         : next === "waitlist"
           ? "Dacă mai vrei să vii, poți intra pe lista de așteptare."
-          : "Online nu se mai poate face nimic. Dacă în ziua evenimentului rămân locuri libere, le dă masa de înscriere.",
+          : next === "paused"
+            ? "Înscrierile pe site sunt oprite acum de organizatori. Dacă mai vrei să vii, scrie-ne din pagina de contact."
+            : next === "offersOnly"
+              ? "Locurile rămase le dau organizatorii: nu te poți înscrie direct pe site. Dacă mai vrei să vii, scrie-ne din pagina de contact."
+              : "Online nu se mai poate face nimic. Dacă în ziua evenimentului rămân locuri libere, le dă masa de înscriere.",
     /** A verification link on an address with others at the event (§588): the one link confirms everybody waiting. */
     verifyCoversFamily: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Pe această adresă sunt înscriși și: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.ro[other.state]})`).join(", ")}. Butonul de mai sus confirmă adresa pentru toți cei care o așteaptă.`,
@@ -2647,8 +2701,10 @@ const T = {
       subject: "You're on the waiting list",
       body: (d: TemplateData) => [
         d.waitlistResent
-          ? `We are sending this again: you are still on **the waiting list** for ${d.eventTitle ?? "the event"}. We'll let you know if a place opens up.`
-          : `${d.eventTitle ?? "The event"} is full right now, so we added you to **the waiting list**. We'll let you know if a place opens up.`,
+          ? `We are sending this again: you are still on **the waiting list** for ${d.eventTitle ?? "the event"}. ${organizersGiveThePlaces(d) ? "The organizers give out the places one at a time: we will write to you when we can give you a place." : "We'll let you know if a place opens up."}`
+          : d.waitlistByHand
+            ? `At ${d.eventTitle ?? "the event"}, the organizers give out the places one at a time: we have put you on **the waiting list** and will write to you when we can give you a place.`
+            : `${d.eventTitle ?? "The event"} is full right now, so we added you to **the waiting list**. ${organizersGiveThePlaces(d) ? "The organizers give out the places one at a time: we will write to you when we can give you a place." : "We'll let you know if a place opens up."}`,
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
@@ -2656,8 +2712,8 @@ const T = {
       subject: "A place has opened up for you",
       body: (d: TemplateData) => [
         d.holdExpiresAtFormatted
-          ? `A place has opened up at ${d.eventTitle ?? "the event"}. It is yours if you sign the self-declaration by **${d.holdExpiresAtFormatted}** (you have **${d.offerHours ?? hoursPhrase("en", DEFAULT_DEADLINES.offerHours)}**); after that, the place passes to the next person on the waiting list.`
-          : `A place has opened up at ${d.eventTitle ?? "the event"}. You have **${d.offerHours ?? hoursPhrase("en", DEFAULT_DEADLINES.offerHours)}** from the offer to sign the self-declaration; after that, the place passes to the next person on the waiting list.`,
+          ? `A place has opened up at ${d.eventTitle ?? "the event"}. It is yours if you sign the self-declaration by **${d.holdExpiresAtFormatted}** (you have **${d.offerHours ?? hoursPhrase("en", DEFAULT_DEADLINES.offerHours)}**); after that, ${d.offerPassesOnItsOwn === false ? "the organizers may give the place to someone else" : "the place passes to the next person on the waiting list"}.`
+          : `A place has opened up at ${d.eventTitle ?? "the event"}. You have **${d.offerHours ?? hoursPhrase("en", DEFAULT_DEADLINES.offerHours)}** from the offer to sign the self-declaration; after that, ${d.offerPassesOnItsOwn === false ? "the organizers may give the place to someone else" : "the place passes to the next person on the waiting list"}.`,
       ],
       action: "Confirm the place",
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
@@ -2924,6 +2980,15 @@ const T = {
       ],
       action: "Open «Volunteers»",
     },
+    placesAlert: {
+      subject: (d: TemplateData) =>
+        d.placesAlert?.stage === "FULL"
+          ? `Every place is taken at ${d.eventTitle ?? "the event"}`
+          : `Places are running out at ${d.eventTitle ?? "the event"}`,
+      facts: (d: TemplateData) => placesAlertFacts("en", d),
+      body: (d: TemplateData) => placesAlertBody("en", d),
+      action: "Open the registrations",
+    },
     volunteerRoleAssigned: {
       subject: (d: TemplateData) => `Your volunteer role at ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
@@ -3029,6 +3094,7 @@ const T = {
       action: (d: TemplateData) => (d.holdLapsedNext === "register" ? "Register again" : "Join the waiting list"),
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
+    // Never queued, its words left as they were: the Romanian entry above says why (§908).
     waitlistOfferExpired: {
       subject: "The time to confirm your place has expired",
       body: (d: TemplateData) => [
@@ -3328,7 +3394,11 @@ const T = {
         ? "If you still want to come, you can register again: there are places free."
         : next === "waitlist"
           ? "If you still want to come, you can join the waiting list."
-          : "Nothing more can be done online. If places are left on the day of the event, the registration desk gives them out.",
+          : next === "paused"
+            ? "Registration on the site has been stopped by the organizers for now. If you still want to come, write to us from the contact page."
+            : next === "offersOnly"
+              ? "The organizers hand out the remaining places themselves: you cannot register directly on the site. If you still want to come, write to us from the contact page."
+              : "Nothing more can be done online. If places are left on the day of the event, the registration desk gives them out.",
     verifyCoversFamily: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Also registered on this address: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.en[other.state]})`).join(", ")}. The button above confirms the address for everybody waiting for it.`,
     cancelledOthers: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
@@ -3432,7 +3502,46 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   VOLUNTEER_ROLE_ASSIGNED: "volunteerRoleAssigned",
   VOLUNTEER_GUARDIAN_REQUEST: "volunteerGuardianRequest",
   VOLUNTEER_INVITATION: "volunteerInvitation",
+  PLACES_ALERT: "placesAlert",
 };
+
+/**
+ * The alert's bold line (§906): the free places of the capacity and the club's N, counted under the lock that
+ * crossed it — «Locuri libere: 3 din 10 · pragul tău: 5». The counts are this line's, never fields of the words
+ * below, so a club text for the message (§359) never stores a sample number. Nothing without the payload's facts.
+ */
+function placesAlertFacts(locale: "ro" | "en", d: TemplateData): { line: string; links: [] } | undefined {
+  const alert = d.placesAlert;
+  if (!alert) return undefined;
+  return locale === "ro"
+    ? { line: `Locuri libere: ${alert.free} din ${alert.capacity} · pragul tău: ${alert.alertAt}`, links: [] }
+    : { line: `Free places: ${alert.free} of ${alert.capacity} · your threshold: ${alert.alertAt}`, links: [] };
+}
+
+/**
+ * The alert's paragraphs (§906), each half in its own language: what happened, the settings that give the
+ * Administrator the door, and the one-email-per-threshold rule — never a person's name, nothing of a registration.
+ */
+function placesAlertBody(locale: "ro" | "en", d: TemplateData): string[] {
+  const full = d.placesAlert?.stage === "FULL";
+  const event = d.eventTitle ?? (locale === "ro" ? "eveniment" : "the event");
+  if (locale === "ro") {
+    return [
+      full
+        ? `Toate locurile de la ${event} sunt ocupate: cine se înscrie de acum pe site intră pe lista de așteptare, dacă evenimentul are una.`
+        : `Locurile libere de la ${event} au scăzut la pragul ales în «Anunță-mă când rămân N locuri»; cât a mai rămas e scris mai sus.`,
+      "Din pagina înscrierilor, la «Locuri», vezi ce vede acum publicul pe site și poți opri înscrierile publice cu o bifă; în editorul evenimentului poți bifa «Locurile libere le dau doar eu» sau mări numărul de locuri.",
+      "Primești câte un singur email la fiecare prag; altul vine doar după ce locurile libere urcă din nou peste prag.",
+    ];
+  }
+  return [
+    full
+      ? `All places at ${event} are taken: from now on, whoever registers on the site joins the waiting list, if the event has one.`
+      : `The free places at ${event} have dropped to the threshold set in «Email me when N places are left»; how many are left is written above.`,
+    "On the registrations page, under «Places», you can see what the public sees on the site right now and stop registration from the site with one tick; in the event's editor you can tick «I hand out the free places myself» or raise the number of places.",
+    "You get one email per threshold; another comes only after the free places climb back above it.",
+  ];
+}
 
 /** The newsletter's three messages (§445) and «Vii mâine la …?» (§818): to a subscriber's address, never about a registration. */
 const NEWSLETTER_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["NEWSLETTER_CONFIRM", "NEWSLETTER", "NEW_EVENT_ALERT", "RSVP_ASK"]);
@@ -3476,6 +3585,18 @@ function participantsPhrase(locale: EmailLocale, count: number): string {
   const form = countForm(count, locale);
   if (locale === "ro") return form === "one" ? "un participant" : form === "few" ? `${count} participanți` : `${count} de participanți`;
   return form === "one" ? "one participant" : `${count} participants`;
+}
+
+/**
+ * Whether `WAITLIST_JOINED` promises the organizers' word rather than a notice when a place frees up (§906): no place
+ * reaches the line by itself — «Nu», or «Locurile libere le dau doar eu» in force: the standing's `autoOffer`, the
+ * allocator's own `offersOnItsOwn` read with the person's place in the line (`readWaitlistPosition`), the fact the
+ * position sentence below is worded by — or the person waits beside a place nobody holds (`waitlistByHand`). The event
+ * may still be «complet momentan», but «Te vom anunța dacă se eliberează un loc.» would promise a notice no freed place
+ * sends. Read only while the person still waits: with no standing, nothing is said of the line and the promise stays.
+ */
+function organizersGiveThePlaces(d: TemplateData): boolean {
+  return d.waitlistByHand === true || d.waitlistStanding?.autoOffer === false;
 }
 
 /**
@@ -4115,7 +4236,9 @@ export function buildTemplateContent(
         messageType === "SHOP_ORDER_PAID" ||
         messageType === "SHOP_ORDER_CLUB_NOTICE" ||
         // …nor the organizers' notice of a volunteer's sign-up (§754): to colleagues, its one link is its button.
-        messageType === "VOLUNTEER_CLUB_NOTICE"
+        messageType === "VOLUNTEER_CLUB_NOTICE" ||
+        // …nor the Administrators' places alert (§906): to colleagues, its one link is its button.
+        messageType === "PLACES_ALERT"
       ) {
         return own.length > 0 ? own : undefined;
       }

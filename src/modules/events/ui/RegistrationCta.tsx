@@ -13,7 +13,8 @@ import type { PublicEventPage } from "../repository";
 import { cachedDeadlines, cachedStartListCounts } from "@/modules/public-cache/reads";
 import { hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
 import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
-import { fillPhrase, fullThanksPhrase, offeredPhrase, waitingPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
+import { offersByItself } from "../domain/registration-cta";
+import { fillPhrase, fullThanksPhrase, offeredPhrase, waitingPhrase, waitlistJoinPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
 import { type PreviewDoor, readRegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { doorButtonLabel } from "./RegistrationDoorButton";
 
@@ -168,7 +169,8 @@ export default async function RegistrationCta({
             {fullThanksPhrase(t, locale, fill?.capacity ?? null, cta.waiting)}
           </Typography>
           <Typography variant="body1" component="p">
-            {t("cta.fullJoin")}
+            {/* What the list does, true whether or not a place reaches it by itself (§906): the offer line's rule below. */}
+            {waitlistJoinPhrase(t, offersByItself(event, 0))}
           </Typography>
         </Box>
 
@@ -190,8 +192,9 @@ export default async function RegistrationCta({
           </Typography>
         )}
 
+        {/* «Nu», or «Locurile libere le dau doar eu» (§906): no place reaches the line by itself — the organizers' words. No place is free here. */}
         <Typography variant="body2" color="text.secondary" data-testid="waitlist-offer">
-          {waitlistOfferPhrase(t, locale, offerHours)}
+          {waitlistOfferPhrase(t, locale, offerHours, offersByItself(event, 0))}
         </Typography>
       </Stack>
     );
@@ -216,6 +219,18 @@ export default async function RegistrationCta({
         )}
         {outsidePlacesNote}
       </Stack>
+    );
+  }
+
+  /*
+    The organizers shut the site's door (§906): «Înscrieri publice deschise» unticked, or the free places theirs to
+    give with nothing to join. A sentence and no button, as above — a button would lead to a form the server refuses.
+  */
+  if (cta.kind === "PAUSED") {
+    return (
+      <Typography variant="body1" data-testid="registration-paused" sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, fontWeight: 500 }}>
+        {cta.reason === "SWITCH" ? t("cta.paused") : t("cta.pausedOffersOnly")}
+      </Typography>
     );
   }
 

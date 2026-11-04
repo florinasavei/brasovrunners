@@ -1,4 +1,4 @@
-import { and, asc, count, eq, isNull, or } from "drizzle-orm";
+import { and, asc, count, eq, isNull, or, sql } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { type EmailMessageType, emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
@@ -16,6 +16,7 @@ import { type DeliveryChoice, markedForNow } from "@/modules/notifications/domai
 import { assertRoomToSendNow, clubCopyTypesFor, outboxIdsForKey } from "@/modules/notifications/send-at-once";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
+import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageRegistrations, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -509,6 +510,12 @@ export type CreateRegistrationByStaffInput = {
    */
   vouchAddress?: boolean;
   /**
+   * «Oferă-i un loc acum» (§888, §906): with `vouchAddress`, the caller offers the row a place in the same
+   * transaction (`enterOnWaitlistByStaff`), so the waiting list's limit — 0 included — is not asked: the person
+   * ends offered, never waiting. Only `enterOnWaitlistByStaff` passes it.
+   */
+  thenOffered?: boolean;
+  /**
    * The number handed to the walk-in with the paper (§444): the desk's next spare, which the form
    * suggests, or any free number the volunteer typed. Only with the fast track — a person who
    * finishes from their own email is not standing at the table holding a bib — and written only
@@ -652,7 +659,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     },
     now,
     "REAL",
-    { source: "STAFF", createdByStaffUserId: actor.id, atTheDesk: input.fastTrack === true, addressVouched: vouchAddress },
+    { source: "STAFF", createdByStaffUserId: actor.id, atTheDesk: input.fastTrack === true, addressVouched: vouchAddress, thenOffered: vouchAddress && input.thenOffered === true },
   );
 
   const participant = await findParticipantByCanonicalEmail(db, identity.canonicalEmail);
@@ -735,7 +742,10 @@ export type WaitlistEntryByStaffResult = { registrationId: string; status: Regis
  * offer's email says everything then, so the waiting-list email the entry queued a moment before is withdrawn
  * in the same transaction, never tried (as §643 withdraws an offer's), and the person gets one email. A row the
  * allocator gave a place, or an offer on the way (§160), keeps it: the ordinary outcome is enough. Then the
- * note. After the start the entry is refused (`VOUCHED_ENTRY_AFTER_START`), a full line refuses it (§348).
+ * note. After the start the entry is refused (`VOUCHED_ENTRY_AFTER_START`). A full line — or a limit of 0 —
+ * refuses an entry without `offerNow` (§348): «Adaugă pe lista de așteptare» and «Mută pe lista oficială» leave
+ * the person waiting, which is what the limit bounds. Never one with `offerNow`, which ends with the person
+ * offered (`thenOffered`, §906), so the limit is not asked.
  */
 export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -760,6 +770,13 @@ export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
         listOptOut: true,
         relayedByParticipantRequest: input.relayedByParticipantRequest,
         vouchAddress: true,
+        /*
+          «Oferă-i un loc acum» (§906; the owner hit it 2026-11-03): the person ends offered, never waiting, so the
+          waiting list's limit — «Fără listă de așteptare» included — never refuses the entry. The offer below runs
+          in this same transaction; refused, it takes the entry back with it. «Adaugă pe lista de așteptare» and
+          «Mută pe lista oficială» leave the person waiting, so they keep honouring the limit (§348).
+        */
+        thenOffered: Boolean(input.offerNow),
       },
       now,
     );
@@ -787,6 +804,54 @@ export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
   // The capacity is on every public page that counts places (§333): told after the commit, as the offer's own press.
   if (result.capacityRaisedTo !== null) revalidatePublicContent("places");
   return result;
+}
+
+/**
+ * «Înscrieri publice deschise» from the registrations page (§906; the owner, 2026-11-03: «cumva trebuie să pot
+ * controla mai bine»): the same column the editor's «Perioada de înscriere» ticks, set beside «Locuri» so the
+ * Administrator closes or opens the site's door where he watches the places. The Administrator's alone
+ * (`canManageRegistrations`), asserted here before anything is read; the Organizer sees it, read-only.
+ *
+ * One write on this one event row — never a series' other dates — with the row's `version` moved like any save's
+ * (AGENTS.md §11.5), so an editor opened before the press is told the event changed rather than writing the old
+ * tick back; and the trail row `event.public_registration_changed` (from, to, who, `via: "registrations"`). A tick
+ * that already says `open` writes nothing and returns false. The public pages are told after the commit (§333).
+ * Every staff verb is untouched by it, whichever way it is set.
+ */
+export async function setPublicRegistrationOpenByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  eventId: string,
+  open: boolean,
+  now: Date,
+): Promise<boolean> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not open or close registration from the site`);
+  }
+  if (!isUuid(eventId)) throw new DomainError("NOT_FOUND", "no such event");
+  const changed = await db.transaction(async (tx) => {
+    const [row] = await tx.select({ open: events.publicRegistrationOpen }).from(events).where(eq(events.id, eventId)).for("update");
+    if (!row) throw new DomainError("NOT_FOUND", "no such event");
+    if (row.open === open) return false;
+    await tx
+      .update(events)
+      .set({ publicRegistrationOpen: open, version: sql`${events.version} + 1`, updatedAt: now, updatedByStaffUserId: actor.id })
+      .where(eq(events.id, eventId));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event.public_registration_changed",
+      entityType: "event",
+      entityId: eventId,
+      metadata: { from: row.open, to: open, via: "registrations" },
+      now,
+    });
+    return true;
+  });
+  // The door is on the event's page, its card and the listing's filter (§333): told after the commit.
+  if (changed) revalidatePublicContent("events", "places");
+  // Opened again: the «Anunță-mă» addresses kept while it was shut are the maintenance job's to tell (§146, §334).
+  if (changed && open) wakeJobs("registration-maintenance");
+  return changed;
 }
 
 /**

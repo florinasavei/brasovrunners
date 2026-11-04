@@ -151,6 +151,8 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       // The outage grace's two (§657): to the staff.
       "UNREACHABLE_WINDOW_OPENED",
       "UNREACHABLE_WINDOW_CLOSED",
+      // «Anunță-mă când rămân N locuri» (§906): to the Administrators.
+      "PLACES_ALERT",
       // The members' shop (§683): to a member's account and the club's mailbox.
       "SHOP_ORDER_PLACED",
       "SHOP_ORDER_PAID",

@@ -55,6 +55,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   bulkDeleteRegistrationsAction: vi.fn(),
   markBibsPrintedAction: vi.fn(),
   sendOutboxNowAction: vi.fn(),
+  setPublicRegistrationOpenAction: vi.fn(),
   cancelRegistrationFromRowAction: vi.fn(),
   eraseRegistrationFromListAction: vi.fn(),
   setBibPrintedAction: vi.fn(),
@@ -316,6 +317,8 @@ describe("BR-REQ-037-05 criterion 26: the internal list's dialogs say the detail
       // The offer's question and the move's: both, each with the sentence.
       expect(questions).toHaveLength(2);
       for (const question of questions) expect(question.body, question.title).toContain(catalogue.Admin.reserve.detailsAtSigning);
+      // …which says the person checks the full name the club typed as well (§907).
+      expect(catalogue.Admin.reserve.detailsAtSigning).toContain(locale === "ro" ? "își verifică numele complet" : "checks their full name");
     }
   });
 });

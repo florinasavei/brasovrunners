@@ -137,6 +137,8 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.21` | the person checks and corrects the full name the club typed, on the declaration's and the offer's page, before signing (§907) · every waiting-list page says who gives the places, «Nu» and the tick alike (§908) |
+| `BR-V4.20` | the Administrator controls the site's door: public registration tick, free places by offer only, «Pe site acum», places alert (§906) |
 | `BR-V4.19` | an internal-list line moves onto the elite list, no address asked (§903) · «Are kit» on a volunteer, counted as «Cu kit»; the list names a role with its category (§904) · the person completes, from their own link, the answers a staff entry left out (§905) |
 | `BR-V4.18` | «Trimite-i oferta» from the list stays on the list (§902) |
 | `BR-V4.17` | one email per volunteer for several roles (§901) |

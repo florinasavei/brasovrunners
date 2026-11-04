@@ -84,6 +84,8 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   LEGAL_TEMPLATES_CHANGED: [],
   // The outage grace's two (§657): the window's instants and counts are their paragraphs, not fields.
   UNREACHABLE_WINDOW_OPENED: [],
+  // «Anunță-mă când rămân N locuri» (§906): the event; the counts are the platform's bold line, not fields.
+  PLACES_ALERT: ["eventTitle"],
   UNREACHABLE_WINDOW_CLOSED: [],
   // The members' shop (§683): the order is the platform's bold line and lines after the words, not fields.
   SHOP_ORDER_PLACED: [],

@@ -48,8 +48,51 @@ export function waitlistLength(input: Pick<WaitlistInput, "waitlisted" | "openOf
  * and a newcomer after a raise past the line would be offered a place instead of holding one — for
  * no one's benefit. `kind` is in no condition (§30): only the count.
  */
-export function newcomerJoinsLine(input: Pick<WaitlistInput, "waitlisted">): boolean {
-  return input.waitlisted > 0;
+export function newcomerJoinsLine(input: Pick<WaitlistInput, "waitlisted"> & OfferOnlyInput): boolean {
+  return input.waitlisted > 0 || publicEntryQueues(input);
+}
+
+/**
+ * How a registration reached the allocator (§906): `public` — the public form, its emailed link for another
+ * person, a verified runner's restart through it, a family sitting's form, and the address confirmation of a
+ * registration the public form wrote — or `staff`: a staff entry (vouched or confirmed by its email), the
+ * desk, «Dă-i un loc», «Trimite-i oferta», «Oferă-i un loc acum», an invitation, «Pe lista de invitați
+ * speciali», and a late signature keeping the place it was given. Never `kind` (§30).
+ */
+export type EntryChannel = "public" | "staff";
+
+export type OfferOnlyInput = {
+  /** `events.free_places_by_offer_only` («Locurile libere le dau doar eu», §906); absent is off. */
+  freePlacesByOfferOnly?: boolean;
+  /** Who is entering (§906); absent is the staff's, which the switch never touches. */
+  channel?: EntryChannel;
+  /** `events.capacity` (§906): null is uncapped — nothing scarce to give, so the switch sends nobody to the line. */
+  capacity?: number | null;
+};
+
+/**
+ * «Locurile libere le dau doar eu» (§906): a public entry joins the line whatever is free, as it does while
+ * anybody waits (§615) — the free places are the staff's to give. A staff entry is never touched. Only who a
+ * free place is for: the capacity formula is untouched, so the switch can give fewer places, never more. Only
+ * where places are counted, too: on an uncapped event (a duplicate or a series date that copied the tick, a cap
+ * lifted while it stayed on) nothing is scarce, and every entry takes its place as before.
+ */
+export function publicEntryQueues(input: OfferOnlyInput): boolean {
+  return input.freePlacesByOfferOnly === true && input.channel === "public" && input.capacity !== null;
+}
+
+/**
+ * Whether the line is offered the free places on its own (§615, §906): «Locurile din lista de așteptare se alocă
+ * automat» on, and «Locurile libere le dau doar eu» off. The tick wins over «Da»: its words are «only I give the free
+ * places», so while it is on no place goes out by itself — not to a newcomer, and not to the first in the line either,
+ * who would otherwise be the public entrant the tick sent there a moment ago. Every free place is then the staff's to
+ * give («Trimite-i oferta», «Dă-i un loc», «Oferă-i un loc acum»), as with «Nu». Only where places are counted:
+ * on an uncapped event the tick means nothing, and a cap lifted while people wait offers them the places as «Da»
+ * says (§147). The SQL form for the readers that say it is `repository.ts#lineOffersOnItsOwn`; both read the same
+ * three columns.
+ */
+export function offersOnItsOwn(event: { waitlistAutoOffer: boolean; freePlacesByOfferOnly: boolean; capacity: number | null }): boolean {
+  return event.waitlistAutoOffer && !(event.freePlacesByOfferOnly && event.capacity !== null);
 }
 
 /**

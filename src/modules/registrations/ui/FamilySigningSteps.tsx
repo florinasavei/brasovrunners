@@ -5,6 +5,13 @@ import { env } from "@/shared/config/env";
 import { type FamilyStep, familyStepWordsKey } from "../domain/family-signing";
 
 /**
+ * `byItself` (§908): whether a place reaches the waiting list by itself at the event — the allocator's own rule, read by
+ * the page — for the last screen's waiting person: false, and the line says the organizers write when they can give one.
+ * Required with `detailed`, the one screen that says what comes next.
+ */
+type Props = { steps: readonly FamilyStep[]; detailed?: false } | { steps: readonly FamilyStep[]; detailed: true; byItself: boolean };
+
+/**
  * The family's declarations as a stepper (§471): one line per person on the address, in the order
  * they are signed — a tick for a person signed, the person signed now in bold, the others after.
  *
@@ -21,7 +28,10 @@ import { type FamilyStep, familyStepWordsKey } from "../domain/family-signing";
  * email and the export read (`raceNumberOf`, §173, §548) — the number each person's own confirmation
  * gave — or «încă fără număr» while none is given.
  */
-export default async function FamilySigningSteps({ steps, detailed = false }: { steps: readonly FamilyStep[]; detailed?: boolean }) {
+export default async function FamilySigningSteps(props: Props) {
+  const { steps } = props;
+  const detailed = props.detailed === true;
+  const byItself = props.detailed === true ? props.byItself : true;
   const t = await getTranslations("Registrations");
 
   const stateWords = (step: FamilyStep) => t(`declare.family.state.${familyStepWordsKey(step)}`);
@@ -30,7 +40,7 @@ export default async function FamilySigningSteps({ steps, detailed = false }: { 
 
   const whatNext = (step: FamilyStep) => {
     if (step.status === "CONFIRMED" && step.checkinCode) return t("declare.family.what.confirmed", { code: step.checkinCode });
-    if (step.status === "WAITLISTED") return t("declare.family.what.waitlisted");
+    if (step.status === "WAITLISTED") return byItself ? t("declare.family.what.waitlisted") : t("declare.family.what.waitlistedByHand");
     // Withdrawn from the wizard (§547): the registration is cancelled and the place free again.
     if (step.status === "CANCELLED") return t("declare.family.what.cancelled");
     if (step.state === "later") return t("declare.family.what.later");

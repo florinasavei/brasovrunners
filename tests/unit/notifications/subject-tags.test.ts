@@ -102,6 +102,7 @@ describe("the walk over every message type that reaches the club or a colleague"
       LEGAL_TEMPLATES_CHANGED: "legal",
       RELAY_NOTICE: "livrare",
       UNREACHABLE_WINDOW_OPENED: "sistem",
+      PLACES_ALERT: "inscrieri",
       UNREACHABLE_WINDOW_CLOSED: "sistem",
       SHOP_ORDER_CLUB_NOTICE: "magazin",
       STAFF_INVITATION: "echipa",

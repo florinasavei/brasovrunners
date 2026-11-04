@@ -114,6 +114,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   editRegistrationAnswersAction: [],
   // «Nu e membru» / «E membru» from the list's ⋮ and the sweep «Scoate bifa la cele {n}» (§645): each names whom it changes.
   setClubMemberDeclaredAction: [],
+  // «Înscrieri publice deschise» beside «Locuri» (§906): shuts or opens the site's door, asked first either way.
+  setPublicRegistrationOpenAction: ["publicDoorAction"],
   clearMemberTicksAction: [],
   cancelRegistrationAction: [],
   cancelRegistrationFromRowAction: [],

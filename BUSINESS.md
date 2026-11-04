@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.19-2026-11-03 -->
+<!-- PROJECT_BASELINE: BR-V4.21-2026-11-04 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V4.19-2026-11-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.21-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -446,6 +446,9 @@ or after a run. It is that person's registration, not the club's: it takes its p
 order as one made online, it starts unconfirmed, and the participant receives the ordinary email
 and signs the declaration themselves. Nobody signs a declaration for somebody else, and the
 organizer confirms on the form that they are relaying a request rather than inventing one.
+Before signing, the person checks the name the organizer typed — the name the declaration is
+signed with and the race number prints — and corrects it if it is wrong, and gives whatever else
+the form asks that the organizer left out (`DECISIONS.md` §905, §907).
 
 The administrative changes to a registration are entering one, correcting the name it carries,
 cancelling it, and erasing it. Each is recorded with who did it and when.

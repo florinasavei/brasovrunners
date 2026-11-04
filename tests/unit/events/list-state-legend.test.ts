@@ -115,3 +115,36 @@ describe("§556 listStateLegend — what each state on the public list means", (
     }
   });
 });
+
+/**
+ * §908 — the waiting list's sentence says who gives the place, by the one rule (`offersByItself`): «the first gets an
+ * offer» only while a place reaches the line by itself («Da», «Locurile libere le dau doar eu» off); «Nu», or the tick
+ * whatever «Da» says, and the organizers give each one. A row read without the two settings is «Da», as before.
+ */
+describe("§908 listStateLegend — the waiting list's sentence follows who gives the places", () => {
+  const waiting = (event: Partial<typeof race> & { waitlistAutoOffer?: boolean; freePlacesByOfferOnly?: boolean }, locale: "ro" | "en") =>
+    listStateLegend(translator(locale), locale, { groups: ["WAITLISTED"], event: { ...race, ...event }, deadlines, now })[0].sentence;
+  const auto = {
+    ro: "„Pe lista de așteptare”: nu are încă loc. Când se eliberează unul, primul primește o ofertă pe email și are 24 de ore ca să semneze declarația.",
+    en: "“On the waiting list”: has no place yet. When one is freed, the first gets an offer by email and has 24 hours to sign the declaration.",
+  };
+  const byHand = {
+    ro: "„Pe lista de așteptare”: nu are încă loc. Locurile le dau organizatorii, pe rând: cine primește o ofertă pe email are 24 de ore ca să semneze declarația.",
+    en: "“On the waiting list”: has no place yet. The organizers give out the places one at a time: whoever gets an offer by email has 24 hours to sign the declaration.",
+  };
+
+  it("«Da», the tick off — and a row without the settings — keeps today's sentence, in both languages", () => {
+    for (const locale of ["ro", "en"] as const) {
+      expect(waiting({ waitlistAutoOffer: true, freePlacesByOfferOnly: false }, locale)).toBe(auto[locale]);
+      expect(waiting({}, locale)).toBe(auto[locale]);
+    }
+  });
+
+  it("«Nu», or «Locurile libere le dau doar eu» over «Da»: the organizers give the places, in both languages", () => {
+    for (const locale of ["ro", "en"] as const) {
+      expect(waiting({ waitlistAutoOffer: false }, locale)).toBe(byHand[locale]);
+      expect(waiting({ waitlistAutoOffer: true, freePlacesByOfferOnly: true }, locale)).toBe(byHand[locale]);
+      expect(byHand[locale].length).toBeLessThanOrEqual(200);
+    }
+  });
+});

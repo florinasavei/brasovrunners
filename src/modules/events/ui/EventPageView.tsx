@@ -14,6 +14,7 @@ import RichText from "@/modules/content/rich-text/ui/RichText";
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { datedOrNull } from "@/modules/events/domain/dated";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
+import { offersByItself } from "@/modules/events/domain/registration-cta";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { type Checkpoint, profileMarkers } from "@/modules/event-checkpoints/domain/checkpoint";
 import { checkpointFinish, withCutoffClocks } from "@/modules/event-checkpoints/domain/start";
@@ -316,6 +317,8 @@ export default async function EventPageView({
           <RegistrationSteps
             folded
             reminderHoursBefore={event.reminderHoursBefore}
+            // The waiting list's step speaks of a full event, places counted (`0`): the organizers' words while none reaches the line by itself (§908).
+            byItself={offersByItself(event, 0)}
             settings={preview?.steps}
             window={
               (() => {

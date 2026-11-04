@@ -22,7 +22,7 @@ import type { ReactNode } from "react";
 import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { fullThanksPhrase, waitlistOfferPhrase } from "@/modules/events/ui/counted-phrases";
+import { fullThanksPhrase, waitlistJoinPhrase, waitlistOfferPhrase } from "@/modules/events/ui/counted-phrases";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { memberBibTickedAtFirst } from "@/modules/registrations/domain/member-bib";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
@@ -267,8 +267,17 @@ export type RegistrationFormInput = {
    * capacity null when the event says no public number (§668).
    */
   fullCounts: { capacity: number | null; waiting: number | null } | null;
-  /** For `WAITLIST`: the club's offer window («Termene», `offerHours`, §377); null says no offer sentence. */
-  offerHours: number | null;
+  /**
+   * For `WAITLIST`: places are free, and given from the line — somebody waits (§615), or «Locurile libere le dau
+   * doar eu» (§906). The lead is the card's own «Locurile se dau din lista de așteptare», never «s-au ocupat».
+   */
+  fromWaitlist?: boolean;
+  /**
+   * For `WAITLIST`: the club's offer window («Termene», `offerHours`, §377), and whether a place goes to the line by itself
+   * (`registration-cta.ts#offersByItself`, §906) — else the organizers' words, in the join sentence and the offer
+   * sentence alike; null says no offer sentence, and the join sentence reads as «Da», the setting's default.
+   */
+  offer: { hours: number; byItself: boolean } | null;
   /** The family sitting's next form (§519): who was sent so far, above the form. */
   familyIntro?: ReactNode;
   /** The Server Action the form posts to; absent in a preview, which posts nothing. */
@@ -303,7 +312,8 @@ export async function registrationForm({
   resting,
   fullNotice,
   fullCounts,
-  offerHours,
+  fromWaitlist = false,
+  offer,
   familyIntro,
   action,
   preview,
@@ -388,11 +398,20 @@ export async function registrationForm({
       )}
       {fullNotice === "WAITLIST" ? (
         <Alert severity="info" sx={{ mb: 2 }} data-testid="registration-waitlist-notice">
-          <AlertTitle>{fullCounts ? fullThanksPhrase(tEvent, locale, fullCounts.capacity, fullCounts.waiting) : tEvent("cta.fullLead")}</AlertTitle>
-          <Typography variant="body2">{tEvent("cta.fullJoin")}</Typography>
-          {offerHours !== null && (
-            <Typography variant="body2" sx={{ mt: 0.5 }}>
-              {waitlistOfferPhrase(tEvent, locale, offerHours)}
+          <AlertTitle>
+            {fromWaitlist
+              ? tEvent("cta.fromWaitlist")
+              : fullCounts
+                ? fullThanksPhrase(tEvent, locale, fullCounts.capacity, fullCounts.waiting)
+                : tEvent("cta.fullLead")}
+          </AlertTitle>
+          {/* What the list does, by the offer line's own rule (§906): «te anunțăm…» only while a freed place reaches it by itself. */}
+          <Typography variant="body2" data-testid="registration-waitlist-join">
+            {waitlistJoinPhrase(tEvent, offer?.byItself ?? true)}
+          </Typography>
+          {offer !== null && (
+            <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="registration-waitlist-offer">
+              {waitlistOfferPhrase(tEvent, locale, offer.hours, offer.byItself)}
             </Typography>
           )}
         </Alert>
