@@ -17,10 +17,16 @@ import type { PublicDoor } from "../public-now";
  * door with how full it is, or closed and why — read off `registrationCta`, the public card's own predicate
  * (`public-now.ts#readPublicDoor`), with a link to the editor's fold that changes it.
  *
- * Under it, «Înscrieri publice deschise»: for an Administrator a real tick and a save button that asks first
- * (§384), the action handed down only to him (`setPublicRegistrationOpenAction`, which asserts the role again);
- * for the Organizer, the state in words, read-only. Only for an event registered on this site — elsewhere the
- * tick means nothing. A Server Component; the form is the shared `ActionForm`.
+ * Under it, «Înscrierile pe site sunt deschise»: for an Administrator a real tick and a save button that asks first
+ * (§384), the action handed down only to him (`setPublicRegistrationOpenAction`, which asserts the role again), the
+ * help under it saying what a press does from the state saved — untick to stop, tick to open again; for the Organizer,
+ * the state in words, read-only. Only for an event registered on this site — elsewhere the tick means nothing.
+ *
+ * Shut by that tick, with the tick drawn right under it (the owner, 2026-11-04, of the line that named the tick and
+ * linked to the editor above the same tick: one setting offered twice), the line says only «Pe site acum: înscrierile
+ * sunt oprite.» and links nowhere. Every other answer — the dates, a full list, «Locurile libere le dau doar eu» —
+ * keeps «Schimbă în editor», where those change, and so does the Organizer's line. A Server Component; the form is
+ * the shared `ActionForm`.
  */
 export default async function PublicNowLine({
   door,
@@ -41,15 +47,19 @@ export default async function PublicNowLine({
 }) {
   const t = await getTranslations("Admin");
   const { now } = door;
-  const sentence =
-    now.kind === "DIRECT"
+  // The Administrator's tick is drawn below: the one setting that shut the door is right there, not in the editor.
+  const tickDrawn = door.internal && publicDoorAction !== undefined;
+  const stoppedByTick = tickDrawn && now.kind === "CLOSED" && now.reason === "SWITCH";
+  const sentence = stoppedByTick
+    ? t("registrations.publicNow.stopped")
+    : now.kind === "DIRECT"
       ? t("registrations.publicNow.direct")
       : now.kind === "WAITLIST"
         ? now.limit === null
           ? t("registrations.publicNow.waitlistUnlimited", { waiting: now.waiting })
           : t(`registrations.publicNow.waitlistLimited.${countForm(now.limit, locale)}`, { waiting: now.waiting, limit: now.limit })
         : t("registrations.publicNow.closed", { reason: t(`registrations.publicNow.reasons.${now.reason}`) });
-  const editor = `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } })}#${publicNowSetting(now)}`;
+  const editor = stoppedByTick ? null : `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } })}#${publicNowSetting(now)}`;
   // The dialog's «Renunță» only where the form is drawn: the Organizer's read-only line reads nothing more.
   const cancel = publicDoorAction ? (await confirmWords()).cancel : "";
 
@@ -59,9 +69,11 @@ export default async function PublicNowLine({
         <Typography variant="body2" sx={{ fontWeight: 600 }} data-testid="registrations-public-now-line">
           {sentence}
         </Typography>
-        <GlyphButton icon="edit" href={editor} variant="text" size="small" sx={{ minHeight: 44, alignSelf: { xs: "flex-start", sm: "center" } }} data-testid="registrations-public-now-setting">
-          {t("registrations.publicNow.setting")}
-        </GlyphButton>
+        {editor && (
+          <GlyphButton icon="edit" href={editor} variant="text" size="small" sx={{ minHeight: 44, alignSelf: { xs: "flex-start", sm: "center" } }} data-testid="registrations-public-now-setting">
+            {t("registrations.publicNow.setting")}
+          </GlyphButton>
+        )}
       </Stack>
       {/* «Locurile libere le dau doar eu» (§906): nothing goes out by itself either, whatever «Da» says — said here, where he looks. */}
       {door.offersOnly && (
@@ -103,8 +115,9 @@ export default async function PublicNowLine({
                 {t("registrations.publicDoor.save")}
               </GlyphButton>
             </Stack>
-            <Typography variant="body2" color="text.secondary">
-              {t("registrations.publicDoor.help")}
+            {/* What a press does from the state saved: the tick is drawn as the row stands. */}
+            <Typography variant="body2" color="text.secondary" data-testid="registrations-public-door-help">
+              {door.open ? t("registrations.publicDoor.helpOpen") : t("registrations.publicDoor.helpStopped")}
             </Typography>
           </ActionForm>
         ) : (

@@ -123,10 +123,16 @@ export default async function BackofficeShell({
     : undefined;
 
   /*
-    How many offers wait for an answer, beside «Voluntari» (§839): «Înscris» on an event not yet over, memoized a minute like the
-    registrations' badge, read only for the roles that may open the list.
+    «Voluntari», read like «Înscrieri» (the owner, 2026-11-04, of a «2» beside a race with nine volunteers: a wrong total): the
+    badge is everyone still in at the events ahead — «Înscris» and «Confirmat» — and a smaller pill beside it, only above zero,
+    how many of them the organizers still have to confirm or give a role. Until then the badge was the unanswered offers alone
+    (§839). Memoized a minute like the registrations' badge, read only for the roles that may open the list.
   */
-  const awaitingVolunteers = canManageVolunteers(staffUser.role) ? await volunteersBadgeCount(getDb(), new Date()) : null;
+  const volunteerCounts = canManageVolunteers(staffUser.role) ? await volunteersBadgeCount(getDb(), new Date()) : null;
+  const volunteerPills: CountPill[] =
+    volunteerCounts && volunteerCounts.toAct > 0
+      ? [{ kind: "toAct", count: volunteerCounts.toAct, label: t("nav.volunteersToActLabel", { count: volunteerCounts.toAct }) }]
+      : [];
 
   const tabs: AdminTab[] = visibleAdminSections(staffUser).map((section) => ({
     href: SECTION_HREF[section],
@@ -139,8 +145,12 @@ export default async function BackofficeShell({
         } : {}),
     // `/devs` is «Setări»'s last tab and no section of its own (§520): the bar lights «Setări» there —
     // and on «Sistemul de design» (§692), reached from «Setări» → «Aspect».
-    ...(section === "volunteers" && awaitingVolunteers !== null && awaitingVolunteers > 0
-      ? { count: awaitingVolunteers, countHint: t("nav.volunteersHint", { count: awaitingVolunteers }) }
+    ...(section === "volunteers" && volunteerCounts !== null && volunteerCounts.active > 0
+      ? {
+          count: volunteerCounts.active,
+          countHint: t("nav.volunteersHint", { active: volunteerCounts.active, toAct: volunteerCounts.toAct }),
+          ...(volunteerPills.length > 0 ? { countPills: volunteerPills } : {}),
+        }
       : {}),
     ...(section === "settings" ? { alsoActiveOn: [getPathname({ locale, href: "/devs" }), getPathname({ locale, href: "/admin/design" })] } : {}),
   }));

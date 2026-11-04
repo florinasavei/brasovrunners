@@ -98,6 +98,7 @@ import { countRsvpsForEvents } from "@/modules/rsvp/counts";
 import { type PublicRsvps, readPublicRsvps } from "@/modules/rsvp/rsvp";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import { DEFAULT_PUBLIC_LIST_CLUB } from "@/modules/registrations/domain/public-list-club";
+import { listPublicEliteEntries } from "@/modules/registrations/elite-list";
 import {
   countAnonymousStartListEntries,
   countHiddenListWithPlace,
@@ -537,6 +538,16 @@ export async function cachedStartListOthersPage(
     ["places", "events"],
     () => listPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, includeWaitlisted, { offset, limit }, { socials, hiddenShown, club }),
   );
+}
+
+/**
+ * «Elitele cursei» under «Cine vine» (§910): the lines of the race's elite list the Administrator ticked «Apare pe site», a name and
+ * a number each (`listPublicEliteEntries`). Filed under "places" and "events" — a tick, an add and a delete expire both — and so with
+ * **no saved copy**: a name the club takes off the page, with the person's agreement withdrawn, must not outlive it (§281), as the start
+ * list's rows.
+ */
+export async function cachedPublicEliteEntries(eventId: string) {
+  return publicRead(["places.elite-list", eventId], ["places", "events"], () => listPublicEliteEntries(getDb(), eventId));
 }
 
 /**

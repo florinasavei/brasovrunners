@@ -61,7 +61,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       note: t("results.csvColumns.note"),
     },
     data.rows.map((row) => ({
-      position: row.positionOverall,
+      // An elite the Administrator left out of the ranking (§910): in the club's own file, said where the position would be.
+      position: row.outOfRanking ? t("results.outOfRanking") : row.positionOverall,
       positionSex: row.positionSex,
       positionCategory: row.positionCategory,
       bib: row.bibNumber,

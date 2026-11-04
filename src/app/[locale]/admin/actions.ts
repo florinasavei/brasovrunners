@@ -72,7 +72,8 @@ import {
 import { env } from "@/shared/config/env";
 import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
-import { addEliteEntry, deleteEliteEntry } from "@/modules/registrations/elite-list";
+import { addEliteEntry, deleteEliteEntry, isEliteTick, setEliteEntryTick } from "@/modules/registrations/elite-list";
+import { isRegistrationEliteTick, setRegistrationEliteTick } from "@/modules/registrations/elite-mark";
 import { hiddenListRefusalOf, SPARES_BEFORE_HIDDEN_LIST } from "@/modules/registrations/domain/hidden-list";
 import { formatCalendarDay } from "@/i18n/dates";
 import { getTranslations } from "next-intl/server";
@@ -1077,7 +1078,7 @@ export async function reserveSpareBibsAction(_previous: FormOutcome | null, form
  * does), because a redirect to the same page is a soft navigation that `OpenFoldFromHash` never sees; `#bib-elite` then
  * only scrolls to it.
  */
-async function backToEliteCard(locale: Locale, eventId: string, saved: "eliteAdded" | "eliteDeleted"): Promise<never> {
+async function backToEliteCard(locale: Locale, eventId: string, saved: "eliteAdded" | "eliteDeleted" | "eliteTicked"): Promise<never> {
   await flashOutcome({ saved });
   redirect(`${editorPath(locale, eventId)}?${new URLSearchParams({ saved })}#bib-elite`);
 }
@@ -1115,6 +1116,45 @@ export async function deleteEliteEntryAction(_previous: FormOutcome | null, form
     return backTo(editorPath(locale, eventId), outcomeOf(error));
   }
   return backToEliteCard(locale, eventId, "eliteDeleted");
+}
+
+/**
+ * «Apare în clasament» / «Apare pe site» on one line of the elite list (§910): the tick posted as it should now stand (`tick` names
+ * which, `on` its new value: the `TickButton` pattern, a submit posting the state it wants). The Administrator's
+ * (`canManageRegistrations`), here at the door and again in `elite-list.ts#setEliteEntryTick` (BR-REQ-060-01). A tick already as asked
+ * writes nothing; a refusal comes back in the editor's banner. Back to the elite card, open.
+ */
+export async function setEliteEntryTickAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const tick = text(form, "tick");
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    if (!isEliteTick(tick)) throw new DomainError("VALIDATION_ERROR", "no such tick on an elite line", ["tick"]);
+    await setEliteEntryTick(getDb(), actor, text(form, "entryId"), tick, text(form, "on") === "1", new Date());
+  } catch (error) {
+    return backTo(editorPath(locale, eventId), outcomeOf(error));
+  }
+  return backToEliteCard(locale, eventId, "eliteTicked");
+}
+
+/**
+ * The same two ticks on a registered runner's line of the elite card (§910): a registration marked «Elită», whose ticks only ever hide
+ * (`elite-mark.ts#setRegistrationEliteTick`). The Administrator's, asserted here and in the service. Back to the elite card, open; a
+ * refusal — the mark taken off meanwhile (`ELITE_NOT_MARKED`), the role — in the editor's banner.
+ */
+export async function setRegisteredEliteTickAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const tick = text(form, "tick");
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    if (!isRegistrationEliteTick(tick)) throw new DomainError("VALIDATION_ERROR", "no such tick on an elite", ["tick"]);
+    await setRegistrationEliteTick(getDb(), actor, text(form, "registrationId"), tick, text(form, "on") === "1", new Date());
+  } catch (error) {
+    return backTo(editorPath(locale, eventId), outcomeOf(error));
+  }
+  return backToEliteCard(locale, eventId, "eliteTicked");
 }
 
 /**

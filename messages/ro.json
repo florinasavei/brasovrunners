@@ -427,6 +427,11 @@
       "noteStatesNamesOnly": "Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "noteStatesNoWaitlistNamesOnly": "Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă apar doar dacă au bifat, cu stadiul înscrierii lângă nume; lista de așteptare nu e publică la acest eveniment, iar o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "othersLead": "Apar cu numele și:",
+      "elites": {
+        "title": "Elitele cursei",
+        "number": "nr. {number}",
+        "note": "Alergători de elită invitați de club, afișați cu acordul lor. Nu sunt înscrieri și nu se numără în lista de mai sus."
+      },
       "pendingCount": {
         "one": "{count} înscris în așteptarea confirmării",
         "few": "{count} înscriși în așteptarea confirmării",
@@ -1080,7 +1085,8 @@
       "events": "Alergări",
       "registrations": "Înscrieri",
       "volunteers": "Voluntari",
-      "volunteersHint": "{count} oferte așteaptă un răspuns la evenimentele care urmează",
+      "volunteersHint": "Voluntari la evenimentele care urmează, fără anulați: {active} · de confirmat sau de repartizat: {toAct}",
+      "volunteersToActLabel": "{count} de confirmat sau de repartizat",
       "staff": "Echipa",
       "legal": "Documente legale",
       "tasks": "Sarcini",
@@ -1134,12 +1140,38 @@
       "summaryTotal": "Înscrieri: {count} (toate stările, anulate și expirate incluse)",
       "summaryTest": "De test: {count}",
       "kits": {
-        "title": "Kituri de pregătit: {count}",
-        "who": "Au acum un loc, cu invitații speciali: {registrations} · Invitații fără răspuns: {invitations}. Lista de așteptare nu intră.",
+        "title": "Kituri de pregătit: {runners}",
+        "titleWithVolunteers": "Kituri de pregătit: {count} — {runners} + {volunteers}",
+        "runners": {
+          "one": "{count} alergător",
+          "few": "{count} alergători",
+          "other": "{count} de alergători"
+        },
+        "volunteers": {
+          "one": "{count} voluntar",
+          "few": "{count} voluntari",
+          "other": "{count} de voluntari"
+        },
+        "who": "Alergători: {holding} · {invitations}. Lista de așteptare nu intră.",
+        "whoWithElites": "Alergători: {holding} · {invitations} · <link>{elites}</link>. Lista de așteptare nu intră.",
+        "holding": {
+          "one": "{count} are acum un loc, cu invitați speciali",
+          "few": "{count} au acum un loc, cu invitați speciali",
+          "other": "{count} au acum un loc, cu invitați speciali"
+        },
+        "invitations": {
+          "one": "{count} invitație fără răspuns",
+          "few": "{count} invitații fără răspuns",
+          "other": "{count} de invitații fără răspuns"
+        },
+        "elites": {
+          "one": "{count} elită din lista separată",
+          "few": "{count} elite din lista separată",
+          "other": "{count} de elite din lista separată"
+        },
         "shirts": "Tricouri — {sizes}",
         "noShirt": "fără tricou: {count}",
-        "unknownSize": "mărime încă necunoscută (invitații): {count}",
-        "volunteers": "Plus voluntari cu kit: {count}"
+        "unknownSize": "mărime încă necunoscută (invitații): {count}"
       },
       "places": {
         "title": "Locuri libere acum: {free} din {capacity}",
@@ -1176,7 +1208,8 @@
         "nobodyWaits": "Nu așteaptă nimeni pe liste.",
         "letIn": "Locurile libere merg întâi la lista oficială («Trimite-i oferta»), apoi la cea internă («Oferă-i un loc acum»).",
         "raises": "Ca să intre toți cei care așteaptă, capacitatea ar trebui să ajungă la {capacity} (+{count}); fiecare ofertă adaugă locul ei, după ce confirmi.",
-        "total": "Invitați speciali: {outside} (nu ocupă loc). Oameni la start dacă intră toți: {count}."
+        "total": "Invitați speciali: {outside} (nu ocupă loc). Oameni la start dacă intră toți: {count}.",
+        "totalWithElites": "Invitați speciali: {outside} (nu ocupă loc). Oameni la start dacă intră toți: {count}, inclusiv {elites}."
       },
       "publicNow": {
         "direct": "Pe site acum: butonul «Înscrie-te» — primul venit ia un loc liber.",
@@ -1187,6 +1220,7 @@
         },
         "waitlistUnlimited": "Pe site acum: «Intră pe lista de așteptare» — {waiting} pe listă, fără limită.",
         "closed": "Pe site acum: înscrierile sunt închise — {reason}.",
+        "stopped": "Pe site acum: înscrierile sunt oprite.",
         "reasons": {
           "NOT_YET_OPEN": "perioada de înscriere nu a început",
           "WINDOW_CLOSED": "perioada de înscriere s-a încheiat",
@@ -1202,9 +1236,10 @@
         "setting": "Schimbă în editor"
       },
       "publicDoor": {
-        "label": "Înscrieri publice deschise",
+        "label": "Înscrierile pe site sunt deschise",
         "save": "Salvează",
-        "help": "Debifat, butonul de pe site dispare imediat, oricare ar fi datele; tot ce face echipa merge mai departe.",
+        "helpOpen": "Debifează și apasă «Salvează» ca să le oprești; tot ce face echipa merge mai departe.",
+        "helpStopped": "Bifează și apasă «Salvează» ca să le redeschizi.",
         "readOnlyOn": "Înscrierile pe site sunt deschise (doar un Administrator le poate opri).",
         "readOnlyOff": "Înscrierile pe site sunt oprite de un Administrator."
       },
@@ -1226,7 +1261,28 @@
       "elite": {
         "chip": "Elită",
         "mark": "Marchează ca elită",
-        "unmark": "Nu mai e elită"
+        "unmark": "Nu mai e elită",
+        "inResults": "Apare în clasament",
+        "onSite": "Apare pe site",
+        "onSiteHint": "Debifat, numele nu apare pe site: nici la «Cine vine», nici în clasament. Bifat, decide bifa lui „Vreau să apar”.",
+        "title": "Elită: clasament și site",
+        "help": "Bifele clubului doar ascund: bifat, decid bifele persoanei.",
+        "inResultsHelp": "Debifat, rezultatul nu apare în clasamentul public și nu ia locul nimănui; la «Clasament» rămâne, marcat «în afara clasamentului».",
+        "readOnly": "Doar un administrator schimbă bifele.",
+        "panelTitle": "Elite",
+        "panelIntro": "Cine aleargă ca elită la acest eveniment: lista separată, doar cu numele pe BIB, și înscrierile marcate «Elită».",
+        "separate": "{count} pe lista separată",
+        "marked": {
+          "one": "{count} înscris marcat",
+          "few": "{count} înscriși marcați",
+          "other": "{count} de înscriși marcați"
+        },
+        "separateTitle": "Lista separată — doar numele pe BIB",
+        "separateEmpty": "Niciun nume pe lista separată.",
+        "markedTitle": "Înscriși marcați «Elită»",
+        "markedEmpty": "Nicio înscriere marcată «Elită».",
+        "manage": "Gestionează lista de elite",
+        "seeCard": "Vezi lista de elite în editor"
       },
       "export": "Descarcă CSV",
       "personLink": "Toate datele unei persoane",
@@ -1587,6 +1643,10 @@
           "outside_capacity_changed": "Pus pe lista de invitați speciali sau scos de pe ea",
           "elite_marked": "Marcat ca elită: BIB-ul se tipărește cu numele în locul numărului",
           "elite_unmarked": "Nu mai e elită: BIB-ul se tipărește din nou cu numărul",
+          "elite_in_results": "Elită: «Apare în clasament» bifat — rezultatul intră din nou în clasament",
+          "elite_out_of_results": "Elită: «Apare în clasament» debifat — în afara clasamentului",
+          "elite_on_site": "Elită: «Apare pe site» bifat — pe site după bifele persoanei",
+          "elite_off_site": "Elită: «Apare pe site» debifat — numele nu mai apare pe site",
           "deadline_moved_for_outage": "Termen mutat: site-ul nu a putut fi accesat, ceasul a stat pe loc",
           "hold_moved_by_window": "Termenul semnării mutat după fereastra de confirmare schimbată",
           "not_revived_for_outage": "Nereluat după întreruperea site-ului: termenul trecuse cât nu putea fi accesat, iar locul fusese dat între timp sau cererea expirase deja",
@@ -1731,6 +1791,11 @@
       "bibMarkPrinted": "Marchează BIB-ul ca printat",
       "bibMarkUnprinted": "BIB-ul nu e printat",
       "bibsPrintedCount": "BIB-uri: {printed} din {total} printate — doar înscrierile confirmate",
+      "bibsElite": {
+        "one": "+ {count} BIB de elită, din lista separată",
+        "few": "+ {count} BIB-uri de elită, din lista separată",
+        "other": "+ {count} de BIB-uri de elită, din lista separată"
+      },
       "bibsVoid": "Numere tipărite ale unor înscrieri anulate sau expirate — de scos din teanc ({count}):",
       "bibsVoidCancelled": "Numărul {number}: {name}, înscriere anulată {date}",
       "bibsVoidExpired": "Numărul {number}: {name}, înscriere expirată {date}",
@@ -2379,6 +2444,7 @@
       "SAMPLE_VALUES_IN_EMAIL": "Textul conține valori de exemplu, nu câmpuri: {found}. Folosește câmpurile în locul lor.",
       "BIB_NUMBER_TAKEN": "Numărul acesta e deja al altcuiva la acest eveniment: dat, rezervat, pe lista de elită sau al unei înscrieri șterse. Alege alt număr din cutie și încearcă din nou.",
       "ELITE_NUMBER_TAKEN": "Numărul acesta e deja folosit la eveniment: al unei înscrieri, al altui nume de elită sau o rezervă a mesei. Scrie alt număr sau lasă căsuța goală.",
+      "ELITE_NOT_MARKED": "Înscrierea nu mai e marcată ca elită, așa că bifele de elită nu se mai schimbă. Nu s-a scris nimic.",
       "RESERVE_ELITE_NAME": "Numele are peste {max} de caractere și nu încape pe BIB. Scrie-l mai scurt în editorul evenimentului, la „Elită — doar numele pe BIB”.",
       "WALK_IN_BIB_TAKEN": "Persoana e înscrisă, dar numărul tocmai l-a dat altcineva, deci e neconfirmată. Caut-o în listă și apasă „Confirmă aici” cu alt număr.",
       "STAFF_ALREADY_ON_ADDRESS": "Persoana aceasta este deja înscrisă la eveniment cu această adresă de email. Caut-o în lista înscrierilor; pentru altă persoană, scrie numele ei.",
@@ -6868,7 +6934,7 @@
         "few": "{count} nume",
         "other": "{count} de nume"
       },
-      "eliteHelp": "Numele lor se tipărește mare, în locul numărului. Nu sunt înscrieri: nu ocupă loc, nu primesc emailuri și nu intră în nicio listă sau numărătoare.",
+      "eliteHelp": "Numele lor se tipărește mare, în locul numărului. Nu sunt înscrieri: nu ocupă loc, nu primesc emailuri; se numără la kituri, la start și la BIB-uri; pe site apar doar cu «Apare pe site».",
       "eliteEmpty": "Niciun nume pe listă.",
       "eliteName": "Numele de pe BIB",
       "eliteNameHelp": "Cum se tipărește, cel mult {max} de caractere. Se micșorează cât să încapă, pe un rând sau două.",
@@ -6887,6 +6953,14 @@
       "eliteRegistered": "înscris",
       "eliteRegisteredHelp": "Un alergător înscris se marchează din lista de înscrieri: «⋮» → «Marchează ca elită». Rămâne înscris, cu locul și numărul lui, și apare aici de când e confirmat.",
       "eliteRegisteredOnce": "Foaia obișnuită îi tipărește și ea, tot ca BIB-uri de elită: tipărește-i dintr-o singură foaie, nu din amândouă.",
+      "eliteInResults": "Apare în clasament",
+      "eliteOnSite": "Apare pe site",
+      "eliteTicksHelp": "Bifează «Apare pe site» doar cu acordul persoanei.",
+      "eliteInResultsHelp": "«Apare în clasament» debifat: rezultatul nu apare în clasamentul public și nu ia locul nimănui; la «Clasament» rămâne, marcat «în afara clasamentului».",
+      "eliteOnSiteHelp": "«Apare pe site» bifat: numele și numărul apar pe pagina evenimentului, la «Elitele cursei», cât timp lista publică e pornită.",
+      "eliteRegisteredSiteHelp": "La un alergător înscris, «Apare pe site» doar ascunde: debifat, apare ca „Participant (nume ascuns)”; bifat, decid bifele lui.",
+      "eliteOnSiteTitle": "Arăți numele pe pagina evenimentului?",
+      "eliteOnSiteBody": "{name} apare la «Elitele cursei» pe pagina evenimentului, cât timp lista publică e pornită. Bifează doar dacă persoana și-a dat acordul.",
       "helpMore": "Numerele se dau în ordinea confirmării și nu se dau de două ori. Foaia are două numere A5 pe o pagină A4; un singur număr se descarcă de pe pagina înscrierii.",
       "memberLabelDefault": "Membru {club}",
       "profileStart": "Start",
@@ -11119,8 +11193,10 @@
       "present": "Prezent",
       "publicLine": {
         "named": "Pe site: cu numele",
-        "anonymous": "Pe site: {label}"
+        "anonymous": "Pe site: {label}",
+        "outOfRanking": "Pe site: nu apare — elită în afara clasamentului"
       },
+      "outOfRanking": "în afara clasamentului",
       "nameless": "Fără nume: înscrierea a fost ștearsă. Rezultatul rămâne, fără nume.",
       "addRow": "Adaugă un alergător neînscris",
       "typedRow": "Alergător neînscris",
@@ -13419,6 +13495,7 @@
       "eliteDeleted": "Numele a fost șters de pe lista de elită.",
       "eliteMarked": "Marcat ca elită: BIB-ul lui se tipărește cu numele în locul numărului. Înscrierea rămâne neschimbată.",
       "eliteUnmarked": "Nu mai e elită: BIB-ul lui se tipărește din nou cu numărul.",
+      "eliteTicked": "Bifa de elită a fost salvată. Nu s-a trimis nimic nimănui.",
       "waitlistAdded": "Persoana e pe lista de așteptare; emailul e pus la coadă.",
       "waitlistPlaced": "Era un loc liber: persoana l-a primit, iar emailul cu declarația e pus la coadă."
     },

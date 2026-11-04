@@ -66,6 +66,9 @@ export type RegistrationListRow = {
   outsideCapacity: boolean;
   /** «Elită» (§897): the bib prints as an elite bib — the row's chip and the «⋮»'s mark or unmark. */
   elite: boolean;
+  /** The two ticks of a marked elite (§910), stored as what the club hid: the «⋮»'s «Apare în clasament» and «Apare pe site». */
+  eliteHiddenFromResults: boolean;
+  eliteHiddenFromSite: boolean;
   /** «Folosește lista de invitați speciali» of the row's event (§647): the «⋮» offers «Pune pe listă» only while it is on (§747). */
   eventHiddenListEnabled: boolean;
   /** Registered through an invitation by email (§737): the list marks it «Invitat». */
@@ -490,6 +493,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       kind: registrations.kind,
       outsideCapacity: registrations.outsideCapacity,
       elite: registrations.elite,
+      eliteHiddenFromResults: registrations.eliteHiddenFromResults,
+      eliteHiddenFromSite: registrations.eliteHiddenFromSite,
       eventHiddenListEnabled: events.hiddenListEnabled,
       // Registered through an invitation by email (§737, amending §647): the list's «Invitat» mark.
       invited: sql<boolean>`exists (select 1 from ${eventInvitations} i where i."accepted_registration_id" = ${registrations}."id")`.mapWith(Boolean),
@@ -785,6 +790,9 @@ export type RegistrationDetail = {
   outsideCapacity: boolean;
   /** «Elită» (§897): the bib prints as an elite bib — the page's chip, for every role that reads it. */
   elite: boolean;
+  /** The two ticks of a marked elite (§910), stored as what the club hid: the page's «Elită» card, read by every role, changed by the Administrator. */
+  eliteHiddenFromResults: boolean;
+  eliteHiddenFromSite: boolean;
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
   source: RegistrationSource;
   registeredName: string;
@@ -936,6 +944,8 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       kind: registrations.kind,
       outsideCapacity: registrations.outsideCapacity,
       elite: registrations.elite,
+      eliteHiddenFromResults: registrations.eliteHiddenFromResults,
+      eliteHiddenFromSite: registrations.eliteHiddenFromSite,
       source: registrations.source,
       registeredName: registrations.registeredName,
       participantEmail: participants.deliveryEmail,

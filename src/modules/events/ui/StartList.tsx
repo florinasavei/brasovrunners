@@ -1,5 +1,6 @@
 import GroupsIcon from "@mui/icons-material/Groups";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
+import MilitaryTechIcon from "@mui/icons-material/MilitaryTech";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -8,6 +9,7 @@ import {
   cachedListNumbersDisclosed,
   cachedListSocialsDisclosed,
   cachedListStatesDisclosed,
+  cachedPublicEliteEntries,
   cachedStartListOthersCounts,
   cachedStartListOthersPage,
   cachedStartListPage,
@@ -153,6 +155,16 @@ const NO_NUMBER = "—";
  * which names appear is the person's tick and the notice's gates alone. The places line never counts
  * the hidden list — it takes no place.
  *
+ * ## «Elitele cursei» (§910)
+ *
+ * The owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe site». The lines of the race's elite list (§895) the
+ * Administrator ticked «Apare pe site» — only with the person's agreement — are named under the fold, a name and the number the
+ * club gave, if any: a small block of its own rather than rows of the table, because they are no registrations — no state, no
+ * place, no position, nothing the title or the line above it counts — and a row in the confirmed order would be a position nobody
+ * holds. Inside this section, so it has the list's gates: the event's public list on, its period not over, the database reachable,
+ * and the names out of search snippets (`data-nosnippet`). A registered runner marked «Elită» is not repeated there: they are on the
+ * list by their own tick, and «Apare pe site» unticked only hides them (`repository.ts#namedOnPublicList`).
+ *
  * ## While the database is away
  *
  * Nothing, rather than the event page's error (§447): the list is never served from a copy — a
@@ -222,11 +234,13 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     the table only decides whether the column is there at all.
   */
   const clubMode = publicListClubOf(event);
-  const [participants, otherRows] = await Promise.all([
+  const [participants, otherRows, elites] = await Promise.all([
     view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn, hiddenShown, clubMode) : [],
     firstStatesNotice !== null && view.othersLimit > 0
       ? cachedStartListOthersPage(event.id, firstStatesNotice, waitlistOn, view.othersOffset, view.othersLimit, socialsOn, hiddenShown, clubMode)
       : [],
+    // «Elitele cursei» (§910): the elite list's lines ticked «Apare pe site», a name and a number each.
+    cachedPublicEliteEntries(event.id),
   ]);
   /*
     The column: never under «Nu arăta clubul»; as it always was under «Cum l-au scris»; and under the default
@@ -531,6 +545,27 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
         </>
       )}
     </Box>
+    {/* «Elitele cursei» (§910): under the fold, open — a few names the club announces, no registrations, so no row of the table. */}
+    {elites.length > 0 && (
+      <Box data-testid="start-list-elites" sx={{ mt: 2 }}>
+        <Typography component="h3" variant="h3" sx={{ fontSize: "1.0625rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 0.75 }}>
+          <MilitaryTechIcon fontSize="small" aria-hidden="true" />
+          {t("startList.elites.title")}
+        </Typography>
+        <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5 }}>
+          {elites.map((elite, index) => (
+            // Two lines may carry one name; the order typed is what tells them apart.
+            <Typography component="li" variant="body2" key={`${index}-${elite.name}`} data-testid="start-list-elite">
+              {elite.name}
+              {elite.bibNumber !== null ? ` · ${t("startList.elites.number", { number: formatRaceNumber(elite.bibNumber, event.raceNumberFormat) })}` : null}
+            </Typography>
+          ))}
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, pb: 2 }}>
+          {t("startList.elites.note")}
+        </Typography>
+      </Box>
+    )}
     </Box>
   );
 }
