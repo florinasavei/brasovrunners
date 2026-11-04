@@ -1012,6 +1012,11 @@ export const eventFieldsSchema = z
      */
     freePlacesByOfferOnly: z.boolean().optional(),
     /**
+     * «Eliberează singur locurile nesemnate la termen» (§NNN): at the participation window's deadline the unsigned
+     * declaration holds go, and nobody is given their places by itself. Absent means this caller is not editing it.
+     */
+    releaseUnsignedAtDeadline: z.boolean().optional(),
+    /**
      * «Înscrieri publice deschise» (§906): unticked, the site's button goes and the public form is refused,
      * whatever the dates; every staff verb keeps working. Absent means this caller is not editing it.
      */

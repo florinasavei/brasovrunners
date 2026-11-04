@@ -433,6 +433,8 @@ export function maintenanceDueFor(
     confirmationDeadlineDaysBefore?: number | null;
     /** The event's reminder lead in force, in hours (`deadlines/domain/deadlines.ts#reminderHoursFor`); zero is none. */
     reminderHours: number;
+    /** «Eliberează singur locurile nesemnate la termen» (§NNN): on, the window's deadline is an instant the job acts on. */
+    releaseUnsignedAtDeadline?: boolean | null;
   },
   now: Date,
   ...deadlines: (Date | null | undefined)[]
@@ -448,6 +450,8 @@ export function maintenanceDueFor(
   const instants = [start, close];
   if (event.reminderHours > 0) instants.push(start - event.reminderHours * 60 * MINUTE);
   if (opens > 0 && opens > deadlineDays) instants.push(start - opens * day);
+  // The deadline's release (§NNN): the window's deadline, when it is before the start and the box is ticked.
+  if (event.releaseUnsignedAtDeadline === true && opens > 0 && opens > deadlineDays && deadlineDays > 0) instants.push(start - deadlineDays * day);
   for (const instant of instants) if (instant > at) candidates.push(instant);
   return candidates.length > 0 ? new Date(Math.min(...candidates)) : null;
 }

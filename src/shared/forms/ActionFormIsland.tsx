@@ -6,7 +6,17 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import { type CSSProperties, type FormEvent, type ReactNode, useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
-import { choiceAnswer, type ConfirmSpec, fillFromForm, pickConfirm, resolveBodyCount, resolveChangedFields, resolveEmailCount, tickAnswer } from "@/shared/feedback/notice";
+import {
+  choiceAnswer,
+  type ConfirmSpec,
+  fillFromForm,
+  pickConfirm,
+  resolveBodyCount,
+  resolveChangedFields,
+  resolveEmailCount,
+  resolvePlaceChanges,
+  tickAnswer,
+} from "@/shared/feedback/notice";
 import { useToast } from "@/shared/feedback/toast-context";
 import { openFoldsAround, REVEAL_EVENT } from "@/shared/ui/fold";
 import { CONFIRM_CANCEL_EVENT } from "./confirm-cancel";
@@ -343,9 +353,15 @@ export default function ActionFormIsland({
       return typeof value === "string" ? value : null;
     });
     if (!named) return;
+    // The event editor's place settings (§NNN): each change and what it does; none changed, nothing to ask for them.
+    const placed = resolvePlaceChanges(named, (field) => {
+      const value = data.get(field);
+      return typeof value === "string" ? value : null;
+    });
+    if (!placed) return;
     event.preventDefault();
     // A series save's email line, summed over the dates ticked at this press (§384).
-    const counted = resolveEmailCount(named, valuesOf);
+    const counted = resolveEmailCount(placed, valuesOf);
     // A typed value named in the sentence (§511): «Limita nouă: 100 ore-CU.».
     const resolved = fillFromForm(counted, (field) => {
       const value = data.get(field);

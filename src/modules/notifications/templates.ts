@@ -1301,6 +1301,8 @@ export type TemplateData = {
    * (`domain/hold-lapsed.ts`). The deadline that passed is `holdExpiresAtFormatted`.
    */
   holdLapsedToWaitlist?: boolean;
+  /** The release was «Eliberează singur locurile nesemnate la termen»'s own (§NNN): the sentence says the deadline released every unsigned place. */
+  holdLapsedAtDeadline?: boolean;
   holdLapsedNext?: HoldLapsedNext;
   /**
    * Why the participant cancelled (§558), from the row: the answer, and the words of «Alt motiv».
@@ -2592,8 +2594,10 @@ const T = {
      * the band with the body's first line; no bold inside, so the editor's «Înlocuiește cu câmpurile»
      * recognises it as the platform's line (`framingSentencesOf`).
      */
-    holdLapsed: (deadline: string | undefined, toWaitlist: boolean) =>
-      `Termenul pentru semnare a fost ${deadline ?? "depășit"}. ${toWaitlist ? "Altcineva aștepta un loc, așa că locul tău a trecut la lista de așteptare." : "Altcineva a cerut un loc, așa că locul tău a devenit liber."}`,
+    holdLapsed: (deadline: string | undefined, toWaitlist: boolean, atDeadline = false) =>
+      atDeadline
+        ? `Termenul pentru semnarea declarației a fost ${deadline ?? "depășit"}. Locurile celor care nu semnaseră până atunci au fost eliberate, așa că locul tău nu mai este rezervat.`
+        : `Termenul pentru semnare a fost ${deadline ?? "depășit"}. ${toWaitlist ? "Altcineva aștepta un loc, așa că locul tău a fost eliberat." : "Altcineva a cerut un loc, așa că locul tău a devenit liber."}`,
     /**
      * …and what the person can do now, by the event as it stands at the send (`holdLapsedNext`). A site the
      * organizers keep shut (§906) is said in the card's own words, with «scrie-ne» — the footer's «Scrie-ne» link.
@@ -3423,8 +3427,10 @@ const T = {
     waitlistPosition: (standing: WaitlistStandingLine) => waitlistPositionLine("en", standing),
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "The person"} is no longer on the waiting list.` : "The place has been released.",
-    holdLapsed: (deadline: string | undefined, toWaitlist: boolean) =>
-      `The deadline to sign was ${deadline ?? "missed"}. ${toWaitlist ? "Somebody was waiting for a place, so yours went to the waiting list." : "Somebody else asked for a place, so yours has been released."}`,
+    holdLapsed: (deadline: string | undefined, toWaitlist: boolean, atDeadline = false) =>
+      atDeadline
+        ? `The deadline to sign the declaration was ${deadline ?? "missed"}. The places of those who had not signed by then were released, so your place is no longer held.`
+        : `The deadline to sign was ${deadline ?? "missed"}. ${toWaitlist ? "Somebody was waiting for a place, so yours has been released." : "Somebody else asked for a place, so yours has been released."}`,
     holdLapsedNext: (next: HoldLapsedNext) =>
       next === "register"
         ? "If you still want to come, you can register again: there are places free."
@@ -4049,7 +4055,7 @@ export function buildTemplateContent(
                   copy.cancelledReleased(data.participantName, data.cancelledFromWaitlist === true),
                 ]
               : messageType === "DECLARATION_HOLD_EXPIRED"
-                ? [...(own.highlight ?? []), copy.holdLapsed(data.holdExpiresAtFormatted, data.holdLapsedToWaitlist === true)]
+                ? [...(own.highlight ?? []), copy.holdLapsed(data.holdExpiresAtFormatted, data.holdLapsedToWaitlist === true, data.holdLapsedAtDeadline === true)]
                 : own.highlight,
         quiet: [...(own.quiet ?? []), ...(messageType === "GROUP_RUN_DECLARATION_SIGNED" ? [copy.groupRunNotYou(data.contactUrl)] : [])],
       };
@@ -4217,7 +4223,7 @@ export function buildTemplateContent(
         A released declaration hold's facts (§638), after the body whoever wrote it: the deadline that
         passed and where the place went, then what the person can do now — one sentence, read at the send.
       */
-      ...(messageType === "DECLARATION_HOLD_EXPIRED" ? [copy.holdLapsed(data.holdExpiresAtFormatted, data.holdLapsedToWaitlist === true)] : []),
+      ...(messageType === "DECLARATION_HOLD_EXPIRED" ? [copy.holdLapsed(data.holdExpiresAtFormatted, data.holdLapsedToWaitlist === true, data.holdLapsedAtDeadline === true)] : []),
       ...(messageType === "DECLARATION_HOLD_EXPIRED" && data.holdLapsedNext ? [copy.holdLapsedNext(data.holdLapsedNext)] : []),
       // The participant's reason (§558), on the club's copy only: the club asked for it, the person knows it.
       ...(messageType === "REGISTRATION_CANCELLED" && clubCopy && data.cancelReasonKind

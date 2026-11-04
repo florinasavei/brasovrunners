@@ -44,6 +44,8 @@ import { listStaffUsers } from "@/modules/staff-identity/repository";
 import { dayIn } from "@/modules/registrations/domain/age";
 import { givePlaceDoorOpen } from "@/modules/registrations/domain/give-place-door";
 import { offersOnItsOwn } from "@/modules/registrations/domain/waitlist";
+import { placeSettingsOf } from "@/modules/content/events/domain/place-changes";
+import { placeChangeWords } from "@/modules/content/events/ui/place-change-words";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
 import { type ScopeDate, SeriesPickDates, SeriesScopeBox, SeriesScopeProvider } from "@/modules/content/events/ui/SeriesScope";
 import { editionNote, ruleSentence } from "@/modules/events/ui/series-sentence";
@@ -116,7 +118,7 @@ import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { clubNightEvent } from "@/modules/events/night-event";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { confirmWords } from "@/shared/feedback/confirm-words";
-import type { ConfirmSpec, EmailCount } from "@/shared/feedback/notice";
+import type { ConfirmSpec, EmailCount, PlaceChangeSpec } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
 import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
@@ -742,6 +744,31 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     return undefined;
   };
   const noticeEmail = noticeRecipients.real > 0 ? words.email(noticeRecipients.real) : undefined;
+  /*
+    The place settings' summary (§NNN): the loaded settings, the numbers the pages read — the places taken
+    (`computeOccupied`), the people waiting, whether the dates let the public in — and the words, for a saved event this
+    site registers, to whoever may save its settings. Worked out in the browser at the press (`domain/place-changes.ts`).
+  */
+  const placeChanges: PlaceChangeSpec | null =
+    internal && maySaveSettings && event.eventStatus === "SCHEDULED"
+      ? {
+          before: placeSettingsOf(event),
+          facts: {
+            occupied: placesTaken ?? computeOccupied(await countOccupied(db, event.id, now)),
+            waiting,
+            datesOpen: registrationState(event, now) === "OPEN",
+            startsAt: event.startsAt.getTime(),
+            now: now.getTime(),
+            releasedFor: event.unsignedReleasedFor?.getTime() ?? null,
+            zone: event.timezone,
+            locale,
+          },
+          words: await placeChangeWords(),
+          only: true,
+        }
+      : null;
+  // On the editor's other save dialogs, the same lines below their own body.
+  const placeLines = placeChanges ? { placeChanges: { ...placeChanges, only: false } } : {};
   const saveConfirm: ConfirmSpec[] = [
     ...(event.eventStatus !== "CANCELLED"
       ? [
@@ -758,6 +785,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             confirmLabel: t("editor.save"),
             cancelLabel: words.cancel,
             destructive: true,
+            ...placeLines,
           },
           {
             when: [{ field: "event.eventStatus", equals: "CANCELLED" }],
@@ -766,6 +794,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             confirmLabel: t("editor.save"),
             cancelLabel: words.cancel,
             destructive: true,
+            ...placeLines,
           },
         ]
       : []),
@@ -778,26 +807,14 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       road: words.road("announcements"),
       confirmLabel: t("editor.save"),
       cancelLabel: words.cancel,
+      ...placeLines,
     },
     /*
-      The places changed while people wait and the places go out by themselves (§147, §NNN): a raise of the site's places
-      — a higher capacity, or fewer kept for the club — emails offers at once, so the save asks first. Only where offers
-      would leave: «Da», the tick off, a scheduled event of this site with somebody waiting.
+      «Controlul înscrierilor e foarte sensibil» (§NNN): a save that changes a place setting first says each change «before →
+      after» and what it does — the offers a raise emails, the site's button, the release at the deadline — and an unchanged
+      save asks nothing. Last, and with no `when`: it asks only through its lines (`resolvePlaceChanges`).
     */
-    ...(internal && event.eventStatus === "SCHEDULED" && waiting > 0 && offersOnItsOwn(event)
-      ? (
-          [
-            ["event.capacity", event.capacity === null ? "" : String(event.capacity)],
-            ["event.placesKeptForClub", event.placesKeptForClub ? String(event.placesKeptForClub) : ""],
-          ] as const
-        ).map(([field, loaded]) => ({
-          when: [{ field, notEquals: loaded }],
-          title: t("confirm.placesOfferTitle"),
-          body: t("confirm.placesOfferBody", { waiting }),
-          confirmLabel: t("editor.save"),
-          cancelLabel: words.cancel,
-        }))
-      : []),
+    ...(placeChanges ? [{ title: t("confirm.places.title"), body: t("confirm.places.intro"), confirmLabel: t("editor.save"), cancelLabel: t("confirm.places.back"), placeChanges }] : []),
   ];
 
   return (

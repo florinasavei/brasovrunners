@@ -107,6 +107,12 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     if (!result.ok) redirect(`${path}?invalid=1`);
     // Signed: a draft kept by an earlier refused press has nothing left to fill in.
     await clearFormDraft(path);
+    /*
+      The participation window's deadline had passed and this press was the transaction that released the unsigned
+      places (§NNN, «Eliberează singur locurile nesemnate la termen»): nothing was signed and the link is spent. The page
+      reads the spent link and says the place is no longer held, as it would had the job released it a minute earlier.
+    */
+    if (result.registration.status === "EXPIRED") redirect(path);
 
     /*
       Another person on the address still to sign (§471): the pass is given — or moved on, with this

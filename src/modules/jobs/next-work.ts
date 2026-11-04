@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventRsvpAsks } from "@/db/schema/event-rsvps";
 import { events } from "@/db/schema/events";
@@ -13,6 +13,7 @@ import { rsvpAskTimingOf } from "@/modules/deadlines/domain/deadlines";
 import { declarationLastCallDueAt, eventReminderDueAt, windowLastCallAt } from "@/modules/notifications/domain/automatic-sends";
 import { nextConfirmationRetry } from "@/modules/notifications/confirmation-retry";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
+import { deadlineReleaseWakeAt } from "@/modules/registrations/domain/unsigned-release";
 import { PLACE_HOLDING_STATUSES } from "@/modules/registrations/domain/state-machine";
 import { emailLinkLapseSql } from "@/modules/registrations/repository";
 import { rsvpAskNextLook, type RsvpAskTiming } from "@/modules/rsvp/domain/ask";
@@ -256,6 +257,8 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
   const familyLapse = await nextFamilyEntryLapse(db, now);
   // An invitation's deadline (§647): the sweep ends it and the place it kept goes to the line.
   const invitationLapse = await nextInvitationLapse(db, now);
+  // «Eliberează singur locurile nesemnate la termen» (§NNN): the participation window's deadline the release is armed for.
+  const deadlineRelease = await nextDeadlineRelease(db, now);
   // `queueConfirmationRetries` (§653): the verification email re-sent, the club's hours after the last one left.
   const confirmationRetry = await nextConfirmationRetry(db, now, settings);
   const outage = await nextOutageWork(db, now, outageGraceMaxMs(settings));
@@ -271,10 +274,51 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     ...interestInstants,
     familyLapse,
     toDate(invitationLapse),
+    deadlineRelease,
     confirmationRetry,
     outage,
     rsvpAsk,
   ]);
+}
+
+/**
+ * «Eliberează singur locurile nesemnate la termen» (§NNN, `registrations/domain/unsigned-release.ts`): the soonest
+ * participation-window deadline still ahead on a scheduled, capped event with the box ticked and the release not yet
+ * run for that deadline — whether or not anybody has registered or waits, since the release runs (and ticks «Locurile
+ * libere le dau doar eu») at the deadline either way. The job's own selection is `deadlineReleaseDueSql`, from the
+ * same rule. Few rows: only the events with the box ticked.
+ */
+async function nextDeadlineRelease<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<Date | null> {
+  const any = db as unknown as AnyDb;
+  const rows = await any
+    .select({
+      capacity: events.capacity,
+      eventStatus: events.eventStatus,
+      startsAt: events.startsAt,
+      opensDays: events.confirmationOpensDaysBefore,
+      deadlineDays: events.confirmationDeadlineDaysBefore,
+      releasedFor: events.unsignedReleasedFor,
+    })
+    .from(events)
+    .where(and(eq(events.releaseUnsignedAtDeadline, true), eq(events.eventStatus, "SCHEDULED"), isNotNull(events.capacity), gt(events.startsAt, now)));
+  return earliest(
+    rows.map((row) => {
+      const startsAt = toDate(row.startsAt);
+      if (!startsAt) return null;
+      return deadlineReleaseWakeAt(
+        {
+          capacity: toCount(row.capacity),
+          eventStatus: String(row.eventStatus),
+          startsAt,
+          confirmationOpensDaysBefore: toCount(row.opensDays),
+          confirmationDeadlineDaysBefore: toCount(row.deadlineDays),
+          releaseUnsignedAtDeadline: true,
+          unsignedReleasedFor: toDate(row.releasedFor),
+        },
+        now,
+      );
+    }),
+  );
 }
 
 /**

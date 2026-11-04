@@ -413,6 +413,8 @@ function eventFieldsFrom(form: FormData) {
     // their markers, so a form without them is "not editing it" — never a door shut or opened by omission.
     freePlacesByOfferOnly: form.get("event.freePlacesByOfferOnly.present") === "1" ? form.get("event.freePlacesByOfferOnly") === "on" : undefined,
     publicRegistrationOpen: form.get("event.publicRegistrationOpen.present") === "1" ? form.get("event.publicRegistrationOpen") === "on" : undefined,
+    // «Eliberează singur locurile nesemnate la termen» (§NNN): a tick, by the same marker.
+    releaseUnsignedAtDeadline: form.get("event.releaseUnsignedAtDeadline.present") === "1" ? form.get("event.releaseUnsignedAtDeadline") === "on" : undefined,
     // «Anunță-mă când rămân N locuri» (§906): an empty box is off; a form without the box is "not editing it".
     placesAlertAt: form.has("event.placesAlertAt") ? value("placesAlertAt") : undefined,
     // «Locuri păstrate pentru club» (§NNN): an empty box is 0; a form without the box is "not editing it".

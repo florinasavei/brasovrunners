@@ -23,6 +23,13 @@
 
 import { type CountForm, countForm } from "@/i18n/count-form";
 import type { EmailGroup, EmailTransport } from "@/modules/notifications/domain/email-transport";
+import {
+  type PlaceChangeWords,
+  type PlaceFacts,
+  type PlaceSettings,
+  placeChangeLines,
+  placeSettingsFromForm,
+} from "@/modules/content/events/domain/place-changes";
 
 /**
  * `warning` and `error` are for the one in-browser press with no refusal summary to land on:
@@ -356,7 +363,39 @@ export type ConfirmSpec = {
    * and the server refuses naming it.
    */
   tick?: ConfirmTick;
+  /**
+   * The event editor's place settings (§NNN, «Controlul înscrierilor e foarte sensibil»): each one the press changes,
+   * «before → after», and what it does, worked out from the form as posted and the numbers the page read
+   * (`resolvePlaceChanges`). Nothing changed, no lines — and a dialog that exists only for them asks nothing.
+   */
+  placeChanges?: PlaceChangeSpec;
+  /** Lines under the body, one fact each, drawn as a list: a resolved `placeChanges`. */
+  lines?: readonly string[];
 };
+
+/** `ConfirmSpec.placeChanges`: the loaded settings, the page's numbers, the words, and whether the dialog is only for them. */
+export type PlaceChangeSpec = {
+  before: PlaceSettings;
+  facts: PlaceFacts;
+  words: PlaceChangeWords;
+  /** The dialog asks only because of them: with nothing changed the press goes through unasked. */
+  only: boolean;
+};
+
+/**
+ * The dialog with the place settings' lines, worked out from the form as posted (§NNN): null when it exists only for
+ * them and no place setting moved — the caller then lets the press through — else the spec with its `lines`. A form
+ * posting another registration mode than the site's own changes no place (the service ignores the hidden boxes).
+ */
+export function resolvePlaceChanges(spec: ConfirmSpec, valueOf: (field: string) => string | null): ConfirmSpec | null {
+  const changes = spec.placeChanges;
+  if (!changes) return spec;
+  const rest: ConfirmSpec = { ...spec, placeChanges: undefined };
+  const mode = valueOf("event.registrationMode");
+  const lines = mode !== null && mode !== "INTERNAL" ? null : placeChangeLines(changes.before, placeSettingsFromForm(valueOf, changes.before), changes.facts, changes.words);
+  if (!lines) return changes.only ? null : rest;
+  return { ...rest, lines };
+}
 
 /** `ConfirmSpec.tick`: the hidden input the tick fills, and the box's words. */
 export type ConfirmTick = { field: string; label: string };

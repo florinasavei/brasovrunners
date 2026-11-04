@@ -20,6 +20,7 @@ import type { RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { spareBandOf } from "@/modules/registrations/domain/spare-bibs";
 import { announcedCapacity, keptOf } from "@/modules/registrations/domain/kept-places";
+import { windowDeadlineOf } from "@/modules/registrations/domain/unsigned-release";
 import { offersOnItsOwn } from "@/modules/registrations/domain/waitlist";
 import {
   confirmationDueAtStart,
@@ -272,6 +273,17 @@ export default async function RegistrationBox({
       ? t("editor.boxes.confirmation.datesAtStart", values)
       : t("editor.boxes.confirmation.dates", values);
   })();
+
+  /*
+    «Eliberează singur locurile nesemnate la termen» (§NNN): the saved deadline it acts at, said as a date and time — or
+    that it does nothing on this event — then what unticked means, and that it ran, when it has.
+  */
+  const releaseDeadline = event && event.capacity !== null && typedStartOrNull(event) ? windowDeadlineOf(event) : null;
+  const releaseHelp = [
+    releaseDeadline ? t("editor.releaseUnsignedHelp", { deadline: summaryDateTime(releaseDeadline, zone, locale, "inline") }) : t("editor.releaseUnsignedNoEffect"),
+    t("editor.releaseUnsignedHelpUnticked"),
+    ...(event?.unsignedReleasedFor ? [t("editor.releaseUnsignedRan", { deadline: summaryDateTime(event.unsignedReleasedFor, zone, locale, "inline") })] : []),
+  ].join(" ");
 
   /*
     What the save does to the places the window already gave (§665): moves those held to another
@@ -590,6 +602,16 @@ export default async function RegistrationBox({
                         </Typography>
                       )}
                       <BoxNote more={t("editor.confirmationWindowHelpMore", { hold })}>{t("editor.confirmationWindowHelp")}</BoxNote>
+                      {/*
+                        «Eliberează singur locurile nesemnate la termen» (§NNN): under the deadline it acts at. A real tick
+                        with its marker, off by default; the help names the saved deadline, or says it has no effect here
+                        (a deadline at the start, no limit on the places), and that it ran when it has.
+                      */}
+                      <input type="hidden" name="event.releaseUnsignedAtDeadline.present" value="1" />
+                      <CheckboxField name="event.releaseUnsignedAtDeadline" defaultChecked={event?.releaseUnsignedAtDeadline ?? false}>
+                        {t("editor.releaseUnsignedAtDeadline")}
+                      </CheckboxField>
+                      <BoxNote more={t("editor.releaseUnsignedHelpMore")}>{releaseHelp}</BoxNote>
                     </Stack>
                   </Panel>
 

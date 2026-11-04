@@ -651,6 +651,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     ...(fields.freePlacesByOfferOnly === undefined ? {} : { freePlacesByOfferOnly: fields.freePlacesByOfferOnly }),
     ...(fields.publicRegistrationOpen === undefined ? {} : { publicRegistrationOpen: fields.publicRegistrationOpen }),
     ...(fields.placesAlertAt === undefined ? {} : { placesAlertAt: fields.placesAlertAt }),
+    // «Eliberează singur locurile nesemnate la termen» (§NNN), by the same discipline: never switched by omission.
+    ...(fields.releaseUnsignedAtDeadline === undefined ? {} : { releaseUnsignedAtDeadline: fields.releaseUnsignedAtDeadline }),
     // «Informații medicale» (§557), by the same discipline: a caller that did not post the card
     // writes nothing, so no save switches the health note on or off by not mentioning it.
     ...(fields.askHealthNote === undefined ? {} : { askHealthNote: fields.askHealthNote }),
@@ -2008,6 +2010,8 @@ const SERIES_COLUMNS = [
   "freePlacesByOfferOnly",
   "publicRegistrationOpen",
   "placesAlertAt",
+  // Never «Eliberează singur locurile nesemnate la termen» (§NNN): each date ticks its own, since each release emails
+  // everybody unsigned and every Administrator — a series save must not arm it on dates nobody looked at.
   // The race kit (§554), like the headlamp once did (§382): "from this date" gives every later date
   // of the series the same T-shirt question.
   "kitShirt",
@@ -2463,14 +2467,16 @@ async function auditWaitlistAutoOffer<T extends Record<string, unknown>>(
 async function auditRegistrationControls<T extends Record<string, unknown>>(
   tx: Database<T> | Transaction<T>,
   actor: Actor,
-  before: { id: string; publicRegistrationOpen: boolean; freePlacesByOfferOnly: boolean; placesAlertAt: number | null },
-  changes: { publicRegistrationOpen?: boolean; freePlacesByOfferOnly?: boolean; placesAlertAt?: number | null },
+  before: { id: string; publicRegistrationOpen: boolean; freePlacesByOfferOnly: boolean; placesAlertAt: number | null; releaseUnsignedAtDeadline?: boolean },
+  changes: { publicRegistrationOpen?: boolean; freePlacesByOfferOnly?: boolean; placesAlertAt?: number | null; releaseUnsignedAtDeadline?: boolean },
   now: Date,
 ): Promise<void> {
   const moved = [
     { action: "event.public_registration_changed" as const, from: before.publicRegistrationOpen, to: changes.publicRegistrationOpen },
     { action: "event.free_places_by_offer_only_changed" as const, from: before.freePlacesByOfferOnly, to: changes.freePlacesByOfferOnly },
     { action: "event.places_alert_changed" as const, from: before.placesAlertAt, to: changes.placesAlertAt },
+    // «Eliberează singur locurile nesemnate la termen» (§NNN): who switched the deadline's release, and when.
+    { action: "event.release_unsigned_changed" as const, from: before.releaseUnsignedAtDeadline ?? false, to: changes.releaseUnsignedAtDeadline },
   ];
   for (const { action, from, to } of moved) {
     if (to === undefined || to === from) continue;
@@ -3904,6 +3910,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // Who hands out a freed place goes with the places (§615): a copy, and every date of a series.
     waitlistAutoOffer: source.waitlistAutoOffer,
     // The registration controls (§906) travel with the duplicate; the alert's memory starts empty.
+    // «Eliberează singur locurile nesemnate la termen» (§NNN) does not: a copy and every date a series makes start
+    // with it off and its memory empty, so no generated date emails the unsigned and the Administrators by itself.
     freePlacesByOfferOnly: source.freePlacesByOfferOnly,
     publicRegistrationOpen: source.publicRegistrationOpen,
     placesAlertAt: source.placesAlertAt,

@@ -3642,9 +3642,19 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     // live when the page was rendered (§15.3 step 6; §10.6: evaluated against `now`). A hold
     // past its deadline is still live while nobody waits for the place (§160): the signature
     // that comes late is the one the owner asked to be lenient about.
-    await repo.expireStaleHolds(tx, locked, now);
+    const sweep = await repo.expireStaleHolds(tx, locked, now);
     let current = await repo.findRegistrationById(tx, registrationId);
     if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+
+    /*
+      «Eliberează singur locurile nesemnate la termen» (§NNN): this very sweep was the deadline's release, and this hold
+      was one of those it released. The place went with the others — whichever transaction reached the deadline first,
+      the job's or this signature's — so the answer is the same either way: no re-allocation, nothing signed. Returned,
+      not thrown, so the release, its memory and its emails commit; the page then says the place is no longer held.
+    */
+    if (current.status === "EXPIRED" && sweep.atDeadline && sweep.released.includes(registrationId)) {
+      return { registration: current, offered: 0 };
+    }
 
     if (current.status === "EXPIRED") {
       // The hold lapsed at the very moment of signing (§15.3 step 7): re-run allocation

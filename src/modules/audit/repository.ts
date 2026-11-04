@@ -362,6 +362,16 @@ export type AuditAction =
   | "event.capacity_changed"
   /** «Locuri păstrate pentru club» changed (§NNN): `{from, to, via, reason?, version}`, as the capacity's row. */
   | "event.places_kept_changed"
+  /** «Eliberează singur locurile nesemnate la termen» ticked or unticked in the editor (§NNN): `{from, to}`. */
+  | "event.release_unsigned_changed"
+  /**
+   * The release at the participation window's deadline ran (§NNN), with no actor — the maintenance run or whichever
+   * transaction reached the deadline first: `{deadline, released, test, unsigned, free, waiting, offerOnlyTicked, via:
+   * "deadline"}` — the deadline it ran for, the real holds released and apart the test ones, the real holds still
+   * unsigned it left, the free places and the people waiting after it, and whether it ticked «Locurile libere le dau
+   * doar eu» (that tick has its own `event.free_places_by_offer_only_changed` row, `via: "deadline"`). Counts only.
+   */
+  | "event.unsigned_released"
   /**
    * One supplementary place added by «Trimite-i oferta» on a full event (§642): the capacity from and
    * to, the Administrator (the actor), the event (the entity) and the registration offered the place

@@ -1234,11 +1234,14 @@ async function renderRow(
     // or a registration that moved on (restarted, signed late, or a newer hold lapsed), has nothing left to tell.
     if (!lapsed) throw new OutboxMessageWithdrawn("the lapsed hold's event is over or cancelled, or the registration moved on from that hold");
     const zone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
-    if (lapsed.deadline) {
-      data.holdExpiresAtFormatted = formatDeadlineInSentence(lapsed.deadline, zone, locale);
-      data.holdExpiresAtFormattedOther = formatDeadlineInSentence(lapsed.deadline, zone, otherLocale(locale));
+    // At the deadline's own release (§NNN) the sentence states the window's deadline, the one everybody was given.
+    const stated = lapsed.atDeadline ?? lapsed.deadline;
+    if (stated) {
+      data.holdExpiresAtFormatted = formatDeadlineInSentence(stated, zone, locale);
+      data.holdExpiresAtFormattedOther = formatDeadlineInSentence(stated, zone, otherLocale(locale));
     }
     data.holdLapsedToWaitlist = lapsed.toWaitlist;
+    data.holdLapsedAtDeadline = lapsed.atDeadline !== null;
     data.holdLapsedNext = lapsed.next;
     if ((lapsed.next === "register" || lapsed.next === "waitlist") && eventDetails?.slug) {
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } } })}`;
@@ -1990,9 +1993,12 @@ async function describeLapsedHold(
   row: OutboxRow,
   registration: Registration,
   now: Date,
-): Promise<{ deadline: Date | null; toWaitlist: boolean; next: HoldLapsedNext } | null> {
+): Promise<{ deadline: Date | null; toWaitlist: boolean; atDeadline: Date | null; next: HoldLapsedNext } | null> {
   if (registration.status !== "EXPIRED" || registration.expiryReason !== "DECLARATION_HOLD_LAPSED") return null;
-  const payload = (row.payloadJson ?? {}) as { deadline?: unknown; toWaitlist?: unknown };
+  const payload = (row.payloadJson ?? {}) as { deadline?: unknown; toWaitlist?: unknown; atDeadline?: unknown };
+  // The deadline's own release (§NNN): the participation window's deadline the release ran for, when it was that.
+  const releasedAt = typeof payload.atDeadline === "string" ? new Date(payload.atDeadline) : null;
+  const atDeadline = releasedAt && !Number.isNaN(releasedAt.getTime()) ? releasedAt : null;
   const fromPayload = typeof payload.deadline === "string" ? new Date(payload.deadline) : null;
   const queuedFor = fromPayload && !Number.isNaN(fromPayload.getTime()) ? fromPayload : null;
   if (queuedFor && registration.holdExpiresAt?.getTime() !== queuedFor.getTime()) return null;
@@ -2025,6 +2031,7 @@ async function describeLapsedHold(
   return {
     deadline,
     toWaitlist: payload.toWaitlist === true,
+    atDeadline,
     next: holdLapsedNext({
       registrationOpen: registrationState(event, now) === "OPEN",
       capacity: event.capacity,
