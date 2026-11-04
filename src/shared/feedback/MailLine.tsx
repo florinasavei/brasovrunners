@@ -40,8 +40,8 @@ export default function MailLine({
         <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
           {text}
         </Typography>
-        {also?.map((line) => (
-          <Typography key={line} variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+        {also?.map((line, index) => (
+          <Typography key={`${index}:${line}`} variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
             {line}
           </Typography>
         ))}
