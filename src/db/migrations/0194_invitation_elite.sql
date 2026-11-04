@@ -1,0 +1,1 @@
+ALTER TABLE "event_invitations" ADD COLUMN "elite" boolean DEFAULT false NOT NULL;

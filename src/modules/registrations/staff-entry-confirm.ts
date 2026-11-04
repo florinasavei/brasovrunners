@@ -1,5 +1,5 @@
 import type { ConfirmMail } from "@/shared/feedback/confirm-words";
-import type { ConfirmSpec } from "@/shared/feedback/notice";
+import type { ConfirmAlso, ConfirmSpec } from "@/shared/feedback/notice";
 
 /**
  * The staff entry's confirmation dialogs (§875), the first whose conditions the posted form meets: the fast track
@@ -13,6 +13,9 @@ import type { ConfirmSpec } from "@/shared/feedback/notice";
  * declaration for a vouched entry, the address's link — or, for an address that confirmed itself before, the step its
  * restarted row lands on — for the ordinary one. `vouchBody` carries `{email}` raw, for the browser to fill too. Pure, so
  * every answer is tested in Node.
+ *
+ * `elite` (§917): with «Elită» ticked, every dialog says so in one quieter line under the email — the mark is internal and
+ * the person is told nothing — and unticked says nothing of it. Absent (a role the tick is not drawn for), no line.
  */
 export function staffEntryConfirm(words: {
   title: string;
@@ -21,14 +24,21 @@ export function staffEntryConfirm(words: {
   mail: { ordinary: ConfirmMail; vouched: ConfirmMail; fastTrack: ConfirmMail };
   confirmLabel: string;
   cancelLabel: string;
+  elite?: string;
 }): ConfirmSpec[] {
   const shared = { title: words.title, confirmLabel: words.confirmLabel, cancelLabel: words.cancelLabel };
   const person = ["firstName", "lastName"];
+  const eliteLine: ConfirmAlso[] = words.elite ? [{ text: words.elite, when: [{ field: "elite", equals: "on" }] }] : [];
+  // The mail's own quieter lines first (the club's copies), then the mark's, only while «Elită» is ticked.
+  const withElite = (mail: ConfirmMail): ConfirmMail => {
+    const also = [...(mail.also ?? []), ...eliteLine];
+    return also.length > 0 ? { ...mail, also } : mail;
+  };
   return [
-    { ...shared, ...words.mail.fastTrack, when: [{ field: "fastTrack", equals: "on" }], body: words.body, fillFrom: person },
+    { ...shared, ...withElite(words.mail.fastTrack), when: [{ field: "fastTrack", equals: "on" }], body: words.body, fillFrom: person },
     {
       ...shared,
-      ...words.mail.vouched,
+      ...withElite(words.mail.vouched),
       when: [
         { field: "vouchAddress", equals: "on" },
         { field: "fastTrack", notEquals: "on" },
@@ -36,6 +46,6 @@ export function staffEntryConfirm(words: {
       body: words.vouchBody,
       fillFrom: ["email", ...person],
     },
-    { ...shared, ...words.mail.ordinary, body: words.body, fillFrom: person },
+    { ...shared, ...withElite(words.mail.ordinary), body: words.body, fillFrom: person },
   ];
 }

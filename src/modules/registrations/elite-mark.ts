@@ -1,7 +1,7 @@
 import { and, asc, eq, ne } from "drizzle-orm";
 import { type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
-import type { Database } from "@/db/types";
+import type { Database, Transaction } from "@/db/types";
 import { type AuditAction, recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { rerankEventResults } from "@/modules/results/results";
@@ -37,6 +37,57 @@ import { isUuid } from "@/shared/ids";
  */
 type Actor = Pick<StaffUser, "id" | "role">;
 
+/**
+ * Where a mark put on from the start came from (§917): the staff entry's «Elită» tick, or the invitation's, carried onto
+ * the registration it became. Absent for «Marchează ca elită» itself, whose trail keeps the new value alone.
+ */
+export type EliteMarkVia = "entry" | "invitation";
+
+/** What one write of the mark did: whether it changed, and whether the public pages must be told after the commit. */
+export type EliteMarkWritten = { changed: boolean; public: boolean };
+
+/**
+ * The mark written inside the caller's transaction — the one body of «Marchează ca elită» (`setRegistrationElite`), of the
+ * staff entry's «Elită» tick (`admin-service.ts#createRegistrationByStaff`) and of an invitation sent with it
+ * (`service.ts#seatInvitedRegistration`, `markInvitationAdopted`), so the three can never mark differently (§917).
+ *
+ * One statement: the mark changes only where it says otherwise, so a second press is a no-op and writes no row. Then the
+ * trail — `registration.elite_marked` / `registration.elite_unmarked` on the registration, `{ elite }` and, from the
+ * entry or an invitation, `via` — and, when «Apare în clasament» was unticked (§910), the results ranked again in the same
+ * transaction. `public` says the caller must tell the public pages after its commit (`revalidatePublicContent`).
+ * Who may is the caller's to assert: `actorStaffUserId` is whoever the trail names (an invitation's sender may be gone).
+ */
+export async function writeRegistrationEliteMark<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  actorStaffUserId: string | null,
+  registrationId: string,
+  elite: boolean,
+  now: Date,
+  via?: EliteMarkVia,
+): Promise<EliteMarkWritten> {
+  const [changed] = await tx
+    .update(registrations)
+    .set({ elite, updatedAt: now })
+    .where(and(eq(registrations.id, registrationId), ne(registrations.elite, elite)))
+    .returning({ id: registrations.id, eventId: registrations.eventId, hiddenFromResults: registrations.eliteHiddenFromResults, hiddenFromSite: registrations.eliteHiddenFromSite });
+  if (!changed) {
+    const [exists] = await tx.select({ id: registrations.id }).from(registrations).where(eq(registrations.id, registrationId)).limit(1);
+    if (!exists) throw new DomainError("NOT_FOUND", "no such registration");
+    return { changed: false, public: false };
+  }
+  await recordAuditEvent(tx, {
+    actorStaffUserId,
+    action: elite ? "registration.elite_marked" : "registration.elite_unmarked",
+    entityType: "registration",
+    entityId: changed.id,
+    metadata: via ? { elite, via } : { elite },
+    now,
+  });
+  // The two ticks (§910) count only under the mark: a hidden result returns to the ranking, or leaves it again.
+  if (changed.hiddenFromResults) await rerankEventResults(tx, changed.eventId);
+  return { changed: true, public: changed.hiddenFromResults || changed.hiddenFromSite };
+}
+
 export async function setRegistrationElite<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Actor,
@@ -49,30 +100,7 @@ export async function setRegistrationElite<T extends Record<string, unknown>>(
   }
   if (!isUuid(registrationId)) throw new DomainError("NOT_FOUND", "no such registration");
 
-  const outcome = await db.transaction(async (tx) => {
-    // One statement: the mark changes only where it says otherwise, so a second press is a no-op and writes no row.
-    const [changed] = await tx
-      .update(registrations)
-      .set({ elite, updatedAt: now })
-      .where(and(eq(registrations.id, registrationId), ne(registrations.elite, elite)))
-      .returning({ id: registrations.id, eventId: registrations.eventId, hiddenFromResults: registrations.eliteHiddenFromResults, hiddenFromSite: registrations.eliteHiddenFromSite });
-    if (!changed) {
-      const [exists] = await tx.select({ id: registrations.id }).from(registrations).where(eq(registrations.id, registrationId)).limit(1);
-      if (!exists) throw new DomainError("NOT_FOUND", "no such registration");
-      return { changed: false, public: false };
-    }
-    await recordAuditEvent(tx, {
-      actorStaffUserId: actor.id,
-      action: elite ? "registration.elite_marked" : "registration.elite_unmarked",
-      entityType: "registration",
-      entityId: changed.id,
-      metadata: { elite },
-      now,
-    });
-    // The two ticks (§910) count only under the mark: a hidden result returns to the ranking, or leaves it again.
-    if (changed.hiddenFromResults) await rerankEventResults(tx, changed.eventId);
-    return { changed: true, public: changed.hiddenFromResults || changed.hiddenFromSite };
-  });
+  const outcome = await db.transaction((tx) => writeRegistrationEliteMark(tx, actor.id, registrationId, elite, now));
   if (outcome.public) revalidatePublicContent("events", "places");
   return { changed: outcome.changed };
 }

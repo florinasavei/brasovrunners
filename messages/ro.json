@@ -1287,7 +1287,10 @@
         "registered": "cu înscriere",
         "empty": "Nicio elită la acest eveniment.",
         "manage": "Gestionează lista de elite",
-        "seeCard": "Vezi lista de elite în editor"
+        "seeCard": "Vezi lista de elite în editor",
+        "entry": "Elită",
+        "entryHelp": "Intern: persoana nu vede marcajul; schimbă doar cum se tipărește BIB-ul.",
+        "entryConfirm": "Marcat «Elită» — intern, persoana nu e anunțată."
       },
       "export": "Descarcă CSV",
       "personLink": "Toate datele unei persoane",
@@ -11111,6 +11114,8 @@
       "daysHelp": "Locul e păstrat atâtea zile, cel mult până la start; între 1 și {max}.",
       "outsideLabel": "Pe lista de invitați speciali (nu ocupă un loc)",
       "outsideHelp": "Pentru organizatori, voluntari, pacemakeri și sportivi invitați, care nu iau niciunul dintre locurile anunțate: invitația nu ține un loc, iar înscrierea va fi a unui invitat special.",
+      "eliteLabel": "Elită",
+      "eliteHelp": "Intern: înscrierile vor fi marcate «Elită»; persoanele nu văd marcajul, schimbă doar cum se tipărește BIB-ul.",
       "localeLegend": "Limba invitației",
       "localeRo": "Română",
       "localeEn": "English",
@@ -11137,6 +11142,7 @@
         },
         "locale": "Limba pentru adresele pe care clubul nu le cunoaște: {language}.",
         "outside": "Pe lista de invitați speciali: nu țin niciun loc.",
+        "elite": "Înscrierile vor fi marcate «Elită» — intern, persoanele nu sunt anunțate.",
         "confirmRaise": {
           "one": "Adaugă {count} loc și trimite",
           "few": "Adaugă {count} locuri și trimite",
