@@ -28,7 +28,7 @@ import Panel from "@/shared/ui/Panel";
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 import { ROW_SX } from "@/shared/ui/row-fold";
 import StatusChip from "@/shared/ui/StatusChip";
-import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
 
 type Props = {
   locale: Locale;
@@ -154,7 +154,7 @@ function linesWords(presses: readonly JournalPress[], t: T, locale: Locale): str
 }
 
 /** «A plecat la 10:15» today, «A plecat joi, 2 oct. 2026, la 10:15» on another day (`emailLeavesWords`, §452). */
-export function sentWords(at: Date, t: T, locale: Locale, now: Date): string {
+function sentWords(at: Date, t: T, locale: Locale, now: Date): string {
   const words = emailLeavesWords(at, now, locale);
   return words.key === "leavesToday" ? t("emails.today.status.sentToday", { at: words.at }) : t("emails.today.status.sentOn", { at: words.at });
 }
@@ -189,7 +189,8 @@ function PressList({ presses, t, typeName, locale, now, departure }: ListProps) 
                       {t("emails.today.toMany", { type: typeName(type), people: t(`emails.today.people.${countForm(lines.length, locale)}`, { count: lines.length }) })}
                     </Typography>
                   </Box>
-                  <Stack spacing={1} sx={{ pl: 2, pt: 0.5 }}>
+                  {/* The first name link reaches 24 pixels up (`INLINE_TAP_TARGET`): its bar's margin and this padding keep that free. */}
+                  <Stack spacing={1} sx={{ pl: 2, pt: 1.5 }}>
                     {lines.map((line) => (
                       <Line key={line.id} line={line} t={t} typeName={typeName} locale={locale} now={now} departure={departure} />
                     ))}
@@ -236,8 +237,8 @@ function Line({ line, t, typeName, locale, now, departure }: LineProps) {
         {line.personName ? (
           <>
             {line.person ? (
-              /* The person's own page (§NNN): their emails, their state, what to do next — a plain anchor a thumb reaches. */
-              <MuiLink href={personHref(line.person, locale)} sx={{ ...TAP_TARGET, display: "inline-flex", alignItems: "center", fontWeight: 600 }} data-testid="email-journal-person">
+              /* The person's own page (§NNN): a plain anchor a thumb reaches, 44 tall above its words so the line keeps its height (§480). */
+              <MuiLink href={personHref(line.person, locale)} sx={{ ...INLINE_TAP_TARGET, fontWeight: 600 }} data-testid="email-journal-person">
                 {line.personName}
               </MuiLink>
             ) : (
@@ -294,7 +295,8 @@ export function DepartedChip({ line, t, locale, now }: { line: Pick<JournalLine,
 /** «+ 2 pentru căsuțele clubului», closed: the addresses, the type and the state behind it. A person's «Emailuri» folds its club rows the same way. */
 export function ClubFold({ rows, t, typeName, locale, now }: { rows: readonly JournalClubLine[]; t: T; typeName: (type: EmailMessageType) => string; locale: Locale; now: Date }) {
   return (
-    <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 0.5 }} data-testid="email-journal-club">
+    // Positioned, so its bar keeps its own presses when the next line's name link reaches up over it (`INLINE_TAP_TARGET`, §366).
+    <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 0.5, position: "relative" }} data-testid="email-journal-club">
       <Box component="summary">
         <ClubMailboxIcon fontSize="small" aria-hidden />
         <Typography component="span" variant="caption" color="text.secondary">

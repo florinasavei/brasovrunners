@@ -9,7 +9,7 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import type { EmailHistory } from "@/modules/notifications/email-history";
+import type { EmailHistory, EmailHistoryRowRead } from "@/modules/notifications/email-history";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -143,7 +143,8 @@ beforeEach(async () => {
   [vlad, vera] = volunteers.map((volunteer) => volunteer.id);
 
   await db.insert(emailOutbox).values([
-    // Maria's journey: the verification from the site, delivered.
+    // Maria's journey: the verification, delivered — queued before the outbox's first recorded press (Monday's resend
+    // below), so nobody can say it was the site's.
     row("k:verify", { messageType: "VERIFY_REGISTRATION_EMAIL", registrationId: maria, createdAt: at("2026-09-28T07:00:00.000Z"), sentAt: at("2026-09-28T07:00:20.000Z"), deliveredAt: at("2026-09-28T07:00:40.000Z") }),
     // «Retrimite emailul», pressed by the Administrator: three tries, a resend by hand, and the club's copy of it.
     row("k:confirm", { registrationId: maria, attemptCount: 3, isManualResend: true, cause: "registrations.resend", pressId: PRESS.resend, requestedByStaffUserId: admin.id, createdAt: at("2026-09-30T07:00:00.000Z"), sentAt: at("2026-09-30T07:20:00.000Z") }),
@@ -156,7 +157,7 @@ beforeEach(async () => {
     row("k:reminder", { messageType: "EVENT_REMINDER", status: "PENDING", registrationId: maria, attemptCount: 3, nextAttemptAt: at("2026-10-01T09:30:00.000Z"), lastError: "421 try again later", cause: "job.registrationMaintenance", pressId: PRESS.job, createdAt: at("2026-10-01T06:00:00.000Z") }),
     // «Salvează nr.»: twenty tries, failed for good — its sanitized reason is drawn.
     row("k:bib", { messageType: "BIB_ASSIGNED", status: "FAILED", registrationId: maria, attemptCount: 20, lastError: "550 mailbox unavailable", cause: "registrations.setBib", pressId: PRESS.bib, requestedByStaffUserId: admin.id, createdAt: at("2026-10-01T07:00:00.000Z") }),
-    // Queued a moment ago from the site and never tried.
+    // Queued a moment ago from the site — after the first recorded press, with none — and never tried.
     row("k:declaration", { messageType: "COMPLETE_DECLARATION", status: "PENDING", registrationId: maria, createdAt: at("2026-10-01T08:59:00.000Z") }),
     // Another person's email: never on Maria's page.
     row("k:ion", { registrationId: ion, recipientEmail: "ion@example.org", createdAt: at("2026-10-01T08:30:00.000Z") }),
@@ -208,7 +209,8 @@ describe("§NNN a registration's emails", () => {
     expect(byType("EVENT_REMINDER")).toMatchObject({ attemptCount: 3, nextTryAt: at("2026-10-01T09:30:00.000Z"), lastError: null, cause: "job.registrationMaintenance", by: null });
     expect(byType("BIB_ASSIGNED")).toMatchObject({ attemptCount: 20, lastError: "550 mailbox unavailable", cause: "registrations.setBib", by: "Ana Admin" });
     expect(byType("WAITLIST_JOINED")).toMatchObject({ lastError: null, rejectionCause: "mailbox-full" });
-    expect(byType("COMPLETE_DECLARATION")).toMatchObject({ attemptCount: 0, nextTryAt: null, cause: null, by: null });
+    expect(byType("COMPLETE_DECLARATION")).toMatchObject({ attemptCount: 0, nextTryAt: null, cause: null, by: null, fromSite: true });
+    expect(byType("VERIFY_REGISTRATION_EMAIL")).toMatchObject({ cause: null, by: null, fromSite: false });
     expect(byType("REGISTRATION_CONFIRMED")).toMatchObject({ manualResend: true, by: "Ana Admin", cause: "registrations.resend", pressId: PRESS.resend });
     // A waiting row's departure is judged as the queue judges it; a row that left has none.
     expect(byType("EVENT_REMINDER")?.departure).not.toBeNull();
@@ -259,6 +261,63 @@ describe("§NNN a registration's emails", () => {
     expect(page).toContain("by Ana Admin");
     expect(page).toContain("+ 1 to the club&#x27;s mailboxes");
     expect(page).not.toMatch(/emails\.(history|today|causes|types)\./);
+  });
+
+  it("never says «de pe site» for a row queued before the outbox recorded presses — a press-less reminder names nobody (§NNN)", async () => {
+    // The race's reminder from the job as it ran before `cause` and `press_id` existed (0192): no press, no colleague.
+    await db.insert(emailOutbox).values(
+      row("k:old-reminder", { messageType: "EVENT_REMINDER", registrationId: maria, createdAt: at("2026-09-26T06:00:00.000Z"), sentAt: at("2026-09-26T06:00:30.000Z") }),
+    );
+    const history = await readEmailHistory(db, admin(), { registrationId: maria }, NOW);
+    const oldId = await idOf("k:old-reminder");
+    expect(history.rows.find((line) => line.id === oldId)).toMatchObject({ cause: null, pressId: null, by: null, fromSite: false });
+    // The site's own row, queued after the first recorded press, keeps its words.
+    expect(history.rows.find((line) => line.messageType === "COMPLETE_DECLARATION")).toMatchObject({ fromSite: true });
+    for (const [locale, words, site] of [
+      ["ro", " · nu s-a notat cine l-a trimis", "de pe site"],
+      ["en", " · who sent it was not recorded", "from the site"],
+    ] as const) {
+      const page = await html(history, locale);
+      const reminder = page.match(/<li[^>]*data-type="EVENT_REMINDER" data-status="SENT"[^>]*>[\s\S]*?<\/li>/)?.[0] ?? "";
+      expect(reminder, locale).toContain('data-cause="unrecorded"');
+      expect(reminder, locale).toContain("09:00");
+      expect(reminder, locale).toContain(words);
+      expect(reminder, locale).not.toContain(site);
+      expect(page, locale).not.toMatch(/emails\.history\./);
+    }
+  });
+
+  it("calls nothing the site's in an outbox that has recorded no press at all", () => {
+    const alone: EmailHistoryRowRead = {
+      id: randomUUID(),
+      messageType: "REGISTRATION_CONFIRMED",
+      status: "SENT",
+      recipientEmail: "maria.pop@example.org",
+      createdAt: NOW,
+      sentAt: NOW,
+      recipientCount: 1,
+      attemptCount: 1,
+      nextAttemptAt: null,
+      deliveredAt: null,
+      rejectedAt: null,
+      rejectionCause: null,
+      lastError: null,
+      cause: null,
+      pressId: null,
+      by: null,
+      manualResend: false,
+      clubCopy: false,
+      familyHeld: false,
+      sentNow: false,
+      road: null,
+      idempotencyKey: "k:alone",
+    };
+    expect(foldEmailHistory([alone], { ownTotal: 1, total: 1, pressesSince: null }).rows[0].fromSite).toBe(false);
+    expect(foldEmailHistory([alone], { ownTotal: 1, total: 1, pressesSince: new Date(NOW.getTime() + 1) }).rows[0].fromSite).toBe(false);
+    expect(foldEmailHistory([alone], { ownTotal: 1, total: 1, pressesSince: NOW }).rows[0].fromSite).toBe(true);
+    // A colleague or a press is never the site, whenever it was queued.
+    expect(foldEmailHistory([{ ...alone, by: "Ana Admin" }], { ownTotal: 1, total: 1, pressesSince: NOW }).rows[0].fromSite).toBe(false);
+    expect(foldEmailHistory([{ ...alone, pressId: randomUUID() }], { ownTotal: 1, total: 1, pressesSince: NOW }).rows[0].fromSite).toBe(false);
   });
 
   it("caps the list and says how many more, older, there are", async () => {

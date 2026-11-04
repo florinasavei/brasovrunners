@@ -38,7 +38,8 @@ const isWaiting = (row: Pick<EmailHistoryRow, "status">) => row.status === "PEND
  * A closed fold whose line says how many and the latest — «4 emailuri · ultimul: „Confirmare înscriere” — a plecat la
  * 10:15» — and, inside, every email newest first, stacked so a row fits 320 pixels, never a table: its name, when it was
  * queued and by what (the journal's press words: the press and the colleague, «automat» for a job, «de pe site» for the
- * person's own form or link), the journal's state chip or the queue's departure words while it waits, «Retrimis
+ * person's own form or link — only where that is known, «nu s-a notat cine l-a trimis» for a row queued before the outbox
+ * recorded presses), the journal's state chip or the queue's departure words while it waits, «Retrimis
  * manual», the tries and the next one, what the provider said after it left, a FAILED row's sanitized reason, and the
  * club's copies folded under it. The journal's own pieces (`EmailJournal.tsx`), so the two screens say one thing.
  */
@@ -97,7 +98,11 @@ function latestState(row: EmailHistoryRow, t: T, locale: Locale, now: Date): str
   return t(words.key === "leavesToday" ? "emails.history.last.sentToday" : "emails.history.last.sentOn", { at: words.at });
 }
 
-/** «10:02 · Anulează înscrierea · de Ana Pop», «… · automat: întreținerea înscrierilor», «… · de pe site (persoana însăși)». */
+/**
+ * «10:02 · Anulează înscrierea · de Ana Pop», «… · automat: întreținerea înscrierilor», «… · de pe site (persoana însăși)»
+ * — the site only for a row known to be the person's own (`fromSite`), never for one queued before presses were
+ * recorded, which says «… · nu s-a notat cine l-a trimis» (§NNN).
+ */
 function causeWords(row: EmailHistoryRow, t: T, locale: Locale, now: Date): string {
   const at = emailLeavesWords(row.createdAt, now, locale).at;
   if (row.cause) {
@@ -106,7 +111,7 @@ function causeWords(row: EmailHistoryRow, t: T, locale: Locale, now: Date): stri
     return row.by ? t("emails.today.press.by", { at, cause, by: row.by }) : t("emails.today.press.cause", { at, cause });
   }
   if (row.by) return t("emails.today.press.byOnly", { at, by: row.by });
-  return t("emails.history.site", { at });
+  return t(row.fromSite ? "emails.history.site" : "emails.history.unrecorded", { at });
 }
 
 /** «3 încercări · următoarea: 10:30», «încă nu s-a încercat» while it waits untried; nothing for an untried row that never waited. */
@@ -142,7 +147,7 @@ function HistoryRow({ row, t, typeName, locale, now }: RowProps) {
       data-testid="email-history-row"
       data-type={row.messageType}
       data-status={row.status}
-      data-cause={row.cause ?? (row.by ? "staff" : "site")}
+      data-cause={row.cause ?? (row.by ? "staff" : row.fromSite ? "site" : "unrecorded")}
       {...(row.pressId ? { "data-press": row.pressId } : {})}
     >
       <Typography variant="body2" sx={{ fontWeight: 600, wordBreak: "break-word" }}>

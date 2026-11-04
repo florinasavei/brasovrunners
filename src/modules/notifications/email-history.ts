@@ -25,7 +25,14 @@ import { readEmailVolumeToday } from "./volume";
  * A person's «Emailuri» (§NNN; the owner: «for each person, the list of emails the outbox holds for them, with how many
  * tries each took»): every outbox row of one registration (`registration_id`) or of one volunteer (the payload's
  * `volunteerId`, the journal's own predicate `VOLUNTEER_OF_ROW`), newest first, each with its tries, its next try, what
- * became of it and who caused it — the press and the colleague, a job, or the person on the site.
+ * became of it and who caused it — the press and the colleague, a job, the person on the site, or, for a row queued
+ * before the outbox recorded presses, nobody it can name.
+ *
+ * **«De pe site» only where it is known.** A public flow opens no press (`domain/press-causes.ts`), so its rows carry
+ * neither a press nor a colleague — but neither does every row queued before `cause` and `press_id` existed (0192): the
+ * race's reminders, the maintenance job's expiries and offers, a staff verb that did not stamp its requester. A row with
+ * neither is the person's own only when it was queued at or after the outbox's **first recorded press** (read in the
+ * same query); before it, or in an outbox that has recorded none, the fold says that nobody was recorded (§NNN).
  *
  * **What is read, and what never is** — the journal's rule (`journal.ts`): the type, the state and its times, the tries,
  * the provider's facts after it left (`delivered_at`, `rejected_at`, `rejection_cause`), the press's `cause` and
@@ -68,13 +75,18 @@ export type EmailHistoryRow = {
   rejectionCause: RejectionCause | null;
   /** Sanitized by the worker (§16.1); on a FAILED row only. */
   lastError: string | null;
-  /** The press or job that queued it, null for the person's own form or link. */
+  /** The press or job that queued it; null for the person's own form or link, and for a row nobody was recorded for. */
   cause: PressCause | null;
   /** One id per press: the rows a press queued share it. */
   pressId: string | null;
   /** The colleague who pressed, by name; null for a job, the site, or an account since removed. */
   by: string | null;
   manualResend: boolean;
+  /**
+   * Queued by the person's own form or link: no press, no colleague, and queued at or after the outbox's first recorded
+   * press — before it nothing was stamped, so such a row could as well be a job's or a colleague's (§NNN).
+   */
+  fromSite: boolean;
   /** When a waiting row leaves, in the queue's own judgement; null on a row that is not waiting. */
   departure: Departure | null;
   /** The club's copies of this very message (`<key>:club-copy:<address>`), folded under it. */
@@ -136,12 +148,14 @@ function assertMayReadEmailHistory(actor: StaffSubject): void {
 
 /**
  * The rows folded as the fold draws them — pure, so the folding is tested apart from the database. `departures` holds
- * each waiting row's departure by id (`readEmailHistory` judges them).
+ * each waiting row's departure by id (`readEmailHistory` judges them); `pressesSince` is the outbox's first recorded
+ * press, null while it has recorded none.
  */
 export function foldEmailHistory(
   read: readonly EmailHistoryRowRead[],
-  input: { ownTotal: number; total: number; departures?: ReadonlyMap<string, Departure> },
+  input: { ownTotal: number; total: number; departures?: ReadonlyMap<string, Departure>; pressesSince?: Date | null },
 ): EmailHistory {
+  const pressesSince = input.pressesSince ?? null;
   const rows: EmailHistoryRow[] = [];
   const byKey = new Map<string, EmailHistoryRow>();
   const clubRows: EmailHistoryRowRead[] = [];
@@ -167,6 +181,7 @@ export function foldEmailHistory(
       pressId: row.pressId,
       by: row.by,
       manualResend: row.manualResend,
+      fromSite: !row.pressId && !row.by && pressesSince !== null && row.createdAt >= pressesSince,
       departure: isWaiting(row.status) ? (input.departures?.get(row.id) ?? null) : null,
       copies: [],
     };
@@ -226,6 +241,11 @@ export async function readEmailHistory<T extends Record<string, unknown>>(
       // Every row of the person, and their own (not the club's), past the cap included: one query, no second count.
       total: sql<number>`count(*) over ()`.mapWith(Number),
       ownTotal: sql<number>`count(*) filter (where not (${clubSideSql})) over ()`.mapWith(Number),
+      // The outbox's first recorded press, computed once for the query (an uncorrelated subquery): only from then on
+      // is a row with neither press nor colleague the person's own (§NNN).
+      pressesSince: sql<Date | null>`(select min(${emailOutbox.createdAt}) from ${emailOutbox} where ${emailOutbox.pressId} is not null)`.mapWith(
+        emailOutbox.createdAt,
+      ),
     })
     .from(emailOutbox)
     .leftJoin(staffUsers, eq(staffUsers.id, emailOutbox.requestedByStaffUserId));
@@ -242,7 +262,7 @@ export async function readEmailHistory<T extends Record<string, unknown>>(
           .orderBy(desc(emailOutbox.createdAt), desc(emailOutbox.id))
           .limit(EMAIL_HISTORY_LIMIT);
 
-  // The window counts are the query's, not a row's: `foldEmailHistory` reads them from the first row below.
+  // The window counts and the first press are the query's, not a row's: `foldEmailHistory` reads them from the first row below.
   const rows: EmailHistoryRowRead[] = read.map((row) => ({
     id: row.id,
     messageType: row.messageType,
@@ -300,5 +320,5 @@ export async function readEmailHistory<T extends Record<string, unknown>>(
     }
   }
 
-  return foldEmailHistory(rows, { total: read[0]?.total ?? 0, ownTotal: read[0]?.ownTotal ?? 0, departures });
+  return foldEmailHistory(rows, { total: read[0]?.total ?? 0, ownTotal: read[0]?.ownTotal ?? 0, departures, pressesSince: read[0]?.pressesSince ?? null });
 }

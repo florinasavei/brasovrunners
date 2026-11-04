@@ -7768,6 +7768,7 @@
           "captured": "reached nobody (QA)"
         },
         "site": "{at} · from the site (the person themselves)",
+        "unrecorded": "{at} · who sent it was not recorded",
         "tries": {
           "one": "{count} try",
           "few": "{count} tries",
