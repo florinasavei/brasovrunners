@@ -297,7 +297,7 @@ For internal registration, the normal sequence is:
 1. participant submits name and email and acknowledges the privacy notice;
 2. participant confirms the email address within the club's email-link window (48 hours by default);
 3. if a place is available, the platform temporarily holds it;
-4. participant reads and signs the approved declaration — online, or on paper at the desk on race day before picking up the number;
+4. participant reads and signs the approved declaration — online, or on paper at the desk on race day before picking up the number; on an event where the club ticked «Eliberează singur locurile nesemnate la termen», a place still unsigned at the participation window's deadline is released then, whether or not anybody waits, and nobody is given it by itself — the organizers hand out the free places from then on (`DECISIONS.md` §NNN);
 5. registration becomes confirmed;
 6. a confirmation email containing a secure management/unregistration link is sent.
 
@@ -800,7 +800,8 @@ Messages include:
 - registration confirmed;
 - registration cancelled;
 - waiting-list offer expired;
-- a held place that lapsed: once for each place lost, to the person who had not signed the declaration by the deadline when somebody else wanted the place, with what they can still do — never after the start or for a cancelled event (`DECISIONS.md` §638);
+- a held place that lapsed: once for each place lost, to the person who had not signed the declaration by the deadline when somebody else wanted the place, or at the deadline the club set to release the unsigned places, with what they can still do — never after the start or for a cancelled event (`DECISIONS.md` §638, §NNN);
+- that release, once per deadline, to each Administrator: how many places were released and how many are still unsigned, the free places and the waiting list after it, and who gives the places now — never a name (`DECISIONS.md` §NNN);
 - secure registration-management link;
 - secure public-profile management link;
 - current registration status notice for a cancelled or expired registration;

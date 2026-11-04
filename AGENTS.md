@@ -1302,9 +1302,13 @@ started, with `expiry_reason = EVENT_STARTED`. No message is sent for it.
 `PENDING_DECLARATION -> EXPIRED` with `expiry_reason = DECLARATION_HOLD_LAPSED` happens only
 when the place is wanted, and to as many holds as are wanted: `wanted = waiting - free`
 places, released oldest deadline first, or every hold once the event has started or is
-`COMPLETED` (`DECISIONS.md` §160). The person whose hold is released to somebody who wanted
-the place is emailed, once per lapsed hold (`DECLARATION_HOLD_EXPIRED`, §638); a hold the start
-or a `COMPLETED` event releases is not. Otherwise the hold outlives its deadline and the declaration
+`COMPLETED` (`DECISIONS.md` §160) — and, on a capped event with «Eliberează singur locurile nesemnate la
+termen» ticked (`events.release_unsigned_at_deadline`, §NNN), once at the participation window's deadline
+(when it is before the start): every hold that holds a counted place and is past its own deadline, whoever
+waits, never a special guest's or one whose first email is still queued; the places go to nobody by
+themselves («Locurile libere le dau doar eu» is ticked in the same transaction). The person whose hold is
+released to somebody who wanted the place, or at that deadline, is emailed, once per lapsed hold
+(`DECLARATION_HOLD_EXPIRED`, §638); a hold the start or a `COMPLETED` event releases is not. Otherwise the hold outlives its deadline and the declaration
 is signed online, or on paper at the desk, at any time before the start; a row the start
 expired is re-allocated by `confirmByStaff` rather than refused, so the desk still confirms
 it while a place is free. `WAITLIST_OFFERED -> EXPIRED` happens at the offer's deadline
@@ -1435,6 +1439,7 @@ Rules:
   `places_alert_sent` and re-armed above N or by a save that changes N. It decides nothing about places;
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
 - every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place — measured on the site's places for the line and a public newcomer (`capacity − K`, clamped at nought, so never more holds than people want places), never for a public newcomer while the club's kept places are in use, on the whole capacity for a staff newcomer (§NNN) — or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
+- «Eliberează singur locurile nesemnate la termen» (`events.release_unsigned_at_deadline`, off by default; `DECISIONS.md` §NNN): the first capacity-changing transaction at or after the participation window's deadline (strictly before the start) on a scheduled, capped event releases every counted declaration hold past its own deadline, whoever waits — not a special guest's, not one whose first email is queued, never an offer, a family's reservation or an invitation — writes the deadline it ran for (`events.unsigned_released_for`, no version bump) and ticks «Locurile libere le dau doar eu» (version + 1, audited `via: "deadline"`), so it offers and seats nobody; once per deadline, a moved deadline arms it again; a hold given or lapsing after it follows §160; it only moves holds to `EXPIRED` under the lock, so it adds no way past the capacity;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
 - public read may subtract eligible waiting entries as a conservative safeguard while maintenance is catching up, but it never mutates state;
 - scheduled maintenance expires holds and allocates released places;
@@ -1867,6 +1872,8 @@ events
 - cost_type FREE|PAID null            -- §11.7; whether it charges, never how much
 - capacity integer null
 - places_kept_for_club integer NOT NULL DEFAULT 0  -- §10.6, §NNN; «Locuri păstrate pentru club», 0 to the capacity, 0 uncapped
+- release_unsigned_at_deadline boolean NOT NULL DEFAULT false  -- §10.6, §NNN; never copied by a duplicate, a series or a repeat
+- unsigned_released_for timestamptz null  -- §NNN; the deadline the release last ran for; a memory, no version bump, never exported
 - registration_mode
 - registration_opens_at timestamptz null
 - registration_closes_at timestamptz null
@@ -2707,7 +2714,10 @@ On explicit POST with valid token/action session:
    called off in between must not still be signed into;
 5. expire stale holds (a lapsed declaration hold is stale only as far as the queue wants its
    place, or once the event has started, §160; a cancelled event was refused at step 4, and its
-   holds are left standing, §331);
+   holds are left standing, §331) — and when this sweep is the window deadline's own release (§NNN)
+   and it released this very hold, return without re-allocating or signing, so the release commits
+   and the answer is the same whichever transaction reached the deadline first; a signature before
+   the deadline keeps its place;
 6. verify current hold still active — a hold past its deadline that nothing wants is;
 7. if expired, allocate older eligible waiting entries first, then renew the hold only if direct capacity remains; otherwise move this participant to Waitlisted at the queue tail and stop;
 8. insert immutable acceptance;
@@ -3098,7 +3108,10 @@ Registration maintenance:
 - expire pending email tokens/registrations where policy applies;
 - expire declaration holds — only as many as the queue wants places for, oldest deadline
   first, or all of them on an event that has started (`DECISIONS.md` §160); a lapsed hold
-  nothing wants is kept, and its event is not even selected;
+  nothing wants is kept, and its event is not even selected — except the window deadline's own
+  release (§NNN): an event whose armed deadline has come is selected with **no** «somebody waits»
+  condition (`deadlineReleaseDueSql`), runs it once (its memory column), and `next-work` wakes the job
+  at that deadline;
 - select scheduled events only: a `COMPLETED` event is over (§82), and a `CANCELLED` one is
   left as it was cancelled (§331) — no hold or offer expired, no waiting list closed, no place
   offered, nothing mailed;
@@ -3199,7 +3212,16 @@ EVENT_CANCELLED
 DECLARATION_HOLD_EXPIRED
 EVENT_INVITATION
 PLACES_ALERT
+UNSIGNED_RELEASED
 ```
+
+`UNSIGNED_RELEASED` (§NNN) is queued by `unsigned-release.ts#completeDeadlineRelease`, in the transaction
+of the window deadline's own release, to the `PLACES_ALERT` audience (every Administrator and
+Superadministrator with an address, in their own language) — only when the release freed a hold or left
+one unsigned — once per deadline and person (`unsigned-released:<event>:<deadline>:<staff>`): the counts in
+the payload, no participant, no token; its one button opens the event's registrations. The
+`DECLARATION_HOLD_EXPIRED` that release queues carries the deadline and is copied to no club address:
+this summary is the club's copy.
 
 `PLACES_ALERT` (§906) is queued by `places-alert.ts#watchPlacesAlert`, in the transaction of the
 allocator write that crossed an event's «Anunță-mă când rămân N locuri», to every Administrator and

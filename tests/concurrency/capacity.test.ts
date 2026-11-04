@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
@@ -10,6 +11,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { computeOccupied, NoFreePlaceError } from "@/modules/registrations/domain/capacity";
 import { countOccupied } from "@/modules/registrations/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { WAITLIST_FULL, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
 import { SUPPLEMENTARY_PLACE_UNCONFIRMED, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { eventInvitations } from "@/db/schema/event-invitations";
@@ -557,6 +559,85 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       expect(capacity).toBe(12);
       // Every row ended in one of the states the allocator writes.
       expect(rows.every((row) => ["PENDING_DECLARATION", "WAITLIST_OFFERED", "WAITLISTED"].includes(row.status))).toBe(true);
+    },
+    30_000,
+  );
+
+  it(
+    "§NNN «Eliberează singur locurile nesemnate la termen»: the deadline passed, ten lapsed holds, six transactions reach it at once — one release, one memory, one summary each, no offer, nobody past the capacity",
+    async () => {
+      const now = new Date();
+      // The start a day ahead, the window's deadline two days before it: passed a day ago.
+      const startsAt = new Date(now.getTime() + 24 * 3_600_000);
+      const deadline = new Date(startsAt.getTime() - 2 * 24 * 3_600_000);
+      eventCounter += 1;
+      const [row] = await db
+        .insert(events)
+        .values({
+          type: "MEETUP",
+          startsAt,
+          registrationMode: "INTERNAL",
+          capacity: 10,
+          waitlistAutoOffer: true,
+          confirmationOpensDaysBefore: 7,
+          confirmationDeadlineDaysBefore: 2,
+          releaseUnsignedAtDeadline: true,
+        })
+        .returning();
+      createdEventIds.push(row.id);
+      const event: EventForRegistration = {
+        id: row.id,
+        eventStatus: row.eventStatus,
+        registrationMode: "INTERNAL",
+        startsAt,
+        registrationOpensAt: null,
+        registrationClosesAt: null,
+        capacity: 10,
+        raceId: null,
+        publishedAt: NOW,
+        confirmationOpensDaysBefore: 7,
+        confirmationDeadlineDaysBefore: 2,
+      };
+      // Ten places held by people who never signed, each past the window's deadline; their first emails long gone.
+      const held = await Promise.all(Array.from({ length: 10 }, (_, i) => createPendingRegistration(row.id, `unsigned${i}`)));
+      await db
+        .update(registrations)
+        .set({ status: "PENDING_DECLARATION", holdExpiresAt: deadline })
+        .where(inArray(registrations.id, held.map((item) => item.id)));
+      // Six newcomers confirming their addresses in the same instant: each transaction sweeps first, any one may be the release.
+      const fresh = await Promise.all(Array.from({ length: 6 }, (_, i) => createPendingRegistration(row.id, `newcomer${i}`)));
+
+      const outcomes = await Promise.allSettled(fresh.map((item) => confirmEmail(db, event, item.id, now)));
+      expect(outcomes.filter((outcome) => outcome.status === "rejected")).toEqual([]);
+
+      const rows = await statusesFor(row.id);
+      // Every unsigned hold released, once; the places given to nobody — the tick sends every newcomer to the line.
+      expect(rows.filter((item) => held.some((h) => h.id === item.id)).every((item) => item.status === "EXPIRED")).toBe(true);
+      expect(rows.filter((item) => fresh.some((f) => f.id === item.id)).every((item) => item.status === "WAITLISTED")).toBe(true);
+      expect(computeOccupied(await countOccupied(db, row.id, now))).toBeLessThanOrEqual(10);
+      const [after] = await db.select().from(events).where(eq(events.id, row.id));
+      expect(after.unsignedReleasedFor).toEqual(deadline);
+      expect(after.freePlacesByOfferOnly).toBe(true);
+      expect(after.version).toBe(row.version + 1);
+
+      const trail = await db.select().from(auditLogs).where(eq(auditLogs.entityId, row.id));
+      expect(trail.filter((entry) => entry.action === "event.unsigned_released")).toHaveLength(1);
+      expect(trail.filter((entry) => entry.action === "event.free_places_by_offer_only_changed")).toHaveLength(1);
+
+      const mail = await db.select().from(emailOutbox).where(inArray(emailOutbox.messageType, ["DECLARATION_HOLD_EXPIRED", "WAITLIST_SPOT_OFFER", "UNSIGNED_RELEASED"]));
+      const ofEvent = mail.filter((item) => held.some((h) => h.id === item.registrationId) || (item.payloadJson as { eventId?: string } | null)?.eventId === row.id);
+      // One per person released, none offered.
+      expect(ofEvent.filter((item) => item.messageType === "DECLARATION_HOLD_EXPIRED")).toHaveLength(10);
+      expect(ofEvent.filter((item) => item.messageType === "WAITLIST_SPOT_OFFER")).toHaveLength(0);
+      // One summary to each Administrator and Superadministrator with an address, whatever else this database holds.
+      const told = (await db.select().from(staffUsers)).filter((member) => canManageRegistrations(member.role) && member.email.trim() !== "");
+      const summaries = ofEvent.filter((item) => item.messageType === "UNSIGNED_RELEASED");
+      expect(summaries).toHaveLength(told.length);
+      expect(new Set(summaries.map((item) => item.recipientEmail)).size).toBe(told.length);
+
+      // This case's rows that name the event and no registration of it.
+      await db.delete(emailOutbox).where(inArray(emailOutbox.id, summaries.map((item) => item.id)));
+      await db.delete(auditLogs).where(eq(auditLogs.entityId, row.id));
     },
     30_000,
   );

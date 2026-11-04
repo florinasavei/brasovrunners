@@ -301,6 +301,8 @@ describe("§799 «Condiții de participare» inside «Regulamentul»", () => {
       "event.publicRegistrationOpen", "event.publicRegistrationOpen.present",
       // «Locuri păstrate pentru club» and the reason kept on the capacity's history (§NNN).
       "event.placesKeptForClub", "event.placesChangeReason",
+      // «Eliberează singur locurile nesemnate la termen» (§NNN): a tick with its marker, in the participation window's card.
+      "event.releaseUnsignedAtDeadline", "event.releaseUnsignedAtDeadline.present",
     ];
     const markup = await registration({ ...RACE, declarationDocumentId: declarations[0].id } as EditableEvent);
     expect([...postedNames(markup)].sort()).toEqual([...before, ...added].sort());
