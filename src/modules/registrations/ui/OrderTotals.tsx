@@ -7,7 +7,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import type { OrderTotal, OrderTotals as Totals } from "../domain/race-plan";
 
 /**
- * «De comandat» on «Planul locurilor» (§NNN), under «Kituri de pregătit» (`KitCount`, the registrations' kits now): every
+ * «De comandat» on «Planul locurilor» (§911), under «Kituri de pregătit» (`KitCount`, the registrations' kits now): every
  * kit needed now, the elite list's lines and the volunteers with a kit added (`domain/race-plan.ts#kitsNow`); what to
  * order if every place fills — the kits and the race numbers (`orderTotals`); each total with the parts it is the sum of
  * written out under it, so the club can check the arithmetic and drop a part it does not print — and the race numbers

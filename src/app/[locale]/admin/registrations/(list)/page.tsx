@@ -1338,7 +1338,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           />
         )
       )}
-      {/* «Planul locurilor» (§NNN): the event's places on one read-only page — only when the list is about one event. */}
+      {/* «Planul locurilor» (§911): the event's places on one read-only page — only when the list is about one event. */}
       {filters.eventId && (
         <GlyphButton
           icon="place"

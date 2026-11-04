@@ -57,7 +57,7 @@ function entryParts(t: Translate, entry: HistoryEntry, when: (at: Date) => strin
 }
 
 /**
- * «Istoric capacitate» on «Planul locurilor» (§NNN): one line per change of the event's places, newest first — when,
+ * «Istoric capacitate» on «Planul locurilor» (§911): one line per change of the event's places, newest first — when,
  * who, from how many to how many and why («3 nov. 2026, 14:02 · Amalia · Locuri: 175 → 176 · un loc în plus pentru
  * «Trimite-i oferta» · ocupate 175»), «Vezi înscrierea» beside a supplementary place whose registration still exists —
  * and, between two rows that do not join, «Schimbare neînregistrată: 175 → 190». The reading and the order are

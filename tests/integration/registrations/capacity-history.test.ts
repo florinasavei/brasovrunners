@@ -11,7 +11,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { createRace, person, registerRunner } from "../../helpers/results";
 
 /**
- * «Istoric capacitate» (§NNN) on a real database (PGlite), BR-REQ-034-02 — from fixture audit rows only, so it holds
+ * «Istoric capacitate» (§911) on a real database (PGlite), BR-REQ-034-02 — from fixture audit rows only, so it holds
  * whichever release writes them:
  *
  * - the rows of this event and of the actions the screen knows, read by their plain strings, newest first, with the
@@ -99,7 +99,7 @@ async function trail() {
   return { event, kept };
 }
 
-describe("BR-REQ-034-02 «Istoric capacitate» from the audit trail (§NNN)", () => {
+describe("BR-REQ-034-02 «Istoric capacitate» from the audit trail (§911)", () => {
   it("reads this event's rows of the places, newest first, and says where the capacity changed without one", async () => {
     const { event, kept } = await trail();
     const history = await listCapacityHistory(db, event.id, 195);

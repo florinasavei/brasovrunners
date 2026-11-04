@@ -240,7 +240,7 @@ export const routing = defineRouting({
      */
     "/admin/events/[id]/mesaje": "/admin/events/[id]/mesaje",
     /**
-     * «Planul locurilor» (§NNN): one event's places on one read-only page — who holds them, who sits outside them, the
+     * «Planul locurilor» (§911): one event's places on one read-only page — who holds them, who sits outside them, the
      * deadlines, what to order and «Istoric capacitate». One spelling in both locales, like `mesaje` and `urgente`.
      */
     "/admin/events/[id]/locuri": "/admin/events/[id]/locuri",

@@ -62,7 +62,7 @@ export type RacePlan =
     };
 
 /**
- * «Planul locurilor» for one event (§NNN): every reader the registrations list already calls for «Locuri», «Pe site
+ * «Planul locurilor» for one event (§911): every reader the registrations list already calls for «Locuri», «Pe site
  * acum», «Kituri de pregătit» and «Când se pierde un loc», with their signatures as they are, and reads of its own — the
  * allocator's count once more for the lapsed holds (`countOccupied`, the definition the sweep uses), one grouped count
  * of the registrations by state × outside × elite × kind, the open invitations by «Pe lista de invitați speciali», the

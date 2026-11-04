@@ -21,7 +21,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { createRace, person, registerRunner, type Runner } from "../../helpers/results";
 
 /**
- * «Planul locurilor» (§NNN) on a real database (PGlite):
+ * «Planul locurilor» (§911) on a real database (PGlite):
  *
  * - BR-REQ-060-01 — the page and its reader are the Organizer's, the Administrator's and the Superadministrator's: the
  *   Tehnic role and the volunteer get the 404, from the page and again from `readRacePlan`; a malformed id and an
@@ -185,7 +185,7 @@ async function page(actor: StaffUser, id: string, locale: "ro" | "en" = "ro"): P
   return markup(await RacePlanPage({ params: Promise.resolve({ locale, id }) }));
 }
 
-describe("BR-REQ-060-01 «Planul locurilor» is for whoever reads the registrations (§NNN)", () => {
+describe("BR-REQ-060-01 «Planul locurilor» is for whoever reads the registrations (§911)", () => {
   it("lets the Organizer, the Administrator and the Superadministrator read it; refuses the Tehnic role and a volunteer", async () => {
     const event = await race(NOW);
     for (const role of ["MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
@@ -214,7 +214,7 @@ describe("BR-REQ-060-01 «Planul locurilor» is for whoever reads the registrati
   });
 });
 
-describe("BR-REQ-034-02 «Pe categorii» counts as the allocator counts (§NNN)", () => {
+describe("BR-REQ-034-02 «Pe categorii» counts as the allocator counts (§911)", () => {
   it("takes the places inside the capacity from the allocator's own count, and nobody outside them", async () => {
     const event = await race(NOW);
     const plan = await readRacePlan(db, { role: "MODERATOR" }, event.id, NOW);
@@ -287,7 +287,7 @@ describe("BR-REQ-034-02 «Pe categorii» counts as the allocator counts (§NNN)"
   });
 });
 
-describe("BR-REQ-050-02 the page draws the list's own readers, read only, in both languages (§NNN)", () => {
+describe("BR-REQ-050-02 the page draws the list's own readers, read only, in both languages (§911)", () => {
   it("draws «Locuri» and «Pe site acum» as the list does, the tick said and never offered, then the four folds", async () => {
     const event = await race(new Date());
     const organizer = await person(db, "MODERATOR", "Organizator");

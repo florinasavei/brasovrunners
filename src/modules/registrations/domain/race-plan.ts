@@ -2,7 +2,7 @@ import type { RegistrationKind, RegistrationStatus } from "@/db/schema/registrat
 import { ACTIVE_STATUSES } from "./state-machine";
 
 /**
- * «Planul locurilor» (§NNN; the owner, 2026-11-03, choosing «one plan page per race» among four place controls for
+ * «Planul locurilor» (§911; the owner, 2026-11-03, choosing «one plan page per race» among four place controls for
  * the 21 November race): one event's places on one read-only page — who holds them, who sits outside them, both lists,
  * and what to order if every place fills.
  *
@@ -159,7 +159,7 @@ function partOf(key: PlanRowKey, count: number): PlanRow[] {
 }
 
 /**
- * Everybody who runs (§NNN): the places taken, the special guests holding a place outside them and the lines of the elite
+ * Everybody who runs (§911): the places taken, the special guests holding a place outside them and the lines of the elite
  * list — a name on a bib, a runner with no registration (§895) — now; and, if every place fills, the places (the capacity,
  * or the places taken when it was lowered under them) and the special guests' invitations not yet answered as well. A
  * registration marked «Elită» (§897) is already one of the places taken or one of the special guests, so it is counted
@@ -230,7 +230,7 @@ export type OrderTotals = { kits: OrderTotal; bibs: OrderTotal };
 const sumOf = (parts: OrderTotal["parts"]): OrderTotal => ({ total: parts.reduce((sum, part) => sum + part.count, 0), parts });
 
 /**
- * What to order if every place fills (§NNN), the parts written out so the club sees what each total is made of:
+ * What to order if every place fills (§911), the parts written out so the club sees what each total is made of:
  *
  * - **kits** = the places + the special guests holding a place + the special guests' invitations not yet answered + the
  *   elite list's lines (§895: a runner with no registration) + the volunteers with a kit (§904);
@@ -275,7 +275,7 @@ export function orderTotals(input: {
 }
 
 /**
- * The kits needed now (§NNN), with or without a limit of places: «Kituri de pregătit» as the registrations list counts it
+ * The kits needed now (§911), with or without a limit of places: «Kituri de pregătit» as the registrations list counts it
  * (`countKits`: the real registrations holding a place, the special guests among them, and the open invitations), plus
  * the elite list's lines — runners with no registration (§895), a registration marked «Elită» already among the first
  * part — and the volunteers with a kit (§904), each part written out.

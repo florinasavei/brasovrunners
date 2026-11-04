@@ -1,5 +1,5 @@
 /**
- * «Istoric capacitate» (§NNN; the owner, 2026-11-03, choosing the capacity's history among four place controls for the
+ * «Istoric capacitate» (§911; the owner, 2026-11-03, choosing the capacity's history among four place controls for the
  * 21 November race): every change of an event's places — who, when, from how many to how many, and why — read back from
  * the audit trail, never from a table of its own.
  *

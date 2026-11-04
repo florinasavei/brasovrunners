@@ -13,7 +13,7 @@ import {
 } from "./domain/capacity-history";
 
 /**
- * «Istoric capacitate» for one event (§NNN): its audit rows about the places, newest first and at most
+ * «Istoric capacitate» for one event (§911): its audit rows about the places, newest first and at most
  * `CAPACITY_HISTORY_LIMIT`, with the staff member's name (a left join: the job has none, and an account removed since
  * leaves none) — the same shape as `notifications/participant-messages.ts#listParticipantMessages` — and one more query
  * for which of the registrations they name still exist. `domain/capacity-history.ts` orders them, reads their metadata

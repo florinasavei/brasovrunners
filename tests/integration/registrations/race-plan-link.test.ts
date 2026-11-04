@@ -8,7 +8,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { createRace } from "../../helpers/results";
 
 /**
- * «Planul locurilor» (§NNN), BR-REQ-050-02: the registrations list scoped to one event links to the event's plan under
+ * «Planul locurilor» (§911), BR-REQ-050-02: the registrations list scoped to one event links to the event's plan under
  * «Locuri», for every role that reads the list (the Organizer too, §289) — and the list over every event has no link,
  * since a plan is one event's. The page's tree is walked as a Server Component's, read without a browser.
  */
@@ -111,7 +111,7 @@ async function link(locale: "ro" | "en", query: Record<string, string>) {
   return elements(tree).find((element) => element.props["data-testid"] === "race-plan-link");
 }
 
-describe("BR-REQ-050-02 the registrations list links to «Planul locurilor» (§NNN)", () => {
+describe("BR-REQ-050-02 the registrations list links to «Planul locurilor» (§911)", () => {
   it("under «Locuri», for one event, for the Administrator and the Organizer alike, in both languages", async () => {
     const race = await createRace(db, { capacity: 20 });
     for (const role of ["ADMIN", "MODERATOR"] as const) {

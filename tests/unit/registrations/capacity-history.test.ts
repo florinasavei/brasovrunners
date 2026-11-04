@@ -15,7 +15,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * «Istoric capacitate» (§NNN) — BR-REQ-034-02: every change of an event's places read back from the audit trail by
+ * «Istoric capacitate» (§911) — BR-REQ-034-02: every change of an event's places read back from the audit trail by
  * its plain action strings, tolerant of the rows written before the editor's writers existed and of any field nobody
  * wrote; in the order the changes took effect; with a line wherever the capacity changed without a row; and who did it.
  */
@@ -34,7 +34,7 @@ const GONE = "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c3d";
 const parse = (r: CapacityAuditRow, existing: ReadonlySet<string> = new Set()) => parseCapacityRow(r, existing) as HistoryEntry;
 const kinds = (lines: readonly HistoryLine[]) => lines.map((line) => (line.kind === "gap" ? `gap ${line.from}→${line.to}` : line.kind === "places" ? `${line.field} ${line.from}→${line.to}` : line.kind));
 
-describe("BR-REQ-034-02 «Istoric capacitate» reads the trail as it was written (§NNN)", () => {
+describe("BR-REQ-034-02 «Istoric capacitate» reads the trail as it was written (§911)", () => {
   it("reads a supplementary place written before this screen: from, to and the registration, no version", () => {
     const entry = parse(row("event.capacity_raised_for_offer", { from: 175, to: 176, registrationId: REGISTRATION }, 0), new Set([REGISTRATION]));
     expect(entry).toMatchObject({ kind: "places", field: "capacity", from: 175, to: 176, why: "anyOffer", version: null, occupied: null, registrationId: REGISTRATION, registrationExists: true, forInvitation: false });
@@ -96,7 +96,7 @@ describe("BR-REQ-034-02 «Istoric capacitate» reads the trail as it was written
   });
 });
 
-describe("BR-REQ-034-02 «Istoric capacitate» in the order the changes took effect (§NNN)", () => {
+describe("BR-REQ-034-02 «Istoric capacitate» in the order the changes took effect (§911)", () => {
   it("orders by time, then the versioned rows by version in the places such rows hold", () => {
     // The raise read its clock before waiting for the lock: stamped first, it took effect after the editor's save.
     const raise = row("event.capacity_raised_for_offer", { from: 190, to: 191, version: 42 }, 0);
@@ -113,7 +113,7 @@ describe("BR-REQ-034-02 «Istoric capacitate» in the order the changes took eff
   });
 });
 
-describe("BR-REQ-034-02 «Istoric capacitate» says where the capacity changed without a row (§NNN)", () => {
+describe("BR-REQ-034-02 «Istoric capacitate» says where the capacity changed without a row (§911)", () => {
   it("puts a gap between two rows that do not join, and one against the capacity of now", () => {
     const lines = withGaps(
       [
@@ -160,7 +160,7 @@ describe("BR-REQ-034-02 «Istoric capacitate» says where the capacity changed w
   });
 });
 
-describe("BR-REQ-040-04 the history's words in both languages (§NNN)", () => {
+describe("BR-REQ-040-04 the history's words in both languages (§911)", () => {
   it("names every why, every switch and every action it reads", () => {
     for (const catalogue of [ro, en]) {
       const words = (catalogue.Admin as unknown as { capacityHistory: { why: Record<string, string>; what: Record<string, string> } }).capacityHistory;

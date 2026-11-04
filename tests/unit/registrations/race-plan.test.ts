@@ -20,7 +20,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * «Planul locurilor» (§NNN) — the arithmetic of «Pe categorii» and «De comandat», BR-REQ-034-02: inside the places
+ * «Planul locurilor» (§911) — the arithmetic of «Pe categorii» and «De comandat», BR-REQ-034-02: inside the places
  * the kinds are the allocator's own and add up to the places taken; nobody outside the places — a special guest, an
  * invitation «Pe lista de invitați speciali», an elite line, a volunteer — is ever counted among them; the runners are
  * the places taken, the special guests and the elite list's lines, a registration marked elite once; and the totals to
@@ -50,7 +50,7 @@ function inputFrom(capacity: number, counts: OccupiedCounts, extra: Partial<Race
 const count = (rows: readonly PlanRow[], key: string) => rows.find((row) => row.key === key)?.count;
 const TOP = ["confirmed", "declaration", "offered", "invited", "family"];
 
-describe("BR-REQ-034-02 «Pe categorii» (§NNN)", () => {
+describe("BR-REQ-034-02 «Pe categorii» (§911)", () => {
   const counts: OccupiedCounts = { confirmed: 150, pendingDeclarationHolds: 9, unexpiredWaitlistOfferedHolds: 2, familyReservations: 1, familyPlaceHolds: 1, invitationHolds: 2 };
 
   it("adds the five kinds up to the places taken, and the places taken and the free ones up to the capacity", () => {
@@ -136,7 +136,7 @@ describe("BR-REQ-034-02 «Pe categorii» (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-034-02 the grouped read, as «Locuri» counts (§NNN)", () => {
+describe("BR-REQ-034-02 the grouped read, as «Locuri» counts (§911)", () => {
   const group = (status: RegistrationGroup["status"], total: number, over: Partial<RegistrationGroup> = {}): RegistrationGroup => ({ status, outside: false, elite: false, kind: "REAL", total, ...over });
 
   it("counts the elite inside the places, the special guests by state and the line, as the outlook does", () => {
@@ -173,7 +173,7 @@ describe("BR-REQ-034-02 the grouped read, as «Locuri» counts (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-034-02 «De comandat» if every place fills (§NNN)", () => {
+describe("BR-REQ-034-02 «De comandat» if every place fills (§911)", () => {
   const input = { capacity: 175, occupied: 170, outside: 4, outsideInvitations: 2, volunteersWithKit: 33, eliteEntries: 12, spares: 6 };
 
   it("is the sum of the parts it writes out, a kit and a bib for every elite line", () => {
@@ -212,7 +212,7 @@ describe("BR-REQ-034-02 «De comandat» if every place fills (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-040-01 the plan in the other language (§NNN)", () => {
+describe("BR-REQ-040-01 the plan in the other language (§911)", () => {
   it("keeps the event's plan when the language switches: one spelling in both locales, the id the same", async () => {
     const id = "6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b";
     // A staff route carries an id, never a slug: the switch reads no database for it.
@@ -221,7 +221,7 @@ describe("BR-REQ-040-01 the plan in the other language (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-040-04 the plan's words in both languages (§NNN)", () => {
+describe("BR-REQ-040-04 the plan's words in both languages (§911)", () => {
   it("names every row and every part in Română and English", () => {
     for (const catalogue of [ro, en]) {
       const words = (catalogue.Admin as unknown as { racePlan: { rows: Record<string, string>; order: { parts: Record<string, string> } } }).racePlan;

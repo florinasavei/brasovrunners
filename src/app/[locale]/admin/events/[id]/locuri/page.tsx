@@ -36,7 +36,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * «Planul locurilor» (§NNN; the owner, 2026-11-03, choosing «one plan page per race» among four place controls for the
+ * «Planul locurilor» (§911; the owner, 2026-11-03, choosing «one plan page per race» among four place controls for the
  * 21 November race): one event's places on one page, read only — five cards, each the subject's glyph before its
  * heading, every one but «Locuri» a fold closed on a summary line:
  *
